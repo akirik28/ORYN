@@ -150,7 +150,7 @@ configuration, since OpenAlex has no auth requirement.
 
 ## Background jobs
 
-Two scheduled jobs exist as protected Route Handlers rather than a cron dependency
+Four scheduled jobs exist as protected Route Handlers rather than a cron dependency
 (Vercel Cron, GitHub Actions, or any external scheduler can call them):
 
 ```bash
@@ -159,10 +159,24 @@ curl -X POST https://your-domain.com/api/jobs/discover-opportunities \
 
 curl -X POST https://your-domain.com/api/jobs/sync-university-data \
   -H "Authorization: Bearer $CRON_SECRET"
+
+curl -X POST https://your-domain.com/api/jobs/deadline-reminders \
+  -H "Authorization: Bearer $CRON_SECRET"
+
+curl -X POST https://your-domain.com/api/jobs/discover-requirements \
+  -H "Authorization: Bearer $CRON_SECRET"
 ```
 
+`discover-requirements` (Phase 69) finds official requirement pages for universities with
+no `university_requirements` rows yet and populates them — bounded to 5 universities per
+run by default (`lib/requirements/discover.ts`) to keep Tavily/Anthropic cost per
+invocation predictable; a university already covered is left alone rather than re-scanned
+(no freshness-driven re-check yet, see `docs/known-issues.md`). Needs both
+`TAVILY_API_KEY` and `ANTHROPIC_API_KEY` configured — degrades to a no-op run (zero
+universities processed, no error) if either is missing, same as `discover-opportunities`.
+
 **Environment variable:** `CRON_SECRET` — generate with `openssl rand -hex 32`. Without
-it set, both routes refuse every request (an unset secret never means "open to the
+it set, every route refuses every request (an unset secret never means "open to the
 world" — see `lib/jobs/verify-cron-request.ts`).
 
 Every run is logged to the `external_sync_jobs` table (`lib/jobs/run-with-tracking.ts`),

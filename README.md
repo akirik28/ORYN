@@ -112,10 +112,6 @@ these in **[docs/known-issues.md](./docs/known-issues.md)**. Current list:
   `n=0`** — see `lib/benchmarking/`. The only honest state to show is "not enough
   comparable students yet," which is what it shows today; no further code is needed for
   it to activate once real user data exists.
-- **The per-program requirement checklist (spec Phase 69) has no automated ingestion
-  job** — see `lib/requirements/`. The schema, deterministic evaluation engine, and an
-  admin entry point (optionally AI-assisted, always human-reviewed) all work; nothing yet
-  crawls official pages to populate `university_requirements` at scale.
 - **No professional legal review** of minor-safe/privacy claims — see SECURITY.md.
 
 Built, but worth knowing the shape of: `/admin` (provider health, job history, AI usage,
@@ -133,7 +129,10 @@ deadline-reminder job, and the AI Advisor's own context all merge applications, 
 opportunities, and target-university program deadlines into one sorted view —
 `lib/deadlines/upcoming.ts` / `lib/deadlines/scan.ts`), global search across universities,
 programs, opportunities, profile items, goals, and applications (`lib/search/`, `/search`),
-and per-program requirement evaluation (`lib/requirements/`, on each university's page).
+per-program requirement evaluation with two population paths — an admin form and an
+automated discovery job, `POST /api/jobs/discover-requirements` (`lib/requirements/`, on
+each university's page) — and admin-triggerable background jobs for opportunity discovery,
+university sync, deadline scans, and requirement discovery, all visible at `/admin`.
 
 None of these are silently faked — where a feature isn't built, the UI says so (a real
 empty state, a "not configured" notice, or the feature simply isn't linked from

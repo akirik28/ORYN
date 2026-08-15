@@ -25,9 +25,10 @@ non-functional — see "Security/RLS notes" below.
 
 ## What is partially complete
 
-- Requirement checklist: schema + evaluation engine + admin entry point all work, but there
-  is no automated crawler populating `university_requirements` yet — rows only exist where
-  an admin has added them. See `known-issues.md`.
+- Requirement checklist: schema + evaluation engine + admin entry point + an automated
+  discovery job all work (the job was initially scoped out, then built within this same
+  pass — see `known-issues.md`). The job is bounded (5 universities/run) and
+  university-wide only (not per-program) — a deliberate scope line, not a bug.
 - Peer benchmarking: fully built, but every cohort is genuinely `n=0` pre-launch, so the
   only thing anyone sees today is the honest "not enough comparable students" state. This
   is correct behavior, not a stub — no further code is needed for it to activate.
@@ -96,13 +97,20 @@ duplicated, for the advisor's context).
 ## Current requirements architecture (new this session)
 
 See `lib/requirements/` (`types.ts`, `evaluate.ts` — pure, unit-tested in
-`__tests__/requirements/evaluate.test.ts` — `facts.ts`, `persist.ts`) and
-`lib/ai/interpret-requirement.ts`. Full reasoning on the schema shape in
+`__tests__/requirements/evaluate.test.ts` — `facts.ts`, `persist.ts`, `dedup.ts`,
+`discover.ts`) and `lib/ai/interpret-requirement.ts` /
+`lib/ai/requirement-extraction.ts`. Full reasoning on the schema shape in
 `product-decisions.md`. Student-facing: `app/(app)/universities/[id]/page.tsx`'s
 "Requirement check" section, grouped university-wide vs. per-program, each row showing a
 status badge, Oryn's plain-language reasoning, and a link to the original source. Evaluated
 on every view of a university/program page a student has (recompute-on-read, same
-convention as admission outlook), never persisted stale.
+convention as admission outlook), never persisted stale. Rows get populated two ways: an
+admin form (`features/universities/admin-requirement-form.tsx`, AI-assisted, always
+human-reviewed) and an automated job (`POST /api/jobs/discover-requirements`, admin panel
+"Run requirement discovery" button) — Tavily search → one AI call per page extracts every
+distinct requirement stated (with an optional inline structured rule, only trusted when its
+shape actually matches the category) → dedupe → store, bounded to 5 uncovered universities
+per run.
 
 ## Security/RLS notes
 

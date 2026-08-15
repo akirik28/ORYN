@@ -16,16 +16,25 @@ memory/documentation discipline.
   university-program deadlines were invisible to the advisor even though a student could
   see them on their own dashboard. Fixed by reusing the existing unified source.
 
+## Fixed this session, continued
+
+- **No automated ingestion job for per-program requirements** — initially scoped out as a
+  separate follow-up phase, then built within the same pass rather than left as a gap (the
+  operating brief's stopping rule: keep going until what's left is external/legal/Chat-2/
+  Chat-3 territory, and this wasn't). `lib/requirements/discover.ts` +
+  `lib/ai/requirement-extraction.ts` + `POST /api/jobs/discover-requirements` — Tavily
+  search → one AI call per page (extracts every distinct requirement stated, with an
+  optional inline structured rule — deliberately not a second AI call per requirement, to
+  keep a run's cost bounded) → dedupe (`lib/requirements/dedup.ts`, unit-tested, reuses
+  `lib/opportunities/dedup.ts`'s title-similarity function) → store via the admin client.
+  Bounded to 5 universities per run by default, university-wide requirements only (not
+  program-specific — attributing a found page to one specific program reliably needs more
+  targeted queries than this pass built). An inline structured rule is only trusted when its
+  `kind` actually matches the category's expected shape; a mismatch is dropped to `null`
+  (an honest `needs_manual_review` later) rather than risking a wrong automatic evaluation.
+
 ## Open — deliberately scoped out, not oversights
 
-- **No automated ingestion job for per-program requirements.** `lib/requirements/` (schema
-  + deterministic evaluation engine + admin entry point) is fully built and tested, but
-  nothing crawls official university/program pages to populate `university_requirements`
-  the way `lib/opportunities/discover.ts` does for opportunities. Rows only exist if an
-  admin adds them (optionally AI-assisted structuring from pasted, sourced text — see
-  `lib/ai/interpret-requirement.ts` — always human-reviewed before save, never invented).
-  Building the ingestion pipeline is a real, scoped next phase, not a small addition —
-  roughly the size of the existing opportunity-discovery pipeline.
 - **Peer benchmarking cohorts are real but pre-launch every one is n=0.** The only honest
   state to show is "not enough comparable Oryn students yet," which is what
   `features/profile/peer-benchmark.tsx` renders today. This activates itself once there's

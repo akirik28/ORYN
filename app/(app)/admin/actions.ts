@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/security/require-admin";
 import { discoverOpportunitiesForQuery, DEFAULT_DISCOVERY_QUERIES } from "@/lib/opportunities/discover";
 import { syncUsUniversities, DEFAULT_US_UNIVERSITIES } from "@/lib/universities/sync-us-universities";
 import { scanDeadlines } from "@/lib/deadlines/scan";
+import { discoverRequirementsForUncoveredUniversities } from "@/lib/requirements/discover";
 import { runWithTracking } from "@/lib/jobs/run-with-tracking";
 
 /**
@@ -49,6 +50,20 @@ export async function triggerDeadlineScan(): Promise<{ error?: string }> {
     await runWithTracking("deadline_reminders", async () => {
       const { notified, checked } = await scanDeadlines();
       return { itemsProcessed: notified, result: { notified, checked } };
+    });
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Job failed." };
+  }
+  revalidatePath("/admin");
+  return {};
+}
+
+export async function triggerRequirementDiscovery(): Promise<{ error?: string }> {
+  await requireAdmin();
+  try {
+    await runWithTracking("discover_requirements", async () => {
+      const runs = await discoverRequirementsForUncoveredUniversities();
+      return { itemsProcessed: runs.reduce((sum, r) => sum + r.requirementsStored, 0), result: runs };
     });
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Job failed." };

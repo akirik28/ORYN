@@ -551,3 +551,41 @@ state, not a bug.
 See `docs/chat-1-handoff.md` for the full handoff to the next session, `docs/known-issues.md`
 for the current honest gap list, and `docs/product-decisions.md` for the reasoning behind
 this pass's schema and scope choices.
+
+### Follow-up within the same pass: automated requirement discovery
+
+The section above initially scoped the Phase 69 ingestion crawler out as a "real, scoped
+next phase." Reconsidered against this build's own stopping rule (keep going until what's
+left is an external blocker, legal review, or explicitly Chat 2/Chat 3 territory — an
+ingestion job is none of those) and built it before ending the session instead of leaving it
+as a documented gap.
+
+`lib/ai/requirement-extraction.ts`: one AI call per source page returns every distinct
+requirement it states, with an *optional* inline structured rule — deliberately not a
+second AI call per requirement (unlike the admin-form path,
+`lib/ai/interpret-requirement.ts`, which structures one already-reviewed requirement at a
+time). A background job fanning out to up to 20 structuring calls per page would be slow
+and expensive; a lower inline hit-rate is safe because `lib/requirements/evaluate.ts`
+already treats a missing or malformed rule as an honest `needs_manual_review`, never a wrong
+answer — cost-cutting here doesn't trade away correctness, only completeness.
+
+`lib/requirements/discover.ts`: Tavily search → extract → dedupe
+(`lib/requirements/dedup.ts`, unit-tested, reuses `lib/opportunities/dedup.ts`'s
+title-similarity function rather than reimplementing fuzzy matching) → store via the admin
+client. `getUniversitiesNeedingRequirementDiscovery` targets universities with zero
+existing `university_requirements` rows, bounded to 5 per run by default — a university
+already covered is left alone (no freshness re-check built yet). University-wide only, not
+per-program: reliably attributing a found page to one specific program needs more targeted
+per-program queries than a university-name search provides, and guessing would risk
+attaching a requirement to the wrong program.
+
+One safety detail worth keeping: an extracted `structuredRule` is only trusted when its
+`kind` actually matches the category's expected shape (`categoryToRuleKind`) — a mismatch
+(the model attached, say, a `coursework` rule to a `minimum_grade` requirement) is dropped
+to `null` rather than stored, so a confused extraction degrades to
+`needs_manual_review` instead of producing a wrong automatic evaluation.
+
+Wired up exactly like the existing jobs: `POST /api/jobs/discover-requirements`
+(`CRON_SECRET`-protected), an admin panel "Run requirement discovery" button, tracked via
+`external_sync_jobs` like every other job. `npm run test` now at 108/108 (4 more for the
+dedup module); `npm run build` still succeeds with the new route.

@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/security/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Badge } from "@/components/ui/badge";
 import { JobTriggerButton } from "@/features/admin/job-trigger-button";
-import { triggerOpportunityDiscovery, triggerUniversitySync, triggerDeadlineScan } from "./actions";
+import { triggerOpportunityDiscovery, triggerUniversitySync, triggerDeadlineScan, triggerRequirementDiscovery } from "./actions";
 
 export const metadata = { title: "Admin" };
 
@@ -75,6 +75,7 @@ export default async function AdminPage() {
           <JobTriggerButton label="Run opportunity discovery" action={triggerOpportunityDiscovery} />
           <JobTriggerButton label="Run university sync" action={triggerUniversitySync} />
           <JobTriggerButton label="Run deadline scan" action={triggerDeadlineScan} />
+          <JobTriggerButton label="Run requirement discovery" action={triggerRequirementDiscovery} />
         </div>
         {jobsRes.data && jobsRes.data.length > 0 ? (
           <ul className="divide-y rounded-lg border">

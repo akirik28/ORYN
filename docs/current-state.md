@@ -11,9 +11,12 @@ plus the pre-existing product surface documented in `PHASE_STATUS.md`:
 
 - **Per-program requirement checklist (Phase 69)** — `lib/requirements/`. Deterministic
   evaluation (met/likely_met/not_met/unknown/needs_manual_review) of a student's profile
-  against a university/program's stated requirements, with an admin entry point to add real
-  sourced requirements (optionally AI-assisted structuring, always human-reviewed before
-  save) and a student-facing "Requirement check" section on the university detail page.
+  against a university/program's stated requirements. Two ways rows get populated: an admin
+  entry point (optionally AI-assisted structuring, always human-reviewed before save) and
+  an automated discovery job (`lib/requirements/discover.ts`, `POST
+  /api/jobs/discover-requirements` — Tavily search → AI extraction → dedupe → store,
+  bounded to 5 universities/run, university-wide only). Student-facing: a "Requirement
+  check" section on the university detail page.
 - **Peer benchmarking (Phase 19)** — `lib/benchmarking/`. Cohort-based percentile
   comparison (graduation year + curriculum), gated at n≥100 comparable peers per dimension,
   shown on the Career Profile page. Pre-launch every cohort is genuinely n=0 — this is
@@ -38,14 +41,13 @@ plus the pre-existing product surface documented in `PHASE_STATUS.md`:
 
 ## What's partially complete (by deliberate scope decision, not oversight)
 
-- **Per-program requirements have no automated ingestion job.** The schema, evaluation
-  engine, and an admin form all work end-to-end, but nothing crawls official pages to
-  populate `university_requirements` the way `lib/opportunities/discover.ts` does for
-  opportunities. Building that (Tavily search → extract → AI-structure → store, per
-  requirement type, per program) is a real, scoped next phase — see "Recommended next
-  phase" in `chat-1-handoff.md`. Not attempted this pass: it's a second discovery pipeline
-  roughly the size of the opportunity one, and this pass already had three major builds in
-  flight.
+- **Per-program requirement discovery is university-wide only, bounded per run.**
+  `lib/requirements/discover.ts` (Tavily search → AI extraction → dedupe → store, mirroring
+  `lib/opportunities/discover.ts`) populates `university_requirements` automatically now —
+  built within this pass after initially being scoped out, see `known-issues.md`. It covers
+  5 universities per run by default and only university-wide requirements (not
+  program-specific ones, which would need more targeted per-program queries); a university
+  already covered isn't re-scanned for freshness yet.
 - **Peer benchmarking cohorts are real but currently empty.** Pre-launch, there's no
   population to compare against. The honest empty state ("Not enough comparable Oryn
   students yet") is what every viewer sees today; this is correct, not a bug.

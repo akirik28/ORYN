@@ -39,9 +39,12 @@ lib/                     Framework-agnostic business logic. Pure functions are u
   admissions/             Transparent admission-outlook heuristic.
   requirements/           Phase 69 — deterministic per-student evaluation of
                          university_requirements rows (met/likely_met/not_met/unknown/
-                         needs_manual_review). evaluate.ts is pure and unit-tested;
-                         facts.ts/persist.ts are the only Supabase-touching parts
-                         (recompute-on-read, same convention as admissions/persist.ts).
+                         needs_manual_review). evaluate.ts and dedup.ts are pure and
+                         unit-tested; facts.ts/persist.ts recompute-on-read (same
+                         convention as admissions/persist.ts); discover.ts is the
+                         Tavily-backed ingestion job (mirrors opportunities/discover.ts)
+                         that populates university_requirements automatically, bounded to
+                         5 uncovered universities per run.
   benchmarking/           Phase 19 — peer percentile comparison. cohort.ts is the one
                          place in the codebase that deliberately reads across many
                          users' profile_scores at once (via the admin client — RLS is
