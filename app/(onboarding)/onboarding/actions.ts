@@ -14,6 +14,7 @@ import {
 import { AIProviderNotConfiguredError } from "@/lib/ai";
 import { assertWithinAIRateLimit, RateLimitExceededError } from "@/lib/ai/rate-limit";
 import { logEvent } from "@/lib/analytics/log";
+import { toFriendlyDbErrorMessage } from "@/lib/errors/friendly-db-error";
 import { CompleteOnboardingSchema, INTEREST_SUGGESTIONS, type CompleteOnboardingInput } from "@/lib/validation/onboarding";
 
 const KNOWN_INTERESTS = new Set<string>(INTEREST_SUGGESTIONS);
@@ -111,7 +112,8 @@ export async function completeOnboarding(input: CompleteOnboardingInput): Promis
     .eq("id", userId);
 
   if (profileError) {
-    return { error: `Couldn't save your profile: ${profileError.message}` };
+    console.error("[onboarding] failed to save profile", { code: profileError.code, message: profileError.message });
+    return { error: toFriendlyDbErrorMessage("save") };
   }
 
   // Best-effort: the student's core profile + onboarding_completed above is the critical

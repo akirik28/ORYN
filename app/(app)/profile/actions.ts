@@ -9,6 +9,7 @@ import { generateResearchProjects, type ResearchProject } from "@/lib/ai/researc
 import { assertWithinAIRateLimit, RateLimitExceededError } from "@/lib/ai/rate-limit";
 import { AIProviderNotConfiguredError } from "@/lib/ai";
 import { logEvent } from "@/lib/analytics/log";
+import { toFriendlyDbErrorMessage, type CrudAction } from "@/lib/errors/friendly-db-error";
 import {
   ActivitySchema,
   ProjectSchema,
@@ -54,6 +55,13 @@ async function afterWrite(userId: string) {
  * so each table gets three thin named wrapper exports around this instead of one
  * object-shaped export.
  */
+/** Logs the real Postgres error server-side, returns a friendly message for the client —
+ * see lib/errors/friendly-db-error.ts for why this must never be `error.message` directly. */
+function friendlyDbError(action: CrudAction, table: string, error: { message: string; code?: string }): string {
+  console.error(`[profile] ${action} failed`, { table, code: error.code, message: error.message });
+  return toFriendlyDbErrorMessage(action);
+}
+
 async function crudCreate<T extends Record<string, unknown>>(table: string, schema: ZodLike<T>, input: T): Promise<ActionResult> {
   const session = await requireUser();
   const parsed = schema.safeParse(input);
@@ -62,7 +70,7 @@ async function crudCreate<T extends Record<string, unknown>>(table: string, sche
   const supabase = await createClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- table name varies per call site; the Zod schema above is the real type check.
   const { error } = await (supabase.from(table as any) as any).insert({ ...parsed.data, user_id: session.userId! });
-  if (error) return { error: error.message };
+  if (error) return { error: friendlyDbError("save", table, error) };
 
   await logEvent(session.userId!, "profile_item_added", { table });
   await afterWrite(session.userId!);
@@ -77,7 +85,7 @@ async function crudUpdate<T extends Record<string, unknown>>(table: string, sche
   const supabase = await createClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase.from(table as any) as any).update(parsed.data).eq("id", id).eq("user_id", session.userId!);
-  if (error) return { error: error.message };
+  if (error) return { error: friendlyDbError("save", table, error) };
 
   await afterWrite(session.userId!);
   return {};
@@ -87,7 +95,7 @@ async function crudRemove(table: string, id: string): Promise<ActionResult> {
   const session = await requireUser();
   const supabase = await createClient();
   const { error } = await supabase.from(table as never).delete().eq("id", id).eq("user_id", session.userId!);
-  if (error) return { error: error.message };
+  if (error) return { error: friendlyDbError("delete", table, error) };
 
   await afterWrite(session.userId!);
   return {};
