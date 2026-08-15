@@ -1,27 +1,23 @@
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge, type StatusTone } from "@/components/oryn/status-badge";
 import type { OutlookLabel } from "@/types/database";
 
-const OUTLOOK_CONFIG: Record<OutlookLabel, { label: string; className: string }> = {
-  extreme_reach: { label: "Extreme Reach", className: "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-400" },
-  reach: { label: "Reach", className: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400" },
-  competitive: { label: "Competitive", className: "border-primary/30 bg-primary/10 text-primary" },
-  strong: { label: "Strong", className: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" },
-  likely: { label: "Likely", className: "border-emerald-600/40 bg-emerald-600/15 text-emerald-800 dark:text-emerald-300" },
+// Selectivity, not sentiment: "Extreme Reach" isn't an error state and "Likely" isn't a
+// guarantee (AGENTS.md's "never imply admissions certainty"), but the tone ramp still
+// needs to read instantly. error/warning/brand/success track the same low-to-high
+// likelihood ordering StatusBadge's tones already carry elsewhere in the product.
+const OUTLOOK_CONFIG: Record<OutlookLabel, { label: string; tone: StatusTone }> = {
+  extreme_reach: { label: "Extreme Reach", tone: "error" },
+  reach: { label: "Reach", tone: "warning" },
+  competitive: { label: "Competitive", tone: "brand" },
+  strong: { label: "Strong", tone: "success" },
+  likely: { label: "Likely", tone: "success" },
 };
 
 export function OutlookBadge({ outlook }: { outlook: OutlookLabel | null }) {
   if (!outlook) {
-    return (
-      <Badge variant="outline" className="text-muted-foreground">
-        Not yet assessed
-      </Badge>
-    );
+    return <StatusBadge label="Not yet assessed" tone="neutral" />;
   }
 
   const config = OUTLOOK_CONFIG[outlook];
-  return (
-    <Badge variant="outline" className={config.className}>
-      {config.label}
-    </Badge>
-  );
+  return <StatusBadge label={config.label} tone={config.tone} />;
 }

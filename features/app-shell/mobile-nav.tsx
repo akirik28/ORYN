@@ -3,14 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, Search } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ButtonLink } from "@/components/ui/button-link";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { SidebarNav } from "./sidebar-nav";
 import { CareerProfileBadge } from "./career-profile-badge";
 import { UserMenu } from "./user-menu";
 import { NotificationBell } from "./notification-bell";
+import { CommandPalette } from "@/features/search/command-palette";
 import type { Notification } from "@/types/database";
 
 export function MobileNav({
@@ -32,9 +32,7 @@ export function MobileNav({
         <Image src="/brand/logo-full.png" alt="Oryn" width={92} height={31} className="h-7 w-auto" />
       </Link>
       <div className="flex items-center gap-1">
-        <ButtonLink href="/search" variant="ghost" size="icon" aria-label="Search">
-          <Search className="size-4" />
-        </ButtonLink>
+        <CommandPalette />
         <NotificationBell notifications={notifications} />
         <Button variant="ghost" size="icon" onClick={() => setOpen(true)} aria-label="Open menu">
           <Menu className="size-5" />
@@ -51,7 +49,7 @@ export function MobileNav({
             <div className="mb-4">
               <CareerProfileBadge score={score} />
             </div>
-            <SidebarNav onNavigate={() => setOpen(false)} />
+            <SidebarNav onNavigate={() => setOpen(false)} idPrefix="mobile" />
             <div className="mt-4 border-t border-sidebar-border pt-3">
               <UserMenu displayName={displayName} email={email} />
             </div>

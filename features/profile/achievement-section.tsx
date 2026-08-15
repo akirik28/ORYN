@@ -14,6 +14,7 @@ import { DynamicFormFields, type FormValues } from "./dynamic-form-fields";
 import type { FieldConfig } from "./field-config";
 import { refineAchievement } from "@/app/(app)/profile/actions";
 import type { AchievementRefinement } from "@/lib/ai/refine-achievement";
+import { SectionHeader } from "@/components/oryn/section-header";
 
 interface AchievementSectionProps<T extends { id: string }> {
   title: string;
@@ -120,15 +121,15 @@ export function AchievementSection<T extends { id: string }>({
 
   return (
     <section className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-semibold">{title}</h2>
-          {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
-        </div>
-        <Button variant="outline" size="sm" onClick={openCreate}>
-          <Plus className="size-4" /> Add
-        </Button>
-      </div>
+      <SectionHeader
+        title={title}
+        description={description}
+        action={
+          <Button variant="outline" size="sm" onClick={openCreate}>
+            <Plus className="size-4" /> Add
+          </Button>
+        }
+      />
 
       {items.length === 0 ? (
         <p className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">{emptyStateText}</p>
@@ -178,7 +179,7 @@ export function AchievementSection<T extends { id: string }>({
           {supportsRefinement ? (
             <div className="space-y-2 rounded-lg border border-dashed p-3">
               <Button variant="ghost" size="sm" onClick={requestRefinement} disabled={isRefining || !String(values.title ?? "").trim()}>
-                {isRefining ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5 text-primary" />}
+                {isRefining ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5 text-brand-primary" />}
                 Improve this entry with AI
               </Button>
               {refineError ? <p className="text-xs text-destructive">{refineError}</p> : null}

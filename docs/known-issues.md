@@ -60,6 +60,27 @@ memory/documentation discipline.
 - **No professional legal review** of minor-safe/privacy claims. Unchanged — still needed
   before any public launch.
 
+## Added this session (Chat 2, UI/UX pass)
+
+- **Base UI `Progress` hydration mismatch** (`components/ui/progress.tsx`) — renders a
+  different `aria-valuetext` server vs. client (`"%20"` vs `"20%"`), cosmetic (ARIA
+  string only, bar width itself is correct) but a real hydration warning. Strong
+  suspicion: this sandbox's system locale is Turkish (percent-prefix formatting) while
+  the browser client defaults to English — worth confirming and fixing with an explicit
+  locale prop if Base UI exposes one. Not fixed this pass — found during onboarding
+  verification, didn't want to guess at an unfamiliar library's locale API without
+  documentation access. Full note in `chat-2-handoff.md`.
+- **Command palette had no error handling on its search call** — found during this
+  pass's own live verification (an unreachable backend surfaced as an unhandled dev
+  crash instead of a graceful message). Fixed in the same pass (try/catch + a
+  "Search isn't available right now" state) — listed here for visibility, not as an open
+  item.
+- **Most authenticated pages are typecheck/build-verified but not individually opened in
+  a browser** — this sandbox has no Docker/Supabase, same limitation Chat 1 recorded.
+  See `chat-2-handoff.md`'s "What was and wasn't visually verified" section for the
+  exact per-surface breakdown; re-verify visually against a real backend before trusting
+  pixel-level correctness on anything marked not-live-verified there.
+
 ## Added this session (Chat 2, V1 social scope)
 
 - **`0023_social_v1.sql` hasn't run against a live Postgres** — no Docker/Supabase in

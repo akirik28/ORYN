@@ -589,3 +589,16 @@ Wired up exactly like the existing jobs: `POST /api/jobs/discover-requirements`
 (`CRON_SECRET`-protected), an admin panel "Run requirement discovery" button, tracked via
 `external_sync_jobs` like every other job. `npm run test` now at 108/108 (4 more for the
 dedup module); `npm run build` still succeeds with the new route.
+
+## Chat 2 — World-Class UI/UX/Brand/Interaction Design pass
+
+Full design system (brand token ramp, Newsreader/Geist typography split, motion,
+`components/oryn/*` primitives) applied across every major surface — Home dashboard, app
+shell, landing/auth, onboarding, university exploration, profile, advisor, opportunities,
+plan/applications (new acceptance-moment celebration), and a rebuilt command-palette
+global search. Also shipped mid-pass at the founder's direction: a narrow V1 social scope
+(shareable profiles, mutual-consent connections, migration `0023_social_v1.sql`). Full
+detail, design-decision reasoning, and an honest per-surface account of what was and
+wasn't live-verified (this sandbox still has no Docker/Supabase) in
+`docs/chat-2-handoff.md` and `docs/design-system.md`. `npm run lint`/`typecheck`/`test`
+(108/108)/`build` all clean at the end of this pass.

@@ -12,9 +12,10 @@ this was built against — the permanent, tooling-immune copy lives at
 `docs/founder-spec.md`, since `AGENTS.md` also hosts a Next.js-managed block that gets
 regenerated independently of this repo's own content.
 
-Multi-session build log: `PHASE_STATUS.md` (phase-by-phase). For the most recent pass
-specifically, see `docs/chat-1-handoff.md`, `docs/current-state.md`,
-`docs/known-issues.md`, and `docs/product-decisions.md`.
+Multi-session build log: `PHASE_STATUS.md` (phase-by-phase). For the most recent passes
+specifically, see `docs/chat-1-handoff.md` (backend/AI/data), `docs/chat-2-handoff.md`
+(UI/UX/brand — start here for anything visual), `docs/design-system.md`,
+`docs/current-state.md`, `docs/known-issues.md`, and `docs/product-decisions.md`.
 
 ## Architecture
 
@@ -57,6 +58,11 @@ the app behaves when it's missing (never a crash, never fabricated data — a cl
 npm run dev
 ```
 
+Without Supabase configured, every authenticated route shows a clear "not configured"
+notice rather than crashing — you can still see the app's design language at
+`/design-preview` (dev-only; hard-404s in a production build), which mounts real
+presentational components against fixture data. See `docs/design-system.md`.
+
 ## Running tests
 
 ```bash
@@ -64,7 +70,7 @@ npm run test          # vitest, single run
 npm run test:watch    # watch mode
 ```
 
-104 tests, focused on the high-risk deterministic logic the build spec explicitly calls
+108 tests, focused on the high-risk deterministic logic the build spec explicitly calls
 for unit coverage on: career-profile scoring (all 9 dimensions), admission-outlook
 classification, opportunity eligibility/matching, opportunity deduplication, per-program
 requirement evaluation, peer-benchmark percentile computation, and search ranking. Most
@@ -131,8 +137,12 @@ opportunities, and target-university program deadlines into one sorted view —
 programs, opportunities, profile items, goals, and applications (`lib/search/`, `/search`),
 per-program requirement evaluation with two population paths — an admin form and an
 automated discovery job, `POST /api/jobs/discover-requirements` (`lib/requirements/`, on
-each university's page) — and admin-triggerable background jobs for opportunity discovery,
-university sync, deadline scans, and requirement discovery, all visible at `/admin`.
+each university's page) — admin-triggerable background jobs for opportunity discovery,
+university sync, deadline scans, and requirement discovery, all visible at `/admin`, and
+a narrow V1 social layer added mid-Chat-2 at the founder's direction: an opt-in
+shareable profile (`/u/[id]`, off by default) and mutual-consent connections
+(`/connections`) — see `docs/product-decisions.md` for why this is request/accept rather
+than an open follow, given the product's 14-18-year-old primary audience.
 
 None of these are silently faked — where a feature isn't built, the UI says so (a real
 empty state, a "not configured" notice, or the feature simply isn't linked from

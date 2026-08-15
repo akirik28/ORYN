@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { MapPin, Users, DollarSign, GraduationCap } from "lucide-react";
+import { MapPin, Users, DollarSign, GraduationCap, ExternalLink } from "lucide-react";
 import { requireUser, getCurrentProfile } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { refreshAdmissionOutlook } from "@/lib/admissions/persist";
@@ -7,7 +7,9 @@ import { explainOutlook } from "@/lib/admissions/explain";
 import { refreshRequirementEvaluations } from "@/lib/requirements/persist";
 import { REQUIREMENT_CATEGORY_LABELS } from "@/lib/requirements/types";
 import { OutlookBadge } from "@/features/universities/outlook-badge";
-import { SourceBadge } from "@/features/system/source-badge";
+import { SourceBadge } from "@/components/oryn/source-badge";
+import { PageHeader } from "@/components/oryn/page-header";
+import { SectionHeader } from "@/components/oryn/section-header";
 import { SaveUniversityButton } from "@/features/universities/save-university-button";
 import { RequirementEvaluationBadge } from "@/features/universities/requirement-evaluation-badge";
 import { AdminRequirementForm } from "@/features/universities/admin-requirement-form";
@@ -67,16 +69,16 @@ export default async function UniversityDetailPage({ params }: { params: Promise
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">{university.name}</h1>
-          <p className="mt-1 flex items-center gap-1.5 text-muted-foreground">
+      <PageHeader
+        title={university.name}
+        description={
+          <span className="flex items-center gap-1.5">
             <MapPin className="size-4" />
             {[university.city, university.country].filter(Boolean).join(", ")}
-          </p>
-        </div>
-        <SaveUniversityButton universityId={university.id} targetId={targetRes.data?.id ?? null} status={targetRes.data?.status ?? null} />
-      </div>
+          </span>
+        }
+        action={<SaveUniversityButton universityId={university.id} targetId={targetRes.data?.id ?? null} status={targetRes.data?.status ?? null} />}
+      />
 
       {university.description ? <p className="max-w-3xl text-muted-foreground">{university.description}</p> : null}
 
@@ -87,9 +89,9 @@ export default async function UniversityDetailPage({ params }: { params: Promise
       </div>
 
       {targetRes.data ? (
-        <section className="space-y-4 rounded-2xl border bg-card p-6">
+        <section className="space-y-4 rounded-2xl border border-brand-primary-border bg-brand-primary-subtle p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Your outlook</h2>
+            <h2 className="font-heading text-lg font-medium">Your outlook</h2>
             <OutlookBadge outlook={targetRes.data.outlook} />
           </div>
           {targetRes.data.estimate_range_low != null && targetRes.data.estimate_range_high != null ? (
@@ -102,15 +104,15 @@ export default async function UniversityDetailPage({ params }: { params: Promise
               probability.
             </p>
           ) : null}
-          <div className="grid gap-4 sm:grid-cols-3 text-sm">
+          <div className="grid gap-4 text-sm sm:grid-cols-3">
             <div>
-              <p className="font-medium text-emerald-700 dark:text-emerald-400">Strengths</p>
+              <p className="font-medium text-success">Strengths</p>
               <ul className="mt-1 space-y-0.5 text-muted-foreground">
                 {explanation.strengths.length > 0 ? explanation.strengths.map((s) => <li key={s}>+ {s}</li>) : <li>Add more profile data to see this.</li>}
               </ul>
             </div>
             <div>
-              <p className="font-medium text-amber-700 dark:text-amber-400">Gaps</p>
+              <p className="font-medium text-warning">Gaps</p>
               <ul className="mt-1 space-y-0.5 text-muted-foreground">
                 {explanation.gaps.length > 0 ? explanation.gaps.map((g) => <li key={g}>− {g}</li>) : <li>None obvious yet.</li>}
               </ul>
@@ -129,7 +131,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
 
       {programsRes.data && programsRes.data.length > 0 ? (
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">Programs</h2>
+          <SectionHeader title="Programs" />
           <ul className="grid gap-2 sm:grid-cols-2">
             {programsRes.data.map((program) => (
               <li key={program.id} className="rounded-lg border p-3 text-sm">
@@ -143,13 +145,10 @@ export default async function UniversityDetailPage({ params }: { params: Promise
 
       {requirements.length > 0 ? (
         <section className="space-y-4">
-          <div>
-            <h2 className="text-lg font-semibold">Requirement check</h2>
-            <p className="text-sm text-muted-foreground">
-              Oryn&apos;s read of your profile against each stated requirement — not an official admissions decision. See each
-              source before relying on it.
-            </p>
-          </div>
+          <SectionHeader
+            title="Requirement check"
+            description="Oryn's read of your profile against each stated requirement — not an official admissions decision. See each source before relying on it."
+          />
           {universityWideRequirements.length > 0 ? (
             <RequirementGroup title="University-wide" items={universityWideRequirements} evaluationByRequirement={evaluationByRequirement} />
           ) : null}
@@ -162,17 +161,27 @@ export default async function UniversityDetailPage({ params }: { params: Promise
       {profile?.is_admin ? <AdminRequirementForm universityId={university.id} programs={programsRes.data ?? []} /> : null}
 
       {university.website_url ? (
-        <a href={university.website_url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">
-          Visit official website →
+        <a
+          href={university.website_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-sm text-brand-primary hover:underline"
+        >
+          Visit official website <ExternalLink className="size-3.5" />
         </a>
       ) : null}
 
       {sourcesRes.data && sourcesRes.data.length > 0 ? (
         <section className="space-y-2">
-          <h2 className="text-sm font-medium text-muted-foreground">Sources</h2>
-          <div className="flex flex-wrap gap-2">
+          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Sources</p>
+          <div className="flex flex-wrap gap-x-4 gap-y-2">
             {sourcesRes.data.map((source) => (
-              <SourceBadge key={source.id} source={source.source_domain ?? source.source_url} retrievedAt={source.retrieved_at} url={source.source_url} />
+              <SourceBadge
+                key={source.id}
+                sourceName={source.source_domain ?? source.source_url ?? "Unknown source"}
+                checkedAt={source.retrieved_at}
+                url={source.source_url}
+              />
             ))}
           </div>
         </section>
@@ -183,12 +192,14 @@ export default async function UniversityDetailPage({ params }: { params: Promise
 
 function StatCard({ icon: Icon, label, value }: { icon: typeof Users; label: string; value: string }) {
   return (
-    <div className="rounded-xl border p-4">
-      <div className="flex items-center gap-2 text-muted-foreground">
+    <div className="flex items-center gap-3 rounded-xl border p-4">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-primary-soft text-brand-primary-strong">
         <Icon className="size-4" />
-        <span className="text-sm">{label}</span>
+      </span>
+      <div>
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="font-heading text-lg font-medium">{value}</p>
       </div>
-      <p className="mt-1 text-lg font-semibold">{value}</p>
     </div>
   );
 }

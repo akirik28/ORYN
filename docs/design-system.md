@@ -1,0 +1,208 @@
+# Design System
+
+Written during Chat 2 (World-Class UI/UX/Brand/Interaction Design). This is the living
+reference for Oryn's visual language — read this before adding or restyling any surface.
+See `/docs/chat-2-handoff.md` for the full pass summary and what Chat 3 should attack.
+
+## Brand tokens (`app/globals.css`)
+
+The existing shadcn semantic tokens (`--primary`, `--card`, `--border`, `--muted`, ...)
+were kept — they're already wired through every `components/ui/*` primitive, and ripping
+them out would have been high-risk, low-value churn. Layered on top:
+
+```
+--brand-primary          the logo hue (272°), = --primary today (see below)
+--brand-primary-hover    color-mix(--brand-primary, --foreground 12%)
+--brand-primary-strong   color-mix(--brand-primary, --foreground 25%)
+--brand-primary-soft     color-mix(--brand-primary, --background 85%)  — icon-circle fills
+--brand-primary-subtle   color-mix(--brand-primary, --background 94%) — section wash
+--brand-primary-border   color-mix(--brand-primary, --border 60%)     — tinted borders
+
+--success / --warning / --info / --error   status tones (--error aliases --destructive)
+--ease-emphasized, --duration-fast/base/slow   motion tokens (see Motion below)
+```
+
+The `--brand-primary-*` ramp is defined **once**, in `:root`, via `color-mix()` against
+`--foreground`/`--background`/`--border` — it is *not* repeated in `.dark`. Because CSS
+custom properties resolve against the cascade at the point they're used, not where
+they're declared, each of those referenced tokens still picks up `.dark`'s override when
+rendered under it, so the single definition is correct in both themes. Don't add a second
+copy under `.dark` — see the comment above the block in `globals.css` if this needs
+re-deriving.
+
+`--brand-primary` currently equals `--primary` (both point at the same gamut-checked
+OKLCH value). They're kept as separate named tokens deliberately — semantically distinct
+even though numerically identical today — so a future rebrand or hue adjustment only
+needs to change one definition. New/touched components use `brand-primary-*`; pre-existing
+`text-primary`/`bg-primary` call sites were **not** repo-wide find-replaced (real, but
+zero visual difference today — not worth the churn/risk under this pass's time budget).
+Prefer `brand-primary-*` in anything you write or substantially rewrite.
+
+**Status tone → meaning is fixed.** `success` = confirmed positive (met, accepted,
+strong outlook). `warning` = needs attention, not failure (needs_manual_review, reach
+outlook, deadline ≤7 days). `error` = confirmed negative (not_met, rejected, extreme
+reach). `info` = a distinct-but-not-bad state (likely_met, submitted). `brand` = neutral
+but "this is Oryn's own" (competitive outlook, exceptional opportunity match, active
+application). `neutral` = no signal yet (unknown, not started). `components/oryn/status-badge.tsx`
+is the *only* place this mapping should be decided — a new status badge should reuse it,
+not invent its own color logic. See `features/universities/requirement-evaluation-badge.tsx`
+and `app/(app)/applications/page.tsx`'s `APPLICATION_STATUS_TONE` for worked examples.
+
+## Typography
+
+Two type families, deliberately not one:
+
+- **`--font-sans` (Geist)** — everything functional: nav, buttons, form labels, table/list
+  content, badges. Unchanged from Chat 1.
+- **`--font-heading` (Newsreader, serif)** — wherever Oryn is making a statement *to* the
+  student rather than presenting UI chrome: page `<h1>`s (via `PageHeader`), the score
+  ring's number, dashboard/hero greetings, `CardTitle`, `DialogTitle`, empty-state
+  headlines, the landing hero. **`SectionHeader`** (in-page section dividers — "Your
+  focus this week", "Requirement check") stays sans-serif on purpose: it's structural,
+  not a statement, and a page with ten serif sub-headings stops feeling premium and
+  starts feeling like a wedding invitation. When in doubt, ask: *is this Oryn talking to
+  the student, or is this a UI label?*
+
+  `CardTitle` already had a `font-heading` class before this pass (aliased to sans); it
+  now inherits the real serif. That's one token change quietly re-skinning every card
+  title in the product — verified this reads well at card-title sizes (14–18px) rather
+  than only at hero scale before relying on it everywhere.
+
+  **Sandbox caveat**: `next/font/google` fetches Newsreader from Google Fonts at
+  dev-server boot. In this sandbox that fetch is intermittently unreachable from the
+  `next dev` process specifically (not from the shell — `curl` to fonts.googleapis.com
+  succeeds every time; see `/docs/known-issues.md`), which throws a build-time "module
+  not found" until the dev server restarts clean (`rm -rf .next`, restart). Every
+  screenshot in this handoff was taken after a clean restart with the font loading
+  correctly. A real deployment (Vercel etc.) has stable outbound network access and
+  self-hosts the fetched font at build time same as Geist already does — this is a
+  sandbox-only flakiness, not a code issue, but worth knowing if Chat 3 sees a fallback
+  system-serif in a screenshot and wonders why.
+
+## Motion (`lib/motion.ts`, `app/layout.tsx`)
+
+- `MotionConfig reducedMotion="user"` wraps the entire app in the root layout — every
+  `motion.*` element anywhere in the product automatically honors
+  `prefers-reduced-motion` with zero per-component opt-in. Don't reach for a manual
+  `useReducedMotion()` check unless you're doing something MotionConfig can't cover
+  (e.g. a non-Motion CSS animation).
+- `transition("fast" | "base" | "slow")` from `lib/motion.ts` mirrors the CSS
+  `--duration-*` tokens (150/250/400ms) with the same `--ease-emphasized` curve
+  (`cubic-bezier(0.2,0,0,1)`, decelerate). Use it instead of hand-rolling a
+  `{duration, ease}` object so timing stays consistent product-wide.
+- `staggerFadeUp` — the entrance pattern for a list of cards (weekly actions today).
+  Capped at 6 items' worth of stagger delay so a long list doesn't feel sluggish to
+  appear.
+- **Don't animate a value's *initial* mount state unless the entrance itself is the
+  point.** `ScoreRing` originally animated the ring drawing in from empty on every
+  render, including first paint — on a slow dev-mode hydration this reads as a stuck
+  empty ring, not a loading state (the product spec explicitly bans fake-looking
+  progress indicators). Fixed with `initial={false}` on the `motion.circle`: it now
+  renders at the correct value immediately on mount, and *only* animates smoothly if the
+  score changes on a later re-render (e.g. after a save elsewhere causes fresh data to
+  flow in). Apply the same judgment elsewhere: entrance animation for lists/cards
+  appearing is good polish; entrance animation for a value that's simply "what the page
+  loaded with" usually isn't.
+- The acceptance-moment celebration (`features/applications/status-control.tsx`) is the
+  one deliberately more elaborate animation in the product — a restrained, non-confetti-
+  library "burst" of a handful of dots plus a scale-in icon. Spec-mandated ("no childish
+  fireworks... a meaningful, memorable moment") — don't add a second one of these
+  elsewhere without the same restraint applied.
+
+## Shape / radius
+
+No change to the underlying `--radius` scale (`0.75rem` base) — but it's now used with
+intent rather than uniformly:
+
+- `rounded-lg`/`rounded-xl` — ordinary data containers: list rows, plain cards, form
+  dialogs. The default.
+- `rounded-2xl` — a card that represents a discrete "thing" with its own identity: an
+  `InsightCard`, a hero stat panel, the acceptance-moment card, a dialog-like surface.
+- `rounded-3xl` — the single dominant hero element on a page: the dashboard score card,
+  the profile page's score section. There should be at most one `rounded-3xl` element per
+  screen — it's a "this is the point of this page" signal, not a size utility.
+
+## Core primitives (`components/oryn/*`)
+
+Built this pass; every page redesign in the product now composes from these instead of
+one-off `<div className="rounded-xl border p-4">` copies:
+
+- **`PageHeader`** — page-level title (serif) + description + optional action slot.
+- **`SectionHeader`** — in-page section divider (sans, dense).
+- **`InsightCard`** — the "Oryn is telling you something" card. Variants `gap` / `avoid`
+  / `strength` / `neutral`. `avoid` is deliberately styled *identically calm* to `gap` —
+  a muted icon chip, not red/amber — because a deprioritization is a strategic call, not
+  a warning (see the master spec's Phase 39 and the dashboard's "One thing not to do").
+- **`ActionCard`** — a recommended action: impact meter (4-dot, not a 4-color badge —
+  magnitude isn't a status), optional time estimate, optional leading slot (used for the
+  numbered-priority treatment on the weekly plan) and trailing `meta` slot (a
+  `DeadlineBadge`, etc).
+- **`StatusBadge`** — see the tone table above. Every colored pill in the product should
+  render through this.
+- **`ConfidenceIndicator`** — a lit/unlit 3-bar meter, not a colored word — Phase 68's
+  "Oryn should know when it doesn't know enough" made visible without reading as an
+  error state.
+- **`DeadlineBadge`** — single source of truth for "how urgent is this deadline"
+  (≤3 days `error`, ≤7 `warning`, ≤14 `brand`, else `neutral`) — was previously
+  duplicated with slightly different thresholds across the dashboard, opportunity cards,
+  and applications.
+- **`SourceBadge`** — Phase 36. Source name, "checked N ago", optional
+  `ConfidenceIndicator`, optional "View source" link.
+- **`EmptyState`** / **`ErrorState`** — every meaningful empty/degraded state in the
+  product should use these rather than a bespoke `<p className="text-muted-foreground">`.
+  `EmptyState` forces an icon + title + description shape, which makes the lazy "No
+  records found" harder to reach for than the helpful version.
+
+## Dev-only design preview harness
+
+This sandbox has neither Docker nor a live Supabase project, so every authenticated route
+(everything under `app/(app)/`, `app/(onboarding)/`) 404s to `NotConfiguredNotice` and
+can't be rendered or screenshotted normally during development. `app/(dev-preview)/design-preview/`
+mounts the same production presentational components directly with fixture data
+(`lib/dev/fixtures.ts`) instead — no server, no auth, no second copy of any markup to
+drift out of sync.
+
+- Hard-gated: `if (process.env.NODE_ENV === "production") notFound();` at the top of
+  every page in the group. Verified via `npm run build` — the route statically
+  prerenders to a 404 in a production build (Next can prerender it because the check has
+  no runtime dependency), so it cannot exist in a deployed build regardless of env vars.
+- `features/dashboard/dashboard-view.tsx` is the pattern to repeat: the real
+  `app/(app)/dashboard/page.tsx` does data-fetching only and renders `<DashboardView
+  {...realData} />`; `design-preview/page.tsx` renders the same component with
+  `lib/dev/fixtures.ts` data. If you add a new data-heavy page, consider the same
+  page-fetches / `*-view.tsx`-renders split — it's what made this harness possible
+  without duplicating JSX, and it's just better separation of concerns regardless.
+- `lib/dev/fixtures.ts`'s numbers intentionally match the master spec's own worked
+  "Key User Experience" example (Ada, 77, Research 42→ +8, Bocconi/LSE/Erasmus outlooks,
+  the Economics Challenge) — building the fixtures around the spec's own target mockup
+  doubles as a running check that the implementation matches what was actually asked for.
+- Keep this. It's genuinely useful beyond this pass — the next person who needs to touch
+  visual design here (Chat 3, or beyond) has the exact same "no live backend" problem
+  in this sandbox, and a from-scratch equivalent would cost real time to rebuild.
+
+## Responsive principles
+
+- Mobile isn't a shrunk desktop: the university explorer's world map is desktop-only
+  (`useIsDesktop`, `useSyncExternalStore`-based, SSR-safe) and never mounts below `md`;
+  `RegionGridExplorer`'s real `<Link>` pill grid is *both* the mobile experience and the
+  keyboard/screen-reader-accessible alternative to the (aria-hidden, mouse-only) map —
+  this was Chat 1's architecture already and it's correct; don't collapse it into "just
+  hide the map on mobile and show nothing."
+- `MobileNav` (a `Sheet`) and the desktop `<aside>` render two separate `SidebarNav`
+  instances; each gets its own `layoutId` prefix (`idPrefix="desktop"` / `"mobile"`) for
+  the active-item sliding pill so Motion never tries to animate a shared `layoutId`
+  between two simultaneously-mounted trees (the desktop sidebar is `hidden` via CSS, not
+  unmounted, while the mobile sheet is open).
+- Verified at 375px (mobile) and native desktop width via the preview harness: landing
+  page, university region-pill fallback, acceptance moment, dashboard hero. Not
+  individually re-verified at 375px: every remaining authenticated page — they reuse the
+  same primitives (`PageHeader`, `EmptyState`, list rows) already confirmed responsive
+  elsewhere, but see `/docs/chat-2-handoff.md` for the honest scope of what was and
+  wasn't pixel-checked this pass.
+
+## What Chat 2 deliberately did not touch
+
+Scoring semantics, admissions/outlook policy, evidence verification vocabulary, RLS,
+requirements evaluation logic, AI recommendation semantics, provider architecture — all
+untouched, per this pass's own operating brief. Restyled the badges/cards that *display*
+these, never the logic that computes them.

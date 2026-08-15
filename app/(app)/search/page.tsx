@@ -5,6 +5,8 @@ import { globalSearch } from "@/lib/search";
 import { SEARCH_RESULT_TYPE_LABELS } from "@/lib/search/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/oryn/page-header";
+import { EmptyState } from "@/components/oryn/empty-state";
 
 export const metadata = { title: "Search" };
 
@@ -16,13 +18,13 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
 
   return (
     <div className="max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Search</h1>
-        <p className="mt-1 text-muted-foreground">Universities, programs, opportunities, and your own profile — all in one place.</p>
-      </div>
+      <PageHeader
+        title="Search"
+        description="Universities, programs, opportunities, and your own profile — all in one place."
+      />
 
       <form action="/search" className="flex gap-2">
-        <Input name="q" defaultValue={query} placeholder="Search Oryn..." autoFocus />
+        <Input name="q" defaultValue={query} placeholder="Search Oryn... (or press ⌘K anywhere)" autoFocus />
         <Button type="submit">Search</Button>
       </form>
 
@@ -44,10 +46,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
             ))}
           </ul>
         ) : (
-          <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed py-10 text-center text-sm text-muted-foreground">
-            <SearchIcon className="size-5" />
-            <p>No results for &quot;{query}&quot;.</p>
-          </div>
+          <EmptyState icon={SearchIcon} title="No results" description={`Nothing matched "${query}".`} />
         )
       ) : null}
     </div>

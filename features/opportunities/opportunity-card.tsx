@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { differenceInCalendarDays } from "date-fns";
 import { ExternalLink, Bookmark, X, Sparkles } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,6 +11,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { StatusBadge, type StatusTone } from "@/components/oryn/status-badge";
+import { DeadlineBadge } from "@/components/oryn/deadline-badge";
 import { setOpportunityStatus } from "@/app/(app)/opportunities/actions";
 import type { Opportunity, SavedOpportunityStatus } from "@/types/database";
 
@@ -25,11 +26,11 @@ const NOT_INTERESTED_REASONS = [
   { value: "other", label: "Other" },
 ];
 
-function tierFor(score: number): { label: string; className: string } {
-  if (score >= 80) return { label: "Exceptional match", className: "border-primary bg-primary/10" };
-  if (score >= 60) return { label: "Strong match", className: "border-primary/40 bg-primary/5" };
-  if (score >= 40) return { label: "Worth a look", className: "border-border" };
-  return { label: "Low priority", className: "border-border opacity-70" };
+function tierFor(score: number): { label: string; tone: StatusTone; cardClassName: string } {
+  if (score >= 80) return { label: "Exceptional match", tone: "brand", cardClassName: "border-brand-primary bg-brand-primary-subtle" };
+  if (score >= 60) return { label: "Strong match", tone: "brand", cardClassName: "border-brand-primary-border" };
+  if (score >= 40) return { label: "Worth a look", tone: "neutral", cardClassName: "border-border" };
+  return { label: "Low priority", tone: "neutral", cardClassName: "border-border opacity-70" };
 }
 
 export function OpportunityCard({
@@ -61,17 +62,13 @@ export function OpportunityCard({
   if (status === "not_interested") return null;
 
   return (
-    <div className={cn("space-y-3 rounded-xl border p-5 transition-colors", tier.className)}>
+    <div className={cn("space-y-3 rounded-xl border p-5 transition-colors duration-(--duration-fast)", tier.cardClassName)}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="mb-1 flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className="border-primary/30 text-primary">
-              <Sparkles className="size-3" /> {tier.label}
-            </Badge>
-            {daysUntilDeadline !== null && daysUntilDeadline >= 0 && daysUntilDeadline <= 14 ? (
-              <Badge variant="outline" className="border-amber-500/40 text-amber-700 dark:text-amber-400">
-                {daysUntilDeadline === 0 ? "Due today" : `${daysUntilDeadline} day${daysUntilDeadline === 1 ? "" : "s"} left`}
-              </Badge>
+            <StatusBadge label={tier.label} tone={tier.tone} icon={Sparkles} />
+            {opportunity.deadline && daysUntilDeadline !== null && daysUntilDeadline >= 0 && daysUntilDeadline <= 14 ? (
+              <DeadlineBadge date={opportunity.deadline} />
             ) : null}
           </div>
           <h3 className="font-semibold leading-snug">{opportunity.title}</h3>

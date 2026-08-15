@@ -27,7 +27,7 @@ export function ScoreRing({ score, trend }: { score: number | null; trend?: numb
             strokeWidth={STROKE}
             strokeLinecap="round"
             strokeDasharray={CIRCUMFERENCE}
-            initial={{ strokeDashoffset: CIRCUMFERENCE }}
+            initial={false}
             animate={{ strokeDashoffset: offset }}
             transition={transition("slow")}
           />

@@ -30,8 +30,10 @@ export function RegionGridExplorer({
       <Link
         href="/universities"
         className={cn(
-          "rounded-full border px-4 py-2 text-sm font-medium transition-colors",
-          !selected ? "border-primary bg-primary text-primary-foreground" : "hover:bg-accent"
+          "rounded-full border px-4 py-2 text-sm font-medium transition-colors duration-(--duration-fast)",
+          !selected
+            ? "border-brand-primary bg-brand-primary text-primary-foreground"
+            : "border-border hover:border-brand-primary-border hover:bg-brand-primary-subtle"
         )}
       >
         All regions
@@ -41,8 +43,10 @@ export function RegionGridExplorer({
           key={country}
           href={`/universities?country=${encodeURIComponent(country)}`}
           className={cn(
-            "rounded-full border px-4 py-2 text-sm font-medium transition-colors",
-            selected === country ? "border-primary bg-primary text-primary-foreground" : "hover:bg-accent"
+            "rounded-full border px-4 py-2 text-sm font-medium transition-colors duration-(--duration-fast)",
+            selected === country
+              ? "border-brand-primary bg-brand-primary text-primary-foreground"
+              : "border-border hover:border-brand-primary-border hover:bg-brand-primary-subtle"
           )}
         >
           {country} <span className="opacity-60">· {count}</span>

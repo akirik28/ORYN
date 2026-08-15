@@ -1,5 +1,8 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { getCurrentProfile, requireUser } from "@/lib/security/dal";
+import { PageHeader } from "@/components/oryn/page-header";
+import { SectionHeader } from "@/components/oryn/section-header";
 import { createClient } from "@/lib/supabase/server";
 import { ScoreRadar } from "@/features/profile/score-radar";
 import { DimensionBars } from "@/features/profile/dimension-bars";
@@ -97,25 +100,22 @@ export default async function ProfilePage() {
 
   return (
     <div className="space-y-10">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Your Career Profile</h1>
-          <p className="mt-1 text-muted-foreground">
-            A living picture of your academics, leadership, research, and execution — this is Oryn&apos;s
-            development assessment, not an admissions score.
-          </p>
-        </div>
-        <div className="flex flex-col items-end gap-1 text-sm">
-          <Link href="/profile/portfolio" className="text-primary hover:underline">
-            View portfolio →
-          </Link>
-          <Link href="/profile/history" className="text-primary hover:underline">
-            View progress →
-          </Link>
-        </div>
-      </div>
+      <PageHeader
+        title="Your Career Profile"
+        description="A living picture of your academics, leadership, research, and execution — this is Oryn's development assessment, not an admissions score."
+        action={
+          <div className="flex flex-col items-end gap-1 text-sm">
+            <Link href="/profile/portfolio" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
+              View portfolio <ArrowRight className="size-3.5" />
+            </Link>
+            <Link href="/profile/history" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
+              View progress <ArrowRight className="size-3.5" />
+            </Link>
+          </div>
+        }
+      />
 
-      <section className="grid gap-8 rounded-2xl border bg-card p-6 md:grid-cols-2 md:p-8">
+      <section className="grid gap-8 rounded-3xl border border-brand-primary-border bg-gradient-to-br from-brand-primary-subtle via-card to-card p-6 md:grid-cols-2 md:p-8">
         <ScoreRadar scores={radarScores} />
         <div className="flex flex-col justify-center">
           <DimensionBars scores={scoreMap} />
@@ -127,7 +127,7 @@ export default async function ProfilePage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Peer comparison</h2>
+        <SectionHeader title="Peer comparison" />
         <PeerBenchmark summary={benchmarkSummary} />
       </section>
 

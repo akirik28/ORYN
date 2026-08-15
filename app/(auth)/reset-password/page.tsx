@@ -10,7 +10,7 @@ export default async function ResetPasswordPage() {
   if (!session.isAuth) {
     return (
       <div className="space-y-4 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">Link expired</h1>
+        <h1 className="font-heading text-2xl font-medium tracking-tight">Link expired</h1>
         <p className="text-sm text-muted-foreground">
           This password reset link is invalid or has expired.
         </p>
@@ -24,7 +24,7 @@ export default async function ResetPasswordPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-1 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">Set a new password</h1>
+        <h1 className="font-heading text-2xl font-medium tracking-tight">Set a new password</h1>
       </div>
       <ResetPasswordForm />
     </div>

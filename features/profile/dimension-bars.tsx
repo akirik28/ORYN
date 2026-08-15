@@ -23,7 +23,7 @@ export function DimensionBars({ scores }: { scores: Partial<Record<ProfileDimens
             </div>
             <div className="h-1.5 overflow-hidden rounded-full bg-muted">
               <div
-                className="h-full rounded-full bg-primary transition-[width] duration-700 ease-out"
+                className="h-full rounded-full bg-brand-primary transition-[width] duration-700 ease-out"
                 style={{ width: `${score}%` }}
               />
             </div>

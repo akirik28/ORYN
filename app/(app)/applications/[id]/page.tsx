@@ -3,6 +3,8 @@ import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { computeReadiness } from "@/lib/applications/readiness";
 import { RequirementChecklist } from "@/features/applications/requirement-checklist";
+import { ApplicationStatusControl } from "@/features/applications/status-control";
+import { PageHeader } from "@/components/oryn/page-header";
 import { Progress } from "@/components/ui/progress";
 
 export default async function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -24,16 +26,18 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
 
   const requirements = requirementsRes.data ?? [];
   const readiness = computeReadiness(requirements);
+  const universityName = university?.name ?? "Application";
+  const applicationTypeLabel = application.application_type.replace(/_/g, " ");
+  const applicationTypeCapitalized = applicationTypeLabel.charAt(0).toUpperCase() + applicationTypeLabel.slice(1);
 
   return (
     <div className="max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{university?.name ?? "Application"}</h1>
-        <p className="mt-1 text-muted-foreground capitalize">
-          {application.application_type.replace(/_/g, " ")}
-          {application.deadline ? ` · Due ${application.deadline}` : ""}
-        </p>
-      </div>
+      <PageHeader
+        title={universityName}
+        description={`${applicationTypeCapitalized}${application.deadline ? ` · Due ${application.deadline}` : ""}`}
+      />
+
+      <ApplicationStatusControl applicationId={application.id} initialStatus={application.status} universityName={universityName} />
 
       <div className="space-y-1.5">
         <div className="flex items-center justify-between text-sm">

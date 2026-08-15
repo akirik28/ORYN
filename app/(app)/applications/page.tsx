@@ -1,12 +1,26 @@
 import Link from "next/link";
-import { differenceInCalendarDays } from "date-fns";
+import { ClipboardCheck } from "lucide-react";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { computeReadiness } from "@/lib/applications/readiness";
 import { NewApplicationDialog } from "@/features/applications/new-application-dialog";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import type { RequirementStatus } from "@/types/database";
+import { PageHeader } from "@/components/oryn/page-header";
+import { EmptyState } from "@/components/oryn/empty-state";
+import { StatusBadge, type StatusTone } from "@/components/oryn/status-badge";
+import { DeadlineBadge } from "@/components/oryn/deadline-badge";
+import type { ApplicationStatus, RequirementStatus } from "@/types/database";
+
+const APPLICATION_STATUS_TONE: Record<ApplicationStatus, StatusTone> = {
+  not_started: "neutral",
+  in_progress: "brand",
+  submitted: "info",
+  under_review: "warning",
+  accepted: "success",
+  waitlisted: "warning",
+  rejected: "error",
+  withdrawn: "neutral",
+};
 
 export const metadata = { title: "Applications" };
 
@@ -46,25 +60,22 @@ export default async function ApplicationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Applications</h1>
-          <p className="mt-1 text-muted-foreground">Track requirements and deadlines for each application.</p>
-        </div>
-        <NewApplicationDialog availableTargets={availableTargets} />
-      </div>
+      <PageHeader
+        title="Applications"
+        description="Track requirements and deadlines for each application."
+        action={<NewApplicationDialog availableTargets={availableTargets} />}
+      />
 
       {applications.length > 0 ? (
         <ul className="space-y-3">
           {applications.map((application) => {
             const readiness = computeReadiness(requirementsByApplication.get(application.id) ?? []);
-            const daysUntil = application.deadline ? differenceInCalendarDays(new Date(application.deadline), new Date()) : null;
 
             return (
               <li key={application.id}>
                 <Link
                   href={`/applications/${application.id}`}
-                  className="block space-y-3 rounded-xl border p-5 transition-colors hover:border-primary/40"
+                  className="block space-y-3 rounded-xl border p-5 transition-colors duration-(--duration-fast) hover:border-brand-primary-border"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
@@ -72,14 +83,12 @@ export default async function ApplicationsPage() {
                       <p className="text-sm text-muted-foreground capitalize">{application.application_type.replace(/_/g, " ")}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      {daysUntil !== null ? (
-                        <Badge variant="outline" className={daysUntil <= 14 && daysUntil >= 0 ? "border-amber-500/40 text-amber-700 dark:text-amber-400" : ""}>
-                          {daysUntil < 0 ? "Past deadline" : daysUntil === 0 ? "Due today" : `${daysUntil} days left`}
-                        </Badge>
-                      ) : null}
-                      <Badge variant="outline" className="capitalize">
-                        {application.status.replace(/_/g, " ")}
-                      </Badge>
+                      {application.deadline ? <DeadlineBadge date={application.deadline} /> : null}
+                      <StatusBadge
+                        label={application.status.replace(/_/g, " ")}
+                        tone={APPLICATION_STATUS_TONE[application.status]}
+                        className="capitalize"
+                      />
                     </div>
                   </div>
                   <div className="space-y-1">
@@ -95,11 +104,15 @@ export default async function ApplicationsPage() {
           })}
         </ul>
       ) : (
-        <div className="rounded-xl border border-dashed p-12 text-center text-sm text-muted-foreground">
-          {targets.length === 0
-            ? "Save a university you're targeting to start an application."
-            : "No applications started yet."}
-        </div>
+        <EmptyState
+          icon={ClipboardCheck}
+          title={targets.length === 0 ? "No applications yet" : "No applications started yet"}
+          description={
+            targets.length === 0
+              ? "Save a university you're targeting to start an application."
+              : "Start one from a target university to begin tracking requirements and deadlines."
+          }
+        />
       )}
     </div>
   );

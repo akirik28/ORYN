@@ -23,7 +23,7 @@ export function UserMenu({ displayName, email }: { displayName: string; email: s
     <DropdownMenu>
       <DropdownMenuTrigger className="flex w-full items-center gap-2.5 rounded-lg p-2 text-left transition-colors hover:bg-sidebar-accent">
         <Avatar>
-          <AvatarFallback>{initialsFor(displayName)}</AvatarFallback>
+          <AvatarFallback className="bg-brand-primary-soft text-brand-primary-strong">{initialsFor(displayName)}</AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-sidebar-foreground">{displayName}</p>

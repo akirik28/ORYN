@@ -79,7 +79,7 @@ export function AdvisorChat({
       <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-4 md:p-6">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
-            <span className="flex size-12 items-center justify-center rounded-full bg-accent text-accent-foreground">
+            <span className="flex size-12 items-center justify-center rounded-full bg-brand-primary-soft text-brand-primary-strong">
               <Sparkles className="size-6" />
             </span>
             <p className="max-w-sm text-sm text-muted-foreground">
@@ -90,7 +90,7 @@ export function AdvisorChat({
                 <button
                   key={prompt}
                   onClick={() => submit(prompt)}
-                  className="rounded-full border px-3.5 py-1.5 text-sm transition-colors hover:border-primary hover:bg-accent"
+                  className="rounded-full border px-3.5 py-1.5 text-sm transition-colors duration-(--duration-fast) hover:border-brand-primary-border hover:bg-brand-primary-subtle"
                 >
                   {prompt}
                 </button>
@@ -103,7 +103,7 @@ export function AdvisorChat({
               <span
                 className={cn(
                   "flex size-7 shrink-0 items-center justify-center rounded-full",
-                  message.role === "assistant" ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground"
+                  message.role === "assistant" ? "bg-brand-primary-soft text-brand-primary-strong" : "bg-muted text-muted-foreground"
                 )}
               >
                 {message.role === "assistant" ? <Sparkles className="size-4" /> : <User className="size-4" />}
@@ -111,7 +111,7 @@ export function AdvisorChat({
               <div
                 className={cn(
                   "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
-                  message.role === "assistant" ? "bg-muted" : "bg-primary text-primary-foreground"
+                  message.role === "assistant" ? "bg-muted" : "bg-brand-primary text-primary-foreground"
                 )}
               >
                 {message.pending ? (

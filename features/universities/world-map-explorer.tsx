@@ -38,10 +38,10 @@ export function WorldMapExplorer({ countryCounts }: { countryCounts: CountryCoun
   }
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border bg-[oklch(0.13_0.02_264)]">
+    <div className="relative overflow-hidden rounded-2xl border bg-[oklch(0.13_0.02_272)]">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_30%,oklch(0.3_0.08_264/0.5),transparent_60%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_30%,oklch(0.3_0.08_272/0.5),transparent_60%)]"
       />
       <ComposableMap
         projection="geoNaturalEarth1"
@@ -62,13 +62,13 @@ export function WorldMapExplorer({ countryCounts }: { countryCounts: CountryCoun
                   tabIndex={-1}
                   style={{
                     default: {
-                      fill: isSupported ? "oklch(0.32 0.06 264)" : "oklch(0.22 0.01 264)",
-                      stroke: "oklch(0.13 0.02 264)",
+                      fill: isSupported ? "oklch(0.32 0.06 272)" : "oklch(0.22 0.01 272)",
+                      stroke: "oklch(0.13 0.02 272)",
                       strokeWidth: 0.5,
                       outline: "none",
                     },
-                    hover: { fill: isSupported ? "oklch(0.4 0.08 264)" : "oklch(0.26 0.01 264)", outline: "none" },
-                    pressed: { fill: "oklch(0.4 0.08 264)", outline: "none" },
+                    hover: { fill: isSupported ? "oklch(0.4 0.08 272)" : "oklch(0.26 0.01 272)", outline: "none" },
+                    pressed: { fill: "oklch(0.4 0.08 272)", outline: "none" },
                   }}
                 />
               );
@@ -92,7 +92,7 @@ export function WorldMapExplorer({ countryCounts }: { countryCounts: CountryCoun
               <circle
                 r={radius}
                 className={isSelected ? "fill-primary" : "fill-primary/70 hover:fill-primary"}
-                stroke="oklch(0.13 0.02 264)"
+                stroke="oklch(0.13 0.02 272)"
                 strokeWidth={1}
               />
               <text

@@ -37,9 +37,9 @@ export function ScoreRadar({ scores }: { scores: Partial<Record<ProfileDimension
         return <line key={dimension} x1={CENTER} y1={CENTER} x2={edge.x} y2={edge.y} stroke="var(--color-border)" strokeWidth={1} />;
       })}
 
-      <polygon points={dataPath} fill="var(--color-primary)" fillOpacity={0.18} stroke="var(--color-primary)" strokeWidth={2} strokeLinejoin="round" />
+      <polygon points={dataPath} fill="var(--color-brand-primary)" fillOpacity={0.18} stroke="var(--color-brand-primary)" strokeWidth={2} strokeLinejoin="round" />
       {dataPoints.map((p, i) => (
-        <circle key={DIMENSION_ORDER[i]} cx={p.x} cy={p.y} r={3} fill="var(--color-primary)" />
+        <circle key={DIMENSION_ORDER[i]} cx={p.x} cy={p.y} r={3} fill="var(--color-brand-primary)" />
       ))}
 
       {DIMENSION_ORDER.map((dimension, i) => {

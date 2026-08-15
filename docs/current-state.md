@@ -1,8 +1,20 @@
 # Current State
 
-Snapshot after Chat 1 (Functional Completion / Backend / AI / Data). Chat 2 (UI/UX) should
-read this file, `chat-1-handoff.md`, and the other root docs rather than any prior
-conversation transcript — the repository is the source of truth.
+Snapshot after Chat 1 (Functional Completion / Backend / AI / Data) and Chat 2
+(World-Class UI/UX/Brand/Interaction Design). Chat 3 (Adversarial QA) should read this
+file, `chat-2-handoff.md`, `design-system.md`, `known-issues.md`, and the other root
+docs rather than any prior conversation transcript — the repository is the source of
+truth.
+
+## Update — Chat 2 UI/UX pass complete (2026-08-15)
+
+Full design system (brand tokens, Newsreader/Geist typography split, motion, `components/oryn/*`
+primitives) applied across every major surface — Home dashboard, app shell, landing/auth,
+onboarding, university exploration, profile, advisor, opportunities, plan/applications
+(incl. a new acceptance-moment celebration), and a rebuilt command-palette global search.
+Full detail, including exactly what was and wasn't live-verified in this sandbox's
+no-Supabase environment, in `chat-2-handoff.md`. Also shipped mid-pass: the founder's V1
+social/network scope update (see `product-decisions.md`).
 
 ## Update — V1 social/network scope (Chat 2 pass, 2026-08-15)
 

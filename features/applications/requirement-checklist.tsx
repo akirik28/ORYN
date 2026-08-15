@@ -48,7 +48,8 @@ export function RequirementChecklist({ requirements }: { requirements: Applicati
                 })
               }
               className={cn(
-                requirement.status === "completed" && "text-emerald-600 dark:text-emerald-400",
+                requirement.status === "completed" && "text-success",
+                requirement.status === "in_progress" && "text-brand-primary",
                 requirement.status === "not_applicable" && "text-muted-foreground line-through"
               )}
             >

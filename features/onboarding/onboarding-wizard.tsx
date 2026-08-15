@@ -31,8 +31,10 @@ function TogglePill({ selected, onClick, children }: { selected: boolean; onClic
       type="button"
       onClick={onClick}
       className={cn(
-        "rounded-full border px-4 py-2 text-sm font-medium transition-colors",
-        selected ? "border-primary bg-primary text-primary-foreground" : "hover:bg-accent"
+        "rounded-full border px-4 py-2 text-sm font-medium transition-colors duration-(--duration-fast)",
+        selected
+          ? "border-brand-primary bg-brand-primary text-primary-foreground"
+          : "border-border hover:border-brand-primary-border hover:bg-brand-primary-subtle"
       )}
     >
       {children}
@@ -50,7 +52,7 @@ function StepShell({ title, subtitle, children }: { title: string; subtitle?: st
       className="space-y-6"
     >
       <div className="space-y-1.5">
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+        <h1 className="font-heading text-2xl font-medium tracking-tight">{title}</h1>
         {subtitle ? <p className="text-muted-foreground">{subtitle}</p> : null}
       </div>
       {children}

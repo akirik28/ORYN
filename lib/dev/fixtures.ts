@@ -4,6 +4,8 @@
 // /docs/design-system.md for why this exists: this sandbox has no Supabase/Docker, so
 // authenticated pages can't be rendered against real data during design work.
 import type { ImpactLevel, OutlookLabel, Opportunity, ProfileDimension, University, WeeklyAction } from "@/types/database";
+import type { TargetUniversityWithDetails } from "@/lib/universities/queries";
+import type { WeeklyPlanWithActions } from "@/lib/plan/persist";
 
 export const FIXTURE_STUDENT = {
   displayName: "Ada",
@@ -115,10 +117,70 @@ export const FIXTURE_WEEKLY_ACTIONS: WeeklyAction[] = [
   },
 ];
 
-export const FIXTURE_TARGET_UNIVERSITIES: { id: string; name: string; outlook: OutlookLabel }[] = [
-  { id: "uni-1", name: "Bocconi University", outlook: "competitive" },
-  { id: "uni-2", name: "LSE — Economics", outlook: "reach" },
-  { id: "uni-3", name: "Erasmus University Rotterdam", outlook: "strong" },
+export const FIXTURE_WEEKLY_PLAN: WeeklyPlanWithActions = {
+  plan: {
+    id: "plan-1",
+    user_id: "fixture-user",
+    week_start_date: new Date().toISOString().slice(0, 10),
+    summary:
+      "Your research project is close to done. Finishing it and applying to one strong competition would meaningfully move your profile this month.",
+    status: "active",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  actions: FIXTURE_WEEKLY_ACTIONS,
+};
+
+function stubUniversity(id: string, name: string, country: string, city: string): University {
+  return {
+    id,
+    name,
+    country,
+    city,
+    institution_type: null,
+    website_url: null,
+    logo_url: null,
+    description: null,
+    selectivity: null,
+    student_size: null,
+    latitude: null,
+    longitude: null,
+    external_ids: {},
+    data_confidence: "medium",
+    data_status: "fresh",
+    last_checked_at: daysFromNow(-5),
+    last_changed_at: daysFromNow(-60),
+    created_at: daysFromNow(-400),
+    updated_at: daysFromNow(-5),
+  };
+}
+
+function stubTarget(id: string, university: University, outlook: OutlookLabel): TargetUniversityWithDetails {
+  return {
+    id,
+    user_id: "fixture-user",
+    university_id: university.id,
+    program_id: null,
+    status: "target",
+    notes: null,
+    academic_fit_score: null,
+    profile_fit_score: null,
+    outlook,
+    estimate_range_low: null,
+    estimate_range_high: null,
+    outlook_confidence: "medium",
+    outlook_model_version: "admission_model_v1",
+    outlook_calculated_at: daysFromNow(-3),
+    created_at: daysFromNow(-40),
+    updated_at: daysFromNow(-3),
+    university,
+  };
+}
+
+export const FIXTURE_TARGET_UNIVERSITIES: TargetUniversityWithDetails[] = [
+  stubTarget("target-1", stubUniversity("uni-1", "Bocconi University", "Italy", "Milan"), "competitive"),
+  stubTarget("target-2", stubUniversity("uni-2", "London School of Economics", "United Kingdom", "London"), "reach"),
+  stubTarget("target-3", stubUniversity("uni-3", "Erasmus University Rotterdam", "Netherlands", "Rotterdam"), "strong"),
 ];
 
 export const FIXTURE_UNIVERSITY: University = {

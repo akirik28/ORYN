@@ -1,26 +1,14 @@
-import Link from "next/link";
-import { ArrowRight, Compass, TrendingUp, FileText, Landmark } from "lucide-react";
-import { differenceInCalendarDays } from "date-fns";
 import { getCurrentProfile, requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWeeklyPlan, getOrCreateWeeklyPlan } from "@/lib/plan/persist";
 import { getTargetUniversitiesWithDetails } from "@/lib/universities/queries";
-import { getUpcomingDeadlines, type DeadlineSource } from "@/lib/deadlines/upcoming";
+import { getUpcomingDeadlines } from "@/lib/deadlines/upcoming";
+import { refreshOpportunityMatches } from "@/lib/opportunities/persist-matches";
 import { AIProviderNotConfiguredError } from "@/lib/ai";
-import { ScoreRing } from "@/features/dashboard/score-ring";
-import { WeeklyFocus } from "@/features/dashboard/weekly-focus";
-import { GeneratePlanButton } from "@/features/dashboard/generate-plan-button";
-import { OutlookBadge } from "@/features/universities/outlook-badge";
-import { DIMENSION_LABELS } from "@/lib/scoring/labels";
+import { DashboardView } from "@/features/dashboard/dashboard-view";
 import type { ProfileDimension } from "@/types/database";
 
 export const metadata = { title: "Home" };
-
-const DEADLINE_SOURCE_ICONS: Record<DeadlineSource, typeof FileText> = {
-  application: FileText,
-  opportunity: Compass,
-  university: Landmark,
-};
 
 function greeting() {
   const hour = new Date().getHours();
@@ -35,7 +23,9 @@ export default async function DashboardPage() {
   const profile = await getCurrentProfile();
   const supabase = await createClient();
 
-  const [scoresRes, snapshotsRes, recommendationRes, targetUniversities, upcomingDeadlines] = await Promise.all([
+  await refreshOpportunityMatches(userId);
+
+  const [scoresRes, snapshotsRes, recommendationRes, targetUniversities, upcomingDeadlines, matchesRes] = await Promise.all([
     supabase.from("profile_scores").select("*").eq("user_id", userId),
     supabase
       .from("profile_score_snapshots")
@@ -54,6 +44,7 @@ export default async function DashboardPage() {
       .maybeSingle(),
     getTargetUniversitiesWithDetails(supabase, userId, 3),
     getUpcomingDeadlines(supabase, userId, 4),
+    supabase.from("opportunity_matches").select("opportunity_id, match_score").eq("user_id", userId).eq("eligible", true).order("match_score", { ascending: false }).limit(2),
   ]);
 
   const scores = scoresRes.data ?? [];
@@ -88,151 +79,32 @@ export default async function DashboardPage() {
     }
   }
 
+  const opportunityMatches = matchesRes.data ?? [];
+  const opportunityIds = opportunityMatches.map((m) => m.opportunity_id);
+  const { data: matchedOpportunities } = opportunityIds.length
+    ? await supabase.from("opportunities").select("id, title").in("id", opportunityIds)
+    : { data: [] };
+  const titleById = new Map((matchedOpportunities ?? []).map((o) => [o.id, o.title]));
+  const opportunityPreview = opportunityMatches
+    .map((m) => ({ title: titleById.get(m.opportunity_id), matchScore: m.match_score }))
+    .filter((o): o is { title: string; matchScore: number } => Boolean(o.title));
+
   const displayName = profile?.display_name || profile?.first_name || "there";
 
   return (
-    <div className="space-y-10">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-          {greeting()}, {displayName}.
-        </h1>
-        <p className="mt-1 text-muted-foreground">Here&apos;s what matters most right now.</p>
-      </div>
-
-      <section className="grid gap-6 rounded-2xl border bg-card p-6 md:grid-cols-[auto_1fr] md:items-center md:p-8">
-        <ScoreRing score={profile?.profile_strength_score ?? null} trend={trend} />
-        <div className="space-y-4">
-          {biggestGap ? (
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Biggest gap</p>
-              <p className="text-lg font-semibold">
-                {DIMENSION_LABELS[biggestGap.dimension]} — {biggestGap.score}/100
-              </p>
-              <p className="text-sm text-muted-foreground">
-                This is currently your least-developed area relative to the rest of your profile.
-              </p>
-            </div>
-          ) : (
-            <div>
-              <p className="text-lg font-semibold">Your Career Profile is waiting for data.</p>
-              <p className="text-sm text-muted-foreground">
-                Add a few activities, grades, or projects and Oryn will tell you where you stand.
-              </p>
-            </div>
-          )}
-          {biggestImprovement ? (
-            <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
-              <TrendingUp className="size-4" />
-              <span>
-                {DIMENSION_LABELS[biggestImprovement.dimension]} improved by {biggestImprovement.delta} this month.
-              </span>
-            </div>
-          ) : null}
-          <Link href="/profile" className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
-            View your full profile <ArrowRight className="size-3.5" />
-          </Link>
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold tracking-tight">Your focus this week</h2>
-        {weeklyPlan && weeklyPlan.actions.length > 0 ? (
-          <>
-            {weeklyPlan.plan.summary ? <p className="text-sm text-muted-foreground">{weeklyPlan.plan.summary}</p> : null}
-            <WeeklyFocus actions={weeklyPlan.actions} />
-          </>
-        ) : (
-          <div className="rounded-xl border border-dashed p-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              {planError === "not_configured"
-                ? "The AI Advisor isn't configured yet, so weekly plans can't be generated. Add ANTHROPIC_API_KEY to enable this — see API_SETUP.md."
-                : planError === "failed"
-                  ? "We couldn't generate this week's plan. Please try again."
-                  : "Add a few things to your profile and Oryn will generate your first weekly plan."}
-            </p>
-            {planError !== "not_configured" ? (
-              <div className="mt-4 flex justify-center">
-                <GeneratePlanButton />
-              </div>
-            ) : null}
-          </div>
-        )}
-      </section>
-
-      {recommendationRes.data ? (
-        <section className="rounded-xl border bg-accent/40 p-5">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">One thing not to do</p>
-          <p className="mt-1 font-medium">{recommendationRes.data.title}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{recommendationRes.data.reason}</p>
-        </section>
-      ) : null}
-
-      {upcomingDeadlines.length > 0 ? (
-        <section className="space-y-3">
-          <h2 className="text-lg font-semibold tracking-tight">Due soon</h2>
-          <ul className="divide-y rounded-xl border">
-            {upcomingDeadlines.map((deadline) => {
-              const daysUntil = differenceInCalendarDays(new Date(deadline.date), new Date());
-              const SourceIcon = DEADLINE_SOURCE_ICONS[deadline.source];
-              return (
-                <li key={deadline.id}>
-                  <Link href={deadline.href} className="flex items-center justify-between gap-3 px-4 py-3 text-sm transition-colors hover:bg-accent">
-                    <span className="flex items-center gap-2">
-                      <SourceIcon className="size-4 text-muted-foreground" />
-                      {deadline.title}
-                    </span>
-                    <span className={daysUntil <= 7 ? "font-medium text-amber-700 dark:text-amber-400" : "text-muted-foreground"}>
-                      {daysUntil === 0 ? "Due today" : daysUntil === 1 ? "1 day left" : `${daysUntil} days left`}
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      ) : null}
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <section className="space-y-3 rounded-xl border p-5">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold">University outlook</h2>
-            <Link href="/universities" className="text-sm text-primary hover:underline">
-              Explore
-            </Link>
-          </div>
-          {targetUniversities.length > 0 ? (
-            <ul className="space-y-2">
-              {targetUniversities.map((target) => (
-                <li key={target.id} className="flex items-center justify-between text-sm">
-                  <span className="truncate pr-2">{target.university?.name ?? "Unknown university"}</span>
-                  <OutlookBadge outlook={target.outlook} />
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              No target universities yet.{" "}
-              <Link href="/universities" className="text-primary hover:underline">
-                Explore universities
-              </Link>{" "}
-              to add your first.
-            </p>
-          )}
-        </section>
-
-        <section className="space-y-3 rounded-xl border p-5">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold">Opportunities</h2>
-            <Link href="/opportunities" className="text-sm text-primary hover:underline">
-              Browse
-            </Link>
-          </div>
-          <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            <Compass className="size-5 text-primary" />
-            <span>Personalized matches appear here once your profile has enough signal.</span>
-          </div>
-        </section>
-      </div>
-    </div>
+    <DashboardView
+      displayName={displayName}
+      greeting={greeting()}
+      score={profile?.profile_strength_score ?? null}
+      trend={trend}
+      biggestGap={biggestGap ? { dimension: biggestGap.dimension, score: biggestGap.score } : null}
+      biggestImprovement={biggestImprovement}
+      weeklyPlan={weeklyPlan}
+      planError={planError}
+      avoidRecommendation={recommendationRes.data ? { title: recommendationRes.data.title, reason: recommendationRes.data.reason ?? "" } : null}
+      upcomingDeadlines={upcomingDeadlines}
+      targetUniversities={targetUniversities}
+      opportunityPreview={opportunityPreview}
+    />
   );
 }

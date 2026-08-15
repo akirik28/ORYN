@@ -1,9 +1,12 @@
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
+import { Landmark } from "lucide-react";
 import { UniversityExplorerHero } from "@/features/universities/university-explorer-hero";
 import { UniversityCard } from "@/features/universities/university-card";
 import { SUPPORTED_COUNTRIES } from "@/lib/data/country-geo";
 import { Input } from "@/components/ui/input";
+import { PageHeader } from "@/components/oryn/page-header";
+import { EmptyState } from "@/components/oryn/empty-state";
 
 export const metadata = { title: "Universities" };
 
@@ -36,10 +39,7 @@ export default async function UniversitiesPage({
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Explore universities</h1>
-        <p className="mt-1 text-muted-foreground">A world of programs — start with a region, or search directly.</p>
-      </div>
+      <PageHeader title="Explore universities" description="A world of programs — start with a region, or search directly." />
 
       <UniversityExplorerHero countryCounts={countryCounts} selected={country ?? null} />
 
@@ -55,11 +55,11 @@ export default async function UniversitiesPage({
           ))}
         </div>
       ) : (
-        <div className="rounded-xl border border-dashed p-12 text-center text-sm text-muted-foreground">
-          No universities found{q ? ` matching "${q}"` : ""}
-          {country ? ` in ${country}` : ""}. University data is added over time — check back soon, or try another
-          region.
-        </div>
+        <EmptyState
+          icon={Landmark}
+          title={`No universities found${q ? ` matching "${q}"` : ""}${country ? ` in ${country}` : ""}`}
+          description="University data is added over time — check back soon, or try another region."
+        />
       )}
     </div>
   );

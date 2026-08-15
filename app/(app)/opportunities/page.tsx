@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { refreshOpportunityMatches } from "@/lib/opportunities/persist-matches";
 import { OpportunityCard } from "@/features/opportunities/opportunity-card";
 import { integrationStatus } from "@/lib/env";
+import { PageHeader } from "@/components/oryn/page-header";
+import { EmptyState } from "@/components/oryn/empty-state";
 
 export const metadata = { title: "Opportunities" };
 
@@ -40,10 +42,7 @@ export default async function OpportunitiesPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Opportunities</h1>
-        <p className="mt-1 text-muted-foreground">Personalized matches — highest-value first.</p>
-      </div>
+      <PageHeader title="Opportunities" description="Personalized matches — highest-value first." />
 
       {cards.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2">
@@ -58,14 +57,15 @@ export default async function OpportunitiesPage() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed p-12 text-center">
-          <Compass className="size-8 text-muted-foreground" />
-          <p className="max-w-sm text-sm text-muted-foreground">
-            {integrationStatus.tavily
-              ? "No matches yet — opportunities are discovered on a schedule. Check back soon, or complete more of your profile so Oryn knows what to look for."
-              : "Opportunity discovery isn't configured yet in this environment (needs TAVILY_API_KEY). See API_SETUP.md."}
-          </p>
-        </div>
+        <EmptyState
+          icon={Compass}
+          title="No matches yet"
+          description={
+            integrationStatus.tavily
+              ? "Opportunities are discovered on a schedule. Check back soon, or complete more of your profile so Oryn knows what to look for."
+              : "Opportunity discovery isn't configured yet in this environment (needs TAVILY_API_KEY). See API_SETUP.md."
+          }
+        />
       )}
     </div>
   );
