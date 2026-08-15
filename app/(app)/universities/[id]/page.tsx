@@ -34,6 +34,33 @@ export default async function UniversityDetailPage({ params }: { params: Promise
     await refreshAdmissionOutlook(targetRes.data.id, session.userId!);
   }
 
+  const requirements = requirementsRes.data ?? [];
+  if (requirements.length > 0) {
+    await refreshRequirementEvaluations(university.id, session.userId!, targetRes.data?.program_id ?? null);
+  }
+  const [profile, evaluationsRes] = await Promise.all([
+    getCurrentProfile(),
+    requirements.length > 0
+      ? supabase
+          .from("student_requirement_evaluations")
+          .select("requirement_id, status, reasoning")
+          .eq("user_id", session.userId!)
+          .in(
+            "requirement_id",
+            requirements.map((r) => r.id)
+          )
+      : Promise.resolve({ data: [] as { requirement_id: string; status: RequirementEvaluationStatus; reasoning: string }[] }),
+  ]);
+  const evaluationByRequirement = new Map(evaluationsRes.data?.map((e) => [e.requirement_id, e]) ?? []);
+
+  const programNameById = new Map((programsRes.data ?? []).map((p) => [p.id, p.name]));
+  const universityWideRequirements = requirements.filter((r) => r.program_id === null);
+  const requirementsByProgram = new Map<string, UniversityRequirement[]>();
+  for (const r of requirements) {
+    if (!r.program_id) continue;
+    requirementsByProgram.set(r.program_id, [...(requirementsByProgram.get(r.program_id) ?? []), r]);
+  }
+
   const scoreMap = Object.fromEntries((scoresRes.data ?? []).map((s) => [s.dimension, s.score])) as Partial<Record<ProfileDimension, number>>;
   const explanation = explainOutlook(scoreMap);
   const stats = statsRes.data;
@@ -114,19 +141,25 @@ export default async function UniversityDetailPage({ params }: { params: Promise
         </section>
       ) : null}
 
-      {requirementsRes.data && requirementsRes.data.length > 0 ? (
-        <section className="space-y-3">
-          <h2 className="text-lg font-semibold">Requirement check</h2>
-          <ul className="divide-y rounded-lg border">
-            {requirementsRes.data.map((req) => (
-              <li key={req.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
-                <span className="capitalize">{req.requirement_type.replace(/_/g, " ")}</span>
-                <span className="text-muted-foreground">{req.requirement_detail ?? (req.is_required ? "Required" : "Optional")}</span>
-              </li>
-            ))}
-          </ul>
+      {requirements.length > 0 ? (
+        <section className="space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold">Requirement check</h2>
+            <p className="text-sm text-muted-foreground">
+              Oryn&apos;s read of your profile against each stated requirement — not an official admissions decision. See each
+              source before relying on it.
+            </p>
+          </div>
+          {universityWideRequirements.length > 0 ? (
+            <RequirementGroup title="University-wide" items={universityWideRequirements} evaluationByRequirement={evaluationByRequirement} />
+          ) : null}
+          {[...requirementsByProgram.entries()].map(([programId, items]) => (
+            <RequirementGroup key={programId} title={programNameById.get(programId) ?? "Program"} items={items} evaluationByRequirement={evaluationByRequirement} />
+          ))}
         </section>
       ) : null}
+
+      {profile?.is_admin ? <AdminRequirementForm universityId={university.id} programs={programsRes.data ?? []} /> : null}
 
       {university.website_url ? (
         <a href={university.website_url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">
@@ -156,6 +189,49 @@ function StatCard({ icon: Icon, label, value }: { icon: typeof Users; label: str
         <span className="text-sm">{label}</span>
       </div>
       <p className="mt-1 text-lg font-semibold">{value}</p>
+    </div>
+  );
+}
+
+function RequirementGroup({
+  title,
+  items,
+  evaluationByRequirement,
+}: {
+  title: string;
+  items: UniversityRequirement[];
+  evaluationByRequirement: Map<string, { status: RequirementEvaluationStatus; reasoning: string }>;
+}) {
+  return (
+    <div className="space-y-2">
+      <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
+      <ul className="divide-y rounded-lg border">
+        {items.map((req) => {
+          const evaluation = evaluationByRequirement.get(req.id);
+          const isInformational = req.requirement_type === "application_deadline";
+          return (
+            <li key={req.id} className="space-y-1 px-4 py-2.5 text-sm">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <span className="font-medium">{req.title ?? REQUIREMENT_CATEGORY_LABELS[req.requirement_type]}</span>
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    {REQUIREMENT_CATEGORY_LABELS[req.requirement_type]}
+                    {!req.is_required ? " · Optional" : ""}
+                  </span>
+                </div>
+                {evaluation && !isInformational ? <RequirementEvaluationBadge status={evaluation.status} /> : null}
+              </div>
+              {req.requirement_detail ? <p className="text-muted-foreground">{req.requirement_detail}</p> : null}
+              {evaluation?.reasoning && !isInformational ? <p className="text-xs text-muted-foreground">{evaluation.reasoning}</p> : null}
+              {req.source_url ? (
+                <a href={req.source_url} target="_blank" rel="noopener noreferrer" className="inline-block text-xs text-primary hover:underline">
+                  Source ↗
+                </a>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }

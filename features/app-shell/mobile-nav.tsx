@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button-link";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { SidebarNav } from "./sidebar-nav";
 import { CareerProfileBadge } from "./career-profile-badge";
@@ -31,6 +32,9 @@ export function MobileNav({
         <Image src="/brand/logo-full.png" alt="Oryn" width={92} height={31} className="h-7 w-auto" />
       </Link>
       <div className="flex items-center gap-1">
+        <ButtonLink href="/search" variant="ghost" size="icon" aria-label="Search">
+          <Search className="size-4" />
+        </ButtonLink>
         <NotificationBell notifications={notifications} />
         <Button variant="ghost" size="icon" onClick={() => setOpen(true)} aria-label="Open menu">
           <Menu className="size-5" />

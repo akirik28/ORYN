@@ -6,7 +6,7 @@ before a public launch — see "Known gaps" at the end.
 
 ## Row Level Security
 
-Every one of the 40 tables in `supabase/migrations/` has Row Level Security enabled.
+Every one of the 43 tables in `supabase/migrations/` has Row Level Security enabled.
 There are three patterns, applied in `supabase/migrations/0014_row_level_security.sql`
 and `0017_fix_missing_score_rls.sql`:
 
@@ -35,6 +35,24 @@ grep -h "^create table public\." supabase/migrations/*.sql | sed -E 's/create ta
 
 ...and confirm every name appears in a policy somewhere in `0014_row_level_security.sql`
 or a later migration.
+
+**Re-run in this session** across all 43 tables (up from 40 — `rate_limit_events`,
+`product_events`, and the new `student_requirement_evaluations`). No further gaps found;
+the new table is owner-only (`user_id = auth.uid()`, full CRUD), added in the same
+migration that creates it (`0020_requirement_evaluation.sql`) rather than as a follow-up
+fix, to avoid repeating the `profile_scores` mistake this section already documents.
+
+A parallel gap, same root cause but on the *write* side rather than RLS-policy coverage:
+`lib/ai/usage.ts`'s `logAIUsage` was inserting into `ai_usage` through the RLS-scoped
+request client, but that table's policy is deliberately select-only (see above) — every
+insert was silently failing (caught by the function's own try/catch, which only logs a
+console warning). Two real consequences: `ai_usage` was never actually populated, and
+`lib/ai/rate-limit.ts`'s sliding window — sourced from that same table — had nothing to
+count, so **the AI rate limiter has not been functioning** despite this document
+previously describing it as active. Fixed by switching `logAIUsage` to the admin client,
+matching `lib/analytics/log.ts`'s `logEvent` (which already did this correctly for
+`product_events`). Worth specifically re-verifying after this fix ships to a real
+environment — check `ai_usage` actually gains rows after an advisor chat message.
 
 ## Secrets
 
@@ -137,3 +155,10 @@ admin Server Action, not just the page.
   own built-in throttling, not this app's code.
 - **No content moderation** on free-text fields (activity descriptions, advisor
   messages) beyond what the AI system prompt discourages.
+- **The admin-only "add a requirement" form (Phase 69,
+  `app/(app)/universities/[id]/requirement-actions.ts`) doesn't cross-check that a
+  submitted `program_id` actually belongs to the given `university_id`.** Low severity —
+  it's gated by `requireAdmin()` (a trusted operator, not a student-facing surface) and the
+  UI only ever offers programs already scoped to that university — but a direct call to the
+  Server Action with a mismatched pair wouldn't be rejected server-side. Worth adding if
+  this form gets more than one admin using it.

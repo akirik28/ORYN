@@ -1,0 +1,98 @@
+# Current State
+
+Snapshot after Chat 1 (Functional Completion / Backend / AI / Data). Chat 2 (UI/UX) should
+read this file, `chat-1-handoff.md`, and the other root docs rather than any prior
+conversation transcript — the repository is the source of truth.
+
+## What's functionally complete
+
+Everything `README.md`'s "Known limitations" section used to list as missing is now built,
+plus the pre-existing product surface documented in `PHASE_STATUS.md`:
+
+- **Per-program requirement checklist (Phase 69)** — `lib/requirements/`. Deterministic
+  evaluation (met/likely_met/not_met/unknown/needs_manual_review) of a student's profile
+  against a university/program's stated requirements, with an admin entry point to add real
+  sourced requirements (optionally AI-assisted structuring, always human-reviewed before
+  save) and a student-facing "Requirement check" section on the university detail page.
+- **Peer benchmarking (Phase 19)** — `lib/benchmarking/`. Cohort-based percentile
+  comparison (graduation year + curriculum), gated at n≥100 comparable peers per dimension,
+  shown on the Career Profile page. Pre-launch every cohort is genuinely n=0 — this is
+  architecture that activates itself once there's real user data, not a stub.
+- **Global search (Phase 25)** — `lib/search/`, `/search`. Universities, programs,
+  opportunities, every achievement-shaped profile table, goals, and applications, ranked
+  and merged into one result list. Reachable from a search icon in both the desktop and
+  mobile headers.
+- **AI Advisor context gaps closed** — `lib/ai/student-context.ts` now includes: evidence
+  status (`[self-reported]`) and ongoing status on activities/projects/research; the
+  cross-source Deadline Engine (previously the advisor only saw application deadlines, not
+  saved-opportunity or university-program ones — a real gap, now fixed by reusing
+  `lib/deadlines/upcoming.ts` instead of a second, narrower query); recent weekly-action
+  outcomes (completed/skipped/expired, with the student's own reflection note) so advice
+  can learn from what actually happened instead of only avoiding repeated titles; and
+  unfinished application checklist items.
+- **A real functional bug fixed**: `lib/ai/usage.ts`'s `logAIUsage` was writing through the
+  RLS-scoped client to a table whose policy is deliberately select-only, so every insert
+  silently failed. This meant `ai_usage` was never populated and `lib/ai/rate-limit.ts`'s
+  sliding window (sourced from it) never actually throttled anyone. Fixed — see
+  `SECURITY.md`.
+
+## What's partially complete (by deliberate scope decision, not oversight)
+
+- **Per-program requirements have no automated ingestion job.** The schema, evaluation
+  engine, and an admin form all work end-to-end, but nothing crawls official pages to
+  populate `university_requirements` the way `lib/opportunities/discover.ts` does for
+  opportunities. Building that (Tavily search → extract → AI-structure → store, per
+  requirement type, per program) is a real, scoped next phase — see "Recommended next
+  phase" in `chat-1-handoff.md`. Not attempted this pass: it's a second discovery pipeline
+  roughly the size of the opportunity one, and this pass already had three major builds in
+  flight.
+- **Peer benchmarking cohorts are real but currently empty.** Pre-launch, there's no
+  population to compare against. The honest empty state ("Not enough comparable Oryn
+  students yet") is what every viewer sees today; this is correct, not a bug.
+- **`RecommendationClass`'s `consider`/`deprioritize` values are declared in the schema but
+  never produced.** Only `do` (the weekly plan's top 1-3 actions, implicitly) and
+  `avoid_for_now` (the plan's optional single callout) are ever generated. See
+  `known-issues.md` for why this was scoped out rather than built now.
+
+## Architecture quick-reference
+
+- **AI**: `lib/ai/provider.ts` (interface) → `lib/ai/anthropic-provider.ts` (only concrete
+  implementation, only file that imports `@anthropic-ai/sdk`). Every structured AI output
+  is Zod-validated with one retry on schema failure. `lib/ai/student-context.ts` is the one
+  place that assembles what the model sees about a student — never the raw database.
+- **University data**: `universities` / `university_programs` / `university_requirements` /
+  `university_statistics` / `university_deadlines` / `university_sources` (Phase 35
+  canonical entities, no wide nullable-column table). College Scorecard sync
+  (`lib/universities/sync-us-universities.ts`) populates U.S. institutions; everything else
+  needs manual/admin population or a future country-specific provider (see AGENTS.md Phase
+  8 — there is deliberately no "universal European admissions API").
+- **Opportunities**: `lib/opportunities/discover.ts` (Tavily search → AI-structure →
+  dedupe → store) → `lib/opportunities/matching.ts` (deterministic, no AI call, cheap
+  enough to recompute per view).
+- **Requirements**: see `lib/requirements/` above. Evaluation is 100% deterministic
+  (`lib/requirements/evaluate.ts`) — the AI only ever helps an admin *structure* a
+  requirement's already-sourced text (`lib/ai/interpret-requirement.ts`), never invents or
+  evaluates one unsupervised.
+- **Benchmarking**: see `lib/benchmarking/` above.
+- **Search**: see `lib/search/` above.
+- **Security**: RLS on all 43 tables, verified this pass (method + result in
+  `SECURITY.md`). Every foreign-key column checked against index coverage this pass too
+  (method + result in `DATABASE.md`).
+
+## Verification status as of this handoff
+
+```
+npm run typecheck   -> clean
+npm run lint        -> clean
+npm run test         -> 104/104 passing (17 files)
+npm run build        -> succeeds
+npm run check:integrations -> OpenAlex OK (keyless); Supabase/Anthropic/Tavily/College
+                              Scorecard all report "Missing credential" in this sandbox,
+                              which is the correct, honest degraded state — no credentials
+                              are configured in this environment.
+```
+
+## Recommended UI surfaces for Chat 2 to prioritize
+
+These are functionally complete but deliberately plain (Chat 1 was told not to spend time
+on visual design) — see `chat-1-handoff.md` for the full list and reasoning.

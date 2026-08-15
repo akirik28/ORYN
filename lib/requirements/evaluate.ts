@@ -1,4 +1,4 @@
-import type { CourseLevel, RequirementCategory, RequirementEvaluationStatus } from "@/types/database";
+import type { CourseLevel, RequirementCategory } from "@/types/database";
 import { StructuredRuleSchema } from "@/lib/validation/requirements";
 import { INFORMATIONAL_CATEGORIES, MANUAL_REVIEW_CATEGORIES, type RequirementEvaluationResult, type RequirementFacts } from "./types";
 

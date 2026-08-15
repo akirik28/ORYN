@@ -3,6 +3,8 @@ import { getCurrentProfile, requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { ScoreRadar } from "@/features/profile/score-radar";
 import { DimensionBars } from "@/features/profile/dimension-bars";
+import { PeerBenchmark } from "@/features/profile/peer-benchmark";
+import { getPeerBenchmarks } from "@/lib/benchmarking";
 import { AchievementSection } from "@/features/profile/achievement-section";
 import { ResearchIdeaGenerator } from "@/features/profile/research-idea-generator";
 import {
@@ -72,6 +74,7 @@ export default async function ProfilePage() {
     testScoresRes,
     certificationsRes,
     goalsRes,
+    benchmarkSummary,
   ] = await Promise.all([
     supabase.from("profile_scores").select("*").eq("user_id", userId),
     supabase.from("activities").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
@@ -84,6 +87,7 @@ export default async function ProfilePage() {
     supabase.from("test_scores").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
     supabase.from("certifications").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
     supabase.from("career_goals").select("*").eq("user_id", userId).order("status", { ascending: true }).order("target_date", { ascending: true, nullsFirst: false }),
+    getPeerBenchmarks(userId),
   ]);
 
   const scoreMap = Object.fromEntries(
@@ -120,6 +124,11 @@ export default async function ProfilePage() {
             knows about you — it&apos;s separate from how strong your profile is.
           </p>
         </div>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold">Peer comparison</h2>
+        <PeerBenchmark summary={benchmarkSummary} />
       </section>
 
       <AchievementSection

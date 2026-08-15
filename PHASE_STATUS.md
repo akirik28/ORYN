@@ -421,3 +421,133 @@ break the user-facing action it's attached to; every call site `await`s it rathe
 firing-and-forgetting, since an unawaited promise in a serverless Server Action can get
 cut off before it completes once the response is sent — correctness over shaving a few
 milliseconds of latency on a lightweight insert.
+
+## Chat 1 — functional completion pass
+
+A second Claude session (per this build's own three-stage protocol — see
+`docs/chat-1-handoff.md` for the full contract with the sessions that follow it) re-audited
+the repository rather than trusting this file, then closed the three gaps the prior pass had
+explicitly and honestly left open, plus found and fixed one real bug along the way.
+
+**Phase 69 — per-program requirement checklist.** `lib/requirements/` (`types.ts`,
+`evaluate.ts` — pure, unit-tested — `facts.ts`, `persist.ts`) plus
+`lib/ai/interpret-requirement.ts`. Extends `university_requirements` (Phase 35's existing
+canonical entity) rather than forking it into a parallel table — see `DATABASE.md` for the
+full reasoning. Five evaluation statuses (met/likely_met/not_met/unknown/
+needs_manual_review), always deterministic — the AI's only role is turning an admin-pasted,
+already-sourced requirement description into a structured comparison rule, reviewed by the
+admin before saving, never invented or auto-published. Categories with no evaluable shape
+(essay, recommendation, interview, portfolio, supplemental, international) always resolve
+to `needs_manual_review`, honestly, rather than guessing. Student-facing: a "Requirement
+check" section on the university detail page, grouped university-wide vs. per-program, each
+row showing a status badge, plain-language reasoning, and the source link. Admin-facing: an
+inline form on the same page (gated by `requireAdmin()`, independently re-checked in every
+Server Action) to add a sourced requirement, with an "AI: suggest structured rule" button
+that only structures text the admin already pasted. No automated ingestion crawler yet —
+see `docs/known-issues.md`.
+
+**Phase 19 — peer benchmarking.** `lib/benchmarking/` (`types.ts`, `compute.ts` — pure,
+unit-tested — `cohort.ts`, `index.ts`). Cohort = graduation year + curriculum (additive
+filter, designed so a third dimension can be added later without touching callers). Gated
+at ≥100 peers *with a score for that specific dimension*, not just ≥100 peers sharing the
+cohort attributes — slightly stricter than the spec's literal wording, in the direction its
+own "never a small-sample percentile" principle clearly favors. `cohort.ts` is the one place
+in the codebase that deliberately reads across many users' `profile_scores` at once (via the
+admin client — RLS is owner-only, and a percentile can't be computed without looking past
+one user's own rows); its return shape (`Map<dimension, number[]>`, no peer id ever
+attached) makes it structurally impossible for a caller to re-identify a peer from the
+result. Shown on the Career Profile page. Pre-launch every cohort is genuinely `n=0` — the
+honest empty state is what renders today, which is correct, not a stub.
+
+**Phase 25 — global search.** `lib/search/` (`types.ts`, `rank.ts` — pure, unit-tested —
+`index.ts`) and `/search`. Fans one query out in parallel across universities, programs,
+opportunities, all nine achievement-shaped profile tables, goals, and applications (the last
+one has no title of its own — resolved via the same batch-fetch-and-zip pattern used
+elsewhere in this codebase, not a nested embed). Reachable via a search icon added next to
+the notification bell in both headers — not a new primary nav item, since `AGENTS.md` Phase
+42 explicitly enumerates the current 7-item nav as a spec requirement, not an arbitrary
+choice.
+
+**AI Advisor context audit.** Read every context-assembly and prompt file against the
+operating brief's explicit checklist (age/stage, evidence confidence, active projects,
+deadlines, time budget, previous outcomes, ...) instead of assuming the existing
+implementation covered it. Found and closed real, concrete gaps in
+`lib/ai/student-context.ts`:
+- Achievement entries never carried evidence status or ongoing/unfinished status — the
+  advisor couldn't distinguish a self-reported claim from a stronger one, or tell an active
+  project from a finished one, despite the system prompt explicitly instructing it to use
+  existing unfinished work before proposing something new.
+- `upcomingDeadlines` was a bespoke applications-only query — narrower than what the
+  dashboard itself shows a student (the "Due soon" widget already merges applications,
+  saved opportunities, and target-university program deadlines via
+  `lib/deadlines/upcoming.ts`). The advisor could genuinely miss a deadline the student can
+  already see on their own dashboard. Fixed by reusing the existing unified source instead
+  of a second, narrower one.
+- **`recentRecommendationTitles` only ever covered "avoid_for_now" suggestions** —
+  `ai_recommendations` is written *only* for that one case (see `lib/plan/persist.ts`), never
+  for the actual do/consider weekly actions that make up the bulk of what's recommended, and
+  its `user_response`/`feedback` columns are never updated anywhere in the codebase. The real
+  outcome signal (Phase 10's reflection loop) lives on `weekly_actions.status` +
+  `reflection_outcome` + `reflection_note` and was never being read back into the advisor's
+  context at all — so despite the reflection loop capturing real student feedback, none of
+  it was actually improving future advice, contradicting Phase 10's own stated purpose.
+  Added `recentActionOutcomes` (last 10 completed/skipped/expired actions with their
+  reflection) to the context, and a new system-prompt rule instructing the model to
+  acknowledge and learn from them rather than re-suggesting something recently skipped or
+  that didn't work.
+- Added unfinished `application_requirements` items (essay/recommendation/... still
+  outstanding on an active application) so the advisor can point at a concrete near-term
+  task, not just reason at the profile-dimension level.
+
+**Real bug found and fixed: `ai_usage` was silently never being written.**
+`lib/ai/usage.ts`'s `logAIUsage` inserted through the RLS-scoped request client, but that
+table's RLS policy (`0014_row_level_security.sql`) is deliberately select-only ("never
+write directly") — every insert failed, caught by the function's own try/catch, which only
+ever logged a console warning. Two real consequences: `ai_usage` (and therefore the admin
+panel's "AI usage" section) was always empty, and `lib/ai/rate-limit.ts`'s sliding window —
+sourced from that same table — never had anything to count, so **the AI rate limiter has
+not actually been throttling anyone**, despite `SECURITY.md` describing it as active. Fixed
+by switching to the admin client, matching `lib/analytics/log.ts`'s already-correct pattern
+for `product_events`. Recommend a live smoke test once real credentials exist: send an
+advisor message, confirm `ai_usage` gains a row.
+
+**RLS re-audit.** Re-ran the full cross-check (every `create table` against every RLS
+policy) across all 43 tables, not just the new one — SECURITY.md documents the method and
+result. No further gaps found; `student_requirement_evaluations` was given its owner-only
+policy in the same migration that creates it, not as a follow-up fix, specifically to avoid
+repeating the `profile_scores` mistake this file already documents from an earlier pass.
+
+**Database index audit.** Every foreign-key column across all 22 migrations checked against
+index coverage (a reusable verification script is now in `DATABASE.md`) — Postgres never
+auto-indexes the referencing side of a FK, so an un-indexed one means both a sequential scan
+on direct queries and, easy to miss, a sequential scan on the child table every time a
+parent row is deleted. Found and closed 9 real gaps in `0022_missing_fk_indexes.sql`.
+
+**Incident: `README.md` was found reduced to a one-line stub (`# ORYN`) partway through this
+pass**, with the repository unexpectedly carrying real git history (`origin` →
+`github.com/akirik28/ORYN.git`, two prior commits) that hadn't been there earlier in the
+same session — almost certainly the user connecting the local project to a fresh GitHub
+repository between turns (this build has form here — see the "root folder renamed on disk"
+incident earlier in this file). Investigated before touching anything (per this repo's own
+"investigate, don't guess" discipline): confirmed via `git log`/`git ls-tree` that every
+other file in the new commit matched this session's own advanced state (including files
+created earlier in this very pass), and that README.md was the *only* file affected — a
+targeted scan of every committed file under 5 lines turned up nothing else anomalous.
+Restored from this conversation's own earlier tool output (the original was read in full
+before any edits happened) rather than guessing at a reconstruction, then updated in place
+for this pass's new features. Nothing was lost, but — same lesson as the AGENTS.md
+founder-spec incident — worth committing promptly once content is known-good, rather than
+leaving a long stretch of valuable, unrecoverable-if-overwritten content sitting only in an
+editor's undo history or a conversation transcript.
+
+**Verification**: `npm run typecheck` / `npm run lint` clean; `npm run test` 104/104
+passing (17 files, up from 57/14 — added coverage for requirement evaluation, benchmark
+computation, and search ranking); `npm run build` succeeds, all routes compile including the
+new `/search`. `npm run check:integrations`: OpenAlex OK (keyless), Supabase/Anthropic/
+Tavily/College Scorecard all correctly report "Missing credential" in this sandbox — no
+credentials are configured in this environment, which is the honest, correct degraded
+state, not a bug.
+
+See `docs/chat-1-handoff.md` for the full handoff to the next session, `docs/known-issues.md`
+for the current honest gap list, and `docs/product-decisions.md` for the reasoning behind
+this pass's schema and scope choices.

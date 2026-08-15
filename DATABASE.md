@@ -1,6 +1,6 @@
 # Database
 
-Postgres via Supabase. 40 tables across 17 migration files in `supabase/migrations/`,
+Postgres via Supabase. 43 tables across 22 migration files in `supabase/migrations/`,
 applied in filename order. UUIDs (`gen_random_uuid()`) everywhere, timestamps on every
 table, foreign keys with deliberate `on delete` behavior (see "Cascade behavior" below).
 
@@ -21,6 +21,11 @@ table, foreign keys with deliberate `on delete` behavior (see "Cascade behavior"
 | `0012_notifications.sql` | `notifications` |
 | `0013_ops.sql` | `provider_health`, `external_sync_jobs`, `ai_usage` |
 | `0016_university_coordinates.sql` | adds `latitude`/`longitude` to `universities` |
+| `0018_rate_limit_events.sql` | `rate_limit_events` (see SECURITY.md) |
+| `0019_product_events.sql` | `product_events` (system-generated only — see SECURITY.md) |
+| `0020_requirement_evaluation.sql` | Phase 69: adds `title`/`structured_rule`/`data_status`/`last_checked_at` to `university_requirements` and retypes its `requirement_type` from free text to the `requirement_category` enum; adds `student_requirement_evaluations` (per-student met/likely_met/not_met/unknown/needs_manual_review, see `lib/requirements/`) |
+| `0021_benchmarking_indexes.sql` | Phase 19: `profiles(graduation_year)` / `profiles(curriculum)` partial indexes for cohort lookups (see `lib/benchmarking/`) — no new tables; peer benchmarking is computed on read, not persisted |
+| `0022_missing_fk_indexes.sql` | Index audit: 9 foreign-key columns across 7 tables that had no covering index (see the migration's own header comment for the full list and reasoning) |
 
 ## Assumptions and consolidations
 
@@ -40,6 +45,20 @@ consolidates:
 
 Each is a deliberate normalization decision, not an oversight — see the comment above
 `create table public.activities` in `0004_achievements.sql` for the fuller rationale.
+
+**Phase 69 (per-program requirement checklist)** follows the same principle. The operating
+instructions for this pass suggested three new tables (`university_program_requirements`,
+`requirement_sources`, `student_requirement_evaluations`). `university_requirements`
+already exists as Phase 35's canonical entity for exactly this concept — creating a second,
+near-identical table alongside it would be the same kind of fragmentation Phase 58
+explicitly avoided elsewhere, so `0020_requirement_evaluation.sql` extends it (adds
+`title`, `structured_rule`, `data_status`, `last_checked_at`; retypes `requirement_type` to
+a real enum) instead. A separate `requirement_sources` table was also skipped —
+`university_sources` already plays that role per-university, and `university_requirements`
+already carries its own `source_url`/`retrieved_at`/`data_confidence` inline, so a third
+source-tracking table would duplicate both without a clear independent purpose. Only
+`student_requirement_evaluations` (the one genuinely new concept — a per-student
+evaluation, which has no existing home) was added as a new table.
 
 ## Evidence is polymorphic
 
@@ -65,7 +84,39 @@ target row's `user_id` matches the caller before attaching evidence to it
 
 See `SECURITY.md` for the full policy breakdown and the verification method (every table
 cross-checked against every RLS policy — this caught a real gap during review, fixed in
-`0017_fix_missing_score_rls.sql`).
+`0017_fix_missing_score_rls.sql`; re-run in this pass across all 43 tables including the
+new `student_requirement_evaluations`, no further gaps found).
+
+## Index coverage
+
+Every foreign-key column across all 22 migrations was cross-checked against every index
+(a table's leading column, not just an exact single-column match) in this pass — the same
+method as the RLS audit, applied to indexes. Found 9 real gaps, closed in
+`0022_missing_fk_indexes.sql`. Re-run this after adding any new FK column:
+
+```bash
+python3 -c "
+import re, glob
+files = sorted(glob.glob('supabase/migrations/*.sql'))
+text = '\n'.join(open(f).read() for f in files)
+tables = {}
+for m in re.finditer(r'create table public\.(\w+)\s*\(', text):
+    start = m.end(); depth = 1; i = start
+    while depth > 0 and i < len(text):
+        depth += 1 if text[i] == '(' else -1 if text[i] == ')' else 0
+        i += 1
+    tables[m.group(1)] = text[start:i]
+fks = [(t, m.group(1)) for t, b in tables.items() for m in re.finditer(r'^\s*(\w+)\s+uuid(?:\s+not null)?\s+references\s+public\.\w+\(', b, re.M)]
+covered = {}
+for m in re.finditer(r'create(?:\s+unique)?\s+index\s+\S+\s+on\s+public\.(\w+)\s*\(([^)]*)\)', text, re.I):
+    covered.setdefault(m.group(1), set()).add(m.group(2).split(',')[0].strip().split()[0])
+for t, b in tables.items():
+    for m in re.finditer(r'^\s*(\w+)\s+uuid\s+primary key', b, re.M):
+        covered.setdefault(t, set()).add(m.group(1))
+missing = [(t, c) for t, c in fks if c not in covered.get(t, set())]
+print('Missing:', missing or 'none')
+"
+```
 
 ## Types
 

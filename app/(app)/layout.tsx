@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { Search } from "lucide-react";
 import { redirect } from "next/navigation";
 import { requireProfile, verifySession } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
@@ -9,6 +10,7 @@ import { CareerProfileBadge } from "@/features/app-shell/career-profile-badge";
 import { MobileNav } from "@/features/app-shell/mobile-nav";
 import { NotificationBell } from "@/features/app-shell/notification-bell";
 import { NotConfiguredNotice } from "@/features/system/not-configured-notice";
+import { ButtonLink } from "@/components/ui/button-link";
 import { integrationStatus } from "@/lib/env";
 
 // Every route under this layout is per-user and auth-gated — never a candidate for
@@ -49,7 +51,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <Link href="/dashboard">
             <Image src="/brand/logo-full.png" alt="Oryn" width={92} height={31} priority className="h-7 w-auto" />
           </Link>
-          <NotificationBell notifications={notifications ?? []} />
+          <div className="flex items-center gap-1">
+            <ButtonLink href="/search" variant="ghost" size="icon" aria-label="Search">
+              <Search className="size-4" />
+            </ButtonLink>
+            <NotificationBell notifications={notifications ?? []} />
+          </div>
         </div>
         <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-3 pb-4">
           <CareerProfileBadge score={profile.profile_strength_score} />

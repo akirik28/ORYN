@@ -3,6 +3,9 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { assembleScoringFacts } from "@/lib/scoring/assemble-facts";
 import { computeCareerProfile } from "@/lib/scoring";
+import { getUpcomingDeadlines } from "@/lib/deadlines/upcoming";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/database";
 
 export interface StudentAdvisorContext {
   student: {
@@ -17,14 +20,63 @@ export interface StudentAdvisorContext {
   profileScores: { dimension: string; score: number; confidence: string }[];
   overallScore: number;
   completenessPercent: number;
-  activities: { title: string; category: string; isLeadership: boolean }[];
-  projects: { title: string; outcomeSummary: string | null }[];
-  research: { title: string; field: string | null; outputType: string }[];
-  awards: { title: string; level: string | null }[];
+  activities: { title: string; category: string; isLeadership: boolean; ongoing: boolean; selfReported: boolean }[];
+  projects: { title: string; outcomeSummary: string | null; ongoing: boolean; selfReported: boolean }[];
+  research: { title: string; field: string | null; outputType: string; ongoing: boolean; selfReported: boolean }[];
+  awards: { title: string; level: string | null; selfReported: boolean }[];
   goals: { title: string; category: string | null }[];
   targetUniversities: { name: string; status: string; outlook: string | null }[];
-  upcomingDeadlines: { title: string; date: string }[];
+  upcomingDeadlines: { title: string; date: string; source: string }[];
   recentRecommendationTitles: string[];
+  /** Phase 10/62/63 — what actually happened after past advice, so the advisor learns from
+   * outcomes instead of only avoiding repeated titles. Sourced from weekly_actions (status +
+   * the reflection captured when a student marks one done), not ai_recommendations — that
+   * table only ever logs "avoid_for_now" suggestions (see recentRecommendationTitles), never
+   * the do/consider actions that make up the bulk of what's actually recommended. */
+  recentActionOutcomes: { title: string; status: string; reflectionOutcome: string | null; reflectionNote: string | null }[];
+  /** Phase 22/62 — unfinished application checklist items (essay, recommendation, ...),
+   * so the advisor can point at a concrete near-term task instead of only reasoning at the
+   * profile-dimension level. */
+  pendingApplicationRequirements: { applicationTitle: string; requirementTitle: string }[];
+}
+
+/**
+ * Unfinished application_requirements rows, resolved to a readable university name via the
+ * same batch-fetch-and-zip pattern used elsewhere (e.g. lib/deadlines/upcoming.ts) rather
+ * than a nested PostgREST embed (see the Identity<T> note in types/database.ts for why).
+ * Capped tightly — this is context for a prompt, not a full application-tracker view.
+ */
+async function getPendingApplicationRequirements(
+  supabase: SupabaseClient<Database>,
+  userId: string
+): Promise<{ applicationTitle: string; requirementTitle: string }[]> {
+  const { data: pending } = await supabase
+    .from("application_requirements")
+    .select("title, requirement_type, application_id")
+    .eq("user_id", userId)
+    .in("status", ["not_started", "in_progress"])
+    .limit(15);
+  if (!pending || pending.length === 0) return [];
+
+  const applicationIds = [...new Set(pending.map((p) => p.application_id))];
+  const { data: applications } = await supabase.from("applications").select("id, target_university_id").in("id", applicationIds);
+  const targetIdByApplication = new Map((applications ?? []).map((a) => [a.id, a.target_university_id]));
+
+  const targetIds = [...new Set([...targetIdByApplication.values()])];
+  const { data: targets } = targetIds.length > 0 ? await supabase.from("target_universities").select("id, university_id").in("id", targetIds) : { data: [] };
+  const universityIdByTarget = new Map((targets ?? []).map((t) => [t.id, t.university_id]));
+
+  const universityIds = [...new Set([...universityIdByTarget.values()])];
+  const { data: universities } =
+    universityIds.length > 0 ? await supabase.from("universities").select("id, name").in("id", universityIds) : { data: [] };
+  const universityNameById = new Map((universities ?? []).map((u) => [u.id, u.name]));
+
+  return pending.map((p) => {
+    const targetId = targetIdByApplication.get(p.application_id);
+    const universityId = targetId ? universityIdByTarget.get(targetId) : undefined;
+    const universityName = universityId ? universityNameById.get(universityId) : undefined;
+    return { applicationTitle: universityName ?? "Application", requirementTitle: p.title ?? p.requirement_type };
+  });
 }
 
 /**
@@ -37,7 +89,7 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
   const facts = await assembleScoringFacts(supabase, userId);
   const { dimensions, overallScore } = computeCareerProfile(facts);
 
-  const [profileRes, targetUnisRes, applicationsRes, recentRecsRes] = await Promise.all([
+  const [profileRes, targetUnisRes, upcomingDeadlines, recentRecsRes, recentActionsRes, pendingApplicationRequirements] = await Promise.all([
     supabase
       .from("profiles")
       .select("display_name, country, school_name, graduation_year, curriculum, weekly_time_budget, busy_mode, completeness_percent")
@@ -47,19 +99,28 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
       .from("target_universities")
       .select("status, outlook, universities(name)")
       .eq("user_id", userId),
-    supabase
-      .from("applications")
-      .select("deadline, target_universities(universities(name))")
-      .eq("user_id", userId)
-      .not("deadline", "is", null)
-      .order("deadline", { ascending: true })
-      .limit(5),
+    // Reuses the same cross-source Deadline Engine the dashboard's "Due soon" widget and
+    // the deadline-reminder job use (lib/deadlines/upcoming.ts) — this used to be a bespoke
+    // applications-only query here, so the advisor's view of "what's due" was narrower than
+    // what the student can already see on their own dashboard (saved-opportunity and
+    // target-university-program deadlines were invisible to it). Real gap, found in this
+    // session's audit; fixed by reusing the existing unified source instead of a second,
+    // inferior implementation.
+    getUpcomingDeadlines(supabase, userId, 5),
     supabase
       .from("ai_recommendations")
       .select("title")
       .eq("user_id", userId)
       .order("shown_at", { ascending: false })
       .limit(15),
+    supabase
+      .from("weekly_actions")
+      .select("title, status, reflection_outcome, reflection_note")
+      .eq("user_id", userId)
+      .in("status", ["completed", "skipped", "expired"])
+      .order("created_at", { ascending: false })
+      .limit(10),
+    getPendingApplicationRequirements(supabase, userId),
   ]);
 
   const profile = profileRes.data;
@@ -77,10 +138,27 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
     profileScores: dimensions.map((d) => ({ dimension: d.dimension, score: d.score, confidence: d.confidence })),
     overallScore,
     completenessPercent: profile?.completeness_percent ?? 0,
-    activities: facts.activities.map((a) => ({ title: a.title, category: a.category, isLeadership: a.is_leadership_role })),
-    projects: facts.projects.map((p) => ({ title: p.title, outcomeSummary: p.outcome_summary })),
-    research: facts.researchExperiences.map((r) => ({ title: r.title, field: r.field, outputType: r.output_type })),
-    awards: facts.awards.map((a) => ({ title: a.title, level: a.level })),
+    activities: facts.activities.map((a) => ({
+      title: a.title,
+      category: a.category,
+      isLeadership: a.is_leadership_role,
+      ongoing: a.ongoing,
+      selfReported: a.evidence_status === "self_reported",
+    })),
+    projects: facts.projects.map((p) => ({
+      title: p.title,
+      outcomeSummary: p.outcome_summary,
+      ongoing: p.ongoing,
+      selfReported: p.evidence_status === "self_reported",
+    })),
+    research: facts.researchExperiences.map((r) => ({
+      title: r.title,
+      field: r.field,
+      outputType: r.output_type,
+      ongoing: r.ongoing,
+      selfReported: r.evidence_status === "self_reported",
+    })),
+    awards: facts.awards.map((a) => ({ title: a.title, level: a.level, selfReported: a.evidence_status === "self_reported" })),
     goals: facts.goals.map((g) => ({ title: g.title, category: g.category })),
     // Supabase's typed client can't express nested-relation shapes from our hand-authored
     // Database type (no Relationships metadata) — these two are read-only display strings.
@@ -89,11 +167,15 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
       status: t.status,
       outlook: t.outlook,
     })),
-    upcomingDeadlines: ((applicationsRes.data ?? []) as unknown as Array<{ deadline: string; target_universities: { universities: { name: string } | null } | null }>).map((a) => ({
-      title: a.target_universities?.universities?.name ?? "Application",
-      date: a.deadline,
-    })),
+    upcomingDeadlines: upcomingDeadlines.map((d) => ({ title: d.title, date: d.date, source: d.source })),
     recentRecommendationTitles: (recentRecsRes.data ?? []).map((r) => r.title),
+    recentActionOutcomes: (recentActionsRes.data ?? []).map((a) => ({
+      title: a.title,
+      status: a.status,
+      reflectionOutcome: a.reflection_outcome,
+      reflectionNote: a.reflection_note,
+    })),
+    pendingApplicationRequirements,
   };
 }
 
@@ -106,15 +188,29 @@ export function formatContextForPrompt(context: StudentAdvisorContext): string {
   for (const d of context.profileScores) {
     lines.push(`  - ${d.dimension}: ${d.score}/100 (confidence: ${d.confidence})`);
   }
-  lines.push(`Activities (${context.activities.length}): ${context.activities.map((a) => `${a.title}${a.isLeadership ? " [leadership]" : ""}`).join("; ") || "none"}`);
-  lines.push(`Projects (${context.projects.length}): ${context.projects.map((p) => p.title).join("; ") || "none"}`);
-  lines.push(`Research (${context.research.length}): ${context.research.map((r) => r.title).join("; ") || "none"}`);
-  lines.push(`Awards (${context.awards.length}): ${context.awards.map((a) => a.title).join("; ") || "none"}`);
+  const tag = (ongoing: boolean, selfReported: boolean) => `${ongoing ? " [ongoing]" : ""}${selfReported ? " [self-reported]" : ""}`;
+  lines.push(
+    `Activities (${context.activities.length}): ${context.activities.map((a) => `${a.title}${a.isLeadership ? " [leadership]" : ""}${tag(a.ongoing, a.selfReported)}`).join("; ") || "none"}`
+  );
+  lines.push(`Projects (${context.projects.length}): ${context.projects.map((p) => `${p.title}${tag(p.ongoing, p.selfReported)}`).join("; ") || "none"}`);
+  lines.push(`Research (${context.research.length}): ${context.research.map((r) => `${r.title}${tag(r.ongoing, r.selfReported)}`).join("; ") || "none"}`);
+  lines.push(`Awards (${context.awards.length}): ${context.awards.map((a) => `${a.title}${a.selfReported ? " [self-reported]" : ""}`).join("; ") || "none"}`);
   lines.push(`Goals: ${context.goals.map((g) => g.title).join("; ") || "none set"}`);
   lines.push(`Target universities: ${context.targetUniversities.map((t) => `${t.name} (${t.status}${t.outlook ? `, ${t.outlook}` : ""})`).join("; ") || "none yet"}`);
-  lines.push(`Upcoming deadlines: ${context.upcomingDeadlines.map((d) => `${d.title} on ${d.date}`).join("; ") || "none"}`);
+  lines.push(`Upcoming deadlines: ${context.upcomingDeadlines.map((d) => `${d.title} on ${d.date} (${d.source})`).join("; ") || "none"}`);
+  if (context.pendingApplicationRequirements.length > 0) {
+    lines.push(`Unfinished application checklist items: ${context.pendingApplicationRequirements.map((r) => `${r.requirementTitle} (${r.applicationTitle})`).join("; ")}`);
+  }
+  if (context.recentActionOutcomes.length > 0) {
+    const describe = (a: StudentAdvisorContext["recentActionOutcomes"][number]) => {
+      if (a.status === "completed") return `COMPLETED "${a.title}"${a.reflectionOutcome ? ` (outcome: ${a.reflectionOutcome})` : ""}${a.reflectionNote ? ` — "${a.reflectionNote}"` : ""}`;
+      if (a.status === "skipped") return `SKIPPED "${a.title}"`;
+      return `EXPIRED UNDONE "${a.title}"`;
+    };
+    lines.push(`Recent weekly-action outcomes (learn from these — don't just repeat what was skipped or didn't work):\n  - ${context.recentActionOutcomes.map(describe).join("\n  - ")}`);
+  }
   if (context.recentRecommendationTitles.length > 0) {
-    lines.push(`Recently shown recommendations (don't repeat these): ${context.recentRecommendationTitles.join("; ")}`);
+    lines.push(`Previously suggested "avoid for now" items (don't repeat unless the situation has genuinely changed): ${context.recentRecommendationTitles.join("; ")}`);
   }
   return lines.join("\n");
 }

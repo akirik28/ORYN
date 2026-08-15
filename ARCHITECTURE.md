@@ -37,6 +37,23 @@ lib/                     Framework-agnostic business logic. Pure functions are u
   scoring/                Deterministic career-profile scoring (9 dimensions) — see
                          "Scoring architecture" below.
   admissions/             Transparent admission-outlook heuristic.
+  requirements/           Phase 69 — deterministic per-student evaluation of
+                         university_requirements rows (met/likely_met/not_met/unknown/
+                         needs_manual_review). evaluate.ts is pure and unit-tested;
+                         facts.ts/persist.ts are the only Supabase-touching parts
+                         (recompute-on-read, same convention as admissions/persist.ts).
+  benchmarking/           Phase 19 — peer percentile comparison. cohort.ts is the one
+                         place in the codebase that deliberately reads across many
+                         users' profile_scores at once (via the admin client — RLS is
+                         owner-only, and a percentile can't be computed without looking
+                         past one user's own rows); its return shape (plain number[] per
+                         dimension) makes it structurally impossible for a caller to
+                         re-identify a peer. compute.ts is pure and unit-tested; never
+                         shows a percentile below MIN_COHORT_SIZE (100) peers.
+  search/                 Phase 25 — lib/search/index.ts fans a query out across
+                         universities, programs, opportunities, every achievement-shaped
+                         profile table, goals, and applications in parallel; rank.ts
+                         (pure, unit-tested) orders the merged results.
   opportunities/          Discovery pipeline (search → extract → AI-structure → dedupe
                          → store) + deterministic per-student matching.
   providers/              External API clients (Tavily, College Scorecard) — typed,
