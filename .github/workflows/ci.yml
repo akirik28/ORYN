@@ -1,0 +1,50 @@
+name: CI
+
+# Minimum production CI (AGENTS.md Phase 74/78): install, lint, typecheck, full test
+# suite, production build — nothing prevented a broken commit from landing before this.
+#
+# Deliberately does NOT run `npm run check:integrations` or anything that talks to
+# Anthropic/Tavily/College Scorecard/a live Supabase project: this repo has no CI secrets
+# configured (see docs/environment-variables.md), and `next build` needs none of them —
+# every integration is optional at process level (lib/env.ts) and degrades at runtime
+# instead of failing the build. Running an integration check here without real
+# credentials would just print "Missing credential" for most providers on every run,
+# which is noise, not a signal — it is intentionally left out rather than faked into a
+# green check. When real CI secrets exist, that check belongs in its own separate,
+# clearly-labeled job, not folded into this one.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm run test
+
+      - name: Build
+        run: npm run build
