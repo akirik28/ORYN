@@ -1,6 +1,6 @@
 # Database
 
-Postgres via Supabase. 43 tables across 22 migration files in `supabase/migrations/`,
+Postgres via Supabase. 44 tables across 25 migration files in `supabase/migrations/`,
 applied in filename order. UUIDs (`gen_random_uuid()`) everywhere, timestamps on every
 table, foreign keys with deliberate `on delete` behavior (see "Cascade behavior" below).
 
@@ -26,6 +26,9 @@ table, foreign keys with deliberate `on delete` behavior (see "Cascade behavior"
 | `0020_requirement_evaluation.sql` | Phase 69: adds `title`/`structured_rule`/`data_status`/`last_checked_at` to `university_requirements` and retypes its `requirement_type` from free text to the `requirement_category` enum; adds `student_requirement_evaluations` (per-student met/likely_met/not_met/unknown/needs_manual_review, see `lib/requirements/`) |
 | `0021_benchmarking_indexes.sql` | Phase 19: `profiles(graduation_year)` / `profiles(curriculum)` partial indexes for cohort lookups (see `lib/benchmarking/`) — no new tables; peer benchmarking is computed on read, not persisted |
 | `0022_missing_fk_indexes.sql` | Index audit: 9 foreign-key columns across 7 tables that had no covering index (see the migration's own header comment for the full list and reasoning) |
+| `0023_social_v1.sql` | V1 social scope (Phase 4/Chat 2): adds `is_public`/`looking_for` to `profiles`, the `public_profiles` security-definer view (narrow column whitelist, never the raw row), and `connections` (mutual-consent request/accept, `pending`/`accepted`/`declined`) — see SECURITY.md's "Social / connections" section |
+| `0024_fix_connection_privacy_leak.sql` | Chat 3: restricts `public_profiles`' connection carve-out to `accepted` (either direction) or `pending` where the caller is the recipient — closes a real privacy vulnerability, see `docs/known-issues.md` |
+| `0025_function_search_path_hardening.sql` | Chat 3: pins `search_path` on `set_updated_at()` (a Supabase security-linter finding) — no new tables |
 
 ## Assumptions and consolidations
 

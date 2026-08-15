@@ -2,21 +2,22 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Connection, Database, PublicProfileRow } from "@/types/database";
+import { isUuidLike } from "@/lib/validation/uuid";
 
 export interface ConnectionWithProfile extends Connection {
   otherProfile: PublicProfileRow | null;
 }
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-export function isUuidLike(value: string): boolean {
-  return UUID_RE.test(value);
-}
-
 /** Batch-fetch-and-zip (no nested PostgREST embed — see docs/chat-1-handoff.md's
  * "implementation decisions Chat 2 must not casually break"): fetch the caller's
  * connection rows, then the other party's public_profiles rows in one `.in()`, then zip
- * in application code. `public_profiles` includes the "connected with caller" carve-out
- * (migration 0023), so this resolves even for a since-gone-private counterpart. */
+ * in application code. `public_profiles` (migration 0024) resolves an accepted
+ * counterpart even if they've since gone private, and resolves the *requester* of an
+ * incoming pending request (so the caller can see who's asking before responding) — but
+ * never resolves a private target from the caller's own outgoing pending request. A
+ * `otherProfile: null` on an incoming request therefore shouldn't happen in practice
+ * (the requester side of a pending row is always visible to the recipient); it stays
+ * nullable in the type because a declined or since-deleted row still zips through here. */
 export async function getConnections(supabase: SupabaseClient<Database>, userId: string) {
   const { data: rows } = await supabase
     .from("connections")

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { GraduationCap } from "lucide-react";
+import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { updateApplicationStatus } from "@/app/(app)/applications/actions";
 import { transition } from "@/lib/motion";
@@ -77,11 +78,20 @@ export function ApplicationStatusControl({
   const [isPending, startTransition] = useTransition();
 
   function changeStatus(next: ApplicationStatus) {
+    const previous = status;
     const wasAccepted = status === "accepted";
     setStatus(next);
     startTransition(async () => {
       const result = await updateApplicationStatus(applicationId, next);
-      if (!result.error && next === "accepted" && !wasAccepted) setJustAccepted(true);
+      if (result.error) {
+        // Roll back the optimistic update — otherwise a failed write leaves the select
+        // showing a status that was never actually saved, with no indication anything
+        // went wrong.
+        setStatus(previous);
+        toast.error(result.error);
+        return;
+      }
+      if (next === "accepted" && !wasAccepted) setJustAccepted(true);
     });
   }
 

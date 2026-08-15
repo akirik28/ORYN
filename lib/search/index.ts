@@ -11,9 +11,21 @@ type DB = SupabaseClient<Database>;
 const MIN_QUERY_LENGTH = 2;
 const PER_SOURCE_LIMIT = 5;
 
+/** Supabase-js resolves a failed query to `{ data: null, error }` rather than rejecting —
+ * every call site here used to destructure only `{ data }`, so a genuine backend failure
+ * (RLS misconfiguration, connection drop, timeout) was indistinguishable from "no rows
+ * matched" and silently became an empty result instead of the caller's error state (see
+ * app/(app)/search/actions.ts / features/search/command-palette.tsx, which only shows
+ * "Search isn't available right now" for a *thrown* exception). Throwing here turns a real
+ * error back into a rejected promise, which `Promise.all` in `globalSearch` propagates. */
+function unwrap<T>(result: { data: T[] | null; error: { message: string } | null }): T[] {
+  if (result.error) throw new Error(`Search query failed: ${result.error.message}`);
+  return result.data ?? [];
+}
+
 async function searchUniversities(supabase: DB, pattern: string): Promise<SearchResult[]> {
-  const { data } = await supabase.from("universities").select("id, name, city, country").ilike("name", pattern).limit(8);
-  return (data ?? []).map((u) => ({
+  const result = await supabase.from("universities").select("id, name, city, country").ilike("name", pattern).limit(8);
+  return unwrap(result).map((u) => ({
     type: "university" as const,
     id: u.id,
     title: u.name,
@@ -23,8 +35,8 @@ async function searchUniversities(supabase: DB, pattern: string): Promise<Search
 }
 
 async function searchPrograms(supabase: DB, pattern: string): Promise<SearchResult[]> {
-  const { data } = await supabase.from("university_programs").select("id, university_id, name, field, degree_level").ilike("name", pattern).limit(8);
-  return (data ?? []).map((p) => ({
+  const result = await supabase.from("university_programs").select("id, university_id, name, field, degree_level").ilike("name", pattern).limit(8);
+  return unwrap(result).map((p) => ({
     type: "program" as const,
     id: p.id,
     title: p.name,
@@ -36,13 +48,13 @@ async function searchPrograms(supabase: DB, pattern: string): Promise<SearchResu
 }
 
 async function searchOpportunities(supabase: DB, pattern: string): Promise<SearchResult[]> {
-  const { data } = await supabase.from("opportunities").select("id, title, organization").eq("status", "active").ilike("title", pattern).limit(PER_SOURCE_LIMIT);
-  return (data ?? []).map((o) => ({ type: "opportunity" as const, id: o.id, title: o.title, subtitle: o.organization, href: "/opportunities" }));
+  const result = await supabase.from("opportunities").select("id, title, organization").eq("status", "active").ilike("title", pattern).limit(PER_SOURCE_LIMIT);
+  return unwrap(result).map((o) => ({ type: "opportunity" as const, id: o.id, title: o.title, subtitle: o.organization, href: "/opportunities" }));
 }
 
 async function searchGoals(supabase: DB, userId: string, pattern: string): Promise<SearchResult[]> {
-  const { data } = await supabase.from("career_goals").select("id, title, category").eq("user_id", userId).ilike("title", pattern).limit(PER_SOURCE_LIMIT);
-  return (data ?? []).map((g) => ({ type: "goal" as const, id: g.id, title: g.title, subtitle: g.category, href: "/profile" }));
+  const result = await supabase.from("career_goals").select("id, title, category").eq("user_id", userId).ilike("title", pattern).limit(PER_SOURCE_LIMIT);
+  return unwrap(result).map((g) => ({ type: "goal" as const, id: g.id, title: g.title, subtitle: g.category, href: "/profile" }));
 }
 
 /**
@@ -53,8 +65,6 @@ async function searchGoals(supabase: DB, userId: string, pattern: string): Promi
  * for named, statically-typed calls over generic dispatch.
  */
 async function searchProfileItems(supabase: DB, userId: string, pattern: string): Promise<SearchResult[]> {
-  const owned = <T extends { id: string }>(rows: T[] | null) => rows ?? [];
-
   const [activities, awards, certifications, projects, research, volunteering, work, education, testScores] = await Promise.all([
     supabase.from("activities").select("id, title, organization").eq("user_id", userId).ilike("title", pattern).limit(PER_SOURCE_LIMIT),
     supabase.from("awards").select("id, title, organization").eq("user_id", userId).ilike("title", pattern).limit(PER_SOURCE_LIMIT),
@@ -68,15 +78,15 @@ async function searchProfileItems(supabase: DB, userId: string, pattern: string)
   ]);
 
   return [
-    ...owned(activities.data).map((r) => ({ type: "activity" as const, id: r.id, title: r.title, subtitle: r.organization, href: "/profile" })),
-    ...owned(awards.data).map((r) => ({ type: "award" as const, id: r.id, title: r.title, subtitle: r.organization, href: "/profile" })),
-    ...owned(certifications.data).map((r) => ({ type: "certification" as const, id: r.id, title: r.title, subtitle: r.organization, href: "/profile" })),
-    ...owned(projects.data).map((r) => ({ type: "project" as const, id: r.id, title: r.title, subtitle: r.organization, href: "/profile" })),
-    ...owned(research.data).map((r) => ({ type: "research_experience" as const, id: r.id, title: r.title, subtitle: r.organization, href: "/profile" })),
-    ...owned(volunteering.data).map((r) => ({ type: "volunteering_experience" as const, id: r.id, title: r.title, subtitle: r.organization, href: "/profile" })),
-    ...owned(work.data).map((r) => ({ type: "work_experience" as const, id: r.id, title: r.title, subtitle: r.organization, href: "/profile" })),
-    ...owned(education.data).map((r) => ({ type: "education_record" as const, id: r.id, title: r.school_name, subtitle: r.country, href: "/profile" })),
-    ...owned(testScores.data).map((r) => ({ type: "test_score" as const, id: r.id, title: r.test_name, subtitle: r.score, href: "/profile" })),
+    ...unwrap(activities).map((r) => ({ type: "activity" as const, id: r.id, title: r.title, subtitle: r.organization, href: "/profile" })),
+    ...unwrap(awards).map((r) => ({ type: "award" as const, id: r.id, title: r.title, subtitle: r.organization, href: "/profile" })),
+    ...unwrap(certifications).map((r) => ({ type: "certification" as const, id: r.id, title: r.title, subtitle: r.organization, href: "/profile" })),
+    ...unwrap(projects).map((r) => ({ type: "project" as const, id: r.id, title: r.title, subtitle: r.organization, href: "/profile" })),
+    ...unwrap(research).map((r) => ({ type: "research_experience" as const, id: r.id, title: r.title, subtitle: r.organization, href: "/profile" })),
+    ...unwrap(volunteering).map((r) => ({ type: "volunteering_experience" as const, id: r.id, title: r.title, subtitle: r.organization, href: "/profile" })),
+    ...unwrap(work).map((r) => ({ type: "work_experience" as const, id: r.id, title: r.title, subtitle: r.organization, href: "/profile" })),
+    ...unwrap(education).map((r) => ({ type: "education_record" as const, id: r.id, title: r.school_name, subtitle: r.country, href: "/profile" })),
+    ...unwrap(testScores).map((r) => ({ type: "test_score" as const, id: r.id, title: r.test_name, subtitle: r.score, href: "/profile" })),
   ];
 }
 
@@ -88,17 +98,16 @@ async function searchProfileItems(supabase: DB, userId: string, pattern: string)
  * three-table SQL join this codebase's query layer doesn't otherwise use.
  */
 async function searchApplications(supabase: DB, userId: string, term: string): Promise<SearchResult[]> {
-  const { data: applications } = await supabase.from("applications").select("id, target_university_id, notes").eq("user_id", userId);
-  if (!applications || applications.length === 0) return [];
+  const applications = unwrap(await supabase.from("applications").select("id, target_university_id, notes").eq("user_id", userId));
+  if (applications.length === 0) return [];
 
   const targetIds = [...new Set(applications.map((a) => a.target_university_id))];
-  const { data: targets } = await supabase.from("target_universities").select("id, university_id").in("id", targetIds);
-  const universityIdByTarget = new Map((targets ?? []).map((t) => [t.id, t.university_id]));
+  const targets = unwrap(await supabase.from("target_universities").select("id, university_id").in("id", targetIds));
+  const universityIdByTarget = new Map(targets.map((t) => [t.id, t.university_id]));
 
   const universityIds = [...new Set([...universityIdByTarget.values()])];
-  const { data: universities } =
-    universityIds.length > 0 ? await supabase.from("universities").select("id, name").in("id", universityIds) : { data: [] };
-  const universityNameById = new Map((universities ?? []).map((u) => [u.id, u.name]));
+  const universities = universityIds.length > 0 ? unwrap(await supabase.from("universities").select("id, name").in("id", universityIds)) : [];
+  const universityNameById = new Map(universities.map((u) => [u.id, u.name]));
 
   const needle = term.toLowerCase();
   return applications

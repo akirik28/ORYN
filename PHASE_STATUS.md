@@ -602,3 +602,105 @@ detail, design-decision reasoning, and an honest per-surface account of what was
 wasn't live-verified (this sandbox still has no Docker/Supabase) in
 `docs/chat-2-handoff.md` and `docs/design-system.md`. `npm run lint`/`typecheck`/`test`
 (108/108)/`build` all clean at the end of this pass.
+
+## Chat 3 — Adversarial security audit
+
+Picked up mid-fix: a prior Chat 3 session had found a real privacy vulnerability in
+`public_profiles` (the V1 social feature's connection carve-out matched any connection
+status, not just accepted) and started `0024_fix_connection_privacy_leak.sql` before
+running out of session budget. This pass verified, completed, and — for the first time in
+this product's history — **live-tested** that fix and the surrounding schema, using
+Supabase MCP access to create a disposable scratch project rather than continuing the
+review-by-hand-only pattern every prior session was limited to.
+
+**The privacy fix, completed and hardened.** The in-progress fix restricted the carve-out
+to `status = 'accepted'` only, which is safe but breaks a real case (a recipient can't see
+who's asking to connect before responding). Shipped version keeps a `pending` clause but
+makes it direction-aware — only the recipient of a pending request sees the requester,
+never the reverse — closing the original hole (a cold request letting the *requester* see
+a private target) while preserving the legitimate UX. `sendConnectionRequest` also
+independently re-verifies the recipient is public server-side (a Server Action is callable
+with any argument, regardless of what the UI shows).
+
+**A second, independent, more fundamental bug found by the live run.** `0023_social_v1.sql`
+itself had never successfully applied to any real Postgres database, ever — its
+`public_profiles` view referenced the `connections` table before that file created it,
+which fails immediately (`CREATE VIEW` resolves dependencies at creation time) and rolls
+back the entire migration transaction. Every session before this one had documented "not
+run against a live Postgres" as an honest limitation; none had discovered it was actually
+a hard blocker, not just an unverified claim. Fixed by reordering the migration in place —
+justified as a rare, deliberate exception to this repo's own "never rewrite a past
+migration" discipline, since a migration that never once successfully ran has no live
+schema history to diverge from. See `docs/product-decisions.md`'s "Chat 3 pass" section
+for the full reasoning on both calls.
+
+**Live verification methodology.** Created a scratch Supabase project (pausing an
+unrelated existing project to stay under the account's free-tier limit, with the
+founder's explicit approval at each step), applied all 25 migrations, and:
+- Queried `public_profiles` under six simulated identities covering every cell of the
+  privacy invariant matrix (private+no-connection, private+pending both directions,
+  private+declined, private+accepted, public+no-connection, plus a direct non-view
+  `profiles` read) — all eight assertions matched intent, including the two that matter
+  most (the original attack shape stays blocked; the "declined kept the leak forever" bug
+  is fixed).
+- Confirmed all 44 `public`-schema tables have RLS enabled (up from 43 — `connections` was
+  never added to that count; corrected in `DATABASE.md`/`SECURITY.md`).
+- Confirmed storage RLS genuinely blocks a cross-user `evidence` object read, so
+  `getSignedEvidenceUrl`'s raw caller-supplied path is safe despite no explicit ownership
+  check in the Server Action itself.
+- Confirmed the AI rate limiter (fixed in Chat 1, never live-tested before now) actually
+  reads back what it writes, and that `ai_usage` RLS isolates users from each other.
+- Ran Supabase's security/performance advisors against the live schema: fixed a mutable
+  `search_path` on `set_updated_at()` (`0025_function_search_path_hardening.sql`);
+  investigated and deliberately left open a `handle_new_user` grant warning (proven
+  non-exploitable live, but no live GoTrue available to verify a fix wouldn't break
+  signups); logged a real, pervasive, pre-existing RLS performance pattern (40 policies
+  using `auth.uid()` instead of `(select auth.uid())`) as a scoped-out follow-up, not
+  attempted this pass.
+
+A manual SQL reproduction of the exact live-verified query matrix is saved in
+`supabase/tests/connection_privacy_manual.sql` for re-running after any future change to
+this view — the invariant has now broken twice in different ways, so "reads correctly" is
+not being trusted as sufficient for this specific file going forward.
+
+**Wider adversarial pass**, using the founder's own re-verification checklist plus a
+background research pass over AI Advisor quality and international-student handling.
+Real, concrete findings, all fixed:
+- **False-precision cross-scale GPA comparison** in `lib/requirements/evaluate.ts` — a
+  linear ratio doesn't validly convert between grading systems (e.g. Turkish 100-point to
+  US 4.0), and this module was doing exactly that while a sibling module
+  (`lib/scoring/dimensions/academics.ts`) already explicitly refuses to. Now only compares
+  GPAs already on the requirement's own scale; anything else is `needs_manual_review`
+  rather than a confident guess.
+- **No prompt-injection framing** on scraped page content fed to Claude in
+  `lib/ai/opportunity-extraction.ts` / `lib/ai/requirement-extraction.ts` — content was
+  concatenated after a bare label with no delimiter and no untrusted-data instruction.
+  Both now wrap content in `<page_content>` tags with an explicit system-prompt
+  instruction not to follow anything inside it.
+- **Global search silently returned empty results on a real backend failure**, not just a
+  genuine no-match — every `lib/search/index.ts` helper discarded Supabase's `error`
+  return value, so only a thrown exception (not the far more common error-object failure)
+  ever reached the command palette's error state. Now throws on a real query error.
+- **Application status control had no rollback or error message on a failed save** — the
+  UI updated optimistically and never checked the result. Fixed with rollback + a `sonner`
+  toast (the app's `<Toaster/>` was already mounted globally but had zero real call sites
+  before this).
+- **`ai_recommendations`' "don't repeat this" query had no class filter**, relying on it
+  being the only class ever written to that table — added the explicit filter so the code
+  matches its own label instead of an unstated invariant.
+- **Advisor context knew "busy mode" was on but never when it ends** — `busy_mode_until`
+  is now read into the prompt.
+- Everything else on the founder's checklist (AI advisor opportunity-cost reasoning, time
+  budget respect, unfinished-work preference, deadline urgency, curriculum-neutral
+  scoring, no hardcoded-US-student assumptions, the `Progress` hydration fix, the
+  dashboard opportunity preview, `updateApplicationStatus`'s persistence) checked out —
+  see `docs/known-issues.md` for the one remaining scoped-out gap this surfaced
+  (`target_geography` is collected but never read back into matching/outlook logic).
+
+**Verification**: `npm run lint` / `typecheck` clean; `npm run test` 113/113 passing (19
+files, up from 108/18 — added `__tests__/validation/uuid.test.ts` and two `evaluate.test.ts`
+cases replacing the one that encoded the now-fixed cross-scale-conversion behavior);
+`npm run build` succeeds, all routes compile; `npm run check:integrations` unchanged
+(OpenAlex OK, everything else correctly reports "Missing credential" — no app credentials
+configured in this sandbox, separate from the Supabase MCP access used for live-verification
+above). Full detail in `docs/final-product-audit.md`.

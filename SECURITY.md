@@ -6,7 +6,7 @@ before a public launch — see "Known gaps" at the end.
 
 ## Row Level Security
 
-Every one of the 43 tables in `supabase/migrations/` has Row Level Security enabled.
+Every one of the 44 tables in `supabase/migrations/` has Row Level Security enabled.
 There are three patterns, applied in `supabase/migrations/0014_row_level_security.sql`
 and `0017_fix_missing_score_rls.sql`:
 
@@ -42,6 +42,23 @@ the new table is owner-only (`user_id = auth.uid()`, full CRUD), added in the sa
 migration that creates it (`0020_requirement_evaluation.sql`) rather than as a follow-up
 fix, to avoid repeating the `profile_scores` mistake this section already documents.
 
+**Re-verified again in Chat 3, this time live, not by grep.** Every migration through
+`0025` was previously reviewed by hand only — no Docker/Supabase existed in any sandbox
+this product had been built in, so "N tables have RLS" was a static-analysis claim, never
+an observed fact. Chat 3 created a disposable scratch Supabase project via the Supabase
+MCP, applied the full migration history, and queried `pg_class`/`pg_policies` directly:
+all **44** tables (43 + `connections`, added by `0023_social_v1.sql` — the "43" figure
+elsewhere in this document and `DATABASE.md` predates that migration and undercounts by
+one; both are corrected as of this pass) confirmed `relrowsecurity = true`, with policy
+counts matching the three patterns above exactly (owner-only tables all show 1 policy,
+`profiles`/`rate_limit_events` show 2, `notifications` shows 3, `connections` shows 4, the
+three ops-only tables show 0 — see the "No policy at all" pattern below). Doing this live run
+also surfaced a real, independent bug: `0023_social_v1.sql`'s `public_profiles` view
+referenced `connections` before that table existed in the same file, so the migration had
+never actually been able to apply to a real Postgres database at all — see
+`docs/known-issues.md` for the fix. Static review had missed this because nothing had
+ever executed the file.
+
 A parallel gap, same root cause but on the *write* side rather than RLS-policy coverage:
 `lib/ai/usage.ts`'s `logAIUsage` was inserting into `ai_usage` through the RLS-scoped
 request client, but that table's policy is deliberately select-only (see above) — every
@@ -51,8 +68,44 @@ console warning). Two real consequences: `ai_usage` was never actually populated
 count, so **the AI rate limiter has not been functioning** despite this document
 previously describing it as active. Fixed by switching `logAIUsage` to the admin client,
 matching `lib/analytics/log.ts`'s `logEvent` (which already did this correctly for
-`product_events`). Worth specifically re-verifying after this fix ships to a real
-environment — check `ai_usage` actually gains rows after an advisor chat message.
+`product_events`). **Re-verified live in Chat 3** against the same scratch project:
+inserted `ai_usage` rows directly, then ran `assertWithinAIRateLimit`'s exact query as
+that user via a simulated JWT — the count came back correct, and a second, unrelated
+simulated user could not see the first user's usage rows (RLS holds). The fix is now an
+observed fact, not just a code-reading conclusion.
+
+## Social / connections (V1, `supabase/migrations/0023`–`0025`)
+
+- `public_profiles` is a security-definer view over a fixed column whitelist
+  (`id, display_name, country, curriculum, graduation_year, looking_for, created_at`) —
+  never the raw `profiles` row, which carries fields that must never be public
+  (`birth_year`, `school_name`, `city`, `is_admin`, `busy_mode*`, `onboarding_*`, ...).
+  Supabase's security linter flags this view as `security_definer_view` (ERROR severity)
+  by design — that's a generic warning against a real footgun class, and this view *was*
+  that footgun twice (see `known-issues.md`), but the current predicate was live-verified
+  correct: `auth.uid()` inside a security-definer view still reads the calling user's JWT
+  claim (it's a session-scoped `current_setting`, not tied to the view owner's identity),
+  confirmed by querying the view under six different simulated identities and getting the
+  expected result every time. Switching to `security_invoker` was considered and rejected
+  — RLS is row-level only, not column-level, so an invoker-view would need a matching RLS
+  policy directly on `profiles`, which would expose every column of `profiles` (not just
+  this view's six) to any row satisfying that policy. The view is the narrower, safer
+  option specifically because it avoids that.
+- Visibility carve-out beyond `is_public = true` is deliberately split into two
+  status-and-direction-specific clauses (accepted, either direction; pending, only
+  recipient-sees-requester) rather than one broad "any relationship exists" predicate —
+  see the migration's own comment for why collapsing these is exactly how the original
+  vulnerability happened.
+- `getPublicPortfolio`/`getPublicSkills` (`lib/social/public-profile.ts`) do not trust
+  `public_profiles` as their authorization check — they independently re-read
+  `profiles.is_public` via the admin client. An accepted connection unlocks the six-column
+  view, never the full portfolio/skills; only `is_public = true` does. This is a
+  deliberate, documented product decision (see `docs/product-decisions.md`), not an
+  oversight.
+- `sendConnectionRequest` (`app/(app)/connections/actions.ts`) re-checks server-side that
+  the recipient is currently public before creating a `pending` row — a Server Action is
+  directly callable with any argument regardless of what the UI shows, so the "Connect"
+  button only appearing on a public profile page is not itself a security boundary.
 
 ## Secrets
 

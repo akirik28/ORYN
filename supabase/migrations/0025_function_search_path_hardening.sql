@@ -1,0 +1,24 @@
+-- Hardening found by Supabase's security linter (`get_advisors`) against a live run of
+-- the full migration history (Chat 3 — see docs/known-issues.md): `set_updated_at` had a
+-- mutable `search_path`, unlike every other function in this schema
+-- (`handle_new_user`, `set_updated_at` itself now) which already pins one. A caller able
+-- to influence `search_path` for the session (not possible for a normal authenticated
+-- request here, since triggers execute server-side with no user-controlled search_path,
+-- but this is the standard defense-in-depth Postgres/Supabase recommend regardless) could
+-- otherwise get a same-named function from another schema substituted in. Trivial,
+-- no-branching function, so pinning `search_path` has no behavioral effect — pure hardening.
+alter function public.set_updated_at() set search_path = public, pg_temp;
+
+-- The linter's other two findings (`anon`/`authenticated` can EXECUTE the
+-- SECURITY DEFINER `handle_new_user`) are left as-is, deliberately, not fixed here:
+-- verified live against this migration's own scratch project that direct invocation
+-- already fails regardless of grants —
+--   select handle_new_user();  ->  ERROR: trigger functions can only be called as triggers
+-- — because its return type is `trigger`, which Postgres refuses to produce as an
+-- ordinary call result. A `revoke ... from public` was drafted for this migration but
+-- reverted: this sandbox has no live GoTrue pointed at a real project (see
+-- known-issues.md), so there's no way to verify which role actually fires
+-- `on_auth_user_created` when a real signup writes `auth.users`, and getting that grant
+-- wrong risks silently breaking every new signup in exchange for closing a warning that's
+-- already provably non-exploitable. Revisit with a real Supabase Auth instance available
+-- to test against, not by guessing the role name.

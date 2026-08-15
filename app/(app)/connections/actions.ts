@@ -11,6 +11,15 @@ export async function sendConnectionRequest(recipientId: string): Promise<{ erro
   if (recipientId === userId) return { error: "You can't connect with yourself." };
 
   const supabase = await createClient();
+
+  // Re-check server-side that the target is actually public right now — never trust that
+  // the UI only shows Connect on a public profile page (a Server Action is directly
+  // callable with any argument). Without this, a cold request to a private profile still
+  // created a 'pending' row, which alone was enough to leak basic info through
+  // public_profiles' connection carve-out — see migration 0024.
+  const { data: recipientIsPublic } = await supabase.from("public_profiles").select("id").eq("id", recipientId).maybeSingle();
+  if (!recipientIsPublic) return { error: "This profile isn't public, so you can't connect with it." };
+
   const { error } = await supabase.from("connections").insert({ requester_id: userId, recipient_id: recipientId });
 
   if (error) {

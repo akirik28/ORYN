@@ -19,38 +19,16 @@ comment on column public.profiles.looking_for is
   'Free-text "currently looking for" status shown on the public profile when set '
   '(e.g. "Research collaborators", "Internship for Summer 2027"). Null = not shown.';
 
--- Deliberately a security-definer view (the default — no `security_invoker`), not an
--- RLS policy opened up on `profiles` itself. `profiles` carries fields that must never
--- be public (birth_year, school_name, city, is_admin, profile_strength_score,
--- busy_mode*, onboarding_*, ...) — a raw RLS carve-out on the table would depend on
--- every future column addition being re-audited for public-safety. This view instead
--- hard-codes both the column whitelist and the `is_public = true` predicate, so it can
--- never return a private row or a column outside this list no matter how `profiles`
--- grows later. Granted to `authenticated` only (not `anon`) — a deliberately more
--- conservative reading of "optionally shareable" than a fully public, unauthenticated,
--- indexable page; see product-decisions.md if this should be loosened later.
--- `connections` is created below `public_profiles` in table order but referenced here —
--- fine in Postgres as long as it exists by the time this view is *queried*, not defined;
--- both statements run in the same migration transaction before anyone can query either.
-create view public.public_profiles as
-  select id, display_name, country, curriculum, graduation_year, looking_for, created_at
-  from public.profiles
-  where is_public = true
-     -- Continuity carve-out: if A is connected to (or has a pending request with) the
-     -- caller, the caller can still see A's basic info even if A later goes private —
-     -- otherwise an existing connection would silently show as an unresolvable/blank
-     -- row. This does NOT let two private users discover each other from scratch: V1's
-     -- "Connect" action only ever appears on an already-public profile page (see
-     -- app/(app)/u/[id]/page.tsx), so a connection can only be *initiated* via a public
-     -- profile in the first place.
-     or id in (
-       select case when requester_id = auth.uid() then recipient_id else requester_id end
-       from public.connections
-       where auth.uid() in (requester_id, recipient_id)
-     );
-
-grant select on public.public_profiles to authenticated;
-
+-- `connections` is created before `public_profiles` (reordered from this migration's
+-- first draft, which had the view first with a comment claiming forward-reference was
+-- fine "as long as it exists by the time this view is *queried*, not defined" — wrong:
+-- Chat 3's first live run of this migration against a real Postgres failed with
+-- `relation "public.connections" does not exist` at the view's CREATE, which rolled back
+-- the entire migration transaction, so *nothing* in this file — not the view, not the
+-- table, not one RLS policy — had ever actually been created in any environment this
+-- shipped to. CREATE VIEW resolves and records its dependencies immediately, unlike a
+-- function body; it cannot forward-reference a not-yet-created relation the way PL/pgSQL
+-- can. Fixed by creating `connections` first.
 create type connection_status as enum ('pending', 'accepted', 'declined');
 
 create table public.connections (
@@ -92,6 +70,35 @@ create policy "recipient responds to connection request" on public.connections
 
 create policy "either party deletes a connection" on public.connections
   for delete using (requester_id = auth.uid() or recipient_id = auth.uid());
+
+-- Deliberately a security-definer view (the default — no `security_invoker`), not an
+-- RLS policy opened up on `profiles` itself. `profiles` carries fields that must never
+-- be public (birth_year, school_name, city, is_admin, profile_strength_score,
+-- busy_mode*, onboarding_*, ...) — a raw RLS carve-out on the table would depend on
+-- every future column addition being re-audited for public-safety. This view instead
+-- hard-codes both the column whitelist and the `is_public = true` predicate, so it can
+-- never return a private row or a column outside this list no matter how `profiles`
+-- grows later. Granted to `authenticated` only (not `anon`) — a deliberately more
+-- conservative reading of "optionally shareable" than a fully public, unauthenticated,
+-- indexable page; see product-decisions.md if this should be loosened later.
+create view public.public_profiles as
+  select id, display_name, country, curriculum, graduation_year, looking_for, created_at
+  from public.profiles
+  where is_public = true
+     -- Continuity carve-out: if A is connected to (or has a pending request with) the
+     -- caller, the caller can still see A's basic info even if A later goes private —
+     -- otherwise an existing connection would silently show as an unresolvable/blank
+     -- row. This does NOT let two private users discover each other from scratch: V1's
+     -- "Connect" action only ever appears on an already-public profile page (see
+     -- app/(app)/u/[id]/page.tsx), so a connection can only be *initiated* via a public
+     -- profile in the first place.
+     or id in (
+       select case when requester_id = auth.uid() then recipient_id else requester_id end
+       from public.connections
+       where auth.uid() in (requester_id, recipient_id)
+     );
+
+grant select on public.public_profiles to authenticated;
 
 -- New notification category so a connection request/acceptance can notify through the
 -- existing system-generated notifications pipeline (lib/notifications/create.ts) rather

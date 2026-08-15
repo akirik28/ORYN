@@ -106,10 +106,16 @@ describe("evaluateRequirement — minimum_grade", () => {
     expect(result.status).toBe("not_met");
   });
 
-  test("likely_met when a different scale has to be converted first", () => {
+  test("needs_manual_review when every GPA on file is on a different scale than the rule — never auto-converted", () => {
     const facts: RequirementFacts = { ...EMPTY_FACTS, gpas: [{ value: 95, scale: 100 }] };
     const result = evaluateRequirement("minimum_grade", { kind: "minimum_grade", minGpa: 3.5, scale: 4 }, facts);
-    expect(result.status).toBe("likely_met");
+    expect(result.status).toBe("needs_manual_review");
+  });
+
+  test("met on the matching-scale GPA even when a different-scale one is also on file", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, gpas: [{ value: 95, scale: 100 }, { value: 3.8, scale: 4 }] };
+    const result = evaluateRequirement("minimum_grade", { kind: "minimum_grade", minGpa: 3.5, scale: 4 }, facts);
+    expect(result.status).toBe("met");
   });
 });
 

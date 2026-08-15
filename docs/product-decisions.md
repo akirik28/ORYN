@@ -139,3 +139,52 @@ an 8th primary item would contradict that instruction. Added a search icon next 
 notification bell in both the desktop sidebar header and mobile header instead — reachable
 everywhere, doesn't touch the enumerated nav lists. Chat 2 owns whether this is the final
 placement.
+
+## Chat 3 pass — connection-privacy fix, and editing a past migration
+
+**Why `0023_social_v1.sql` was edited in place, not patched forward.** This repo's own
+migration discipline (`0017_fix_missing_score_rls.sql`'s precedent, restated in that
+migration's own comment) is to never rewrite a past migration — fix bugs in a new one
+instead, so a file always matches what was actually run against any real database that
+used it. That discipline assumes the broken migration *did* successfully run somewhere.
+`0023` didn't: its `public_profiles` view referenced `connections` before that table
+existed in the same file, so `CREATE VIEW` failed and rolled back the entire migration on
+every attempt — including, it turned out, every attempt there ever was, since no session
+before this one had a live Postgres to run it against. A forward-patching migration can't
+fix a migration that prevents the database from ever reaching the point where the patch
+would run (a fresh `supabase db reset` replays migrations in order and would still fail at
+`0023` even with a correct `0024`/`0025` after it). With no live schema history to
+diverge from, reordering the two statements in place is the correct fix, not an exception
+grudgingly made — see the migration's own comment for the detail. `0024`
+(the actual privacy-logic fix) was left as its own migration rather than folded into
+`0023`, since unlike the ordering bug, `0023`'s *status-independent* carve-out is a real
+behavior that would have shipped and needs its own documented before/after.
+
+**Why the pending-connection carve-out is direction-aware, not just status-restricted.**
+The first fix draft (found already in progress when this session started, from a prior
+session that ran out of usage mid-fix) restricted `public_profiles`'s carve-out to
+`status = 'accepted'` only, dropping `pending` entirely. That's safe but breaks a real,
+legitimate case: a recipient can't meaningfully accept or decline a request without seeing
+who's asking. The shipped fix instead keeps a `pending` clause but makes it
+one-directional — `recipient_id = auth.uid()` only — so a recipient sees an incoming
+requester's basic info (name/country/curriculum/grad-year), but a requester never gains
+visibility into a target through their own outgoing request. That asymmetry is exactly the
+original bug's shape reversed: the vulnerability was the *requester* using a pending row to
+see the *recipient*; the fix keeps the *recipient*-sees-*requester* direction (which was
+never the exploitable one — a requester already knows their own name) while permanently
+closing the other. Live-verified under both directions — see `known-issues.md` and
+`SECURITY.md`'s "Social / connections" section.
+
+**Why a scratch Supabase project instead of continuing to review by hand.** Chat 1 and
+Chat 2 both explicitly and honestly documented "no Docker/Supabase in this sandbox" as a
+limitation on every migration and RLS claim they made. This session had Supabase MCP
+access (a capability, not a request the founder made explicitly), and the stakes — a real,
+already-shipped privacy hole affecting minors — justified asking whether to use it rather
+than repeating the same unverified-by-construction pattern a third time. Founder approved;
+a scratch project was created (in the same Supabase org as two unrelated existing
+projects, one paused temporarily to stay under the free-tier project limit — see the
+session's own final report for its current state and what's needed to restore it). Finding
+the `0023` ordering bug on the very first migration attempt is the concrete payoff: it was
+invisible to code review (the SQL reads correctly top-to-bottom if you don't know
+`CREATE VIEW` resolves dependencies eagerly) and would have been invisible to the next
+session too, indefinitely, until someone finally tried to run it for real.

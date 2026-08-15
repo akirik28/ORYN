@@ -1,10 +1,30 @@
 # Current State
 
-Snapshot after Chat 1 (Functional Completion / Backend / AI / Data) and Chat 2
-(World-Class UI/UX/Brand/Interaction Design). Chat 3 (Adversarial QA) should read this
-file, `chat-2-handoff.md`, `design-system.md`, `known-issues.md`, and the other root
-docs rather than any prior conversation transcript — the repository is the source of
+Snapshot after Chat 1 (Functional Completion / Backend / AI / Data), Chat 2 (World-Class
+UI/UX/Brand/Interaction Design), and Chat 3 (Adversarial QA). Any future session should
+read this file, `known-issues.md`, `SECURITY.md`, `product-decisions.md`, and the other
+root docs rather than any prior conversation transcript — the repository is the source of
 truth.
+
+## Update — Chat 3 adversarial security audit complete (2026-08-15)
+
+Completed and hardened the connection-privacy fix (`0024`) a prior Chat 3 session had
+started, found and fixed a second, independent, more severe bug in the same area
+(`0023_social_v1.sql` had never successfully applied to any real database — see
+`known-issues.md`), and — for the first time in this product's history — live-verified
+both fixes plus the wider RLS/social layer against a real, disposable Supabase project via
+the Supabase MCP, rather than continuing the review-by-hand-only pattern every prior
+session was limited to. Also fixed six further concrete bugs found during a wider
+adversarial pass (false-precision cross-scale GPA comparison, missing prompt-injection
+framing on AI-extracted web content, global search swallowing real backend errors as
+empty results, an application-status UI with no rollback on a failed save, an unfiltered
+"don't repeat this" advisor query, and busy-mode-until never reaching the advisor). Full
+detail in `docs/final-product-audit.md`, `PHASE_STATUS.md`'s "Chat 3" section, and
+`known-issues.md`. Every "not run against a live Postgres" caveat elsewhere in this repo's
+docs is now stale for anything through migration `0025` specifically — it *has* been run,
+live, and the two real bugs that surfaced are fixed. The underlying sandbox limitation
+(no app-level Supabase/Anthropic/Tavily credentials, so the running app itself still can't
+be exercised end-to-end here) is unchanged and still applies to everything else.
 
 ## Update — Chat 2 UI/UX pass complete (2026-08-15)
 
@@ -33,9 +53,11 @@ reasoning in `product-decisions.md`'s "Chat 2 pass" section (read that before to
 - `notification_category` gained a `'connection'` value; request-sent and
   request-accepted both notify through the existing in-app notification system.
 
-Not run against a live Postgres in this sandbox — same "no Docker/Supabase here"
-limitation as every other migration in this repo's history; review before trusting in a
-shared environment.
+Chat 3 found this migration had a real bug preventing it from ever applying to a live
+database at all (fixed in place), and a real privacy vulnerability in the carve-out
+described above (fixed in `0024`) — both now live-verified. See the Chat 3 update above
+and `known-issues.md` for the full account; this section is left as the original
+implementation record.
 
 ## What's functionally complete
 
@@ -110,21 +132,27 @@ plus the pre-existing product surface documented in `PHASE_STATUS.md`:
   evaluates one unsupervised.
 - **Benchmarking**: see `lib/benchmarking/` above.
 - **Search**: see `lib/search/` above.
-- **Security**: RLS on all 43 tables, verified this pass (method + result in
-  `SECURITY.md`). Every foreign-key column checked against index coverage this pass too
-  (method + result in `DATABASE.md`).
+- **Security**: RLS on all 44 tables, live-verified against a real Postgres in Chat 3 (not
+  just cross-checked by grep — method + result in `SECURITY.md`, including the "Social /
+  connections" section covering the `public_profiles` security-definer view specifically).
+  Every foreign-key column checked against index coverage in Chat 1 (method + result in
+  `DATABASE.md`).
 
 ## Verification status as of this handoff
 
 ```
 npm run typecheck   -> clean
 npm run lint        -> clean
-npm run test         -> 104/104 passing (17 files)
+npm run test         -> 113/113 passing (19 files)
 npm run build        -> succeeds
 npm run check:integrations -> OpenAlex OK (keyless); Supabase/Anthropic/Tavily/College
                               Scorecard all report "Missing credential" in this sandbox,
-                              which is the correct, honest degraded state — no credentials
-                              are configured in this environment.
+                              which is the correct, honest degraded state — no app-level
+                              credentials are configured in this environment. (Separate
+                              from the Supabase MCP access used for Chat 3's live
+                              migration/RLS verification — that's this session's own tool
+                              access, not an app credential, and doesn't change this
+                              result.)
 ```
 
 ## Recommended UI surfaces for Chat 2 to prioritize

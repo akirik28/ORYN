@@ -4,7 +4,8 @@ import { Lock, Sparkles } from "lucide-react";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { getPublicProfile, getPublicPortfolio, getPublicSkills } from "@/lib/social/public-profile";
-import { getConnectionWith, isUuidLike } from "@/lib/social/connections";
+import { getConnectionWith } from "@/lib/social/connections";
+import { isUuidLike } from "@/lib/validation/uuid";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/oryn/status-badge";
@@ -61,7 +62,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
   let skills: PublicSkill[] = [];
   let loadFailed = false;
   try {
-    [portfolio, skills] = await Promise.all([getPublicPortfolio(id), getPublicSkills(id)]);
+    [portfolio, skills] = await Promise.all([getPublicPortfolio(id, { bypassCheck: isSelf }), getPublicSkills(id, { bypassCheck: isSelf })]);
   } catch {
     loadFailed = true;
   }

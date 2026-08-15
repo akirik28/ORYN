@@ -97,21 +97,24 @@ export function evaluateRequirement(
       if (facts.gpas.length === 0) {
         return { status: "unknown", reasoning: "No GPA is on file yet — add your education record." };
       }
-      let bestOnRuleScale = -Infinity;
-      let bestIsExactScale = false;
-      for (const gpa of facts.gpas) {
-        const onRuleScale = (gpa.value / gpa.scale) * rule.scale;
-        if (onRuleScale > bestOnRuleScale) {
-          bestOnRuleScale = onRuleScale;
-          bestIsExactScale = gpa.scale === rule.scale;
-        }
+      // Only compare GPAs already on the rule's own scale. A flat linear ratio
+      // ((value/scale)*ruleScale) is not a valid way to convert between grading systems —
+      // e.g. a Turkish 100-point average and a US 4.0 GPA don't correspond linearly — so
+      // this used to produce a confident-looking `likely_met`/`not_met` from a comparison
+      // that wasn't actually sound. `lib/scoring/dimensions/academics.ts` already commits
+      // to the same "never compare GPA across curricula" principle for scoring; this
+      // brings requirement evaluation in line with it rather than quietly disagreeing.
+      const sameScale = facts.gpas.filter((gpa) => gpa.scale === rule.scale);
+      if (sameScale.length === 0) {
+        return {
+          status: "needs_manual_review",
+          reasoning: `Your GPA is recorded on a different scale than this requirement's ${rule.scale}-point scale — compare it yourself rather than trust an automatic conversion.`,
+        };
       }
-      if (bestOnRuleScale < rule.minGpa) {
-        return { status: "not_met", reasoning: `Your GPA is below the required ${rule.minGpa} (on a ${rule.scale} scale).` };
-      }
-      return bestIsExactScale
-        ? { status: "met", reasoning: `Your GPA meets the required ${rule.minGpa} (on a ${rule.scale} scale).` }
-        : { status: "likely_met", reasoning: `Your GPA appears to meet ${rule.minGpa} once converted to a ${rule.scale} scale.` };
+      const best = Math.max(...sameScale.map((gpa) => gpa.value));
+      return best >= rule.minGpa
+        ? { status: "met", reasoning: `Your GPA (${best} on a ${rule.scale} scale) meets the required ${rule.minGpa}.` }
+        : { status: "not_met", reasoning: `Your GPA (${best} on a ${rule.scale} scale) is below the required ${rule.minGpa}.` };
     }
 
     case "test_score":

@@ -16,6 +16,7 @@ export interface StudentAdvisorContext {
     curriculum: string | null;
     weeklyTimeBudget: string | null;
     busyMode: boolean;
+    busyModeUntil: string | null;
   };
   profileScores: { dimension: string; score: number; confidence: string }[];
   overallScore: number;
@@ -92,7 +93,7 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
   const [profileRes, targetUnisRes, upcomingDeadlines, recentRecsRes, recentActionsRes, pendingApplicationRequirements] = await Promise.all([
     supabase
       .from("profiles")
-      .select("display_name, country, school_name, graduation_year, curriculum, weekly_time_budget, busy_mode, completeness_percent")
+      .select("display_name, country, school_name, graduation_year, curriculum, weekly_time_budget, busy_mode, busy_mode_until, completeness_percent")
       .eq("id", userId)
       .single(),
     supabase
@@ -107,10 +108,17 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
     // session's audit; fixed by reusing the existing unified source instead of a second,
     // inferior implementation.
     getUpcomingDeadlines(supabase, userId, 5),
+    // Explicitly scoped to avoid_for_now: today lib/plan/persist.ts only ever writes that
+    // one class to this table (do/consider are never persisted here — see
+    // known-issues.md), so this filter is currently a no-op in practice. It's here so the
+    // prompt's "previously suggested avoid-for-now items" label (below) stays true if a
+    // future change ever starts persisting other classes too — without it, a "do" or
+    // "consider" row would silently get relabeled as something to avoid repeating.
     supabase
       .from("ai_recommendations")
       .select("title")
       .eq("user_id", userId)
+      .eq("recommendation_class", "avoid_for_now")
       .order("shown_at", { ascending: false })
       .limit(15),
     supabase
@@ -134,6 +142,7 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
       curriculum: profile?.curriculum ?? null,
       weeklyTimeBudget: profile?.weekly_time_budget ?? null,
       busyMode: profile?.busy_mode ?? false,
+      busyModeUntil: profile?.busy_mode_until ?? null,
     },
     profileScores: dimensions.map((d) => ({ dimension: d.dimension, score: d.score, confidence: d.confidence })),
     overallScore,
@@ -182,7 +191,10 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
 export function formatContextForPrompt(context: StudentAdvisorContext): string {
   const lines: string[] = [];
   lines.push(`Student: ${context.student.displayName}, graduating ${context.student.graduationYear ?? "unknown"}, ${context.student.curriculum ?? "unknown curriculum"}, ${context.student.country ?? "unknown country"}.`);
-  lines.push(`Weekly time budget: ${context.student.weeklyTimeBudget ?? "not set"}.${context.student.busyMode ? " Currently in a busy period (e.g. exams) — reduce recommendations." : ""}`);
+  const busyNote = context.student.busyMode
+    ? ` Currently in a busy period (e.g. exams)${context.student.busyModeUntil ? `, until ${context.student.busyModeUntil}` : ""} — reduce recommendations.`
+    : "";
+  lines.push(`Weekly time budget: ${context.student.weeklyTimeBudget ?? "not set"}.${busyNote}`);
   lines.push(`Career Profile: ${context.overallScore}/100 overall. Profile completeness: ${context.completenessPercent}%.`);
   lines.push("Dimension scores:");
   for (const d of context.profileScores) {

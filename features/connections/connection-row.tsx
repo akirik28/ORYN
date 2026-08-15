@@ -22,15 +22,29 @@ function Identity({ connection }: { connection: ConnectionWithProfile }) {
   const name = connection.otherProfile?.display_name ?? "A student";
   const meta = [connection.otherProfile?.curriculum, connection.otherProfile?.country].filter(Boolean).join(" · ");
 
-  return (
-    <Link href={`/u/${connection.otherProfile?.id ?? ""}`} className="flex min-w-0 items-center gap-3">
+  const content = (
+    <>
       <Avatar>
         <AvatarFallback className="bg-brand-primary-soft text-brand-primary-strong">{initials(name)}</AvatarFallback>
       </Avatar>
       <div className="min-w-0">
-        <p className="truncate font-medium hover:underline">{name}</p>
+        <p className="truncate font-medium group-hover:underline">{name}</p>
         {meta ? <p className="truncate text-xs text-muted-foreground">{meta}</p> : null}
       </div>
+    </>
+  );
+
+  // otherProfile is only null for a stale outgoing request whose target has since gone
+  // private (public_profiles' pending carve-out is one-directional — see migration 0024 —
+  // so a requester never resolves a now-private recipient here). No page to link to in
+  // that case, so render a plain row instead of a Link to `/u/` (empty id, would 404).
+  if (!connection.otherProfile) {
+    return <div className="flex min-w-0 items-center gap-3">{content}</div>;
+  }
+
+  return (
+    <Link href={`/u/${connection.otherProfile.id}`} className="group flex min-w-0 items-center gap-3">
+      {content}
     </Link>
   );
 }

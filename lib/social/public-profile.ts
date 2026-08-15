@@ -16,12 +16,21 @@ export async function getPublicProfile(supabase: SupabaseClient<Database>, userI
 }
 
 /** Cross-user reads, so the admin client (server-only, bypasses RLS) — the achievement
- * tables have no public-read policy by design (lib/social/public-profile.ts is the one
- * place that's allowed to read someone else's, and only after getPublicProfile above has
- * already confirmed the profile is public). Education is deliberately excluded — GPA/
- * school aren't part of "projects, achievements and skills". Evidence file paths are
- * never part of PortfolioItem's shape in the first place (lib/portfolio/types.ts). */
-export async function getPublicPortfolio(userId: string): Promise<PortfolioItem[]> {
+ * tables have no public-read policy by design. Checks `is_public` itself rather than
+ * trusting the caller already confirmed it: `getPublicProfile`'s view also returns a row
+ * for an accepted connection or an incoming pending request (migration 0024's carve-outs
+ * are deliberately narrower than "public" — see product-decisions.md), and neither
+ * carve-out was ever meant to also unlock the full portfolio, only the view's own small
+ * column set. `bypassCheck` exists only for a student previewing their own not-yet-public
+ * page. */
+async function isCurrentlyPublic(userId: string): Promise<boolean> {
+  const admin = createAdminClient();
+  const { data } = await admin.from("profiles").select("is_public").eq("id", userId).maybeSingle();
+  return data?.is_public === true;
+}
+
+export async function getPublicPortfolio(userId: string, opts: { bypassCheck?: boolean } = {}): Promise<PortfolioItem[]> {
+  if (!opts.bypassCheck && !(await isCurrentlyPublic(userId))) return [];
   const admin = createAdminClient();
   const items = await buildPortfolio(admin, userId);
   return items.filter((item) => item.category !== "education");
@@ -33,7 +42,8 @@ export interface PublicSkill {
   proficiency: string | null;
 }
 
-export async function getPublicSkills(userId: string): Promise<PublicSkill[]> {
+export async function getPublicSkills(userId: string, opts: { bypassCheck?: boolean } = {}): Promise<PublicSkill[]> {
+  if (!opts.bypassCheck && !(await isCurrentlyPublic(userId))) return [];
   const admin = createAdminClient();
   const { data } = await admin.from("skills").select("name, category, proficiency").eq("user_id", userId).order("category");
   return data ?? [];
