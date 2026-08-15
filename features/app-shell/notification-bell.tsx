@@ -17,7 +17,12 @@ export function NotificationBell({ notifications }: { notifications: Notificatio
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger render={<Button variant="ghost" size="icon" />} nativeButton={false} aria-label="Notifications">
+      {/* nativeButton={true}, not false: the render target here is Button with no render
+          override of its own, which Base UI's Button already renders as a real <button>
+          (see components/ui/button-link.tsx's comment on Button's own native default).
+          Unlike the other PopoverTrigger/Button `render` usages in this codebase (an <a>
+          or Link standing in for the button), there's nothing non-native about this one. */}
+      <PopoverTrigger render={<Button variant="ghost" size="icon" />} nativeButton={true} aria-label="Notifications">
         <span className="relative">
           <Bell className="size-4" />
           {unreadCount > 0 ? (

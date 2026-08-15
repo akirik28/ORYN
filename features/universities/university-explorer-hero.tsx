@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useSyncExternalStore } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RegionGridExplorer } from "./region-grid-explorer";
+import { WORLD_REGION, regionById } from "@/lib/data/regions";
 import type { CountryCount } from "./world-map-explorer";
 
 // Code-split: react-simple-maps + the world topology (~110KB) never ship to a mobile
@@ -34,27 +35,38 @@ function useIsDesktop() {
 
 /**
  * The map is a decorative, mouse/touch-driven visualization — aria-hidden, because
- * RegionGridExplorer below provides the same navigation as real, always-present,
- * keyboard- and screen-reader-accessible links. On small screens the map never mounts at
- * all; the region grid alone is a fully sufficient "reinterpreted" mobile interaction.
+ * RegionGridExplorer below provides the same navigation (including the world/region/
+ * country hierarchy) as real, always-present, keyboard- and screen-reader-accessible
+ * links. On small screens the map never mounts at all; the region+country pill list
+ * alone is a fully sufficient "reinterpreted" mobile interaction — World -> Europe ->
+ * country still works there, just without an SVG map, rather than the concept
+ * disappearing outright.
  */
 export function UniversityExplorerHero({
   countryCounts,
   selected,
+  selectedRegion,
 }: {
   countryCounts: CountryCount[];
   selected: string | null;
+  selectedRegion: string | null;
 }) {
   const showMap = useIsDesktop();
+  // A region with no drill-down `projection` (North America, Asia today) narrows the
+  // result list but leaves the map in world view — only a region that defines one
+  // (Europe) actually changes what the map renders.
+  const mapRegion = (selectedRegion ? regionById.get(selectedRegion) : undefined)?.projection
+    ? regionById.get(selectedRegion!)!
+    : WORLD_REGION;
 
   return (
     <div className="space-y-4">
       {showMap ? (
         <div aria-hidden="true">
-          <WorldMapExplorer countryCounts={countryCounts} />
+          <WorldMapExplorer countryCounts={countryCounts} region={mapRegion} />
         </div>
       ) : null}
-      <RegionGridExplorer countryCounts={countryCounts} selected={selected} />
+      <RegionGridExplorer countryCounts={countryCounts} selected={selected} selectedRegion={selectedRegion} />
     </div>
   );
 }

@@ -42,7 +42,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        {/* Founder-locked visual direction (revised): a dark, black-blue system built
+            around the ORYN logo's blue (--brand, hue 272 — see globals.css's `.dark`
+            block) is now the product's one deliberate default, not something contingent
+            on OS preference (`enableSystem` off, same reasoning as when this briefly
+            pointed at light: one consistent experience for every visitor). The light
+            theme's tokens stay fully defined for whoever opts in later; only the
+            default changed. */}
+        <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
           {/* Global prefers-reduced-motion gate — every `motion.*` element in the app
               honors the OS setting automatically; no per-component opt-in needed. */}
           <MotionConfig reducedMotion="user">

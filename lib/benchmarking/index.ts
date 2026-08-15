@@ -24,7 +24,26 @@ export async function getPeerBenchmarks(userId: string): Promise<PeerBenchmarkSu
   if (!profile) return { cohortDescription: "All Oryn students", results: [] };
 
   const filter: CohortFilter = { graduationYear: profile.graduation_year, curriculum: profile.curriculum };
-  const peerScoresByDimension = await getCohortDimensionScores(filter, userId);
+
+  // getCohortDimensionScores goes through the admin client (see cohort.ts) to read past
+  // RLS's owner-only scoping — createAdminClient() throws synchronously when
+  // SUPABASE_SECRET_KEY isn't configured. Uncaught, that throw propagates out of the
+  // Promise.all in app/(app)/profile/page.tsx and crashes the entire Career Profile page
+  // with a 500 — found live-testing this pass. Peer benchmarking is the one place this
+  // page reads past its own RLS-scoped data, so it's also the one place a missing admin
+  // credential can take the whole page down with it; every other section here uses only
+  // the RLS-scoped client and degrades per-row (empty arrays), not by crashing. Caught
+  // here so a missing/misconfigured secret key collapses into the same, already-honest
+  // "not enough comparable students" empty state PeerBenchmark renders for a genuinely
+  // small cohort — not false (there still aren't ≥MIN_COHORT_SIZE comparable peers
+  // either way), just not distinguishing the two causes in the UI.
+  let peerScoresByDimension: Map<BenchmarkDimension, number[]>;
+  try {
+    peerScoresByDimension = await getCohortDimensionScores(filter, userId);
+  } catch (error) {
+    console.warn("[benchmarking] cohort lookup unavailable", error);
+    peerScoresByDimension = new Map();
+  }
 
   const myScoreByDimension = new Map<BenchmarkDimension, number>((myScores ?? []).map((s) => [s.dimension, s.score]));
   if (profile.profile_strength_score !== null) myScoreByDimension.set("overall", profile.profile_strength_score);

@@ -20,10 +20,18 @@ interface AchievementSectionProps<T extends { id: string }> {
   title: string;
   description?: string;
   items: T[];
+  // Pre-computed on the server (app/(app)/profile/page.tsx), keyed by item id — not a
+  // `renderSummary(item)` function prop. This is a Client Component ("use client" above),
+  // and a Server Component can't hand a plain closure across that boundary (only a
+  // "use server" Action survives it) — passing one throws "Functions cannot be passed
+  // directly to Client Components" at request time. Neither `tsc --noEmit` nor `next
+  // build` catches this (the type system has no "RSC-serializable" type, and this page is
+  // force-dynamic, so build-time prerendering never actually executes the render path
+  // either) — found by live-testing an authenticated page load, the first time this
+  // codebase has had a real backend to do that against.
+  summaries: Record<string, { title: string; subtitle?: string }>;
   fields: FieldConfig[];
   defaultValues: FormValues;
-  toFormValues: (item: T) => FormValues;
-  renderSummary: (item: T) => { title: string; subtitle?: string };
   onCreate: (values: FormValues) => Promise<{ error?: string }>;
   onUpdate: (id: string, values: FormValues) => Promise<{ error?: string }>;
   onDelete: (id: string) => Promise<{ error?: string }>;
@@ -34,10 +42,9 @@ export function AchievementSection<T extends { id: string }>({
   title,
   description,
   items,
+  summaries,
   fields,
   defaultValues,
-  toFormValues,
-  renderSummary,
   onCreate,
   onUpdate,
   onDelete,
@@ -65,7 +72,10 @@ export function AchievementSection<T extends { id: string }>({
 
   function openEdit(item: T) {
     setEditingId(item.id);
-    setValues(toFormValues(item));
+    // Every caller's old `toFormValues` was the same identity cast (the DB row already
+    // matches FormValues' shape) — inlined here rather than kept as a prop, since a prop
+    // would hit the same cross-boundary-function problem `summaries` above works around.
+    setValues(item as unknown as FormValues);
     setError(null);
     setRefinement(null);
     setOpen(true);
@@ -136,7 +146,7 @@ export function AchievementSection<T extends { id: string }>({
       ) : (
         <ul className="divide-y rounded-lg border">
           {items.map((item) => {
-            const summary = renderSummary(item);
+            const summary = summaries[item.id] ?? { title: "Untitled" };
             return (
               <li key={item.id} className="flex items-center justify-between gap-3 px-4 py-3">
                 <div className="min-w-0">

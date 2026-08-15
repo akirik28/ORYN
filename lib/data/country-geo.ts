@@ -10,7 +10,7 @@ export interface CountryGeo {
   name: string;
   numericId: string;
   centroid: [latitude: number, longitude: number];
-  region: "North America" | "Europe" | "Other";
+  region: "North America" | "Europe" | "Asia" | "Other";
 }
 
 export const SUPPORTED_COUNTRIES: CountryGeo[] = [

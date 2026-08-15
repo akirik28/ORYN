@@ -29,7 +29,7 @@ export default function DesignPreviewPage() {
     <PreviewShell score={FIXTURE_STUDENT.profileStrengthScore}>
       <div className="mb-16 space-y-3">
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">University exploration</p>
-        <UniversityExplorerHero countryCounts={FIXTURE_COUNTRY_COUNTS} selected={null} />
+        <UniversityExplorerHero countryCounts={FIXTURE_COUNTRY_COUNTS} selected={null} selectedRegion={null} />
       </div>
 
       <div className="mb-16 max-w-2xl space-y-3">

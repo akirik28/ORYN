@@ -122,39 +122,49 @@
   --duration-slow: 400ms;
 }
 
+/* Founder-locked dark "black-blue" system (supersedes the earlier all-neutral dark
+   theme): background/surfaces carry a consistent low-chroma blue-black cast at hue 272 —
+   the same hue --brand is sampled from (see the comment above --brand-primary) — instead
+   of flat zero-chroma gray, so the whole product reads as *one* deliberately blue-black
+   product rather than a generic dark-gray UI with blue accents sprinkled on top.
+   High-contrast is a hard requirement here, not a nice-to-have: --border/--input moved
+   from a 10-15% white overlay (nearly invisible against a near-black surface) to solid,
+   clearly-lighter blue-grays, and --muted-foreground was lightened — "faint gray-on-dark
+   text" and borders you can't see are exactly the failure mode this pass corrects, not a
+   style preference. */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
+  --background: oklch(0.085 0.018 272);
+  --foreground: oklch(0.97 0.005 272);
+  --card: oklch(0.13 0.022 272);
+  --card-foreground: oklch(0.97 0.005 272);
+  --popover: oklch(0.13 0.022 272);
+  --popover-foreground: oklch(0.97 0.005 272);
   --brand: oklch(0.477 0.29 272);
-  --primary: oklch(0.72 0.14 272);
-  --primary-foreground: oklch(0.145 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.3 0.08 272);
-  --accent-foreground: oklch(0.9 0.04 272);
+  --primary: oklch(0.7 0.17 272);
+  --primary-foreground: oklch(0.09 0.01 272);
+  --secondary: oklch(0.17 0.025 272);
+  --secondary-foreground: oklch(0.97 0.005 272);
+  --muted: oklch(0.16 0.022 272);
+  --muted-foreground: oklch(0.74 0.02 272);
+  --accent: oklch(0.24 0.06 272);
+  --accent-foreground: oklch(0.93 0.05 272);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.6 0.2 272);
-  --chart-1: oklch(0.72 0.14 272);
+  --border: oklch(0.32 0.045 272);
+  --input: oklch(0.34 0.045 272);
+  --ring: oklch(0.68 0.19 272);
+  --chart-1: oklch(0.7 0.17 272);
   --chart-2: oklch(0.71 0.13 200);
   --chart-3: oklch(0.75 0.15 85);
   --chart-4: oklch(0.65 0.19 25);
-  --chart-5: oklch(0.708 0 0);
-  --sidebar: oklch(0.18 0.01 272);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.72 0.14 272);
-  --sidebar-primary-foreground: oklch(0.145 0 0);
-  --sidebar-accent: oklch(0.3 0.08 272);
-  --sidebar-accent-foreground: oklch(0.9 0.04 272);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.6 0.2 272);
+  --chart-5: oklch(0.74 0.02 272);
+  --sidebar: oklch(0.075 0.02 272);
+  --sidebar-foreground: oklch(0.97 0.005 272);
+  --sidebar-primary: oklch(0.7 0.17 272);
+  --sidebar-primary-foreground: oklch(0.09 0.01 272);
+  --sidebar-accent: oklch(0.2 0.055 272);
+  --sidebar-accent-foreground: oklch(0.93 0.05 272);
+  --sidebar-border: oklch(0.32 0.045 272);
+  --sidebar-ring: oklch(0.68 0.19 272);
 
   --success: oklch(0.72 0.15 152);
   --warning: oklch(0.78 0.14 80);

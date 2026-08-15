@@ -29,22 +29,37 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1">
-        <section className="relative overflow-hidden border-b bg-[oklch(0.13_0.02_272)] text-white">
+        {/* Founder-locked light system: a restrained brand-tinted gradient (the same
+            `brand-primary-subtle` token the Profile page's score card already uses), not
+            a solid dark-purple hero slab — this was the one large hardcoded-dark surface
+            still left on the landing page. */}
+        <section className="relative overflow-hidden border-b bg-gradient-to-b from-brand-primary-subtle via-background to-background">
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,oklch(0.32_0.14_272/0.6),transparent_60%)]"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,var(--brand-primary-soft),transparent_60%)]"
           />
+          {/* No opacity in the entrance animation (Y-offset only) — found live-testing
+              this pass that this motion.div's `animate` can get stuck at its `initial`
+              state well past its 400ms transition (not a prefers-reduced-motion skip;
+              reproduced with that media query confirmed false), which on the new
+              near-black background left the hero's headline and body copy essentially
+              invisible: a legibility failure on the single most important above-the-fold
+              text in the product. Root cause not fully isolated (other `motion.div`
+              entrances on this same page, e.g. the four loop-step cards below, resolved
+              normally) and disproportionate to chase further under a focused visual
+              pass — critical content simply shouldn't depend on an animation completing
+              to be readable, regardless of cause. */}
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 12 }}
+            animate={{ y: 0 }}
             transition={transition("slow")}
             className="relative mx-auto w-full max-w-4xl px-4 py-24 text-center md:px-8 md:py-32"
           >
-            <p className="mb-4 text-sm font-medium tracking-wide text-white/60">A Personal Career Operating System</p>
+            <p className="mb-4 text-sm font-medium tracking-wide text-brand-primary-strong">A Personal Career Operating System</p>
             <h1 className="font-heading text-balance text-4xl font-medium leading-tight tracking-tight md:text-6xl">
               What should I do next to improve my future opportunities?
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-balance text-lg text-white/70">
+            <p className="mx-auto mt-6 max-w-2xl text-balance text-lg text-muted-foreground">
               Oryn is where ambitious students capture what they&apos;ve done, understand where they
               genuinely stand, and get told — clearly — what&apos;s worth their time next.
             </p>
@@ -52,12 +67,7 @@ export default function LandingPage() {
               <ButtonLink size="lg" href="/signup">
                 Start building your profile <ArrowRight className="size-4" />
               </ButtonLink>
-              <ButtonLink
-                size="lg"
-                variant="outline"
-                className="border-white/20 bg-transparent text-white hover:bg-white/10"
-                href="/login"
-              >
+              <ButtonLink size="lg" variant="outline" href="/login">
                 I already have an account
               </ButtonLink>
             </div>
@@ -67,10 +77,15 @@ export default function LandingPage() {
         <section className="mx-auto w-full max-w-6xl px-4 py-20 md:px-8">
           <div className="grid gap-8 md:grid-cols-4">
             {LOOP_STEPS.map((step, index) => (
+              // Same opacity-safety fix as the hero above: verified live that these four
+              // `whileInView` cards can sit at their `initial` state (opacity 0) with
+              // `viewport={{ once: true }}` never firing, even scrolled fully into view —
+              // Y-offset only, so a stalled trigger is invisible-harmless rather than
+              // blanking these cards' text entirely.
               <motion.div
                 key={step.title}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ y: 10 }}
+                whileInView={{ y: 0 }}
                 viewport={{ once: true, margin: "-80px" }}
                 transition={{ ...transition("base"), delay: index * 0.06 }}
                 className="space-y-3"
