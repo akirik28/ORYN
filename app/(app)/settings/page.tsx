@@ -1,5 +1,5 @@
 import { Download, LogOut } from "lucide-react";
-import { getCurrentProfile, verifySession } from "@/lib/security/dal";
+import { getCurrentProfile, requireUser } from "@/lib/security/dal";
 import { signOut } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
 import { DisplayNameForm } from "@/features/settings/display-name-form";
@@ -10,7 +10,12 @@ import { DeleteAccountDialog } from "@/features/settings/delete-account-dialog";
 export const metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
-  const session = await verifySession();
+  // requireUser() (redirect-on-fail), not verifySession() — this page is nested under
+  // (app)/layout.tsx's own requireProfile() gate, but per lib/security/dal.ts's own
+  // documented discipline a layout isn't guaranteed to re-run on every client-side
+  // navigation, so each page still needs its own real check rather than one that
+  // silently renders a blank shell for a session that went stale mid-visit.
+  const session = await requireUser();
   const profile = await getCurrentProfile();
 
   return (
