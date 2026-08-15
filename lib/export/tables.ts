@@ -40,3 +40,22 @@ export const EXPORT_TABLES = [
  * filter shape in the route, so this list exists for coverage testing, not for driving
  * the fetch itself. */
 export const EXPORT_PARTICIPANT_TABLES = ["messages", "connections", "blocked_users", "message_reports"] as const;
+
+/**
+ * Explicit column allowlist for message_reports, because `*` is unsafe here: RLS on that
+ * table is necessarily row-level (a reporter can read back a report they filed — see
+ * migration 0030's "select own filed reports" policy), so `select("*")` would also hand
+ * back reviewed_by (an admin's id) and resolution_note — both meant as admin-internal,
+ * per the moderation UI's own "internal only" copy. This is the one export table that
+ * cannot reuse the generic `select("*")` pattern the others use.
+ */
+export const MESSAGE_REPORTS_EXPORT_COLUMNS = [
+  "id",
+  "reporter_id",
+  "reported_user_id",
+  "message_id",
+  "reason",
+  "status",
+  "reviewed_at",
+  "created_at",
+] as const;

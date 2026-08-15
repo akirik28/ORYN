@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { cn } from "@/lib/utils";
 import { sendMessage, markConversationRead, blockUser, unblockUser, reportMessage } from "@/app/(app)/messages/actions";
 import { resolveBlockUiState } from "@/lib/messaging/authorization";
+import { isMessageFromConversationPartner } from "@/lib/messaging/realtime";
 import { createClient } from "@/lib/supabase/client";
 import type { Message } from "@/types/database";
 
@@ -89,7 +90,7 @@ export function ConversationThread({
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages", filter: `recipient_id=eq.${currentUserId}` },
         (payload) => {
-          if (payload.new.sender_id === otherUserId) router.refresh();
+          if (isMessageFromConversationPartner(payload.new.sender_id, otherUserId)) router.refresh();
         }
       )
       .subscribe();

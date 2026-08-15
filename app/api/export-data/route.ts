@@ -3,7 +3,7 @@ import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { assertWithinRateLimit, RateLimitExceededError } from "@/lib/security/rate-limit";
 import { RATE_LIMITS } from "@/lib/security/rate-limit-config";
-import { EXPORT_TABLES } from "@/lib/export/tables";
+import { EXPORT_TABLES, MESSAGE_REPORTS_EXPORT_COLUMNS } from "@/lib/export/tables";
 
 /** Full data export (Phase 12 minor-safe requirement) — every table the student's own
  * data lives in, RLS-scoped via the normal request client (never the admin client).
@@ -39,14 +39,23 @@ export async function GET() {
   // direction-privacy rule as lib/messaging/authorization.ts: this export must not become
   // a side channel for "who blocked me" (RLS wouldn't return those rows anyway, but the
   // query itself is written to only ever ask for the direction that's actually mine).
-  // message_reports currently has no self-select RLS policy for the reporter (insert-only
-  // by design pre-moderation — see migration 0027), so this returns empty until that
-  // policy exists; harmless no-op until then, not an error.
+  // message_reports needs migration 0030's "select own filed reports" policy to return
+  // anything at all for a non-admin client — harmless empty result until then, not an
+  // error. It also intentionally selects an explicit column list rather than `*`: RLS is
+  // row-level, so once a reporter can read their own report row, they'd see every column
+  // on it including reviewed_by (an admin's id) and resolution_note — both meant as
+  // admin-internal (see the "internal only" placeholder on the moderation UI). Excluding
+  // them here is the correct place to draw that line; narrowing the policy itself would
+  // also block a future "see my report's status" UI feature that has no reason not to
+  // exist.
   const [messagesRes, connectionsRes, blockedRes, reportsRes] = await Promise.all([
     supabase.from("messages").select("*").or(`sender_id.eq.${userId},recipient_id.eq.${userId}`),
     supabase.from("connections").select("*").or(`requester_id.eq.${userId},recipient_id.eq.${userId}`),
     supabase.from("blocked_users").select("*").eq("blocker_id", userId),
-    supabase.from("message_reports").select("*").eq("reporter_id", userId),
+    supabase
+      .from("message_reports")
+      .select(MESSAGE_REPORTS_EXPORT_COLUMNS.join(", "))
+      .eq("reporter_id", userId),
   ]);
 
   const payload = {
