@@ -145,15 +145,22 @@ npm run typecheck   -> clean
 npm run lint        -> clean
 npm run test         -> 113/113 passing (19 files)
 npm run build        -> succeeds
-npm run check:integrations -> OpenAlex OK (keyless); Supabase/Anthropic/Tavily/College
-                              Scorecard all report "Missing credential" in this sandbox,
-                              which is the correct, honest degraded state — no app-level
-                              credentials are configured in this environment. (Separate
-                              from the Supabase MCP access used for Chat 3's live
-                              migration/RLS verification — that's this session's own tool
-                              access, not an app credential, and doesn't change this
-                              result.)
+npm run check:integrations -> OpenAlex OK (keyless); Supabase OK as of the end of this
+                              session (see below); Anthropic/Tavily/College Scorecard/
+                              Supabase-secret-key still report "Missing credential" —
+                              correct, honest degraded state for what's genuinely not
+                              configured.
 ```
+
+**Update, same session, after the numbers above were captured**: the founder chose to
+keep the Chat 3 scratch Supabase project as ORYN's real dev backend. `.env.local` now
+holds real `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` values —
+`npm run check:integrations` reports `Supabase OK`, the first time that's been true for
+this product. `SUPABASE_SECRET_KEY` is intentionally still blank (Supabase's MCP server
+doesn't expose service-role keys, by design — the founder needs to paste it in from their
+dashboard), so admin-client-backed features still degrade correctly. `.env.example` was
+also added — referenced by `.gitignore` since early in this project's history but never
+actually created.
 
 ## Recommended UI surfaces for Chat 2 to prioritize
 

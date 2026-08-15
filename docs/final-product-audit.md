@@ -154,13 +154,25 @@ pattern above). No new heavy dependencies, no new client-side bundles of consequ
 
 ## External blockers
 
-- No app-level `SUPABASE_SECRET_KEY`/`ANTHROPIC_API_KEY`/`TAVILY_API_KEY`/
-  `COLLEGE_SCORECARD_API_KEY` configured in this sandbox — every authenticated page and
-  every AI call path is typecheck/build-verified but not observed running against a real
-  backend or a real model this pass either.
-- The Supabase MCP access used for live-verification is this session's own tool access,
-  separate from the app's own credentials — it does not change the app-level integration
-  status above, and doesn't persist into any deployed environment on its own.
+- **Update, same session, after this document's main body was written**: the founder
+  chose to keep the scratch Supabase project as ORYN's real dev backend rather than
+  delete it. `.env.local` now has real `NEXT_PUBLIC_SUPABASE_URL` /
+  `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` values — `npm run check:integrations` confirms
+  `Supabase OK` for the first time in this product's history (not just the MCP access
+  used for the live-verification work above; the *app itself* can now reach a real
+  Postgres). `SUPABASE_SECRET_KEY` is still blank — the MCP server that provisioned this
+  project deliberately doesn't expose service-role/secret keys as a retrievable value
+  (for the founder's own security), so admin-client-backed features (background jobs,
+  account deletion, analytics, benchmarking cohorts) still report "Missing credential"
+  until the founder pastes it in from the Supabase dashboard. A live browser smoke test
+  was attempted but skipped: another session already had a `next dev` server running
+  against this same project directory, and Next.js refuses a second instance against one
+  `.next` build dir regardless of port — killing another session's active process wasn't
+  a reasonable tradeoff for one smoke check. `.env.example` was also added (referenced by
+  `.gitignore` but never actually created — a real Phase 32 gap, closed here).
+- `ANTHROPIC_API_KEY`/`TAVILY_API_KEY`/`COLLEGE_SCORECARD_API_KEY` remain unconfigured —
+  every AI call path and every non-Supabase provider is still typecheck/build-verified
+  only, not observed running for real.
 - No professional legal review of minor-safe/privacy claims — unchanged, still required
   before public launch.
 
