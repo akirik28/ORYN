@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { sendMessage, markConversationRead, blockUser, unblockUser, reportMessage } from "@/app/(app)/messages/actions";
+import { resolveBlockUiState } from "@/lib/messaging/authorization";
 import type { Message } from "@/types/database";
 
 export function ConversationThread({
@@ -16,23 +17,39 @@ export function ConversationThread({
   otherUserId,
   otherDisplayName,
   initialMessages,
-  isBlocked,
+  connectionAccepted,
+  blockedByMe,
+  messagingBlocked,
 }: {
   currentUserId: string;
   otherUserId: string;
   otherDisplayName: string;
   initialMessages: Message[];
-  isBlocked: boolean;
+  /** Whether there's currently a live accepted connection — independent of block state.
+   * False and unaffected by blocking/unblocking here (that requires reconnecting via
+   * /connections). Read access (this component always renders once reached) is a
+   * separate, broader gate — see lib/messaging/authorization.ts. */
+  connectionAccepted: boolean;
+  blockedByMe: boolean;
+  messagingBlocked: boolean;
 }) {
   const [messages, setMessages] = useState(initialMessages);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [blocked, setBlocked] = useState(isBlocked);
+  const [blocked, setBlocked] = useState(blockedByMe);
   const [reportOpen, setReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [reportTarget, setReportTarget] = useState<Message | null>(null);
   const [isPending, startTransition] = useTransition();
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // "Blocked by the other party" is only known at the moment this page loaded (no
+  // realtime for the other side toggling their own block) and can't change from any
+  // control in this component, so it's fixed for the session. My own `blocked` state is
+  // reactive — toggling Block/Unblock below updates it, and composer visibility follows.
+  const blockedByOtherAtLoad = messagingBlocked && !blockedByMe;
+  const blockUiState = resolveBlockUiState({ blockedByMe: blocked, messagingBlocked: blocked || blockedByOtherAtLoad });
+  const canSendNow = connectionAccepted && !blocked && !blockedByOtherAtLoad;
 
   useEffect(() => {
     void markConversationRead(otherUserId);
@@ -77,17 +94,35 @@ export function ConversationThread({
     });
   }
 
+  const headerCopy =
+    blockUiState === "blocked_by_me"
+      ? "You've blocked this student — they can't message you, and you can't message them."
+      : blockUiState === "unavailable"
+        ? "You can't message this student right now."
+        : !connectionAccepted
+          ? "You're no longer connected — you can view this conversation, but you can't send new messages."
+          : "Accepted connection";
+
+  const footerCopy =
+    blockUiState === "blocked_by_me"
+      ? "Unblock to send a new message."
+      : blockUiState === "unavailable"
+        ? "You can't send messages to this student right now."
+        : "You're no longer connected, so you can't send new messages.";
+
   return (
     <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border bg-card">
       <div className="flex items-center justify-between border-b px-4 py-2.5">
-        <p className="text-sm text-muted-foreground">
-          {blocked ? "You've blocked this student — they can't message you, and you can't message them." : "Accepted connection"}
-        </p>
+        <p className="text-sm text-muted-foreground">{headerCopy}</p>
         <DropdownMenu>
           <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" />} nativeButton={true} aria-label="Conversation options">
             <MoreVertical className="size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            {/* Only "did I block them" is ever known here — see resolveBlockUiState.
+                Blocking stays available even when disconnected or already blocked by the
+                other party (harmless, and gives every user full control of their own
+                block relationship). */}
             <DropdownMenuItem onClick={toggleBlock}>
               {blocked ? <ShieldCheck className="size-3.5" /> : <ShieldOff className="size-3.5" />}
               {blocked ? "Unblock" : "Block"} {otherDisplayName}
@@ -136,8 +171,8 @@ export function ConversationThread({
 
       <div className="border-t p-3">
         {error ? <p className="mb-2 text-sm text-destructive">{error}</p> : null}
-        {blocked ? (
-          <p className="text-center text-sm text-muted-foreground">Unblock to send a new message.</p>
+        {!canSendNow ? (
+          <p className="text-center text-sm text-muted-foreground">{footerCopy}</p>
         ) : (
           <div className="flex items-end gap-2">
             <Textarea

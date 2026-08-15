@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
-import { getConversation } from "@/lib/messaging/messages";
+import { getConversation, getBlockState } from "@/lib/messaging/messages";
+import { resolveConversationAccess } from "@/lib/messaging/authorization";
 import { getConnectionWith } from "@/lib/social/connections";
 import { isUuidLike } from "@/lib/validation/uuid";
 import { PageHeader } from "@/components/oryn/page-header";
@@ -21,18 +22,27 @@ export default async function ConversationPage({ params }: { params: Promise<{ u
 
   const supabase = await createClient();
 
-  const [connection, otherProfileRes, blockedRes] = await Promise.all([
+  const [connection, otherProfileRes, blockState, messages] = await Promise.all([
     getConnectionWith(supabase, userId, otherUserId),
     supabase.from("public_profiles").select("display_name").eq("id", otherUserId).maybeSingle(),
-    supabase.rpc("is_blocked_between", { user_a: userId, user_b: otherUserId }),
+    getBlockState(supabase, userId, otherUserId),
+    getConversation(supabase, userId, otherUserId),
   ]);
 
   const displayName = otherProfileRes.data?.display_name ?? "This student";
 
   // Same "re-check server-side, never trust that the UI only linked here from a valid
   // state" discipline as every other authorization-sensitive page in this app — a bare
-  // URL to /messages/[id] is directly reachable regardless of connection status.
-  if (!connection || connection.status !== "accepted") {
+  // URL to /messages/[id] is directly reachable regardless of connection status. Read and
+  // send are deliberately different gates now — see lib/messaging/authorization.ts: a
+  // removed connection with retained history stays readable, just not writable.
+  const access = resolveConversationAccess({
+    connectionStatus: connection?.status ?? null,
+    hasMessageHistory: messages.length > 0,
+    messagingBlocked: blockState.messagingBlocked,
+  });
+
+  if (!access.canRead) {
     return (
       <div className="space-y-6">
         <PageHeader title="Conversation" />
@@ -45,9 +55,6 @@ export default async function ConversationPage({ params }: { params: Promise<{ u
     );
   }
 
-  const messages = await getConversation(supabase, userId, otherUserId);
-  const isBlocked = Boolean(blockedRes.data);
-
   return (
     <div className="flex h-[calc(100vh-8rem)] flex-col space-y-4">
       <PageHeader title={displayName} />
@@ -56,7 +63,9 @@ export default async function ConversationPage({ params }: { params: Promise<{ u
         otherUserId={otherUserId}
         otherDisplayName={displayName}
         initialMessages={messages}
-        isBlocked={isBlocked}
+        connectionAccepted={connection?.status === "accepted"}
+        blockedByMe={blockState.blockedByMe}
+        messagingBlocked={blockState.messagingBlocked}
       />
     </div>
   );

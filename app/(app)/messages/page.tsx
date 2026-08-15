@@ -25,7 +25,7 @@ export default async function MessagesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Messages" description="1:1 conversations with accepted connections only." />
+      <PageHeader title="Messages" description="1:1 conversations with your connections. Removed connections stay readable but read-only." />
 
       {conversations.length === 0 ? (
         <EmptyState
@@ -53,7 +53,11 @@ export default async function MessagesPage() {
                       ) : null}
                     </div>
                     <p className="truncate text-sm text-muted-foreground">
-                      {c.lastMessage ? c.lastMessage.body : "Say hello — start the conversation."}
+                      {!c.isConnected
+                        ? "No longer connected — read only"
+                        : c.lastMessage
+                          ? c.lastMessage.body
+                          : "Say hello — start the conversation."}
                     </p>
                   </div>
                 </Link>
