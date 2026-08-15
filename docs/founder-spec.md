@@ -13,6 +13,14 @@ never be treated as generated content — it is the permanent source of truth.
 `PRODUCT_SPEC.md` is a short orientation summary of it; where the two disagree,
 this file wins.
 
+**Partial supersession (2026-08-15, founder-approved):** Phase 3 below lists "a social
+network" among what Oryn is explicitly *not*. The founder has since locked a narrow V1
+social scope (an optionally-shareable profile, mutual-consent connections, a "currently
+looking for" status — explicitly still not a feed/DMs/comments/likes/mentor-marketplace).
+This note supersedes that one line only; the verbatim body below is otherwise left
+exactly as originally written, per this file's whole purpose. Full reasoning in
+`product-decisions.md`'s "Chat 2 pass — V1 social/network scope" section.
+
 ---
 
 # Product build specification

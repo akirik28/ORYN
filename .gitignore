@@ -24,3 +24,7 @@ coverage/
 
 # Vercel
 .vercel/
+
+# Claude Code local tooling (dev-server launch config etc.) — machine/session-local,
+# not product config.
+.claude/

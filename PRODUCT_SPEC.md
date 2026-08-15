@@ -17,7 +17,18 @@ A **Personal Career Operating System**: capture → verify → organize → anal
 benchmark → discover → plan → act → reflect → update → repeat.
 
 Not a CV builder, not a university ranking site, not an admissions calculator, not a
-chatbot with a dashboard attached.
+chatbot with a dashboard attached, and — per V1 scope, see below — not a social feed.
+
+## V1 social scope (added 2026-08-15, see `docs/product-decisions.md`)
+
+Oryn is broadening toward an "Operating System for Ambitious Students" — counseling,
+career guidance, opportunity discovery, a professional network layer, and AI next-best-
+action — but V1's social surface is deliberately narrow: an optionally-shareable profile
+(off by default), mutual-consent connections (request → accept, not an open follow), and
+a "currently looking for" status. Explicitly **not** in V1: a feed, DMs, comments,
+likes/reactions, teammate matching, or a mentor marketplace. This updates `AGENTS.md`'s
+original Phase 3 ("not... a social network") — see `docs/founder-spec.md`'s header note
+for exactly what's superseded and what isn't.
 
 ## Non-negotiables (from AGENTS.md, restated because they shape every screen)
 

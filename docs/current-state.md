@@ -4,6 +4,27 @@ Snapshot after Chat 1 (Functional Completion / Backend / AI / Data). Chat 2 (UI/
 read this file, `chat-1-handoff.md`, and the other root docs rather than any prior
 conversation transcript — the repository is the source of truth.
 
+## Update — V1 social/network scope (Chat 2 pass, 2026-08-15)
+
+The founder locked a narrow V1 social scope mid-build: an optionally-shareable public
+profile, mutual-consent connections, and a "currently looking for" status — explicitly
+**not** a feed, DMs, comments, likes, teammate matching, or a mentor marketplace. Full
+reasoning in `product-decisions.md`'s "Chat 2 pass" section (read that before touching
+`connections`/`public_profiles`/`is_public`/`looking_for`). Built this pass:
+
+- `supabase/migrations/0023_social_v1.sql` — `profiles.is_public`/`looking_for`, a
+  `public_profiles` view (fixed safe-column whitelist, never the raw table), and a
+  `connections` table (request → accept, RLS-scoped, order-independent uniqueness).
+- `lib/social/public-profile.ts`, `lib/social/connections.ts`.
+- `app/(app)/u/[id]/` (public profile page), `app/(app)/connections/` (requests +
+  accepted list), a "Visibility" section on `/settings`.
+- `notification_category` gained a `'connection'` value; request-sent and
+  request-accepted both notify through the existing in-app notification system.
+
+Not run against a live Postgres in this sandbox — same "no Docker/Supabase here"
+limitation as every other migration in this repo's history; review before trusting in a
+shared environment.
+
 ## What's functionally complete
 
 Everything `README.md`'s "Known limitations" section used to list as missing is now built,

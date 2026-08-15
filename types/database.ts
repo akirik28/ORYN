@@ -69,7 +69,14 @@ export type ImpactLevel = "low" | "medium" | "high" | "very_high";
 export type ReflectionOutcome = "completed_successfully" | "partially_completed" | "did_not_work" | "opportunity_no_longer_available";
 export type RecommendationClass = "do" | "consider" | "deprioritize" | "avoid_for_now";
 export type MessageRole = "user" | "assistant";
-export type NotificationCategory = "deadline" | "new_opportunity" | "weekly_plan" | "profile_update" | "university_data_changed" | "system";
+export type NotificationCategory =
+  | "deadline"
+  | "new_opportunity"
+  | "weekly_plan"
+  | "profile_update"
+  | "university_data_changed"
+  | "system"
+  | "connection";
 export type ProviderStatus = "healthy" | "degraded" | "down" | "unknown";
 export type SyncJobStatus = "running" | "succeeded" | "failed";
 
@@ -97,10 +104,40 @@ export interface Profile {
   completeness_percent: number;
   profile_strength_score: number | null;
   is_admin: boolean;
+  is_public: boolean;
+  looking_for: string | null;
   created_at: string;
   updated_at: string;
 }
 export type ProfileUpdate = Updatable<Profile, "id" | "created_at" | "updated_at">;
+
+// Narrow, explicit column subset exposed by the `public_profiles` view (migration
+// 0023) — never the raw `Profile` row. See that migration for why.
+export interface PublicProfileRow {
+  id: string;
+  display_name: string | null;
+  country: string | null;
+  curriculum: CurriculumType | null;
+  graduation_year: number | null;
+  looking_for: string | null;
+  created_at: string;
+}
+
+export type ConnectionStatus = "pending" | "accepted" | "declined";
+
+export interface Connection {
+  id: string;
+  requester_id: string;
+  recipient_id: string;
+  status: ConnectionStatus;
+  low_id: string;
+  high_id: string;
+  created_at: string;
+  updated_at: string;
+  responded_at: string | null;
+}
+export type ConnectionInsert = Insertable<Connection, "id" | "created_at" | "updated_at" | "low_id" | "high_id" | "responded_at" | "status">;
+export type ConnectionUpdate = Updatable<Connection, "id" | "requester_id" | "created_at" | "updated_at" | "low_id" | "high_id">;
 
 interface AchievementCommon {
   id: string;
@@ -763,10 +800,17 @@ type Table<Row, Insert, Update = Partial<Insert>> = {
 
 export interface Database {
   public: {
-    Views: { [_ in never]: never };
+    Views: {
+      // Same `Relationships` requirement as Table<> above (see its comment) — a view
+      // entry missing it collapsed every *table* query in the whole client to `never`
+      // too, not just this view, when this was first added. Keep it even though this
+      // view has no Insert/Update.
+      public_profiles: { Row: Identity<PublicProfileRow>; Relationships: [] };
+    };
     Functions: { [_ in never]: never };
     Tables: {
       profiles: Table<Profile, Partial<Profile>, ProfileUpdate>;
+      connections: Table<Connection, ConnectionInsert, ConnectionUpdate>;
       education_records: Table<EducationRecord, EducationRecordInsert, EducationRecordUpdate>;
       courses: Table<Course, CourseInsert, CourseUpdate>;
       test_scores: Table<TestScore, TestScoreInsert, TestScoreUpdate>;

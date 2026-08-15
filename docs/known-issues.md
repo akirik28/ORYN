@@ -60,6 +60,20 @@ memory/documentation discipline.
 - **No professional legal review** of minor-safe/privacy claims. Unchanged — still needed
   before any public launch.
 
+## Added this session (Chat 2, V1 social scope)
+
+- **`0023_social_v1.sql` hasn't run against a live Postgres** — no Docker/Supabase in
+  this sandbox, same limitation Chat 1 recorded for its own migrations. Reviewed by hand
+  (a view, an additive enum value, a standard RLS-scoped table); run `supabase db reset`
+  before trusting it in a shared environment.
+- **Public profile/portfolio is whole-profile, not per-item.** Turning on "Public
+  profile" shows every project/achievement/skill (minus `education`) — there's no
+  per-item visibility toggle. Matches the founder's "optionally shareable profile"
+  phrasing rather than a granular ACL system; worth a look if per-item privacy turns out
+  to matter in practice.
+- **No people-search/student directory** — deliberate, see `product-decisions.md`.
+  Connections are discoverable only via a shared `/u/[id]` link.
+
 ## Pre-existing, still true (see `README.md` "Known limitations" for the full list)
 
 - No unified admin UI for browsing/editing global reference data beyond the one new

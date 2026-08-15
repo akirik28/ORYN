@@ -42,6 +42,23 @@ export async function updateTimeBudget(timeBudget: TimeBudget | null): Promise<{
   return {};
 }
 
+/** V1 social scope (docs/product-decisions.md) — opt-in, private-by-default. `isPublic`
+ * and `lookingFor` are independent: a student can set a "looking for" status while
+ * staying private (it just won't be visible anywhere yet), though the settings UI only
+ * exposes it once public to avoid a confusing "who sees this?" state. */
+export async function updateVisibility(isPublic: boolean, lookingFor: string | null): Promise<{ error?: string }> {
+  const session = await requireUser();
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ is_public: isPublic, looking_for: lookingFor?.trim() || null })
+    .eq("id", session.userId!);
+  if (error) return { error: "Couldn't update." };
+  revalidatePath("/settings");
+  revalidatePath("/profile");
+  return {};
+}
+
 /**
  * Permanently deletes the student's account (Phase 12 minor-safe requirement). Uses the
  * admin client to delete the auth.users row directly — every other table cascades via

@@ -4,6 +4,7 @@ import { signOut } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
 import { DisplayNameForm } from "@/features/settings/display-name-form";
 import { CapacityForm } from "@/features/settings/capacity-form";
+import { VisibilityForm } from "@/features/settings/visibility-form";
 import { DeleteAccountDialog } from "@/features/settings/delete-account-dialog";
 
 export const metadata = { title: "Settings" };
@@ -38,6 +39,18 @@ export default async function SettingsPage() {
           initialTimeBudget={profile?.weekly_time_budget ?? null}
           initialBusyMode={profile?.busy_mode ?? false}
           initialBusyModeUntil={profile?.busy_mode_until ?? null}
+        />
+      </section>
+
+      <section className="space-y-4">
+        <div>
+          <h2 className="font-semibold">Visibility</h2>
+          <p className="text-sm text-muted-foreground">Control what other Oryn students can see about you.</p>
+        </div>
+        <VisibilityForm
+          userId={session.userId!}
+          initialIsPublic={profile?.is_public ?? false}
+          initialLookingFor={profile?.looking_for ?? null}
         />
       </section>
 
