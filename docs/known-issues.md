@@ -4,6 +4,82 @@ Honest, current list. Anything fixed during a session should be removed from her
 left stale — cross-check against the code before trusting an entry, per this repo's own
 memory/documentation discipline.
 
+## Needs founder decision — real conflict found in the founder's own Drive doc
+
+While working autonomously, this session found "ORYN Programlama" (a Google Doc in the
+founder's Drive, last edited 15:29 Turkey time on 2026-08-15 — the same day as everything
+else in this file) — the founder's own private product-strategy notes, in Turkish. Two of
+its "final, locked" decisions directly contradict instructions given to Claude Code in
+chat **later the same day**:
+
+1. **Section 33, "V1 SOSYAL KATMAN — FİNAL SCOPE KARARI"**, lists "Direct messaging / DM"
+   under what will explicitly **not** be in V1. The chat instruction that led to
+   `0027_messaging.sql`/commit `bcfa64c` (18:02 Turkey time — after the doc) explicitly
+   says the opposite: "previous V1 scope explicitly excluded direct messaging. That
+   decision is now superseded." That chat message's own wording shows awareness of the
+   exact stance the doc describes, which reads as a deliberate, later reversal rather than
+   an oversight — messaging was kept as built, not reverted.
+2. **Section 34, "GÖRSEL YÖN / UI DENSITY — FİNAL TASARIM KARARI"**, is an explicit
+   decision to move the whole UI from a "previous dark and dense approach" to a
+   white/near-white, indigo-accent design, with large dark-background areas specifically
+   called out as something to stop doing. Commit `401a894`, **"Rework visual system to a
+   high-contrast dark black-blue theme"** (16:58 Turkey time — also after the doc), did
+   the opposite, and the chat instructions driving both that pass and this one explicitly
+   say "Keep ORYN's current black / blue-black / logo-blue high-contrast design system."
+   The dark theme was kept as instructed, not reworked to match the doc.
+
+**Why this wasn't treated as blocking**: in both cases the chat instructions are more
+recent (by commit timestamp), more specific, and repeated more than once, including in
+the message driving this very pass — that's a strong, consistent signal of the founder's
+actual current intent, stronger than a single planning document apparently not yet
+reconciled with it. But a full visual-system reversal and a safety-sensitive messaging
+feature are both too consequential to resolve by guessing silently either way, so this is
+logged here explicitly rather than being fixed or ignored. **If the doc actually reflects
+current intent, not the chat instructions**: the messaging feature would need to come out
+(schema, RLS, UI, nav) and the entire design system would need reworking toward light/
+white — both real, scoped efforts, not a quick toggle.
+
+## Fixed this session (autonomous pass — Drive data import, CV Generator)
+
+- **Sports/Portfolio and public-profile Message CTA gaps** (found auditing the prior
+  pass's own commit rather than trusting it) — see `PHASE_STATUS.md`'s "Continuation" and
+  commit `699fc92`; already fixed before this pass began.
+- **`opportunities`/`universities`/`university_programs`/`university_requirements` have no
+  real data path without `SUPABASE_SECRET_KEY`.** Not fixable from inside a chat session
+  (RLS on these tables is deliberately service-role-write-only — see migration 0014) —
+  documented, and worked around by generating ready-to-apply SQL instead of a live write.
+  See `docs/data-readiness.md`'s "Staged batch" section.
+- **CV Generator did not exist**, despite the founder's Drive doc listing it as
+  unconditionally in MVP scope ("MVP'DE KESİN OLARAK OLACAKLAR" — section 4). Built:
+  `/profile/cv`, `features/profile/cv-builder.tsx`, reusing `buildPortfolio` (no new data
+  path, no invented facts) with a category/item checklist and browser print-to-PDF export
+  (`window.print()` + a `.cv-print-area` isolation rule in `globals.css` — no new PDF
+  dependency).
+
+## Open — new from this pass, not fixed
+
+- **Essay Story Bank does not exist.** Also explicitly MVP-scope in the founder's Drive
+  doc (sections 12, 20). Needs: a `story_notes`-shaped addition to achievement records
+  (why started / hardest moment / what changed / what learned / measurable outcome — the
+  doc's own field list), a UI to capture it, and a flow that surfaces 2-3 "story
+  candidates" for a given essay prompt with 2-3 outline options each (Hook → Context →
+  Conflict → Action → Turning Point → Reflection → Connection to Future) — AI organizes
+  and suggests angles, never invents events or writes the essay itself. Scoped but not
+  built this pass — a real second feature on top of an already-large single session, and
+  half-building it risks exactly the "half-finished implementation" this repo's own
+  discipline rules out. Recommended next priority; see `docs/pre-publish-checklist.md`.
+- **Drive-corpus opportunities carry no `country`/`eligible_countries`/`age`/`cost`.** The
+  source text doesn't reliably map to these without guessing, and guessing eligibility is
+  exactly what this product prohibits — see `scripts/drive-import/README.md`. A student
+  can see the opportunity but the app can't yet hard-gate it by eligibility the way
+  `AGENTS.md` Phase 13 asks; needs a second, more targeted extraction pass per record
+  (real scope, not a quick fix).
+- **`supabase/seed_drive_batch1.sql` genuinely untested against a real Postgres.** Checked
+  programmatically (parenthesis/quote balance, no bare unquoted enum literals) and by hand
+  (spot-read a representative sample), but this session has no database connection to
+  actually execute it. Apply it in a disposable/staging environment first if that
+  possibility exists, rather than trusting static review alone for a ~1,300-line file.
+
 ## Fixed this session (Chat 4, data-readiness + messaging/Sports pass)
 
 - **Career Profile radar chart clipped its own axis labels.** "Exploration" and

@@ -4,6 +4,12 @@ Chat 4. Real counts from the live dev database (`oryn-qa-scratch`, wired up as `
 backend this pass), queried directly — not estimated, not from memory. Re-run the queries
 in "How to re-verify" below before trusting this document after any further data work.
 
+**Update (autonomous pass, same day)**: a staged batch is ready to apply — real, sourced
+records generated from the founder's own Google Drive corpus, not yet in the live
+database (see "Staged batch" below). The summary table immediately below still describes
+**only what's actually live right now**; do not read the staged-batch section as having
+already happened to these numbers.
+
 ## Summary
 
 | Dataset | Rows | Verified source | Status |
@@ -122,6 +128,54 @@ Read `lib/opportunities/discover.ts`, `lib/requirements/discover.ts`,
   in place regardless.
 
 **Conclusion: the pipeline is architecturally ready. It has simply never been run.**
+
+## Staged batch: founder's Google Drive corpus (autonomous pass, not yet applied)
+
+While the founder was away, this session found a real, already-verified data corpus in
+their Google Drive ("ORYN Database" folder, owned by their school account) — a prior
+research pass (same day) had cross-checked school-counselor documents against official
+institution/provider pages and split every record into `Verified`/`2026 cycle confirmed`
+vs. `Review`/`Rejected` (kept out). Full methodology, corpus inventory, and the reusable
+extraction pipeline: `scripts/drive-import/README.md`.
+
+**This session has no working `SUPABASE_SECRET_KEY`** (still the placeholder — see
+`.env.local`'s own header, unchanged since Chat 3), so none of this was written to the
+live database. Instead, `scripts/drive-import/{parse,generate_sql}.py` transformed it into
+`supabase/seed_drive_batch1.sql` — a plain, idempotent SQL file, reviewed by hand (not a
+rubber-stamped code-gen output — see "how this was checked" below), ready for the founder
+(or a future session with the key) to apply via the Supabase SQL editor or `psql`/CLI.
+Requires `supabase/migrations/0028_program_requirement_dedup_indexes.sql` applied first
+(adds two unique indexes the seed file's `ON CONFLICT` clauses depend on — safe to add
+now specifically because this document's own live audit already confirmed both tables are
+currently empty).
+
+| Dataset | Staged rows | Notes |
+|---|---|---|
+| Universities | 31 new (of 50 in the corpus) | 19 already existed from the prior 21-university seed; matched by `(lower(name), country)`, never duplicated |
+| University programs | 189 | Bachelor/first-cycle only, across all 50 (new + pre-existing) universities |
+| University requirements | 520 | Pivoted from 192 verified programme-level rows into ORYN's one-row-per-requirement-type shape; `structured_rule` left `NULL` (admin-review-only, per migration 0020) |
+| Opportunities | 273 | 125 `active`, 147 `under_review` (identity verified, current-cycle date not confirmed — never shown with a fabricated deadline), 1 `expired` |
+
+**How this was checked, not just generated**: every row's parsed count was cross-validated
+against that source file's own README-stated "Verified identity records" count before
+being trusted (all matched exactly — 199 Summer Programs, 54 Competitions, 189 Programs,
+200 Requirements, 50 Universities). The generated SQL was checked for enum-quoting
+correctness, parenthesis/quote balance, and apostrophe-escaping (e.g. "King's College
+London") programmatically, then spot-read by hand. No date was ever parsed out of free
+text into a `deadline` column — a wrong guess there is exactly the false-precision failure
+this document's own "Opportunities: nothing to report" section above already refuses to
+do for the same reason.
+
+**What this batch deliberately leaves out** (see `scripts/drive-import/README.md`'s "Known
+limitations" for the full list): `country`/`eligible_countries`/`age`/`cost` on
+opportunities (the source text doesn't reliably map to these without guessing), any
+requirement's `structured_rule`, and university admission statistics — all still `NULL`/
+unset, consistent with this document's own standing "never fabricate" rule.
+
+**Founder action to make this live**: open the Supabase SQL editor for the linked
+project, run `supabase/migrations/0028_program_requirement_dedup_indexes.sql`, then
+`supabase/seed_drive_batch1.sql`. Both are idempotent — safe to run once, and safe to
+re-run if interrupted partway through.
 
 ## How to re-verify
 

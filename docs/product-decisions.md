@@ -237,3 +237,32 @@ count was thin for a product whose first target user is exactly this student). A
 the live dev project directly (not just the local-CLI-only seed file) so the actual
 running product has real starting content instead of an empty catalog — see
 `docs/data-readiness.md` for exactly what is and isn't backed by this seed.
+
+## Autonomous pass — Drive import status mapping, CV export approach, conflict handling
+
+**Opportunity `status` is derived from two fields, never a parsed date.** The Drive
+corpus's `current_cycle_status` (`2026 cycle confirmed` vs. `Programme identity only`)
+maps to `active` vs. `under_review`; a keyword scan of `current_cycle_details` for
+explicit closed-signals (`"registration closed"`, etc.) downgrades to `expired`. Rejected
+outright: regex-extracting an actual date out of free text into `deadline` — across ~460
+candidate rows of inconsistent human-written text, a wrong month/day/year read with
+confident precision is a worse outcome than no date at all, and is exactly the failure
+mode `AGENTS.md`'s "never present a passed date as currently actionable" rule exists to
+prevent. The real date, when present, stays human-readable in `description` instead.
+
+**CV export uses the browser's native print-to-PDF, not a new PDF-generation dependency.**
+`window.print()` plus a `.cv-print-area` CSS isolation rule (`app/globals.css`) reuses
+`buildPortfolio` and produces a real, clean PDF via "Save as PDF" in the print dialog —
+zero new packages, zero new server-side rendering path, reversible if a real templated-PDF
+system is wanted later. Considered and rejected: a PDF library (`@react-pdf/renderer` or
+similar) — meaningfully more surface area (a second rendering engine to keep visually in
+sync with the web view) for a V1 that just needs "gets a clean PDF out," not pixel-perfect
+multi-template control.
+
+**Two conflicts between the founder's own Drive planning doc and same-day chat
+instructions (messaging in/out of V1; dark vs. light theme) were resolved in favor of the
+chat instructions, not the doc** — full reasoning and exact evidence in
+`docs/known-issues.md`'s first section. Recorded here too because it's a product decision,
+not just a bug: the doc's "FİNAL scope kararı" language means a future session should not
+assume this resolution is obviously correct forever, only that it was the best call
+available without being able to ask.

@@ -28,3 +28,10 @@ coverage/
 # Claude Code local tooling (dev-server launch config etc.) — machine/session-local,
 # not product config.
 .claude/
+
+# Drive-import working data (scripts/drive-import/README.md) — large, regenerable from
+# Drive, and the raw exports may carry more of the source school documents' content than
+# belongs in git history. Only the two scripts + the generated supabase/seed_drive_*.sql
+# output are committed.
+scripts/drive-import/raw/
+scripts/drive-import/parsed/

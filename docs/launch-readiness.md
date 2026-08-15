@@ -144,9 +144,9 @@ France/Parcoursup ingestion, group/continent drill-downs beyond Europe).
 
 ## Recommended next step
 
-Get the three missing external API credentials into `.env.local` (Tavily, Anthropic,
-College Scorecard) and confirm `SUPABASE_SECRET_KEY` landed correctly, then run
-`POST /api/jobs/discover-requirements` and `POST /api/jobs/discover-opportunities` for
-real against the 21 seeded universities. That single action — not more code — is what
-converts this from "credible architecture" to "credible product a real student can act
-on," per this document's own launch-blocker #1.
+See `docs/pre-publish-checklist.md` — written the same day this document last needed
+updating, so it supersedes this section's own recommendation rather than duplicating it.
+Headline: a real, staged data batch (31 universities, 189 programs, 520 requirements, 273
+opportunities, sourced from the founder's own Drive corpus) is ready to apply and would
+close most of launch-blocker #1 below immediately, before any external API credential is
+even needed — see `docs/data-readiness.md`'s "Staged batch" section.

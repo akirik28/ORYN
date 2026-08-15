@@ -751,3 +751,37 @@ claims already in these docs). Full detail, including the one harmless leftover 
 test account this left in the live dev database, in `docs/known-issues.md`.
 `npm run lint`/`typecheck` clean, `test` 113/113, `build` succeeds — all re-run after the
 two fixes above, not assumed carried over from the prior commit.
+
+### Autonomous pass — Drive data corpus, CV Generator, founder away
+
+Given open-ended autonomy ("do not wait for me... take initiative") for several hours,
+this pass prioritized by "what would let the founder publish on return":
+
+- **Found a real, already-verified data corpus in the founder's Google Drive** ("ORYN
+  Database" folder) — universities, programs, requirements, and opportunities, each
+  already split into `Verified`/`2026 cycle confirmed` vs. `Review`/`Rejected` by a same-
+  day research pass. Built a reusable two-stage Python pipeline
+  (`scripts/drive-import/{parse,generate_sql}.py`, standard library only) that turns it
+  into schema-correct SQL, validated every parsed count against the source files' own
+  stated counts, and generated `supabase/seed_drive_batch1.sql` (31 new universities, 189
+  programs, 520 pivoted requirement rows, 273 opportunities). **Not applied live** — this
+  session's `SUPABASE_SECRET_KEY` is still the placeholder; see
+  `docs/data-readiness.md`'s "Staged batch" section and `docs/pre-publish-checklist.md`.
+- **Built the CV Generator** (`/profile/cv`) — a founder-confirmed MVP feature
+  (`docs/known-issues.md` cites the exact Drive-doc line) that didn't exist yet. Reuses
+  `buildPortfolio` (no new data path), lets the student pick which items to include, and
+  exports via the browser's own print-to-PDF rather than a new PDF dependency.
+- **Found a real conflict**: the founder's own Drive planning doc, edited earlier the same
+  day, explicitly excludes messaging from V1 and calls for a light/white theme — both
+  directly contradicted by chat instructions given later the same day (which this session,
+  and the one before it, both followed). Investigated timestamps, judged the more recent
+  and repeated chat instructions as the stronger signal of current intent, kept both as
+  built rather than reverting — but logged the conflict prominently
+  (`docs/known-issues.md`'s first section) rather than silently resolving it either way.
+- Assessed and deliberately deferred the Essay Story Bank (the other confirmed-MVP
+  feature) — scoped in `docs/known-issues.md`, not half-built under time pressure.
+- `npm run lint`/`typecheck` clean, `test` 113/113, `build` succeeds (36 routes, up from
+  35 — `/profile/cv`), `check:integrations` unchanged (Supabase app + OpenAlex OK; the
+  other four correctly report missing credential).
+
+See `docs/pre-publish-checklist.md` for the founder's exact remaining action list.

@@ -1,5 +1,14 @@
 # Current State
 
+**Update — autonomous pass, same day (2026-08-15), founder away**: found and staged a real
+Drive-corpus data batch (31 universities, 189 programs, 520 requirements, 273
+opportunities — not yet applied, no working `SUPABASE_SECRET_KEY`), built the CV
+Generator (a founder-confirmed MVP feature that didn't exist yet), and found a real
+conflict between the founder's own Drive planning doc and same-day chat instructions on
+both messaging and the visual theme — kept the chat-instructed versions, flagged the
+conflict rather than silently picking a side. Start at `docs/pre-publish-checklist.md` for
+exactly what's left, and `docs/known-issues.md`'s top section for the conflict.
+
 Snapshot after Chat 1 (Functional Completion / Backend / AI / Data), Chat 2 (World-Class
 UI/UX/Brand/Interaction Design), Chat 3 (Adversarial QA), and Chat 4 (Data Readiness /
 Launch Readiness / messaging + Sports). Any future session should read this file,

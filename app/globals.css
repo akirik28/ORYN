@@ -182,3 +182,22 @@
     @apply font-sans;
   }
 }
+
+/* CV Generator (features/profile/cv-builder.tsx): isolates .cv-print-area as the only
+   visible content when printing / saving as PDF, regardless of the app shell around it. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .cv-print-area,
+  .cv-print-area * {
+    visibility: visible;
+  }
+  .cv-print-area {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    color: black;
+    background: white;
+  }
+}

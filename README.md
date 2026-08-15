@@ -119,6 +119,12 @@ these in **[docs/known-issues.md](./docs/known-issues.md)**. Current list:
   comparable students yet," which is what it shows today; no further code is needed for
   it to activate once real user data exists.
 - **No professional legal review** of minor-safe/privacy claims — see SECURITY.md.
+- **Essay Story Bank (founder-confirmed MVP scope) is not built.** CV Generator is
+  (`/profile/cv`); Story Bank needs a schema addition and its own scoped pass — see
+  `docs/known-issues.md`.
+- **A real, sourced data batch (universities/programs/requirements/opportunities) is
+  staged but not yet applied to the live database** — no working `SUPABASE_SECRET_KEY`
+  this session. See `docs/pre-publish-checklist.md`.
 
 Built, but worth knowing the shape of: `/admin` (provider health, job history, AI usage,
 manual job triggers — gated by `profiles.is_admin`, not linked from navigation),

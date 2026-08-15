@@ -121,6 +121,9 @@ export default async function ProfilePage() {
             <Link href="/profile/portfolio" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
               View portfolio <ArrowRight className="size-3.5" />
             </Link>
+            <Link href="/profile/cv" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
+              Build CV <ArrowRight className="size-3.5" />
+            </Link>
             <Link href="/profile/history" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
               View progress <ArrowRight className="size-3.5" />
             </Link>
