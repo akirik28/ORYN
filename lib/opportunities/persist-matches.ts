@@ -1,0 +1,72 @@
+import "server-only";
+
+import { createClient } from "@/lib/supabase/server";
+import { computeOpportunityMatch } from "./matching";
+import type { StudentMatchProfile } from "./matching";
+
+/**
+ * Recomputes and upserts opportunity_matches for one student against every active
+ * opportunity. Cheap (pure deterministic math, no AI call) — safe to run on every
+ * /opportunities page view, unlike weekly-plan generation.
+ */
+export async function refreshOpportunityMatches(userId: string): Promise<void> {
+  const supabase = await createClient();
+
+  const [profileRes, scoresRes, interestsRes, opportunitiesRes] = await Promise.all([
+    supabase.from("profiles").select("birth_year, country").eq("id", userId).single(),
+    supabase.from("profile_scores").select("dimension, score").eq("user_id", userId),
+    supabase.from("student_interests").select("label").eq("user_id", userId),
+    supabase.from("opportunities").select("id, category, minimum_age, maximum_age, eligible_countries, fields").eq("status", "active"),
+  ]);
+
+  const opportunities = opportunitiesRes.data ?? [];
+  if (opportunities.length === 0) return;
+
+  const currentYear = new Date().getFullYear();
+  const age = profileRes.data?.birth_year ? currentYear - profileRes.data.birth_year : null;
+
+  const weakestDimensions = [...(scoresRes.data ?? [])]
+    .sort((a, b) => a.score - b.score)
+    .slice(0, 3)
+    .map((s) => s.dimension);
+
+  const studentProfile: StudentMatchProfile = {
+    age,
+    country: profileRes.data?.country ?? null,
+    interests: (interestsRes.data ?? []).map((i) => i.label),
+    weakestDimensions,
+  };
+
+  const rows = opportunities.map((opportunity) => {
+    const match = computeOpportunityMatch(studentProfile, {
+      category: opportunity.category,
+      minimumAge: opportunity.minimum_age,
+      maximumAge: opportunity.maximum_age,
+      eligibleCountries: opportunity.eligible_countries,
+      fields: opportunity.fields,
+    });
+
+    return {
+      user_id: userId,
+      opportunity_id: opportunity.id,
+      eligible: match.eligible,
+      eligibility_notes: match.eligibilityNotes,
+      relevance_score: match.relevanceScore,
+      profile_need_score: match.profileNeedScore,
+      match_score: match.matchScore,
+      effort_estimate: null,
+      reason_codes: buildReasonCodes(match),
+      calculated_at: new Date().toISOString(),
+    };
+  });
+
+  await supabase.from("opportunity_matches").upsert(rows, { onConflict: "user_id,opportunity_id" });
+}
+
+function buildReasonCodes(match: ReturnType<typeof computeOpportunityMatch>): string[] {
+  const codes: string[] = [];
+  if (!match.eligible) codes.push("ineligible");
+  if (match.relevanceScore >= 70) codes.push("matches_your_interests");
+  if (match.profileNeedScore >= 70) codes.push("addresses_a_current_gap");
+  return codes;
+}

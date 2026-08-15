@@ -1,0 +1,138 @@
+import "server-only";
+
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/database";
+import type { PortfolioItem } from "./types";
+
+/** Read-only aggregation across every achievement table into one common shape (Phase 20).
+ * "Leadership" is presented as its own section here even though it's stored as
+ * `activities.is_leadership_role = true` — a portfolio-display distinction only, not a
+ * schema one (see DATABASE.md for why they share one table). */
+export async function buildPortfolio(supabase: SupabaseClient<Database>, userId: string): Promise<PortfolioItem[]> {
+  const [education, activities, research, projects, awards, certifications, volunteering, work] = await Promise.all([
+    supabase.from("education_records").select("*").eq("user_id", userId),
+    supabase.from("activities").select("*").eq("user_id", userId),
+    supabase.from("research_experiences").select("*").eq("user_id", userId),
+    supabase.from("projects").select("*").eq("user_id", userId),
+    supabase.from("awards").select("*").eq("user_id", userId),
+    supabase.from("certifications").select("*").eq("user_id", userId),
+    supabase.from("volunteering_experiences").select("*").eq("user_id", userId),
+    supabase.from("work_experiences").select("*").eq("user_id", userId),
+  ]);
+
+  const items: PortfolioItem[] = [];
+
+  for (const record of education.data ?? []) {
+    items.push({
+      id: record.id,
+      category: "education",
+      title: record.school_name,
+      organization: record.country,
+      description: record.notes,
+      startDate: record.start_date,
+      endDate: record.end_date,
+      ongoing: record.is_current,
+      meta: record.overall_gpa && record.gpa_scale ? `GPA ${record.overall_gpa}/${record.gpa_scale}` : null,
+    });
+  }
+
+  for (const record of activities.data ?? []) {
+    items.push({
+      id: record.id,
+      category: record.is_leadership_role ? "leadership" : "activities",
+      title: record.title,
+      organization: record.organization,
+      description: record.description,
+      startDate: record.start_date,
+      endDate: record.end_date,
+      ongoing: record.ongoing,
+      meta: record.people_led ? `Led ${record.people_led} people` : null,
+    });
+  }
+
+  for (const record of research.data ?? []) {
+    items.push({
+      id: record.id,
+      category: "research",
+      title: record.title,
+      organization: record.organization,
+      description: record.description,
+      startDate: record.start_date,
+      endDate: record.end_date,
+      ongoing: record.ongoing,
+      meta: record.field,
+    });
+  }
+
+  for (const record of projects.data ?? []) {
+    items.push({
+      id: record.id,
+      category: "projects",
+      title: record.title,
+      organization: record.organization,
+      description: record.outcome_summary ?? record.description,
+      startDate: record.start_date,
+      endDate: record.end_date,
+      ongoing: record.ongoing,
+      meta: record.role,
+    });
+  }
+
+  for (const record of awards.data ?? []) {
+    items.push({
+      id: record.id,
+      category: "awards",
+      title: record.title,
+      organization: record.organization,
+      description: record.description,
+      startDate: record.award_date,
+      endDate: record.award_date,
+      ongoing: false,
+      meta: record.level,
+    });
+  }
+
+  for (const record of certifications.data ?? []) {
+    items.push({
+      id: record.id,
+      category: "certifications",
+      title: record.title,
+      organization: record.organization,
+      description: record.description,
+      startDate: record.issue_date,
+      endDate: record.expiry_date,
+      ongoing: false,
+      meta: null,
+    });
+  }
+
+  for (const record of volunteering.data ?? []) {
+    items.push({
+      id: record.id,
+      category: "volunteering",
+      title: record.title,
+      organization: record.organization,
+      description: record.description,
+      startDate: record.start_date,
+      endDate: record.end_date,
+      ongoing: record.ongoing,
+      meta: record.cause_area,
+    });
+  }
+
+  for (const record of work.data ?? []) {
+    items.push({
+      id: record.id,
+      category: "work",
+      title: record.title,
+      organization: record.organization,
+      description: record.description,
+      startDate: record.start_date,
+      endDate: record.end_date,
+      ongoing: record.ongoing,
+      meta: record.employment_type.replace(/_/g, " "),
+    });
+  }
+
+  return items.sort((a, b) => (b.startDate ?? "0").localeCompare(a.startDate ?? "0"));
+}

@@ -1,0 +1,85 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { requireUser } from "@/lib/security/dal";
+import { createClient } from "@/lib/supabase/server";
+import { refreshAdmissionOutlook } from "@/lib/admissions/persist";
+import { logEvent } from "@/lib/analytics/log";
+import type { TargetStatus } from "@/types/database";
+
+/** Ownership-scoped lookup for an existing target, correctly handling the "no specific
+ * program" case — `.eq("program_id", null)` never matches in Postgres (NULL isn't equal
+ * to NULL), so a plain `.eq()` would always come back empty for that case. */
+async function findExistingTarget(supabase: Awaited<ReturnType<typeof createClient>>, userId: string, universityId: string, programId: string | null) {
+  let query = supabase.from("target_universities").select("id").eq("user_id", userId).eq("university_id", universityId);
+  query = programId ? query.eq("program_id", programId) : query.is("program_id", null);
+  const { data } = await query.maybeSingle();
+  return data;
+}
+
+export async function addTargetUniversity(universityId: string, programId: string | null = null): Promise<{ error?: string; targetId?: string }> {
+  const session = await requireUser();
+  const userId = session.userId!;
+  const supabase = await createClient();
+
+  // Deliberately not `.upsert(..., { onConflict: "user_id,university_id,program_id" })`:
+  // program_id is nullable, and Postgres never treats NULL as conflicting with NULL for
+  // uniqueness purposes, so the ON CONFLICT clause silently never fired for the common
+  // "target a university without picking a program" case — every repeat call (double
+  // click, revisit, a second tab) inserted a brand new duplicate row instead of returning
+  // the existing one. Explicit check-then-insert instead; a unique index still exists as
+  // a last-line-of-defense against a true concurrent-request race (see migration
+  // 0020), so a 23505 on insert here means someone else's concurrent request won it —
+  // treat that the same as finding it up front rather than surfacing an error.
+  const existing = await findExistingTarget(supabase, userId, universityId, programId);
+  if (existing) return { targetId: existing.id };
+
+  const { data, error } = await supabase
+    .from("target_universities")
+    .insert({ user_id: userId, university_id: universityId, program_id: programId, status: "exploring", notes: null })
+    .select()
+    .single();
+
+  if (error) {
+    if (error.code === "23505") {
+      const wonByConcurrentRequest = await findExistingTarget(supabase, userId, universityId, programId);
+      if (wonByConcurrentRequest) return { targetId: wonByConcurrentRequest.id };
+    }
+    return { error: "Couldn't add this university. Please try again." };
+  }
+  if (!data) return { error: "Couldn't add this university. Please try again." };
+
+  await refreshAdmissionOutlook(data.id, userId);
+  await logEvent(userId, "target_university_added", { universityId });
+  revalidatePath("/universities");
+  revalidatePath("/dashboard");
+  return { targetId: data.id };
+}
+
+export async function updateTargetUniversityStatus(targetId: string, status: TargetStatus): Promise<{ error?: string }> {
+  const session = await requireUser();
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("target_universities")
+    .update({ status })
+    .eq("id", targetId)
+    .eq("user_id", session.userId!);
+
+  if (error) return { error: "Couldn't update status." };
+  revalidatePath("/universities");
+  revalidatePath("/dashboard");
+  return {};
+}
+
+export async function removeTargetUniversity(targetId: string): Promise<{ error?: string }> {
+  const session = await requireUser();
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("target_universities").delete().eq("id", targetId).eq("user_id", session.userId!);
+  if (error) return { error: "Couldn't remove this university." };
+
+  revalidatePath("/universities");
+  revalidatePath("/dashboard");
+  return {};
+}

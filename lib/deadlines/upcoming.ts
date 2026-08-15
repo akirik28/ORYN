@@ -1,0 +1,135 @@
+import "server-only";
+
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/database";
+
+export type DeadlineSource = "application" | "opportunity" | "university";
+
+export interface UpcomingDeadline {
+  id: string;
+  source: DeadlineSource;
+  title: string;
+  date: string;
+  href: string;
+}
+
+const ACTIVE_APPLICATION_STATUSES = ["not_started", "in_progress", "submitted", "under_review"] as const;
+const ACTIVE_TARGET_STATUSES = ["exploring", "target", "applying"] as const;
+
+async function getUpcomingApplicationDeadlines(supabase: SupabaseClient<Database>, userId: string, today: string): Promise<UpcomingDeadline[]> {
+  const { data: applications } = await supabase
+    .from("applications")
+    .select("id, deadline, target_university_id")
+    .eq("user_id", userId)
+    .not("deadline", "is", null)
+    .gte("deadline", today)
+    .in("status", ACTIVE_APPLICATION_STATUSES);
+  if (!applications || applications.length === 0) return [];
+
+  const targetIds = [...new Set(applications.map((a) => a.target_university_id))];
+  const { data: targets } = targetIds.length
+    ? await supabase.from("target_universities").select("id, university_id").in("id", targetIds)
+    : { data: [] };
+  const universityIdByTarget = new Map((targets ?? []).map((t) => [t.id, t.university_id]));
+
+  const universityIds = [...new Set((targets ?? []).map((t) => t.university_id))];
+  const { data: universities } = universityIds.length
+    ? await supabase.from("universities").select("id, name").in("id", universityIds)
+    : { data: [] };
+  const universityNameById = new Map((universities ?? []).map((u) => [u.id, u.name]));
+
+  return applications.map((application) => {
+    const universityId = universityIdByTarget.get(application.target_university_id);
+    const name = universityId ? universityNameById.get(universityId) : null;
+    return {
+      id: `application-${application.id}`,
+      source: "application" as const,
+      title: name ? `${name} application` : "Application",
+      date: application.deadline!,
+      href: `/applications/${application.id}`,
+    };
+  });
+}
+
+async function getUpcomingOpportunityDeadlines(supabase: SupabaseClient<Database>, userId: string, today: string): Promise<UpcomingDeadline[]> {
+  const { data: saved } = await supabase.from("saved_opportunities").select("opportunity_id").eq("user_id", userId).eq("status", "saved");
+  if (!saved || saved.length === 0) return [];
+
+  const opportunityIds = [...new Set(saved.map((s) => s.opportunity_id))];
+  const { data: opportunities } = await supabase
+    .from("opportunities")
+    .select("id, title, deadline")
+    .in("id", opportunityIds)
+    .not("deadline", "is", null)
+    .gte("deadline", today);
+
+  return (opportunities ?? []).map((opportunity) => ({
+    id: `opportunity-${opportunity.id}`,
+    source: "opportunity" as const,
+    title: opportunity.title,
+    date: opportunity.deadline!,
+    href: "/opportunities",
+  }));
+}
+
+async function getUpcomingUniversityDeadlines(supabase: SupabaseClient<Database>, userId: string, today: string): Promise<UpcomingDeadline[]> {
+  const { data: targets } = await supabase
+    .from("target_universities")
+    .select("university_id, program_id")
+    .eq("user_id", userId)
+    .in("status", ACTIVE_TARGET_STATUSES);
+  if (!targets || targets.length === 0) return [];
+
+  const universityIds = [...new Set(targets.map((t) => t.university_id))];
+  const [{ data: deadlines }, { data: universities }] = await Promise.all([
+    supabase
+      .from("university_deadlines")
+      .select("id, university_id, program_id, deadline_type, deadline_date")
+      .in("university_id", universityIds)
+      .not("deadline_date", "is", null)
+      .gte("deadline_date", today),
+    supabase.from("universities").select("id, name").in("id", universityIds),
+  ]);
+  const universityNameById = new Map((universities ?? []).map((u) => [u.id, u.name]));
+  const programIdsByUniversity = new Map<string, Set<string | null>>();
+  for (const target of targets) {
+    const set = programIdsByUniversity.get(target.university_id) ?? new Set<string | null>();
+    set.add(target.program_id);
+    programIdsByUniversity.set(target.university_id, set);
+  }
+
+  const result: UpcomingDeadline[] = [];
+  for (const deadline of deadlines ?? []) {
+    // A university-level deadline (program_id null) always applies; a program-specific
+    // one only applies once the student has actually targeted that exact program.
+    const targetedPrograms = programIdsByUniversity.get(deadline.university_id);
+    if (!targetedPrograms) continue;
+    if (deadline.program_id !== null && !targetedPrograms.has(deadline.program_id)) continue;
+
+    const name = universityNameById.get(deadline.university_id) ?? "University";
+    result.push({
+      id: `university-${deadline.id}`,
+      source: "university",
+      title: `${name} — ${deadline.deadline_type}`,
+      date: deadline.deadline_date!,
+      href: `/universities/${deadline.university_id}`,
+    });
+  }
+  return result;
+}
+
+/** "Due soon" feed (Phase 23) — the cross-source Deadline Engine: merges application,
+ * saved-opportunity, and target-university-program deadlines into one sorted feed. Mirrors
+ * the three sources lib/deadlines/scan.ts notifies on, so what a student sees here lines up
+ * with what they get reminded about. */
+export async function getUpcomingDeadlines(supabase: SupabaseClient<Database>, userId: string, limit = 5): Promise<UpcomingDeadline[]> {
+  const today = new Date().toISOString().slice(0, 10);
+
+  const [applications, opportunities, universities] = await Promise.all([
+    getUpcomingApplicationDeadlines(supabase, userId, today),
+    getUpcomingOpportunityDeadlines(supabase, userId, today),
+    getUpcomingUniversityDeadlines(supabase, userId, today),
+  ]);
+
+  return [...applications, ...opportunities, ...universities].sort((a, b) => a.date.localeCompare(b.date)).slice(0, limit);
+}

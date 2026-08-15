@@ -1,0 +1,120 @@
+"use client";
+
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import type { FieldConfig } from "./field-config";
+
+export type FormValues = Record<string, string | number | boolean | null>;
+
+export function DynamicFormFields({
+  fields,
+  values,
+  onChange,
+}: {
+  fields: FieldConfig[];
+  values: FormValues;
+  onChange: (name: string, value: string | number | boolean | null) => void;
+}) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      {fields.map((field) => {
+        const span = "span" in field && field.span === "half" ? "" : "sm:col-span-2";
+        const value = values[field.name];
+
+        if (field.type === "checkbox") {
+          return (
+            <div key={field.name} className={cn("flex items-center gap-2", span)}>
+              <Checkbox
+                id={field.name}
+                checked={Boolean(value)}
+                onCheckedChange={(checked) => onChange(field.name, checked === true)}
+              />
+              <Label htmlFor={field.name} className="font-normal">
+                {field.label}
+              </Label>
+            </div>
+          );
+        }
+
+        if (field.type === "textarea") {
+          return (
+            <div key={field.name} className={cn("space-y-1.5", span)}>
+              <Label htmlFor={field.name}>{field.label}</Label>
+              <Textarea
+                id={field.name}
+                value={(value as string) ?? ""}
+                onChange={(e) => onChange(field.name, e.target.value || null)}
+                placeholder={field.placeholder}
+                rows={3}
+              />
+            </div>
+          );
+        }
+
+        if (field.type === "select") {
+          return (
+            <div key={field.name} className={cn("space-y-1.5", span)}>
+              <Label htmlFor={field.name}>{field.label}</Label>
+              <Select value={(value as string) ?? field.options[0]?.value} onValueChange={(v) => onChange(field.name, v)}>
+                <SelectTrigger id={field.name} className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {field.options.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          );
+        }
+
+        if (field.type === "date") {
+          return (
+            <div key={field.name} className={cn("space-y-1.5", span)}>
+              <Label htmlFor={field.name}>{field.label}</Label>
+              <Input
+                id={field.name}
+                type="date"
+                value={(value as string) ?? ""}
+                onChange={(e) => onChange(field.name, e.target.value || null)}
+              />
+            </div>
+          );
+        }
+
+        if (field.type === "number") {
+          return (
+            <div key={field.name} className={cn("space-y-1.5", span)}>
+              <Label htmlFor={field.name}>{field.label}</Label>
+              <Input
+                id={field.name}
+                type="number"
+                value={value === null || value === undefined ? "" : String(value)}
+                onChange={(e) => onChange(field.name, e.target.value === "" ? null : Number(e.target.value))}
+              />
+            </div>
+          );
+        }
+
+        return (
+          <div key={field.name} className={cn("space-y-1.5", span)}>
+            <Label htmlFor={field.name}>{field.label}</Label>
+            <Input
+              id={field.name}
+              value={(value as string) ?? ""}
+              onChange={(e) => onChange(field.name, e.target.value || null)}
+              placeholder={field.placeholder}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+}

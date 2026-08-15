@@ -1,0 +1,217 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { Plus, Pencil, Trash2, Loader2, Sparkles, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { DynamicFormFields, type FormValues } from "./dynamic-form-fields";
+import type { FieldConfig } from "./field-config";
+import { refineAchievement } from "@/app/(app)/profile/actions";
+import type { AchievementRefinement } from "@/lib/ai/refine-achievement";
+
+interface AchievementSectionProps<T extends { id: string }> {
+  title: string;
+  description?: string;
+  items: T[];
+  fields: FieldConfig[];
+  defaultValues: FormValues;
+  toFormValues: (item: T) => FormValues;
+  renderSummary: (item: T) => { title: string; subtitle?: string };
+  onCreate: (values: FormValues) => Promise<{ error?: string }>;
+  onUpdate: (id: string, values: FormValues) => Promise<{ error?: string }>;
+  onDelete: (id: string) => Promise<{ error?: string }>;
+  emptyStateText: string;
+}
+
+export function AchievementSection<T extends { id: string }>({
+  title,
+  description,
+  items,
+  fields,
+  defaultValues,
+  toFormValues,
+  renderSummary,
+  onCreate,
+  onUpdate,
+  onDelete,
+  emptyStateText,
+}: AchievementSectionProps<T>) {
+  const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [values, setValues] = useState<FormValues>(defaultValues);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [refinement, setRefinement] = useState<AchievementRefinement | null>(null);
+  const [isRefining, startRefining] = useTransition();
+  const [refineError, setRefineError] = useState<string | null>(null);
+
+  const supportsRefinement = fields.some((f) => f.name === "description");
+
+  function openCreate() {
+    setEditingId(null);
+    setValues(defaultValues);
+    setError(null);
+    setRefinement(null);
+    setOpen(true);
+  }
+
+  function openEdit(item: T) {
+    setEditingId(item.id);
+    setValues(toFormValues(item));
+    setError(null);
+    setRefinement(null);
+    setOpen(true);
+  }
+
+  function handleChange(name: string, value: string | number | boolean | null) {
+    setValues((prev) => ({ ...prev, [name]: value }));
+    setRefinement(null);
+  }
+
+  function requestRefinement() {
+    setRefineError(null);
+    startRefining(async () => {
+      const result = await refineAchievement({
+        achievementType: title,
+        title: String(values.title ?? ""),
+        organization: (values.organization as string | null) ?? null,
+        description: (values.description as string | null) ?? null,
+      });
+      if (result.error) {
+        setRefineError(result.error);
+        return;
+      }
+      setRefinement(result.data ?? null);
+    });
+  }
+
+  function acceptImprovedDescription() {
+    if (refinement?.improvedDescription) {
+      handleChange("description", refinement.improvedDescription);
+      setRefinement((prev) => (prev ? { ...prev, improvedDescription: null } : prev));
+    }
+  }
+
+  function submit() {
+    startTransition(async () => {
+      const result = editingId ? await onUpdate(editingId, values) : await onCreate(values);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      setOpen(false);
+    });
+  }
+
+  function handleDelete(id: string) {
+    setDeletingId(id);
+    startTransition(async () => {
+      await onDelete(id);
+      setDeletingId(null);
+    });
+  }
+
+  return (
+    <section className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-semibold">{title}</h2>
+          {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
+        </div>
+        <Button variant="outline" size="sm" onClick={openCreate}>
+          <Plus className="size-4" /> Add
+        </Button>
+      </div>
+
+      {items.length === 0 ? (
+        <p className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">{emptyStateText}</p>
+      ) : (
+        <ul className="divide-y rounded-lg border">
+          {items.map((item) => {
+            const summary = renderSummary(item);
+            return (
+              <li key={item.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{summary.title}</p>
+                  {summary.subtitle ? <p className="truncate text-sm text-muted-foreground">{summary.subtitle}</p> : null}
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  <Button variant="ghost" size="icon-sm" onClick={() => openEdit(item)} aria-label="Edit">
+                    <Pencil className="size-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => handleDelete(item.id)}
+                    disabled={isPending && deletingId === item.id}
+                    aria-label="Delete"
+                  >
+                    {isPending && deletingId === item.id ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                      <Trash2 className="size-3.5 text-muted-foreground hover:text-destructive" />
+                    )}
+                  </Button>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {editingId ? "Edit" : "Add"} {title.toLowerCase()}
+            </DialogTitle>
+          </DialogHeader>
+          <DynamicFormFields fields={fields} values={values} onChange={handleChange} />
+
+          {supportsRefinement ? (
+            <div className="space-y-2 rounded-lg border border-dashed p-3">
+              <Button variant="ghost" size="sm" onClick={requestRefinement} disabled={isRefining || !String(values.title ?? "").trim()}>
+                {isRefining ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5 text-primary" />}
+                Improve this entry with AI
+              </Button>
+              {refineError ? <p className="text-xs text-destructive">{refineError}</p> : null}
+              {refinement?.improvedDescription ? (
+                <div className="space-y-1.5 rounded-md bg-accent/50 p-2.5 text-sm">
+                  <p>{refinement.improvedDescription}</p>
+                  <Button variant="outline" size="xs" onClick={acceptImprovedDescription}>
+                    <Check className="size-3" /> Use this description
+                  </Button>
+                </div>
+              ) : null}
+              {refinement?.suggestedQuestions && refinement.suggestedQuestions.length > 0 ? (
+                <ul className="space-y-1 text-xs text-muted-foreground">
+                  {refinement.suggestedQuestions.map((question) => (
+                    <li key={question}>• {question}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          ) : null}
+
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={submit} disabled={isPending}>
+              {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </section>
+  );
+}
