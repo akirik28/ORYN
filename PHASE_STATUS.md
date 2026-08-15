@@ -729,3 +729,25 @@ angles) — `features/profile/score-radar.tsx`.
 Launch-readiness classification (blocker / high-priority / backlog) in
 `docs/launch-readiness.md`. Verification and final commit hash in that document's own
 trailing section and this session's final report.
+
+### Continuation — Portfolio/public-profile audit, live-QA attempt
+
+A follow-up pass (same founder-labeled "Chat 4," fresh session) re-audited the messaging
+and Sports work above line-by-line rather than trusting the prior pass's own commit
+message, and attempted the live two-account browser QA `known-issues.md` had flagged as
+still open. Found and fixed two real, concrete gaps the original pass missed: Sports was
+absent from `buildPortfolio`/`getPublicPortfolio` (so it never appeared on `/profile/portfolio`
+or a public `/u/[id]` page despite the founder's explicit "summary presentation... public
+profile presentation" requirement), and `/u/[id]` had no Message button for an accepted
+connection even though the founder's brief named that as an entry point. Both fixed —
+`lib/portfolio/build.ts`, `lib/portfolio/types.ts`, `app/(app)/u/[id]/page.tsx`.
+
+The live-QA attempt hit a real, confirmed blocker rather than a skipped step: signing up a
+disposable test account through the real UI requires email confirmation, and
+`SUPABASE_SECRET_KEY` is still the placeholder noted in `.env.local`'s own header — no
+admin API to auto-confirm or fixture accounts, and this session has no Supabase
+project-admin MCP tool either (unlike whatever produced the Chat 3 live-verification
+claims already in these docs). Full detail, including the one harmless leftover unconfirmed
+test account this left in the live dev database, in `docs/known-issues.md`.
+`npm run lint`/`typecheck` clean, `test` 113/113, `build` succeeds — all re-run after the
+two fixes above, not assumed carried over from the prior commit.

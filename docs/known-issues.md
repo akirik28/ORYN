@@ -28,6 +28,26 @@ memory/documentation discipline.
   live-verified adversarial matrix (10 scenarios, including that a removed/blocked
   relationship still can't send new messages but doesn't destroy history).
 
+## Fixed this session (Chat 4 continuation — Portfolio/public-profile audit pass)
+
+- **Sports was invisible from Portfolio** (`/profile/portfolio` and, via
+  `getPublicPortfolio`, the public `/u/[id]` page too) — `lib/portfolio/build.ts` queried
+  every achievement table except `sports_experiences`, so a section the founder explicitly
+  called "first-class" was the one thing missing from "everything you've done, in one
+  place." Every other achievement type (Projects, Awards, Research, ...) already appeared
+  there. Fixed: added `sports` to `PortfolioCategory`/`PORTFOLIO_CATEGORY_LABELS`
+  (`lib/portfolio/types.ts`) and a `sports_experiences` fetch + mapping in `buildPortfolio`
+  (title = sport, organization = team name, meta = level + Captain tag). Found by reading
+  the actual portfolio-aggregation code against the founder's own "summary presentation...
+  public profile presentation" requirement for Sports, not by assumption.
+- **No Message button on an accepted connection's public profile** (`/u/[id]`) — the
+  founder's brief listed this specifically as a messaging entry point; only the
+  Connections-page row (`features/connections/connection-row.tsx`) had one. Fixed in
+  `app/(app)/u/[id]/page.tsx`: same accepted-only gating (`connection?.status ===
+  "accepted"`), links to `/messages/[id]`.
+- `npm run lint`/`typecheck` clean, `test` 113/113, `build` succeeds (all 35 routes) after
+  both fixes.
+
 ## Open — new from Chat 4, not fixed this pass
 
 - **Newly-discovered opportunities would be stored as `active` immediately**, not held in
@@ -44,10 +64,25 @@ memory/documentation discipline.
   page, so low-risk, but genuinely unchecked — don't assume clean until it's actually
   looked at.
 - **Messaging's live send/receive round-trip was verified at the database/RLS layer, not
-  clicked through in the browser between two real accounts.** The RLS-layer verification
-  is the one that actually matters for the safety invariant (that's the real enforcement
-  boundary), but the UI code path itself (compose → optimistic update → real persistence)
-  wasn't independently exercised live.
+  clicked through in the browser between two real accounts — attempted this session,
+  concretely blocked, root cause now confirmed rather than assumed.** `SUPABASE_SECRET_KEY`
+  in `.env.local` is still the placeholder the founder hasn't filled in yet (documented in
+  that file's own header comment); without it there's no way to admin-create or
+  auto-confirm a disposable test account, and this session has no Supabase project-admin
+  MCP tool either (unlike whatever tooling a prior session used for the adversarial
+  connection-privacy live-verification — see `known-issues.md`'s Chat 3 section). Signing
+  up through the real UI hit Supabase's own "confirm your email" gate, which nothing in
+  this sandbox can click through. The RLS-layer verification is still the one that
+  actually matters for the safety invariant (that's the real enforcement boundary, and it
+  was re-read line-by-line this session against `supabase/migrations/0027_messaging.sql`,
+  `lib/messaging/messages.ts`, and `app/(app)/messages/actions.ts` — logic checks out), but
+  the UI code path itself (compose → optimistic update → real persistence) still hasn't
+  been independently exercised live. **Concrete leftover**: one throwaway, unconfirmed auth
+  user (`oryn.qa.alpha.chat4@qamail.io` — fake, unreachable domain, no real data beyond the
+  trigger-created default profile row) sitting in the live dev database from this attempt.
+  Harmless but not self-cleaning without the secret key; delete it from the Supabase
+  dashboard (Authentication → Users) or hand over the real key so a future session can both
+  clean it up and finish this specific verification with disposable admin-created accounts.
 
 ## Fixed this session (Chat 3, adversarial security audit pass)
 

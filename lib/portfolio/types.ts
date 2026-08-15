@@ -9,6 +9,7 @@ export type PortfolioCategory =
   | "education"
   | "leadership"
   | "activities"
+  | "sports"
   | "research"
   | "projects"
   | "awards"
@@ -32,6 +33,7 @@ export const PORTFOLIO_CATEGORY_LABELS: Record<PortfolioCategory, string> = {
   education: "Education",
   leadership: "Leadership",
   activities: "Activities",
+  sports: "Sports",
   research: "Research",
   projects: "Projects",
   awards: "Awards",

@@ -9,9 +9,10 @@ import type { PortfolioItem } from "./types";
  * `activities.is_leadership_role = true` — a portfolio-display distinction only, not a
  * schema one (see DATABASE.md for why they share one table). */
 export async function buildPortfolio(supabase: SupabaseClient<Database>, userId: string): Promise<PortfolioItem[]> {
-  const [education, activities, research, projects, awards, certifications, volunteering, work] = await Promise.all([
+  const [education, activities, sports, research, projects, awards, certifications, volunteering, work] = await Promise.all([
     supabase.from("education_records").select("*").eq("user_id", userId),
     supabase.from("activities").select("*").eq("user_id", userId),
+    supabase.from("sports_experiences").select("*").eq("user_id", userId),
     supabase.from("research_experiences").select("*").eq("user_id", userId),
     supabase.from("projects").select("*").eq("user_id", userId),
     supabase.from("awards").select("*").eq("user_id", userId),
@@ -47,6 +48,22 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
       endDate: record.end_date,
       ongoing: record.ongoing,
       meta: record.people_led ? `Led ${record.people_led} people` : null,
+    });
+  }
+
+  for (const record of sports.data ?? []) {
+    items.push({
+      id: record.id,
+      category: "sports",
+      title: record.sport,
+      organization: record.team_name,
+      description: record.description ?? record.achievements,
+      startDate: record.start_date,
+      endDate: record.end_date,
+      ongoing: record.ongoing,
+      meta: [record.level ? record.level.charAt(0).toUpperCase() + record.level.slice(1) : null, record.is_captain ? "Captain" : null]
+        .filter(Boolean)
+        .join(" · ") || null,
     });
   }
 

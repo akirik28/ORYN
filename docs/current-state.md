@@ -27,6 +27,16 @@ messages). See `product-decisions.md`'s "Chat 4 pass" and
 
 Full launch-blocker / high-priority / backlog classification: `docs/launch-readiness.md`.
 
+**Follow-up within the same founder-labeled pass**: a fresh session re-audited this work
+line-by-line instead of trusting the commit message, found and fixed two real gaps (Sports
+missing from Portfolio/public-profile presentation; no Message button on an accepted
+connection's `/u/[id]` page), and attempted the live two-account browser QA this section's
+"both live-verified" doesn't cover. Confirmed root cause: `SUPABASE_SECRET_KEY` is still
+the placeholder, so there's no way to admin-create or auto-confirm a disposable test
+account in this session, and it has no Supabase project-admin MCP tool either. See
+`docs/known-issues.md`'s "Chat 4 continuation" section for the full account, including a
+harmless leftover unconfirmed test user in the live dev database.
+
 ## Update — Chat 3 adversarial security audit complete (2026-08-15)
 
 Completed and hardened the connection-privacy fix (`0024`) a prior Chat 3 session had

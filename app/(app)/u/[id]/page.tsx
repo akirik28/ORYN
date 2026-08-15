@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Lock, Sparkles } from "lucide-react";
+import { Lock, Sparkles, MessageCircle } from "lucide-react";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { getPublicProfile, getPublicPortfolio, getPublicSkills } from "@/lib/social/public-profile";
@@ -8,6 +8,7 @@ import { getConnectionWith } from "@/lib/social/connections";
 import { isUuidLike } from "@/lib/validation/uuid";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/oryn/status-badge";
 import { ErrorState } from "@/components/oryn/error-state";
 import { ConnectButton } from "@/features/connections/connect-button";
@@ -99,12 +100,19 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
           </div>
         </div>
         {!isSelf ? (
-          <ConnectButton
-            targetId={id}
-            initialStatus={connection?.status ?? null}
-            initialConnectionId={connection?.id ?? null}
-            isRecipient={connection?.recipient_id === session.userId}
-          />
+          <div className="flex gap-2">
+            {connection?.status === "accepted" ? (
+              <Button size="sm" variant="outline" render={<Link href={`/messages/${id}`} />} nativeButton={false}>
+                <MessageCircle className="size-3.5" /> Message
+              </Button>
+            ) : null}
+            <ConnectButton
+              targetId={id}
+              initialStatus={connection?.status ?? null}
+              initialConnectionId={connection?.id ?? null}
+              isRecipient={connection?.recipient_id === session.userId}
+            />
+          </div>
         ) : null}
       </div>
 
