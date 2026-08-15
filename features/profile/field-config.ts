@@ -53,6 +53,17 @@ export const CURRICULUM_FIELD_OPTIONS = [
   { value: "other", label: "Other" },
 ];
 
+// Global competitive-level ontology, deliberately not US-specific varsity/JV terms —
+// see supabase/migrations/0026_sports.sql.
+export const SPORT_LEVEL_OPTIONS = [
+  { value: "recreational", label: "Recreational" },
+  { value: "school", label: "School" },
+  { value: "club", label: "Club" },
+  { value: "regional", label: "Regional" },
+  { value: "national", label: "National" },
+  { value: "international", label: "International" },
+];
+
 export const ACTIVITY_FIELDS: FieldConfig[] = [
   { type: "text", name: "title", label: "Title", placeholder: "e.g. Robotics Club Captain" },
   { type: "text", name: "organization", label: "Organization", span: "half" },
@@ -178,4 +189,22 @@ export const GOAL_FIELDS: FieldConfig[] = [
   { type: "text", name: "category", label: "Category (optional)", placeholder: "e.g. Academics, Career", span: "half" },
   { type: "date", name: "target_date", label: "Target date", span: "half" },
   { type: "select", name: "status", label: "Status", options: GOAL_STATUS_OPTIONS },
+];
+
+export const SPORTS_FIELDS: FieldConfig[] = [
+  { type: "text", name: "sport", label: "Sport", placeholder: "e.g. Swimming", span: "half" },
+  { type: "text", name: "discipline", label: "Discipline / event", placeholder: "e.g. 200m Freestyle", span: "half" },
+  { type: "text", name: "team_name", label: "Team / club / school", span: "half" },
+  { type: "text", name: "position", label: "Position / role", span: "half" },
+  { type: "select", name: "level", label: "Competitive level", options: SPORT_LEVEL_OPTIONS, span: "half" },
+  { type: "text", name: "us_specific_label", label: "Other label (optional, e.g. Varsity)", span: "half" },
+  { type: "checkbox", name: "is_captain", label: "Captain / team leader" },
+  { type: "textarea", name: "achievements", label: "Achievements / rankings / results" },
+  { type: "textarea", name: "description", label: "Description" },
+  { type: "date", name: "start_date", label: "Start date", span: "half" },
+  { type: "date", name: "end_date", label: "End date", span: "half" },
+  { type: "checkbox", name: "ongoing", label: "Ongoing" },
+  { type: "number", name: "hours_per_week", label: "Hours per week", span: "half" },
+  { type: "number", name: "weeks_per_year", label: "Weeks per year", span: "half" },
+  { type: "text", name: "location", label: "Location" },
 ];

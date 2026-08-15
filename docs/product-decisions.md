@@ -188,3 +188,52 @@ the `0023` ordering bug on the very first migration attempt is the concrete payo
 invisible to code review (the SQL reads correctly top-to-bottom if you don't know
 `CREATE VIEW` resolves dependencies eagerly) and would have been invisible to the next
 session too, indefinitely, until someone finally tried to run it for real.
+
+## Chat 4 pass — messaging, Sports, and the university seed
+
+**Messaging is denormalized (sender_id/recipient_id on each message), not a
+`conversations` table.** V1 is 1:1-only and always maps to exactly one accepted
+connection, so a join table buys nothing a direct pair of columns doesn't already give —
+and denormalizing is what makes "preserve message history after a connection is removed
+or a user is blocked" (an explicit founder requirement, for abuse-report evidence) trivial:
+history has no foreign key to the connection or block row that could cascade it away.
+Only *new* messages depend on a live, accepted, unblocked relationship, checked fresh at
+insert time by RLS. See `supabase/migrations/0027_messaging.sql`'s own comments for the
+full reasoning, including the `is_blocked_between()` security-definer function (needed
+because a raw cross-table RLS subquery can't see a block the *other* party created,
+without also letting either party enumerate who's blocked whom).
+
+**Historical messages stay visible to both parties after disconnect or block; only
+sending a new one is prevented.** The alternative (hiding history for former
+participants, keeping it only for a hypothetical admin review) would need an admin-only
+visibility tier this product has no infrastructure for yet, and the brief's actual
+requirement was "don't destroy evidence," not "hide it from the people it happened to."
+Simpler, and consistent with how most real messaging products already behave.
+
+**Sports is a dedicated table, not squeezed into `activities`.** The founder's own brief
+listed real structure (`activities` has none of: discipline/event, team/position,
+competitive level, captaincy, achievements/rankings) — see
+`supabase/migrations/0026_sports.sql`.
+
+**Sports feeds the AI Advisor's context (time-budget/opportunity-cost reasoning) but does
+NOT touch the deterministic scoring engine this pass.** The brief asked for both
+("must feed the Digital Twin appropriately... but do NOT automatically give a huge
+profile-strength bonus"). Wiring a new input into 9 carefully TDD'd scoring dimensions
+under real time pressure, in the same pass as two other substantial additions, is exactly
+how a scoring regression would slip in unnoticed — the existing dimensions weren't built
+with sports in mind, and "avoid double-counting against Awards" needs real design
+thought, not a rushed one-line addition. Advisor-context wiring (committed hours don't
+count as free capacity; don't casually suggest dropping a serious sport) delivers the
+Advisor-facing half of the brief immediately and safely; scoring-engine integration is
+logged as a real, named follow-up in `docs/launch-readiness.md`, not silently dropped.
+
+**The 21-university seed is real institutions with real official sources, not fabricated
+statistics.** Every row has exactly identity facts (name/city/country/website/type) and
+one `university_sources` row citing the official site. Extended (not replaced) the
+existing `supabase/seed.sql` — Chat 1 had already seeded 15 real universities there; this
+pass added 6 more specifically to cover the founder's own stated initial market (Turkey)
+properly (Bilkent/Koç/Sabancı joined Boğaziçi/METU; the previous 2-Turkish-university
+count was thin for a product whose first target user is exactly this student). Applied to
+the live dev project directly (not just the local-CLI-only seed file) so the actual
+running product has real starting content instead of an empty catalog — see
+`docs/data-readiness.md` for exactly what is and isn't backed by this seed.

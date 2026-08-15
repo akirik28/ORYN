@@ -1,0 +1,67 @@
+import Link from "next/link";
+import { MessageCircle } from "lucide-react";
+import { requireUser } from "@/lib/security/dal";
+import { createClient } from "@/lib/supabase/server";
+import { getConversations } from "@/lib/messaging/messages";
+import { PageHeader } from "@/components/oryn/page-header";
+import { EmptyState } from "@/components/oryn/empty-state";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+
+export const metadata = { title: "Messages" };
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
+export default async function MessagesPage() {
+  const session = await requireUser();
+  const supabase = await createClient();
+  const conversations = await getConversations(supabase, session.userId!);
+
+  return (
+    <div className="space-y-6">
+      <PageHeader title="Messages" description="1:1 conversations with accepted connections only." />
+
+      {conversations.length === 0 ? (
+        <EmptyState
+          icon={MessageCircle}
+          title="No conversations yet"
+          description="Messaging opens up once you and someone else accept a connection request. Visit Connections to get started."
+        />
+      ) : (
+        <ul className="divide-y rounded-lg border">
+          {conversations.map((c) => {
+            const name = c.otherDisplayName ?? "A student";
+            return (
+              <li key={c.otherUserId}>
+                <Link href={`/messages/${c.otherUserId}`} className="flex items-center gap-3 px-4 py-3 hover:bg-accent">
+                  <Avatar>
+                    <AvatarFallback className="bg-brand-primary-soft text-brand-primary-strong">{initials(name)}</AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate font-medium">{name}</p>
+                      {c.unreadCount > 0 ? (
+                        <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-medium text-primary-foreground">
+                          {c.unreadCount > 9 ? "9+" : c.unreadCount}
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="truncate text-sm text-muted-foreground">
+                      {c.lastMessage ? c.lastMessage.body : "Say hello — start the conversation."}
+                    </p>
+                  </div>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}

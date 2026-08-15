@@ -76,7 +76,8 @@ export type NotificationCategory =
   | "profile_update"
   | "university_data_changed"
   | "system"
-  | "connection";
+  | "connection"
+  | "message";
 export type ProviderStatus = "healthy" | "degraded" | "down" | "unknown";
 export type SyncJobStatus = "running" | "succeeded" | "failed";
 
@@ -138,6 +139,39 @@ export interface Connection {
 }
 export type ConnectionInsert = Insertable<Connection, "id" | "created_at" | "updated_at" | "low_id" | "high_id" | "responded_at" | "status">;
 export type ConnectionUpdate = Updatable<Connection, "id" | "requester_id" | "created_at" | "updated_at" | "low_id" | "high_id">;
+
+// Messaging (migration 0027) — accepted-connection-only, enforced by RLS (see that
+// migration's comments), not by these types. sender_id/recipient_id are denormalized
+// directly onto each row rather than referencing a conversation/connection id, so history
+// survives a later disconnect or block — see the migration for why that matters here.
+export interface Message {
+  id: string;
+  sender_id: string;
+  recipient_id: string;
+  body: string;
+  read_at: string | null;
+  created_at: string;
+}
+export type MessageInsert = Insertable<Message, "id" | "created_at" | "read_at">;
+export type MessageUpdate = Updatable<Message, "id" | "sender_id" | "recipient_id" | "body" | "created_at">;
+
+export interface BlockedUser {
+  id: string;
+  blocker_id: string;
+  blocked_id: string;
+  created_at: string;
+}
+export type BlockedUserInsert = Insertable<BlockedUser, "id" | "created_at">;
+
+export interface MessageReport {
+  id: string;
+  reporter_id: string;
+  reported_user_id: string;
+  message_id: string | null;
+  reason: string;
+  created_at: string;
+}
+export type MessageReportInsert = Insertable<MessageReport, "id" | "created_at">;
 
 interface AchievementCommon {
   id: string;
@@ -299,6 +333,38 @@ export interface WorkExperience {
 }
 export type WorkExperienceInsert = Insertable<WorkExperience, "id" | "created_at" | "updated_at" | "employment_type" | "ongoing" | "source" | "evidence_status">;
 export type WorkExperienceUpdate = Updatable<WorkExperience, "id" | "user_id" | "created_at" | "updated_at">;
+
+// Sports (migration 0026) — a dedicated table, not folded into `activities`: real
+// structure (discipline, team/position, competitive level, captaincy, achievements) that
+// table has no fields for. `level` is a deliberately global ontology, not US-specific
+// varsity/JV — see the migration's own comment.
+export type SportLevel = "recreational" | "school" | "club" | "regional" | "national" | "international";
+
+export interface SportsExperience {
+  id: string;
+  user_id: string;
+  sport: string;
+  discipline: string | null;
+  team_name: string | null;
+  position: string | null;
+  level: SportLevel | null;
+  us_specific_label: string | null;
+  is_captain: boolean;
+  achievements: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  ongoing: boolean;
+  hours_per_week: number | null;
+  weeks_per_year: number | null;
+  location: string | null;
+  description: string | null;
+  source: string;
+  evidence_status: EvidenceStatus;
+  created_at: string;
+  updated_at: string;
+}
+export type SportsExperienceInsert = Insertable<SportsExperience, "id" | "created_at" | "updated_at" | "is_captain" | "ongoing" | "source" | "evidence_status">;
+export type SportsExperienceUpdate = Updatable<SportsExperience, "id" | "user_id" | "created_at" | "updated_at">;
 
 export interface Skill {
   id: string;
@@ -807,10 +873,15 @@ export interface Database {
       // view has no Insert/Update.
       public_profiles: { Row: Identity<PublicProfileRow>; Relationships: [] };
     };
-    Functions: { [_ in never]: never };
+    Functions: {
+      is_blocked_between: { Args: { user_a: string; user_b: string }; Returns: boolean };
+    };
     Tables: {
       profiles: Table<Profile, Partial<Profile>, ProfileUpdate>;
       connections: Table<Connection, ConnectionInsert, ConnectionUpdate>;
+      messages: Table<Message, MessageInsert, MessageUpdate>;
+      blocked_users: Table<BlockedUser, BlockedUserInsert, Partial<BlockedUserInsert>>;
+      message_reports: Table<MessageReport, MessageReportInsert, Partial<MessageReportInsert>>;
       education_records: Table<EducationRecord, EducationRecordInsert, EducationRecordUpdate>;
       courses: Table<Course, CourseInsert, CourseUpdate>;
       test_scores: Table<TestScore, TestScoreInsert, TestScoreUpdate>;
@@ -821,6 +892,7 @@ export interface Database {
       research_experiences: Table<ResearchExperience, ResearchExperienceInsert, ResearchExperienceUpdate>;
       volunteering_experiences: Table<VolunteeringExperience, VolunteeringExperienceInsert, VolunteeringExperienceUpdate>;
       work_experiences: Table<WorkExperience, WorkExperienceInsert, WorkExperienceUpdate>;
+      sports_experiences: Table<SportsExperience, SportsExperienceInsert, SportsExperienceUpdate>;
       skills: Table<Skill, SkillInsert, SkillUpdate>;
       languages: Table<Language, LanguageInsert, LanguageUpdate>;
       evidence_files: Table<EvidenceFile, EvidenceFileInsert, EvidenceFileUpdate>;

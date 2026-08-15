@@ -133,3 +133,22 @@ export const GoalSchema = z.object({
   status: z.enum(["active", "achieved", "abandoned"]),
 });
 export type GoalFormInput = z.infer<typeof GoalSchema>;
+
+export const SportsSchema = z.object({
+  sport: z.string().min(1, { error: "Sport is required." }),
+  discipline: optionalText,
+  team_name: optionalText,
+  position: optionalText,
+  level: z.enum(["recreational", "school", "club", "regional", "national", "international"]).nullable(),
+  us_specific_label: optionalText,
+  is_captain: z.boolean(),
+  achievements: optionalText,
+  start_date: dateField,
+  end_date: dateField,
+  ongoing: z.boolean(),
+  hours_per_week: z.coerce.number().nonnegative().nullable(),
+  weeks_per_year: z.coerce.number().nonnegative().nullable(),
+  location: optionalText,
+  description: optionalText,
+});
+export type SportsFormInput = z.infer<typeof SportsSchema>;

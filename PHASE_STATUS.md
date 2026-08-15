@@ -704,3 +704,28 @@ cases replacing the one that encoded the now-fixed cross-scale-conversion behavi
 (OpenAlex OK, everything else correctly reports "Missing credential" — no app credentials
 configured in this sandbox, separate from the Supabase MCP access used for live-verification
 above). Full detail in `docs/final-product-audit.md`.
+
+## Chat 4 — data readiness, launch readiness, messaging, Sports
+
+Wired the scratch Supabase project up as the app's real `.env.local` backend (Supabase now
+reports OK in `check:integrations` — first time ever). Audited actual data: zero
+opportunities, zero programs/requirements, and zero rows had ever been written by any
+ingestion job — root cause is missing `TAVILY_API_KEY`/`ANTHROPIC_API_KEY`/
+`COLLEGE_SCORECARD_API_KEY`, an external blocker, not a code defect. Added 21 real, sourced
+universities (identity facts only, never fabricated statistics) covering the founder's
+initial market properly. Full findings in `docs/data-readiness.md`.
+
+Founder scope update mid-pass: added 1:1 messaging (accepted connections only,
+`0027_messaging.sql`) and a first-class Sports profile section (`0026_sports.sql`).
+Messaging's authorization model was live-verified adversarially (10 scenarios) against the
+real database before any UI was written — see `docs/product-decisions.md`'s "Chat 4 pass"
+and `supabase/tests/messaging_authorization_manual.sql`. Sports feeds the AI Advisor's
+time-budget reasoning; scoring-engine integration deliberately deferred (see same doc).
+
+Also fixed, found by the founder live: the Career Profile radar chart clipped its
+"Exploration"/"Leadership" axis labels (SVG viewBox too tight for label text at those
+angles) — `features/profile/score-radar.tsx`.
+
+Launch-readiness classification (blocker / high-priority / backlog) in
+`docs/launch-readiness.md`. Verification and final commit hash in that document's own
+trailing section and this session's final report.

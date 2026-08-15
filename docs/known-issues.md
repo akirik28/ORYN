@@ -4,6 +4,51 @@ Honest, current list. Anything fixed during a session should be removed from her
 left stale — cross-check against the code before trusting an entry, per this repo's own
 memory/documentation discipline.
 
+## Fixed this session (Chat 4, data-readiness + messaging/Sports pass)
+
+- **Career Profile radar chart clipped its own axis labels.** "Exploration" and
+  "Leadership" (the two labels landing nearest the left/right edges of the SVG at this
+  layout) rendered as "ploration"/"Leadershi" — the outermost `<svg>` element's default
+  `overflow: hidden` was clipping label text that extended past the tight `viewBox`, real
+  and visible on every profile with a rendered radar, invisible from the coordinate math
+  alone. Found by the founder in the live browser, not by this pass's own testing.
+  Fixed in `features/profile/score-radar.tsx` by widening the viewBox with a margin
+  rather than shrinking the chart or the label offset.
+- **Zero real-world data existed in the live dev database** — `external_sync_jobs` had 0
+  rows total (not 0 successful, 0 *ever attempted*), confirming the ingestion pipeline has
+  never run in any environment this product has been built in. Root cause: missing
+  `TAVILY_API_KEY`/`ANTHROPIC_API_KEY`/`COLLEGE_SCORECARD_API_KEY` — external, not fixable
+  from inside a chat session. Closed the university half of this gap with 21 real,
+  sourced (never fabricated) universities; opportunities remain genuinely empty since
+  there's no safe manual-curation path for time-sensitive deadline data. Full detail in
+  `docs/data-readiness.md`.
+- **Added 1:1 messaging (accepted connections only) and a Sports profile section** —
+  founder scope update, mid-pass. See `docs/product-decisions.md`'s "Chat 4 pass" for the
+  architecture reasoning and `supabase/tests/messaging_authorization_manual.sql` for the
+  live-verified adversarial matrix (10 scenarios, including that a removed/blocked
+  relationship still can't send new messages but doesn't destroy history).
+
+## Open — new from Chat 4, not fixed this pass
+
+- **Newly-discovered opportunities would be stored as `active` immediately**, not held in
+  a review/moderation state first — found auditing `lib/opportunities/discover.ts` this
+  pass. Never mattered in practice (the pipeline has never run — see above), but worth
+  fixing before the first real ingestion run, not after. Needs product input on what a
+  review queue should look like; out of scope for this pass's "focused additions" mandate.
+- **No admin surface reads `message_reports`.** The table and insert-only RLS policy
+  exist (so reports aren't silently lost), but nothing currently surfaces them to anyone
+  — same posture Phase 51's admin panel already accepts for a few other tables, documented
+  here so it isn't mistaken for "reports get reviewed somewhere."
+- **Messages and Sports were not verified at mobile width** this pass (Universities and
+  Home/Profile were, at 390px). Built on the same responsive primitives as every other
+  page, so low-risk, but genuinely unchecked — don't assume clean until it's actually
+  looked at.
+- **Messaging's live send/receive round-trip was verified at the database/RLS layer, not
+  clicked through in the browser between two real accounts.** The RLS-layer verification
+  is the one that actually matters for the safety invariant (that's the real enforcement
+  boundary), but the UI code path itself (compose → optimistic update → real persistence)
+  wasn't independently exercised live.
+
 ## Fixed this session (Chat 3, adversarial security audit pass)
 
 - **Real privacy vulnerability in `public_profiles`**: the connection carve-out matched a

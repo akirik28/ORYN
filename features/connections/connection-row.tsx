@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import Link from "next/link";
-import { Check, X, UserMinus } from "lucide-react";
+import { Check, X, UserMinus, MessageCircle } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { respondToConnectionRequest, removeConnection } from "@/app/(app)/connections/actions";
@@ -84,6 +84,11 @@ export function ConnectionRow({ connection, pending = false }: { connection: Con
       <Identity connection={connection} />
       <div className="flex shrink-0 items-center gap-2">
         {pending ? <span className="text-xs text-muted-foreground">Requested</span> : null}
+        {!pending && connection.status === "accepted" ? (
+          <Button size="sm" variant="outline" render={<Link href={`/messages/${connection.otherProfile?.id ?? ""}`} />} nativeButton={false}>
+            <MessageCircle className="size-3.5" /> Message
+          </Button>
+        ) : null}
         <Button
           size="icon-sm"
           variant="ghost"

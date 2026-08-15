@@ -1,10 +1,31 @@
 # Current State
 
 Snapshot after Chat 1 (Functional Completion / Backend / AI / Data), Chat 2 (World-Class
-UI/UX/Brand/Interaction Design), and Chat 3 (Adversarial QA). Any future session should
-read this file, `known-issues.md`, `SECURITY.md`, `product-decisions.md`, and the other
-root docs rather than any prior conversation transcript — the repository is the source of
-truth.
+UI/UX/Brand/Interaction Design), Chat 3 (Adversarial QA), and Chat 4 (Data Readiness /
+Launch Readiness / messaging + Sports). Any future session should read this file,
+`known-issues.md`, `SECURITY.md`, `product-decisions.md`, `data-readiness.md`,
+`launch-readiness.md`, and the other root docs rather than any prior conversation
+transcript — the repository is the source of truth.
+
+## Update — Chat 4: data readiness, launch readiness, messaging, Sports (2026-08-15)
+
+The app now has a real, live, working backend (`.env.local` → a Supabase project;
+`check:integrations` reports Supabase OK for the first time). Audited actual data instead
+of assuming: zero opportunities, zero university programs/requirements, and the ingestion
+pipeline had literally never run (not "run and produced bad data" — never run at all).
+Root cause is three missing external API keys, not a code problem. Added 21 real,
+individually-sourced universities (never fabricated statistics) covering the founder's
+initial Turkey/UK/Europe/US market. Full findings: `docs/data-readiness.md`.
+
+Founder expanded V1 scope mid-pass to include 1:1 messaging (accepted connections only)
+and a first-class Sports profile section. Both shipped, both live-verified — messaging's
+authorization model specifically against a 10-scenario adversarial matrix on the real
+database (non-participant read, forged sender, every non-accepted connection state,
+both directions of a block, and disconnect/block preserving history while blocking new
+messages). See `product-decisions.md`'s "Chat 4 pass" and
+`supabase/tests/messaging_authorization_manual.sql`.
+
+Full launch-blocker / high-priority / backlog classification: `docs/launch-readiness.md`.
 
 ## Update — Chat 3 adversarial security audit complete (2026-08-15)
 

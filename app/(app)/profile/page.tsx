@@ -21,6 +21,7 @@ import {
   TEST_SCORE_FIELDS,
   CERTIFICATION_FIELDS,
   GOAL_FIELDS,
+  SPORTS_FIELDS,
 } from "@/features/profile/field-config";
 import {
   createActivity,
@@ -53,6 +54,9 @@ import {
   createGoal,
   updateGoal,
   deleteGoal,
+  createSportsExperience,
+  updateSportsExperience,
+  deleteSportsExperience,
 } from "./actions";
 import type { FormValues } from "@/features/profile/dynamic-form-fields";
 import type { ProfileDimension } from "@/types/database";
@@ -68,6 +72,7 @@ export default async function ProfilePage() {
   const [
     scoresRes,
     activitiesRes,
+    sportsRes,
     projectsRes,
     awardsRes,
     researchRes,
@@ -81,6 +86,7 @@ export default async function ProfilePage() {
   ] = await Promise.all([
     supabase.from("profile_scores").select("*").eq("user_id", userId),
     supabase.from("activities").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+    supabase.from("sports_experiences").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
     supabase.from("projects").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
     supabase.from("awards").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
     supabase.from("research_experiences").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
@@ -162,6 +168,38 @@ export default async function ProfilePage() {
         onUpdate={updateActivity as (id: string, v: FormValues) => Promise<{ error?: string }>}
         onDelete={deleteActivity}
         emptyStateText="No activities yet. Add clubs, leadership, or other experiences."
+      />
+
+      <AchievementSection
+        title="Sports"
+        description="Athletic history — a first-class part of your profile, not folded into Activities."
+        items={sportsRes.data ?? []}
+        summaries={summaryMap(sportsRes.data ?? [], (item) => ({
+          title: item.sport,
+          subtitle: [item.team_name, item.is_captain ? "Captain" : null].filter(Boolean).join(" · ") || undefined,
+        }))}
+        fields={SPORTS_FIELDS}
+        defaultValues={{
+          sport: "",
+          discipline: null,
+          team_name: null,
+          position: null,
+          level: null,
+          us_specific_label: null,
+          is_captain: false,
+          achievements: null,
+          start_date: null,
+          end_date: null,
+          ongoing: false,
+          hours_per_week: null,
+          weeks_per_year: null,
+          location: null,
+          description: null,
+        }}
+        onCreate={createSportsExperience as (v: FormValues) => Promise<{ error?: string }>}
+        onUpdate={updateSportsExperience as (id: string, v: FormValues) => Promise<{ error?: string }>}
+        onDelete={deleteSportsExperience}
+        emptyStateText="No sports yet. Add a team, club, or individual sport you take seriously."
       />
 
       <AchievementSection

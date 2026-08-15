@@ -25,6 +25,12 @@ export interface StudentAdvisorContext {
   projects: { title: string; outcomeSummary: string | null; ongoing: boolean; selfReported: boolean }[];
   research: { title: string; field: string | null; outputType: string; ongoing: boolean; selfReported: boolean }[];
   awards: { title: string; level: string | null; selfReported: boolean }[];
+  /** Chat 4 founder scope update — deliberately NOT part of `assembleScoringFacts`/the
+   * scoring engine this pass (see docs/product-decisions.md): sports feeds the advisor's
+   * time-budget reasoning ("10 committed hours/week isn't free capacity") and opportunity-
+   * cost judgment (a long-term competitive commitment isn't something to casually drop
+   * for a superficial new activity), not a profile-strength score. */
+  sports: { sport: string; level: string | null; isCaptain: boolean; hoursPerWeek: number | null; ongoing: boolean; achievements: string | null }[];
   goals: { title: string; category: string | null }[];
   targetUniversities: { name: string; status: string; outlook: string | null }[];
   upcomingDeadlines: { title: string; date: string; source: string }[];
@@ -90,7 +96,7 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
   const facts = await assembleScoringFacts(supabase, userId);
   const { dimensions, overallScore } = computeCareerProfile(facts);
 
-  const [profileRes, targetUnisRes, upcomingDeadlines, recentRecsRes, recentActionsRes, pendingApplicationRequirements] = await Promise.all([
+  const [profileRes, targetUnisRes, upcomingDeadlines, recentRecsRes, recentActionsRes, pendingApplicationRequirements, sportsRes] = await Promise.all([
     supabase
       .from("profiles")
       .select("display_name, country, school_name, graduation_year, curriculum, weekly_time_budget, busy_mode, busy_mode_until, completeness_percent")
@@ -129,6 +135,7 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
       .order("created_at", { ascending: false })
       .limit(10),
     getPendingApplicationRequirements(supabase, userId),
+    supabase.from("sports_experiences").select("sport, level, is_captain, hours_per_week, ongoing, achievements").eq("user_id", userId),
   ]);
 
   const profile = profileRes.data;
@@ -169,6 +176,14 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
     })),
     awards: facts.awards.map((a) => ({ title: a.title, level: a.level, selfReported: a.evidence_status === "self_reported" })),
     goals: facts.goals.map((g) => ({ title: g.title, category: g.category })),
+    sports: (sportsRes.data ?? []).map((s) => ({
+      sport: s.sport,
+      level: s.level,
+      isCaptain: s.is_captain,
+      hoursPerWeek: s.hours_per_week,
+      ongoing: s.ongoing,
+      achievements: s.achievements,
+    })),
     // Supabase's typed client can't express nested-relation shapes from our hand-authored
     // Database type (no Relationships metadata) — these two are read-only display strings.
     targetUniversities: ((targetUnisRes.data ?? []) as unknown as Array<{ status: string; outlook: string | null; universities: { name: string } | null }>).map((t) => ({
@@ -207,6 +222,15 @@ export function formatContextForPrompt(context: StudentAdvisorContext): string {
   lines.push(`Projects (${context.projects.length}): ${context.projects.map((p) => `${p.title}${tag(p.ongoing, p.selfReported)}`).join("; ") || "none"}`);
   lines.push(`Research (${context.research.length}): ${context.research.map((r) => `${r.title}${tag(r.ongoing, r.selfReported)}`).join("; ") || "none"}`);
   lines.push(`Awards (${context.awards.length}): ${context.awards.map((a) => `${a.title}${a.selfReported ? " [self-reported]" : ""}`).join("; ") || "none"}`);
+  if (context.sports.length > 0) {
+    const committedHours = context.sports.filter((s) => s.ongoing).reduce((sum, s) => sum + (s.hoursPerWeek ?? 0), 0);
+    lines.push(
+      `Sports (${context.sports.length}, ~${committedHours} committed hrs/week from ongoing ones — subtract this from the weekly time budget above, it is not free capacity): ` +
+        context.sports
+          .map((s) => `${s.sport}${s.level ? ` (${s.level})` : ""}${s.isCaptain ? " [captain]" : ""}${s.ongoing ? " [ongoing]" : ""}${s.achievements ? ` — ${s.achievements}` : ""}`)
+          .join("; ")
+    );
+  }
   lines.push(`Goals: ${context.goals.map((g) => g.title).join("; ") || "none set"}`);
   lines.push(`Target universities: ${context.targetUniversities.map((t) => `${t.name} (${t.status}${t.outlook ? `, ${t.outlook}` : ""})`).join("; ") || "none yet"}`);
   lines.push(`Upcoming deadlines: ${context.upcomingDeadlines.map((d) => `${d.title} on ${d.date} (${d.source})`).join("; ") || "none"}`);

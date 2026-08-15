@@ -5,6 +5,13 @@ const SIZE = 360;
 const CENTER = SIZE / 2;
 const MAX_RADIUS = 118;
 const RINGS = [0.33, 0.66, 1];
+// Labels sit at MAX_RADIUS + 26 = 144px from center — at the leftmost/rightmost points
+// (~CENTER ± 144 = 36 / 324) a longer label like "Leadership" or "Exploration" (~60-70px
+// wide at this font size) extends past the 0..360 viewBox. The outermost <svg> element's
+// UA-stylesheet default is `overflow: hidden`, so without this margin those two labels
+// were silently clipped to "ploration"/"Leadershi" — found live-testing the real profile
+// page, not visible from the coordinate math alone.
+const LABEL_MARGIN = 40;
 
 function pointFor(index: number, total: number, radius: number) {
   const angle = -Math.PI / 2 + (index * 2 * Math.PI) / total;
@@ -18,7 +25,10 @@ export function ScoreRadar({ scores }: { scores: Partial<Record<ProfileDimension
   const dataPath = `${dataPoints.map((p) => `${p.x},${p.y}`).join(" ")}`;
 
   return (
-    <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="mx-auto w-full max-w-sm">
+    <svg
+      viewBox={`${-LABEL_MARGIN} ${-LABEL_MARGIN} ${SIZE + 2 * LABEL_MARGIN} ${SIZE + 2 * LABEL_MARGIN}`}
+      className="mx-auto w-full max-w-sm"
+    >
       {RINGS.map((ring) => {
         const ringPoints = DIMENSION_ORDER.map((_, i) => pointFor(i, total, MAX_RADIUS * ring));
         return (

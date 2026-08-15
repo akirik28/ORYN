@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Home, UserRound, Landmark, Compass, ListChecks, ClipboardCheck, Sparkles, FolderClosed, Settings, Users } from "lucide-react";
+import { Home, UserRound, Landmark, Compass, ListChecks, ClipboardCheck, Sparkles, FolderClosed, Settings, Users, MessageCircle } from "lucide-react";
 
 export interface NavItem {
   href: string;
@@ -19,6 +19,7 @@ export const PRIMARY_NAV: NavItem[] = [
 
 export const SECONDARY_NAV: NavItem[] = [
   { href: "/connections", label: "Connections", icon: Users },
+  { href: "/messages", label: "Messages", icon: MessageCircle },
   { href: "/documents", label: "Documents", icon: FolderClosed },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

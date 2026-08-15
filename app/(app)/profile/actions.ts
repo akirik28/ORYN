@@ -20,6 +20,7 @@ import {
   TestScoreSchema,
   CertificationSchema,
   GoalSchema,
+  SportsSchema,
   type ActivityFormInput,
   type ProjectFormInput,
   type AwardFormInput,
@@ -30,6 +31,7 @@ import {
   type TestScoreFormInput,
   type CertificationFormInput,
   type GoalFormInput,
+  type SportsFormInput,
 } from "@/lib/validation/achievements";
 
 type ActionResult = { error?: string };
@@ -199,6 +201,17 @@ export async function updateGoal(id: string, input: GoalFormInput) {
 }
 export async function deleteGoal(id: string) {
   return crudRemove("career_goals", id);
+}
+
+// ---------- Sports (Chat 4 founder scope update) ----------
+export async function createSportsExperience(input: SportsFormInput) {
+  return crudCreate("sports_experiences", SportsSchema, input);
+}
+export async function updateSportsExperience(id: string, input: SportsFormInput) {
+  return crudUpdate("sports_experiences", SportsSchema, id, input);
+}
+export async function deleteSportsExperience(id: string) {
+  return crudRemove("sports_experiences", id);
 }
 
 // ---------- AI-assisted refinement (Phase 5) — generic across every achievement type ----------
