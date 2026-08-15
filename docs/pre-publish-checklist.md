@@ -26,16 +26,19 @@ wrong one.
 
 Verify with `npm run check:integrations` — should report `OK` for all five once set.
 
-## 3. Apply the staged Drive-corpus data
+## 3. Apply the staged migrations + Drive-corpus data
 
 Via the Supabase SQL editor (or `psql`/CLI) against the linked project, in order:
 
 ```bash
 supabase/migrations/0028_program_requirement_dedup_indexes.sql
+supabase/migrations/0029_story_notes.sql
 supabase/seed_drive_batch1.sql
 ```
 
-Adds 31 real universities, 189 programs, 520 requirement rows, and 273 real opportunities
+`0029` adds the Essay Story Bank's `story_notes` column to all seven achievement tables
+(additive, nullable — no existing data affected). The seed adds 31 real universities, 189
+programs, 520 requirement rows, and 273 real opportunities
 — see `docs/data-readiness.md`'s "Staged batch" section for exactly what's in it and what
 was deliberately left out. Both files are idempotent. Confirm afterward with the count
 query at the bottom of `docs/data-readiness.md`.
@@ -63,9 +66,6 @@ variables on the hosting platform, deploy, configure the custom domain.
 
 ## Recommended, not blocking
 
-- **Essay Story Bank** — the other founder-confirmed MVP feature not yet built (CV
-  Generator is done this pass). Scoped in `docs/known-issues.md`; a real second feature,
-  not a quick add.
 - **Live two-account messaging click-through and Messages/Sports mobile-width check** —
   both blocked on step 2's `SUPABASE_SECRET_KEY` (no way to create/confirm disposable test
   accounts without it); RLS-layer correctness is independently verified and is the layer

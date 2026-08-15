@@ -14,6 +14,7 @@ function award(overrides: Partial<Award>): Award {
     award_date: null,
     location: null,
     source: "manual",
+    story_notes: null,
     evidence_status: "self_reported",
     created_at: "",
     updated_at: "",

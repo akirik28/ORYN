@@ -778,8 +778,17 @@ this pass prioritized by "what would let the founder publish on return":
   and repeated chat instructions as the stronger signal of current intent, kept both as
   built rather than reverting — but logged the conflict prominently
   (`docs/known-issues.md`'s first section) rather than silently resolving it either way.
-- Assessed and deliberately deferred the Essay Story Bank (the other confirmed-MVP
-  feature) — scoped in `docs/known-issues.md`, not half-built under time pressure.
+- **Built the Essay Story Bank** (`/profile/story-bank`) — the other unconditional-MVP
+  item from the same Drive doc, initially deferred, then built when the founder pushed to
+  keep going. `story_notes` added to all seven achievement-shaped tables (migration
+  `0029`) through one shared `STORY_NOTES_FIELD`, so every profile form gained it without
+  seven bespoke edits; `lib/story-bank/collect.ts` normalizes all seven sources into one
+  shape; `lib/ai/essay-outlines.ts` returns Zod-validated story candidates with outlines
+  following the founder's own seven-part structure. The server action re-reads experiences
+  from the caller's own RLS-scoped rows — the client only ever sends ids. The model is
+  instructed to name what's missing rather than invent it, and to say outright when a
+  student's records are too thin. Adding the column rippled into 8 test fixture files and
+  one `saveResearchIdea` call site; all fixed, all 113 tests still pass.
 - `npm run lint`/`typecheck` clean, `test` 113/113, `build` succeeds (36 routes, up from
   35 — `/profile/cv`), `check:integrations` unchanged (Supabase app + OpenAlex OK; the
   other four correctly report missing credential).

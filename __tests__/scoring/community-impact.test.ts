@@ -18,6 +18,7 @@ function volunteering(overrides: Partial<VolunteeringExperience>): VolunteeringE
     weeks_per_year: null,
     location: null,
     source: "manual",
+    story_notes: null,
     evidence_status: "self_reported",
     created_at: "",
     updated_at: "",

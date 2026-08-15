@@ -22,6 +22,7 @@ function project(overrides: Partial<Project>): Project {
     live_url: null,
     location: null,
     source: "manual",
+    story_notes: null,
     evidence_status: "self_reported",
     created_at: "",
     updated_at: "",

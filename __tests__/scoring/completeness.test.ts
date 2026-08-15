@@ -46,6 +46,7 @@ describe("computeCompleteness", () => {
         hours_per_week: 6,
         weeks_per_year: 30,
         location: null,
+        story_notes: null,
         source: "manual",
         evidence_status: "self_reported",
         created_at: "",

@@ -17,6 +17,7 @@ export const ActivitySchema = z.object({
   hours_per_week: z.coerce.number().nonnegative().nullable(),
   weeks_per_year: z.coerce.number().nonnegative().nullable(),
   location: optionalText,
+  story_notes: optionalText,
 });
 export type ActivityFormInput = z.infer<typeof ActivitySchema>;
 
@@ -35,6 +36,7 @@ export const ProjectSchema = z.object({
   repo_url: optionalText,
   live_url: optionalText,
   location: optionalText,
+  story_notes: optionalText,
 });
 export type ProjectFormInput = z.infer<typeof ProjectSchema>;
 
@@ -45,6 +47,7 @@ export const AwardSchema = z.object({
   description: optionalText,
   award_date: dateField,
   location: optionalText,
+  story_notes: optionalText,
 });
 export type AwardFormInput = z.infer<typeof AwardSchema>;
 
@@ -63,6 +66,7 @@ export const ResearchExperienceSchema = z.object({
   ongoing: z.boolean(),
   hours_per_week: z.coerce.number().nonnegative().nullable(),
   location: optionalText,
+  story_notes: optionalText,
 });
 export type ResearchExperienceFormInput = z.infer<typeof ResearchExperienceSchema>;
 
@@ -77,6 +81,7 @@ export const VolunteeringSchema = z.object({
   hours_per_week: z.coerce.number().nonnegative().nullable(),
   weeks_per_year: z.coerce.number().nonnegative().nullable(),
   location: optionalText,
+  story_notes: optionalText,
 });
 export type VolunteeringFormInput = z.infer<typeof VolunteeringSchema>;
 
@@ -91,6 +96,7 @@ export const WorkExperienceSchema = z.object({
   hours_per_week: z.coerce.number().nonnegative().nullable(),
   paid: z.boolean().nullable(),
   location: optionalText,
+  story_notes: optionalText,
 });
 export type WorkExperienceFormInput = z.infer<typeof WorkExperienceSchema>;
 
@@ -150,5 +156,6 @@ export const SportsSchema = z.object({
   weeks_per_year: z.coerce.number().nonnegative().nullable(),
   location: optionalText,
   description: optionalText,
+  story_notes: optionalText,
 });
 export type SportsFormInput = z.infer<typeof SportsSchema>;

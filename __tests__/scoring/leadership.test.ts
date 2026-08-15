@@ -20,6 +20,7 @@ function activity(overrides: Partial<Activity>): Activity {
     hours_per_week: null,
     weeks_per_year: null,
     location: null,
+    story_notes: null,
     source: "manual",
     evidence_status: "self_reported",
     created_at: "",

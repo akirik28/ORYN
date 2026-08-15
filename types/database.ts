@@ -184,6 +184,11 @@ interface AchievementCommon {
   ongoing: boolean;
   hours_per_week: number | null;
   location: string | null;
+  /** Essay Story Bank (founder-confirmed MVP scope, see docs/known-issues.md): why started,
+   * hardest moment, what changed, what learned, measurable outcome, who worked with — free
+   * text, not CV-facing. Surfaced as candidate material when generating essay outlines,
+   * never invented. */
+  story_notes: string | null;
   source: string;
   evidence_status: EvidenceStatus;
   created_at: string;
@@ -259,6 +264,7 @@ export interface Award {
   description: string | null;
   award_date: string | null;
   location: string | null;
+  story_notes: string | null;
   source: string;
   evidence_status: EvidenceStatus;
   created_at: string;
@@ -326,6 +332,7 @@ export interface WorkExperience {
   hours_per_week: number | null;
   paid: boolean | null;
   location: string | null;
+  story_notes: string | null;
   source: string;
   evidence_status: EvidenceStatus;
   created_at: string;
@@ -358,6 +365,7 @@ export interface SportsExperience {
   weeks_per_year: number | null;
   location: string | null;
   description: string | null;
+  story_notes: string | null;
   source: string;
   evidence_status: EvidenceStatus;
   created_at: string;

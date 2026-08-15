@@ -22,6 +22,7 @@ function researchExperience(overrides: Partial<ResearchExperience>): ResearchExp
     hours_per_week: null,
     location: null,
     source: "manual",
+    story_notes: null,
     evidence_status: "self_reported",
     created_at: "",
     updated_at: "",

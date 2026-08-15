@@ -276,6 +276,7 @@ export async function saveResearchIdea(project: ResearchProject, field: string):
     ongoing: true,
     hours_per_week: null,
     location: null,
+    story_notes: null,
   });
   if (!result.error) {
     await logEvent(session.userId!, "research_project_started", { field });

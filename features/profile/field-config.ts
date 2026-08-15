@@ -1,3 +1,13 @@
+// Essay Story Bank (founder-confirmed MVP scope) reads this field as candidate material —
+// never CV-facing, never auto-summarized. One shared field, one shared prompt list, reused
+// across every achievement-shaped form below rather than seven separate structured columns.
+export const STORY_NOTES_FIELD = {
+  type: "textarea" as const,
+  name: "story_notes",
+  label: "Story notes (optional)",
+  placeholder: "Why did you start? What was the hardest moment? What changed? What did you learn? Who did you work with? What was the measurable outcome? Anything you don't want to forget.",
+};
+
 export type FieldConfig =
   | { type: "text"; name: string; label: string; placeholder?: string; span?: "full" | "half" }
   | { type: "textarea"; name: string; label: string; placeholder?: string }
@@ -78,6 +88,7 @@ export const ACTIVITY_FIELDS: FieldConfig[] = [
   { type: "number", name: "hours_per_week", label: "Hours per week", span: "half" },
   { type: "number", name: "weeks_per_year", label: "Weeks per year", span: "half" },
   { type: "text", name: "location", label: "Location" },
+  STORY_NOTES_FIELD,
 ];
 
 export const PROJECT_FIELDS: FieldConfig[] = [
@@ -95,6 +106,7 @@ export const PROJECT_FIELDS: FieldConfig[] = [
   { type: "text", name: "repo_url", label: "Repository URL", span: "half" },
   { type: "text", name: "live_url", label: "Live URL", span: "half" },
   { type: "text", name: "location", label: "Location" },
+  STORY_NOTES_FIELD,
 ];
 
 export const AWARD_FIELDS: FieldConfig[] = [
@@ -104,6 +116,7 @@ export const AWARD_FIELDS: FieldConfig[] = [
   { type: "textarea", name: "description", label: "Description" },
   { type: "date", name: "award_date", label: "Date", span: "half" },
   { type: "text", name: "location", label: "Location", span: "half" },
+  STORY_NOTES_FIELD,
 ];
 
 export const RESEARCH_FIELDS: FieldConfig[] = [
@@ -121,6 +134,7 @@ export const RESEARCH_FIELDS: FieldConfig[] = [
   { type: "checkbox", name: "ongoing", label: "Ongoing" },
   { type: "number", name: "hours_per_week", label: "Hours per week", span: "half" },
   { type: "text", name: "location", label: "Location" },
+  STORY_NOTES_FIELD,
 ];
 
 export const VOLUNTEERING_FIELDS: FieldConfig[] = [
@@ -147,6 +161,7 @@ export const WORK_EXPERIENCE_FIELDS: FieldConfig[] = [
   { type: "checkbox", name: "ongoing", label: "Ongoing" },
   { type: "number", name: "hours_per_week", label: "Hours per week", span: "half" },
   { type: "text", name: "location", label: "Location" },
+  STORY_NOTES_FIELD,
 ];
 
 export const EDUCATION_FIELDS: FieldConfig[] = [

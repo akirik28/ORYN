@@ -55,19 +55,25 @@ white — both real, scoped efforts, not a quick toggle.
   path, no invented facts) with a category/item checklist and browser print-to-PDF export
   (`window.print()` + a `.cv-print-area` isolation rule in `globals.css` — no new PDF
   dependency).
+- **Essay Story Bank did not exist** — the other unconditional-MVP item from the same
+  Drive doc (sections 12 and 20). Built end-to-end: `story_notes` on all seven
+  achievement-shaped tables (migration `0029_story_notes.sql`, wired through types,
+  validation, and every profile form via one shared `STORY_NOTES_FIELD`);
+  `lib/story-bank/collect.ts` (one shape across all seven sources — deliberately separate
+  from `lib/portfolio/build.ts`, which drops story notes on purpose since they're private
+  reflections, not CV content); `lib/ai/essay-outlines.ts` (Zod-validated structured
+  output — 2-3 story candidates, each with 2-3 genuinely different outlines following the
+  founder's own Hook → Context → Conflict → Action → Turning Point → Reflection →
+  Connection to Future structure); `/profile/story-bank`. The server action re-reads every
+  experience from the caller's own RLS-scoped rows rather than trusting client-supplied
+  content — the client only ever sends ids to filter by. System prompt forbids inventing
+  any event, quote, person, or outcome, and instructs the model to say what's missing
+  rather than fill a gap in; when a student's records are too thin it says so
+  (`notEnoughMaterial`) instead of producing a fabricated-sounding outline. Rate-limited
+  at 10 calls/hour like every other AI-backed action.
 
 ## Open — new from this pass, not fixed
 
-- **Essay Story Bank does not exist.** Also explicitly MVP-scope in the founder's Drive
-  doc (sections 12, 20). Needs: a `story_notes`-shaped addition to achievement records
-  (why started / hardest moment / what changed / what learned / measurable outcome — the
-  doc's own field list), a UI to capture it, and a flow that surfaces 2-3 "story
-  candidates" for a given essay prompt with 2-3 outline options each (Hook → Context →
-  Conflict → Action → Turning Point → Reflection → Connection to Future) — AI organizes
-  and suggests angles, never invents events or writes the essay itself. Scoped but not
-  built this pass — a real second feature on top of an already-large single session, and
-  half-building it risks exactly the "half-finished implementation" this repo's own
-  discipline rules out. Recommended next priority; see `docs/pre-publish-checklist.md`.
 - **Drive-corpus opportunities carry no `country`/`eligible_countries`/`age`/`cost`.** The
   source text doesn't reliably map to these without guessing, and guessing eligibility is
   exactly what this product prohibits — see `scripts/drive-import/README.md`. A student
