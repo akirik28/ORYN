@@ -163,15 +163,22 @@ export interface BlockedUser {
 }
 export type BlockedUserInsert = Insertable<BlockedUser, "id" | "created_at">;
 
+export type MessageReportStatus = "open" | "reviewing" | "resolved" | "dismissed";
+
 export interface MessageReport {
   id: string;
   reporter_id: string;
   reported_user_id: string;
   message_id: string | null;
   reason: string;
+  status: MessageReportStatus;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  resolution_note: string | null;
   created_at: string;
 }
-export type MessageReportInsert = Insertable<MessageReport, "id" | "created_at">;
+export type MessageReportInsert = Insertable<MessageReport, "id" | "created_at" | "status" | "reviewed_by" | "reviewed_at" | "resolution_note">;
+export type MessageReportUpdate = Updatable<MessageReport, "id" | "reporter_id" | "reported_user_id" | "message_id" | "reason" | "created_at">;
 
 interface AchievementCommon {
   id: string;
@@ -889,7 +896,7 @@ export interface Database {
       connections: Table<Connection, ConnectionInsert, ConnectionUpdate>;
       messages: Table<Message, MessageInsert, MessageUpdate>;
       blocked_users: Table<BlockedUser, BlockedUserInsert, Partial<BlockedUserInsert>>;
-      message_reports: Table<MessageReport, MessageReportInsert, Partial<MessageReportInsert>>;
+      message_reports: Table<MessageReport, MessageReportInsert, MessageReportUpdate>;
       education_records: Table<EducationRecord, EducationRecordInsert, EducationRecordUpdate>;
       courses: Table<Course, CourseInsert, CourseUpdate>;
       test_scores: Table<TestScore, TestScoreInsert, TestScoreUpdate>;

@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/security/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Badge } from "@/components/ui/badge";
 import { JobTriggerButton } from "@/features/admin/job-trigger-button";
+import { ReportReviewControl } from "@/features/admin/report-review-control";
 import { triggerOpportunityDiscovery, triggerUniversitySync, triggerDeadlineScan, triggerRequirementDiscovery } from "./actions";
 
 export const metadata = { title: "Admin" };
@@ -10,10 +11,14 @@ export const metadata = { title: "Admin" };
 const STATUS_CLASS: Record<string, string> = {
   healthy: "border-emerald-500/30 text-emerald-700 dark:text-emerald-400",
   succeeded: "border-emerald-500/30 text-emerald-700 dark:text-emerald-400",
+  resolved: "border-emerald-500/30 text-emerald-700 dark:text-emerald-400",
   degraded: "border-amber-500/30 text-amber-700 dark:text-amber-400",
+  reviewing: "border-amber-500/30 text-amber-700 dark:text-amber-400",
   down: "border-red-500/30 text-red-700 dark:text-red-400",
   failed: "border-red-500/30 text-red-700 dark:text-red-400",
+  open: "border-red-500/30 text-red-700 dark:text-red-400",
   running: "border-primary/30 text-primary",
+  dismissed: "text-muted-foreground",
   unknown: "text-muted-foreground",
 };
 
@@ -21,10 +26,11 @@ export default async function AdminPage() {
   await requireAdmin();
   const admin = createAdminClient();
 
-  const [providersRes, jobsRes, usageRes] = await Promise.all([
+  const [providersRes, jobsRes, usageRes, reportsRes] = await Promise.all([
     admin.from("provider_health").select("*").order("provider"),
     admin.from("external_sync_jobs").select("*").order("started_at", { ascending: false }).limit(15),
     admin.from("ai_usage").select("feature, input_tokens, output_tokens").order("created_at", { ascending: false }).limit(500),
+    admin.from("message_reports").select("*").order("created_at", { ascending: false }).limit(100),
   ]);
 
   const usageByFeature = new Map<string, { calls: number; inputTokens: number; outputTokens: number }>();
@@ -36,12 +42,66 @@ export default async function AdminPage() {
     usageByFeature.set(row.feature, entry);
   }
 
+  // Batch-fetch-and-zip (no nested PostgREST embed — message_reports has two FKs to
+  // profiles, so an embed would need constraint-name disambiguation; this matches the
+  // existing convention in lib/social/connections.ts). Service-role client sees every
+  // row regardless of RLS, so this is the one place display names and message bodies for
+  // *other people's* content are resolved outside their own request context — scoped
+  // tightly to exactly the ids referenced by a report, for the admin moderation queue only.
+  const reports = reportsRes.data ?? [];
+  const profileIds = Array.from(new Set(reports.flatMap((r) => [r.reporter_id, r.reported_user_id])));
+  const messageIds = Array.from(new Set(reports.map((r) => r.message_id).filter((id): id is string => id !== null)));
+
+  const [profilesRes, messagesRes] = await Promise.all([
+    profileIds.length > 0 ? admin.from("profiles").select("id, display_name").in("id", profileIds) : Promise.resolve({ data: [] }),
+    messageIds.length > 0 ? admin.from("messages").select("id, body").in("id", messageIds) : Promise.resolve({ data: [] }),
+  ]);
+  const nameById = new Map((profilesRes.data ?? []).map((p) => [p.id, p.display_name]));
+  const messageById = new Map((messagesRes.data ?? []).map((m) => [m.id, m.body]));
+
   return (
     <div className="space-y-10">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Admin</h1>
         <p className="mt-1 text-muted-foreground">Provider health, background jobs, and AI usage. Not linked from navigation.</p>
       </div>
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold">Reports</h2>
+          <span className="text-xs text-muted-foreground">{reports.filter((r) => r.status === "open").length} open</span>
+        </div>
+        {reports.length > 0 ? (
+          <ul className="divide-y rounded-lg border">
+            {reports.map((report) => (
+              <li key={report.id} className="space-y-2 px-4 py-3 text-sm">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <span className="font-medium">{nameById.get(report.reporter_id) ?? "A student"}</span>
+                    <span className="text-muted-foreground"> reported </span>
+                    <span className="font-medium">{nameById.get(report.reported_user_id) ?? "a student"}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>{formatDistanceToNow(new Date(report.created_at), { addSuffix: true })}</span>
+                    <Badge variant="outline" className={STATUS_CLASS[report.status]}>
+                      {report.status}
+                    </Badge>
+                  </div>
+                </div>
+                <p className="text-muted-foreground">{report.reason}</p>
+                {report.message_id ? (
+                  <p className="rounded-md bg-muted px-3 py-1.5 text-xs italic text-muted-foreground">
+                    {messageById.get(report.message_id) ?? "(reported message no longer available)"}
+                  </p>
+                ) : null}
+                <ReportReviewControl reportId={report.id} initialStatus={report.status} initialNote={report.resolution_note} />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-muted-foreground">No reports filed yet.</p>
+        )}
+      </section>
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">

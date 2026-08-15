@@ -2,11 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/security/require-admin";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { discoverOpportunitiesForQuery, DEFAULT_DISCOVERY_QUERIES } from "@/lib/opportunities/discover";
 import { syncUsUniversities, DEFAULT_US_UNIVERSITIES } from "@/lib/universities/sync-us-universities";
 import { scanDeadlines } from "@/lib/deadlines/scan";
 import { discoverRequirementsForUncoveredUniversities } from "@/lib/requirements/discover";
 import { runWithTracking } from "@/lib/jobs/run-with-tracking";
+import { isUuidLike } from "@/lib/validation/uuid";
+import type { MessageReportStatus } from "@/types/database";
 
 /**
  * Manual "run now" triggers for the admin panel — call the same underlying job logic the
@@ -68,6 +71,42 @@ export async function triggerRequirementDiscovery(): Promise<{ error?: string }>
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Job failed." };
   }
+  revalidatePath("/admin");
+  return {};
+}
+
+/**
+ * Minimum viable moderation (migration 0030): move a message_reports row through the
+ * review state, and/or record a resolution note. Touching either field marks the report
+ * reviewed by the acting admin, now — this is the audit trail, not a separate table.
+ * Goes through the admin client because no RLS policy grants a normal client write access
+ * to message_reports at all (reporter is insert-only) — same trust boundary as every
+ * other admin-only write on this page.
+ */
+export async function updateReportReview(
+  reportId: string,
+  input: { status?: MessageReportStatus; resolutionNote?: string }
+): Promise<{ error?: string }> {
+  const admin_profile = await requireAdmin();
+  if (!isUuidLike(reportId)) return { error: "Invalid report." };
+  if (input.status === undefined && input.resolutionNote === undefined) return {};
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("message_reports")
+    .update({
+      ...(input.status !== undefined ? { status: input.status } : {}),
+      ...(input.resolutionNote !== undefined ? { resolution_note: input.resolutionNote.trim().slice(0, 2000) } : {}),
+      reviewed_by: admin_profile.id,
+      reviewed_at: new Date().toISOString(),
+    })
+    .eq("id", reportId);
+
+  if (error) {
+    console.error("[admin] failed to update report review", { code: error.code, message: error.message });
+    return { error: "Couldn't save that. Please try again." };
+  }
+
   revalidatePath("/admin");
   return {};
 }
