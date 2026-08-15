@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createNotification } from "@/lib/notifications/create";
 import { isUuidLike } from "@/lib/validation/uuid";
 import { getConnectionWith } from "@/lib/social/connections";
+import { assertWithinRateLimit, RateLimitExceededError } from "@/lib/security/rate-limit";
+import { RATE_LIMITS } from "@/lib/security/rate-limit-config";
 
 const MAX_BODY_LENGTH = 4000;
 
@@ -18,6 +20,17 @@ export async function sendMessage(recipientId: string, body: string): Promise<{ 
   if (recipientId === userId) return { error: "You can't message yourself." };
   if (!trimmed) return { error: "Message can't be empty." };
   if (trimmed.length > MAX_BODY_LENGTH) return { error: "Message is too long." };
+
+  // Abuse guard (thresholds + fail-open rationale: lib/security/rate-limit-config.ts and
+  // lib/security/rate-limit.ts). Checked after trivial validation so malformed calls
+  // don't burn quota, but before any DB round-trip so a flood can't hammer the
+  // connection/block checks below.
+  try {
+    await assertWithinRateLimit(userId, "send_message", RATE_LIMITS.send_message);
+  } catch (error) {
+    if (error instanceof RateLimitExceededError) return { error: error.message };
+    throw error;
+  }
 
   const supabase = await createClient();
 
@@ -103,6 +116,14 @@ export async function reportMessage(messageId: string, reportedUserId: string, r
   if (!isUuidLike(messageId) || !isUuidLike(reportedUserId)) return { error: "Invalid report." };
   const trimmedReason = reason.trim().slice(0, 1000);
   if (!trimmedReason) return { error: "Please describe the issue." };
+
+  // Abuse guard — see lib/security/rate-limit-config.ts.
+  try {
+    await assertWithinRateLimit(session.userId!, "report_message", RATE_LIMITS.report_message);
+  } catch (error) {
+    if (error instanceof RateLimitExceededError) return { error: error.message };
+    throw error;
+  }
 
   const supabase = await createClient();
   const { error } = await supabase

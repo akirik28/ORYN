@@ -4,11 +4,21 @@ import { revalidatePath } from "next/cache";
 import { requireUser, getCurrentProfile } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { createNotification } from "@/lib/notifications/create";
+import { assertWithinRateLimit, RateLimitExceededError } from "@/lib/security/rate-limit";
+import { RATE_LIMITS } from "@/lib/security/rate-limit-config";
 
 export async function sendConnectionRequest(recipientId: string): Promise<{ error?: string }> {
   const session = await requireUser();
   const userId = session.userId!;
   if (recipientId === userId) return { error: "You can't connect with yourself." };
+
+  // Abuse guard — see lib/security/rate-limit-config.ts.
+  try {
+    await assertWithinRateLimit(userId, "send_connection_request", RATE_LIMITS.send_connection_request);
+  } catch (error) {
+    if (error instanceof RateLimitExceededError) return { error: error.message };
+    throw error;
+  }
 
   const supabase = await createClient();
 
