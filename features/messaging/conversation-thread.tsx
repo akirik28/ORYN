@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { Send, ShieldOff, ShieldCheck, Flag, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { cn } from "@/lib/utils";
 import { sendMessage, markConversationRead, blockUser, unblockUser, reportMessage } from "@/app/(app)/messages/actions";
 import { resolveBlockUiState } from "@/lib/messaging/authorization";
+import { createClient } from "@/lib/supabase/client";
 import type { Message } from "@/types/database";
 
 export function ConversationThread({
@@ -34,6 +36,17 @@ export function ConversationThread({
   messagingBlocked: boolean;
 }) {
   const [messages, setMessages] = useState(initialMessages);
+  // Reconciles local state with the server's authoritative list whenever
+  // router.refresh() lands new props — adjusted during render (React's documented
+  // pattern for this, not an effect) so it takes effect before this render commits
+  // instead of scheduling an extra one. See the submit()/realtime comments below for why
+  // this exists: the optimistic row appended in submit() is never itself treated as proof
+  // a message persisted, only as instant feedback until this replaces it.
+  const [prevInitialMessages, setPrevInitialMessages] = useState(initialMessages);
+  if (initialMessages !== prevInitialMessages) {
+    setPrevInitialMessages(initialMessages);
+    setMessages(initialMessages);
+  }
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [blocked, setBlocked] = useState(blockedByMe);
@@ -42,6 +55,7 @@ export function ConversationThread({
   const [reportTarget, setReportTarget] = useState<Message | null>(null);
   const [isPending, startTransition] = useTransition();
   const bottomRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   // "Blocked by the other party" is only known at the moment this page loaded (no
   // realtime for the other side toggling their own block) and can't change from any
@@ -59,6 +73,32 @@ export function ConversationThread({
     bottomRef.current?.scrollIntoView({ block: "end" });
   }, [messages.length]);
 
+  // Realtime: only listens for messages addressed to ME (recipient_id = my id), then
+  // re-fetches the whole conversation rather than splicing the payload into state — a
+  // duplicate or out-of-order event just triggers a harmless repeat fetch of the same
+  // truth, so there's no separate dedup logic to get wrong. RLS ("select own messages",
+  // migration 0027) still gates what this channel can ever deliver — this subscription
+  // can't see a row this user couldn't already SELECT. Reconnect/backoff is handled by
+  // supabase-js's realtime client itself; this effect only needs to (re)subscribe when
+  // the conversation identity changes and clean up on unmount.
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`messages:${currentUserId}:${otherUserId}`)
+      .on<Message>(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages", filter: `recipient_id=eq.${currentUserId}` },
+        (payload) => {
+          if (payload.new.sender_id === otherUserId) router.refresh();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [currentUserId, otherUserId, router]);
+
   function submit() {
     const body = draft.trim();
     if (!body) return;
@@ -74,6 +114,7 @@ export function ConversationThread({
         { id: `optimistic-${Date.now()}`, sender_id: currentUserId, recipient_id: otherUserId, body, read_at: null, created_at: new Date().toISOString() },
       ]);
       setDraft("");
+      router.refresh();
     });
   }
 

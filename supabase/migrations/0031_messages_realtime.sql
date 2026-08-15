@@ -1,0 +1,12 @@
+-- Enables Supabase Realtime (Postgres Changes) for the messages table — the "recipient
+-- must reload to see a new message" gap (docs/qa-environment-readiness-audit.md §6.3).
+-- Realtime's Postgres Changes stream is authorized per-connection using the same RLS the
+-- table already enforces (migration 0027's "select own messages" policy: sender or
+-- recipient only), so adding a table to this publication does not, by itself, let a
+-- client see rows it couldn't already SELECT — it only lets an already-authorized client
+-- learn about a new row without polling. No RLS change in this file.
+--
+-- INSERT payloads always carry the full new row regardless of replica identity (that
+-- setting only affects what OLD data ships with UPDATE/DELETE), and the client side only
+-- ever needs INSERT events here, so REPLICA IDENTITY is deliberately left at its default.
+alter publication supabase_realtime add table public.messages;
