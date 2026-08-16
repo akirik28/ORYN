@@ -37,7 +37,9 @@ export interface BasicProfileVisibilityInput {
 /** public_profiles view predicate: `is_public = true OR id in (select ... from
  * connections where auth.uid() in (requester_id, recipient_id))`. Grants only the
  * view's own narrow column set (see PUBLIC_PROFILE_SAFE_COLUMNS below) — never the full
- * `profiles` row, and never the portfolio. */
+ * `profiles` row, and never the portfolio. `headline`/`about` (migration 0037) sit in
+ * this same tier deliberately: identity/header text, not achievement data, so they
+ * follow canViewBasicProfile rather than the stricter canViewPortfolio below. */
 export function canViewBasicProfile(input: BasicProfileVisibilityInput): boolean {
   return input.isSelf || input.isPublic || input.hasAnyConnection;
 }
@@ -68,4 +70,14 @@ export function canShowMessageButton(connectionStatus: ConnectionStatus | null):
  * documents the view's SELECT (SQL-enforced, not by this constant) and exists so a test
  * can assert the whitelist itself never silently grows to include a private field.
  */
-export const PUBLIC_PROFILE_SAFE_COLUMNS = ["id", "display_name", "country", "curriculum", "graduation_year", "looking_for", "created_at"] as const;
+export const PUBLIC_PROFILE_SAFE_COLUMNS = [
+  "id",
+  "display_name",
+  "headline",
+  "about",
+  "country",
+  "curriculum",
+  "graduation_year",
+  "looking_for",
+  "created_at",
+] as const;

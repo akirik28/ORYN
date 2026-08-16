@@ -107,16 +107,120 @@ export interface Profile {
   is_admin: boolean;
   is_public: boolean;
   looking_for: string | null;
+  /** Professional Profile pack (migration 0033). Plain text only — never rendered as
+   * markdown/HTML, so there is no injection surface. Max 220 chars (DB-enforced). */
+  headline: string | null;
+  /** Plain text only, same rule as headline. Max 2600 chars (DB-enforced). */
+  about: string | null;
+  /** Structured multi-select from OPEN_TO_OPTIONS (lib/social/open-to.ts) — distinct
+   * from the free-text `looking_for` above. Visibility lives on contact_info, not here
+   * (shares one visibility model with the rest of the optional contact surface). */
+  open_to: string[];
+  /** Opt-in: education_records.overall_gpa/gpa_scale and courses.grade_value are only
+   * ever shown on the public profile when this is true. */
+  show_gpa: boolean;
   created_at: string;
   updated_at: string;
 }
 export type ProfileUpdate = Updatable<Profile, "id" | "created_at" | "updated_at">;
+
+export type ContactVisibility = "private" | "connections" | "public";
+
+export interface ContactInfo {
+  user_id: string;
+  phone: string | null;
+  phone_visibility: ContactVisibility;
+  email: string | null;
+  email_visibility: ContactVisibility;
+  linkedin_url: string | null;
+  linkedin_visibility: ContactVisibility;
+  instagram_handle: string | null;
+  instagram_visibility: ContactVisibility;
+  github_url: string | null;
+  github_visibility: ContactVisibility;
+  website_url: string | null;
+  website_visibility: ContactVisibility;
+  twitter_handle: string | null;
+  twitter_visibility: ContactVisibility;
+  discord_handle: string | null;
+  discord_visibility: ContactVisibility;
+  open_to_visibility: ContactVisibility;
+  updated_at: string;
+}
+export type ContactInfoUpsert = Insertable<
+  ContactInfo,
+  | "phone_visibility"
+  | "email_visibility"
+  | "linkedin_visibility"
+  | "instagram_visibility"
+  | "github_visibility"
+  | "website_visibility"
+  | "twitter_visibility"
+  | "discord_visibility"
+  | "open_to_visibility"
+  | "updated_at"
+>;
+
+export type FeaturedItemType =
+  | "project"
+  | "research_experience"
+  | "award"
+  | "activity"
+  | "work_experience"
+  | "volunteering_experience"
+  | "sports_experience"
+  | "external_link";
+
+export interface FeaturedItem {
+  id: string;
+  user_id: string;
+  item_type: FeaturedItemType;
+  item_id: string | null;
+  external_title: string | null;
+  external_url: string | null;
+  display_order: number;
+  created_at: string;
+}
+export type FeaturedItemInsert = Insertable<FeaturedItem, "id" | "created_at" | "display_order">;
+
+export interface SkillEndorsement {
+  id: string;
+  skill_id: string;
+  endorser_id: string;
+  created_at: string;
+}
+export type SkillEndorsementInsert = Insertable<SkillEndorsement, "id" | "created_at">;
+
+export type RecommendationRelationship = "teacher" | "mentor" | "teammate" | "project_collaborator" | "colleague" | "other";
+export type RecommendationStatus = "visible" | "hidden";
+
+export interface Recommendation {
+  id: string;
+  author_id: string;
+  recipient_id: string;
+  relationship: RecommendationRelationship;
+  body: string;
+  status: RecommendationStatus;
+  created_at: string;
+}
+export type RecommendationInsert = Insertable<Recommendation, "id" | "created_at" | "status">;
+
+export interface ProfileView {
+  id: string;
+  viewed_user_id: string;
+  viewer_id: string;
+  viewed_on: string;
+  created_at: string;
+}
+export type ProfileViewInsert = Insertable<ProfileView, "id" | "created_at" | "viewed_on">;
 
 // Narrow, explicit column subset exposed by the `public_profiles` view (migration
 // 0023) — never the raw `Profile` row. See that migration for why.
 export interface PublicProfileRow {
   id: string;
   display_name: string | null;
+  headline: string | null;
+  about: string | null;
   country: string | null;
   curriculum: CurriculumType | null;
   graduation_year: number | null;
@@ -170,6 +274,12 @@ export interface MessageReport {
   reporter_id: string;
   reported_user_id: string;
   message_id: string | null;
+  /** Professional Profile pack (migration 0035) — reuses this same moderation system
+   * for recommendation reports rather than a parallel one. A report references at most
+   * one of message_id/recommendation_id (not enforced by a DB constraint, since a
+   * general "report this user" with neither is also valid, matching message_id's own
+   * pre-existing nullability). */
+  recommendation_id: string | null;
   reason: string;
   status: MessageReportStatus;
   reviewed_by: string | null;
@@ -177,8 +287,14 @@ export interface MessageReport {
   resolution_note: string | null;
   created_at: string;
 }
-export type MessageReportInsert = Insertable<MessageReport, "id" | "created_at" | "status" | "reviewed_by" | "reviewed_at" | "resolution_note">;
-export type MessageReportUpdate = Updatable<MessageReport, "id" | "reporter_id" | "reported_user_id" | "message_id" | "reason" | "created_at">;
+export type MessageReportInsert = Insertable<
+  MessageReport,
+  "id" | "created_at" | "status" | "reviewed_by" | "reviewed_at" | "resolution_note" | "message_id" | "recommendation_id"
+>;
+export type MessageReportUpdate = Updatable<
+  MessageReport,
+  "id" | "reporter_id" | "reported_user_id" | "message_id" | "recommendation_id" | "reason" | "created_at"
+>;
 
 interface AchievementCommon {
   id: string;
@@ -917,6 +1033,11 @@ export interface Database {
       messages: Table<Message, MessageInsert, MessageUpdate>;
       blocked_users: Table<BlockedUser, BlockedUserInsert, Partial<BlockedUserInsert>>;
       message_reports: Table<MessageReport, MessageReportInsert, MessageReportUpdate>;
+      contact_info: Table<ContactInfo, ContactInfoUpsert, Partial<ContactInfoUpsert>>;
+      featured_items: Table<FeaturedItem, FeaturedItemInsert, Partial<FeaturedItemInsert>>;
+      skill_endorsements: Table<SkillEndorsement, SkillEndorsementInsert, Partial<SkillEndorsementInsert>>;
+      recommendations: Table<Recommendation, RecommendationInsert, Partial<RecommendationInsert>>;
+      profile_views: Table<ProfileView, ProfileViewInsert, Partial<ProfileViewInsert>>;
       education_records: Table<EducationRecord, EducationRecordInsert, EducationRecordUpdate>;
       courses: Table<Course, CourseInsert, CourseUpdate>;
       test_scores: Table<TestScore, TestScoreInsert, TestScoreUpdate>;

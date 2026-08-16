@@ -128,13 +128,19 @@ describe("PUBLIC_PROFILE_SAFE_COLUMNS — no cross-user private field leakage", 
     "profile_strength_score",
     "is_admin",
     "updated_at",
+    // Professional Profile pack (migration 0033): open_to has its own independent
+    // visibility gate (contact_info.open_to_visibility, not this view — see
+    // lib/social/contact-info.ts), and show_gpa is a private preference flag, not
+    // display data — neither belongs in the blanket-visible identity tier.
+    "open_to",
+    "show_gpa",
   ];
 
   test.each(FORBIDDEN_PROFILE_FIELDS)("never includes private profiles column %s", (field) => {
     expect((PUBLIC_PROFILE_SAFE_COLUMNS as readonly string[]).includes(field)).toBe(false);
   });
 
-  test.each(["id", "display_name", "country", "curriculum", "graduation_year", "looking_for", "created_at"])(
+  test.each(["id", "display_name", "headline", "about", "country", "curriculum", "graduation_year", "looking_for", "created_at"])(
     "includes expected public column %s",
     (field) => {
       expect((PUBLIC_PROFILE_SAFE_COLUMNS as readonly string[]).includes(field)).toBe(true);

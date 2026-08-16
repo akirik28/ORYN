@@ -10,6 +10,11 @@ import { PeerBenchmark } from "@/features/profile/peer-benchmark";
 import { getPeerBenchmarks } from "@/lib/benchmarking";
 import { AchievementSection } from "@/features/profile/achievement-section";
 import { ResearchIdeaGenerator } from "@/features/profile/research-idea-generator";
+import { ProfessionalIdentityForm } from "@/features/profile/professional-identity-form";
+import { OpenToForm } from "@/features/profile/open-to-form";
+import { ContactInfoForm } from "@/features/profile/contact-info-form";
+import { getOwnContactInfo } from "@/lib/social/contact-info";
+import { isLikelyAdult } from "@/lib/social/age";
 import {
   ACTIVITY_FIELDS,
   PROJECT_FIELDS,
@@ -83,6 +88,7 @@ export default async function ProfilePage() {
     certificationsRes,
     goalsRes,
     benchmarkSummary,
+    contactInfo,
   ] = await Promise.all([
     supabase.from("profile_scores").select("*").eq("user_id", userId),
     supabase.from("activities").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
@@ -97,7 +103,10 @@ export default async function ProfilePage() {
     supabase.from("certifications").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
     supabase.from("career_goals").select("*").eq("user_id", userId).order("status", { ascending: true }).order("target_date", { ascending: true, nullsFirst: false }),
     getPeerBenchmarks(userId),
+    getOwnContactInfo(supabase, userId),
   ]);
+
+  const isAdult = isLikelyAdult(profile?.birth_year ?? null);
 
   const scoreMap = Object.fromEntries(
     (scoresRes.data ?? []).map((s) => [s.dimension, { score: s.score, confidence: s.confidence }])
@@ -130,9 +139,29 @@ export default async function ProfilePage() {
             <Link href="/profile/history" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
               View progress <ArrowRight className="size-3.5" />
             </Link>
+            <Link href={`/u/${userId}`} className="inline-flex items-center gap-1 text-brand-primary hover:underline">
+              Preview public profile <ArrowRight className="size-3.5" />
+            </Link>
           </div>
         }
       />
+
+      <section className="space-y-6 rounded-3xl border p-6 md:p-8">
+        <SectionHeader title="Professional profile" description="What other Oryn students see on your public profile." />
+        <ProfessionalIdentityForm
+          initialHeadline={profile?.headline ?? null}
+          initialAbout={profile?.about ?? null}
+          initialShowGpa={profile?.show_gpa ?? false}
+        />
+        <div className="border-t pt-6">
+          <h3 className="mb-3 text-sm font-semibold">Open to</h3>
+          <OpenToForm initialSelected={profile?.open_to ?? []} initialVisibility={contactInfo.open_to_visibility} />
+        </div>
+        <div className="border-t pt-6">
+          <h3 className="mb-3 text-sm font-semibold">Contact information</h3>
+          <ContactInfoForm initialContact={contactInfo} isAdult={isAdult} />
+        </div>
+      </section>
 
       <section className="grid gap-8 rounded-3xl border border-brand-primary-border bg-gradient-to-br from-brand-primary-subtle via-card to-card p-6 md:grid-cols-2 md:p-8">
         <ScoreRadar scores={radarScores} />

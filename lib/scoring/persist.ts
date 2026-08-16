@@ -19,18 +19,38 @@ export async function recomputeCareerProfile(userId: string, opts?: { snapshotRe
   const supabase = await createClient();
   const facts = await assembleScoringFacts(supabase, userId);
 
-  const { data: profileRow, error: profileError } = await supabase
-    .from("profiles")
-    .select("country, school_name, graduation_year, curriculum, profile_strength_score")
-    .eq("id", userId)
-    .single();
+  const [profileResult, skillsResult, featuredResult, contactResult] = await Promise.all([
+    supabase.from("profiles").select("country, school_name, graduation_year, curriculum, profile_strength_score, headline, about").eq("id", userId).single(),
+    supabase.from("skills").select("id", { count: "exact", head: true }).eq("user_id", userId),
+    supabase.from("featured_items").select("id", { count: "exact", head: true }).eq("user_id", userId),
+    supabase.from("contact_info").select("phone, email, linkedin_url, instagram_handle, github_url, website_url, twitter_handle, discord_handle").eq("user_id", userId).maybeSingle(),
+  ]);
+  const { data: profileRow, error: profileError } = profileResult;
 
   if (profileError || !profileRow) {
     throw new Error(`Cannot recompute career profile: profile not found (${profileError?.message ?? "no data"})`);
   }
 
+  const hasContactInfo = Boolean(
+    contactResult.data &&
+      (contactResult.data.phone ||
+        contactResult.data.email ||
+        contactResult.data.linkedin_url ||
+        contactResult.data.instagram_handle ||
+        contactResult.data.github_url ||
+        contactResult.data.website_url ||
+        contactResult.data.twitter_handle ||
+        contactResult.data.discord_handle)
+  );
+
   const careerProfile = computeCareerProfile(facts);
-  const completeness = computeCompleteness({ ...facts, profile: profileRow });
+  const completeness = computeCompleteness({
+    ...facts,
+    profile: profileRow,
+    skillCount: skillsResult.count ?? 0,
+    featuredCount: featuredResult.count ?? 0,
+    hasContactInfo,
+  });
 
   const calculatedAt = new Date().toISOString();
   const { error: scoresError } = await supabase.from("profile_scores").upsert(

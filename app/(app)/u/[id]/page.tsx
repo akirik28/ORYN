@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getPublicProfile, getPublicPortfolio, getPublicSkills } from "@/lib/social/public-profile";
 import { getConnectionWith } from "@/lib/social/connections";
 import { canShowMessageButton } from "@/lib/social/public-profile-authorization";
+import { getFilteredContactInfo } from "@/lib/social/contact-info";
+import { OPEN_TO_LABELS, type OpenToOption } from "@/lib/social/open-to";
 import { isUuidLike } from "@/lib/validation/uuid";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -53,7 +55,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
   if (isSelfPrivate) {
     const { data } = await supabase
       .from("profiles")
-      .select("id, display_name, country, curriculum, graduation_year, looking_for, created_at")
+      .select("id, display_name, headline, about, country, curriculum, graduation_year, looking_for, created_at")
       .eq("id", id)
       .single();
     display = data;
@@ -70,6 +72,10 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
   }
 
   const connection = isSelf ? null : await getConnectionWith(supabase, session.userId!, id);
+  const hasAcceptedConnection = connection?.status === "accepted";
+  const contact = await getFilteredContactInfo(id, { isSelf, hasAcceptedConnection });
+  const hasAnyContact =
+    contact.phone || contact.email || contact.linkedinUrl || contact.instagramHandle || contact.githubUrl || contact.websiteUrl || contact.twitterHandle || contact.discordHandle;
 
   return (
     <div className="max-w-2xl space-y-8">
@@ -93,6 +99,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
           </Avatar>
           <div>
             <h1 className="font-heading text-2xl font-medium tracking-tight">{display.display_name ?? "Oryn student"}</h1>
+            {display.headline ? <p className="text-sm font-medium text-foreground/90">{display.headline}</p> : null}
             <p className="text-sm text-muted-foreground">
               {[display.curriculum, display.country, display.graduation_year ? `Class of ${display.graduation_year}` : null]
                 .filter(Boolean)
@@ -121,6 +128,13 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
         <StatusBadge tone="brand" icon={Sparkles} label={`Looking for: ${display.looking_for}`} />
       ) : null}
 
+      {display.about ? (
+        <div className="space-y-2">
+          <h2 className="font-semibold">About</h2>
+          <p className="whitespace-pre-wrap text-sm text-muted-foreground">{display.about}</p>
+        </div>
+      ) : null}
+
       {loadFailed ? (
         <ErrorState description="We couldn't load the full portfolio right now. The profile above is still accurate." />
       ) : (
@@ -132,6 +146,83 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
           </div>
         </>
       )}
+
+      {contact.openTo.length > 0 ? (
+        <div className="space-y-2">
+          <h2 className="font-semibold">Open to</h2>
+          <div className="flex flex-wrap gap-1.5">
+            {contact.openTo.map((option) => (
+              <Badge key={option} variant="outline">
+                {OPEN_TO_LABELS[option as OpenToOption] ?? option}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {hasAnyContact ? (
+        <div className="space-y-2">
+          <h2 className="font-semibold">Contact</h2>
+          <ul className="space-y-1.5 text-sm">
+            {contact.email ? (
+              <li>
+                <span className="text-muted-foreground">Email: </span>
+                <a href={`mailto:${contact.email}`} className="text-brand-primary hover:underline">
+                  {contact.email}
+                </a>
+              </li>
+            ) : null}
+            {contact.phone ? (
+              <li>
+                <span className="text-muted-foreground">Phone: </span>
+                {contact.phone}
+              </li>
+            ) : null}
+            {contact.linkedinUrl ? (
+              <li>
+                <span className="text-muted-foreground">LinkedIn: </span>
+                <a href={contact.linkedinUrl} target="_blank" rel="noreferrer noopener" className="text-brand-primary hover:underline">
+                  {contact.linkedinUrl}
+                </a>
+              </li>
+            ) : null}
+            {contact.githubUrl ? (
+              <li>
+                <span className="text-muted-foreground">GitHub: </span>
+                <a href={contact.githubUrl} target="_blank" rel="noreferrer noopener" className="text-brand-primary hover:underline">
+                  {contact.githubUrl}
+                </a>
+              </li>
+            ) : null}
+            {contact.websiteUrl ? (
+              <li>
+                <span className="text-muted-foreground">Website: </span>
+                <a href={contact.websiteUrl} target="_blank" rel="noreferrer noopener" className="text-brand-primary hover:underline">
+                  {contact.websiteUrl}
+                </a>
+              </li>
+            ) : null}
+            {contact.instagramHandle ? (
+              <li>
+                <span className="text-muted-foreground">Instagram: </span>
+                {contact.instagramHandle}
+              </li>
+            ) : null}
+            {contact.twitterHandle ? (
+              <li>
+                <span className="text-muted-foreground">X / Twitter: </span>
+                {contact.twitterHandle}
+              </li>
+            ) : null}
+            {contact.discordHandle ? (
+              <li>
+                <span className="text-muted-foreground">Discord: </span>
+                {contact.discordHandle}
+              </li>
+            ) : null}
+          </ul>
+        </div>
+      ) : null}
     </div>
   );
 }
