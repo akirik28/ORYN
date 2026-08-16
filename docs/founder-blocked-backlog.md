@@ -184,6 +184,22 @@ in a browser; `npm run lint`, `tsc --noEmit`, `vitest`, and `next build` all pas
 confirms the code is internally consistent, not that the live queries succeed.
 **Depends on**: the same permission grant as item 3.
 
+## 17. Apply migration 0038 + seed_institutions.sql (Canonical Entity Autocomplete System)
+
+**Action**: apply `supabase/migrations/0038_canonical_institutions.sql` (new
+`institutions` table + RLS, `aliases text[]` added to `universities`/`opportunities`,
+nullable `*_id` linkage columns added to nine achievement/education tables — all
+additive, no drops), then `supabase/seed_institutions.sql` (one real, verified school
+row — Üsküdar American Academy, the founder's own school; see that file's own header for
+why it's not fabricated). Blocked by the same classifier gate as items 3 and 16.
+**Blocks**: every canonical school/organization field this pass wired (education
+records' school, and every achievement type's organization/team field) — none of it has
+executed against a real database; `npm run entities:backfill-report` (also new this
+pass) additionally needs `SUPABASE_SECRET_KEY` to run at all.
+**Depends on**: the same permission grant as item 3, applied after 0033–0037 (item 16) —
+0038 doesn't structurally depend on them, but keeping the pack's own migrations in their
+numeric order avoids ever needing to reason about out-of-order application.
+
 ---
 
 ## Environment-capability gap (not founder-blocked, noted for completeness)

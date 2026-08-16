@@ -57,3 +57,51 @@ body, About) and are not touched.
   with a `category` (`school` | `organization`) column serves both rather than two
   near-duplicate tables. This is the one new table this pass adds; every other field
   above links to either it, `universities`, or `opportunities` — never a fourth registry.
+
+## Implementation status (end of pass)
+
+**Built and wired:**
+- Migration `0038_canonical_institutions.sql` — `institutions` table + RLS,
+  `aliases text[]` on `universities`/`opportunities`, nullable `*_id` linkage columns on
+  `profiles`, `education_records`, `work_experiences`, `volunteering_experiences`,
+  `activities`, `research_experiences`, `awards`, `certifications`, `projects`,
+  `sports_experiences`.
+- `lib/entities/{normalize,rank,types,search,resolve,validation,backfill}.ts` — the
+  search/ranking engine (Turkish-aware normalization, tiered ranking with a soft
+  country/city context boost, Levenshtein-based fuzzy fallback), server search/resolve/
+  custom-creation actions, and pure backfill classification. Pure-vs-server-only split
+  throughout (mirroring `lib/social/skills.ts`'s own convention) so every rule is unit
+  tested without a database.
+- `features/entities/entity-combobox.tsx` — the shared component (spec section 17),
+  wired via a new `FieldConfig` "entity" variant into `education_records.school_name`
+  and every `organization`/`team_name` field across the nine achievement tables above.
+  `app/(app)/profile/actions.ts`'s shared `crudCreate`/`crudUpdate` re-verify any
+  submitted `*_id` server-side (`resolveEntityLinkage`) before persisting, and sync the
+  legacy text column to the linked entity's current canonical name.
+- `scripts/entities-backfill-report.ts` — non-destructive backfill classification
+  script (report-only, never writes a `*_id`), and `supabase/seed_institutions.sql` — one
+  real, verified school row (Üsküdar American Academy — the founder's own school, not a
+  fabricated example; see that file's header).
+- `target_universities.university_id` was already fully canonical — confirmed via audit,
+  no change needed.
+
+**Deferred, explicitly (not silent gaps):**
+- `profiles.school_name` (the onboarding "quick profile" mirror) stays plain free text —
+  `school_id` column exists on it, but the onboarding wizard wasn't rewired to
+  `EntityCombobox` this pass. `education_records.school_id` (the fuller structured
+  record, one row per school attended) is the real source of truth going forward.
+- `activities.opportunity_id` — schema and `opportunities.aliases` both exist, but no
+  form field wires it yet: displaying the linked opportunity's title on re-edit needs a
+  small additional resolve-on-load join this pass didn't build (activities has no
+  existing text column to denormalize the title into, unlike every `organization_id`
+  field above, which reuses an existing `organization` text column).
+- The existing University Explorer's own search UI
+  (`app/(app)/universities/page.tsx`) was not rewired to the new alias-aware engine —
+  `target_universities` linkage was already fully ID-based (the actual integrity
+  requirement of spec section 9), so this would be a search-quality improvement, not a
+  data-integrity fix.
+- `lib/social/people-you-may-know-query.ts`'s `sameSchool` signal still compares raw
+  `profiles.school_name` text rather than `school_id` — a candidate follow-up once
+  `profiles.school_id` itself is wired (see the first bullet above).
+- No live-DB backfill was run (see docs/founder-blocked-backlog.md item 17) — this
+  environment has no applied migrations for this table at all yet.
