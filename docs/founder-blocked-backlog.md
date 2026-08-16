@@ -30,12 +30,27 @@ section), and applying/verifying migrations 3–5 below via `npm run check:integ
 
 ## 3. Apply migrations 0028 → 0032, in order
 
-**Action**: follow `docs/founder-environment-unblock-runbook.md` steps 3–8 exactly —
-each migration has its own pre-check/apply/post-check SQL. Do not skip a post-check.
-**Blocks**: 0029 blocks all achievement saves (Activities/Projects/Awards/Research/
-Volunteering/Work/Sports) from actually persisting — currently fails with a friendly-
-but-real error. 0030 blocks the moderation panel and `message_reports` export. 0031
-blocks realtime message updates (recipient must reload). 0032 blocks safe re-running of
+**Status (2026-08-16, Professional Profile pack session)**: `0029` (story_notes columns)
+is now applied to `oryn-qa-scratch` via the Supabase MCP tools directly from this
+session — confirmed additive/safe per this file's own reasoning, applied with no schema
+conflicts. `0028`, `0030`, `0031`, `0032` are **still not applied**: the very next
+`apply_migration` call (0028) was refused by Claude Code's own auto-mode safety
+classifier ("Blocked by classifier"), and a subsequent read-only `list_migrations` call
+was refused for the same reason — the classifier appears to gate the whole Supabase
+MCP-write category in this session, not just the specific 0028 statement, so retrying
+individual migrations wasn't attempted further per the tool's own instruction not to work
+around a denial. **Unblock**: the user needs to grant this session (or a future one) an
+explicit Bash/MCP permission rule for Supabase migration application — see the denial
+message's own suggestion ("add a Bash permission rule to their settings") — after which
+0028, 0030, 0031, 0032, and this pack's own 0033–0037 (item 16 below) can all be applied
+in one sitting following the runbook.
+**Action**: follow `docs/founder-environment-unblock-runbook.md` steps 3–8 for the
+remaining `0028`, `0030`, `0031`, `0032` — each has its own pre-check/apply/post-check
+SQL. Do not skip a post-check.
+**Blocks**: `0028` blocks safe re-running of the university program/requirement seed
+(no dedup index yet). `0030` blocks the moderation panel and `message_reports` export.
+`0031` blocks realtime message updates (recipient must reload). `0032` blocks safe
+re-running of
 the university sync job and honest null-handling on two opportunity fields.
 **Depends on**: item 2 (secret key, for the post-checks) — the SQL editor itself doesn't
 need it, but verifying each step does.
@@ -146,6 +161,24 @@ scope per the founder's own earlier instruction.
 vanishes in a serverless environment — messaging/social failures post-deploy would be
 invisible without this.
 **Depends on**: item 14 (needs a real deploy target to be worth setting up).
+
+## 16. Apply migrations 0033 → 0037 (Professional Profile & Networking Pack)
+
+**Action**: apply, in order, `supabase/migrations/0033_professional_profile_core.sql`
+(contact_info, featured_items, profiles.headline/about/open_to/show_gpa),
+`0034_skill_endorsements.sql`, `0035_recommendations.sql`, `0036_profile_views.sql`,
+`0037_public_profile_headline_about.sql` (adds headline/about to the `public_profiles`
+view). All five are additive-only (new tables/columns/enums/one `CREATE OR REPLACE
+VIEW`), no drops, no data migration — same safety shape as 0028–0032 above. Blocked by
+the same classifier gate described in item 3; needs the same permission grant to unblock,
+then apply both ranges (0028–0032, then 0033–0037) in one sitting.
+**Blocks**: every feature this session built code for — headline/About, contact
+info + visibility, Open To, Featured items, skill endorsements, recommendations, and
+profile-view counts all query tables/columns that don't exist yet on any environment
+except a hand-run local Postgres. None of it has been exercised against a real request
+in a browser; `npm run lint`, `tsc --noEmit`, `vitest`, and `next build` all pass, which
+confirms the code is internally consistent, not that the live queries succeed.
+**Depends on**: the same permission grant as item 3.
 
 ---
 

@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { Lock, Sparkles, MessageCircle } from "lucide-react";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
-import { getPublicProfile, getPublicPortfolio, getPublicSkills } from "@/lib/social/public-profile";
+import { getPublicProfile, getPublicPortfolio, getPublicSkills, isCurrentlyPublic } from "@/lib/social/public-profile";
+import { getFeaturedItems } from "@/lib/social/featured";
 import { getConnectionWith } from "@/lib/social/connections";
 import { canShowMessageButton } from "@/lib/social/public-profile-authorization";
 import { getFilteredContactInfo } from "@/lib/social/contact-info";
@@ -92,9 +93,15 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
   let portfolio: PortfolioItem[] = [];
   let skills: PublicSkill[] = [];
+  let featured: Awaited<ReturnType<typeof getFeaturedItems>> = [];
   let loadFailed = false;
   try {
-    [portfolio, skills] = await Promise.all([getPublicPortfolio(id, { bypassCheck: isSelf }), getPublicSkills(id, { bypassCheck: isSelf })]);
+    const isPublic = isSelf ? false : await isCurrentlyPublic(id);
+    [portfolio, skills, featured] = await Promise.all([
+      getPublicPortfolio(id, { bypassCheck: isSelf }),
+      getPublicSkills(id, { bypassCheck: isSelf }),
+      getFeaturedItems(id, { isSelf, isPublic }),
+    ]);
   } catch {
     loadFailed = true;
   }
@@ -173,6 +180,34 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
         <div className="space-y-2">
           <h2 className="font-semibold">About</h2>
           <p className="whitespace-pre-wrap text-sm text-muted-foreground">{display.about}</p>
+        </div>
+      ) : null}
+
+      {featured.length > 0 ? (
+        <div className="space-y-3">
+          <h2 className="font-semibold">Featured</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {featured.map((item) =>
+              item.url ? (
+                <a
+                  key={item.id}
+                  href={item.url}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="space-y-1 rounded-xl border p-4 hover:border-brand-primary/50"
+                >
+                  <p className="font-medium">{item.title}</p>
+                  <p className="truncate text-xs text-muted-foreground">{item.url}</p>
+                </a>
+              ) : (
+                <div key={item.id} className="space-y-1 rounded-xl border p-4">
+                  <p className="font-medium">{item.title}</p>
+                  {item.organization ? <p className="text-sm text-muted-foreground">{item.organization}</p> : null}
+                  {item.description ? <p className="text-sm text-muted-foreground">{item.description}</p> : null}
+                </div>
+              )
+            )}
+          </div>
         </div>
       ) : null}
 

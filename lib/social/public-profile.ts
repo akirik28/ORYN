@@ -23,8 +23,10 @@ export async function getPublicProfile(supabase: SupabaseClient<Database>, userI
  * are deliberately narrower than "public" — see product-decisions.md), and neither
  * carve-out was ever meant to also unlock the full portfolio, only the view's own small
  * column set. `bypassCheck` exists only for a student previewing their own not-yet-public
- * page. */
-async function isCurrentlyPublic(userId: string): Promise<boolean> {
+ * page. Exported so other portfolio-adjacent gates (e.g. lib/social/featured.ts's
+ * caller) can compute the same `isPublic` input without a second, subtly different
+ * check. */
+export async function isCurrentlyPublic(userId: string): Promise<boolean> {
   const admin = createAdminClient();
   const { data } = await admin.from("profiles").select("is_public").eq("id", userId).maybeSingle();
   return data?.is_public === true;

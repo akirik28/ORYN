@@ -16,6 +16,8 @@ import { ContactInfoForm } from "@/features/profile/contact-info-form";
 import { getOwnContactInfo, hasAnyContactValue } from "@/lib/social/contact-info";
 import { isLikelyAdult } from "@/lib/social/age";
 import { getProfileViewCounts } from "@/lib/social/profile-views";
+import { getFeaturedItems } from "@/lib/social/featured";
+import { FeaturedManager, type FeaturedManagerItem } from "@/features/profile/featured-manager";
 import { assembleScoringFacts } from "@/lib/scoring/assemble-facts";
 import { getCompletenessChecklist } from "@/lib/scoring/completeness";
 import { Progress } from "@/components/ui/progress";
@@ -96,7 +98,7 @@ export default async function ProfilePage() {
     benchmarkSummary,
     contactInfo,
     skillsRes,
-    featuredCountRes,
+    featuredItems,
     profileViewCounts,
     scoringFacts,
   ] = await Promise.all([
@@ -115,7 +117,7 @@ export default async function ProfilePage() {
     getPeerBenchmarks(userId),
     getOwnContactInfo(supabase, userId),
     supabase.from("skills").select("*").eq("user_id", userId).order("category").order("name"),
-    supabase.from("featured_items").select("id", { count: "exact", head: true }).eq("user_id", userId),
+    getFeaturedItems(userId, { isSelf: true, isPublic: false }),
     getProfileViewCounts(supabase, userId),
     assembleScoringFacts(supabase, userId),
   ]);
@@ -131,11 +133,28 @@ export default async function ProfilePage() {
       about: profile?.about ?? null,
     },
     skillCount: skillsRes.data?.length ?? 0,
-    featuredCount: featuredCountRes.count ?? 0,
+    featuredCount: featuredItems.length,
     hasContactInfo: hasAnyContactValue(contactInfo),
   });
   const completenessPercent = profile?.completeness_percent ?? 0;
   const remainingSuggestions = completenessChecklist.filter((item) => !item.done);
+
+  const featuredManagerItems: FeaturedManagerItem[] = featuredItems.map((item) => ({
+    id: item.id,
+    itemType: item.itemType,
+    title: item.title,
+    organization: item.organization,
+    url: item.url,
+  }));
+  const featuredCandidates = {
+    project: (projectsRes.data ?? []).map((p) => ({ id: p.id, label: p.title })),
+    research_experience: (researchRes.data ?? []).map((r) => ({ id: r.id, label: r.title })),
+    award: (awardsRes.data ?? []).map((a) => ({ id: a.id, label: a.title })),
+    activity: (activitiesRes.data ?? []).map((a) => ({ id: a.id, label: a.title })),
+    work_experience: (workRes.data ?? []).map((w) => ({ id: w.id, label: w.title })),
+    volunteering_experience: (volunteeringRes.data ?? []).map((v) => ({ id: v.id, label: v.title })),
+    sports_experience: (sportsRes.data ?? []).map((s) => ({ id: s.id, label: s.sport })),
+  };
 
   const isAdult = isLikelyAdult(profile?.birth_year ?? null);
 
@@ -192,6 +211,11 @@ export default async function ProfilePage() {
           <h3 className="mb-3 text-sm font-semibold">Contact information</h3>
           <ContactInfoForm initialContact={contactInfo} isAdult={isAdult} />
         </div>
+      </section>
+
+      <section className="space-y-3 rounded-3xl border p-6 md:p-8">
+        <SectionHeader title="Featured" description="Pin your best 3-5 items to the top of your public profile." />
+        <FeaturedManager initialItems={featuredManagerItems} candidates={featuredCandidates} />
       </section>
 
       <section className="grid gap-6 rounded-3xl border p-6 md:grid-cols-[1fr_auto] md:items-start md:p-8">
