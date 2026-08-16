@@ -794,3 +794,58 @@ this pass prioritized by "what would let the founder publish on return":
   other four correctly report missing credential).
 
 See `docs/pre-publish-checklist.md` for the founder's exact remaining action list.
+
+### Professional Profile & Networking Pack (2026-08-16)
+
+Continued from a prior session that hit its usage limit mid-implementation, having
+already landed migrations `0033`-`0036` (contact_info, featured_items,
+skill_endorsements, recommendations, profile_views), the profiles.headline/about/
+open_to/show_gpa columns, and pure authorization predicates + tests for contact
+visibility, minor-safe phone rules, skill endorsements, recommendations, and People You
+May Know — recovered, verified (all passing), and built on rather than redone.
+
+**Code-complete this session** (batches A-D, F-H; see git log for the individual
+commits):
+- **Contact info + identity** — per-field visibility (private/connections/public),
+  server-side minor-safe phone gating (age derived from `profiles.birth_year`, never a
+  client flag), headline/About/Open To editing and filtered display. Migration `0037`
+  adds headline/about to the `public_profiles` view.
+- **Skills** — had a table (migration `0004`) but no UI at all before this session; full
+  CRUD with a 15-skill cap and case-insensitive dedup, plus endorsements from accepted
+  connections (self/stranger/duplicate/blocked all denied server-side, not just hidden
+  in the UI).
+- **Recommendations** — write (accepted connections only), recipient show/hide (sends
+  only `{ status }`, never the body), author delete, reporting reuses the existing
+  `message_reports` moderation queue via a new `recommendation_id` column.
+- **Featured items** — pin up to 5 existing achievements (or an external link);
+  re-verified against the live source row and portfolio-visibility gate on every read,
+  so a since-deleted or since-privated item never leaks.
+- **Mutual connections + People You May Know** — deterministic V1 scoring (mutual
+  connections, same school, shared interests, shared skills — no AI), two-hop candidate
+  pool rather than a full-table scan, excludes self/any connection record/blocked/
+  non-public profiles.
+- **Profile views + Profile Strength** — 7d/30d owner-only counts that never expose
+  viewer identity (DB-enforced self-exclusion and same-day dedup); Profile Strength
+  reuses the extended completeness checklist from the prior session's work.
+- **Data export** extended to every new table, including a deliberate omission
+  (`viewer_id` excluded from the `profile_views` export — the feature's core privacy
+  commitment holds even in the owner's own export).
+
+**Verification:** `npm run lint` / `typecheck` clean, `npm test` 292/292 (283 without
+this session's own export-coverage additions; started this session at 272 with the
+inherited work), `npm run build` clean (routes unchanged in count — all new surfaces are
+sections on existing `/profile`, `/u/[id]`, `/connections` pages, not new routes) — all
+re-run via a full `npm ci` clean pass at the end, not assumed carried over. Every batch
+committed and pushed individually with GitHub Actions CI green on each.
+
+**Not live-verified.** This environment has no linked local Postgres and the QA Supabase
+project (`oryn-qa-scratch`) only got one of this pack's prerequisite migrations applied
+(`0029`) before the Supabase MCP tools were refused by Claude Code's own auto-mode safety
+classifier for further schema writes (and even a read-only `list_migrations` call after
+that). None of `0028`, `0030`-`0032`, or this pack's own `0033`-`0037` are applied
+anywhere live, so no query this session wrote has ever executed against a real database —
+code-level checks (lint/types/tests/build) confirm internal consistency, not that the
+live queries succeed. See `docs/founder-blocked-backlog.md` items 3 and 16 for the exact
+unblock (a permission grant, then apply both migration ranges in one sitting following
+`docs/founder-environment-unblock-runbook.md`) and a full accounting of what's still
+untested against a real request.
