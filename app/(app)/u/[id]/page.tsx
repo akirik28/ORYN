@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { getPublicProfile, getPublicPortfolio, getPublicSkills } from "@/lib/social/public-profile";
 import { getConnectionWith } from "@/lib/social/connections";
+import { canShowMessageButton } from "@/lib/social/public-profile-authorization";
 import { isUuidLike } from "@/lib/validation/uuid";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -101,7 +102,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
         </div>
         {!isSelf ? (
           <div className="flex gap-2">
-            {connection?.status === "accepted" ? (
+            {canShowMessageButton(connection?.status ?? null) ? (
               <Button size="sm" variant="outline" render={<Link href={`/messages/${id}`} />} nativeButton={false}>
                 <MessageCircle className="size-3.5" /> Message
               </Button>

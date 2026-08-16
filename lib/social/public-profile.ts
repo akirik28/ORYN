@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, PublicProfileRow } from "@/types/database";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildPortfolio } from "@/lib/portfolio/build";
+import { canViewPortfolio } from "@/lib/social/public-profile-authorization";
 import type { PortfolioItem } from "@/lib/portfolio/types";
 
 /** The `public_profiles` view already enforces `is_public = true` and the safe column
@@ -30,7 +31,11 @@ async function isCurrentlyPublic(userId: string): Promise<boolean> {
 }
 
 export async function getPublicPortfolio(userId: string, opts: { bypassCheck?: boolean } = {}): Promise<PortfolioItem[]> {
-  if (!opts.bypassCheck && !(await isCurrentlyPublic(userId))) return [];
+  const isSelf = Boolean(opts.bypassCheck);
+  // Short-circuit preserved: canViewPortfolio's isSelf branch decides on its own, so
+  // there's no reason to spend a query on is_public when previewing your own profile.
+  const isPublic = isSelf ? false : await isCurrentlyPublic(userId);
+  if (!canViewPortfolio({ isSelf, isPublic })) return [];
   const admin = createAdminClient();
   const items = await buildPortfolio(admin, userId);
   return items.filter((item) => item.category !== "education");
@@ -43,7 +48,9 @@ export interface PublicSkill {
 }
 
 export async function getPublicSkills(userId: string, opts: { bypassCheck?: boolean } = {}): Promise<PublicSkill[]> {
-  if (!opts.bypassCheck && !(await isCurrentlyPublic(userId))) return [];
+  const isSelf = Boolean(opts.bypassCheck);
+  const isPublic = isSelf ? false : await isCurrentlyPublic(userId);
+  if (!canViewPortfolio({ isSelf, isPublic })) return [];
   const admin = createAdminClient();
   const { data } = await admin.from("skills").select("name, category, proficiency").eq("user_id", userId).order("category");
   return data ?? [];
