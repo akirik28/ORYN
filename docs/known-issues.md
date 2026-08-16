@@ -4,6 +4,13 @@ Honest, current list. Anything fixed during a session should be removed from her
 left stale — cross-check against the code before trusting an entry, per this repo's own
 memory/documentation discipline.
 
+**Since 2026-08-16**: CI, security/authorization, and test-coverage state moved to
+dedicated living docs rather than being tracked here — start at
+`docs/founder-blocked-backlog.md` for what's still blocked and
+`docs/production-route-audit.md` for the current per-route security/test state. This
+file's remaining entries (the Drive-doc product-decision conflict, data-readiness gaps,
+scoped-out items) are still current as of the dates on each entry.
+
 ## Needs founder decision — real conflict found in the founder's own Drive doc
 
 While working autonomously, this session found "ORYN Programlama" (a Google Doc in the
@@ -137,10 +144,10 @@ white — both real, scoped efforts, not a quick toggle.
   pass. Never mattered in practice (the pipeline has never run — see above), but worth
   fixing before the first real ingestion run, not after. Needs product input on what a
   review queue should look like; out of scope for this pass's "focused additions" mandate.
-- **No admin surface reads `message_reports`.** The table and insert-only RLS policy
-  exist (so reports aren't silently lost), but nothing currently surfaces them to anyone
-  — same posture Phase 51's admin panel already accepts for a few other tables, documented
-  here so it isn't mistaken for "reports get reviewed somewhere."
+- ~~No admin surface reads `message_reports`.~~ **Fixed** (autonomous pass, 2026-08-16):
+  `/admin` now has a Reports section (status/reviewed_by/reviewed_at/resolution_note —
+  migration `0030_moderation.sql`, `CODE_READY_ENV_BLOCKED` until applied). See
+  `docs/production-route-audit.md`.
 - **Messages and Sports were not verified at mobile width** this pass (Universities and
   Home/Profile were, at 390px). Built on the same responsive primitives as every other
   page, so low-risk, but genuinely unchecked — don't assume clean until it's actually
@@ -327,9 +334,11 @@ white — both real, scoped efforts, not a quick toggle.
 - **The admin "add a requirement" form doesn't verify a submitted `program_id` belongs to
   the given `university_id`.** Low severity (admin-only, gated by `requireAdmin()`, and the
   UI only ever offers that university's own programs) — see `SECURITY.md`.
-- **Rate limiting doesn't cover every Server Action** — see `SECURITY.md`'s own "Known
-  gaps" for the exact, unchanged-this-session scope (AI-backed actions + `/api/export-data`
-  only; ordinary CRUD relies on RLS ownership scoping).
+- **Rate limiting doesn't cover every Server Action.** **Partially fixed** (autonomous
+  pass, 2026-08-16): `sendMessage`, `sendConnectionRequest`, and `reportMessage` now have
+  limits (`lib/security/rate-limit-config.ts`), on top of the pre-existing AI-backed
+  actions + `/api/export-data`. `blockUser`/`removeConnection` and most ordinary CRUD
+  still rely on RLS ownership scoping only — see `docs/production-route-audit.md`.
 - **No professional legal review** of minor-safe/privacy claims. Unchanged — still needed
   before any public launch.
 - **40 RLS policies re-evaluate `auth.<function>()` per row instead of once per query**

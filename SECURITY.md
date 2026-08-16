@@ -196,16 +196,22 @@ admin Server Action, not just the page.
 - **No professional legal review has been performed.** COPPA/GDPR-for-minors compliance
   needs a lawyer before any public launch — this document describes the engineering
   posture, not a compliance certification.
-- **Rate limiting covers AI-backed actions and the data export endpoint, not every
-  Server Action.** `lib/ai/rate-limit.ts` throttles AI calls (sourced from the `ai_usage`
-  log); `lib/security/rate-limit.ts` is the same sliding-window approach generalized for
-  everything else, backed by its own `rate_limit_events` table, currently applied to
-  `/api/export-data` (a repeatable full-account-data dump — the clearest abuse target
-  outside the AI path). Ordinary CRUD Server Actions (adding an achievement, updating a
-  field) are *not* individually throttled — they're scoped to the caller's own rows by
-  RLS, and Supabase's own infrastructure limits apply, but there's no per-user request
-  cap on them yet. Auth endpoints (signup/login/password reset) rely on Supabase Auth's
-  own built-in throttling, not this app's code.
+- **Rate limiting covers AI-backed actions, the data export endpoint, and the three
+  highest-abuse-risk social actions, not every Server Action.** `lib/ai/rate-limit.ts`
+  throttles AI calls (sourced from the `ai_usage` log); `lib/security/rate-limit.ts` is
+  the same sliding-window approach generalized for everything else (its core decision
+  logic factored into `lib/security/rate-limit-core.ts`, unit-tested against boundary/
+  window/isolation/fail-open behavior with an injectable store — see
+  `__tests__/security/rate-limit-core.test.ts`), backed by its own `rate_limit_events`
+  table. Applied to `/api/export-data` (a repeatable full-account-data dump), and — added
+  2026-08-16, for a product where minors message each other — `sendMessage`,
+  `sendConnectionRequest`, and `reportMessage` (thresholds in
+  `lib/security/rate-limit-config.ts`). Ordinary CRUD Server Actions (adding an
+  achievement, updating a field) and `blockUser`/`removeConnection` are still *not*
+  individually throttled — they're scoped to the caller's own rows by RLS, and Supabase's
+  own infrastructure limits apply, but there's no per-user request cap on them yet. Auth
+  endpoints (signup/login/password reset) rely on Supabase Auth's own built-in
+  throttling, not this app's code.
 - **No content moderation** on free-text fields (activity descriptions, advisor
   messages) beyond what the AI system prompt discourages.
 - **The admin-only "add a requirement" form (Phase 69,

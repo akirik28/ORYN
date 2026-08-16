@@ -111,9 +111,10 @@ fully-working core over exhaustive feature coverage. Full detail and reasoning f
 these in **[docs/known-issues.md](./docs/known-issues.md)**. Current list:
 
 - **Rate limiting doesn't cover every Server Action** — AI-backed actions
-  (`lib/ai/rate-limit.ts`) and the data export endpoint (`lib/security/rate-limit.ts`)
-  are throttled; ordinary CRUD actions rely on RLS scoping rather than a per-user request
-  cap. See SECURITY.md.
+  (`lib/ai/rate-limit.ts`), the data export endpoint, and the three highest-abuse-risk
+  social actions (`sendMessage`, `sendConnectionRequest`, `reportMessage` —
+  `lib/security/rate-limit-config.ts`) are throttled; ordinary CRUD actions rely on RLS
+  scoping rather than a per-user request cap. See SECURITY.md.
 - **Peer benchmarking (spec Phase 19) is fully built but pre-launch every cohort is
   `n=0`** — see `lib/benchmarking/`. The only honest state to show is "not enough
   comparable students yet," which is what it shows today; no further code is needed for
@@ -124,7 +125,8 @@ these in **[docs/known-issues.md](./docs/known-issues.md)**. Current list:
   this session. See `docs/pre-publish-checklist.md`.
 
 Built, but worth knowing the shape of: `/admin` (provider health, job history, AI usage,
-manual job triggers — gated by `profiles.is_admin`, not linked from navigation),
+manual job triggers, a minimum-viable message-report moderation queue — gated by
+`profiles.is_admin`, not linked from navigation),
 in-app notifications (weekly-plan-ready, deadline reminders — a bell in the nav, no
 push/email delivery), a Portfolio showcase view (`/profile/portfolio`), a monthly Progress
 view (`/profile/history` — score deltas against the oldest snapshot in the last 30 days),

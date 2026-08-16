@@ -1,5 +1,12 @@
 # Current State
 
+**Update — 2026-08-16, founder away**: four further autonomous passes landed after this
+file was written — CI, moderation, realtime messaging, rate limiting, an open-redirect
+fix, and 230 automated tests (up from 113). Start at `docs/founder-blocked-backlog.md`
+for what's actually still blocking launch and the exact next action; this file's account
+of Chat 1–4 below is unchanged and still an accurate history of that period, just no
+longer the most current status.
+
 **Update — autonomous pass, same day (2026-08-15), founder away**: found and staged a real
 Drive-corpus data batch (31 universities, 189 programs, 520 requirements, 273
 opportunities — not yet applied, no working `SUPABASE_SECRET_KEY`), built the CV

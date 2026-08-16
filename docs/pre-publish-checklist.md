@@ -2,53 +2,32 @@
 
 Status: **NOT READY TO PUBLISH.** The repository is engineering-complete for V1 as
 scoped; every remaining item below needs either founder credentials, a founder decision,
-or a human legal review — nothing left is a code task this session could have finished
-itself. Full detail behind each item is linked, not repeated here.
+or a human legal review — nothing left is a code task an agent session could finish
+itself.
+
+**Superseded (2026-08-16): steps 2–4 below are stale** — a fifth migration
+(`0030_moderation.sql`, `0031_messages_realtime.sql`) shipped after this file was
+written, and the exact step-by-step sequence now lives in
+`docs/founder-environment-unblock-runbook.md` (pre-check/apply/post-check SQL per
+migration, not just a file list). **Use that file for steps 2–4, not this one** — kept
+here only as a pointer so this doesn't become a second, drifting copy of the same steps.
 
 ## 1. Resolve two real conflicts before anything else
 
-Read `docs/known-issues.md`'s first section ("Needs founder decision"). This session
-found the founder's own Drive planning doc explicitly contradicts, on the same day, both
-(a) the decision to add messaging and (b) the decision to keep the dark theme. Both were
-kept as chat-instructed rather than reverted, but a full theme rework and/or ripping out
-messaging are big enough that a five-minute confirmation now is cheaper than shipping the
-wrong one.
+Read `docs/known-issues.md`'s first section ("Needs founder decision") and
+`docs/founder-blocked-backlog.md`. This session found the founder's own Drive planning
+doc explicitly contradicts, on the same day, both (a) the decision to add messaging and
+(b) the decision to keep the dark theme. Both were kept as chat-instructed rather than
+reverted, but a full theme rework and/or ripping out messaging are big enough that a
+five-minute confirmation now is cheaper than shipping the wrong one. Still unresolved as
+of 2026-08-16 — no further session has had the founder input needed to close this.
 
-## 2. Add production credentials to `.env.local`
+## 2–4. Credentials, migrations, seed data, leftover test account
 
-| Credential | Unlocks | Where to get it |
-|---|---|---|
-| `SUPABASE_SECRET_KEY` | Admin-client features, live data writes, account deletion, peer benchmarking | Supabase dashboard → Project Settings → API |
-| `ANTHROPIC_API_KEY` | AI Advisor, weekly plans, CV/opportunity/requirement extraction | `API_SETUP.md` |
-| `TAVILY_API_KEY` | Opportunity + requirement discovery jobs | `API_SETUP.md` |
-| `COLLEGE_SCORECARD_API_KEY` | U.S. university sync | `API_SETUP.md` |
-| `CRON_SECRET` | Protects the background-job routes | Generate any strong random string |
-
-Verify with `npm run check:integrations` — should report `OK` for all five once set.
-
-## 3. Apply the staged migrations + Drive-corpus data
-
-Via the Supabase SQL editor (or `psql`/CLI) against the linked project, in order:
-
-```bash
-supabase/migrations/0028_program_requirement_dedup_indexes.sql
-supabase/migrations/0029_story_notes.sql
-supabase/seed_drive_batch1.sql
-```
-
-`0029` adds the Essay Story Bank's `story_notes` column to all seven achievement tables
-(additive, nullable — no existing data affected). The seed adds 31 real universities, 189
-programs, 520 requirement rows, and 273 real opportunities
-— see `docs/data-readiness.md`'s "Staged batch" section for exactly what's in it and what
-was deliberately left out. Both files are idempotent. Confirm afterward with the count
-query at the bottom of `docs/data-readiness.md`.
-
-## 4. Clean up one harmless leftover
-
-An earlier live-QA attempt this session created one unconfirmed, unreachable-email test
-account (`oryn.qa.alpha.chat4@qamail.io`) — no real data attached. Delete it from the
-Supabase dashboard (Authentication → Users), or it self-resolves once step 2's secret key
-lets a future session do it directly.
+**See `docs/founder-environment-unblock-runbook.md`** — its 12 steps cover all of this
+file's original steps 2–4 plus two that didn't exist when this file was written: creating
+real QA accounts (step 10) and granting `is_admin` (step 11), both needed before
+`docs/browser-qa-checklist.md` can be run.
 
 ## 5. Professional legal review
 

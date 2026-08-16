@@ -4,6 +4,13 @@ Chat 4. Honest classification, not a status celebration. "Launch blocker" means 
 promise ("what should I do next?") cannot be safely or credibly delivered without it —
 not "would be nice to have."
 
+**Since 2026-08-16**: significant additional hardening landed (CI, moderation, rate
+limiting, realtime messaging, the block-direction/disconnect-history/open-redirect/
+raw-error fixes, 230 automated tests) — this file's *product-capability* assessment below
+is still accurate, but for current security/test/CI status see
+`docs/production-route-audit.md` and `docs/founder-blocked-backlog.md` rather than
+treating this file as up to date on those dimensions.
+
 ## Product status
 
 Functionally complete across the V1 surface (profile/digital-twin incl. Sports, university
