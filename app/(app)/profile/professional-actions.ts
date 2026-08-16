@@ -30,7 +30,12 @@ async function afterProfessionalWrite(userId: string) {
   revalidatePath("/dashboard");
 }
 
-export async function updateProfessionalIdentity(input: { headline: string; about: string; showGpa: boolean }): Promise<{ error?: string }> {
+/** `show_gpa` is deliberately not written here — there is no UI control for it while the
+ * public profile has no education section to honor it (see
+ * features/profile/professional-identity-form.tsx's own comment and
+ * docs/founder-blocked-backlog.md). Any value a student already stored is left as-is
+ * rather than being silently reset by an unrelated headline/About save. */
+export async function updateProfessionalIdentity(input: { headline: string; about: string }): Promise<{ error?: string }> {
   const session = await requireUser();
   const headline = input.headline.trim().slice(0, 220);
   const about = input.about.trim().slice(0, 2600);
@@ -38,7 +43,7 @@ export async function updateProfessionalIdentity(input: { headline: string; abou
   const supabase = await createClient();
   const { error } = await supabase
     .from("profiles")
-    .update({ headline: headline || null, about: about || null, show_gpa: input.showGpa })
+    .update({ headline: headline || null, about: about || null })
     .eq("id", session.userId!);
   if (error) return { error: "Couldn't save your profile." };
 

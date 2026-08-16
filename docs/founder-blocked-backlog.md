@@ -184,6 +184,33 @@ in a browser; `npm run lint`, `tsc --noEmit`, `vitest`, and `next build` all pas
 confirms the code is internally consistent, not that the live queries succeed.
 **Depends on**: the same permission grant as item 3.
 
+## 16b. Decide whether Education (and therefore GPA) appears on the public profile
+
+**Action**: decide, as a product/minor-safety call, whether a student's public `/u/[id]`
+profile may show an Education section — school name, and GPA behind the existing
+per-student `profiles.show_gpa` opt-in.
+**Why this is blocked, not built**: two parts of the product currently contradict each
+other, and reconciling them is a disclosure decision about minors, not a wiring task.
+`docs/product-decisions.md` records a deliberate choice that the public portfolio omits
+the `education` category entirely, reasoning that "a public GPA/school-name toggle feels
+like a materially bigger disclosure... worth a deliberate look, not an oversight";
+`school_name` is likewise on `public_profiles`' forbidden-column list and regression
+tested as such. Migration `0033` then added `profiles.show_gpa` with a comment promising
+GPA "is only ever shown on the public profile when this is true" — a promise nothing can
+keep while education isn't public at all.
+**What was done instead (2026-08-16)**: the owner-facing "Show my GPA on my public
+profile" checkbox has been withheld from the UI, because a control that silently does
+nothing is a worse defect than a missing one. The column, the Server Action path, and any
+value already stored are untouched, and `updateProfessionalIdentity` no longer writes the
+field, so an unrelated headline/About save can't reset it. Nothing about GPA privacy
+changed; GPA remains not publicly exposed.
+**To unblock**: say yes or no. If yes, the wiring is small — include `education` in
+`getPublicPortfolio`, strip `meta` (the "GPA x/y" string) unless `show_gpa`, add
+`school_name` to the public column set, and restore the checkbox. If no, drop the
+`show_gpa` column in a future migration and this item closes.
+**Depends on**: nothing technical — a founder decision, and plausibly a legal review
+touchpoint given the minor-safety framing (item 13).
+
 ## 17. Apply migration 0038 + seed_entities_drive_batch1.sql (Canonical Entity Autocomplete System)
 
 **Action**: apply `supabase/migrations/0038_canonical_institutions.sql` (new

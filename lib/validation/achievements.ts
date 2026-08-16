@@ -131,6 +131,21 @@ export const EducationRecordSchema = z.object({
 });
 export type EducationRecordFormInput = z.infer<typeof EducationRecordSchema>;
 
+/** Coursework — the source of truth for AP/IB HL/IB SL/A-Level/honors rigor. Reuses the
+ * `course_level` ontology migration 0003 already defines rather than inventing a second
+ * one; feeds lib/scoring/dimensions/academics.ts (rigor) and intellectual-curiosity.ts
+ * (subject breadth), both of which were previously unreachable from the UI. */
+export const CourseSchema = z.object({
+  course_name: z.string().min(1, { error: "Course name is required." }),
+  subject: optionalText,
+  level: z.enum(["regular", "honors", "ap", "ib_hl", "ib_sl", "a_level", "dual_enrollment", "other"]),
+  academic_year: optionalText,
+  grade_value: optionalText,
+  grade_scale: optionalText,
+  credit_hours: z.coerce.number().nonnegative().nullable(),
+});
+export type CourseFormInput = z.infer<typeof CourseSchema>;
+
 export const TestScoreSchema = z.object({
   test_name: z.string().min(1, { error: "Test name is required." }),
   score: z.string().min(1, { error: "Score is required." }),

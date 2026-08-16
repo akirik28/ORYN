@@ -18,6 +18,7 @@ import {
   VolunteeringSchema,
   WorkExperienceSchema,
   EducationRecordSchema,
+  CourseSchema,
   TestScoreSchema,
   CertificationSchema,
   GoalSchema,
@@ -29,6 +30,7 @@ import {
   type VolunteeringFormInput,
   type WorkExperienceFormInput,
   type EducationRecordFormInput,
+  type CourseFormInput,
   type TestScoreFormInput,
   type CertificationFormInput,
   type GoalFormInput,
@@ -246,6 +248,17 @@ export async function deleteEducationRecord(id: string) {
 }
 
 // ---------- Test scores ----------
+// ---------- Coursework ----------
+export async function createCourse(input: CourseFormInput) {
+  return crudCreate("courses", CourseSchema, input);
+}
+export async function updateCourse(id: string, input: CourseFormInput) {
+  return crudUpdate("courses", CourseSchema, id, input);
+}
+export async function deleteCourse(id: string) {
+  return crudRemove("courses", id);
+}
+
 export async function createTestScore(input: TestScoreFormInput) {
   return crudCreate("test_scores", TestScoreSchema, input);
 }

@@ -245,6 +245,31 @@ export const EDUCATION_FIELDS: FieldConfig[] = [
   { type: "textarea", name: "notes", label: "Notes" },
 ];
 
+/** Mirrors migration 0003's `course_level` enum exactly — the one rigor ontology, not a
+ * second parallel one. */
+export const COURSE_LEVEL_OPTIONS = [
+  { value: "regular", label: "Regular" },
+  { value: "honors", label: "Honors" },
+  { value: "ap", label: "AP" },
+  { value: "ib_hl", label: "IB Higher Level (HL)" },
+  { value: "ib_sl", label: "IB Standard Level (SL)" },
+  { value: "a_level", label: "A-Level" },
+  { value: "dual_enrollment", label: "Dual enrollment" },
+  { value: "other", label: "Other" },
+];
+
+export const COURSE_LEVEL_LABELS: Record<string, string> = Object.fromEntries(COURSE_LEVEL_OPTIONS.map((o) => [o.value, o.label]));
+
+export const COURSE_FIELDS: FieldConfig[] = [
+  { type: "text", name: "course_name", label: "Course", placeholder: "e.g. AP Microeconomics" },
+  { type: "select", name: "level", label: "Level", options: COURSE_LEVEL_OPTIONS, span: "half" },
+  { type: "text", name: "subject", label: "Subject", placeholder: "e.g. Economics", span: "half" },
+  { type: "text", name: "academic_year", label: "Academic year", placeholder: "e.g. 2026-27", span: "half" },
+  { type: "text", name: "grade_value", label: "Grade (optional)", placeholder: "e.g. A, 5, 7", span: "half" },
+  { type: "text", name: "grade_scale", label: "Grade scale (optional)", placeholder: "e.g. A-F, 1-5, 1-7", span: "half" },
+  { type: "number", name: "credit_hours", label: "Credit hours (optional)", span: "half" },
+];
+
 export const TEST_SCORE_FIELDS: FieldConfig[] = [
   { type: "text", name: "test_name", label: "Test name (e.g. SAT, IB Predicted)" },
   { type: "text", name: "score", label: "Score", span: "half" },

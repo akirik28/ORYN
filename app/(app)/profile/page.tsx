@@ -30,6 +30,8 @@ import {
   VOLUNTEERING_FIELDS,
   WORK_EXPERIENCE_FIELDS,
   EDUCATION_FIELDS,
+  COURSE_FIELDS,
+  COURSE_LEVEL_LABELS,
   TEST_SCORE_FIELDS,
   CERTIFICATION_FIELDS,
   GOAL_FIELDS,
@@ -58,6 +60,9 @@ import {
   createEducationRecord,
   updateEducationRecord,
   deleteEducationRecord,
+  createCourse,
+  updateCourse,
+  deleteCourse,
   createTestScore,
   updateTestScore,
   deleteTestScore,
@@ -93,6 +98,7 @@ export default async function ProfilePage() {
     volunteeringRes,
     workRes,
     educationRes,
+    coursesRes,
     testScoresRes,
     certificationsRes,
     goalsRes,
@@ -112,6 +118,7 @@ export default async function ProfilePage() {
     supabase.from("volunteering_experiences").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
     supabase.from("work_experiences").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
     supabase.from("education_records").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+    supabase.from("courses").select("*").eq("user_id", userId).order("academic_year", { ascending: false, nullsFirst: false }).order("course_name"),
     supabase.from("test_scores").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
     supabase.from("certifications").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
     supabase.from("career_goals").select("*").eq("user_id", userId).order("status", { ascending: true }).order("target_date", { ascending: true, nullsFirst: false }),
@@ -206,7 +213,6 @@ export default async function ProfilePage() {
         <ProfessionalIdentityForm
           initialHeadline={profile?.headline ?? null}
           initialAbout={profile?.about ?? null}
-          initialShowGpa={profile?.show_gpa ?? false}
         />
         <div className="border-t pt-6">
           <h3 className="mb-3 text-sm font-semibold">Open to</h3>
@@ -399,6 +405,24 @@ export default async function ProfilePage() {
         onUpdate={updateEducationRecord as (id: string, v: FormValues) => Promise<{ error?: string }>}
         onDelete={deleteEducationRecord}
         emptyStateText="No education records yet."
+      />
+
+      <AchievementSection
+        title="Coursework"
+        description="AP, IB HL/SL, A-Level, honors, and regular courses. Oryn uses these to understand your academic rigor and subject range."
+        items={coursesRes.data ?? []}
+        summaries={summaryMap(coursesRes.data ?? [], (item) => ({
+          title: item.course_name,
+          subtitle: [COURSE_LEVEL_LABELS[item.level] ?? item.level, item.academic_year, item.grade_value ? `Grade ${item.grade_value}` : null]
+            .filter(Boolean)
+            .join(" · ") || undefined,
+        }))}
+        fields={COURSE_FIELDS}
+        defaultValues={{ course_name: "", level: "regular", subject: null, academic_year: null, grade_value: null, grade_scale: null, credit_hours: null }}
+        onCreate={createCourse as (v: FormValues) => Promise<{ error?: string }>}
+        onUpdate={updateCourse as (id: string, v: FormValues) => Promise<{ error?: string }>}
+        onDelete={deleteCourse}
+        emptyStateText="No coursework yet. Add the courses you're taking — advanced coursework is one of the strongest academic signals."
       />
 
       <AchievementSection
