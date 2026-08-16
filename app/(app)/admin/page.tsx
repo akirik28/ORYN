@@ -51,13 +51,16 @@ export default async function AdminPage() {
   const reports = reportsRes.data ?? [];
   const profileIds = Array.from(new Set(reports.flatMap((r) => [r.reporter_id, r.reported_user_id])));
   const messageIds = Array.from(new Set(reports.map((r) => r.message_id).filter((id): id is string => id !== null)));
+  const recommendationIds = Array.from(new Set(reports.map((r) => r.recommendation_id).filter((id): id is string => id !== null)));
 
-  const [profilesRes, messagesRes] = await Promise.all([
+  const [profilesRes, messagesRes, recommendationsRes] = await Promise.all([
     profileIds.length > 0 ? admin.from("profiles").select("id, display_name").in("id", profileIds) : Promise.resolve({ data: [] }),
     messageIds.length > 0 ? admin.from("messages").select("id, body").in("id", messageIds) : Promise.resolve({ data: [] }),
+    recommendationIds.length > 0 ? admin.from("recommendations").select("id, body").in("id", recommendationIds) : Promise.resolve({ data: [] }),
   ]);
   const nameById = new Map((profilesRes.data ?? []).map((p) => [p.id, p.display_name]));
   const messageById = new Map((messagesRes.data ?? []).map((m) => [m.id, m.body]));
+  const recommendationById = new Map((recommendationsRes.data ?? []).map((r) => [r.id, r.body]));
 
   return (
     <div className="space-y-10">
@@ -92,6 +95,11 @@ export default async function AdminPage() {
                 {report.message_id ? (
                   <p className="rounded-md bg-muted px-3 py-1.5 text-xs italic text-muted-foreground">
                     {messageById.get(report.message_id) ?? "(reported message no longer available)"}
+                  </p>
+                ) : null}
+                {report.recommendation_id ? (
+                  <p className="rounded-md bg-muted px-3 py-1.5 text-xs italic text-muted-foreground">
+                    {recommendationById.get(report.recommendation_id) ?? "(reported recommendation no longer available)"}
                   </p>
                 ) : null}
                 <ReportReviewControl reportId={report.id} initialStatus={report.status} initialNote={report.resolution_note} />

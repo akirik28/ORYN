@@ -8,8 +8,10 @@ import { getConnectionWith } from "@/lib/social/connections";
 import { canShowMessageButton } from "@/lib/social/public-profile-authorization";
 import { getFilteredContactInfo } from "@/lib/social/contact-info";
 import { getEndorsementsForSkills, type SkillEndorsementInfo } from "@/lib/social/endorsements";
+import { getRecommendationsFor } from "@/lib/social/recommendations-query";
 import { OPEN_TO_LABELS, type OpenToOption } from "@/lib/social/open-to";
 import { EndorseSkillButton } from "@/features/connections/endorse-skill-button";
+import { RecommendationsSection } from "@/features/profile/recommendations-section";
 import { isUuidLike } from "@/lib/validation/uuid";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -95,6 +97,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
   const hasAcceptedConnection = connection?.status === "accepted";
   const contact = await getFilteredContactInfo(id, { isSelf, hasAcceptedConnection });
   const endorsements = await getEndorsementsForSkills(skills.map((s) => s.id), session.userId ?? null);
+  const recommendations = await getRecommendationsFor(id, { includeHidden: isSelf });
   const hasAnyContact =
     contact.phone || contact.email || contact.linkedinUrl || contact.instagramHandle || contact.githubUrl || contact.websiteUrl || contact.twitterHandle || contact.discordHandle;
 
@@ -167,6 +170,14 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
           </div>
         </>
       )}
+
+      <RecommendationsSection
+        recipientId={id}
+        items={recommendations}
+        viewerId={session.userId!}
+        isSelf={isSelf}
+        canWrite={!isSelf && hasAcceptedConnection}
+      />
 
       {contact.openTo.length > 0 ? (
         <div className="space-y-2">
