@@ -1,5 +1,12 @@
 import { describe, expect, test } from "vitest";
-import { EXPORT_TABLES, EXPORT_PARTICIPANT_TABLES, MESSAGE_REPORTS_EXPORT_COLUMNS } from "@/lib/export/tables";
+import {
+  EXPORT_TABLES,
+  EXPORT_PARTICIPANT_TABLES,
+  MESSAGE_REPORTS_EXPORT_COLUMNS,
+  messagesExportFilter,
+  connectionsExportFilter,
+  BLOCKED_USERS_EXPORT_OWN_BLOCKS_COLUMN,
+} from "@/lib/export/tables";
 
 describe("data export table coverage", () => {
   const allTables = new Set<string>([...EXPORT_TABLES, ...EXPORT_PARTICIPANT_TABLES, "profiles"]);
@@ -43,4 +50,30 @@ describe("MESSAGE_REPORTS_EXPORT_COLUMNS", () => {
       expect((MESSAGE_REPORTS_EXPORT_COLUMNS as readonly string[]).includes(column)).toBe(true);
     }
   );
+});
+
+describe("participant-pair export filters — scoped to the current user only", () => {
+  const me = "11111111-1111-1111-1111-111111111111";
+  const someoneElse = "22222222-2222-2222-2222-222222222222";
+
+  test("messages filter references only the caller's own id, both directions", () => {
+    const filter = messagesExportFilter(me);
+    expect(filter).toBe(`sender_id.eq.${me},recipient_id.eq.${me}`);
+    expect(filter).not.toContain(someoneElse);
+  });
+
+  test("connections filter references only the caller's own id, both directions", () => {
+    const filter = connectionsExportFilter(me);
+    expect(filter).toBe(`requester_id.eq.${me},recipient_id.eq.${me}`);
+    expect(filter).not.toContain(someoneElse);
+  });
+
+  // Regression guard: exporting the blocked_id direction instead would leak "who
+  // blocked me" — the exact disclosure the block-direction fix
+  // (lib/messaging/authorization.ts) and is_blocked_between's security-definer design
+  // both deliberately withhold.
+  test("blocked_users export uses the blocker direction, never the blocked direction", () => {
+    expect(BLOCKED_USERS_EXPORT_OWN_BLOCKS_COLUMN).toBe("blocker_id");
+    expect(BLOCKED_USERS_EXPORT_OWN_BLOCKS_COLUMN).not.toBe("blocked_id");
+  });
 });

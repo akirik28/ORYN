@@ -3,7 +3,13 @@ import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { assertWithinRateLimit, RateLimitExceededError } from "@/lib/security/rate-limit";
 import { RATE_LIMITS } from "@/lib/security/rate-limit-config";
-import { EXPORT_TABLES, MESSAGE_REPORTS_EXPORT_COLUMNS } from "@/lib/export/tables";
+import {
+  EXPORT_TABLES,
+  MESSAGE_REPORTS_EXPORT_COLUMNS,
+  messagesExportFilter,
+  connectionsExportFilter,
+  BLOCKED_USERS_EXPORT_OWN_BLOCKS_COLUMN,
+} from "@/lib/export/tables";
 
 /** Full data export (Phase 12 minor-safe requirement) — every table the student's own
  * data lives in, RLS-scoped via the normal request client (never the admin client).
@@ -49,9 +55,9 @@ export async function GET() {
   // also block a future "see my report's status" UI feature that has no reason not to
   // exist.
   const [messagesRes, connectionsRes, blockedRes, reportsRes] = await Promise.all([
-    supabase.from("messages").select("*").or(`sender_id.eq.${userId},recipient_id.eq.${userId}`),
-    supabase.from("connections").select("*").or(`requester_id.eq.${userId},recipient_id.eq.${userId}`),
-    supabase.from("blocked_users").select("*").eq("blocker_id", userId),
+    supabase.from("messages").select("*").or(messagesExportFilter(userId)),
+    supabase.from("connections").select("*").or(connectionsExportFilter(userId)),
+    supabase.from("blocked_users").select("*").eq(BLOCKED_USERS_EXPORT_OWN_BLOCKS_COLUMN, userId),
     supabase
       .from("message_reports")
       .select(MESSAGE_REPORTS_EXPORT_COLUMNS.join(", "))

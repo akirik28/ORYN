@@ -59,3 +59,27 @@ export const MESSAGE_REPORTS_EXPORT_COLUMNS = [
   "reviewed_at",
   "created_at",
 ] as const;
+
+/**
+ * Named, tested query fragments for the participant-pair export tables — wired into
+ * app/api/export-data/route.ts rather than left as inline template strings, so "which
+ * column(s) scope this to the current user" stays a single, regression-tested source of
+ * truth instead of something that could silently drift if this route is edited later.
+ * Even a wrong filter here would still be caught by RLS underneath (messages/connections
+ * select policies already scope to participant; blocked_users to blocker) — this is
+ * defense in depth on the export's *content correctness*, not the only thing preventing
+ * cross-user leakage.
+ */
+export function messagesExportFilter(userId: string): string {
+  return `sender_id.eq.${userId},recipient_id.eq.${userId}`;
+}
+
+export function connectionsExportFilter(userId: string): string {
+  return `requester_id.eq.${userId},recipient_id.eq.${userId}`;
+}
+
+/** blocked_users must only ever export rows where the current user is the *blocker* —
+ * never the blocked party. Exporting the other direction would leak "who blocked me",
+ * the exact disclosure lib/messaging/authorization.ts's block-direction fix (and
+ * is_blocked_between's own security-definer design) deliberately withholds. */
+export const BLOCKED_USERS_EXPORT_OWN_BLOCKS_COLUMN = "blocker_id" as const;
