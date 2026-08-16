@@ -7,6 +7,7 @@ import { generateAdvisorReply } from "@/lib/ai/advisor-chat";
 import { AIProviderNotConfiguredError } from "@/lib/ai";
 import { assertWithinAIRateLimit, RateLimitExceededError } from "@/lib/ai/rate-limit";
 import { logEvent } from "@/lib/analytics/log";
+import { isUuidLike } from "@/lib/validation/uuid";
 
 export async function sendAdvisorMessage(
   conversationId: string | null,
@@ -16,6 +17,7 @@ export async function sendAdvisorMessage(
   const userId = session.userId!;
   const trimmed = content.trim();
   if (!trimmed) return { conversationId: conversationId ?? "", error: "Message can't be empty." };
+  if (conversationId && !isUuidLike(conversationId)) return { conversationId: "", error: "Invalid conversation." };
 
   try {
     await assertWithinAIRateLimit(userId, "advisor_chat", { maxCalls: 30, windowMinutes: 10 });
@@ -28,6 +30,18 @@ export async function sendAdvisorMessage(
 
   const supabase = await createClient();
   let convId = conversationId;
+
+  if (convId) {
+    // Re-verify server-side that this conversation is actually the caller's own — same
+    // "a Server Action is directly callable with any argument" discipline as every other
+    // authorization-sensitive action in this app. RLS's owner-only policy (migration
+    // 0014) already makes a foreign conversation id harmless (every read/write stays
+    // scoped to auth.uid() regardless), so this isn't closing a data-exposure hole; it's
+    // avoiding silently inserting orphaned advisor_messages rows against someone else's
+    // conversation_id and returning a friendly error instead of a confusing empty thread.
+    const { data: owned } = await supabase.from("advisor_conversations").select("id").eq("id", convId).eq("user_id", userId).maybeSingle();
+    if (!owned) return { conversationId: "", error: "Conversation not found." };
+  }
 
   if (!convId) {
     const { data: conversation, error } = await supabase
