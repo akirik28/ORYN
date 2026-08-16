@@ -172,10 +172,72 @@ opportunities (the source text doesn't reliably map to these without guessing), 
 requirement's `structured_rule`, and university admission statistics — all still `NULL`/
 unset, consistent with this document's own standing "never fabricate" rule.
 
-**Founder action to make this live**: open the Supabase SQL editor for the linked
-project, run `supabase/migrations/0028_program_requirement_dedup_indexes.sql`, then
-`supabase/seed_drive_batch1.sql`. Both are idempotent — safe to run once, and safe to
-re-run if interrupted partway through.
+**Founder action to make this live**: see `docs/founder-environment-unblock-runbook.md`
+steps 3–4 and 8–9 for the exact sequence with pre/post-check SQL — in short, `0028` then
+`0032` then this file, in that order. (**2026-08-16 correction**: the seed file's
+`university_requirements` insert originally used an `ON CONFLICT` clause that didn't
+match 0028's partial unique index — applying it as first written would have errored the
+entire 520-row requirements section. Found and fixed by reproducing the exact failure
+against a real local Postgres before trusting the fix; see
+`docs/migration-safety-audit-0028-0031.md`'s "0032" section for detail. The file is
+correctly idempotent now, not before.)
+
+## Ingestion pipeline gaps found auditing sync/import code (2026-08-16)
+
+Three real bugs found reading `lib/universities/sync-us-universities.ts`,
+`lib/opportunities/discover.ts`, and the drive-import scripts — all fixed the same pass,
+detail in the commit and `docs/migration-safety-audit-0028-0031.md`:
+
+- **Silent overwrite**: the university sync job's update payload hardcoded
+  `description`/`logo_url`/`selectivity`/`latitude`/`longitude` to `null` on every
+  re-sync of an *existing* university, wiping any admin-entered or future-geocoded value
+  back to null. Fixed by excluding those fields from the update path entirely.
+- **Unbounded duplication**: `university_statistics` and `university_sources` had no
+  unique constraint, so re-running the sync job for the same school appended a new row
+  every time instead of updating in place. Migration `0032` adds the missing indexes;
+  the sync code now upserts against them.
+- **Unknown silently became false**: `opportunities.remote_allowed`/`.funding_available`
+  were `not null default false`, so the AI extraction step
+  (`lib/ai/opportunity-extraction.ts`) had no way to represent "the page didn't say" —
+  it was structurally forced to guess. Migration `0032` makes both columns nullable;
+  the extraction schema now allows (and is instructed to prefer) `null`.
+
+**Dead schema, found the same pass** (present in migrations/types, never read by any
+`app/`/`features/` file — not bugs, just worth knowing before spending effort populating
+them): `universities.selectivity`/`external_ids`/`data_confidence`/`data_status`/
+`last_checked_at`/`last_changed_at`; `universities.latitude`/`longitude` specifically —
+added by migration `0016` "for the map-based university exploration view," but
+`features/universities/world-map-explorer.tsx` actually positions countries from a
+static lookup table (`lib/data/country-geo.ts`), never these per-university columns;
+several `university_programs`/`university_statistics`/`university_requirements` columns
+(`duration_years`, `tuition_amount`/`tuition_currency`, `language_of_instruction`,
+`stat_year`, `sat_range_*`, `act_range_*`, `graduation_rate`, most `data_confidence`/
+`retrieved_at` columns). None of this blocks anything — populating them later is additive
+UI work, not a schema change.
+
+**Admission outlook is genuinely deterministic, not AI-invented** — confirmed by reading
+`lib/admissions/outlook.ts`/`explain.ts` and `lib/requirements/evaluate.ts`: no AI call
+exists anywhere in the eligibility/outlook computation path. The only place AI touches
+requirements at all is upstream and admin-gated (`lib/ai/interpret-requirement.ts`,
+wired to the admin-only requirement form) — it *suggests* a structured rule for a human
+to review before it's ever saved; it never asserts an eligibility fact at evaluation
+time. This is the architecture `AGENTS.md` asks for (verified facts → deterministic rule
+→ explanation), not a gap.
+
+**Opportunity data model — schema gaps against the full "ideal opportunity" field list**
+(none of these block launch; the schema supports every currently-populated field
+correctly): no dedicated `grade_level` column (only `minimum_age`/`maximum_age`); no
+explicit "international eligibility" boolean (inferred only from an empty
+`eligible_countries` array); `remote_allowed` is binary, no hybrid option; no
+application-*open* date (only `deadline`/`start_date`/`end_date`); no `selectivity`
+column on `opportunities` (exists only on `universities`); and no per-opportunity
+requirements list (essay/recommendation/transcript/test-score) — `university_requirements`
+has no `opportunities` analog. `OpportunityCard` (the only component that renders an
+opportunity) also currently displays just `title`/`organization`/`description`/
+`official_url`/`deadline` — every other populated column (`category`, `country`,
+`fields`, `cost`, `funding_available`, `remote_allowed`, dates, source fields, `status`)
+is fetched but not shown. Not fixed this pass (UI/schema expansion, not a bug) —
+documented here as backlog, not attempted.
 
 ## How to re-verify
 
