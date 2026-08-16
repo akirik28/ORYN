@@ -9,6 +9,7 @@ import { canShowMessageButton } from "@/lib/social/public-profile-authorization"
 import { getFilteredContactInfo } from "@/lib/social/contact-info";
 import { getEndorsementsForSkills, type SkillEndorsementInfo } from "@/lib/social/endorsements";
 import { getRecommendationsFor } from "@/lib/social/recommendations-query";
+import { getMutualConnections } from "@/lib/social/mutual-connections";
 import { OPEN_TO_LABELS, type OpenToOption } from "@/lib/social/open-to";
 import { EndorseSkillButton } from "@/features/connections/endorse-skill-button";
 import { RecommendationsSection } from "@/features/profile/recommendations-section";
@@ -98,6 +99,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
   const contact = await getFilteredContactInfo(id, { isSelf, hasAcceptedConnection });
   const endorsements = await getEndorsementsForSkills(skills.map((s) => s.id), session.userId ?? null);
   const recommendations = await getRecommendationsFor(id, { includeHidden: isSelf });
+  const mutual = isSelf ? { count: 0, preview: [] } : await getMutualConnections(session.userId!, id);
   const hasAnyContact =
     contact.phone || contact.email || contact.linkedinUrl || contact.instagramHandle || contact.githubUrl || contact.websiteUrl || contact.twitterHandle || contact.discordHandle;
 
@@ -129,6 +131,16 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
                 .filter(Boolean)
                 .join(" · ")}
             </p>
+            {mutual.count > 0 ? (
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {mutual.count} mutual connection{mutual.count === 1 ? "" : "s"}
+                {mutual.preview.length > 0
+                  ? `: ${mutual.preview
+                      .map((p) => p.displayName ?? "Oryn student")
+                      .join(", ")}${mutual.count > mutual.preview.length ? ` +${mutual.count - mutual.preview.length}` : ""}`
+                  : null}
+              </p>
+            ) : null}
           </div>
         </div>
         {!isSelf ? (
