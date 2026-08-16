@@ -3,7 +3,8 @@
 import { useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps";
+import { ComposableMap, Geographies, Geography, Marker, createCoordinates } from "@vnedyalk0v/react19-simple-maps";
+import type { PreparedFeature } from "@vnedyalk0v/react19-simple-maps";
 import { feature } from "topojson-client";
 import type { Topology, GeometryCollection } from "topojson-specification";
 import worldTopology from "world-atlas/countries-110m.json";
@@ -62,8 +63,8 @@ export function WorldMapExplorer({ countryCounts, region = WORLD_REGION }: { cou
 
   return (
     // Founder-locked black-blue system: `bg-card` (theme-aware, not a hardcoded literal).
-    // `Geography`/marker colors below are plain CSS strings (react-simple-maps renders raw
-    // SVG, not Tailwind-classed DOM) that reference the same `var(--token)` custom
+    // `Geography`/marker colors below are plain CSS strings (@vnedyalk0v/react19-simple-maps
+    // renders raw SVG, not Tailwind-classed DOM) that reference the same `var(--token)` custom
     // properties Tailwind's utility classes resolve to elsewhere in this file, so the map
     // follows the active theme automatically instead of drifting from it.
     <div className="relative overflow-hidden rounded-2xl border bg-card">
@@ -78,7 +79,7 @@ export function WorldMapExplorer({ countryCounts, region = WORLD_REGION }: { cou
       ) : null}
       <ComposableMap
         projection={proj.projection}
-        projectionConfig={{ scale: proj.scale, center: proj.center }}
+        projectionConfig={{ scale: proj.scale, center: createCoordinates(proj.center[0], proj.center[1]) }}
         width={800}
         height={420}
         style={{ width: "100%", height: "auto" }}
@@ -86,7 +87,12 @@ export function WorldMapExplorer({ countryCounts, region = WORLD_REGION }: { cou
       >
         <Geographies geography={worldGeo}>
           {({ geographies }) =>
-            geographies.map((geo) => {
+            // The library's own runtime type (GeographyData.geographies: PreparedFeature[])
+            // is more specific than what the Geographies render-prop's public type exposes
+            // (Feature<Geometry>[], missing rsmKey) — every geography passed through here
+            // genuinely is a PreparedFeature at runtime, so this narrows a real fact the
+            // type doesn't state, not an unsafe guess.
+            (geographies as PreparedFeature[]).map((geo) => {
               const isSupported = supportedIds.has(String(geo.id));
               return (
                 <Geography
@@ -128,7 +134,7 @@ export function WorldMapExplorer({ countryCounts, region = WORLD_REGION }: { cou
           return (
             <Marker
               key={c.name}
-              coordinates={[c.centroid[1], c.centroid[0]]}
+              coordinates={createCoordinates(c.centroid[1], c.centroid[0])}
               onClick={() => selectCountry(c.name)}
               className="cursor-pointer outline-none"
             >

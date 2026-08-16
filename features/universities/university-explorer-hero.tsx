@@ -7,7 +7,7 @@ import { RegionGridExplorer } from "./region-grid-explorer";
 import { WORLD_REGION, regionById } from "@/lib/data/regions";
 import type { CountryCount } from "./world-map-explorer";
 
-// Code-split: react-simple-maps + the world topology (~110KB) never ship to a mobile
+// Code-split: @vnedyalk0v/react19-simple-maps + the world topology (~110KB) never ship to a mobile
 // visitor, since the map is never mounted below the md breakpoint (see useIsDesktop below).
 const WorldMapExplorer = dynamic(() => import("./world-map-explorer").then((m) => m.WorldMapExplorer), {
   ssr: false,
