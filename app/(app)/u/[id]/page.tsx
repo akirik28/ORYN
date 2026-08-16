@@ -10,6 +10,7 @@ import { getFilteredContactInfo } from "@/lib/social/contact-info";
 import { getEndorsementsForSkills, type SkillEndorsementInfo } from "@/lib/social/endorsements";
 import { getRecommendationsFor } from "@/lib/social/recommendations-query";
 import { getMutualConnections } from "@/lib/social/mutual-connections";
+import { recordProfileView } from "@/lib/social/profile-views";
 import { OPEN_TO_LABELS, type OpenToOption } from "@/lib/social/open-to";
 import { EndorseSkillButton } from "@/features/connections/endorse-skill-button";
 import { RecommendationsSection } from "@/features/profile/recommendations-section";
@@ -84,6 +85,10 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
     display = data;
   }
   if (!display) notFound();
+
+  if (!isSelf) {
+    await recordProfileView(supabase, id, session.userId!);
+  }
 
   let portfolio: PortfolioItem[] = [];
   let skills: PublicSkill[] = [];

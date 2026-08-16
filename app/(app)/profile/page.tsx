@@ -13,8 +13,12 @@ import { ResearchIdeaGenerator } from "@/features/profile/research-idea-generato
 import { ProfessionalIdentityForm } from "@/features/profile/professional-identity-form";
 import { OpenToForm } from "@/features/profile/open-to-form";
 import { ContactInfoForm } from "@/features/profile/contact-info-form";
-import { getOwnContactInfo } from "@/lib/social/contact-info";
+import { getOwnContactInfo, hasAnyContactValue } from "@/lib/social/contact-info";
 import { isLikelyAdult } from "@/lib/social/age";
+import { getProfileViewCounts } from "@/lib/social/profile-views";
+import { assembleScoringFacts } from "@/lib/scoring/assemble-facts";
+import { getCompletenessChecklist } from "@/lib/scoring/completeness";
+import { Progress } from "@/components/ui/progress";
 import {
   ACTIVITY_FIELDS,
   PROJECT_FIELDS,
@@ -92,6 +96,9 @@ export default async function ProfilePage() {
     benchmarkSummary,
     contactInfo,
     skillsRes,
+    featuredCountRes,
+    profileViewCounts,
+    scoringFacts,
   ] = await Promise.all([
     supabase.from("profile_scores").select("*").eq("user_id", userId),
     supabase.from("activities").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
@@ -108,7 +115,27 @@ export default async function ProfilePage() {
     getPeerBenchmarks(userId),
     getOwnContactInfo(supabase, userId),
     supabase.from("skills").select("*").eq("user_id", userId).order("category").order("name"),
+    supabase.from("featured_items").select("id", { count: "exact", head: true }).eq("user_id", userId),
+    getProfileViewCounts(supabase, userId),
+    assembleScoringFacts(supabase, userId),
   ]);
+
+  const completenessChecklist = getCompletenessChecklist({
+    ...scoringFacts,
+    profile: {
+      country: profile?.country ?? null,
+      school_name: profile?.school_name ?? null,
+      graduation_year: profile?.graduation_year ?? null,
+      curriculum: profile?.curriculum ?? null,
+      headline: profile?.headline ?? null,
+      about: profile?.about ?? null,
+    },
+    skillCount: skillsRes.data?.length ?? 0,
+    featuredCount: featuredCountRes.count ?? 0,
+    hasContactInfo: hasAnyContactValue(contactInfo),
+  });
+  const completenessPercent = profile?.completeness_percent ?? 0;
+  const remainingSuggestions = completenessChecklist.filter((item) => !item.done);
 
   const isAdult = isLikelyAdult(profile?.birth_year ?? null);
 
@@ -167,14 +194,35 @@ export default async function ProfilePage() {
         </div>
       </section>
 
+      <section className="grid gap-6 rounded-3xl border p-6 md:grid-cols-[1fr_auto] md:items-start md:p-8">
+        <div className="space-y-3">
+          <SectionHeader
+            title="Profile Strength"
+            description="How much Oryn knows about you — separate from how strong your profile is. Only you can see this."
+          />
+          <Progress value={completenessPercent} />
+          <p className="text-sm text-muted-foreground">{completenessPercent}% complete</p>
+          {remainingSuggestions.length > 0 ? (
+            <ul className="grid gap-1.5 text-sm text-muted-foreground sm:grid-cols-2">
+              {remainingSuggestions.map((item) => (
+                <li key={item.label}>{item.label}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">Your profile is fully filled out.</p>
+          )}
+        </div>
+        <div className="shrink-0 space-y-1 text-sm text-muted-foreground md:text-right">
+          <p className="font-medium text-foreground">Profile views</p>
+          <p>{profileViewCounts.last7Days} in the last 7 days</p>
+          <p>{profileViewCounts.last30Days} in the last 30 days</p>
+        </div>
+      </section>
+
       <section className="grid gap-8 rounded-3xl border border-brand-primary-border bg-gradient-to-br from-brand-primary-subtle via-card to-card p-6 md:grid-cols-2 md:p-8">
         <ScoreRadar scores={radarScores} />
         <div className="flex flex-col justify-center">
           <DimensionBars scores={scoreMap} />
-          <p className="mt-4 text-xs text-muted-foreground">
-            Profile completeness: {profile?.completeness_percent ?? 0}%. Completeness measures how much Oryn
-            knows about you — it&apos;s separate from how strong your profile is.
-          </p>
         </div>
       </section>
 
