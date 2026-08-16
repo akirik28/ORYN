@@ -33,7 +33,11 @@ section), and applying/verifying migrations 3–5 below via `npm run check:integ
 **Status (2026-08-16, Professional Profile pack session)**: `0029` (story_notes columns)
 is now applied to `oryn-qa-scratch` via the Supabase MCP tools directly from this
 session — confirmed additive/safe per this file's own reasoning, applied with no schema
-conflicts. `0028`, `0030`, `0031`, `0032` are **still not applied**: the very next
+conflicts. **Do not re-run 0029 against `oryn-qa-scratch`** — this status is specific to
+that one project (project ref `qtcvcflzxbuagvvwahhu`); a different project (a fresh QA
+project, staging, production) starts from its own actual state, always confirm via the
+runbook's own pre-check rather than assuming this note carries over. `0028`, `0030`,
+`0031`, `0032` are **still not applied**: the very next
 `apply_migration` call (0028) was refused by Claude Code's own auto-mode safety
 classifier ("Blocked by classifier"), and a subsequent read-only `list_migrations` call
 was refused for the same reason — the classifier appears to gate the whole Supabase

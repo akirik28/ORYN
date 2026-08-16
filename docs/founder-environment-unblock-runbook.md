@@ -84,6 +84,16 @@ where indexname in ('university_programs_university_name_idx', 'university_requi
 
 ## 5. Migration 0029 — apply and verify
 
+**Status on `oryn-qa-scratch` (project ref `qtcvcflzxbuagvvwahhu`) as of 2026-08-16: already
+applied**, via the Supabase MCP tools directly from a Claude Code session (Professional
+Profile pack acceptance-gap pass) — confirmed by the pre-check below returning 7 rows,
+not 0. **Do not re-run the `alter table` statement against this project** — it would
+fail on "column already exists" (harmless, but skip it and go straight to the
+post-check). This status is specific to `oryn-qa-scratch`; if you're running this
+against a different project (a fresh QA project, or eventually production), the
+pre-check below is still the right way to confirm your actual starting state there —
+don't assume this note applies to every environment.
+
 Adds `story_notes text` to 7 tables. This is what unblocks the Essay Story Bank and —
 more importantly — every achievement save across Activities/Projects/Awards/Research/
 Volunteering/Work/Sports, all of which currently fail with a (now user-friendly, but
