@@ -27,6 +27,7 @@ import {
   CERTIFICATION_FIELDS,
   GOAL_FIELDS,
   SPORTS_FIELDS,
+  SKILL_FIELDS,
 } from "@/features/profile/field-config";
 import {
   createActivity,
@@ -63,6 +64,7 @@ import {
   updateSportsExperience,
   deleteSportsExperience,
 } from "./actions";
+import { createSkill, updateSkill, deleteSkill } from "./skills-actions";
 import type { FormValues } from "@/features/profile/dynamic-form-fields";
 import type { ProfileDimension } from "@/types/database";
 
@@ -89,6 +91,7 @@ export default async function ProfilePage() {
     goalsRes,
     benchmarkSummary,
     contactInfo,
+    skillsRes,
   ] = await Promise.all([
     supabase.from("profile_scores").select("*").eq("user_id", userId),
     supabase.from("activities").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
@@ -104,6 +107,7 @@ export default async function ProfilePage() {
     supabase.from("career_goals").select("*").eq("user_id", userId).order("status", { ascending: true }).order("target_date", { ascending: true, nullsFirst: false }),
     getPeerBenchmarks(userId),
     getOwnContactInfo(supabase, userId),
+    supabase.from("skills").select("*").eq("user_id", userId).order("category").order("name"),
   ]);
 
   const isAdult = isLikelyAdult(profile?.birth_year ?? null);
@@ -343,6 +347,19 @@ export default async function ProfilePage() {
         onUpdate={updateCertification as (id: string, v: FormValues) => Promise<{ error?: string }>}
         onDelete={deleteCertification}
         emptyStateText="No certifications yet."
+      />
+
+      <AchievementSection
+        title="Skills"
+        description="Up to 15. Self-declared — connections can endorse a skill once they're added below."
+        items={skillsRes.data ?? []}
+        summaries={summaryMap(skillsRes.data ?? [], (item) => ({ title: item.name, subtitle: item.proficiency ?? undefined }))}
+        fields={SKILL_FIELDS}
+        defaultValues={{ name: "", category: "other", proficiency: null }}
+        onCreate={createSkill as (v: FormValues) => Promise<{ error?: string }>}
+        onUpdate={updateSkill as (id: string, v: FormValues) => Promise<{ error?: string }>}
+        onDelete={deleteSkill}
+        emptyStateText="No skills yet. Add up to 15 — technical, creative, analytical, or otherwise."
       />
     </div>
   );

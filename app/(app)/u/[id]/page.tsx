@@ -7,7 +7,9 @@ import { getPublicProfile, getPublicPortfolio, getPublicSkills } from "@/lib/soc
 import { getConnectionWith } from "@/lib/social/connections";
 import { canShowMessageButton } from "@/lib/social/public-profile-authorization";
 import { getFilteredContactInfo } from "@/lib/social/contact-info";
+import { getEndorsementsForSkills, type SkillEndorsementInfo } from "@/lib/social/endorsements";
 import { OPEN_TO_LABELS, type OpenToOption } from "@/lib/social/open-to";
+import { EndorseSkillButton } from "@/features/connections/endorse-skill-button";
 import { isUuidLike } from "@/lib/validation/uuid";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -25,17 +27,35 @@ function initials(name: string | null) {
   return name.split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase();
 }
 
-function SkillList({ skills }: { skills: PublicSkill[] }) {
+function SkillList({
+  skills,
+  endorsements,
+  ownerId,
+  canEndorse,
+}: {
+  skills: PublicSkill[];
+  endorsements: Record<string, SkillEndorsementInfo>;
+  ownerId: string;
+  canEndorse: boolean;
+}) {
   if (skills.length === 0) return null;
   return (
     <div className="space-y-2">
       <h2 className="font-semibold">Skills</h2>
       <div className="flex flex-wrap gap-1.5">
-        {skills.map((skill) => (
-          <Badge key={skill.name} variant="outline">
-            {skill.name}
-          </Badge>
-        ))}
+        {skills.map((skill) => {
+          const info = endorsements[skill.id] ?? { count: 0, endorsedByMe: false };
+          return (
+            <div key={skill.id} className="flex items-center gap-1 rounded-full border border-input py-0.5 pl-3 pr-1">
+              <span className="text-sm">{skill.name}</span>
+              {canEndorse ? (
+                <EndorseSkillButton skillId={skill.id} skillOwnerId={ownerId} initialCount={info.count} initialEndorsedByMe={info.endorsedByMe} />
+              ) : info.count > 0 ? (
+                <span className="pr-1.5 text-xs text-muted-foreground">{info.count}</span>
+              ) : null}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -74,6 +94,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
   const connection = isSelf ? null : await getConnectionWith(supabase, session.userId!, id);
   const hasAcceptedConnection = connection?.status === "accepted";
   const contact = await getFilteredContactInfo(id, { isSelf, hasAcceptedConnection });
+  const endorsements = await getEndorsementsForSkills(skills.map((s) => s.id), session.userId ?? null);
   const hasAnyContact =
     contact.phone || contact.email || contact.linkedinUrl || contact.instagramHandle || contact.githubUrl || contact.websiteUrl || contact.twitterHandle || contact.discordHandle;
 
@@ -139,7 +160,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
         <ErrorState description="We couldn't load the full portfolio right now. The profile above is still accurate." />
       ) : (
         <>
-          <SkillList skills={skills} />
+          <SkillList skills={skills} endorsements={endorsements} ownerId={id} canEndorse={!isSelf && hasAcceptedConnection} />
           <div className="space-y-3">
             <h2 className="font-semibold">Portfolio</h2>
             <PortfolioView items={portfolio} />

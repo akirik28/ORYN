@@ -159,3 +159,10 @@ export const SportsSchema = z.object({
   story_notes: optionalText,
 });
 export type SportsFormInput = z.infer<typeof SportsSchema>;
+
+export const SkillSchema = z.object({
+  name: z.string().min(1, { error: "Skill name is required." }).max(60, { error: "Keep it under 60 characters." }),
+  category: z.enum(["technical", "creative", "analytical", "communication", "leadership", "other"]),
+  proficiency: optionalText,
+});
+export type SkillFormInput = z.infer<typeof SkillSchema>;

@@ -15,6 +15,12 @@ export const RATE_LIMITS = {
   /** Reporting is rare under normal use; bounds report-spam (including using false
    * reports themselves as a harassment vector) without limiting a genuine run of reports. */
   report_message: { maxCalls: 20, windowMinutes: 60 },
+  /** A student genuinely endorsing several connections' skills in one sitting stays well
+   * under this; guards against scripted mass-endorsement. */
+  endorse_skill: { maxCalls: 40, windowMinutes: 60 },
+  /** Same shape as endorse_skill — a genuine batch of recommendations for people you
+   * actually know is rare and slow to write by hand; this only bounds abuse. */
+  write_recommendation: { maxCalls: 15, windowMinutes: 60 },
 } as const;
 
 export type RateLimitedAction = keyof typeof RATE_LIMITS;

@@ -223,3 +223,22 @@ export const SPORTS_FIELDS: FieldConfig[] = [
   { type: "number", name: "weeks_per_year", label: "Weeks per year", span: "half" },
   { type: "text", name: "location", label: "Location" },
 ];
+
+export const SKILL_CATEGORY_OPTIONS = [
+  { value: "technical", label: "Technical" },
+  { value: "creative", label: "Creative" },
+  { value: "analytical", label: "Analytical" },
+  { value: "communication", label: "Communication" },
+  { value: "leadership", label: "Leadership" },
+  { value: "other", label: "Other" },
+];
+
+/** Max 15, no obvious duplicates (spec) — enforced server-side in
+ * app/(app)/profile/skills-actions.ts, not just by leaving this list short. Self-declared,
+ * so a weak Digital Twin signal on its own (spec: Digital Twin rules) — endorsements from
+ * accepted connections add real context on top, but neither becomes a quantitative score. */
+export const SKILL_FIELDS: FieldConfig[] = [
+  { type: "text", name: "name", label: "Skill", placeholder: "e.g. Python, Public speaking", span: "half" },
+  { type: "select", name: "category", label: "Category", options: SKILL_CATEGORY_OPTIONS, span: "half" },
+  { type: "text", name: "proficiency", label: "Proficiency (optional)", placeholder: "e.g. Intermediate" },
+];

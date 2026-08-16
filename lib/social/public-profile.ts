@@ -42,6 +42,7 @@ export async function getPublicPortfolio(userId: string, opts: { bypassCheck?: b
 }
 
 export interface PublicSkill {
+  id: string;
   name: string;
   category: string;
   proficiency: string | null;
@@ -52,6 +53,6 @@ export async function getPublicSkills(userId: string, opts: { bypassCheck?: bool
   const isPublic = isSelf ? false : await isCurrentlyPublic(userId);
   if (!canViewPortfolio({ isSelf, isPublic })) return [];
   const admin = createAdminClient();
-  const { data } = await admin.from("skills").select("name, category, proficiency").eq("user_id", userId).order("category");
+  const { data } = await admin.from("skills").select("id, name, category, proficiency").eq("user_id", userId).order("category");
   return data ?? [];
 }
