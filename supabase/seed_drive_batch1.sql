@@ -786,7 +786,7 @@ from (values
 ) as v(university_name, university_country, program_name, requirement_type, title, requirement_detail, source_url)
 join public.universities u on lower(u.name) = lower(v.university_name) and u.country = v.university_country
 join public.university_programs p on p.university_id = u.id and lower(p.name) = lower(v.program_name)
-on conflict (program_id, requirement_type) do nothing;
+on conflict (program_id, requirement_type) where program_id is not null do nothing;
 
 -- ===== Opportunities: 273 verified-identity records (125 active, 147 under_review, 1 expired). =====
 -- source_confidence: 'high' where the official/provider page itself was directly and cleanly

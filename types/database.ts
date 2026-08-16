@@ -466,7 +466,23 @@ export interface University {
   created_at: string;
   updated_at: string;
 }
-export type UniversityInsert = Insertable<University, "id" | "created_at" | "updated_at" | "external_ids" | "data_confidence" | "data_status">;
+export type UniversityInsert = Insertable<
+  University,
+  | "id"
+  | "created_at"
+  | "updated_at"
+  | "external_ids"
+  | "data_confidence"
+  | "data_status"
+  // Nullable columns with no data source populating them at insert time today
+  // (lib/universities/sync-us-universities.ts) — genuinely optional, not just
+  // omitted; the DB leaves them null with no explicit value required.
+  | "description"
+  | "logo_url"
+  | "selectivity"
+  | "latitude"
+  | "longitude"
+>;
 export type UniversityUpdate = Updatable<University, "id" | "created_at" | "updated_at">;
 
 export interface UniversityProgram {
@@ -634,13 +650,17 @@ export interface Opportunity {
   official_url: string | null;
   application_url: string | null;
   country: string | null;
-  remote_allowed: boolean;
+  /** Nullable since migration 0032 — null means the source didn't state it, distinct
+   * from a confirmed false. Never defaulted to false by the AI extraction step
+   * (lib/ai/opportunity-extraction.ts) or the DB (no column default either). */
+  remote_allowed: boolean | null;
   minimum_age: number | null;
   maximum_age: number | null;
   eligible_countries: string[];
   fields: string[];
   cost: number | null;
-  funding_available: boolean;
+  /** Nullable since migration 0032 — same reasoning as remote_allowed. */
+  funding_available: boolean | null;
   deadline: string | null;
   start_date: string | null;
   end_date: string | null;

@@ -6,13 +6,16 @@ moving to the next — do not skip a post-check because the previous one looked 
 
 No credential values appear anywhere in this document. Nothing here is destructive: every
 migration in this range is additive only (new columns, new indexes, one new RLS policy, a
-publication membership change — verified in `docs/migration-safety-audit-0028-0031.md`),
-and the seed step uses `on conflict do nothing` throughout.
+publication membership change, and two `NOT NULL`/`DEFAULT` drops on columns confirmed
+empty live — see `docs/migration-safety-audit-0028-0031.md` for 0028–0031; 0032 is
+covered inline below, verified against a real local Postgres instance during the
+2026-08-16 audit that found the bug it fixes), and the seed step uses `on conflict do
+nothing` throughout.
 
 Run all SQL in the Supabase dashboard's SQL Editor for the `oryn-qa-scratch` project,
 unless you have the CLI linked (`npx supabase link --project-ref <ref>`), in which case
 `npx supabase db push` applies every pending migration in order in one step — steps
-3–8's individual apply instructions are for the SQL-editor path; the pre-checks and
+3–9's individual apply instructions are for the SQL-editor path; the pre-checks and
 post-checks are useful either way.
 
 ---
@@ -22,7 +25,7 @@ post-checks are useful either way.
 Supabase dashboard → Authentication → Sign In / Providers → Email → turn **"Confirm
 email" off**. Also confirm Site URL / Redirect URLs includes `http://localhost:3000`.
 
-**Why first:** every other step can be done without this, but no browser QA (step 12)
+**Why first:** every other step can be done without this, but no browser QA (step 13)
 can start until this is off — do it first so the rest of the runbook can be completed in
 one sitting without waiting on a dashboard change to propagate.
 
@@ -35,7 +38,7 @@ one sitting without waiting on a dashboard change to propagate.
 Project Settings → API → copy the **secret** key (not the publishable key). Add it to
 `/Users/direncagankirik/Desktop/Founder/ORYN/.env.local` as `SUPABASE_SECRET_KEY=...`.
 
-**Why second:** steps 4–8's post-checks, and the admin panel in step 11, all need this.
+**Why second:** steps 4–9's post-checks, and the admin panel in step 12, all need this.
 
 **Verify (no value printed):**
 ```bash
@@ -146,13 +149,61 @@ Apply: paste `supabase/migrations/0031_messages_realtime.sql` into the SQL edito
 
 ---
 
-## 8. Apply the staged seed batch and verify row counts
+## 8. Migration 0032 — apply and verify
+
+Added 2026-08-16, auditing the sync/import pipeline. Adds unique indexes to
+`university_statistics`, `university_sources`, and `opportunity_sources` (all three
+currently have none — a re-run of the university sync job duplicates rows indefinitely
+instead of updating in place; fixed in the same pass in
+`lib/universities/sync-us-universities.ts`, now using `upsert` against these indexes).
+Also drops `NOT NULL`/`DEFAULT` on `opportunities.remote_allowed` and
+`.funding_available`, so "the source page didn't say" can be stored as `null` instead of
+silently becoming `false` (`lib/ai/opportunity-extraction.ts` already emits `null` in
+this case, but the column previously couldn't store it).
+
+**Pre-check (expect 0 rows — confirms it's not already applied):**
+```sql
+select indexname from pg_indexes
+where indexname in (
+  'university_statistics_university_year_idx',
+  'university_sources_university_url_idx',
+  'opportunity_sources_opportunity_url_idx'
+);
+```
+
+Apply: paste `supabase/migrations/0032_ingestion_dedup_and_unknown_fields.sql` into the
+SQL editor and run it.
+
+**Post-check:**
+```sql
+select indexname from pg_indexes
+where indexname in (
+  'university_statistics_university_year_idx',
+  'university_sources_university_url_idx',
+  'opportunity_sources_opportunity_url_idx'
+);
+
+select column_name, is_nullable from information_schema.columns
+where table_name = 'opportunities' and column_name in ('remote_allowed', 'funding_available');
+```
+**Expected result:** first query returns **3 rows**; second returns **2 rows**, both
+with `is_nullable = 'YES'`.
+
+---
+
+## 9. Apply the staged seed batch and verify row counts
 
 `supabase/seed_drive_batch1.sql` is real, sourced university/program/requirement/
 opportunity data (not fixtures), staged since an earlier pass and never yet run against
-any Postgres. It's `on conflict do nothing` throughout, so it's safe to run even if some
-rows already exist — but that also means the exact row counts below are a **ceiling**
-(how many insert attempts the file makes), not a guarantee, if anything already overlaps.
+any Postgres. **Apply after 0028 and 0032 specifically** — its `university_requirements`
+insert's `on conflict` clause was fixed (2026-08-16, empirically verified against a real
+Postgres 17 instance) to match 0028's partial unique index exactly; applying this file
+against a database missing 0028 would error the entire requirements section (`there is
+no unique or exclusion constraint matching the ON CONFLICT specification`).
+
+It's `on conflict do nothing` throughout, so it's safe to run even if some rows already
+exist — but that also means the exact row counts below are a **ceiling** (how many
+insert attempts the file makes), not a guarantee, if anything already overlaps.
 
 **Pre-check (current state):**
 ```sql
@@ -182,7 +233,7 @@ output for errors before moving on.
 
 ---
 
-## 9. Add `ANTHROPIC_API_KEY`
+## 10. Add `ANTHROPIC_API_KEY`
 
 [console.anthropic.com](https://console.anthropic.com) → API Keys. Add to `.env.local`
 as `ANTHROPIC_API_KEY=...`. Optionally also `TAVILY_API_KEY`, `COLLEGE_SCORECARD_API_KEY`,
@@ -198,7 +249,7 @@ Should show `Anthropic   OK`.
 
 ---
 
-## 10. Create two QA user accounts
+## 11. Create two QA user accounts
 
 With step 1 done (email confirmation off), signup returns a live session immediately —
 no email needed. Through the browser (not SQL):
@@ -220,7 +271,7 @@ select id, email, created_at from auth.users order by created_at desc limit 2;
 
 ---
 
-## 11. Grant yourself `is_admin`
+## 12. Grant yourself `is_admin`
 
 Only needed to QA `/admin` (moderation queue, provider health, job triggers) — no UI
 grants this flag.
@@ -237,8 +288,8 @@ select id, is_admin from public.profiles where is_admin = true;
 
 ---
 
-## 12. Browser QA
+## 13. Browser QA
 
 Everything above unblocks this. Use `docs/browser-qa-checklist.md` as the executable
-checklist — work through it top to bottom with Accounts A and B from step 10, recording
+checklist — work through it top to bottom with Accounts A and B from step 11, recording
 PASS/FAIL/BLOCKED and evidence per row rather than assuming success.

@@ -10,7 +10,11 @@ Scope: `0028_program_requirement_dedup_indexes.sql`, `0029_story_notes.sql`,
 `0030_moderation.sql`, `0031_messages_realtime.sql`. All four are still unapplied to the
 live dev database as of this pass (`activities.story_notes` and `message_reports.status`
 both re-confirmed missing via a live read-only probe; `supabase_realtime` publication
-membership isn't observable via the anon key/PostgREST).
+membership isn't observable via the anon key/PostgREST). **0032 was added in a later
+pass (2026-08-16) and is covered in its own section near the end of this file** — kept in
+this doc rather than a new one so migration-safety reasoning stays in one place; the
+filename is left as-is since `docs/founder-environment-unblock-runbook.md` already links
+to it by name.
 
 ## Summary
 
@@ -124,15 +128,71 @@ creates `message_reports`) has exactly one policy on that table before 0030
 (`create own report`, insert-only) — 0030 adds a second, distinct policy rather than
 redefining or shadowing it.
 
-## Recommended apply order (unchanged from the standing FOUNDER_BLOCKED_BACKLOG item)
+## 0032 (added 2026-08-16 — not in this doc's original 0028–0031 scope)
+
+Written the same pass that found the bug it fixes, so this section documents both the
+audit and the fix together rather than as a separate finding-then-fix cycle.
+
+**What it does**: adds plain column-list unique indexes to `university_statistics
+(university_id, stat_year)`, `university_sources (university_id, source_url)`, and
+`opportunity_sources (opportunity_id, source_url)` — none of the three had any unique
+constraint at all, so `lib/universities/sync-us-universities.ts`'s re-sync of the same
+school duplicated a statistics/source row every run instead of updating in place
+(confirmed by reading the code: plain `.insert()` calls, no `not exists` guard, no
+constraint to violate). Also drops `NOT NULL`/`DEFAULT` on
+`opportunities.remote_allowed`/`.funding_available` so the AI extraction step can store
+an honest "unknown" instead of being structurally forced to assert `false`.
+
+**Destructive?** No — same additive shape as 0028/0031 (indexes) plus two constraint
+*drops* (removing a `NOT NULL` can only ever admit previously-disallowed values, never
+reject previously-valid ones).
+
+**Existing-data safety**: all three tables confirmed empty in the live dev database
+(`docs/data-readiness.md` — the university sync job has never run;
+`external_sync_jobs` has 0 rows ever), so the new unique indexes have zero chance of
+rejecting an existing duplicate at creation time. `opportunities` is also confirmed
+empty, so the two dropped defaults have no existing row to reinterpret.
+
+**Idempotent?** Yes for the three `create unique index if not exists` statements. No
+`if not exists`-equivalent exists for `alter column drop not null`/`drop default` in
+Postgres, but both are already no-ops if run a second time (dropping something already
+absent raises no error) — genuinely idempotent, not just "low risk to re-run" like most
+of 0029–0031.
+
+**RLS impact**: none — no policy touched.
+
+**A second, more severe bug found in the same pass, fixed at the file level, not by a
+migration**: `supabase/seed_drive_batch1.sql`'s `university_requirements` insert used
+`on conflict (program_id, requirement_type) do nothing` — but 0028's unique index on
+that exact column pair is a **partial** index (`where program_id is not null`), and
+Postgres requires an `ON CONFLICT` target's predicate to textually match a partial
+index's predicate to infer it as the arbiter. Applying the seed file as originally
+written against a database with 0028 applied would have failed the entire 520-row
+requirements section with `there is no unique or exclusion constraint matching the ON
+CONFLICT specification` — **empirically reproduced against a real local Postgres 17
+instance** (not just reasoned about: created the same table/partial-index shape,
+confirmed the original clause errors, confirmed the fixed clause — `on conflict
+(program_id, requirement_type) where program_id is not null do nothing` — both
+deduplicates correctly and still inserts genuinely new rows). Fixed directly in
+`seed_drive_batch1.sql` (a staged file that has never been applied to any Postgres, so
+editing it in place is safe — unlike an already-applied migration) and in
+`scripts/drive-import/generate_sql.py` (the generator, so regenerating the file doesn't
+reintroduce the bug).
+
+## Recommended apply order (see `docs/founder-environment-unblock-runbook.md` for the
+authoritative step-by-step with pre/post-check SQL — this list is a summary, not a
+second copy)
 
 1. Re-run the duplicate-check queries above, then `0028`.
 2. `0029`.
 3. `0030`.
 4. `0031`.
-5. Then `seed_drive_batch1.sql` (unrelated to this range, already staged per
-   `docs/data-readiness.md`).
+5. `0032`.
+6. Then `seed_drive_batch1.sql` — **after 0028 and 0032 specifically**, per the ON
+   CONFLICT fix above.
 
-Each of 0029–0031 is independent of the others in terms of correctness (none will fail
-because a *different* one of these four wasn't applied first) — the order above is for
-consistency with the numbering, not a hard requirement.
+Each of 0029–0032 is independent of the others in terms of correctness (none will fail
+because a *different* one of these wasn't applied first) — the order above is for
+consistency with the numbering, not a hard requirement. The seed batch is the one
+genuine hard dependency: it needs 0028 applied first (its own requirement) or it will
+error.

@@ -288,7 +288,11 @@ def emit(out_path, verification_date):
         out.append(") as v(university_name, university_country, program_name, requirement_type, title, requirement_detail, source_url)")
         out.append("join public.universities u on lower(u.name) = lower(v.university_name) and u.country = v.university_country")
         out.append("join public.university_programs p on p.university_id = u.id and lower(p.name) = lower(v.program_name)")
-        out.append("on conflict (program_id, requirement_type) do nothing;")
+        # Must match migration 0028's partial unique index predicate exactly
+        # (program_id is not null) or Postgres can't infer it as the ON CONFLICT
+        # arbiter and every insert in this statement errors — verified against a real
+        # Postgres 17 instance during the 2026-08-16 audit that found this.
+        out.append("on conflict (program_id, requirement_type) where program_id is not null do nothing;")
         out.append("")
 
     opp_rows = build_opportunities(all_opps)
