@@ -31,6 +31,34 @@ export interface PYMKSignals {
   overlappingSkills: string[];
 }
 
+export interface SameSchoolInput {
+  selfSchoolId: string | null;
+  candidateSchoolId: string | null;
+  /** Already normalized (lib/entities/normalize.ts) by the caller — this predicate never
+   * compares raw text, so "Üsküdar American Academy" and "uskudar american academy"
+   * can't read as two different schools. */
+  selfNormalizedSchoolName: string;
+  candidateNormalizedSchoolName: string;
+}
+
+/**
+ * Canonical id wins over text whenever both sides have one (Canonical Entity
+ * Autocomplete System): two students who both picked the same registry entry are at the
+ * same school even if one's legacy `school_name` text still says something else, and two
+ * students who picked *different* registry entries are NOT at the same school even if
+ * their names happen to normalize alike ("Saint Joseph" in İstanbul vs. İzmir — the
+ * exact ambiguity the registry exists to resolve). Normalized-text comparison is only
+ * the fallback for when at least one side has no canonical link yet, which is every
+ * legacy profile until it's re-saved.
+ */
+export function isSameSchool(input: SameSchoolInput): boolean {
+  if (input.selfSchoolId && input.candidateSchoolId) {
+    return input.selfSchoolId === input.candidateSchoolId;
+  }
+  if (!input.selfNormalizedSchoolName || !input.candidateNormalizedSchoolName) return false;
+  return input.selfNormalizedSchoolName === input.candidateNormalizedSchoolName;
+}
+
 export interface PYMKScore {
   score: number;
   /** Ordered, human-readable — the first 1-2 are what the UI shows (spec examples:

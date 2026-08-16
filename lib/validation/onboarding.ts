@@ -52,6 +52,11 @@ export const CompleteOnboardingSchema = z.object({
   goals: z.array(z.string()).max(10),
   country: z.string().min(1, { error: "Select a country." }),
   schoolName: z.string().min(1, { error: "Enter your school." }),
+  /** Canonical Entity Autocomplete System — set when the student picked a real
+   * registry entry rather than typing free text. Re-verified server-side against the
+   * institutions table (category='school') before it's ever persisted; null is the
+   * legacy/custom free-text path, which stays fully supported. */
+  schoolId: z.string().nullable().optional(),
   graduationYear: z.coerce
     .number()
     .int()

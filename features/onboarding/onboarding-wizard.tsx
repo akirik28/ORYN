@@ -19,6 +19,7 @@ import { GOAL_OPTIONS, CURRICULUM_OPTIONS, GEOGRAPHY_OPTIONS } from "@/lib/valid
 import type { CurriculumType, TargetGeography } from "@/types/database";
 import type { CompleteOnboardingInput } from "@/lib/validation/onboarding";
 import { completeOnboarding } from "@/app/(onboarding)/onboarding/actions";
+import { EntityCombobox } from "@/features/entities/entity-combobox";
 import { InterestsStep } from "./steps/interests-step";
 import { ImportStep, type ReviewedExtractedItem } from "./steps/import-step";
 
@@ -68,6 +69,7 @@ export function OnboardingWizard() {
   const [goals, setGoals] = useState<string[]>([]);
   const [country, setCountry] = useState("");
   const [schoolName, setSchoolName] = useState("");
+  const [schoolId, setSchoolId] = useState<string | null>(null);
   const [graduationYear, setGraduationYear] = useState(String(currentYear + 1));
   const [curriculum, setCurriculum] = useState<CurriculumType | "">("");
   const [interests, setInterests] = useState<string[]>([]);
@@ -98,6 +100,7 @@ export function OnboardingWizard() {
       goals,
       country: country.trim(),
       schoolName: schoolName.trim(),
+      schoolId,
       graduationYear: Number(graduationYear),
       curriculum: curriculum as CompleteOnboardingInput["curriculum"],
       interests,
@@ -146,7 +149,20 @@ export function OnboardingWizard() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="school">School</Label>
-                <Input id="school" value={schoolName} onChange={(e) => setSchoolName(e.target.value)} placeholder="Lincoln High School" />
+                <EntityCombobox
+                  id="school"
+                  entityType="school"
+                  value={schoolName}
+                  entityId={schoolId}
+                  context={{ country: country.trim() || null }}
+                  placeholder="Start typing your school's name"
+                  allowCustom
+                  customLabel="school"
+                  onChange={(next) => {
+                    setSchoolName(next.displayName);
+                    setSchoolId(next.id);
+                  }}
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Newsreader } from "next/font/google";
-import { ThemeProvider } from "next-themes";
 import { MotionConfig } from "motion/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
@@ -36,29 +35,32 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
+    // Founder-locked visual direction (revised): a dark, black-blue system built around
+    // the ORYN logo's blue (--brand, hue 272 — see globals.css's `.dark` block) is the
+    // product's one deliberate default, not something contingent on OS preference — one
+    // consistent experience for every visitor. The light theme's tokens stay fully
+    // defined in globals.css for whoever opts in later; only the default is locked.
+    //
+    // `dark` is set statically here rather than through next-themes: with no theme
+    // toggle anywhere in the product, that provider's only remaining job was injecting
+    // a client-side <script> to re-apply a stored preference that can never differ from
+    // this default — and React 19 warns on every client render that a <script> inside a
+    // component never executes ("Encountered a script tag while rendering React
+    // component", reported live from /connections). A static class has no flash, no
+    // script, and no warning. Reintroduce a provider only alongside a real theme switcher.
     <html
       lang="en"
-      suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} h-full antialiased`}
+      className={`dark ${geistSans.variable} ${geistMono.variable} ${newsreader.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        {/* Founder-locked visual direction (revised): a dark, black-blue system built
-            around the ORYN logo's blue (--brand, hue 272 — see globals.css's `.dark`
-            block) is now the product's one deliberate default, not something contingent
-            on OS preference (`enableSystem` off, same reasoning as when this briefly
-            pointed at light: one consistent experience for every visitor). The light
-            theme's tokens stay fully defined for whoever opts in later; only the
-            default changed. */}
-        <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
-          {/* Global prefers-reduced-motion gate — every `motion.*` element in the app
-              honors the OS setting automatically; no per-component opt-in needed. */}
-          <MotionConfig reducedMotion="user">
-            <TooltipProvider>
-              {children}
-              <Toaster position="bottom-right" />
-            </TooltipProvider>
-          </MotionConfig>
-        </ThemeProvider>
+        {/* Global prefers-reduced-motion gate — every `motion.*` element in the app
+            honors the OS setting automatically; no per-component opt-in needed. */}
+        <MotionConfig reducedMotion="user">
+          <TooltipProvider>
+            {children}
+            <Toaster position="bottom-right" />
+          </TooltipProvider>
+        </MotionConfig>
       </body>
     </html>
   );
