@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { EntityCombobox } from "@/features/entities/entity-combobox";
 import type { FieldConfig } from "./field-config";
 
 export type FormValues = Record<string, string | number | boolean | null>;
@@ -98,6 +99,27 @@ export function DynamicFormFields({
                 type="number"
                 value={value === null || value === undefined ? "" : String(value)}
                 onChange={(e) => onChange(field.name, e.target.value === "" ? null : Number(e.target.value))}
+              />
+            </div>
+          );
+        }
+
+        if (field.type === "entity") {
+          return (
+            <div key={field.name} className={cn("space-y-1.5", span)}>
+              <Label htmlFor={field.name}>{field.label}</Label>
+              <EntityCombobox
+                id={field.name}
+                entityType={field.entityType}
+                value={(value as string) ?? ""}
+                entityId={(values[field.entityIdField] as string) ?? null}
+                allowCustom={field.allowCustom}
+                customLabel={field.customLabel}
+                placeholder={field.placeholder}
+                onChange={(next) => {
+                  onChange(field.name, next.displayName || null);
+                  onChange(field.entityIdField, next.id);
+                }}
               />
             </div>
           );

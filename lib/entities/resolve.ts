@@ -4,7 +4,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, InstitutionCategory } from "@/types/database";
 import { isUuidLike } from "@/lib/validation/uuid";
 import { findPossibleDuplicates, type EntityCandidate } from "./rank";
-import type { EntitySearchType } from "./search";
+import { validateCustomInstitutionInput } from "./validation";
+import type { EntitySearchType } from "./types";
 
 export interface ResolvedEntity {
   id: string;
@@ -51,8 +52,6 @@ export async function resolveEntity(supabase: SupabaseClient<Database>, type: En
   return resolveOpportunity(supabase, id);
 }
 
-const MAX_CANONICAL_NAME_LENGTH = 300;
-
 export interface CreateCustomInstitutionInput {
   category: InstitutionCategory;
   canonicalName: string;
@@ -80,13 +79,14 @@ export async function createCustomInstitution(
   confirmDespiteDuplicates = false
 ): Promise<CreateCustomInstitutionResult> {
   const canonicalName = input.canonicalName.trim();
-  if (!canonicalName) return { status: "error", error: "Enter a name." };
-  if (canonicalName.length > MAX_CANONICAL_NAME_LENGTH) return { status: "error", error: "That name is too long." };
-
   const country = input.country?.trim() || null;
   const city = input.city?.trim() || null;
   const websiteUrl = input.websiteUrl?.trim() || null;
-  if (websiteUrl && !/^https?:\/\/.+/i.test(websiteUrl)) return { status: "error", error: "Website must start with http:// or https://." };
+
+  const validationError = validateCustomInstitutionInput({ canonicalName, websiteUrl });
+  if (validationError === "empty_name") return { status: "error", error: "Enter a name." };
+  if (validationError === "name_too_long") return { status: "error", error: "That name is too long." };
+  if (validationError === "invalid_website") return { status: "error", error: "Website must start with http:// or https://." };
 
   if (!confirmDespiteDuplicates) {
     let existingQuery = supabase.from("institutions").select("id, canonical_name, aliases, country, city").eq("category", input.category);

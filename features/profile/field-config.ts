@@ -1,3 +1,5 @@
+import type { EntitySearchType } from "@/lib/entities/types";
+
 // Essay Story Bank (founder-confirmed MVP scope) reads this field as candidate material —
 // never CV-facing, never auto-summarized. One shared field, one shared prompt list, reused
 // across every achievement-shaped form below rather than seven separate structured columns.
@@ -14,7 +16,24 @@ export type FieldConfig =
   | { type: "date"; name: string; label: string; span?: "full" | "half" }
   | { type: "number"; name: string; label: string; span?: "full" | "half" }
   | { type: "checkbox"; name: string; label: string }
-  | { type: "select"; name: string; label: string; options: { value: string; label: string }[]; span?: "full" | "half" };
+  | { type: "select"; name: string; label: string; options: { value: string; label: string }[]; span?: "full" | "half" }
+  // Canonical Entity Autocomplete System (docs/entity-canonicalization-audit.md). `name`
+  // is the existing legacy free-text column (kept in sync with the linked entity's
+  // canonical name at selection time); `entityIdField` is the new nullable `*_id`
+  // column. `allowCustom` (school/organization only) exposes the "can't find it?"
+  // fallback — universities/opportunities stay fully curated registries with no
+  // custom-creation path from this form.
+  | {
+      type: "entity";
+      name: string;
+      entityIdField: string;
+      label: string;
+      entityType: EntitySearchType;
+      allowCustom?: boolean;
+      customLabel?: string;
+      placeholder?: string;
+      span?: "full" | "half";
+    };
 
 export const ACTIVITY_CATEGORY_OPTIONS = [
   { value: "club", label: "Club" },
@@ -76,7 +95,7 @@ export const SPORT_LEVEL_OPTIONS = [
 
 export const ACTIVITY_FIELDS: FieldConfig[] = [
   { type: "text", name: "title", label: "Title", placeholder: "e.g. Robotics Club Captain" },
-  { type: "text", name: "organization", label: "Organization", span: "half" },
+  { type: "entity", name: "organization", entityIdField: "organization_id", entityType: "organization", label: "Organization", allowCustom: true, customLabel: "organization", span: "half" },
   { type: "select", name: "category", label: "Category", options: ACTIVITY_CATEGORY_OPTIONS, span: "half" },
   { type: "textarea", name: "description", label: "Description" },
   { type: "checkbox", name: "is_leadership_role", label: "This is a leadership role" },
@@ -93,7 +112,16 @@ export const ACTIVITY_FIELDS: FieldConfig[] = [
 
 export const PROJECT_FIELDS: FieldConfig[] = [
   { type: "text", name: "title", label: "Title" },
-  { type: "text", name: "organization", label: "Organization", span: "half" },
+  {
+    type: "entity",
+    name: "organization",
+    entityIdField: "organization_id",
+    entityType: "organization",
+    label: "Organization (optional)",
+    allowCustom: true,
+    customLabel: "organization",
+    span: "half",
+  },
   { type: "text", name: "role", label: "Your role", span: "half" },
   { type: "textarea", name: "description", label: "Description" },
   { type: "textarea", name: "outcome_summary", label: "Outcome / measurable result" },
@@ -111,7 +139,16 @@ export const PROJECT_FIELDS: FieldConfig[] = [
 
 export const AWARD_FIELDS: FieldConfig[] = [
   { type: "text", name: "title", label: "Title" },
-  { type: "text", name: "organization", label: "Awarding organization", span: "half" },
+  {
+    type: "entity",
+    name: "organization",
+    entityIdField: "organization_id",
+    entityType: "organization",
+    label: "Awarding organization",
+    allowCustom: true,
+    customLabel: "organization",
+    span: "half",
+  },
   { type: "text", name: "level", label: "Level (school, national, international...)", span: "half" },
   { type: "textarea", name: "description", label: "Description" },
   { type: "date", name: "award_date", label: "Date", span: "half" },
@@ -121,7 +158,16 @@ export const AWARD_FIELDS: FieldConfig[] = [
 
 export const RESEARCH_FIELDS: FieldConfig[] = [
   { type: "text", name: "title", label: "Title" },
-  { type: "text", name: "organization", label: "Organization / institution", span: "half" },
+  {
+    type: "entity",
+    name: "organization",
+    entityIdField: "organization_id",
+    entityType: "organization",
+    label: "Organization / institution",
+    allowCustom: true,
+    customLabel: "institution",
+    span: "half",
+  },
   { type: "text", name: "mentor_name", label: "Mentor", span: "half" },
   { type: "text", name: "field", label: "Field", span: "half" },
   { type: "select", name: "output_type", label: "Output", options: RESEARCH_OUTPUT_OPTIONS, span: "half" },
@@ -139,7 +185,16 @@ export const RESEARCH_FIELDS: FieldConfig[] = [
 
 export const VOLUNTEERING_FIELDS: FieldConfig[] = [
   { type: "text", name: "title", label: "Title" },
-  { type: "text", name: "organization", label: "Organization", span: "half" },
+  {
+    type: "entity",
+    name: "organization",
+    entityIdField: "organization_id",
+    entityType: "organization",
+    label: "Organization",
+    allowCustom: true,
+    customLabel: "organization",
+    span: "half",
+  },
   { type: "text", name: "cause_area", label: "Cause area", span: "half" },
   { type: "textarea", name: "description", label: "Description" },
   { type: "date", name: "start_date", label: "Start date", span: "half" },
@@ -152,7 +207,7 @@ export const VOLUNTEERING_FIELDS: FieldConfig[] = [
 
 export const WORK_EXPERIENCE_FIELDS: FieldConfig[] = [
   { type: "text", name: "title", label: "Title" },
-  { type: "text", name: "organization", label: "Organization" },
+  { type: "entity", name: "organization", entityIdField: "organization_id", entityType: "organization", label: "Organization", allowCustom: true, customLabel: "employer" },
   { type: "select", name: "employment_type", label: "Type", options: EMPLOYMENT_TYPE_OPTIONS, span: "half" },
   { type: "checkbox", name: "paid", label: "Paid" },
   { type: "textarea", name: "description", label: "Description" },
@@ -165,7 +220,7 @@ export const WORK_EXPERIENCE_FIELDS: FieldConfig[] = [
 ];
 
 export const EDUCATION_FIELDS: FieldConfig[] = [
-  { type: "text", name: "school_name", label: "School name" },
+  { type: "entity", name: "school_name", entityIdField: "school_id", entityType: "school", label: "School name", allowCustom: true, customLabel: "school" },
   { type: "text", name: "country", label: "Country", span: "half" },
   { type: "select", name: "stage", label: "Stage", options: EDUCATION_STAGE_OPTIONS, span: "half" },
   { type: "select", name: "curriculum", label: "Curriculum", options: CURRICULUM_FIELD_OPTIONS, span: "half" },
@@ -186,7 +241,15 @@ export const TEST_SCORE_FIELDS: FieldConfig[] = [
 
 export const CERTIFICATION_FIELDS: FieldConfig[] = [
   { type: "text", name: "title", label: "Title" },
-  { type: "text", name: "organization", label: "Issuing organization" },
+  {
+    type: "entity",
+    name: "organization",
+    entityIdField: "organization_id",
+    entityType: "organization",
+    label: "Issuing organization",
+    allowCustom: true,
+    customLabel: "organization",
+  },
   { type: "textarea", name: "description", label: "Description" },
   { type: "date", name: "issue_date", label: "Issue date", span: "half" },
   { type: "date", name: "expiry_date", label: "Expiry date", span: "half" },
@@ -209,7 +272,16 @@ export const GOAL_FIELDS: FieldConfig[] = [
 export const SPORTS_FIELDS: FieldConfig[] = [
   { type: "text", name: "sport", label: "Sport", placeholder: "e.g. Swimming", span: "half" },
   { type: "text", name: "discipline", label: "Discipline / event", placeholder: "e.g. 200m Freestyle", span: "half" },
-  { type: "text", name: "team_name", label: "Team / club / school", span: "half" },
+  {
+    type: "entity",
+    name: "team_name",
+    entityIdField: "team_organization_id",
+    entityType: "organization",
+    label: "Team / club / school",
+    allowCustom: true,
+    customLabel: "team, club, or school",
+    span: "half",
+  },
   { type: "text", name: "position", label: "Position / role", span: "half" },
   { type: "select", name: "level", label: "Competitive level", options: SPORT_LEVEL_OPTIONS, span: "half" },
   { type: "text", name: "us_specific_label", label: "Other label (optional, e.g. Varsity)", span: "half" },

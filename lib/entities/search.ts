@@ -3,18 +3,9 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, InstitutionCategory } from "@/types/database";
 import { rankEntityCandidates, type EntityCandidate } from "./rank";
+import type { EntitySearchType, EntitySearchResult, EntitySearchContext } from "./types";
 
-export type EntitySearchType = "school" | "organization" | "university" | "opportunity";
-
-export interface EntitySearchResult {
-  id: string;
-  /** Always the canonical name as stored — never the normalized search string (spec:
-   * "Display her zaman canonical presentation name olsun"). */
-  displayName: string;
-  /** Disambiguation line — "Istanbul, Turkey · High School" style (spec section 4). */
-  subtitle: string | null;
-  isCustom: boolean;
-}
+export type { EntitySearchType, EntitySearchResult, EntitySearchContext } from "./types";
 
 const MIN_QUERY_LENGTH = 2;
 const RESULT_LIMIT = 8;
@@ -78,11 +69,6 @@ async function fetchOpportunityCandidates(supabase: SupabaseClient<Database>, co
     row,
     candidate: { id: row.id, canonicalName: row.title, aliases: row.aliases, country: row.country, city: null } as EntityCandidate,
   }));
-}
-
-export interface EntitySearchContext {
-  country?: string | null;
-  city?: string | null;
 }
 
 /**

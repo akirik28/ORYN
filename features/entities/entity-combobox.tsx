@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { searchEntitiesAction, createCustomInstitutionAction } from "@/app/(app)/entities/actions";
-import type { EntitySearchResult, EntitySearchType } from "@/lib/entities/search";
+import type { EntitySearchResult, EntitySearchType } from "@/lib/entities/types";
 import type { InstitutionCategory } from "@/types/database";
 
 const DEBOUNCE_MS = 300;

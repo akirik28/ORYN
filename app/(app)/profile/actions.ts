@@ -34,9 +34,52 @@ import {
   type GoalFormInput,
   type SportsFormInput,
 } from "@/lib/validation/achievements";
+import { resolveInstitution } from "@/lib/entities/resolve";
+import type { InstitutionCategory } from "@/types/database";
 
 type ActionResult = { error?: string };
 type ZodLike<T> = { safeParse: (input: unknown) => { success: boolean; data?: T; error?: { issues: { message: string }[] } } };
+
+/**
+ * Canonical Entity Autocomplete System (spec section 16): every achievement/education
+ * table with a `*_id` linkage column re-verifies that id against the institutions
+ * registry server-side before it's ever persisted — never trusts the client's
+ * autocomplete result blindly. A null id (the legacy/custom free-text path) skips this
+ * entirely. `textField` is overwritten with the institution's CURRENT canonical name on
+ * every write that links one, so the legacy column a linked row's every existing read
+ * path already renders (portfolio, CV builder, exports, ...) always shows the canonical
+ * name at the moment of selection (spec section 13) with zero changes to those read
+ * paths.
+ */
+const ENTITY_LINK_FIELDS: Record<string, { idField: string; textField: string; category: InstitutionCategory }> = {
+  education_records: { idField: "school_id", textField: "school_name", category: "school" },
+  work_experiences: { idField: "organization_id", textField: "organization", category: "organization" },
+  volunteering_experiences: { idField: "organization_id", textField: "organization", category: "organization" },
+  activities: { idField: "organization_id", textField: "organization", category: "organization" },
+  research_experiences: { idField: "organization_id", textField: "organization", category: "organization" },
+  awards: { idField: "organization_id", textField: "organization", category: "organization" },
+  certifications: { idField: "organization_id", textField: "organization", category: "organization" },
+  projects: { idField: "organization_id", textField: "organization", category: "organization" },
+  sports_experiences: { idField: "team_organization_id", textField: "team_name", category: "organization" },
+};
+
+async function resolveEntityLinkage<T extends Record<string, unknown>>(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  table: string,
+  data: T
+): Promise<{ data: T; error?: string }> {
+  const link = ENTITY_LINK_FIELDS[table];
+  if (!link) return { data };
+
+  const rawId = data[link.idField];
+  if (rawId === null || rawId === undefined) return { data };
+  if (typeof rawId !== "string") return { data, error: "Invalid entity reference." };
+
+  const resolved = await resolveInstitution(supabase, rawId, link.category);
+  if (!resolved) return { data, error: "That entry couldn't be verified. Please search and select it again." };
+
+  return { data: { ...data, [link.idField]: resolved.id, [link.textField]: resolved.canonicalName } };
+}
 
 async function afterWrite(userId: string) {
   try {
@@ -68,8 +111,11 @@ async function crudCreate<T extends Record<string, unknown>>(table: string, sche
   if (!parsed.success || !parsed.data) return { error: parsed.error?.issues[0]?.message ?? "Invalid input." };
 
   const supabase = await createClient();
+  const linked = await resolveEntityLinkage(supabase, table, parsed.data);
+  if (linked.error) return { error: linked.error };
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- table name varies per call site; the Zod schema above is the real type check.
-  const { error } = await (supabase.from(table as any) as any).insert({ ...parsed.data, user_id: session.userId! });
+  const { error } = await (supabase.from(table as any) as any).insert({ ...linked.data, user_id: session.userId! });
   if (error) return { error: friendlyDbError("save", table, error) };
 
   await logEvent(session.userId!, "profile_item_added", { table });
@@ -83,8 +129,11 @@ async function crudUpdate<T extends Record<string, unknown>>(table: string, sche
   if (!parsed.success || !parsed.data) return { error: parsed.error?.issues[0]?.message ?? "Invalid input." };
 
   const supabase = await createClient();
+  const linked = await resolveEntityLinkage(supabase, table, parsed.data);
+  if (linked.error) return { error: linked.error };
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase.from(table as any) as any).update(parsed.data).eq("id", id).eq("user_id", session.userId!);
+  const { error } = await (supabase.from(table as any) as any).update(linked.data).eq("id", id).eq("user_id", session.userId!);
   if (error) return { error: friendlyDbError("save", table, error) };
 
   await afterWrite(session.userId!);
