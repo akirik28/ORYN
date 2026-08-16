@@ -1,13 +1,9 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { RateLimitExceededError } from "@/lib/errors/rate-limit-exceeded";
 
-export class RateLimitExceededError extends Error {
-  constructor(message = "You're doing that a lot — please wait a bit and try again.") {
-    super(message);
-    this.name = "RateLimitExceededError";
-  }
-}
+export { RateLimitExceededError };
 
 /**
  * Simple sliding-window rate limit for AI-backed actions, sourced from `ai_usage` (every

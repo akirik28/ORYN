@@ -1,7 +1,8 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import { RateLimitExceededError } from "@/lib/ai/rate-limit";
+import { checkRateLimit, type RateLimitStore, type RateLimitOptions } from "@/lib/security/rate-limit-core";
+import { RateLimitExceededError } from "@/lib/errors/rate-limit-exceeded";
 
 /**
  * General-purpose sliding-window rate limit for Server Actions / Route Handlers outside
@@ -13,23 +14,33 @@ import { RateLimitExceededError } from "@/lib/ai/rate-limit";
  *
  * Call this *before* doing the real work, so a rejected call still counts against the
  * window (otherwise a client could retry indefinitely with no cost).
+ *
+ * The actual window/threshold/fail-open decision lives in
+ * lib/security/rate-limit-core.ts's checkRateLimit — this function only wires it to a
+ * real `rate_limit_events` table. Every existing call site is unaffected; this file's
+ * only export is unchanged.
  */
-export async function assertWithinRateLimit(userId: string, action: string, opts: { maxCalls: number; windowMinutes: number }): Promise<void> {
-  const supabase = await createClient();
-  const since = new Date(Date.now() - opts.windowMinutes * 60 * 1000).toISOString();
+function supabaseRateLimitStore(): RateLimitStore {
+  return {
+    async countSince(userId, action, sinceIso) {
+      const supabase = await createClient();
+      const { count } = await supabase
+        .from("rate_limit_events")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .eq("action", action)
+        .gte("created_at", sinceIso);
+      return count;
+    },
+    async record(userId, action) {
+      const supabase = await createClient();
+      await supabase.from("rate_limit_events").insert({ user_id: userId, action });
+    },
+  };
+}
 
-  const { count } = await supabase
-    .from("rate_limit_events")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .eq("action", action)
-    .gte("created_at", since);
-
-  if ((count ?? 0) >= opts.maxCalls) {
-    throw new RateLimitExceededError();
-  }
-
-  await supabase.from("rate_limit_events").insert({ user_id: userId, action });
+export async function assertWithinRateLimit(userId: string, action: string, opts: RateLimitOptions): Promise<void> {
+  return checkRateLimit(supabaseRateLimitStore(), userId, action, opts);
 }
 
 export { RateLimitExceededError };
