@@ -65,6 +65,11 @@ export const MESSAGE_REPORTS_EXPORT_COLUMNS = [
   "reporter_id",
   "reported_user_id",
   "message_id",
+  // Professional Profile pack (migration 0035) — a report about a recommendation
+  // instead of a message. Omitting this was a real gap: a reporter exporting their own
+  // filed report about a recommendation would see everything except which
+  // recommendation they'd actually reported.
+  "recommendation_id",
   "reason",
   "status",
   "reviewed_at",

@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { Badge } from "@/components/ui/badge";
 import { JobTriggerButton } from "@/features/admin/job-trigger-button";
 import { ReportReviewControl } from "@/features/admin/report-review-control";
+import { resolveReportedContentPreview } from "@/lib/moderation/content-preview";
 import { triggerOpportunityDiscovery, triggerUniversitySync, triggerDeadlineScan, triggerRequirementDiscovery } from "./actions";
 
 export const metadata = { title: "Admin" };
@@ -94,12 +95,12 @@ export default async function AdminPage() {
                 <p className="text-muted-foreground">{report.reason}</p>
                 {report.message_id ? (
                   <p className="rounded-md bg-muted px-3 py-1.5 text-xs italic text-muted-foreground">
-                    {messageById.get(report.message_id) ?? "(reported message no longer available)"}
+                    {resolveReportedContentPreview(report.message_id, messageById, "(reported message no longer available)")}
                   </p>
                 ) : null}
                 {report.recommendation_id ? (
                   <p className="rounded-md bg-muted px-3 py-1.5 text-xs italic text-muted-foreground">
-                    {recommendationById.get(report.recommendation_id) ?? "(reported recommendation no longer available)"}
+                    {resolveReportedContentPreview(report.recommendation_id, recommendationById, "(reported recommendation no longer available)")}
                   </p>
                 ) : null}
                 <ReportReviewControl reportId={report.id} initialStatus={report.status} initialNote={report.resolution_note} />

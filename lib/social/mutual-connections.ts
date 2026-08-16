@@ -1,6 +1,9 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { intersectAcceptedConnections, excludeBlockedIds } from "./mutual-connections-rules";
+
+export * from "./mutual-connections-rules";
 
 /** Everyone `userId` has an *accepted* connection with — deliberately narrower than
  * `hasAnyConnection` elsewhere in this pack (pending/declined don't count as a real
@@ -13,6 +16,16 @@ async function getAcceptedConnectionIds(userId: string): Promise<Set<string>> {
     .eq("status", "accepted")
     .or(`requester_id.eq.${userId},recipient_id.eq.${userId}`);
   return new Set((data ?? []).map((row) => (row.requester_id === userId ? row.recipient_id : row.requester_id)));
+}
+
+/** Everyone blocked with `userId`, either direction — admin client bypasses
+ * blocked_users' own owner-only RLS (a normal client can only ever read blocks *it*
+ * created), safe here because this never returns the block rows themselves, only a set
+ * of ids used to filter another list before it's returned to anyone. */
+async function getBlockedIds(userId: string): Promise<Set<string>> {
+  const admin = createAdminClient();
+  const { data } = await admin.from("blocked_users").select("blocker_id, blocked_id").or(`blocker_id.eq.${userId},blocked_id.eq.${userId}`);
+  return new Set((data ?? []).map((row) => (row.blocker_id === userId ? row.blocked_id : row.blocker_id)));
 }
 
 export interface MutualConnectionsResult {
@@ -28,8 +41,8 @@ const PREVIEW_LIMIT = 6;
 export async function getMutualConnections(userA: string, userB: string): Promise<MutualConnectionsResult> {
   if (userA === userB) return { count: 0, preview: [] };
 
-  const [aIds, bIds] = await Promise.all([getAcceptedConnectionIds(userA), getAcceptedConnectionIds(userB)]);
-  const mutualIds = [...aIds].filter((id) => bIds.has(id));
+  const [aIds, bIds, blockedIds] = await Promise.all([getAcceptedConnectionIds(userA), getAcceptedConnectionIds(userB), getBlockedIds(userA)]);
+  const mutualIds = excludeBlockedIds(intersectAcceptedConnections(aIds, bIds), blockedIds);
   if (mutualIds.length === 0) return { count: 0, preview: [] };
 
   const admin = createAdminClient();

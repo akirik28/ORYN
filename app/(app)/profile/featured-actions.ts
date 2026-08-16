@@ -4,12 +4,18 @@ import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { isUuidLike } from "@/lib/validation/uuid";
-import { FEATURED_SOURCE_TABLES } from "@/lib/social/featured";
+import {
+  FEATURED_SOURCE_TABLES,
+  canAddAnotherFeaturedItem,
+  isDuplicateFeaturedSource,
+  isFeaturedSourceOwnedByRequester,
+  allFeaturedIdsOwned,
+  buildFeaturedReorder,
+  MAX_FEATURED_ITEMS,
+} from "@/lib/social/featured";
 import type { FeaturedItemType } from "@/types/database";
 
 type ActionResult = { error?: string };
-
-const MAX_FEATURED = 5;
 
 function isHttpUrl(value: string): boolean {
   return /^https?:\/\/.+/i.test(value);
@@ -36,9 +42,12 @@ export async function addFeaturedItem(
   const session = await requireUser();
   const supabase = await createClient();
 
-  const { count } = await supabase.from("featured_items").select("id", { count: "exact", head: true }).eq("user_id", session.userId!);
-  const nextOrder = count ?? 0;
-  if (nextOrder >= MAX_FEATURED) return { error: `You can feature up to ${MAX_FEATURED} items. Remove one before adding another.` };
+  const { data: existingRows } = await supabase.from("featured_items").select("item_type, item_id").eq("user_id", session.userId!);
+  const existing = (existingRows ?? []).map((r) => ({ itemType: r.item_type, itemId: r.item_id }));
+  if (!canAddAnotherFeaturedItem(existing.length)) {
+    return { error: `You can feature up to ${MAX_FEATURED_ITEMS} items. Remove one before adding another.` };
+  }
+  const nextOrder = existing.length;
 
   if (itemType === "external_link") {
     const url = (externalUrl ?? "").trim();
@@ -51,9 +60,14 @@ export async function addFeaturedItem(
     if (error) return { error: "Couldn't feature that link." };
   } else {
     if (!itemId || !isUuidLike(itemId)) return { error: "Choose an item to feature." };
+    if (isDuplicateFeaturedSource(existing, itemType, itemId)) return { error: "That's already featured." };
+
+    // Fetched by id alone (not `.eq("user_id", ...)`) so ownership is decided by the
+    // pure predicate below, not folded invisibly into the query filter — RLS on the
+    // source table is the redundant, real backstop underneath either way.
     const table = FEATURED_SOURCE_TABLES[itemType];
-    const { data: owned } = await supabase.from(table as "projects").select("id").eq("id", itemId).eq("user_id", session.userId!).maybeSingle();
-    if (!owned) return { error: "That item couldn't be found." };
+    const { data: sourceRow } = await supabase.from(table as "projects").select("id, user_id").eq("id", itemId).maybeSingle();
+    if (!isFeaturedSourceOwnedByRequester(sourceRow, session.userId!)) return { error: "That item couldn't be found." };
 
     const { error } = await supabase
       .from("featured_items")
@@ -86,10 +100,12 @@ export async function reorderFeaturedItems(orderedIds: string[]): Promise<Action
 
   const supabase = await createClient();
   const { data: owned } = await supabase.from("featured_items").select("id").eq("user_id", session.userId!).in("id", orderedIds);
-  if (!owned || owned.length !== orderedIds.length) return { error: "Invalid order." };
+  if (!allFeaturedIdsOwned((owned ?? []).map((r) => r.id), orderedIds)) return { error: "Invalid order." };
 
   const { error } = await Promise.all(
-    orderedIds.map((id, index) => supabase.from("featured_items").update({ display_order: index }).eq("id", id).eq("user_id", session.userId!))
+    buildFeaturedReorder(orderedIds).map(({ id, displayOrder }) =>
+      supabase.from("featured_items").update({ display_order: displayOrder }).eq("id", id).eq("user_id", session.userId!)
+    )
   ).then((results) => results.find((r) => r.error) ?? { error: null });
   if (error) return { error: "Couldn't reorder." };
 

@@ -53,7 +53,7 @@ describe("MESSAGE_REPORTS_EXPORT_COLUMNS", () => {
 
   // And it must still be useful — a reporter's export of their own report should keep
   // enough to be meaningful (what they reported, why, and its current review status).
-  test.each(["id", "reporter_id", "reported_user_id", "message_id", "reason", "status", "created_at"])(
+  test.each(["id", "reporter_id", "reported_user_id", "message_id", "recommendation_id", "reason", "status", "created_at"])(
     "includes reporter-relevant column %s",
     (column) => {
       expect((MESSAGE_REPORTS_EXPORT_COLUMNS as readonly string[]).includes(column)).toBe(true);
