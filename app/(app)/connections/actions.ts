@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createNotification } from "@/lib/notifications/create";
 import { assertWithinRateLimit, RateLimitExceededError } from "@/lib/security/rate-limit";
 import { RATE_LIMITS } from "@/lib/security/rate-limit-config";
+import { canRespondToConnectionRequest } from "@/lib/social/connection-transitions";
 
 export async function sendConnectionRequest(recipientId: string): Promise<{ error?: string }> {
   const session = await requireUser();
@@ -54,10 +55,21 @@ export async function respondToConnectionRequest(connectionId: string, accept: b
   const session = await requireUser();
   const supabase = await createClient();
 
+  // Re-verify server-side that this request is still pending and actually addressed to
+  // the caller — never trust that the UI only offered Accept/Decline on a genuinely
+  // pending, incoming request (a Server Action is directly callable with any argument).
+  // RLS already restricts *who* can write here (recipient_id = auth.uid()); this adds
+  // the status half of the check, which RLS knows nothing about.
+  const { data: existing } = await supabase.from("connections").select("status, recipient_id").eq("id", connectionId).maybeSingle();
+  if (!existing || !canRespondToConnectionRequest({ status: existing.status, recipientId: existing.recipient_id }, session.userId!)) {
+    return { error: "Couldn't update that request." };
+  }
+
   const { data: updated, error } = await supabase
     .from("connections")
     .update({ status: accept ? "accepted" : "declined", responded_at: new Date().toISOString() })
     .eq("id", connectionId)
+    .eq("status", "pending") // belt-and-suspenders against a race between two concurrent calls
     .select("requester_id")
     .single();
 
