@@ -56,31 +56,60 @@ that.
 
 ## Known gaps
 
-Two of the three gaps originally listed here are closed (rate-limit boundary behavior:
-`security/rate-limit-core.test.ts`, via an injectable store rather than a DB mock;
-`/u/[id]`'s authorization logic: `social/public-profile-authorization.test.ts`). What
-remains:
+All items previously listed here as fixable have been fixed
+(`requirement-actions.ts`'s raw error, `respondToConnectionRequest`'s missing pending
+guard, rate-limit boundary tests, `/u/[id]` authorization tests). One remains, genuinely
+architectural rather than a one-off gap:
 
-- **Zero component tests, zero Server Action *integration* tests, zero RLS/integration
-  tests against a live database** — pre-existing, codebase-wide, not something this or
-  the prior pass introduced. Every test added across both passes follows the same
-  convention: pure decision logic extracted out of server-only/client-component files
-  (`lib/messaging/authorization.ts`, `lib/security/rate-limit-core.ts`,
-  `lib/social/public-profile-authorization.ts`, `lib/security/is-admin.ts`, ...) and
-  *wired into* the real call site rather than left as an unenforced parallel model —
-  documented per-module which. What this can't cover: whether the SQL itself (RLS
-  policies, the `public_profiles` view, `is_blocked_between`) actually behaves as
-  documented on a live database, and whole-request-lifecycle behavior (does a Server
-  Action actually redirect via `next/navigation`, does a Route Handler actually return
-  the right HTTP status). Closing that needs a live database (this environment has none)
-  or a first real mocking/component-test decision — still not decided unilaterally
-  across either autonomous pass, left for founder input given it's a standing
-  architecture choice, not a one-off test.
-- Two low-severity items noted but intentionally left as-is, both because fixing them
-  is out of the stated scope for these passes and neither is a data-exposure risk:
-  `app/(app)/universities/[id]/requirement-actions.ts` still returns raw
-  `error.message` (admin-only surface, arguably useful for an admin debugging a bad
-  insert), and `respondToConnectionRequest` (`app/(app)/connections/actions.ts`) doesn't
-  guard `status = 'pending'` before updating, so a direct call could in principle flip an
-  already-accepted connection back to `declined` — functionally equivalent to removing
-  the connection (which that user could already do), no cross-user exposure.
+### Server-layer / RLS integration testing — investigated this pass, not built
+
+**The question**: can `sendConnectionRequest`, `sendMessage`, block/report, `/u/[id]`,
+and the admin gate be tested at the real server layer — the actual Server Action calling
+the actual `@supabase/supabase-js` client against something that actually enforces RLS —
+without a real Supabase credential, without a mock that could give a false PASS, and
+without building a large harness?
+
+**What was checked, concretely, before answering:**
+
+- `docker` — not installed in this environment. `npx supabase start` (the project's own
+  local-dev tooling, already a devDependency) is confirmed container-based with no
+  Docker-free mode (`supabase start --help`: "Start containers for Supabase local
+  development"), so it's unusable here regardless of credentials.
+- A local Postgres *binary* is available (`/opt/homebrew/bin/postgres`), and network
+  access works, so `postgrest` (the HTTP layer `@supabase/supabase-js` actually talks to
+  — it does not speak the Postgres wire protocol directly) is installable via Homebrew.
+  So the raw pieces exist. But making them into a real Supabase-shaped stack needs a
+  hand-built `auth` schema (`auth.users`, an `auth.uid()` function, JWT-claim-to-`SET
+  ROLE` wiring matching PostgREST's actual verification behavior) — none of which exists
+  in a vanilla Postgres, all of which Supabase's real GoTrue+PostgREST stack provides
+  and this migration set assumes throughout (`auth.uid()` appears in nearly every RLS
+  policy in `supabase/migrations/`). A hand-rolled stub of that is exactly the kind of
+  thing that can subtly diverge from the real thing's behavior — and a test suite that
+  passes against a slightly-wrong auth simulation while the real project behaves
+  differently is a false PASS, which was explicit out-of-bounds for this pass.
+- `pg-mem` (an in-memory JS Postgres-emulator, considered as a lighter alternative) was
+  ruled out for the same reason: it doesn't implement real `CREATE POLICY`/RLS semantics
+  or several extensions/functions this schema's migrations use, so passing against it
+  wouldn't demonstrate anything about how the real policies behave — the same
+  false-confidence risk, from a different direction.
+- Wiring the *actual* Server Actions to a local stack (rather than testing hand-copied
+  SQL) would also mean overriding `NEXT_PUBLIC_SUPABASE_URL` per test run to point at a
+  local PostgREST instance, plus minting JWTs shaped exactly like Supabase's — each an
+  independent way for the harness to diverge from production behavior.
+
+**Conclusion**: reproducing enough of Supabase's platform to make this trustworthy is
+not "a small harness" — it's rebuilding a meaningful slice of what `supabase start`
+already does under Docker, in a way that risks false confidence if any piece drifts from
+the real thing, and it would need its own install step in CI (this project's CI
+currently needs zero external services or credentials — see `.github/workflows/ci.yml`'s
+own comment — and that property was deliberately verified, not assumed, when the
+workflow was added). Per this pass's own instruction to not write code when it can't be
+done cleanly: not built. What every pure-function test added across the last several
+passes already covers — the *app-layer* authorization decisions
+(`resolveConversationAccess`, `canRespondToConnectionRequest`,
+`canViewBasicProfile`/`canViewPortfolio`, `isAdminProfile`, `isMessageFromConversationPartner`,
+export filter scoping) — is real and regression-tested. What remains genuinely
+unverified by anything in this repository is whether the **RLS policies themselves**,
+on a live database, produce the same answer. That needs one of: a real Supabase project
+(`docs/browser-qa-checklist.md`), or Docker becoming available in a future environment so
+`supabase start` can run for real.
