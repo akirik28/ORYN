@@ -6,6 +6,12 @@ history, activities, projects, research, and goals; analyzes it into an honest p
 strengths and gaps; and tells them — specifically, not generically — what's worth doing
 next.
 
+> **Founder, picking this up?** Open **[docs/FOUNDER-START-HERE.md](./docs/FOUNDER-START-HERE.md)**
+> first. It's the single ordered path from "just got back" to "running end-to-end in a
+> browser" — 10 numbered actions, each with where to click, what to expect, and when to
+> stop. Everything still outstanding is a credential, a dashboard setting, or a product
+> decision; the code itself is green (lint, typecheck, tests, build, CI).
+
 It is deliberately not a CV builder, a university ranking site, an admissions calculator,
 or a chatbot bolted onto a dashboard. See `AGENTS.md` for the full product specification
 this was built against — the permanent, tooling-immune copy lives at

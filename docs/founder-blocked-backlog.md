@@ -7,6 +7,11 @@ this information; update here first, not in five places.
 
 Each item: **exact action**, **why it's blocking**, **what it depends on**.
 
+> Looking for *what to do first*, not *the full list*? **[FOUNDER-START-HERE.md](./FOUNDER-START-HERE.md)**
+> sequences the subset that actually gets the app running, in order, with expected results.
+> This file stays the complete inventory — including the optional and later-stage items
+> that ordered path deliberately leaves out.
+
 ---
 
 ## 1. Disable "Confirm email" (QA project)
