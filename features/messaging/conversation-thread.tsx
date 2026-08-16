@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { cn } from "@/lib/utils";
 import { sendMessage, markConversationRead, blockUser, unblockUser, reportMessage } from "@/app/(app)/messages/actions";
 import { resolveBlockUiState } from "@/lib/messaging/authorization";
-import { isMessageFromConversationPartner } from "@/lib/messaging/realtime";
+import { isMessageFromConversationPartner, newMessageChannelFilter, newMessageChannelName } from "@/lib/messaging/realtime";
 import { createClient } from "@/lib/supabase/client";
 import type { Message } from "@/types/database";
 
@@ -85,10 +85,10 @@ export function ConversationThread({
   useEffect(() => {
     const supabase = createClient();
     const channel = supabase
-      .channel(`messages:${currentUserId}:${otherUserId}`)
+      .channel(newMessageChannelName(currentUserId, otherUserId))
       .on<Message>(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages", filter: `recipient_id=eq.${currentUserId}` },
+        { event: "INSERT", schema: "public", table: "messages", filter: newMessageChannelFilter(currentUserId) },
         (payload) => {
           if (isMessageFromConversationPartner(payload.new.sender_id, otherUserId)) router.refresh();
         }

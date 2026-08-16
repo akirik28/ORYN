@@ -16,3 +16,21 @@
 export function isMessageFromConversationPartner(messageSenderId: string, otherUserId: string): boolean {
   return messageSenderId === otherUserId;
 }
+
+/**
+ * PostgREST realtime filter for "new messages addressed to me" — deliberately
+ * `recipient_id`, never `sender_id`. Flipping this would silently break the feature (the
+ * viewer would stop hearing about incoming messages and instead see their own outgoing
+ * sends echoed back), not leak anything RLS wouldn't already gate — but it's exactly the
+ * kind of single-word mistake that's easy to introduce in a later edit and easy to miss
+ * in review, so it's named and tested rather than left as an inline template string.
+ */
+export function newMessageChannelFilter(currentUserId: string): string {
+  return `recipient_id=eq.${currentUserId}`;
+}
+
+/** One channel per open conversation (both participants), so a user with several
+ * open threads across tabs/navigations doesn't collide on a shared channel name. */
+export function newMessageChannelName(currentUserId: string, otherUserId: string): string {
+  return `messages:${currentUserId}:${otherUserId}`;
+}
