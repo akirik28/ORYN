@@ -9,6 +9,7 @@ function researchExperience(overrides: Partial<ResearchExperience>): ResearchExp
     user_id: "u1",
     title: "Untitled research",
     organization: null,
+    organization_id: null,
     mentor_name: null,
     field: null,
     description: null,

@@ -9,6 +9,7 @@ function award(overrides: Partial<Award>): Award {
     user_id: "u1",
     title: "Some award",
     organization: null,
+    organization_id: null,
     level: null,
     description: null,
     award_date: null,

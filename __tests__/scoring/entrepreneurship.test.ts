@@ -9,6 +9,7 @@ function project(overrides: Partial<Project>): Project {
     user_id: "u1",
     title: "Side project",
     organization: null,
+    organization_id: null,
     description: null,
     role: "Contributor",
     start_date: "2024-09-01",

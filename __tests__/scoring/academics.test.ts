@@ -33,6 +33,7 @@ describe("scoreAcademics", () => {
             id: "1",
             user_id: "u1",
             school_name: "Lincoln High",
+            school_id: null,
             country: "US",
             stage: "high_school",
             curriculum: "ap",
