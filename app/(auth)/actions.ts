@@ -12,6 +12,7 @@ import {
 } from "@/lib/validation/auth";
 import { requireUser } from "@/lib/security/dal";
 import { env } from "@/lib/env";
+import { isSafeRedirectTarget } from "@/lib/security/safe-redirect";
 
 async function getOrigin() {
   const originHeader = (await headers()).get("origin");
@@ -76,7 +77,7 @@ export async function signIn(_prevState: AuthFormState, formData: FormData): Pro
   }
 
   const next = formData.get("next");
-  redirect(typeof next === "string" && next.startsWith("/") ? next : "/dashboard");
+  redirect(typeof next === "string" && isSafeRedirectTarget(next) ? next : "/dashboard");
 }
 
 export async function signOut() {
