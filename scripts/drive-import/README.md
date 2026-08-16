@@ -54,6 +54,37 @@ sufficiently confirmed, or a wrong level/mismatch — always excluded). See
    spot-check a handful of rows in the app (Universities explorer, Opportunities list)
    against the same official source URL the row cites.
 
+## Entity batch (Canonical Entity Autocomplete System, 2026-08-16)
+
+A second, separate pipeline for a different source: `10 ORYN Canonical App Data Pack —
+Verified 2026-08-15`, one large merged-tabs Google Sheet export (not the six
+per-category files above) covering canonical organizations (`PROV`), verified Turkish
+schools (`TRSCH`) with their explicit aliases (`ALIA`), globally QS-ranked universities
+(`GUNI`), and a small explicit opportunity-alias table (`ALIAS`). Do not use the
+`99_SUPERSEDED_...` copy of this sheet.
+
+1. `read_file_content` on the pack's file ID, save to
+   `raw/canonical_app_data_pack.json`.
+2. `python3 scripts/drive-import/parse_entities.py` — a different parser from
+   `parse.py` above (this export is one physical line per row, pipe-delimited
+   markdown-table format, not CSV-in-cells). Prints a row count per table; cross-check
+   against a manual skim of the source (58 TRSCH, 126 ALIA, 19 PROV, 98 GUNI, 16
+   "official-current" canonical opportunities, 7 opportunity aliases, as of this batch).
+3. `python3 scripts/drive-import/generate_entities_sql.py` —
+   `supabase/seed_entities_drive_batch1.sql`. Requires
+   `supabase/migrations/0038_canonical_institutions.sql` applied first.
+4. Read the generated file before applying it, same discipline as step 4 above. Update
+   `existing_universities.json`'s source (the `existing` list `main()` builds from
+   `supabase/seed.sql` + `seed_drive_batch1.sql`) first if either has grown since this
+   script was last run — otherwise a university that already exists gets re-inserted as
+   a duplicate row instead of alias-enriched (the unique index would reject it, not
+   silently duplicate, but it's still the wrong SQL to generate).
+
+Respects the corpus's own release/verification gates — see
+`generate_entities_sql.py`'s own module docstring for exactly what gets excluded and
+why (4 Turkish schools on `HOLD_*` release state, 2 of 7 opportunity aliases whose
+canonical opportunity isn't in the 16-row current set).
+
 ## Known limitations (batch 1, 2026-08-15)
 
 - `EXISTING_SEED_UNIS` is a hardcoded snapshot, not a live query — see the module

@@ -184,14 +184,25 @@ in a browser; `npm run lint`, `tsc --noEmit`, `vitest`, and `next build` all pas
 confirms the code is internally consistent, not that the live queries succeed.
 **Depends on**: the same permission grant as item 3.
 
-## 17. Apply migration 0038 + seed_institutions.sql (Canonical Entity Autocomplete System)
+## 17. Apply migration 0038 + seed_entities_drive_batch1.sql (Canonical Entity Autocomplete System)
 
 **Action**: apply `supabase/migrations/0038_canonical_institutions.sql` (new
 `institutions` table + RLS, `aliases text[]` added to `universities`/`opportunities`,
 nullable `*_id` linkage columns added to nine achievement/education tables — all
-additive, no drops), then `supabase/seed_institutions.sql` (one real, verified school
-row — Üsküdar American Academy, the founder's own school; see that file's own header for
-why it's not fabricated). Blocked by the same classifier gate as items 3 and 16.
+additive, no drops), then `supabase/seed_entities_drive_batch1.sql` — 19 verified
+organizations, 54 verified Turkish schools (of 58 in the source; 4 excluded because
+their own `release_state` is `HOLD_*`) with 126 source-verified aliases, 77 new
+universities + 3 alias-enrichments of already-seeded ones (of 98 QS-2027-ranked rows —
+21 already existed), and 5 opportunity aliases (of 7 — 2 excluded because their
+canonical opportunity isn't in the source's own 16-row "official-current" set). Sourced
+from the founder's Drive "10 ORYN Canonical App Data Pack — Verified 2026-08-15" (not
+the superseded copy) — see `docs/entity-canonicalization-audit.md`'s "Drive integration"
+section for the full accounting and `scripts/drive-import/README.md` for how to
+regenerate it. Supersedes an earlier single-row `seed_institutions.sql` from this same
+session (removed — this batch is a strict superset, and its Üsküdar American Academy
+aliases are the actual source-verified three, not the four this session originally
+guessed at before finding the real alias table). Blocked by the same classifier gate as
+items 3 and 16.
 **Blocks**: every canonical school/organization field this pass wired (education
 records' school, and every achievement type's organization/team field) — none of it has
 executed against a real database; `npm run entities:backfill-report` (also new this

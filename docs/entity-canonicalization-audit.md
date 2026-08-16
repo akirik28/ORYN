@@ -105,3 +105,54 @@ body, About) and are not touched.
   `profiles.school_id` itself is wired (see the first bullet above).
 - No live-DB backfill was run (see docs/founder-blocked-backlog.md item 17) — this
   environment has no applied migrations for this table at all yet.
+
+## Drive integration (2026-08-16)
+
+Connected the data layer above to the founder's verified Drive corpus — specifically
+`10 ORYN Canonical App Data Pack — Verified 2026-08-15` (not the
+`99_SUPERSEDED_...` copy), which turned out to contain five clean, structured,
+already-verified tables purpose-built for exactly this system: `PROV` (organizations),
+`TRSCH` (Turkish schools), `ALIA` (school aliases), `GUNI` (QS-2027-ranked
+universities), and a small `ALIAS` merge table (opportunity aliases). See
+`scripts/drive-import/parse_entities.py` + `generate_entities_sql.py` (a second pipeline
+alongside the pre-existing `parse.py`/`generate_sql.py`, documented in
+`scripts/drive-import/README.md`) and the resulting
+`supabase/seed_entities_drive_batch1.sql`.
+
+**Universities linked**: 21 of 98 GUNI rows matched an existing seeded university by
+normalized name — enriched with an explicit alias only (never re-inserted; the existing
+row's id stays the source of truth), 3 of those 21 carried a source-written
+parenthetical abbreviation ("... (MIT)") worth keeping as an alias. The remaining 77 are
+new rows.
+
+**Organizations created**: 19, all from `PROV` (`release_state = VERIFIED` on every
+row). Two carried their own parenthetical abbreviation in the provider name itself
+("Harvard-MIT Mathematics Tournament (HMMT)", "Mathematical Association of America
+(MAA)") — split into a proper alias rather than left baked into the display name.
+
+**Schools seeded**: 54 of 58 `TRSCH` rows. The remaining 4
+(TRSCH-0055–0058) were excluded outright — their own `release_state` starts with
+`HOLD_FULL_APP_RELEASE` / `HOLD_APP_RELEASE`, which this pass treats as "not yet safe to
+surface," not merely "unverified" (an unverified-but-listed row is still findable via
+search; a held one shouldn't be listed at all yet).
+
+**Aliases added**: 126 school aliases (100% of `ALIA`, all `verified = TRUE`) grouped
+onto their 54 included schools; 5 of 19 organizations/universities carried an
+explicit parenthetical abbreviation; 5 of 7 opportunity aliases (2 excluded — their
+`canonical_opportunity_id` isn't in the source's own 16-row "official-current" set,
+so treated the same as the school HOLD rows: the source itself hasn't cleared them).
+
+**Unresolved / not attempted**: the `GEVD`/`CEVD` evidence tables (136 + 115 rows) back
+individual *facts* about universities/schools (admissions policy, enrollment, deadlines)
+— out of scope for entity identity/alias linking specifically, not imported. The 16-row
+opportunity master's own rich fields (dates, cost, eligibility, requirements) were read
+only to resolve alias name-matching, not re-imported — that would duplicate
+`seed_drive_batch1.sql`'s existing, separate opportunity-import responsibility.
+
+**Rejected ambiguous matches**: none required a genuine identity judgment call this
+batch — every organization/school/alias came with an explicit, source-stated
+verification state, and the two "exclusions" above (HOLD schools, non-current
+opportunity aliases) were the source's own gate, not this pass inferring an ambiguity.
+No alias or organization identity was ever inferred from name similarity alone (spec
+section 5) — every alias/organization mapping traces to an explicit row in `ALIA`,
+`PROV`, or the opportunity `ALIAS` table.
