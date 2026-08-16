@@ -101,6 +101,19 @@ export const ACTIVITY_FIELDS: FieldConfig[] = [
   { type: "checkbox", name: "is_leadership_role", label: "This is a leadership role" },
   { type: "number", name: "people_led", label: "People led", span: "half" },
   { type: "text", name: "organization_scope", label: "Scope (e.g. school-wide, regional)", span: "half" },
+  // Optional link to the canonical opportunity/program catalog — e.g. an activity that
+  // IS Yale Young Global Scholars resolves via the "YYGS" alias. `opportunity_title` is
+  // a display-only field (resolved at read time by lib/profile/activity-opportunities.ts,
+  // stripped by ActivitySchema on save); `opportunity_id` is what persists. No custom
+  // fallback: the opportunity catalog is curated, not student-extendable.
+  {
+    type: "entity",
+    name: "opportunity_title",
+    entityIdField: "opportunity_id",
+    entityType: "opportunity",
+    label: "Oryn program/opportunity this matches (optional)",
+    placeholder: "e.g. YYGS",
+  },
   { type: "date", name: "start_date", label: "Start date", span: "half" },
   { type: "date", name: "end_date", label: "End date", span: "half" },
   { type: "checkbox", name: "ongoing", label: "Ongoing" },

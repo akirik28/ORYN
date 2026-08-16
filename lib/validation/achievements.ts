@@ -13,6 +13,10 @@ export const ActivitySchema = z.object({
   title: z.string().min(1, { error: "Title is required." }),
   organization: optionalText,
   organization_id: optionalEntityId,
+  /** Optional link to the canonical opportunity/program catalog (e.g. an activity that
+   * *is* Yale Young Global Scholars). Never required — the activity's own free-text
+   * title stays the primary record. */
+  opportunity_id: optionalEntityId,
   category: z.enum(["club", "sports", "student_government", "community_org", "summer_program", "academic_program", "competition_team", "other"]),
   description: optionalText,
   is_leadership_role: z.boolean(),

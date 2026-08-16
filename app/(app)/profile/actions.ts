@@ -34,7 +34,7 @@ import {
   type GoalFormInput,
   type SportsFormInput,
 } from "@/lib/validation/achievements";
-import { resolveInstitution } from "@/lib/entities/resolve";
+import { resolveInstitution, resolveOpportunity } from "@/lib/entities/resolve";
 import type { InstitutionCategory } from "@/types/database";
 
 type ActionResult = { error?: string };
@@ -42,25 +42,37 @@ type ZodLike<T> = { safeParse: (input: unknown) => { success: boolean; data?: T;
 
 /**
  * Canonical Entity Autocomplete System (spec section 16): every achievement/education
- * table with a `*_id` linkage column re-verifies that id against the institutions
- * registry server-side before it's ever persisted — never trusts the client's
- * autocomplete result blindly. A null id (the legacy/custom free-text path) skips this
- * entirely. `textField` is overwritten with the institution's CURRENT canonical name on
- * every write that links one, so the legacy column a linked row's every existing read
- * path already renders (portfolio, CV builder, exports, ...) always shows the canonical
- * name at the moment of selection (spec section 13) with zero changes to those read
- * paths.
+ * table with a `*_id` linkage column re-verifies that id server-side before it's ever
+ * persisted — never trusts the client's autocomplete result blindly. A null id (the
+ * legacy/custom free-text path) skips this entirely.
+ *
+ * An institution link also overwrites its `textField` with the registry's CURRENT
+ * canonical name on every write, so the legacy column a linked row's existing read paths
+ * already render (portfolio, CV builder, exports, ...) always shows the canonical name
+ * at the moment of selection (spec section 13) with zero changes to those read paths.
+ * An opportunity link has no such column — the catalog title is resolved for display at
+ * read time instead (see lib/profile/activity-opportunities.ts), so `textField` is null.
+ *
+ * A table can carry more than one link: `activities` has both an organization and an
+ * optional link to the canonical opportunity/program catalog it corresponds to.
  */
-const ENTITY_LINK_FIELDS: Record<string, { idField: string; textField: string; category: InstitutionCategory }> = {
-  education_records: { idField: "school_id", textField: "school_name", category: "school" },
-  work_experiences: { idField: "organization_id", textField: "organization", category: "organization" },
-  volunteering_experiences: { idField: "organization_id", textField: "organization", category: "organization" },
-  activities: { idField: "organization_id", textField: "organization", category: "organization" },
-  research_experiences: { idField: "organization_id", textField: "organization", category: "organization" },
-  awards: { idField: "organization_id", textField: "organization", category: "organization" },
-  certifications: { idField: "organization_id", textField: "organization", category: "organization" },
-  projects: { idField: "organization_id", textField: "organization", category: "organization" },
-  sports_experiences: { idField: "team_organization_id", textField: "team_name", category: "organization" },
+type EntityLink =
+  | { idField: string; textField: string; kind: "institution"; category: InstitutionCategory }
+  | { idField: string; textField: null; kind: "opportunity" };
+
+const ENTITY_LINK_FIELDS: Record<string, EntityLink[]> = {
+  education_records: [{ idField: "school_id", textField: "school_name", kind: "institution", category: "school" }],
+  work_experiences: [{ idField: "organization_id", textField: "organization", kind: "institution", category: "organization" }],
+  volunteering_experiences: [{ idField: "organization_id", textField: "organization", kind: "institution", category: "organization" }],
+  activities: [
+    { idField: "organization_id", textField: "organization", kind: "institution", category: "organization" },
+    { idField: "opportunity_id", textField: null, kind: "opportunity" },
+  ],
+  research_experiences: [{ idField: "organization_id", textField: "organization", kind: "institution", category: "organization" }],
+  awards: [{ idField: "organization_id", textField: "organization", kind: "institution", category: "organization" }],
+  certifications: [{ idField: "organization_id", textField: "organization", kind: "institution", category: "organization" }],
+  projects: [{ idField: "organization_id", textField: "organization", kind: "institution", category: "organization" }],
+  sports_experiences: [{ idField: "team_organization_id", textField: "team_name", kind: "institution", category: "organization" }],
 };
 
 async function resolveEntityLinkage<T extends Record<string, unknown>>(
@@ -68,17 +80,23 @@ async function resolveEntityLinkage<T extends Record<string, unknown>>(
   table: string,
   data: T
 ): Promise<{ data: T; error?: string }> {
-  const link = ENTITY_LINK_FIELDS[table];
-  if (!link) return { data };
+  const links = ENTITY_LINK_FIELDS[table];
+  if (!links) return { data };
 
-  const rawId = data[link.idField];
-  if (rawId === null || rawId === undefined) return { data };
-  if (typeof rawId !== "string") return { data, error: "Invalid entity reference." };
+  let next: Record<string, unknown> = data;
+  for (const link of links) {
+    const rawId = next[link.idField];
+    if (rawId === null || rawId === undefined) continue;
+    if (typeof rawId !== "string") return { data, error: "Invalid entity reference." };
 
-  const resolved = await resolveInstitution(supabase, rawId, link.category);
-  if (!resolved) return { data, error: "That entry couldn't be verified. Please search and select it again." };
+    const resolved =
+      link.kind === "institution" ? await resolveInstitution(supabase, rawId, link.category) : await resolveOpportunity(supabase, rawId);
+    if (!resolved) return { data, error: "That entry couldn't be verified. Please search and select it again." };
 
-  return { data: { ...data, [link.idField]: resolved.id, [link.textField]: resolved.canonicalName } };
+    next = { ...next, [link.idField]: resolved.id, ...(link.textField ? { [link.textField]: resolved.canonicalName } : {}) };
+  }
+
+  return { data: next as T };
 }
 
 async function afterWrite(userId: string) {

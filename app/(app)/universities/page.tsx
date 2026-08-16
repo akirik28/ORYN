@@ -5,6 +5,7 @@ import { UniversityExplorerHero } from "@/features/universities/university-explo
 import { UniversityCard } from "@/features/universities/university-card";
 import { SUPPORTED_COUNTRIES } from "@/lib/data/country-geo";
 import { regionById } from "@/lib/data/regions";
+import { rankUniversities } from "@/lib/universities/alias-search";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/oryn/page-header";
@@ -22,7 +23,17 @@ export default async function UniversitiesPage({
   const session = await requireUser();
   const supabase = await createClient();
 
-  let query = supabase.from("universities").select("*").order("name", { ascending: true }).limit(48);
+  // A text search fetches a wider candidate set and ranks it alias/accent-aware in TS
+  // (lib/universities/alias-search.ts) instead of relying on `ilike`, which could never
+  // match "MIT" -> Massachusetts Institute of Technology or "uskudar" -> "Üsküdar ...".
+  // Browsing without a query keeps the cheap, ordered, directly-limited path.
+  const RESULT_LIMIT = 48;
+  const SEARCH_CANDIDATE_LIMIT = 500;
+  let query = supabase
+    .from("universities")
+    .select("*")
+    .order("name", { ascending: true })
+    .limit(q ? SEARCH_CANDIDATE_LIMIT : RESULT_LIMIT);
   if (country) {
     query = query.eq("country", country);
   } else if (region) {
@@ -32,7 +43,6 @@ export default async function UniversitiesPage({
     // empty, rather than relying on that edge-case behavior.
     query = region.countries.length > 0 ? query.in("country", region.countries) : query.eq("country", "__no_countries_in_region__");
   }
-  if (q) query = query.ilike("name", `%${q}%`);
 
   const [universitiesRes, allCountriesRes, targetsRes] = await Promise.all([
     query,
@@ -46,7 +56,8 @@ export default async function UniversitiesPage({
   }));
 
   const savedIds = new Set((targetsRes.data ?? []).map((t) => t.university_id));
-  const universities = universitiesRes.data ?? [];
+  const fetchedUniversities = universitiesRes.data ?? [];
+  const universities = q ? rankUniversities(q, fetchedUniversities, RESULT_LIMIT) : fetchedUniversities;
 
   const scopeLabel = country ?? region?.name ?? null;
 

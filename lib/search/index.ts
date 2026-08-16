@@ -4,12 +4,16 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { createClient } from "@/lib/supabase/server";
 import { rankResults, toIlikePattern } from "./rank";
+import { rankUniversities } from "@/lib/universities/alias-search";
 import type { SearchResult } from "./types";
 
 type DB = SupabaseClient<Database>;
 
 const MIN_QUERY_LENGTH = 2;
 const PER_SOURCE_LIMIT = 5;
+/** Bounded candidate pool for the one source that ranks in TS rather than in SQL —
+ * see searchUniversities below. */
+const UNIVERSITY_CANDIDATE_LIMIT = 500;
 
 /** Supabase-js resolves a failed query to `{ data: null, error }` rather than rejecting —
  * every call site here used to destructure only `{ data }`, so a genuine backend failure
@@ -23,9 +27,13 @@ function unwrap<T>(result: { data: T[] | null; error: { message: string } | null
   return result.data ?? [];
 }
 
-async function searchUniversities(supabase: DB, pattern: string): Promise<SearchResult[]> {
-  const result = await supabase.from("universities").select("id, name, city, country").ilike("name", pattern).limit(8);
-  return unwrap(result).map((u) => ({
+/** Alias/accent-aware, unlike every other source here: universities are the one entity
+ * with a curated alias list, so "MIT" and "uskudar" have to resolve (an `ilike` pattern
+ * can do neither). Fetches a bounded candidate set and ranks it with the shared engine —
+ * same trade-off documented in lib/entities/search.ts. */
+async function searchUniversities(supabase: DB, term: string): Promise<SearchResult[]> {
+  const result = await supabase.from("universities").select("id, name, city, country, aliases").limit(UNIVERSITY_CANDIDATE_LIMIT);
+  return rankUniversities(term, unwrap(result), 8).map((u) => ({
     type: "university" as const,
     id: u.id,
     title: u.name,
@@ -142,7 +150,8 @@ export async function globalSearch(term: string, userId: string): Promise<Search
   const pattern = toIlikePattern(trimmed);
 
   const [universities, programs, opportunities, profileItems, goals, applications] = await Promise.all([
-    searchUniversities(supabase, pattern),
+    // Raw term, not the ilike pattern — this one ranks in TS (aliases/accents).
+    searchUniversities(supabase, trimmed),
     searchPrograms(supabase, pattern),
     searchOpportunities(supabase, pattern),
     searchProfileItems(supabase, userId, pattern),
