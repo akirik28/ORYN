@@ -8,7 +8,10 @@ import {
   MESSAGE_REPORTS_EXPORT_COLUMNS,
   messagesExportFilter,
   connectionsExportFilter,
+  recommendationsExportFilter,
   BLOCKED_USERS_EXPORT_OWN_BLOCKS_COLUMN,
+  SKILL_ENDORSEMENTS_EXPORT_OWN_COLUMN,
+  PROFILE_VIEWS_EXPORT_COLUMNS,
 } from "@/lib/export/tables";
 
 /** Full data export (Phase 12 minor-safe requirement) — every table the student's own
@@ -54,7 +57,7 @@ export async function GET() {
   // them here is the correct place to draw that line; narrowing the policy itself would
   // also block a future "see my report's status" UI feature that has no reason not to
   // exist.
-  const [messagesRes, connectionsRes, blockedRes, reportsRes] = await Promise.all([
+  const [messagesRes, connectionsRes, blockedRes, reportsRes, recommendationsRes, skillEndorsementsRes, profileViewsRes] = await Promise.all([
     supabase.from("messages").select("*").or(messagesExportFilter(userId)),
     supabase.from("connections").select("*").or(connectionsExportFilter(userId)),
     supabase.from("blocked_users").select("*").eq(BLOCKED_USERS_EXPORT_OWN_BLOCKS_COLUMN, userId),
@@ -62,6 +65,12 @@ export async function GET() {
       .from("message_reports")
       .select(MESSAGE_REPORTS_EXPORT_COLUMNS.join(", "))
       .eq("reporter_id", userId),
+    supabase.from("recommendations").select("*").or(recommendationsExportFilter(userId)),
+    supabase.from("skill_endorsements").select("*").eq(SKILL_ENDORSEMENTS_EXPORT_OWN_COLUMN, userId),
+    supabase
+      .from("profile_views")
+      .select(PROFILE_VIEWS_EXPORT_COLUMNS.join(", "))
+      .eq("viewed_user_id", userId),
   ]);
 
   const payload = {
@@ -74,6 +83,9 @@ export async function GET() {
       connections: connectionsRes.data ?? [],
       blocked_users: blockedRes.data ?? [],
       message_reports: reportsRes.data ?? [],
+      recommendations: recommendationsRes.data ?? [],
+      skill_endorsements: skillEndorsementsRes.data ?? [],
+      profile_views: profileViewsRes.data ?? [],
     },
   };
 

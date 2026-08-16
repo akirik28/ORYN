@@ -3,9 +3,12 @@ import {
   EXPORT_TABLES,
   EXPORT_PARTICIPANT_TABLES,
   MESSAGE_REPORTS_EXPORT_COLUMNS,
+  PROFILE_VIEWS_EXPORT_COLUMNS,
   messagesExportFilter,
   connectionsExportFilter,
+  recommendationsExportFilter,
   BLOCKED_USERS_EXPORT_OWN_BLOCKS_COLUMN,
+  SKILL_ENDORSEMENTS_EXPORT_OWN_COLUMN,
 } from "@/lib/export/tables";
 
 describe("data export table coverage", () => {
@@ -22,6 +25,12 @@ describe("data export table coverage", () => {
     "blocked_users",
     "message_reports",
     "notifications",
+    // Professional Profile pack (migrations 0033-0036).
+    "contact_info",
+    "featured_items",
+    "recommendations",
+    "skill_endorsements",
+    "profile_views",
   ])("includes %s", (table) => {
     expect(allTables.has(table)).toBe(true);
   });
@@ -75,5 +84,30 @@ describe("participant-pair export filters — scoped to the current user only", 
   test("blocked_users export uses the blocker direction, never the blocked direction", () => {
     expect(BLOCKED_USERS_EXPORT_OWN_BLOCKS_COLUMN).toBe("blocker_id");
     expect(BLOCKED_USERS_EXPORT_OWN_BLOCKS_COLUMN).not.toBe("blocked_id");
+  });
+
+  test("recommendations filter references only the caller's own id, both directions (author or recipient)", () => {
+    const filter = recommendationsExportFilter(me);
+    expect(filter).toBe(`author_id.eq.${me},recipient_id.eq.${me}`);
+    expect(filter).not.toContain(someoneElse);
+  });
+
+  test("skill_endorsements export uses the endorser (authorship) column", () => {
+    expect(SKILL_ENDORSEMENTS_EXPORT_OWN_COLUMN).toBe("endorser_id");
+  });
+});
+
+describe("PROFILE_VIEWS_EXPORT_COLUMNS — never exposes viewer identity", () => {
+  // Regression guard: profile_views' entire product commitment (spec: PROFILE VIEWS) is
+  // that a viewed user never learns who viewed them — that must hold in their own data
+  // export too, not just the UI.
+  test("never includes viewer_id", () => {
+    expect((PROFILE_VIEWS_EXPORT_COLUMNS as readonly string[]).includes("viewer_id")).toBe(false);
+  });
+
+  test("still includes enough to be meaningful", () => {
+    for (const column of ["id", "viewed_on", "created_at"]) {
+      expect((PROFILE_VIEWS_EXPORT_COLUMNS as readonly string[]).includes(column)).toBe(true);
+    }
   });
 });
