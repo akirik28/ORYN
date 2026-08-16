@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { RequirementInputSchema, StructuredRuleSchema } from "@/lib/validation/requirements";
 import { interpretRequirementText } from "@/lib/ai/interpret-requirement";
 import { categoryToRuleKind } from "@/lib/requirements/types";
+import { toFriendlyDbErrorMessage } from "@/lib/errors/friendly-db-error";
 import type { RequirementCategory } from "@/types/database";
 
 /**
@@ -52,7 +53,10 @@ export async function addUniversityRequirement(input: unknown): Promise<{ error?
     last_checked_at: new Date().toISOString(),
   });
 
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("[requirement-actions] failed to save requirement", { code: error.code, message: error.message });
+    return { error: toFriendlyDbErrorMessage("save") };
+  }
   revalidatePath(`/universities/${data.universityId}`);
   return {};
 }
@@ -61,7 +65,10 @@ export async function deleteUniversityRequirement(id: string, universityId: stri
   await requireAdmin();
   const admin = createAdminClient();
   const { error } = await admin.from("university_requirements").delete().eq("id", id);
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("[requirement-actions] failed to delete requirement", { code: error.code, message: error.message });
+    return { error: toFriendlyDbErrorMessage("delete") };
+  }
   revalidatePath(`/universities/${universityId}`);
   return {};
 }
