@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { MapPin, Users, DollarSign, GraduationCap, ExternalLink } from "lucide-react";
+import { SUBJECT_LABELS } from "@/lib/programs/subject-labels";
 import { requireUser, getCurrentProfile } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { refreshAdmissionOutlook } from "@/lib/admissions/persist";
@@ -13,7 +14,7 @@ import { SectionHeader } from "@/components/oryn/section-header";
 import { SaveUniversityButton } from "@/features/universities/save-university-button";
 import { RequirementEvaluationBadge } from "@/features/universities/requirement-evaluation-badge";
 import { AdminRequirementForm } from "@/features/universities/admin-requirement-form";
-import type { ProfileDimension, RequirementEvaluationStatus, UniversityRequirement } from "@/types/database";
+import type { ProfileDimension, RequirementEvaluationStatus, UniversityRequirement, UniversityProgram } from "@/types/database";
 
 export default async function UniversityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -130,16 +131,34 @@ export default async function UniversityDetailPage({ params }: { params: Promise
       ) : null}
 
       {programsRes.data && programsRes.data.length > 0 ? (
-        <section className="space-y-3">
-          <SectionHeader title="Programs" />
-          <ul className="grid gap-2 sm:grid-cols-2">
-            {programsRes.data.map((program) => (
-              <li key={program.id} className="rounded-lg border p-3 text-sm">
-                <p className="font-medium">{program.name}</p>
-                <p className="text-muted-foreground">{[program.degree_level, program.field].filter(Boolean).join(" · ")}</p>
-              </li>
-            ))}
-          </ul>
+        <section className="space-y-5">
+          <SectionHeader title="Programs" description="Degree programs Oryn has verified against this university's own official pages." />
+          {groupProgramsBySubject(programsRes.data).map(([subjectLabel, programs]) => (
+            <div key={subjectLabel} className="space-y-2">
+              <h3 className="text-sm font-medium text-muted-foreground">{subjectLabel}</h3>
+              <ul className="grid gap-2 sm:grid-cols-2">
+                {programs.map((program) => (
+                  <li key={program.id} className="space-y-1 rounded-lg border p-3 text-sm">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-medium">{program.name}</p>
+                      {program.official_program_url ? (
+                        <a
+                          href={program.official_program_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="shrink-0 text-muted-foreground hover:text-brand-primary"
+                          aria-label={`Official page for ${program.name}`}
+                        >
+                          <ExternalLink className="size-3.5" />
+                        </a>
+                      ) : null}
+                    </div>
+                    <p className="text-muted-foreground">{[program.degree_type ?? program.degree_level, program.faculty_or_school].filter(Boolean).join(" · ")}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </section>
       ) : null}
 
@@ -188,6 +207,23 @@ export default async function UniversityDetailPage({ params }: { params: Promise
       ) : null}
     </div>
   );
+}
+
+/** Groups verified programs by subject for the detail page, ordered by group size
+ * (largest first) so a student sees the university's clearest strengths first.
+ * "Other programs" (unclassified names) always sorts last regardless of size. */
+function groupProgramsBySubject(programs: UniversityProgram[]): [string, UniversityProgram[]][] {
+  const bySubject = new Map<string, UniversityProgram[]>();
+  for (const program of programs) {
+    const label = SUBJECT_LABELS[program.subject_taxonomy ?? "other"];
+    bySubject.set(label, [...(bySubject.get(label) ?? []), program]);
+  }
+  const otherLabel = SUBJECT_LABELS.other;
+  return [...bySubject.entries()].sort(([labelA, itemsA], [labelB, itemsB]) => {
+    if (labelA === otherLabel) return 1;
+    if (labelB === otherLabel) return -1;
+    return itemsB.length - itemsA.length;
+  });
 }
 
 function StatCard({ icon: Icon, label, value }: { icon: typeof Users; label: string; value: string }) {

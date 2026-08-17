@@ -15,7 +15,9 @@
     "entities:backfill-report": "tsx scripts/entities-backfill-report.ts",
     "entities:audit": "tsx scripts/entities-audit.ts",
     "enrich:student-counts": "tsx scripts/enrich-student-counts.ts",
-    "report:universities": "tsx scripts/university-data-report.ts"
+    "report:universities": "tsx scripts/university-data-report.ts",
+    "ingest:university-programs": "tsx scripts/ingest-university-programs.ts",
+    "report:programs": "tsx scripts/university-programs-report.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",
