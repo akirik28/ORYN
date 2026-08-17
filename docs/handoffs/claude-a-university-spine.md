@@ -459,9 +459,16 @@ independently re-investigated as a third thing, just noted as probably-overlappi
   rank, which is exactly what "same real institution" predicts). **The 9th was new**: KFUPM,
   rank_display `"63"` with no tie marker on both sides (a genuine QS tie would read `"=63"`)
   — see the Phase 2 table above, now merged.
-- **Bocconi University is the one university (1/1010) with no QS 2027 row at all.** Not
-  investigated further this session (a single missing row, not a pattern) — plausibly a
-  genuine QS category-eligibility gap rather than a data bug, but not confirmed either way.
+- **Bocconi University is the one university (1/1010) with no QS ranking row at all, in any
+  provider/edition.** **Confirmed this session, not just plausible**: QS's own published
+  methodology excludes single-discipline institutions from its overall World University
+  Rankings (Bocconi is Economics/Management/Law-only) — Bocconi ranks #9 in QS's separate
+  Business & Management subject ranking instead, a different product from the one this table
+  tracks. Genuine category exclusion, not a data-acquisition gap. Nothing to fabricate; no fix
+  needed in the acquisition pipeline. Surfaced properly in the UI instead — the university
+  detail page now shows QS rank (it previously showed none at all, for any university — see
+  the ranking-display commit), and correctly renders nothing for a university with zero
+  ranking rows rather than a misleading blank/broken state.
 
 ## Phase 7 — external IDs: mostly closed by this session's re-acquisition
 
@@ -476,28 +483,74 @@ whether the same external id is ever mapped to two different *live* (non-merged)
 university entities registry-wide, beyond what the import pipeline's own resolver refuses to
 act on. Confirmed clean as of the last run of this session.
 
+## Phase 9 — `university_profile_metrics` schema review: flexible store stays, no new typed columns
+
+Reviewed with real data now in hand (612 rows, up from near-zero): 320 `total_students`, 128
+each `undergraduate_students`/`postgraduate_students` (new this session), 30
+`research_topics_top5`, and 6 one-off scope-variant rows — `full_time_equivalent_students` (2),
+`students_australian_campuses`, `system_total_students`, `phd_fellows_enrolled`,
+`taught_degree_students` (1 each).
+
+**Decision: no new typed columns on `universities`.** Reasoning:
+
+- Every row carries real provenance (`source_url`, `source_type`, `verified_at`,
+  `data_quality_flag`, `stats_as_of`, `scope`, `notes`) that a typed column has nowhere to put
+  without either dropping it or adding a parallel `_source_url`/`_verified_at` column per
+  metric — exactly the "hundreds of nullable columns" anti-pattern AGENTS.md Phase 35 already
+  rules out for this table.
+- The 6 one-off scope-variant rows are the clearest argument *for* keeping the flexible store,
+  not against it: `students_australian_campuses` and `system_total_students` are exactly the
+  HEADCOUNT/FTE/CAMPUS/SYSTEM conflation the founder's brief said never to collapse into one
+  column, and a fixed schema has no honest place to put a value that is real but
+  differently-scoped from the primary metric. The flexible store kept them distinct instead of
+  either discarding them or silently blending them into `total_students` — working exactly as
+  designed.
+- `research_topics_top5` isn't a scalar at all (a top-5 list), which doesn't fit a single typed
+  column regardless of volume.
+- `undergraduate_students`/`postgraduate_students` are real and now well-populated, but
+  US-only so far (128/1010, ~13% of the spine) and not yet read by any UI — promoting to a
+  typed column now would mean a mostly-null column speculatively added ahead of both broader
+  geographic coverage and an actual UI consumer.
+- The one existing exception, `universities.student_size` mirroring `total_students`
+  (`fill_if_null`, so a differently-sourced or human-set value is never overwritten), stays the
+  right narrow carve-out: it's the single figure read on every Explorer card and the detail
+  page, worth a cheap denormalized read; nothing else here clears that bar yet. **Verified
+  exact and current**: 320/320 `total_students` rows have a matching non-null
+  `universities.student_size` — the sync has no gap.
+
+No code change from this review — the existing design was already correct; this closes the
+open question rather than leaving it queued indefinitely. Revisit if/when `undergraduate_students`/
+`postgraduate_students` cross a majority-of-spine coverage threshold AND a UI actually wants to
+read them directly (the same two conditions that justified `student_size`).
+
 ## Next (queued, not yet started)
 
 1. Duplicate-id cross-registry check (see Phase 7 above) — a standalone query, not yet run.
-2. Phase 9 — `university_profile_metrics` schema review (which of the still-missing
-   population metrics deserve a typed column vs staying in the flexible metric store).
-3. Phase 11 — confirm the API/query layer actually exposes what's been acquired this session
-   (admissions_url, the corrected verification states, refreshed external ids, the new
-   undergraduate/postgraduate student counts) to the University Explorer UI — not yet checked.
-4. Phase 6 — OpenAlex retry once its budget resets (retryAfter window from the last 429 hadn't
+2. Phase 11 — UI data-readiness audit, partially done: QS ranking display was missing from
+   the university detail page entirely (only the Explorer card showed it) and is now fixed —
+   see the ranking-display commit. Still not checked: whether `admissions_url`/
+   `application_system` and the new undergraduate/postgraduate student counts render anywhere
+   a student would actually see them, and whether the audit generalizes across world regions
+   (only spot-checked via Bocconi/Italy so far, not a systematic multi-region pass).
+3. Phase 6 — OpenAlex retry once its budget resets (retryAfter window from the last 429 hadn't
    elapsed as of this pass; circuit breaker means a retry costs 3 requests to confirm, not
    another wasted full run).
-5. Resume `acquire:admissions` once the Tavily plan-limit blocker (see "Current state") is
+4. Resume `acquire:admissions` once the Tavily plan-limit blocker (see "Current state") is
    resolved — 413 universities still missing `admissions_url`. Not a code blocker.
-6. Student counts beyond the US: Germany (37 QS universities missing `total_students`),
+5. Student counts beyond the US: Germany (37 QS universities missing `total_students`),
    India (33), Italy (31), Spain (27) — investigate each country's own statistics-office bulk
    dataset the same way College Scorecard was verified (live `curl`, spot-check known figures,
    confirm headcount/FTE/institution/system scope before trusting it). UK/HESA investigated
    and is a genuine dead end (Cloudflare-protected) — don't re-attempt it the same way.
-7. Migration 0043 + the 5 read-path filters (see Phase 2 above) — founder/DDL-access blocked,
+6. Migration 0043 + the 5 read-path filters (see Phase 2 above) — founder/DDL-access blocked,
    not code-blocked.
-8. Bocconi University's missing QS 2027 row (see Phase 5 above) — still just the one flagged
-   row, not yet investigated further.
-9. The ~203-row external-ID-unresolved bucket (Phase 7) — currently one undifferentiated
-   pile (192 ambiguous/no exact match, 5 country mismatch, 2 no ROR hit, 4 other); worth
-   splitting into evidence-backed sub-buckets rather than leaving it as one generic count.
+7. The ~200-row external-ID-unresolved bucket (Phase 7) — a fresh full-spine
+   `acquire:universities --from-db` re-run was started this pass specifically to get a
+   *current* evidence-classified breakdown (the DB has changed materially since the original
+   203-count: 9 new institutions, merges, etc.) rather than trust a stale number. Check
+   whether it finished and what the new per-reason breakdown looks like before doing anything
+   else with it — the script already buckets by reason (no ROR hit / country mismatch /
+   ambiguous exact-name collision / no exact match among candidates), this is about acting on
+   the current numbers, not building new classification logic.
+
+~~Bocconi University's missing QS 2027 row~~ — **done this pass**, see Phase 5.
