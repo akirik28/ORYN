@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { assembleScoringFacts } from "@/lib/scoring/assemble-facts";
 import { computeCareerProfile } from "@/lib/scoring";
 import { getUpcomingDeadlines } from "@/lib/deadlines/upcoming";
+import { canonicalUniversityId } from "@/lib/universities/canonical";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 
@@ -71,7 +72,8 @@ async function getPendingApplicationRequirements(
 
   const targetIds = [...new Set([...targetIdByApplication.values()])];
   const { data: targets } = targetIds.length > 0 ? await supabase.from("target_universities").select("id, university_id").in("id", targetIds) : { data: [] };
-  const universityIdByTarget = new Map((targets ?? []).map((t) => [t.id, t.university_id]));
+  // Canonicalized — see lib/universities/canonical.ts.
+  const universityIdByTarget = new Map((targets ?? []).map((t) => [t.id, canonicalUniversityId(t.university_id)]));
 
   const universityIds = [...new Set([...universityIdByTarget.values()])];
   const { data: universities } =
@@ -87,6 +89,31 @@ async function getPendingApplicationRequirements(
 }
 
 /**
+ * Target universities for the advisor prompt — batch-fetch-and-zip (same convention as
+ * getPendingApplicationRequirements above), not the nested `universities(name)` embed this
+ * used before: an embed returns whatever row Postgres's FK actually points at, with no way to
+ * post-process it through canonicalUniversityId() — a target referencing a known-duplicate
+ * loser row would silently hand the advisor the loser's name. See lib/universities/canonical.ts.
+ */
+async function getTargetUniversitiesForContext(
+  supabase: SupabaseClient<Database>,
+  userId: string
+): Promise<{ name: string; status: string; outlook: string | null }[]> {
+  const { data: targets } = await supabase.from("target_universities").select("status, outlook, university_id").eq("user_id", userId);
+  if (!targets || targets.length === 0) return [];
+
+  const universityIds = [...new Set(targets.map((t) => canonicalUniversityId(t.university_id)))];
+  const { data: universities } = await supabase.from("universities").select("id, name").in("id", universityIds);
+  const universityNameById = new Map((universities ?? []).map((u) => [u.id, u.name]));
+
+  return targets.map((t) => ({
+    name: universityNameById.get(canonicalUniversityId(t.university_id)) ?? "Unknown",
+    status: t.status,
+    outlook: t.outlook,
+  }));
+}
+
+/**
  * Compact, structured context for the AI Advisor and weekly-plan generator (spec 8.1) —
  * deliberately NOT the whole database. Reuses assembleScoringFacts so this and the
  * scoring engine never drift out of sync on what "the student's data" means.
@@ -96,16 +123,13 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
   const facts = await assembleScoringFacts(supabase, userId);
   const { dimensions, overallScore } = computeCareerProfile(facts);
 
-  const [profileRes, targetUnisRes, upcomingDeadlines, recentRecsRes, recentActionsRes, pendingApplicationRequirements, sportsRes] = await Promise.all([
+  const [profileRes, targetUniversities, upcomingDeadlines, recentRecsRes, recentActionsRes, pendingApplicationRequirements, sportsRes] = await Promise.all([
     supabase
       .from("profiles")
       .select("display_name, country, school_name, graduation_year, curriculum, weekly_time_budget, busy_mode, busy_mode_until, completeness_percent")
       .eq("id", userId)
       .single(),
-    supabase
-      .from("target_universities")
-      .select("status, outlook, universities(name)")
-      .eq("user_id", userId),
+    getTargetUniversitiesForContext(supabase, userId),
     // Reuses the same cross-source Deadline Engine the dashboard's "Due soon" widget and
     // the deadline-reminder job use (lib/deadlines/upcoming.ts) — this used to be a bespoke
     // applications-only query here, so the advisor's view of "what's due" was narrower than
@@ -184,13 +208,7 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
       ongoing: s.ongoing,
       achievements: s.achievements,
     })),
-    // Supabase's typed client can't express nested-relation shapes from our hand-authored
-    // Database type (no Relationships metadata) — these two are read-only display strings.
-    targetUniversities: ((targetUnisRes.data ?? []) as unknown as Array<{ status: string; outlook: string | null; universities: { name: string } | null }>).map((t) => ({
-      name: t.universities?.name ?? "Unknown",
-      status: t.status,
-      outlook: t.outlook,
-    })),
+    targetUniversities,
     upcomingDeadlines: upcomingDeadlines.map((d) => ({ title: d.title, date: d.date, source: d.source })),
     recentRecommendationTitles: (recentRecsRes.data ?? []).map((r) => r.title),
     recentActionOutcomes: (recentActionsRes.data ?? []).map((a) => ({

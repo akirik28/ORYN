@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { MapPin, Users, DollarSign, GraduationCap, ExternalLink, Trophy } from "lucide-react";
 import { requireUser, getCurrentProfile } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
@@ -13,12 +13,22 @@ import { SectionHeader } from "@/components/oryn/section-header";
 import { SaveUniversityButton } from "@/features/universities/save-university-button";
 import { RequirementEvaluationBadge } from "@/features/universities/requirement-evaluation-badge";
 import { AdminRequirementForm } from "@/features/universities/admin-requirement-form";
+import { canonicalUniversityId, isSupersededUniversityId } from "@/lib/universities/canonical";
 import type { ProfileDimension, RequirementEvaluationStatus, UniversityRequirement } from "@/types/database";
 
 export default async function UniversityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await requireUser();
   const supabase = await createClient();
+
+  // A loser row still has a real, working detail page (it must — programs/requirements/FKs on
+  // one side of a pair are exactly why the row can't just be deleted), but no surface should
+  // let a student land on it as if it were the canonical result: redirect to the winner instead
+  // of rendering. Catches every path here, not just the now-fixed browse/search — an old
+  // bookmark, a program search result, a saved deep link. See lib/universities/canonical.ts.
+  if (isSupersededUniversityId(id)) {
+    redirect(`/universities/${canonicalUniversityId(id)}`);
+  }
 
   const { data: university } = await supabase.from("universities").select("*").eq("id", id).single();
   if (!university) notFound();

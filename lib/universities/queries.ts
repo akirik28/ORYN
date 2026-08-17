@@ -2,6 +2,7 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, TargetUniversity, University } from "@/types/database";
+import { canonicalUniversityId } from "@/lib/universities/canonical";
 
 export interface TargetUniversityWithDetails extends TargetUniversity {
   university: University | null;
@@ -29,9 +30,12 @@ export async function getTargetUniversitiesWithDetails(
 
   if (!targets || targets.length === 0) return [];
 
-  const universityIds = [...new Set(targets.map((t) => t.university_id))];
+  // Resolved through the canonical winner — self-heals a target that references a known-
+  // duplicate loser row (from before the write-path fix existed) at read time instead of
+  // permanently showing the dashboard a stale duplicate. See lib/universities/canonical.ts.
+  const universityIds = [...new Set(targets.map((t) => canonicalUniversityId(t.university_id)))];
   const { data: universities } = await supabase.from("universities").select("*").in("id", universityIds);
   const universityById = new Map((universities ?? []).map((u) => [u.id, u]));
 
-  return targets.map((target) => ({ ...target, university: universityById.get(target.university_id) ?? null }));
+  return targets.map((target) => ({ ...target, university: universityById.get(canonicalUniversityId(target.university_id)) ?? null }));
 }

@@ -6,6 +6,7 @@ import { isUuidLike } from "@/lib/validation/uuid";
 import { ENTITY_SCOPES, type CanonicalEntityType, type EntityScope } from "./field-policy";
 import { findPossibleDuplicates, type EntityCandidate } from "./rank";
 import { validateCustomEntityInput } from "./validation";
+import { canonicalUniversityId } from "@/lib/universities/canonical";
 
 export interface ResolvedEntity {
   id: string;
@@ -47,7 +48,11 @@ export async function resolveCanonicalEntity(
 
 export async function resolveUniversity(supabase: SupabaseClient<Database>, id: string): Promise<ResolvedEntity | null> {
   if (!isUuidLike(id)) return null;
-  const { data } = await supabase.from("universities").select("id, name").eq("id", id).maybeSingle();
+  // A client-submitted id could be a known-duplicate loser row (an old bookmark, a stale
+  // client-side cache) — resolve to the canonical winner before the lookup, same defense as
+  // addTargetUniversity, so a loser id can never end up denormalized into a profile field
+  // even via this path. See lib/universities/canonical.ts.
+  const { data } = await supabase.from("universities").select("id, name").eq("id", canonicalUniversityId(id)).maybeSingle();
   if (!data) return null;
   return { id: data.id, canonicalName: data.name };
 }

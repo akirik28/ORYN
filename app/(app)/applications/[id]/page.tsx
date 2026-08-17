@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { computeReadiness } from "@/lib/applications/readiness";
+import { canonicalUniversityId } from "@/lib/universities/canonical";
 import { RequirementChecklist } from "@/features/applications/requirement-checklist";
 import { ApplicationStatusControl } from "@/features/applications/status-control";
 import { PageHeader } from "@/components/oryn/page-header";
@@ -21,7 +22,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
   ]);
 
   const { data: university } = targetRes.data
-    ? await supabase.from("universities").select("name").eq("id", targetRes.data.university_id).single()
+    ? await supabase.from("universities").select("name").eq("id", canonicalUniversityId(targetRes.data.university_id)).single()
     : { data: null };
 
   const requirements = requirementsRes.data ?? [];
