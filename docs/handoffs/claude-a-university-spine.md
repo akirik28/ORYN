@@ -15,14 +15,23 @@ current state, not as a session log.
 - Branch: `oryn/university-intelligence-spine`, pushed to origin, tracking. Base: `main` @
   `b92c72f` (the tip when the first session started; contains the Phase 2 verified-acquisition
   architecture and the live full-spine run from the prior session).
-- Latest commit on this branch: `694caa1`. This is a continuation session (session 2) picking
+- Latest commit on this branch: `3397186`. This is a continuation session (session 2) picking
   up after the first session's own "session complete" checkpoint — see git log for the full
-  first-session commit list; this session's own commits in order: `eca81c8` (admissions
-  apply-loop crash fix + `--apply-from` resume path), `694caa1` (US student-count enrichment
-  via College Scorecard bulk file). A "strategic expansion" batch (9 institutions from Claude
-  B's missing-university handoff + the École Polytechnique/Institut Polytechnique de Paris
-  identity ambiguity) also landed this session, before this doc update — see git log for that
-  commit and `docs/handoffs/claude-a-to-claude-b.md` for the full per-institution dossier.
+  first-session commit list; this session's own commits in order: strategic-expansion batch (9
+  institutions from Claude B's missing-university handoff + the École Polytechnique/Institut
+  Polytechnique de Paris identity ambiguity — see `docs/handoffs/claude-a-to-claude-b.md` for
+  the full per-institution dossier), `eca81c8` (admissions apply-loop crash fix + `--apply-from`
+  resume path), `694caa1` (US student-count enrichment via College Scorecard bulk file),
+  `17a52c5` (ranking display added to the university detail page), `a24f368` (Phase 9 schema
+  decision + Bocconi confirmed), `0e60f4b` (health gate extended to 9 checks), `3397186`
+  (application_system taxonomy +8 systems).
+  **Closed the loop with Claude B**: their branch (`oryn/programs-pipeline-reconciled`, now at
+  `ca20671`) confirms the strategic-expansion batch was received and consumed successfully —
+  `universities` 1010 → 1019 matched exactly, École Polytechnique resolved as its own row per
+  the recommendation above, and 30/32 of their previously-blocked program candidates are now
+  ingested (the other 2 are a genuine page-retrieval issue on their side, not a registry
+  problem). See their `docs/handoffs/claude-b-to-claude-a.md` (on their branch) for the
+  "RESOLVED" confirmation banner they added. Nothing further needed from this side.
 - `SUPABASE_SECRET_KEY` is live and working this session (`check:integrations`: Supabase +
   secret key OK). **No Supabase MCP and no linked CLI/direct-Postgres access in this session**
   — DDL (migrations) cannot be applied by me; only PostgREST reads/writes and existing RPCs
