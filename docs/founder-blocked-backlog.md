@@ -305,6 +305,35 @@ consent is designed, not retrofitted.
 **Blocks**: Phase 18 outcome-based benchmarking, and any peer comparison grounded in real
 decisions rather than profile scores.
 
+## 25. Merge eight confirmed duplicate university identities
+
+**Action**: for each pair below, decide which row is canonical, then merge with
+`merge_canonical_entities(source, target, reason)` — or, if they are genuinely different
+institutions, give them distinguishing city/country values.
+
+| Institution | Evidence they are one institution |
+|---|---|
+| University of Warwick / **The** University of Warwick | Both resolve to `ror.org/01a77tt86`. The second records its city as "England", which is not a city. |
+| University College London / UCL | Both resolve to `ror.org/02jx3x895`. |
+| Massachusetts Institute of Technology ×2 | Two rows match the same name in the US. |
+| London School of Economics and Political Science ×2 | Two rows, same name, UK. |
+| Hong Kong University of Science and Technology ×2 | Two rows, same name, Hong Kong SAR. |
+| King Fahd University of Petroleum and Minerals ×2 | Previously known (see item 19). |
+| University of Newcastle, Australia ×2 | Two rows, same name, Australia. |
+| University of Technology Sydney ×2 | Two rows, same name, Australia. |
+
+**Why it's blocked**: merging real entities is a human decision, and this repo's own rule
+forbids fuzzy-auto-merging universities. Each pair needs one person to confirm against an
+official source and pick the surviving row. Note that each duplicate carries its **own**
+`canonical_entity_id`, so the canonical registry is duplicated too — a merge has to resolve
+both layers.
+**Blocks**: enrichment of these specific institutions. The acquisition pipeline now detects the
+collision and withholds **both** rows as UNRESOLVED rather than writing facts to each, because
+writing to both would double one institution's data across two identities and make the
+duplication harder to see. So this costs coverage on 16 rows until resolved, and nothing else.
+**Depends on**: nothing — a person with an official source can clear it. Related: item 19's 43
+lower-confidence pairs.
+
 ---
 
 ## Environment-capability gap (not founder-blocked, noted for completeness)

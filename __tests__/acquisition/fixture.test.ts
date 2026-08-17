@@ -105,6 +105,29 @@ describe("validateFixture", () => {
     expect(validateFixture(mismatched, NOW).warnings.join(" ")).toContain("registry");
   });
 
+  test("rejects out-of-range coordinates", () => {
+    const badLat = validateFixture(fixture([fact({ field: "latitude", value: 95, factClass: "identity", scope: "institution_geonames_locality" })]), NOW);
+    expect(badLat.errors.join(" ")).toContain("outside the valid ±90");
+    const badLng = validateFixture(fixture([fact({ field: "longitude", value: -200, factClass: "identity", scope: "institution_geonames_locality" })]), NOW);
+    expect(badLng.errors.join(" ")).toContain("outside the valid ±180");
+  });
+
+  test("accepts coordinates inside range", () => {
+    const ok = validateFixture(
+      fixture([
+        fact({ field: "latitude", value: 41.01384, scope: "institution_geonames_locality" }),
+        fact({ field: "longitude", value: 28.94966, scope: "institution_geonames_locality" }),
+      ]),
+      NOW
+    );
+    expect(ok.errors).toEqual([]);
+  });
+
+  test("rejects a non-https source URL", () => {
+    const result = validateFixture(fixture([fact({ sourceUrl: "http://ror.org/01nrxwf90" })]), NOW);
+    expect(result.errors.join(" ")).toContain("not https");
+  });
+
   test("returns structured errors instead of throwing on completely malformed input", () => {
     const result = validateFixture({ nope: true }, NOW);
     expect(result.ok).toBe(false);

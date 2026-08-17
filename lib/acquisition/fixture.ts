@@ -189,6 +189,20 @@ export function validateFixture(raw: unknown, now: Date = new Date()): FixtureVa
       if (Date.parse(fact.retrievedAt) > now.getTime() + 60_000) {
         errors.push(`${uni.declaredName}/${fact.field}: retrievedAt is in the future.`);
       }
+
+      // Coordinates are the one numeric field where an out-of-range value is silently
+      // plausible — a swapped lat/lng pair still renders, just in the wrong hemisphere — so
+      // the range is checked rather than trusted.
+      if (fact.field === "latitude" || fact.field === "longitude") {
+        const limit = fact.field === "latitude" ? 90 : 180;
+        if (typeof fact.value !== "number" || !Number.isFinite(fact.value) || Math.abs(fact.value) > limit) {
+          errors.push(`${uni.declaredName}/${fact.field}: ${String(fact.value)} is outside the valid ±${limit} range.`);
+        }
+      }
+
+      if (!/^https:\/\//.test(fact.sourceUrl)) {
+        errors.push(`${uni.declaredName}/${fact.field}: source URL is not https (${fact.sourceUrl}).`);
+      }
     }
   }
 

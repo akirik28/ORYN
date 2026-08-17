@@ -16,7 +16,14 @@ tests (578/578 passing). Engineering detail:
 [verified-data-acquisition.md](./verified-data-acquisition.md). Founder-facing record: Drive doc
 **"ORYN — Verified Data Acquisition: Architecture, Pilot & Coverage"**
 (`1_fR35JLJhi3iZIQd3WPstON000iutnICGSRgYmExm40`). Nothing was written to the database — the
-import path is implemented and gated on `SUPABASE_SECRET_KEY`, which is still empty.
+import path is implemented and gated on `SUPABASE_SECRET_KEY`.
+
+**Correction (same day)**: credentials arrived and the pipeline ran live. A mid-session claim
+that the spine is "1000, not 1010" was **wrong** — it came from PostgREST silently truncating
+unpaginated reads at 1000 rows with a 200 status. The live spine is **1010**, exactly as the
+canonical Drive report always said. Fixed in `lib/acquisition/paginate.ts`, which asserts every
+complete read against the server's exact count. Treat any 1000-based figure from that window as
+truncated.
 
 **Update — 2026-08-16, founder away**: four further autonomous passes landed after this
 file was written — CI, moderation, realtime messaging, rate limiting, an open-redirect

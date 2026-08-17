@@ -35,6 +35,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { searchRorByName, type RorRecord } from "../lib/acquisition/ror";
 import { countryFromIso2, nameKey, sameCountry } from "../lib/acquisition/normalize";
 import { sourceAuthority } from "../lib/acquisition/source-authority";
+import { fetchAllRowsVerified } from "../lib/acquisition/paginate";
 import { CADENCE_DAYS, resolveVerificationState } from "../lib/acquisition/verification";
 import type { AcquiredFact, AcquisitionFixture, AcquiredUniversity } from "../lib/acquisition/fixture";
 
@@ -47,6 +48,20 @@ try {
 }
 
 const USER_AGENT = "ORYN-data-acquisition/1.0 (+https://github.com/akirik28/ORYN)";
+
+/**
+ * Per-provider outcome tally.
+ *
+ * A provider that starts failing must never be silently absent from the output. A full-spine
+ * run once produced zero `research_topics_top5` facts because OpenAlex was returning HTTP 429
+ * for every request, and nothing in the run said so — the field simply vanished from the
+ * summary, which reads identically to "this source has nothing for these institutions".
+ * Missing data and a broken source are different facts and are now reported differently.
+ */
+const sourceOutcomes: Record<string, { ok: number; rateLimited: number; failed: number }> = {
+  ror: { ok: 0, rateLimited: 0, failed: 0 },
+  openalex: { ok: 0, rateLimited: 0, failed: 0 },
+};
 const DEFAULT_OUT = "supabase/fixtures/university-identity-pilot.json";
 
 /**
@@ -108,7 +123,22 @@ interface OpenAlexInstitution {
 async function fetchOpenAlexByRor(rorId: string): Promise<OpenAlexInstitution | null> {
   const url = `https://api.openalex.org/institutions/${encodeURIComponent(rorId)}?mailto=oryn-data@oryn.app`;
   const response = await fetch(url, { headers: { "User-Agent": USER_AGENT } }).catch(() => null);
-  if (!response || !response.ok) return null;
+  if (!response) {
+    sourceOutcomes.openalex.failed += 1;
+    return null;
+  }
+  if (response.status === 429) {
+    // Being rate limited is a fact about the run, not about the institution. Slow down so a
+    // transient limit does not silently erase a whole field from the output.
+    sourceOutcomes.openalex.rateLimited += 1;
+    await sleep(2000);
+    return null;
+  }
+  if (!response.ok) {
+    sourceOutcomes.openalex.failed += 1;
+    return null;
+  }
+  sourceOutcomes.openalex.ok += 1;
   const body = (await response.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body) return null;
 
@@ -218,6 +248,33 @@ function factsFor(ror: RorRecord, openAlex: OpenAlexInstitution | null, retrieve
     });
   }
 
+  if (ror.latitude !== null && ror.longitude !== null) {
+    // Coordinates were 0/1000 in the live report while features/universities/world-map-explorer.tsx
+    // already exists — so the map has been rendering against nothing. ROR carries geonames
+    // lat/lng on every located record, which closes that in the same pass.
+    //
+    // fill_if_null, and note the honest limitation: these are the coordinates of the
+    // geonames *locality* ROR assigns, not a surveyed campus centroid. Good enough to place a
+    // pin on a world map, not good enough to overwrite a value someone measured per campus.
+    const geoNote = `geonames locality "${ror.city ?? "unknown"}"; not a campus centroid`;
+    push("latitude", ror.latitude, {
+      sourceUrl: rorSourceUrl,
+      sourceAsOf: ror.lastModified,
+      scope: "institution_geonames_locality",
+      factClass: "identity",
+      writePolicy: "fill_if_null",
+      notes: geoNote,
+    });
+    push("longitude", ror.longitude, {
+      sourceUrl: rorSourceUrl,
+      sourceAsOf: ror.lastModified,
+      scope: "institution_geonames_locality",
+      factClass: "identity",
+      writePolicy: "fill_if_null",
+      notes: geoNote,
+    });
+  }
+
   // Deliberately NOT acquired from ROR, after inspecting the pilot output:
   //
   // * institution_type — ROR's vocabulary for every university in the roster is just
@@ -274,15 +331,14 @@ async function main(): Promise<void> {
       process.exitCode = 1;
       return;
     }
-    const response = await fetch(`${url}/rest/v1/universities?select=name,country&order=name.asc`, {
-      headers: { apikey: key, Authorization: `Bearer ${key}` },
-    });
-    if (!response.ok) {
-      console.error(`Couldn't read universities: HTTP ${response.status} ${await response.text().catch(() => "")}`);
-      process.exitCode = 1;
-      return;
-    }
-    const all = (await response.json()) as { name: string; country: string }[];
+    // Paginated: an unpaginated read silently stops at PostgREST's max-rows cap, which
+    // dropped the last 10 universities alphabetically and made them look unmatchable later.
+    const { rows: all } = await fetchAllRowsVerified<{ name: string; country: string }>(
+      { url, key },
+      "universities",
+      "name,country",
+      "order=name.asc"
+    );
     roster = all.slice(0, Number.isFinite(limit) ? limit : undefined);
     console.log(`Enumerated ${all.length} universities from the database; acquiring for ${roster.length}.\n`);
   } else {
@@ -300,6 +356,8 @@ async function main(): Promise<void> {
     }
     const search = await searchRorByName(entry.name);
     await sleep(200);
+    if (search === null) sourceOutcomes.ror.failed += 1;
+    else sourceOutcomes.ror.ok += 1;
 
     if (!search || search.items.length === 0) {
       unresolved.push({ declaredName: entry.name, declaredCountry: entry.country, reason: "No ROR record returned for this name." });
@@ -381,6 +439,42 @@ async function main(): Promise<void> {
     }
   }
 
+  // Duplicate-identity guard.
+  //
+  // Two of our rows resolving to the SAME authoritative registry record does not mean the
+  // match was wrong — it means our own spine holds the institution twice ("University of
+  // Warwick" and "The University of Warwick"; "University College London" and "UCL"). Writing
+  // facts to both rows would double one institution's data across two identities and make the
+  // duplication harder to see, not easier. Merging real entities is explicitly a human
+  // decision (docs/founder-blocked-backlog.md item 19), so both entries are withdrawn to
+  // `unresolved` and surfaced instead.
+  const byRor = new Map<string, AcquiredUniversity[]>();
+  for (const entry of universities) {
+    const list = byRor.get(entry.rorId) ?? [];
+    list.push(entry);
+    byRor.set(entry.rorId, list);
+  }
+  const duplicated = [...byRor.entries()].filter(([, list]) => list.length > 1);
+  for (const [rorId, list] of duplicated) {
+    for (const entry of list) {
+      unresolved.push({
+        declaredName: entry.declaredName,
+        declaredCountry: entry.declaredCountry,
+        reason: `Duplicate identity: this row and ${list.length - 1} other (${list
+          .filter((o) => o !== entry)
+          .map((o) => `"${o.declaredName}"`)
+          .join(", ")}) both resolve to ${rorId}. Needs a human merge decision before either can be enriched — see docs/founder-blocked-backlog.md item 19.`,
+      });
+    }
+  }
+  const duplicatedRorIds = new Set(duplicated.map(([rorId]) => rorId));
+  const deduped = universities.filter((entry) => !duplicatedRorIds.has(entry.rorId));
+  if (duplicated.length > 0) {
+    console.log(
+      `\nWithheld ${universities.length - deduped.length} entries across ${duplicated.length} duplicate-identity group(s); recorded as unresolved, not merged.`
+    );
+  }
+
   const fixture: AcquisitionFixture = {
     schemaVersion: 1,
     generatedAt: retrievedAt,
@@ -389,14 +483,27 @@ async function main(): Promise<void> {
       { name: "Research Organization Registry (ROR)", api: "https://api.ror.org/v2/organizations", licence: "CC0", factClasses: ["identity"] },
       { name: "OpenAlex", api: "https://api.openalex.org/institutions", licence: "CC0", factClasses: ["research_strength"] },
     ],
-    universities,
+    universities: deduped,
     unresolved,
   };
+
+  console.log(`\nSource outcomes:`);
+  for (const [provider, o] of Object.entries(sourceOutcomes)) {
+    console.log(`  ${provider.padEnd(10)} ok=${o.ok} rate_limited=${o.rateLimited} failed=${o.failed}`);
+  }
+  const degraded = Object.entries(sourceOutcomes).filter(([, o]) => o.ok === 0 && o.rateLimited + o.failed > 0);
+  for (const [provider, o] of degraded) {
+    console.log(
+      `\n  WARNING: ${provider} returned no successful response in this run (rate_limited=${o.rateLimited}, failed=${o.failed}).\n` +
+        `  Fields sourced from it are ABSENT because the source was unavailable, not because the\n` +
+        `  institutions lack the data. Re-run for those fields once the source recovers.`
+    );
+  }
 
   mkdirSync(dirname(outPath), { recursive: true });
   writeFileSync(outPath, `${JSON.stringify(fixture, null, 2)}\n`);
 
-  const factCount = universities.reduce((n, u) => n + u.facts.length, 0);
+  const factCount = deduped.reduce((n, u) => n + u.facts.length, 0);
   const unresolvedByReason = new Map<string, number>();
   for (const u of unresolved) {
     const kind = u.reason.startsWith("No ROR record")
@@ -409,12 +516,12 @@ async function main(): Promise<void> {
     unresolvedByReason.set(kind, (unresolvedByReason.get(kind) ?? 0) + 1);
   }
   const byField = new Map<string, number>();
-  for (const u of universities) for (const f of u.facts) byField.set(f.field, (byField.get(f.field) ?? 0) + 1);
+  for (const u of deduped) for (const f of u.facts) byField.set(f.field, (byField.get(f.field) ?? 0) + 1);
 
-  console.log(`\nResolved ${universities.length}/${roster.length}; unresolved ${unresolved.length}.`);
+  console.log(`\nResolved ${deduped.length}/${roster.length}; unresolved ${unresolved.length}.`);
   console.log(`${factCount} facts written to ${outPath}`);
   for (const [field, count] of [...byField.entries()].sort()) {
-    console.log(`  ${field.padEnd(24)} ${count}/${universities.length}`);
+    console.log(`  ${field.padEnd(24)} ${count}/${deduped.length}`);
   }
   if (unresolvedByReason.size > 0) {
     console.log(`\nUnresolved by reason (kept in the fixture, never guessed):`);

@@ -127,18 +127,43 @@ async function main() {
     application_system?: string | null;
   }
 
-  const [{ data: universitiesRaw, error: uniError }, { data: rankings }, { data: metrics }, { data: programs }] = await Promise.all([
-    admin.from("universities").select(selectColumns),
-    admin.from("university_rankings").select("university_id").eq("ranking_provider", "QS"),
-    admin.from("university_profile_metrics").select("university_id, metric_code, stats_as_of, notes"),
-    admin.from("university_programs").select("id"),
-  ]);
-  if (uniError || !universitiesRaw) {
-    console.error(`Couldn't read universities: ${uniError?.message}`);
-    process.exitCode = 1;
-    return;
+  /**
+   * Every coverage number here is a fraction whose denominator is a row count, so a truncated
+   * read does not just lose rows — it silently reports the wrong percentage. PostgREST caps
+   * unpaginated responses at 1000 with a 200 status and no error, and `universities` holds
+   * 1010, so every figure this script printed before this fix was computed over 1000 of 1010.
+   */
+  async function selectAll<T>(table: string, columns: string, tweak?: (q: never) => never): Promise<T[]> {
+    const out: T[] = [];
+    const PAGE = 1000;
+    for (let from = 0; ; from += PAGE) {
+      let query = admin.from(table).select(columns).order("id", { ascending: true }).range(from, from + PAGE - 1);
+      if (tweak) query = (tweak as unknown as (q: typeof query) => typeof query)(query);
+      const { data, error } = await query;
+      if (error) throw new Error(`${table}: ${error.message}`);
+      const page = (data ?? []) as unknown as T[];
+      out.push(...page);
+      if (page.length < PAGE) break;
+    }
+    return out;
   }
-  const universities = universitiesRaw as unknown as UniRow[];
+
+  const [universitiesRaw, rankings, metrics, programs] = await Promise.all([
+    selectAll<UniRow>("universities", selectColumns),
+    selectAll<{ university_id: string }>("university_rankings", "id, university_id", (q) =>
+      (q as unknown as { eq: (a: string, b: string) => never }).eq("ranking_provider", "QS")
+    ),
+    selectAll<{ university_id: string; metric_code: string; stats_as_of: string | null; notes: string | null }>(
+      "university_profile_metrics",
+      "id, university_id, metric_code, stats_as_of, notes"
+    ),
+    selectAll<{ id: string }>("university_programs", "id"),
+  ]).catch((e: unknown) => {
+    throw e instanceof Error ? e : new Error(String(e));
+  });
+  const uniError = null;
+  void uniError;
+  const universities = universitiesRaw;
 
   const total = universities.length;
   const rankedIds = new Set((rankings ?? []).map((r) => r.university_id));

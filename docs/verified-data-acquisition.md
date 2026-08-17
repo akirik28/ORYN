@@ -252,23 +252,151 @@ working as intended. That was fixed by improving normalisation, not by loosening
 `research_topics_top5` is a dimension ORYN had no representation of at all: what an
 institution actually publishes on, from OpenAlex, which feeds interest and research matching.
 
-### Coverage: before → after
+### Coverage: before → after (measured live, 2026-08-17)
 
-| Field | Live now | Pilot adds | After (of 1,010) |
+Credentials arrived after the architecture was built, so these are real measurements against
+`oryn-qa-scratch`.
+
+| Field | Before | After pilot | Note |
 |---|---|---|---|
-| `website_url` | partial | up to 30 gap-fills | unchanged where already set |
-| `city` | partial | 0 written (cross-check only) | unchanged by design |
-| `research_topics_top5` | **0** | 30 | 30 |
-| `admissions_url` | no column | column added | 0 — awaits policy layer |
-| `application_system` | no column | column added | 0 — awaits policy layer |
+| universities | 1010 | 1010 | unchanged |
+| `official website` | **25 / 1010 (2.5%)** | **47 / 1010 (4.7%)** | +22; existing values preserved by `fill_if_null` |
+| `research_topics_top5` | **0** | **30 rows** | dimension ORYN had no representation of |
+| identity resolution | 28 / 30 | **30 / 30** | 0 unresolved after two registry aliases were added |
+| `city` | 1010 / 1010 | unchanged | `cross_check_only`; disagreements reported, none written |
+| `coordinates` | 0 / 1010 | 0 / 1010 | full-spine pass supplies these |
 
-Live figures are carried from the same-day canonical Drive report and were **not re-queried**:
-`SUPABASE_SECRET_KEY` is empty, so `report:universities` cannot read the database. The anon key
-is not a substitute — global reference tables are authenticated-read only, so an anon count
-returns zero rows for every table. **That is RLS working, not an empty database, and must
-never be read as a coverage number.**
+**Idempotency proven on real data.** Re-running the same fixture with `--apply` produced
+`touch_only`, `skip_human_verified`, and **zero writes**. A direct duplicate check confirmed one
+`research_topics_top5` row per university, 0 duplicated — so the explicit PATCH-or-POST path is
+correct even without 0042's natural-key index.
 
----
+**City disagreements are exactly what the write policy exists for.** Reported, never written:
+
+```
+University of Michigan       stored "Ann Arbor, MI"  vs registry "Ann Arbor"
+Georgia Institute of Tech.   stored "Atlanta, GA"    vs registry "Atlanta"
+University of Hong Kong      stored "Hong Kong"      vs registry "Pok Fu Lam"
+University of Cape Town      stored "Cape Town"      vs registry "Rondebosch"
+```
+
+A date-based-precedence-only importer would have overwritten every one with the worse value.
+
+### Full-spine result (measured live, 2026-08-17)
+
+| Field | Before | After full spine | Change |
+|---|---|---|---|
+| universities | 1010 | 1010 | — |
+| `official website` | **25 / 1010 (2.5%)** | **809 / 1010 (80.1%)** | **+784** |
+| `coordinates` | **0 / 1010 (0%)** | **800 / 1010 (79.2%)** | **+800** |
+| cross-registry external ids | **0** | **3,945** | ROR 800 · WIKIDATA 800 · GRID 796 · ISNI 790 · CROSSREF_FUNDER 759 |
+| `research_topics_top5` | 0 | 30 | OpenAlex rate-limited mid-work — see below |
+| `city` | 1010 / 1010 | unchanged | `cross_check_only`; 114 disagreements reported, 0 written |
+| `institution_type` | 764 / 1010 | unchanged | deliberately not acquired |
+| `total_students` | 283 / 1010 | unchanged | not in scope this pass |
+| `university_programs` | 0 | 0 | Phase C |
+
+Acquisition: 1010 processed, **806 resolved**, 204 unresolved (194 no exact name match, 5 country
+mismatch, 1 no ROR hit, 4 withheld duplicate identities), 3,224 facts, 86 countries.
+
+Import: 2,362 fact writes + 3,945 external ids. **0 conflicts.** 38 existing values preserved.
+114 city disagreements reported, none written. 6 unresolved at import (all duplicate-row pairs).
+
+**Idempotency proven:** two consecutive `--apply` runs after the fixes produced
+`skip_human_verified 2400` and **0 fact writes**, with 0 duplicated rows across
+`university_profile_metrics`, `entity_external_ids`, and `canonical_entities` (the importer never
+creates entities).
+
+### The silent truncation bug — and a correction
+
+Mid-session this document (and a commit message) claimed the spine was **1000, not 1010**, and
+that the canonical Drive report was wrong. **That was itself the bug.** PostgREST applies a
+server-side `max-rows` cap — 1000 on Supabase — and returns a truncated result with a **200
+status and no error**. `universities` holds 1010 rows, so:
+
+- every coverage percentage was computed over 1000 of 1010 rows (wrong denominator *and* wrong
+  numerator);
+- the acquisition roster, ordered by name, silently dropped the last 10 alphabetically;
+- the importer then could not match those same 10 back and reported them as "no name match" —
+  **a truncation bug wearing the costume of a data-quality refusal**, which is the most
+  dangerous shape this class of bug can take, because the pipeline looked like it was being
+  appropriately strict.
+
+The Drive report's figures (1,010 universities, 1,009 QS, 283 `total_students`) were correct
+throughout. Fixed in `lib/acquisition/paginate.ts`: every read that must be complete pages
+through the result **and asserts the assembled count against the server's own exact count**,
+throwing rather than proceeding on a short read. `fetchAllRows` also refuses a query with no
+`order=` clause, since paging without a stable order can skip or repeat rows.
+
+Verified figures after the fix match the Drive report exactly: 1010 universities, QS 1009/1010,
+`student_size` 283, `total_students` 283.
+
+### Four more data-quality bugs found by running it for real
+
+1. **Idempotency failed on the second full-spine run** (1,600 writes instead of 0).
+   `latitude`/`longitude` were in the importer's writable-columns set but *not* in its SELECT
+   list, so `existingVersion` always saw `undefined`, concluded nothing was stored, and
+   re-wrote both every run. The select list was hardcoded and had drifted from the writable
+   set. Fixed by **deriving** the select list from the writable sets, plus a startup assertion
+   that every writable column was actually returned — the check that would have caught this on
+   the first run rather than the second.
+2. **External-id identity resolution had never once executed.** The query used `id_type` /
+   `id_value`; the real columns are `id_system` / `external_id`, and the resulting HTTP 400 was
+   swallowed by `.catch(() => [])`, so it silently fell through to name matching every time.
+   Column names fixed and the catch removed — a schema mismatch must fail loudly.
+3. **External ids were acquired and reported but never persisted.** Now written to
+   `entity_external_ids` as `source_verified` (ROR is an authoritative open registry, not the
+   institution itself, so `official_verified` would overstate it).
+4. **`resolution=ignore-duplicates` without `on_conflict` still raised 23505.** PostgREST only
+   considers the primary key unless given an explicit conflict target; the second run collided
+   on `unique (id_system, external_id)`. Fixed with `?on_conflict=id_system,external_id`.
+
+### A source failure that hid as missing data
+
+One full-spine run produced **zero** `research_topics_top5` facts. OpenAlex was returning HTTP
+429 for every request — self-inflicted, from running the full spine three times (~2,400 calls) —
+and the field simply vanished from the run summary, which reads identically to "this source has
+nothing for these institutions". **Missing data and a broken source are different facts.**
+Acquisition now tallies per-provider outcomes (`ok` / `rate_limited` / `failed`), backs off on
+429, and prints an explicit warning when a provider returned no successful response at all,
+stating that the field is absent because the source was unavailable — not because the
+institutions lack the data. `research_topics_top5` therefore stands at 30/1010 and needs one
+follow-up pass once the limit clears.
+
+### Duplicate identities in the live spine
+
+The full-spine fixture failed validation on first pass with two duplicate ROR ids, which is the
+validator doing its job. The cause was duplicate rows in our own spine, each with its **own**
+`canonical_entity_id`:
+
+| Institution | Row A | Row B |
+|---|---|---|
+| Warwick | `University of Warwick` (Coventry) | `The University of Warwick` (city recorded as "England") |
+| UCL | `University College London` | `UCL` |
+
+The import plan surfaced six more: MIT, LSE, HKUST, KFUPM, University of Newcastle (Australia),
+and University of Technology Sydney all match two rows each.
+
+Per the standing rule, none were merged — merging real entities is a human decision
+(`founder-blocked-backlog.md` item 19). Acquisition now carries a **duplicate-identity guard**:
+when two rows resolve to the same authoritative registry record, *both* entries are withdrawn
+to `unresolved` with the conflict recorded. Writing facts to both would double one
+institution's data across two identities and make the duplication harder to see, not easier.
+
+### Resolving the two unmatched universities the designed way
+
+The pilot could not place two rows, and both were genuine — not matcher weakness:
+
+- `Universität Heidelberg` — ROR publishes "Heidelberg University" and
+  "Ruprecht-Karls-Universität Heidelberg", neither of which is the short German form we store.
+- `Trinity College Dublin, The University of Dublin` — our row concatenates two official
+  titles; ROR publishes them as separate names.
+
+Fixed by adding five verified, source-linked aliases to `entity_aliases` and teaching the
+importer to consult the registry's aliases — **not** by loosening the matcher. That is the
+canonical-registry path working as intended: a human confirms once, and every later import
+resolves automatically. Identity resolution went 28/30 → 30/30 with zero change to matching
+strictness.
 
 ## Commands
 

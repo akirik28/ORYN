@@ -37,6 +37,7 @@ import { readFileSync } from "node:fs";
 import { validateFixture, type AcquiredFact, type AcquiredUniversity } from "../lib/acquisition/fixture";
 import { decideWrite, mutatesValue, type FactVersion, type WriteAction } from "../lib/acquisition/precedence";
 import { nameKey, nameVariants, sameCountry } from "../lib/acquisition/normalize";
+import { fetchAllRows, fetchAllRowsVerified } from "../lib/acquisition/paginate";
 
 export {};
 
@@ -46,10 +47,23 @@ try {
   // No .env.local — validation mode still works.
 }
 
-/** Columns on `universities` this importer is allowed to touch. Anything not listed is not
- * writable by an automated fixture, which keeps a malformed `field` from reaching a column
- * it should never reach (name, country, canonical_entity_id are deliberately absent). */
-const WRITABLE_UNIVERSITY_COLUMNS = new Set(["website_url", "admissions_url", "application_system", "logo_url", "description"]);
+/**
+ * Columns on `universities` this importer is allowed to touch. Anything not listed is not
+ * writable by an automated fixture, which keeps a malformed `field` from reaching a column it
+ * should never reach (name, country, canonical_entity_id are deliberately absent).
+ *
+ * Split by whether the column predates migration 0042, because the two groups are selected
+ * differently — but crucially the SELECT list is *derived* from these sets rather than written
+ * out separately. A hardcoded select list that drifted from this set is what broke idempotency:
+ * `latitude`/`longitude` were writable but not selected, so `existingVersion` always saw
+ * `undefined`, concluded nothing was stored, and re-inserted both on every single run.
+ */
+const WRITABLE_ALWAYS = ["website_url", "logo_url", "description", "latitude", "longitude"] as const;
+const WRITABLE_AFTER_0042 = ["admissions_url", "application_system"] as const;
+const WRITABLE_UNIVERSITY_COLUMNS = new Set<string>([...WRITABLE_ALWAYS, ...WRITABLE_AFTER_0042]);
+
+/** Columns read for identity resolution and cross-checking, on top of the writable ones. */
+const IDENTITY_COLUMNS = ["id", "name", "country", "canonical_entity_id", "city"] as const;
 
 /** Fields that are stored as dated metric rows rather than columns. */
 const METRIC_FIELDS = new Set(["research_topics_top5", "total_students", "international_students_share", "established_year"]);
@@ -64,6 +78,13 @@ interface PlanEntry {
 interface Rest {
   url: string;
   key: string;
+}
+
+/** ROR keys its cross-registry ids lowercase ("grid", "isni"); this registry stores id_system
+ * uppercase ("IB_SCHOOL_CODE", "MEB_INSTITUTION_CODE"). Normalised in one place so the read
+ * and the write cannot disagree about the spelling. */
+function externalIdSystem(rorKey: string): string {
+  return rorKey === "fundref" ? "CROSSREF_FUNDER" : rorKey.toUpperCase();
 }
 
 async function restGet(rest: Rest, path: string): Promise<unknown[]> {
@@ -96,6 +117,10 @@ interface LocalUniRow {
   country: string;
   city: string | null;
   website_url: string | null;
+  logo_url: string | null;
+  description: string | null;
+  latitude: number | null;
+  longitude: number | null;
   canonical_entity_id: string | null;
   /** Alias strings from `entity_aliases` for this row's canonical entity, loaded once up front. */
   aliases?: string[];
@@ -107,7 +132,7 @@ interface LocalUniRow {
 /** Columns added by migration 0042. The importer must run before that migration is applied —
  * otherwise the only way to import anything is to apply a migration first, which is a worse
  * coupling than degrading gracefully and refusing just the facts that need the new columns. */
-const MIGRATION_0042_COLUMNS = ["admissions_url", "application_system"] as const;
+const MIGRATION_0042_COLUMNS = WRITABLE_AFTER_0042;
 
 /**
  * Resolve one fixture entry to a university id.
@@ -124,18 +149,24 @@ async function resolveUniversity(
 ): Promise<{ id: string; method: string } | { id: null; reason: string }> {
   // 1. External ids via the canonical registry. This is the strongest signal and the reason
   //    the registry exists — it survives renames and translations that break name matching.
+  // Registry columns are `id_system`/`external_id`. An earlier version queried `id_type`/
+  // `id_value` and swallowed the resulting 400 with `.catch(() => [])`, so external-id
+  // resolution never actually ran — it silently fell through to name matching on every import.
+  // The catch is gone deliberately: a schema mismatch here must fail loudly, not degrade.
   const idPairs = Object.entries(entry.externalIds);
   if (idPairs.length > 0) {
-    const orFilter = idPairs.map(([type, value]) => `and(id_type.eq.${type},id_value.eq.${encodeURIComponent(value)})`).join(",");
-    const hits = (await restGet(rest, `entity_external_ids?select=entity_id,id_type,id_value&or=(${orFilter})`).catch(() => [])) as {
+    const orFilter = idPairs
+      .map(([system, value]) => `and(id_system.eq.${externalIdSystem(system)},external_id.eq.${encodeURIComponent(value)})`)
+      .join(",");
+    const hits = (await restGet(rest, `entity_external_ids?select=entity_id,id_system,external_id&or=(${orFilter})`)) as {
       entity_id: string;
-      id_type: string;
-      id_value: string;
+      id_system: string;
+      external_id: string;
     }[];
     const entityIds = [...new Set(hits.map((h) => h.entity_id))];
     if (entityIds.length === 1) {
       const match = rows.find((r) => r.canonical_entity_id === entityIds[0]);
-      if (match) return { id: match.id, method: `external_id (${hits[0].id_type})` };
+      if (match) return { id: match.id, method: `external_id (${hits[0].id_system})` };
     }
     if (entityIds.length > 1) {
       return { id: null, reason: `Fixture external ids resolve to ${entityIds.length} different canonical entities; needs a human merge decision.` };
@@ -281,17 +312,23 @@ async function main(): Promise<void> {
   const rest: Rest = { url, key };
   const fixture = raw as { universities: AcquiredUniversity[] };
 
-  const BASE_SELECT = "id,name,country,city,website_url,canonical_entity_id";
+  // Derived, never hardcoded: every writable column must be readable, or the importer cannot
+  // tell "nothing stored" from "not fetched" and will rewrite the column on every run.
+  const BASE_SELECT = [...IDENTITY_COLUMNS, ...WRITABLE_ALWAYS].join(",");
   const probe = await fetch(`${url}/rest/v1/universities?select=${BASE_SELECT},${MIGRATION_0042_COLUMNS.join(",")}&limit=1`, {
     headers: { apikey: key, Authorization: `Bearer ${key}` },
   });
   const missingColumns = probe.ok ? [] : [...MIGRATION_0042_COLUMNS];
   const selectList = missingColumns.length > 0 ? BASE_SELECT : `${BASE_SELECT},${MIGRATION_0042_COLUMNS.join(",")}`;
 
-  const rows = (await restGet(rest, `universities?select=${selectList}`)) as LocalUniRow[];
+  // Paginated and count-verified: an identity match resolved against a silently truncated
+  // candidate set reports "no name match" for rows that are actually present, which is exactly
+  // what happened before this was fixed (see lib/acquisition/paginate.ts).
+  const { rows, expected } = await fetchAllRowsVerified<LocalUniRow>(rest, "universities", selectList, "order=id.asc");
+  void expected;
 
   // Load the registry's aliases in one pass and attach them, rather than a query per entry.
-  const aliasRows = (await restGet(rest, "entity_aliases?select=entity_id,alias")) as { entity_id: string; alias: string }[];
+  const aliasRows = await fetchAllRows<{ entity_id: string; alias: string }>(rest, "entity_aliases", "entity_id,alias", "order=id.asc");
   const aliasesByEntity = new Map<string, string[]>();
   for (const a of aliasRows) {
     const list = aliasesByEntity.get(a.entity_id) ?? [];
@@ -302,6 +339,22 @@ async function main(): Promise<void> {
     row.aliases = row.canonical_entity_id ? (aliasesByEntity.get(row.canonical_entity_id) ?? []) : [];
   }
 
+  // Fail loudly if a writable column was not actually returned. This is the assertion that
+  // would have caught the idempotency bug on its first run rather than its second.
+  if (rows.length > 0) {
+    const sample = rows[0] as unknown as Record<string, unknown>;
+    const notFetched = [...WRITABLE_ALWAYS].filter((c) => !(c in sample));
+    if (notFetched.length > 0) {
+      console.error(
+        `Writable column(s) missing from the fetched rows: ${notFetched.join(", ")}.\n` +
+          `The importer cannot distinguish "no value stored" from "not fetched", so it would rewrite\n` +
+          `these on every run. Refusing to continue.`
+      );
+      process.exitCode = 1;
+      return;
+    }
+  }
+
   console.log(`Loaded ${rows.length} existing universities and ${aliasRows.length} registry aliases.`);
   if (missingColumns.length > 0) {
     console.log(`Migration 0042 is NOT applied — ${missingColumns.join(", ")} absent. Facts targeting them will be skipped, not guessed.`);
@@ -310,6 +363,7 @@ async function main(): Promise<void> {
 
   const plan: PlanEntry[] = [];
   let applied = 0;
+  let externalIdsConsidered = 0;
 
   for (const entry of fixture.universities) {
     const resolution = await resolveUniversity(rest, entry, rows);
@@ -318,6 +372,34 @@ async function main(): Promise<void> {
       continue;
     }
     const uni = rows.find((r) => r.id === resolution.id)!;
+
+    // Persist the cross-registry ids against the canonical entity. These were acquired and
+    // reported from the start but never actually written, so the registry could not benefit
+    // from them on a later run. `unique (id_system, external_id)` makes this idempotent, and
+    // also means a second entity claiming the same ROR id is rejected by the database rather
+    // than silently duplicated. verification_state is `source_verified`, not
+    // `official_verified` — ROR is an authoritative open registry, not the institution itself.
+    if (uni.canonical_entity_id) {
+      const idRows = Object.entries(entry.externalIds).map(([system, value]) => ({
+        entity_id: uni.canonical_entity_id,
+        id_system: externalIdSystem(system),
+        external_id: value,
+        source_url: entry.rorId,
+        verification_state: "source_verified",
+        verified_at: new Date().toISOString(),
+      }));
+      if (idRows.length > 0) {
+        if (apply) {
+          // `on_conflict` is required: without an explicit conflict target PostgREST only
+          // considers the primary key, so `resolution=ignore-duplicates` alone still raised a
+          // 23505 on the unique(id_system, external_id) constraint on the second run.
+          await restWrite(rest, "POST", "entity_external_ids?on_conflict=id_system,external_id", idRows, {
+            Prefer: "return=minimal,resolution=ignore-duplicates",
+          });
+        }
+        externalIdsConsidered += idRows.length;
+      }
+    }
 
     for (const fact of entry.facts) {
       // cross_check_only never writes — it exists to surface disagreement.
@@ -424,7 +506,8 @@ async function main(): Promise<void> {
     for (const p of notable) console.log(`  [${p.action}] ${p.declaredName} / ${p.field}: ${p.reason}`);
   }
 
-  console.log(apply ? `\nApplied ${applied} writes.` : "\nDry run — nothing was written. Re-run with --apply.");
+  console.log(`\nCross-registry external ids ${apply ? "upserted" : "would be upserted"}: ${externalIdsConsidered} (duplicates ignored by unique(id_system, external_id)).`);
+  console.log(apply ? `Applied ${applied} fact writes.` : "Dry run — nothing was written. Re-run with --apply.");
 }
 
 main().catch((error: unknown) => {
