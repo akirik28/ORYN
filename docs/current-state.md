@@ -6,9 +6,28 @@ record (strategy, field maps, gap matrix, coverage, source rights): Google Drive
 **"ORYN — Cialfo Public Intelligence & Data Gap Audit"**, ID
 `1SeLGD4y8Rj4twWpZWeMj5fP_OIEahlwhTNBCtYubVLA`, in the Drive `ORYN` folder. Live data state
 is tracked in the Drive doc **"ORYN University & Opportunity Enrichment — Canonical Report"**
-(`1jxIAa6_pMTTh8j7efTXYheGLzTzpwnt2NtwULQy85s8`) — **not** in `data-readiness.md`, which is
-now stale (it still reports 21 universities; live is 1,010, with 11 opportunities). Four new
-founder-blocked items (21–24) were added to `founder-blocked-backlog.md`.
+(`1lTYmGvpz6DCw5CKkkFBmK40dAZPVk0xzdLi2yZOSaww` as of 2026-08-17) — **not** in
+`data-readiness.md`, which is now stale (it still reports 21 universities; live is 1,010,
+with 130 university_programs and 11 opportunities). Four new founder-blocked items (21–24)
+were added to `founder-blocked-backlog.md`.
+
+**Drive ID note:** the Drive tooling available to agent sessions can create and read Docs but
+cannot edit a Doc's body in place — updating the canonical report means writing a replacement
+and trashing the old one, which mints a **new file ID** every time. Search by **title**, not
+ID, when opening it; the title is the stable identifier, not whatever ID is pasted above.
+
+**Update — 2026-08-17, programs-pipeline reconciliation**: two sessions had independently
+built on `main`/a feature branch at the same time (a university-identity acquisition pipeline
+on `main`, a university-programs pipeline on `oryn/programs-pipeline`) and collided on
+migration number `0042`. Reconciled on `oryn/programs-pipeline-reconciled` (merged with
+`main`, migration renumbered to `0043`, the programs pipeline rewritten to call the
+acquisition session's shared `lib/acquisition/identity.ts`/`source-authority.ts` instead of
+keeping a second matcher, a real PostgREST 1000-row pagination bug fixed before it could bite).
+Live result: `university_programs` 0 → 130 verified rows, `program_research_queue` 189 rows
+(full audit trail), 618/618 tests passing. Branch pushed, **not merged to `main`** — pending
+founder review. Full detail and the one real founder decision this batch surfaced (École
+Polytechnique's identity vs. the existing Institut Polytechnique de Paris consortium row): the
+canonical report doc above.
 
 **Phase 2 (same day, commit `0953d67`)**: the verified data-acquisition architecture landed —
 `lib/acquisition/*`, a 30-university / 23-country pilot fixture, migration 0042, and 123 new

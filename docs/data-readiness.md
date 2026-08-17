@@ -5,7 +5,9 @@
 > opportunities, while the live database holds **1,010 universities** (1,009 with QS 2027
 > ranks, 283 with sourced student counts) and **11 opportunities**. Current data state lives
 > in the Drive doc *ORYN University & Opportunity Enrichment — Canonical Report*
-> (`1jxIAa6_pMTTh8j7efTXYheGLzTzpwnt2NtwULQy85s8`). The coverage-gap analysis is in
+> (`1lTYmGvpz6DCw5CKkkFBmK40dAZPVk0xzdLi2yZOSaww` as of 2026-08-17; search by title, not ID —
+> the Drive tooling can't edit a Doc's body in place, so every update mints a new file ID).
+> The coverage-gap analysis is in
 > [cialfo-public-intelligence-audit.md](./cialfo-public-intelligence-audit.md).
 > What *is* still accurate here: the root-cause credential analysis, the pipeline audit, and
 > the fact that `external_sync_jobs` has never had a single row.
