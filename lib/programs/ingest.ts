@@ -1,7 +1,7 @@
 import { classifySubjects } from "./subject-taxonomy";
 import { normalizeProgramName } from "./normalize";
 import { resolveIdentity, type LocalUniversity } from "@/lib/acquisition/identity";
-import { sourceAuthority } from "@/lib/acquisition/source-authority";
+import { sourceAuthority, domainOf } from "@/lib/acquisition/source-authority";
 
 /** One record from the research handoff contract — see
  * docs/research-handoff-university-programs.md for the full field-by-field spec. */
@@ -34,8 +34,12 @@ export interface ResearchProgramRecord {
  * lib/acquisition/identity) is the platform-wide shape for "a university candidate an
  * identity match can be resolved against" — id, name, country, plus optional aliases and
  * external ids sourced from canonical_entities/entity_aliases/entity_external_ids. This
- * pipeline no longer keeps its own separate university-matching data shape. */
-export type UniversityLookupRow = LocalUniversity;
+ * pipeline no longer keeps its own separate university-matching data shape.
+ *
+ * Extended (not forked) with an optional `websiteUrl` — universities.website_url, when
+ * populated — purely so this module can establish an `officialDomains` hint for
+ * sourceAuthority() itself; it plays no role in identity resolution. */
+export type UniversityLookupRow = LocalUniversity & { websiteUrl?: string | null };
 
 /**
  * University identity resolution for a research record — a thin adapter over
@@ -46,7 +50,7 @@ export type UniversityLookupRow = LocalUniversity;
  * (entity_aliases, via LocalUniversity.aliases), then external ids — never fuzzy, and a
  * multi-candidate match is `unresolved`, not a guess.
  */
-export function resolveUniversity(record: ResearchProgramRecord, universities: readonly LocalUniversity[]): { universityId: string | null; reason: string | null } {
+export function resolveUniversity(record: ResearchProgramRecord, universities: readonly UniversityLookupRow[]): { universityId: string | null; reason: string | null } {
   const resolution = resolveIdentity(
     {
       displayName: record.university_name,
@@ -106,7 +110,7 @@ export interface IngestDecision {
  * `${university_id}|${normalized_program_name}|${degree_level ?? ""}` combinations already
  * present (live table rows + anything already accepted earlier in this same batch), so a
  * batch is idempotent against both re-runs and internal duplicates. */
-export function decideIngestion(record: ResearchProgramRecord, universities: readonly LocalUniversity[], existingKeys: ReadonlySet<string>): IngestDecision {
+export function decideIngestion(record: ResearchProgramRecord, universities: readonly UniversityLookupRow[], existingKeys: ReadonlySet<string>): IngestDecision {
   if (!record.university_name?.trim() || !record.program_name?.trim()) {
     return { outcome: "rejected", detail: "Missing university_name or program_name.", universityId: null, programRow: null };
   }
@@ -123,8 +127,14 @@ export function decideIngestion(record: ResearchProgramRecord, universities: rea
   // Source authority is resolved per fact class (lib/acquisition/source-authority.ts),
   // not asserted from the record's own claimed source_type — a record cannot self-certify
   // as official_primary; the URL's domain has to actually earn that for the "programs"
-  // fact class (an institution's own domain, or nothing).
-  const authority = sourceAuthority("programs", record.source_url);
+  // fact class. looksOfficial() alone only recognizes .edu/.ac./.gov-shaped domains, which
+  // excludes plenty of genuine European institutions (ethz.ch, tudelft.nl, tum.de) — so a
+  // matched university's own stored website_url is offered as an additional official
+  // domain, the same "caller established it from an authoritative identity source" contract
+  // sourceAuthority()'s officialDomains parameter documents.
+  const matchedUniversity = universities.find((u) => u.id === universityId);
+  const officialDomains = new Set(matchedUniversity?.websiteUrl ? [domainOf(matchedUniversity.websiteUrl)] : []);
+  const authority = sourceAuthority("programs", record.source_url, officialDomains);
   if (!authority) {
     return {
       outcome: "malformed_source",

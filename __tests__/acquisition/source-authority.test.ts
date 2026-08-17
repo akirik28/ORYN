@@ -75,6 +75,18 @@ describe("sourceAuthority", () => {
     expect(sourceAuthority("cost", "https://ethz.ch/fees")).toBeNull();
   });
 
+  test("a caller-supplied official domain also covers its department/faculty subdomains", () => {
+    // Program/course pages overwhelmingly live on a department subdomain, not the bare
+    // domain — physics.ethz.ch, wiwi.hu-berlin.de. Matched the same suffix-aware way as
+    // EXCLUDED/OPEN_REGISTRY/THIRD_PARTY_STRUCTURED, not an exact-only Set lookup.
+    expect(sourceAuthority("programs", "https://phys.ethz.ch/bachelor", new Set(["ethz.ch"]))).toEqual({
+      tier: "HIGH",
+      sourceType: "official_primary",
+    });
+    // An unrelated domain that merely shares a suffix-unsafe substring must still fail.
+    expect(sourceAuthority("programs", "https://notethz.ch/bachelor", new Set(["ethz.ch"]))).toBeNull();
+  });
+
   test("an excluded domain stays excluded even if a caller claims it is official", () => {
     expect(sourceAuthority("identity", "https://en.wikipedia.org/wiki/X", new Set(["en.wikipedia.org"]))).toBeNull();
   });

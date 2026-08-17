@@ -26,8 +26,7 @@
  * constraint as scripts/enrich-student-counts.ts).
  */
 import { readFileSync } from "node:fs";
-import { decideIngestion, type ResearchProgramRecord } from "../lib/programs/ingest";
-import type { LocalUniversity } from "../lib/acquisition/identity";
+import { decideIngestion, type ResearchProgramRecord, type UniversityLookupRow } from "../lib/programs/ingest";
 import { fetchAllRowsVerified, type PostgrestTarget } from "../lib/acquisition/paginate";
 
 try {
@@ -56,6 +55,7 @@ interface UniversityRow {
   name: string;
   country: string;
   canonical_entity_id: string | null;
+  website_url: string | null;
 }
 interface AliasRow {
   entity_id: string;
@@ -75,9 +75,9 @@ interface ExistingProgramRow {
 /** Full candidate pool for identity resolution — every university, alias-enriched, read
  * completely (see the pagination note above). Aliases/external-ids are grouped in memory
  * rather than joined per-university to avoid N+1 requests. */
-async function loadUniversityCandidates(target: PostgrestTarget): Promise<LocalUniversity[]> {
+async function loadUniversityCandidates(target: PostgrestTarget): Promise<UniversityLookupRow[]> {
   const [{ rows: universities }, { rows: aliases }, { rows: externalIds }] = await Promise.all([
-    fetchAllRowsVerified<UniversityRow>(target, "universities", "id,name,country,canonical_entity_id", "order=id"),
+    fetchAllRowsVerified<UniversityRow>(target, "universities", "id,name,country,canonical_entity_id,website_url", "order=id"),
     fetchAllRowsVerified<AliasRow>(target, "entity_aliases", "entity_id,alias", "order=id"),
     fetchAllRowsVerified<ExternalIdRow>(target, "entity_external_ids", "entity_id,id_system,external_id", "order=id"),
   ]);
@@ -98,6 +98,7 @@ async function loadUniversityCandidates(target: PostgrestTarget): Promise<LocalU
     country: u.country,
     aliases: u.canonical_entity_id ? aliasesByEntity.get(u.canonical_entity_id) : undefined,
     externalIds: u.canonical_entity_id ? externalIdsByEntity.get(u.canonical_entity_id) : undefined,
+    websiteUrl: u.website_url,
   }));
 }
 

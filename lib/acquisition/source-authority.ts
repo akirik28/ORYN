@@ -145,7 +145,10 @@ export function looksOfficial(domain: string): boolean {
  * official when it carries no academic suffix — plenty of real universities sit on `.ch`,
  * `.nl`, `.de`, `.sg`. The caller must have established that domain from an authoritative
  * identity source (ROR's `links`/`domains`) rather than guessing it, which is why this is a
- * parameter and not another hardcoded list.
+ * parameter and not another hardcoded list. Matched the same suffix-aware way as the other
+ * domain lists (`domainMatches`), not exact-only — a department/faculty subdomain of a known
+ * official domain (`phys.ethz.ch` under `ethz.ch`) is exactly the shape most program/course
+ * pages actually live on.
  */
 export function sourceAuthority(
   factClass: FactClass,
@@ -156,7 +159,7 @@ export function sourceAuthority(
   if (!domain) return null;
   if (domainMatches(domain, EXCLUDED_DOMAINS)) return null;
 
-  const isOfficial = looksOfficial(domain) || officialDomains.has(domain);
+  const isOfficial = looksOfficial(domain) || domainMatches(domain, officialDomains);
   // An institution's own site is authoritative for everything it publishes about itself.
   if (isOfficial) return { tier: "HIGH", sourceType: "official_primary" };
 

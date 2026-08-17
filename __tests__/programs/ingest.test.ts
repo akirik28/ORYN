@@ -1,13 +1,18 @@
 import { describe, expect, test } from "vitest";
-import { decideIngestion, resolveUniversity, looksPageConfirmed, type ResearchProgramRecord } from "@/lib/programs/ingest";
-import type { LocalUniversity } from "@/lib/acquisition/identity";
+import { decideIngestion, resolveUniversity, looksPageConfirmed, type ResearchProgramRecord, type UniversityLookupRow } from "@/lib/programs/ingest";
 
-const MIT: LocalUniversity = { id: "uni-mit", name: "Massachusetts Institute of Technology", country: "United States" };
-const EDINBURGH: LocalUniversity = { id: "uni-edi", name: "The University of Edinburgh", country: "United Kingdom", aliases: ["University of Edinburgh"] };
-const NAPIER: LocalUniversity = { id: "uni-nap", name: "Edinburgh Napier University", country: "United Kingdom" };
-const KFUPM_A: LocalUniversity = { id: "uni-kfupm-a", name: "King Fahd University of Petroleum and Minerals", country: "Saudi Arabia" };
-const KFUPM_B: LocalUniversity = { id: "uni-kfupm-b", name: "King Fahd University of Petroleum and Minerals", country: "Saudi Arabia" };
-const EPFL: LocalUniversity = { id: "uni-epfl", name: "EPFL – École polytechnique fédérale de Lausanne", country: "Switzerland", aliases: ["EPFL"] };
+const MIT: UniversityLookupRow = { id: "uni-mit", name: "Massachusetts Institute of Technology", country: "United States" };
+const EDINBURGH: UniversityLookupRow = { id: "uni-edi", name: "The University of Edinburgh", country: "United Kingdom", aliases: ["University of Edinburgh"] };
+const NAPIER: UniversityLookupRow = { id: "uni-nap", name: "Edinburgh Napier University", country: "United Kingdom" };
+const KFUPM_A: UniversityLookupRow = { id: "uni-kfupm-a", name: "King Fahd University of Petroleum and Minerals", country: "Saudi Arabia" };
+const KFUPM_B: UniversityLookupRow = { id: "uni-kfupm-b", name: "King Fahd University of Petroleum and Minerals", country: "Saudi Arabia" };
+const EPFL: UniversityLookupRow = {
+  id: "uni-epfl",
+  name: "EPFL – École polytechnique fédérale de Lausanne",
+  country: "Switzerland",
+  aliases: ["EPFL"],
+  websiteUrl: "https://www.epfl.ch",
+};
 
 const UNIVERSITIES = [MIT, EDINBURGH, NAPIER, KFUPM_A, KFUPM_B, EPFL];
 
@@ -58,7 +63,7 @@ describe("resolveUniversity (via lib/acquisition/identity.resolveIdentity)", () 
   });
 
   test("bridges a known label alias (Türkiye vs Turkey) via the shared country normalizer", () => {
-    const turkish: LocalUniversity = { id: "uni-tr", name: "Boğaziçi University", country: "Turkey" };
+    const turkish: UniversityLookupRow = { id: "uni-tr", name: "Boğaziçi University", country: "Turkey" };
     const r = record({ university_name: "Boğaziçi University", university_country: "Türkiye" });
     expect(resolveUniversity(r, [turkish]).universityId).toBe("uni-tr");
   });
@@ -138,5 +143,42 @@ describe("decideIngestion", () => {
     const existing = new Set<string>();
     const econ = decideIngestion(record({ program_name: "Economics", official_program_url: "https://econ.mit.edu", source_url: "https://econ.mit.edu" }), UNIVERSITIES, existing);
     expect(econ.outcome).toBe("accepted");
+  });
+
+  test("accepts a resolved university's own non-.edu/.ac./.gov domain (EPFL sits on .ch)", () => {
+    // Before this domain was wired as an officialDomains hint, sourceAuthority() only ever
+    // recognized .edu/.ac./.gov-shaped domains, which would have wrongly rejected this as
+    // malformed_source despite EPFL being correctly resolved and the source page being real.
+    const r = record({
+      university_name: "EPFL",
+      university_country: "Switzerland",
+      official_program_url: "https://www.epfl.ch/education/bachelor/",
+      source_url: "https://www.epfl.ch/education/bachelor/",
+    });
+    const decision = decideIngestion(r, UNIVERSITIES, new Set());
+    expect(decision.outcome).toBe("accepted");
+    expect(decision.programRow?.university_id).toBe("uni-epfl");
+  });
+
+  test("accepts a department subdomain of the resolved university's own domain", () => {
+    const r = record({
+      university_name: "EPFL",
+      university_country: "Switzerland",
+      official_program_url: "https://sti.epfl.ch/bachelor/",
+      source_url: "https://sti.epfl.ch/bachelor/",
+    });
+    const decision = decideIngestion(r, UNIVERSITIES, new Set());
+    expect(decision.outcome).toBe("accepted");
+  });
+
+  test("still rejects a domain that is not the resolved university's own domain, even off .ch", () => {
+    const r = record({
+      university_name: "EPFL",
+      university_country: "Switzerland",
+      official_program_url: "https://some-unrelated-site.ch/epfl-programs",
+      source_url: "https://some-unrelated-site.ch/epfl-programs",
+    });
+    const decision = decideIngestion(r, UNIVERSITIES, new Set());
+    expect(decision.outcome).toBe("malformed_source");
   });
 });
