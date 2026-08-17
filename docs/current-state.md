@@ -4,7 +4,7 @@
 [cialfo-public-intelligence-audit.md](./cialfo-public-intelligence-audit.md). Founder-facing
 record (strategy, field maps, gap matrix, coverage, source rights): Google Drive doc
 **"ORYN — Cialfo Public Intelligence & Data Gap Audit"**, ID
-`1SMLUp3hWMaeDsFPDp77Bxirs2lqM32aIXHR2u5vH_bQ`, in the Drive `ORYN` folder. Live data state
+`1SeLGD4y8Rj4twWpZWeMj5fP_OIEahlwhTNBCtYubVLA`, in the Drive `ORYN` folder. Live data state
 is tracked in the Drive doc **"ORYN University & Opportunity Enrichment — Canonical Report"**
 (`1jxIAa6_pMTTh8j7efTXYheGLzTzpwnt2NtwULQy85s8`) — **not** in `data-readiness.md`, which is
 now stale (it still reports 21 universities; live is 1,010, with 11 opportunities). Four new

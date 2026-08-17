@@ -2,10 +2,17 @@
 
 **Founder-facing counterpart (source of truth for strategy, field maps, coverage, decisions):**
 Google Drive document **"ORYN — Cialfo Public Intelligence & Data Gap Audit"**,
-ID `1SMLUp3hWMaeDsFPDp77Bxirs2lqM32aIXHR2u5vH_bQ`, in the Drive `ORYN` folder
+ID `1SeLGD4y8Rj4twWpZWeMj5fP_OIEahlwhTNBCtYubVLA`, in the Drive `ORYN` folder
 (`10Ca-Tsmr1u7L0L_oJXDW9-PVfPujxl6x`). Update that document after every phase of this
 work; it is the durable record. This file is the engineering half: what to run, what to
 change, and the rules any implementation must obey.
+
+> **Drive update constraint.** The Drive tooling available to agent sessions can create and
+> read Docs but **cannot edit an existing Doc's body in place**. Updating the founder-facing
+> document means writing a replacement and trashing the old one, which mints a **new file
+> ID** — so whoever updates it must also re-point the ID in this file and in
+> `current-state.md`. Search by **title**, not ID; the title is the stable identifier. Drop
+> this note if in-place editing becomes available.
 
 Audit opened 2026-08-17 against commit `315f914`.
 
