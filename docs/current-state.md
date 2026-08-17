@@ -1,5 +1,41 @@
 # Current State
 
+**Update — 2026-08-17, Claude A, University Intelligence Spine pass (branch
+`oryn/university-intelligence-spine`, not yet merged to `main`)**: a long autonomous pass
+focused entirely on `universities`/`canonical_entities` (entity_type='university') data
+quality, owned separately from the parallel programs/opportunities workstream
+(`oryn/programs-pipeline-reconciled`). Full detail, evidence, and a live-updated status:
+`docs/handoffs/claude-a-university-spine.md`. Highlights:
+
+- **9 real duplicate university identities found and merged** (MIT, UCL, HKUST, LSE,
+  University of Warwick, University of Technology Sydney, University of Newcastle Australia,
+  Al-Farabi Kazakh National University, KFUPM), each live-verified against ROR before
+  merging — never on name similarity alone. One (KFUPM) wasn't in `founder-blocked-backlog.md`
+  item 25's list at all; found via a `university_rankings` audit instead of name matching.
+  The underlying duplicate `universities` rows themselves (not just the canonical-entity
+  identity layer) still need a migration this session couldn't apply — see item 25 there.
+- **73 `official_verified` university entities downgraded to `source_verified`** — all 73
+  had zero supporting `entity_evidence` rows (founder-blocked-backlog.md item 20, now closed).
+- **A real pagination bug in the pre-existing `entities-audit.ts` fixed** — it was silently
+  auditing an arbitrary 1000-row slice of the (now 1160-row) canonical registry.
+- **`admissions_url`/`application_system` acquisition built from scratch** (Tavily-only, no
+  AI — `ANTHROPIC_API_KEY` is credit-blocked this session, a billing issue) and wired onto
+  the university detail page for the first time (the columns existed live since an earlier
+  session's migration 0042, but nothing ever read them — `types/database.ts` didn't even
+  have them). Coverage: 0% → 12% / 2.5%. Three real scoring bugs caught and fixed on live
+  data before being trusted at scale (a Master's-only page, an unrelated news article, and a
+  national exam system false-matched across the wrong country).
+- **`total_students` coverage pushed from 283 → 284/1010** — genuinely close to the current
+  ceiling for a Wikidata-index-only approach without AI-assisted per-institution extraction;
+  documented as a real finding, not treated as a bug to keep chasing.
+- OpenAlex is currently returning a structured budget-exhaustion response (not a plain rate
+  limit — `"Insufficient budget... resets at midnight UTC"`), blocking `research_topics_top5`
+  acquisition for the rest of this pass; a circuit breaker was added so a future full-spine
+  run doesn't waste ~30 minutes discovering that 1,010 times over.
+- A `duplicate_status`/`superseded_by_id` migration (`0043`) and a spine-wide
+  catastrophic-regression health check (`npm run check:university-spine-health`) are new,
+  committed, and passing.
+
 **Update — 2026-08-17**: a competitive/data audit of Cialfo landed. Engineering record:
 [cialfo-public-intelligence-audit.md](./cialfo-public-intelligence-audit.md). Founder-facing
 record (strategy, field maps, gap matrix, coverage, source rights): Google Drive doc
