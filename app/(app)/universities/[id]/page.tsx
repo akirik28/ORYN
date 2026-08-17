@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { MapPin, Users, DollarSign, GraduationCap, ExternalLink } from "lucide-react";
+import { MapPin, Users, DollarSign, GraduationCap, ExternalLink, Trophy } from "lucide-react";
 import { requireUser, getCurrentProfile } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { refreshAdmissionOutlook } from "@/lib/admissions/persist";
@@ -23,13 +23,14 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   const { data: university } = await supabase.from("universities").select("*").eq("id", id).single();
   if (!university) notFound();
 
-  const [programsRes, requirementsRes, statsRes, sourcesRes, targetRes, scoresRes] = await Promise.all([
+  const [programsRes, requirementsRes, statsRes, sourcesRes, targetRes, scoresRes, rankingsRes] = await Promise.all([
     supabase.from("university_programs").select("*").eq("university_id", id),
     supabase.from("university_requirements").select("*").eq("university_id", id),
     supabase.from("university_statistics").select("*").eq("university_id", id).order("stat_year", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("university_sources").select("*").eq("university_id", id).order("retrieved_at", { ascending: false }),
     supabase.from("target_universities").select("*").eq("university_id", id).eq("user_id", session.userId!).maybeSingle(),
     supabase.from("profile_scores").select("dimension, score").eq("user_id", session.userId!),
+    supabase.from("university_rankings").select("ranking_provider, ranking_edition, rank_display, source_url").eq("university_id", id).order("ranking_provider"),
   ]);
 
   if (targetRes.data) {
@@ -81,6 +82,23 @@ export default async function UniversityDetailPage({ params }: { params: Promise
       />
 
       {university.description ? <p className="max-w-3xl text-muted-foreground">{university.description}</p> : null}
+
+      {rankingsRes.data && rankingsRes.data.length > 0 ? (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+          {rankingsRes.data.map((r) => (
+            <a
+              key={`${r.ranking_provider}-${r.ranking_edition}`}
+              href={r.source_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 hover:text-foreground hover:underline"
+            >
+              <Trophy className="size-4 shrink-0" />
+              {r.ranking_provider} {r.ranking_edition} — #{r.rank_display}
+            </a>
+          ))}
+        </div>
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard icon={Users} label="Student size" value={university.student_size ? university.student_size.toLocaleString() : "Unavailable"} />
