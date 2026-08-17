@@ -17,7 +17,9 @@
     "enrich:student-counts": "tsx scripts/enrich-student-counts.ts",
     "report:universities": "tsx scripts/university-data-report.ts",
     "ingest:university-programs": "tsx scripts/ingest-university-programs.ts",
-    "report:programs": "tsx scripts/university-programs-report.ts"
+    "report:programs": "tsx scripts/university-programs-report.ts",
+    "acquire:universities": "tsx scripts/acquire-university-facts.ts",
+    "import:universities": "tsx scripts/import-university-facts.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",

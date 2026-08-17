@@ -1,0 +1,2044 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-17T10:18:35.863Z",
+  "generator": "scripts/acquire-university-facts.ts --pilot",
+  "sources": [
+    {
+      "name": "Research Organization Registry (ROR)",
+      "api": "https://api.ror.org/v2/organizations",
+      "licence": "CC0",
+      "factClasses": [
+        "identity"
+      ]
+    },
+    {
+      "name": "OpenAlex",
+      "api": "https://api.openalex.org/institutions",
+      "licence": "CC0",
+      "factClasses": [
+        "research_strength"
+      ]
+    }
+  ],
+  "universities": [
+    {
+      "declaredName": "Boğaziçi Üniversitesi",
+      "declaredCountry": "Turkey",
+      "rorId": "https://ror.org/03z9tma90",
+      "rorDisplayName": "Boğaziçi University",
+      "rorCountryName": "Turkey",
+      "rorLastModified": "2024-12-11",
+      "externalIds": {
+        "ror": "03z9tma90",
+        "fundref": "501100005037",
+        "grid": "grid.11220.30",
+        "isni": "0000 0001 2253 9056",
+        "wikidata": "Q896267"
+      },
+      "aliases": [
+        "Boğaziçi University",
+        "Boğaziçi Üniversitesi"
+      ],
+      "acronyms": [],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://bogazici.edu.tr",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/03z9tma90",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2024-12-11",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "ROR domains: boun.edu.tr"
+        },
+        {
+          "field": "city",
+          "value": "Istanbul",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/03z9tma90",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2024-12-11",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 41.01384,28.94966"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Particle physics theoretical and experimental studies | High-Energy Particle Collisions Research | Quantum Chromodynamics and Particle Interactions | Particle Detector Development and Performance | earthquake and tectonic studies",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I4405392",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=24908; fields: Physics and Astronomy, Earth and Planetary Sciences"
+        }
+      ]
+    },
+    {
+      "declaredName": "Koç University",
+      "declaredCountry": "Turkey",
+      "rorId": "https://ror.org/00jzwgz36",
+      "rorDisplayName": "Koç University",
+      "rorCountryName": "Turkey",
+      "rorLastModified": "2024-12-11",
+      "externalIds": {
+        "ror": "00jzwgz36",
+        "fundref": "501100018719",
+        "grid": "grid.15876.3d",
+        "isni": "0000 0001 0688 7552",
+        "wikidata": "Q1193155"
+      },
+      "aliases": [
+        "Koç University",
+        "Koç Üniversitesi",
+        "Qoç Universiteti"
+      ],
+      "acronyms": [],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://www.ku.edu.tr",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/00jzwgz36",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2024-12-11",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "ROR domains: ku.edu.tr"
+        },
+        {
+          "field": "city",
+          "value": "Istanbul",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/00jzwgz36",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2024-12-11",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 41.01384,28.94966"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Turkey's Politics and Society | Photonic and Optical Devices | Reproductive Biology and Fertility | Prostate Cancer Treatment and Research | Protein Structure and Dynamics",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I1351752",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=24431; fields: Social Sciences, Engineering, Medicine, Biochemistry, Genetics and Molecular Biology"
+        }
+      ]
+    },
+    {
+      "declaredName": "University of Amsterdam",
+      "declaredCountry": "Netherlands",
+      "rorId": "https://ror.org/04dkp9463",
+      "rorDisplayName": "University of Amsterdam",
+      "rorCountryName": "Netherlands",
+      "rorLastModified": "2026-06-02",
+      "externalIds": {
+        "ror": "04dkp9463",
+        "fundref": "501100001827",
+        "grid": "grid.7177.6",
+        "isni": "0000 0000 8499 2262",
+        "wikidata": "Q214341"
+      },
+      "aliases": [
+        "Universiteit van Amsterdam",
+        "University of Amsterdam",
+        "UvA"
+      ],
+      "acronyms": [
+        "UvA"
+      ],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://www.uva.nl",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/04dkp9463",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-06-02",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "ROR domains: uva.nl"
+        },
+        {
+          "field": "city",
+          "value": "Amsterdam",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/04dkp9463",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-06-02",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 52.37403,4.88969"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Astrophysical Phenomena and Observations | Particle physics theoretical and experimental studies | Pulsars and Gravitational Waves Research | Stellar, planetary, and galactic studies | Gamma-ray bursts and supernovae",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I887064364",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=239670; fields: Physics and Astronomy"
+        }
+      ]
+    },
+    {
+      "declaredName": "Delft University of Technology",
+      "declaredCountry": "Netherlands",
+      "rorId": "https://ror.org/02e2c7k09",
+      "rorDisplayName": "Delft University of Technology",
+      "rorCountryName": "Netherlands",
+      "rorLastModified": "2026-06-23",
+      "externalIds": {
+        "ror": "02e2c7k09",
+        "fundref": "501100001831",
+        "grid": "grid.5292.c",
+        "isni": "0000 0001 2097 4740",
+        "wikidata": "Q752663"
+      },
+      "aliases": [
+        "Delft University of Technology",
+        "TU Delft",
+        "Technische Universiteit Delft"
+      ],
+      "acronyms": [],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://www.tudelft.nl",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/02e2c7k09",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-06-23",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "ROR domains: tudelft.nl"
+        },
+        {
+          "field": "city",
+          "value": "Delft",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/02e2c7k09",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-06-23",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 52.00667,4.35556"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Transportation Planning and Optimization | Fluid Dynamics and Turbulent Flows | Quantum and electron transport phenomena | Coastal and Marine Dynamics | Seismic Imaging and Inversion Techniques",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I98358874",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=176282; fields: Social Sciences, Engineering, Physics and Astronomy, Earth and Planetary Sciences"
+        }
+      ]
+    },
+    {
+      "declaredName": "Technical University of Munich",
+      "declaredCountry": "Germany",
+      "rorId": "https://ror.org/02kkvpp62",
+      "rorDisplayName": "Technical University of Munich",
+      "rorCountryName": "Germany",
+      "rorLastModified": "2026-07-20",
+      "externalIds": {
+        "ror": "02kkvpp62",
+        "fundref": "501100005713",
+        "grid": "grid.6936.a",
+        "isni": "0000 0001 2322 2966",
+        "wikidata": "Q157808"
+      },
+      "aliases": [
+        "TUM",
+        "Technical University of Munich",
+        "Technische Universitaet Muenchen",
+        "Technische Universität München"
+      ],
+      "acronyms": [
+        "TUM"
+      ],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://www.tum.de",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/02kkvpp62",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-07-20",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "ROR domains: tum.de"
+        },
+        {
+          "field": "city",
+          "value": "Munich",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/02kkvpp62",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-07-20",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 48.13743,11.57549"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Particle physics theoretical and experimental studies | Quantum Chromodynamics and Particle Interactions | Advanced Chemical Physics Studies | Nuclear physics research studies | High-Energy Particle Collisions Research",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I62916508",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=229321; fields: Physics and Astronomy"
+        }
+      ]
+    },
+    {
+      "declaredName": "Heidelberg University",
+      "declaredCountry": "Germany",
+      "rorId": "https://ror.org/038t36y30",
+      "rorDisplayName": "Heidelberg University",
+      "rorCountryName": "Germany",
+      "rorLastModified": "2025-05-05",
+      "externalIds": {
+        "ror": "038t36y30",
+        "fundref": "501100001661",
+        "grid": "grid.7700.0",
+        "isni": "0000 0001 2190 4373",
+        "wikidata": "Q151510"
+      },
+      "aliases": [
+        "Heidelberg University",
+        "Ruprecht-Karls-Universität Heidelberg"
+      ],
+      "acronyms": [],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://www.uni-heidelberg.de",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/038t36y30",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2025-05-05",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "ROR domains: uni-heidelberg.de"
+        },
+        {
+          "field": "city",
+          "value": "Heidelberg",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/038t36y30",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2025-05-05",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 49.40768,8.69079"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Particle physics theoretical and experimental studies | High-Energy Particle Collisions Research | Quantum Chromodynamics and Particle Interactions | Stellar, planetary, and galactic studies | Glioma Diagnosis and Treatment",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I223822909",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=320975; fields: Physics and Astronomy, Medicine"
+        }
+      ]
+    },
+    {
+      "declaredName": "The University of Edinburgh",
+      "declaredCountry": "United Kingdom",
+      "rorId": "https://ror.org/01nrxwf90",
+      "rorDisplayName": "University of Edinburgh",
+      "rorCountryName": "United Kingdom",
+      "rorLastModified": "2025-08-26",
+      "externalIds": {
+        "ror": "01nrxwf90",
+        "fundref": "501100000848",
+        "grid": "grid.4305.2",
+        "isni": "0000 0004 1936 7988",
+        "wikidata": "Q160302"
+      },
+      "aliases": [
+        "Oilthigh Dhùn Èideann",
+        "University of Edinburgh"
+      ],
+      "acronyms": [],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://www.ed.ac.uk",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/01nrxwf90",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2025-08-26",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "ROR domains: ed.ac.uk"
+        },
+        {
+          "field": "city",
+          "value": "Edinburgh",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/01nrxwf90",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2025-08-26",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 55.95206,-3.19648"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Particle physics theoretical and experimental studies | Galaxies: Formation, Evolution, Phenomena | Quantum Chromodynamics and Particle Interactions | Astronomy and Astrophysical Research | High-Energy Particle Collisions Research",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I98677209",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=283945; fields: Physics and Astronomy"
+        }
+      ]
+    },
+    {
+      "declaredName": "The University of Manchester",
+      "declaredCountry": "United Kingdom",
+      "rorId": "https://ror.org/027m9bs27",
+      "rorDisplayName": "University of Manchester",
+      "rorCountryName": "United Kingdom",
+      "rorLastModified": "2025-05-05",
+      "externalIds": {
+        "ror": "027m9bs27",
+        "fundref": "501100000770",
+        "grid": "grid.5379.8",
+        "isni": "0000 0001 2166 2407",
+        "wikidata": "Q230899"
+      },
+      "aliases": [
+        "Manchester University",
+        "Prifysgol Manceinion",
+        "University of Manchester",
+        "University of Manchester Institute of Science and Technology",
+        "Victoria University of Manchester"
+      ],
+      "acronyms": [],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "http://www.manchester.ac.uk/",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/027m9bs27",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2025-05-05",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": null
+        },
+        {
+          "field": "city",
+          "value": "Manchester",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/027m9bs27",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2025-05-05",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 53.48095,-2.23743"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Particle physics theoretical and experimental studies | Quantum Chromodynamics and Particle Interactions | High-Energy Particle Collisions Research | Galaxies: Formation, Evolution, Phenomena | Stellar, planetary, and galactic studies",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I28407311",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=316733; fields: Physics and Astronomy"
+        }
+      ]
+    },
+    {
+      "declaredName": "ETH Zurich",
+      "declaredCountry": "Switzerland",
+      "rorId": "https://ror.org/05a28rw58",
+      "rorDisplayName": "ETH Zurich",
+      "rorCountryName": "Switzerland",
+      "rorLastModified": "2026-03-31",
+      "externalIds": {
+        "ror": "05a28rw58",
+        "fundref": "501100003006",
+        "grid": "grid.5801.c",
+        "isni": "0000 0001 2156 2780",
+        "wikidata": "Q11942"
+      },
+      "aliases": [
+        "ETH Zurich",
+        "ETH Zürich",
+        "ETH di Zurigo",
+        "Eidgenössische Technische Hochschule Zürich",
+        "Politecnico Federale di Zurigo",
+        "Swiss Federal Institute of Technology in Zurich",
+        "École Polytechnique Fédérale de Zurich"
+      ],
+      "acronyms": [],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://ethz.ch",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/05a28rw58",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-03-31",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "ROR domains: ethz.ch"
+        },
+        {
+          "field": "city",
+          "value": "Zurich",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/05a28rw58",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-03-31",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 47.36667,8.55"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Geology and Paleoclimatology Research | Geological and Geochemical Analysis | earthquake and tectonic studies | Particle physics theoretical and experimental studies | Climate variability and models",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I35440088",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=248798; fields: Earth and Planetary Sciences, Physics and Astronomy, Environmental Science"
+        }
+      ]
+    },
+    {
+      "declaredName": "Politecnico di Milano",
+      "declaredCountry": "Italy",
+      "rorId": "https://ror.org/01nffqt88",
+      "rorDisplayName": "Politecnico di Milano",
+      "rorCountryName": "Italy",
+      "rorLastModified": "2025-01-22",
+      "externalIds": {
+        "ror": "01nffqt88",
+        "fundref": "501100006690",
+        "grid": "grid.4643.5",
+        "isni": "0000 0004 1937 0327",
+        "wikidata": "Q392904"
+      },
+      "aliases": [
+        "Politecnico di Milano",
+        "Polytechnic University of Milan",
+        "École Polytechnique de Milan"
+      ],
+      "acronyms": [],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://polimi.it",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/01nffqt88",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2025-01-22",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "ROR domains: polimi.it"
+        },
+        {
+          "field": "city",
+          "value": "Milan",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/01nffqt88",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2025-01-22",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 45.46427,9.18951"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Photonic and Optical Devices | Structural Health Monitoring Techniques | Combustion and flame dynamics | Fault Detection and Control Systems | 3D Surveying and Cultural Heritage",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I93860229",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=257500; fields: Engineering, Earth and Planetary Sciences"
+        }
+      ]
+    },
+    {
+      "declaredName": "Bocconi University",
+      "declaredCountry": "Italy",
+      "rorId": "https://ror.org/05crjpb27",
+      "rorDisplayName": "Bocconi University",
+      "rorCountryName": "Italy",
+      "rorLastModified": "2024-12-11",
+      "externalIds": {
+        "ror": "05crjpb27",
+        "fundref": "501100006375",
+        "grid": "grid.7945.f",
+        "isni": "0000 0001 2165 6939",
+        "wikidata": "Q959524"
+      },
+      "aliases": [
+        "Bocconi University",
+        "Università Commerciale Luigi Bocconi",
+        "Wirtschaftsuniversität Luigi Bocconi"
+      ],
+      "acronyms": [],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://www.unibocconi.it",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/05crjpb27",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2024-12-11",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "ROR domains: unibocconi.it"
+        },
+        {
+          "field": "city",
+          "value": "Milan",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/05crjpb27",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2024-12-11",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 45.46427,9.18951"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Corporate Finance and Governance | Monetary Policy and Economic Impact | Innovation and Knowledge Management | Banking stability, regulation, efficiency | Financial Markets and Investment Strategies",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I71209653",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=21844; fields: Business, Management and Accounting, Economics, Econometrics and Finance"
+        }
+      ]
+    },
+    {
+      "declaredName": "Sorbonne University",
+      "declaredCountry": "France",
+      "rorId": "https://ror.org/02en5vm52",
+      "rorDisplayName": "Sorbonne Université",
+      "rorCountryName": "France",
+      "rorLastModified": "2026-03-31",
+      "externalIds": {
+        "ror": "02en5vm52",
+        "fundref": "501100019125",
+        "grid": "grid.462844.8",
+        "isni": "0000 0001 2308 1657",
+        "wikidata": "Q41497113"
+      },
+      "aliases": [
+        "Sorbonne University",
+        "Sorbonne Université"
+      ],
+      "acronyms": [],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://www.sorbonne-universite.fr",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/02en5vm52",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-03-31",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": null
+        },
+        {
+          "field": "city",
+          "value": "Paris",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/02en5vm52",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-03-31",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 48.85341,2.3488"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Astro and Planetary Science | Stellar, planetary, and galactic studies | Particle physics theoretical and experimental studies | Astrophysics and Star Formation Studies | Astronomy and Astrophysical Research",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I39804081",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=404041; fields: Physics and Astronomy"
+        }
+      ]
+    },
+    {
+      "declaredName": "KTH Royal Institute of Technology",
+      "declaredCountry": "Sweden",
+      "rorId": "https://ror.org/026vcq606",
+      "rorDisplayName": "KTH Royal Institute of Technology",
+      "rorCountryName": "Sweden",
+      "rorLastModified": "2025-08-26",
+      "externalIds": {
+        "ror": "026vcq606",
+        "fundref": "501100004270",
+        "grid": "grid.5037.1",
+        "isni": "0000 0001 2158 1746",
+        "wikidata": "Q854280"
+      },
+      "aliases": [
+        "KTH",
+        "KTH Royal Institute of Technology",
+        "Kungliga Tekniska högskolan",
+        "Kuninkaallinen teknillinen korkeakoulu",
+        "Royal Institute of Technology"
+      ],
+      "acronyms": [
+        "KTH"
+      ],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://www.kth.se",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/026vcq606",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2025-08-26",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "ROR domains: kth.se"
+        },
+        {
+          "field": "city",
+          "value": "Stockholm",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/026vcq606",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2025-08-26",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 59.32938,18.06871"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Photonic and Optical Devices | Particle physics theoretical and experimental studies | Advanced MIMO Systems Optimization | Ionosphere and magnetosphere dynamics | Solar and Space Plasma Dynamics",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I86987016",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=117692; fields: Engineering, Physics and Astronomy"
+        }
+      ]
+    },
+    {
+      "declaredName": "Trinity College Dublin",
+      "declaredCountry": "Ireland",
+      "rorId": "https://ror.org/02tyrky19",
+      "rorDisplayName": "Trinity College Dublin",
+      "rorCountryName": "Ireland",
+      "rorLastModified": "2024-12-11",
+      "externalIds": {
+        "ror": "02tyrky19",
+        "fundref": "501100001637",
+        "grid": "grid.8217.c",
+        "isni": "0000 0004 1936 9705",
+        "wikidata": "Q258464"
+      },
+      "aliases": [
+        "College of the Holy and Undivided Trinity of Queen Elizabeth near Dublin",
+        "Coláiste na Tríonóide",
+        "Coláiste na Tríonóide Baile Átha Cliath",
+        "TCD",
+        "Trinity College Dublin",
+        "University of Dublin"
+      ],
+      "acronyms": [
+        "TCD"
+      ],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://www.tcd.ie/",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/02tyrky19",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2024-12-11",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "ROR domains: tcd.ie"
+        },
+        {
+          "field": "city",
+          "value": "Dublin",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/02tyrky19",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2024-12-11",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 53.33306,-6.24889"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Irish and British Studies | Dementia and Cognitive Impairment Research | Functional Brain Connectivity Studies | Geology and Paleoclimatology Research | Geological and Geochemical Analysis",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I205274468",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=96761; fields: Social Sciences, Medicine, Neuroscience, Earth and Planetary Sciences"
+        }
+      ]
+    },
+    {
+      "declaredName": "University of Copenhagen",
+      "declaredCountry": "Denmark",
+      "rorId": "https://ror.org/035b05819",
+      "rorDisplayName": "University of Copenhagen",
+      "rorCountryName": "Denmark",
+      "rorLastModified": "2026-07-20",
+      "externalIds": {
+        "ror": "035b05819",
+        "fundref": "501100001734",
+        "grid": "grid.5254.6",
+        "isni": "0000 0001 0674 042X",
+        "wikidata": "Q186285"
+      },
+      "aliases": [
+        "Københavns Universitet",
+        "UCPH",
+        "University of Copenhagen",
+        "Universität Kopenhagen"
+      ],
+      "acronyms": [
+        "UCPH"
+      ],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://www.ku.dk",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/035b05819",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-07-20",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "ROR domains: ku.dk"
+        },
+        {
+          "field": "city",
+          "value": "Copenhagen",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/035b05819",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-07-20",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 55.67594,12.56553"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Genomics and Phylogenetic Studies | Particle physics theoretical and experimental studies | Geology and Paleoclimatology Research | Galaxies: Formation, Evolution, Phenomena | Astronomy and Astrophysical Research",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I124055696",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=291200; fields: Biochemistry, Genetics and Molecular Biology, Physics and Astronomy, Earth and Planetary Sciences"
+        }
+      ]
+    },
+    {
+      "declaredName": "University of Barcelona",
+      "declaredCountry": "Spain",
+      "rorId": "https://ror.org/021018s57",
+      "rorDisplayName": "Universitat de Barcelona",
+      "rorCountryName": "Spain",
+      "rorLastModified": "2026-02-24",
+      "externalIds": {
+        "ror": "021018s57",
+        "fundref": "501100005774",
+        "grid": "grid.5841.8",
+        "isni": "0000 0004 1937 0247",
+        "wikidata": "Q219615"
+      },
+      "aliases": [
+        "Bartzelonako Unibertsitatea",
+        "UB",
+        "Universidad de Barcelona",
+        "Universitat de Barcelona",
+        "University of Barcelona"
+      ],
+      "acronyms": [
+        "UB"
+      ],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://web.ub.edu",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/021018s57",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-02-24",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "ROR domains: ub.edu"
+        },
+        {
+          "field": "city",
+          "value": "Barcelona",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/021018s57",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-02-24",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 41.38879,2.15899"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Particle physics theoretical and experimental studies | Quantum Chromodynamics and Particle Interactions | Liver Disease Diagnosis and Treatment | Magnetism in coordination complexes | Liver Disease and Transplantation",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I71999127",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=192902; fields: Physics and Astronomy, Medicine, Materials Science"
+        }
+      ]
+    },
+    {
+      "declaredName": "University of Toronto",
+      "declaredCountry": "Canada",
+      "rorId": "https://ror.org/03dbr7087",
+      "rorDisplayName": "University of Toronto",
+      "rorCountryName": "Canada",
+      "rorLastModified": "2026-07-20",
+      "externalIds": {
+        "ror": "03dbr7087",
+        "fundref": "501100003579",
+        "grid": "grid.17063.33",
+        "isni": "0000 0001 2157 2938",
+        "wikidata": "Q180865"
+      },
+      "aliases": [
+        "University of Toronto",
+        "Université de Toronto"
+      ],
+      "acronyms": [],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://www.utoronto.ca",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/03dbr7087",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-07-20",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "ROR domains: utoronto.ca"
+        },
+        {
+          "field": "city",
+          "value": "Toronto",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/03dbr7087",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-07-20",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 43.70643,-79.39864"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Neuroscience and Neuropharmacology Research | Health Systems, Economic Evaluations, Quality of Life | Respiratory Support and Mechanisms | Particle physics theoretical and experimental studies | Neonatal Respiratory Health Research",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I185261750",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=557446; fields: Neuroscience, Economics, Econometrics and Finance, Medicine, Physics and Astronomy"
+        }
+      ]
+    },
+    {
+      "declaredName": "McGill University",
+      "declaredCountry": "Canada",
+      "rorId": "https://ror.org/01pxwe438",
+      "rorDisplayName": "McGill University",
+      "rorCountryName": "Canada",
+      "rorLastModified": "2026-02-24",
+      "externalIds": {
+        "ror": "01pxwe438",
+        "fundref": "100008582",
+        "grid": "grid.14709.3b",
+        "isni": "0000 0004 1936 8649",
+        "wikidata": "Q201492"
+      },
+      "aliases": [
+        "McGill University",
+        "Université McGill"
+      ],
+      "acronyms": [],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://www.mcgill.ca",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/01pxwe438",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-02-24",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "ROR domains: mcgill.ca"
+        },
+        {
+          "field": "city",
+          "value": "Montreal",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/01pxwe438",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-02-24",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 45.50884,-73.58781"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Particle physics theoretical and experimental studies | Neuroscience and Neuropharmacology Research | Functional Brain Connectivity Studies | High-Energy Particle Collisions Research | Neural dynamics and brain function",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I5023651",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=298466; fields: Physics and Astronomy, Neuroscience"
+        }
+      ]
+    },
+    {
+      "declaredName": "University of Michigan",
+      "declaredCountry": "United States",
+      "rorId": "https://ror.org/00jmfr291",
+      "rorDisplayName": "University of Michigan",
+      "rorCountryName": "United States",
+      "rorLastModified": "2026-07-20",
+      "externalIds": {
+        "ror": "00jmfr291",
+        "fundref": "100007270",
+        "grid": "grid.214458.e",
+        "isni": "0000 0004 1936 7347",
+        "wikidata": "Q230492"
+      },
+      "aliases": [
+        "UM",
+        "UMich",
+        "University of Michigan",
+        "University of Michigan–Ann Arbor",
+        "Université du Michigan"
+      ],
+      "acronyms": [
+        "UM"
+      ],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://www.umich.edu",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/00jmfr291",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-07-20",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "ROR domains: umich.edu"
+        },
+        {
+          "field": "city",
+          "value": "Ann Arbor",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/00jmfr291",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-07-20",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 42.27756,-83.74088"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Particle physics theoretical and experimental studies | Astro and Planetary Science | Stellar, planetary, and galactic studies | Nuclear Physics and Applications | Astronomy and Astrophysical Research",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I27837315",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=987553; fields: Physics and Astronomy"
+        }
+      ]
+    },
+    {
+      "declaredName": "Georgia Institute of Technology",
+      "declaredCountry": "United States",
+      "rorId": "https://ror.org/01zkghx44",
+      "rorDisplayName": "Georgia Institute of Technology",
+      "rorCountryName": "United States",
+      "rorLastModified": "2025-05-05",
+      "externalIds": {
+        "ror": "01zkghx44",
+        "fundref": "100006778",
+        "grid": "grid.213917.f",
+        "isni": "0000 0001 2097 4943",
+        "wikidata": "Q864855"
+      },
+      "aliases": [
+        "GT",
+        "Georgia Institute of Technology",
+        "Georgia Tech",
+        "Instituto de Tecnología de Georgia"
+      ],
+      "acronyms": [
+        "GT"
+      ],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://www.gatech.edu",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/01zkghx44",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2025-05-05",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "ROR domains: gatech.edu"
+        },
+        {
+          "field": "city",
+          "value": "Atlanta",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/01zkghx44",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2025-05-05",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 33.749,-84.38798"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Advanced Sensor and Energy Harvesting Materials | Atmospheric chemistry and aerosols | Conducting polymers and applications | Semiconductor materials and devices | Photonic and Optical Devices",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I130701444",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=198170; fields: Engineering, Earth and Planetary Sciences, Materials Science"
+        }
+      ]
+    },
+    {
+      "declaredName": "National University of Singapore",
+      "declaredCountry": "Singapore",
+      "rorId": "https://ror.org/01tgyzw49",
+      "rorDisplayName": "National University of Singapore",
+      "rorCountryName": "Singapore",
+      "rorLastModified": "2026-07-20",
+      "externalIds": {
+        "ror": "01tgyzw49",
+        "fundref": "501100001352",
+        "grid": "grid.4280.e",
+        "isni": "0000 0001 2180 6431",
+        "wikidata": "Q738236"
+      },
+      "aliases": [
+        "King Edward VII College of Medicine",
+        "NUS",
+        "National University of Singapore",
+        "Universiti Kebangsaan Singapura",
+        "University of Malaya",
+        "சிங்கப்பூர் தேசியப் பல்கலைக்கழகம்",
+        "新加坡国立大学"
+      ],
+      "acronyms": [
+        "NUS"
+      ],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "http://www.nus.edu.sg/",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/01tgyzw49",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-07-20",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": null
+        },
+        {
+          "field": "city",
+          "value": "Singapore",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/01tgyzw49",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-07-20",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 1.28967,103.85007"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Semiconductor materials and devices | Quantum Information and Cryptography | Advanced Sensor and Energy Harvesting Materials | Graphene research and applications | Conducting polymers and applications",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I165932596",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=281811; fields: Engineering, Computer Science, Materials Science"
+        }
+      ]
+    },
+    {
+      "declaredName": "The University of Tokyo",
+      "declaredCountry": "Japan",
+      "rorId": "https://ror.org/057zh3y96",
+      "rorDisplayName": "The University of Tokyo",
+      "rorCountryName": "Japan",
+      "rorLastModified": "2026-07-20",
+      "externalIds": {
+        "ror": "057zh3y96",
+        "fundref": "501100004721",
+        "grid": "grid.26999.3d",
+        "isni": "0000 0001 2169 1048",
+        "wikidata": "Q7842"
+      },
+      "aliases": [
+        "The University of Tokyo",
+        "Todai",
+        "Tōkyō Daigaku",
+        "UT",
+        "UTokyo",
+        "とうきょうだいがく",
+        "トウキョウダイガク",
+        "東京大学"
+      ],
+      "acronyms": [
+        "UT"
+      ],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://www.u-tokyo.ac.jp",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/057zh3y96",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-07-20",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": null
+        },
+        {
+          "field": "city",
+          "value": "Tokyo",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/057zh3y96",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-07-20",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 35.6895,139.69171"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Physics of Superconductivity and Magnetism | Particle physics theoretical and experimental studies | Advanced Condensed Matter Physics | Legal and Regulatory Analysis | Linguistic, Cultural, and Literary Studies",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I74801974",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=510184; fields: Physics and Astronomy, Social Sciences"
+        }
+      ]
+    },
+    {
+      "declaredName": "Seoul National University",
+      "declaredCountry": "South Korea",
+      "rorId": "https://ror.org/04h9pn542",
+      "rorDisplayName": "Seoul National University",
+      "rorCountryName": "South Korea",
+      "rorLastModified": "2026-07-20",
+      "externalIds": {
+        "ror": "04h9pn542",
+        "fundref": "501100002551",
+        "grid": "grid.31501.36",
+        "isni": "0000 0004 0470 5905",
+        "wikidata": "Q39913"
+      },
+      "aliases": [
+        "SNU",
+        "Seoul Daehakgyo",
+        "Seoul National University",
+        "서울대학교"
+      ],
+      "acronyms": [
+        "SNU"
+      ],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://www.snu.ac.kr",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/04h9pn542",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-07-20",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "ROR domains: snu.ac.kr"
+        },
+        {
+          "field": "city",
+          "value": "Seoul",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/04h9pn542",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-07-20",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 37.566,126.9784"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Particle physics theoretical and experimental studies | Semiconductor materials and devices | Quantum Chromodynamics and Particle Interactions | High-Energy Particle Collisions Research | Advancements in Battery Materials",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I139264467",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=246253; fields: Physics and Astronomy, Engineering"
+        }
+      ]
+    },
+    {
+      "declaredName": "The University of Hong Kong",
+      "declaredCountry": "Hong Kong SAR",
+      "rorId": "https://ror.org/02zhqgq86",
+      "rorDisplayName": "University of Hong Kong",
+      "rorCountryName": "Hong Kong SAR",
+      "rorLastModified": "2026-07-20",
+      "externalIds": {
+        "ror": "02zhqgq86",
+        "fundref": "501100003803",
+        "grid": "grid.194645.b",
+        "isni": "0000 0001 2174 2757",
+        "wikidata": "Q15568"
+      },
+      "aliases": [
+        "HKU",
+        "Hong Kong University",
+        "University of Hong Kong"
+      ],
+      "acronyms": [
+        "HKU"
+      ],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://www.hku.hk",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/02zhqgq86",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-07-20",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "ROR domains: hku.hk"
+        },
+        {
+          "field": "city",
+          "value": "Pok Fu Lam",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/02zhqgq86",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-07-20",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 22.26861,114.12924"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Corporate Finance and Governance | SARS-CoV-2 and COVID-19 Research | Luminescence and Fluorescent Materials | Influenza Virus Research Studies | Geological and Geochemical Analysis",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I889458895",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=234586; fields: Business, Management and Accounting, Medicine, Materials Science, Earth and Planetary Sciences"
+        }
+      ]
+    },
+    {
+      "declaredName": "The University of Melbourne",
+      "declaredCountry": "Australia",
+      "rorId": "https://ror.org/01ej9dk98",
+      "rorDisplayName": "The University of Melbourne",
+      "rorCountryName": "Australia",
+      "rorLastModified": "2026-07-20",
+      "externalIds": {
+        "ror": "01ej9dk98",
+        "fundref": "501100001782",
+        "grid": "grid.1008.9",
+        "isni": "0000 0001 2179 088X",
+        "wikidata": "Q319078"
+      },
+      "aliases": [
+        "Melbourne University",
+        "The University of Melbourne",
+        "University of Melbourne"
+      ],
+      "acronyms": [],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://www.unimelb.edu.au",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/01ej9dk98",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-07-20",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "ROR domains: unimelb.edu.au"
+        },
+        {
+          "field": "city",
+          "value": "Melbourne",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/01ej9dk98",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-07-20",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng -37.814,144.96332"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Genomics and Phylogenetic Studies | Particle physics theoretical and experimental studies | Schizophrenia research and treatment | Immune Cell Function and Interaction | Mental Health Treatment and Access",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I165779595",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=347953; fields: Biochemistry, Genetics and Molecular Biology, Physics and Astronomy, Medicine, Immunology and Microbiology, Psychology"
+        }
+      ]
+    },
+    {
+      "declaredName": "Universidade de São Paulo",
+      "declaredCountry": "Brazil",
+      "rorId": "https://ror.org/036rp1748",
+      "rorDisplayName": "Universidade de São Paulo",
+      "rorCountryName": "Brazil",
+      "rorLastModified": "2026-07-20",
+      "externalIds": {
+        "ror": "036rp1748",
+        "fundref": "501100005639",
+        "grid": "grid.11899.38",
+        "isni": "0000 0004 1937 0722",
+        "wikidata": "Q835960"
+      },
+      "aliases": [
+        "USP",
+        "Universidade de Sao Paulo",
+        "Universidade de São Paulo",
+        "University of Sao Paulo",
+        "University of São Paulo"
+      ],
+      "acronyms": [
+        "USP"
+      ],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://www5.usp.br",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/036rp1748",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-07-20",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "ROR domains: usp.br"
+        },
+        {
+          "field": "city",
+          "value": "São Paulo",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/036rp1748",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-07-20",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng -23.5475,-46.63611"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Health, Nursing, Elderly Care | Business and Management Studies | Cultural, Media, and Literary Studies | Plant and animal studies | Dental materials and restorations",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I17974374",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=479141; fields: Health Professions, Decision Sciences, Arts and Humanities, Agricultural and Biological Sciences, Dentistry"
+        }
+      ]
+    },
+    {
+      "declaredName": "Universidad Nacional Autónoma de México",
+      "declaredCountry": "Mexico",
+      "rorId": "https://ror.org/01tmp8f25",
+      "rorDisplayName": "Universidad Nacional Autónoma de México",
+      "rorCountryName": "Mexico",
+      "rorLastModified": "2026-06-02",
+      "externalIds": {
+        "ror": "01tmp8f25",
+        "fundref": "501100005739",
+        "grid": "grid.9486.3",
+        "isni": "0000 0001 2159 0001",
+        "wikidata": "Q222738"
+      },
+      "aliases": [
+        "National Autonomous University of Mexico",
+        "UNAM",
+        "Universidad Nacional Autónoma de México"
+      ],
+      "acronyms": [
+        "UNAM"
+      ],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "http://www.unam.mx",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/01tmp8f25",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-06-02",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": null
+        },
+        {
+          "field": "city",
+          "value": "Mexico City",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/01tmp8f25",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-06-02",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 19.42847,-99.12766"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Stellar, planetary, and galactic studies | Mexican Socioeconomic and Environmental Dynamics | Plant and animal studies | Astrophysics and Star Formation Studies | Astronomy and Astrophysical Research",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I8961855",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=252454; fields: Physics and Astronomy, Environmental Science, Agricultural and Biological Sciences"
+        }
+      ]
+    },
+    {
+      "declaredName": "University of Cape Town",
+      "declaredCountry": "South Africa",
+      "rorId": "https://ror.org/03p74gp79",
+      "rorDisplayName": "University of Cape Town",
+      "rorCountryName": "South Africa",
+      "rorLastModified": "2026-06-23",
+      "externalIds": {
+        "ror": "03p74gp79",
+        "fundref": "501100001338",
+        "grid": "grid.7836.a",
+        "isni": "0000 0004 1937 1151",
+        "wikidata": "Q951305"
+      },
+      "aliases": [
+        "South African College",
+        "UCT",
+        "Universiteit van Kaapstad",
+        "University of Cape Town",
+        "iYunivesithi yaseKapa"
+      ],
+      "acronyms": [
+        "UCT"
+      ],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://uct.ac.za",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/03p74gp79",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-06-23",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": null
+        },
+        {
+          "field": "city",
+          "value": "Rondebosch",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/03p74gp79",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-06-23",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng -33.96333,18.47639"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Geochemistry and Geologic Mapping | Geological Modeling and Analysis | Electrical and Electromagnetic Research | Microbial Natural Products and Biosynthesis | Plant Disease Resistance and Genetics",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I157614274",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=334364; fields: Computer Science, Earth and Planetary Sciences, Physics and Astronomy, Medicine, Agricultural and Biological Sciences"
+        }
+      ]
+    },
+    {
+      "declaredName": "Indian Institute of Technology Delhi",
+      "declaredCountry": "India",
+      "rorId": "https://ror.org/049tgcd06",
+      "rorDisplayName": "Indian Institute of Technology Delhi",
+      "rorCountryName": "India",
+      "rorLastModified": "2024-12-11",
+      "externalIds": {
+        "ror": "049tgcd06",
+        "fundref": "501100007488",
+        "grid": "grid.417967.a",
+        "isni": "0000 0004 0558 8755",
+        "wikidata": "Q1194650"
+      },
+      "aliases": [
+        "IIT Delhi",
+        "IITD",
+        "Indian Institute of Technology Delhi",
+        "Institut indien de technologie de delhi",
+        "भारतीय तंत्रज्ञान संस्था",
+        "भारतीय प्रौद्योगिकी संस्थान दिल्ली",
+        "இந்திய தொழில்நுட்பக் கழகம் தில்லி",
+        "ఇండియన్ ఇన్స్టిట్యూట్ ఆఫ్ టెక్నాలజీ ఢిల్లీ",
+        "ಇಂಡಿಯನ್ ಇನ್ ಸ್ಟಿಟ್ಯೂಟ್ ಆಫ್ ಟೆಕ್ನಾಲಜಿ ದೆಹಲಿ",
+        "ഇന്ത്യൻ ഇൻസ്റ്റിറ്റ്യൂട്ട് ഓഫ് ടെക്നോളജി ഡെൽഹി"
+      ],
+      "acronyms": [
+        "IITD"
+      ],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://home.iitd.ac.in",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/049tgcd06",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2024-12-11",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "ROR domains: iitd.ac.in"
+        },
+        {
+          "field": "city",
+          "value": "New Delhi",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/049tgcd06",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2024-12-11",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 28.62137,77.2148"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Microgrid Control and Optimization | Photovoltaic System Optimization Techniques | Multilevel Inverters and Converters | Advanced DC-DC Converters | Photonic and Optical Devices",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I68891433",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=72726; fields: Engineering, Energy"
+        }
+      ]
+    },
+    {
+      "declaredName": "Khalifa University",
+      "declaredCountry": "United Arab Emirates",
+      "rorId": "https://ror.org/05hffr360",
+      "rorDisplayName": "Khalifa University of Science and Technology",
+      "rorCountryName": "United Arab Emirates",
+      "rorLastModified": "2024-12-11",
+      "externalIds": {
+        "ror": "05hffr360",
+        "fundref": "501100004070",
+        "grid": "grid.440568.b",
+        "isni": "0000 0004 1762 9729",
+        "wikidata": "Q6399651"
+      },
+      "aliases": [
+        "KUSTAR",
+        "Khalifa University",
+        "Khalifa University of Science and Technology",
+        "جامعة خليفة للعلوم والتكنولوجيا والبحوث"
+      ],
+      "acronyms": [
+        "KUSTAR"
+      ],
+      "facts": [
+        {
+          "field": "website_url",
+          "value": "https://www.ku.ac.ae/",
+          "factClass": "identity",
+          "writePolicy": "fill_if_null",
+          "scope": "institution",
+          "sourceUrl": "https://ror.org/05hffr360",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2024-12-11",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": null
+        },
+        {
+          "field": "city",
+          "value": "Abu Dhabi",
+          "factClass": "identity",
+          "writePolicy": "cross_check_only",
+          "scope": "institution_geonames_locality",
+          "sourceUrl": "https://ror.org/05hffr360",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2024-12-11",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "geonames lat/lng 24.45118,54.39696"
+        },
+        {
+          "field": "research_topics_top5",
+          "value": "Genomics and Phylogenetic Studies | Mycorrhizal Fungi and Plant Interactions | Plant Pathogens and Fungal Diseases | Topological and Geometric Data Analysis | Stochastic Gradient Optimization Techniques",
+          "factClass": "research_strength",
+          "writePolicy": "supersede_by_date",
+          "scope": "institution_all_time",
+          "sourceUrl": "https://openalex.org/I176601375",
+          "sourceType": "open_registry",
+          "sourceTier": "HIGH",
+          "sourceAsOf": "2026-08-17T05:59:21",
+          "retrievedAt": "2026-08-17T10:18:35.863Z",
+          "verificationState": "verified_current",
+          "notes": "works_count=35081; fields: Biochemistry, Genetics and Molecular Biology, Agricultural and Biological Sciences, Computer Science"
+        }
+      ]
+    }
+  ],
+  "unresolved": []
+}
