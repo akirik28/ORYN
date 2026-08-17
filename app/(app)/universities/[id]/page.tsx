@@ -160,15 +160,19 @@ export default async function UniversityDetailPage({ params }: { params: Promise
 
       {profile?.is_admin ? <AdminRequirementForm universityId={university.id} programs={programsRes.data ?? []} /> : null}
 
-      {university.website_url ? (
-        <a
-          href={university.website_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-sm text-brand-primary hover:underline"
-        >
-          Visit official website <ExternalLink className="size-3.5" />
-        </a>
+      {university.website_url || university.admissions_url ? (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+          {university.website_url ? (
+            <a href={university.website_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
+              Visit official website <ExternalLink className="size-3.5" />
+            </a>
+          ) : null}
+          {university.admissions_url ? (
+            <a href={university.admissions_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
+              Admissions{university.application_system ? ` (${university.application_system})` : ""} <ExternalLink className="size-3.5" />
+            </a>
+          ) : null}
+        </div>
       ) : null}
 
       {sourcesRes.data && sourcesRes.data.length > 0 ? (
