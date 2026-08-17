@@ -336,11 +336,11 @@ regeneration commit) refreshed ROR/WIKIDATA/GRID/ISNI/CROSSREF_FUNDER coverage w
 credentials and the new circuit breaker: 3,950 external ids upserted (idempotent — mostly
 confirming what was already there), 807/1010 resolved (203 unresolved: 192 ambiguous/no exact
 name match, 5 country mismatch, 2 no ROR hit, 4 other — all kept in the fixture with a reason,
-none guessed). Not separately audited this session: whether the SAME external id is ever
-mapped to two different *live* (non-merged) canonical entities registry-wide — the import
-pipeline's own resolver would refuse to act on that case (`resolveUniversity` returns
-`unresolved` when external ids resolve to >1 entity) but a standalone confirmation query
-hasn't been run.
+none guessed). **Closed, not just theoretically covered**: `npm run
+check:university-spine-health` (built later this session — see Phase 10) directly checks
+whether the same external id is ever mapped to two different *live* (non-merged) canonical
+university entities registry-wide, beyond what the import pipeline's own resolver refuses to
+act on. Confirmed clean as of the last run of this session.
 
 ## Next (queued, not yet started this session)
 
