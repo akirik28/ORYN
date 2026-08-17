@@ -228,7 +228,7 @@ picks the admissions page or returns null (never a guess) → `application_syste
 when a known portal name (Common App/UCAS/Parcoursup/Studielink/uni-assist/ÖSYM-YKS/Coalition)
 appears verbatim in the fetched page content.
 
-**Three real scoring bugs found and fixed by actually reading the live output, not just
+**Four real scoring bugs found and fixed by actually reading the live output, not just
 trusting "a value was found" — every one caught between an apply and the next batch, never
 left for a later session to discover:**
 1. First 3-university smoke test resolved Aarhus University to a **Master's-only** admissions
@@ -249,9 +249,21 @@ left for a later session to discover:**
    different fact from DCU using that system itself. Fixed by gating every country-specific
    system (Parcoursup/Studielink/uni-assist/ÖSYM-YKS) behind a same-country match between the
    institution and the system's home country (`lib/acquisition/normalize.ts`'s `sameCountry`,
-   so `Türkiye`/`Turkey` aliasing works). Common App/UCAS/Coalition stay ungated — broad
-   multi-country portals, no demonstrated bug there. Reverted DCU's value; re-verified against
-   the real live DCU page text (not just the unit test).
+   so `Türkiye`/`Turkey` aliasing works). Common App/UCAS/Coalition were left ungated at this
+   point — broad multi-country portals, reasoned to be lower risk, no demonstrated bug yet.
+   Reverted DCU's value; re-verified against the real live DCU page text (not just the unit
+   test).
+4. A 300-university batch proved that reasoning wrong: **Shanghai Jiao Tong University**
+   (China) was tagged `application_system = "Common App"` (the US portal) from its own
+   international-admissions PDF — same mechanism as #3, just on a pattern assumed safe.
+   Generalized the fix instead of special-casing again: every system in the list is now
+   country-gated, including Common App (→ United States), UCAS (→ United Kingdom), and
+   Coalition (→ United States). Manually audited all 60 `application_system` rows produced
+   across all three batches against the new rule — SJTU was the only mismatch. Separately
+   (unrelated mechanism, same batch), **LSE**'s newly-acquired `admissions_url` resolved to an
+   "Undergraduate Admissions Extenuating Circumstances" sub-page — real LSE content, on-domain,
+   but not what a prospective applicant needs; reverted (LSE's `application_system=UCAS` was
+   correct and kept).
 
 **Known, accepted limitation, not chased further this session:** a handful of the kept
 `admissions_url` results point at a real, on-topic, on-domain admissions page that is narrower
@@ -264,11 +276,12 @@ scoped — the kind of judgment call that needs AI-level page-purpose understand
 close, which is exactly the piece blocked on Anthropic credits. Not a fabrication risk,
 disclosed rather than silently accepted as perfect.
 
-**Coverage after two applied batches** (40 + 150 universities): `admissions_url` 122/1010
-(12.1%), `application_system` 25/1010 (2.5%, one DCU row reverted). Every write is
-`fill_if_null`, re-checked immediately before writing (not just at selection time). `--limit`
-defaults to 25 deliberately — Tavily is a paid API, scale-up should stay deliberate rather
-than a single 1010-university run.
+**Coverage after three applied batches** (40 + 150 + 300 universities): `admissions_url`
+296/1010 (29.3%), `application_system` 59/1010 (5.8%) — both net of the DCU/SJTU/LSE reverts.
+Every write is `fill_if_null`, re-checked immediately before writing (not just at selection
+time). `--limit` defaults to 25 deliberately — Tavily is a paid API, scale-up should stay
+deliberate rather than a single 1010-university run. `npm run check:university-spine-health`
+passes cleanly after all three batches and both rounds of reverts.
 
 ## Phase 8 — canonical entity registry quality: two real findings closed
 
