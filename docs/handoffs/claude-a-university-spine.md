@@ -13,19 +13,30 @@ current state, not as a session log.
 ## Current state
 
 - Branch: `oryn/university-intelligence-spine`, pushed to origin, tracking. Base: `main` @
-  `b92c72f` (the tip when this session started; contains the Phase 2 verified-acquisition
+  `b92c72f` (the tip when the first session started; contains the Phase 2 verified-acquisition
   architecture and the live full-spine run from the prior session).
-- Latest commit on this branch: `1931c54`. Commits this session, in order: `d0f276c` (8
-  confirmed duplicate identities merged), `e883c8c`/this file, `2005846` (OpenAlex circuit
-  breaker), `b223373`/`24ce238` (admissions acquisition + a live-caught false-positive fix),
-  `9aef391` (full-spine fixture regenerated + applied), `4450b60` (73 evidence-less
-  official_verified entities downgraded), `1931c54` (entities-audit.ts 1000-row truncation
-  fix).
+- Latest commit on this branch: `694caa1`. This is a continuation session (session 2) picking
+  up after the first session's own "session complete" checkpoint — see git log for the full
+  first-session commit list; this session's own commits in order: `eca81c8` (admissions
+  apply-loop crash fix + `--apply-from` resume path), `694caa1` (US student-count enrichment
+  via College Scorecard bulk file). A "strategic expansion" batch (9 institutions from Claude
+  B's missing-university handoff + the École Polytechnique/Institut Polytechnique de Paris
+  identity ambiguity) also landed this session, before this doc update — see git log for that
+  commit and `docs/handoffs/claude-a-to-claude-b.md` for the full per-institution dossier.
 - `SUPABASE_SECRET_KEY` is live and working this session (`check:integrations`: Supabase +
-  secret key OK, Tavily OK). **No Supabase MCP and no linked CLI/direct-Postgres access in
-  this session** — DDL (migrations) cannot be applied by me; only PostgREST reads/writes and
-  existing RPCs (e.g. `merge_canonical_entities`) are reachable. This is the one hard
-  capability gap this pass ran into.
+  secret key OK). **No Supabase MCP and no linked CLI/direct-Postgres access in this session**
+  — DDL (migrations) cannot be applied by me; only PostgREST reads/writes and existing RPCs
+  (e.g. `merge_canonical_entities`) are reachable. This is the one hard capability gap this
+  pass ran into.
+- **Tavily: was working all of this session (drove `admissions_url` from ~36% to 40%), then
+  hit `HTTP 432` — "This request exceeds your plan's set usage limit. Please upgrade your plan
+  or contact support@tavily.com."** Confirmed with a direct `curl` against `api.tavily.com`,
+  not just the acquisition script — a genuine plan-level usage cap, not a bug, not ordinary
+  rate-limiting (which the script already retries around via its circuit breaker). See
+  `docs/founder-blocked-backlog.md` item 6. Blocks all further `acquire:admissions` batches
+  (413 universities still missing `admissions_url` as of this pass) until the plan resets or
+  is upgraded. No fallback heuristic was built to route around this, per this repo's own
+  standing rule against unsafe substitutes for a billing/plan blocker.
 - Anthropic: `check:integrations` reports **"insufficient credit balance"** (billing, HTTP
   400), not a missing-key error — a founder billing action, not a code problem. Blocks
   AI-structured admissions/requirement extraction.
@@ -33,7 +44,16 @@ current state, not as a session log.
   `"Insufficient budget... $0 remaining. Resets at midnight UTC", retryAfter: 34062` — this
   is a materially different failure than a plain rate limit; worth the founder's attention
   since prior docs describe OpenAlex as unconditionally free/keyless. Blocks
-  `research_topics_top5` acquisition (currently 30/1010, unchanged this pass).
+  `research_topics_top5` acquisition (currently 30/1010, unchanged this pass). Not yet
+  retried this session (retryAfter window hadn't elapsed as of the last check).
+- **HESA (UK national student-count dataset) is Cloudflare bot-protected** — `HTTP 403` with
+  `cf-ray`/`__cf_bm` challenge headers on both the main site and direct CSV asset URLs
+  (`hesa.ac.uk/data-and-analysis/sb271/figure-*.csv`), confirmed via `curl` with a realistic
+  browser user-agent, not just `WebFetch`. This is not a founder-fixable credential gap — no
+  key or account unlocks someone else's bot detection — so it doesn't belong in
+  `founder-blocked-backlog.md`; recorded here as a real, investigated dead end so a future
+  session doesn't re-attempt the same request. See "Phase 3 continuation" below for what was
+  tried and the country-priority gap this leaves open.
 
 ## Measured baseline (live, `npm run report:universities`, 2026-08-17)
 
@@ -240,6 +260,60 @@ property found for undergrad-only/grad-only splits, and the nearest faculty-adja
 be exactly the kind of fabrication-by-overstatement this product's rules forbid. Left honestly
 at 0%, not attempted with a weaker signal.
 
+### Session 2 continuation — moved beyond Wikidata to a real national dataset (US), UK blocked
+
+Per the founder's explicit instruction not to keep pushing the exhausted Wikidata index and
+instead find scalable *official* national datasets: `scripts/enrich-student-counts-us.ts`
+against the US Department of Education's College Scorecard **bulk institution-level file**
+(`Most-Recent-Cohorts-Institution.csv`, IPEDS-derived, ~6,300 US institutions) — a genuinely
+different, keyless source from the live query API `lib/providers/college-scorecard.ts` wraps
+(which needs the still-unset `COLLEGE_SCORECARD_API_KEY`). Verified real before trusting it:
+`curl -sI` on the download URL (real S3/CloudFront headers, HTTP 200), then spot-checked
+Harvard/MIT/Princeton/Stanford figures against public knowledge.
+
+Scope kept explicit, per the founder's instruction not to conflate definitions: `UGDS`/`GRADS`
+are **headcount**, **institution-level** (one UNITID = one campus; IPEDS gives every branch
+campus of a multi-campus system its own UNITID, never a system total). No per-row academic
+year is asserted in `stats_as_of` — the bulk file is a rolling per-institution "most recent
+available" snapshot with no year column, and the year can genuinely differ row-to-row, so
+`stats_as_of` is `"undated (see source)"` / `data_quality_flag =
+"current_page_date_uncertain"`, reusing the Wikidata pipeline's own convention for this exact
+situation rather than asserting a guessed year.
+
+Matching: exact `nameKey`/`nameVariants` first (103/131 US universities), then a small,
+individually city-verified `FLAGSHIP_UNITID_OVERRIDES` table (25 entries) for the well-known
+IPEDS "-Main Campus" multi-campus-suffix convention (e.g. `Purdue University` only exists in
+the bulk file as `Purdue University-Main Campus`) — each entry confirmed by cross-checking the
+bulk file's own city/state against that institution's known flagship location, **not**
+name-similarity/fuzzy matching. Two multi-campus names deliberately got no override and stay
+unresolved: **City University of New York** (a ~25-college system — Baruch, Hunter, Brooklyn,
+...— with no single UNITID representing it) and **University of Minnesota (System)** (our own
+row names it a system total; the Twin Cities flagship's headcount would silently relabel a
+campus figure as a system figure, the exact HEADCOUNT/SYSTEM conflation this pipeline exists
+to prevent). One genuine near-duplicate — Notre Dame's Chicago satellite campus sharing a
+name-key with the main South Bend campus — was correctly caught by the existing
+more-than-one-candidate guard and skipped rather than guessed.
+
+**Result: 128/131 US universities matched (25 via the verified override), 354 facts applied**
+— `undergraduate_students` 128 (0% → new), `postgraduate_students` 128 (0% → new),
+`total_students` 98 new (320/1010 total spine-wide, up from 222).
+
+**UK is next by gap size (51 QS universities still missing `total_students`, the largest
+non-US gap) and was investigated, not just queued.** HESA — the obvious source, and the one
+the founder named — is Cloudflare bot-protected (see "Current state" above): confirmed `403`
+with `cf-ray`/challenge cookies on the main site, on `data.gov.uk`'s own mirrored links (which
+still point back to `hesa.ac.uk` URLs), and on individual CSV asset URLs directly, all via
+`curl` with a realistic browser user agent — not a `WebFetch`-specific quirk. Did not attempt
+to defeat the bot challenge (headless-browser rendering, cookie-jar/session replay, etc.) —
+that crosses from "acquire official data" into "evade another service's anti-bot controls,"
+which this session's own instructions treat the same as any other detection-evasion request.
+**Germany (37 missing), India (33), Italy (31), Spain (27) were identified as the next-largest
+gaps but not yet investigated** — genuinely queued, not attempted and abandoned. A reasonable
+next step for each: check whether that country's own statistics office (Destatis for Germany,
+AISHE/UGC for India, MUR/ISTAT for Italy, Ministerio de Universidades for Spain) publishes a
+comparable bulk per-institution file, applying the exact same live-`curl`-verify-before-trust
+discipline used for College Scorecard, rather than assuming any of them will or won't work.
+
 ## Phase 4 — admissions_url / application_system: built, live-tested, one real bug caught and fixed before scale-up
 
 Tavily-only (no AI — Anthropic credit-blocked). `scripts/acquire-admissions-facts.ts` +
@@ -298,11 +372,11 @@ scoped — the kind of judgment call that needs AI-level page-purpose understand
 close, which is exactly the piece blocked on Anthropic credits. Not a fabrication risk,
 disclosed rather than silently accepted as perfect.
 
-**Final coverage, four applied batches** (40 + 150 + 300 + 250 universities): `admissions_url`
-368/1010 (36.4%), `application_system` 74/1010 (7.3%) — net of all reverts. The 4th batch's
-country-consistency was checked exhaustively (all 74 `application_system` rows, not a
-sample): 0 mismatches, confirming the generalized country gate holds across the full
-dataset, not just the two cases that originally exposed it. A last spot-check of 8
+**Coverage after the first session's four batches** (40 + 150 + 300 + 250 universities):
+`admissions_url` 368/1010 (36.4%), `application_system` 74/1010 (7.3%) — net of all reverts.
+The 4th batch's country-consistency was checked exhaustively (all 74 `application_system`
+rows, not a sample): 0 mismatches, confirming the generalized country gate holds across the
+full dataset, not just the two cases that originally exposed it. A last spot-check of 8
 newly-flagged `admissions_url` values found the same "real but narrower than ideal" pattern
 already documented above (an "Info Day" press release, a country-specific PDF guide, a
 single-program page) — no new bug class, nothing reverted this round.
@@ -310,7 +384,38 @@ single-program page) — no new bug class, nothing reverted this round.
 Every write is `fill_if_null`, re-checked immediately before writing (not just at selection
 time). `--limit` defaults to 25 deliberately — Tavily is a paid API, scale-up should stay
 deliberate rather than a single 1010-university run. `npm run check:university-spine-health`
-passes cleanly after all four batches and every revert.
+passes cleanly after all four batches and every revert. `scripts/audit-admissions-quality.ts`
+(new this session — see below) makes that anomaly check repeatable instead of ad hoc.
+
+### Session 2 continuation — a real crash bug, two more real anomalies, then a plan-limit wall
+
+**Bug found and fixed**: the apply loop's per-fact PATCH/probe `fetch` calls had no
+`try`/`catch`, unlike the acquire-side calls. A 350-candidate batch died mid-write on an
+uncaught `fetch failed` (a transient network blip) and exited silently — `[exited with code
+0]` even though the run was genuinely incomplete, stranding the rest of the batch unattempted.
+Fixed in `eca81c8`: each fact's apply is now individually try/caught (one flaky request can no
+longer abort the run), and a new `--apply-from <path>` mode replays a previously saved
+`--out` batch without spending any new Tavily credit — used to recover the stranded batch's
+remaining facts (24 admissions_url + 2 application_system) without re-querying Tavily for
+universities already paid for.
+
+**Two more real anomalies caught by `audit:admissions-quality` and reverted** (same two
+pattern classes as the first session's LSE finding, now with regression tests in
+`__tests__/acquisition/admissions.test.ts`): a stale admissions-cycle news post (Gadjah Mada
+University's "2026 seat count" announcement) and — a second, independent occurrence — LSE's
+`admissions_url` had reverted back to the same "Extenuating Circumstances" page this session
+that the first session had already reverted once. **Root cause not established** — no direct
+evidence distinguishes "the first revert didn't actually persist" from "something else
+re-wrote it" — flagged here rather than silently re-fixed a third time without note. A
+regression test now locks in the correct (below-threshold) score for that exact URL, so if it
+reappears again the acquisition scorer itself, not just the periodic audit, will refuse it.
+
+**Coverage after resuming the stranded batch**: `admissions_url` 407/1019 (40.0%),
+`application_system` 77/1019 (7.6%). `audit:admissions-quality` clean (0 flagged) at this
+point. A further `--limit 413` batch (all remaining candidates) then hit Tavily's plan usage
+limit on its 3rd request and tripped the circuit breaker immediately — 0 new facts, see
+"Current state" above. **413 universities still missing `admissions_url`** as of this pass;
+resuming needs the Tavily plan blocker resolved first, not a code change.
 
 ## Phase 8 — canonical entity registry quality: two real findings closed
 
@@ -371,18 +476,28 @@ whether the same external id is ever mapped to two different *live* (non-merged)
 university entities registry-wide, beyond what the import pipeline's own resolver refuses to
 act on. Confirmed clean as of the last run of this session.
 
-## Next (queued, not yet started this session)
+## Next (queued, not yet started)
 
 1. Duplicate-id cross-registry check (see Phase 7 above) — a standalone query, not yet run.
 2. Phase 9 — `university_profile_metrics` schema review (which of the still-missing
    population metrics deserve a typed column vs staying in the flexible metric store).
 3. Phase 11 — confirm the API/query layer actually exposes what's been acquired this session
-   (admissions_url, the corrected verification states, refreshed external ids) to the
-   University Explorer UI — not yet checked.
-4. Phase 6 — OpenAlex retry once its budget resets (~9.5h out from 14:30 UTC; circuit breaker
-   means a retry costs 3 requests to confirm, not another wasted full run).
-5. Scale the admissions acquisition batch size further (`--limit`) now that the scorer bug is
-   fixed and validated against two independent live failures — current coverage: check
-   `npm run report:universities`'s "admissions URL" line.
-6. Migration 0043 + the 5 read-path filters (see Phase 2 above) — founder/DDL-access blocked,
+   (admissions_url, the corrected verification states, refreshed external ids, the new
+   undergraduate/postgraduate student counts) to the University Explorer UI — not yet checked.
+4. Phase 6 — OpenAlex retry once its budget resets (retryAfter window from the last 429 hadn't
+   elapsed as of this pass; circuit breaker means a retry costs 3 requests to confirm, not
+   another wasted full run).
+5. Resume `acquire:admissions` once the Tavily plan-limit blocker (see "Current state") is
+   resolved — 413 universities still missing `admissions_url`. Not a code blocker.
+6. Student counts beyond the US: Germany (37 QS universities missing `total_students`),
+   India (33), Italy (31), Spain (27) — investigate each country's own statistics-office bulk
+   dataset the same way College Scorecard was verified (live `curl`, spot-check known figures,
+   confirm headcount/FTE/institution/system scope before trusting it). UK/HESA investigated
+   and is a genuine dead end (Cloudflare-protected) — don't re-attempt it the same way.
+7. Migration 0043 + the 5 read-path filters (see Phase 2 above) — founder/DDL-access blocked,
    not code-blocked.
+8. Bocconi University's missing QS 2027 row (see Phase 5 above) — still just the one flagged
+   row, not yet investigated further.
+9. The ~203-row external-ID-unresolved bucket (Phase 7) — currently one undifferentiated
+   pile (192 ambiguous/no exact match, 5 country mismatch, 2 no ROR hit, 4 other); worth
+   splitting into evidence-backed sub-buckets rather than leaving it as one generic count.

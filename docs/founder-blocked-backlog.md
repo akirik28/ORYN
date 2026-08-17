@@ -84,12 +84,28 @@ Story Bank outline generation, opportunity/requirement extraction (also needs it
 and the admin-only "suggest a rule" AI assist on the requirement form.
 **Depends on**: nothing.
 
-## 6. Add `TAVILY_API_KEY` (optional)
+## 6. Add `TAVILY_API_KEY` (optional) — key present, plan usage limit now exceeded
 
-**Action**: [tavily.com](https://tavily.com) → add to `.env.local`.
-**Blocks**: the opportunity-discovery and requirement-discovery background jobs
-specifically — everything else works without it.
-**Depends on**: item 5 also needed for these two jobs (search + AI-structure both required).
+**Status (2026-08-17, University Intelligence Spine continuation)**: the key itself is
+configured and was working all session (drove `admissions_url`/`application_system`
+acquisition from ~36% to 40% coverage across 1,019 universities). A subsequent batch then
+hit `HTTP 432` from `api.tavily.com/search`: `{"detail":{"error":"This request exceeds
+your plan's set usage limit. Please upgrade your plan or contact support@tavily.com"}}`.
+Confirmed with a direct `curl` against the API, not just the acquisition script — this is
+Tavily's own plan-level usage cap, not a bug in this repo, not rate-limiting (which the
+acquisition script already handles and retries around), and not something a code change
+can work around. Per this repo's own standing rule against building unsafe substitutes to
+route around a billing/credential blocker, no fallback heuristic was built — remaining
+`admissions_url`/`application_system` acquisition (currently 413 universities still
+missing `admissions_url`) and the OpenAlex-adjacent research-topic work both stay paused
+on this specifically until the plan resets or is upgraded.
+**Action**: [tavily.com](https://tavily.com) dashboard → check current plan's usage
+window/reset date, or upgrade the plan → add/confirm `TAVILY_API_KEY` in `.env.local`.
+**Blocks**: the opportunity-discovery and requirement-discovery background jobs, and (as
+of this pass) all further `acquire:admissions` batches until the limit resets or the plan
+is upgraded — everything else works without it.
+**Depends on**: item 5 also needed for the two background jobs (search + AI-structure both
+required); not needed for `acquire:admissions`, which is Tavily-only by design.
 
 ## 7. Add `COLLEGE_SCORECARD_API_KEY` (optional)
 
