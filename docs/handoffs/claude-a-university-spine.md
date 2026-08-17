@@ -121,22 +121,39 @@ backend was the exact dead-code landmine fixed above. Not currently wired to any
 UI location needs it — target-university selection goes through the now-fixed Explorer search/
 browse instead), so nothing to demo, but the infrastructure is correct and ready.
 
-**Test-score selector / coursework autocomplete status (Phase G/H) — researched, not yet built**:
-schema confirmed (`types/database.ts`'s `TestScore.test_name`/`score`/`max_score` are all plain
-`text`, deliberately — score formats are genuinely heterogeneous across tests, not an oversight
-to fix). The actual UI field is `features/profile/field-config.ts`'s `TEST_SCORE_FIELDS`
-(`{ type: "text", name: "test_name", label: "Test name (e.g. SAT, IB Predicted)" }`) — confirms
-the founder's screenshot exactly. `FieldConfig` already has a generic `"entity"` field type
-wired to `EntityCombobox` (used for schools/employers/etc.), which is architecturally the
-obvious mechanism — but tests are a small, closed, mostly-static vocabulary (SAT/ACT/PSAT/IELTS/
-TOEFL/Duolingo are fixed; AP/IB need a subject suffix, the same complication coursework has),
-which doesn't obviously want the full canonical_entities registry (open-ended, growing,
-alias/dedup/verification-state machinery meant for organizations, not a fixed exam list) the way
-a university or employer does. Not built this pass — the research is done and recorded here so
-the next session doesn't re-investigate the schema from zero, but forcing a new selector
-component through in an already-very-long session felt like the wrong tradeoff against quality.
-**Coursework autocomplete**: not yet independently investigated (`COURSEWORK_FIELDS` in the same
-file, not yet read this pass).
+**Test-score selector / coursework autocomplete status (Phase G/H) — built, wired, verified
+live**: schema confirmed first (`types/database.ts`'s `TestScore.test_name`/`score`/`max_score`
+are all plain `text`, deliberately — score formats are genuinely heterogeneous across tests, not
+an oversight). Decided against the obvious-looking `"entity"`/`EntityCombobox`/
+`canonical_entities` mechanism (architecturally the first thing to reach for, used for schools/
+employers) — tests and course subjects are small, closed, mostly-static vocabularies, and that
+registry's alias/dedup/verification-state machinery is built for open-ended, growing real-world
+organizations, not a fixed list. Also found `COURSE_FIELDS.level` was already a proper `select`
+(AP/IB HL/SL/A-Level/Honors/Regular/Dual enrollment/Other) — the founder's own "AP
+Microeconomics" example was really about `subject` (free text) and `course_name`, not `level`.
+
+Built `features/entities/suggest-input.tsx` (`SuggestInput`) instead: same interaction contract
+as `EntityCombobox` (typeahead, keyboard nav, Escape/Enter, a11y roles) but synchronous over a
+static in-memory list, no server round trip, no "id"/rejection concept — the typed text is
+always the stored value, a suggestion is offered, never enforced. New `FieldConfig` variant
+`"suggest"`, wired into `DynamicFormFields`. `test_name` now suggests a researched
+`TEST_NAME_SUGGESTIONS` list (SAT, ACT, PSAT/NMSQT, AP, IB Predicted, IB Final, A-Level, IELTS
+Academic/General Training, TOEFL iBT, Duolingo English Test, Cambridge English (C1/C2), YKS —
+checked against this app's own US/UK/Europe/Turkey focus, not the founder brief's example list
+copied blindly). Coursework's `subject` now reuses the existing `INTEREST_SUGGESTIONS`
+(onboarding's own interest-chip list) rather than inventing a second, parallel vocabulary — DRY,
+and a student's stated interests and their course subjects are naturally the same list.
+
+No `.test.tsx` added — checked first, this codebase has zero component-test precedent anywhere;
+verified live instead, matching this session's established convention. Both dialogs opened via
+the same already-authenticated shared session used for the earlier P0 verification: all 8
+test-name suggestions show on focus (capped, `MAX_VISIBLE=8` of the 14-item list), typing "sat"
+filters to exactly SAT/PSAT-NMSQT (the founder's own literal acceptance test), selecting SAT sets
+the underlying input's real DOM value to `"SAT"` (checked directly, not just the accessible-name
+label, after a stale first read nearly gave a false negative — see the commit for the full
+trace), and the coursework Subject field shows the same Economics/Business/Computer Science/...
+suggestions onboarding uses. Both dialogs canceled rather than saved (real account data via a
+shared session, not a fixture).
 
 **Other free-text traps (Phase I)**: not yet audited beyond tests/coursework.
 
@@ -168,14 +185,16 @@ regression.test.ts` — 34 tests covering all 9 named pairs individually and com
 "genuinely different institutions stay separate" case). `npm run lint` / `npx tsc --noEmit` /
 `npm run build` all clean after every commit in this pass.
 
-**Remaining, explicitly scoped next steps** (not blockers — just not yet done): Phase G (test-
-score selector) and Phase H (coursework autocomplete) need an actual UI decision on the
-entity-registry-vs-fixed-list question above before building; Phase I (other free-text fields:
-subjects, countries, curricula, degree types, organizations); Phase Q (existing free-text data
-cleanup — PLAN → REVIEW → APPLY → VERIFY, only after G/H land); Phase O (site-wide visual audit
-+ Claude-B handoff for shared-token adoption on their surfaces). Commits this pass, in order:
-`8247819` (P0 fix), `cccb74d` (Phase D surface fixes), `61eff71` (audit artifact), `a55cb92`
-(Phase F regression tests), `3192962` (light-theme default).
+**Remaining, explicitly scoped next steps** (not blockers — just not yet done): Phase I (other
+free-text fields worth the same suggest/entity treatment — countries, curricula, degree types,
+organizations not already covered by an existing `"entity"` scope); Phase Q (existing free-text
+data cleanup — PLAN → REVIEW → APPLY → VERIFY over already-stored `test_name`/`subject` values
+now that G/H exist to prevent new fragmentation; e.g. normalizing pre-existing "sat"/"Sat" rows
+to "SAT" — only obvious deterministic cases, never destructive on ambiguous custom values); Phase
+O (site-wide visual audit beyond the surfaces already touched + Claude-B handoff for shared-
+token adoption on their surfaces). Commits this pass, in order: `8247819` (P0 fix), `cccb74d`
+(Phase D surface fixes), `61eff71` (audit artifact), `a55cb92` (Phase F regression tests),
+`3192962` (light-theme default), `c0fb731` (docs), `b632149` (Phase G/H suggestion fields).
 
 ## Measured baseline (live, `npm run report:universities`, 2026-08-17)
 
