@@ -72,7 +72,7 @@ schools (`TRSCH`) with their explicit aliases (`ALIA`), globally QS-ranked unive
    "official-current" canonical opportunities, 7 opportunity aliases, as of this batch).
 3. `python3 scripts/drive-import/generate_entities_sql.py` —
    `supabase/seed_entities_drive_batch1.sql`. Requires
-   `supabase/migrations/0038_canonical_institutions.sql` applied first.
+   `supabase/migrations/0038_canonical_entity_registry.sql` applied first.
 4. Read the generated file before applying it, same discipline as step 4 above. Update
    `existing_universities.json`'s source (the `existing` list `main()` builds from
    `supabase/seed.sql` + `seed_drive_batch1.sql`) first if either has grown since this

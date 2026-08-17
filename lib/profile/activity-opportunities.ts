@@ -5,7 +5,7 @@ import type { Activity, Database } from "@/types/database";
 
 /**
  * Resolves each activity's linked opportunity title for display, since `activities` has
- * no denormalized text column for it (unlike every `organization_id` field, which reuses
+ * no denormalized text column for it (unlike every `organization_entity_id` field, which reuses
  * the row's existing `organization` text). The resolved title is attached as
  * `opportunity_title`, a display-only field the edit form binds to — `ActivitySchema`
  * strips it on save (Zod objects drop unknown keys), so only `opportunity_id` ever

@@ -54,7 +54,7 @@ describe("scoreIntellectualCuriosity", () => {
             user_id: "u1",
             title: "Data Analysis",
             organization: null,
-            organization_id: null,
+            organization_entity_id: null,
             description: null,
             issue_date: null,
             expiry_date: null,

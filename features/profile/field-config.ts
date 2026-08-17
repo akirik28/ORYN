@@ -1,4 +1,4 @@
-import type { EntitySearchType } from "@/lib/entities/types";
+import type { EntityScope } from "@/lib/entities/field-policy";
 
 // Essay Story Bank (founder-confirmed MVP scope) reads this field as candidate material —
 // never CV-facing, never auto-summarized. One shared field, one shared prompt list, reused
@@ -17,18 +17,19 @@ export type FieldConfig =
   | { type: "number"; name: string; label: string; span?: "full" | "half" }
   | { type: "checkbox"; name: string; label: string }
   | { type: "select"; name: string; label: string; options: { value: string; label: string }[]; span?: "full" | "half" }
-  // Canonical Entity Autocomplete System (docs/entity-canonicalization-audit.md). `name`
-  // is the existing legacy free-text column (kept in sync with the linked entity's
-  // canonical name at selection time); `entityIdField` is the new nullable `*_id`
-  // column. `allowCustom` (school/organization only) exposes the "can't find it?"
-  // fallback — universities/opportunities stay fully curated registries with no
-  // custom-creation path from this form.
+  // Canonical Entity Autocomplete System. `name` is the existing legacy free-text column
+  // (kept in sync with the linked entity's display name at selection time);
+  // `entityIdField` is the nullable `*_entity_id` column that links to the canonical
+  // registry. `scope` must match the entity types the database's own trigger allows for
+  // that exact column — see lib/entities/field-policy.ts. `allowCustom` exposes the
+  // "can't find it?" fallback; it has no effect on scopes the policy gives no custom
+  // fallback type (universities/opportunities stay fully curated registries).
   | {
       type: "entity";
       name: string;
       entityIdField: string;
       label: string;
-      entityType: EntitySearchType;
+      scope: EntityScope;
       allowCustom?: boolean;
       customLabel?: string;
       placeholder?: string;
@@ -95,7 +96,7 @@ export const SPORT_LEVEL_OPTIONS = [
 
 export const ACTIVITY_FIELDS: FieldConfig[] = [
   { type: "text", name: "title", label: "Title", placeholder: "e.g. Robotics Club Captain" },
-  { type: "entity", name: "organization", entityIdField: "organization_id", entityType: "organization", label: "Organization", allowCustom: true, customLabel: "organization", span: "half" },
+  { type: "entity", name: "organization", entityIdField: "organization_entity_id", scope: "activity_organization", label: "Organization", allowCustom: true, customLabel: "organization", span: "half" },
   { type: "select", name: "category", label: "Category", options: ACTIVITY_CATEGORY_OPTIONS, span: "half" },
   { type: "textarea", name: "description", label: "Description" },
   { type: "checkbox", name: "is_leadership_role", label: "This is a leadership role" },
@@ -110,7 +111,7 @@ export const ACTIVITY_FIELDS: FieldConfig[] = [
     type: "entity",
     name: "opportunity_title",
     entityIdField: "opportunity_id",
-    entityType: "opportunity",
+    scope: "opportunity",
     label: "Oryn program/opportunity this matches (optional)",
     placeholder: "e.g. YYGS",
   },
@@ -128,8 +129,8 @@ export const PROJECT_FIELDS: FieldConfig[] = [
   {
     type: "entity",
     name: "organization",
-    entityIdField: "organization_id",
-    entityType: "organization",
+    entityIdField: "organization_entity_id",
+    scope: "project_organization",
     label: "Organization (optional)",
     allowCustom: true,
     customLabel: "organization",
@@ -155,8 +156,8 @@ export const AWARD_FIELDS: FieldConfig[] = [
   {
     type: "entity",
     name: "organization",
-    entityIdField: "organization_id",
-    entityType: "organization",
+    entityIdField: "organization_entity_id",
+    scope: "award_organization",
     label: "Awarding organization",
     allowCustom: true,
     customLabel: "organization",
@@ -174,8 +175,8 @@ export const RESEARCH_FIELDS: FieldConfig[] = [
   {
     type: "entity",
     name: "organization",
-    entityIdField: "organization_id",
-    entityType: "organization",
+    entityIdField: "organization_entity_id",
+    scope: "research_organization",
     label: "Organization / institution",
     allowCustom: true,
     customLabel: "institution",
@@ -201,8 +202,8 @@ export const VOLUNTEERING_FIELDS: FieldConfig[] = [
   {
     type: "entity",
     name: "organization",
-    entityIdField: "organization_id",
-    entityType: "organization",
+    entityIdField: "organization_entity_id",
+    scope: "volunteering_organization",
     label: "Organization",
     allowCustom: true,
     customLabel: "organization",
@@ -220,7 +221,7 @@ export const VOLUNTEERING_FIELDS: FieldConfig[] = [
 
 export const WORK_EXPERIENCE_FIELDS: FieldConfig[] = [
   { type: "text", name: "title", label: "Title" },
-  { type: "entity", name: "organization", entityIdField: "organization_id", entityType: "organization", label: "Organization", allowCustom: true, customLabel: "employer" },
+  { type: "entity", name: "organization", entityIdField: "organization_entity_id", scope: "work_organization", label: "Organization", allowCustom: true, customLabel: "employer" },
   { type: "select", name: "employment_type", label: "Type", options: EMPLOYMENT_TYPE_OPTIONS, span: "half" },
   { type: "checkbox", name: "paid", label: "Paid" },
   { type: "textarea", name: "description", label: "Description" },
@@ -233,7 +234,7 @@ export const WORK_EXPERIENCE_FIELDS: FieldConfig[] = [
 ];
 
 export const EDUCATION_FIELDS: FieldConfig[] = [
-  { type: "entity", name: "school_name", entityIdField: "school_id", entityType: "school", label: "School name", allowCustom: true, customLabel: "school" },
+  { type: "entity", name: "school_name", entityIdField: "school_entity_id", scope: "school", label: "School name", allowCustom: true, customLabel: "school" },
   { type: "text", name: "country", label: "Country", span: "half" },
   { type: "select", name: "stage", label: "Stage", options: EDUCATION_STAGE_OPTIONS, span: "half" },
   { type: "select", name: "curriculum", label: "Curriculum", options: CURRICULUM_FIELD_OPTIONS, span: "half" },
@@ -282,8 +283,8 @@ export const CERTIFICATION_FIELDS: FieldConfig[] = [
   {
     type: "entity",
     name: "organization",
-    entityIdField: "organization_id",
-    entityType: "organization",
+    entityIdField: "organization_entity_id",
+    scope: "certification_organization",
     label: "Issuing organization",
     allowCustom: true,
     customLabel: "organization",
@@ -313,8 +314,8 @@ export const SPORTS_FIELDS: FieldConfig[] = [
   {
     type: "entity",
     name: "team_name",
-    entityIdField: "team_organization_id",
-    entityType: "organization",
+    entityIdField: "team_entity_id",
+    scope: "sports_team",
     label: "Team / club / school",
     allowCustom: true,
     customLabel: "team, club, or school",

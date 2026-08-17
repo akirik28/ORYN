@@ -12,7 +12,7 @@ import {
 } from "@/lib/entities/audit";
 
 function entity(overrides: Partial<AuditableEntity> & { id: string; canonicalName: string }): AuditableEntity {
-  return { aliases: [], country: "Turkey", city: "İstanbul", category: "school", ...overrides };
+  return { aliases: [], country: "Turkey", city: "İstanbul", entityType: "school", ...overrides };
 }
 
 describe("findExactDuplicates", () => {
@@ -36,8 +36,8 @@ describe("findExactDuplicates", () => {
 
   test("same name in different categories is not a duplicate", () => {
     const findings = findExactDuplicates([
-      entity({ id: "a", canonicalName: "Acıbadem University", category: "school" }),
-      entity({ id: "b", canonicalName: "Acıbadem University", category: "organization" }),
+      entity({ id: "a", canonicalName: "Acıbadem University", entityType: "school" }),
+      entity({ id: "b", canonicalName: "Acıbadem University", entityType: "organization" }),
     ]);
     expect(findings).toEqual([]);
   });
@@ -91,8 +91,8 @@ describe("findInvalidEntities", () => {
   });
 
   test("a non-http website (including javascript:) is INVALID", () => {
-    expect(findInvalidEntities([entity({ id: "a", canonicalName: "X", websiteUrl: "javascript:alert(1)" })]).some((f) => f.rule === "malformed_website_url")).toBe(true);
-    expect(findInvalidEntities([entity({ id: "a", canonicalName: "X", websiteUrl: "https://ok.example" })]).some((f) => f.rule === "malformed_website_url")).toBe(false);
+    expect(findInvalidEntities([entity({ id: "a", canonicalName: "X", officialUrl: "javascript:alert(1)" })]).some((f) => f.rule === "malformed_official_url")).toBe(true);
+    expect(findInvalidEntities([entity({ id: "a", canonicalName: "X", officialUrl: "https://ok.example" })]).some((f) => f.rule === "malformed_official_url")).toBe(false);
   });
 
   test("an alias identical to the entity's own name is INVALID (redundant, inflates ranking)", () => {
@@ -104,7 +104,7 @@ describe("findInvalidEntities", () => {
   });
 
   test("a clean entity produces no findings", () => {
-    expect(findInvalidEntities([entity({ id: "a", canonicalName: "Robert College", aliases: ["RC"], websiteUrl: "https://robcol.k12.tr" })])).toEqual([]);
+    expect(findInvalidEntities([entity({ id: "a", canonicalName: "Robert College", aliases: ["RC"], officialUrl: "https://robcol.k12.tr" })])).toEqual([]);
   });
 });
 
@@ -172,7 +172,7 @@ describe("auditEntities / summarizeFindings", () => {
     const findings = auditEntities([
       entity({ id: "a", canonicalName: "Robert College", aliases: ["Sezin Okulu"] }),
       entity({ id: "b", canonicalName: "robert college" }),
-      entity({ id: "c", canonicalName: "Sezin Okulu", websiteUrl: "ftp://nope" }),
+      entity({ id: "c", canonicalName: "Sezin Okulu", officialUrl: "ftp://nope" }),
     ]);
     const summary = summarizeFindings(findings);
     expect(summary.SAFE_EXACT_LINK).toBeGreaterThan(0); // the exact duplicate

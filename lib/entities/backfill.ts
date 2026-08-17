@@ -1,5 +1,5 @@
 /**
- * Pure backfill classification (spec section 14) — no `server-only` import, so it's
+ * Pure backfill classification — no `server-only` import, so it's
  * unit-testable and reusable by both scripts/entities-backfill-report.ts (a real,
  * live-DB script) and a future admin-triggered version, without duplicating the rule.
  *
@@ -25,7 +25,7 @@ export interface BackfillResult {
   rowId: string;
   freeText: string;
   classification: BackfillClassification;
-  matchedInstitutionId: string | null;
+  matchedEntityId: string | null;
   matchedCanonicalName: string | null;
 }
 
@@ -35,13 +35,13 @@ export interface BackfillResult {
  * independently since this module must stay decidable on its own. */
 const POSSIBLE_DUPLICATE_FUZZY_THRESHOLD = 0.85;
 
-export function classifyForBackfill(row: BackfillSourceRow, institutions: EntityCandidate[]): BackfillResult {
+export function classifyForBackfill(row: BackfillSourceRow, entities: EntityCandidate[]): BackfillResult {
   const text = row.freeText.trim();
   if (!text) {
-    return { rowId: row.rowId, freeText: row.freeText, classification: "unresolved", matchedInstitutionId: null, matchedCanonicalName: null };
+    return { rowId: row.rowId, freeText: row.freeText, classification: "unresolved", matchedEntityId: null, matchedCanonicalName: null };
   }
 
-  const ranked = rankEntityCandidates(text, institutions, { country: row.country, city: row.city });
+  const ranked = rankEntityCandidates(text, entities, { country: row.country, city: row.city });
   const top = ranked[0];
 
   if (top && (top.tier === MATCH_TIER.exactCanonical || top.tier === MATCH_TIER.exactAlias)) {
@@ -49,7 +49,7 @@ export function classifyForBackfill(row: BackfillSourceRow, institutions: Entity
       rowId: row.rowId,
       freeText: row.freeText,
       classification: "auto_linked",
-      matchedInstitutionId: top.candidate.id,
+      matchedEntityId: top.candidate.id,
       matchedCanonicalName: top.candidate.canonicalName,
     };
   }
@@ -59,12 +59,12 @@ export function classifyForBackfill(row: BackfillSourceRow, institutions: Entity
       rowId: row.rowId,
       freeText: row.freeText,
       classification: "possible_duplicate",
-      matchedInstitutionId: top.candidate.id,
+      matchedEntityId: top.candidate.id,
       matchedCanonicalName: top.candidate.canonicalName,
     };
   }
 
-  return { rowId: row.rowId, freeText: row.freeText, classification: "unresolved", matchedInstitutionId: null, matchedCanonicalName: null };
+  return { rowId: row.rowId, freeText: row.freeText, classification: "unresolved", matchedEntityId: null, matchedCanonicalName: null };
 }
 
 export interface BackfillSummary {

@@ -849,3 +849,47 @@ live queries succeed. See `docs/founder-blocked-backlog.md` items 3 and 16 for t
 unblock (a permission grant, then apply both migration ranges in one sitting following
 `docs/founder-environment-unblock-runbook.md`) and a full accounting of what's still
 untested against a real request.
+
+---
+
+## Live database ↔ repo reconciliation (2026-08-17)
+
+The two histories had diverged in both directions. Live carried eleven canonical-entity
+and university-data migrations that exist in no commit on any branch (built directly
+against the project, never written down); the repo carried `0028` and `0030`–`0038`,
+which had never been applied anywhere. Full trace, evidence and decisions:
+`docs/live-db-reconciliation.md`.
+
+**Applied to `oryn-qa-scratch`:** `0028`, `0030`–`0032`, `0033`–`0037` (the Professional
+Profile pack — previously blocked, now live), plus the three new migrations below. Nothing
+was dropped and no live row was deleted.
+
+**Architecture:** `canonical_entities` selected over the repo's proposed `institutions`.
+0038 had never been applied, so deprecating it cost no data, and the live registry already
+had evidence, external IDs, locations, relationships, a verification queue, an auditable
+merge workflow and per-column type-enforcement triggers that `institutions` did not.
+`0038_canonical_institutions.sql` deleted; `0038_canonical_entity_registry.sql` transcribes
+the live stack idempotently so a fresh database converges to it.
+
+**Fixed along the way:**
+- `0037` could never apply to any database (`create or replace view` cannot reorder
+  columns) — it now drops and recreates.
+- The custom-fallback write path was unreachable: the RPC was invoker-rights with no
+  INSERT grant anywhere, so every student call failed on RLS. Now SECURITY DEFINER,
+  granted to `authenticated` only, and it enqueues for verification.
+- `university_rankings` (1,009 rows) and `university_profile_metrics` had RLS on with no
+  policy — deny-all for signed-in users, not just anon. Any page showing a ranking got
+  nothing.
+- Registry search was broken on the shipped data: "MIT", "LSE", "Caltech", "NUS" returned
+  nothing and "UCLA" returned University College London, because QS-ingest abbreviations
+  lived inside display names instead of `entity_aliases`. Aliases 132 → 435; all resolve
+  exactly now.
+
+**Not merged, deliberately:** 43 duplicate university identities and 78 `official_verified`
+entities with no evidence are queued for human review (backlog items 19 and 20).
+
+**Verification:** `npm ci` / lint / `tsc --noEmit` / `vitest` 448 passed (47 files) /
+`next build` all clean. Security advisors re-run after the DDL; remaining findings are
+accepted with reasons in `0040_post_reconciliation_security.sql`. Both Postgres roles were
+simulated directly against RLS to confirm every read and deny boundary. Browser coverage
+is partial and honestly bounded — see the Phase 12 section of the reconciliation doc.

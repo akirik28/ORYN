@@ -1,132 +1,194 @@
 import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database, InstitutionCategory } from "@/types/database";
+import type { Database } from "@/types/database";
+import { ENTITY_SCOPES, type EntityScope } from "./field-policy";
+import { normalizeEntitySearchText } from "./normalize";
 import { rankEntityCandidates, type EntityCandidate } from "./rank";
-import type { EntitySearchType, EntitySearchResult, EntitySearchContext } from "./types";
+import type { EntitySearchResult, EntitySearchContext } from "./types";
 
-export type { EntitySearchType, EntitySearchResult, EntitySearchContext } from "./types";
+export type { EntityScope, EntitySearchResult, EntitySearchContext } from "./types";
 
 const MIN_QUERY_LENGTH = 2;
 const RESULT_LIMIT = 8;
 
 /**
- * V1 fetches a bounded candidate set per type and ranks it in TS (lib/entities/rank.ts)
- * rather than pushing alias/fuzzy matching into SQL — correct and simple at the row
- * counts this table starts at (a slowly-grown custom+curated registry, not a bulk-
- * imported one). The migration's trigram index on `institutions.canonical_name` is
- * ready for a dedicated search RPC if/when a category+country combination grows past a
- * few hundred rows; not built now (spec: don't add unrelated features ahead of need).
+ * Canonical-registry search runs in Postgres, not TypeScript.
+ *
+ * The `search_canonical_entities` RPC (migration 0038) does exact > prefix > alias >
+ * trigram-fuzzy ranking over the whole registry with `unaccent()` folding, backed by GIN
+ * trigram indexes. The alternative — fetching a capped candidate set and ranking it in
+ * TS — silently truncates: the registry holds 1,143 entities today and over a thousand
+ * of them are universities, so any cap small enough to be cheap is also small enough to
+ * drop the right answer before ranking ever sees it.
+ *
+ * lib/entities/rank.ts is still used, for the two jobs SQL is the wrong tool for: the
+ * country/city context boost applied to the (small, already-ranked) result set below,
+ * and the "did you mean X?" duplicate check in resolve.ts.
  */
-const CANDIDATE_FETCH_LIMIT = 300;
-
-interface InstitutionRow {
-  id: string;
+interface CanonicalSearchRow {
+  entity_id: string;
+  entity_type: string;
   canonical_name: string;
-  institution_type: string | null;
-  country: string | null;
+  display_name: string;
+  country_code: string | null;
   city: string | null;
-  aliases: string[];
-  status: string;
+  verification_state: string;
+  matched_text: string;
+  matched_via: string;
+  score: number;
 }
 
-function institutionSubtitle(row: InstitutionRow): string | null {
-  return [row.city, row.country, row.institution_type].filter(Boolean).join(", ").replace(/, ([^,]+)$/, " · $1") || null;
+function subtitleOf(parts: (string | null | undefined)[]): string | null {
+  const kept = parts.filter((part): part is string => Boolean(part && part.trim()));
+  if (kept.length === 0) return null;
+  if (kept.length === 1) return kept[0];
+  return `${kept.slice(0, -1).join(", ")} · ${kept[kept.length - 1]}`;
 }
 
-async function fetchInstitutionCandidates(
+function humanizeEntityType(entityType: string): string {
+  return entityType.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
+}
+
+/**
+ * Nudges ordering within what SQL already matched, using the student's own country/city.
+ * Context ranks, it never filters — a boost can only reorder results the query already
+ * returned, so a student whose profile says Turkey can still find a US university.
+ */
+function applyContextBoost(rows: CanonicalSearchRow[], context: EntitySearchContext): CanonicalSearchRow[] {
+  const country = context.country ? normalizeEntitySearchText(context.country) : null;
+  const city = context.city ? normalizeEntitySearchText(context.city) : null;
+  if (!country && !city) return rows;
+
+  return rows
+    .map((row) => {
+      let boost = 0;
+      if (country && row.country_code && normalizeEntitySearchText(row.country_code) === country) boost += 0.02;
+      if (city && row.city && normalizeEntitySearchText(row.city) === city) boost += 0.01;
+      return { row, sortScore: row.score + boost };
+    })
+    .sort((a, b) => b.sortScore - a.sortScore || a.row.display_name.localeCompare(b.row.display_name))
+    .map((entry) => entry.row);
+}
+
+async function searchCanonicalRegistry(
   supabase: SupabaseClient<Database>,
-  category: InstitutionCategory,
-  country: string | null | undefined
-): Promise<{ candidate: EntityCandidate; row: InstitutionRow }[]> {
-  let query = supabase.from("institutions").select("id, canonical_name, institution_type, country, city, aliases, status").eq("category", category);
-  if (country) query = query.eq("country", country);
-  const { data } = await query.limit(CANDIDATE_FETCH_LIMIT);
+  scope: EntityScope,
+  query: string,
+  context: EntitySearchContext
+): Promise<CanonicalSearchRow[]> {
+  const { data, error } = await supabase.rpc("search_canonical_entities", {
+    q: query,
+    p_entity_types: [...ENTITY_SCOPES[scope].allowedTypes],
+    // Over-fetch relative to RESULT_LIMIT so the context boost has something to reorder.
+    p_limit: RESULT_LIMIT * 3,
+  });
 
-  return (data ?? []).map((row) => ({
-    row,
-    candidate: { id: row.id, canonicalName: row.canonical_name, aliases: row.aliases, country: row.country, city: row.city },
-  }));
+  if (error) {
+    console.error("[entities] canonical search failed", { scope, code: error.code, message: error.message });
+    return [];
+  }
+  return applyContextBoost((data ?? []) as CanonicalSearchRow[], context);
 }
 
-async function fetchUniversityCandidates(supabase: SupabaseClient<Database>, country: string | null | undefined) {
-  let query = supabase.from("universities").select("id, name, institution_type, country, city, aliases");
-  if (country) query = query.eq("country", country);
-  const { data } = await query.limit(CANDIDATE_FETCH_LIMIT);
+/**
+ * Universities resolve to `universities.id`, not to their canonical entity id: that is
+ * what target_universities and every other university foreign key already reference.
+ * The *search* still runs over the canonical registry, so alias and accent handling is
+ * identical to every other field ("MIT", "bogazici"), then the matched entity ids are
+ * mapped back to their university rows. A canonical university entity with no
+ * `universities` row is not selectable and drops out here — deliberate: those are
+ * identities the university stack has not ingested statistics for yet.
+ */
+async function searchUniversities(
+  supabase: SupabaseClient<Database>,
+  query: string,
+  context: EntitySearchContext
+): Promise<EntitySearchResult[]> {
+  const rows = await searchCanonicalRegistry(supabase, "university", query, context);
+  if (rows.length === 0) return [];
 
-  return (data ?? []).map((row) => ({
-    row,
-    candidate: { id: row.id, canonicalName: row.name, aliases: row.aliases, country: row.country, city: row.city } as EntityCandidate,
-  }));
+  const { data } = await supabase
+    .from("universities")
+    .select("id, name, city, country, institution_type, canonical_entity_id")
+    .in("canonical_entity_id", rows.map((row) => row.entity_id));
+
+  const byEntityId = new Map((data ?? []).map((row) => [row.canonical_entity_id, row]));
+
+  return rows
+    .map((row) => byEntityId.get(row.entity_id))
+    .filter((row): row is NonNullable<typeof row> => Boolean(row))
+    .slice(0, RESULT_LIMIT)
+    .map((row) => ({
+      id: row.id,
+      displayName: row.name,
+      subtitle: subtitleOf([row.city, row.country, row.institution_type]),
+      isCustom: false,
+    }));
 }
 
-async function fetchOpportunityCandidates(supabase: SupabaseClient<Database>, country: string | null | undefined) {
-  let query = supabase.from("opportunities").select("id, title, category, organization, country, aliases").eq("status", "active");
-  if (country) query = query.eq("country", country);
-  const { data } = await query.limit(CANDIDATE_FETCH_LIMIT);
+/**
+ * Opportunities are not in the canonical registry — they are catalogue records with a
+ * deadline, eligibility and a source URL, produced by the discovery pipeline. Their
+ * search is a plain name match ranked in TS over a bounded fetch, with no aliases:
+ * nothing stores alternate names for an opportunity today, and inventing them from the
+ * title would be fabricated data.
+ */
+async function searchOpportunities(
+  supabase: SupabaseClient<Database>,
+  query: string,
+  context: EntitySearchContext
+): Promise<EntitySearchResult[]> {
+  const OPPORTUNITY_CANDIDATE_LIMIT = 300;
+  let candidateQuery = supabase.from("opportunities").select("id, title, category, organization, country").eq("status", "active");
+  if (context.country) candidateQuery = candidateQuery.eq("country", context.country);
+  const { data } = await candidateQuery.limit(OPPORTUNITY_CANDIDATE_LIMIT);
 
-  return (data ?? []).map((row) => ({
-    row,
-    candidate: { id: row.id, canonicalName: row.title, aliases: row.aliases, country: row.country, city: null } as EntityCandidate,
+  const rows = data ?? [];
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  const candidates: EntityCandidate[] = rows.map((row) => ({
+    id: row.id,
+    canonicalName: row.title,
+    aliases: [],
+    country: row.country,
+    city: null,
   }));
+
+  return rankEntityCandidates(query, candidates, context)
+    .slice(0, RESULT_LIMIT)
+    .map((match) => {
+      const row = byId.get(match.candidate.id)!;
+      return {
+        id: row.id,
+        displayName: row.title,
+        subtitle: subtitleOf([row.organization, row.category]),
+        isCustom: false,
+      };
+    });
 }
 
 /**
  * The one search entry point every EntityCombobox instance calls (via
  * app/(app)/entities/actions.ts's searchEntities Server Action) — dispatches to the
- * right registry by type, then hands off to the shared pure ranker.
+ * right registry by scope.
  */
 export async function searchEntities(
   supabase: SupabaseClient<Database>,
-  type: EntitySearchType,
+  scope: EntityScope,
   query: string,
   context: EntitySearchContext = {}
 ): Promise<EntitySearchResult[]> {
   if (query.trim().length < MIN_QUERY_LENGTH) return [];
 
-  if (type === "school" || type === "organization") {
-    const fetched = await fetchInstitutionCandidates(supabase, type, context.country);
-    const ranked = rankEntityCandidates(
-      query,
-      fetched.map((f) => f.candidate),
-      context
-    );
-    const rowById = new Map(fetched.map((f) => [f.row.id, f.row]));
-    return ranked.slice(0, RESULT_LIMIT).map((match) => {
-      const row = rowById.get(match.candidate.id)!;
-      return { id: row.id, displayName: row.canonical_name, subtitle: institutionSubtitle(row), isCustom: row.status === "unverified" };
-    });
-  }
+  const registry = ENTITY_SCOPES[scope].registry;
+  if (registry === "universities") return searchUniversities(supabase, query, context);
+  if (registry === "opportunities") return searchOpportunities(supabase, query, context);
 
-  if (type === "university") {
-    const fetched = await fetchUniversityCandidates(supabase, context.country);
-    const ranked = rankEntityCandidates(
-      query,
-      fetched.map((f) => f.candidate),
-      context
-    );
-    const rowById = new Map(fetched.map((f) => [f.row.id, f.row]));
-    return ranked.slice(0, RESULT_LIMIT).map((match) => {
-      const row = rowById.get(match.candidate.id)!;
-      return {
-        id: row.id,
-        displayName: row.name,
-        subtitle: [row.city, row.country, row.institution_type].filter(Boolean).join(", ").replace(/, ([^,]+)$/, " · $1") || null,
-        isCustom: false,
-      };
-    });
-  }
-
-  // opportunity
-  const fetched = await fetchOpportunityCandidates(supabase, context.country);
-  const ranked = rankEntityCandidates(
-    query,
-    fetched.map((f) => f.candidate),
-    context
-  );
-  const rowById = new Map(fetched.map((f) => [f.row.id, f.row]));
-  return ranked.slice(0, RESULT_LIMIT).map((match) => {
-    const row = rowById.get(match.candidate.id)!;
-    return { id: row.id, displayName: row.title, subtitle: [row.organization, row.category].filter(Boolean).join(" · ") || null, isCustom: false };
-  });
+  const rows = await searchCanonicalRegistry(supabase, scope, query, context);
+  return rows.slice(0, RESULT_LIMIT).map((row) => ({
+    id: row.entity_id,
+    displayName: row.display_name,
+    subtitle: subtitleOf([row.city, row.country_code, humanizeEntityType(row.entity_type)]),
+    isCustom: row.verification_state === "user_submitted",
+  }));
 }

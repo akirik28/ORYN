@@ -12,7 +12,7 @@ const optionalEntityId = z.string().nullable().optional();
 export const ActivitySchema = z.object({
   title: z.string().min(1, { error: "Title is required." }),
   organization: optionalText,
-  organization_id: optionalEntityId,
+  organization_entity_id: optionalEntityId,
   /** Optional link to the canonical opportunity/program catalog (e.g. an activity that
    * *is* Yale Young Global Scholars). Never required — the activity's own free-text
    * title stays the primary record. */
@@ -35,7 +35,7 @@ export type ActivityFormInput = z.infer<typeof ActivitySchema>;
 export const ProjectSchema = z.object({
   title: z.string().min(1, { error: "Title is required." }),
   organization: optionalText,
-  organization_id: optionalEntityId,
+  organization_entity_id: optionalEntityId,
   description: optionalText,
   role: optionalText,
   start_date: dateField,
@@ -55,7 +55,7 @@ export type ProjectFormInput = z.infer<typeof ProjectSchema>;
 export const AwardSchema = z.object({
   title: z.string().min(1, { error: "Title is required." }),
   organization: optionalText,
-  organization_id: optionalEntityId,
+  organization_entity_id: optionalEntityId,
   level: optionalText,
   description: optionalText,
   award_date: dateField,
@@ -67,7 +67,7 @@ export type AwardFormInput = z.infer<typeof AwardSchema>;
 export const ResearchExperienceSchema = z.object({
   title: z.string().min(1, { error: "Title is required." }),
   organization: optionalText,
-  organization_id: optionalEntityId,
+  organization_entity_id: optionalEntityId,
   mentor_name: optionalText,
   field: optionalText,
   description: optionalText,
@@ -87,7 +87,7 @@ export type ResearchExperienceFormInput = z.infer<typeof ResearchExperienceSchem
 export const VolunteeringSchema = z.object({
   title: z.string().min(1, { error: "Title is required." }),
   organization: optionalText,
-  organization_id: optionalEntityId,
+  organization_entity_id: optionalEntityId,
   description: optionalText,
   cause_area: optionalText,
   start_date: dateField,
@@ -103,7 +103,7 @@ export type VolunteeringFormInput = z.infer<typeof VolunteeringSchema>;
 export const WorkExperienceSchema = z.object({
   title: z.string().min(1, { error: "Title is required." }),
   organization: z.string().min(1, { error: "Organization is required." }),
-  organization_id: optionalEntityId,
+  organization_entity_id: optionalEntityId,
   employment_type: z.enum(["internship", "part_time_job", "full_time_job", "apprenticeship", "freelance", "other"]),
   description: optionalText,
   start_date: dateField,
@@ -118,7 +118,7 @@ export type WorkExperienceFormInput = z.infer<typeof WorkExperienceSchema>;
 
 export const EducationRecordSchema = z.object({
   school_name: z.string().min(1, { error: "School name is required." }),
-  school_id: optionalEntityId,
+  school_entity_id: optionalEntityId,
   country: optionalText,
   stage: z.enum(["middle_school", "high_school", "pre_university", "undergraduate", "other"]),
   curriculum: z.enum(["ap", "ib", "a_level", "turkish_curriculum", "national_curriculum", "other"]).nullable(),
@@ -157,7 +157,7 @@ export type TestScoreFormInput = z.infer<typeof TestScoreSchema>;
 export const CertificationSchema = z.object({
   title: z.string().min(1, { error: "Title is required." }),
   organization: optionalText,
-  organization_id: optionalEntityId,
+  organization_entity_id: optionalEntityId,
   description: optionalText,
   issue_date: dateField,
   expiry_date: dateField,
@@ -177,7 +177,7 @@ export const SportsSchema = z.object({
   sport: z.string().min(1, { error: "Sport is required." }),
   discipline: optionalText,
   team_name: optionalText,
-  team_organization_id: optionalEntityId,
+  team_entity_id: optionalEntityId,
   position: optionalText,
   level: z.enum(["recreational", "school", "club", "regional", "national", "international"]).nullable(),
   us_specific_label: optionalText,

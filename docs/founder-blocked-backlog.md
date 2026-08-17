@@ -171,23 +171,20 @@ vanishes in a serverless environment — messaging/social failures post-deploy w
 invisible without this.
 **Depends on**: item 14 (needs a real deploy target to be worth setting up).
 
-## 16. Apply migrations 0033 → 0037 (Professional Profile & Networking Pack)
+## 16. ~~Apply migrations 0033 → 0037 (Professional Profile & Networking Pack)~~ — RESOLVED 2026-08-17
 
-**Action**: apply, in order, `supabase/migrations/0033_professional_profile_core.sql`
-(contact_info, featured_items, profiles.headline/about/open_to/show_gpa),
-`0034_skill_endorsements.sql`, `0035_recommendations.sql`, `0036_profile_views.sql`,
-`0037_public_profile_headline_about.sql` (adds headline/about to the `public_profiles`
-view). All five are additive-only (new tables/columns/enums/one `CREATE OR REPLACE
-VIEW`), no drops, no data migration — same safety shape as 0028–0032 above. Blocked by
-the same classifier gate described in item 3; needs the same permission grant to unblock,
-then apply both ranges (0028–0032, then 0033–0037) in one sitting.
-**Blocks**: every feature this session built code for — headline/About, contact
-info + visibility, Open To, Featured items, skill endorsements, recommendations, and
-profile-view counts all query tables/columns that don't exist yet on any environment
-except a hand-run local Postgres. None of it has been exercised against a real request
-in a browser; `npm run lint`, `tsc --noEmit`, `vitest`, and `next build` all pass, which
-confirms the code is internally consistent, not that the live queries succeed.
-**Depends on**: the same permission grant as item 3.
+**Applied to `oryn-qa-scratch`**, along with `0028` and `0030`–`0032`, which had also
+never been applied. `contact_info`, `featured_items`, `skill_endorsements`,
+`recommendations`, `profile_views` and `profiles.headline/about/open_to/show_gpa` now
+exist.
+
+`0037` had to be fixed first: it used `create or replace view`, which Postgres only allows
+to *append* columns, so inserting `headline`/`about` next to `display_name` failed with
+`42P16: cannot change name of view column "country" to "headline"` — on live and on any
+fresh database. It now drops and recreates the view and re-issues its grant.
+
+Still not exercised in a browser: the code paths for these features have never served a
+real signed-in request. See the Phase 12 note in `docs/live-db-reconciliation.md`.
 
 ## 16b. Decide whether Education (and therefore GPA) appears on the public profile
 
@@ -216,32 +213,55 @@ changed; GPA remains not publicly exposed.
 **Depends on**: nothing technical — a founder decision, and plausibly a legal review
 touchpoint given the minor-safety framing (item 13).
 
-## 17. Apply migration 0038 + seed_entities_drive_batch1.sql (Canonical Entity Autocomplete System)
+## 17. ~~Apply migration 0038 + seed_entities_drive_batch1.sql~~ — RESOLVED 2026-08-17
 
-**Action**: apply `supabase/migrations/0038_canonical_institutions.sql` (new
-`institutions` table + RLS, `aliases text[]` added to `universities`/`opportunities`,
-nullable `*_id` linkage columns added to nine achievement/education tables — all
-additive, no drops), then `supabase/seed_entities_drive_batch1.sql` — 19 verified
-organizations, 54 verified Turkish schools (of 58 in the source; 4 excluded because
-their own `release_state` is `HOLD_*`) with 126 source-verified aliases, 77 new
-universities + 3 alias-enrichments of already-seeded ones (of 98 QS-2027-ranked rows —
-21 already existed), and 5 opportunity aliases (of 7 — 2 excluded because their
-canonical opportunity isn't in the source's own 16-row "official-current" set). Sourced
-from the founder's Drive "10 ORYN Canonical App Data Pack — Verified 2026-08-15" (not
-the superseded copy) — see `docs/entity-canonicalization-audit.md`'s "Drive integration"
-section for the full accounting and `scripts/drive-import/README.md` for how to
-regenerate it. Supersedes an earlier single-row `seed_institutions.sql` from this same
-session (removed — this batch is a strict superset, and its Üsküdar American Academy
-aliases are the actual source-verified three, not the four this session originally
-guessed at before finding the real alias table). Blocked by the same classifier gate as
-items 3 and 16.
-**Blocks**: every canonical school/organization field this pass wired (education
-records' school, and every achievement type's organization/team field) — none of it has
-executed against a real database; `npm run entities:backfill-report` (also new this
-pass) additionally needs `SUPABASE_SECRET_KEY` to run at all.
-**Depends on**: the same permission grant as item 3, applied after 0033–0037 (item 16) —
-0038 doesn't structurally depend on them, but keeping the pack's own migrations in their
-numeric order avoids ever needing to reason about out-of-order application.
+**Closed by the live-database reconciliation.** Both artefacts named here are gone.
+
+`0038_canonical_institutions.sql` was never applied to anything and has been deleted: the
+live project already carried a richer canonical registry (`canonical_entities` and nine
+supporting tables), built directly against the project and never committed. Applying 0038
+would have created a second, competing identity system. The repo now converges on the
+live design — see `docs/live-db-reconciliation.md` for the full trace.
+
+`seed_entities_drive_batch1.sql` was deleted too, and replaced by
+`supabase/seed_canonical_delta.sql`, which is a genuine delta rather than a replay: the
+Drive pack's 54 schools and 77 universities were already live (14 of those universities
+under a QS-style parenthetical name, so inserting them would have created real
+duplicates), leaving 17 organizations actually missing. Those 17 are imported.
+
+`npm run entities:backfill-report` still needs `SUPABASE_SECRET_KEY` to run — that part of
+this item stands, and moves to item 3's credential ask.
+
+## 18. Enable leaked-password protection (Supabase Auth)
+
+**Action**: turn on "Leaked password protection" in the Supabase Auth dashboard
+(Authentication -> Policies). It checks new passwords against HaveIBeenPwned.
+**Why it's blocked**: it is a project setting, not schema — no migration can enable it,
+and it is not exposed through the MCP tooling.
+**Blocks**: nothing functional. It is the one security-advisor finding from the
+reconciliation that cannot be fixed in code.
+
+## 19. Decide what to do about 43 duplicate university identities
+
+**Action**: review the 43 pairs now sitting in `entity_verification_queue` with
+`blocker='possible_duplicate'`, and for each either merge with
+`merge_canonical_entities(source, target, reason)` or give the two rows distinct
+city/country values.
+**Why it's blocked**: they are almost certainly the same institution ingested twice with
+differently-written cities ("Boston" vs "Boston, MA"), but "almost certainly" is not the
+bar for merging real entities, and a name-similarity heuristic must never run unattended.
+Each needs a human to confirm against an official source.
+**Blocks**: nothing today — duplicates make search noisier, not wrong.
+
+## 20. Decide what `official_verified` means for 78 university entities
+
+**Action**: either attach primary-source evidence rows to the 78 university entities
+currently marked `official_verified`, or downgrade them to `source_verified`.
+**Why it's blocked**: no university entity has any `entity_evidence` row at all, so the
+registry is asserting a verification state its own evidence model does not support. Which
+way to resolve it is a data-trust decision, not a reconciliation one — and this product's
+own rule is that a verification claim must be backed by a source.
+**Blocks**: any UI that surfaces a "verified" badge for universities.
 
 ---
 

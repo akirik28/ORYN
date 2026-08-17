@@ -21,11 +21,12 @@ export const RATE_LIMITS = {
   /** Same shape as endorse_skill — a genuine batch of recommendations for people you
    * actually know is rare and slow to write by hand; this only bounds abuse. */
   write_recommendation: { maxCalls: 15, windowMinutes: 60 },
-  /** Canonical Entity Autocomplete System (spec section 16: "custom entity spam").
-   * A student adding their own school plus a handful of employers/clubs in one sitting
-   * stays well under this; bounds scripted spam-registration of the shared institutions
-   * table. */
-  create_custom_institution: { maxCalls: 20, windowMinutes: 60 },
+  /** Canonical Entity Autocomplete System custom fallback. A student adding their own
+   * school plus a handful of employers/clubs in one sitting stays well under this. This
+   * is the only abuse control on that path: the underlying RPC is SECURITY DEFINER
+   * (migration 0039) precisely so no broad INSERT grant exists on the shared registry,
+   * and the row it writes deliberately records no submitting user. */
+  create_custom_entity: { maxCalls: 20, windowMinutes: 60 },
 } as const;
 
 export type RateLimitedAction = keyof typeof RATE_LIMITS;

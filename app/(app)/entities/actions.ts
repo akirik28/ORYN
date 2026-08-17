@@ -2,54 +2,54 @@
 
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
-import { searchEntities, type EntitySearchType, type EntitySearchResult } from "@/lib/entities/search";
-import { createCustomInstitution, type CreateCustomInstitutionResult } from "@/lib/entities/resolve";
+import { searchEntities } from "@/lib/entities/search";
+import { createCustomEntity, type CreateCustomEntityResult } from "@/lib/entities/resolve";
+import { ENTITY_SCOPES, isEntityScope, type EntityScope } from "@/lib/entities/field-policy";
+import type { EntitySearchResult } from "@/lib/entities/types";
 import { assertWithinRateLimit, RateLimitExceededError } from "@/lib/security/rate-limit";
 import { RATE_LIMITS } from "@/lib/security/rate-limit-config";
-import type { InstitutionCategory } from "@/types/database";
-
-const SEARCH_TYPES: readonly EntitySearchType[] = ["school", "organization", "university", "opportunity"];
-function isEntitySearchType(value: unknown): value is EntitySearchType {
-  return typeof value === "string" && (SEARCH_TYPES as readonly string[]).includes(value);
-}
 
 /**
- * The one search entry point every EntityCombobox instance calls. Requires a session
- * (institutions' own RLS also requires `auth.uid() is not null` — this is the same gate
- * re-expressed as a friendly redirect instead of a raw RLS denial) but otherwise has no
- * per-field authorization: search itself is read-only and safe for any signed-in user
- * regardless of which field they're about to link.
+ * The one search entry point every EntityCombobox instance calls. Requires a session —
+ * the registry's own RLS is `to authenticated` (migration 0039), so this is the same
+ * gate re-expressed as a friendly redirect instead of a silently empty result. There is
+ * no per-field authorization beyond that: search is read-only and safe for any signed-in
+ * student regardless of which field they are about to link.
  */
-export async function searchEntitiesAction(type: EntitySearchType, query: string, context: { country?: string | null; city?: string | null } = {}): Promise<EntitySearchResult[]> {
+export async function searchEntitiesAction(
+  scope: EntityScope,
+  query: string,
+  context: { country?: string | null; city?: string | null } = {}
+): Promise<EntitySearchResult[]> {
   await requireUser();
-  if (!isEntitySearchType(type)) return [];
+  if (!isEntityScope(scope)) return [];
   const supabase = await createClient();
-  return searchEntities(supabase, type, query, context);
+  return searchEntities(supabase, scope, query, context);
 }
 
-const INSTITUTION_CATEGORIES: readonly InstitutionCategory[] = ["school", "organization"];
-function isInstitutionCategory(value: unknown): value is InstitutionCategory {
-  return typeof value === "string" && (INSTITUTION_CATEGORIES as readonly string[]).includes(value);
-}
-
-export async function createCustomInstitutionAction(
-  category: InstitutionCategory,
-  canonicalName: string,
+export async function createCustomEntityAction(
+  scope: EntityScope,
+  displayName: string,
   city: string | null,
   country: string | null,
-  websiteUrl: string | null,
   confirmDespiteDuplicates = false
-): Promise<CreateCustomInstitutionResult> {
+): Promise<CreateCustomEntityResult> {
   const session = await requireUser();
-  if (!isInstitutionCategory(category)) return { status: "error", error: "Invalid entity type." };
+  if (!isEntityScope(scope)) return { status: "error", error: "Invalid entity type." };
+  if (!ENTITY_SCOPES[scope].customFallbackType) {
+    return { status: "error", error: "This field only accepts entries from Oryn's verified catalogue." };
+  }
 
+  // The rate limit is the abuse control for this path: the underlying RPC is SECURITY
+  // DEFINER, so it is deliberately the only way a student session can write to the
+  // registry at all, and nothing about the row records who submitted it.
   try {
-    await assertWithinRateLimit(session.userId!, "create_custom_institution", RATE_LIMITS.create_custom_institution);
+    await assertWithinRateLimit(session.userId!, "create_custom_entity", RATE_LIMITS.create_custom_entity);
   } catch (error) {
     if (error instanceof RateLimitExceededError) return { status: "error", error: error.message };
     throw error;
   }
 
   const supabase = await createClient();
-  return createCustomInstitution(supabase, session.userId!, { category, canonicalName, city, country, websiteUrl }, confirmDespiteDuplicates);
+  return createCustomEntity(supabase, { scope, displayName, city, country }, confirmDespiteDuplicates);
 }

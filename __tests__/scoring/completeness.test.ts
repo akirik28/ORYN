@@ -38,7 +38,7 @@ describe("computeCompleteness", () => {
         user_id: "u1",
         title: "Founder & President",
         organization: "Model UN",
-        organization_id: null,
+        organization_entity_id: null,
         category: "club",
         description: null,
         is_leadership_role: true,

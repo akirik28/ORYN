@@ -16,9 +16,6 @@
  * guard throws outside Next.js's bundler, which this plain Node/tsx script is (same
  * constraint scripts/check-integrations.ts documents). Uses the Supabase admin client
  * directly.
- *
- * NOT RUN as part of this change — this environment has no applied migrations (0038
- * included) and no SUPABASE_SECRET_KEY, so there is no live `institutions` table to read.
  */
 
 import { auditEntities, findDenormalizedNameDrift, summarizeFindings, type AuditableEntity, type DenormalizedNameRow } from "../lib/entities/audit";
@@ -29,19 +26,19 @@ try {
   // No .env.local — fine, maybe using real environment variables (CI, hosting platform).
 }
 
-/** Every table + column pair whose text is kept in sync with a linked institution's
- * canonical name (mirrors app/(app)/profile/actions.ts's ENTITY_LINK_FIELDS). */
+/** Every table + column pair whose text is kept in sync with a linked entity's display
+ * name (mirrors app/(app)/profile/actions.ts's ENTITY_LINK_FIELDS). */
 const DENORMALIZED_LINKS: { table: string; idColumn: string; textColumn: string }[] = [
-  { table: "profiles", idColumn: "school_id", textColumn: "school_name" },
-  { table: "education_records", idColumn: "school_id", textColumn: "school_name" },
-  { table: "work_experiences", idColumn: "organization_id", textColumn: "organization" },
-  { table: "volunteering_experiences", idColumn: "organization_id", textColumn: "organization" },
-  { table: "activities", idColumn: "organization_id", textColumn: "organization" },
-  { table: "research_experiences", idColumn: "organization_id", textColumn: "organization" },
-  { table: "awards", idColumn: "organization_id", textColumn: "organization" },
-  { table: "certifications", idColumn: "organization_id", textColumn: "organization" },
-  { table: "projects", idColumn: "organization_id", textColumn: "organization" },
-  { table: "sports_experiences", idColumn: "team_organization_id", textColumn: "team_name" },
+  { table: "profiles", idColumn: "school_entity_id", textColumn: "school_name" },
+  { table: "education_records", idColumn: "school_entity_id", textColumn: "school_name" },
+  { table: "work_experiences", idColumn: "organization_entity_id", textColumn: "organization" },
+  { table: "volunteering_experiences", idColumn: "organization_entity_id", textColumn: "organization" },
+  { table: "activities", idColumn: "organization_entity_id", textColumn: "organization" },
+  { table: "research_experiences", idColumn: "organization_entity_id", textColumn: "organization" },
+  { table: "awards", idColumn: "organization_entity_id", textColumn: "organization" },
+  { table: "certifications", idColumn: "organization_entity_id", textColumn: "organization" },
+  { table: "projects", idColumn: "organization_entity_id", textColumn: "organization" },
+  { table: "sports_experiences", idColumn: "team_entity_id", textColumn: "team_name" },
 ];
 
 async function main() {
@@ -58,24 +55,30 @@ async function main() {
   const { createClient } = await import("@supabase/supabase-js");
   const admin = createClient(url, secretKey, { auth: { autoRefreshToken: false, persistSession: false } });
 
-  const { data: institutionRows, error } = await admin
-    .from("institutions")
-    .select("id, category, canonical_name, aliases, country, city, website_url, status");
-  if (error) {
-    console.error(`Couldn't read institutions: ${error.message}`);
+  const [{ data: entityRows, error }, { data: aliasRows, error: aliasError }] = await Promise.all([
+    admin.from("canonical_entities").select("id, entity_type, display_name, country_code, city, official_url, verification_state"),
+    admin.from("entity_aliases").select("entity_id, alias"),
+  ]);
+  if (error || aliasError) {
+    console.error(`Couldn't read the canonical registry: ${error?.message ?? aliasError?.message}`);
     process.exitCode = 1;
     return;
   }
 
-  const entities: AuditableEntity[] = (institutionRows ?? []).map((row) => ({
+  const aliasesByEntity = new Map<string, string[]>();
+  for (const row of aliasRows ?? []) {
+    aliasesByEntity.set(row.entity_id, [...(aliasesByEntity.get(row.entity_id) ?? []), row.alias]);
+  }
+
+  const entities: AuditableEntity[] = (entityRows ?? []).map((row) => ({
     id: row.id,
-    canonicalName: row.canonical_name,
-    aliases: row.aliases,
-    country: row.country,
+    canonicalName: row.display_name,
+    aliases: aliasesByEntity.get(row.id) ?? [],
+    country: row.country_code,
     city: row.city,
-    category: row.category,
-    websiteUrl: row.website_url,
-    status: row.status,
+    entityType: row.entity_type,
+    officialUrl: row.official_url,
+    verificationState: row.verification_state,
   }));
   const nameById = new Map(entities.map((e) => [e.id, e.canonicalName]));
 
@@ -103,7 +106,7 @@ async function main() {
   const allFindings = [...registryFindings, ...driftFindings];
   const summary = summarizeFindings(allFindings);
 
-  console.log(`Entity registry audit — ${entities.length} institutions, ${driftRows.length} linked rows checked for name drift.`);
+  console.log(`Entity registry audit — ${entities.length} canonical entities, ${driftRows.length} linked rows checked for name drift.`);
   for (const [bucket, count] of Object.entries(summary)) console.log(`  ${bucket.padEnd(19)} ${count}`);
   console.log("");
 

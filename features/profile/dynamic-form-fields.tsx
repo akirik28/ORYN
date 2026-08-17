@@ -110,7 +110,7 @@ export function DynamicFormFields({
               <Label htmlFor={field.name}>{field.label}</Label>
               <EntityCombobox
                 id={field.name}
-                entityType={field.entityType}
+                scope={field.scope}
                 value={(value as string) ?? ""}
                 entityId={(values[field.entityIdField] as string) ?? null}
                 allowCustom={field.allowCustom}

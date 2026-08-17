@@ -15,7 +15,7 @@ import { AIProviderNotConfiguredError } from "@/lib/ai";
 import { assertWithinAIRateLimit, RateLimitExceededError } from "@/lib/ai/rate-limit";
 import { logEvent } from "@/lib/analytics/log";
 import { toFriendlyDbErrorMessage } from "@/lib/errors/friendly-db-error";
-import { resolveInstitution } from "@/lib/entities/resolve";
+import { resolveEntity } from "@/lib/entities/resolve";
 import { CompleteOnboardingSchema, INTEREST_SUGGESTIONS, type CompleteOnboardingInput } from "@/lib/validation/onboarding";
 
 const KNOWN_INTERESTS = new Set<string>(INTEREST_SUGGESTIONS);
@@ -100,16 +100,16 @@ export async function completeOnboarding(input: CompleteOnboardingInput): Promis
   const supabase = await createClient();
 
   // Canonical Entity Autocomplete System: an id the client sent is re-verified against
-  // the institutions registry (category='school') before it's persisted — never trusted
-  // blindly, and a school id can't be smuggled in as anything else. A verified match
-  // also overwrites school_name with the registry's CURRENT canonical name, so the
-  // legacy text column every existing read path uses never drifts from the linked
+  // the canonical registry (entity_type='school') before it's persisted — never trusted
+  // blindly, so nothing but a school can be smuggled into school_entity_id. A verified
+  // match also overwrites school_name with the entity's CURRENT display name, so the
+  // denormalized text column every existing read path uses never drifts from the linked
   // entity. A rejected id fails the whole save rather than silently storing free text
   // under a link the student thinks they made.
   let schoolId: string | null = null;
   let schoolName = data.schoolName;
   if (data.schoolId) {
-    const resolved = await resolveInstitution(supabase, data.schoolId, "school");
+    const resolved = await resolveEntity(supabase, "school", data.schoolId);
     if (!resolved) return { error: "That school couldn't be verified. Please search and select it again." };
     schoolId = resolved.id;
     schoolName = resolved.canonicalName;
@@ -120,7 +120,7 @@ export async function completeOnboarding(input: CompleteOnboardingInput): Promis
     .update({
       country: data.country,
       school_name: schoolName,
-      school_id: schoolId,
+      school_entity_id: schoolId,
       graduation_year: data.graduationYear,
       curriculum: data.curriculum,
       target_geographies: data.targetGeographies,

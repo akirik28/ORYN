@@ -36,45 +36,53 @@ import {
   type GoalFormInput,
   type SportsFormInput,
 } from "@/lib/validation/achievements";
-import { resolveInstitution, resolveOpportunity } from "@/lib/entities/resolve";
-import type { InstitutionCategory } from "@/types/database";
+import { resolveEntity } from "@/lib/entities/resolve";
+import type { EntityScope } from "@/lib/entities/field-policy";
 
 type ActionResult = { error?: string };
 type ZodLike<T> = { safeParse: (input: unknown) => { success: boolean; data?: T; error?: { issues: { message: string }[] } } };
 
 /**
- * Canonical Entity Autocomplete System (spec section 16): every achievement/education
- * table with a `*_id` linkage column re-verifies that id server-side before it's ever
+ * Canonical Entity Autocomplete System: every achievement/education table with a
+ * `*_entity_id` linkage column re-verifies that id server-side before it is ever
  * persisted — never trusts the client's autocomplete result blindly. A null id (the
- * legacy/custom free-text path) skips this entirely.
+ * legacy free-text path) skips this entirely.
  *
- * An institution link also overwrites its `textField` with the registry's CURRENT
- * canonical name on every write, so the legacy column a linked row's existing read paths
+ * A canonical link also overwrites its `textField` with the entity's CURRENT display
+ * name on every write, so the denormalized column a linked row's existing read paths
  * already render (portfolio, CV builder, exports, ...) always shows the canonical name
- * at the moment of selection (spec section 13) with zero changes to those read paths.
- * An opportunity link has no such column — the catalog title is resolved for display at
- * read time instead (see lib/profile/activity-opportunities.ts), so `textField` is null.
+ * at the moment of selection, with zero changes to those read paths.
+ * An opportunity link has no such column — the catalogue title is resolved for display
+ * at read time instead (see lib/profile/activity-opportunities.ts), so `textField` is
+ * null.
+ *
+ * `scope` must be the same scope features/profile/field-config.ts binds to that column,
+ * and both must match the entity types the column's own database trigger allows. The
+ * trigger is the real gate; resolving here just turns a would-be Postgres exception into
+ * a message the student can act on.
  *
  * A table can carry more than one link: `activities` has both an organization and an
- * optional link to the canonical opportunity/program catalog it corresponds to.
+ * optional link to the opportunity/program catalogue it corresponds to.
  */
-type EntityLink =
-  | { idField: string; textField: string; kind: "institution"; category: InstitutionCategory }
-  | { idField: string; textField: null; kind: "opportunity" };
+interface EntityLink {
+  idField: string;
+  textField: string | null;
+  scope: EntityScope;
+}
 
 const ENTITY_LINK_FIELDS: Record<string, EntityLink[]> = {
-  education_records: [{ idField: "school_id", textField: "school_name", kind: "institution", category: "school" }],
-  work_experiences: [{ idField: "organization_id", textField: "organization", kind: "institution", category: "organization" }],
-  volunteering_experiences: [{ idField: "organization_id", textField: "organization", kind: "institution", category: "organization" }],
+  education_records: [{ idField: "school_entity_id", textField: "school_name", scope: "school" }],
+  work_experiences: [{ idField: "organization_entity_id", textField: "organization", scope: "work_organization" }],
+  volunteering_experiences: [{ idField: "organization_entity_id", textField: "organization", scope: "volunteering_organization" }],
   activities: [
-    { idField: "organization_id", textField: "organization", kind: "institution", category: "organization" },
-    { idField: "opportunity_id", textField: null, kind: "opportunity" },
+    { idField: "organization_entity_id", textField: "organization", scope: "activity_organization" },
+    { idField: "opportunity_id", textField: null, scope: "opportunity" },
   ],
-  research_experiences: [{ idField: "organization_id", textField: "organization", kind: "institution", category: "organization" }],
-  awards: [{ idField: "organization_id", textField: "organization", kind: "institution", category: "organization" }],
-  certifications: [{ idField: "organization_id", textField: "organization", kind: "institution", category: "organization" }],
-  projects: [{ idField: "organization_id", textField: "organization", kind: "institution", category: "organization" }],
-  sports_experiences: [{ idField: "team_organization_id", textField: "team_name", kind: "institution", category: "organization" }],
+  research_experiences: [{ idField: "organization_entity_id", textField: "organization", scope: "research_organization" }],
+  awards: [{ idField: "organization_entity_id", textField: "organization", scope: "award_organization" }],
+  certifications: [{ idField: "organization_entity_id", textField: "organization", scope: "certification_organization" }],
+  projects: [{ idField: "organization_entity_id", textField: "organization", scope: "project_organization" }],
+  sports_experiences: [{ idField: "team_entity_id", textField: "team_name", scope: "sports_team" }],
 };
 
 async function resolveEntityLinkage<T extends Record<string, unknown>>(
@@ -91,8 +99,7 @@ async function resolveEntityLinkage<T extends Record<string, unknown>>(
     if (rawId === null || rawId === undefined) continue;
     if (typeof rawId !== "string") return { data, error: "Invalid entity reference." };
 
-    const resolved =
-      link.kind === "institution" ? await resolveInstitution(supabase, rawId, link.category) : await resolveOpportunity(supabase, rawId);
+    const resolved = await resolveEntity(supabase, link.scope, rawId);
     if (!resolved) return { data, error: "That entry couldn't be verified. Please search and select it again." };
 
     next = { ...next, [link.idField]: resolved.id, ...(link.textField ? { [link.textField]: resolved.canonicalName } : {}) };

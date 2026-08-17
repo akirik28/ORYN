@@ -94,7 +94,7 @@ export interface Profile {
   school_name: string | null;
   /** Canonical Entity Autocomplete System — preferred over school_name once set; kept in
    * sync with the linked institution's canonical name at selection time. */
-  school_id: string | null;
+  school_entity_id: string | null;
   graduation_year: number | null;
   curriculum: CurriculumType | null;
   preferred_language: string;
@@ -308,7 +308,7 @@ interface AchievementCommon {
    * once set; `organization` is kept in sync with the linked institution's canonical name
    * at selection time (see lib/entities/resolve.ts) so every existing read path keeps
    * working unchanged. Null means unlinked/legacy free text only. */
-  organization_id: string | null;
+  organization_entity_id: string | null;
   description: string | null;
   start_date: string | null;
   end_date: string | null;
@@ -330,7 +330,7 @@ export interface EducationRecord {
   id: string;
   user_id: string;
   school_name: string;
-  school_id: string | null;
+  school_entity_id: string | null;
   country: string | null;
   stage: EducationStage;
   curriculum: CurriculumType | null;
@@ -343,7 +343,7 @@ export interface EducationRecord {
   created_at: string;
   updated_at: string;
 }
-export type EducationRecordInsert = Insertable<EducationRecord, "id" | "created_at" | "updated_at" | "stage" | "is_current" | "school_id">;
+export type EducationRecordInsert = Insertable<EducationRecord, "id" | "created_at" | "updated_at" | "stage" | "is_current" | "school_entity_id">;
 export type EducationRecordUpdate = Updatable<EducationRecord, "id" | "user_id" | "created_at" | "updated_at">;
 
 export interface Course {
@@ -390,7 +390,7 @@ export interface Activity extends AchievementCommon {
 }
 export type ActivityInsert = Insertable<
   Activity,
-  "id" | "created_at" | "updated_at" | "category" | "is_leadership_role" | "ongoing" | "source" | "evidence_status" | "organization_id" | "opportunity_id"
+  "id" | "created_at" | "updated_at" | "category" | "is_leadership_role" | "ongoing" | "source" | "evidence_status" | "organization_entity_id" | "opportunity_id"
 >;
 export type ActivityUpdate = Updatable<Activity, "id" | "user_id" | "created_at" | "updated_at">;
 
@@ -399,7 +399,7 @@ export interface Award {
   user_id: string;
   title: string;
   organization: string | null;
-  organization_id: string | null;
+  organization_entity_id: string | null;
   level: string | null;
   description: string | null;
   award_date: string | null;
@@ -410,7 +410,7 @@ export interface Award {
   created_at: string;
   updated_at: string;
 }
-export type AwardInsert = Insertable<Award, "id" | "created_at" | "updated_at" | "source" | "evidence_status" | "organization_id">;
+export type AwardInsert = Insertable<Award, "id" | "created_at" | "updated_at" | "source" | "evidence_status" | "organization_entity_id">;
 export type AwardUpdate = Updatable<Award, "id" | "user_id" | "created_at" | "updated_at">;
 
 export interface Certification {
@@ -418,7 +418,7 @@ export interface Certification {
   user_id: string;
   title: string;
   organization: string | null;
-  organization_id: string | null;
+  organization_entity_id: string | null;
   description: string | null;
   issue_date: string | null;
   expiry_date: string | null;
@@ -428,7 +428,7 @@ export interface Certification {
   created_at: string;
   updated_at: string;
 }
-export type CertificationInsert = Insertable<Certification, "id" | "created_at" | "updated_at" | "source" | "evidence_status" | "organization_id">;
+export type CertificationInsert = Insertable<Certification, "id" | "created_at" | "updated_at" | "source" | "evidence_status" | "organization_entity_id">;
 export type CertificationUpdate = Updatable<Certification, "id" | "user_id" | "created_at" | "updated_at">;
 
 export interface Project extends AchievementCommon {
@@ -439,7 +439,7 @@ export interface Project extends AchievementCommon {
   repo_url: string | null;
   live_url: string | null;
 }
-export type ProjectInsert = Insertable<Project, "id" | "created_at" | "updated_at" | "ongoing" | "source" | "evidence_status" | "organization_id">;
+export type ProjectInsert = Insertable<Project, "id" | "created_at" | "updated_at" | "ongoing" | "source" | "evidence_status" | "organization_entity_id">;
 export type ProjectUpdate = Updatable<Project, "id" | "user_id" | "created_at" | "updated_at">;
 
 export interface ResearchExperience extends AchievementCommon {
@@ -452,7 +452,7 @@ export interface ResearchExperience extends AchievementCommon {
 }
 export type ResearchExperienceInsert = Insertable<
   ResearchExperience,
-  "id" | "created_at" | "updated_at" | "ongoing" | "source" | "evidence_status" | "output_type" | "organization_id"
+  "id" | "created_at" | "updated_at" | "ongoing" | "source" | "evidence_status" | "output_type" | "organization_entity_id"
 >;
 export type ResearchExperienceUpdate = Updatable<ResearchExperience, "id" | "user_id" | "created_at" | "updated_at">;
 
@@ -460,7 +460,7 @@ export interface VolunteeringExperience extends AchievementCommon {
   cause_area: string | null;
   weeks_per_year: number | null;
 }
-export type VolunteeringExperienceInsert = Insertable<VolunteeringExperience, "id" | "created_at" | "updated_at" | "ongoing" | "source" | "evidence_status" | "organization_id">;
+export type VolunteeringExperienceInsert = Insertable<VolunteeringExperience, "id" | "created_at" | "updated_at" | "ongoing" | "source" | "evidence_status" | "organization_entity_id">;
 export type VolunteeringExperienceUpdate = Updatable<VolunteeringExperience, "id" | "user_id" | "created_at" | "updated_at">;
 
 export interface WorkExperience {
@@ -468,7 +468,7 @@ export interface WorkExperience {
   user_id: string;
   title: string;
   organization: string;
-  organization_id: string | null;
+  organization_entity_id: string | null;
   employment_type: EmploymentType;
   description: string | null;
   start_date: string | null;
@@ -483,7 +483,7 @@ export interface WorkExperience {
   created_at: string;
   updated_at: string;
 }
-export type WorkExperienceInsert = Insertable<WorkExperience, "id" | "created_at" | "updated_at" | "employment_type" | "ongoing" | "source" | "evidence_status" | "organization_id">;
+export type WorkExperienceInsert = Insertable<WorkExperience, "id" | "created_at" | "updated_at" | "employment_type" | "ongoing" | "source" | "evidence_status" | "organization_entity_id">;
 export type WorkExperienceUpdate = Updatable<WorkExperience, "id" | "user_id" | "created_at" | "updated_at">;
 
 // Sports (migration 0026) — a dedicated table, not folded into `activities`: real
@@ -498,7 +498,7 @@ export interface SportsExperience {
   sport: string;
   discipline: string | null;
   team_name: string | null;
-  team_organization_id: string | null;
+  team_entity_id: string | null;
   position: string | null;
   level: SportLevel | null;
   us_specific_label: string | null;
@@ -517,7 +517,7 @@ export interface SportsExperience {
   created_at: string;
   updated_at: string;
 }
-export type SportsExperienceInsert = Insertable<SportsExperience, "id" | "created_at" | "updated_at" | "is_captain" | "ongoing" | "source" | "evidence_status" | "team_organization_id">;
+export type SportsExperienceInsert = Insertable<SportsExperience, "id" | "created_at" | "updated_at" | "is_captain" | "ongoing" | "source" | "evidence_status" | "team_entity_id">;
 export type SportsExperienceUpdate = Updatable<SportsExperience, "id" | "user_id" | "created_at" | "updated_at">;
 
 export interface Skill {
@@ -582,49 +582,85 @@ export interface CareerGoal {
 export type CareerGoalInsert = Insertable<CareerGoal, "id" | "created_at" | "updated_at" | "priority" | "status">;
 export type CareerGoalUpdate = Updatable<CareerGoal, "id" | "user_id" | "created_at" | "updated_at">;
 
-// ---------- Institutions (Canonical Entity Autocomplete System, migration 0038) ----------
+// ---------- Canonical entity registry (migration 0038) ----------
 
-export type InstitutionCategory = "school" | "organization";
-export type InstitutionStatus = "verified" | "unverified";
+/** Every entity type `canonical_entities.entity_type` accepts. The source of truth for
+ * which of these a given profile field may link is lib/entities/field-policy.ts, which
+ * mirrors the database's own per-column triggers. */
+export type CanonicalEntityType =
+  | "school"
+  | "university"
+  | "employer"
+  | "organization"
+  | "research_institution"
+  | "lab"
+  | "ngo"
+  | "club"
+  | "opportunity_provider"
+  | "program"
+  | "competition"
+  | "scholarship"
+  | "sports_team"
+  | "country"
+  | "city";
 
-export interface Institution {
+/** `user_submitted` is what the student-facing custom fallback produces — it is NOT a
+ * claim that anything was checked. `merged` is a tombstone pointing at a replacement via
+ * metadata.merged_into; nothing should ever link to one. */
+export type EntityVerificationState = "unverified" | "user_submitted" | "source_verified" | "official_verified" | "conflict" | "merged" | "inactive";
+
+export interface CanonicalEntity {
   id: string;
-  category: InstitutionCategory;
+  entity_type: CanonicalEntityType;
+  /** The legal/registry name. */
   canonical_name: string;
-  institution_type: string | null;
-  country: string | null;
+  /** What the UI shows — differs from canonical_name when the legal name is unwieldy. */
+  display_name: string;
+  /** Identity key, never displayed. */
+  normalized_name: string;
+  country_code: string | null;
   city: string | null;
-  website_url: string | null;
-  domain: string | null;
-  local_language_name: string | null;
-  english_name: string | null;
-  aliases: string[];
-  status: InstitutionStatus;
-  created_by: string | null;
-  source: string | null;
-  data_confidence: DataConfidence | null;
+  official_url: string | null;
+  parent_entity_id: string | null;
+  canonicality_rule: "required" | "preferred_custom_fallback" | "free_text_not_entity";
+  verification_state: EntityVerificationState;
+  data_status: DataStatus;
+  source_priority: number;
+  metadata: Record<string, unknown>;
+  last_verified_at: string | null;
   created_at: string;
   updated_at: string;
+  /** Trigram-indexed search form, maintained by a trigger — never written by the app. */
+  search_key: string | null;
 }
-export type InstitutionInsert = Insertable<
-  Institution,
-  | "id"
-  | "created_at"
-  | "updated_at"
-  | "institution_type"
-  | "country"
-  | "city"
-  | "website_url"
-  | "domain"
-  | "local_language_name"
-  | "english_name"
-  | "aliases"
-  | "status"
-  | "created_by"
-  | "source"
-  | "data_confidence"
->;
-export type InstitutionUpdate = Updatable<Institution, "id" | "category" | "created_at" | "updated_at" | "created_by">;
+
+export interface EntityAlias {
+  id: string;
+  entity_id: string;
+  alias: string;
+  normalized_alias: string;
+  language_code: string | null;
+  alias_type: "official" | "common" | "abbreviation" | "legacy" | "translation" | "user_submitted";
+  source_url: string | null;
+  verified: boolean;
+  created_at: string;
+  alias_search_key: string | null;
+}
+
+/** One row of `search_canonical_entities`. `matched_text` is the alias that matched when
+ * `matched_via` is 'alias', otherwise the display name. */
+export interface CanonicalEntitySearchRow {
+  entity_id: string;
+  entity_type: CanonicalEntityType;
+  canonical_name: string;
+  display_name: string;
+  country_code: string | null;
+  city: string | null;
+  verification_state: EntityVerificationState;
+  matched_text: string;
+  matched_via: "canonical" | "alias";
+  score: number;
+}
 
 // ---------- Universities (global reference data) ----------
 
@@ -634,9 +670,10 @@ export interface University {
   country: string;
   city: string | null;
   institution_type: string | null;
-  /** Search-only alternate names/abbreviations (e.g. "MIT") — never the display name
-   * (Canonical Entity Autocomplete System, migration 0038). */
-  aliases: string[];
+  /** Identity link into canonical_entities (entity_type='university'). Alternate names
+   * live there as entity_aliases rows, not as a column here — see
+   * lib/universities/alias-search.ts. */
+  canonical_entity_id: string | null;
   website_url: string | null;
   logo_url: string | null;
   description: string | null;
@@ -668,7 +705,7 @@ export type UniversityInsert = Insertable<
   | "selectivity"
   | "latitude"
   | "longitude"
-  | "aliases"
+  | "canonical_entity_id"
 >;
 export type UniversityUpdate = Updatable<University, "id" | "created_at" | "updated_at">;
 
@@ -857,15 +894,12 @@ export interface Opportunity {
   last_verified_at: string | null;
   status: OpportunityStatus;
   normalized_title: string;
-  /** Search-only alternate names/abbreviations (e.g. "YYGS") — never the display name
-   * (Canonical Entity Autocomplete System, migration 0038). */
-  aliases: string[];
   created_at: string;
   updated_at: string;
 }
 export type OpportunityInsert = Insertable<
   Opportunity,
-  "id" | "created_at" | "updated_at" | "remote_allowed" | "eligible_countries" | "fields" | "funding_available" | "source_confidence" | "status" | "aliases"
+  "id" | "created_at" | "updated_at" | "remote_allowed" | "eligible_countries" | "fields" | "funding_available" | "source_confidence" | "status"
 >;
 export type OpportunityUpdate = Updatable<Opportunity, "id" | "created_at" | "updated_at">;
 
@@ -1103,6 +1137,16 @@ export interface Database {
     };
     Functions: {
       is_blocked_between: { Args: { user_a: string; user_b: string }; Returns: boolean };
+      search_canonical_entities: {
+        Args: { q: string; p_entity_types: string[] | null; p_limit: number };
+        Returns: CanonicalEntitySearchRow[];
+      };
+      /** SECURITY DEFINER (migration 0039) — the only path by which a student session can
+       * write to the registry, and it can only ever produce a `user_submitted` row. */
+      create_or_resolve_user_submitted_entity: {
+        Args: { p_entity_type: string; p_display_name: string; p_country_code: string | null; p_city: string | null };
+        Returns: { entity_id: string; created_new: boolean; verification_state: EntityVerificationState }[];
+      };
     };
     Tables: {
       profiles: Table<Profile, Partial<Profile>, ProfileUpdate>;
@@ -1131,7 +1175,8 @@ export interface Database {
       evidence_files: Table<EvidenceFile, EvidenceFileInsert, EvidenceFileUpdate>;
       student_interests: Table<StudentInterest, StudentInterestInsert, StudentInterestInsert>;
       career_goals: Table<CareerGoal, CareerGoalInsert, CareerGoalUpdate>;
-      institutions: Table<Institution, InstitutionInsert, InstitutionUpdate>;
+      canonical_entities: Table<CanonicalEntity, never, never>;
+      entity_aliases: Table<EntityAlias, never, never>;
       universities: Table<University, UniversityInsert, UniversityUpdate>;
       university_programs: Table<UniversityProgram, UniversityProgramInsert, Partial<UniversityProgramInsert>>;
       university_requirements: Table<UniversityRequirement, UniversityRequirementInsert, Partial<UniversityRequirementInsert>>;

@@ -73,7 +73,7 @@ CLI, which applies all of them in one command).
 | 0035 | `0035_recommendations.sql` | |
 | 0036 | `0036_profile_views.sql` | |
 | 0037 | `0037_public_profile_headline_about.sql` | |
-| 0038 | `0038_canonical_institutions.sql` | |
+| 0038 | `0038_canonical_entity_registry.sql` | |
 
 Every one is additive — new tables, columns, indexes, RLS policies, and one
 `CREATE OR REPLACE VIEW`. Nothing drops or rewrites existing data.
@@ -94,7 +94,7 @@ depend on earlier ones.
 ```
 supabase/seed.sql                      (if not already applied)
 supabase/seed_drive_batch1.sql         needs 0028 + 0032
-supabase/seed_entities_drive_batch1.sql   needs 0038
+supabase/seed_canonical_delta.sql         needs 0038 + 0039
 ```
 
 All three are idempotent (`ON CONFLICT DO NOTHING`) — safe to re-run.
@@ -106,11 +106,11 @@ universities plus 3 alias enrichments, 5 opportunity aliases.
 **Expected result:**
 
 ```sql
-select count(*) from public.institutions;   -- 73  (19 organizations + 54 schools)
+select count(*) from public.canonical_entities;  -- 1160  (1083 universities, 59 schools, 18 organizations/providers)
 select count(*) from public.universities;   -- 128 (51 existing + 77 new)
 ```
 
-**Stop if:** `institutions` doesn't exist — 0038 didn't apply, go back to step 3.
+**Stop if:** `canonical_entities` doesn't exist — 0038 didn't apply, go back to step 3.
 
 ---
 

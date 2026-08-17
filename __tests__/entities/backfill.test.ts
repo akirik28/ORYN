@@ -18,7 +18,7 @@ describe("classifyForBackfill", () => {
       rowId: "row-1",
       freeText: "Üsküdar American Academy",
       classification: "auto_linked",
-      matchedInstitutionId: UAA.id,
+      matchedEntityId: UAA.id,
       matchedCanonicalName: UAA.canonicalName,
     });
   });
@@ -26,7 +26,7 @@ describe("classifyForBackfill", () => {
   test("an exact alias match is auto-linked", () => {
     const result = classifyForBackfill({ rowId: "row-2", freeText: "UAA" }, [UAA]);
     expect(result.classification).toBe("auto_linked");
-    expect(result.matchedInstitutionId).toBe(UAA.id);
+    expect(result.matchedEntityId).toBe(UAA.id);
   });
 
   test("an accent/spelling variant that only fuzzy-matches is a possible duplicate, not auto-linked", () => {
@@ -41,7 +41,7 @@ describe("classifyForBackfill", () => {
       rowId: "row-4",
       freeText: "My local scout troop",
       classification: "unresolved",
-      matchedInstitutionId: null,
+      matchedEntityId: null,
       matchedCanonicalName: null,
     });
   });

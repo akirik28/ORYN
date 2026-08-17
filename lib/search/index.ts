@@ -4,16 +4,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { createClient } from "@/lib/supabase/server";
 import { rankResults, toIlikePattern } from "./rank";
-import { rankUniversities } from "@/lib/universities/alias-search";
+import { searchUniversityRows } from "@/lib/universities/alias-search";
 import type { SearchResult } from "./types";
 
 type DB = SupabaseClient<Database>;
 
 const MIN_QUERY_LENGTH = 2;
 const PER_SOURCE_LIMIT = 5;
-/** Bounded candidate pool for the one source that ranks in TS rather than in SQL —
- * see searchUniversities below. */
-const UNIVERSITY_CANDIDATE_LIMIT = 500;
 
 /** Supabase-js resolves a failed query to `{ data: null, error }` rather than rejecting —
  * every call site here used to destructure only `{ data }`, so a genuine backend failure
@@ -27,13 +24,12 @@ function unwrap<T>(result: { data: T[] | null; error: { message: string } | null
   return result.data ?? [];
 }
 
-/** Alias/accent-aware, unlike every other source here: universities are the one entity
- * with a curated alias list, so "MIT" and "uskudar" have to resolve (an `ilike` pattern
- * can do neither). Fetches a bounded candidate set and ranks it with the shared engine —
- * same trade-off documented in lib/entities/search.ts. */
+/** Alias/accent-aware, unlike every other source here: universities carry curated
+ * aliases in the canonical registry, so "MIT" and "uskudar" have to resolve (an `ilike`
+ * pattern can do neither). Ranked in Postgres — see lib/universities/alias-search.ts. */
 async function searchUniversities(supabase: DB, term: string): Promise<SearchResult[]> {
-  const result = await supabase.from("universities").select("id, name, city, country, aliases").limit(UNIVERSITY_CANDIDATE_LIMIT);
-  return rankUniversities(term, unwrap(result), 8).map((u) => ({
+  const rows = await searchUniversityRows(supabase, term, { limit: 8 });
+  return rows.map((u) => ({
     type: "university" as const,
     id: u.id,
     title: u.name,

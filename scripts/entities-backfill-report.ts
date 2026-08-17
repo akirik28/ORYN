@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
- * Non-destructive backfill report for the Canonical Entity Autocomplete System (spec
- * section 14). Reads every existing free-text school/organization value across the nine
- * audited tables, classifies each against the current `institutions` registry using the
- * exact same pure engine the live app uses (lib/entities/backfill.ts), and writes a
- * report — it never writes a `*_id` column itself. Applying `auto_linked` rows (and
- * deciding what to do with `possible_duplicate` ones) is a deliberate, separate,
- * reviewed step; this script's only job is to make that review possible.
+ * Non-destructive backfill report for the Canonical Entity Autocomplete System. Reads
+ * every existing free-text school/organization value across the nine linkable tables,
+ * classifies each against the canonical registry using the exact same pure engine the
+ * live app uses (lib/entities/backfill.ts), and writes a report — it never writes an
+ * `*_entity_id` column itself. Applying `auto_linked` rows (and deciding what to do with
+ * `possible_duplicate` ones) is a deliberate, separate, reviewed step; this script's only
+ * job is to make that review possible.
  *
  * Run with: npm run entities:backfill-report
  *
@@ -14,16 +14,11 @@
  * the top — that guard throws outside Next.js's bundler, which this plain Node/tsx
  * script is (same constraint scripts/check-integrations.ts documents). Talks to
  * Supabase directly via the admin client instead.
- *
- * NOT RUN as part of this change — this environment has no applied migrations (this
- * pack's own 0038 included) and no `SUPABASE_SECRET_KEY`, so there is no live
- * `institutions` table or any free-text data to read yet. Ready to run once both exist
- * (see docs/founder-blocked-backlog.md).
  */
 
 import { classifyForBackfill, summarizeBackfillResults, type BackfillResult } from "../lib/entities/backfill";
 import type { EntityCandidate } from "../lib/entities/rank";
-import type { InstitutionCategory } from "../types/database";
+import { ENTITY_SCOPES, type EntityScope } from "../lib/entities/field-policy";
 
 try {
   process.loadEnvFile(".env.local");
@@ -35,26 +30,27 @@ interface SourceTableSpec {
   table: string;
   column: string;
   idColumn: string;
-  category: InstitutionCategory;
+  /** Same scope the app binds to this column, so the candidate pool this classifies
+   * against is exactly the set of entity types the column would actually accept. */
+  scope: EntityScope;
   /** Optional country-context column, if the table has one — improves ranking, never
    * required. */
   countryColumn?: string;
 }
 
-/** Every table the Phase 1 audit (docs/entity-canonicalization-audit.md) flagged as
- * CANONICAL + CUSTOM FALLBACK. profiles.school_name is deliberately excluded — it's the
- * onboarding "quick profile" mirror of education_records.school_name, not linked this
- * pass (see the audit doc's own note on that decision). */
+/** Every table whose free-text column has a canonical linkage column next to it.
+ * profiles.school_name is deliberately excluded — it is the onboarding "quick profile"
+ * mirror of education_records.school_name, linked at onboarding time instead. */
 const SOURCE_TABLES: SourceTableSpec[] = [
-  { table: "education_records", column: "school_name", idColumn: "id", category: "school", countryColumn: "country" },
-  { table: "work_experiences", column: "organization", idColumn: "id", category: "organization" },
-  { table: "volunteering_experiences", column: "organization", idColumn: "id", category: "organization" },
-  { table: "activities", column: "organization", idColumn: "id", category: "organization" },
-  { table: "research_experiences", column: "organization", idColumn: "id", category: "organization" },
-  { table: "awards", column: "organization", idColumn: "id", category: "organization" },
-  { table: "certifications", column: "organization", idColumn: "id", category: "organization" },
-  { table: "projects", column: "organization", idColumn: "id", category: "organization" },
-  { table: "sports_experiences", column: "team_name", idColumn: "id", category: "organization" },
+  { table: "education_records", column: "school_name", idColumn: "id", scope: "school", countryColumn: "country" },
+  { table: "work_experiences", column: "organization", idColumn: "id", scope: "work_organization" },
+  { table: "volunteering_experiences", column: "organization", idColumn: "id", scope: "volunteering_organization" },
+  { table: "activities", column: "organization", idColumn: "id", scope: "activity_organization" },
+  { table: "research_experiences", column: "organization", idColumn: "id", scope: "research_organization" },
+  { table: "awards", column: "organization", idColumn: "id", scope: "award_organization" },
+  { table: "certifications", column: "organization", idColumn: "id", scope: "certification_organization" },
+  { table: "projects", column: "organization", idColumn: "id", scope: "project_organization" },
+  { table: "sports_experiences", column: "team_name", idColumn: "id", scope: "sports_team" },
 ];
 
 async function main() {
@@ -69,21 +65,39 @@ async function main() {
   const { createClient } = await import("@supabase/supabase-js");
   const admin = createClient(url, secretKey, { auth: { autoRefreshToken: false, persistSession: false } });
 
-  const { data: institutionRows, error: institutionsError } = await admin
-    .from("institutions")
-    .select("id, category, canonical_name, aliases, country, city");
-  if (institutionsError) {
-    console.error(`Couldn't read institutions: ${institutionsError.message}`);
+  // The whole registry plus its aliases is loaded once and partitioned per scope in
+  // memory — nine scoped queries would re-fetch the same overlapping rows nine times.
+  const [{ data: entityRows, error: entitiesError }, { data: aliasRows, error: aliasesError }] = await Promise.all([
+    admin.from("canonical_entities").select("id, entity_type, display_name, country_code, city, verification_state"),
+    admin.from("entity_aliases").select("entity_id, alias"),
+  ]);
+  if (entitiesError || aliasesError) {
+    console.error(`Couldn't read the canonical registry: ${entitiesError?.message ?? aliasesError?.message}`);
     process.exitCode = 1;
     return;
   }
 
-  const bySchoolCategory: EntityCandidate[] = (institutionRows ?? [])
-    .filter((r) => r.category === "school")
-    .map((r) => ({ id: r.id, canonicalName: r.canonical_name, aliases: r.aliases, country: r.country, city: r.city }));
-  const byOrgCategory: EntityCandidate[] = (institutionRows ?? [])
-    .filter((r) => r.category === "organization")
-    .map((r) => ({ id: r.id, canonicalName: r.canonical_name, aliases: r.aliases, country: r.country, city: r.city }));
+  const aliasesByEntity = new Map<string, string[]>();
+  for (const row of aliasRows ?? []) {
+    aliasesByEntity.set(row.entity_id, [...(aliasesByEntity.get(row.entity_id) ?? []), row.alias]);
+  }
+
+  // A merged entity is a tombstone; suggesting a link to one would be wrong even for a
+  // human reviewer to accept.
+  const liveEntities = (entityRows ?? []).filter((r) => r.verification_state !== "merged" && r.verification_state !== "inactive");
+
+  function candidatesForScope(scope: EntityScope): EntityCandidate[] {
+    const allowed = new Set<string>(ENTITY_SCOPES[scope].allowedTypes);
+    return liveEntities
+      .filter((r) => allowed.has(r.entity_type))
+      .map((r) => ({
+        id: r.id,
+        canonicalName: r.display_name,
+        aliases: aliasesByEntity.get(r.id) ?? [],
+        country: r.country_code,
+        city: r.city,
+      }));
+  }
 
   const allResults: (BackfillResult & { table: string })[] = [];
 
@@ -96,7 +110,7 @@ async function main() {
       continue;
     }
 
-    const candidates = spec.category === "school" ? bySchoolCategory : byOrgCategory;
+    const candidates = candidatesForScope(spec.scope);
     for (const row of rows ?? []) {
       const freeText: string = row[spec.column];
       if (!freeText || !freeText.trim()) continue;

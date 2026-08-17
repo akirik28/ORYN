@@ -9,7 +9,7 @@ function volunteering(overrides: Partial<VolunteeringExperience>): VolunteeringE
     user_id: "u1",
     title: "Volunteer",
     organization: "Local shelter",
-    organization_id: null,
+    organization_entity_id: null,
     description: null,
     cause_area: null,
     start_date: "2025-05-01",

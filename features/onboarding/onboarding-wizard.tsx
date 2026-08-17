@@ -151,7 +151,7 @@ export function OnboardingWizard() {
                 <Label htmlFor="school">School</Label>
                 <EntityCombobox
                   id="school"
-                  entityType="school"
+                  scope="school"
                   value={schoolName}
                   entityId={schoolId}
                   context={{ country: country.trim() || null }}

@@ -1,5 +1,13 @@
 # Entity Canonicalization Audit
 
+> **Partly superseded (2026-08-17).** The *field audit* below still stands — which fields
+> name a real-world entity, and which are free text, did not change. The *schema* it
+> proposed did: `institutions` was replaced by the live `canonical_entities` registry
+> before it was ever applied. Read `docs/live-db-reconciliation.md` for what actually
+> shipped, and treat every mention of `institutions`, `category`, or `*_id` columns below
+> as historical. The live equivalent of this document's own table is the
+> `canonical_field_policies` table, which the database reads and enforces via triggers.
+
 Every field in the schema/UI where a user types the name of a real-world entity
 (school, university, employer, organization, program, ...), audited before any schema
 change. Fields where the user types a *description, title, or personal text* are

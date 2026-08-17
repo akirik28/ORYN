@@ -32,7 +32,7 @@ export async function getPeopleYouMayKnow(userId: string, limit = 10): Promise<P
   const [connectionsRes, blockedRes, myProfileRes, myInterestsRes, mySkillsRes] = await Promise.all([
     admin.from("connections").select("requester_id, recipient_id, status").or(`requester_id.eq.${userId},recipient_id.eq.${userId}`),
     admin.from("blocked_users").select("blocker_id, blocked_id").or(`blocker_id.eq.${userId},blocked_id.eq.${userId}`),
-    admin.from("profiles").select("school_name, school_id").eq("id", userId).maybeSingle(),
+    admin.from("profiles").select("school_name, school_entity_id").eq("id", userId).maybeSingle(),
     admin.from("student_interests").select("label").eq("user_id", userId),
     admin.from("skills").select("name").eq("user_id", userId),
   ]);
@@ -44,7 +44,7 @@ export async function getPeopleYouMayKnow(userId: string, limit = 10): Promise<P
   );
   const blockedIds = new Set((blockedRes.data ?? []).map((r) => (r.blocker_id === userId ? r.blocked_id : r.blocker_id)));
   const mySchool = myProfileRes.data?.school_name ?? null;
-  const mySchoolId = myProfileRes.data?.school_id ?? null;
+  const mySchoolId = myProfileRes.data?.school_entity_id ?? null;
   const myNormalizedSchool = mySchool ? normalizeEntitySearchText(mySchool) : "";
   const myInterests = new Set((myInterestsRes.data ?? []).map((r) => r.label));
   const mySkills = new Set((mySkillsRes.data ?? []).map((r) => r.name));
@@ -70,7 +70,7 @@ export async function getPeopleYouMayKnow(userId: string, limit = 10): Promise<P
   // should still find each other; both are candidate-*gathering* queries, and
   // isSameSchool below is what actually decides the signal.
   if (mySchoolId) {
-    const { data: linkedMates } = await admin.from("profiles").select("id").eq("school_id", mySchoolId).eq("is_public", true).limit(50);
+    const { data: linkedMates } = await admin.from("profiles").select("id").eq("school_entity_id", mySchoolId).eq("is_public", true).limit(50);
     for (const row of linkedMates ?? []) candidateIds.add(row.id);
   }
   if (mySchool) {
@@ -86,7 +86,7 @@ export async function getPeopleYouMayKnow(userId: string, limit = 10): Promise<P
   const idsArr = [...candidateIds].slice(0, CANDIDATE_POOL_CAP);
 
   const [profilesRes, candidateConnRes, candidateInterestsRes, candidateSkillsRes] = await Promise.all([
-    admin.from("profiles").select("id, display_name, school_name, school_id, is_public").in("id", idsArr),
+    admin.from("profiles").select("id, display_name, school_name, school_entity_id, is_public").in("id", idsArr),
     admin.from("connections").select("requester_id, recipient_id, status").eq("status", "accepted").or(`${orInList("requester_id", idsArr)},${orInList("recipient_id", idsArr)}`),
     admin.from("student_interests").select("user_id, label").in("user_id", idsArr),
     admin.from("skills").select("user_id, name").in("user_id", idsArr),
@@ -131,7 +131,7 @@ export async function getPeopleYouMayKnow(userId: string, limit = 10): Promise<P
     const mutualConnectionCount = [...acceptedConnectionIds].filter((id) => theirAccepted.has(id)).length;
     const sameSchool = isSameSchool({
       selfSchoolId: mySchoolId,
-      candidateSchoolId: profile.school_id,
+      candidateSchoolId: profile.school_entity_id,
       selfNormalizedSchoolName: myNormalizedSchool,
       candidateNormalizedSchoolName: profile.school_name ? normalizeEntitySearchText(profile.school_name) : "",
     });

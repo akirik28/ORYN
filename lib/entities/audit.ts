@@ -1,5 +1,5 @@
 /**
- * Deterministic data-quality rules for the canonical entity registries (spec Phase 2).
+ * Deterministic data-quality rules for the canonical entity registry.
  * Pure — no `server-only`, no Supabase — so every rule is unit tested and the script
  * wrapper (scripts/entities-audit.ts) stays a thin IO shell.
  *
@@ -23,9 +23,9 @@ export interface AuditFinding {
 }
 
 export interface AuditableEntity extends EntityCandidate {
-  category?: string | null;
-  websiteUrl?: string | null;
-  status?: string | null;
+  entityType?: string | null;
+  officialUrl?: string | null;
+  verificationState?: string | null;
 }
 
 /** Same shape a URL must satisfy anywhere else in this app before being stored or
@@ -34,13 +34,15 @@ function isValidHttpUrl(value: string): boolean {
   return /^https?:\/\/.+/i.test(value);
 }
 
-/** Two entities are an exact duplicate only when category, normalized name, country AND
- * city all match — the same tuple migration 0038's own unique index uses, so anything
+/** Two entities are an exact duplicate only when entity type, normalized name, country
+ * AND city all match — the same tuple `canonical_entities_identity_uq` uses, so anything
  * this flags is a case the database itself would have rejected had both rows been
  * inserted through it. Deliberately city-scoped: two real "Saint Joseph" schools in
- * different cities are NOT duplicates. */
+ * different cities are NOT duplicates. That same scoping is why the live registry could
+ * accumulate 43 near-duplicate universities whose only difference was how the city was
+ * spelled — which findNearDuplicates below, not this rule, is what catches. */
 function exactDuplicateKey(entity: AuditableEntity): string {
-  return [entity.category ?? "", normalizeEntitySearchText(entity.canonicalName), entity.country ?? "", entity.city ?? ""].join("|");
+  return [entity.entityType ?? "", normalizeEntitySearchText(entity.canonicalName), entity.country ?? "", entity.city ?? ""].join("|");
 }
 
 export function findExactDuplicates(entities: AuditableEntity[]): AuditFinding[] {
@@ -56,7 +58,7 @@ export function findExactDuplicates(entities: AuditableEntity[]): AuditFinding[]
       bucket: "SAFE_EXACT_LINK" as const,
       rule: "duplicate_canonical_name",
       entityIds: group.map((e) => e.id),
-      detail: `${group.length} rows share category+normalized name+country+city ("${group[0].canonicalName}") — the same tuple migration 0038's unique index enforces.`,
+      detail: `${group.length} rows share entity type+normalized name+country+city ("${group[0].canonicalName}") — the same tuple canonical_entities_identity_uq enforces.`,
     }));
 }
 
@@ -125,12 +127,12 @@ export function findInvalidEntities(entities: AuditableEntity[]): AuditFinding[]
         detail: `canonical_name has leading/trailing whitespace: ${JSON.stringify(entity.canonicalName)}.`,
       });
     }
-    if (entity.websiteUrl && !isValidHttpUrl(entity.websiteUrl)) {
+    if (entity.officialUrl && !isValidHttpUrl(entity.officialUrl)) {
       findings.push({
         bucket: "INVALID",
-        rule: "malformed_website_url",
+        rule: "malformed_official_url",
         entityIds: [entity.id],
-        detail: `website_url is not an http(s) URL: ${JSON.stringify(entity.websiteUrl)}.`,
+        detail: `official_url is not an http(s) URL: ${JSON.stringify(entity.officialUrl)}.`,
       });
     }
     for (const alias of entity.aliases) {
@@ -157,7 +159,7 @@ export function findNearDuplicates(entities: AuditableEntity[]): AuditFinding[] 
   const seenPairs = new Set<string>();
 
   for (const entity of entities) {
-    const others = entities.filter((o) => o.id !== entity.id && (o.category ?? null) === (entity.category ?? null));
+    const others = entities.filter((o) => o.id !== entity.id && (o.entityType ?? null) === (entity.entityType ?? null));
     for (const candidate of findPossibleDuplicates(entity.canonicalName, others, { country: entity.country, city: entity.city })) {
       // Exact duplicates are already reported by findExactDuplicates at a bucket that
       // authorizes action — don't double-report them here as merely "possible".

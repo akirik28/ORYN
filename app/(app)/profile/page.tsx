@@ -131,7 +131,7 @@ export default async function ProfilePage() {
   ]);
 
   // Canonical opportunity titles resolved for display only — `activities` has no
-  // denormalized column for them, unlike every organization_id field. One batched query.
+  // denormalized column for them, unlike every organization_entity_id field. One batched query.
   const activities = await attachOpportunityTitles(supabase, activitiesRes.data ?? []);
 
   const completenessChecklist = getCompletenessChecklist({
@@ -285,7 +285,7 @@ export default async function ProfilePage() {
         items={activities}
         summaries={summaryMap(activities, (item) => ({ title: item.title, subtitle: item.organization ?? undefined }))}
         fields={ACTIVITY_FIELDS}
-        defaultValues={{ title: "", organization: null, organization_id: null, category: "club", description: null, is_leadership_role: false, people_led: null, organization_scope: null, opportunity_title: null, opportunity_id: null, start_date: null, end_date: null, ongoing: false, hours_per_week: null, weeks_per_year: null, location: null, story_notes: null }}
+        defaultValues={{ title: "", organization: null, organization_entity_id: null, category: "club", description: null, is_leadership_role: false, people_led: null, organization_scope: null, opportunity_title: null, opportunity_id: null, start_date: null, end_date: null, ongoing: false, hours_per_week: null, weeks_per_year: null, location: null, story_notes: null }}
         onCreate={createActivity as (v: FormValues) => Promise<{ error?: string }>}
         onUpdate={updateActivity as (id: string, v: FormValues) => Promise<{ error?: string }>}
         onDelete={deleteActivity}
@@ -305,7 +305,7 @@ export default async function ProfilePage() {
           sport: "",
           discipline: null,
           team_name: null,
-          team_organization_id: null,
+          team_entity_id: null,
           position: null,
           level: null,
           us_specific_label: null,
@@ -332,7 +332,7 @@ export default async function ProfilePage() {
         items={projectsRes.data ?? []}
         summaries={summaryMap(projectsRes.data ?? [], (item) => ({ title: item.title, subtitle: item.outcome_summary ?? item.organization ?? undefined }))}
         fields={PROJECT_FIELDS}
-        defaultValues={{ title: "", organization: null, organization_id: null, description: null, role: null, start_date: null, end_date: null, ongoing: false, hours_per_week: null, outcome_summary: null, users_reached: null, revenue_amount: null, repo_url: null, live_url: null, location: null, story_notes: null }}
+        defaultValues={{ title: "", organization: null, organization_entity_id: null, description: null, role: null, start_date: null, end_date: null, ongoing: false, hours_per_week: null, outcome_summary: null, users_reached: null, revenue_amount: null, repo_url: null, live_url: null, location: null, story_notes: null }}
         onCreate={createProject as (v: FormValues) => Promise<{ error?: string }>}
         onUpdate={updateProject as (id: string, v: FormValues) => Promise<{ error?: string }>}
         onDelete={deleteProject}
@@ -348,7 +348,7 @@ export default async function ProfilePage() {
         items={researchRes.data ?? []}
         summaries={summaryMap(researchRes.data ?? [], (item) => ({ title: item.title, subtitle: item.field ?? undefined }))}
         fields={RESEARCH_FIELDS}
-        defaultValues={{ title: "", organization: null, organization_id: null, mentor_name: null, field: null, description: null, methodology: null, independence_level: null, output_type: "none", output_url: null, start_date: null, end_date: null, ongoing: false, hours_per_week: null, location: null, story_notes: null }}
+        defaultValues={{ title: "", organization: null, organization_entity_id: null, mentor_name: null, field: null, description: null, methodology: null, independence_level: null, output_type: "none", output_url: null, start_date: null, end_date: null, ongoing: false, hours_per_week: null, location: null, story_notes: null }}
         onCreate={createResearchExperience as (v: FormValues) => Promise<{ error?: string }>}
         onUpdate={updateResearchExperience as (id: string, v: FormValues) => Promise<{ error?: string }>}
         onDelete={deleteResearchExperience}
@@ -361,7 +361,7 @@ export default async function ProfilePage() {
         items={awardsRes.data ?? []}
         summaries={summaryMap(awardsRes.data ?? [], (item) => ({ title: item.title, subtitle: item.level ?? undefined }))}
         fields={AWARD_FIELDS}
-        defaultValues={{ title: "", organization: null, organization_id: null, level: null, description: null, award_date: null, location: null, story_notes: null }}
+        defaultValues={{ title: "", organization: null, organization_entity_id: null, level: null, description: null, award_date: null, location: null, story_notes: null }}
         onCreate={createAward as (v: FormValues) => Promise<{ error?: string }>}
         onUpdate={updateAward as (id: string, v: FormValues) => Promise<{ error?: string }>}
         onDelete={deleteAward}
@@ -374,7 +374,7 @@ export default async function ProfilePage() {
         items={workRes.data ?? []}
         summaries={summaryMap(workRes.data ?? [], (item) => ({ title: item.title, subtitle: item.organization }))}
         fields={WORK_EXPERIENCE_FIELDS}
-        defaultValues={{ title: "", organization: "", organization_id: null, employment_type: "internship", description: null, start_date: null, end_date: null, ongoing: false, hours_per_week: null, paid: null, location: null, story_notes: null }}
+        defaultValues={{ title: "", organization: "", organization_entity_id: null, employment_type: "internship", description: null, start_date: null, end_date: null, ongoing: false, hours_per_week: null, paid: null, location: null, story_notes: null }}
         onCreate={createWorkExperience as (v: FormValues) => Promise<{ error?: string }>}
         onUpdate={updateWorkExperience as (id: string, v: FormValues) => Promise<{ error?: string }>}
         onDelete={deleteWorkExperience}
@@ -387,7 +387,7 @@ export default async function ProfilePage() {
         items={volunteeringRes.data ?? []}
         summaries={summaryMap(volunteeringRes.data ?? [], (item) => ({ title: item.title, subtitle: item.cause_area ?? undefined }))}
         fields={VOLUNTEERING_FIELDS}
-        defaultValues={{ title: "", organization: null, organization_id: null, description: null, cause_area: null, start_date: null, end_date: null, ongoing: false, hours_per_week: null, weeks_per_year: null, location: null, story_notes: null }}
+        defaultValues={{ title: "", organization: null, organization_entity_id: null, description: null, cause_area: null, start_date: null, end_date: null, ongoing: false, hours_per_week: null, weeks_per_year: null, location: null, story_notes: null }}
         onCreate={createVolunteering as (v: FormValues) => Promise<{ error?: string }>}
         onUpdate={updateVolunteering as (id: string, v: FormValues) => Promise<{ error?: string }>}
         onDelete={deleteVolunteering}
@@ -400,7 +400,7 @@ export default async function ProfilePage() {
         items={educationRes.data ?? []}
         summaries={summaryMap(educationRes.data ?? [], (item) => ({ title: item.school_name, subtitle: item.country ?? undefined }))}
         fields={EDUCATION_FIELDS}
-        defaultValues={{ school_name: "", school_id: null, country: null, stage: "high_school", curriculum: null, start_date: null, end_date: null, is_current: true, overall_gpa: null, gpa_scale: null, notes: null }}
+        defaultValues={{ school_name: "", school_entity_id: null, country: null, stage: "high_school", curriculum: null, start_date: null, end_date: null, is_current: true, overall_gpa: null, gpa_scale: null, notes: null }}
         onCreate={createEducationRecord as (v: FormValues) => Promise<{ error?: string }>}
         onUpdate={updateEducationRecord as (id: string, v: FormValues) => Promise<{ error?: string }>}
         onDelete={deleteEducationRecord}
@@ -444,7 +444,7 @@ export default async function ProfilePage() {
         items={certificationsRes.data ?? []}
         summaries={summaryMap(certificationsRes.data ?? [], (item) => ({ title: item.title, subtitle: item.organization ?? undefined }))}
         fields={CERTIFICATION_FIELDS}
-        defaultValues={{ title: "", organization: null, organization_id: null, description: null, issue_date: null, expiry_date: null, credential_url: null }}
+        defaultValues={{ title: "", organization: null, organization_entity_id: null, description: null, issue_date: null, expiry_date: null, credential_url: null }}
         onCreate={createCertification as (v: FormValues) => Promise<{ error?: string }>}
         onUpdate={updateCertification as (id: string, v: FormValues) => Promise<{ error?: string }>}
         onDelete={deleteCertification}

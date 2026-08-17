@@ -9,7 +9,7 @@ function activity(overrides: Partial<Activity>): Activity {
     user_id: "u1",
     title: "Member",
     organization: "Some Club",
-    organization_id: null,
+    organization_entity_id: null,
     category: "club",
     description: null,
     is_leadership_role: false,

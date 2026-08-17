@@ -5,7 +5,7 @@ import { UniversityExplorerHero } from "@/features/universities/university-explo
 import { UniversityCard } from "@/features/universities/university-card";
 import { SUPPORTED_COUNTRIES } from "@/lib/data/country-geo";
 import { regionById } from "@/lib/data/regions";
-import { rankUniversities } from "@/lib/universities/alias-search";
+import { searchUniversityRows } from "@/lib/universities/alias-search";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/oryn/page-header";
@@ -23,29 +23,21 @@ export default async function UniversitiesPage({
   const session = await requireUser();
   const supabase = await createClient();
 
-  // A text search fetches a wider candidate set and ranks it alias/accent-aware in TS
-  // (lib/universities/alias-search.ts) instead of relying on `ilike`, which could never
-  // match "MIT" -> Massachusetts Institute of Technology or "uskudar" -> "Üsküdar ...".
-  // Browsing without a query keeps the cheap, ordered, directly-limited path.
+  // A text search goes through the canonical registry so aliases and accents resolve
+  // ("MIT" -> Massachusetts Institute of Technology, "uskudar" -> "Üsküdar ..."), which
+  // `ilike` could never do. Browsing without a query keeps the cheap, ordered,
+  // directly-limited path over `universities` itself.
   const RESULT_LIMIT = 48;
-  const SEARCH_CANDIDATE_LIMIT = 500;
-  let query = supabase
-    .from("universities")
-    .select("*")
-    .order("name", { ascending: true })
-    .limit(q ? SEARCH_CANDIDATE_LIMIT : RESULT_LIMIT);
-  if (country) {
-    query = query.eq("country", country);
-  } else if (region) {
-    // A region with zero countries today (Asia) would make `.in()` receive an empty
-    // array — Postgres/PostgREST handle that as "match nothing" correctly, but being
-    // explicit here means the query never even runs for a state that can only ever be
-    // empty, rather than relying on that edge-case behavior.
-    query = region.countries.length > 0 ? query.in("country", region.countries) : query.eq("country", "__no_countries_in_region__");
-  }
+  // A region with zero countries today (Asia) would make `.in()` receive an empty array —
+  // Postgres/PostgREST treat that as "match nothing" correctly, but being explicit means
+  // the query never runs for a state that can only ever be empty.
+  const scopedCountries = country ? [country] : region ? (region.countries.length > 0 ? region.countries : ["__no_countries_in_region__"]) : null;
+
+  let browseQuery = supabase.from("universities").select("*").order("name", { ascending: true }).limit(RESULT_LIMIT);
+  if (scopedCountries) browseQuery = browseQuery.in("country", scopedCountries);
 
   const [universitiesRes, allCountriesRes, targetsRes] = await Promise.all([
-    query,
+    q ? Promise.resolve(null) : browseQuery,
     supabase.from("universities").select("country"),
     supabase.from("target_universities").select("university_id").eq("user_id", session.userId!),
   ]);
@@ -56,8 +48,9 @@ export default async function UniversitiesPage({
   }));
 
   const savedIds = new Set((targetsRes.data ?? []).map((t) => t.university_id));
-  const fetchedUniversities = universitiesRes.data ?? [];
-  const universities = q ? rankUniversities(q, fetchedUniversities, RESULT_LIMIT) : fetchedUniversities;
+  const universities = q
+    ? await searchUniversityRows(supabase, q, { limit: RESULT_LIMIT, countries: scopedCountries })
+    : (universitiesRes?.data ?? []);
 
   const scopeLabel = country ?? region?.name ?? null;
 

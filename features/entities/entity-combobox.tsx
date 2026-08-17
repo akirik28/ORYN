@@ -6,9 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { searchEntitiesAction, createCustomInstitutionAction } from "@/app/(app)/entities/actions";
-import type { EntitySearchResult, EntitySearchType } from "@/lib/entities/types";
-import type { InstitutionCategory } from "@/types/database";
+import { searchEntitiesAction, createCustomEntityAction } from "@/app/(app)/entities/actions";
+import type { EntitySearchResult } from "@/lib/entities/types";
+import { ENTITY_SCOPES, type EntityScope } from "@/lib/entities/field-policy";
 
 const DEBOUNCE_MS = 300;
 const MIN_QUERY_LENGTH = 2;
@@ -19,21 +19,21 @@ export interface EntityComboboxValue {
 }
 
 /**
- * Shared search/select UX for every canonical entity field (spec section 17) — school,
- * organization, university, opportunity all use this one component, differing only by
- * `entityType`. Fully controlled by `value`/`onChange` (like every other field in
- * DynamicFormFields) rather than mirroring the prop into local state, so there's no
- * "sync prop to state" effect to keep correct. Selecting a result persists its `id`
- * (spec section 5: "yalnız görünen string'i kaydetme"); manually editing the text after
- * a selection clears the id (the text and the linked entity must never silently drift
- * apart) until a new selection is made. `allowCustom` (school/organization only —
- * universities and opportunities stay fully curated registries) exposes the "Can't find
- * your X?" fallback with its required duplicate check before creating anything (spec
- * sections 6-7).
+ * Shared search/select UX for every canonical entity field — school, employer, NGO,
+ * lab, sports team, university, opportunity all use this one component, differing only
+ * by `scope` (lib/entities/field-policy.ts, which mirrors the database's own per-field
+ * entity-type triggers). Fully controlled by `value`/`onChange` (like every other field
+ * in DynamicFormFields) rather than mirroring the prop into local state, so there's no
+ * "sync prop to state" effect to keep correct. Selecting a result persists its `id`, not
+ * just the displayed string; manually editing the text after a selection clears the id
+ * (the text and the linked entity must never silently drift apart) until a new selection
+ * is made. `allowCustom` exposes the "Can't find your X?" fallback with its required
+ * duplicate check — it is ignored for scopes the policy gives no custom fallback type
+ * (universities and opportunities stay fully curated registries).
  */
 export function EntityCombobox({
   id,
-  entityType,
+  scope,
   value,
   entityId,
   onChange,
@@ -43,7 +43,7 @@ export function EntityCombobox({
   customLabel,
 }: {
   id?: string;
-  entityType: EntitySearchType;
+  scope: EntityScope;
   value: string;
   entityId: string | null;
   onChange: (next: EntityComboboxValue) => void;
@@ -52,6 +52,11 @@ export function EntityCombobox({
   allowCustom?: boolean;
   customLabel?: string;
 }) {
+  // A scope with no custom fallback type cannot accept one however the caller configured
+  // it — the Server Action refuses it too, so offering the affordance would only produce
+  // an error the student can do nothing about.
+  const canAddCustom = allowCustom && ENTITY_SCOPES[scope].customFallbackType !== null;
+  const customNoun = customLabel ?? ENTITY_SCOPES[scope].customLabel;
   const [results, setResults] = useState<EntitySearchResult[]>([]);
   const [open, setOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -82,7 +87,7 @@ export function EntityCombobox({
     setIsSearching(true);
     const thisRequest = ++requestIdRef.current;
     debounceRef.current = setTimeout(async () => {
-      const found = await searchEntitiesAction(entityType, trimmed, context);
+      const found = await searchEntitiesAction(scope, trimmed, context);
       if (requestIdRef.current === thisRequest) {
         setResults(found);
         setIsSearching(false);
@@ -147,7 +152,7 @@ export function EntityCombobox({
 
       {entityId ? <p className="mt-1 text-xs text-muted-foreground">Linked to a verified entry.</p> : null}
 
-      {open && (results.length > 0 || (allowCustom && value.trim().length >= MIN_QUERY_LENGTH)) ? (
+      {open && (results.length > 0 || (canAddCustom && value.trim().length >= MIN_QUERY_LENGTH)) ? (
         <ul id={listboxId} role="listbox" className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-lg border bg-popover py-1 text-popover-foreground shadow-md ring-1 ring-foreground/10">
           {results.map((result, index) => (
             <li key={result.id} role="option" aria-selected={index === highlightedIndex}>
@@ -166,7 +171,7 @@ export function EntityCombobox({
               </button>
             </li>
           ))}
-          {allowCustom ? (
+          {canAddCustom ? (
             <li>
               <button
                 type="button"
@@ -178,19 +183,20 @@ export function EntityCombobox({
                   setCustomOpen(true);
                 }}
               >
-                <Plus className="size-3.5" /> Can&apos;t find your {customLabel ?? "entry"}?
+                <Plus className="size-3.5" /> Can&apos;t find your {customNoun}?
               </button>
             </li>
           ) : null}
         </ul>
       ) : null}
 
-      {allowCustom ? (
-        <CreateCustomInstitutionDialog
+      {canAddCustom ? (
+        <CreateCustomEntityDialog
           key={customDialogKey}
           open={customOpen}
           onOpenChange={setCustomOpen}
-          category={entityType as InstitutionCategory}
+          scope={scope}
+          noun={customNoun}
           initialName={value}
           context={context}
           onCreated={(entity) => {
@@ -203,17 +209,19 @@ export function EntityCombobox({
   );
 }
 
-function CreateCustomInstitutionDialog({
+function CreateCustomEntityDialog({
   open,
   onOpenChange,
-  category,
+  scope,
+  noun,
   initialName,
   context,
   onCreated,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  category: InstitutionCategory;
+  scope: EntityScope;
+  noun: string;
   initialName: string;
   context?: { country?: string | null; city?: string | null };
   onCreated: (entity: { id: string; canonicalName: string }) => void;
@@ -223,7 +231,6 @@ function CreateCustomInstitutionDialog({
   const [name, setName] = useState(initialName);
   const [city, setCity] = useState(context?.city ?? "");
   const [country, setCountry] = useState(context?.country ?? "");
-  const [website, setWebsite] = useState("");
   const [duplicates, setDuplicates] = useState<{ id: string; canonicalName: string }[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -231,7 +238,7 @@ function CreateCustomInstitutionDialog({
   function submit(confirmDespiteDuplicates: boolean) {
     setError(null);
     startTransition(async () => {
-      const result = await createCustomInstitutionAction(category, name, city || null, country || null, website || null, confirmDespiteDuplicates);
+      const result = await createCustomEntityAction(scope, name, city || null, country || null, confirmDespiteDuplicates);
       if (result.status === "error") {
         setError(result.error);
         return;
@@ -248,7 +255,7 @@ function CreateCustomInstitutionDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add {category === "school" ? "your school" : "an organization"}</DialogTitle>
+          <DialogTitle>Add {scope === "school" ? "your school" : `a ${noun}`}</DialogTitle>
         </DialogHeader>
 
         {duplicates && duplicates.length > 0 ? (
@@ -283,10 +290,12 @@ function CreateCustomInstitutionDialog({
                 <Input id="custom-entity-country" value={country} onChange={(e) => setCountry(e.target.value)} />
               </div>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="custom-entity-website">Website (optional)</Label>
-              <Input id="custom-entity-website" value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://..." />
-            </div>
+            {/* No website field: a registry row's official_url is sourced during
+                verification from the official page itself. A student-typed URL would put
+                unverified data on a row every other student reads. */}
+            <p className="text-xs text-muted-foreground">
+              Oryn will add this as unverified until someone checks it against an official source.
+            </p>
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
           </div>
         )}
