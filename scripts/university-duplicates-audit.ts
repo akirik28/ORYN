@@ -188,6 +188,15 @@ const MANUALLY_VERIFIED: {
     loserUniversityId: "6f0df596-4ee5-49da-82ad-8057bfaa890d",
     reason: "Loser's own canonical_name is self-referential (\"Farabi University (former Al - Farabi Kazakh National University)\"). Winner carries website_url (farabi.university) + ROR/WIKIDATA/GRID/ISNI/CROSSREF_FUNDER external ids; loser has none of either. Same city (Almaty).",
   },
+  {
+    label: "KFUPM",
+    winnerEntityId: "46257b9f-eeb1-4833-9cf6-cd19107197d5",
+    loserEntityId: "384a248a-65d7-458f-a321-e5296af10596",
+    winnerUniversityId: "62929169-4cb9-4ef2-b1f4-bfd1b34cf164",
+    loserUniversityId: "0e01bc5d-0e1e-4e35-a629-2befec4e3cb3",
+    reason:
+      "Found via the Phase 5 rankings audit, not the name-collision detectors above: both universities.id rows independently claim QS 2027 rank_display \"63\" (no tie marker) in the SAME city (Dhahran) — the same institution counted twice, not a genuine QS tie. \"KFUPM\" doesn't share a normalized_name OR a nameVariants() key with the full name (same reason UCL needed manual search: a bare acronym vs a full name are lexically unrelated), so neither pass 1 nor pass 2 above found it. ROR live-verified 2026-08-17: https://api.ror.org/v2/organizations?query=King%20Fahd%20University%20of%20Petroleum%20and%20Minerals top hit ror.org/03yez3163 lists BOTH \"KFUPM\" and \"King Fahd University of Petroleum and Minerals\" as names on the SAME record. Winner carries website_url (kfupm.edu.sa); loser has neither website nor external ids. Note: founder-blocked-backlog.md item 25 named this pair; an earlier pass this session searched canonical_entities for \"king fahd\"/\"petroleum\" (substring), found only the winner, and wrongly concluded no duplicate existed — the loser's canonical_name is literally just \"KFUPM\", which doesn't contain either substring. Same search-gap class as UCL, just not re-applied here the first time.",
+  },
 ];
 
 /** Thin adapter: script rows are snake_case Supabase columns, the shared classifier speaks
@@ -371,6 +380,15 @@ async function main(): Promise<void> {
   if (mergeVerified) {
     console.log(`\nApplying merge_canonical_entities() to ${MANUALLY_VERIFIED.length} hand-verified pair(s)...`);
     for (const pair of MANUALLY_VERIFIED) {
+      // merge_canonical_entities is safe to call twice (the source row is tombstoned, not
+      // deleted, so a repeat call just re-runs no-op updates) but would add a redundant
+      // canonical_entity_merges audit row every time — skip already-merged pairs so re-running
+      // this script after adding a new manifest entry doesn't churn the audit trail.
+      const alreadyMerged = await admin.from("canonical_entities").select("verification_state").eq("id", pair.loserEntityId).maybeSingle();
+      if (alreadyMerged.data?.verification_state === "merged") {
+        console.log(`  skip ${pair.label}: already merged.`);
+        continue;
+      }
       const { error } = await admin.rpc("merge_canonical_entities", {
         p_source_entity_id: pair.loserEntityId,
         p_target_entity_id: pair.winnerEntityId,
