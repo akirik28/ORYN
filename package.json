@@ -13,7 +13,8 @@
     "db:types": "supabase gen types typescript --linked > types/database.ts",
     "check:integrations": "tsx scripts/check-integrations.ts",
     "entities:backfill-report": "tsx scripts/entities-backfill-report.ts",
-    "entities:audit": "tsx scripts/entities-audit.ts"
+    "entities:audit": "tsx scripts/entities-audit.ts",
+    "enrich:student-counts": "tsx scripts/enrich-student-counts.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",
