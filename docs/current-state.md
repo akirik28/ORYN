@@ -22,9 +22,10 @@ quality, owned separately from the parallel programs/opportunities workstream
   AI — `ANTHROPIC_API_KEY` is credit-blocked this session, a billing issue) and wired onto
   the university detail page for the first time (the columns existed live since an earlier
   session's migration 0042, but nothing ever read them — `types/database.ts` didn't even
-  have them). Coverage: 0% → 12% / 2.5%. Three real scoring bugs caught and fixed on live
-  data before being trusted at scale (a Master's-only page, an unrelated news article, and a
-  national exam system false-matched across the wrong country).
+  have them). Coverage: 0% → 36.4% / 7.3% across four scaled-up batches. Four real scoring
+  bugs caught and fixed on live data before being trusted at scale (a Master's-only page, an
+  unrelated news article, and — twice, once forcing a generalization of the first fix — a
+  national application system false-matched onto an institution in the wrong country).
 - **`total_students` coverage pushed from 283 → 284/1010** — genuinely close to the current
   ceiling for a Wikidata-index-only approach without AI-assisted per-institution extraction;
   documented as a real finding, not treated as a bug to keep chasing.

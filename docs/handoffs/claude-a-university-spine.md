@@ -298,12 +298,19 @@ scoped — the kind of judgment call that needs AI-level page-purpose understand
 close, which is exactly the piece blocked on Anthropic credits. Not a fabrication risk,
 disclosed rather than silently accepted as perfect.
 
-**Coverage after three applied batches** (40 + 150 + 300 universities): `admissions_url`
-296/1010 (29.3%), `application_system` 59/1010 (5.8%) — both net of the DCU/SJTU/LSE reverts.
+**Final coverage, four applied batches** (40 + 150 + 300 + 250 universities): `admissions_url`
+368/1010 (36.4%), `application_system` 74/1010 (7.3%) — net of all reverts. The 4th batch's
+country-consistency was checked exhaustively (all 74 `application_system` rows, not a
+sample): 0 mismatches, confirming the generalized country gate holds across the full
+dataset, not just the two cases that originally exposed it. A last spot-check of 8
+newly-flagged `admissions_url` values found the same "real but narrower than ideal" pattern
+already documented above (an "Info Day" press release, a country-specific PDF guide, a
+single-program page) — no new bug class, nothing reverted this round.
+
 Every write is `fill_if_null`, re-checked immediately before writing (not just at selection
 time). `--limit` defaults to 25 deliberately — Tavily is a paid API, scale-up should stay
 deliberate rather than a single 1010-university run. `npm run check:university-spine-health`
-passes cleanly after all three batches and both rounds of reverts.
+passes cleanly after all four batches and every revert.
 
 ## Phase 8 — canonical entity registry quality: two real findings closed
 
