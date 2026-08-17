@@ -167,10 +167,32 @@ is a standing risk to that workstream's data forever, a superseded flag is not.
   orphan side ever gets external ids (would let the SAFE_TO_CANONICALIZE bar activate
   automatically), or as part of a broader Phase 8 pass on the "78 `official_verified` with
   no evidence" question (item 20) — these largely look like the same set.
-- **28 name-variant pairs remaining** — same orphan pattern as above (one side has 0
-  `universities` rows) in all but the 6 already merged; re-run
-  `npm run audit:university-duplicates` any time to get the live, current list with full
-  evidence dump (not reproduced here — it changes as more of the spine gets external ids).
+- **28 name-variant pairs remaining, all orphan-pattern** (one side has 0 `universities`
+  rows — zero product impact). Investigated further: **26 of the 28 turned out to be a
+  different, stronger evidence class than "similar name"** — their `canonical_name` strings
+  are byte-identical after Unicode NFC normalization (composition-form-only differences,
+  e.g. precomposed `ü` vs a combining-mark form), and the other 2 differ only by a literal
+  non-breaking space vs a regular space, or one missing diacritic. Every one has a matching
+  city. This is the DB's own weak `normalized_name` trigger (plain `lower(unaccent())`, no
+  Unicode form normalization) failing to catch what's structurally the same string typed/
+  imported twice, not two similarly-named institutions.
+  - `lib/acquisition/duplicates.ts` gained `isPureEncodingVariant()` (12 new tests) and a
+    diacritic-insensitive `citiesCompatible()` to detect this precisely and narrowly — it
+    must never fold away an actual WORD (unlike `nameKey()`/`nameVariants()`, which
+    deliberately do that for search).
+  - **Deliberately NOT wired to auto-merge.** First implementation did wire it to
+    `SAFE_TO_CANONICALIZE`, then reverted before committing: this module's one bar for
+    authorizing a merge is external verification (an agreeing ROR id) specifically so "how
+    confident does the match look" is never itself sufficient to merge — the same principle
+    that kept migration 0039's 43 identical-`normalized_name` pairs queued for human review
+    instead of auto-merged, even though the architects were themselves confident. Surfaced
+    as evidence text in the `LIKELY_DUPLICATE_REQUIRES_REVIEW` bucket instead.
+  - **Ready-to-execute follow-up, not done this session**: the same live-ROR-verification
+    process used for the 9 already-merged pairs would very likely clear all 26-28 quickly
+    (a name this precisely identical is easy to confirm) — deprioritized this session
+    specifically because, unlike the 9, none of these have a visible-product-card impact
+    (all orphan-pattern), so the time was spent on higher-leverage work instead. Re-run
+    `npm run audit:university-duplicates` any time for the live, current list.
 - **Correction, same session**: an earlier draft of this file claimed founder-blocked-backlog.md
   item 25's KFUPM pair "does not exist in the live registry" — that was wrong, and was itself
   caused by an incomplete search (canonical_entities searched for "king fahd"/"petroleum"
