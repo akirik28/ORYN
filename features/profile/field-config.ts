@@ -1,5 +1,7 @@
 import type { EntityScope } from "@/lib/entities/field-policy";
 import { INTEREST_SUGGESTIONS } from "@/lib/validation/onboarding";
+import { COURSE_NAME_SUGGESTIONS } from "@/lib/vocabularies/subjects";
+import { TEST_NAME_SUGGESTIONS } from "@/lib/vocabularies/tests";
 
 // Essay Story Bank (founder-confirmed MVP scope) reads this field as candidate material —
 // never CV-facing, never auto-summarized. One shared field, one shared prompt list, reused
@@ -42,31 +44,6 @@ export type FieldConfig =
   // `suggestions` — a genuinely custom entry is always valid and stored as typed.
   | { type: "suggest"; name: string; label: string; suggestions: string[]; placeholder?: string; span?: "full" | "half" };
 
-/** Real, defensible test names an ORYN student plausibly reports — not the founder brief's
- * example list copied blindly (the brief explicitly warned against that): checked against
- * this app's own stated geographic focus (US/UK/Europe/Turkey — AGENTS.md) and against the
- * `test_scores` schema, which has no existing test-type enum to draw from (test_name is plain
- * text with no prior canonical list anywhere in the codebase). YKS included alongside the
- * international standard tests since Turkey is an explicit focus market and this session
- * already established YKS as a real, distinct national exam (lib/acquisition/admissions.ts's
- * application-system taxonomy). A student whose real test isn't here can still type it —
- * this is a suggestion list, not a closed set. */
-export const TEST_NAME_SUGGESTIONS = [
-  "SAT",
-  "ACT",
-  "PSAT/NMSQT",
-  "AP",
-  "IB Predicted",
-  "IB Final",
-  "A-Level",
-  "IELTS Academic",
-  "IELTS General Training",
-  "TOEFL iBT",
-  "Duolingo English Test",
-  "Cambridge English (C1 Advanced)",
-  "Cambridge English (C2 Proficiency)",
-  "YKS",
-];
 
 export const ACTIVITY_CATEGORY_OPTIONS = [
   { value: "club", label: "Club" },
@@ -294,7 +271,7 @@ export const COURSE_LEVEL_OPTIONS = [
 export const COURSE_LEVEL_LABELS: Record<string, string> = Object.fromEntries(COURSE_LEVEL_OPTIONS.map((o) => [o.value, o.label]));
 
 export const COURSE_FIELDS: FieldConfig[] = [
-  { type: "text", name: "course_name", label: "Course", placeholder: "e.g. AP Microeconomics" },
+  { type: "suggest", name: "course_name", label: "Course", suggestions: COURSE_NAME_SUGGESTIONS, placeholder: "e.g. AP Microeconomics" },
   { type: "select", name: "level", label: "Level", options: COURSE_LEVEL_OPTIONS, span: "half" },
   { type: "suggest", name: "subject", label: "Subject", suggestions: INTEREST_SUGGESTIONS, placeholder: "e.g. Economics", span: "half" },
   { type: "text", name: "academic_year", label: "Academic year", placeholder: "e.g. 2026-27", span: "half" },
