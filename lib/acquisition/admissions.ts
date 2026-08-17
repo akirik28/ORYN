@@ -18,6 +18,18 @@
  *     in the fetched page content. Never inferred from absence — a page mentioning none of
  *     them stays null ("unknown"), never defaults to "direct" (the exact anti-pattern
  *     migration 0042's own column comment warns against).
+ *
+ * `"direct"` (an institution with no third-party application portal at all) is a legitimate
+ * value the column comment explicitly allows — but is deliberately NOT auto-detected here,
+ * even from explicit-sounding phrases like "apply directly to the university". Unlike a portal
+ * name (an unambiguous proper noun — a page either says "UCAS" or it doesn't), "direct
+ * application" is common generic admissions-marketing language that shows up on portal-routed
+ * pages too ("start your direct application today" while still routing through Common App
+ * behind the scenes is realistic copy, not a contrived edge case). Reliably telling "this page
+ * asserts there is no third-party system" apart from ordinary CTA phrasing needs actual
+ * page-purpose understanding, which is exactly the piece blocked on Anthropic credits — a
+ * keyword pattern here would trade the null-by-default safety this whole module is built
+ * around for a real false-positive risk. Stays unautomated on purpose, not an oversight.
  */
 
 import { sameCountry } from "./normalize";
@@ -137,6 +149,25 @@ const APPLICATION_SYSTEM_PATTERNS: { system: string; pattern: RegExp; homeCountr
   { system: "Studielink", pattern: /studielink/i, homeCountry: "Netherlands" },
   { system: "uni-assist", pattern: /uni-assist/i, homeCountry: "Germany" },
   { system: "ÖSYM/YKS", pattern: /\bösym\b|\bosym\b|\byks\b/i, homeCountry: "Turkey" },
+  // CAO/UAC deliberately require the domain or full official name, not the bare acronym —
+  // unlike VTAC/QTAC/SATAC/TISC/OUAC below, "CAO" and "UAC" are generic-sounding enough
+  // (Chief Administrative Officer, an unrelated internal "UAC" abbreviation, etc.) that
+  // matching them bare would risk exactly the false-positive class this module exists to
+  // avoid. cao.ie/uac.edu.au and the full names are unambiguous.
+  { system: "CAO", pattern: /cao\.ie|central\s*applications?\s*office/i, homeCountry: "Ireland" },
+  { system: "UAC", pattern: /uac\.edu\.au|universities\s*admissions?\s*centre/i, homeCountry: "Australia" },
+  // Australia has no single national system — each is a real, distinct, state-level body
+  // (NSW/ACT: UAC above; VIC: VTAC; QLD: QTAC; SA/NT: SATAC; WA: TISC). All homeCountry
+  // "Australia" since our schema has no state/region field to gate more precisely; a
+  // Victorian university's page mentioning VTAC vs a NSW page mentioning UAC are both still
+  // genuinely Australian institutions using a genuinely Australian system, so the residual
+  // risk here is "which specific state body", not "wrong country" — a materially smaller
+  // error than the cross-country failures this file's gating was built to prevent.
+  { system: "VTAC", pattern: /\bvtac\b|vtac\.edu\.au|victorian\s*tertiary\s*admissions?\s*centre/i, homeCountry: "Australia" },
+  { system: "QTAC", pattern: /\bqtac\b|qtac\.edu\.au|queensland\s*tertiary\s*admissions?\s*centre/i, homeCountry: "Australia" },
+  { system: "SATAC", pattern: /\bsatac\b|satac\.edu\.au|south\s*australian\s*tertiary\s*admissions?\s*centre/i, homeCountry: "Australia" },
+  { system: "TISC", pattern: /\btisc\b|tisc\.edu\.au|tertiary\s*institutions?\s*service\s*centre/i, homeCountry: "Australia" },
+  { system: "OUAC", pattern: /\bouac\b|ouac\.on\.ca|ontario\s*universit(?:y|ies)\W*\s*applications?\s*centre/i, homeCountry: "Canada" },
 ];
 
 /**

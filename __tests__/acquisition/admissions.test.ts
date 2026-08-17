@@ -154,6 +154,31 @@ describe("detectApplicationSystem", () => {
     // unknown, never a guessed "direct".
     expect(detectApplicationSystem("Welcome to our admissions page. Learn about our programs.", "United States")).toBeNull();
   });
+
+  test("detects the taxonomy's later additions (Ireland, Australia's state bodies, Ontario)", () => {
+    expect(detectApplicationSystem("Irish applicants apply through the CAO (cao.ie).", "Ireland")?.system).toBe("CAO");
+    expect(detectApplicationSystem("Apply via the Central Applications Office.", "Ireland")?.system).toBe("CAO");
+    expect(detectApplicationSystem("NSW and ACT applicants apply through the Universities Admissions Centre.", "Australia")?.system).toBe("UAC");
+    expect(detectApplicationSystem("Victorian students apply via VTAC.", "Australia")?.system).toBe("VTAC");
+    expect(detectApplicationSystem("Queensland applicants use QTAC.", "Australia")?.system).toBe("QTAC");
+    expect(detectApplicationSystem("SA and NT applicants apply through SATAC.", "Australia")?.system).toBe("SATAC");
+    expect(detectApplicationSystem("WA applicants apply via TISC.", "Australia")?.system).toBe("TISC");
+    expect(detectApplicationSystem("Ontario applicants apply through OUAC.", "Canada")?.system).toBe("OUAC");
+  });
+
+  test("CAO and UAC require the domain or full name, not the bare acronym — both are too generic to trust alone", () => {
+    // Unlike VTAC/QTAC/SATAC/TISC/OUAC (not real words, low collision risk), a bare "CAO" or
+    // "UAC" plausibly appears on a university page for an unrelated reason (an internal role
+    // abbreviation, a different program's acronym) without meaning the Irish/NSW admissions
+    // body at all.
+    expect(detectApplicationSystem("Contact the CAO for budget approval.", "Ireland")).toBeNull();
+    expect(detectApplicationSystem("The UAC committee reviews curriculum changes annually.", "Australia")).toBeNull();
+  });
+
+  test("the new systems are still country-gated, same mechanism as the original failures", () => {
+    expect(detectApplicationSystem("Our partner institution in Ireland uses the CAO (cao.ie) system.", "United States")).toBeNull();
+    expect(detectApplicationSystem("Exchange students from Victoria, Australia may have used VTAC.", "New Zealand")).toBeNull();
+  });
 });
 
 describe("extractDomain", () => {
