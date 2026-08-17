@@ -33,15 +33,28 @@ const GRADUATE_LEVEL_PATTERN = /\b(master'?s?|graduate|postgraduate|phd|doctoral
 /**
  * Keyword score for "is this URL the institution's UNDERGRADUATE admissions page". Path
  * signals outweigh title signals (a title can be generic; a URL path segment like
- * `/admissions/apply` is a much stronger structural signal of intent). A live pilot run
- * caught the real failure mode this guards: a domain-restricted search for "Aarhus
- * University undergraduate admissions" still surfaced `masters.au.dk/.../admission-
- * requirements` as the top-scoring candidate before this penalty existed — "/admission" and
- * "apply" in the title were enough to clear the bar despite the URL being graduate-only.
+ * `/admissions/apply` is a much stronger structural signal of intent).
+ *
+ * A real "admission" or "apply" signal (path or title) is a HARD REQUIREMENT, not just the
+ * highest-weighted bonus — everything else (undergrad/bachelor, the graduate penalty) only
+ * ever adjusts a candidate that already cleared that bar. Two real failures on a live pilot
+ * batch of 40 both traced to that not being true yet:
+ *   - `masters.au.dk/.../admission-requirements` (Aarhus) — a real "/admission" path match,
+ *     but graduate-level; fixed by the GRADUATE_LEVEL_PATTERN penalty.
+ *   - a 2019 NEWS ARTICLE about a research-competition win at Al Ain University, containing
+ *     no "admission"/"apply" anywhere, still cleared the old threshold on "undergraduate"
+ *     alone (path +2, title +1 = 3) — the undergrad/bachelor bonus was independently
+ *     sufficient, which was never the intent. Fixed by gating every bonus behind a genuine
+ *     admission/apply match first.
  */
 export function scoreAdmissionsCandidate(candidate: AdmissionsCandidate): number {
   const path = candidate.url.toLowerCase();
   const title = candidate.title.toLowerCase();
+
+  const hasAdmissionSignal = /\/admission/.test(path) || /\badmission/.test(title);
+  const hasApplySignal = /\/apply|applying/.test(path) || /\bapply\b|\bapplying\b/.test(title);
+  if (!hasAdmissionSignal && !hasApplySignal) return 0;
+
   let score = 0;
   if (/\/admission/.test(path)) score += 3;
   if (/\/apply|applying/.test(path)) score += 2;

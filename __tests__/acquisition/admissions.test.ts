@@ -34,6 +34,20 @@ describe("scoreAdmissionsCandidate", () => {
     const score = scoreAdmissionsCandidate({ url: "https://example.edu/admissions/undergraduate/apply", title: "Undergraduate Admission" });
     expect(score).toBeGreaterThanOrEqual(ADMISSIONS_SCORE_THRESHOLD);
   });
+
+  test("an unrelated page mentioning 'undergraduate' with no admission/apply signal scores zero, not just below threshold", () => {
+    // Real failure caught on a live 40-university batch: a 2019 NEWS ARTICLE about a
+    // research-competition win ("AAU students won... in the Undergraduate Research
+    // Competition") cleared the old threshold on the undergrad bonus alone (path +2, title
+    // +1 = 3) despite containing no "admission" or "apply" anywhere. The undergrad/bachelor
+    // bonus must never be independently sufficient — it can only refine a candidate that
+    // already has a real admission/apply signal.
+    const score = scoreAdmissionsCandidate({
+      url: "https://example.edu/en/news/2019/students-won-first-place-in-the-undergraduate-research-competition",
+      title: "Students Won First and Second Place in the Undergraduate Research Competition",
+    });
+    expect(score).toBe(0);
+  });
 });
 
 describe("pickBestAdmissionsCandidate", () => {
