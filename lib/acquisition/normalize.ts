@@ -98,6 +98,24 @@ export function nameKey(name: string): string {
 }
 
 /**
+ * `canonical_entities.normalized_name` has no insert trigger (unlike `search_key`, which
+ * `set_canonical_entity_search_key()` computes automatically) — every caller that inserts a
+ * row must supply it, and it must match the database's OWN convention exactly
+ * (`lower(unaccent(x))`, used by e.g. the `create_or_resolve_user_submitted_entity` RPC in
+ * migration 0038) or a new row's uniqueness can silently drift from what
+ * `canonical_entities_identity_uq` actually enforces. Deliberately NOT `nameKey()`: that
+ * function also drops a leading "the" and expands "&", real semantic normalizations the
+ * database's own index does not apply — reusing it here would make this app's notion of
+ * "the same normalized_name" diverge from Postgres's.
+ */
+export function dbNormalizedName(name: string): string {
+  return name
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase();
+}
+
+/**
  * Plausible alternative spellings of an institution name, used to widen a registry lookup.
  * Handles the three shapes that actually recur in ranking-derived names: a parenthetical
  * suffix, a trailing dash-acronym, and the "X, University of" inversion.

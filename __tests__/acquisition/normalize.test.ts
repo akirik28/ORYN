@@ -1,5 +1,21 @@
 import { describe, expect, test } from "vitest";
-import { countryFromIso2, institutionTypeFromRor, isCurrencyCode, nameKey, nameVariants, normalizeDegreeLevel, parseMoneyAmount, sameCountry } from "@/lib/acquisition/normalize";
+import { countryFromIso2, dbNormalizedName, institutionTypeFromRor, isCurrencyCode, nameKey, nameVariants, normalizeDegreeLevel, parseMoneyAmount, sameCountry } from "@/lib/acquisition/normalize";
+
+describe("dbNormalizedName", () => {
+  test("matches Postgres lower(unaccent(x)) — diacritics stripped, case folded", () => {
+    expect(dbNormalizedName("Özyeğin University")).toBe("ozyegin university");
+    expect(dbNormalizedName("Université Paris Dauphine - PSL")).toBe("universite paris dauphine - psl");
+  });
+
+  test("unlike nameKey(), keeps a leading 'The' and does not expand '&' — must match the database's own weaker normalization exactly, not the app's search-oriented one", () => {
+    expect(dbNormalizedName("The University of Warwick")).toBe("the university of warwick");
+    expect(dbNormalizedName("Johnson & Johnson Institute")).toBe("johnson & johnson institute");
+  });
+
+  test("does not collapse punctuation or whitespace variants the way nameKey() does — a real gap this session found live (26 duplicate pairs slipped past canonical_entities_identity_uq this way)", () => {
+    expect(dbNormalizedName("St. Andrews")).not.toBe(dbNormalizedName("St Andrews"));
+  });
+});
 
 describe("nameKey", () => {
   test("strips diacritics so localised and transliterated names compare equal", () => {
