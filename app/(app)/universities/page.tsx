@@ -52,6 +52,22 @@ export default async function UniversitiesPage({
     ? await searchUniversityRows(supabase, q, { limit: RESULT_LIMIT, countries: scopedCountries })
     : (universitiesRes?.data ?? []);
 
+  // Batch-fetched separately (see getTargetUniversitiesWithDetails for why: our hand
+  // -authored Database type can't model FK embedding reliably) rather than joined in the
+  // main query, so cards can show "QS #N" without slowing down the primary browse path.
+  const qsRankByUniId = new Map<string, string>();
+  if (universities.length > 0) {
+    const { data: rankings } = await supabase
+      .from("university_rankings")
+      .select("university_id, rank_display")
+      .eq("ranking_provider", "QS")
+      .in(
+        "university_id",
+        universities.map((u) => u.id)
+      );
+    for (const r of rankings ?? []) qsRankByUniId.set(r.university_id, r.rank_display);
+  }
+
   const scopeLabel = country ?? region?.name ?? null;
 
   return (
@@ -78,7 +94,12 @@ export default async function UniversitiesPage({
       {universities.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {universities.map((university) => (
-            <UniversityCard key={university.id} university={university} isSaved={savedIds.has(university.id)} />
+            <UniversityCard
+              key={university.id}
+              university={university}
+              isSaved={savedIds.has(university.id)}
+              qsRank={qsRankByUniId.get(university.id)}
+            />
           ))}
         </div>
       ) : (

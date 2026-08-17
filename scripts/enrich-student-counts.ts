@@ -361,10 +361,24 @@ async function main() {
       data_quality_flag: dataQualityFlag,
       notes: note,
     });
-    if (insertError) console.error(`  failed to insert ${c.uniName}: ${insertError.message}`);
-    else inserted += 1;
+    if (insertError) {
+      console.error(`  failed to insert ${c.uniName}: ${insertError.message}`);
+      continue;
+    }
+    inserted += 1;
+
+    // Keep universities.student_size (what the Explorer/detail UI actually reads) in
+    // sync with the metric we just wrote. Only fills a currently-null value — never
+    // overwrites an existing figure, so a human-verified student_size always wins over
+    // this pipeline's Wikidata-sourced one.
+    const { error: syncError } = await admin
+      .from("universities")
+      .update({ student_size: c.students })
+      .eq("id", c.uniId)
+      .is("student_size", null);
+    if (syncError) console.error(`  metric written but student_size sync failed for ${c.uniName}: ${syncError.message}`);
   }
-  console.log(`\nInserted ${inserted}/${accepted.length} row(s) into university_profile_metrics.`);
+  console.log(`\nInserted ${inserted}/${accepted.length} row(s) into university_profile_metrics (and synced universities.student_size where it was empty).`);
 }
 
 main();

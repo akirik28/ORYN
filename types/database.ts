@@ -674,6 +674,10 @@ export interface University {
    * live there as entity_aliases rows, not as a column here — see
    * lib/universities/alias-search.ts. */
   canonical_entity_id: string | null;
+  /** Identity links into canonical_entities for this university's country/city, in
+   * addition to the denormalized `country`/`city` text columns above (migration 0038). */
+  country_entity_id: string | null;
+  city_entity_id: string | null;
   website_url: string | null;
   logo_url: string | null;
   description: string | null;
@@ -706,6 +710,8 @@ export type UniversityInsert = Insertable<
   | "latitude"
   | "longitude"
   | "canonical_entity_id"
+  | "country_entity_id"
+  | "city_entity_id"
 >;
 export type UniversityUpdate = Updatable<University, "id" | "created_at" | "updated_at">;
 
@@ -795,6 +801,66 @@ export interface UniversitySource {
   created_at: string;
 }
 export type UniversitySourceInsert = Insertable<UniversitySource, "id" | "created_at" | "retrieved_at" | "confidence">;
+
+/** One ranking-list placement for a university (migration 0038). A university can have
+ * multiple rows across providers/editions (e.g. QS 2027, QS 2026) — always filter by
+ * `ranking_provider` (and `ranking_edition` if you need a specific year) rather than
+ * assuming one row per university. */
+export interface UniversityRanking {
+  id: string;
+  university_id: string;
+  ranking_provider: string;
+  ranking_edition: string;
+  /** Human-readable rank as published, e.g. "1", "=2", "601-610" — not always a plain integer. */
+  rank_display: string;
+  rank_numeric: number | null;
+  list_position: number | null;
+  overall_score: number | null;
+  source_url: string;
+  source_published_at: string | null;
+  verified_at: string;
+  correction_checked_at: string | null;
+  data_quality_flag: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+export type UniversityRankingInsert = Insertable<
+  UniversityRanking,
+  "id" | "created_at" | "updated_at" | "verified_at" | "data_quality_flag" | "list_position" | "overall_score" | "source_published_at" | "correction_checked_at" | "notes"
+>;
+
+/** Generic key-value metric store for facts a fixed-schema table doesn't fit (migration
+ * 0038) — e.g. `total_students`, `undergraduate_students`, `international_students`,
+ * `student_faculty_ratio`. Unlike `university_statistics` (a narrow, fixed-column table
+ * for US College-Scorecard-shaped admissions stats), this table is schema-flexible and
+ * global: any `metric_code`, any country, any source. A university can have several rows
+ * per `metric_code` over time (different years/scopes) — always order by `stats_as_of`
+ * or filter by `scope` when you need "the" current value for a metric. */
+export interface UniversityProfileMetric {
+  id: string;
+  university_id: string;
+  metric_code: string;
+  value_numeric: number | null;
+  value_text: string | null;
+  unit: string;
+  /** Often a year ("2024"), but can be a free-text scope note ("undated (see source)",
+   * an academic-year string, a page-capture marker) when the source doesn't state a clean year. */
+  stats_as_of: string | null;
+  /** What population the number covers, e.g. "institution" (whole university),
+   * "undergraduate_plus_graduate", "full_time_students" — never assume "institution" scope
+   * without checking; a system total misread as one campus's total is a real failure mode. */
+  scope: string;
+  precision_state: "exact" | "approximate" | "lower_bound" | "upper_bound" | "range" | "category_only" | "unknown";
+  source_url: string;
+  source_type: string;
+  verified_at: string;
+  data_quality_flag: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+export type UniversityProfileMetricInsert = Insertable<UniversityProfileMetric, "id" | "created_at" | "updated_at" | "verified_at" | "value_text" | "notes">;
 
 // ---------- Target universities / applications ----------
 
@@ -894,12 +960,57 @@ export interface Opportunity {
   last_verified_at: string | null;
   status: OpportunityStatus;
   normalized_title: string;
+  /** Whether the *current* application cycle is actually open — deliberately separate
+   * from `status` (an admin/moderation flag). A "closed" opportunity here still exists
+   * and is worth showing; it just isn't accepting applications right now. Never copy a
+   * past cycle's dates forward to make this look "open" — use `date_not_announced`
+   * instead when the official source hasn't published the next cycle yet. */
+  cycle_status: "open" | "upcoming" | "closed" | "date_not_announced" | "historical" | "discontinued" | "unverified";
+  /** Factual, evidence-based selectivity — never inferred from brand reputation alone. */
+  selectivity_tier: "extremely_selective" | "highly_selective" | "selective" | "competitive_award" | "open_enrollment" | "unknown";
+  verification_state: "verified_current" | "verified_historical" | "verified_derived" | "unverified" | "conflicting";
+  application_open_date: string | null;
+  eligible_grades: string[];
+  citizenship_restrictions: string | null;
+  residency_restrictions: string | null;
+  location_mode: "online" | "in_person" | "hybrid" | null;
+  financial_aid_available: boolean | null;
+  application_requirements: string[];
+  /** e.g. "2026-2027", "Summer 2026" — which cycle `cycle_status`/`deadline` describe. */
+  current_cycle_label: string | null;
+  verified_at: string | null;
+  /** Identity links into canonical_entities (migration 0038) — resolved organizer/country,
+   * separate from the denormalized `organization`/`country` text columns above. */
+  organization_entity_id: string | null;
+  country_entity_id: string | null;
   created_at: string;
   updated_at: string;
 }
 export type OpportunityInsert = Insertable<
   Opportunity,
-  "id" | "created_at" | "updated_at" | "remote_allowed" | "eligible_countries" | "fields" | "funding_available" | "source_confidence" | "status"
+  | "id"
+  | "created_at"
+  | "updated_at"
+  | "remote_allowed"
+  | "eligible_countries"
+  | "fields"
+  | "funding_available"
+  | "source_confidence"
+  | "status"
+  | "cycle_status"
+  | "selectivity_tier"
+  | "verification_state"
+  | "application_open_date"
+  | "eligible_grades"
+  | "citizenship_restrictions"
+  | "residency_restrictions"
+  | "location_mode"
+  | "financial_aid_available"
+  | "application_requirements"
+  | "current_cycle_label"
+  | "verified_at"
+  | "organization_entity_id"
+  | "country_entity_id"
 >;
 export type OpportunityUpdate = Updatable<Opportunity, "id" | "created_at" | "updated_at">;
 
@@ -1178,6 +1289,8 @@ export interface Database {
       canonical_entities: Table<CanonicalEntity, never, never>;
       entity_aliases: Table<EntityAlias, never, never>;
       universities: Table<University, UniversityInsert, UniversityUpdate>;
+      university_rankings: Table<UniversityRanking, UniversityRankingInsert, Partial<UniversityRankingInsert>>;
+      university_profile_metrics: Table<UniversityProfileMetric, UniversityProfileMetricInsert, Partial<UniversityProfileMetricInsert>>;
       university_programs: Table<UniversityProgram, UniversityProgramInsert, Partial<UniversityProgramInsert>>;
       university_requirements: Table<UniversityRequirement, UniversityRequirementInsert, Partial<UniversityRequirementInsert>>;
       university_statistics: Table<UniversityStatistic, UniversityStatisticInsert, Partial<UniversityStatisticInsert>>;

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { MapPin, Bookmark, BookmarkCheck, Landmark } from "lucide-react";
+import { MapPin, Bookmark, BookmarkCheck, Landmark, Users, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { addTargetUniversity } from "@/app/(app)/universities/actions";
 import type { University } from "@/types/database";
@@ -11,7 +11,16 @@ import type { University } from "@/types/database";
 // row") — a visual identity band up top (the university's real `logo_url` when the data
 // has one, never a fabricated photo otherwise — Rule 4 forbids inventing imagery this
 // product has no actual source for) instead of packing every field into a small row.
-export function UniversityCard({ university, isSaved }: { university: University; isSaved: boolean }) {
+export function UniversityCard({
+  university,
+  isSaved,
+  qsRank,
+}: {
+  university: University;
+  isSaved: boolean;
+  /** QS 2027 rank_display for this university, when it has one (e.g. "1", "=2", "601-610"). */
+  qsRank?: string | null;
+}) {
   const [saved, setSaved] = useState(isSaved);
   const [isPending, startTransition] = useTransition();
 
@@ -44,6 +53,23 @@ export function UniversityCard({ university, isSaved }: { university: University
             </p>
           )}
         </div>
+
+        {(qsRank || university.student_size || university.institution_type) && (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            {qsRank ? (
+              <span className="flex items-center gap-1">
+                <Trophy className="size-3.5 shrink-0" />
+                QS #{qsRank}
+              </span>
+            ) : null}
+            {university.student_size ? (
+              <span className="flex items-center gap-1">
+                <Users className="size-3.5 shrink-0" />
+                {university.student_size.toLocaleString()} students
+              </span>
+            ) : null}
+          </div>
+        )}
 
         {university.institution_type ? (
           <span className="w-fit rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground">{university.institution_type}</span>

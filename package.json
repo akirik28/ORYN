@@ -14,7 +14,8 @@
     "check:integrations": "tsx scripts/check-integrations.ts",
     "entities:backfill-report": "tsx scripts/entities-backfill-report.ts",
     "entities:audit": "tsx scripts/entities-audit.ts",
-    "enrich:student-counts": "tsx scripts/enrich-student-counts.ts"
+    "enrich:student-counts": "tsx scripts/enrich-student-counts.ts",
+    "report:universities": "tsx scripts/university-data-report.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",

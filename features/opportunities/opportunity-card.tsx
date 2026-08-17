@@ -33,6 +33,30 @@ function tierFor(score: number): { label: string; tone: StatusTone; cardClassNam
   return { label: "Low priority", tone: "neutral", cardClassName: "border-border opacity-70" };
 }
 
+// Factual selectivity is a separate signal from ORYN's match score above — RSI and an
+// open-enrollment summer course should never read the same just because both matched a
+// student's interests. Only render a badge for tiers that are actually informative;
+// "unknown" stays silent rather than implying "not selective".
+const SELECTIVITY_LABEL: Partial<Record<Opportunity["selectivity_tier"], string>> = {
+  extremely_selective: "Extremely selective",
+  highly_selective: "Highly selective",
+  selective: "Selective",
+  competitive_award: "Competitive award",
+  open_enrollment: "Open enrollment",
+};
+
+// cycle_status is about whether *this* cycle is taking applications right now — distinct
+// from whether the opportunity is worth knowing about at all. Only the states a student
+// needs a heads-up about get a badge; "open" is the unremarkable default and stays quiet.
+const CYCLE_STATUS_BADGE: Partial<Record<Opportunity["cycle_status"], { label: string; tone: StatusTone }>> = {
+  upcoming: { label: "Opens soon", tone: "info" },
+  closed: { label: "Closed for this cycle", tone: "neutral" },
+  date_not_announced: { label: "Next dates not announced", tone: "neutral" },
+  historical: { label: "Historical — not currently running", tone: "warning" },
+  discontinued: { label: "Discontinued", tone: "error" },
+  unverified: { label: "Verification pending", tone: "warning" },
+};
+
 export function OpportunityCard({
   opportunity,
   matchScore,
@@ -67,6 +91,12 @@ export function OpportunityCard({
         <div>
           <div className="mb-1 flex flex-wrap items-center gap-2">
             <StatusBadge label={tier.label} tone={tier.tone} icon={Sparkles} />
+            {SELECTIVITY_LABEL[opportunity.selectivity_tier] ? (
+              <StatusBadge label={SELECTIVITY_LABEL[opportunity.selectivity_tier]!} tone="neutral" />
+            ) : null}
+            {CYCLE_STATUS_BADGE[opportunity.cycle_status] ? (
+              <StatusBadge label={CYCLE_STATUS_BADGE[opportunity.cycle_status]!.label} tone={CYCLE_STATUS_BADGE[opportunity.cycle_status]!.tone} />
+            ) : null}
             {opportunity.deadline && daysUntilDeadline !== null && daysUntilDeadline >= 0 && daysUntilDeadline <= 14 ? (
               <DeadlineBadge date={opportunity.deadline} />
             ) : null}
