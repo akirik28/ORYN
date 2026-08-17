@@ -16,6 +16,11 @@ change, and the rules any implementation must obey.
 
 Audit opened 2026-08-17 against commit `315f914`.
 
+**Phase 2 landed.** The acquisition architecture that closes these gaps is documented in
+[verified-data-acquisition.md](./verified-data-acquisition.md), with a 30-university /
+23-country verified pilot committed at `supabase/fixtures/university-identity-pilot.json`.
+Read that file before implementing any further data work.
+
 ---
 
 ## What this audit was and was not
