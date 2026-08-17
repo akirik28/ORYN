@@ -52,6 +52,22 @@ describe("nameVariants", () => {
     expect(nameVariants("Manchester, University of")).toContain("University of Manchester");
   });
 
+  test("drops a leading acronym prefix", () => {
+    // Real gap found live this session: ROR's own record for these is the plain name with
+    // no prefix at all — acquire-university-facts.ts's exact-match step was only trying the
+    // raw declared name, so these both failed to resolve despite ROR having an exact match
+    // for the stripped form sitting in the very first page of results.
+    expect(nameVariants("EPFL – École polytechnique fédérale de Lausanne")).toContain("École polytechnique fédérale de Lausanne");
+    expect(nameVariants("KIT, Karlsruhe Institute of Technology")).toContain("Karlsruhe Institute of Technology");
+  });
+
+  test("does not strip a genuine leading word that merely happens to be capitalized", () => {
+    // The leading-acronym rule requires ALL-CAPS (2-8 chars) before the separator — "New" and
+    // "The" are mixed-case, so a real institution name is never mistaken for an acronym prefix.
+    const variants = nameVariants("New York University");
+    expect(variants).toEqual(["New York University"]);
+  });
+
   test("always includes the original", () => {
     expect(nameVariants("ETH Zurich")).toContain("ETH Zurich");
   });

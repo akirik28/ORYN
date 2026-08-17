@@ -33,7 +33,7 @@ import { dirname } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 
 import { searchRorByName, type RorRecord } from "../lib/acquisition/ror";
-import { countryFromIso2, nameKey, sameCountry } from "../lib/acquisition/normalize";
+import { countryFromIso2, nameKey, nameVariants, sameCountry } from "../lib/acquisition/normalize";
 import { sourceAuthority } from "../lib/acquisition/source-authority";
 import { fetchAllRowsVerified } from "../lib/acquisition/paginate";
 import { CADENCE_DAYS, resolveVerificationState } from "../lib/acquisition/verification";
@@ -429,7 +429,18 @@ async function main(): Promise<void> {
 
     // Prefer an exact name match inside the country; otherwise the top in-country hit, but
     // only when it is unambiguous. Anything else is left unresolved for a human.
-    const exact = candidates.filter((r) => r.names.some((n) => nameKey(n.value) === nameKey(entry.name)));
+    //
+    // Matched against every nameVariants() form of our declared name, not just the raw
+    // string — a real gap found this session: ~194/1019 unresolved rows turned out to have
+    // ROR's exact record sitting right there in `candidates`, just under a name our own
+    // declared name differs from by exactly the pattern nameVariants() already strips (a
+    // trailing parenthetical acronym — "Auckland University of Technology (AUT)" only
+    // matched because ROR's own record is bare "Auckland University of Technology"). Still a
+    // strict post-normalization EXACT match, never fuzzy — this widens which of OUR already-
+    // known-legitimate name forms gets compared, not how loosely two strings may resemble
+    // each other.
+    const ourVariantKeys = new Set(nameVariants(entry.name).map(nameKey));
+    const exact = candidates.filter((r) => r.names.some((n) => ourVariantKeys.has(nameKey(n.value))));
     let chosen: RorRecord | null = null;
     if (exact.length === 1) chosen = exact[0];
     else if (exact.length > 1) {

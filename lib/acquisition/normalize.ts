@@ -117,8 +117,8 @@ export function dbNormalizedName(name: string): string {
 
 /**
  * Plausible alternative spellings of an institution name, used to widen a registry lookup.
- * Handles the three shapes that actually recur in ranking-derived names: a parenthetical
- * suffix, a trailing dash-acronym, and the "X, University of" inversion.
+ * Handles the shapes that actually recur in ranking-derived names: a parenthetical suffix, a
+ * trailing dash-acronym, a leading acronym prefix, and the "X, University of" inversion.
  */
 export function nameVariants(name: string): string[] {
   const variants = new Set<string>();
@@ -128,6 +128,13 @@ export function nameVariants(name: string): string[] {
   if (paren && paren[1].length > 3) variants.add(paren[1].trim());
   const dashAbbr = base.match(/^(.*?)\s*[-–]\s*[A-Z]{2,6}$/);
   if (dashAbbr && dashAbbr[1].length > 3) variants.add(dashAbbr[1].trim());
+  // The mirror of dashAbbr: an acronym prefix rather than suffix ("EPFL – École
+  // polytechnique...", "KIT, Karlsruhe Institute of Technology"). Found live this session —
+  // ROR's own record is the plain, un-prefixed name in every observed case. Same 2-8-char
+  // all-caps bound as dashAbbr, so it can't strip a genuine leading word ("New York
+  // University" doesn't match: "New" isn't all-caps).
+  const leadingAbbr = base.match(/^[A-ZÀ-Ö&]{2,8}\s*[-–,]\s*(.+)$/);
+  if (leadingAbbr && leadingAbbr[1].length > 3) variants.add(leadingAbbr[1].trim());
   const trailingOf = base.match(/^(.*?),\s*University of$/i);
   if (trailingOf) variants.add(`University of ${trailingOf[1].trim()}`);
   return [...variants].filter(Boolean);
