@@ -64,6 +64,119 @@ current state, not as a session log.
   session doesn't re-attempt the same request. See "Phase 3 continuation" below for what was
   tried and the country-priority gap this leaves open.
 
+## Founder Requirement 2026-08-18: product-visible duplicate universities + light theme default
+
+A new, higher-priority workstream landed mid-session: the founder reported seeing duplicate
+universities live in the product (searching "UCL" surfaced both "UCL" and "University College
+London"), plus two related, durable product requirements — canonical autocomplete over free text
+for controlled fields, and a light/optimistic default visual identity anchored in the ORYN logo
+blue. Full detail in `docs/university-surface-audit.md` (the Phase-D audit artifact); this
+section is the measured-results summary the founder asked to see recorded here.
+
+**Root cause**: `merge_canonical_entities()` (this session's own Phase 2 work) merges the
+identity layer only — both sides of a merge share one `canonical_entity_id`, but the
+`universities` rows themselves stay separate (FK safety). Every surface reading `universities`
+filtered by `canonical_entity_id` therefore returned both rows. Migration `0043`
+(`superseded_by_id`) remains the schema-correct fix and remains blocked (no DDL access this
+session, unchanged all session) — so this pass built the same fix at the application layer:
+`lib/universities/canonical.ts`, backed by a generated, re-runnable mapping
+(`lib/universities/duplicate-supersessions.json`, `npm run resolve:university-duplicates`).
+
+**Duplicate university count before/after**: 9 pairs / 18 rows before, unchanged after (rows are
+deliberately never deleted — FK safety) — but 0 of the 9 losing rows now independently surface on
+any Claude-A-owned read/write path. **Active/canonical university count**: 1019 total rows,
+1010 canonical (9 pairs collapse to 9), matching `universities` count 1010 → 1019 tracked
+elsewhere in this doc for an unrelated reason (the strategic-expansion batch) — these are two
+independent numbers that happen to both be near 1019/1010, not the same fact.
+
+**Surfaces audited**: 27 `.from("universities")` call sites across 20 files (full table in
+`docs/university-surface-audit.md`). **Surfaces fixed** (Claude-A-owned, 16 files across the P0
+and Phase D commits): University Explorer browse + country counts + search, university detail
+page (now redirects a loser id to the winner), the write path (`addTargetUniversity` — the
+single most important fix, since it's where a selection becomes permanent), the shared
+`EntityCombobox` university-scope backend (`lib/entities/search.ts`/`resolve.ts` — dead code
+today, a defused landmine for whenever a university-scoped field is added), global search
+(program results, application results), applications list/detail, the dashboard's target-
+university feed, the AI Advisor's context builder (also restructured off a nested-embed query
+that couldn't be filtered, onto this codebase's own established batch-fetch convention), and
+both deadline jobs (scan + upcoming). **Handed to Claude B**: `lib/requirements/discover.ts`'s
+batch selection (their table, one-line ask in `docs/handoffs/claude-a-to-claude-b.md`). **Known,
+accepted gaps**: `lib/universities/sync-us-universities.ts` and the dev-engineering scripts
+(admin-only/credential-blocked, not student-facing); pre-existing bad data in
+`target_universities`/`applications`, if any exists, self-heals at read time on every fixed
+surface but the stored id itself isn't rewritten (a genuine Phase-Q-shaped decision, not
+attempted).
+
+**Aliases tested/fixed**: all 9 pairs' `entity_aliases` checked live; 2 real gaps found and
+fixed (Al-Farabi, Warwick both had zero aliases — the losing row's name now survives as a
+searchable alias of the winner, via `expand:university-spine`'s existing `ALIAS_FIXES`
+mechanism, not a new one).
+
+**University autocomplete status**: no new component built. `features/entities/entity-
+combobox.tsx` (`EntityCombobox`) already is a production-ready, reusable, accessible
+(debounced typeahead, keyboard nav, a11y roles, city/country subtitle disambiguation, custom-
+fallback with duplicate detection) selector, generic across entity scopes including
+`university` — confirmed by reading it directly rather than assumed. Its `scope="university"`
+backend was the exact dead-code landmine fixed above. Not currently wired to any live field (no
+UI location needs it — target-university selection goes through the now-fixed Explorer search/
+browse instead), so nothing to demo, but the infrastructure is correct and ready.
+
+**Test-score selector / coursework autocomplete status (Phase G/H) — researched, not yet built**:
+schema confirmed (`types/database.ts`'s `TestScore.test_name`/`score`/`max_score` are all plain
+`text`, deliberately — score formats are genuinely heterogeneous across tests, not an oversight
+to fix). The actual UI field is `features/profile/field-config.ts`'s `TEST_SCORE_FIELDS`
+(`{ type: "text", name: "test_name", label: "Test name (e.g. SAT, IB Predicted)" }`) — confirms
+the founder's screenshot exactly. `FieldConfig` already has a generic `"entity"` field type
+wired to `EntityCombobox` (used for schools/employers/etc.), which is architecturally the
+obvious mechanism — but tests are a small, closed, mostly-static vocabulary (SAT/ACT/PSAT/IELTS/
+TOEFL/Duolingo are fixed; AP/IB need a subject suffix, the same complication coursework has),
+which doesn't obviously want the full canonical_entities registry (open-ended, growing,
+alias/dedup/verification-state machinery meant for organizations, not a fixed exam list) the way
+a university or employer does. Not built this pass — the research is done and recorded here so
+the next session doesn't re-investigate the schema from zero, but forcing a new selector
+component through in an already-very-long session felt like the wrong tradeoff against quality.
+**Coursework autocomplete**: not yet independently investigated (`COURSEWORK_FIELDS` in the same
+file, not yet read this pass).
+
+**Other free-text traps (Phase I)**: not yet audited beyond tests/coursework.
+
+**Shared components created**: `lib/universities/canonical.ts` (the application-layer canonical-
+resolution layer, the actual novel infrastructure this pass built) + its generator script. No
+new UI component — reused `EntityCombobox`.
+
+**Design tokens introduced/reused**: none introduced — audited first, found the token
+architecture already excellent. Extracted the real logo's pixel color (`#3a19fd`) and converted
+it to OKLCH for a like-for-like comparison against the existing `--brand` token:
+`oklch(0.477 0.294 272.2)` computed vs. `oklch(0.477 0.29 272)` already in `globals.css` — an
+almost exact match, meaning a prior session had already color-picked the real logo precisely.
+**The actual defect** (found, not assumed): `app/layout.tsx` hardcoded `dark` unconditionally on
+`<html>`, with no theme toggle anywhere in the product — per an explicit prior-session
+"founder-locked" comment now superseded by the current founder direction. One-line fix (remove
+the hardcoded class), since `:root` already carries a fully-formed light theme.
+
+**Light-theme surfaces verified live** (connected to the running dev server via an already-
+authenticated session in a shared browser tab — no credentials entered, no account created):
+marketing homepage, authenticated dashboard, University Explorer (map + search results), and a
+university detail page all render light/bright/calm with the brand blue clearly recognizable in
+the logo, primary CTAs, and accent icons. Incidentally re-confirmed the P0 fix in the same live
+session: searching "UCL" returned exactly one "University College London" card, linking to
+`/universities/03c8faf1-4b30-47fe-b09e-8851b96c1f6e` — the exact computed canonical winner id.
+
+**Tests**: 60 test files / 677 tests, all passing (`__tests__/universities/canonical.test.ts` —
+9 tests for `pickCanonicalWinner` and the runtime helpers; `__tests__/universities/duplicate-
+regression.test.ts` — 34 tests covering all 9 named pairs individually and combined, plus the
+"genuinely different institutions stay separate" case). `npm run lint` / `npx tsc --noEmit` /
+`npm run build` all clean after every commit in this pass.
+
+**Remaining, explicitly scoped next steps** (not blockers — just not yet done): Phase G (test-
+score selector) and Phase H (coursework autocomplete) need an actual UI decision on the
+entity-registry-vs-fixed-list question above before building; Phase I (other free-text fields:
+subjects, countries, curricula, degree types, organizations); Phase Q (existing free-text data
+cleanup — PLAN → REVIEW → APPLY → VERIFY, only after G/H land); Phase O (site-wide visual audit
++ Claude-B handoff for shared-token adoption on their surfaces). Commits this pass, in order:
+`8247819` (P0 fix), `cccb74d` (Phase D surface fixes), `61eff71` (audit artifact), `a55cb92`
+(Phase F regression tests), `3192962` (light-theme default).
+
 ## Measured baseline (live, `npm run report:universities`, 2026-08-17)
 
 ```
