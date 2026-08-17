@@ -18,7 +18,8 @@
     "report:universities": "tsx scripts/university-data-report.ts",
     "acquire:universities": "tsx scripts/acquire-university-facts.ts",
     "import:universities": "tsx scripts/import-university-facts.ts",
-    "audit:university-duplicates": "tsx scripts/university-duplicates-audit.ts"
+    "audit:university-duplicates": "tsx scripts/university-duplicates-audit.ts",
+    "acquire:admissions": "tsx scripts/acquire-admissions-facts.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",
