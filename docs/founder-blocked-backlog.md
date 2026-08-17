@@ -243,25 +243,38 @@ reconciliation that cannot be fixed in code.
 
 ## 19. Decide what to do about 43 duplicate university identities
 
-**Action**: review the 43 pairs now sitting in `entity_verification_queue` with
-`blocker='possible_duplicate'`, and for each either merge with
-`merge_canonical_entities(source, target, reason)` or give the two rows distinct
-city/country values.
+**Status (2026-08-17, University Intelligence Spine pass)**: investigated in full, not
+resolved. Every one of the 43 turns out to be an **orphan** duplicate — one side of each
+pair has zero linked `universities` rows (never enriched, no website, no external ids,
+`official_verified` with no evidence — see item 20), so there is **no visible product
+impact** (the University Explorer reads `universities`, not `canonical_entities` directly;
+an orphan with no `universities` row never renders a card). Registry-cleanliness issue, not
+a user-facing bug. A second pass (article/parenthetical-acronym-aware name matching, which
+`canonical_entities.normalized_name`'s own DB trigger doesn't do) found 28 *more* pairs of
+the same shape, of which exactly 8 (now merged — see item 25) turned out to have two real
+`universities` rows instead of one. Full dossier, evidence, and the reusable detector:
+`docs/handoffs/claude-a-university-spine.md`, `npm run audit:university-duplicates`.
+**Action**: review the remaining ~63 orphan pairs (43 + 28 − 8 merged) sitting in
+`entity_verification_queue` with `blocker='possible_duplicate'` (or found live by the
+detector above), and for each either merge with `merge_canonical_entities(source, target,
+reason)` or give the two rows distinct city/country values.
 **Why it's blocked**: they are almost certainly the same institution ingested twice with
 differently-written cities ("Boston" vs "Boston, MA"), but "almost certainly" is not the
 bar for merging real entities, and a name-similarity heuristic must never run unattended.
-Each needs a human to confirm against an official source.
+Each needs a human to confirm against an official source (or, per the detector's own SAFE
+bar, a matching ROR id once the orphan side ever gets external ids acquired for it).
 **Blocks**: nothing today — duplicates make search noisier, not wrong.
 
-## 20. Decide what `official_verified` means for 78 university entities
+## 20. ~~Decide what `official_verified` means for 78 university entities~~ — RESOLVED 2026-08-17
 
-**Action**: either attach primary-source evidence rows to the 78 university entities
-currently marked `official_verified`, or downgrade them to `source_verified`.
-**Why it's blocked**: no university entity has any `entity_evidence` row at all, so the
-registry is asserting a verification state its own evidence model does not support. Which
-way to resolve it is a data-trust decision, not a reconciliation one — and this product's
-own rule is that a verification claim must be backed by a source.
-**Blocks**: any UI that surfaces a "verified" badge for universities.
+**Downgraded all 73 live evidence-less entities to `source_verified`** (`npm run
+audit:verification-state -- --fix-downgrade`, `scripts/verification-state-audit.ts`).
+Confirmed at the time: 0/73 `official_verified` university entities had any `entity_evidence`
+row — not 78 (the live count had drifted down to 73 by the time of this pass, some tombstoned
+by the item-25 merges below). One direction only, never upgrades — attaching real evidence
+and re-verifying specific institutions from an official source remains a real, separate,
+not-yet-done task if `official_verified` is wanted back for any of them. Re-run confirms 0
+university entities currently claim `official_verified` with no evidence.
 
 ## 21. Written licensing position on QS ranking data
 
@@ -305,34 +318,47 @@ consent is designed, not retrofitted.
 **Blocks**: Phase 18 outcome-based benchmarking, and any peer comparison grounded in real
 decisions rather than profile scores.
 
-## 25. Merge eight confirmed duplicate university identities
+## 25. ~~Merge duplicate university identities~~ — IDENTITY LAYER RESOLVED 2026-08-17, ROW LAYER STILL BLOCKED
 
-**Action**: for each pair below, decide which row is canonical, then merge with
-`merge_canonical_entities(source, target, reason)` — or, if they are genuinely different
-institutions, give them distinguishing city/country values.
+**9 pairs, not 8** — this list was missing KFUPM/King Fahd University of Petroleum and
+Minerals (its second row's `canonical_name` is literally just "KFUPM", so it didn't match
+the "previously known" cross-reference this file made to item 19, and an early pass in this
+session's own investigation initially and wrongly concluded it didn't exist; found properly
+via a `university_rankings` audit — two `universities.id` rows both claiming QS 2027 rank
+"63" with no tie marker). All 9 live-verified against ROR
+(`https://api.ror.org/v2/organizations`) on 2026-08-17 and merged via
+`merge_canonical_entities()`. Full per-pair evidence, winner/loser ids, and reasoning:
+`docs/handoffs/claude-a-university-spine.md`.
 
 | Institution | Evidence they are one institution |
 |---|---|
 | University of Warwick / **The** University of Warwick | Both resolve to `ror.org/01a77tt86`. The second records its city as "England", which is not a city. |
 | University College London / UCL | Both resolve to `ror.org/02jx3x895`. |
-| Massachusetts Institute of Technology ×2 | Two rows match the same name in the US. |
-| London School of Economics and Political Science ×2 | Two rows, same name, UK. |
-| Hong Kong University of Science and Technology ×2 | Two rows, same name, Hong Kong SAR. |
-| King Fahd University of Petroleum and Minerals ×2 | Previously known (see item 19). |
-| University of Newcastle, Australia ×2 | Two rows, same name, Australia. |
-| University of Technology Sydney ×2 | Two rows, same name, Australia. |
+| Massachusetts Institute of Technology ×2 | Both resolve to `ror.org/042nb2s44`. |
+| London School of Economics and Political Science ×2 | Both resolve to `ror.org/0090zs177`. |
+| Hong Kong University of Science and Technology ×2 | Both resolve to `ror.org/00q4vv597` (not the separate real HKUST-GZ campus, `050h0vm43`). |
+| King Fahd University of Petroleum and Minerals / KFUPM | One ROR record (`ror.org/03yez3163`) lists both names. |
+| University of Newcastle, Australia ×2 | Both resolve to `ror.org/00eae9z71` (not UK Newcastle University, `01kj2bm70`). |
+| University of Technology Sydney ×2 | Both resolve to `ror.org/03f0f6041` (not the unrelated University of Sydney). |
 
-**Why it's blocked**: merging real entities is a human decision, and this repo's own rule
-forbids fuzzy-auto-merging universities. Each pair needs one person to confirm against an
-official source and pick the surviving row. Note that each duplicate carries its **own**
-`canonical_entity_id`, so the canonical registry is duplicated too — a merge has to resolve
-both layers.
-**Blocks**: enrichment of these specific institutions. The acquisition pipeline now detects the
-collision and withholds **both** rows as UNRESOLVED rather than writing facts to each, because
-writing to both would double one institution's data across two identities and make the
-duplication harder to see. So this costs coverage on 16 rows until resolved, and nothing else.
-**Depends on**: nothing — a person with an official source can clear it. Related: item 19's 43
-lower-confidence pairs.
+**What's still open**: `merge_canonical_entities()` merges the identity layer only (aliases,
+external ids, evidence, repoints `universities.canonical_entity_id`) — it never touches the
+`universities` rows themselves, so all 18 still exist and the University Explorer would
+still show 9 duplicate cards. A non-destructive fix (`universities.duplicate_status` /
+`superseded_by_id`, migration `0043_university_duplicate_supersession.sql`) is written and
+committed but **not applied** — this session had no Supabase MCP / linked CLI / direct
+Postgres access, only PostgREST (which cannot run DDL). Deliberately not a straight `DELETE`
+of the losing row either way: `university_programs`/`university_requirements` reference
+`universities(id) on delete cascade`, and 4 of these 9 pairs already carry real
+`university_programs` rows on one side — an automated delete is a standing risk to that
+data, a superseded flag is not.
+**To finish**: apply the migration (Supabase SQL editor, or grant CLI/MCP access), then
+`npm run audit:university-duplicates -- --supersede` (already written, probe-gated, tested
+against the current unapplied state), then add the `duplicate_status != 'superseded'` filter
+to the 4 read paths + 1 dependent join mapped in `docs/handoffs/claude-a-university-spine.md`.
+**Depends on**: DB/DDL access for this repo's automated sessions, or a founder SQL-editor
+pass. Related: item 19's remaining ~63 lower-confidence orphan pairs (no visible-card impact,
+lower priority).
 
 ---
 
