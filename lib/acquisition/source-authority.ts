@@ -31,7 +31,12 @@ export type FactClass =
   /** Programme/course catalogue facts. */
   | "programs"
   /** Research output/topic strength. */
-  | "research_strength";
+  | "research_strength"
+  /** Competitions, summer programs, internships, fellowships and similar opportunities —
+   * organizer's own domain, or nothing. Behaves identically to "programs"/"cost"/"policy"
+   * (official-domain-or-nothing, no registry/third-party tier); listed separately because
+   * the claim itself (an opportunity's own facts) is conceptually distinct. */
+  | "opportunities";
 
 export type AuthorityTier = "HIGH" | "MEDIUM";
 

@@ -18,6 +18,7 @@
     "report:universities": "tsx scripts/university-data-report.ts",
     "ingest:university-programs": "tsx scripts/ingest-university-programs.ts",
     "report:programs": "tsx scripts/university-programs-report.ts",
+    "ingest:opportunities": "tsx scripts/ingest-opportunities.ts",
     "acquire:universities": "tsx scripts/acquire-university-facts.ts",
     "import:universities": "tsx scripts/import-university-facts.ts"
   },
