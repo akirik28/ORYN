@@ -90,7 +90,8 @@ signal I haven't found yet. Not silently skipped — flagged here.
    both sides** — an actual duplicate card in the University Explorer. Combined with 2 more
    found by targeted manual search (UCL/University College London — pure acronym vs full
    name, no shared `nameVariant`; Al-Farabi — names differ too much for `nameVariants()` to
-   catch), that's **8 confirmed, live-verified, merged this pass**:
+   catch) and 1 found by the Phase 5 rankings audit (KFUPM — see below), that's **9
+   confirmed, live-verified, merged this pass**:
 
    | Institution | Winner `universities.id` | Loser (superseded, pending 0043) | Evidence |
    |---|---|---|---|
@@ -102,8 +103,9 @@ signal I haven't found yet. Not silently skipped — flagged here.
    | University of Technology Sydney | `6c88ddfe-1b49-411f-a4e8-bb82436ae1ed` | `f1d7d625-4c39-4132-a54e-e567e1390185` | ROR `03f0f6041` (not "University of Sydney", `0384j8v12`) |
    | University of Newcastle, Australia | `54d29f0d-ce64-4342-ba0f-0d0895e36797` | `6bdd71e9-9ab3-4f64-bf9b-b6a821784115` | ROR `00eae9z71` (not UK Newcastle University, `01kj2bm70`) |
    | Al-Farabi Kazakh National University | `37f12391-462d-4aba-8947-d9cf159627cb` | `6f0df596-4ee5-49da-82ad-8057bfaa890d` | Loser's own name is self-referential ("former Al-Farabi..."); winner carries 5 external ids, loser none |
+   | KFUPM | `62929169-4cb9-4ef2-b1f4-bfd1b34cf164` | `0e01bc5d-0e1e-4e35-a629-2befec4e3cb3` | Found via Phase 5 (below), not the name detectors — see that section. ROR `03yez3163` lists both "KFUPM" and the full name on one record |
 
-   `merge_canonical_entities()` ran for all 8 (audit trail in `canonical_entity_merges`,
+   `merge_canonical_entities()` ran for all 9 (audit trail in `canonical_entity_merges`,
    `reason` column carries the full citation). This merges the **identity layer only**
    (aliases, external ids, evidence, repoints `universities.canonical_entity_id`) — it does
    **not** touch the `universities` rows, which is why the table above still lists two
@@ -169,11 +171,13 @@ is a standing risk to that workstream's data forever, a superseded flag is not.
   `universities` rows) in all but the 6 already merged; re-run
   `npm run audit:university-duplicates` any time to get the live, current list with full
   evidence dump (not reproduced here — it changes as more of the spine gets external ids).
-- **founder-blocked-backlog.md item 25's "KFUPM" pair does not exist in the live registry**
-  as of this session (searched directly by name — only one live row). Either already resolved
-  by an earlier session, or the original claim was inaccurate. Left that document's item 25
-  as-is (not mine to edit) but flagging here so nobody spends time looking for a second
-  KFUPM row that isn't there.
+- **Correction, same session**: an earlier draft of this file claimed founder-blocked-backlog.md
+  item 25's KFUPM pair "does not exist in the live registry" — that was wrong, and was itself
+  caused by an incomplete search (canonical_entities searched for "king fahd"/"petroleum"
+  substrings; the second row's canonical_name is literally just "KFUPM", matching neither).
+  The Phase 5 rankings audit below found it independently (two universities.id rows both
+  claiming QS 2027 rank 63, no tie marker) and it's merged now — see the Phase 2 table above
+  (9 pairs, not 8) and the Phase 5 section for the full account.
 - **founder-blocked-backlog.md item 19's "43 duplicates"** matches this session's exact-name
   pass count (43) — consistent, not independently stale.
 
@@ -278,15 +282,53 @@ The 43 exact-name + 28 name-variant orphan pairs from the Phase 2 dossier above 
 likely a large fraction of both the pre-fix-73 and the 296 POSSIBLE_DUPLICATE set — not
 independently re-investigated as a third thing, just noted as probably-overlapping.
 
+## Phase 5 — rankings: clean, well-designed already, one real finding (the 9th duplicate)
+
+`university_rankings` audited directly (1009 rows). Findings:
+
+- **Provider/edition naming is already clean** — exactly one value, `QS | 2027`, no naming
+  drift (e.g. no "QS World University Rankings" vs "QS" split). Nothing to normalize.
+- **Zero false-precision cases.** The schema already separates `rank_display` (exact source
+  string, e.g. a band like "601-610") from `rank_numeric` (nullable derived sort key,
+  explicitly null when the source gives a band — per the column's own migration 0038
+  comment). Checked directly: 0 rows have a band-shaped `rank_display` with a non-null
+  `rank_numeric`. This was already built correctly; confirmed, not fixed.
+- **9 `(provider, edition, list_position)` collisions** — two different `universities.id` rows
+  claiming the identical QS rank. **8 were exactly the 8 Phase 2 pairs already merged**
+  (independent structural confirmation of that work from a completely different angle — every
+  single one of the 8 name-collision-detected duplicates also independently collided on QS
+  rank, which is exactly what "same real institution" predicts). **The 9th was new**: KFUPM,
+  rank_display `"63"` with no tie marker on both sides (a genuine QS tie would read `"=63"`)
+  — see the Phase 2 table above, now merged.
+- **Bocconi University is the one university (1/1010) with no QS 2027 row at all.** Not
+  investigated further this session (a single missing row, not a pattern) — plausibly a
+  genuine QS category-eligibility gap rather than a data bug, but not confirmed either way.
+
+## Phase 7 — external IDs: mostly closed by this session's re-acquisition
+
+Full-spine `acquire:universities --from-db` + `import --apply` this session (see the fixture-
+regeneration commit) refreshed ROR/WIKIDATA/GRID/ISNI/CROSSREF_FUNDER coverage with current
+credentials and the new circuit breaker: 3,950 external ids upserted (idempotent — mostly
+confirming what was already there), 807/1010 resolved (203 unresolved: 192 ambiguous/no exact
+name match, 5 country mismatch, 2 no ROR hit, 4 other — all kept in the fixture with a reason,
+none guessed). Not separately audited this session: whether the SAME external id is ever
+mapped to two different *live* (non-merged) canonical entities registry-wide — the import
+pipeline's own resolver would refuse to act on that case (`resolveUniversity` returns
+`unresolved` when external ids resolve to >1 entity) but a standalone confirmation query
+hasn't been run.
+
 ## Next (queued, not yet started this session)
 
-1. Phase 7 — external ID completeness: the full-spine re-acquisition (see fixture-regeneration
-   commit) covered the ROR/Wikidata/GRID/ISNI/CROSSREF_FUNDER side already this session
-   (3,950 ids, idempotent). Remaining: check for the SAME external ID mapped to multiple
-   *live* canonical entities (a guard exists at import time; a standalone audit query across
-   the registry hasn't been run) and look at whether any of the 43+28 orphan pairs would
-   resolve automatically once given a real external id.
-4. Phase 8 — the broader canonical-entity-registry quality audit (item 20's 78-entity
-   evidence question, orphan alias cleanup) — likely subsumes most of the 43+28 pairs above.
-5. Phase 5/6/9/10/11 as time allows; OpenAlex retry once its budget resets (~9.5h out from
-   14:30 UTC).
+1. Duplicate-id cross-registry check (see Phase 7 above) — a standalone query, not yet run.
+2. Phase 9 — `university_profile_metrics` schema review (which of the still-missing
+   population metrics deserve a typed column vs staying in the flexible metric store).
+3. Phase 11 — confirm the API/query layer actually exposes what's been acquired this session
+   (admissions_url, the corrected verification states, refreshed external ids) to the
+   University Explorer UI — not yet checked.
+4. Phase 6 — OpenAlex retry once its budget resets (~9.5h out from 14:30 UTC; circuit breaker
+   means a retry costs 3 requests to confirm, not another wasted full run).
+5. Scale the admissions acquisition batch size further (`--limit`) now that the scorer bug is
+   fixed and validated against two independent live failures — current coverage: check
+   `npm run report:universities`'s "admissions URL" line.
+6. Migration 0043 + the 5 read-path filters (see Phase 2 above) — founder/DDL-access blocked,
+   not code-blocked.
