@@ -170,6 +170,20 @@ const ALIAS_FIXES: AliasFix[] = [
     reason:
       "universities row 196f3ea1-6688-47f5-a561-778c3b424f23 already exists (website lmu.de matches Claude B's citation exactly, ROR 05591te55 matches exactly). The program-pipeline's resolver couldn't match \"LMU Munich\" against the stored \"Ludwig-Maximilians-Universität München\" — fixed the designed way (add the alias), not by creating a duplicate row.",
   },
+  {
+    label: "Al-Farabi Kazakh National University — alias gap found during the product-visible-duplicates fix",
+    existingEntityId: "07c13be2-3ce3-4ad0-8326-9f7f458a07ef",
+    aliases: [{ alias: "Farabi University", aliasType: "common" }],
+    reason:
+      "This entity has TWO live universities rows (a known, already-merged-at-entity-level duplicate pair — see lib/universities/canonical.ts). The losing row's own declared name is \"Farabi University (former Al - Farabi Kazakh National University)\"; now that the losing row is excluded from search/browse results, its name needs to survive as a searchable alias of the winning row (\"Al-Farabi Kazakh National University\") instead, or a student searching that form finds nothing. Had zero aliases before this fix.",
+  },
+  {
+    label: "University of Warwick — alias gap found during the product-visible-duplicates fix",
+    existingEntityId: "f1d72d7c-98ae-43a1-908f-9b8cc209cd3a",
+    aliases: [{ alias: "The University of Warwick", aliasType: "common" }],
+    reason:
+      "Same mechanism as Al-Farabi above: the losing row's name (\"The University of Warwick\") needs to survive as an alias of the winner (\"University of Warwick\") now that the losing row is excluded from results. Had zero aliases before this fix.",
+  },
 ];
 
 async function main(): Promise<void> {

@@ -6,6 +6,7 @@ import { UniversityCard } from "@/features/universities/university-card";
 import { SUPPORTED_COUNTRIES } from "@/lib/data/country-geo";
 import { regionById } from "@/lib/data/regions";
 import { searchUniversityRows } from "@/lib/universities/alias-search";
+import { getSupersededUniversityIds } from "@/lib/universities/canonical";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/oryn/page-header";
@@ -33,12 +34,22 @@ export default async function UniversitiesPage({
   // the query never runs for a state that can only ever be empty.
   const scopedCountries = country ? [country] : region ? (region.countries.length > 0 ? region.countries : ["__no_countries_in_region__"]) : null;
 
+  // A known-duplicate row (both sides of an already-merged canonical identity, e.g. "UCL" and
+  // "University College London") must never independently surface as its own card — see
+  // lib/universities/canonical.ts. Applied to both the browse query and the country-count
+  // query, so neither shows a duplicate card nor an inflated per-country count.
+  const supersededIds = getSupersededUniversityIds();
+
   let browseQuery = supabase.from("universities").select("*").order("name", { ascending: true }).limit(RESULT_LIMIT);
   if (scopedCountries) browseQuery = browseQuery.in("country", scopedCountries);
+  if (supersededIds.length > 0) browseQuery = browseQuery.not("id", "in", `(${supersededIds.join(",")})`);
+
+  let countriesQuery = supabase.from("universities").select("country");
+  if (supersededIds.length > 0) countriesQuery = countriesQuery.not("id", "in", `(${supersededIds.join(",")})`);
 
   const [universitiesRes, allCountriesRes, targetsRes] = await Promise.all([
     q ? Promise.resolve(null) : browseQuery,
-    supabase.from("universities").select("country"),
+    countriesQuery,
     supabase.from("target_universities").select("university_id").eq("user_id", session.userId!),
   ]);
 
