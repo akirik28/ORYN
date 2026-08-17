@@ -95,7 +95,7 @@ export function SuggestInput({
             <li key={suggestion} role="option" aria-selected={index === highlightedIndex}>
               <button
                 type="button"
-                className={`block w-full px-3 py-1.5 text-left text-sm hover:bg-muted ${index === highlightedIndex ? "bg-muted" : ""}`}
+                className={`block w-full px-3 py-1.5 text-left text-sm hover:bg-brand-primary-subtle ${index === highlightedIndex ? "bg-brand-primary-subtle" : ""}`}
                 onMouseDown={(e) => e.preventDefault()}
                 onMouseEnter={() => setHighlightedIndex(index)}
                 onClick={() => select(suggestion)}
