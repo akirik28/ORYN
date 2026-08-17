@@ -6,7 +6,7 @@ audit that identified the gaps; this file is how ORYN closes them without loweri
 standards.
 
 Founder-facing record for this phase: Google Drive doc **"ORYN — Verified Data Acquisition:
-Architecture, Pilot & Coverage"**, ID `1_fR35JLJhi3iZIQd3WPstON000iutnICGSRgYmExm40`, in the
+Architecture, Pilot & Coverage"**, ID `1nsd14SDhzysW66n0v_nAHd8_hyergnu5qbgyPHeujCM`, in the
 Drive `ORYN` folder. That document is the living implementation/coverage record; the audit doc
 (`1SeLGD4y8Rj4twWpZWeMj5fP_OIEahlwhTNBCtYubVLA`) stays the stable record of the audit itself.
 They are split deliberately: the Drive connector cannot edit a document body in place, so every

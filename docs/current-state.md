@@ -15,7 +15,7 @@ founder-blocked items (21–24) were added to `founder-blocked-backlog.md`.
 tests (578/578 passing). Engineering detail:
 [verified-data-acquisition.md](./verified-data-acquisition.md). Founder-facing record: Drive doc
 **"ORYN — Verified Data Acquisition: Architecture, Pilot & Coverage"**
-(`1_fR35JLJhi3iZIQd3WPstON000iutnICGSRgYmExm40`). Nothing was written to the database — the
+(`1nsd14SDhzysW66n0v_nAHd8_hyergnu5qbgyPHeujCM`). Nothing was written to the database — the
 import path is implemented and gated on `SUPABASE_SECRET_KEY`.
 
 **Correction (same day)**: credentials arrived and the pipeline ran live. A mid-session claim
