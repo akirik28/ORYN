@@ -10,6 +10,14 @@ is tracked in the Drive doc **"ORYN University & Opportunity Enrichment — Cano
 now stale (it still reports 21 universities; live is 1,010, with 11 opportunities). Four new
 founder-blocked items (21–24) were added to `founder-blocked-backlog.md`.
 
+**Phase 2 (same day, commit `0953d67`)**: the verified data-acquisition architecture landed —
+`lib/acquisition/*`, a 30-university / 23-country pilot fixture, migration 0042, and 123 new
+tests (578/578 passing). Engineering detail:
+[verified-data-acquisition.md](./verified-data-acquisition.md). Founder-facing record: Drive doc
+**"ORYN — Verified Data Acquisition: Architecture, Pilot & Coverage"**
+(`1_fR35JLJhi3iZIQd3WPstON000iutnICGSRgYmExm40`). Nothing was written to the database — the
+import path is implemented and gated on `SUPABASE_SECRET_KEY`, which is still empty.
+
 **Update — 2026-08-16, founder away**: four further autonomous passes landed after this
 file was written — CI, moderation, realtime messaging, rate limiting, an open-redirect
 fix, and 230 automated tests (up from 113). Start at `docs/founder-blocked-backlog.md`

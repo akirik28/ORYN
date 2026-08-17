@@ -5,9 +5,13 @@ Phase 2 of the Cialfo data-gap work. Companion to
 audit that identified the gaps; this file is how ORYN closes them without lowering its data
 standards.
 
-Founder-facing record: Google Drive doc **"ORYN — Cialfo Public Intelligence & Data Gap
-Audit"** (see the audit doc for the current file ID — it changes on every update, because the
-Drive connector cannot edit a document body in place).
+Founder-facing record for this phase: Google Drive doc **"ORYN — Verified Data Acquisition:
+Architecture, Pilot & Coverage"**, ID `1_fR35JLJhi3iZIQd3WPstON000iutnICGSRgYmExm40`, in the
+Drive `ORYN` folder. That document is the living implementation/coverage record; the audit doc
+(`1SeLGD4y8Rj4twWpZWeMj5fP_OIEahlwhTNBCtYubVLA`) stays the stable record of the audit itself.
+They are split deliberately: the Drive connector cannot edit a document body in place, so every
+update mints a new file ID — keeping the frequently-updated coverage record separate stops that
+churn from invalidating references to the audit. Search by title, not ID.
 
 ---
 
