@@ -228,8 +228,9 @@ picks the admissions page or returns null (never a guess) → `application_syste
 when a known portal name (Common App/UCAS/Parcoursup/Studielink/uni-assist/ÖSYM-YKS/Coalition)
 appears verbatim in the fetched page content.
 
-**Two real scoring bugs found and fixed by actually reading the live output, not just trusting
-"a URL was found":**
+**Three real scoring bugs found and fixed by actually reading the live output, not just
+trusting "a value was found" — every one caught between an apply and the next batch, never
+left for a later session to discover:**
 1. First 3-university smoke test resolved Aarhus University to a **Master's-only** admissions
    page (`masters.au.dk/...`) — wrong audience for ORYN's high-school users. Fixed with an
    explicit graduate/PhD-level penalty; re-verified live (now resolves to `bachelor.au.dk`).
@@ -242,21 +243,32 @@ appears verbatim in the fetched page content.
    department-subdomain page) directly in the database; the other 27 were investigated and
    confirmed genuine (2 initially flagged by the audit heuristic — Ajou, Aston — turned out to
    be correct pages the heuristic's simpler regex just didn't recognize).
+3. A 150-university batch tagged **Dublin City University** (Ireland) `application_system =
+   "ÖSYM/YKS"` (Turkey's national exam) — its own page describes accepting the Turkish "Lise
+   Diplomasi + YKS" qualification as one of many recognized foreign quals, which is a
+   different fact from DCU using that system itself. Fixed by gating every country-specific
+   system (Parcoursup/Studielink/uni-assist/ÖSYM-YKS) behind a same-country match between the
+   institution and the system's home country (`lib/acquisition/normalize.ts`'s `sameCountry`,
+   so `Türkiye`/`Turkey` aliasing works). Common App/UCAS/Coalition stay ungated — broad
+   multi-country portals, no demonstrated bug there. Reverted DCU's value; re-verified against
+   the real live DCU page text (not just the unit test).
 
-**Known, accepted limitation, not chased further this session:** a handful of the 27 kept
-results point at a real, on-topic, on-domain admissions page that is narrower than ideal
-(a specific institute/department/program's admissions page rather than the university-wide
-one — e.g. Alexandria University resolved to its Public Health institute's admission page,
-Bologna to Medicine & Surgery's). These are honestly sourced and about the right topic at the
-right institution, just not perfectly scoped — the kind of judgment call that needs AI-level
-page-purpose understanding to fully close, which is exactly the piece blocked on Anthropic
-credits. Not a fabrication risk, disclosed rather than silently accepted as perfect.
+**Known, accepted limitation, not chased further this session:** a handful of the kept
+`admissions_url` results point at a real, on-topic, on-domain admissions page that is narrower
+than ideal (a specific institute/department/program's admissions page rather than the
+university-wide one — e.g. Alexandria University resolved to its Public Health institute's
+admission page, Bologna to Medicine & Surgery's, a few others to a specific news bulletin
+about that cycle's admission scores/seats rather than a general how-to-apply hub). These are
+honestly sourced and about the right topic at the right institution, just not perfectly
+scoped — the kind of judgment call that needs AI-level page-purpose understanding to fully
+close, which is exactly the piece blocked on Anthropic credits. Not a fabrication risk,
+disclosed rather than silently accepted as perfect.
 
-**Coverage after two applied batches** (40 + up to 150, second batch may still be running —
-check `npm run report:universities`'s "admissions URL" line for the current figure): every
-write is `fill_if_null`, re-checked immediately before writing (not just at selection time).
-`--limit` defaults to 25 deliberately — Tavily is a paid API, scale-up should stay deliberate
-rather than a single 1010-university run.
+**Coverage after two applied batches** (40 + 150 universities): `admissions_url` 122/1010
+(12.1%), `application_system` 25/1010 (2.5%, one DCU row reverted). Every write is
+`fill_if_null`, re-checked immediately before writing (not just at selection time). `--limit`
+defaults to 25 deliberately — Tavily is a paid API, scale-up should stay deliberate rather
+than a single 1010-university run.
 
 ## Phase 8 — canonical entity registry quality: two real findings closed
 
