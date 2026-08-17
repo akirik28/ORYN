@@ -31,6 +31,8 @@
  *   npm run acquire:admissions -- --limit 25                # dry run, prints what it found
  *   npm run acquire:admissions -- --limit 25 --apply         # writes
  *   npm run acquire:admissions -- --limit 25 --out path.json # also saves the reviewable batch
+ *   npm run acquire:admissions -- --apply-from path.json     # apply a previously saved batch,
+ *                                                             # no new Tavily calls at all
  *
  * Tavily is a paid API — --limit defaults conservatively (25) rather than defaulting to the
  * full spine. Scale up deliberately once the classification quality on a small batch looks
@@ -113,6 +115,8 @@ async function main(): Promise<void> {
   const limit = limitIndex >= 0 && args[limitIndex + 1] ? Number(args[limitIndex + 1]) : 25;
   const outIndex = args.indexOf("--out");
   const outPath = outIndex >= 0 ? args[outIndex + 1] : null;
+  const applyFromIndex = args.indexOf("--apply-from");
+  const applyFromPath = applyFromIndex >= 0 ? args[applyFromIndex + 1] : null;
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const secretKey = process.env.SUPABASE_SECRET_KEY;
@@ -122,6 +126,20 @@ async function main(): Promise<void> {
     process.exitCode = 1;
     return;
   }
+
+  if (applyFromPath) {
+    // Resume path: apply a batch a prior run already paid Tavily for and saved via --out,
+    // without spending anything new. Exists because the apply loop below can be interrupted
+    // by a transient network failure partway through a large batch — re-running the full
+    // acquisition would re-query Tavily for the same universities just to reproduce facts
+    // already sitting on disk.
+    const { readFileSync } = await import("node:fs");
+    const saved = JSON.parse(readFileSync(applyFromPath, "utf-8")) as { facts: AcquiredAdmissionsFact[] };
+    console.log(`Loaded ${saved.facts.length} fact(s) from ${applyFromPath} (no new Tavily calls).`);
+    await applyFacts(url, secretKey, saved.facts);
+    return;
+  }
+
   if (!tavilyKey) {
     console.error("Missing TAVILY_API_KEY — see API_SETUP.md. This pass needs it (no fallback source for admissions/application-system discovery this session).");
     process.exitCode = 1;
@@ -245,34 +263,53 @@ async function main(): Promise<void> {
     return;
   }
 
+  await applyFacts(url, secretKey, facts);
+}
+
+/**
+ * fill_if_null, re-checked at write time (not just whatever selected the candidate list) —
+ * a same-run admissions_url write is what makes the corresponding application_system write
+ * for the SAME university need this, and a concurrent session could race either one.
+ *
+ * Each fact's network calls are individually try/caught: a large batch (hundreds of facts,
+ * two REST round trips each) WILL hit an occasional transient `fetch failed`, and one flaky
+ * request must not abort the whole run and strand every fact after it unwritten. Real
+ * incident this exact bug caused: a 350-candidate/50-fact batch died on fact-partway-through
+ * with an uncaught "fetch failed", exiting silently with the rest of the batch never
+ * attempted — recoverable only because --out had saved the facts first (see --apply-from).
+ */
+async function applyFacts(supabaseUrl: string, secretKey: string, facts: AcquiredAdmissionsFact[]): Promise<void> {
   console.log(`\nApplying ${facts.length} fact(s)...`);
   let written = 0;
+  let failed = 0;
   for (const fact of facts) {
-    // fill_if_null, re-checked at write time (not just at read time above) — this run's own
-    // earlier admissions_url write for the SAME university is what would make a same-run
-    // application_system write need this: without the re-check, two facts for one
-    // university in one run could not otherwise race, but a concurrent session could.
-    const probe = await fetch(`${url}/rest/v1/universities?id=eq.${fact.universityId}&select=${fact.field}`, {
-      headers: { apikey: secretKey, Authorization: `Bearer ${secretKey}` },
-    });
-    const probeBody = (await probe.json().catch(() => [])) as { [k: string]: unknown }[];
-    const current = probeBody[0]?.[fact.field];
-    if (current !== null && current !== undefined) {
-      console.log(`  skip_human_verified ${fact.universityName}/${fact.field}: already "${String(current)}".`);
-      continue;
+    try {
+      const probe = await fetch(`${supabaseUrl}/rest/v1/universities?id=eq.${fact.universityId}&select=${fact.field}`, {
+        headers: { apikey: secretKey, Authorization: `Bearer ${secretKey}` },
+      });
+      const probeBody = (await probe.json().catch(() => [])) as { [k: string]: unknown }[];
+      const current = probeBody[0]?.[fact.field];
+      if (current !== null && current !== undefined) {
+        console.log(`  skip_human_verified ${fact.universityName}/${fact.field}: already "${String(current)}".`);
+        continue;
+      }
+      const patch = await fetch(`${supabaseUrl}/rest/v1/universities?id=eq.${fact.universityId}`, {
+        method: "PATCH",
+        headers: { apikey: secretKey, Authorization: `Bearer ${secretKey}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+        body: JSON.stringify({ [fact.field]: fact.value, last_checked_at: fact.retrievedAt, last_changed_at: fact.retrievedAt }),
+      });
+      if (!patch.ok) {
+        console.error(`  FAILED ${fact.universityName}/${fact.field}: HTTP ${patch.status} ${await patch.text().catch(() => "")}`);
+        failed += 1;
+        continue;
+      }
+      written += 1;
+    } catch (requestError) {
+      console.error(`  FAILED ${fact.universityName}/${fact.field}: ${requestError instanceof Error ? requestError.message : requestError} (continuing)`);
+      failed += 1;
     }
-    const patch = await fetch(`${url}/rest/v1/universities?id=eq.${fact.universityId}`, {
-      method: "PATCH",
-      headers: { apikey: secretKey, Authorization: `Bearer ${secretKey}`, "Content-Type": "application/json", Prefer: "return=minimal" },
-      body: JSON.stringify({ [fact.field]: fact.value, last_checked_at: fact.retrievedAt, last_changed_at: fact.retrievedAt }),
-    });
-    if (!patch.ok) {
-      console.error(`  FAILED ${fact.universityName}/${fact.field}: HTTP ${patch.status} ${await patch.text().catch(() => "")}`);
-      continue;
-    }
-    written += 1;
   }
-  console.log(`Wrote ${written}/${facts.length} fact(s).`);
+  console.log(`Wrote ${written}/${facts.length} fact(s)${failed > 0 ? ` (${failed} failed — safe to re-run the same batch, fill_if_null skips what already wrote)` : ""}.`);
 }
 
 main().catch((error: unknown) => {
