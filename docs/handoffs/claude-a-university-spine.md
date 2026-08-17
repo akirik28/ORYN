@@ -15,8 +15,12 @@ current state, not as a session log.
 - Branch: `oryn/university-intelligence-spine`, pushed to origin, tracking. Base: `main` @
   `b92c72f` (the tip when this session started; contains the Phase 2 verified-acquisition
   architecture and the live full-spine run from the prior session).
-- Latest commit on this branch: `d0f276c` — 8 confirmed duplicate university identities
-  merged.
+- Latest commit on this branch: `1931c54`. Commits this session, in order: `d0f276c` (8
+  confirmed duplicate identities merged), `e883c8c`/this file, `2005846` (OpenAlex circuit
+  breaker), `b223373`/`24ce238` (admissions acquisition + a live-caught false-positive fix),
+  `9aef391` (full-spine fixture regenerated + applied), `4450b60` (73 evidence-less
+  official_verified entities downgraded), `1931c54` (entities-audit.ts 1000-row truncation
+  fix).
 - `SUPABASE_SECRET_KEY` is live and working this session (`check:integrations`: Supabase +
   secret key OK, Tavily OK). **No Supabase MCP and no linked CLI/direct-Postgres access in
   this session** — DDL (migrations) cannot be applied by me; only PostgREST reads/writes and
@@ -183,17 +187,105 @@ the *loser* ids in that table before migration 0043 lands and the read-path filt
 they'd currently still be visible (the loser row isn't hidden yet) — not a problem, just not
 yet deduplicated either.
 
-## Next (in progress / queued this session)
+## Phase 3 — student population: Wikidata index is exhausted, real finding, not a bug
 
-1. Phase 3 — `total_students` coverage push (`enrich:student-counts`, Wikidata-sourced,
-   already proven safe) — founder's explicit top ask ("how many students study at each
-   university"). Starting now.
-2. Phase 7 — re-run `acquire:universities -- --from-db` for the remaining `website_url`/
-   `coordinates` gap now that credentials are live (last full-spine run predates this
-   session).
-3. Phase 4 — `admissions_url`/`application_system` via Tavily-only deterministic
-   domain/keyword classification (Anthropic is credit-blocked, so no AI-structured
-   extraction this pass — architecture note below).
+Ran `enrich:student-counts -- --limit 1000` (covers every remaining gap). Result: **1 new row**
+(University of Westminster), 6 rejected as stale (pre-2015, correctly not written), **712/719
+genuinely unresolved** — no Wikidata P2196 statement with an acceptable domain+date exists for
+them at all, not a matching/domain-rule problem. `total_students` is now 284/1010.
+
+This is the honest ceiling for a Wikidata-index approach: the well-documented (mostly
+Western/large) institutions were captured in earlier passes; the long tail (smaller/regional
+institutions across the QS 1000) mostly isn't on Wikidata with a sourced figure. Closing this
+further needs either (a) `ANTHROPIC_API_KEY` credits restored, to build the Tavily-search +
+AI-extract path AGENTS.md Phase 3 actually describes for this, reading each institution's own
+"facts and figures" page — the architecturally correct path — or (b) loosening the `MIN_ACCEPT_YEAR
+= 2015` staleness filter or the domain allow-list in `source-authority.ts`'s `population`
+class, neither attempted here since both are deliberate existing quality bars, not bugs.
+**Did not build a numeric-extraction-without-AI fallback** — unlike a URL (right domain or
+wrong, binary and safe to score), a wrong digit silently accepted as a student count is a much
+worse failure mode than finding nothing, and Tavily-only text-regex extraction of a NUMBER is
+exactly that risk. Recommend this stays blocked on (a) rather than a workaround.
+
+Investigated `undergraduate_students`/`postgraduate_students`/`international_students`/
+`faculty_count`/`student_faculty_ratio` (0% each): no reliable, separately-populated Wikidata
+property found for undergrad-only/grad-only splits, and the nearest faculty-adjacent property
+(P1128 "employees") would overstate faculty by including non-academic staff — using it would
+be exactly the kind of fabrication-by-overstatement this product's rules forbid. Left honestly
+at 0%, not attempted with a weaker signal.
+
+## Phase 4 — admissions_url / application_system: built, live-tested, one real bug caught and fixed before scale-up
+
+Tavily-only (no AI — Anthropic credit-blocked). `scripts/acquire-admissions-facts.ts` +
+`lib/acquisition/admissions.ts` (16 unit tests). Domain-restricted Tavily search
+(`include_domains` = the institution's own already-verified `website_url` host, so every
+candidate is `official_primary`-tier by construction) → deterministic URL/title keyword score
+picks the admissions page or returns null (never a guess) → `application_system` only ever set
+when a known portal name (Common App/UCAS/Parcoursup/Studielink/uni-assist/ÖSYM-YKS/Coalition)
+appears verbatim in the fetched page content.
+
+**Two real scoring bugs found and fixed by actually reading the live output, not just trusting
+"a URL was found":**
+1. First 3-university smoke test resolved Aarhus University to a **Master's-only** admissions
+   page (`masters.au.dk/...`) — wrong audience for ORYN's high-school users. Fixed with an
+   explicit graduate/PhD-level penalty; re-verified live (now resolves to `bachelor.au.dk`).
+2. A 40-university batch resolved **Al Ain University** to a 2019 **news article** about a
+   research-competition win — contained neither "admission" nor "apply" anywhere, cleared the
+   old threshold purely on the undergrad/bachelor bonus. Fixed by making a real admission/apply
+   signal a hard requirement before any other bonus counts (was previously just the
+   highest-weighted signal, not a gate). Audited all 29 URLs the pre-fix batch had already
+   written, found and reverted 2 bad ones (Al Ain; Aristotle University of Thessaloniki, a
+   department-subdomain page) directly in the database; the other 27 were investigated and
+   confirmed genuine (2 initially flagged by the audit heuristic — Ajou, Aston — turned out to
+   be correct pages the heuristic's simpler regex just didn't recognize).
+
+**Known, accepted limitation, not chased further this session:** a handful of the 27 kept
+results point at a real, on-topic, on-domain admissions page that is narrower than ideal
+(a specific institute/department/program's admissions page rather than the university-wide
+one — e.g. Alexandria University resolved to its Public Health institute's admission page,
+Bologna to Medicine & Surgery's). These are honestly sourced and about the right topic at the
+right institution, just not perfectly scoped — the kind of judgment call that needs AI-level
+page-purpose understanding to fully close, which is exactly the piece blocked on Anthropic
+credits. Not a fabrication risk, disclosed rather than silently accepted as perfect.
+
+**Coverage after two applied batches** (40 + up to 150, second batch may still be running —
+check `npm run report:universities`'s "admissions URL" line for the current figure): every
+write is `fill_if_null`, re-checked immediately before writing (not just at selection time).
+`--limit` defaults to 25 deliberately — Tavily is a paid API, scale-up should stay deliberate
+rather than a single 1010-university run.
+
+## Phase 8 — canonical entity registry quality: two real findings closed
+
+1. **73/73 `official_verified` university entities had zero `entity_evidence` rows** —
+   confirms founder-blocked-backlog.md item 20's finding still holds, for the entire set, not
+   a few stragglers. `scripts/verification-state-audit.ts` downgrades honestly
+   (`official_verified` → `source_verified`) in one direction only, never upgrades. Applied:
+   all 73 downgraded, including 4 with a real linked `universities` row (3 Phase 2 merge
+   winners — Al-Farabi, UTS, HKUST — plus the standalone KFUPM entity). Re-run confirms 0
+   remain. General-purpose (`--entity-type` flag), scoped to `university` this session.
+2. **`scripts/entities-audit.ts` (pre-existing, not written this session) was silently
+   truncating its own read of `canonical_entities` at 1000 rows** — the exact bug class
+   `lib/acquisition/paginate.ts`'s own header documents at length, just never applied to this
+   particular script. The registry passed 1000 rows at some point this session (now 1160);
+   every audit run since then was silently over an arbitrary 1000-row slice. Fixed (paginated
+   `canonical_entities` and `entity_aliases` reads, mirrors `university-data-report.ts`'s own
+   `selectAll` pattern). Live effect: `POSSIBLE_DUPLICATE` findings went 231 → 296 once the
+   other 160 entities were actually included. Not investigated further this session (296 is
+   the Levenshtein-fuzzy, cross-entity-type bucket that's explicitly "review, don't auto-act
+   on" by the audit's own design — far beyond this session's scope to hand-verify each one).
+
+The 43 exact-name + 28 name-variant orphan pairs from the Phase 2 dossier above are very
+likely a large fraction of both the pre-fix-73 and the 296 POSSIBLE_DUPLICATE set — not
+independently re-investigated as a third thing, just noted as probably-overlapping.
+
+## Next (queued, not yet started this session)
+
+1. Phase 7 — external ID completeness: the full-spine re-acquisition (see fixture-regeneration
+   commit) covered the ROR/Wikidata/GRID/ISNI/CROSSREF_FUNDER side already this session
+   (3,950 ids, idempotent). Remaining: check for the SAME external ID mapped to multiple
+   *live* canonical entities (a guard exists at import time; a standalone audit query across
+   the registry hasn't been run) and look at whether any of the 43+28 orphan pairs would
+   resolve automatically once given a real external id.
 4. Phase 8 — the broader canonical-entity-registry quality audit (item 20's 78-entity
    evidence question, orphan alias cleanup) — likely subsumes most of the 43+28 pairs above.
 5. Phase 5/6/9/10/11 as time allows; OpenAlex retry once its budget resets (~9.5h out from
