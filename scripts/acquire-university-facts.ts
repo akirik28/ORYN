@@ -58,10 +58,24 @@ const USER_AGENT = "ORYN-data-acquisition/1.0 (+https://github.com/akirik28/ORYN
  * summary, which reads identically to "this source has nothing for these institutions".
  * Missing data and a broken source are different facts and are now reported differently.
  */
-const sourceOutcomes: Record<string, { ok: number; rateLimited: number; failed: number }> = {
-  ror: { ok: 0, rateLimited: 0, failed: 0 },
-  openalex: { ok: 0, rateLimited: 0, failed: 0 },
+const sourceOutcomes: Record<string, { ok: number; rateLimited: number; failed: number; skipped: number }> = {
+  ror: { ok: 0, rateLimited: 0, failed: 0, skipped: 0 },
+  openalex: { ok: 0, rateLimited: 0, failed: 0, skipped: 0 },
 };
+
+/**
+ * Circuit breaker for OpenAlex specifically. A plain per-request 429 backoff (below) is fine
+ * for a transient limit, but OpenAlex has been observed returning a *budget* exhaustion
+ * (HTTP 429, JSON body `{"error":"Rate limit exceeded","message":"Insufficient budget...",
+ * "retryAfter":34062}` — i.e. hours, not seconds) that will not clear mid-run. Without this,
+ * a 1,010-university run wastes ~2s/request re-discovering the same fact ~1,010 times. After
+ * OPENALEX_CIRCUIT_THRESHOLD consecutive non-ok responses, stop calling it for the rest of
+ * this run and say so once, loudly — research_topics_top5 is then correctly reported absent
+ * because the source was unavailable, never silently guessed or left unexplained.
+ */
+const OPENALEX_CIRCUIT_THRESHOLD = 3;
+let openAlexConsecutiveFailures = 0;
+let openAlexCircuitLogged = false;
 const DEFAULT_OUT = "supabase/fixtures/university-identity-pilot.json";
 
 /**
@@ -121,23 +135,52 @@ interface OpenAlexInstitution {
  * lookup cannot drift onto a different institution the way a second name search could.
  */
 async function fetchOpenAlexByRor(rorId: string): Promise<OpenAlexInstitution | null> {
+  if (openAlexConsecutiveFailures >= OPENALEX_CIRCUIT_THRESHOLD) {
+    if (!openAlexCircuitLogged) {
+      openAlexCircuitLogged = true;
+      console.log(
+        `\n  OpenAlex circuit breaker OPEN after ${OPENALEX_CIRCUIT_THRESHOLD} consecutive non-ok responses — skipping it for the rest of ` +
+          `this run instead of spending ~2s/request re-discovering the same outage. research_topics_top5 will be reported absent because the ` +
+          `source was unavailable, not because these institutions lack the data.\n`
+      );
+    }
+    sourceOutcomes.openalex.skipped += 1;
+    return null;
+  }
+
   const url = `https://api.openalex.org/institutions/${encodeURIComponent(rorId)}?mailto=oryn-data@oryn.app`;
   const response = await fetch(url, { headers: { "User-Agent": USER_AGENT } }).catch(() => null);
   if (!response) {
     sourceOutcomes.openalex.failed += 1;
+    openAlexConsecutiveFailures += 1;
     return null;
   }
   if (response.status === 429) {
     // Being rate limited is a fact about the run, not about the institution. Slow down so a
     // transient limit does not silently erase a whole field from the output.
     sourceOutcomes.openalex.rateLimited += 1;
+    openAlexConsecutiveFailures += 1;
+    // Best-effort: OpenAlex has been observed returning a structured budget-exhaustion body
+    // (retryAfter in seconds) rather than a plain 429 — surface it once so a human knows this
+    // is hours, not the few seconds a generic rate limit would suggest.
+    if (openAlexConsecutiveFailures === 1) {
+      const body = (await response
+        .clone()
+        .json()
+        .catch(() => null)) as { message?: string; retryAfter?: number } | null;
+      if (body?.retryAfter) {
+        console.log(`  OpenAlex: ${body.message ?? "rate limited"} (retryAfter=${body.retryAfter}s ≈ ${(body.retryAfter / 3600).toFixed(1)}h)`);
+      }
+    }
     await sleep(2000);
     return null;
   }
   if (!response.ok) {
     sourceOutcomes.openalex.failed += 1;
+    openAlexConsecutiveFailures += 1;
     return null;
   }
+  openAlexConsecutiveFailures = 0;
   sourceOutcomes.openalex.ok += 1;
   const body = (await response.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body) return null;
@@ -489,12 +532,12 @@ async function main(): Promise<void> {
 
   console.log(`\nSource outcomes:`);
   for (const [provider, o] of Object.entries(sourceOutcomes)) {
-    console.log(`  ${provider.padEnd(10)} ok=${o.ok} rate_limited=${o.rateLimited} failed=${o.failed}`);
+    console.log(`  ${provider.padEnd(10)} ok=${o.ok} rate_limited=${o.rateLimited} failed=${o.failed} skipped=${o.skipped}`);
   }
-  const degraded = Object.entries(sourceOutcomes).filter(([, o]) => o.ok === 0 && o.rateLimited + o.failed > 0);
+  const degraded = Object.entries(sourceOutcomes).filter(([, o]) => o.ok === 0 && o.rateLimited + o.failed + o.skipped > 0);
   for (const [provider, o] of degraded) {
     console.log(
-      `\n  WARNING: ${provider} returned no successful response in this run (rate_limited=${o.rateLimited}, failed=${o.failed}).\n` +
+      `\n  WARNING: ${provider} returned no successful response in this run (rate_limited=${o.rateLimited}, failed=${o.failed}, skipped=${o.skipped}).\n` +
         `  Fields sourced from it are ABSENT because the source was unavailable, not because the\n` +
         `  institutions lack the data. Re-run for those fields once the source recovers.`
     );
