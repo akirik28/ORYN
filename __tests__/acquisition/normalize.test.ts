@@ -57,14 +57,30 @@ describe("sameCountry", () => {
 });
 
 describe("countryFromIso2", () => {
-  test("resolves codes registries return into the name form we store", () => {
-    expect(countryFromIso2("TR")).toBe("Turkey");
-    expect(countryFromIso2("hk")).toBe("Hong Kong SAR");
+  test("resolves every assigned code, not just a hand-picked list", () => {
     expect(countryFromIso2("GB")).toBe("United Kingdom");
+    expect(countryFromIso2("US")).toBe("United States");
+    // Previously absent from a hand-maintained table, which made an incomplete lookup look
+    // like a country mismatch. Regression guard for that specific failure.
+    expect(countryFromIso2("KZ")).toBe("Kazakhstan");
+    expect(countryFromIso2("VN")).toBe("Vietnam");
+    expect(countryFromIso2("NG")).toBe("Nigeria");
   });
 
-  test("returns null for an unmapped or missing code rather than inventing one", () => {
+  test("resolved names still compare equal to the forms we store", () => {
+    expect(sameCountry("Turkey", countryFromIso2("TR")!)).toBe(true);
+    expect(sameCountry("Hong Kong SAR", countryFromIso2("HK")!)).toBe(true);
+    expect(sameCountry("South Korea", countryFromIso2("KR")!)).toBe(true);
+    expect(sameCountry("Mainland China", countryFromIso2("CN")!)).toBe(true);
+  });
+
+  test("returns null for an unassigned, malformed or missing code rather than inventing one", () => {
+    // CLDR names these, so they are not filtered by fallback:"none" alone.
     expect(countryFromIso2("ZZ")).toBeNull();
+    expect(countryFromIso2("XA")).toBeNull();
+    expect(countryFromIso2("QQ")).toBeNull();
+    expect(countryFromIso2("XYZ")).toBeNull();
+    expect(countryFromIso2("")).toBeNull();
     expect(countryFromIso2(null)).toBeNull();
   });
 });

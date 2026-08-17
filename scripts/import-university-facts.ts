@@ -36,7 +36,7 @@ import { readFileSync } from "node:fs";
 
 import { validateFixture, type AcquiredFact, type AcquiredUniversity } from "../lib/acquisition/fixture";
 import { decideWrite, mutatesValue, type FactVersion, type WriteAction } from "../lib/acquisition/precedence";
-import { nameKey, sameCountry } from "../lib/acquisition/normalize";
+import { nameKey, nameVariants, sameCountry } from "../lib/acquisition/normalize";
 
 export {};
 
@@ -96,10 +96,18 @@ interface LocalUniRow {
   country: string;
   city: string | null;
   website_url: string | null;
-  admissions_url: string | null;
-  application_system: string | null;
   canonical_entity_id: string | null;
+  /** Alias strings from `entity_aliases` for this row's canonical entity, loaded once up front. */
+  aliases?: string[];
+  /** Optional because their existence depends on migration 0042 being applied. */
+  admissions_url?: string | null;
+  application_system?: string | null;
 }
+
+/** Columns added by migration 0042. The importer must run before that migration is applied —
+ * otherwise the only way to import anything is to apply a migration first, which is a worse
+ * coupling than degrading gracefully and refusing just the facts that need the new columns. */
+const MIGRATION_0042_COLUMNS = ["admissions_url", "application_system"] as const;
 
 /**
  * Resolve one fixture entry to a university id.
@@ -142,8 +150,30 @@ async function resolveUniversity(
     return { id: null, reason: `No university row in ${entry.declaredCountry} to match "${entry.declaredName}" against.` };
   }
 
-  const exact = inCountry.filter((r) => nameKey(r.name) === target || nameKey(r.name) === rorTarget);
+  // Match against every name form ROR publishes, not just the display name. Those forms are
+  // authoritative identity data (localised labels, official alternates, acronyms), and our own
+  // rows carry ranking-table spellings that often differ — "University of Michigan" here vs
+  // "University of Michigan-Ann Arbor" in the QS-derived name. Country agreement is still
+  // required, so widening the name evidence does not widen what counts as a match.
+  const candidateKeys = new Set(
+    [entry.declaredName, entry.rorDisplayName, ...entry.aliases, ...entry.acronyms].flatMap((n) => nameVariants(n)).map(nameKey).filter(Boolean)
+  );
+  void target;
+  void rorTarget;
+
+  const exact = inCountry.filter((r) => nameVariants(r.name).map(nameKey).some((k) => candidateKeys.has(k)));
   if (exact.length === 1) return { id: exact[0].id, method: "name+country" };
+  if (exact.length === 0) {
+    // Fall back to the canonical registry's own aliases. This is the designed remedy for a
+    // name our row spells differently from every form the registry publishes — a human
+    // confirms it once, stores the alias, and every later import resolves automatically
+    // instead of the matcher being loosened for everyone.
+    const byAlias = inCountry.filter((r) => (r.aliases ?? []).flatMap((a) => nameVariants(a)).map(nameKey).some((k) => candidateKeys.has(k)));
+    if (byAlias.length === 1) return { id: byAlias[0].id, method: "entity_aliases" };
+    if (byAlias.length > 1) {
+      return { id: null, reason: `"${entry.declaredName}" matches ${byAlias.length} rows in ${entry.declaredCountry} via stored aliases; ambiguous.` };
+    }
+  }
   if (exact.length > 1) {
     return {
       id: null,
@@ -154,13 +184,17 @@ async function resolveUniversity(
   return { id: null, reason: `No name match for "${entry.declaredName}" (or ROR name "${entry.rorDisplayName}") among ${inCountry.length} rows in ${entry.declaredCountry}.` };
 }
 
-/** Existing stored version of a fact, for precedence comparison. */
-async function existingVersion(rest: Rest, uni: LocalUniRow, fact: AcquiredFact): Promise<FactVersion | null> {
+/** Existing stored version of a fact, for precedence comparison. `rowId` is set for metric
+ * rows so an update can PATCH that exact row rather than relying on an upsert arbiter — the
+ * natural-key unique index lives in migration 0042, which may not be applied yet, and without
+ * it an insert-with-merge-duplicates silently appends a duplicate instead of updating. */
+async function existingVersion(rest: Rest, uni: LocalUniRow, fact: AcquiredFact): Promise<(FactVersion & { rowId?: string }) | null> {
   if (METRIC_FIELDS.has(fact.field)) {
     const rows = (await restGet(
       rest,
-      `university_profile_metrics?select=value_numeric,value_text,stats_as_of,source_type,verified_at,notes&university_id=eq.${uni.id}&metric_code=eq.${encodeURIComponent(fact.field)}&scope=eq.${encodeURIComponent(fact.scope)}`
+      `university_profile_metrics?select=id,value_numeric,value_text,stats_as_of,source_type,verified_at,notes&university_id=eq.${uni.id}&metric_code=eq.${encodeURIComponent(fact.field)}&scope=eq.${encodeURIComponent(fact.scope)}`
     )) as {
+      id: string;
       value_numeric: number | null;
       value_text: string | null;
       stats_as_of: string | null;
@@ -172,6 +206,7 @@ async function existingVersion(rest: Rest, uni: LocalUniRow, fact: AcquiredFact)
     const row = rows[0];
     const year = row.stats_as_of ? Number(row.stats_as_of.match(/20\d\d/)?.[0] ?? Number.NaN) : Number.NaN;
     return {
+      rowId: row.id,
       value: row.value_numeric ?? row.value_text,
       sourceYear: Number.isFinite(year) ? year : null,
       tier: row.source_type === "official_primary" || row.source_type === "open_registry" ? "HIGH" : "MEDIUM",
@@ -246,11 +281,32 @@ async function main(): Promise<void> {
   const rest: Rest = { url, key };
   const fixture = raw as { universities: AcquiredUniversity[] };
 
-  const rows = (await restGet(
-    rest,
-    "universities?select=id,name,country,city,website_url,admissions_url,application_system,canonical_entity_id"
-  )) as LocalUniRow[];
-  console.log(`Loaded ${rows.length} existing universities.\n`);
+  const BASE_SELECT = "id,name,country,city,website_url,canonical_entity_id";
+  const probe = await fetch(`${url}/rest/v1/universities?select=${BASE_SELECT},${MIGRATION_0042_COLUMNS.join(",")}&limit=1`, {
+    headers: { apikey: key, Authorization: `Bearer ${key}` },
+  });
+  const missingColumns = probe.ok ? [] : [...MIGRATION_0042_COLUMNS];
+  const selectList = missingColumns.length > 0 ? BASE_SELECT : `${BASE_SELECT},${MIGRATION_0042_COLUMNS.join(",")}`;
+
+  const rows = (await restGet(rest, `universities?select=${selectList}`)) as LocalUniRow[];
+
+  // Load the registry's aliases in one pass and attach them, rather than a query per entry.
+  const aliasRows = (await restGet(rest, "entity_aliases?select=entity_id,alias")) as { entity_id: string; alias: string }[];
+  const aliasesByEntity = new Map<string, string[]>();
+  for (const a of aliasRows) {
+    const list = aliasesByEntity.get(a.entity_id) ?? [];
+    list.push(a.alias);
+    aliasesByEntity.set(a.entity_id, list);
+  }
+  for (const row of rows) {
+    row.aliases = row.canonical_entity_id ? (aliasesByEntity.get(row.canonical_entity_id) ?? []) : [];
+  }
+
+  console.log(`Loaded ${rows.length} existing universities and ${aliasRows.length} registry aliases.`);
+  if (missingColumns.length > 0) {
+    console.log(`Migration 0042 is NOT applied — ${missingColumns.join(", ")} absent. Facts targeting them will be skipped, not guessed.`);
+  }
+  console.log("");
 
   const plan: PlanEntry[] = [];
   let applied = 0;
@@ -281,6 +337,15 @@ async function main(): Promise<void> {
       }
 
       const isMetric = METRIC_FIELDS.has(fact.field);
+      if (!isMetric && (missingColumns as string[]).includes(fact.field)) {
+        plan.push({
+          declaredName: entry.declaredName,
+          field: fact.field,
+          action: "not_writable",
+          reason: "Target column does not exist yet — migration 0042 is not applied. Skipped rather than guessed.",
+        });
+        continue;
+      }
       if (!isMetric && !WRITABLE_UNIVERSITY_COLUMNS.has(fact.field)) {
         plan.push({ declaredName: entry.declaredName, field: fact.field, action: "not_writable", reason: "Field is not in the importer's writable allow-list." });
         continue;
@@ -313,28 +378,29 @@ async function main(): Promise<void> {
 
       if (isMetric) {
         const isNumeric = typeof fact.value === "number";
-        await restWrite(
-          rest,
-          "POST",
-          "university_profile_metrics",
-          {
-            university_id: uni.id,
-            metric_code: fact.field,
-            value_numeric: isNumeric ? fact.value : null,
-            value_text: isNumeric ? null : String(fact.value),
-            unit: isNumeric ? "count" : "text",
-            stats_as_of: fact.sourceAsOf,
-            scope: fact.scope,
-            precision_state: isNumeric ? "exact" : "category_only",
-            source_url: fact.sourceUrl,
-            source_type: fact.sourceType,
-            data_quality_flag: fact.verificationState,
-            notes: `acquisition-pipeline; ${fact.notes ?? ""}`.trim(),
-          },
-          // Natural key from migration 0042 — makes a re-run update in place instead of
-          // inserting a duplicate.
-          { Prefer: "return=minimal,resolution=merge-duplicates" }
-        );
+        const payload = {
+          university_id: uni.id,
+          metric_code: fact.field,
+          value_numeric: isNumeric ? fact.value : null,
+          value_text: isNumeric ? null : String(fact.value),
+          unit: isNumeric ? "count" : "text",
+          stats_as_of: fact.sourceAsOf,
+          scope: fact.scope,
+          precision_state: isNumeric ? "exact" : "category_only",
+          source_url: fact.sourceUrl,
+          source_type: fact.sourceType,
+          data_quality_flag: fact.verificationState,
+          notes: `acquisition-pipeline; ${fact.notes ?? ""}`.trim(),
+        };
+        // Explicit PATCH-or-POST rather than an upsert: the natural-key unique index that
+        // would make `resolution=merge-duplicates` work is in migration 0042, and until that
+        // is applied an upsert has no arbiter and appends a duplicate row instead of updating.
+        // Doing it this way is correct with or without the index.
+        if (existing?.rowId) {
+          await restWrite(rest, "PATCH", `university_profile_metrics?id=eq.${existing.rowId}`, payload);
+        } else {
+          await restWrite(rest, "POST", "university_profile_metrics", payload);
+        }
       } else {
         await restWrite(rest, "PATCH", `universities?id=eq.${uni.id}`, {
           [fact.field]: fact.value,

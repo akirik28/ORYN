@@ -13,7 +13,7 @@ const COUNTRY_ALIASES: Record<string, Set<string>> = {
   "united states": new Set(["united states of america", "united states", "usa", "us"]),
   "united kingdom": new Set(["united kingdom", "great britain", "uk"]),
   "hong kong sar": new Set(["hong kong", "hong kong sar", "hong kong sar china"]),
-  "macao sar": new Set(["macau", "macao", "macao sar"]),
+  "macao sar": new Set(["macau", "macao", "macao sar", "macao sar china"]),
   "south korea": new Set(["south korea", "republic of korea", "korea", "korea, republic of"]),
   czechia: new Set(["czechia", "czech republic"]),
   russia: new Set(["russia", "russian federation"]),
@@ -25,53 +25,38 @@ const COUNTRY_ALIASES: Record<string, Set<string>> = {
   "mainland china": new Set(["china", "mainland china", "people's republic of china"]),
 };
 
-/** ISO 3166-1 alpha-2 → the country name form we store, for the countries in the pilot.
- * Registries return codes; our rows store names, so a code has to be resolved to a name
- * before it can be compared at all. */
-const ISO2_TO_COUNTRY: Record<string, string> = {
-  TR: "Turkey",
-  NL: "Netherlands",
-  DE: "Germany",
-  GB: "United Kingdom",
-  CH: "Switzerland",
-  IT: "Italy",
-  FR: "France",
-  SE: "Sweden",
-  IE: "Ireland",
-  DK: "Denmark",
-  ES: "Spain",
-  CA: "Canada",
-  US: "United States",
-  SG: "Singapore",
-  JP: "Japan",
-  KR: "South Korea",
-  HK: "Hong Kong SAR",
-  AU: "Australia",
-  BR: "Brazil",
-  MX: "Mexico",
-  ZA: "South Africa",
-  IN: "India",
-  AE: "United Arab Emirates",
-  CN: "Mainland China",
-  BE: "Belgium",
-  AT: "Austria",
-  NO: "Norway",
-  FI: "Finland",
-  PT: "Portugal",
-  PL: "Poland",
-  NZ: "New Zealand",
-  CL: "Chile",
-  AR: "Argentina",
-  IL: "Israel",
-  SA: "Saudi Arabia",
-  MY: "Malaysia",
-  TH: "Thailand",
-  TW: "Taiwan",
-};
+
+/**
+ * ISO 3166-1 alpha-2 → English country name, via the runtime's own CLDR data.
+ *
+ * This replaced a hand-maintained lookup table. The table was not just tedious, it was
+ * actively harmful: a code it happened to omit (Kazakhstan, say) produced an *unresolvable
+ * country*, which the identity gate then correctly reported as a country mismatch — so an
+ * incomplete lookup table masqueraded as a data-quality refusal. `Intl.DisplayNames` covers
+ * every assigned code, so a genuine mismatch now means a genuine mismatch.
+ *
+ * Where CLDR's spelling differs from the form we store ("Türkiye" vs "Turkey", "Hong Kong SAR
+ * China" vs "Hong Kong SAR"), `sameCountry` bridges it via COUNTRY_ALIASES rather than this
+ * function second-guessing the standard.
+ */
+const REGION_NAMES = new Intl.DisplayNames(["en"], { type: "region", fallback: "none" });
+
+/** CLDR assigns names to codes that are not countries. "ZZ" resolves to "Unknown Region" and
+ * "XA"/"XB" to pseudo-locale placeholders, so `fallback: "none"` alone does not filter them —
+ * they have to be rejected by name, or an unknown region would sail through as a country. */
+const NON_COUNTRY_REGION_NAMES = new Set(["unknown region", "pseudo-accents", "pseudo-bidi"]);
 
 export function countryFromIso2(code: string | null | undefined): string | null {
   if (!code) return null;
-  return ISO2_TO_COUNTRY[code.toUpperCase()] ?? null;
+  const upper = code.trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(upper)) return null;
+  try {
+    const name = REGION_NAMES.of(upper);
+    if (!name || name === upper) return null;
+    return NON_COUNTRY_REGION_NAMES.has(name.toLowerCase()) ? null : name;
+  } catch {
+    return null;
+  }
 }
 
 /** Every accepted spelling of `country`, lowercased. */

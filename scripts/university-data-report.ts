@@ -102,17 +102,43 @@ async function main() {
   const { createClient } = await import("@supabase/supabase-js");
   const admin = createClient(url, secretKey, { auth: { autoRefreshToken: false, persistSession: false } });
 
-  const [{ data: universities, error: uniError }, { data: rankings }, { data: metrics }, { data: programs }] = await Promise.all([
-    admin.from("universities").select("id, country, city, website_url, admissions_url, application_system, institution_type, description, student_size, latitude"),
+  // Columns added by a migration that may not be applied yet are probed separately: a
+  // coverage report must not hard-fail just because a migration is pending, or it becomes
+  // useless in exactly the situation you most want to measure (before/after an import).
+  const PENDING_MIGRATION_COLUMNS = ["admissions_url", "application_system"] as const;
+  const BASE_COLUMNS = "id, country, city, website_url, institution_type, description, student_size, latitude";
+  const probe = await admin.from("universities").select(`${BASE_COLUMNS}, ${PENDING_MIGRATION_COLUMNS.join(", ")}`).limit(1);
+  const missingColumns = probe.error?.message.includes("does not exist") ? [...PENDING_MIGRATION_COLUMNS] : [];
+  const selectColumns = missingColumns.length > 0 ? BASE_COLUMNS : `${BASE_COLUMNS}, ${PENDING_MIGRATION_COLUMNS.join(", ")}`;
+
+  // A runtime-composed select string defeats supabase-js's literal-based type inference, so
+  // the row shape is declared here instead. The two probed columns are optional precisely
+  // because whether they exist depends on whether migration 0042 has been applied.
+  interface UniRow {
+    id: string;
+    country: string | null;
+    city: string | null;
+    website_url: string | null;
+    institution_type: string | null;
+    description: string | null;
+    student_size: number | null;
+    latitude: number | null;
+    admissions_url?: string | null;
+    application_system?: string | null;
+  }
+
+  const [{ data: universitiesRaw, error: uniError }, { data: rankings }, { data: metrics }, { data: programs }] = await Promise.all([
+    admin.from("universities").select(selectColumns),
     admin.from("university_rankings").select("university_id").eq("ranking_provider", "QS"),
     admin.from("university_profile_metrics").select("university_id, metric_code, stats_as_of, notes"),
     admin.from("university_programs").select("id"),
   ]);
-  if (uniError || !universities) {
+  if (uniError || !universitiesRaw) {
     console.error(`Couldn't read universities: ${uniError?.message}`);
     process.exitCode = 1;
     return;
   }
+  const universities = universitiesRaw as unknown as UniRow[];
 
   const total = universities.length;
   const rankedIds = new Set((rankings ?? []).map((r) => r.university_id));
@@ -134,8 +160,12 @@ async function main() {
     ["country", universities.filter((u) => u.country).length],
     ["city", universities.filter((u) => u.city).length],
     ["official website", universities.filter((u) => u.website_url).length],
-    ["admissions URL", universities.filter((u) => u.admissions_url).length],
-    ["application system", universities.filter((u) => u.application_system).length],
+    ...(missingColumns.length === 0
+      ? ([
+          ["admissions URL", universities.filter((u) => u.admissions_url).length],
+          ["application system", universities.filter((u) => u.application_system).length],
+        ] as [string, number][])
+      : []),
     ["institution type", universities.filter((u) => u.institution_type).length],
     ["description", universities.filter((u) => u.description).length],
     ["coordinates", universities.filter((u) => u.latitude).length],
@@ -150,6 +180,10 @@ async function main() {
   ];
   for (const [label, n] of coreFields) {
     console.log(`  ${label.padEnd(42)} ${String(n).padStart(5)} / ${total}  (${pct(n, total)})`);
+  }
+  if (missingColumns.length > 0) {
+    console.log(`\n  NOT YET IN THE DATABASE (migration 0042 not applied): ${missingColumns.join(", ")}`);
+    console.log(`  Reported as absent columns rather than as 0% coverage of an existing field.`);
   }
   console.log(`\n  university_programs rows total: ${(programs ?? []).length}`);
   console.log(`  (financial aid / scholarships: still no dedicated entity — a real schema gap, held pending`);

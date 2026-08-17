@@ -106,7 +106,7 @@ interface OpenAlexInstitution {
  * lookup cannot drift onto a different institution the way a second name search could.
  */
 async function fetchOpenAlexByRor(rorId: string): Promise<OpenAlexInstitution | null> {
-  const url = `https://api.openalex.org/institutions/${encodeURIComponent(rorId)}`;
+  const url = `https://api.openalex.org/institutions/${encodeURIComponent(rorId)}?mailto=oryn-data@oryn.app`;
   const response = await fetch(url, { headers: { "User-Agent": USER_AGENT } }).catch(() => null);
   if (!response || !response.ok) return null;
   const body = (await response.json().catch(() => null)) as Record<string, unknown> | null;
@@ -255,28 +255,55 @@ async function main(): Promise<void> {
   const limitIndex = args.indexOf("--limit");
   const limit = limitIndex >= 0 && args[limitIndex + 1] ? Number(args[limitIndex + 1]) : Number.POSITIVE_INFINITY;
 
-  if (!isPilot) {
-    console.error(
-      "This script currently supports --pilot only.\n" +
-        "Enumerating the full 1,010-university spine requires SUPABASE_SECRET_KEY (read policies are\n" +
-        "authenticated-only), which is not set in this environment. See docs/founder-blocked-backlog.md item 2."
-    );
+  const fromDb = args.includes("--from-db");
+  if (!isPilot && !fromDb) {
+    console.error("Usage: npm run acquire:universities -- (--pilot | --from-db) [--limit N] [--out path]");
     process.exitCode = 1;
     return;
   }
 
-  const roster = PILOT_ROSTER.slice(0, Number.isFinite(limit) ? limit : undefined);
+  let roster: { name: string; country: string }[];
+  if (fromDb) {
+    // Enumerate the real spine. Needs SUPABASE_SECRET_KEY because the global reference tables
+    // are authenticated-read only. Ordered by name so a --limit run is reproducible rather
+    // than returning an arbitrary slice.
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SECRET_KEY;
+    if (!url || !key) {
+      console.error("--from-db needs NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SECRET_KEY (see docs/founder-blocked-backlog.md item 2).");
+      process.exitCode = 1;
+      return;
+    }
+    const response = await fetch(`${url}/rest/v1/universities?select=name,country&order=name.asc`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+    });
+    if (!response.ok) {
+      console.error(`Couldn't read universities: HTTP ${response.status} ${await response.text().catch(() => "")}`);
+      process.exitCode = 1;
+      return;
+    }
+    const all = (await response.json()) as { name: string; country: string }[];
+    roster = all.slice(0, Number.isFinite(limit) ? limit : undefined);
+    console.log(`Enumerated ${all.length} universities from the database; acquiring for ${roster.length}.\n`);
+  } else {
+    roster = PILOT_ROSTER.slice(0, Number.isFinite(limit) ? limit : undefined);
+  }
   const retrievedAt = new Date().toISOString();
   const universities: AcquiredUniversity[] = [];
   const unresolved: { declaredName: string; declaredCountry: string; reason: string }[] = [];
 
+  let processed = 0;
   for (const entry of roster) {
+    processed += 1;
+    if (roster.length > 60 && processed % 50 === 0) {
+      console.log(`  ... ${processed}/${roster.length} (resolved ${universities.length}, unresolved ${unresolved.length})`);
+    }
     const search = await searchRorByName(entry.name);
     await sleep(200);
 
     if (!search || search.items.length === 0) {
       unresolved.push({ declaredName: entry.name, declaredCountry: entry.country, reason: "No ROR record returned for this name." });
-      console.log(`UNRESOLVED  ${entry.name} — no ROR hit`);
+      if (roster.length <= 60) console.log(`UNRESOLVED  ${entry.name} — no ROR hit`);
       continue;
     }
 
@@ -295,7 +322,7 @@ async function main(): Promise<void> {
         declaredCountry: entry.country,
         reason: `Top ROR hits are not in ${entry.country} (best: "${top.displayName}" in ${rorCountryOf(top) ?? top.countryCode ?? "unknown"}).`,
       });
-      console.log(`UNRESOLVED  ${entry.name} — country mismatch`);
+      if (roster.length <= 60) console.log(`UNRESOLVED  ${entry.name} — country mismatch`);
       continue;
     }
 
@@ -310,7 +337,7 @@ async function main(): Promise<void> {
         declaredCountry: entry.country,
         reason: `${exact.length} ROR records in ${entry.country} carry this exact name (${exact.map((r) => r.id).join(", ")}).`,
       });
-      console.log(`UNRESOLVED  ${entry.name} — ambiguous exact match`);
+      if (roster.length <= 60) console.log(`UNRESOLVED  ${entry.name} — ambiguous exact match`);
       continue;
     } else if (candidates.length === 1) chosen = candidates[0];
     else {
@@ -322,13 +349,13 @@ async function main(): Promise<void> {
           .map((r) => `"${r.displayName}" (${r.id})`)
           .join(", ")}.`,
       });
-      console.log(`UNRESOLVED  ${entry.name} — no exact name match among ${candidates.length} in-country records`);
+      if (roster.length <= 60) console.log(`UNRESOLVED  ${entry.name} — no exact name match among ${candidates.length} in-country records`);
       continue;
     }
 
     if (chosen.status !== "active") {
       unresolved.push({ declaredName: entry.name, declaredCountry: entry.country, reason: `ROR record ${chosen.id} status is "${chosen.status}", not active.` });
-      console.log(`UNRESOLVED  ${entry.name} — ROR status ${chosen.status}`);
+      if (roster.length <= 60) console.log(`UNRESOLVED  ${entry.name} — ROR status ${chosen.status}`);
       continue;
     }
 
@@ -349,7 +376,9 @@ async function main(): Promise<void> {
       facts,
     });
 
-    console.log(`ok          ${entry.name} -> ${chosen.id} (${facts.length} facts, ids: ${Object.keys(chosen.externalIds).join("/") || "none"})`);
+    if (roster.length <= 60) {
+      console.log(`ok          ${entry.name} -> ${chosen.id} (${facts.length} facts, ids: ${Object.keys(chosen.externalIds).join("/") || "none"})`);
+    }
   }
 
   const fixture: AcquisitionFixture = {
@@ -368,6 +397,17 @@ async function main(): Promise<void> {
   writeFileSync(outPath, `${JSON.stringify(fixture, null, 2)}\n`);
 
   const factCount = universities.reduce((n, u) => n + u.facts.length, 0);
+  const unresolvedByReason = new Map<string, number>();
+  for (const u of unresolved) {
+    const kind = u.reason.startsWith("No ROR record")
+      ? "no ROR hit"
+      : u.reason.includes("country mismatch") || u.reason.startsWith("Top ROR hits are not in")
+        ? "country mismatch"
+        : u.reason.includes("exact name")
+          ? "ambiguous / no exact name match"
+          : "other";
+    unresolvedByReason.set(kind, (unresolvedByReason.get(kind) ?? 0) + 1);
+  }
   const byField = new Map<string, number>();
   for (const u of universities) for (const f of u.facts) byField.set(f.field, (byField.get(f.field) ?? 0) + 1);
 
@@ -375,6 +415,10 @@ async function main(): Promise<void> {
   console.log(`${factCount} facts written to ${outPath}`);
   for (const [field, count] of [...byField.entries()].sort()) {
     console.log(`  ${field.padEnd(24)} ${count}/${universities.length}`);
+  }
+  if (unresolvedByReason.size > 0) {
+    console.log(`\nUnresolved by reason (kept in the fixture, never guessed):`);
+    for (const [kind, count] of [...unresolvedByReason.entries()].sort()) console.log(`  ${kind.padEnd(32)} ${count}`);
   }
 }
 
