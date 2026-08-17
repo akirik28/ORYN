@@ -58,7 +58,39 @@ yours to trigger and verify.
 
 Nothing blocking your work. One FYI from this session's Phase 2 duplicate-identity cleanup.
 
-## FYI: 9 duplicate `universities` rows merged at the identity layer (canonical_entities), not yet at the `universities` row layer
+## Update 2026-08-18: the 9 duplicate `universities` rows are now hidden from product surfaces — a helper exists if you want the same protection
+
+The founder reported this as a live product bug (searching "UCL" surfaced both rows) — fixed at
+the application layer, not the schema (still no DDL access for migration 0043). New module:
+`lib/universities/canonical.ts`, backed by a generated, re-runnable mapping
+(`lib/universities/duplicate-supersessions.json`, `npm run resolve:university-duplicates`).
+Independent cross-check: the algorithmic winner-selection (`pickCanonicalWinner` — FK-reference
+count, then `website_url` presence, then name cleanliness, then creation order) picked the
+*exact same* 9 winning ids as the manual dossier below, re-derived from scratch without looking
+at this table first.
+
+If any of your own code reads `universities` directly (not just the reference table below), two
+functions are exported for exactly this:
+
+```ts
+import { canonicalUniversityId, getSupersededUniversityIds } from "@/lib/universities/canonical";
+
+// Resolve a possibly-stale id before using it:
+const id = canonicalUniversityId(rawUniversityId);
+
+// Or exclude every known loser at the query level:
+const superseded = getSupersededUniversityIds();
+if (superseded.length > 0) query = query.not("id", "in", `(${superseded.join(",")})`);
+```
+
+**Specific ask**: `lib/requirements/discover.ts`'s `getUniversitiesNeedingRequirementDiscovery`
+reads every `universities` row with zero `university_requirements` rows, oldest-first — since
+that's your file (`university_requirements` is your table), I didn't edit it, but it will
+currently run Tavily+AI discovery independently for both sides of a pair once Tavily/Anthropic
+unblock, spending real budget on a row nothing will ever show. Excluding
+`getSupersededUniversityIds()` from that batch is a one-line addition whenever convenient.
+
+## FYI (original, 2026-08-17): 9 duplicate `universities` rows merged at the identity layer (canonical_entities), not yet at the `universities` row layer
 
 Full detail: `docs/handoffs/claude-a-university-spine.md`. Short version: MIT, UCL, HKUST,
 LSE, University of Warwick, University of Technology Sydney, University of Newcastle
@@ -91,8 +123,10 @@ and haven't yet, the canonical (winning) `universities.id`s are:
 | Al-Farabi Kazakh National University | `37f12391-462d-4aba-8947-d9cf159627cb` |
 | KFUPM | `62929169-4cb9-4ef2-b1f4-bfd1b34cf164` |
 
-The other (losing) id in each pair still exists and is not yet hidden anywhere — safe to
-ignore, will be marked `duplicate_status='superseded'` once migration 0043 lands.
+The other (losing) id in each pair still exists (needed for FK safety) but is now excluded from
+every Claude-A-owned read/write surface via `lib/universities/canonical.ts` (see the update
+above) — will be marked `duplicate_status='superseded'` at the schema level once migration 0043
+lands.
 
 Not touching `university_programs`, `university_requirements`, `opportunities`, or
 `opportunity_sources` this session beyond read-only reference counts, per the founder's
