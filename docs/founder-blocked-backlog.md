@@ -263,6 +263,48 @@ way to resolve it is a data-trust decision, not a reconciliation one — and thi
 own rule is that a verification claim must be backed by a source.
 **Blocks**: any UI that surfaces a "verified" badge for universities.
 
+## 21. Written licensing position on QS ranking data
+
+**Action**: get an explicit answer — from QS directly, or from counsel — on whether ORYN
+may display QS rank positions to students in a public product, and under what attribution.
+**Why it's blocked**: `university_rankings` already holds 1,009 QS 2027 rows, and the
+Explorer card renders "QS #N" today. Rankings are a commercial publication, not open data;
+"we cited the source" is not the same as "we have the right to redistribute it at scale."
+This is a rights question, not an engineering one.
+**Blocks**: nothing in development. It blocks *public launch* of the university surface as
+currently built. Raised by `docs/cialfo-public-intelligence-audit.md`.
+
+## 22. ETS / College Board score-verification agreement
+
+**Action**: decide whether to pursue an API agreement with ETS (TOEFL) and/or College Board
+(SAT) for score verification, and if so start it.
+**Why it's blocked**: needs a commercial/organisational relationship ORYN does not have.
+**Blocks**: any genuinely `verified` test score. Without it, ORYN's evidence taxonomy tops
+out at `evidence_added` for test scores — which is honest and correct, just weaker than a
+competitor that verifies against the testing body itself. Raised by the Cialfo audit, where
+this pattern was found in use.
+
+## 23. Product decision: how scholarships get sourced
+
+**Action**: choose between (a) sourcing scholarships institution-by-institution from each
+awarding body's own official page — slow, clean, HIGH confidence, or (b) licensing an
+aggregator dataset — fast, needs a licence review first.
+**Why it's blocked**: (b) is a spend-and-rights decision. Nothing should be ingested at
+scale from an aggregator without that review, per this repo's own source-rights rule.
+**Blocks**: populating a scholarships table. The schema can be designed either way, so
+design work proceeds; only the data does not.
+
+## 24. Consent design for storing real application outcomes
+
+**Action**: decide whether ORYN will ask students for permission to store their actual
+admission decisions (accepted / rejected / waitlisted / withdrawn) for benchmarking, and
+get the consent language reviewed alongside item 13.
+**Why it's blocked**: these are minors' application outcomes. Phase 18 is explicitly
+designed to be future-compatible rather than built now, and it should stay that way until
+consent is designed, not retrofitted.
+**Blocks**: Phase 18 outcome-based benchmarking, and any peer comparison grounded in real
+decisions rather than profile scores.
+
 ---
 
 ## Environment-capability gap (not founder-blocked, noted for completeness)

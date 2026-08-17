@@ -1,5 +1,15 @@
 # Current State
 
+**Update — 2026-08-17**: a competitive/data audit of Cialfo landed. Engineering record:
+[cialfo-public-intelligence-audit.md](./cialfo-public-intelligence-audit.md). Founder-facing
+record (strategy, field maps, gap matrix, coverage, source rights): Google Drive doc
+**"ORYN — Cialfo Public Intelligence & Data Gap Audit"**, ID
+`1SMLUp3hWMaeDsFPDp77Bxirs2lqM32aIXHR2u5vH_bQ`, in the Drive `ORYN` folder. Live data state
+is tracked in the Drive doc **"ORYN University & Opportunity Enrichment — Canonical Report"**
+(`1jxIAa6_pMTTh8j7efTXYheGLzTzpwnt2NtwULQy85s8`) — **not** in `data-readiness.md`, which is
+now stale (it still reports 21 universities; live is 1,010, with 11 opportunities). Four new
+founder-blocked items (21–24) were added to `founder-blocked-backlog.md`.
+
 **Update — 2026-08-16, founder away**: four further autonomous passes landed after this
 file was written — CI, moderation, realtime messaging, rate limiting, an open-redirect
 fix, and 230 automated tests (up from 113). Start at `docs/founder-blocked-backlog.md`
