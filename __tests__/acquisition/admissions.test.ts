@@ -29,6 +29,33 @@ describe("scoreAdmissionsCandidate", () => {
     expect(scoreAdmissionsCandidate({ url: "https://example.edu/graduate/admissions/apply", title: "PhD Admissions" })).toBeLessThan(ADMISSIONS_SCORE_THRESHOLD);
   });
 
+  test("an extenuating-circumstances/appeal page is penalized below threshold — real content, wrong page", () => {
+    // Real case, a 300-university batch: LSE's newly-acquired admissions_url resolved to
+    // ".../Undergraduate-Admissions-Extenuating-Circumstances" — genuinely LSE, genuinely
+    // about admissions, and still not what a prospective applicant needs. Reverted in the
+    // database; this locks in the fix so it can't recur.
+    expect(
+      scoreAdmissionsCandidate({
+        url: "https://www.lse.ac.uk/study-at-lse/Undergraduate/Applicants/Secure/Undergraduate-Admissions-Extenuating-Circumstances",
+        title: "Undergraduate Admissions - Extenuating Circumstances",
+      })
+    ).toBeLessThan(ADMISSIONS_SCORE_THRESHOLD);
+    expect(scoreAdmissionsCandidate({ url: "https://example.edu/admissions/appeals-process", title: "How to appeal an admissions decision" })).toBeLessThan(ADMISSIONS_SCORE_THRESHOLD);
+  });
+
+  test("a dated admissions-cycle news post is penalized below threshold, even when genuinely about admission", () => {
+    // Real case: Gadjah Mada University resolved to a news post about that cycle's seat
+    // count ("UGM 2026 Admissions: 10,000 Undergraduate ... Seats Available") — a durable
+    // "how to apply" hub is what a prospective applicant needs, not a dated announcement.
+    expect(
+      scoreAdmissionsCandidate({
+        url: "https://ugm.ac.id/en/news/ugm-2026-admissions-10000-undergraduate-and-applied-program-seats-available",
+        title: "UGM 2026 Admissions: 10,000 Undergraduate and Applied Program Seats Available",
+      })
+    ).toBeLessThan(ADMISSIONS_SCORE_THRESHOLD);
+    expect(scoreAdmissionsCandidate({ url: "https://example.edu/undergraduate/admission-results-2023", title: "2023 Admission Results" })).toBeLessThan(ADMISSIONS_SCORE_THRESHOLD);
+  });
+
   test("'undergraduate' itself does not false-trigger the graduate-level penalty", () => {
     // \bgraduate\b must not match the substring inside "undergraduate".
     const score = scoreAdmissionsCandidate({ url: "https://example.edu/admissions/undergraduate/apply", title: "Undergraduate Admission" });
@@ -68,6 +95,20 @@ describe("pickBestAdmissionsCandidate", () => {
     ];
     const best = pickBestAdmissionsCandidate(candidates);
     expect(best?.url).toBe("https://example.edu/admissions/apply");
+  });
+
+  test("prefers a comparably-scored HTML hub over a PDF, but still returns the PDF when it's the only good option", () => {
+    const withHtmlAlternative = [
+      { url: "https://example.edu/admissions/apply.pdf", title: "Undergraduate Admissions Guide" },
+      { url: "https://example.edu/admissions/apply", title: "Undergraduate Admissions" },
+    ];
+    expect(pickBestAdmissionsCandidate(withHtmlAlternative)?.url).toBe("https://example.edu/admissions/apply");
+
+    // Real cases this session: Shanghai Jiao Tong University and Gebze Technical University
+    // both had a PDF as the only real admissions document Tavily found — a PDF is a valid
+    // answer, never disqualified outright.
+    const pdfOnly = [{ url: "https://example.edu/admissions/2026-international-undergraduate-admissions.pdf", title: "2026 International Undergraduate Admissions" }];
+    expect(pickBestAdmissionsCandidate(pdfOnly)?.url).toBe("https://example.edu/admissions/2026-international-undergraduate-admissions.pdf");
   });
 
   test("empty candidate list returns null", () => {

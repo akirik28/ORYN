@@ -22,7 +22,8 @@
     "acquire:admissions": "tsx scripts/acquire-admissions-facts.ts",
     "audit:verification-state": "tsx scripts/verification-state-audit.ts",
     "check:university-spine-health": "tsx scripts/university-spine-health.ts",
-    "expand:university-spine": "tsx scripts/expand-university-spine.ts"
+    "expand:university-spine": "tsx scripts/expand-university-spine.ts",
+    "audit:admissions-quality": "tsx scripts/audit-admissions-quality.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",

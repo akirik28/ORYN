@@ -32,6 +32,20 @@ export interface AdmissionsCandidate {
  * a Master's/PhD admissions page is a wrong answer, not a partial one. */
 const GRADUATE_LEVEL_PATTERN = /\b(master'?s?|graduate|postgraduate|phd|doctoral)\b/;
 
+/** A page ABOUT a specific applicant's problem (an exception process, an appeal, a
+ * complaint), not a page that helps a prospective student apply. Real case: LSE's
+ * newly-acquired admissions_url resolved to
+ * ".../Undergraduate-Admissions-Extenuating-Circumstances" — real LSE content, genuinely
+ * about admissions, and still the wrong page for anyone browsing ORYN. */
+const SPECIAL_CASE_PATTERN = /extenuating[- ]circumstances|special[- ]circumstances|mitigating[- ]circumstances|\bappeals?\b|\bcomplaints?\b/;
+
+/** A dated announcement (this cycle's seat count, this year's cutoff score), not a durable
+ * "how to apply" hub — even when it genuinely mentions admission and is genuinely current.
+ * Real cases from live batches: Gadjah Mada's "2026-admissions-10000-undergraduate-...-seats
+ * -available" (a news post about seat counts) and Duy Tan's Vietnamese "diem-trung-tuyen"
+ * ("admission scores") results page for a specific past intake. */
+const STALE_CYCLE_NEWS_PATTERN = /\/news\/|admission\s*results?|admission\s*scores?|entry\s*(?:cut[- ]?off|scores?)/;
+
 /**
  * Keyword score for "is this URL the institution's UNDERGRADUATE admissions page". Path
  * signals outweigh title signals (a title can be generic; a URL path segment like
@@ -65,6 +79,13 @@ export function scoreAdmissionsCandidate(candidate: AdmissionsCandidate): number
   if (/\bapply\b|\bapplying\b/.test(title)) score += 1;
   if (/undergrad|bachelor/.test(title)) score += 1;
   if (GRADUATE_LEVEL_PATTERN.test(path) || GRADUATE_LEVEL_PATTERN.test(title)) score -= 5;
+  if (SPECIAL_CASE_PATTERN.test(path) || SPECIAL_CASE_PATTERN.test(title)) score -= 5;
+  if (STALE_CYCLE_NEWS_PATTERN.test(path) || STALE_CYCLE_NEWS_PATTERN.test(title)) score -= 4;
+  // A PDF is a valid, often-correct answer (several real ones this session: Shanghai Jiao
+  // Tong, Gebze Technical University) — never disqualified — but a small penalty means a
+  // comparably-scored durable HTML hub wins the tie-break when one also exists, since a
+  // student can navigate further from an HTML page and not from a static PDF.
+  if (/\.pdf(?:$|[?#])/.test(path)) score -= 1;
   return score;
 }
 
