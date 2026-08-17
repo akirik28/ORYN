@@ -20,6 +20,8 @@
  *     migration 0042's own column comment warns against).
  */
 
+import { sameCountry } from "./normalize";
+
 export interface AdmissionsCandidate {
   url: string;
   title: string;
@@ -89,23 +91,43 @@ export interface ApplicationSystemMatch {
   matchedText: string;
 }
 
-/** Order matters only in the sense that each pattern is specific enough not to collide with
- * another on this list — not a priority ranking a page could plausibly need. */
-const APPLICATION_SYSTEM_PATTERNS: { system: string; pattern: RegExp }[] = [
-  { system: "Common App", pattern: /common\s*app(?:lication)?\b|commonapp\.org/i },
-  { system: "UCAS", pattern: /\bucas\b|ucas\.com/i },
-  { system: "Coalition", pattern: /coalition\s*(?:for\s*college\s*access)?\b|coalitionforcollegeaccess\.org/i },
-  { system: "Parcoursup", pattern: /parcoursup/i },
-  { system: "Studielink", pattern: /studielink/i },
-  { system: "uni-assist", pattern: /uni-assist/i },
-  { system: "ÖSYM/YKS", pattern: /\bösym\b|\bosym\b|\byks\b/i },
+/**
+ * `homeCountry` is which country's applicants this system serves — null for Common App/UCAS/
+ * Coalition, which are broad multi-country portals with no single home country to gate on.
+ *
+ * Order matters only in the sense that each pattern is specific enough not to collide with
+ * another on this list — not a priority ranking a page could plausibly need.
+ */
+const APPLICATION_SYSTEM_PATTERNS: { system: string; pattern: RegExp; homeCountry: string | null }[] = [
+  { system: "Common App", pattern: /common\s*app(?:lication)?\b|commonapp\.org/i, homeCountry: null },
+  { system: "UCAS", pattern: /\bucas\b|ucas\.com/i, homeCountry: null },
+  { system: "Coalition", pattern: /coalition\s*(?:for\s*college\s*access)?\b|coalitionforcollegeaccess\.org/i, homeCountry: null },
+  { system: "Parcoursup", pattern: /parcoursup/i, homeCountry: "France" },
+  { system: "Studielink", pattern: /studielink/i, homeCountry: "Netherlands" },
+  { system: "uni-assist", pattern: /uni-assist/i, homeCountry: "Germany" },
+  { system: "ÖSYM/YKS", pattern: /\bösym\b|\bosym\b|\byks\b/i, homeCountry: "Turkey" },
 ];
 
-/** First distinctive portal name/domain literally present in `content`, or null. Null means
+/**
+ * First distinctive portal name/domain literally present in `content`, or null. Null means
  * "not mentioned in what we fetched" — not "applies directly", which this deliberately never
- * asserts without positive evidence. */
-export function detectApplicationSystem(content: string): ApplicationSystemMatch | null {
-  for (const { system, pattern } of APPLICATION_SYSTEM_PATTERNS) {
+ * asserts without positive evidence.
+ *
+ * `universityCountry` gates every country-specific system (Parcoursup/Studielink/uni-assist/
+ * ÖSYM-YKS) to a same-country match, using the same alias-aware comparison the rest of
+ * lib/acquisition/* uses (`Türkiye`/`Turkey`, etc.). A live pilot batch caught the exact
+ * failure this prevents: Dublin City University (Ireland) was tagged ÖSYM/YKS because its own
+ * international-admissions page describes accepting the Turkish "Lise Diplomasi + YKS"
+ * qualification as ONE OF MANY recognized foreign quals — a page *mentioning* a national exam
+ * system to describe how it evaluates foreign applicants is not the same fact as the page's
+ * own institution *using* that system. Common App/UCAS/Coalition stay ungated: they are
+ * third-party portals a student submits an application THROUGH (an institution's own page
+ * naming one is reliable signal), not a national qualification a page might describe accepting
+ * from elsewhere.
+ */
+export function detectApplicationSystem(content: string, universityCountry: string): ApplicationSystemMatch | null {
+  for (const { system, pattern, homeCountry } of APPLICATION_SYSTEM_PATTERNS) {
+    if (homeCountry && !sameCountry(universityCountry, homeCountry)) continue;
     const match = content.match(pattern);
     if (match) return { system, matchedText: match[0] };
   }

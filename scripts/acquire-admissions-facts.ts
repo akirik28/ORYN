@@ -210,7 +210,7 @@ async function main(): Promise<void> {
     // not per search result — keeps the paid-API cost bounded to what was actually useful.
     const fullContent = (await tavilyExtract(tavilyKey, best.url)) ?? candidatesForScoring.find((c) => c.url === best.url)?.content ?? "";
     await sleep(400);
-    const appSystem = detectApplicationSystem(fullContent);
+    const appSystem = detectApplicationSystem(fullContent, uni.country);
     if (appSystem) {
       facts.push({
         universityId: uni.id,

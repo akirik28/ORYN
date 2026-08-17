@@ -76,26 +76,36 @@ describe("pickBestAdmissionsCandidate", () => {
 });
 
 describe("detectApplicationSystem", () => {
-  test("detects Common App from either wording or domain", () => {
-    expect(detectApplicationSystem("Apply through the Common App.")?.system).toBe("Common App");
-    expect(detectApplicationSystem("Visit commonapp.org to start your application.")?.system).toBe("Common App");
+  test("detects Common App and UCAS regardless of the institution's own country (broad multi-country portals)", () => {
+    expect(detectApplicationSystem("Apply through the Common App.", "United States")?.system).toBe("Common App");
+    expect(detectApplicationSystem("Visit commonapp.org to start your application.", "United States")?.system).toBe("Common App");
+    expect(detectApplicationSystem("International students should apply via UCAS.", "United Kingdom")?.system).toBe("UCAS");
   });
 
-  test("detects UCAS", () => {
-    expect(detectApplicationSystem("International students should apply via UCAS.")?.system).toBe("UCAS");
+  test("detects a country-specific system when the institution's own country matches", () => {
+    expect(detectApplicationSystem("French students apply through Parcoursup.", "France")?.system).toBe("Parcoursup");
+    expect(detectApplicationSystem("Dutch applicants use Studielink.", "Netherlands")?.system).toBe("Studielink");
+    expect(detectApplicationSystem("International applicants need uni-assist certification.", "Germany")?.system).toBe("uni-assist");
+    expect(detectApplicationSystem("Turkish students apply through YKS.", "Turkey")?.system).toBe("ÖSYM/YKS");
+    expect(detectApplicationSystem("Öğrenciler YKS ile başvurabilir.", "Türkiye")?.system).toBe("ÖSYM/YKS"); // country-alias form
   });
 
-  test("detects Parcoursup, Studielink, uni-assist, OSYM/YKS", () => {
-    expect(detectApplicationSystem("French students apply through Parcoursup.")?.system).toBe("Parcoursup");
-    expect(detectApplicationSystem("Dutch applicants use Studielink.")?.system).toBe("Studielink");
-    expect(detectApplicationSystem("International applicants need uni-assist certification.")?.system).toBe("uni-assist");
-    expect(detectApplicationSystem("Turkish students apply through YKS.")?.system).toBe("ÖSYM/YKS");
+  test("does NOT detect a country-specific system when the institution is in a different country — the real bug this guards", () => {
+    // Real failure caught on a live batch: Dublin City University (Ireland) was tagged
+    // ÖSYM/YKS because its own international-admissions page describes accepting the
+    // Turkish "Lise Diplomasi + YKS" qualification as ONE OF MANY recognized foreign
+    // quals for Turkish applicants — mentioning a national exam system to describe how
+    // foreign qualifications are evaluated is not the institution's own application system.
+    const dcuPageExcerpt =
+      "Applicants presenting both the Lise Diplomasi and the Yükseköğretim Kurumları Sınavı (YKS) may be considered for direct entry to DCU programmes.";
+    expect(detectApplicationSystem(dcuPageExcerpt, "Ireland")).toBeNull();
+    expect(detectApplicationSystem("Applicants who used Parcoursup in France may also apply directly.", "Germany")).toBeNull();
   });
 
   test("returns null rather than defaulting to 'direct' when nothing is mentioned", () => {
     // This is the specific anti-pattern migration 0042's column comment forbids: null means
     // unknown, never a guessed "direct".
-    expect(detectApplicationSystem("Welcome to our admissions page. Learn about our programs.")).toBeNull();
+    expect(detectApplicationSystem("Welcome to our admissions page. Learn about our programs.", "United States")).toBeNull();
   });
 });
 
