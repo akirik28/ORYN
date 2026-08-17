@@ -76,13 +76,10 @@ describe("pickBestAdmissionsCandidate", () => {
 });
 
 describe("detectApplicationSystem", () => {
-  test("detects Common App and UCAS regardless of the institution's own country (broad multi-country portals)", () => {
+  test("detects a system when the institution's own country matches its home country", () => {
     expect(detectApplicationSystem("Apply through the Common App.", "United States")?.system).toBe("Common App");
     expect(detectApplicationSystem("Visit commonapp.org to start your application.", "United States")?.system).toBe("Common App");
     expect(detectApplicationSystem("International students should apply via UCAS.", "United Kingdom")?.system).toBe("UCAS");
-  });
-
-  test("detects a country-specific system when the institution's own country matches", () => {
     expect(detectApplicationSystem("French students apply through Parcoursup.", "France")?.system).toBe("Parcoursup");
     expect(detectApplicationSystem("Dutch applicants use Studielink.", "Netherlands")?.system).toBe("Studielink");
     expect(detectApplicationSystem("International applicants need uni-assist certification.", "Germany")?.system).toBe("uni-assist");
@@ -90,16 +87,25 @@ describe("detectApplicationSystem", () => {
     expect(detectApplicationSystem("Öğrenciler YKS ile başvurabilir.", "Türkiye")?.system).toBe("ÖSYM/YKS"); // country-alias form
   });
 
-  test("does NOT detect a country-specific system when the institution is in a different country — the real bug this guards", () => {
-    // Real failure caught on a live batch: Dublin City University (Ireland) was tagged
+  test("does NOT detect a system when the institution is in a different country — the real bug this guards", () => {
+    // Real failure #1, a 150-university batch: Dublin City University (Ireland) was tagged
     // ÖSYM/YKS because its own international-admissions page describes accepting the
-    // Turkish "Lise Diplomasi + YKS" qualification as ONE OF MANY recognized foreign
-    // quals for Turkish applicants — mentioning a national exam system to describe how
-    // foreign qualifications are evaluated is not the institution's own application system.
+    // Turkish "Lise Diplomasi + YKS" qualification as ONE OF MANY recognized foreign quals
+    // for Turkish applicants — mentioning a national exam system to describe how foreign
+    // qualifications are evaluated is not the institution's own application system.
     const dcuPageExcerpt =
       "Applicants presenting both the Lise Diplomasi and the Yükseköğretim Kurumları Sınavı (YKS) may be considered for direct entry to DCU programmes.";
     expect(detectApplicationSystem(dcuPageExcerpt, "Ireland")).toBeNull();
     expect(detectApplicationSystem("Applicants who used Parcoursup in France may also apply directly.", "Germany")).toBeNull();
+
+    // Real failure #2, a 300-university batch: Shanghai Jiao Tong University (China) was
+    // tagged "Common App" from its own international-admissions PDF — Common App and UCAS
+    // were originally left ungated on the theory that a broad multi-country portal was
+    // unlikely to appear as a mere "recognized pathway" mention. This disproved that theory:
+    // there's no legitimate reading where a Chinese university's own application route is
+    // the US undergraduate portal.
+    expect(detectApplicationSystem("Students admitted through our joint program with a US partner may also apply via the Common App.", "China")).toBeNull();
+    expect(detectApplicationSystem("Our exchange partners in the UK accept students via UCAS.", "China")).toBeNull();
   });
 
   test("returns null rather than defaulting to 'direct' when nothing is mentioned", () => {

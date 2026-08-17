@@ -92,16 +92,26 @@ export interface ApplicationSystemMatch {
 }
 
 /**
- * `homeCountry` is which country's applicants this system serves — null for Common App/UCAS/
- * Coalition, which are broad multi-country portals with no single home country to gate on.
+ * `homeCountry` is which country's applicants this system serves. Every pattern is gated —
+ * Common App/UCAS/Coalition were originally left ungated on the assumption that a broad
+ * multi-country portal was unlikely to appear as a mere "recognized pathway" mention the way
+ * a single-country national exam could. A live batch disproved that: Shanghai Jiao Tong
+ * University (China) was tagged "Common App" from its own international-admissions PDF,
+ * almost certainly a joint-degree/exchange-pathway mention rather than SJTU's own system —
+ * there is no legitimate reading where a Chinese university's OWN application route is the
+ * US undergraduate portal. Common App and Coalition both draw the overwhelming majority of
+ * their member institutions from the US; UCAS is the UK's national system. A rare genuine
+ * international member of either (both do have a small number) will read as "not detected"
+ * rather than detected-for-the-wrong-country — the same asymmetry this module applies
+ * everywhere else: an honest null beats a wrong positive.
  *
  * Order matters only in the sense that each pattern is specific enough not to collide with
  * another on this list — not a priority ranking a page could plausibly need.
  */
-const APPLICATION_SYSTEM_PATTERNS: { system: string; pattern: RegExp; homeCountry: string | null }[] = [
-  { system: "Common App", pattern: /common\s*app(?:lication)?\b|commonapp\.org/i, homeCountry: null },
-  { system: "UCAS", pattern: /\bucas\b|ucas\.com/i, homeCountry: null },
-  { system: "Coalition", pattern: /coalition\s*(?:for\s*college\s*access)?\b|coalitionforcollegeaccess\.org/i, homeCountry: null },
+const APPLICATION_SYSTEM_PATTERNS: { system: string; pattern: RegExp; homeCountry: string }[] = [
+  { system: "Common App", pattern: /common\s*app(?:lication)?\b|commonapp\.org/i, homeCountry: "United States" },
+  { system: "UCAS", pattern: /\bucas\b|ucas\.com/i, homeCountry: "United Kingdom" },
+  { system: "Coalition", pattern: /coalition\s*(?:for\s*college\s*access)?\b|coalitionforcollegeaccess\.org/i, homeCountry: "United States" },
   { system: "Parcoursup", pattern: /parcoursup/i, homeCountry: "France" },
   { system: "Studielink", pattern: /studielink/i, homeCountry: "Netherlands" },
   { system: "uni-assist", pattern: /uni-assist/i, homeCountry: "Germany" },
@@ -113,21 +123,18 @@ const APPLICATION_SYSTEM_PATTERNS: { system: string; pattern: RegExp; homeCountr
  * "not mentioned in what we fetched" — not "applies directly", which this deliberately never
  * asserts without positive evidence.
  *
- * `universityCountry` gates every country-specific system (Parcoursup/Studielink/uni-assist/
- * ÖSYM-YKS) to a same-country match, using the same alias-aware comparison the rest of
- * lib/acquisition/* uses (`Türkiye`/`Turkey`, etc.). A live pilot batch caught the exact
- * failure this prevents: Dublin City University (Ireland) was tagged ÖSYM/YKS because its own
- * international-admissions page describes accepting the Turkish "Lise Diplomasi + YKS"
- * qualification as ONE OF MANY recognized foreign quals — a page *mentioning* a national exam
- * system to describe how it evaluates foreign applicants is not the same fact as the page's
- * own institution *using* that system. Common App/UCAS/Coalition stay ungated: they are
- * third-party portals a student submits an application THROUGH (an institution's own page
- * naming one is reliable signal), not a national qualification a page might describe accepting
- * from elsewhere.
+ * `universityCountry` gates every system to a same-country match against its `homeCountry`,
+ * using the same alias-aware comparison the rest of lib/acquisition/* uses (`Türkiye`/
+ * `Turkey`, etc.). Two live failures on real batches, same underlying mechanism: a page
+ * *mentioning* a foreign application system to describe how it evaluates foreign applicants
+ * (a recognized-pathway or joint-degree footnote) is not the same fact as the page's own
+ * institution *using* that system — Dublin City University (Ireland) tagged ÖSYM/YKS, then
+ * Shanghai Jiao Tong University (China) tagged Common App. See the pattern list above for why
+ * every system is gated now, not just the obviously single-country ones.
  */
 export function detectApplicationSystem(content: string, universityCountry: string): ApplicationSystemMatch | null {
   for (const { system, pattern, homeCountry } of APPLICATION_SYSTEM_PATTERNS) {
-    if (homeCountry && !sameCountry(universityCountry, homeCountry)) continue;
+    if (!sameCountry(universityCountry, homeCountry)) continue;
     const match = content.match(pattern);
     if (match) return { system, matchedText: match[0] };
   }
