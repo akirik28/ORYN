@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createAdminClient } from "@/lib/supabase/admin";
+import { tryCreateAdminClient } from "@/lib/supabase/admin";
 
 export interface SkillEndorsementInfo {
   count: number;
@@ -18,7 +18,11 @@ export async function getEndorsementsForSkills(skillIds: string[], viewerId: str
   for (const id of skillIds) result[id] = { count: 0, endorsedByMe: false };
   if (skillIds.length === 0) return result;
 
-  const admin = createAdminClient();
+  // A missing admin credential degrades to the zeroed-out result already seeded above —
+  // see tryCreateAdminClient's own comment for why (crashed a page render, found
+  // live-testing this pass).
+  const admin = tryCreateAdminClient();
+  if (!admin) return result;
   const { data } = await admin.from("skill_endorsements").select("skill_id, endorser_id").in("skill_id", skillIds);
 
   for (const row of data ?? []) {

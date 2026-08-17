@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createAdminClient } from "@/lib/supabase/admin";
+import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import type { FeaturedItemType } from "@/types/database";
 import { canViewPortfolio } from "./public-profile-authorization";
 import { FEATURED_SOURCE_TABLES, resolveFeaturedItems, type ResolvedFeaturedItem, type SourceRow } from "./featured-rules";
@@ -17,7 +17,13 @@ export * from "./featured-rules";
 export async function getFeaturedItems(userId: string, viewer: { isSelf: boolean; isPublic: boolean }): Promise<ResolvedFeaturedItem[]> {
   if (!canViewPortfolio(viewer)) return [];
 
-  const admin = createAdminClient();
+  // A missing admin credential degrading to "no featured items" is honest (there's
+  // genuinely no way to read them right now) and matches this function's own
+  // empty-array return for every other early-out case above — see tryCreateAdminClient's
+  // own comment for why this matters (crashed app/(app)/profile/page.tsx, found
+  // live-testing this pass).
+  const admin = tryCreateAdminClient();
+  if (!admin) return [];
   const { data: rows } = await admin.from("featured_items").select("*").eq("user_id", userId).order("display_order");
   if (!rows || rows.length === 0) return [];
 

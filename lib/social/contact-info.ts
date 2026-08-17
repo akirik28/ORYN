@@ -2,7 +2,7 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ContactInfo, Database } from "@/types/database";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import { canViewContactField } from "./contact-visibility";
 
 /** A contact_info row that doesn't exist yet means "nothing set, everything at its
@@ -65,11 +65,16 @@ export async function getFilteredContactInfo(
   targetUserId: string,
   viewer: { isSelf: boolean; hasAcceptedConnection: boolean }
 ): Promise<FilteredContact> {
-  const admin = createAdminClient();
-  const [{ data: contact }, { data: profile }] = await Promise.all([
-    admin.from("contact_info").select("*").eq("user_id", targetUserId).maybeSingle(),
-    admin.from("profiles").select("open_to").eq("id", targetUserId).maybeSingle(),
-  ]);
+  // A missing admin credential degrades to the same empty contact block a genuinely
+  // contact-less profile shows below — see tryCreateAdminClient's own comment for why
+  // (crashed app/(app)/u/[id]/page.tsx, found live-testing this pass).
+  const admin = tryCreateAdminClient();
+  const [{ data: contact } = { data: null }, { data: profile } = { data: null }] = admin
+    ? await Promise.all([
+        admin.from("contact_info").select("*").eq("user_id", targetUserId).maybeSingle(),
+        admin.from("profiles").select("open_to").eq("id", targetUserId).maybeSingle(),
+      ])
+    : [];
 
   if (!contact) {
     return {

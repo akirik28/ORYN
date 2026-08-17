@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createAdminClient } from "@/lib/supabase/admin";
+import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import type { RecommendationRelationship, RecommendationStatus } from "@/types/database";
 
 export interface RecommendationWithAuthor {
@@ -21,7 +21,11 @@ export interface RecommendationWithAuthor {
  * hidden recommendation, matching "recipient may show/hide" from the spec.
  */
 export async function getRecommendationsFor(recipientId: string, opts: { includeHidden?: boolean } = {}): Promise<RecommendationWithAuthor[]> {
-  const admin = createAdminClient();
+  // A missing admin credential degrades to "no recommendations shown" — see
+  // tryCreateAdminClient's own comment for why (crashed a page render, found
+  // live-testing this pass).
+  const admin = tryCreateAdminClient();
+  if (!admin) return [];
   let query = admin.from("recommendations").select("id, author_id, relationship, body, status, created_at").eq("recipient_id", recipientId);
   if (!opts.includeHidden) query = query.eq("status", "visible");
   const { data } = await query.order("created_at", { ascending: false });

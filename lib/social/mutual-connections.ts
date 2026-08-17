@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createAdminClient } from "@/lib/supabase/admin";
+import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import { intersectAcceptedConnections, excludeBlockedIds } from "./mutual-connections-rules";
 
 export * from "./mutual-connections-rules";
@@ -9,7 +9,11 @@ export * from "./mutual-connections-rules";
  * `hasAnyConnection` elsewhere in this pack (pending/declined don't count as a real
  * mutual friend). Two-query, no N+1: one `.or()` covering both participant columns. */
 async function getAcceptedConnectionIds(userId: string): Promise<Set<string>> {
-  const admin = createAdminClient();
+  // A missing admin credential degrades to "no accepted connections found" — see
+  // tryCreateAdminClient's own comment for why (crashed a page render, found
+  // live-testing this pass).
+  const admin = tryCreateAdminClient();
+  if (!admin) return new Set();
   const { data } = await admin
     .from("connections")
     .select("requester_id, recipient_id")
@@ -23,7 +27,11 @@ async function getAcceptedConnectionIds(userId: string): Promise<Set<string>> {
  * created), safe here because this never returns the block rows themselves, only a set
  * of ids used to filter another list before it's returned to anyone. */
 async function getBlockedIds(userId: string): Promise<Set<string>> {
-  const admin = createAdminClient();
+  // A missing admin credential degrades to "no blocks found" — see
+  // tryCreateAdminClient's own comment for why (crashed a page render, found
+  // live-testing this pass).
+  const admin = tryCreateAdminClient();
+  if (!admin) return new Set();
   const { data } = await admin.from("blocked_users").select("blocker_id, blocked_id").or(`blocker_id.eq.${userId},blocked_id.eq.${userId}`);
   return new Set((data ?? []).map((row) => (row.blocker_id === userId ? row.blocked_id : row.blocker_id)));
 }
@@ -45,7 +53,11 @@ export async function getMutualConnections(userA: string, userB: string): Promis
   const mutualIds = excludeBlockedIds(intersectAcceptedConnections(aIds, bIds), blockedIds);
   if (mutualIds.length === 0) return { count: 0, preview: [] };
 
-  const admin = createAdminClient();
+  // A missing admin credential still reports the correct count (computed above from
+  // connections/blocked_users reads that already degrade to empty sets) but with an
+  // empty preview rather than crashing — see tryCreateAdminClient's own comment for why.
+  const admin = tryCreateAdminClient();
+  if (!admin) return { count: mutualIds.length, preview: [] };
   const { data } = await admin.from("profiles").select("id, display_name").in("id", mutualIds.slice(0, PREVIEW_LIMIT));
 
   return {
