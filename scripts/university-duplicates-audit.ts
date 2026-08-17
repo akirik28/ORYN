@@ -121,7 +121,10 @@ const MANUALLY_VERIFIED: {
   winnerEntityId: string;
   loserEntityId: string;
   winnerUniversityId: string;
-  loserUniversityId: string;
+  /** Null for an orphan-pair merge (loser canonical_entities row has zero linked universities
+   * rows to begin with — see the 2026-08-18 batch below) — there is nothing to supersede, so
+   * `--supersede` skips these correctly rather than failing on a missing id. */
+  loserUniversityId: string | null;
   reason: string;
 }[] = [
   {
@@ -196,6 +199,265 @@ const MANUALLY_VERIFIED: {
     loserUniversityId: "0e01bc5d-0e1e-4e35-a629-2befec4e3cb3",
     reason:
       "Found via the Phase 5 rankings audit, not the name-collision detectors above: both universities.id rows independently claim QS 2027 rank_display \"63\" (no tie marker) in the SAME city (Dhahran) — the same institution counted twice, not a genuine QS tie. \"KFUPM\" doesn't share a normalized_name OR a nameVariants() key with the full name (same reason UCL needed manual search: a bare acronym vs a full name are lexically unrelated), so neither pass 1 nor pass 2 above found it. ROR live-verified 2026-08-17: https://api.ror.org/v2/organizations?query=King%20Fahd%20University%20of%20Petroleum%20and%20Minerals top hit ror.org/03yez3163 lists BOTH \"KFUPM\" and \"King Fahd University of Petroleum and Minerals\" as names on the SAME record. Winner carries website_url (kfupm.edu.sa); loser has neither website nor external ids. Note: founder-blocked-backlog.md item 25 named this pair; an earlier pass this session searched canonical_entities for \"king fahd\"/\"petroleum\" (substring), found only the winner, and wrongly concluded no duplicate existed — the loser's canonical_name is literally just \"KFUPM\", which doesn't contain either substring. Same search-gap class as UCL, just not re-applied here the first time.",
+  },
+  // ---- 2026-08-18 batch: Pass 2 orphan pairs (lower-confidence tier, Priority 9 revisit) ----
+  // Every pair below is a pure Unicode-encoding-variant collision (e.g. "Universite" vs
+  // "Université") where ONE side has zero linked `universities` rows — never product-visible,
+  // not the UCL-class bug, just registry cleanliness. Each name was independently ROR-verified
+  // (searchRorByName, single confident active match, correct country) before being added here;
+  // none were auto-authorized by classifyDuplicateCandidate() alone. loserUniversityId is null
+  // for all of them: there is no universities row on the losing side to supersede.
+  {
+    label: 'Università di Padova',
+    winnerEntityId: '0117c4a8-6ca7-49ea-920f-16fd9ca7e07a',
+    loserEntityId: 'ed84bcf0-8e57-4470-a1f7-8bca38dc6caa',
+    winnerUniversityId: '3c231660-070e-427a-ac07-f8a860df0fde',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/00240q980 ("University of Padua", IT, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'Rheinische Friedrich-Wilhelms-Universität Bonn',
+    winnerEntityId: '054145b0-fb69-4b05-81c3-4ebbea264e61',
+    loserEntityId: 'aa675909-6b63-4eb5-9e00-e7ccdd83d677',
+    winnerUniversityId: '099646dd-ffc5-4742-aeb1-cc77c69344eb',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/041nas322 ("University of Bonn", DE, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'Tecnológico de Monterrey',
+    winnerEntityId: '6950f1ef-8229-4d48-8276-64e4dce49190',
+    loserEntityId: '13125953-ddf6-4488-8df1-b76a3f4a7cfa',
+    winnerUniversityId: 'a21cd657-1964-46c0-9718-79dacf08400a',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/03ayjn504 ("Tecnológico de Monterrey", MX, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'Ludwig-Maximilians-Universität München',
+    winnerEntityId: 'acaa7e82-9f23-493c-b2cd-6f796d55363b',
+    loserEntityId: '1a44da7a-f4cf-4ed0-a643-5a5044d2fa08',
+    winnerUniversityId: '196f3ea1-6688-47f5-a561-778c3b424f23',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/05591te55 ("Ludwig-Maximilians-Universität München", DE, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'Pontificia Universidad Católica de Chile',
+    winnerEntityId: '1dcda5e8-994a-445f-bfba-55b51f446453',
+    loserEntityId: '36b31466-c5f4-4b43-94b3-f6f6a4b064ed',
+    winnerUniversityId: 'f142977d-c4d5-4451-8b12-840a7061f7be',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/04teye511 ("Pontificia Universidad Católica de Chile", CL, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'Université catholique de Louvain',
+    winnerEntityId: 'ca901071-5303-4fad-ba6e-b29bb8d33fb2',
+    loserEntityId: '1f9c225d-cbe6-49fb-8eeb-de168d94c4fc',
+    winnerUniversityId: '1407bb65-8bc1-412a-ba89-5f4a581b38df',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/02495e989 ("UCLouvain", BE, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'Université Paris 1 Panthéon-Sorbonne',
+    winnerEntityId: '5d8c838a-eba8-461a-9ef6-78d68b4dcb14',
+    loserEntityId: '215694db-b692-40e0-b295-57d4e1f6fa96',
+    winnerUniversityId: '310f397e-bf9e-41b6-ad15-5c66593f5395',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/002t25c44 ("Université Paris 1 Panthéon-Sorbonne", FR, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'Friedrich-Alexander-Universität Erlangen-Nürnberg',
+    winnerEntityId: '22dfc61a-1aa8-4714-9e50-5d7616986a68',
+    loserEntityId: '94d28bc5-7455-4666-9c0b-50f3c2cef53b',
+    winnerUniversityId: '49d066e3-52e6-4372-95ce-24212ecd96bb',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/00f7hpc57 ("Friedrich-Alexander-Universität Erlangen-Nürnberg", DE, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'Technische Universität Wien',
+    winnerEntityId: '59707410-98a8-43da-a218-451cb0e24d40',
+    loserEntityId: '27cda26b-7ead-42f6-8b0a-6238535a2990',
+    winnerUniversityId: 'e239a049-634f-4c02-9756-86078f2b6c58',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/04d836q62 ("TU Wien", AT, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'Universität Hamburg',
+    winnerEntityId: '2a77ff73-2b95-421c-b534-425d1fa95d03',
+    loserEntityId: '9a7b3262-2a8b-4ff9-930f-bab1fffaba28',
+    winnerUniversityId: 'bb9fc142-370a-4ba3-869b-936e203a89fd',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/00g30e956 ("Universität Hamburg", DE, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'Université de Montréal',
+    winnerEntityId: '2cc37315-d860-4fd9-8c19-c30ed9b0d10c',
+    loserEntityId: 'b9a23d64-4823-410b-aaa1-55b03c425118',
+    winnerUniversityId: '5c116aba-9932-401d-b2e8-1879500cfb51',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/0161xgx34 ("Université de Montréal", CA, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'Technische Universität Dresden',
+    winnerEntityId: '2eb696b9-0518-40f6-8cd0-d433315e7f44',
+    loserEntityId: 'd2b78c57-728a-4b69-8eab-70928e05f0e4',
+    winnerUniversityId: '9b957f10-d9d0-4a64-b28e-601bd6cc8a61',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/042aqky30 ("Technische Universität Dresden", DE, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'Universitat Autònoma de Barcelona',
+    winnerEntityId: '735c08c7-a32c-4c2c-b502-f2d3a2186b6d',
+    loserEntityId: '30885d05-fd24-4f74-8bc5-ff269f8efd5c',
+    winnerUniversityId: 'fb7243be-4a54-411a-94ae-04261dec71b9',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/052g8jq94 ("Universitat Autònoma de Barcelona", ES, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'Boğaziçi University',
+    winnerEntityId: '31aaadf6-c81a-4782-a336-064a1f56a914',
+    loserEntityId: '751ea344-2906-425e-9494-a5f9d19f5ecc',
+    winnerUniversityId: '5df0803b-98e5-4484-9798-c59dddcddb84',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/03z9tma90 ("Boğaziçi University", TR, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'Université Paris-Saclay',
+    winnerEntityId: '674efb18-0ef8-4b9e-9b5a-d22c7f515778',
+    loserEntityId: '37c64850-9f4c-435c-8b82-b2e8da119b9e',
+    winnerUniversityId: 'd1f0faea-c787-47cc-85a2-648bcee6e63d',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/03xjwb503 ("Université Paris-Saclay", FR, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'Universite libre de Bruxelles',
+    winnerEntityId: '7291a334-983c-4aec-bb3b-5a44fdf236ef',
+    loserEntityId: '38f58033-08fa-4f43-a4ab-baede0969d4e',
+    winnerUniversityId: 'f74ab3bd-97a0-4d65-91bd-973cc6a7f4de',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/01r9htc13 ("Université Libre de Bruxelles", BE, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'Alma Mater Studiorum - Università di Bologna',
+    winnerEntityId: '408e2804-cee5-4608-9da4-7d12afa3ee5b',
+    loserEntityId: 'a487b667-5944-4630-a377-518014632f31',
+    winnerUniversityId: '3acf2e36-46ab-4bbb-a379-8323789f5f8f',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/01111rn36 ("University of Bologna", IT, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'École Normale Supérieure de Lyon',
+    winnerEntityId: '42d6d2f7-8d6a-45a7-91ee-a7f32f5f914b',
+    loserEntityId: '4de1389d-d989-4dd1-8b84-f1b6d97553d0',
+    winnerUniversityId: '2b729fee-39f8-4530-99d7-a4adcf300d21',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/04zmssz18 ("École Normale Supérieure de Lyon", FR, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'Eberhard Karls Universität Tübingen',
+    winnerEntityId: '436d4180-6c84-4d32-9fb6-035f33482947',
+    loserEntityId: 'e1a2109b-bc3e-4a8a-8638-73a3e1e647c4',
+    winnerUniversityId: 'f1d89d6d-ef0c-4ba6-83cf-29efeb9f9723',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/03a1kwz48 ("University of Tübingen", DE, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'Technische Universität Berlin',
+    winnerEntityId: '4c2d3edf-f2a0-440a-9df2-da68063e7028',
+    loserEntityId: 'f0744b9b-d403-41b5-923e-978424889070',
+    winnerUniversityId: '4627fa0c-24f7-427a-9371-555142aab3ce',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/03v4gjf40 ("Technische Universität Berlin", DE, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'Koç University',
+    winnerEntityId: 'dd2ef768-3196-42c2-b22f-842aeb4899e8',
+    loserEntityId: '713a3f78-c1be-4ac2-b2a9-8a9ffa020403',
+    winnerUniversityId: '6e66c4e7-9d04-4262-8d33-27df6ca04c7d',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/00jzwgz36 ("Koç University", TR, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'Universidad Autónoma de Madrid',
+    winnerEntityId: '85893220-e293-4709-a836-9998d7d9eea8',
+    loserEntityId: '73a621e5-f14c-4c40-a914-9f3ef3ec3486',
+    winnerUniversityId: 'ad25a8be-7282-48b9-a80f-004f4807482a',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/01cby8j38 ("Universidad Autónoma de Madrid", ES, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'EPFL – École polytechnique fédérale de Lausanne',
+    winnerEntityId: '7a4021cc-618d-4aef-b683-1a5b6f09de84',
+    loserEntityId: 'afe22b01-902a-4463-8f26-3e3e6606eb11',
+    winnerUniversityId: '846029e2-39bd-40f1-8c00-bc263edbaaca',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/02s376052 ("École Polytechnique Fédérale de Lausanne", CH, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'Universidade de São Paulo',
+    winnerEntityId: '7a8d1db7-77fa-4849-95ac-9ec63be6e0b0',
+    loserEntityId: 'b6ed4ebb-3256-4800-8dfb-cd27e5e32f0c',
+    winnerUniversityId: '5731030f-fe57-48c4-b4ab-2f64595ca088',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/036rp1748 ("Universidade de São Paulo", BR, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'Humboldt-Universität zu Berlin',
+    winnerEntityId: '89bf2564-590f-4fb8-90f0-a2c5479103c4',
+    loserEntityId: '9cb88d6b-1d80-413a-bfb2-99b956c36fae',
+    winnerUniversityId: '84925a17-9a73-43a0-982c-2a9b846a545d',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/01hcx6992 ("Humboldt-Universität zu Berlin", DE, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'Universidad Nacional Autónoma de México',
+    winnerEntityId: 'dfeeae86-0584-46de-a513-d88908d3c81f',
+    loserEntityId: '92c34c0a-7009-4c5e-b123-b726b8a145bb',
+    winnerUniversityId: 'bd8f606a-3bc2-4075-bb21-26869b494733',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/01tmp8f25 ("Universidad Nacional Autónoma de México", MX, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'Universität Heidelberg',
+    winnerEntityId: 'ede64132-e8b1-4acf-a746-5b00d24720e2',
+    loserEntityId: 'b984bc89-aef9-4ddc-af61-5ef7e794c333',
+    winnerUniversityId: '700cae63-1c38-40fe-b682-88374c47a75d',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/038t36y30 ("Heidelberg University", DE, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
+  },
+  {
+    label: 'Université PSL',
+    winnerEntityId: 'c6d07213-3c82-41a7-8861-2ba4eb28f2ad',
+    loserEntityId: 'eb1ed612-126d-43b7-8fb4-92e336c8e1fc',
+    winnerUniversityId: '42f43a53-b072-4734-8c22-6499b1254b04',
+    loserUniversityId: null,
+    reason:
+      'ROR live-verified 2026-08-18: top-resolves uniquely to https://ror.org/013cjyk83 ("Université Paris Sciences et Lettres", FR, active). Loser is a pure Unicode-encoding-variant canonical_entities row with zero linked universities rows (never enriched) — no data-loss risk from the merge.',
   },
 ];
 
@@ -410,6 +672,10 @@ async function main(): Promise<void> {
     }
     console.log(`\nMarking the losing side of ${MANUALLY_VERIFIED.length} hand-verified pair(s) as superseded...`);
     for (const pair of MANUALLY_VERIFIED) {
+      if (pair.loserUniversityId === null) {
+        console.log(`  skip ${pair.label}: orphan pair, no losing universities row to supersede.`);
+        continue;
+      }
       const response = await fetch(`${url}/rest/v1/universities?id=eq.${pair.loserUniversityId}`, {
         method: "PATCH",
         headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json", Prefer: "return=minimal" },
