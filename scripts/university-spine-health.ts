@@ -17,6 +17,20 @@
  * proceeding — so "the count matches the paginated read" is enforced by construction, not
  * re-implemented here.
  *
+ * Extended (University Intelligence Spine continuation session) with five more checks beyond
+ * the original four, each tied to a real incident this workstream actually hit rather than a
+ * hypothetical: false-precision ranking rows, duplicate ranking positions, duplicate
+ * university_profile_metrics rows, out-of-range student counts, and known-bad admissions_url
+ * patterns (see each check's own comment for the specific incident).
+ *
+ * **One check is currently a known, expected FAIL**: "no canonical_entity_id shared by >1 live
+ * universities row" — 9 pairs/18 rows, tracked in founder-blocked-backlog.md item 25, blocked
+ * on migration 0043 needing DDL access this repo's automated sessions don't have. This is
+ * intentional, not a bug in the gate: it stays a hard FAIL (not suppressed or downgraded) so
+ * the count can never silently grow past 9, and so applying the eventual fix has an automated
+ * way to confirm it worked. A red exit code from this one check specifically is expected until
+ * that migration lands — check the detail line before assuming something new broke.
+ *
  * Usage:
  *   npm run check:university-spine-health [-- --min-universities 1000]
  */
@@ -121,6 +135,119 @@ async function main(): Promise<void> {
     name: "every universities row has canonical_entity_id",
     pass: missingLink.length === 0,
     detail: missingLink.length === 0 ? "clean" : `${missingLink.length} row(s) missing a link, e.g. ${missingLink[0].id}`,
+  });
+
+  // 5. No false-precision ranking rows: a band-shaped rank_display (e.g. "601-610") must
+  // never carry a non-null rank_numeric — migration 0038's own column comment requires this,
+  // and AGENTS.md's non-negotiable rule 5 ("admission/ranking figures must never be presented
+  // with false precision") makes this a product-trust invariant, not a style preference.
+  // Manually verified clean once during Phase 5; this makes that check permanent instead of a
+  // one-time finding that could silently regress on the next ingestion.
+  const { rows: rankings } = await fetchAllRowsVerified<{ university_id: string; ranking_provider: string; ranking_edition: string; rank_display: string; rank_numeric: number | null }>(
+    rest,
+    "university_rankings",
+    "university_id,ranking_provider,ranking_edition,rank_display,rank_numeric",
+    "order=university_id.asc"
+  );
+  const falsePrecision = rankings.filter((r) => r.rank_numeric !== null && /[^0-9]/.test(r.rank_display.replace(/^=/, "")));
+  checks.push({
+    name: "no band-shaped rank_display with a non-null rank_numeric",
+    pass: falsePrecision.length === 0,
+    detail: falsePrecision.length === 0 ? "clean" : `${falsePrecision.length} row(s), e.g. ${falsePrecision[0].university_id} "${falsePrecision[0].rank_display}"`,
+  });
+
+  // 6. No canonical_entity_id shared by more than one live universities row. This is the
+  // precise form of a check attempted twice while building this out: the first version tried
+  // to infer duplicates from shared QS rank_display, which turned out to be unusable — sampled
+  // live, the overwhelming majority of rank collisions past roughly the top 100 are ordinary
+  // QS ties between entirely unrelated real institutions (e.g. HSE University and National
+  // Taiwan Normal University both at #423), not our data being wrong, and this dataset doesn't
+  // consistently mark them with QS's own "=" tie prefix. canonical_entity_id is the actual
+  // ground truth instead: `merge_canonical_entities()` (Phase 2 this session, 9 pairs — see
+  // founder-blocked-backlog.md item 25) repoints both sides of a merge to the SAME
+  // canonical_entity_id but deliberately never touches the `universities` rows themselves, so
+  // a merged pair's two rows sharing one canonical_entity_id is the exact documented "still
+  // open" gap, not a new bug. **Expected to currently FAIL with exactly 9 pairs/18 rows** until
+  // migration 0043 is applied (DDL-access-blocked, not code-blocked) and those rows are
+  // superseded — failing loudly here is intentional so the gate can never silently regress
+  // past 9, and so applying the fix has an automated way to confirm it actually worked.
+  const entityOwners = new Map<string, Set<string>>();
+  for (const u of uniLinks) {
+    if (!u.canonical_entity_id) continue;
+    entityOwners.set(u.canonical_entity_id, (entityOwners.get(u.canonical_entity_id) ?? new Set()).add(u.id));
+  }
+  const entityCollisions = [...entityOwners.entries()].filter(([, owners]) => owners.size > 1);
+  checks.push({
+    name: "no canonical_entity_id shared by >1 live universities row",
+    pass: entityCollisions.length === 0,
+    detail:
+      entityCollisions.length === 0
+        ? "clean"
+        : `${entityCollisions.length} pair(s)/${entityCollisions.reduce((n, [, o]) => n + o.size, 0)} row(s) — expected until migration 0043 applies, see founder-blocked-backlog.md item 25: ${entityCollisions.map(([k, o]) => `${k}->${[...o].join(",")}`).join("; ")}`,
+  });
+
+  // 7. No duplicate (university_id, metric_code, scope) in university_profile_metrics. This
+  // table's fill_if_null/upgrade write paths (enrich-student-counts.ts,
+  // enrich-student-counts-us.ts) all assume at most one row per (university, metric, scope)
+  // when deciding whether to insert or update — a duplicate here means some future read that
+  // expects "the" current value (.maybeSingle()-shaped call sites) would silently pick
+  // whichever row the query planner returns first.
+  const { rows: metrics } = await fetchAllRowsVerified<{ university_id: string; metric_code: string; scope: string }>(
+    rest,
+    "university_profile_metrics",
+    "university_id,metric_code,scope",
+    "order=university_id.asc"
+  );
+  const metricKeyCounts = new Map<string, number>();
+  for (const m of metrics) {
+    const key = `${m.university_id}:${m.metric_code}:${m.scope}`;
+    metricKeyCounts.set(key, (metricKeyCounts.get(key) ?? 0) + 1);
+  }
+  const metricDuplicates = [...metricKeyCounts.entries()].filter(([, n]) => n > 1);
+  checks.push({
+    name: "no duplicate (university, metric_code, scope) in university_profile_metrics",
+    pass: metricDuplicates.length === 0,
+    detail: metricDuplicates.length === 0 ? "clean" : `${metricDuplicates.length} key(s), e.g. ${metricDuplicates[0][0]} (${metricDuplicates[0][1]}x)`,
+  });
+
+  // 8. Student-count metrics within a sane range. Not a coverage/quality check (that's
+  // report:universities) — this is a catastrophic-input guard: a unit mixup or parser bug
+  // (e.g. a future CSV column-index shift) producing a zero, negative, or absurd headcount
+  // should fail the gate immediately rather than surface as a silently wrong number on a
+  // student-facing page. Ceiling is generous on purpose (the largest single-campus
+  // universities worldwide top out in the 150k-200k range) — this catches garbage, not
+  // legitimately large institutions.
+  const { rows: studentMetrics } = await fetchAllRowsVerified<{ university_id: string; metric_code: string; value_numeric: number | null }>(
+    rest,
+    "university_profile_metrics",
+    "university_id,metric_code,value_numeric",
+    "metric_code=in.(total_students,undergraduate_students,postgraduate_students)&order=university_id.asc"
+  );
+  const insaneStudentCounts = studentMetrics.filter((m) => m.value_numeric !== null && (m.value_numeric <= 0 || m.value_numeric > 500_000));
+  checks.push({
+    name: "student-count metrics within a sane range (0, 500000]",
+    pass: insaneStudentCounts.length === 0,
+    detail: insaneStudentCounts.length === 0 ? "clean" : `${insaneStudentCounts.length} row(s), e.g. ${insaneStudentCounts[0].university_id}/${insaneStudentCounts[0].metric_code} = ${insaneStudentCounts[0].value_numeric}`,
+  });
+
+  // 9. No known-bad admissions_url pattern live. Mirrors scripts/audit-admissions-quality.ts's
+  // two structural patterns (kept separate/duplicated deliberately, same reasoning as that
+  // script's own header comment: this operates on URL-only evidence, not a full re-score).
+  // Folded into the fast gate too because this specific bug class has already recurred twice
+  // on the same university (LSE) within this session — worth a permanent, zero-cost tripwire
+  // in addition to the dedicated audit script, not instead of it.
+  const { rows: admissionsUrls } = await fetchAllRowsVerified<{ id: string; admissions_url: string | null }>(
+    rest,
+    "universities",
+    "id,admissions_url",
+    "admissions_url=not.is.null&order=id.asc"
+  );
+  const badAdmissionsPattern = /extenuating[- ]circumstances|special[- ]circumstances|mitigating[- ]circumstances|\bappeals?\b|\bcomplaints?\b|\/news\/|admission\s*results?|admission\s*scores?|entry\s*(?:cut[- ]?off|scores?)/i;
+  const badAdmissionsUrls = admissionsUrls.filter((u) => u.admissions_url && badAdmissionsPattern.test(u.admissions_url));
+  checks.push({
+    name: "no known-bad admissions_url pattern",
+    pass: badAdmissionsUrls.length === 0,
+    detail: badAdmissionsUrls.length === 0 ? "clean" : `${badAdmissionsUrls.length} row(s), e.g. ${badAdmissionsUrls[0].id} -> ${badAdmissionsUrls[0].admissions_url}`,
   });
 
   console.log("=".repeat(70));
