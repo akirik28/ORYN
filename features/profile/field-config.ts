@@ -1,4 +1,5 @@
 import type { EntityScope } from "@/lib/entities/field-policy";
+import { INTEREST_SUGGESTIONS } from "@/lib/validation/onboarding";
 
 // Essay Story Bank (founder-confirmed MVP scope) reads this field as candidate material —
 // never CV-facing, never auto-summarized. One shared field, one shared prompt list, reused
@@ -34,7 +35,38 @@ export type FieldConfig =
       customLabel?: string;
       placeholder?: string;
       span?: "full" | "half";
-    };
+    }
+  // Canonical-suggestion text field (features/entities/suggest-input.tsx) — for a small,
+  // mostly-closed vocabulary (test names, course subjects) that doesn't warrant the full
+  // registry `"entity"` uses. Unlike "select", never rejects or forces a value to be one of
+  // `suggestions` — a genuinely custom entry is always valid and stored as typed.
+  | { type: "suggest"; name: string; label: string; suggestions: string[]; placeholder?: string; span?: "full" | "half" };
+
+/** Real, defensible test names an ORYN student plausibly reports — not the founder brief's
+ * example list copied blindly (the brief explicitly warned against that): checked against
+ * this app's own stated geographic focus (US/UK/Europe/Turkey — AGENTS.md) and against the
+ * `test_scores` schema, which has no existing test-type enum to draw from (test_name is plain
+ * text with no prior canonical list anywhere in the codebase). YKS included alongside the
+ * international standard tests since Turkey is an explicit focus market and this session
+ * already established YKS as a real, distinct national exam (lib/acquisition/admissions.ts's
+ * application-system taxonomy). A student whose real test isn't here can still type it —
+ * this is a suggestion list, not a closed set. */
+export const TEST_NAME_SUGGESTIONS = [
+  "SAT",
+  "ACT",
+  "PSAT/NMSQT",
+  "AP",
+  "IB Predicted",
+  "IB Final",
+  "A-Level",
+  "IELTS Academic",
+  "IELTS General Training",
+  "TOEFL iBT",
+  "Duolingo English Test",
+  "Cambridge English (C1 Advanced)",
+  "Cambridge English (C2 Proficiency)",
+  "YKS",
+];
 
 export const ACTIVITY_CATEGORY_OPTIONS = [
   { value: "club", label: "Club" },
@@ -264,7 +296,7 @@ export const COURSE_LEVEL_LABELS: Record<string, string> = Object.fromEntries(CO
 export const COURSE_FIELDS: FieldConfig[] = [
   { type: "text", name: "course_name", label: "Course", placeholder: "e.g. AP Microeconomics" },
   { type: "select", name: "level", label: "Level", options: COURSE_LEVEL_OPTIONS, span: "half" },
-  { type: "text", name: "subject", label: "Subject", placeholder: "e.g. Economics", span: "half" },
+  { type: "suggest", name: "subject", label: "Subject", suggestions: INTEREST_SUGGESTIONS, placeholder: "e.g. Economics", span: "half" },
   { type: "text", name: "academic_year", label: "Academic year", placeholder: "e.g. 2026-27", span: "half" },
   { type: "text", name: "grade_value", label: "Grade (optional)", placeholder: "e.g. A, 5, 7", span: "half" },
   { type: "text", name: "grade_scale", label: "Grade scale (optional)", placeholder: "e.g. A-F, 1-5, 1-7", span: "half" },
@@ -272,7 +304,7 @@ export const COURSE_FIELDS: FieldConfig[] = [
 ];
 
 export const TEST_SCORE_FIELDS: FieldConfig[] = [
-  { type: "text", name: "test_name", label: "Test name (e.g. SAT, IB Predicted)" },
+  { type: "suggest", name: "test_name", label: "Test name", suggestions: TEST_NAME_SUGGESTIONS, placeholder: "e.g. SAT, IB Predicted" },
   { type: "text", name: "score", label: "Score", span: "half" },
   { type: "text", name: "max_score", label: "Max score", span: "half" },
   { type: "date", name: "test_date", label: "Date" },
