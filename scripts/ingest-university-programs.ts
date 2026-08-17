@@ -2,13 +2,21 @@
 /**
  * University-programs research handoff ingestion (spec Phase: university programs
  * pipeline). Reads a JSONL batch matching docs/research-handoff-university-programs.md,
- * resolves each record's university via lib/programs/ingest.ts's strict alias-aware
- * matching, and writes every outcome (accepted/duplicate/unresolved/insufficient-evidence)
- * to program_research_queue — only `accepted` rows also land in university_programs.
+ * resolves each record's university via lib/acquisition/identity.ts's shared, alias-aware
+ * matching, and writes every outcome (accepted/duplicate/unresolved/insufficient-evidence/
+ * malformed-source) to program_research_queue — only `accepted` rows also land in
+ * university_programs.
  *
  * Idempotent and restartable: re-running the same batch produces `duplicate` outcomes for
  * anything already accepted, never a second insert (belt-and-suspenders with the DB's own
  * unique index on university_programs).
+ *
+ * Reads universities/aliases/external-ids via lib/acquisition/paginate.ts rather than a
+ * plain supabase-js `.select()` — PostgREST's default 1000-row cap silently truncates an
+ * unpaginated read, and `universities` alone is 1010 rows. An earlier version of this
+ * script had exactly that bug (would have silently dropped the last ~10 universities,
+ * alphabetically, from the candidate pool); fixed as part of reconciling with the
+ * acquisition pipeline's own hard-won fix for the same bug class.
  *
  * Usage:
  *   npm run ingest:university-programs -- data/research/university-programs/batch1.jsonl
@@ -18,7 +26,9 @@
  * constraint as scripts/enrich-student-counts.ts).
  */
 import { readFileSync } from "node:fs";
-import { decideIngestion, type ResearchProgramRecord, type UniversityLookupRow } from "../lib/programs/ingest";
+import { decideIngestion, type ResearchProgramRecord } from "../lib/programs/ingest";
+import type { LocalUniversity } from "../lib/acquisition/identity";
+import { fetchAllRowsVerified, type PostgrestTarget } from "../lib/acquisition/paginate";
 
 try {
   process.loadEnvFile(".env.local");
@@ -41,6 +51,56 @@ function parseJsonl(path: string): ResearchProgramRecord[] {
   return records;
 }
 
+interface UniversityRow {
+  id: string;
+  name: string;
+  country: string;
+  canonical_entity_id: string | null;
+}
+interface AliasRow {
+  entity_id: string;
+  alias: string;
+}
+interface ExternalIdRow {
+  entity_id: string;
+  id_system: string;
+  external_id: string;
+}
+interface ExistingProgramRow {
+  university_id: string;
+  normalized_name: string;
+  degree_level: string | null;
+}
+
+/** Full candidate pool for identity resolution — every university, alias-enriched, read
+ * completely (see the pagination note above). Aliases/external-ids are grouped in memory
+ * rather than joined per-university to avoid N+1 requests. */
+async function loadUniversityCandidates(target: PostgrestTarget): Promise<LocalUniversity[]> {
+  const [{ rows: universities }, { rows: aliases }, { rows: externalIds }] = await Promise.all([
+    fetchAllRowsVerified<UniversityRow>(target, "universities", "id,name,country,canonical_entity_id", "order=id"),
+    fetchAllRowsVerified<AliasRow>(target, "entity_aliases", "entity_id,alias", "order=id"),
+    fetchAllRowsVerified<ExternalIdRow>(target, "entity_external_ids", "entity_id,id_system,external_id", "order=id"),
+  ]);
+
+  const aliasesByEntity = new Map<string, string[]>();
+  for (const a of aliases) aliasesByEntity.set(a.entity_id, [...(aliasesByEntity.get(a.entity_id) ?? []), a.alias]);
+
+  const externalIdsByEntity = new Map<string, Record<string, string>>();
+  for (const e of externalIds) {
+    const existing = externalIdsByEntity.get(e.entity_id) ?? {};
+    existing[e.id_system] = e.external_id;
+    externalIdsByEntity.set(e.entity_id, existing);
+  }
+
+  return universities.map((u) => ({
+    id: u.id,
+    name: u.name,
+    country: u.country,
+    aliases: u.canonical_entity_id ? aliasesByEntity.get(u.canonical_entity_id) : undefined,
+    externalIds: u.canonical_entity_id ? externalIdsByEntity.get(u.canonical_entity_id) : undefined,
+  }));
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const apply = args.includes("--apply");
@@ -58,30 +118,24 @@ async function main() {
     process.exitCode = 1;
     return;
   }
+  const target: PostgrestTarget = { url, key: secretKey };
 
   const records = parseJsonl(path);
   console.log(`Loaded ${records.length} record(s) from ${path}.`);
 
+  const [universities, { rows: existing }] = await Promise.all([
+    loadUniversityCandidates(target),
+    fetchAllRowsVerified<ExistingProgramRow>(target, "university_programs", "university_id,normalized_name,degree_level", "order=id"),
+  ]);
+  console.log(`Candidate pool: ${universities.length} universities (paginated + exact-count verified).`);
+
+  const existingKeys = new Set(existing.map((r) => `${r.university_id}|${r.normalized_name}|${r.degree_level ?? ""}`));
+
   const { createClient } = await import("@supabase/supabase-js");
   const admin = createClient(url, secretKey, { auth: { autoRefreshToken: false, persistSession: false } });
 
-  const { data: universities, error: uniError } = await admin.from("universities").select("id, name, country, website_url");
-  if (uniError) {
-    console.error(`Couldn't read universities: ${uniError.message}`);
-    process.exitCode = 1;
-    return;
-  }
-
-  const { data: existing, error: existingError } = await admin.from("university_programs").select("university_id, normalized_name, degree_level");
-  if (existingError) {
-    console.error(`Couldn't read existing university_programs: ${existingError.message}`);
-    process.exitCode = 1;
-    return;
-  }
-  const existingKeys = new Set((existing ?? []).map((r) => `${r.university_id}|${r.normalized_name}|${r.degree_level ?? ""}`));
-
   const batchId = `${path.split("/").pop()}_${new Date().toISOString().slice(0, 10)}`;
-  const decisions = records.map((record) => ({ record, decision: decideIngestion(record, universities as UniversityLookupRow[], existingKeys) }));
+  const decisions = records.map((record) => ({ record, decision: decideIngestion(record, universities, existingKeys) }));
 
   const counts: Record<string, number> = {};
   for (const { decision } of decisions) counts[decision.outcome] = (counts[decision.outcome] ?? 0) + 1;

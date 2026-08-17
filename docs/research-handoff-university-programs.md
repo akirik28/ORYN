@@ -51,8 +51,9 @@ Required: `university_name`, `university_country`, `program_name`, `official_pro
 optional — leave a field `null` rather than guessing; the ingestion pipeline never
 interprets a missing field as a negative or default value.
 
-`university_official_domain` is optional but resolves far more reliably than name+country
-alone (see Entity linking below) — include it whenever the researcher has it.
+`university_official_domain` is accepted in the contract for a researcher's own record-keeping
+and possible future use, but is **not currently consulted by resolution** — see Entity linking
+below for what actually decides a match today.
 
 `subject_hint` is advisory only. The ingestion pipeline independently re-derives
 `subject_taxonomy` from `program_name` via `lib/programs/subject-taxonomy.ts` — a
@@ -80,47 +81,61 @@ A candidate is promoted into `university_programs` with `verification_state =
    'unresolved_university'` and `university_id = NULL`. It is never inserted into
    `university_programs` with a guessed or null university — that table's `university_id`
    is `NOT NULL` at the schema level specifically to make this impossible.
-2. **`official_program_url` and `source_url` are both present** and non-empty.
+2. **`official_program_url` and `source_url` are both present**, and `source_url` resolves
+   to an accepted authority for the `"programs"` fact class via
+   `lib/acquisition/source-authority.ts`'s `sourceAuthority()` — in practice, the
+   institution's own domain and nothing else (open registries and third-party-structured
+   sources are accepted for *identity* and *population* facts respectively, never for
+   programs). A record cannot self-certify `source_type: "official_primary"`; the URL has
+   to actually earn it. Failing this is `outcome = 'malformed_source'`.
 3. **`verification_status` indicates the source page was actually read**, not merely found
-   via search (see above).
+   via search (see above). Failing this is `outcome = 'insufficient_evidence'`.
 4. **Not a duplicate** — `(university_id, normalized_name, degree_level)` doesn't already
    exist in `university_programs` (enforced by both the ingestion logic and a DB unique
-   index, so a race between two ingestion runs still can't double-insert).
+   index, so a race between two ingestion runs still can't double-insert). Failing this is
+   `outcome = 'duplicate'`.
 
-Anything failing gate 2 or 3 lands in `program_research_queue` with `outcome =
-'insufficient_evidence'`; gate 4 failures get `outcome = 'duplicate'`. Every queue row
-carries its `research_program_id` and full input fields, so a later, better-evidenced
-research pass can be re-submitted and re-ingested without losing the earlier attempt's
-trail.
+Every queue row carries its `research_program_id` and full input fields, so a later,
+better-evidenced research pass can be re-submitted and re-ingested without losing the
+earlier attempt's trail.
 
 Tier-1 evidence only (per `AGENTS.md` Phase 3): the official university/department page,
 official admissions page, or official catalog/programme-regulations page. QS subject
 rankings, Wikipedia, Wikidata, educational directories, and AI-recalled knowledge are
-discovery aids at best — never cited as `source_url` for a `verified_current` row.
+discovery aids at best — never cited as `source_url` for a `verified_current` row, and
+`sourceAuthority()` refuses them outright (see its `EXCLUDED_DOMAINS`).
 
-## Entity linking — strict, alias-aware, never fuzzy
+## Entity linking — strict, alias-aware, never fuzzy, and shared platform-wide
 
-Resolution order (`lib/programs/ingest.ts`'s `resolveUniversity`):
+University identity resolution is **not** program-specific logic. It calls
+`lib/acquisition/identity.ts`'s `resolveIdentity()` — the one entity-matching
+implementation this product has, also used by the university-facts acquisition pipeline
+(`scripts/acquire-university-facts.ts`). Resolution order:
 
-1. Exact match on `universities.name` (case/whitespace-normalized) + `country` (with a
-   small, explicit alias table for known label variants — e.g. `Türkiye` ↔ `Turkey` — see
-   `COUNTRY_ALIASES`).
-2. If `university_official_domain` is present, match against `universities.website_url`'s
-   domain.
-3. A short, explicit, hand-verified override table for well-known abbreviations/short
-   forms the exact match can't bridge (`MANUAL_ALIAS_OVERRIDES` — e.g. `"EPFL"` →
-   the live row whose full name is "EPFL – École polytechnique fédérale de Lausanne").
-   Every entry here was independently confirmed as the single correct institution before
-   being added — see the migration-batch commit for the confirmation trail. This table is
-   deliberately small and reviewed by hand on every addition, not grown automatically.
-4. Nothing else. No trigram/fuzzy matching, no "closest name wins." A university with two
-   plausible candidates (e.g. "University of Edinburgh" text-matching both "The University
-   of Edinburgh" and the unrelated "Edinburgh Napier University") resolves to neither
-   automatically — it's either disambiguated by domain/override, or left unresolved.
+1. **External ids** (`entity_external_ids`, e.g. a shared Wikidata/GRID id) — decisive when
+   present on both sides, ahead of any name comparison.
+2. **Exact name match** (`nameKey`-normalized: accent-insensitive, leading-"The"-insensitive)
+   within the same country (`sameCountry`, which knows label variants like `Türkiye`↔`Turkey`).
+3. **Name-variant match** — parenthetical suffixes, trailing dash-acronyms, "X, University
+   of" inversions (`nameVariants`) — still within the matching country.
+4. **Registered alias match** (`entity_aliases`, attached to the university's
+   `canonical_entity_id`) — the loosest signal, so it only decides when nothing stronger
+   did, still country-scoped.
 
-If a future batch needs broader alias coverage than the override table gives, the correct
-fix is a real `entity_aliases` row (see `lib/entities/`), reviewed the same way university
-identity is reviewed everywhere else in this product — not a lower match threshold here.
+Nothing else. No trigram/fuzzy matching, no "closest name wins." A university with two
+plausible candidates (e.g. "University of Edinburgh" text-matching both "The University of
+Edinburgh" and the unrelated "Edinburgh Napier University") resolves via Edinburgh's
+registered alias to the correct row, never to Napier — and if *neither* candidate had a
+clear signal, both tiers 2–4 return every equally-plausible match and `resolveIdentity`
+reports `unresolved`, not a guess.
+
+**Well-known abbreviations belong in `entity_aliases`, not in this pipeline.** The first
+batch (2026-08-17) needed seven such aliases (EPFL, Humboldt, NYU, Bologna, UC Berkeley,
+Edinburgh, Mannheim); two (NYU, UC Berkeley) already existed in the registry from earlier
+work, and the other five were added directly to `entity_aliases` as part of reconciling
+this pipeline with the shared identity architecture — never as a program-pipeline-local
+override table. Every future "well-known short form" gap is a registry gap to close the
+same way, reviewed by hand on every addition, not a lower match threshold in this pipeline.
 
 ## Producing a batch
 

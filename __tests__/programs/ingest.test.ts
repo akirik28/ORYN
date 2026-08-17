@@ -1,13 +1,15 @@
 import { describe, expect, test } from "vitest";
-import { decideIngestion, resolveUniversity, looksPageConfirmed, type ResearchProgramRecord, type UniversityLookupRow } from "@/lib/programs/ingest";
+import { decideIngestion, resolveUniversity, looksPageConfirmed, type ResearchProgramRecord } from "@/lib/programs/ingest";
+import type { LocalUniversity } from "@/lib/acquisition/identity";
 
-const MIT: UniversityLookupRow = { id: "uni-mit", name: "Massachusetts Institute of Technology", country: "United States", website_url: "https://web.mit.edu" };
-const EDINBURGH: UniversityLookupRow = { id: "uni-edi", name: "The University of Edinburgh", country: "United Kingdom", website_url: "https://www.ed.ac.uk" };
-const NAPIER: UniversityLookupRow = { id: "uni-nap", name: "Edinburgh Napier University", country: "United Kingdom", website_url: "https://www.napier.ac.uk" };
-const KFUPM_A: UniversityLookupRow = { id: "uni-kfupm-a", name: "King Fahd University of Petroleum and Minerals", country: "Saudi Arabia", website_url: null };
-const KFUPM_B: UniversityLookupRow = { id: "uni-kfupm-b", name: "King Fahd University of Petroleum and Minerals", country: "Saudi Arabia", website_url: null };
+const MIT: LocalUniversity = { id: "uni-mit", name: "Massachusetts Institute of Technology", country: "United States" };
+const EDINBURGH: LocalUniversity = { id: "uni-edi", name: "The University of Edinburgh", country: "United Kingdom", aliases: ["University of Edinburgh"] };
+const NAPIER: LocalUniversity = { id: "uni-nap", name: "Edinburgh Napier University", country: "United Kingdom" };
+const KFUPM_A: LocalUniversity = { id: "uni-kfupm-a", name: "King Fahd University of Petroleum and Minerals", country: "Saudi Arabia" };
+const KFUPM_B: LocalUniversity = { id: "uni-kfupm-b", name: "King Fahd University of Petroleum and Minerals", country: "Saudi Arabia" };
+const EPFL: LocalUniversity = { id: "uni-epfl", name: "EPFL – École polytechnique fédérale de Lausanne", country: "Switzerland", aliases: ["EPFL"] };
 
-const UNIVERSITIES = [MIT, EDINBURGH, NAPIER, KFUPM_A, KFUPM_B];
+const UNIVERSITIES = [MIT, EDINBURGH, NAPIER, KFUPM_A, KFUPM_B, EPFL];
 
 function record(overrides: Partial<ResearchProgramRecord> = {}): ResearchProgramRecord {
   return {
@@ -24,37 +26,41 @@ function record(overrides: Partial<ResearchProgramRecord> = {}): ResearchProgram
   };
 }
 
-describe("resolveUniversity", () => {
+describe("resolveUniversity (via lib/acquisition/identity.resolveIdentity)", () => {
   test("resolves an exact name+country match", () => {
-    expect(resolveUniversity(record(), UNIVERSITIES)).toBe("uni-mit");
+    expect(resolveUniversity(record(), UNIVERSITIES).universityId).toBe("uni-mit");
   });
 
   test("does not resolve 'University of Edinburgh' to the unrelated Edinburgh Napier University", () => {
     const r = record({ university_name: "University of Edinburgh", university_country: "United Kingdom" });
-    // Neither an exact-name match (real name is "The University of Edinburgh") nor a safe
-    // override without the manual alias table — must not silently pick Napier.
-    expect(resolveUniversity(r, UNIVERSITIES)).not.toBe("uni-nap");
+    // Resolves via the registered alias on EDINBURGH, never to the unrelated Napier despite
+    // both plausibly text-matching a naive search.
+    expect(resolveUniversity(r, UNIVERSITIES).universityId).toBe("uni-edi");
   });
 
-  test("resolves via university_official_domain when name+country is ambiguous or absent", () => {
-    const r = record({ university_name: "MIT", university_country: "United States", university_official_domain: "web.mit.edu" });
-    expect(resolveUniversity(r, UNIVERSITIES)).toBe("uni-mit");
+  test("resolves a well-known abbreviation via a registered alias, not a hardcoded override", () => {
+    const r = record({ university_name: "EPFL", university_country: "Switzerland" });
+    expect(resolveUniversity(r, UNIVERSITIES).universityId).toBe("uni-epfl");
   });
 
   test("refuses to resolve when two live rows share the same name and country (real duplicate case)", () => {
     const r = record({ university_name: "King Fahd University of Petroleum and Minerals", university_country: "Saudi Arabia" });
-    expect(resolveUniversity(r, UNIVERSITIES)).toBeNull();
+    const result = resolveUniversity(r, UNIVERSITIES);
+    expect(result.universityId).toBeNull();
+    expect(result.reason).toContain("duplicates must be merged");
   });
 
-  test("returns null rather than guessing for a university not in the lookup at all", () => {
+  test("returns null with a reason rather than guessing for a university not in the lookup at all", () => {
     const r = record({ university_name: "Some Unlisted College", university_country: "Nowhere" });
-    expect(resolveUniversity(r, UNIVERSITIES)).toBeNull();
+    const result = resolveUniversity(r, UNIVERSITIES);
+    expect(result.universityId).toBeNull();
+    expect(result.reason).toBeTruthy();
   });
 
-  test("bridges a known label alias (Türkiye vs Turkey) via country normalization", () => {
-    const turkish: UniversityLookupRow = { id: "uni-tr", name: "Boğaziçi University", country: "Turkey", website_url: null };
+  test("bridges a known label alias (Türkiye vs Turkey) via the shared country normalizer", () => {
+    const turkish: LocalUniversity = { id: "uni-tr", name: "Boğaziçi University", country: "Turkey" };
     const r = record({ university_name: "Boğaziçi University", university_country: "Türkiye" });
-    expect(resolveUniversity(r, [turkish])).toBe("uni-tr");
+    expect(resolveUniversity(r, [turkish]).universityId).toBe("uni-tr");
   });
 });
 
@@ -74,12 +80,13 @@ describe("looksPageConfirmed", () => {
 });
 
 describe("decideIngestion", () => {
-  test("accepts a well-formed, page-confirmed, resolvable record", () => {
+  test("accepts a well-formed, page-confirmed, resolvable record with an official-domain source", () => {
     const decision = decideIngestion(record(), UNIVERSITIES, new Set());
     expect(decision.outcome).toBe("accepted");
     expect(decision.programRow?.university_id).toBe("uni-mit");
     expect(decision.programRow?.verification_state).toBe("verified_current");
     expect(decision.programRow?.subject_taxonomy).toBe("computer_science");
+    expect(decision.programRow?.source_type).toBe("official_primary");
   });
 
   test("never inserts a program row for an unresolved university, even with perfect evidence", () => {
@@ -95,6 +102,14 @@ describe("decideIngestion", () => {
     const decision = decideIngestion(r, UNIVERSITIES, new Set());
     expect(decision.outcome).toBe("insufficient_evidence");
     expect(decision.programRow).toBeNull();
+  });
+
+  test("rejects as malformed_source when the source_url is not on an accepted domain for program facts", () => {
+    // A Wikipedia-style or content-farm URL is never acceptable evidence for a program fact,
+    // regardless of what the record's own source_type field claims.
+    const r = record({ source_url: "https://en.wikipedia.org/wiki/MIT" });
+    const decision = decideIngestion(r, UNIVERSITIES, new Set());
+    expect(decision.outcome).toBe("malformed_source");
   });
 
   test("rejects as insufficient_evidence when verification_status reads as a search result only", () => {
@@ -117,12 +132,6 @@ describe("decideIngestion", () => {
     const keyAfterFirst = new Set([`${first.programRow!.university_id}|${first.programRow!.normalized_name}|${first.programRow!.degree_level ?? ""}`]);
     const second = decideIngestion(record(), UNIVERSITIES, keyAfterFirst);
     expect(second.outcome).toBe("duplicate");
-  });
-
-  test("rejects malformed_source for an unrecognized source_type", () => {
-    const r = record({ source_type: "vibes" });
-    const decision = decideIngestion(r, UNIVERSITIES, new Set());
-    expect(decision.outcome).toBe("malformed_source");
   });
 
   test("two different program names at the same university both accept independently", () => {

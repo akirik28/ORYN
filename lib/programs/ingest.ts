@@ -1,5 +1,7 @@
 import { classifySubjects } from "./subject-taxonomy";
-import { normalizeCountry, normalizeName, normalizeProgramName, domainOf } from "./normalize";
+import { normalizeProgramName } from "./normalize";
+import { resolveIdentity, type LocalUniversity } from "@/lib/acquisition/identity";
+import { sourceAuthority } from "@/lib/acquisition/source-authority";
 
 /** One record from the research handoff contract — see
  * docs/research-handoff-university-programs.md for the full field-by-field spec. */
@@ -28,48 +30,33 @@ export interface ResearchProgramRecord {
   evidence_excerpt?: string | null;
 }
 
-export interface UniversityLookupRow {
-  id: string;
-  name: string;
-  country: string;
-  website_url: string | null;
-}
+/** Re-exported so callers only need to import from this module. LocalUniversity (from
+ * lib/acquisition/identity) is the platform-wide shape for "a university candidate an
+ * identity match can be resolved against" — id, name, country, plus optional aliases and
+ * external ids sourced from canonical_entities/entity_aliases/entity_external_ids. This
+ * pipeline no longer keeps its own separate university-matching data shape. */
+export type UniversityLookupRow = LocalUniversity;
 
-/** Unambiguous corpus-name -> live universities.id overrides for well-known abbreviations
- * the exact match can't bridge on its own. Every entry is independently hand-confirmed as
- * the single correct institution — see docs/research-handoff-university-programs.md's
- * "Entity linking" section. Keyed by (normalized name, normalized country). Extend by hand
- * only, never by lowering the match threshold. */
-export const MANUAL_ALIAS_OVERRIDES: Record<string, string> = {
-  "epfl|switzerland": "846029e2-39bd-40f1-8c00-bc263edbaaca",
-  "humboldt university of berlin|germany": "84925a17-9a73-43a0-982c-2a9b846a545d",
-  "new york university|united states": "86e9bca7-e10e-45ca-8f3c-3782ca3dba83",
-  "university of bologna|italy": "3acf2e36-46ab-4bbb-a379-8323789f5f8f",
-  "university of california, berkeley|united states": "0c1c454c-52c2-44af-8892-c024b9dfdb0b",
-  "university of edinburgh|united kingdom": "e2feb81c-1bda-4889-8aa9-37783b720901",
-  "university of mannheim|germany": "3c48effe-f883-4907-bb0b-5911eb39e021",
-};
-
-/** Strict, alias-aware, never fuzzy — see docs/research-handoff-university-programs.md.
- * Returns null (not a guess) when identity can't be confidently established. */
-export function resolveUniversity(record: ResearchProgramRecord, universities: readonly UniversityLookupRow[]): string | null {
-  const nameKey = normalizeName(record.university_name);
-  const countryKey = normalizeCountry(record.university_country);
-
-  const nameMatches = universities.filter((u) => normalizeName(u.name) === nameKey);
-  if (nameMatches.length === 1) return nameMatches[0].id;
-  if (nameMatches.length > 1) {
-    const countryMatches = nameMatches.filter((u) => normalizeCountry(u.country) === countryKey);
-    if (countryMatches.length === 1) return countryMatches[0].id;
-  }
-
-  const inputDomain = domainOf(record.university_official_domain ? `https://${record.university_official_domain}` : null);
-  if (inputDomain) {
-    const domainMatches = universities.filter((u) => domainOf(u.website_url) === inputDomain);
-    if (domainMatches.length === 1) return domainMatches[0].id;
-  }
-
-  return MANUAL_ALIAS_OVERRIDES[`${nameKey}|${countryKey}`] ?? null;
+/**
+ * University identity resolution for a research record — a thin adapter over
+ * lib/acquisition/identity.ts's resolveIdentity(), which is the one entity-matching
+ * implementation this platform has (see docs/research-handoff-university-programs.md's
+ * "Entity linking" section for why a second, program-specific matcher was retired in favor
+ * of this). Strict and alias-aware: exact name+country, then registered aliases
+ * (entity_aliases, via LocalUniversity.aliases), then external ids — never fuzzy, and a
+ * multi-candidate match is `unresolved`, not a guess.
+ */
+export function resolveUniversity(record: ResearchProgramRecord, universities: readonly LocalUniversity[]): { universityId: string | null; reason: string | null } {
+  const resolution = resolveIdentity(
+    {
+      displayName: record.university_name,
+      names: [record.university_name],
+      countryName: record.university_country || null,
+    },
+    universities
+  );
+  if (resolution.status === "matched") return { universityId: resolution.match.universityId, reason: null };
+  return { universityId: null, reason: resolution.reason };
 }
 
 /** A researcher-stated verification_status counts as page-confirmed only when it says so
@@ -115,33 +102,36 @@ export interface IngestDecision {
   programRow: AcceptedProgramRow | null;
 }
 
-const VALID_SOURCE_TYPES = new Set(["official_primary", "official_secondary", "third_party_structured", "unverified_secondary"]);
-
 /** Pure decision function — no I/O, fully unit-testable. `existingKeys` is the set of
  * `${university_id}|${normalized_program_name}|${degree_level ?? ""}` combinations already
  * present (live table rows + anything already accepted earlier in this same batch), so a
  * batch is idempotent against both re-runs and internal duplicates. */
-export function decideIngestion(record: ResearchProgramRecord, universities: readonly UniversityLookupRow[], existingKeys: ReadonlySet<string>): IngestDecision {
+export function decideIngestion(record: ResearchProgramRecord, universities: readonly LocalUniversity[], existingKeys: ReadonlySet<string>): IngestDecision {
   if (!record.university_name?.trim() || !record.program_name?.trim()) {
     return { outcome: "rejected", detail: "Missing university_name or program_name.", universityId: null, programRow: null };
   }
 
-  const universityId = resolveUniversity(record, universities);
+  const { universityId, reason } = resolveUniversity(record, universities);
   if (!universityId) {
-    return {
-      outcome: "unresolved_university",
-      detail: `No confident match for "${record.university_name}" / ${record.university_country}.`,
-      universityId: null,
-      programRow: null,
-    };
+    return { outcome: "unresolved_university", detail: reason, universityId: null, programRow: null };
   }
 
   if (!record.official_program_url?.trim() || !record.source_url?.trim()) {
     return { outcome: "insufficient_evidence", detail: "Missing official_program_url or source_url.", universityId, programRow: null };
   }
 
-  if (!VALID_SOURCE_TYPES.has(record.source_type)) {
-    return { outcome: "malformed_source", detail: `Unrecognized source_type "${record.source_type}".`, universityId, programRow: null };
+  // Source authority is resolved per fact class (lib/acquisition/source-authority.ts),
+  // not asserted from the record's own claimed source_type — a record cannot self-certify
+  // as official_primary; the URL's domain has to actually earn that for the "programs"
+  // fact class (an institution's own domain, or nothing).
+  const authority = sourceAuthority("programs", record.source_url);
+  if (!authority) {
+    return {
+      outcome: "malformed_source",
+      detail: `source_url "${record.source_url}" does not resolve to an accepted authority for program facts (must be the institution's own domain).`,
+      universityId,
+      programRow: null,
+    };
   }
 
   const normalizedName = normalizeProgramName(record.program_name);
@@ -184,7 +174,7 @@ export function decideIngestion(record: ResearchProgramRecord, universities: rea
       official_program_url: record.official_program_url,
       admissions_url: record.admissions_url ?? null,
       source_url: record.source_url,
-      source_type: record.source_type,
+      source_type: authority.sourceType,
       verification_state: "verified_current",
       notes: `Research handoff, program_id ${record.research_program_id}, researched_at ${record.researched_at}.`,
       data_confidence: "high",
