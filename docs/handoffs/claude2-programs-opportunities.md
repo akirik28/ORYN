@@ -262,7 +262,52 @@ worth targeted independent research once the founder corpus is exhausted (per PR
 highest-confidence tiers. Remaining lower-confidence tiers in each file (the large
 "official/provider search evidence" buckets — ambiguous whether page-fetched or search-only,
 same discipline required) are a option for a future pass, but marginal value is dropping
-per-record. Higher-leverage next step is likely pivoting to Priority 1 (university programs —
-still only 182 rows / 49 universities, 0 with ≥5 programs) or beginning independent research
-into scholarship/fellowship candidates specifically, since the founder corpus produced zero of
-either.
+per-record.
+
+## Pivot to Priority 1: university_programs (independent research, not corpus mining)
+
+Checked whether `02_ORYN_University_Programs.xlsx` had unmined rows before writing any new
+research: parsed it (199 unique program rows after the same dedupe-by-id discipline, no
+duplicate-emission bug this time), filtered to its cleanest tier ("Verified - official
+Bachelor/first-cycle page", 159 records), and diffed every one of those 159
+`official_program_url`s against the live table's 182 rows — **zero were missing**. The
+"10 ORYN Canonical App Data Pack" gap register confirms the same conclusion from its own
+angle: `DS-002` (university programs) lists its only next action as "Reconcile 03B with
+program master" (linking requirements to existing programs — task #18, not new-program
+discovery), not "more rows available." This file is genuinely exhausted at this tier; growing
+`university_programs` further requires fresh research, not more corpus mining.
+
+Picked the highest-priority target: every one of the 49 covered universities capped at 3-4
+programs (max observed: 4), and `medicine`/`psychology` sat at exactly zero despite being
+named explicitly in the founder's subject list — the largest, most conspicuous gaps. Used
+WebSearch to find official program pages (not WebFetch alone, which needs a known URL) for
+Medicine and Psychology at five universities already in the spine (Cambridge, UCL, Edinburgh,
+King's College London, Imperial), then WebFetch to read and verify each page directly —
+duration, degree type, UCAS code, entry requirements all pulled from the live page today, not
+copied from any prior corpus. Oxford Medicine's official page 403'd twice and was dropped
+rather than guessed at or substituted with a lower-tier source.
+
+Ran the *real* `decideIngestion()` from `lib/programs/ingest.ts` (not reimplemented) via a
+temporary dry-run script, with the UK-scoped university candidate pool (75 rows, sufficient
+since `resolveIdentity()` is country-scoped and none of these five names are ambiguous within
+that set) and existing `(university_id, normalized_name, degree_level)` keys fetched live via
+Supabase MCP. All 7 records accepted; `classifySubjects()` correctly derived 4 `medicine` + 3
+`psychology` from the program names alone, exactly as expected. Applied both the
+`university_programs` rows and their `program_research_queue` audit rows (this pipeline's own
+contract: every input row gets a queue entry, not just accepted ones) via `execute_sql`.
+
+**Batch result** (`data/research/university-programs/independent_batch1_2026-08-18.jsonl`, 7
+records, 7 accepted, 0 rejected): `university_programs` 182 → 189 (49 universities unchanged —
+all 7 went to already-covered institutions as new subjects, not new universities). `medicine`
+0 → 4, `psychology` 0 → 3 — both previously-empty founder-named target subjects now populated.
+Full lint/typecheck/725-test/build gate clean after this batch. Skipped the pipeline doc's
+"spot-check a handful of accepted rows in a browser" step as redundant here specifically —
+every one of the 7 was already read live via WebFetch during research, not sourced from an
+unverified corpus row.
+
+**Next**: `architecture` (2), `finance` (4), `law` (3), `international_relations` (2),
+`physics` (1), and `entrepreneurship` (1) are the next-thinnest subjects — same
+already-in-spine-university approach (add a missing subject at a covered institution) is the
+fastest way to keep closing gaps without touching Claude 1's canonical-registry territory.
+Independent opportunity research into `scholarship`/`fellowship` (still zero from the founder
+corpus) is the other clear next priority.
