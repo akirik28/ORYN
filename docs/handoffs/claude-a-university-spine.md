@@ -1116,10 +1116,13 @@ see below), France (**done, 19/30 standard universities** — 11 confirmed to ha
 different, decree-independent fee status, see below), Switzerland (**done, 7/11** — ETH-domain
 federal policy + per-canton research, see below), Italy (**done for this pass, 4/38** — a real
 ISEE-income-based framework, not a flat number, see below), Spain (**done for this pass,
-10/29** — per-region ECTS-credit pricing, see below). **Coverage-driven, not geography-driven,
+10/29** — per-region ECTS-credit pricing, see below), China (**investigated, deliberately not
+written** — conflicting sources, no official domain confirmed, see below), South Korea
+(**done for this pass, 2/31** — no national/regional price, per-university research with two
+specifically-named extraction blockers, see below). **Coverage-driven, not geography-driven,
 per the founder's own instruction** — run `npm run report:universities` (now includes a
-per-country tuition table) before picking each next country. As of right after Spain: China
-(64 missing), South Korea (31), Malaysia (25), Japan (22), Russia (21) are the largest
+per-country tuition table) before picking each next country. As of right after South Korea:
+Malaysia (25 missing), Japan (22), Russia (21), Saudi Arabia (18), Taiwan (16) are the largest
 zero-coverage pools; India (37) and the US (131, shown as 0 in the tuition table by design —
 see the report's own note — already has 128/131 via the separate `cost_of_attendance` column)
 are lower priority per the founder's own sequencing. Reorder for efficiency if a better bulk
@@ -1676,10 +1679,45 @@ dedicated future pass with either working .edu.cn access or a confirmed official
 queued with reason code `source_unreachable` / `unverified_conflicting_sources`, not attempted
 further this session per the founder's own "don't force a country" instruction.
 
+**South Korea — 2/31, done for this pass, with two specifically-diagnosed blockers rather than
+a vague "not found," per the founder's own explicit instruction to determine what would make
+each unresolved case resolvable.** No national or regional price exists — Korea's Higher
+Education Act Article 11 caps the year-over-year tuition INCREASE (1.2× the 3-year average
+inflation rate, tightened from 1.5× for 2026, a real and current policy), not the base amount,
+so it can't be used to derive a figure. Each university still publishes its own tuition,
+varying by college within the institution (Humanities cheapest, Engineering/Natural Sciences
+priciest) — the same course-based-range shape as UK/Canada/Australia/Netherlands. Resolved:
+**Seoul National University** (public, ₩4,884,000-5,996,000/year across colleges, from SNU's
+own fee-table PDF) and **Yonsei University** (private, ₩8,008,000-10,432,000/year, from
+Yonsei's own PDF, with Engineering's figure cross-checked using BOTH semesters independently,
+not just one doubled). Both PDFs themselves returned as unreadable garbled binary to this
+pass's own WebFetch tool (the same failure class as Padova's Italy PDF) — rescued only because
+a search engine's own text extraction had already indexed the numbers; a genuinely fragile path
+worth naming, not assumed to work for every Korean university.
+
+**Two specifically-diagnosed blockers, not silently skipped**, exactly matching what the
+founder asked for: **KAIST** has a real, officially-documented near-total tuition waiver for
+undergraduates (KAIST's own scholarship-policy page states the PRINCIPLE is full tuition
+support for all bachelor's students, domestic and international, with only *partial* — not
+full — support for continuing students whose *previous* semester GPA fell below 2.7; new
+first-years default to full support since they have no previous semester). An official KAIST
+document exists with columns literally labelled "tuition(A), scholarship(B), amount
+collected(A-B)" — structurally the same shape as Italy's ISEE ceiling-vs-actual system, just
+merit-conditioned instead of income-conditioned, and would use the same `upper_bound`
+`precision_state` once resolved. Not written because the nominal 수업료(A) figure itself never
+extracted from that binary PDF. **Unblocks with**: working PDF-to-text extraction for
+`kaist.ac.kr/kr/html/footer/0802.html?...file_id=59190`, or an HTML equivalent if one exists.
+**Korea University** — the exact right official page was found and confirmed live
+(`korea.ac.kr/ko/582/subview.do`, "2026학년도 등록금 일람표," three real tuition PDFs linked)
+but, unlike SNU/Yonsei, no search-engine-indexed rescue existed for its specific PDF this pass.
+**Unblocks with**: the same PDF-extraction fix, applied to that specific document. 27 further
+South Korean universities queued, not attempted.
+
 **Coverage, verified live via `npm run report:universities`**: 110/1019 (10.8%) going into
-Italy → 124/1019 (12.2%) after Italy + Spain. Countries done so far this workstream: UK
-(20/79), Canada (3/27), Australia (1/38), Germany (49/49), Netherlands (13/13), France (19/30),
-Switzerland (7/11), Italy (4/38), Spain (10/29).
+Italy → 124/1019 (12.2%) after Italy + Spain → 126/1019 (12.4%) after South Korea. Countries
+done so far this workstream: UK (20/79), Canada (3/27), Australia (1/38), Germany (49/49),
+Netherlands (13/13), France (19/30), Switzerland (7/11), Italy (4/38), Spain (10/29), South
+Korea (2/31). China investigated, deliberately not written (see above).
 
 After tuition progresses meaningfully: (1) India student counts (~33 remaining, AISHE >
 annual report > official institutional stats > official facts page — see the India dead-end
