@@ -64,3 +64,46 @@ architecture (summer programs / competitions / internships-research / scholarshi
 different filter dimensions, not one shared generic panel) — that's real product/UX scope,
 doesn't touch `university_programs`/`opportunities` data acquisition or schema, and will be
 picked up as UI-only work against whatever data shape already exists.
+
+## Progress checkpoint (2026-08-18, same session, still running)
+
+Commits so far on this branch, all pushed, each gate-clean (lint/typecheck/full test suite/
+production build) before commit:
+
+- `5ee7ee6` — university browse search box: live typeahead reusing the pre-existing but
+  previously-uncalled `searchEntitiesAction("university", ...)` scope. Enter with no
+  suggestion highlighted still falls through to the existing full-grid GET-form search.
+- `aa468ec` — Opportunities "Browse all" tab: the page only ever showed a fixed top-30
+  personalized-match slice with zero filters. Added category pills + text/country/remote/
+  free/cycle-status filters, all against real existing columns (migration 0041's taxonomy),
+  option lists derived from live data not a fixed list. "For you" tab unchanged.
+- `354ce6d` — advisor suggested-prompt chips now respect `aiConfigured` like the
+  textarea/button already did (found via a full code-level advisor audit, see below).
+- `4405cc0` — Settings gained an editable Location section (`profiles.country`/`city`
+  existed but had no post-onboarding edit path); opportunity matching now gives a modest,
+  capped relevance boost (never an eligibility gate) for same-country opportunities.
+
+**Verified, not assumed:** `ANTHROPIC_API_KEY` is genuinely unset (`check:integrations`),
+`SUPABASE_SECRET_KEY` still placeholder, Supabase Auth's "Confirm email" is genuinely ON for
+`oryn-qa-scratch` (queried `auth.users` directly — every recent signup has
+`confirmation_sent_at`, only 2 of 5 recent accounts ever got `email_confirmed_at`) —
+contradicts `FOUNDER-START-HERE.md` step 1's assumption it was already off. No SQL-only path
+exists to flip it (GoTrue service config, not a Postgres table) or to create a pre-confirmed
+test user (needs the admin API, gated on the still-missing secret key). **This blocks live
+authenticated browser QA for this entire session** — every change above is verified via
+typecheck/lint/full test suite/production build plus careful manual reading against
+established codebase patterns, not click-through in a real browser session. Flagging this
+plainly rather than claiming more verification happened than actually did.
+
+AI Advisor got a full code-level audit (couldn't live-test — see above): auth, error
+handling, rate limiting, Zod validation, prompt-injection framing, and the historical
+`ai_usage`-RLS bug are all confirmed solid / still fixed live, not just by comment. Only the
+one gap above (`354ce6d`) needed a code change.
+
+Next up, roughly in this order: continue the free-text/canonical-selector audit (Phase B),
+university detail-page continuation (Phase K), i18n string audit (Phase G), living-profile
+recency (Phase F), responsive/accessibility pass (Phase N/O), then pilot readiness (Phase P)
+and a final adversarial audit (Phase R). Not stopping between these — this section will keep
+getting updated as commits land, so if this session's context/usage runs out mid-work, the
+git log plus this file's running checkpoint is the actual state to trust, not any summary
+given only in chat.
