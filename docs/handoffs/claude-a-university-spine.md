@@ -1048,6 +1048,64 @@ manual-review fixture entry (not silently skipped, not silently guessed), valida
 currency/year, sanity-check implausible values against known real-world tuition ranges before
 trusting them (the same discipline every student-count pipeline below already used).
 
+**UK — pilot batch done 2026-08-18, 7/79 universities, genuinely investigated not just
+started.** HESA (the obvious UK-wide dataset) is Cloudflare-blocked, already confirmed in an
+earlier pass (see "Current state" above) — not re-attempted. Discover Uni
+(`discoveruni.gov.uk`, the OfS/HESA-run public comparison site) is reachable (unlike HESA
+itself — different Cloudflare config, real `200`s) but its public pages have no bulk-download
+UI as of this check, only a per-course search tool. Went straight to individual official
+university fee pages instead — the founder's own #1-ranked source anyway.
+
+`scripts/acquire-university-statistics-uk.ts`: Oxford, Cambridge, Edinburgh, LSE, UCL,
+Manchester, King's College London. Written to `university_profile_metrics`
+(`tuition_international_annual`/`tuition_domestic_annual`), deliberately NOT
+`university_statistics.cost_of_attendance` — that column means IPEDS's US all-in
+cost-of-attendance estimate specifically, and UK tuition is a different concept (no bundled
+living-cost estimate, and international fees are typically a range across courses, not one
+number) that would be misrepresented by reusing it. **10 metric rows written**: domestic
+(UK/Home) fee £9,790/year confirmed independently at 6 of the 7 (a real national policy figure
+— the government fee cap for 2026/27 — not assumed, checked live at each one separately);
+international tuition as a range (`value_numeric` = low end, `precision_state: "range"`, full
+range in `notes`) at 4 of the 7: Oxford £37,380–£62,820, Cambridge £29,052–£70,554
+(5 published course bands), Edinburgh £29,600–£38,900 (from a genuinely excellent source — a
+real 633-row static per-programme table, no JS search tool needed), LSE £30,700–£39,900
+(medium confidence — cross-cited via search results attributed to lse.ac.uk rather than
+directly re-rendered live, flagged via `data_quality_flag`).
+
+**A real, named pattern**: UCL, Manchester, and King's College London each confirmed to have NO
+single published international figure — fees are exposed only through an interactive
+per-course search tool with no static table, the same shape UCL and Manchester both hit
+independently. Recorded as a genuine negative result (domestic fee still written, since that
+IS a single clean figure at every one of these), not guessed at or skipped silently. A future
+pass wanting these specific three would need to either drive the search tool interactively
+(course-by-course, a bigger job) or find a per-department static page.
+
+**A duplicate-identity finding, surfaced not fixed**: the two "London School of Economics" rows
+(`cfd5cd77-...` and `cc117524-...`) share one `canonical_entity_id` — already merged at the
+entity level — but neither `universities.id` is in `lib/universities/canonical.ts`'s row-level
+`SUPERSESSIONS` map, so the explorer still renders LSE as two separate cards today. This
+script wrote to the more complete row (`cfd5cd77-...`: has `website_url`/`admissions_url`,
+`institution_type: "Public"`; the other has neither and a bare "university" placeholder type)
+but did not add a supersession entry — that needs the same ROR-cross-check discipline the
+other 28 merged pairs got (Phase 2), not a decision made mid-task. **Queued as a follow-up**,
+worth checking whether other similarly-already-merged-at-entity-level-but-not-row-level pairs
+exist beyond just this one.
+
+**UI wiring**: `app/(app)/universities/[id]/page.tsx`'s "Cost of attendance" StatCard now
+shows US `cost_of_attendance` when present, or the new `tuition_international_annual` metric
+(labeled "International tuition," phrased "From £X/yr" since it's always a range so far) when
+present, or "Unavailable" — verified live for Edinburgh (real range), Cambridge (real range),
+and UCL (correctly falls back to "Unavailable," no fabricated figure). **Not yet wired into
+the explorer grid/cards or the cost filter** — those still read `university_statistics` only,
+so a UK university with real tuition data acquired this pass still shows no cost on its
+explorer card and gets swept into the cost filter's "excluded because unavailable" count. A
+deliberate scope cut this pass (the explorer's cost concept and this new metric need genuinely
+distinct visual treatment, not a quick prop swap, per the same anti-conflation rule), not an
+oversight — worth doing once more countries add real weight to this metric.
+
+Remaining 72 UK universities queued, not attempted. Full gate green (`tsc`/lint/713
+tests/build) after this batch.
+
 After tuition progresses meaningfully: (1) India student counts (~33 remaining, AISHE >
 annual report > official institutional stats > official facts page — see the India dead-end
 note below, may need real per-institution page work this time), (2) the remaining 15 ambiguous
