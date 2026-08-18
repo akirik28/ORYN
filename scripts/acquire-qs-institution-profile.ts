@@ -22,12 +22,15 @@
  * conflict since they're different metric_codes entirely.
  *
  * `institution_status`: only fills `universities.institution_type` when that column is
- * currently NULL. Deliberately not used to overwrite an existing value — a prior pass this
- * session already found or hand-researched richer text there ("Public research university"
- * vs QS's bare "Public"), and a previous investigation into pulling from ROR was rejected
- * for exactly this reason (coarser data replacing richer data). For the 255 universities
- * with no institution_type at all, QS's plain Public/Private label is still real signal
- * worth having over nothing.
+ * currently NULL — `fill_if_null` via `.is("institution_type", null)` in the actual UPDATE
+ * query, not just app-level logic, so this is structurally incapable of touching a non-null
+ * row regardless of what value it already holds. (A comment elsewhere claiming the existing
+ * 764 rows held richer text like "Public research university" turned out not to match live
+ * data on re-check 2026-08-18 — the dominant existing value is just the bare word
+ * "university" — but never-overwrite is the right policy regardless of how rich the existing
+ * value turns out to be, so the behavior here didn't need to change, only the comment did.)
+ * For the universities with no institution_type at all, QS's plain Public/Private label is
+ * still real, sourced signal worth having over nothing.
  *
  * Usage:
  *   npm run acquire:qs-institution-profile                  # dry run

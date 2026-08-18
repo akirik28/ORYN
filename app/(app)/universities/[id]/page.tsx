@@ -115,6 +115,10 @@ export default async function UniversityDetailPage({ params }: { params: Promise
         action={<SaveUniversityButton universityId={university.id} targetId={targetRes.data?.id ?? null} status={targetRes.data?.status ?? null} />}
       />
 
+      {university.institution_type ? (
+        <span className="w-fit rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground">{university.institution_type}</span>
+      ) : null}
+
       {university.description ? <p className="max-w-3xl text-muted-foreground">{university.description}</p> : null}
 
       {rankingsRes.data && rankingsRes.data.length > 0 ? (

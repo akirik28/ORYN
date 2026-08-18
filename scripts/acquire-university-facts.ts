@@ -398,10 +398,14 @@ function factsFor(ror: RorRecord, openAlex: OpenAlexInstitution | null, retrieve
   // Deliberately NOT acquired from ROR, after inspecting the pilot output:
   //
   // * institution_type — ROR's vocabulary for every university in the roster is just
-  //   ["education", "funder"]. That is strictly coarser than what this column already holds
-  //   for hand-researched rows ("Public research university"), so importing it would make the
-  //   column worse while looking like enrichment. The public/private and research-intensity
-  //   distinction ORYN's filters actually need is not in ROR at all.
+  //   ["education", "funder"], strictly coarser than a real public/private/research-intensity
+  //   classification, so importing it would look like enrichment while adding nothing. (An
+  //   earlier version of this comment claimed the existing column already held richer text
+  //   like "Public research university" — re-checked live 2026-08-18 while investigating a
+  //   founder question about a different metric, and that is not what's actually there: the
+  //   live distribution is 743 rows of the bare word "university", 217 "Public", 35 "Private
+  //   not for Profit", 7 "Private nonprofit" — no row holds anything richer. The conclusion
+  //   ROR is still the wrong source stands, just not for the reason originally written here.)
   // * established_year — no column exists for it, it carries no student value, and it is the
   //   one field where ROR is demonstrably shaky for merged institutions (it states 2010 for
   //   Sorbonne Université, which was formed in 2018).
