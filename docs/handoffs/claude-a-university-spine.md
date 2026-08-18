@@ -73,6 +73,25 @@ current state, not as a session log.
   `founder-blocked-backlog.md`; recorded here as a real, investigated dead end so a future
   session doesn't re-attempt the same request. See "Phase 3 continuation" below for what was
   tried and the country-priority gap this leaves open.
+- **`university_statistics` was completely empty — 0 rows — until this pass, 2026-08-18.**
+  Founder asked directly why "Admission rate"/"Cost of attendance" always show "Unavailable"
+  on the detail page; checked the table rather than guessing and found nothing had ever
+  written to it. The same College Scorecard bulk file `enrich-student-counts-us.ts` already
+  downloads and verifies has `ADM_RATE`/`SATVR25/75`/`SATMT25/75`/`ACTCM25/75`/`COSTT4_A`/
+  `C150_4` columns too — spot-checked Harvard/MIT/Princeton against known real figures before
+  trusting it (Harvard: 3.65% admit, $85,540 cost, 97.58% grad rate — all correct). New
+  `scripts/acquire-university-statistics-us.ts`: 128/131 US universities matched (25 via the
+  shared flagship-campus override table), 128 written, US `admission_rate`/`cost_of_attendance`
+  coverage 0 → 128/1019. Real bug caught building this: a first draft imported
+  `FLAGSHIP_UNITID_OVERRIDES` directly from `enrich-student-counts-us.ts` — every script here
+  runs `main()` unconditionally at module load, so that import silently re-ran the *entire*
+  enrollment pipeline (re-download, re-match, its own dry-run print) as a side effect, visible
+  as oddly-merged console output before it was understood. Fixed at the root: extracted the
+  shared constants into `lib/acquisition/college-scorecard-overrides.ts` (a plain module, no
+  side effects) and pointed both scripts at that instead. Verified live (MIT: admission rate
+  "5%", cost "$82,730" — matches `Math.round(0.0455*100)` and the stored `82730` exactly).
+  Non-US cost data (the vast majority of the spine) is a real, separate, much harder problem —
+  no single global source the way College Scorecard covers the US — not started this pass.
 
 ## Founder Requirement 2026-08-18: product-visible duplicate universities + light theme default
 
