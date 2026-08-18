@@ -1142,18 +1142,17 @@ per-university breakdown). No comparable per-institution bulk file found this ch
 Germany's Destatis or Spain's ciencia.gob.es). So Canada needs the same per-university
 official-page research as the UK batch above, not a different, faster pipeline.
 
-**Canada — pilot started same day, 1/27 universities, `scripts/acquire-university-statistics-ca.ts`.**
-A genuine structural difference from the UK batch surfaced immediately: every Canadian
-university checked bills tuition **per credit**, not a flat annual figure. Caught a real
-mistake before it reached `--apply`: a first draft reused the UK batch's
+**Canada — pilot continued, 2/27 universities, `scripts/acquire-university-statistics-ca.ts`.**
+A genuine structural difference from the UK batch surfaced immediately: UBC and (confirmed but
+not yet resolved to real numbers) McMaster bill tuition **per credit**, not a flat annual
+figure. Caught a real mistake before it reached `--apply`: a first draft reused the UK batch's
 `tuition_international_annual`/`tuition_domestic_annual` metric codes for this per-credit
 data — exactly the "collapse different cost concepts" the founder's spec forbids, since the
 detail page already renders those two codes as "£X/yr" (a per-credit figure under that code
 would silently display as if it were annual). Fixed before any write: new, distinct
-`tuition_international_per_credit`/`tuition_domestic_per_credit` metric codes. **Not wired
-into any UI yet** — deliberately; a per-credit figure needs its own correctly-labeled display,
-not a relabeled copy of the annual one, and one university isn't yet enough to justify that UI
-work properly.
+`tuition_international_per_credit`/`tuition_domestic_per_credit` metric codes, kept separate
+from the annual ones. **Not wired into any UI yet** — deliberately; a per-credit figure needs
+its own correctly-labeled display, not a relabeled copy of the annual one.
 
 **UBC (University of British Columbia)**: real, live, directly-readable table (not a PDF) —
 `https://vancouver.calendar.ubc.ca/fees/tuition-fees/undergraduate`, explicitly the 2026/27
@@ -1162,16 +1161,49 @@ $2,222.61 (Commerce, highest). Domestic per-credit low end (most Year 1 programs
 recorded as a low anchor only, not a full domestic range, since this pass's focus was the
 international figure. High confidence.
 
-**McGill and University of Toronto investigated, genuinely left unresolved — not attempted-
-and-abandoned.** McGill: Quebec's tuition structure is real but complex (a base per-credit
-Quebec rate plus separate out-of-province supplements, plus a cohort-guaranteed international
-rate), and McGill's own international fee schedule is published only as a PDF with no readable
-static page found; search-derived figures conflicted between sources ($31,836 vs $49,000,
-likely different years or faculties). University of Toronto: fee schedules are fragmented per
+**University of Alberta**: turned out NOT to be per-credit — a real flat annual rate per
+program band, same shape as the UK data (`CaTuitionEntry` now carries its own `feeBasis` per
+entry rather than assuming one convention for the whole country). Source:
+`https://calendar.ualberta.ca/content.php?catoid=69&navoid=22549`. **Explicitly 2025-26 data,
+not 2026/27** — no 2026/27 page exists anywhere on that domain yet (Alberta uses a
+cohort-guaranteed model where each entering class's rate locks for the program's duration, so
+this is still real, current, verifiable data — just a year behind the rest of this batch, and
+labeled as such in `stats_as_of` rather than silently presented as current). International
+annual: $32,643.60 (Augustana/Saint Jean/Education/Native Studies/Nursing, lowest band) to
+$47,756.40 (Engineering, highest standard band — excludes higher outlier professional programs
+Pharmacy/Law/Dental Surgery, none of which are undergraduate first-entry degrees).
+
+**A real, live UI bug found immediately after writing Alberta's data — caught by looking at
+the page, not just trusting the write succeeded**: the detail page's tuition StatCard hardcoded
+`£` and the label "UK Home tuition"/"UK/Home rate" unconditionally, both silently assuming
+every `tuition_*_annual` figure is UK/GBP. Alberta's page rendered "From £32,643.6/yr" — wrong
+currency symbol, plus a stray decimal from an unrounded value. Fixed in the same commit as the
+Alberta data: a small unit-string -> currency-symbol map (`app/(app)/universities/[id]/
+page.tsx`'s new `CURRENCY_SYMBOLS`/`currencyPrefix`, covering GBP/USD/EUR/CAD/AUD so far —
+extend as new countries' tuition data lands), values rounded to whole currency units, and the
+labels genericized to "Domestic tuition"/"Domestic rate" since this page serves every country,
+not just the UK. Verified live both ways: Alberta now shows "From CA$32,644/yr", Edinburgh
+still correctly shows "From £29,600/yr, Domestic rate: £9,790/yr" — the relabel didn't regress
+the existing UK case.
+
+**Western University and McMaster investigated, genuinely left unresolved.** Western: every
+fee schedule found is PDF-only (`2026-27-Program-Specific-Tuition-Fees.pdf` and siblings), no
+static HTML table or summary page. McMaster: confirmed per-credit billing (same shape as UBC),
+but its actual rate table is an XLSX rendered through Microsoft's Office Online viewer
+(`view.officeapps.live.com`) — the numbers live inside a canvas/iframe, not real page text this
+pass's tooling could read. McGill and University of Toronto remain unresolved from the prior
+pass too (see below) — not attempted-and-abandoned in either case, all four genuinely checked.
+McGill: Quebec's tuition structure is real but complex (a base per-credit Quebec rate plus
+separate out-of-province supplements, plus a cohort-guaranteed international rate), and
+McGill's own international fee schedule is published only as a PDF with no readable static
+page found; search-derived figures conflicted between sources ($31,836 vs $49,000, likely
+different years or faculties). University of Toronto: fee schedules are fragmented per
 constituent college (Trinity, Victoria, University College, St. Michael's, Innis, Woodsworth
 each publish their own PDF) on top of per-faculty variation — all PDF-only, none readable live.
-Neither downloaded (file downloads need explicit user permission, out of scope for an
-unattended pass) or written. 25 further Canadian universities queued, not attempted.
+None of the four downloaded (file downloads need explicit user permission, out of scope for an
+unattended pass) or written. 23 further Canadian universities queued, not attempted.
+
+Full gate green (`tsc`/lint/713 tests/build) after this batch too.
 
 Full gate green (`tsc`/lint/713 tests/build) after this batch.
 
