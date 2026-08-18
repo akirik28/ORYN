@@ -15,16 +15,11 @@ current state, not as a session log.
 - Branch: `oryn/university-intelligence-spine`, pushed to origin, tracking. Base: `main` @
   `b92c72f` (the tip when the first session started; contains the Phase 2 verified-acquisition
   architecture and the live full-spine run from the prior session).
-- Latest commit on this branch: `3397186`. This is a continuation session (session 2) picking
-  up after the first session's own "session complete" checkpoint — see git log for the full
-  first-session commit list; this session's own commits in order: strategic-expansion batch (9
-  institutions from Claude B's missing-university handoff + the École Polytechnique/Institut
-  Polytechnique de Paris identity ambiguity — see `docs/handoffs/claude-a-to-claude-b.md` for
-  the full per-institution dossier), `eca81c8` (admissions apply-loop crash fix + `--apply-from`
-  resume path), `694caa1` (US student-count enrichment via College Scorecard bulk file),
-  `17a52c5` (ranking display added to the university detail page), `a24f368` (Phase 9 schema
-  decision + Bocconi confirmed), `0e60f4b` (health gate extended to 9 checks), `3397186`
-  (application_system taxonomy +8 systems).
+- Latest commit on this branch: `99c54da` (this handoff update). See `git log` for the full,
+  authoritative commit list rather than this paragraph — it was accurate as of `3397186` (end
+  of session 2) but hand-enumerating every commit since is exactly the kind of thing that goes
+  stale; Phase 10 below covers the most recent substantial work (the Explorer P0 package,
+  `fd22716`/`fce1ce8`/`99c54da`) in prose instead.
   **Closed the loop with Claude B**: their branch (`oryn/programs-pipeline-reconciled`, now at
   `ca20671`) confirms the strategic-expansion batch was received and consumed successfully —
   `universities` 1010 → 1019 matched exactly, École Polytechnique resolved as its own row per
