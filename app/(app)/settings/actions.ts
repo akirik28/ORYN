@@ -21,6 +21,29 @@ export async function updateDisplayName(displayName: string): Promise<{ error?: 
   return {};
 }
 
+/** Editable post-onboarding (onboarding only ever writes this once, with no way back —
+ * a student who moves, or typed it wrong, was stuck). Country stays required (matches
+ * onboarding's own validation; several other reads already assume a student who's
+ * completed onboarding has one) — city is optional and, unlike country, isn't collected
+ * anywhere else yet. Both feed opportunity relevance ranking (lib/opportunities/matching.ts's
+ * isNearStudent) at the country level only; `opportunities` has no city column yet. */
+export async function updateLocation(country: string, city: string | null): Promise<{ error?: string }> {
+  const session = await requireUser();
+  const trimmedCountry = country.trim();
+  if (!trimmedCountry) return { error: "Country can't be empty." };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ country: trimmedCountry, city: city?.trim() || null })
+    .eq("id", session.userId!);
+  if (error) return { error: "Couldn't save your location." };
+
+  revalidatePath("/settings");
+  revalidatePath("/opportunities");
+  return {};
+}
+
 export async function updateBusyMode(busyMode: boolean, busyModeUntil: string | null): Promise<{ error?: string }> {
   const session = await requireUser();
   const supabase = await createClient();

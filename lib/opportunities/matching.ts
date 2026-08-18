@@ -1,4 +1,5 @@
 import { clampScore } from "@/lib/scoring/math";
+import { normalizeEntitySearchText } from "@/lib/entities/normalize";
 import type { OpportunityCategory, ProfileDimension } from "@/types/database";
 
 export interface StudentMatchProfile {
@@ -15,6 +16,11 @@ export interface OpportunityForMatching {
   maximumAge: number | null;
   eligibleCountries: string[];
   fields: string[];
+  /** The opportunity's own base country (distinct from `eligibleCountries`, which is who
+   * may apply — an in-person program based in France could still be open worldwide).
+   * Used only for a relevance boost below, never eligibility: an opportunity outside a
+   * student's country is not a reason to hide it, only a reason to rank it lower. */
+  country: string | null;
 }
 
 export interface EligibilityResult {
@@ -53,14 +59,28 @@ const CATEGORY_DIMENSIONS: Record<OpportunityCategory, ProfileDimension[]> = {
   student_program: ["career_exploration"],
 };
 
+/** Same real-world country, text-normalized (case/accent/whitespace only — "USA" vs.
+ * "United States" still won't match; the onboarding country field is free text today,
+ * a real but separate data-quality gap, not fixed here). Relevance, never eligibility:
+ * a program based elsewhere is still worth knowing about, just not surfaced first. */
+export function isNearStudent(student: StudentMatchProfile, opportunity: Pick<OpportunityForMatching, "country">): boolean {
+  if (!student.country || !opportunity.country) return false;
+  return normalizeEntitySearchText(student.country) === normalizeEntitySearchText(opportunity.country);
+}
+
+const PROXIMITY_BOOST = 15;
+
 function computeRelevanceScore(student: StudentMatchProfile, opportunity: OpportunityForMatching): number {
-  if (opportunity.fields.length === 0 || student.interests.length === 0) return 40;
+  const near = isNearStudent(student, opportunity);
+  if (opportunity.fields.length === 0 || student.interests.length === 0) {
+    return clampScore(40 + (near ? PROXIMITY_BOOST : 0));
+  }
 
   const fields = opportunity.fields.map((f) => f.toLowerCase());
   const interests = student.interests.map((i) => i.toLowerCase());
   const overlapCount = interests.filter((interest) => fields.some((field) => field.includes(interest) || interest.includes(field))).length;
 
-  return clampScore((overlapCount / interests.length) * 100);
+  return clampScore((overlapCount / interests.length) * 100 + (near ? PROXIMITY_BOOST : 0));
 }
 
 function computeProfileNeedScore(student: StudentMatchProfile, opportunity: OpportunityForMatching): number {
