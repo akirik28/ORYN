@@ -1,5 +1,5 @@
-import { notFound } from "next/navigation";
-import { MapPin, Users, DollarSign, GraduationCap, ExternalLink } from "lucide-react";
+import { notFound, redirect } from "next/navigation";
+import { MapPin, Users, DollarSign, GraduationCap, ExternalLink, Trophy } from "lucide-react";
 import { SUBJECT_LABELS } from "@/lib/programs/subject-labels";
 import { requireUser, getCurrentProfile } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
@@ -14,6 +14,7 @@ import { SectionHeader } from "@/components/oryn/section-header";
 import { SaveUniversityButton } from "@/features/universities/save-university-button";
 import { RequirementEvaluationBadge } from "@/features/universities/requirement-evaluation-badge";
 import { AdminRequirementForm } from "@/features/universities/admin-requirement-form";
+import { canonicalUniversityId, isSupersededUniversityId } from "@/lib/universities/canonical";
 import type { ProfileDimension, RequirementEvaluationStatus, UniversityRequirement, UniversityProgram } from "@/types/database";
 
 export default async function UniversityDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -21,16 +22,31 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   const session = await requireUser();
   const supabase = await createClient();
 
+  // A loser row still has a real, working detail page (it must — programs/requirements/FKs on
+  // one side of a pair are exactly why the row can't just be deleted), but no surface should
+  // let a student land on it as if it were the canonical result: redirect to the winner instead
+  // of rendering. Catches every path here, not just the now-fixed browse/search — an old
+  // bookmark, a program search result, a saved deep link. See lib/universities/canonical.ts.
+  if (isSupersededUniversityId(id)) {
+    redirect(`/universities/${canonicalUniversityId(id)}`);
+  }
+
   const { data: university } = await supabase.from("universities").select("*").eq("id", id).single();
   if (!university) notFound();
 
-  const [programsRes, requirementsRes, statsRes, sourcesRes, targetRes, scoresRes] = await Promise.all([
+  const [programsRes, requirementsRes, statsRes, sourcesRes, targetRes, scoresRes, rankingsRes, metricsRes] = await Promise.all([
     supabase.from("university_programs").select("*").eq("university_id", id),
     supabase.from("university_requirements").select("*").eq("university_id", id),
     supabase.from("university_statistics").select("*").eq("university_id", id).order("stat_year", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("university_sources").select("*").eq("university_id", id).order("retrieved_at", { ascending: false }),
     supabase.from("target_universities").select("*").eq("university_id", id).eq("user_id", session.userId!).maybeSingle(),
     supabase.from("profile_scores").select("dimension, score").eq("user_id", session.userId!),
+    supabase.from("university_rankings").select("ranking_provider, ranking_edition, rank_display, source_url").eq("university_id", id).order("ranking_provider"),
+    supabase
+      .from("university_profile_metrics")
+      .select("metric_code, value_numeric, value_text, source_url, source_type, verified_at")
+      .eq("university_id", id)
+      .in("metric_code", ["research_topics_top5", "undergraduate_students", "postgraduate_students"]),
   ]);
 
   if (targetRes.data) {
@@ -68,6 +84,12 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   const explanation = explainOutlook(scoreMap);
   const stats = statsRes.data;
 
+  const metricByCode = new Map((metricsRes.data ?? []).map((m) => [m.metric_code, m]));
+  const researchTopicsMetric = metricByCode.get("research_topics_top5");
+  const researchTopics = researchTopicsMetric?.value_text ? researchTopicsMetric.value_text.split(" | ").filter(Boolean) : [];
+  const undergradCount = metricByCode.get("undergraduate_students")?.value_numeric ?? null;
+  const postgradCount = metricByCode.get("postgraduate_students")?.value_numeric ?? null;
+
   return (
     <div className="space-y-8">
       <PageHeader
@@ -83,8 +105,30 @@ export default async function UniversityDetailPage({ params }: { params: Promise
 
       {university.description ? <p className="max-w-3xl text-muted-foreground">{university.description}</p> : null}
 
+      {rankingsRes.data && rankingsRes.data.length > 0 ? (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+          {rankingsRes.data.map((r) => (
+            <a
+              key={`${r.ranking_provider}-${r.ranking_edition}`}
+              href={r.source_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 hover:text-foreground hover:underline"
+            >
+              <Trophy className="size-4 shrink-0" />
+              {r.ranking_provider} {r.ranking_edition} — #{r.rank_display}
+            </a>
+          ))}
+        </div>
+      ) : null}
+
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard icon={Users} label="Student size" value={university.student_size ? university.student_size.toLocaleString() : "Unavailable"} />
+        <StatCard
+          icon={Users}
+          label="Student size"
+          value={university.student_size ? university.student_size.toLocaleString() : "Unavailable"}
+          caption={undergradCount != null && postgradCount != null ? `${undergradCount.toLocaleString()} undergrad · ${postgradCount.toLocaleString()} postgrad` : undefined}
+        />
         <StatCard icon={GraduationCap} label="Admission rate" value={stats?.admission_rate != null ? `${Math.round(stats.admission_rate * 100)}%` : "Unavailable"} />
         <StatCard icon={DollarSign} label="Cost of attendance" value={stats?.cost_of_attendance ? `$${stats.cost_of_attendance.toLocaleString()}` : "Unavailable"} />
       </div>
@@ -162,6 +206,22 @@ export default async function UniversityDetailPage({ params }: { params: Promise
         </section>
       ) : null}
 
+      {researchTopics.length > 0 ? (
+        <section className="space-y-3">
+          <SectionHeader title="Research strengths" description="Topics this university publishes in most, from OpenAlex's open research index." />
+          <div className="flex flex-wrap gap-2">
+            {researchTopics.map((topic) => (
+              <span key={topic} className="rounded-full border bg-muted/50 px-3 py-1 text-xs text-muted-foreground">
+                {topic}
+              </span>
+            ))}
+          </div>
+          {researchTopicsMetric?.source_url ? (
+            <SourceBadge sourceName="OpenAlex" checkedAt={researchTopicsMetric.verified_at} url={researchTopicsMetric.source_url} />
+          ) : null}
+        </section>
+      ) : null}
+
       {requirements.length > 0 ? (
         <section className="space-y-4">
           <SectionHeader
@@ -179,15 +239,19 @@ export default async function UniversityDetailPage({ params }: { params: Promise
 
       {profile?.is_admin ? <AdminRequirementForm universityId={university.id} programs={programsRes.data ?? []} /> : null}
 
-      {university.website_url ? (
-        <a
-          href={university.website_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-sm text-brand-primary hover:underline"
-        >
-          Visit official website <ExternalLink className="size-3.5" />
-        </a>
+      {university.website_url || university.admissions_url ? (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+          {university.website_url ? (
+            <a href={university.website_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
+              Visit official website <ExternalLink className="size-3.5" />
+            </a>
+          ) : null}
+          {university.admissions_url ? (
+            <a href={university.admissions_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
+              Admissions{university.application_system ? ` (${university.application_system})` : ""} <ExternalLink className="size-3.5" />
+            </a>
+          ) : null}
+        </div>
       ) : null}
 
       {sourcesRes.data && sourcesRes.data.length > 0 ? (
@@ -226,7 +290,7 @@ function groupProgramsBySubject(programs: UniversityProgram[]): [string, Univers
   });
 }
 
-function StatCard({ icon: Icon, label, value }: { icon: typeof Users; label: string; value: string }) {
+function StatCard({ icon: Icon, label, value, caption }: { icon: typeof Users; label: string; value: string; caption?: string }) {
   return (
     <div className="flex items-center gap-3 rounded-xl border p-4">
       <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-primary-soft text-brand-primary-strong">
@@ -235,6 +299,7 @@ function StatCard({ icon: Icon, label, value }: { icon: typeof Users; label: str
       <div>
         <p className="text-xs text-muted-foreground">{label}</p>
         <p className="font-heading text-lg font-medium">{value}</p>
+        {caption ? <p className="text-xs text-muted-foreground">{caption}</p> : null}
       </div>
     </div>
   );

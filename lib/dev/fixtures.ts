@@ -142,6 +142,8 @@ function stubUniversity(id: string, name: string, country: string, city: string)
     country_entity_id: null,
     city_entity_id: null,
     website_url: null,
+    admissions_url: null,
+    application_system: null,
     logo_url: null,
     description: null,
     selectivity: null,
@@ -196,6 +198,8 @@ export const FIXTURE_UNIVERSITY: University = {
   country_entity_id: null,
   city_entity_id: null,
   website_url: "https://www.lse.ac.uk",
+  admissions_url: "https://www.lse.ac.uk/study-at-lse/Undergraduate/Applying-to-LSE",
+  application_system: "UCAS",
   logo_url: null,
   description:
     "A specialist social science institution consistently ranked among the world's leading universities for economics, politics, and law.",

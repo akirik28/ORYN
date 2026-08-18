@@ -1,5 +1,21 @@
 import { describe, expect, test } from "vitest";
-import { countryFromIso2, institutionTypeFromRor, isCurrencyCode, nameKey, nameVariants, normalizeDegreeLevel, parseMoneyAmount, sameCountry } from "@/lib/acquisition/normalize";
+import { countryFromIso2, dbNormalizedName, institutionTypeFromRor, isCurrencyCode, nameKey, nameVariants, normalizeDegreeLevel, parseMoneyAmount, sameCountry } from "@/lib/acquisition/normalize";
+
+describe("dbNormalizedName", () => {
+  test("matches Postgres lower(unaccent(x)) — diacritics stripped, case folded", () => {
+    expect(dbNormalizedName("Özyeğin University")).toBe("ozyegin university");
+    expect(dbNormalizedName("Université Paris Dauphine - PSL")).toBe("universite paris dauphine - psl");
+  });
+
+  test("unlike nameKey(), keeps a leading 'The' and does not expand '&' — must match the database's own weaker normalization exactly, not the app's search-oriented one", () => {
+    expect(dbNormalizedName("The University of Warwick")).toBe("the university of warwick");
+    expect(dbNormalizedName("Johnson & Johnson Institute")).toBe("johnson & johnson institute");
+  });
+
+  test("does not collapse punctuation or whitespace variants the way nameKey() does — a real gap this session found live (26 duplicate pairs slipped past canonical_entities_identity_uq this way)", () => {
+    expect(dbNormalizedName("St. Andrews")).not.toBe(dbNormalizedName("St Andrews"));
+  });
+});
 
 describe("nameKey", () => {
   test("strips diacritics so localised and transliterated names compare equal", () => {
@@ -34,6 +50,22 @@ describe("nameVariants", () => {
 
   test("un-inverts the 'X, University of' form", () => {
     expect(nameVariants("Manchester, University of")).toContain("University of Manchester");
+  });
+
+  test("drops a leading acronym prefix", () => {
+    // Real gap found live this session: ROR's own record for these is the plain name with
+    // no prefix at all — acquire-university-facts.ts's exact-match step was only trying the
+    // raw declared name, so these both failed to resolve despite ROR having an exact match
+    // for the stripped form sitting in the very first page of results.
+    expect(nameVariants("EPFL – École polytechnique fédérale de Lausanne")).toContain("École polytechnique fédérale de Lausanne");
+    expect(nameVariants("KIT, Karlsruhe Institute of Technology")).toContain("Karlsruhe Institute of Technology");
+  });
+
+  test("does not strip a genuine leading word that merely happens to be capitalized", () => {
+    // The leading-acronym rule requires ALL-CAPS (2-8 chars) before the separator — "New" and
+    // "The" are mixed-case, so a real institution name is never mistaken for an acronym prefix.
+    const variants = nameVariants("New York University");
+    expect(variants).toEqual(["New York University"]);
   });
 
   test("always includes the original", () => {
