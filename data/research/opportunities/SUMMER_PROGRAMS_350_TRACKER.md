@@ -17,9 +17,22 @@ and honesty over hitting the number.
 | Wave | Candidates sent | Accepted | Duplicate | Rejected/skipped | Status |
 |------|-----------------|----------|-----------|-------------------|--------|
 | 0 (pre-existing `batch1_2026-08-17.jsonl`) | 7 | 6 | 1 (M&TSI) | 0 | Applied — commit `9cefbee` |
-| 1 | 64 | pending | | | dispatched |
+| 1, groups A+E | 16 | 10 | 0 | 6 (E: BETA Camp, Notre Dame Business Scholars, Wharton Foundations in Business, JSA, TASP, Georgetown Law/Advocacy — all ruled out as non-existent-under-that-name/discontinued/renamed/duplicate) | Applied — commit `b6167a4` |
+| 1, groups B/C/D/F/G/H | 48 | pending | | | in progress — see note below |
 
-Live `opportunities` count before Wave 1: 50 total, 20 `summer_program`.
+Live `opportunities` count after groups A+E: 62 total, 30 `summer_program`.
+
+**Operational note (2026-08-18/19):** the account's rolling session usage limit was hit
+twice while running 8 parallel research agents at once (each burn appears to exhaust a
+full ~5h window). Groups A and E finished and wrote their files within the first ~12
+minutes of the second dispatch; groups B/C/D/F/G/H were still mid-research when the
+window ran out both times. Rather than restarting those 6 from scratch, they were
+resumed via SendMessage (which continues an agent from its own transcript/context) once
+the window reset, with instructions to finalize efficiently rather than keep
+open-ended-researching. If a future session hits this again: check wall-clock time
+against the reported reset time first (it may have already passed), prefer resuming
+over-budget agents to restarting them, and consider fewer than 8 parallel agents per
+wave if it recurs.
 
 ## Already live or already researched — do NOT re-target
 
