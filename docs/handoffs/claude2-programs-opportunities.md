@@ -429,6 +429,44 @@ offering is "International Economics and Finance," already live from file 02, so
 `university_programs` 192 → 195. `finance` 4 → 5, `law` 3 → 5. Full
 lint/typecheck/725-test/build clean.
 
-**Cumulative this session**: `opportunities` 11 → 44, `university_programs` 182 → 195,
-`university_requirements` 15 → 41. `physics` (1) and `entrepreneurship` (1) remain the
-thinnest subjects; `fellowship` remains the one opportunity category still at zero.
+**Cumulative this session so far**: `opportunities` 11 → 44, `university_programs` 182 → 195,
+`university_requirements` 15 → 41.
+
+## Parallel-session write detected mid-session — not mine, left untouched
+
+Before building batch 5, re-fetched the live `opportunities` table to build a fresh dedup
+candidate pool (standard practice before every batch) and found **6 rows I never created**:
+Wharton Global High School Investment Competition, World Scholar's Cup, Summer Science
+Program (SSP), Pioneer Research Institute, Wharton Global Youth Program (Leadership in the
+Business World), Ross Mathematics Program — all `verification_state = verified_current`,
+`source = official_primary`, and all sharing one `created_at` timestamp
+(`2026-08-18 15:01:45`), meaning a single batch insert from somewhere else, not organic
+one-by-one additions. These are exactly the shape of founder-named backlog candidate this
+whole pivot has been chasing, and none collide with anything I added. Per this repo's own
+established pattern (`[[project_oryn_parallel_sessions]]` — the founder runs concurrent
+Claude lanes on this repo) this reads as another session productively working the same
+opportunities pipeline concurrently, not a conflict — did not touch or duplicate this work,
+just re-fetched the live table as ground truth before writing my own next batch, same as
+always. `opportunities` count below reflects both sessions' work combined.
+
+## Batch 5 (opportunities): fellowship — the last empty founder-named category
+
+Found two genuine fellowships (not summer-program-in-disguise, unlike TASS in batch 4): BRI
+Student Fellowship (Bill of Rights Institute — 6-month leadership program, 20 fellows/cohort,
+capstone in DC or Philadelphia; 2025-2026 cycle's Oct-Nov 2025 application window already
+closed, next cycle not yet posted) and TechGirls (a fully-funded U.S. State Department
+exchange program for young women in STEM, ages 15-17, 38 countries historically — organization
+and eligibility confirmed directly via WebFetch on the official site, but exact current-cycle
+dates were only found in search-result snippets, not on the page I actually fetched myself, so
+`cycle_status` is left `unverified` rather than asserting dates I didn't personally confirm —
+same discipline as Oxbridge/Sabancı/Notre Dame in batch 1).
+
+**Batch 5 result** (`drive_batch5_2026-08-18.jsonl`, 2 records, both accepted):
+`opportunities` (combined with the parallel session's 6 rows) now at 52. `fellowship`: 0 → 2
+— **every founder-named category (summer_program, competition, internship, research,
+scholarship, online_program, fellowship) now has at least one live entry.**
+Lint/typecheck/725-test/build clean.
+
+**Remaining thin spots**: `internship` (1), `research` (4), `physics`/`entrepreneurship`
+subject taxonomy (1 each in university_programs). Good targets for a next pass, alongside the
+~149 file-03 requirement rows still needing per-row review before they can be trusted.
