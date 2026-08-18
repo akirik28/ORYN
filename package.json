@@ -23,6 +23,7 @@
     "acquire:university-statistics-de": "tsx scripts/acquire-university-statistics-de.ts",
     "acquire:university-statistics-nl": "tsx scripts/acquire-university-statistics-nl.ts",
     "acquire:university-statistics-fr": "tsx scripts/acquire-university-statistics-fr.ts",
+    "acquire:university-statistics-ch": "tsx scripts/acquire-university-statistics-ch.ts",
     "acquire:qs-institution-profile": "tsx scripts/acquire-qs-institution-profile.ts",
     "enrich:student-counts-de": "tsx scripts/enrich-student-counts-de.ts",
     "enrich:student-counts-es": "tsx scripts/enrich-student-counts-es.ts",

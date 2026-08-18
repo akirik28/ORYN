@@ -1113,8 +1113,8 @@ is 128/1019, US-only — see Phase 10's P0K numbers). Country order: UK (done, 2
 documented negatives — see below), Germany (**done, 49/49** — a real state-law pattern, see
 below), Netherlands (**done, 13/13** — statutory fee scalable, institutional fee per-university,
 see below), France (**done, 19/30 standard universities** — 11 confirmed to have a genuinely
-different, decree-independent fee status, see below), **Switzerland next**, then Italy
-(web-accessible sources only, per
+different, decree-independent fee status, see below), Switzerland (**done, 7/11** — ETH-domain
+federal policy + per-canton research, see below), **Italy next** (web-accessible sources only, per
 the Phase 3/"Next" note below that MUR/USTAT times out), Singapore, Hong Kong, then other
 high-count countries — reorder for efficiency if a better bulk source turns up elsewhere, same
 as the German/Spanish student-count pipelines below already did. Per-country pipeline:
@@ -1503,6 +1503,42 @@ Verified live: Sorbonne University ("€2,902/yr" / "Domestic rate: €178/yr", 
 "varies" — the Germany-built `precision_state` logic needed no changes again); Sciences Po
 correctly still shows "Cost of attendance: Unavailable" rather than a wrongly-applied national
 figure. Full gate green (`tsc`/lint/801 tests/build) after.
+
+**Switzerland — 7/11, done in one pass; a real two-tier system, each tier researched on its own
+terms.** No single national or cantonal-uniform rate exists here, unlike Germany/France/
+Netherlands. Tier 1: the "ETH domain" — ETH Zurich and EPFL, Switzerland's 2 federal institutes
+of technology, share one federal policy set by the ETH Board. From fall semester 2025
+(continuing through 2026-2027): CHF 730/semester (CHF 1,460/year) for Swiss/Liechtenstein
+students; CHF 2,190/semester (CHF 4,380/year) for other foreign students — a threefold
+increase, confirmed directly on ETH Zurich's own page and independently corroborated for EPFL
+(the same ETH Board decision explicitly names both). Tier 2: every other university in this
+spine is cantonal — each of Switzerland's 26 cantons funds and prices its own university
+independently, researched individually like the UK. Resolved: University of Zurich (CHF
+1,440/year domestic, base fee unchanged since 2012; international left unresolved — a new
+"additional fee for foreign students" regulation takes effect 1 January 2026 but no static page
+stated the actual amount); University of Basel (CHF 1,700/year, **same for domestic and
+international** — Basel explicitly does not currently distinguish by nationality, unlike most
+other Swiss universities); University of Geneva (CHF 1,000/year, also **same for both** — its
+own site states this directly); University of Bern (CHF 1,700/year domestic, CHF 3,400/year
+international — a real, *adopted* increase effective "ab Herbstsemester 2026," not a proposal,
+confirmed via UniBE's own dedicated page plus multiple independent Swiss news outlets; today's
+date falls right at this transition); University of Lausanne (CHF 1,400/year domestic, CHF
+2,100/year international, 2025-26 rate, no newer figure found). Not attempted this pass, queued:
+USI, University of Fribourg, University of St. Gallen, Zurich University of Applied Sciences
+(a Fachhochschule — a genuinely different institutional tier, would need its own research).
+
+**Worth naming as a real finding**: Basel and Geneva both currently charge domestic and
+international students the identical fee — a genuine, verified fact, not a research gap — and
+both have pending (not yet adopted) political proposals to introduce a higher international
+rate, which this pass correctly did not use since it isn't law yet. Currency check done before
+writing anything: figures are Swiss Francs (CHF), and this codebase's existing `currencyPrefix()`
+already renders an unrecognized currency code as `"CODE "` (confirmed live: "CHF 4,380/yr") —
+the standard convention for CHF, which doesn't commonly use a dedicated symbol the way £/€/$
+do — so no detail-page change was needed for this country, unlike Canada's original hardcoded-£
+bug. Verified live: ETH Zurich ("CHF 4,380/yr" / "Domestic rate: CHF 1,460/yr"); Geneva ("CHF
+1,000/yr" / "Domestic rate: CHF 1,000/yr" — the same-fee case renders correctly, just
+duplicated, which is honest rather than a bug). Full gate green (`tsc`/lint/801 tests/build)
+after.
 
 After tuition progresses meaningfully: (1) India student counts (~33 remaining, AISHE >
 annual report > official institutional stats > official facts page — see the India dead-end
