@@ -3,6 +3,7 @@ import { getCurrentProfile, requireUser } from "@/lib/security/dal";
 import { signOut } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
 import { DisplayNameForm } from "@/features/settings/display-name-form";
+import { LocationForm } from "@/features/settings/location-form";
 import { CapacityForm } from "@/features/settings/capacity-form";
 import { VisibilityForm } from "@/features/settings/visibility-form";
 import { DeleteAccountDialog } from "@/features/settings/delete-account-dialog";
@@ -33,6 +34,16 @@ export default async function SettingsPage() {
             <LogOut className="size-4" /> Sign out
           </Button>
         </form>
+      </section>
+
+      <section className="space-y-4">
+        <div>
+          <h2 className="font-semibold">Location</h2>
+          <p className="text-sm text-muted-foreground">
+            Used to prioritize nearby opportunities. Country is part of your public profile if you turn that on below; city is never shown publicly.
+          </p>
+        </div>
+        <LocationForm initialCountry={profile?.country ?? ""} initialCity={profile?.city ?? null} />
       </section>
 
       <section className="space-y-4">

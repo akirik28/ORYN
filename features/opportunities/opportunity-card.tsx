@@ -125,7 +125,8 @@ export function OpportunityCard({
       {reasonCodes.length > 0 ? (
         <p className="text-xs text-muted-foreground">
           {reasonCodes.includes("matches_your_interests") ? "Matches your interests. " : ""}
-          {reasonCodes.includes("addresses_a_current_gap") ? "Addresses a current gap in your profile." : ""}
+          {reasonCodes.includes("addresses_a_current_gap") ? "Addresses a current gap in your profile. " : ""}
+          {reasonCodes.includes("near_you") ? "Based in your country." : ""}
         </p>
       ) : null}
 
