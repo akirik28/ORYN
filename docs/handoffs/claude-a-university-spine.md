@@ -1658,6 +1658,29 @@ de Barcelona ("~€1,061/yr"), both domestic and international identical (no dif
 in either region's decree this pass, stated plainly in notes rather than guessed at). Full gate
 green (`tsc`/lint/821 tests/build) after.
 
+**China — investigated, deliberately NOT written, a real negative result, not a skip.** China
+is the largest remaining zero-coverage pool (64 universities) so it was checked next per the
+coverage report's own ranking. No provincial or national bulk source was found accessible to
+this pass's tooling (China's price-bureau/NDRC-style provincial tuition-ceiling mechanism is
+real in principle but no citable English- or Chinese-language page stating current figures
+surfaced this pass). Worse: individual-university figures found for the same two flagship
+universities (Peking University, Tsinghua University) genuinely CONFLICT by roughly 5-6× between
+two source clusters — Chinese-language results (5,000-5,300 RMB/year) vs. English-language
+study-abroad aggregator results (26,000-30,000 RMB/year). These likely represent domestic vs.
+international tuition respectively (a real, large gap that does exist in China's dual-track
+system) rather than being simply wrong, but **neither figure was confirmed on the university's
+own .edu.cn domain this pass** — every source was a secondary aggregator (gk100.com, 6617.com,
+globalscholarships.com, wentchina.com, cucas.cn), the same class of source this project has
+consistently refused to trust alone (LUISS, Naples Federico II). Not written. China needs a
+dedicated future pass with either working .edu.cn access or a confirmed official bulk source —
+queued with reason code `source_unreachable` / `unverified_conflicting_sources`, not attempted
+further this session per the founder's own "don't force a country" instruction.
+
+**Coverage, verified live via `npm run report:universities`**: 110/1019 (10.8%) going into
+Italy → 124/1019 (12.2%) after Italy + Spain. Countries done so far this workstream: UK
+(20/79), Canada (3/27), Australia (1/38), Germany (49/49), Netherlands (13/13), France (19/30),
+Switzerland (7/11), Italy (4/38), Spain (10/29).
+
 After tuition progresses meaningfully: (1) India student counts (~33 remaining, AISHE >
 annual report > official institutional stats > official facts page — see the India dead-end
 note below, may need real per-institution page work this time), (2) the remaining 15 ambiguous
