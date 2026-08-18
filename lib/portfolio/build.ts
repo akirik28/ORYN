@@ -34,6 +34,7 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
       endDate: record.end_date,
       ongoing: record.is_current,
       meta: record.overall_gpa && record.gpa_scale ? `GPA ${record.overall_gpa}/${record.gpa_scale}` : null,
+      createdAt: record.created_at,
     });
   }
 
@@ -48,6 +49,7 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
       endDate: record.end_date,
       ongoing: record.ongoing,
       meta: record.people_led ? `Led ${record.people_led} people` : null,
+      createdAt: record.created_at,
     });
   }
 
@@ -64,6 +66,7 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
       meta: [record.level ? record.level.charAt(0).toUpperCase() + record.level.slice(1) : null, record.is_captain ? "Captain" : null]
         .filter(Boolean)
         .join(" · ") || null,
+      createdAt: record.created_at,
     });
   }
 
@@ -78,6 +81,7 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
       endDate: record.end_date,
       ongoing: record.ongoing,
       meta: record.field,
+      createdAt: record.created_at,
     });
   }
 
@@ -92,6 +96,7 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
       endDate: record.end_date,
       ongoing: record.ongoing,
       meta: record.role,
+      createdAt: record.created_at,
     });
   }
 
@@ -106,6 +111,7 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
       endDate: record.award_date,
       ongoing: false,
       meta: record.level,
+      createdAt: record.created_at,
     });
   }
 
@@ -120,6 +126,7 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
       endDate: record.expiry_date,
       ongoing: false,
       meta: null,
+      createdAt: record.created_at,
     });
   }
 
@@ -134,6 +141,7 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
       endDate: record.end_date,
       ongoing: record.ongoing,
       meta: record.cause_area,
+      createdAt: record.created_at,
     });
   }
 
@@ -148,6 +156,7 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
       endDate: record.end_date,
       ongoing: record.ongoing,
       meta: record.employment_type.replace(/_/g, " "),
+      createdAt: record.created_at,
     });
   }
 
