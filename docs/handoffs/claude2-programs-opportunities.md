@@ -470,3 +470,28 @@ Lint/typecheck/725-test/build clean.
 **Remaining thin spots**: `internship` (1), `research` (4), `physics`/`entrepreneurship`
 subject taxonomy (1 each in university_programs). Good targets for a next pass, alongside the
 ~149 file-03 requirement rows still needing per-row review before they can be trusted.
+
+## Batch 6 (university_programs): physics and entrepreneurship, after the morning report
+
+Continued past the morning report (`docs/handoffs/claude2-morning-report-2026-08-18.md`) per
+the founder's own "keep going" instruction, closing the two subjects that report flagged as
+thinnest: Physics BS at MIT, Physics-with-Theoretical-Physics BSc at Imperial (named precisely
+as the joint variant it is — its own UCAS code, F325 — not assumed equivalent to a plain
+Physics BSc), and Entrepreneurship and Innovation BS at Wharton/UPenn. Checked Babson College
+first (a natural entrepreneurship-specific candidate) and confirmed it does not exist in the
+canonical `universities` table — correctly left alone rather than created, per the hard rule.
+
+Also fixed a real gap in this session's own process: batches 2 and 3 of the university-programs
+work (6 programs total) had `university_programs` rows inserted but their matching
+`program_research_queue` audit rows were never written — only batch 1 got both. Rebuilt and
+applied the missing 6 queue rows from the still-available decision data so the audit trail is
+now 1:1 with every accepted program across all four independent-research batches.
+
+**Batch 6 result** (`independent_batch4_2026-08-18.jsonl`, 3 records, all 3 accepted):
+`university_programs` 195 → 198. `physics` 1 → 3, `entrepreneurship` 1 → 2.
+Lint/typecheck/725-test/build clean.
+
+**Final cumulative totals this session**: `opportunities` 11 → 52 (this session's own
+batches: 11 → 46; +6 more from the parallel session noted above), `university_programs`
+182 → 198 (10 universities now have ≥5 programs, up from 0), `university_requirements`
+15 → 41.
