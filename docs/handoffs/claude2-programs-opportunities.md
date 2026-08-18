@@ -357,7 +357,59 @@ program in disguise) and directly page-verifiable; worth another dedicated pass.
 Lint/typecheck/725-test/build clean.
 
 **Cumulative across the whole session so far**: `opportunities` 11 → 44 (+33 across 4
-batches), `university_programs` 182 → 192 (+10 across 2 batches). Two commits still
-outstanding for a morning report once the founder wakes: measured before/after counts per
-PRIORITY reporting template, and a note on `fellowship` as the one founder-named category this
-pass never filled.
+batches), `university_programs` 182 → 192 (+10 across 2 batches).
+
+## Task #18 (map 03/03B requirements): found a real source-data quality problem, did not bulk-ingest
+
+Set out to map `03_ORYN_Program_Requirements.xlsx` (200 rows, flat one-row-per-program shape,
+10 requirement-category columns) into `university_requirements`. Parsing and joining worked
+cleanly: 200/200 rows parsed with zero duplicate-emission issues, 159/160 of the
+"Verified - official Bachelor/first-cycle page" tier joined to a live `university_programs`
+row via the shared `program_id`/`official_program_url` scheme (one genuine mismatch: Yale
+Global Affairs, present in 03 but not in 02's own clean tier). Five URLs are shared by
+multiple live programs at the same university (Bilkent's single international-programs page,
+Sciences Po's dual-degree hub, Rome's admissions PDF, and two others) — all correctly
+disambiguated by matching each row's own `program_name` against the live programs' `name`
+column; zero ambiguous rows left unresolved.
+
+**Then, before writing anything, sampled the actual column content and found the file's
+per-column structure is not reliable enough to bulk-ingest mechanically.** Not an isolated
+case: `academic_subjects_or_diploma` contained admissions-round/deadline text for École
+Polytechnique, generic "use your CV to describe yourself" boilerplate for Constructor
+University, and a description of Germany's aptitude-assessment *process* (not subject
+requirements) for three different LMU Munich programs. `standardized_tests` held
+program-description marketing copy for ESSEC and Paris Dauphine instead of test information.
+`english_language` for Constructor literally leaked raw scraper metadata into the cell
+(`citeturn489search0 [wordlim: 200] Crawled: today...` prefixing the real text) — would have
+shown a garbled string directly to a student. `portfolio_or_supplement` for St. Gallen was
+about internship opportunities, unrelated to portfolios. This reads as content getting
+misfiled into the wrong column somewhere upstream in how file 03 was built, not a
+misunderstanding on my part about what each column means — the column headers and the actual
+values disagree for a meaningful share of rows, unpredictably, across at least 5 of the 10
+requirement columns and across universities with no obvious pattern connecting the affected
+rows.
+
+Given this, mechanically converting all 159 programs (~469 candidate rows) into structured
+`university_requirements` rows would have put a real number of mislabeled and
+artifact-containing rows into the live product — exactly what this codebase's own
+`AGENTS.md`/data-confidence rules exist to prevent, and not fixable by being more careful in
+my own mapping code, since the defect is in the source cell content itself. **Did not run that
+ingestion.** Instead, built a much smaller (26-row, 10-program) batch from evidence I had
+already personally gathered and verified via direct WebFetch during this session's own
+university-programs batches 1-2 (Cambridge Medicine/PBS, UCL Psychology/Medicine/Architecture,
+Edinburgh Psychology, KCL Medicine, Imperial Medicine, LSE International Relations, ETH Zurich
+Architecture) — genuinely clean, correctly-categorized, since I read and categorized it myself
+rather than trusting a pre-built column. `university_requirements`: 15 → 41 rows,
+10 programs now have structured requirement data (was 0 with `program_id` set — the prior
+15 rows are all institution-level, `program_id IS NULL`). Full lint/typecheck/725-test/build
+clean.
+
+**Left undone, and worth flagging explicitly rather than silently dropping**: the other ~149
+programs in file 03's clean tier are NOT mapped into `university_requirements` — the source
+file needs either a real per-row human/AI review pass before it's trustworthy (expensive,
+~150 rows), or the whole file re-derived from scratch with a tighter extraction discipline
+(matches this repo's own general pattern of preferring fresh official-page research over
+salvaging a corpus of uncertain provenance). `03B_...` (the richer, evidence-ledger-backed
+sibling file, per the earlier deep-dive subagent's report) was not touched this pass; whether
+that file has the same column-misfiling defect or is more reliable is unknown and would need
+its own sampling check before trusting it either.
