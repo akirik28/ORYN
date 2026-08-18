@@ -3,11 +3,11 @@ import { createClient } from "@/lib/supabase/server";
 import { Landmark, Search } from "lucide-react";
 import { UniversityExplorerHero } from "@/features/universities/university-explorer-hero";
 import { UniversityCard } from "@/features/universities/university-card";
+import { UniversitySearchBox } from "@/features/universities/university-search-box";
 import { SUPPORTED_COUNTRIES } from "@/lib/data/country-geo";
 import { regionById } from "@/lib/data/regions";
 import { searchUniversityRows } from "@/lib/universities/alias-search";
 import { getSupersededUniversityIds } from "@/lib/universities/canonical";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/oryn/page-header";
 import { EmptyState } from "@/components/oryn/empty-state";
@@ -95,7 +95,7 @@ export default async function UniversitiesPage({
         <form className="flex gap-2" action="/universities" method="GET">
           {country ? <input type="hidden" name="country" value={country} /> : null}
           {region ? <input type="hidden" name="region" value={region.id} /> : null}
-          <Input name="q" defaultValue={q} placeholder="Search by university name…" className="sm:w-72" />
+          <UniversitySearchBox defaultValue={q} country={country ?? null} />
           <Button type="submit" variant="outline" size="sm">
             <Search className="size-3.5" /> Search
           </Button>
