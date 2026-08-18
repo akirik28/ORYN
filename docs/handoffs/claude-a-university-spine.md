@@ -1306,6 +1306,22 @@ each publish their own PDF) on top of per-faculty variation — all PDF-only, no
 None of the four downloaded (file downloads need explicit user permission, out of scope for an
 unattended pass) or written. 23 further Canadian universities queued, not attempted.
 
+**Canada — second batch, 2026-08-18, 3/27 (+1: Waterloo).** New `feeBasis: "per_course"` added
+to `CaTuitionEntry` — Waterloo bills per 0.5-unit course (its own real billing denomination,
+kept distinct from UBC's per-credit figure via the `unit` string, never conflated). Explicitly
+Fall 2025 data (no 2026/27 schedule found), same honest-about-staleness treatment as Alberta's
+entry. $4,698.20–$6,919.40/course across standard faculties. Five more genuinely investigated
+this batch, none written: Calgary (Calendar is the real source but not a static page, third-
+party estimates for it conflict too widely to trust, needs dedicated navigation not attempted
+here); Simon Fraser (structurally cohort-dependent — a real tuition-guarantee system where the
+per-unit rate depends on the student's ENTRY YEAR, not just the current year — no single "2026/
+27 rate" exists the way it does for every other entry in this file); Ottawa (official page
+returned HTTP 402 to this pass's fetch tooling — fetch-access failure, not confirmed absent
+data); Victoria (official page explicitly defers actual figures to the Board's June meeting/
+Calendar, its own fee estimator tool was non-functional at check time); Queen's (no official-
+domain fee page surfaced in search results at all this pass). 4 metric rows written
+(`--apply`). Full gate green (lint/tsc/801 tests/build) after.
+
 Full gate green (`tsc`/lint/713 tests/build) after this batch too.
 
 **Australia — pilot started, 1/37 universities, `scripts/acquire-university-statistics-au.ts`.**

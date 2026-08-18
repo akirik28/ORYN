@@ -72,10 +72,11 @@ try {
 }
 
 interface CaTuitionEntry {
-  /** Not every Canadian university bills the same way — BC and Ontario schools checked so far
-   * bill per credit, Alberta bills a flat annual rate per program band. Each entry states its
-   * own basis explicitly rather than assuming one convention for the whole country. */
-  feeBasis: "per_credit" | "annual";
+  /** Not every Canadian university bills the same way — UBC bills per credit, Alberta a flat
+   * annual rate per program band, Waterloo per 0.5-unit COURSE (a distinct concept from a
+   * "credit" — not assumed equivalent). Each entry states its own basis explicitly rather than
+   * assuming one convention for the whole country. */
+  feeBasis: "per_credit" | "annual" | "per_course";
   /** [low, high] across published undergraduate programs, in CAD, at whatever `feeBasis` says. */
   international: [number, number];
   domesticLow?: number;
@@ -108,7 +109,43 @@ const CA_TUITION: Record<string, CaTuitionEntry> = {
     notes:
       "IMPORTANT: this is the 2025-26 rate table, explicitly labeled as such on the source page — no 2026/27 version was found anywhere on this domain at time of check, unlike every other entry in this file. Not silently presented as 2026/27. Alberta uses a program-based, cohort-guaranteed tuition model (each entering class's rate is locked for the program's duration, increasing ~5.5%/year for NEW cohorts) — this pass did not compute an inflation-adjusted 2026/27 estimate, since that would be a derived, not directly-sourced, figure. Real annual rate (not per-credit): $32,643.60 (Augustana/Saint Jean/Education/Native Studies/Nursing degree programs, the lowest band) to $47,756.40 (Faculty of Engineering, the highest of the standard bands — excludes higher outlier professional programs: Pharmacy $60,452.52, Law $57,205.34, Dental Surgery $107,921.52, none of which are undergraduate first-entry degrees).",
   },
+
+  // --- Second batch, 2026-08-18 ---
+  "University of Waterloo": {
+    feeBasis: "per_course",
+    international: [4698.2, 6919.4],
+    statsAsOf: "Fall 2025 (see notes — not yet 2026/27)",
+    sourceUrl: "https://uwaterloo.ca/finance/fee-schedule-international-undergraduate-students-fall-2025-0",
+    notes:
+      "IMPORTANT: the live fee-schedule page found is explicitly Fall 2025, not 2026/27 — no 2026/27 schedule was found at time of check; same honest-about-staleness treatment as the Alberta entry above. Waterloo bills per 0.5-unit COURSE (its own real billing unit, e.g. a standard one-term course), not a generic 'credit' — a genuinely different denomination from UBC's per-credit figure above, kept in its own `unit` string so the two are never displayed as if comparable. Range across standard faculties: $4,698.20 (Health/Science) to $6,919.40 (Engineering/Mathematics, top band); Environment $4,719.60. Excludes Optometry ($36,011/term) and Pharmacy ($35,561/term), which are professional per-term program fees on a completely different structure, not comparable to a per-course undergraduate rate.",
+  },
 };
+
+/**
+ * REAL NEGATIVE RESULTS, second batch, investigated not skipped:
+ *   - University of Calgary: the university's own Calendar (calendar.ucalgary.ca) is the
+ *     stated official source but wasn't reduced to one clean figure this pass — it's a large
+ *     interactive calendar site, not a static table, and third-party estimates for it conflict
+ *     wildly ($26,849–$84,085 depending on source), too uncertain to trust without reading the
+ *     Calendar directly. Needs dedicated per-page navigation, not attempted this pass.
+ *   - Simon Fraser University: genuinely structurally complex, not just hard to find — tuition
+ *     is billed per unit AND depends on the student's ENTRY COHORT (a real tuition-guarantee
+ *     system: 2016/17-or-earlier / 2017/18-2023/24 / 2024/25-or-later cohorts each pay a
+ *     different locked-in per-unit rate, e.g. $1,262.88 vs $1,239.06 vs $1,087.78/unit for the
+ *     same base program). There is no single "the 2026/27 rate" the way most other entries in
+ *     this file have — any figure written would need to specify which cohort, a materially
+ *     different shape than every other entry here. Not written rather than picking one cohort
+ *     arbitrarily.
+ *   - University of Ottawa: the official tuition-international page returned HTTP 402 to this
+ *     pass's fetch tooling — a fetch-access failure, not a confirmed absence of data (same class
+ *     of gap as Cardiff in the UK batch), worth retrying with different tooling.
+ *   - University of Victoria: the official page states fees are set at the Board's June meeting
+ *     and directs to the Calendar/faculty pages for actual figures — the page's own tuition
+ *     estimator tool was non-functional ("Waiting for results") at time of check. Not written.
+ *   - Queen's University: no official-domain (queensu.ca) fee page surfaced in this pass's
+ *     search results at all — every result was a third-party aggregator. Not attempted further
+ *     without a real official URL to start from.
+ */
 
 async function main(): Promise<void> {
   const apply = process.argv.includes("--apply");
@@ -140,9 +177,10 @@ async function main(): Promise<void> {
       noEntry++;
       continue;
     }
-    const intlCode = entry.feeBasis === "per_credit" ? "tuition_international_per_credit" : "tuition_international_annual";
-    const domCode = entry.feeBasis === "per_credit" ? "tuition_domestic_per_credit" : "tuition_domestic_annual";
-    const unit = entry.feeBasis === "per_credit" ? "CAD/credit" : "CAD/year";
+    const isAnnual = entry.feeBasis === "annual";
+    const intlCode = isAnnual ? "tuition_international_annual" : "tuition_international_per_credit";
+    const domCode = isAnnual ? "tuition_domestic_annual" : "tuition_domestic_per_credit";
+    const unit = entry.feeBasis === "per_credit" ? "CAD/credit" : entry.feeBasis === "per_course" ? "CAD/0.5-unit course" : "CAD/year";
     toWrite.push({ universityId: uni.id, universityName: uni.name, metricCode: intlCode, valueNumeric: entry.international[0], unit });
     if (entry.domesticLow != null) {
       toWrite.push({ universityId: uni.id, universityName: uni.name, metricCode: domCode, valueNumeric: entry.domesticLow, unit });
