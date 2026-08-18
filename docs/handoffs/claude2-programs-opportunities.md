@@ -413,3 +413,22 @@ salvaging a corpus of uncertain provenance). `03B_...` (the richer, evidence-led
 sibling file, per the earlier deep-dive subagent's report) was not touched this pass; whether
 that file has the same column-misfiling defect or is more reliable is unknown and would need
 its own sampling check before trusting it either.
+
+## Batch 3 (university_programs): finance and law, next-thinnest subjects
+
+Continued closing subject gaps at already-in-spine universities: Law BA (Hons) at Cambridge
+(clean, standalone), BS in Business — Finance at NYU Stern. Sciences Po's Law entry needed
+careful framing — it's a second-year specialization *within* the general Bachelor admission,
+not a separately-admitted law degree like Cambridge's, so the program name and
+`researcher_notes` say so explicitly rather than presenting it as equivalent to a standalone
+programme. Bocconi Finance was considered and dropped — its only real undergraduate finance
+offering is "International Economics and Finance," already live from file 02, so a
+"Finance BSc" addition there would have been a near-duplicate.
+
+**Batch 3 result** (`independent_batch3_2026-08-18.jsonl`, 3 records, all 3 accepted):
+`university_programs` 192 → 195. `finance` 4 → 5, `law` 3 → 5. Full
+lint/typecheck/725-test/build clean.
+
+**Cumulative this session**: `opportunities` 11 → 44, `university_programs` 182 → 195,
+`university_requirements` 15 → 41. `physics` (1) and `entrepreneurship` (1) remain the
+thinnest subjects; `fellowship` remains the one opportunity category still at zero.
