@@ -907,9 +907,15 @@ short research-category chips replacing raw OpenAlex topic strings on cards. No 
 migration — reused the existing (empty) `universities.logo_url` column and the existing
 `university_profile_metrics` flexible-store pattern. Piloted end-to-end on all 16 founder-
 named flagship universities (16/16 real images, verified live in-browser), then scaled to the
-full spine: **708/1019 (69.5%) real campus images**, 337 logos, after finding and fixing a
-Wikimedia rate-limiting bug mid-scale (a real User-Agent stops the 429 for one request but not
-under this script's sustained volume — fixed with a shared minimum-gap throttle). Full detail,
-architecture rationale, and known limitations:
+full spine, then pushed further with official-site sub-page discovery and a crash fix (a
+Node/undici assertion from one malformed response on an arbitrary official-site host — now
+survived via process-level handlers): **721/1010 live universities (71.4%) real campus
+images**, 98 logo fallback, 191 ORYN-icon fallback — **display-safe 1010/1010, broken 0**,
+after finding and fixing a Wikimedia rate-limiting bug mid-scale (a real User-Agent stops the
+429 for one request but not under this script's sustained volume — fixed with a shared
+minimum-gap throttle). `npm run report:university-images` gives the full real-vs-fallback
+breakdown plus needs_review reason categorization on demand. Full detail, architecture
+rationale, and known limitations (including why opportunity/programme image work is
+deliberately deferred — that table is owned by a separate, actively-writing workstream):
 `docs/handoffs/claude-a-university-spine.md`'s "University images" section. Full gate green
 throughout (lint/tsc/801 tests/build).

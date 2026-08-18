@@ -2014,3 +2014,84 @@ manual-override attention than this pass gave them.
 opengraph,image-validation,image-storage}.test.ts`, `__tests__/universities/
 research-taxonomy.test.ts`, extended `source-authority.test.ts`. Full gate green
 (lint/tsc/801 tests/build) before and after the pilot `--apply`.
+
+**Pushed further, same day — founder asked explicitly for 1019/1019 display-safe with real vs.
+fallback coverage never conflated (P0A–P0T of a follow-up spec).** Two real fixes plus one more
+`--apply` pass landed this round:
+
+1. **Official-site sub-page discovery** — a homepage with no `og:image` at all (a real case:
+   `web.mit.edu` has none) now tries `/about`, `/about-us`, `/campus`, `/visit`, `/gallery`,
+   `/media`, `/newsroom`, `/press` in order, stopping at the first hit, before falling through.
+   Same downstream validation applies regardless of which page it came from.
+2. **A real crash found and fixed**: hitting dozens of arbitrary official-site hosts (not just
+   Wikidata/Commons's well-behaved endpoints) means some server somewhere sends a malformed
+   response — one did, and it crashed a ~900-university run partway through with a raw
+   Node/undici socket-teardown assertion (`Parser.finish`/`TLSSocket.onHttpSocketEnd`), a
+   failure mode below the fetch Promise itself that no per-call `try/catch` in this codebase
+   could see. Fixed with process-level `uncaughtException`/`unhandledRejection` handlers that
+   log and continue — verified safe specifically because writes are already incremental
+   per-university and nothing here is shared mutable state a corrupted socket could poison (10
+   such events logged-and-survived on the next full run, which then completed cleanly).
+3. `lib/acquisition/image-storage.ts` generalized to take a bucket name and entity id as plain
+   parameters (`ensureImageBucket`/`uploadEntityImage`) instead of hardcoding "university" —
+   ready for a future opportunities/programme image pipeline to reuse directly. No schema
+   change, no bucket created for anyone but universities yet.
+
+**Final numbers (`npm run report:university-images`, new script — also generalizes the
+reporting split the founder asked for: display-safe vs. real-verified are two different
+questions, never collapsed into one):**
+```
+Total live universities: 1010
+DISPLAY-SAFE:  1010/1010  (real 721, official-logo fallback 98, ORYN-icon fallback 191, broken 0)
+PIPELINE:      real verified 721/1010 (71.4%), needs_review 180, no_candidate 109
+needs_review reasons: too_small 106, portrait_or_near_square 52, extreme_panorama 13,
+  download_failed_or_inaccessible 9
+```
+(1010, not 1019 — `getSupersededUniversityIds()` correctly excludes the 9 known duplicate-loser
+rows from this count; the raw `universities` table still has 1019 physical rows.) Verified live
+in-browser post-pass: a `needs_review` case (Fudan University — correctly renders the ORYN icon,
+no broken image, no logo either) and a logo-fallback case (Bocconi University — correctly
+renders its real logo, no campus photo yet) via DOM/network inspection (this session's screenshot
+capture tool is unreliable when attached to an externally-run dev server — see the pilot
+section above; `naturalWidth`/`naturalHeight`/network-200 checks are the actual evidence).
+
+Display-safe was already 100% before this pass too — the card/detail fallback chain guarantees
+it structurally, not by measurement — what moved is the real-verified share (69.5% → 71.4%) and,
+more importantly, the *honesty* of the needs_review bucket: before the throttle fix (see the
+scale section above) it was dominated by transient "download failed" noise; now it's
+overwhelmingly genuine quality rejections (portrait/too-small/panorama Wikidata images this
+pipeline correctly refuses to publish rather than crop badly). Diminishing returns confirmed
+directly — a fourth `--apply` pass after the sub-page-discovery + crash fix added only 5 more
+real images (716→721) vs. +317 on the pass that fixed the actual rate-limit bug — the founder's
+"don't block on 1019 perfect sources" instruction is the right read of where this pipeline
+now sits: safe to leave, safe to re-run again anytime for marginal gains, not worth chasing
+further in this session.
+
+**Explicitly NOT done, and why — read before touching `opportunities`:** the same follow-up
+spec (P0E onward) asked for this image architecture to generalize across every ORYN discovery
+entity — programmes, summer schools, competitions, scholarships, fellowships, internships,
+providers — via a shared media model. Investigated (full report in-session, not filed as its
+own doc): `opportunities` is a real, populated table (**52 live rows at investigation time,
+growing in real time** — a session on `origin/oryn/programs-opportunities-intel` pushed a new
+scholarship-category commit *during* this investigation), with its own `opportunity_category`
+enum, its own canonical-entity linkage (`organization_entity_id`), and **zero image/media
+columns anywhere** — confirmed via full migration grep. This branch's own header above already
+states the boundary: `opportunities`/`opportunity_sources` are **not** in scope here, owned by
+that parallel workstream. A migration-numbering collision between these two branches already
+happened once (`0043`, resolved by renumbering). Building a new `entity_media` table or writing
+opportunity image data myself right now would risk a second collision against a table someone
+else is actively writing to, live, in the same database this session shares. What *is* safe and
+done: the storage/adapter layer (`image-storage.ts`, `wikimedia.ts`, `opengraph.ts`,
+`image-validation.ts`) is already entity-agnostic — the opportunities pipeline can import these
+directly, unchanged, whenever that workstream is ready to pick up media. The architecture
+choice it still needs to make (documented for whoever does it): clone the
+`university_profile_metrics` EAV-rows-per-image pattern into an `opportunity_profile_metrics`
+table, or build one genuine polymorphic table keyed on `canonical_entities.id` (which both
+`opportunities.organization_entity_id` and `universities.canonical_entity_id` could share) —
+nothing in the current schema forces either choice.
+
+**Files added this round:** `lib/universities/image-coverage.ts` (pure `displayTierOf`/
+`categorizeRejection` classification, unit tested — `__tests__/universities/
+image-coverage.test.ts`), `scripts/university-image-coverage-report.ts` (`npm run
+report:university-images`, `--list-needs-review` for per-university detail). Full gate green
+(lint/tsc/821 tests/build) after every change in this round.
