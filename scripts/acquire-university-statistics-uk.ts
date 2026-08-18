@@ -43,6 +43,18 @@
  * policy number every UK university publishes plainly — £9,790 for 2026/27, independently
  * confirmed live at every one of the 12 universities below that publish a Home rate at all.
  *
+ * SECOND BATCH, 2026-08-18 — 6 more added (Exeter, Warwick, St Andrews, Loughborough,
+ * Southampton, Queen Mary), same per-university-official-page discipline. Three more real
+ * negative results this batch: Imperial College London and Newcastle University both split
+ * every fee out to individual course pages with no overview table (Imperial's own overview
+ * page states only the CPI-linked *increase* — 3.5% — never a base figure); Cardiff University's
+ * overseas-fees page returned HTTP 403 to this pass's fetch tooling (unlike the JS-search-tool
+ * class of negative result above — a fetch-access problem, not a missing-data one; worth
+ * retrying with different tooling before assuming it's the same "no static table" case).
+ * St Andrews' Home/RUK fee is genuinely "to be confirmed" per the university's own page — not
+ * assumed to match the £9,790 cap the way Warwick/Loughborough's Home fees are (St Andrews has
+ * its own Scotland-specific fee history and shouldn't be defaulted to the England-cap figure).
+ *
  * CROSS-CHECK THE SUPERSESSION REGISTRY BEFORE PICKING A ROW BY NAME — a real mistake this
  * script made once already: this spine has THREE UK pairs where two `universities` rows are
  * the same real institution (already resolved in `lib/universities/duplicate-supersessions.
@@ -186,6 +198,50 @@ const UK_TUITION: Record<string, UkTuitionEntry> = {
     sourceUrl: "https://www.nottingham.ac.uk/fees/tuitionfees/202627/undergraduate.aspx",
     notes:
       "2026/27 entry. Real per-programme table, 209 rows (195 with a valid international figure) scanned directly. Home fee £9,790/year (a handful of Foundation-Year courses show £5,760 instead — excluded as a non-standard rate, not representative). International: £20,000-£47,000. High confidence.",
+  },
+
+  // --- Second batch, 2026-08-18, continuing the queued 65 ---
+  "University of Exeter": {
+    domestic: 9790,
+    international: [24900, 48900],
+    sourceUrl: "https://www.exeter.ac.uk/undergraduate-degrees/fees/",
+    notes:
+      "2026/27 entry, read directly from a real per-subject-band table. Home: £9,790/year. International bands: £24,900 (Business/Economics/Marketing) to £48,900 (BMBS Medicine); Arts/Humanities/Social Sciences/Law £24,950; Biosciences/Psychology/Nursing/Geography £31,200; Computer Science/Engineering/Physics/Natural Sciences £31,200; Mathematics £30,100; Sport and Health Sciences £29,900. High confidence, Medicine included in the range (unlike Oxford, Exeter's own table lists it as one band among others, not called out as a separate pricing structure).",
+  },
+  "University of Warwick": {
+    // Winner of the Warwick duplicate pair (0b204add-..., 6 vs 2 FK references) —
+    // "The University of Warwick" (ad3ef0a4-...) is the loser, cross-checked against
+    // duplicate-supersessions.json before writing, same discipline as every entry above.
+    domestic: 9790,
+    international: [27870, 35530],
+    sourceUrl: "https://warwick.ac.uk/services/finance/studentfinance/fees/overseasfees/",
+    notes:
+      "2026/27 entry, read directly from Warwick's own Band 1/Band 2 overseas fee schedule. Band 1 (Arts & Humanities): £27,870. Band 2 (STEM & professional): £35,530. Medicine (MBChB) is priced separately, outside this range, and excluded from it — £32,510 (Year 1), £56,660 (Years 2-4) — same treatment as Oxford's clinical medicine exclusion, for the same reason (a genuinely different, non-comparable pricing structure). Home fee £9,790 not independently re-verified on Warwick's own page this pass — written as the same well-established 2026/27 national policy figure independently confirmed live at multiple other UK institutions this pass (Oxford, UCL, King's, Exeter, Southampton, Queen Mary), not a per-institution guess.",
+  },
+  "University of St Andrews": {
+    international: [33250, 39620],
+    sourceUrl: "https://www.st-andrews.ac.uk/study/tuition-fees/undergraduate/",
+    notes:
+      "2026/27 entry, read directly. Overseas: Arts, Divinity and Science £33,250; Medicine £39,620 (includes a Scottish-Government-mandated national levy for overseas medical students covering NHS clinical teaching costs, stated explicitly on the page as part of the figure, not hidden). Home (RUK) fee explicitly stated on the page as 'to be confirmed' for 2026/27 — genuinely not yet published, not written here rather than assumed to match the £9,790 cap other institutions confirm (St Andrews' own Scotland-domiciled/RUK fee history has diverged from the standard England cap before).",
+  },
+  "Loughborough University": {
+    domestic: 9790,
+    international: [24700, 33000],
+    sourceUrl: "https://www.lboro.ac.uk/study/undergraduate/fees-funding/fees/international-fees-2026-27/",
+    notes:
+      "2026/27 entry, read directly from a real 5-band fee table (page marked 'Updated on 09/10/2025'). International: £24,700 (Humanities/Social Sciences — English, History, Law, Psychology, Sociology) to £33,000 (Sport and Exercise Science); Business/Economics £25,950; Computing/Management £27,300; Engineering/Sciences/Design £30,700. Home fee £9,790 not independently re-verified on Loughborough's own page this pass — written under the same cross-institution-confirmed-national-figure reasoning as Warwick above.",
+  },
+  "University of Southampton": {
+    domestic: 9790,
+    sourceUrl: "https://www.southampton.ac.uk/courses/fees/undergraduate/tuition-fees.page",
+    notes:
+      "2026/27 entry. Home fee £9,790/year, independently confirmed live on this page. International fee: no single published figure on this page or its linked international-fees page — genuinely course-specific, no static table found this pass; not guessed.",
+  },
+  "Queen Mary University of London": {
+    domestic: 9790,
+    sourceUrl: "https://www.qmul.ac.uk/undergraduate/feesandfunding/tuitionfees/",
+    notes:
+      "2026/27 entry. Home fee £9,790/year, independently confirmed live on this page (Foundation-year variants differ: £9,790 Science/Engineering integrated, £5,760 Humanities/Social Sciences integrated — not representative of the standard rate, excluded). International standard-programme fee: no single published figure on this page — directed to a per-course finder; only the International Foundation Year figure (£25,500) is stated directly, which isn't the standard undergraduate rate, so not written as `tuition_international_annual`.",
   },
 };
 

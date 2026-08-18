@@ -1214,6 +1214,25 @@ oversight — worth doing once more countries add real weight to this metric.
 Remaining 65 UK universities queued, not attempted. Full gate green (`tsc`/lint/713
 tests/build) after this batch.
 
+**UK — second batch, 2026-08-18, 20/79 (+6: Exeter, Warwick, St Andrews, Loughborough,
+Southampton, Queen Mary).** Same official-page-only discipline; three real negative results
+this batch, recorded in the script's own header rather than silently skipped: Imperial College
+London and Newcastle University both split fees to individual course pages with no overview
+figure at all (not even a Home rate on Imperial's overview — only the year-over-year CPI
+increase percentage); Cardiff University's overseas-fees page returned HTTP 403 to this pass's
+fetch tooling specifically — a fetch-access failure, not a confirmed "no data" case, worth
+retrying with different tooling before assuming it's the same class of gap as the JS-search-
+tool universities above. St Andrews' Home/RUK fee is genuinely unpublished ("to be confirmed"
+per the university's own page) — NOT defaulted to the £9,790 England cap the way Warwick's and
+Loughborough's Home fees were (both cross-institution-confirmed rather than independently
+re-verified on their own pages, same reasoning Glasgow's entry already used). Exeter and
+Warwick both explicitly exclude Medicine from their standard range (Warwick: separately priced,
+outside the range; Exeter: included since its own table lists it as one band among others, not
+called out as different — the two universities structure their own fee schedules differently,
+each followed as published rather than forced into one convention). 30 metric rows written
+(`--apply`). Remaining 59 UK universities queued. Full gate green (lint/tsc/801 tests/build)
+after this batch.
+
 **Canada — quick source check done 2026-08-18, before switching countries: no bulk per-
 institution win available, same manual-per-university shape as UK.** Statistics Canada's
 Tuition and Living Accommodation Costs (TLAC) tables (37-10-0003 through -0006, -0045-01 — the
