@@ -56,7 +56,14 @@ export default async function UniversityDetailPage({ params }: { params: Promise
       .from("university_profile_metrics")
       .select("metric_code, value_numeric, value_text, source_url, source_type, verified_at")
       .eq("university_id", id)
-      .in("metric_code", ["research_topics_top5", "undergraduate_students", "postgraduate_students", "qs_size_category"]),
+      .in("metric_code", [
+        "research_topics_top5",
+        "undergraduate_students",
+        "postgraduate_students",
+        "qs_size_category",
+        "tuition_international_annual",
+        "tuition_domestic_annual",
+      ]),
   ]);
 
   if (targetRes.data) {
@@ -100,6 +107,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   const undergradCount = metricByCode.get("undergraduate_students")?.value_numeric ?? null;
   const postgradCount = metricByCode.get("postgraduate_students")?.value_numeric ?? null;
   const qsSizeCode = metricByCode.get("qs_size_category")?.value_text ?? null;
+  const internationalTuition = metricByCode.get("tuition_international_annual")?.value_numeric ?? null;
   const qsSizeLabel = qsSizeCode ? (QS_SIZE_LABELS[qsSizeCode] ?? qsSizeCode) : null;
 
   return (
@@ -152,7 +160,20 @@ export default async function UniversityDetailPage({ params }: { params: Promise
           }
         />
         <StatCard icon={GraduationCap} label="Admission rate" value={stats?.admission_rate != null ? `${Math.round(stats.admission_rate * 100)}%` : "Unavailable"} />
-        <StatCard icon={DollarSign} label="Cost of attendance" value={stats?.cost_of_attendance ? `$${stats.cost_of_attendance.toLocaleString("en-US")}` : "Unavailable"} />
+        {/* These read two genuinely different concepts — US `cost_of_attendance` (an IPEDS
+            all-in sticker-price estimate) vs a UK-and-onward `tuition_international_annual`
+            (tuition only, official-university-page-sourced, often a range) — and are never
+            shown under the same label, per the founder's explicit "never collapse different
+            cost concepts" rule. Only one of the two is ever populated for a given university
+            today (US vs non-US acquisition pipelines don't overlap), so at most one StatCard
+            renders real data; if that ever changes, this still can't silently blend them. */}
+        {stats?.cost_of_attendance ? (
+          <StatCard icon={DollarSign} label="Cost of attendance" value={`$${stats.cost_of_attendance.toLocaleString("en-US")}`} />
+        ) : internationalTuition != null ? (
+          <StatCard icon={DollarSign} label="International tuition" value={`From £${internationalTuition.toLocaleString("en-US")}/yr`} caption="Varies by course — see university for your exact fee" />
+        ) : (
+          <StatCard icon={DollarSign} label="Cost of attendance" value="Unavailable" />
+        )}
       </div>
 
       {targetRes.data ? (

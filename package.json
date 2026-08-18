@@ -17,6 +17,7 @@
     "enrich:student-counts": "tsx scripts/enrich-student-counts.ts",
     "enrich:student-counts-us": "tsx scripts/enrich-student-counts-us.ts",
     "acquire:university-statistics-us": "tsx scripts/acquire-university-statistics-us.ts",
+    "acquire:university-statistics-uk": "tsx scripts/acquire-university-statistics-uk.ts",
     "acquire:qs-institution-profile": "tsx scripts/acquire-qs-institution-profile.ts",
     "enrich:student-counts-de": "tsx scripts/enrich-student-counts-de.ts",
     "enrich:student-counts-es": "tsx scripts/enrich-student-counts-es.ts",
