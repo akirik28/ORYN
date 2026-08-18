@@ -108,6 +108,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   const postgradCount = metricByCode.get("postgraduate_students")?.value_numeric ?? null;
   const qsSizeCode = metricByCode.get("qs_size_category")?.value_text ?? null;
   const internationalTuition = metricByCode.get("tuition_international_annual")?.value_numeric ?? null;
+  const domesticTuition = metricByCode.get("tuition_domestic_annual")?.value_numeric ?? null;
   const qsSizeLabel = qsSizeCode ? (QS_SIZE_LABELS[qsSizeCode] ?? qsSizeCode) : null;
 
   return (
@@ -170,7 +171,18 @@ export default async function UniversityDetailPage({ params }: { params: Promise
         {stats?.cost_of_attendance ? (
           <StatCard icon={DollarSign} label="Cost of attendance" value={`$${stats.cost_of_attendance.toLocaleString("en-US")}`} />
         ) : internationalTuition != null ? (
-          <StatCard icon={DollarSign} label="International tuition" value={`From £${internationalTuition.toLocaleString("en-US")}/yr`} caption="Varies by course — see university for your exact fee" />
+          <StatCard
+            icon={DollarSign}
+            label="International tuition"
+            value={`From £${internationalTuition.toLocaleString("en-US")}/yr`}
+            caption={domesticTuition != null ? `Varies by course. UK/Home rate: £${domesticTuition.toLocaleString("en-US")}/yr` : "Varies by course — see university for your exact fee"}
+          />
+        ) : domesticTuition != null ? (
+          // International tuition genuinely isn't published as a single figure at this
+          // university (see acquire-university-statistics-uk.ts's header) — the domestic/
+          // home rate is real, verified data too, just clearly labeled as NOT what most of
+          // this product's international-applicant audience would actually pay.
+          <StatCard icon={DollarSign} label="UK Home tuition" value={`£${domesticTuition.toLocaleString("en-US")}/yr`} caption="International fee not published as a single figure — varies by course" />
         ) : (
           <StatCard icon={DollarSign} label="Cost of attendance" value="Unavailable" />
         )}

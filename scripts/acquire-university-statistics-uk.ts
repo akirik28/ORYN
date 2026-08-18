@@ -91,7 +91,16 @@ const UK_TUITION: Record<string, UkTuitionEntry> = {
     notes:
       "2026 entry. Overseas tuition across 5 published course groups: £29,052 (Group 1 — humanities/social sciences) to £70,554 (Group 5 — Medical and Veterinary Science). A separate annual College fee also applies on top of University tuition for overseas-fee-status students (Oxbridge collegiate system) — a distinct cost concept, not folded into this figure. Home fee not independently re-verified on this specific page this pass (Oxford/UCL both independently confirm the same £9,790 national cap for 2026/27, so very likely identical, but not written here since not directly checked for Cambridge specifically).",
   },
-  UCL: {
+  // Keyed "University College London", NOT "UCL" — this spine has both as separate rows
+  // (cf8adcbd-... "UCL" and 03c8faf1-... "University College London") sharing one
+  // canonical_entity_id, already resolved in duplicate-supersessions.json: "University
+  // College London" is the winner (7 vs 2 FK references), "UCL" the loser. Caught live: a
+  // first version of this table used "UCL" and would have written real, carefully-verified
+  // tuition data onto the superseded row — invisible everywhere, since getSupersededUniversityIds()
+  // excludes it from every browse/search/detail surface. Exactly the "KFUPM/UCL mistake"
+  // class this workstream was explicitly told to avoid, caught before --apply by cross-
+  // checking the supersession registry rather than assuming a name match means the right row.
+  "University College London": {
     domestic: 9790,
     sourceUrl: "https://www.ucl.ac.uk/study/student-finances/tuition-fees/fee-schedules/fee-schedules-2026-2027/undergraduate-fees-2026-2027",
     notes:
