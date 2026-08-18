@@ -7,6 +7,7 @@ import { MapPin, Bookmark, BookmarkCheck, Landmark, Users, Trophy, DollarSign, S
 import { Button } from "@/components/ui/button";
 import { addTargetUniversity } from "@/app/(app)/universities/actions";
 import { useCompare } from "@/features/universities/compare-context";
+import { formatNumber } from "@/lib/i18n/format";
 import type { University } from "@/types/database";
 
 // Larger, calmer card (founder direction: "fewer larger cards ... not a dense database
@@ -100,7 +101,7 @@ export function UniversityCard({
             {university.student_size ? (
               <span className="flex items-center gap-1">
                 <Users className="size-3.5 shrink-0" />
-                {university.student_size.toLocaleString("en-US")} students
+                {formatNumber(university.student_size)} students
               </span>
             ) : null}
           </div>

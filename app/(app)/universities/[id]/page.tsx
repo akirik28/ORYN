@@ -17,6 +17,7 @@ import { RequirementEvaluationBadge } from "@/features/universities/requirement-
 import { AdminRequirementForm } from "@/features/universities/admin-requirement-form";
 import { canonicalUniversityId, isSupersededUniversityId } from "@/lib/universities/canonical";
 import { formatTuition, tuitionQualifier } from "@/lib/universities/tuition-format";
+import { formatNumber, formatCurrency } from "@/lib/i18n/format";
 import type { ProfileDimension, RequirementEvaluationStatus, UniversityRequirement, UniversityProgram } from "@/types/database";
 
 /** QS's own official Size classification (S/M/L/XL) — a coarse FTE-based band, not an exact
@@ -183,10 +184,10 @@ export default async function UniversityDetailPage({ params }: { params: Promise
         <StatCard
           icon={Users}
           label="Student size"
-          value={university.student_size ? university.student_size.toLocaleString("en-US") : (qsSizeLabel ?? "Unavailable")}
+          value={university.student_size ? formatNumber(university.student_size) : (qsSizeLabel ?? "Unavailable")}
           caption={
             university.student_size && undergradCount != null && postgradCount != null
-              ? `${undergradCount.toLocaleString("en-US")} undergrad · ${postgradCount.toLocaleString("en-US")} postgrad`
+              ? `${formatNumber(undergradCount)} undergrad · ${formatNumber(postgradCount)} postgrad`
               : !university.student_size && qsSizeLabel
                 ? "QS size band, not an exact count"
                 : undefined
@@ -201,7 +202,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
             today (US vs non-US acquisition pipelines don't overlap), so at most one StatCard
             renders real data; if that ever changes, this still can't silently blend them. */}
         {stats?.cost_of_attendance ? (
-          <StatCard icon={DollarSign} label="Cost of attendance" value={`$${stats.cost_of_attendance.toLocaleString("en-US")}`} />
+          <StatCard icon={DollarSign} label="Cost of attendance" value={formatCurrency(stats.cost_of_attendance)} />
         ) : internationalTuition != null ? (
           (() => {
             // Each figure's own precision_state governs its own prefix — international being
