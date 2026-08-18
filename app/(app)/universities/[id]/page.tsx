@@ -16,6 +16,17 @@ import { AdminRequirementForm } from "@/features/universities/admin-requirement-
 import { canonicalUniversityId, isSupersededUniversityId } from "@/lib/universities/canonical";
 import type { ProfileDimension, RequirementEvaluationStatus, UniversityRequirement } from "@/types/database";
 
+/** QS's own official Size classification (S/M/L/XL) — a coarse FTE-based band, not an exact
+ * headcount; QS doesn't publish the numeric thresholds between them. Used only as a fallback
+ * when no exact `student_size` exists yet — see scripts/acquire-qs-institution-profile.ts. */
+const QS_SIZE_LABELS: Record<string, string> = {
+  XS: "Extra small",
+  S: "Small",
+  M: "Medium",
+  L: "Large",
+  XL: "Extra large",
+};
+
 export default async function UniversityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await requireUser();
@@ -45,7 +56,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
       .from("university_profile_metrics")
       .select("metric_code, value_numeric, value_text, source_url, source_type, verified_at")
       .eq("university_id", id)
-      .in("metric_code", ["research_topics_top5", "undergraduate_students", "postgraduate_students"]),
+      .in("metric_code", ["research_topics_top5", "undergraduate_students", "postgraduate_students", "qs_size_category"]),
   ]);
 
   if (targetRes.data) {
@@ -88,6 +99,8 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   const researchTopics = researchTopicsMetric?.value_text ? researchTopicsMetric.value_text.split(" | ").filter(Boolean) : [];
   const undergradCount = metricByCode.get("undergraduate_students")?.value_numeric ?? null;
   const postgradCount = metricByCode.get("postgraduate_students")?.value_numeric ?? null;
+  const qsSizeCode = metricByCode.get("qs_size_category")?.value_text ?? null;
+  const qsSizeLabel = qsSizeCode ? (QS_SIZE_LABELS[qsSizeCode] ?? qsSizeCode) : null;
 
   return (
     <div className="space-y-8">
@@ -125,8 +138,14 @@ export default async function UniversityDetailPage({ params }: { params: Promise
         <StatCard
           icon={Users}
           label="Student size"
-          value={university.student_size ? university.student_size.toLocaleString() : "Unavailable"}
-          caption={undergradCount != null && postgradCount != null ? `${undergradCount.toLocaleString()} undergrad · ${postgradCount.toLocaleString()} postgrad` : undefined}
+          value={university.student_size ? university.student_size.toLocaleString() : (qsSizeLabel ?? "Unavailable")}
+          caption={
+            university.student_size && undergradCount != null && postgradCount != null
+              ? `${undergradCount.toLocaleString()} undergrad · ${postgradCount.toLocaleString()} postgrad`
+              : !university.student_size && qsSizeLabel
+                ? "QS size band, not an exact count"
+                : undefined
+          }
         />
         <StatCard icon={GraduationCap} label="Admission rate" value={stats?.admission_rate != null ? `${Math.round(stats.admission_rate * 100)}%` : "Unavailable"} />
         <StatCard icon={DollarSign} label="Cost of attendance" value={stats?.cost_of_attendance ? `$${stats.cost_of_attendance.toLocaleString()}` : "Unavailable"} />

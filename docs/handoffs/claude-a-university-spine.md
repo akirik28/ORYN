@@ -92,6 +92,38 @@ current state, not as a session log.
   "5%", cost "$82,730" — matches `Math.round(0.0455*100)` and the stored `82730` exactly).
   Non-US cost data (the vast majority of the spine) is a real, separate, much harder problem —
   no single global source the way College Scorecard covers the US — not started this pass.
+- **`qs2027_import_staging.size_code`/`institution_status` — real fields sitting unused since
+  the table was first imported, found while looking for a global (non-country-by-country)
+  student-size signal.** `grep -rl qs2027_import_staging scripts/ lib/` was zero hits before
+  this pass. `size_code` is QS's own official S/M/L/XL institution-size band (FTE degree-
+  seeking student body; QS doesn't publish the numeric thresholds — confirmed via web search,
+  their own support docs 403 automated fetches), populated for all 1000 staged rows.
+  `institution_status` (Public/Private not for Profit/Private for Profit) is populated for
+  987/1000. **Exact join, zero fuzzy name-matching**: `qs2027_import_staging.list_position` is
+  the same `list_position` already stored on `university_rankings` (confirmed live —
+  `list_position=1` is MIT on both sides) — staging → rankings.list_position →
+  rankings.university_id, no string comparison anywhere in the path.
+  New `scripts/acquire-qs-institution-profile.ts`: 999 `qs_size_category`
+  `university_profile_metrics` rows written (a new, separate metric — never touches
+  `total_students`/`student_size`, a coarse band isn't a substitute for an exact headcount),
+  plus 238 `universities.institution_type` fills (`fill_if_null` only — never overwrites the
+  richer hand-researched text already there for 764 rows, same reasoning that earlier
+  rejected pulling this from ROR's much coarser "education"/"funder" vocabulary). Coverage:
+  `institution_type` 764/1019 (75.0%) → **1002/1019 (98.3%)**. Sanity-checked before trusting
+  (Caltech = S, matches its famously tiny ~2,200-student reality; Harvard/Oxford/Cambridge =
+  L, all genuinely large by FTE).
+  Caught and fixed a real shared-infrastructure bug while building this: `qs2027_import_staging`
+  has no `id` column (`list_position` is its primary key), and `lib/acquisition/paginate.ts`'s
+  `fetchExactCount`/`fetchAllRowsVerified` hardcoded `select=id` for their lightweight count
+  probe — a latent bug for any future table without a literal `id` column, not just this one.
+  Fixed properly: added an optional `countColumn` parameter (defaults to `"id"`, so every
+  existing caller is unaffected — confirmed via full `tsc`/test run before and after), not a
+  one-off workaround in this script.
+  Surfaced on the detail page too (same invisible-acquired-data problem the earlier
+  `university_profile_metrics` UI fix caught): "Student size" now falls back to the QS size
+  label ("Large", etc.) with a "QS size band, not an exact count" caption when no exact
+  `student_size` exists — verified live (Erasmus University Rotterdam: "Large" / "QS size
+  band, not an exact count"). Full gate green throughout (lint, tsc, 677 tests, build).
 
 ## Founder Requirement 2026-08-18: product-visible duplicate universities + light theme default
 
