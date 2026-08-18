@@ -29,6 +29,16 @@
  *   - University of Melbourne: 2026 fee tables are published only as PDFs
  *     (2026-International-Fee-Tables.pdf and a companion course-tuition PDF); the international-
  *     applications landing page shows only a $17,000 deposit figure, no rate table. Not written.
+ *   - Australian National University, University of Queensland, Monash University: same
+ *     pattern as UNSW/Melbourne, checked separately — every fee page found points at a
+ *     per-course fee-estimator/finder tool (enter a specific programme, get that programme's
+ *     figure) with zero static aggregate table or page-wide range statement anywhere on the
+ *     official domain. **A real pattern worth naming**: of the 6 Australian universities
+ *     checked so far, only the University of Sydney published a genuine, scannable,
+ *     university-wide table — every other large Australian research university checked
+ *     requires a real per-course tool interaction to get a single figure. A future pass
+ *     wanting these five specifically will need to drive that tool programme-by-programme
+ *     (a materially bigger job) rather than expect a quick static-page read to work.
  *
  * Usage:
  *   npm run acquire:university-statistics-au                  # dry run
