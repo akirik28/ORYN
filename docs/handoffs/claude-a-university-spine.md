@@ -266,9 +266,31 @@ the university/opportunity **reference-data** acquisition (rankings, `admissions
 `application_system`, student counts, research topics, external ids — the actual "fill the
 database" work) is the higher-leverage track until real student volume exists.
 
-**Remaining, explicitly scoped next steps**: Phase O (site-wide visual audit beyond the surfaces
-already touched + Claude-B handoff for shared-token adoption on their surfaces) — UI polish, not
-data, deliberately not this session's next move given the Phase Q finding above. Commits this
+**Phase O — site-wide visual sweep done, 2026-08-18, nothing to fix.** Walked every top-level
+authenticated surface live against the dev server on the same shared session used for the
+P1 checks: Home/dashboard, Profile, Universities (world map + a university detail page —
+University College London, re-confirming the P0 canonical-id fix still holds), Opportunities
+(Claude B's surface — confirms the shared-token architecture is doing its job without needing a
+per-surface patch from either side), Plan, Applications, Advisor, Connections, Documents,
+Settings. All light, calm, on-brand, no dark-mode leftovers, no contrast problems, empty states
+all follow the spec's "help the user act" pattern. Two incidental (non-visual) findings, neither
+a theme/token issue:
+- World map's "Asia · 0" region count — checked `lib/data/regions.ts` before assuming a bug: it
+  derives strictly from `SUPPORTED_COUNTRIES`'s own curated `region` field, and only Europe has
+  a drill-down projection built (the file's own header comment says so explicitly). Matches the
+  product spec's own V1 geographic focus (US/UK/Europe/Turkey — Asia was never a named v1
+  region) — confirmed intentional, not a gap, nothing to fix.
+- Advisor page has a sent message with no reply and no visible retry affordance on reload — real,
+  but chat/AI-conversation logic is outside this workstream's scope. Flagged to Claude B in
+  `docs/handoffs/claude-a-to-claude-b.md` rather than fixed here.
+
+No Claude-B handoff needed for token adoption specifically — their `/opportunities` surface
+already renders correctly off the same shared tokens, nothing to hand off.
+
+**Remaining, explicitly scoped next steps**: none from the original P0-P3 backlog — P0/P1/P2/P3
+are all either done or (Phase Q) confirmed not yet actionable against today's data. Next session
+time is better spent on reference-data acquisition (see the Phase Q note above) than searching
+for more UI work that the sweep didn't find. Commits this
 pass, in order: `8247819` (P0 fix), `cccb74d` (Phase D surface fixes), `61eff71` (audit
 artifact), `a55cb92` (Phase F regression tests), `3192962` (light-theme default), `c0fb731`
 (docs), `b632149` (Phase G/H suggestion fields), `9648f80` (Phase I suggestion fields), Phase Q
