@@ -218,7 +218,7 @@ const THROTTLED_HOSTS = new Set(["upload.wikimedia.org", "commons.wikimedia.org"
  * approach" without needing per-university retry-storms.
  */
 let lastWikimediaRequestAt = 0;
-async function throttleWikimediaHosts(url: string, minGapMs = 300): Promise<void> {
+async function throttleWikimediaHosts(url: string, minGapMs = 700): Promise<void> {
   let host: string;
   try {
     host = new URL(url).hostname;
