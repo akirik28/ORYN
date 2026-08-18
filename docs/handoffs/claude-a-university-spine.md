@@ -1788,26 +1788,44 @@ is untouched — still the full, uncapped, raw OpenAlex list, which is the right
 detail once a student has actually clicked in. Only `app/(app)/universities/page.tsx`'s
 card-feeding logic changed; `UniversityCard`'s own rendering code didn't need to.
 
-**Coverage after the pilot, before scaling (2026-08-18):** `primary_image_status` populated
-for 16/1010 (the pilot). 985/1010 live universities carry a Wikidata QID (984 before the MIT
-fix) — the large majority of the remaining ~994 are expected to resolve via the same
-automated Wikidata/Commons tier with no further hand-curation, per the pilot's 14/16
-automated success rate before overrides. Scaling run (`--apply`, no `--pilot`/`--only`
-filter) queued next; the script is idempotent (skips any university already at `verified`/
-`official`/`wikimedia_verified` unless `--force`) and safe to re-run/resume at any point.
+**Scaled to the full spine, 2026-08-18 — final coverage 708/1019 (69.5%) real campus images.**
+Three `--apply` passes total (the pilot, then two full-scale runs), `primary_image_status`
+breakdown: `wikimedia_verified` 522, `official` 184, `verified` 2 (the two hand-overridden
+pilot cases, Oxford/Cambridge), `needs_review` 183, no status row at all (never found any
+candidate) 128. Logos populated for 337/1019. Verified live in-browser post-scale (Peking
+University, a first-full-scale-run addition, not a pilot one) — real bytes served
+(`image/jpeg`, 59.6KB at the card's 750w variant), confirming the pipeline works correctly at
+scale, not just for the 16 hand-checked flagships.
 
-**Known limitations, stated plainly:** official-site `og:image` discovery (Tier 3) is
-noticeably less reliable than Wikidata/Commons (Tier 2) — some sites' own CDN/bot-mitigation
-behavior appears sensitive to an automated, non-browser User-Agent in ways this pass didn't
-fully characterize (observed transiently on ETH Zurich/Sydney/Imperial's og:image path across
-otherwise-identical runs) — not a correctness bug (nothing bad gets written; a flaky
-candidate just lands in `needs_review` and is retried automatically on the next run), but
-expect Tier-3-only universities (no Wikidata QID) to have a lower first-pass success rate
-than the pilot's headline number. No AI-vision identity/quality check anywhere in this
-pipeline (deliberate, per the founder's own "don't require it" instruction) — a Wikidata P18
-claim is trusted once the QID itself is already spine-verified, which is usually right but
-not infallible (a mis-tagged Commons file, a crest mistaken for a building) at full scale;
-worth a periodic spot-check, not a blocker.
+**A real bug found and fixed mid-scale, worth remembering for any future Wikimedia work:**
+the first full-scale run (1010 universities) landed only 280 real images with a huge
+`needs_review` bucket (562) dominated by "download failed or exceeded the size cap" — the
+User-Agent fix from the pilot section above stops Wikimedia's 429 for an ISOLATED request, but
+not under this script's sustained request volume; direct spot-check re-confirmed the exact
+same candidate URL still 429'd after ~20 minutes of acquisition traffic, with Wikimedia's own
+error text pointing at request rate ("too many requests... a less disruptive approach"). Fixed
+with a single shared minimum-gap timer across every Wikimedia-host request in the process
+(`throttleWikimediaHosts`, global not per-worker, so 5-way concurrency can't multiply the
+effective rate) — 300ms recovered another 95 images with still-heavy "download failed" noise;
+700ms recovered 317 more with that failure mode essentially gone from the tail, confirming
+request rate (not bad data, not file size) was the real cause throughout. Also hardened
+`downloadBuffer` to reject non-`image/*` content-types before handing bytes to sharp — a
+handful of official-site `og:image` URLs turned out to be broken links answering 200 with an
+HTML error page instead of a real 404, which sharp then threw trying to decode.
+
+**Known limitations, stated plainly:** the remaining 183 `needs_review` + 128 no-candidate
+(311/1019, ~30%) is a mix of: genuinely low-quality Wikidata P18 images (wrong aspect, too
+small — the pipeline correctly rejects these rather than publishing a bad crop), universities
+with no Wikidata QID and no usable `og:image` either, and a residual few that may still be
+rate-limit-affected even at 700ms (worth one more `--apply` re-run in a future session before
+assuming they're all genuine gaps — the script is idempotent and safe to re-run any time). No
+AI-vision identity/quality check anywhere in this pipeline (deliberate, per the founder's own
+"don't require it" instruction) — a Wikidata P18 claim is trusted once the QID itself is
+already spine-verified, which is usually right but not infallible (a mis-tagged Commons file,
+a crest mistaken for a building) at full scale; worth a periodic spot-check, not a blocker.
+Official-site `og:image` discovery (Tier 3) remains noticeably less automatable than Wikidata/
+Commons (Tier 2) for universities with no QID at all — expect that minority to need more
+manual-override attention than this pass gave them.
 
 **Files:** `lib/acquisition/wikimedia.ts`, `opengraph.ts`, `image-validation.ts`,
 `image-storage.ts`, `source-authority.ts`'s `"image"` fact class,

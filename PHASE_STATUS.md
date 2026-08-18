@@ -906,7 +906,10 @@ Storage bucket) and wired real images into both the card and a new detail-page h
 short research-category chips replacing raw OpenAlex topic strings on cards. No new database
 migration — reused the existing (empty) `universities.logo_url` column and the existing
 `university_profile_metrics` flexible-store pattern. Piloted end-to-end on all 16 founder-
-named flagship universities (16/16 real images, verified live in-browser), then scaled toward
-the full 1010-university spine. Full detail, architecture rationale, and known limitations:
+named flagship universities (16/16 real images, verified live in-browser), then scaled to the
+full spine: **708/1019 (69.5%) real campus images**, 337 logos, after finding and fixing a
+Wikimedia rate-limiting bug mid-scale (a real User-Agent stops the 429 for one request but not
+under this script's sustained volume — fixed with a shared minimum-gap throttle). Full detail,
+architecture rationale, and known limitations:
 `docs/handoffs/claude-a-university-spine.md`'s "University images" section. Full gate green
 throughout (lint/tsc/801 tests/build).
