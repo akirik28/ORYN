@@ -252,18 +252,27 @@ regression.test.ts` — 34 tests covering all 9 named pairs individually and com
 "genuinely different institutions stay separate" case). `npm run lint` / `npx tsc --noEmit` /
 `npm run build` all clean after every commit in this pass.
 
-**Remaining, explicitly scoped next steps** (not blockers — just not yet done): Phase Q (existing
-free-text data cleanup — PLAN → REVIEW → APPLY → VERIFY over already-stored `test_name`/
-`subject`/`country`/`level`/`cause_area`/`proficiency` values now that G/H/I exist to prevent new
-fragmentation; e.g. normalizing pre-existing "sat"/"Sat" rows to "SAT" — only obvious
-deterministic cases, never destructive on ambiguous custom values — `npm run reconcile:custom-
-vocabulary` already reports the candidate list for the original 3 columns, would need the same
-treatment extended to the 5 new Phase I columns); Phase O (site-wide visual audit beyond the
-surfaces already touched + Claude-B handoff for shared-token adoption on their surfaces).
-Commits this pass, in order: `8247819` (P0 fix), `cccb74d` (Phase D surface fixes), `61eff71`
-(audit artifact), `a55cb92` (Phase F regression tests), `3192962` (light-theme default),
-`c0fb731` (docs), `b632149` (Phase G/H suggestion fields), Phase I suggestion fields (this
-commit).
+**Phase Q — checked 2026-08-18, nothing to clean up yet.** `reconcile-custom-vocabulary.ts`
+extended from 3 to all 8 suggest-backed columns (`+country` ×2, `level`, `cause_area`,
+`proficiency`) and re-run against live data: `test_scores`/`courses`/`education_records`/
+`volunteering_experiences` are all **empty** (0 rows), `profiles` has 5 rows (2 with a country
+set, already canonical), `awards` and `skills` have 1 row each. Zero candidates at any frequency
+— there is no real fragmentation to reconcile because there is barely any real student data yet
+(pre-launch state, expected). Re-running this script periodically as real usage grows is the
+actual "Phase Q," not a one-time cleanup pass; nothing more to do against today's data. This is
+also the concrete argument for where this session's time is actually worth spending right now:
+student-input data quality has ~nothing to fix while the tables are this empty, so continuing
+the university/opportunity **reference-data** acquisition (rankings, `admissions_url`,
+`application_system`, student counts, research topics, external ids — the actual "fill the
+database" work) is the higher-leverage track until real student volume exists.
+
+**Remaining, explicitly scoped next steps**: Phase O (site-wide visual audit beyond the surfaces
+already touched + Claude-B handoff for shared-token adoption on their surfaces) — UI polish, not
+data, deliberately not this session's next move given the Phase Q finding above. Commits this
+pass, in order: `8247819` (P0 fix), `cccb74d` (Phase D surface fixes), `61eff71` (audit
+artifact), `a55cb92` (Phase F regression tests), `3192962` (light-theme default), `c0fb731`
+(docs), `b632149` (Phase G/H suggestion fields), `9648f80` (Phase I suggestion fields), Phase Q
+reconcile-script extension (this commit).
 
 ## Measured baseline (live, `npm run report:universities`, 2026-08-17)
 
