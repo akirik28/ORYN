@@ -2095,3 +2095,24 @@ nothing in the current schema forces either choice.
 image-coverage.test.ts`), `scripts/university-image-coverage-report.ts` (`npm run
 report:university-images`, `--list-needs-review` for per-university detail). Full gate green
 (lint/tsc/821 tests/build) after every change in this round.
+
+**Out-of-lane side quest, founder-directed mid-session, worth flagging explicitly since it
+touches `opportunities`:** asked directly (not via the image spec) to add ~300 more programs.
+Rather than fresh research, applied the 273-record corpus that had been sitting in
+`supabase/seed_drive_batch1.sql` since 2026-08-15 (real, sourced, never fabricated —
+title/description/category/official_url/source/confidence/status per record) and was never
+live only because `SUPABASE_SECRET_KEY` was a placeholder at generation time — no longer true.
+`scripts/import-opportunity-corpus.ts` (`npm run import:opportunity-corpus -- --apply`) parses
+the seed file's SQL tuples directly (a small quote-aware parser — see the file for why a plain
+comma-split doesn't work on this data), dedupes against `opportunities` using
+`lib/opportunities/dedup.ts`'s own logic plus a title-similarity fallback (these rows carry no
+`organization` value to combine with), and **re-checks the live table for a title collision
+immediately before every single write** — `opportunities` was 52 rows at this handoff's earlier
+investigation, 69 by the time this script ran minutes later, confirming the parallel
+`programs-opportunities-intel` workstream was genuinely writing to the same table concurrently.
+Result: **221/221 written, 0 failures**, live count 69 → **290**. Verified live: `/opportunities`
+picked the new rows up automatically through the existing matching pipeline (no code change
+needed there), real programs showing real "Strong match" reasoning (Breakthrough Junior
+Challenge, Boston University Summer Term, İTÜ Lise Yaz Okulu, etc.). Still no image/media
+column on `opportunities` — that gap (and the schema-choice question) is exactly as described
+above, unchanged by this import. Pure DML, no migration, no schema touched.
