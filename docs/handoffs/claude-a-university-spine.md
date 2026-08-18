@@ -1205,7 +1205,41 @@ unattended pass) or written. 23 further Canadian universities queued, not attemp
 
 Full gate green (`tsc`/lint/713 tests/build) after this batch too.
 
-Full gate green (`tsc`/lint/713 tests/build) after this batch.
+**Australia — pilot started, 1/37 universities, `scripts/acquire-university-statistics-au.ts`.**
+No single obvious national dataset to check first the way StatCan/HESA needed ruling out for
+Canada/UK — went straight to official pages.
+
+**University of Sydney**: a genuinely well-built source —
+`https://www.sydney.edu.au/study/fees-and-loans/international-student-tuition-fees.html`, a
+real table per faculty (13 total) with an explicit `2026 entry` column and separate
+`Undergraduate`/`Postgraduate coursework`/`Postgraduate research` rows in the SAME table. Read
+only the `Undergraduate` row across all 13 — not an unscoped min/max over the whole page, which
+would have silently mixed undergrad and postgrad figures (checked and rejected exactly that
+naive approach first). International, 2026 entry: A$49,200 (lowest faculty) to A$60,600
+(highest). High confidence.
+
+**UNSW Sydney investigated, genuinely left unresolved, worth naming as a lesson**: real
+per-unit-of-credit tables exist (48 units of credit = one standard full-time year), but they
+sit behind Undergraduate/Postgraduate JS tabs. A raw DOM scrape pulls all 33 underlying tables
+regardless of which tab is "active," with no reliable per-table label distinguishing
+undergraduate from postgraduate content — unlike Sydney's page, where the row labels made the
+split trivial and safe. Tried simulating a tab click via JS; the tables still reported as
+`offsetParent === null` (hidden) afterward, so even that didn't reveal a clean way to isolate
+the right subset. Rather than compute a min/max across the mixed set (which would silently
+blend two different concepts — a real conflation risk, not a hypothetical one), wrote nothing
+for UNSW. **University of Melbourne**: 2026 fee tables are PDF-only
+(`2026-International-Fee-Tables.pdf` and a companion course-tuition PDF); the international-
+applications landing page shows only a $17,000 deposit figure, no rate table. Not written.
+
+**Domestic fees deliberately not attempted for Australia** — Australian domestic students don't
+pay a flat "domestic tuition" the way UK/Canadian students do; most hold a Commonwealth
+Supported Place (a government-subsidised, field-of-study-specific "student contribution
+amount," not a single figure comparable to what this pass has been recording as `domestic` for
+other countries). Modelling that honestly needs its own research pass, not the UK/Canada
+`domesticLow` field reused for a structurally different system — left out rather than forced.
+
+36 further Australian universities queued, not attempted. Full gate green (`tsc`/lint/713
+tests/build) after this batch too.
 
 After tuition progresses meaningfully: (1) India student counts (~33 remaining, AISHE >
 annual report > official institutional stats > official facts page — see the India dead-end
