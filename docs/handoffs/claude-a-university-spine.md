@@ -1112,7 +1112,9 @@ is 128/1019, US-only — see Phase 10's P0K numbers). Country order: UK (done, 2
 (done for this pass, 3/27 + well-documented negatives), Australia (closed out, 1/38 + 6
 documented negatives — see below), Germany (**done, 49/49** — a real state-law pattern, see
 below), Netherlands (**done, 13/13** — statutory fee scalable, institutional fee per-university,
-see below), **France next**, then Switzerland, Italy (web-accessible sources only, per
+see below), France (**done, 19/30 standard universities** — 11 confirmed to have a genuinely
+different, decree-independent fee status, see below), **Switzerland next**, then Italy
+(web-accessible sources only, per
 the Phase 3/"Next" note below that MUR/USTAT times out), Singapore, Hong Kong, then other
 high-count countries — reorder for efficiency if a better bulk source turns up elsewhere, same
 as the German/Spanish student-count pipelines below already did. Per-country pipeline:
@@ -1460,6 +1462,47 @@ further changes; verified live anyway: Amsterdam ("From €17,500/yr" / "Varies 
 Domestic rate: €2,694/yr"), Delft ("€19,906/yr" / "Domestic rate: €2,694/yr", no "From"/no
 "varies"), Utrecht ("Domestic tuition €2,694/yr" / "International fee not published..." — the
 domestic-only fallback branch). Full gate green (`tsc`/lint/801 tests/build) after.
+
+**France — 19/30 of this spine's French entries, done in one pass; the other 11 investigated
+and confirmed to be a genuinely different case, not left out by oversight.** France sets a
+national statutory fee by government decree, uniform across public universities — €178/year
+for Licence (Bachelor's) for 2026-2027 for domestic/EU/EEA/Swiss students. Since décret
+n° 2026-385 (19 May 2026), non-EU ("extra-communautaire") students at public universities pay a
+differentiated national rate instead: €2,902/year, confirmed via multiple independent
+university pages (Lyon 1, CY Cergy, Bordeaux, Brest) all describing the identical
+decree/figure, plus the government's own FAQ page (fetch blocked, HTTP 403, cited as source
+anyway — a Cardiff-class fetch-access issue). Universities may exempt up to 30% of subject
+non-EU students from this rate based on personal circumstances (2026-27 transitional cap,
+dropping to 25% in 2027-28) — €2,902 is still the real rate at least 70% of non-EU students
+actually pay, same "a real sticker price can still have some students receiving a discount"
+reasoning this project already applies to merit scholarships elsewhere. Written for 19
+universities confirmed to be on this standard schedule — **38 metric rows in one `--apply`
+pass** — `scripts/acquire-university-statistics-fr.ts`.
+
+**The other 11 of this spine's 30 French entries were checked individually, not assumed onto
+the national schedule, and each turned out to have a real, different, decree-independent fee
+mechanism** — a materially higher rate of genuine exceptions than Germany's 2 private
+universities or the Netherlands' 4 research gaps, and worth naming as its own finding: Sciences
+Po (long-published income-based sliding-scale tuition, never on the national schedule); École
+Centrale de Lyon (confirmed on its own page: cycle-ingénieur tuition is now literally
+income-based, €1,613–4,113 depending on family taxable income — not a course-based range this
+project's model can represent honestly); Institut National Polytechnique de Toulouse (an
+"Institut" grouping several constituent schools, no single institution-wide figure surfaced,
+genuinely fragmented); CNAM (fees set per regional training centre, confirmed via its own
+fragmented site structure — Paris/Nouvelle-Aquitaine/etc. each separate — no single national
+figure exists to write); École Polytechnique, Institut Polytechnique de Paris, Université PSL,
+Université Paris Dauphine - PSL, École Normale Supérieure de Lyon (each a "Grand Établissement"
+or part of one, with its own government-granted fee-setting autonomy, historically and
+currently different from the standard schedule); ESCP Business School, ESSEC Business School
+(private, real market-rate tuition, never subject to any public-university decree). None
+guessed at or force-fit onto the €178/€2,902 schedule — each confirmed individually before being
+excluded, matching the same "verified unavailable > fabricated available" discipline as every
+other country's negative results, just a higher count of them for this one country. Queued for
+a possible dedicated future pass — most are prestigious, high-student-interest institutions.
+Verified live: Sorbonne University ("€2,902/yr" / "Domestic rate: €178/yr", no "From"/no
+"varies" — the Germany-built `precision_state` logic needed no changes again); Sciences Po
+correctly still shows "Cost of attendance: Unavailable" rather than a wrongly-applied national
+figure. Full gate green (`tsc`/lint/801 tests/build) after.
 
 After tuition progresses meaningfully: (1) India student counts (~33 remaining, AISHE >
 annual report > official institutional stats > official facts page — see the India dead-end
