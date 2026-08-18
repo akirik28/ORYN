@@ -71,6 +71,7 @@ export const CompleteOnboardingSchema = z.object({
         category: z.enum(["education", "activities", "awards", "projects", "research", "workExperience"]),
         title: z.string().min(1),
         organization: z.string().nullable(),
+        organizationEntityId: z.string().nullable(),
         description: z.string().nullable(),
         startDate: z.string().nullable(),
         endDate: z.string().nullable(),

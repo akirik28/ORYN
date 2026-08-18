@@ -109,10 +109,11 @@ export function OnboardingWizard() {
       targetGeographies,
       extractedItems: reviewedItems
         .filter((item) => item.included)
-        .map(({ category, title, organization, description, startDate, endDate }) => ({
+        .map(({ category, title, organization, organizationEntityId, description, startDate, endDate }) => ({
           category,
           title,
           organization,
+          organizationEntityId,
           description,
           startDate,
           endDate,
@@ -222,7 +223,7 @@ export function OnboardingWizard() {
 
         {step === 4 && (
           <StepShell key="4" title="Import your profile" subtitle="Upload a CV to save time, or start fresh — either way takes a minute.">
-            <ImportStep reviewedItems={reviewedItems} setReviewedItems={setReviewedItems} />
+            <ImportStep reviewedItems={reviewedItems} setReviewedItems={setReviewedItems} country={country} />
           </StepShell>
         )}
       </AnimatePresence>
