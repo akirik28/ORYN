@@ -1108,8 +1108,10 @@ Full gate green (`tsc`/lint/799 tests/build) at time of commit. Commits: `10c45d
 **Active priority as of 2026-08-18, per explicit founder direction — supersedes the general
 enrichment ordering below until it progresses meaningfully**: global tuition/cost-of-attendance
 acquisition for the ~890 non-US universities still showing "Unavailable" (`university_statistics`
-is 128/1019, US-only — see Phase 10's P0K numbers). Country order: **UK next**, then Canada,
-Australia, Germany, Netherlands, France, Switzerland, Italy (web-accessible sources only, per
+is 128/1019, US-only — see Phase 10's P0K numbers). Country order: UK (done, 20/79), Canada
+(done for this pass, 3/27 + well-documented negatives), Australia (closed out, 1/38 + 6
+documented negatives — see below), Germany (**done, 49/49** — a real state-law pattern, see
+below), **Netherlands next**, then France, Switzerland, Italy (web-accessible sources only, per
 the Phase 3/"Next" note below that MUR/USTAT times out), Singapore, Hong Kong, then other
 high-count countries — reorder for efficiency if a better bulk source turns up elsewhere, same
 as the German/Spanish student-count pipelines below already did. Per-country pipeline:
@@ -1359,6 +1361,63 @@ other countries). Modelling that honestly needs its own research pass, not the U
 
 36 further Australian universities queued, not attempted. Full gate green (`tsc`/lint/713
 tests/build) after this batch too.
+
+**Australia closed out for this pass, 2026-08-18 — a structural finding, not a tier problem.**
+Checked one more candidate before moving to Germany: Deakin University (a real, well-regarded
+mid-tier university, deliberately not a Group-of-8 research university like the 5 already
+rejected). Same wall: `deakin.edu.au`'s own international-fees page states plainly that the
+per-study-period fee "depend[s] on when you commenced your course" and directs to a per-degree
+fee finder / estimator — no static aggregate table. This confirms the pattern isn't about
+institutional prestige tier (Sydney is itself a Group-of-8 university and DID have a real
+table) — it's that most Australian universities, regardless of ranking, route fees through a
+per-course tool rather than publishing one. Closing Australia here per the founder's own "don't
+force a country" instruction: 2/38 written (Sydney + none from this check), 6 genuinely
+investigated and well-documented negatives (UNSW, Melbourne, ANU, UQ, Monash, Deakin), 32
+queued but not worth further one-off attempts until a future pass is willing to drive the
+per-course tools programmatically.
+
+**Germany — done in one pass, 49/49 universities, a real "one law, many universities" case
+found via the founder's own SCALABILITY CHECK instruction.** Unlike the UK/Canada/Australia,
+German tuition isn't set per-institution — it's set by STATE LAW. Destatis (checked first, the
+obvious bulk-data candidate) publishes per-institution student-count data but no per-institution
+fee dataset, because there's no per-institution fee *to* dataset: Baden-Württemberg is the only
+one of Germany's 16 states charging non-EU/EEA students tuition (€1,500/semester = €3,000/year,
+state law `Landeshochschulgebührengesetz`, since WS2017/18); every other state's public
+universities charge genuine, verified $0 tuition to domestic and international undergrads
+alike. Confirmed directly on 5 of the 9 Baden-Württemberg institutions' own pages this pass
+(Heidelberg, Stuttgart, Freiburg, Konstanz, Ulm all independently state the identical figure
+and cite the same law); the remaining 4 (Tübingen, Mannheim, Hohenheim, KIT) have their own
+confirmed official fee-page URL at the same statutory rate, not individually re-quoted —
+flagged with `data_quality_flag: "current_search_cited"` rather than silently treated the same
+as the 5 read directly. The 38 other public universities get a verified $0/$0, cited to the
+national policy fact rather than a per-institution page (`source_type: "web_search"`, honestly
+distinct from `"official_primary"`). 2 genuinely private universities in the spine — Constructor
+University (Bremen) and Frankfurt School of Finance & Management — are explicitly excluded from
+the state-law rule (private tuition is a real per-institution decision, not policy) and
+researched individually instead: Constructor €20,000/year flat (own hosted Cost-of-Attendance
+fact sheet, stable across 3 years of the same document found in search), Frankfurt School
+€16,400/year flat (own "Academic Year 2026/2027" cost-of-attendance PDF). All 98 rows
+(49 universities × domestic + international) written in one `--apply` pass —
+`scripts/acquire-university-statistics-de.ts`.
+
+**A real UI bug this batch surfaced, fixed in the same pass — found by looking at the live
+page, not just trusting the write succeeded, same discipline as the Alberta currency bug**: the
+detail page's tuition StatCard hardcoded the phrase "From X — Varies by course" for every
+`tuition_international_annual` value, which was a safe assumption while every prior country's
+data was a genuine range (`precision_state: "range"`). Germany's data is `precision_state:
+"exact"` — a single flat number (€3,000, or a verified €0) with no course-to-course variation
+to caveat — so the old copy would have told a TUM applicant their genuinely free tuition
+"varies by course," which is simply false. Fixed in `app/(app)/universities/[id]/page.tsx`: the
+"From "/"Varies by course" phrasing is now conditional on `precision_state === "range"`, and a
+new `formatTuition()` helper renders an exact `0` as "Free" instead of "€0/yr" (0 is real,
+verified data here, not a missing value — a truthy check would have wrongly hidden it, but this
+codebase already used `!= null` throughout, so no silent-disappearance bug, just a wrong
+caption). The metrics query also needed `precision_state` added to its `select()` — it wasn't
+being fetched before. Verified live for all three new shapes: Heidelberg ("€3,000/yr" /
+"Domestic rate: Free", no "varies" language), Technical University of Munich ("Free" / "Free"),
+Constructor University ("€20,000/yr" / "€20,000/yr", no "From"/no "varies"); re-verified the
+pre-existing UK range case is unaffected (Edinburgh still "From £29,600/yr" / "Varies by
+course. Domestic rate: £9,790/yr"). Full gate green (`tsc`/lint/801 tests/build) after.
 
 After tuition progresses meaningfully: (1) India student counts (~33 remaining, AISHE >
 annual report > official institutional stats > official facts page — see the India dead-end

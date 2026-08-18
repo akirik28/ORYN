@@ -40,6 +40,12 @@ function currencyPrefix(unit: string): string {
   const code = unit.split("/")[0];
   return CURRENCY_SYMBOLS[code] ?? `${code} `;
 }
+/** `0` is real, verified data for Germany's public universities outside Baden-Württemberg (no
+ * tuition charged by law — see acquire-university-statistics-de.ts), not a missing value; shown
+ * as "Free" rather than "€0/yr" since that's what a reader actually wants to know. */
+function formatTuition(amount: number, unit: string): string {
+  return amount === 0 ? "Free" : `${currencyPrefix(unit)}${amount.toLocaleString("en-US", { maximumFractionDigits: 0 })}/yr`;
+}
 
 export default async function UniversityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -68,7 +74,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
     supabase.from("university_rankings").select("ranking_provider, ranking_edition, rank_display, source_url").eq("university_id", id).order("ranking_provider"),
     supabase
       .from("university_profile_metrics")
-      .select("metric_code, value_numeric, value_text, unit, source_url, source_type, verified_at")
+      .select("metric_code, value_numeric, value_text, unit, source_url, source_type, verified_at, precision_state")
       .eq("university_id", id)
       .in("metric_code", [
         "research_topics_top5",
@@ -213,14 +219,24 @@ export default async function UniversityDetailPage({ params }: { params: Promise
         {stats?.cost_of_attendance ? (
           <StatCard icon={DollarSign} label="Cost of attendance" value={`$${stats.cost_of_attendance.toLocaleString("en-US")}`} />
         ) : internationalTuition != null ? (
+          // A "range" precision_state means the published figure genuinely varies by course
+          // (UK/Canada/Australia-style fee bands) — "From X, varies by course" is honest there.
+          // An "exact" precision_state (Germany's state-law-set or private-university flat
+          // rate) is a single real number with no course-to-course variation to caveat.
           <StatCard
             icon={DollarSign}
             label="International tuition"
-            value={`From ${currencyPrefix(internationalTuitionMetric!.unit)}${internationalTuition.toLocaleString("en-US", { maximumFractionDigits: 0 })}/yr`}
+            value={
+              internationalTuitionMetric!.precision_state === "range"
+                ? `From ${formatTuition(internationalTuition, internationalTuitionMetric!.unit)}`
+                : formatTuition(internationalTuition, internationalTuitionMetric!.unit)
+            }
             caption={
               domesticTuition != null
-                ? `Varies by course. Domestic rate: ${currencyPrefix(domesticTuitionMetric!.unit)}${domesticTuition.toLocaleString("en-US", { maximumFractionDigits: 0 })}/yr`
-                : "Varies by course — see university for your exact fee"
+                ? `${internationalTuitionMetric!.precision_state === "range" ? "Varies by course. " : ""}Domestic rate: ${formatTuition(domesticTuition, domesticTuitionMetric!.unit)}`
+                : internationalTuitionMetric!.precision_state === "range"
+                  ? "Varies by course — see university for your exact fee"
+                  : undefined
             }
           />
         ) : domesticTuition != null ? (
@@ -231,7 +247,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
           <StatCard
             icon={DollarSign}
             label="Domestic tuition"
-            value={`${currencyPrefix(domesticTuitionMetric!.unit)}${domesticTuition.toLocaleString("en-US", { maximumFractionDigits: 0 })}/yr`}
+            value={formatTuition(domesticTuition, domesticTuitionMetric!.unit)}
             caption="International fee not published as a single figure — varies by course"
           />
         ) : (
