@@ -776,7 +776,11 @@ read them directly (the same two conditions that justified `student_size`).
 
 ## Next (queued, not yet started)
 
-1. Duplicate-id cross-registry check (see Phase 7 above) — a standalone query, not yet run.
+1. ~~Duplicate-id cross-registry check~~ — **already covered, confirmed 2026-08-18.**
+   `check:university-spine-health`'s own "no external id claimed by >1 live university entity"
+   check (built later the same session this item was queued) is exactly this query, run every
+   time the health gate runs. Re-ran it standalone just to confirm: still `[PASS] clean`. Not
+   a separate thing to build.
 2. ~~Phase 11 — UI data-readiness audit~~ — **done 2026-08-18.** QS ranking display fix (see
    the ranking-display commit) was already done. Checked the rest by reading
    `app/(app)/universities/[id]/page.tsx` directly rather than guessing: `admissions_url`/
@@ -874,11 +878,32 @@ read them directly (the same two conditions that justified `student_size`).
    assuming a script is buildable.
 6. Migration 0043 + the 5 read-path filters (see Phase 2 above) — founder/DDL-access blocked,
    not code-blocked.
-7. ~~The ~200-row external-ID-unresolved bucket~~ — **current breakdown captured 2026-08-18**
-   from the same full-spine re-run as item 3: 94 unresolved of 1019 (was ~203, but against a
-   smaller/different spine, not directly comparable) — ambiguous/no-exact-name-match 72,
-   country mismatch 5, no ROR hit 1, other 16. The 72-bucket is the one that might have real
-   KFUPM/UCL-style manual-search wins in it, but is a large individual-investigation effort,
-   not one query — left queued rather than started this pass.
+7. ~~The ~200-row external-ID-unresolved bucket~~ — **72-bucket worked through 2026-08-18,
+   55 resolved.** Pulled the full `unresolved` array out of the fixture (not just the printed
+   summary — `declaredName` + full candidate list per row) and went through all 72
+   "ambiguous/no-exact-name-match" entries by hand. Root cause, confirmed by reading the
+   matcher (`scripts/acquire-university-facts.ts`): it already checks every `nameVariants()`
+   form against ROR's full `names` array (not just `displayName`), so a real gap here is
+   never simple formatting — it's genuine German ae/oe/ue-vs-umlaut transliteration
+   ("Universitaet" vs "Universität"), German-name-vs-ROR's-English-name-form ("Universität
+   Heidelberg" vs "Heidelberg University"), or a legacy/short name ROR doesn't list at all
+   ("Verona University" vs "University of Verona"). For 55 of the 72, individually fetched
+   the proposed ROR record BY ID (not just trusted the unresolved log's truncated top-3
+   preview — several of those previews were themselves misleading, e.g. Purdue/St. Gallen/
+   "University of the Philippines" genuinely don't show the right answer in their top 3,
+   which is exactly why those are NOT among the 55) and confirmed active status, matching
+   country, and the declared name appearing in the record's own names before trusting it.
+   Added as `MANUAL_ROR_OVERRIDES` in the acquire script — used only when the automatic
+   matcher finds zero exact matches, never overriding a genuine ambiguous/multi-candidate
+   case. Full-spine re-run: resolved 925 → 982/1019, ambiguous bucket 72 → 15. Reviewed with
+   `--plan` (4832 external ids, up from 4556 — all city cross-checks still correctly
+   withheld, no new duplicate-id conflicts), then `--apply`: 181 fact writes.
+   `check:university-spine-health`'s external-id-uniqueness check still clean — deliberately
+   did NOT add both Rutgers–New Brunswick and Rutgers–Newark to the same ROR id, which would
+   have broken that invariant (multi-campus-vs-single-ROR-record is a genuine ambiguity, left
+   unresolved rather than guessed which campus "owns" the shared id). Remaining 15 ambiguous
+   + the political-status "Northern Cyprus" entries (ROR doesn't recognize it as a country, a
+   product/policy question above this pass's remit) + a few country-mismatch/no-ROR-hit ones
+   still queued — genuinely uncertain or requiring outside knowledge this pass didn't have.
 
 ~~Bocconi University's missing QS 2027 row~~ — **done this pass**, see Phase 5.

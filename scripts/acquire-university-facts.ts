@@ -79,6 +79,83 @@ let openAlexCircuitLogged = false;
 const DEFAULT_OUT = "supabase/fixtures/university-identity-pilot.json";
 
 /**
+ * Hand-verified overrides for declared names that `nameVariants()` genuinely cannot bridge to
+ * ROR's own name forms — not formatting noise (that's what `nameVariants()` already handles),
+ * but real gaps: German ae/oe/ue vs ä/ö/ü ASCII transliteration ("Universitaet" vs
+ * "Universität"), German-name vs ROR's English-name form ("Universität Heidelberg" vs
+ * "Heidelberg University"), or a declared name using a well-known short/legacy form ROR
+ * doesn't list as a name at all ("Verona University" vs "University of Verona"). Every entry
+ * individually verified 2026-08-18 by fetching the ROR record directly (not just trusting the
+ * unresolved log's truncated candidate preview — several of those previews genuinely didn't
+ * show the right answer in their top 3, e.g. Purdue/St. Gallen/"University of the Philippines",
+ * which is exactly why those are NOT in this list) and confirming: `status active`, country
+ * matches our declared country, and the declared name (or an unambiguous variant of it) appears
+ * in the record's own `names`. Deliberately NOT used for genuinely ambiguous cases (multiple
+ * plausible ROR records, a merged/successor institution question, or an institution this
+ * pass has no confident outside knowledge of) — those stay unresolved rather than guessed.
+ */
+const MANUAL_ROR_OVERRIDES: Record<string, string> = {
+  "Albert-Ludwigs-Universitaet Freiburg": "0245cg223",
+  "Christian-Albrechts-University zu Kiel": "04v76ef78",
+  "Freie Universitaet Berlin": "046ak2485",
+  "Goethe-University Frankfurt am Main": "04cvxnb49",
+  "Johannes Kepler University Linz": "052r2xn60",
+  "Karl-Franzens-Universitaet Graz": "01faaaf77",
+  "Radboud University": "016xsfp80",
+  "Trinity College Dublin, The University of Dublin": "02tyrky19",
+  "TUHH Hamburg University of Technology": "04bs1pb34",
+  "Ulster University": "01yp9g959",
+  "Universität Heidelberg": "038t36y30",
+  "Universität Jena": "05qpz1x62",
+  "Universitat Politècnica de Catalunya · BarcelonaTech (UPC)": "03mb6wj31",
+  "Zurich University of Applied Sciences (ZHAW)": "05pmsvm27",
+  "Stony Brook University, State University of New York": "05qghxh33",
+  "University at Buffalo SUNY": "01y64my43",
+  "Kingston University, London": "05bbqza97",
+  "Northumbria University at Newcastle": "049e6bc10",
+  "Manipal Academy of Higher Education, Manipal, Karnataka, India": "02xzytt36",
+  "Symbiosis International (Deemed University)": "005r2ww51",
+  "Vellore Institute of Technology (VIT), Vellore, India": "00qzypv28",
+  "Verona University": "039bp8j42",
+  "University of Wroclaw": "00yae6e25",
+  "Wroclaw University of Science and Technology (Wrocław Tech)": "008fyn775",
+  "Anna University": "01qhf1r47",
+  "Ain Shams University in Cairo (ASU, Cairo)": "00cb9w016",
+  "Catania University": "03a64bh57",
+  "Czech University of Life Sciences in Prague": "0415vcw02",
+  "Kazan (Volga region) Federal University": "05256ym39",
+  "National Research Tomsk Polytechnic University": "00a45v709",
+  "Tomsk State University": "02he2nc27",
+  "Ural Federal University - UrFU": "00hs7dr46",
+  "Universidad Espíritu Santo (UEES), Ecuador": "00b210x50",
+  "Universit degli Studi della Campania Luigi Vanvitelli": "02kqnpp86",
+  "Adam Mickiewicz University, Poznań": "04g6bbq64",
+  "Auezov South Kazakhstan University (SKU)": "05xzaq362",
+  "Canadian University Dubai": "029zgsn59",
+  "Asia Pacific University of Technology and Innovation (APU) Malaysia": "03c52a632",
+  "Asia University Taiwan": "038a1tp19",
+  "Applied Science Private University - Jordan": "01ah6nb52",
+  "Applied Science University - Bahrain": "059zrbe49",
+  "HUFS - Hankuk (Korea) University of Foreign Studies": "051q2m369",
+  "Indian Institute of Science (IISc) Bangalore": "04dese585",
+  "Indian Institute of Technology (Indian School of Mines), Dhanbad": "013v3cc28",
+  "Indian Institute of Technology BHU Varanasi (IIT BHU Varanasi)": "01kh5gc44",
+  "Kyrgyz Russian Slavic University": "020qfzf72",
+  "Nanyang Technological University, Singapore (NTU Singapore)": "02e7b5302",
+  "National University of Sciences & Technology (NUST) Islamabad": "03w2j5y17",
+  "National University of Uzbekistan named after Mirzo Ulugbek": "011647w73",
+  "Queen's University at Kingston": "02y72wh86",
+  "Renmin (People's) University of China": "041pakw92",
+  "The University of Tennessee, Knoxville": "020f3ap87",
+  "University of Engineering & Technology (UET) Lahore": "0051w2v06",
+  "NLC «Buketov Karaganda National Research University»": "00eq8hh49",
+  "Tashkent Institute of Irrigation and Agricultural Mechanization Engineers - National Research University (TIIAME-NRU)": "01s4mx151",
+  "Universidad Anáhuac México": "02z9t1k38",
+  "Universidad Iberoamericana Ciudad de México - IBERO": "05vss7635",
+  "Universiti Teknologi MARA - UiTM": "05n8tts92",
+};
+
+/**
  * Pilot roster: 30 universities across 23 countries and 6 continents.
  *
  * Chosen for regional spread rather than ranking position, specifically because a pilot that
@@ -453,16 +530,22 @@ async function main(): Promise<void> {
       continue;
     } else if (candidates.length === 1) chosen = candidates[0];
     else {
-      unresolved.push({
-        declaredName: entry.name,
-        declaredCountry: entry.country,
-        reason: `No exact name match among ${candidates.length} in-country ROR records; top candidates: ${candidates
-          .slice(0, 3)
-          .map((r) => `"${r.displayName}" (${r.id})`)
-          .join(", ")}.`,
-      });
-      if (roster.length <= 60) console.log(`UNRESOLVED  ${entry.name} — no exact name match among ${candidates.length} in-country records`);
-      continue;
+      const overrideId = MANUAL_ROR_OVERRIDES[entry.name];
+      const overrideMatch = overrideId ? candidates.find((r) => r.id === `https://ror.org/${overrideId}`) : undefined;
+      if (overrideMatch) {
+        chosen = overrideMatch;
+      } else {
+        unresolved.push({
+          declaredName: entry.name,
+          declaredCountry: entry.country,
+          reason: `No exact name match among ${candidates.length} in-country ROR records; top candidates: ${candidates
+            .slice(0, 3)
+            .map((r) => `"${r.displayName}" (${r.id})`)
+            .join(", ")}.`,
+        });
+        if (roster.length <= 60) console.log(`UNRESOLVED  ${entry.name} — no exact name match among ${candidates.length} in-country records`);
+        continue;
+      }
     }
 
     if (chosen.status !== "active") {
