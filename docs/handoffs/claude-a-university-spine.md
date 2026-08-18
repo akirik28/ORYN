@@ -845,7 +845,23 @@ read them directly (the same two conditions that justified `student_size`).
    then `--apply`: **26/26 written**, `total_students` coverage 357/1019 → 383/1019. Full gate
    green after.
 
-   **India (33 missing) still fully queued, not started.**
+   **India — investigated 2026-08-18, also a genuine near-term dead end.** AISHE (All India
+   Survey on Higher Education, the right authority) has TWO delivery mechanisms, both broken
+   or heavy in a different way than Italy: (1) `dashboard.aishe.gov.in`'s "Higher Education
+   Institution Directory" — loaded it in a real browser (not just `curl`/`WebFetch`) and it
+   throws `ReferenceError: jQuery is not defined` in its own console, a genuinely broken page
+   on the government's own site, not a fetch-tooling limitation; (2) `he.nic.in/aishereport`
+   — a TLS cert-chain issue (`unable to get local issuer certificate`) plus the same hash-
+   routed-SPA problem as the broken dashboard. The fallback is the "AISHE Book" national PDF
+   report (e.g. `cdnbbsr.s3waas.gov.in/.../20240214825688998.pdf`) — reachable in principle,
+   but a large unstructured national PDF with no guaranteed clean per-institution table the
+   way Destatis's XLSX had, and extracting ~33 specific named universities' figures from it
+   reliably would need real page-by-page inspection, not attempted this pass. **Pattern
+   worth naming**: Germany and Spain both had a genuine bulk machine-readable file one or two
+   clicks from their statistics ministry's own page; Italy and India both don't, so far —
+   this may be true of the remaining un-investigated countries too. Don't assume the Germany/
+   Spain experience generalizes; each country still needs its own honest check before
+   assuming a script is buildable.
 6. Migration 0043 + the 5 read-path filters (see Phase 2 above) — founder/DDL-access blocked,
    not code-blocked.
 7. ~~The ~200-row external-ID-unresolved bucket~~ — **current breakdown captured 2026-08-18**
