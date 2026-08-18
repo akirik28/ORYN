@@ -153,8 +153,40 @@ or the live queries run shows a write coming from this browser session.
   closely.
 
 **Still not verified live**: Settings' Location *save* action, the CV-import EntityCombobox
-change, Connections/People You May Know rendering, and mobile widths of any of the pages
-above (checked at desktop width only during this live pass) — the read-only discipline above
-means several things were confirmed to *render* correctly but their *mutating* actions
-weren't exercised. Worth a real click-through once a disposable test account exists
-(the Confirm-Email fix in `docs/pilot-readiness.md` unblocks that).
+change, and Connections/People You May Know rendering with actual candidates (0 today —
+this account has no connections/school-mates yet, so the empty state is what's confirmed,
+not the populated one). The read-only discipline above means several things were confirmed
+to *render* correctly but their *mutating* actions weren't exercised. Worth a real
+click-through once a disposable test account exists (the Confirm-Email fix in
+`docs/pilot-readiness.md` unblocks that).
+
+## Update, same session: a real page-crash bug found live, fixed, and a wider spot-check
+
+Kept using the same read-only access to spot-check more pages at mobile width (375px) —
+`/connections`, `/plan`, `/applications`, `/advisor`, `/documents`, `/dashboard`, all clean —
+and found one genuine, serious bug: **`/connections` 500'd completely** in this environment.
+`getPeopleYouMayKnow` used the throwing `createAdminClient()` directly instead of
+`tryCreateAdminClient()` — the exact helper `lib/supabase/admin.ts`'s own doc comment says
+was built specifically for this failure mode, with a list of already-fixed call sites that
+happened to not include this one file. Fixed, tested, live-reloaded and re-confirmed
+(`b4a38dd`) — the page now renders its correct "No connections yet" empty state instead of
+crashing. This would have broken pilot tasks 8 and 9 for every tester; see
+`docs/pilot-readiness.md`'s own update section.
+
+Went looking for the same bug shape elsewhere before writing this: `lib/benchmarking/index.ts`
+already wraps its own equivalent admin-client call in a try/catch, with a comment recording
+that *that* crash (on the Career Profile page, the single highest-traffic page in the
+product) was already found and fixed by an earlier session — confirmed still holding by
+loading `/profile` live, which rendered correctly. So this class of bug is mostly already
+guarded against; `people-you-may-know-query.ts` was the one gap, now closed. Didn't do an
+exhaustive grep-every-call-site audit beyond that — a `createAdminClient()` vs.
+`tryCreateAdminClient()` sweep across the remaining call sites listed in this session's own
+research (background jobs, admin routes, a couple of Server Actions) would be a reasonable,
+bounded follow-up if anyone wants full confidence, but the highest-traffic, highest-risk
+surfaces (Profile, Connections, Opportunities, Universities, Settings, Advisor, Plan,
+Applications, Documents, Dashboard) are now all confirmed live.
+
+The Next.js dev-toolbar's persistent "1 Issue" badge on every authenticated page is the
+already-known, already-handled `AIProviderNotConfiguredError` from the dashboard's
+weekly-plan auto-generation attempt (`ANTHROPIC_API_KEY` unset) — confirmed via
+`read_network_requests` that the page itself still returns a clean 200, not a new problem.
