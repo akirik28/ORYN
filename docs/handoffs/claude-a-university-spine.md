@@ -810,12 +810,42 @@ read them directly (the same two conditions that justified `student_size`).
    University's only candidate row showed an implausibly low 536; TUHH not found at all).
    Full gate green after (lint/tsc/677 tests/build).
    
-   **India (33 missing), Italy (31), Spain (27) still queued, not started.** Same methodology
-   (find the national statistics office's own bulk dataset, verify live, hand-map genuinely
-   abbreviated/translated names, never guess) should generalize, but each country's own
-   source needs the same live investigation Germany and the US each got — don't assume any of
-   them publish institution-level data as cleanly as Destatis did. UK/HESA investigated and is
-   a genuine dead end (Cloudflare-protected) — don't re-attempt it the same way.
+   **Italy — investigated 2026-08-18, a genuine dead end for now, don't re-attempt the same
+   way.** MUR/USTAT (the right authority — Ministero dell'Università e della Ricerca) has an
+   "Iscritti per ateneo" open-data resource that looks exactly right, but its actual host
+   (`dati-ustat.mur.gov.it`, also aliased as the older `dati.ustat.miur.it` — same IP,
+   `193.206.6.150`) times out at the TCP level on every attempt (`curl -v`: connection timeout,
+   not a 403/Cloudflare challenge — a different failure class than HESA, same practical
+   outcome). The parent site `ustat.mur.gov.it` IS reachable, but its per-university pages
+   (e.g. `/dati/didattica/italia/atenei-statali/torino`) render enrollment figures via
+   client-side charts — `WebFetch`'s HTML-to-text conversion gets the page's descriptive text
+   but not the chart values, and reading 31 individual charts via real browser automation
+   is a materially bigger job than this pass, not attempted. Re-check whether
+   `dati-ustat.mur.gov.it` becomes reachable in a future session before trying anything more
+   elaborate — the actual dataset is right there if the connection ever succeeds.
+
+   **Spain — done 2026-08-18.** `ciencia.gob.es` (Ministerio de Ciencia, Innovación y
+   Universidades) publishes a genuinely bulk, per-university XLSX:
+   `https://www.ciencia.gob.es/dam/jcr:717ab000-0372-44e4-bec3-e49afcb2838b/MatriculadosTitulacion2015_2024.xlsx`
+   (linked from the "Estadística de estudiantes universitarios" page — the portal's own SPA
+   shell isn't fetchable directly, had to `curl` the specific sub-page's raw HTML to find this
+   link). Two sheets, "Matriculados Grado" and "Matriculados Master", each one row per
+   (Comunidad autónoma, Universidad, Rama, Titulación) with both a 2024-2025 "provisional
+   avance" column and a finalized 2023-2024 column — used **the 2023-2024 column**, summed
+   across both sheets grouped by `Universidad` (`scripts/enrich-student-counts-es.ts`,
+   `ES_TOTALS`). This necessarily **excludes doctorate students** (no `Matriculados Doctorado`
+   sheet in this file) — written as `precision_state: 'lower_bound'` (the true total is
+   provably ≥ this figure, a systematic exclusion, not rounding noise — a more honest fit than
+   `'approximate'`) and stated plainly in `notes`, not hidden. Sanity-checked several figures
+   against known institution sizes first (Complutense Madrid and Sevilla both ~58k, consistent
+   with their reputation as two of Spain's largest). One genuine ambiguity left unresolved
+   rather than guessed: our spine's bare "Universidad Europea" (no campus qualifier) matches
+   FIVE separately-branded campuses in the source (Madrid, Valencia, Canarias, del Atlántico,
+   Miguel de Cervantes) — no way to know which one our single row means. Dry run reviewed,
+   then `--apply`: **26/26 written**, `total_students` coverage 357/1019 → 383/1019. Full gate
+   green after.
+
+   **India (33 missing) still fully queued, not started.**
 6. Migration 0043 + the 5 read-path filters (see Phase 2 above) — founder/DDL-access blocked,
    not code-blocked.
 7. ~~The ~200-row external-ID-unresolved bucket~~ — **current breakdown captured 2026-08-18**
