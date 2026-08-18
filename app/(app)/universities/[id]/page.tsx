@@ -14,6 +14,7 @@ import { SaveUniversityButton } from "@/features/universities/save-university-bu
 import { RequirementEvaluationBadge } from "@/features/universities/requirement-evaluation-badge";
 import { AdminRequirementForm } from "@/features/universities/admin-requirement-form";
 import { canonicalUniversityId, isSupersededUniversityId } from "@/lib/universities/canonical";
+import { formatNumber, formatCurrency } from "@/lib/i18n/format";
 import type { ProfileDimension, RequirementEvaluationStatus, UniversityRequirement } from "@/types/database";
 
 export default async function UniversityDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -111,9 +112,9 @@ export default async function UniversityDetailPage({ params }: { params: Promise
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard icon={Users} label="Student size" value={university.student_size ? university.student_size.toLocaleString() : "Unavailable"} />
+        <StatCard icon={Users} label="Student size" value={university.student_size ? formatNumber(university.student_size) : "Unavailable"} />
         <StatCard icon={GraduationCap} label="Admission rate" value={stats?.admission_rate != null ? `${Math.round(stats.admission_rate * 100)}%` : "Unavailable"} />
-        <StatCard icon={DollarSign} label="Cost of attendance" value={stats?.cost_of_attendance ? `$${stats.cost_of_attendance.toLocaleString()}` : "Unavailable"} />
+        <StatCard icon={DollarSign} label="Cost of attendance" value={stats?.cost_of_attendance ? formatCurrency(stats.cost_of_attendance) : "Unavailable"} />
         <StatCard icon={Target} label="Test scores" value={testScoreRangeLabel(stats)} />
         <StatCard icon={TrendingUp} label="Graduation rate" value={stats?.graduation_rate != null ? `${Math.round(stats.graduation_rate * 100)}%` : "Unavailable"} />
       </div>

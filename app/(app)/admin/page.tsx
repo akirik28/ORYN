@@ -1,4 +1,5 @@
 import { formatDistanceToNow } from "date-fns";
+import { formatNumber } from "@/lib/i18n/format";
 import { requireAdmin } from "@/lib/security/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Badge } from "@/components/ui/badge";
@@ -174,7 +175,7 @@ export default async function AdminPage() {
               <li key={feature} className="flex items-center justify-between px-4 py-2.5 text-sm">
                 <span className="font-medium">{feature}</span>
                 <span className="text-xs text-muted-foreground">
-                  {stats.calls} calls · {stats.inputTokens.toLocaleString()} in / {stats.outputTokens.toLocaleString()} out tokens
+                  {stats.calls} calls · {formatNumber(stats.inputTokens)} in / {formatNumber(stats.outputTokens)} out tokens
                 </span>
               </li>
             ))}
