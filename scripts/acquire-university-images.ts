@@ -204,9 +204,49 @@ function withUserAgent(fetchFn: typeof fetch, userAgent: string): typeof fetch {
   };
 }
 
+const THROTTLED_HOSTS = new Set(["upload.wikimedia.org", "commons.wikimedia.org", "www.wikidata.org"]);
+
+/**
+ * A real User-Agent (see withUserAgent above) fixes Wikimedia's 429 for an ISOLATED request,
+ * but not under this script's sustained volume — directly observed re-running this exact
+ * pilot-verified URL after ~20 minutes of full-scale acquisition traffic: still 429, "too many
+ * requests... contact noc@wikimedia.org to discuss a less disruptive approach". That message is
+ * about request RATE, not identification, and this script is already requesting thumbnails, not
+ * full originals (see wikimedia.ts's `iiurlwidth`) — the remaining lever is pacing. A single
+ * shared minimum-gap timer across every Wikimedia-host request in this process (not per-worker,
+ * so 5-way concurrency can't multiply the effective rate) is a materially "less disruptive
+ * approach" without needing per-university retry-storms.
+ */
+let lastWikimediaRequestAt = 0;
+async function throttleWikimediaHosts(url: string, minGapMs = 300): Promise<void> {
+  let host: string;
+  try {
+    host = new URL(url).hostname;
+  } catch {
+    return;
+  }
+  if (!THROTTLED_HOSTS.has(host)) return;
+  const wait = lastWikimediaRequestAt + minGapMs - Date.now();
+  lastWikimediaRequestAt = Math.max(Date.now(), lastWikimediaRequestAt + minGapMs);
+  if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
+}
+
+function withWikimediaThrottle(fetchFn: typeof fetch): typeof fetch {
+  return async (input, init) => {
+    await throttleWikimediaHosts(typeof input === "string" ? input : input.toString());
+    return fetchFn(input, init);
+  };
+}
+
 async function downloadBuffer(url: string, fetchImpl: typeof fetch, maxBytes = MAX_DOWNLOAD_BYTES): Promise<Buffer | null> {
   const response = await fetchImpl(url).catch(() => null);
   if (!response || !response.ok) return null;
+  // A handful of official-site og:image URLs in the full-scale run turned out to be broken
+  // links that still answer 200 with an HTML error/placeholder page rather than a real 404 —
+  // sharp then threw trying to decode that HTML as image bytes. Reject non-image content types
+  // up front instead of letting the optimize step discover it the hard way.
+  const contentType = response.headers.get("content-type");
+  if (contentType && !contentType.startsWith("image/")) return null;
   const lengthHeader = response.headers.get("content-length");
   if (lengthHeader && Number(lengthHeader) > maxBytes) return null;
   const arrayBuffer = await response.arrayBuffer().catch(() => null);
@@ -409,7 +449,7 @@ async function main(): Promise<void> {
 
   const contactEmail = process.env.OPENALEX_CONTACT_EMAIL;
   const userAgent = `Oryn-ImageAcquisition/1.0 (https://oryn.app${contactEmail ? `; ${contactEmail}` : ""}) node`;
-  const fetchImpl = withUserAgent(withRetry(timedFetch(DOWNLOAD_TIMEOUT_MS), 1), userAgent);
+  const fetchImpl = withUserAgent(withRetry(withWikimediaThrottle(timedFetch(DOWNLOAD_TIMEOUT_MS)), 1), userAgent);
   const DONE_STATUSES = new Set(["verified", "official", "wikimedia_verified"]);
 
   const outcomes = await mapWithConcurrency(targetSet, CONCURRENCY, async (uni): Promise<Outcome> => {
