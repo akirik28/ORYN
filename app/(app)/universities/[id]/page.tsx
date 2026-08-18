@@ -27,6 +27,19 @@ const QS_SIZE_LABELS: Record<string, string> = {
   XL: "Extra large",
 };
 
+/** `university_profile_metrics.unit` for a tuition figure is a currency/basis string like
+ * "GBP/year" or "CAD/credit" — this table has no dedicated currency column, so the unit string
+ * is what a reader has to parse. A prior version of this page hardcoded "£", which silently
+ * mislabeled Canada's CAD figures as GBP the moment non-UK data existed — caught live 2026-08-18
+ * viewing University of Alberta's page. Extend this map as new countries' currencies get
+ * acquired; an unrecognized prefix falls back to the raw currency code plus a space rather than
+ * guessing a symbol. */
+const CURRENCY_SYMBOLS: Record<string, string> = { GBP: "£", USD: "$", EUR: "€", CAD: "CA$", AUD: "AU$" };
+function currencyPrefix(unit: string): string {
+  const code = unit.split("/")[0];
+  return CURRENCY_SYMBOLS[code] ?? `${code} `;
+}
+
 export default async function UniversityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await requireUser();
@@ -54,7 +67,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
     supabase.from("university_rankings").select("ranking_provider, ranking_edition, rank_display, source_url").eq("university_id", id).order("ranking_provider"),
     supabase
       .from("university_profile_metrics")
-      .select("metric_code, value_numeric, value_text, source_url, source_type, verified_at")
+      .select("metric_code, value_numeric, value_text, unit, source_url, source_type, verified_at")
       .eq("university_id", id)
       .in("metric_code", [
         "research_topics_top5",
@@ -107,8 +120,10 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   const undergradCount = metricByCode.get("undergraduate_students")?.value_numeric ?? null;
   const postgradCount = metricByCode.get("postgraduate_students")?.value_numeric ?? null;
   const qsSizeCode = metricByCode.get("qs_size_category")?.value_text ?? null;
-  const internationalTuition = metricByCode.get("tuition_international_annual")?.value_numeric ?? null;
-  const domesticTuition = metricByCode.get("tuition_domestic_annual")?.value_numeric ?? null;
+  const internationalTuitionMetric = metricByCode.get("tuition_international_annual");
+  const domesticTuitionMetric = metricByCode.get("tuition_domestic_annual");
+  const internationalTuition = internationalTuitionMetric?.value_numeric ?? null;
+  const domesticTuition = domesticTuitionMetric?.value_numeric ?? null;
   const qsSizeLabel = qsSizeCode ? (QS_SIZE_LABELS[qsSizeCode] ?? qsSizeCode) : null;
 
   return (
@@ -174,15 +189,24 @@ export default async function UniversityDetailPage({ params }: { params: Promise
           <StatCard
             icon={DollarSign}
             label="International tuition"
-            value={`From £${internationalTuition.toLocaleString("en-US")}/yr`}
-            caption={domesticTuition != null ? `Varies by course. UK/Home rate: £${domesticTuition.toLocaleString("en-US")}/yr` : "Varies by course — see university for your exact fee"}
+            value={`From ${currencyPrefix(internationalTuitionMetric!.unit)}${internationalTuition.toLocaleString("en-US", { maximumFractionDigits: 0 })}/yr`}
+            caption={
+              domesticTuition != null
+                ? `Varies by course. Domestic rate: ${currencyPrefix(domesticTuitionMetric!.unit)}${domesticTuition.toLocaleString("en-US", { maximumFractionDigits: 0 })}/yr`
+                : "Varies by course — see university for your exact fee"
+            }
           />
         ) : domesticTuition != null ? (
           // International tuition genuinely isn't published as a single figure at this
-          // university (see acquire-university-statistics-uk.ts's header) — the domestic/
-          // home rate is real, verified data too, just clearly labeled as NOT what most of
-          // this product's international-applicant audience would actually pay.
-          <StatCard icon={DollarSign} label="UK Home tuition" value={`£${domesticTuition.toLocaleString("en-US")}/yr`} caption="International fee not published as a single figure — varies by course" />
+          // university (see acquire-university-statistics-uk.ts's header) — the domestic
+          // rate is real, verified data too, just clearly labeled as NOT what most of this
+          // product's international-applicant audience would actually pay.
+          <StatCard
+            icon={DollarSign}
+            label="Domestic tuition"
+            value={`${currencyPrefix(domesticTuitionMetric!.unit)}${domesticTuition.toLocaleString("en-US", { maximumFractionDigits: 0 })}/yr`}
+            caption="International fee not published as a single figure — varies by course"
+          />
         ) : (
           <StatCard icon={DollarSign} label="Cost of attendance" value="Unavailable" />
         )}
