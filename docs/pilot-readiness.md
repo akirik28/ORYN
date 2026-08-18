@@ -6,6 +6,18 @@ before handing it to anyone. Everything below was verified directly against the 
 docs, several of which (`FOUNDER-START-HERE.md` in particular) describe a state that has
 since drifted.
 
+## Update: a real, pilot-blocking crash was found live and is now fixed
+
+After this doc was first written, live browser access became available mid-session (full
+story in `docs/handoffs/claude2-product-ux.md`) and surfaced something code review alone
+hadn't caught: **the Connections page 500'd completely** in any environment missing
+`SUPABASE_SECRET_KEY` (this one included) — which would have made pilot tasks 8 and 9 below
+fail for every single tester, not just degrade. Root cause and fix: `b4a38dd`. Confirmed
+fixed by reloading the live page — it now renders its correct "No connections yet" empty
+state instead of crashing. Worth knowing this class of bug exists (an admin-only Supabase
+client throwing synchronously when unconfigured, uncaught, taking a whole page down with
+it) — most call sites already guard against it, this was the one gap, now closed.
+
 ## Before inviting anyone: 3 real blockers, founder action only
 
 None of these are code problems — verified by reading `.env.local` state via
