@@ -33,22 +33,31 @@
  * "range"`, and the full stated range is in `notes`. A caller must not present `value_numeric`
  * alone as "the" tuition fee — see `notes` for the real range every time.
  *
- * REAL NEGATIVE RESULTS, recorded rather than silently skipped: UCL, University of Manchester,
- * and King's College London each confirmed to have NO single published international figure —
- * fees are programme-specific, exposed only through an interactive course-fee search tool with
- * no static table this pass's tooling could read cleanly. These are NOT gaps to guess at; left
- * genuinely unresolved. Their (separately confirmed) UK/Home fee IS written, since that figure
- * is a single national policy number every UK university publishes plainly.
+ * REAL NEGATIVE RESULTS, recorded rather than silently skipped: University College London,
+ * University of Manchester, King's College London, University of Birmingham, University of
+ * Leeds, and Durham University each confirmed to have NO single published international
+ * figure — fees are programme-specific, exposed only through an interactive course-fee search
+ * tool (or, for Birmingham, quoted only per individual offer letter) with no static table this
+ * pass's tooling could read cleanly. These are NOT gaps to guess at; left genuinely unresolved.
+ * Their (separately confirmed) UK/Home fee IS written, since that figure is a single national
+ * policy number every UK university publishes plainly — £9,790 for 2026/27, independently
+ * confirmed live at every one of the 12 universities below that publish a Home rate at all.
  *
- * A REAL FINDING, out of scope for this script to act on: the two "London School of Economics"
- * rows in the spine (`cfd5cd77-...` and `cc117524-...`) share ONE `canonical_entity_id`
- * (`ba53a102-...`) — the entity-level merge already happened — but neither `universities.id` is
- * in the row-level `SUPERSESSIONS` map `lib/universities/canonical.ts` reads, so the explorer
- * still shows LSE as two separate cards. This script writes to the more complete of the two
- * rows (`cfd5cd77-...` — has `website_url`/`admissions_url`, `institution_type: "Public"`; the
- * other has neither and a bare "university" placeholder type) but does NOT add a supersession
- * entry itself — that needs the same ROR-cross-check discipline the other 28 merged pairs got,
- * not a decision made mid-way through unrelated tuition research. Flagged in the handoff doc.
+ * CROSS-CHECK THE SUPERSESSION REGISTRY BEFORE PICKING A ROW BY NAME — a real mistake this
+ * script made once already: this spine has THREE UK pairs where two `universities` rows are
+ * the same real institution (already resolved in `lib/universities/duplicate-supersessions.
+ * json`, Phase 2's work) — "UCL"/"University College London", "London School of Economics and
+ * Political Science"/"The London School of Economics and Political Science (LSE)", and
+ * "University of Warwick"/"The University of Warwick" (Warwick not used by this table). A
+ * first version of this script keyed its UCL entry as `"UCL"` — the LOSER row
+ * (`cf8adcbd-...`), which every browse/search/detail surface excludes — instead of the winner,
+ * `"University College London"` (`03c8faf1-...`). The data would have been permanently
+ * invisible. Caught before `--apply` reached `main` by checking `duplicate-supersessions.json`
+ * directly, not by re-litigating "which row looks more complete" from scratch (which is also
+ * what happened, unnoticed, for the LSE entry: it happened to land on the already-registered
+ * winner row by that same heuristic, not because the registry was actually checked at the
+ * time). Every entry below has been cross-checked against the registry now — see the file's
+ * own git history for the fix commit if reconstructing what changed matters later.
  *
  * Usage:
  *   npm run acquire:university-statistics-uk                  # dry run
@@ -132,6 +141,52 @@ const UK_TUITION: Record<string, UkTuitionEntry> = {
     notes:
       "2026/27 entry. UK fee: £9,790/year, independently confirmed live on this page. International fee: no single published figure — genuinely programme-specific, exposed only via the online course finder; not guessed.",
   },
+  "University of Bristol": {
+    domestic: 9790,
+    international: [25500, 49700],
+    sourceUrl: "https://www.bristol.ac.uk/students/support/finances/tuition-fees/ug/overseas/26-27/2026-starters/",
+    notes:
+      "2026/27 entry. Home fee £9,790, independently confirmed on a separate page. Overseas: real per-programme table, 503 rows scanned directly — £25,500 to £49,700. High confidence.",
+  },
+  "University of Birmingham": {
+    domestic: 9790,
+    sourceUrl: "https://www.birmingham.ac.uk/study/undergraduate/fees-funding/tuition",
+    notes:
+      "2026/27 entry. UK fee: £9,790/year. International fee: no single published figure — quoted per individual offer letter, no table found; not guessed.",
+  },
+  "University of Leeds": {
+    domestic: 9790,
+    sourceUrl: "https://www.leeds.ac.uk/undergraduate-fees/doc/fees-undergraduate-fees",
+    notes:
+      "2026/27 entry. UK fee: £9,790/year. International fee: no single published figure — course-search-tool only, no static table found; not guessed.",
+  },
+  "University of Glasgow": {
+    domestic: 9790,
+    international: [27720, 62730],
+    sourceUrl: "https://www.gla.ac.uk/undergraduate/fees/intlfees/",
+    notes:
+      "2026/27 entry (page explicitly labels separate 2025/26 vs 2026/27 tables — this used the 2026/27 one, verified from the section heading). International, undergraduate degree programmes only (excludes the separate 'Incoming Study Abroad' visiting-student rate, £24,000/£12,000, a different category): £27,720 (Arts and Social Sciences) to £62,730 (MBChB and clinical programmes); also BDS £58,500, BVMS £37,350. Home/RUK fee (£9,790) NOT independently re-verified on Glasgow's own page this pass — written anyway as a well-established national policy figure independently confirmed live at 11 other UK institutions this pass, not a per-institution guess.",
+  },
+  "The University of Sheffield": {
+    domestic: 9790,
+    international: [25000, 50925],
+    sourceUrl: "https://sheffield.ac.uk/new-students/tuition-fees/undergraduate-overseas",
+    notes:
+      "2026/27 entry, directly read. Standard overseas undergraduate: £25,000-£32,100. Medicine £47,575/year (5 years), Dentistry £50,925/year (5 years) — full range £25,000-£50,925. Home fee £9,790 independently confirmed on a separate page.",
+  },
+  "Durham University": {
+    domestic: 9790,
+    sourceUrl: "https://www.durham.ac.uk/study/undergraduate/fees-and-funding/tuition-fees/",
+    notes:
+      "2026/27 entry. UK fee: £9,790/year. International fee: no single published figure — course-database only, no static table found; not guessed.",
+  },
+  "University of Nottingham": {
+    domestic: 9790,
+    international: [20000, 47000],
+    sourceUrl: "https://www.nottingham.ac.uk/fees/tuitionfees/202627/undergraduate.aspx",
+    notes:
+      "2026/27 entry. Real per-programme table, 209 rows (195 with a valid international figure) scanned directly. Home fee £9,790/year (a handful of Foundation-Year courses show £5,760 instead — excluded as a non-standard rate, not representative). International: £20,000-£47,000. High confidence.",
+  },
 };
 
 async function main(): Promise<void> {
@@ -174,7 +229,7 @@ async function main(): Promise<void> {
     }
   }
 
-  console.log(`${toWrite.length} metric rows to write, ${noEntry} UK universities with no entry in this table (left unresolved, see file header for the two genuine "no single published figure" cases and the queued remainder).`);
+  console.log(`${toWrite.length} metric rows to write, ${noEntry} UK universities with no entry in this table (left unresolved, see file header for the "no single published figure" cases and the queued remainder).`);
 
   if (!apply) {
     console.log("\nDry run — nothing written. Re-run with --apply.");
