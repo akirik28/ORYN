@@ -4,6 +4,8 @@ import { COURSE_NAME_SUGGESTIONS } from "@/lib/vocabularies/subjects";
 import { TEST_NAME_SUGGESTIONS } from "@/lib/vocabularies/tests";
 import { COUNTRY_SUGGESTIONS } from "@/lib/vocabularies/countries";
 import { AWARD_LEVEL_SUGGESTIONS, CAUSE_AREA_SUGGESTIONS, PROFICIENCY_SUGGESTIONS } from "@/lib/vocabularies/profile-fields";
+import { SKILL_NAME_SUGGESTIONS } from "@/lib/vocabularies/skills";
+import { SPORT_NAME_SUGGESTIONS } from "@/lib/vocabularies/sports";
 
 // Essay Story Bank (founder-confirmed MVP scope) reads this field as candidate material —
 // never CV-facing, never auto-summarized. One shared field, one shared prompt list, reused
@@ -104,6 +106,17 @@ export const SPORT_LEVEL_OPTIONS = [
   { value: "national", label: "National" },
   { value: "international", label: "International" },
 ];
+
+// Plain suggestion lists, not `select` options like SPORT_LEVEL_OPTIONS above: every one
+// of these three fields is explicitly optional (nullable, no default), and DynamicFormFields'
+// `type: "select"` always resolves to a concrete value (`field.options[0]?.value` when
+// unset — see that component) — forcing one of these into a `select` would silently turn
+// "unset" into "Academics"/"Beginner"/"School" the moment the form re-renders. `suggest`
+// preserves genuine optionality (an empty SuggestInput stays empty) while still cutting
+// fragmentation for the common cases.
+export const AWARD_LEVEL_SUGGESTIONS = ["School", "Regional", "State/Provincial", "National", "International"];
+export const GOAL_CATEGORY_SUGGESTIONS = ["Academics", "Career", "Personal", "Financial", "Community/Leadership"];
+export const PROFICIENCY_SUGGESTIONS = ["Beginner", "Intermediate", "Advanced", "Expert"];
 
 export const ACTIVITY_FIELDS: FieldConfig[] = [
   { type: "text", name: "title", label: "Title", placeholder: "e.g. Robotics Club Captain" },
@@ -314,13 +327,13 @@ export const GOAL_STATUS_OPTIONS = [
 
 export const GOAL_FIELDS: FieldConfig[] = [
   { type: "text", name: "title", label: "Goal", placeholder: "e.g. Study Economics in the UK" },
-  { type: "text", name: "category", label: "Category (optional)", placeholder: "e.g. Academics, Career", span: "half" },
+  { type: "suggest", name: "category", label: "Category (optional)", suggestions: GOAL_CATEGORY_SUGGESTIONS, placeholder: "e.g. Academics, Career", span: "half" },
   { type: "date", name: "target_date", label: "Target date", span: "half" },
   { type: "select", name: "status", label: "Status", options: GOAL_STATUS_OPTIONS },
 ];
 
 export const SPORTS_FIELDS: FieldConfig[] = [
-  { type: "text", name: "sport", label: "Sport", placeholder: "e.g. Swimming", span: "half" },
+  { type: "suggest", name: "sport", label: "Sport", suggestions: SPORT_NAME_SUGGESTIONS, placeholder: "e.g. Swimming", span: "half" },
   { type: "text", name: "discipline", label: "Discipline / event", placeholder: "e.g. 200m Freestyle", span: "half" },
   {
     type: "entity",
@@ -360,7 +373,7 @@ export const SKILL_CATEGORY_OPTIONS = [
  * so a weak Digital Twin signal on its own (spec: Digital Twin rules) — endorsements from
  * accepted connections add real context on top, but neither becomes a quantitative score. */
 export const SKILL_FIELDS: FieldConfig[] = [
-  { type: "text", name: "name", label: "Skill", placeholder: "e.g. Python, Public speaking", span: "half" },
+  { type: "suggest", name: "name", label: "Skill", suggestions: SKILL_NAME_SUGGESTIONS, placeholder: "e.g. Python, Public speaking", span: "half" },
   { type: "select", name: "category", label: "Category", options: SKILL_CATEGORY_OPTIONS, span: "half" },
   { type: "suggest", name: "proficiency", label: "Proficiency (optional)", suggestions: PROFICIENCY_SUGGESTIONS, placeholder: "e.g. Intermediate" },
 ];
