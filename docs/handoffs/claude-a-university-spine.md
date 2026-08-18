@@ -1111,7 +1111,8 @@ acquisition for the ~890 non-US universities still showing "Unavailable" (`unive
 is 128/1019, US-only — see Phase 10's P0K numbers). Country order: UK (done, 20/79), Canada
 (done for this pass, 3/27 + well-documented negatives), Australia (closed out, 1/38 + 6
 documented negatives — see below), Germany (**done, 49/49** — a real state-law pattern, see
-below), **Netherlands next**, then France, Switzerland, Italy (web-accessible sources only, per
+below), Netherlands (**done, 13/13** — statutory fee scalable, institutional fee per-university,
+see below), **France next**, then Switzerland, Italy (web-accessible sources only, per
 the Phase 3/"Next" note below that MUR/USTAT times out), Singapore, Hong Kong, then other
 high-count countries — reorder for efficiency if a better bulk source turns up elsewhere, same
 as the German/Spanish student-count pipelines below already did. Per-country pipeline:
@@ -1418,6 +1419,47 @@ being fetched before. Verified live for all three new shapes: Heidelberg ("€3,
 Constructor University ("€20,000/yr" / "€20,000/yr", no "From"/no "varies"); re-verified the
 pre-existing UK range case is unaffected (Edinburgh still "From £29,600/yr" / "Varies by
 course. Domestic rate: £9,790/yr"). Full gate green (`tsc`/lint/801 tests/build) after.
+
+**Netherlands — done in one pass, 13/13 universities, a genuine hybrid: scalable for domestic,
+real per-university research for international.** The statutory tuition fee ("wettelijk
+collegegeld") is set annually by the Dutch government and confirmed directly on DUO's own page
+(duo.nl, the government's student-finance executive agency) at **€2,694 for 2026-2027** —
+applies uniformly to EU/EEA/Swiss/Surinamese students at every government-funded Dutch
+university, all 13 of which qualify. Written as `tuition_domestic_annual` for all 13 — a real
+"one government figure, many universities" win, same shape as Germany's state law. The
+international side ("instellingscollegegeld") is NOT government-set — each university prices it
+independently, and (unlike Germany) most price **per faculty**, not as one institution-wide
+number; Nuffic (checked as a candidate bulk source) runs a scholarship database, not a
+comparative fee dataset, so this half needed real per-university research like the UK. Resolved
+9/13: Delft (€19,906, flat), Eindhoven (€18,600, flat), Wageningen (€18,300, flat, explicitly
+confirmed uniform), Tilburg (€13,400, flat, search-cited — direct fetch 403'd), Amsterdam
+(€17,500–34,700, Humanities to Medicine), Erasmus Rotterdam (€13,500–32,200, most faculties to
+Medicine), Groningen (€14,000–32,000, 4 programme bands, search-cited), Twente
+(€12,300–16,400, two tiers), Leiden (€14,300–30,200, most faculties to Medicine). 4 genuinely
+unresolved, each investigated not skipped: Utrecht (general fee page links only to a PDF, no
+static figure), Vrije Universiteit Amsterdam (confirmed to vary by programme, PDF-only
+breakdown), Maastricht (a real low/high/top three-tier system exists but the tier boundaries
+aren't on any static page found — only one specific surcharged tier, €20,109, was directly
+confirmed, not representative enough to anchor a range on), Radboud (confirmed per-programme,
+directs to individual programme pages, no general figure). 22 metric rows written in one
+`--apply` pass — `scripts/acquire-university-statistics-nl.ts`.
+
+**A real near-miss caught mid-research, before anything was written, worth naming as a
+process lesson**: a first pass took Leiden's figure from one specific programme's page
+(€18,700) as if it were Leiden's single general rate — it's actually just the Faculty of
+Science's rate on that per-faculty schedule. Re-fetching Leiden's actual GENERAL bachelor's
+tuition page (not a specific programme's page) surfaced the real range, €14,300–30,200, before
+`--apply` ran. Prompted a second look at every other "clean single figure" candidate against
+its own general overview page rather than a search-engine summary of one programme's page —
+Utrecht failed that re-check (general page links to a PDF with no static figure) and moved from
+"resolved" to genuinely unresolved as a direct result. Same discipline as the UCL
+supersession-registry lesson earlier: check the authoritative thing directly, don't trust a
+plausible-looking shortcut. No UI bug this time — the Germany pass's `precision_state`-aware
+StatCard logic handled every new range/exact/domestic-only combination correctly without
+further changes; verified live anyway: Amsterdam ("From €17,500/yr" / "Varies by course.
+Domestic rate: €2,694/yr"), Delft ("€19,906/yr" / "Domestic rate: €2,694/yr", no "From"/no
+"varies"), Utrecht ("Domestic tuition €2,694/yr" / "International fee not published..." — the
+domestic-only fallback branch). Full gate green (`tsc`/lint/801 tests/build) after.
 
 After tuition progresses meaningfully: (1) India student counts (~33 remaining, AISHE >
 annual report > official institutional stats > official facts page — see the India dead-end
