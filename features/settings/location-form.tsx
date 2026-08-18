@@ -5,6 +5,8 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SuggestInput } from "@/features/entities/suggest-input";
+import { COUNTRY_SUGGESTIONS } from "@/lib/vocabularies/countries";
 import { updateLocation } from "@/app/(app)/settings/actions";
 
 export function LocationForm({ initialCountry, initialCity }: { initialCountry: string; initialCity: string | null }) {
@@ -21,13 +23,14 @@ export function LocationForm({ initialCountry, initialCity }: { initialCountry: 
       <div className="flex flex-wrap items-end gap-2">
         <div className="min-w-40 flex-1 space-y-1.5">
           <Label htmlFor="location-country">Country</Label>
-          <Input
+          <SuggestInput
             id="location-country"
             value={country}
-            onChange={(e) => {
-              setCountry(e.target.value);
+            onChange={(next) => {
+              setCountry(next);
               setSaved(false);
             }}
+            suggestions={COUNTRY_SUGGESTIONS}
           />
         </div>
         <div className="min-w-40 flex-1 space-y-1.5">
