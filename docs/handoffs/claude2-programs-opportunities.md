@@ -319,5 +319,45 @@ institutions). Lint/typecheck/725-test/build clean.
 **Next**: `finance` (4), `law` (3), `physics` (1), and `entrepreneurship` (1) are the
 next-thinnest subjects — same already-in-spine-university approach (add a missing subject at
 a covered institution) is the fastest way to keep closing gaps without touching Claude 1's
-canonical-registry territory. Independent opportunity research into `scholarship`/`fellowship`
-(still zero from the founder corpus) is the other clear next priority.
+canonical-registry territory.
+
+## Batch 4 (opportunities): first scholarship-category candidates
+
+Pivoted to `scholarship`/`fellowship` — both still zero after all three founder-corpus files,
+per PRIORITY 6. Independent research via WebSearch (to find candidates) + WebFetch (to verify
+each directly) rather than corpus mining, same discipline as the university-programs batches.
+
+Found and verified Coca-Cola Scholars Program and QuestBridge National College Match
+(`scholarship`) plus Telluride Association Summer Seminar/TASS (`summer_program` — its actual
+shape is a free educational seminar, not a leadership fellowship, so `fellowship` would have
+been a less accurate category despite the name similarity). Three other candidates were
+investigated and **dropped rather than included on partial evidence**: Jack Kent Cooke Young
+Scholars (application currently closed, and its 7th-grade eligibility sits below this
+product's stated 14-18 age range), Bank of America Student Leaders (eligibility requires
+already having a high school diploma — a recent-graduate program, not a currently-enrolled-
+student one, a real audience mismatch), and both Horatio Alger Association and Elks National
+Foundation MVS (real, legitimate scholarships confirmed via WebSearch quotes from their own
+official domains, but every WebFetch attempt to directly read either page failed — 403 or
+connection reset, twice each. Consistent with this session's own established rule of requiring
+a genuine page-read rather than a search snippet before treating something as
+`verified_current`, both were left out rather than published on secondhand evidence).
+
+Also caught, again, the same "extraction doesn't know today's date" failure mode as batch 3:
+BIYSC-style — TASS's own fetched summary asserted in the same breath that 2026 applications
+were both "now closed" (correct) and "have not yet opened" (wrong, reasoning as if today were
+still 2025). Worked out by hand: today is 2026-08-18; TASS's 2026 program (June 21 – July 25,
+2026) already happened, so `cycle_status: closed` is correct, with the 2027 cycle noted as not
+yet posted.
+
+**Batch 4 result** (`data/research/opportunities/drive_batch4_2026-08-18.jsonl`, 3 records, all
+3 accepted, 0 duplicates): `opportunities` 41 → 44. `scholarship` 0 → 2 (first entries in this
+category since the pivot began), `summer_program` 16 → 17. `fellowship` remains at zero — no
+candidate found this pass that was both a genuine fellowship (not scholarship or summer
+program in disguise) and directly page-verifiable; worth another dedicated pass.
+Lint/typecheck/725-test/build clean.
+
+**Cumulative across the whole session so far**: `opportunities` 11 → 44 (+33 across 4
+batches), `university_programs` 182 → 192 (+10 across 2 batches). Two commits still
+outstanding for a morning report once the founder wakes: measured before/after counts per
+PRIORITY reporting template, and a note on `fellowship` as the one founder-named category this
+pass never filled.
