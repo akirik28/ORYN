@@ -7,61 +7,80 @@ import { SUPPORTED_COUNTRIES } from "@/lib/data/country-geo";
 import { regionById } from "@/lib/data/regions";
 import { searchUniversityRows } from "@/lib/universities/alias-search";
 import { getSupersededUniversityIds } from "@/lib/universities/canonical";
+import { getUniversityCountByCountry } from "@/lib/universities/queries";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/oryn/page-header";
 import { EmptyState } from "@/components/oryn/empty-state";
+import { Pagination } from "@/components/oryn/pagination";
 
 export const metadata = { title: "Universities" };
+
+const PAGE_SIZE = 48;
 
 export default async function UniversitiesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ country?: string; region?: string; q?: string }>;
+  searchParams: Promise<{ country?: string; region?: string; q?: string; page?: string }>;
 }) {
-  const { country, region: regionId, q } = await searchParams;
+  const { country, region: regionId, q, page: pageParam } = await searchParams;
   const region = regionId ? regionById.get(regionId) : undefined;
+  const page = Math.max(1, Number(pageParam) || 1);
   const session = await requireUser();
   const supabase = await createClient();
 
   // A text search goes through the canonical registry so aliases and accents resolve
   // ("MIT" -> Massachusetts Institute of Technology, "uskudar" -> "Üsküdar ..."), which
-  // `ilike` could never do. Browsing without a query keeps the cheap, ordered,
-  // directly-limited path over `universities` itself.
-  const RESULT_LIMIT = 48;
-  // A region with zero countries today (Asia) would make `.in()` receive an empty array —
-  // Postgres/PostgREST treat that as "match nothing" correctly, but being explicit means
-  // the query never runs for a state that can only ever be empty.
+  // `ilike` could never do. Browsing without a query keeps the cheap, ordered path over
+  // `universities` itself, paginated the same way (`page`/`PAGE_SIZE`) rather than a single
+  // unpaginated cap — see the 2026-08-18 fix note below for why that mattered.
   const scopedCountries = country ? [country] : region ? (region.countries.length > 0 ? region.countries : ["__no_countries_in_region__"]) : null;
 
   // A known-duplicate row (both sides of an already-merged canonical identity, e.g. "UCL" and
   // "University College London") must never independently surface as its own card — see
-  // lib/universities/canonical.ts. Applied to both the browse query and the country-count
-  // query, so neither shows a duplicate card nor an inflated per-country count.
+  // lib/universities/canonical.ts. Applied to the browse query, the country-count query, and
+  // search, so none of the three shows a duplicate card or an inflated per-country count.
   const supersededIds = getSupersededUniversityIds();
 
-  let browseQuery = supabase.from("universities").select("*").order("name", { ascending: true }).limit(RESULT_LIMIT);
+  let browseQuery = supabase
+    .from("universities")
+    .select("*", { count: "exact" })
+    .order("name", { ascending: true })
+    .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
   if (scopedCountries) browseQuery = browseQuery.in("country", scopedCountries);
   if (supersededIds.length > 0) browseQuery = browseQuery.not("id", "in", `(${supersededIds.join(",")})`);
 
-  let countriesQuery = supabase.from("universities").select("country");
-  if (supersededIds.length > 0) countriesQuery = countriesQuery.not("id", "in", `(${supersededIds.join(",")})`);
-
-  const [universitiesRes, allCountriesRes, targetsRes] = await Promise.all([
+  const [universitiesRes, liveCountryCounts, targetsRes] = await Promise.all([
     q ? Promise.resolve(null) : browseQuery,
-    countriesQuery,
+    // 2026-08-18 fix: this used to be a single unpaginated `.select("country")` filtered
+    // client-side against a 12-country hardcoded allowlist (SUPPORTED_COUNTRIES) — the
+    // combination silently dropped 77 of the 89 real countries in the data from every
+    // region tab and country count (that's the whole "Asia: 0" / "~400 total" bug — see
+    // lib/data/country-geo.ts's header for the full writeup). Now sourced from the live,
+    // paginated, exact-count-verified DB read, so a country's count can never silently
+    // undercount or vanish again, and a country the DB has that SUPPORTED_COUNTRIES
+    // doesn't yet know about is now a *detectable* gap (see the reconciliation below)
+    // instead of a silent drop.
+    getUniversityCountByCountry(supabase, supersededIds),
     supabase.from("target_universities").select("university_id").eq("user_id", session.userId!),
   ]);
 
   const countryCounts = SUPPORTED_COUNTRIES.map((c) => ({
     country: c.name,
-    count: (allCountriesRes.data ?? []).filter((u) => u.country === c.name).length,
+    count: liveCountryCounts.get(c.name) ?? 0,
   }));
+  // Reconciliation, not just a display list: a country present in the live data but absent
+  // from SUPPORTED_COUNTRIES would previously vanish with no trace. Surfaced to the page
+  // (rendered as a quiet footnote, not hidden) so a future new country shows up as an
+  // honest gap instead of silently zeroing out again.
+  const uncoveredCountries = [...liveCountryCounts.keys()].filter((name) => !SUPPORTED_COUNTRIES.some((c) => c.name === name));
+  const totalUniversities = [...liveCountryCounts.values()].reduce((sum, n) => sum + n, 0);
 
   const savedIds = new Set((targetsRes.data ?? []).map((t) => t.university_id));
-  const universities = q
-    ? await searchUniversityRows(supabase, q, { limit: RESULT_LIMIT, countries: scopedCountries })
-    : (universitiesRes?.data ?? []);
+  const searchResult = q ? await searchUniversityRows(supabase, q, { limit: PAGE_SIZE, countries: scopedCountries }) : null;
+  const universities = searchResult ?? universitiesRes?.data ?? [];
+  const totalResults = q ? universities.length : (universitiesRes?.count ?? 0);
+  const totalPages = q ? 1 : Math.max(1, Math.ceil(totalResults / PAGE_SIZE));
 
   // Batch-fetched separately (see getTargetUniversitiesWithDetails for why: our hand
   // -authored Database type can't model FK embedding reliably) rather than joined in the
@@ -81,6 +100,16 @@ export default async function UniversitiesPage({
 
   const scopeLabel = country ?? region?.name ?? null;
 
+  function buildPageHref(targetPage: number): string {
+    const params = new URLSearchParams();
+    if (country) params.set("country", country);
+    if (region) params.set("region", region.id);
+    if (q) params.set("q", q);
+    if (targetPage > 1) params.set("page", String(targetPage));
+    const qs = params.toString();
+    return qs ? `/universities?${qs}` : "/universities";
+  }
+
   return (
     <div className="space-y-8">
       <PageHeader title="Explore universities" description="A world of programs — start with a region, or search directly." />
@@ -90,7 +119,9 @@ export default async function UniversitiesPage({
       <div className="flex flex-col gap-3 rounded-2xl border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium">Search universities</p>
-          <p className="text-xs text-muted-foreground">{scopeLabel ? `Filtered to ${scopeLabel}` : "Across all supported regions"}</p>
+          <p className="text-xs text-muted-foreground">
+            {scopeLabel ? `Filtered to ${scopeLabel}` : "Across all supported regions"} · {totalUniversities.toLocaleString("en-US")} universities total
+          </p>
         </div>
         <form className="flex gap-2" action="/universities" method="GET">
           {country ? <input type="hidden" name="country" value={country} /> : null}
@@ -103,16 +134,24 @@ export default async function UniversitiesPage({
       </div>
 
       {universities.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {universities.map((university) => (
-            <UniversityCard
-              key={university.id}
-              university={university}
-              isSaved={savedIds.has(university.id)}
-              qsRank={qsRankByUniId.get(university.id)}
-            />
-          ))}
-        </div>
+        <>
+          <p className="text-xs text-muted-foreground">
+            {q
+              ? `${universities.length} result${universities.length === 1 ? "" : "s"} for "${q}"`
+              : `Showing ${(page - 1) * PAGE_SIZE + 1}–${(page - 1) * PAGE_SIZE + universities.length} of ${totalResults.toLocaleString("en-US")}${scopeLabel ? ` in ${scopeLabel}` : ""}`}
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {universities.map((university) => (
+              <UniversityCard
+                key={university.id}
+                university={university}
+                isSaved={savedIds.has(university.id)}
+                qsRank={qsRankByUniId.get(university.id)}
+              />
+            ))}
+          </div>
+          {!q ? <Pagination currentPage={page} totalPages={totalPages} buildHref={buildPageHref} /> : null}
+        </>
       ) : (
         <EmptyState
           icon={Landmark}
@@ -120,6 +159,13 @@ export default async function UniversitiesPage({
           description="University data is added over time — check back soon, or try another region."
         />
       )}
+
+      {uncoveredCountries.length > 0 ? (
+        <p className="text-xs text-muted-foreground/70">
+          Note: {uncoveredCountries.length} check-in-progress {uncoveredCountries.length === 1 ? "country isn't" : "countries aren't"} yet mapped to a
+          region ({uncoveredCountries.join(", ")}) — included in the total above, not yet in any region tab.
+        </p>
+      ) : null}
     </div>
   );
 }

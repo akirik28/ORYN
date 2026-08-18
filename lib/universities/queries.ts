@@ -4,6 +4,58 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, TargetUniversity, University } from "@/types/database";
 import { canonicalUniversityId } from "@/lib/universities/canonical";
 
+const PAGE_SIZE = 1000;
+
+/**
+ * Every `universities.country` value, verified complete against PostgREST's own exact
+ * count — a plain `.select("country")` with no range silently truncates at PostgREST's
+ * 1000-row cap (the exact bug class `lib/acquisition/paginate.ts` exists to prevent for the
+ * script side of this codebase; this is the supabase-js-client equivalent for a server
+ * component). With 1019 live universities, an unpaginated read here would have quietly
+ * dropped the last 19 — small enough to not obviously break anything, which is exactly how
+ * this class of bug hides. Superseded (post-merge loser) rows are excluded so a duplicate
+ * identity never inflates a country's count — same rule the browse query itself applies.
+ *
+ * Kept separate from `SUPPORTED_COUNTRIES` (lib/data/country-geo.ts) deliberately: this
+ * returns the live, authoritative counts for whatever countries actually exist in the data
+ * right now; `SUPPORTED_COUNTRIES` is the region/map-display taxonomy layered on top. A
+ * country appearing here that `SUPPORTED_COUNTRIES` doesn't yet know about is a real,
+ * detectable gap (see `getUniversityCountByCountry`'s caller in `app/(app)/universities/
+ * page.tsx` for how that reconciliation surfaces), not a silent drop like before.
+ */
+export async function getUniversityCountByCountry(supabase: SupabaseClient<Database>, excludeIds: string[] = []): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  let offset = 0;
+  let expectedTotal: number | null = null;
+  let seen = 0;
+
+  for (;;) {
+    let query = supabase
+      .from("universities")
+      .select("country", { count: "exact" })
+      .order("id", { ascending: true })
+      .range(offset, offset + PAGE_SIZE - 1);
+    if (excludeIds.length > 0) query = query.not("id", "in", `(${excludeIds.join(",")})`);
+
+    const { data, count, error } = await query;
+    if (error) throw new Error(`getUniversityCountByCountry: ${error.message}`);
+    if (expectedTotal === null) expectedTotal = count ?? 0;
+
+    for (const row of data ?? []) {
+      if (!row.country) continue;
+      counts.set(row.country, (counts.get(row.country) ?? 0) + 1);
+    }
+    seen += (data ?? []).length;
+    if (!data || data.length < PAGE_SIZE) break;
+    offset += PAGE_SIZE;
+  }
+
+  if (seen !== expectedTotal) {
+    throw new Error(`getUniversityCountByCountry: assembled ${seen} rows but the server counts ${expectedTotal}. Refusing to return a partial result.`);
+  }
+  return counts;
+}
+
 export interface TargetUniversityWithDetails extends TargetUniversity {
   university: University | null;
 }

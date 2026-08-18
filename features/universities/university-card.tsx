@@ -65,7 +65,7 @@ export function UniversityCard({
             {university.student_size ? (
               <span className="flex items-center gap-1">
                 <Users className="size-3.5 shrink-0" />
-                {university.student_size.toLocaleString()} students
+                {university.student_size.toLocaleString("en-US")} students
               </span>
             ) : null}
           </div>

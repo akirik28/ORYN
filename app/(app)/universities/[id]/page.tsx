@@ -142,17 +142,17 @@ export default async function UniversityDetailPage({ params }: { params: Promise
         <StatCard
           icon={Users}
           label="Student size"
-          value={university.student_size ? university.student_size.toLocaleString() : (qsSizeLabel ?? "Unavailable")}
+          value={university.student_size ? university.student_size.toLocaleString("en-US") : (qsSizeLabel ?? "Unavailable")}
           caption={
             university.student_size && undergradCount != null && postgradCount != null
-              ? `${undergradCount.toLocaleString()} undergrad · ${postgradCount.toLocaleString()} postgrad`
+              ? `${undergradCount.toLocaleString("en-US")} undergrad · ${postgradCount.toLocaleString("en-US")} postgrad`
               : !university.student_size && qsSizeLabel
                 ? "QS size band, not an exact count"
                 : undefined
           }
         />
         <StatCard icon={GraduationCap} label="Admission rate" value={stats?.admission_rate != null ? `${Math.round(stats.admission_rate * 100)}%` : "Unavailable"} />
-        <StatCard icon={DollarSign} label="Cost of attendance" value={stats?.cost_of_attendance ? `$${stats.cost_of_attendance.toLocaleString()}` : "Unavailable"} />
+        <StatCard icon={DollarSign} label="Cost of attendance" value={stats?.cost_of_attendance ? `$${stats.cost_of_attendance.toLocaleString("en-US")}` : "Unavailable"} />
       </div>
 
       {targetRes.data ? (

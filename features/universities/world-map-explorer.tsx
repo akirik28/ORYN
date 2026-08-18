@@ -8,7 +8,7 @@ import type { PreparedFeature } from "@vnedyalk0v/react19-simple-maps";
 import { feature } from "topojson-client";
 import type { Topology, GeometryCollection } from "topojson-specification";
 import worldTopology from "world-atlas/countries-110m.json";
-import { SUPPORTED_COUNTRIES } from "@/lib/data/country-geo";
+import { SUPPORTED_COUNTRIES, countryByName } from "@/lib/data/country-geo";
 import { WORLD_REGION, type MapRegion } from "@/lib/data/regions";
 
 const worldGeo = feature(
@@ -39,6 +39,7 @@ export function WorldMapExplorer({ countryCounts, region = WORLD_REGION }: { cou
   const regionCountrySet = useMemo(() => new Set(region.countries), [region]);
   const visibleCountries = useMemo(() => SUPPORTED_COUNTRIES.filter((c) => regionCountrySet.has(c.name)), [regionCountrySet]);
   const supportedIds = useMemo(() => new Set(visibleCountries.map((c) => c.numericId)), [visibleCountries]);
+  const selectedNumericId = selected ? (countryByName.get(selected)?.numericId ?? null) : null;
 
   function selectCountry(name: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -94,6 +95,7 @@ export function WorldMapExplorer({ countryCounts, region = WORLD_REGION }: { cou
             // type doesn't state, not an unsafe guess.
             (geographies as PreparedFeature[]).map((geo) => {
               const isSupported = supportedIds.has(String(geo.id));
+              const isThisSelected = selectedNumericId !== null && String(geo.id) === selectedNumericId;
               return (
                 <Geography
                   key={geo.rsmKey}
@@ -106,18 +108,35 @@ export function WorldMapExplorer({ countryCounts, region = WORLD_REGION }: { cou
                     // `--background` that land barely separated from ocean here — exactly
                     // the "map feels empty/faded" failure mode the founder flagged. Mixed
                     // with more foreground/primary specifically for this component instead.
+                    // Four-step intensity ladder, lightest to strongest: unselected (55%
+                    // diluted) < unselected hover (40%) < selected (30%) < selected hover
+                    // (22%) — each step visibly stronger than the last, so hovering a
+                    // different country is never confusable with the persistent selected
+                    // state. Selected deliberately stops short of the FULL, undiluted
+                    // `--brand-primary` (L≈0.46): reproduced live 2026-08-18 (a founder
+                    // report of the selected country "turning black") — that exact token
+                    // reads as a clean, vivid blue everywhere else it's used (buttons, text,
+                    // small icons), but as the dominant fill of a large map region sitting
+                    // next to the much lighter "unselected" tint, undiluted read as near-
+                    // black/navy — confirmed by screenshot and a computed-style pixel check,
+                    // not just theory. A 30% dilution keeps it clearly the strongest blue on
+                    // the map without crossing into looking black.
                     default: {
-                      fill: isSupported
-                        ? "color-mix(in oklch, var(--brand-primary), var(--background) 55%)"
-                        : "color-mix(in oklch, var(--muted), var(--foreground) 10%)",
-                      stroke: "var(--card)",
-                      strokeWidth: 0.75,
+                      fill: isThisSelected
+                        ? "color-mix(in oklch, var(--brand-primary), var(--background) 30%)"
+                        : isSupported
+                          ? "color-mix(in oklch, var(--brand-primary), var(--background) 55%)"
+                          : "color-mix(in oklch, var(--muted), var(--foreground) 10%)",
+                      stroke: isThisSelected ? "var(--brand-primary)" : "var(--card)",
+                      strokeWidth: isThisSelected ? 1.5 : 0.75,
                       outline: "none",
                     },
                     hover: {
-                      fill: isSupported
-                        ? "color-mix(in oklch, var(--brand-primary), var(--background) 35%)"
-                        : "color-mix(in oklch, var(--muted), var(--foreground) 18%)",
+                      fill: isThisSelected
+                        ? "color-mix(in oklch, var(--brand-primary), var(--background) 22%)"
+                        : isSupported
+                          ? "color-mix(in oklch, var(--brand-primary), var(--background) 40%)"
+                          : "color-mix(in oklch, var(--muted), var(--foreground) 18%)",
                       outline: "none",
                     },
                     pressed: { fill: "color-mix(in oklch, var(--brand-primary), var(--background) 25%)", outline: "none" },
