@@ -27,12 +27,16 @@ export function formatTuition(amount: number, unit: string): string {
   return amount === 0 ? "Free" : `${currencyPrefix(unit)}${amount.toLocaleString("en-US", { maximumFractionDigits: 0 })}/yr`;
 }
 
-/** Three tuition shapes this product actually has, each needing different honesty framing:
+/** Four tuition shapes this product actually has, each needing different honesty framing:
  * "range" (UK/Canada/Australia/Netherlands course-fee bands) genuinely varies by programme;
  * "upper_bound" (Italy's ISEE-based public-university ceiling — see
  * acquire-university-statistics-it.ts) is a real number, but most students pay less, sometimes
- * €0, based on family income, not course choice — a materially different caveat, so it gets its
- * own copy rather than reusing "varies by course," which would be a different, wrong claim.
+ * €0, based on family income, not course choice; "approximate" (Spain's per-credit regional
+ * price × the national standard 60-ECTS full-time course load — see
+ * acquire-university-statistics-es.ts) is a real, officially-derivable figure but not itself
+ * the literal number any decree states, and doesn't capture the per-field "experimentality"
+ * variance some regions still apply. Each of these gets its own copy rather than reusing
+ * another's, which would make a different, wrong claim about WHY the figure isn't exact.
  * Anything else ("exact") is a single real figure with nothing to caveat.
  *
  * IMPORTANT: call this separately for the international figure and the domestic figure — each
@@ -45,5 +49,6 @@ export function formatTuition(amount: number, unit: string): string {
 export function tuitionQualifier(precisionState: string): { valuePrefix: string; note: string } {
   if (precisionState === "range") return { valuePrefix: "From ", note: "Varies by course. " };
   if (precisionState === "upper_bound") return { valuePrefix: "Up to ", note: "Income-based (ISEE) — most students pay less. " };
+  if (precisionState === "approximate") return { valuePrefix: "~", note: "Estimated from the region's official per-credit price. " };
   return { valuePrefix: "", note: "" };
 }

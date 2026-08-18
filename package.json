@@ -25,6 +25,7 @@
     "acquire:university-statistics-fr": "tsx scripts/acquire-university-statistics-fr.ts",
     "acquire:university-statistics-ch": "tsx scripts/acquire-university-statistics-ch.ts",
     "acquire:university-statistics-it": "tsx scripts/acquire-university-statistics-it.ts",
+    "acquire:university-statistics-es": "tsx scripts/acquire-university-statistics-es.ts",
     "acquire:qs-institution-profile": "tsx scripts/acquire-qs-institution-profile.ts",
     "enrich:student-counts-de": "tsx scripts/enrich-student-counts-de.ts",
     "enrich:student-counts-es": "tsx scripts/enrich-student-counts-es.ts",
@@ -39,7 +40,8 @@
     "audit:admissions-quality": "tsx scripts/audit-admissions-quality.ts",
     "resolve:university-duplicates": "tsx scripts/resolve-university-duplicates.ts",
     "reconcile:custom-vocabulary": "tsx scripts/reconcile-custom-vocabulary.ts",
-    "acquire:university-images": "tsx scripts/acquire-university-images.ts"
+    "acquire:university-images": "tsx scripts/acquire-university-images.ts",
+    "report:university-images": "tsx scripts/university-image-coverage-report.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",

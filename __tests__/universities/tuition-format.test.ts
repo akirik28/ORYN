@@ -35,6 +35,14 @@ describe("tuitionQualifier", () => {
     expect(q.note).not.toContain("course");
   });
 
+  test("approximate: '~' prefix, per-credit-derivation note — distinct from range and upper_bound", () => {
+    const q = tuitionQualifier("approximate");
+    expect(q.valuePrefix).toBe("~");
+    expect(q.note).toContain("per-credit");
+    expect(q.note).not.toContain("course");
+    expect(q.note).not.toContain("Income-based");
+  });
+
   test("exact (and any other value) gets no prefix and no note", () => {
     expect(tuitionQualifier("exact")).toEqual({ valuePrefix: "", note: "" });
   });

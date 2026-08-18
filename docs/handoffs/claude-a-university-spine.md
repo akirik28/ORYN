@@ -1115,15 +1115,15 @@ below), Netherlands (**done, 13/13** — statutory fee scalable, institutional f
 see below), France (**done, 19/30 standard universities** — 11 confirmed to have a genuinely
 different, decree-independent fee status, see below), Switzerland (**done, 7/11** — ETH-domain
 federal policy + per-canton research, see below), Italy (**done for this pass, 4/38** — a real
-ISEE-income-based framework, not a flat number, see below). **Next: coverage-driven, not
-geography-driven** — run `npm run report:universities` (now includes a per-country tuition
-table) and prioritize by missing-count × likelihood of a scalable source, not a fixed list.
-As of right after Italy: Spain (29 missing — a promising lead already flagged in the Canada
-script's own header, `ciencia.gob.es`, never verified), China (64), South Korea (31), Malaysia
-(25), Japan (22) are the largest zero-coverage pools; India (37) and the US (131, shown as 0 in
-the tuition table by design — see the report's own note — already has 128/131 via the separate
-`cost_of_attendance` column) are lower priority per the founder's own sequencing. Reorder for
-efficiency if a better bulk source turns up elsewhere, same
+ISEE-income-based framework, not a flat number, see below), Spain (**done for this pass,
+10/29** — per-region ECTS-credit pricing, see below). **Coverage-driven, not geography-driven,
+per the founder's own instruction** — run `npm run report:universities` (now includes a
+per-country tuition table) before picking each next country. As of right after Spain: China
+(64 missing), South Korea (31), Malaysia (25), Japan (22), Russia (21) are the largest
+zero-coverage pools; India (37) and the US (131, shown as 0 in the tuition table by design —
+see the report's own note — already has 128/131 via the separate `cost_of_attendance` column)
+are lower priority per the founder's own sequencing. Reorder for efficiency if a better bulk
+source turns up elsewhere, same
 as the German/Spanish student-count pipelines below already did. Per-country pipeline:
 discover → acquire → normalize → match → fixture → validate → `--plan` → `--apply` → verify,
 same shape as `enrich-student-counts-de.ts`/`-es.ts`. Source hierarchy: official university fees
@@ -1620,6 +1620,43 @@ US shows 0 there by design (its cost data lives in the separate `university_stat
 cost_of_attendance` column, 128/131 covered) rather than as a real gap. This is the tool the
 founder's new coverage-driven-selection instruction expects to be run before picking each next
 country — see "Next" above for what it showed right after Italy.
+
+**Spain — 10/29, done for this pass, the first country picked by the coverage report's ranking
+rather than a fixed list.** `ciencia.gob.es` (the lead flagged in passing in the Canada script's
+own header, never verified until now) does not itself publish a tuition dataset — checked
+directly. The real pattern: Spanish public tuition is priced per ECTS credit, by REGION (one of
+17 comunidades autónomas), not by institution and not nationally — every public university in a
+given region charges the same per-credit price, set by that region's own annual decree. A
+Spanish Grado is a standardised 240 ECTS over 4 years (60 ECTS/year, government-mandated, not a
+guess), so `credit price × 60` is a legitimate annual estimate — written as `precision_state:
+"approximate"` (another existing, already-allowed check-constraint value, same "check the
+schema before assuming a migration" discipline as Italy's `upper_bound`). Two regions resolved,
+both confirmed CURRENT for 2026-2027 specifically, not an older year silently carried forward:
+**Comunidad de Madrid** (€18.46/credit, DECRETO 43/2022, 5 public universities in this spine)
+and **Catalunya** (€17.69/credit, DECRET 96/2026 de 16 de juny — a 2026-dated decree, doubly
+confirmed via the Generalitat's own announcement AND University of Lleida's own page, both
+independently stating the identical figure; Catalunya has also recently consolidated to one
+flat rate for every Grado field, simpler than Madrid, which still varies by field — the Madrid
+figure used is the base/lowest tier). 20 metric rows written in one `--apply` pass.
+
+**A real regional bonification found, correctly NOT modelled, worth recording since it changes
+what the sticker price means**: Andalucía subsidises 99% of the cost of credits passed on first
+enrolment — a real, large discount programme. Andalucía was not written this pass regardless,
+not because of the bonification but because the only credit-price figure found (€12.62) was
+dated 2025-26 with no confirmation it still holds for 2026-27 — the same "verify by academic
+year" discipline that caught Leiden's near-miss in the Netherlands pass. Valencia (decree
+confirmed to exist, no specific figure surfaced) and every other region not attempted. 6 private
+universities in this spine's Spain list (Comillas, IE University, Universidad Europea, Universitat
+Ramon Llull, Universitat Internacional de Catalunya, University of Navarra) are not subject to
+any regional decree at all and were not researched — queued.
+
+**UI**: added a fourth `tuitionQualifier()` shape, `"approximate"` → "~€X/yr" with "Estimated
+from the region's official per-credit price," kept distinct from `"range"`'s "varies by course"
+and Italy's `"upper_bound"`'s "income-based" wording — each says something different and true,
+not a generic "not exact" catch-all. Verified live: Complutense Madrid ("~€1,108/yr"), Universitat
+de Barcelona ("~€1,061/yr"), both domestic and international identical (no differentiation found
+in either region's decree this pass, stated plainly in notes rather than guessed at). Full gate
+green (`tsc`/lint/821 tests/build) after.
 
 After tuition progresses meaningfully: (1) India student counts (~33 remaining, AISHE >
 annual report > official institutional stats > official facts page — see the India dead-end
