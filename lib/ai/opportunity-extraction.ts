@@ -22,6 +22,7 @@ export const OpportunityCandidateSchema = z.object({
     "entrepreneurship",
     "hackathon",
     "academic_program",
+    "online_program",
     "conference",
     "student_program",
   ]).nullable(),

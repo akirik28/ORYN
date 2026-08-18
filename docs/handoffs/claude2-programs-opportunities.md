@@ -135,7 +135,80 @@ after this batch.
 strictest "page-accessible + 2026-confirmed" tier — including the large
 "Verified - official/provider search evidence" tier (102 records, ambiguous whether that
 means a fetched page or a search snippet — needs its own per-record read before trusting) and
-the "provider page accessible; exact naming needs normalization" tier (20 records). Next
-batch should work through those, then move to `05_ORYN_Online_Programs_and_Internships.xlsx`
-and `06_ORYN_Competitions_and_Awards.xlsx` (structure not yet confirmed — apply the same
-dedupe-by-id check immediately after parsing, before trusting any count from either file).
+the "provider page accessible; exact naming needs normalization" tier (20 records).
+
+## Batch 2: `05_ORYN_Online_Programs_and_Internships.xlsx` + a new `online_program` category
+
+Prioritized this file next over mining deeper into `04` because `internship`, `scholarship`,
+`online_program`, and `fellowship` were still all at zero — breadth into empty categories is
+higher-value right now than more depth in one already-improved category. This corpus is much
+smaller (README states 13 verified identity / 3 "2026 confirmed" / 1 review — small enough to
+read the whole file in one `read_file_content` call, no pagination/chunking needed) and its
+sections legitimately overlap (a few ids appear in both the full "Verified_Records" list and
+the "Current_2026...Confirmed" subset list — intentional, not the same duplicate-emission bug
+as `04`).
+
+Hand-reading found the same per-record unreliability pattern as batch 1, worse in one respect:
+several records marked "Verified - official/provider search evidence" have a
+`verification_note` that says outright *"Direct page retrieval was blocked or failed; identity
+was corroborated with an official/provider search result"* — i.e. the corpus's own notes admit
+the page was never actually fetched, only search-corroborated, even though it's still labeled
+"Verified". Excluded all such records from this batch on that basis (Inspirit AI's own
+evidence text also independently confirmed this was right — it cited Spring/Summer **2025**
+application deadlines despite being tagged "2026 cycle confirmed"). Same for records whose
+`identity_verification_status` says "direct retrieval failed" outright (Boğaziçi BOUN 101,
+CTY Online, Wall Street 101 as captured, SIP as captured) — excluded from the corpus's own
+data, but see below.
+
+**New this batch: live re-verification, not just trusting or discarding the corpus.** For the
+"retrieval failed" records with real-looking evidence (BOUN 101, CTY, SIP, Wall Street 101,
+Inspirit AI), fetched the official URL directly with WebFetch instead of just excluding them.
+Results: BOUN 101's exact URL now 404s (confirms exclusion was correct — it was the dead 2024
+course page); CTY blocked the fetch (403, left excluded, unresolved); **SIP, Wall Street 101,
+and Inspirit AI all fetched successfully with genuinely current 2026 data** (SIP's live dates
+even cross-validated the corpus's own secondary-source date claim exactly: June 22 – Aug 7,
+2026). Also live-verified three "page accessible" records with spot-checkable date claims
+(Özyeğin, Columbia Online Summer, Stanford ULO) rather than trust the tag at face value —
+worth flagging: **the same URL fetched twice with differently-worded prompts returned
+different (both individually accurate) date ranges for Stanford's multi-term ULO page**, since
+the page lists Fall/Spring/Summer terms together and the extraction sampled different terms
+each time. Resolved with a third, explicit fetch ("list every term separately") rather than
+picking one arbitrary answer — the record ended up representing the Fall 2026-2027 term with
+`cycle_status: closed`, since that term's own application deadline (July 27, 2026) had already
+passed as of the verification date (2026-08-18). Records live-verified this way use
+`researched_at: 2026-08-18` (today, when I actually fetched them) rather than the corpus's
+`2026-08-15`, to keep provenance honest about who fetched what when.
+
+Also caught mid-batch: **`UNITED NATIONS ONLINE — UNO 2026`'s own name is misleading.** Live
+fetch confirmed this is a private company (Stanley Prep) program run in partnership with
+WFUNA, not an official UN program. Kept the record (it's real and legitimately valuable) but
+set `organization: "Stanley Prep"` (not "United Nations") and made the description explicit
+about the non-affiliation — an easy place to have accidentally published a materially
+misleading claim to a family.
+
+**Schema change**: none of the "online" records fit any existing `opportunity_category` value
+— the closest, `academic_program`, doesn't distinguish "fully online, from anywhere" from
+"in-person, on a campus," a real distinction for cost/travel/visas, and the founder's own spec
+names `ONLINE_PROGRAM` as a distinct target category. Since `opportunities` is this branch's
+own schema territory (not spine's), added migration
+`0045_opportunity_online_program_category.sql` (`ALTER TYPE opportunity_category ADD VALUE`)
+and updated the four places the category enum is hardcoded in app code:
+`types/database.ts`'s `OpportunityCategory`, `lib/opportunities/ingest.ts`'s
+`VALID_CATEGORIES`, `lib/opportunities/matching.ts`'s `CATEGORY_DIMENSIONS` (TypeScript's
+`Record<OpportunityCategory, ...>` requiring every key caught this one at typecheck — added
+`online_program: ["intellectual_curiosity", "academics"]`, mirroring `academic_program`), and
+`lib/ai/opportunity-extraction.ts`'s Zod schema. No UI change needed — this branch has no
+category-filter or category-label UI yet (that work is on the separate `oryn/product-ux`
+branch, not merged into this one), and the opportunity card doesn't render a raw category
+string anywhere.
+
+**Batch 2 result** (`data/research/opportunities/drive_batch2_2026-08-18.jsonl`, 9 records, all
+9 accepted, 0 duplicates): `opportunities` 24 → 33. Category breakdown after: competition 4,
+summer_program 16, entrepreneurship 3, research 3 (was 1 — Özyeğin, SIP), online_program 6
+(new), internship 1 (new — InvestIN). `scholarship` and `fellowship` still at zero — not
+covered by this file. Full lint/typecheck/725-test/build gate re-run clean after this batch.
+
+**Next**: `06_ORYN_Competitions_and_Awards.xlsx` (structure not yet confirmed — apply the same
+dedupe-by-id check immediately after parsing, and the same discipline of reading
+`verification_note`/evidence text by hand rather than trusting the status column, before
+trusting any count).

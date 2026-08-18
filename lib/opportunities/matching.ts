@@ -48,6 +48,7 @@ const CATEGORY_DIMENSIONS: Record<OpportunityCategory, ProfileDimension[]> = {
   entrepreneurship: ["entrepreneurship", "execution_project_depth"],
   hackathon: ["execution_project_depth", "entrepreneurship"],
   academic_program: ["intellectual_curiosity", "academics"],
+  online_program: ["intellectual_curiosity", "academics"],
   conference: ["intellectual_curiosity", "career_exploration"],
   student_program: ["career_exploration"],
 };

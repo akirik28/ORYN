@@ -59,7 +59,7 @@ export type RequirementCategory =
   | "supplemental_requirement"
   | "international_requirement";
 export type RequirementEvaluationStatus = "met" | "likely_met" | "not_met" | "unknown" | "needs_manual_review";
-export type OpportunityCategory = "competition" | "research" | "internship" | "summer_program" | "fellowship" | "scholarship" | "volunteering" | "entrepreneurship" | "hackathon" | "academic_program" | "conference" | "student_program";
+export type OpportunityCategory = "competition" | "research" | "internship" | "summer_program" | "fellowship" | "scholarship" | "volunteering" | "entrepreneurship" | "hackathon" | "academic_program" | "online_program" | "conference" | "student_program";
 export type OpportunityStatus = "active" | "expired" | "under_review" | "disabled";
 export type SavedOpportunityStatus = "saved" | "applied" | "not_interested";
 export type ProfileDimension = "academics" | "intellectual_curiosity" | "leadership" | "research" | "entrepreneurship" | "community_impact" | "awards_distinction" | "career_exploration" | "execution_project_depth";
