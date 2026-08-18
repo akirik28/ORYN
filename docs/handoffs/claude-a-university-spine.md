@@ -49,12 +49,22 @@ current state, not as a session log.
 - Anthropic: `check:integrations` reports **"insufficient credit balance"** (billing, HTTP
   400), not a missing-key error — a founder billing action, not a code problem. Blocks
   AI-structured admissions/requirement extraction.
-- OpenAlex: as of 2026-08-17 ~14:30 UTC, returning HTTP 429 with a JSON body reading
-  `"Insufficient budget... $0 remaining. Resets at midnight UTC", retryAfter: 34062` — this
-  is a materially different failure than a plain rate limit; worth the founder's attention
-  since prior docs describe OpenAlex as unconditionally free/keyless. Blocks
-  `research_topics_top5` acquisition (currently 30/1010, unchanged this pass). Not yet
-  retried this session (retryAfter window hadn't elapsed as of the last check).
+- **OpenAlex — recovered, full-spine re-run done, 2026-08-18.** Was HTTP 429 (`"Insufficient
+  budget... $0 remaining. Resets at midnight UTC"`) as of 2026-08-17 ~14:30 UTC; `check:
+  integrations` later showed it healthy again. Re-ran `acquire:universities -- --from-db`
+  (all 1019 live universities, not just the 30-roster pilot): `ror ok=1018 failed=1`,
+  `openalex ok=940 failed=1` — circuit breaker never tripped this time. `research_topics_top5`
+  now resolved for 923/925 (was 30/1010). Reviewed with `--plan` before writing (conservative
+  precedence held throughout: ~70 `city` cross-registry disagreements and 4 `research_topics_top5`
+  same-date-different-order conflicts correctly withheld, never guessed), then `--apply`:
+  **904 fact writes, 4556 cross-registry external ids upserted.** Verified live via direct
+  PostgREST count (`university_profile_metrics` where `metric_code=eq.research_topics_top5`:
+  925 rows) rather than trusting the script's own log alone. `official website` coverage now
+  91.6% (was lower pre-this-pass). `npm run check:university-spine-health` still reports its
+  one known, pre-existing, expected FAIL (the 9 P0-merged pairs still share a
+  `canonical_entity_id` at the `universities` row layer — blocked on migration 0043, unrelated
+  to this run, not a regression). Regenerated fixture committed (matches this repo's own
+  established "regenerate full-spine fixture, apply the delta" pattern from `9aef391`).
 - **HESA (UK national student-count dataset) is Cloudflare bot-protected** — `HTTP 403` with
   `cf-ray`/`__cf_bm` challenge headers on both the main site and direct CSV asset URLs
   (`hesa.ac.uk/data-and-analysis/sb271/figure-*.csv`), confirmed via `curl` with a realistic
