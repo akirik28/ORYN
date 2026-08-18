@@ -1,0 +1,21 @@
+/** Suggestions only — common volunteering cause areas. */
+export const CAUSE_AREA_SUGGESTIONS: string[] = [
+  "Education",
+  "Environment",
+  "Health",
+  "Poverty and Homelessness",
+  "Animal Welfare",
+  "Human Rights",
+  "Disaster Relief",
+  "Elderly Care",
+  "Youth Mentorship",
+  "Disability Support",
+  "Mental Health",
+  "Food Security",
+  "Refugee Support",
+  "Community Development",
+  "Arts and Culture",
+  "Gender Equality",
+  "Public Health",
+  "Civic Engagement",
+];
