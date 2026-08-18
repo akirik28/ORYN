@@ -777,12 +777,22 @@ read them directly (the same two conditions that justified `student_size`).
 ## Next (queued, not yet started)
 
 1. Duplicate-id cross-registry check (see Phase 7 above) — a standalone query, not yet run.
-2. Phase 11 — UI data-readiness audit, partially done: QS ranking display was missing from
-   the university detail page entirely (only the Explorer card showed it) and is now fixed —
-   see the ranking-display commit. Still not checked: whether `admissions_url`/
-   `application_system` and the new undergraduate/postgraduate student counts render anywhere
-   a student would actually see them, and whether the audit generalizes across world regions
-   (only spot-checked via Bocconi/Italy so far, not a systematic multi-region pass).
+2. ~~Phase 11 — UI data-readiness audit~~ — **done 2026-08-18.** QS ranking display fix (see
+   the ranking-display commit) was already done. Checked the rest by reading
+   `app/(app)/universities/[id]/page.tsx` directly rather than guessing: `admissions_url`/
+   `application_system` already rendered fine when present (verified live: MIT's page shows
+   an "Admissions" link). But `university_profile_metrics` — the table `research_topics_top5`
+   (923/925 coverage after this pass's OpenAlex re-run), `undergraduate_students`, and
+   `postgraduate_students` all live in — **was never queried by this page at all**. All of
+   that acquired, sourced data was invisible to every student, on every university, the whole
+   time. Fixed: added the metrics fetch to the page's existing `Promise.all`, added a
+   "Research strengths" section (topic chips + a `SourceBadge` pointing at the OpenAlex
+   institution page — reuses the existing SourceBadge component, no new one), and an
+   undergrad/postgrad caption under the "Student size" stat when both are present. Verified
+   live against a university with each: University of Eastern Finland (real research-topic
+   chips + correct source attribution) and MIT ("4,535 undergrad · 7,351 postgrad" under
+   11,816 total). Both sections render nothing when the data's absent — most universities
+   still don't have it, which is fine, matches every other stat on this page. Full gate green.
 3. ~~Phase 6 — OpenAlex retry~~ — **done 2026-08-18**, see "Current state" above.
    `research_topics_top5` 30/1010 → 923/925.
 4. Resume `acquire:admissions` once the Tavily plan-limit blocker (see "Current state") is
