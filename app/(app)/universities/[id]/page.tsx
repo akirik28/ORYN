@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { MapPin, Users, DollarSign, GraduationCap, ExternalLink, Trophy } from "lucide-react";
+import { MapPin, Users, DollarSign, GraduationCap, ExternalLink, Trophy, Target, TrendingUp } from "lucide-react";
 import { SUBJECT_LABELS } from "@/lib/programs/subject-labels";
 import { requireUser, getCurrentProfile } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
@@ -246,6 +246,8 @@ export default async function UniversityDetailPage({ params }: { params: Promise
         ) : (
           <StatCard icon={DollarSign} label="Cost of attendance" value="Unavailable" />
         )}
+        <StatCard icon={Target} label="Test scores" value={testScoreRangeLabel(stats)} />
+        <StatCard icon={TrendingUp} label="Graduation rate" value={stats?.graduation_rate != null ? `${Math.round(stats.graduation_rate * 100)}%` : "Unavailable"} />
       </div>
 
       {targetRes.data ? (
@@ -403,6 +405,14 @@ function groupProgramsBySubject(programs: UniversityProgram[]): [string, Univers
     if (labelB === otherLabel) return -1;
     return itemsB.length - itemsA.length;
   });
+}
+
+/** SAT preferred over ACT when both are on file — no ranking claim, just a stable pick so
+ * the card doesn't flip between the two across universities that report both. */
+function testScoreRangeLabel(stats: { sat_range_low: number | null; sat_range_high: number | null; act_range_low: number | null; act_range_high: number | null } | null | undefined): string {
+  if (stats?.sat_range_low != null && stats?.sat_range_high != null) return `SAT ${stats.sat_range_low}–${stats.sat_range_high}`;
+  if (stats?.act_range_low != null && stats?.act_range_high != null) return `ACT ${stats.act_range_low}–${stats.act_range_high}`;
+  return "Unavailable";
 }
 
 function StatCard({ icon: Icon, label, value, caption }: { icon: typeof Users; label: string; value: string; caption?: string }) {
