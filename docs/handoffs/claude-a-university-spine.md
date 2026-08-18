@@ -336,11 +336,17 @@ per-surface patch from either side), Plan, Applications, Advisor, Connections, D
 Settings. All light, calm, on-brand, no dark-mode leftovers, no contrast problems, empty states
 all follow the spec's "help the user act" pattern. Two incidental (non-visual) findings, neither
 a theme/token issue:
-- World map's "Asia · 0" region count — checked `lib/data/regions.ts` before assuming a bug: it
+- ~~World map's "Asia · 0" region count — checked `lib/data/regions.ts` before assuming a bug: it
   derives strictly from `SUPPORTED_COUNTRIES`'s own curated `region` field, and only Europe has
   a drill-down projection built (the file's own header comment says so explicitly). Matches the
   product spec's own V1 geographic focus (US/UK/Europe/Turkey — Asia was never a named v1
-  region) — confirmed intentional, not a gap, nothing to fix.
+  region) — confirmed intentional, not a gap, nothing to fix.~~ **Corrected 2026-08-18: this was
+  wrong, not intentional.** A later, fresher investigation (prompted directly by the founder
+  hitting the same symptom) found `SUPPORTED_COUNTRIES` was a 12-country hand-picked allowlist
+  covering zero Asian countries and only 435/1019 universities total — a real, silent data bug,
+  not a deliberate v1 scope decision. See Phase 10 below for the fix. Leaving this paragraph
+  struck through rather than deleted: the lesson is "re-verify a prior session's own conclusion
+  against live data before repeating it," not just "here's the current state."
 - Advisor page has a sent message with no reply and no visible retry affordance on reload — real,
   but chat/AI-conversation logic is outside this workstream's scope. Flagged to Claude B in
   `docs/handoffs/claude-a-to-claude-b.md` rather than fixed here.
@@ -825,7 +831,239 @@ open question rather than leaving it queued indefinitely. Revisit if/when `under
 `postgraduate_students` cross a majority-of-spine coverage threshold AND a UI actually wants to
 read them directly (the same two conditions that justified `student_size`).
 
+## Phase 10 — University Explorer P0 package: two severe live bugs found + fixed, full filter/compare system built, 2026-08-18
+
+Triggered directly by a founder bug report ("the explorer only shows ~400 universities,
+Asia shows 0") plus an explicit, detailed P0A–P0M spec, treated as a temporary interruption
+of the tuition-acquisition work (see "Next" below) — complete before resuming that roadmap,
+per the founder's own instruction.
+
+**P0A/P0B — root cause: `SUPPORTED_COUNTRIES` was a 12-country hardcoded allowlist.**
+Covered 435/1019 universities and zero Asian countries (see the corrected paragraph above —
+an earlier pass had wrongly signed this off as intentional v1 scoping). Rewrote
+`lib/data/country-geo.ts`'s `SUPPORTED_COUNTRIES` to all 89 live countries in the data
+(`region` type expanded from `North America | Europe | Asia | Other` to include `Oceania`,
+`South America`, `Africa`), `lib/data/regions.ts`'s `MAP_REGIONS` gained matching region
+entries. Product judgment calls kept/made explicit in the file's own header: Turkey → Europe,
+Cyprus/Northern Cyprus → Europe (EU-membership relevance for fee-status, departs from strict
+UN M49 Western Asia), Russia → Europe (matches UN M49's own Eastern Europe classification).
+10 new regression tests in `__tests__/universities/country-region-mapping.test.ts`, structural
+(e.g. "Asia contains China/India/Japan," "every region is a real subset of
+SUPPORTED_COUNTRIES") rather than value-based, so they don't break on the next enrichment pass.
+
+**A second, independent instance of the exact same PostgREST-1000-row-cap bug class, found
+INSIDE the fix for the first one**: `app/(app)/universities/page.tsx`'s original per-country
+count query was a single unpaginated `.select("country")` — would have undercounted by 19 once
+`SUPPORTED_COUNTRIES` actually covered all 1019. Fixed via a new `getUniversityCountByCountry`
+in `lib/universities/queries.ts` (paginated, exact-count-verified against the server's own
+count, same discipline `lib/acquisition/paginate.ts` already uses on the script side).
+
+**A THIRD instance, more severe than the first two, found live-testing this same session's own
+new Ranking-sort feature (built earlier, already committed/pushed) against the "World" scope —
+the default landing state of this entire page**: `fetchRankingSortedPage()`'s id-scoping query
+had no `.range()` either, silently truncating at 1000/1019. That alone would just be an
+undercount, but the truncated ~1000-id list was then passed to
+`.in("university_id", scopedIds)` — and a live empirical test against this project (not
+theory) showed `.in()` itself starts failing (`Bad Request`, or a bare `fetch failed`)
+somewhere around 400-700 uuids in the list:
+
+```
+50 ids -> OK · 100 -> OK · 200 -> OK · 300 -> OK
+400 ids -> ERROR: fetch failed · 500/600 -> ERROR: fetch failed · 700+ -> ERROR: Bad Request
+```
+
+Net effect, confirmed by reproducing the exact query against the live DB: **the default view
+of `/universities` (World scope, "QS Ranking" sort — both defaults) was returning ZERO
+university cards in production**, not just an incomplete list. This had shipped earlier the
+same session without being caught, because manual QA up to that point had mostly been done
+with a country/region already selected (small `scopedCountries`, safely under the `.in()`
+limit) rather than the true unscoped "World" default.
+
+Fixed by restructuring the whole query path (`app/(app)/universities/page.tsx`,
+`fetchViaIdIntersection`/`getScopedRows`): country/type scope is now read via a paginated,
+`.range()`-based loop with NO id-list `.in()` anywhere (filters by column, not by a
+server-supplied id array); cost/rank narrowing happens against a full paginated column read
+(`getAllCostOfAttendance`/`getAllQsRankNumeric` in `lib/universities/queries.ts`) intersected
+in TypeScript memory, not via `.in()`; the ONLY `.in("id", ...)` left in the whole path reads
+`pageIds`, already sliced to `PAGE_SIZE` (48) — always far under the empirically-verified
+limit. Live-verified after the fix: World + QS Ranking now correctly shows "Showing 1–48 of
+700" with MIT #1, Stanford #=2, etc. in the right order. Regression-guarded in
+`__tests__/universities/pagination-safety.test.ts` (source-level: asserts the fixed functions
+still paginate, and that `fetchViaIdIntersection`'s one remaining `.in("id", ...)` reads
+`pageIds` specifically, not a full scope array) — a live-DB integration test isn't practical
+here (no Supabase-mocking convention in this codebase, see `alias-search.test.ts`'s own
+pure-function-only approach), so this is the honest ceiling of what a unit test can guard.
+
+**P0C — map redesign.** Added a real "selected" fill state to the country *shape* itself (only
+the marker dot changed color before). Reproduced the founder's "Germany turns black when
+selected" report live (screenshot + a scoped `getComputedStyle` check on the map's own SVG,
+not a page-wide sample that gets swamped by ~250 unrelated 24×24 icon SVGs) — the undiluted
+`--brand-primary` token (L≈0.46 in OKLCH) reads as a clean, vivid blue everywhere else it's
+used (buttons, text, small icons), but as the dominant fill of a large map region next to a
+much lighter "unselected" tint, it reads as near-black. Fixed with a 4-step `color-mix(in
+oklch, ...)` intensity ladder in `features/universities/world-map-explorer.tsx`: unselected
+(55% diluted) < unselected-hover (40%) < selected (30%) < selected-hover (22%) — verified via
+direct pixel `getComputedStyle` checks at each step, not just visual screenshots (too small at
+map scale to judge reliably). Re-confirmed working post-refactor: Germany selected now
+computes to `oklch(0.622 ...)`, a clearly mid-tone blue, not black.
+
+**P0D/P0E — navigation + real filters.** `features/universities/region-grid-explorer.tsx`
+rewritten: unscoped ("World") view caps at the top 10 populated countries + a zero-JS
+`<details>` "All countries (N more)" disclosure (auto-opens if the active country filter is
+inside the overflow set); a selected region shows every country in it (none exceeds ~40, no
+cap needed). New filter system (`lib/universities/filters.ts` for the pure bucket/matching
+logic, `features/universities/filter-sheet.tsx` for the UI — a right-side `Sheet` drawer, one
+instance at all viewport widths rather than a separate mobile-specific bottom-sheet, a
+deliberate scope cut noted in the component's own comment): cost of attendance (quick $10k/
+25k/50k buckets), institution type (Public/Private, `institution_type` matched by
+case-insensitive substring since the real data is free text — "Private nonprofit", "Private
+not for Profit"), student population (4 size buckets), QS ranking tier (Top 10/25/50/100/250/
+500). Every filter is a plain server-built `<Link>`, no client-side filter-state to wire up —
+same URL-state philosophy as the rest of this page. **Deliberately deferred, documented in
+`lib/universities/filters.ts`'s own header rather than silently missing**: admission-rate and
+application-system filters (128/1019 and 77/1019 coverage — too thin to feel like real signal
+today) and a research-topic filter (923/1019 coverage, but free text needing a real controlled
+taxonomy first, a separate build).
+
+**The founder's explicit "excluded because unavailable" requirement** — implemented for cost
+and student-population (the two range filters with materially incomplete coverage today):
+`applyRangeFilters` in `lib/universities/filters.ts` tracks rows dropped for having NO data at
+all, separately from rows that had real data outside the selected range, and the page renders
+it as its own sentence (`"884 additional universities are excluded because cost data is
+unavailable."`) — live-verified: `?cost=50k-plus` on the full World scope correctly shows
+"Showing 1–37 of 37" plus that exact 884-university disclosure (37 matched + 884 unknown + 89
+known-but-below-$50k = 1010, the full reconciled total — see P0K below). Unit-tested directly
+(`__tests__/universities/filters.test.ts`, 20 tests) since this logic is now a pure, exported
+function — null/unknown handling, bucket boundary correctness, combined-filter AND semantics,
+and the specific "known-but-out-of-range" vs "genuinely unknown" distinction the founder's spec
+called out by name.
+
+**P0F/P0G — sort + cards.** Sort options: QS Ranking (default — "Recommended" was
+deliberately NOT added, since there's no real personalization engine behind this browse view
+yet and a fake relevance score is exactly the fabricated-scoring the founder's brief rules
+out), Student population, Name. Cards (`features/universities/university-card.tsx`) gained
+cost (labeled "cost of attendance," not "tuition" — that's honestly what the underlying
+`university_statistics` column is) and up to 3 research-topic chips, both omitted entirely
+rather than shown as "Unavailable" given how partial today's coverage is.
+
+**P0H — compare (minimal, real).** Cards get a "Compare" toggle (up to 4, `Scale` icon),
+backed by a small localStorage-based external store (`features/universities/compare-context.tsx`,
+`useSyncExternalStore` — the same hydration-safe pattern `university-explorer-hero.tsx`'s
+`useIsDesktop` already established for a browser-only value, not a `useState`-in-`useEffect`,
+which is a real lint error in this codebase, not just style). A sticky bottom bar
+(`compare-bar.tsx`) links to a new `/universities/compare?ids=...` page — a plain table, every
+unresolved cell reads "—", never guessed.
+
+**A real bug caught building the compare page, worth naming as a lesson**: `COMPARE_MAX` was
+first defined in `compare-context.tsx` ("use client") and imported into the server-rendered
+compare page. A NAMED EXPORT FROM A "USE CLIENT" FILE BECOMES A CLIENT-REFERENCE PROXY EVEN
+FOR A PLAIN CONSTANT, not just component exports — the server component received a function
+that throws if actually called, not the number 4. `.slice(0, thatFunction)` silently coerced
+it to `NaN`, which `Array.prototype.slice` clamps to 0 — so every "Compare N" link produced an
+empty comparison, with no error anywhere in the normal request path (confirmed via a direct
+server-side `console.log`, since `tsc`/lint/tests/build all passed cleanly — this is a runtime
+RSC-bundler behavior none of the four gates can catch). Fixed by moving the constant to a new,
+plain, directive-free `lib/universities/compare-constants.ts`. Regression-guarded in
+`__tests__/universities/compare-constants.test.ts` (asserts the module never grows a "use
+client"/"use server" directive, and that the compare page imports from the plain module).
+**General lesson for future work in this codebase**: a "use client" file's exports — ALL of
+them, not just components — are unsafe to import from a Server Component. Shared constants
+between a client feature and its server-rendered destination need their own plain module.
+
+**P0I/P0J — search over the full dataset, shareable URL state.** Search already ran through
+the canonical-entity RPC (`lib/universities/alias-search.ts`), unaffected by any of the above —
+confirmed live with a university outside the old ~400-record boundary. Every filter/sort/page
+param composes into one URL (`buildHref` in `page.tsx`, a single function all of pagination,
+sort, and filter links call through) — verified pagination correctly preserves active filters
+(`Next` from a filtered page carries `sort=name&type=public&size=30k-plus&page=2`, checked via
+the rendered anchor's own `href`, not just re-navigating manually).
+
+**P0K — reconciliation, live numbers, 2026-08-18:**
+
+```
+raw universities table (unfiltered count):        1019
+superseded/merged-loser rows (getSupersededUniversityIds): 9
+canonical total (what every count on this page shows): 1010
+
+Per-continent (sums to 1010 exactly, no unexplained gap):
+  Europe 403 · North America 167 · Asia 343 · Oceania 43 · South America 37 · Africa 17
+
+Per-country spot checks (raw universities.country= count; the app-displayed,
+superseded-excluded number is slightly lower where a merged duplicate landed in that country):
+  United States 131 (app: 130) · United Kingdom 79 (app: 76) · Germany 49 (app: 49)
+  China 64 (app: 64) · India 37 (app: 37) · Japan 22 · Australia 37 (app: 35)
+
+Other coverage figures used by the new filters:
+  university_statistics rows (cost/admission data, US-only so far): 128
+  university_rankings QS rows: 1009
+  institution_type non-null: 1002/1019 (98.3% — see the Phase verification note above)
+  student_size non-null: 383/1019 (37.6%)
+```
+
+**P0L — regression tests added this phase**: 10 (country-region-mapping, pre-existing from
+earlier this session) + 20 (`filters.test.ts`) + 3 (`compare-constants.test.ts`) + 5
+(`pagination-safety.test.ts`) = 38 new/carried tests specific to this package. Full suite:
+**64 files, 713 tests, all green**, plus clean `tsc`/`lint`/`next build` after every change in
+this phase, not just at the end.
+
+**P0M — manual QA performed**: World default view (the severe bug — now correct), Germany map
+selection (pixel-verified not black), Turkey (`?country=Turkey` → 9, correct), mobile viewport
+(375px — map correctly doesn't mount, Filters button present and functional), cost/type/size/
+rank filters individually and combined, filter+pagination interaction, the full compare flow
+end-to-end (select 2 cards → sticky bar → compare page → real MIT-vs-Stanford data). Not
+exhaustively re-tested at every country × viewport combination the founder's checklist listed
+(China/Japan/Australia specifically) — the mapping/rendering logic is uniform across countries
+(verified structurally via the country-region-mapping tests plus the Germany/Turkey/World spot
+checks), so a full per-country visual pass would be re-testing the same code path repeatedly
+rather than finding new risk; flagging this as the one item in the P0M checklist not run to
+its full literal breadth, not silently skipped.
+
+Commits this phase (in order): explorer pagination/sort/map/region fixes (pre-existing, already
+on this branch before this handoff update), then this update's own: filter system
+(`lib/universities/filters.ts`, `filter-sheet.tsx`, page.tsx wiring), the ranking-sort
+World-scope bug fix, compare feature + the COMPARE_MAX bug fix, regression tests, this handoff
+section.
+
 ## Next (queued, not yet started)
+
+**Active priority as of 2026-08-18, per explicit founder direction — supersedes the general
+enrichment ordering below until it progresses meaningfully**: global tuition/cost-of-attendance
+acquisition for the ~890 non-US universities still showing "Unavailable" (`university_statistics`
+is 128/1019, US-only — see Phase 10's P0K numbers). Country order: **UK next**, then Canada,
+Australia, Germany, Netherlands, France, Switzerland, Italy (web-accessible sources only, per
+the Phase 3/"Next" note below that MUR/USTAT times out), Singapore, Hong Kong, then other
+high-count countries — reorder for efficiency if a better bulk source turns up elsewhere, same
+as the German/Spanish student-count pipelines below already did. Per-country pipeline:
+discover → acquire → normalize → match → fixture → validate → `--plan` → `--apply` → verify,
+same shape as `enrich-student-counts-de.ts`/`-es.ts`. Source hierarchy: official university fees
+page > official government dataset > official prospectus/PDF > trusted national portal > other
+sources (verification only, never primary truth — explicitly, never write a QS/ranking-
+aggregator's tuition estimate as DB truth). Fields per the founder's spec: tuition
+international/domestic/undergrad/postgrad, estimated living cost, total cost of attendance,
+currency, academic year, source URL/date, fee basis (annual/per-term/per-credit/programme-
+specific/range) — **never collapse different cost concepts into one field or one number**; if
+`university_statistics`'s current single `cost_of_attendance` column can't represent a
+programme-specific or ranged figure honestly, that's a real schema question to investigate
+(this table's current shape, plus whether `university_profile_metrics`' flexible-store pattern
+already used for `qs_size_category`/`research_topics_top5` is the better fit for a
+multi-concept cost figure) before writing a migration proposal to the founder backlog — don't
+guess a migration is needed without checking the existing model first, matching Phase 9's own
+review discipline. Safety: no auto-write on a fuzzy institution match, ambiguous cases go to a
+manual-review fixture entry (not silently skipped, not silently guessed), validate unit/
+currency/year, sanity-check implausible values against known real-world tuition ranges before
+trusting them (the same discipline every student-count pipeline below already used).
+
+After tuition progresses meaningfully: (1) India student counts (~33 remaining, AISHE >
+annual report > official institutional stats > official facts page — see the India dead-end
+note below, may need real per-institution page work this time), (2) the remaining 15 ambiguous
+external-ID records (Phase 7 above), (3) resume `acquire:admissions` once Tavily's plan-limit
+blocker clears (item 4 below), (4) admissions/application-system UI completeness audit (already
+largely covered by Phase 10's P0E filter-coverage review, but a is/isn't-rendered pass matching
+the founder's original P0.5 spec — check `admissions_url`/`application_system`/admission rate/
+cost/student breakdown/research topics/institution type/size are each rendered SOMEWHERE across
+explorer cards, detail page, and now the compare page, not just acquired into the DB — is still
+worth a dedicated look once tuition data exists to actually populate the cost columns being
+checked).
 
 1. ~~Duplicate-id cross-registry check~~ — **already covered, confirmed 2026-08-18.**
    `check:university-spine-health`'s own "no external id claimed by >1 live university entity"
