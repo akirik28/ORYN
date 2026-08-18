@@ -1019,6 +1019,90 @@ on this branch before this handoff update), then this update's own: filter syste
 World-scope bug fix, compare feature + the COMPARE_MAX bug fix, regression tests, this handoff
 section.
 
+## Phase 11 — Explorer map UX polish (P0N-P0U) + multi-select filters, 2026-08-18
+
+Founder-reported live bugs, fixed in `features/universities/world-map-explorer.tsx` and
+`lib/data/map-visuals.ts` (new): label clutter, land clicks not selecting, and a genuine
+black-fill bug. Full detail is in the two commits' own messages (`10c45db` for the map,
+`3ecdaf3` for the filter fix below) — summarized here for anyone not reading git log.
+
+**Label clutter (P0N)**: all 89 supported countries rendered a permanent text label
+simultaneously at world scope — dense over Europe/Asia specifically, matching the report
+exactly. Capped to the top 8 by count at world scope, top 15 at region scope (a no-op for
+every region except Europe/Asia, the two actually named), plus the selected country
+regardless of rank. Verified live: exactly 8 labels render on the default view, all real
+top-count countries.
+
+**Land clicks didn't select (P0O)**: only the marker DOT had an `onClick` — the country's own
+land shape, the obvious large click target, had none. Added the same `selectCountry` call to
+`<Geography>`, resolved via a `numericId -> name` lookup. This is the one root cause behind
+the founder's "map click doesn't drive filter state" report — the underlying URL-param/
+server-component architecture (`?country=` read by `page.tsx`, driving chips/results/counts
+together) was already correct from Phase 10; nothing there needed to change once land clicks
+actually fired the existing mechanism.
+
+**The real black-fill bug (P0P)** — this was NOT the color math from the earlier (2026-08-18,
+same-day, Phase 10) fix, which was already correct. Reproduced live and root-caused properly
+this time: selecting a country via direct URL navigation always rendered the correct diluted
+blue; clicking that SAME country's shape could render literal black. A `getComputedStyle`
+check on the just-clicked path showed an EMPTY inline `style` attribute — not a wrong color,
+no style at all — which is what makes an SVG `<path>` fall back to the spec's own default
+fill (black). The underlying map library (`@vnedyalk0v/react19-simple-maps`) has its own
+internal hover/pressed state machine driving which of a `{default, hover, pressed, focused}`
+style object it applies, and that machine can drop the style entirely right after a click.
+Fixed by computing one style object from this component's OWN tracked state (not the
+library's internal flags) and repeating that identical object across all four keys the
+library could select between — so it can't matter which one its internal state lands on.
+Verified live across United States, China (twice), Germany, United Kingdom, Turkey, and
+Australia: 0 black paths via computed-style check after every click, chip/URL/results synced
+each time, including a region-scoped click (Germany inside `?region=europe`) correctly
+preserving the region param.
+
+**Tooltip (P0S)**: hovering either the marker or the land shape now shows a real floating
+tooltip (name, university count, region) positioned in viewport space (`position: fixed`, so
+it can't be clipped by the map's own `overflow-hidden` container) — verified live showing
+correct data for United States.
+
+**Visual polish (P0Q)**: a subtle brand-tinted radial gradient stands in for flat ocean
+background; selected markers get a soft double-ring halo. Kept intentionally restrained —
+the founder's own direction is "light, airy, not loud," and the map was already functionally
+correct after the P0N/P0O/P0P fixes; this pass didn't chase decoration beyond that.
+
+**Lower UI (P0R)**: reviewed live (chips, search bar, filter sheet, sort select) — already
+reads as one coherent surface with the map, wraps correctly, no redesign needed.
+
+**Pure logic extracted and unit-tested** (`lib/data/map-visuals.ts`,
+`pickLabelPriorityCountries`/`resolveCountryFillStyle`) since the map component itself has no
+test renderer in this codebase (same constraint `lib/universities/filters.ts` documents for
+`applyRangeFilters`). The click/library-state-machine half of the black-fill fix isn't unit-
+testable (it's a live-DOM/third-party-library behavior) — guarded instead with source-level
+regression tests in `__tests__/universities/map-interaction.test.ts`, the same pattern
+`compare-constants.test.ts` already established for exactly this class of bug.
+
+**Separately, mid-package: a founder-reported filter UX bug, fixed same session.** Cost and
+student-population filters were single-select presets — no way to express "$10k to $50k"
+(spanning two adjacent buckets), reported live via screenshot. Converted both to multi-select
+(`lib/universities/filters.ts`'s `RangeFilters.cost`/`.size` are now arrays, OR-matched within
+the category, still AND against every other filter) — rank stays single-select (QS tiers are
+already cumulative, so multi-selecting adds no expressive power). Verified live: selecting
+both "$10,000-$25,000" and "$25,000-$50,000" shows both chips active simultaneously and
+returns real matches from either sub-range. 4 new tests cover the OR-semantics directly.
+
+**A real finding, not acted on**: this session shares its working directory with at least one
+other active, uncommitted session building a university-image-acquisition pipeline
+(`lib/acquisition/wikimedia.ts`, `opengraph.ts`, `image-storage.ts`, `image-validation.ts`,
+`features/universities/detail-hero-image.tsx`, and more) plus a `research-taxonomy.ts` module
+— all touching files inside this workstream's nominal scope (`lib/acquisition/*`,
+`app/(app)/universities/*`). Confirmed via `git status`/`git diff` before every commit this
+phase that only files this session actually authored were staged — never a blind `git add -A`.
+Not investigated further (out of scope for this map-fix package), but worth another session
+being aware of before assuming sole ownership of `lib/acquisition/*` going forward — this
+handoff doc's own "Owner: Claude A" line may need revisiting if this is a second Claude A
+instance rather than a different workstream.
+
+Full gate green (`tsc`/lint/799 tests/build) at time of commit. Commits: `10c45db` (map),
+`3ecdaf3` (multi-select filters, landed first).
+
 ## Next (queued, not yet started)
 
 **Active priority as of 2026-08-18, per explicit founder direction — supersedes the general
