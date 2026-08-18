@@ -59,7 +59,7 @@ import { domainOf, sourceAuthority } from "../lib/acquisition/source-authority";
 import { fetchWikidataImageClaim, fetchCommonsFileInfo } from "../lib/acquisition/wikimedia";
 import { fetchOpenGraphImage } from "../lib/acquisition/opengraph";
 import { validateCampusImageCandidate, validateLogoCandidate } from "../lib/acquisition/image-validation";
-import { ensureUniversityImagesBucket, optimizeImage, uploadUniversityImage, verifyPublicUrlServes } from "../lib/acquisition/image-storage";
+import { UNIVERSITY_IMAGES_BUCKET, ensureImageBucket, optimizeImage, uploadEntityImage, verifyPublicUrlServes } from "../lib/acquisition/image-storage";
 
 /** `universities.name` (exact) -> hand-verified override. Empty until an automated tier gets a
  * pilot university's image visibly wrong — see the file header. */
@@ -94,6 +94,12 @@ const MANUAL_IMAGE_OVERRIDES: Record<string, ManualOverride> = {
     notes: "King's College Chapel, Clare College and King's College — the automated P18 candidate was portrait, and cam.ac.uk's og:image is only 590x288.",
   },
 };
+
+/** Checked, in order, only when an official site's homepage has no og:image at all — most real
+ * institution sites carry a representative photo on at least one of these. Kept short and
+ * ordered by how likely each is to have one (an "about"/"campus" page over a "press" page,
+ * which is more often just a text feed) since every miss is a full extra page fetch. */
+const COMMON_OFFICIAL_SUBPATHS = ["/about", "/about-us", "/campus", "/visit", "/gallery", "/media", "/newsroom", "/press"];
 
 /** Distinctive substrings (case-insensitive) for the 16 first-pilot universities named in the
  * founder's spec. Matched against `universities.name` AFTER superseded rows are already
@@ -305,7 +311,31 @@ async function resolveCampusCandidates(uni: UniversityRow, qid: string | null, f
     const pageAuthority = sourceAuthority("image", uni.website_url, officialDomains);
     if (pageAuthority) {
       const ogUrl = await fetchOpenGraphImage(uni.website_url, fetchImpl);
-      if (ogUrl) candidates.push({ byteUrl: ogUrl, sourceUrl: uni.website_url, sourceType: "official_primary", license: null, attribution: null });
+      if (ogUrl) {
+        candidates.push({ byteUrl: ogUrl, sourceUrl: uni.website_url, sourceType: "official_primary", license: null, attribution: null });
+      } else {
+        // Homepage often carries no og:image at all (MIT's own web.mit.edu is a real example —
+        // see the file header's MIT case). Try a short list of pages an official site is likely
+        // to have a real representative photo on, stopping at the first hit. Same downstream
+        // validation (dimensions/aspect/dedup) still applies — this only expands where a
+        // candidate URL can come from, never what counts as acceptable once found.
+        let origin: string | null = null;
+        try {
+          origin = new URL(uni.website_url).origin;
+        } catch {
+          origin = null;
+        }
+        if (origin) {
+          for (const path of COMMON_OFFICIAL_SUBPATHS) {
+            const subPageUrl = `${origin}${path}`;
+            const subOgUrl = await fetchOpenGraphImage(subPageUrl, fetchImpl);
+            if (subOgUrl) {
+              candidates.push({ byteUrl: subOgUrl, sourceUrl: subPageUrl, sourceType: "official_primary", license: null, attribution: null });
+              break;
+            }
+          }
+        }
+      }
     }
   }
 
@@ -394,7 +424,7 @@ async function main(): Promise<void> {
   const { createClient } = await import("@supabase/supabase-js");
   const admin = createClient(url, secretKey, { auth: { autoRefreshToken: false, persistSession: false } });
 
-  if (apply) await ensureUniversityImagesBucket(admin);
+  if (apply) await ensureImageBucket(admin, UNIVERSITY_IMAGES_BUCKET);
 
   const { rows: allUniversities } = await fetchAllRowsVerified<UniversityRow>(
     target,
@@ -481,7 +511,7 @@ async function main(): Promise<void> {
         const { candidate, optimized } = accepted;
         const status = candidate.handVerified ? "verified" : candidate.sourceType === "wikimedia_commons" ? "wikimedia_verified" : "official";
         if (apply) {
-          const uploaded = await uploadUniversityImage(admin, uni.id, "campus", optimized.buffer);
+          const uploaded = await uploadEntityImage(admin, UNIVERSITY_IMAGES_BUCKET, uni.id, "campus", optimized.buffer);
           const serves = await verifyPublicUrlServes(uploaded.publicUrl, fetchImpl);
           if (!serves) {
             campusWrites.push({
@@ -534,7 +564,7 @@ async function main(): Promise<void> {
             const optimizedLogo = await optimizeImage(bytes, 800);
             if (validateLogoCandidate({ width: optimizedLogo.width, height: optimizedLogo.height }).ok) {
               if (apply) {
-                const uploaded = await uploadUniversityImage(admin, uni.id, "logo", optimizedLogo.buffer);
+                const uploaded = await uploadEntityImage(admin, UNIVERSITY_IMAGES_BUCKET, uni.id, "logo", optimizedLogo.buffer);
                 if (await verifyPublicUrlServes(uploaded.publicUrl, fetchImpl)) {
                   const { error } = await admin.from("universities").update({ logo_url: uploaded.publicUrl }).eq("id", uni.id);
                   if (error) throw new Error(`logo_url write failed: ${error.message}`);

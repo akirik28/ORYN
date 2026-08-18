@@ -1,20 +1,26 @@
 /**
- * Storage + optimization layer for acquired university images.
+ * Storage + optimization layer for acquired entity images — universities today, written to be
+ * reused as-is for any future entity type (opportunities/programmes/competitions/providers)
+ * rather than re-implemented per domain. Nothing in this file is university-specific: every
+ * function takes a bucket name and an entity id as plain parameters, never a hardcoded table or
+ * column name.
  *
  * Database rows never hold image bytes — Postgres/PostgREST rows stay metadata-only (a URL plus
  * provenance), per the image-acquisition spec's explicit "don't store blobs in the core DB"
  * rule. This module is the only place that touches actual image bytes: resize/re-encode via
- * `sharp`, hash for dedup, and upload to a dedicated public Supabase Storage bucket.
+ * `sharp`, hash for dedup, and upload to a public Supabase Storage bucket.
  *
  * No RLS/signed-URL layer the way evidence/cv-uploads have one (see 0015_storage_buckets.sql):
  * these are public campus photos and institution logos, the same "global public data" carve-out
  * `universities` itself already gets (Phase 31 — private-by-default is a rule about *student*
- * data, not public institutional marketing imagery).
+ * data, not public institutional marketing imagery). The same reasoning applies to any future
+ * public opportunity/programme/competition imagery.
  *
- * The bucket is created via the Storage Admin API (`storage.createBucket`), not a SQL migration
- * — an authenticated HTTP call through the service-role key, so this works even in a session
- * with no direct Postgres/DDL access (see docs/founder-blocked-backlog.md). Idempotent: safe to
- * call at the start of every run.
+ * Buckets are created via the Storage Admin API (`storage.createBucket`), not a SQL migration —
+ * an authenticated HTTP call through the service-role key, so this works even in a session with
+ * no direct Postgres/DDL access (see docs/founder-blocked-backlog.md). Idempotent: safe to call
+ * at the start of every run. A future entity type gets its own bucket name (or reuses this one)
+ * without needing a new migration either.
  *
  * Deliberately NOT `server-only` — used from a plain `tsx` acquisition script, same constraint
  * as ror.ts/wikimedia.ts/opengraph.ts.
@@ -59,15 +65,17 @@ export async function optimizeImage(original: Buffer, maxWidth = MAX_WIDTH): Pro
   return { buffer: data, width: info.width, height: info.height, checksum };
 }
 
-/** Idempotent bucket creation — treats "already exists" as success rather than an error. */
-export async function ensureUniversityImagesBucket(admin: SupabaseClient): Promise<void> {
-  const { error } = await admin.storage.createBucket(UNIVERSITY_IMAGES_BUCKET, {
+/** Idempotent bucket creation — treats "already exists" as success rather than an error. Any
+ * entity type can pass its own `bucketName` (or share an existing one); nothing here assumes
+ * "university". */
+export async function ensureImageBucket(admin: SupabaseClient, bucketName: string): Promise<void> {
+  const { error } = await admin.storage.createBucket(bucketName, {
     public: true,
     fileSizeLimit: "5MB",
     allowedMimeTypes: ["image/webp"],
   });
   if (error && !/already exists/i.test(error.message)) {
-    throw new Error(`Couldn't ensure the ${UNIVERSITY_IMAGES_BUCKET} storage bucket exists: ${error.message}`);
+    throw new Error(`Couldn't ensure the ${bucketName} storage bucket exists: ${error.message}`);
   }
 }
 
@@ -77,21 +85,22 @@ export interface UploadResult {
 }
 
 /**
- * Uploads optimized bytes and returns the public URL to store as `primary_image_url` (or, for a
- * logo, to write directly into `universities.logo_url`). `kind` only picks the storage path
- * convention — a university's campus and logo images never collide. `upsert: true` so a re-run
- * (a corrected candidate, or a scheduled refresh) replaces the existing file at the same stable
- * path rather than accumulating orphaned versions.
+ * Uploads optimized bytes and returns the public URL to store as the entity's image fact (or,
+ * for a logo, to write directly into a `logo_url`-shaped column). `kind` is a free-form path
+ * segment ("campus", "logo", "hero", ...) — the caller picks a convention per entity type; this
+ * function only guarantees two different kinds for the same `entityId` never collide.
+ * `upsert: true` so a re-run (a corrected candidate, or a scheduled refresh) replaces the
+ * existing file at the same stable path rather than accumulating orphaned versions.
  */
-export async function uploadUniversityImage(admin: SupabaseClient, universityId: string, kind: "campus" | "logo", buffer: Buffer): Promise<UploadResult> {
-  const storagePath = `${universityId}/${kind}.webp`;
-  const { error } = await admin.storage.from(UNIVERSITY_IMAGES_BUCKET).upload(storagePath, buffer, {
+export async function uploadEntityImage(admin: SupabaseClient, bucketName: string, entityId: string, kind: string, buffer: Buffer): Promise<UploadResult> {
+  const storagePath = `${entityId}/${kind}.webp`;
+  const { error } = await admin.storage.from(bucketName).upload(storagePath, buffer, {
     contentType: "image/webp",
     upsert: true,
     cacheControl: "31536000",
   });
-  if (error) throw new Error(`Upload failed for ${storagePath}: ${error.message}`);
-  const { data } = admin.storage.from(UNIVERSITY_IMAGES_BUCKET).getPublicUrl(storagePath);
+  if (error) throw new Error(`Upload failed for ${bucketName}/${storagePath}: ${error.message}`);
+  const { data } = admin.storage.from(bucketName).getPublicUrl(storagePath);
   return { publicUrl: data.publicUrl, storagePath };
 }
 
