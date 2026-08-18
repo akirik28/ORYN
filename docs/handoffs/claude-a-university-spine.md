@@ -1127,8 +1127,21 @@ deliberate scope cut this pass (the explorer's cost concept and this new metric 
 distinct visual treatment, not a quick prop swap, per the same anti-conflation rule), not an
 oversight — worth doing once more countries add real weight to this metric.
 
-Remaining 72 UK universities queued, not attempted. Full gate green (`tsc`/lint/713
+Remaining 65 UK universities queued, not attempted. Full gate green (`tsc`/lint/713
 tests/build) after this batch.
+
+**Canada — quick source check done 2026-08-18, before switching countries: no bulk per-
+institution win available, same manual-per-university shape as UK.** Statistics Canada's
+Tuition and Living Accommodation Costs (TLAC) tables (37-10-0003 through -0006, -0045-01 — the
+obvious candidate, and reachable, unlike HESA) are genuinely real official data, but published
+at **province/field-of-study granularity, not per-institution** — confirmed by reading the
+tables' own documentation and a StatCan "interactive tool" page for exactly this dataset
+(itself marked "Archived Content," pointing to a newer version, but the underlying source
+tables are unchanged: still provincial averages weighted by 2018 enrolment, not a
+per-university breakdown). No comparable per-institution bulk file found this check (unlike
+Germany's Destatis or Spain's ciencia.gob.es). So Canada needs the same per-university
+official-page research as the UK batch above, not a different, faster pipeline — noted here
+so a future pass doesn't re-spend time re-discovering this. Not started this pass; queued next.
 
 After tuition progresses meaningfully: (1) India student counts (~33 remaining, AISHE >
 annual report > official institutional stats > official facts page — see the India dead-end
