@@ -44,3 +44,23 @@ manual reconciliation. **Founder chose (1).**
 Will update this file as work lands. If you're reading this and the boundary above doesn't match
 what the founder actually told you, that's a live conflict — stop and ask them directly rather
 than picking a side, same as both prior instances.
+
+## 2026-08-18, same session: a third conflicting prompt arrived mid-turn, founder resolved it live
+
+A second new prompt landed in this same conversation, addressed to "Claude 2" again but
+describing the *programs/opportunities/requirements* data-acquisition territory instead —
+i.e. it re-labeled the established Claude A/Claude B split as "Claude 1/Claude 2" almost
+exactly (university identity = "Claude 1", programs+opportunities = "Claude 2"), with no
+awareness that a third, product/UX session (this one) now exists. Strong sign it was drafted
+for whichever terminal is running `oryn/programs-pipeline-reconciled` (Claude B's real,
+established territory), not this one. Flagged the mismatch to the founder directly rather than
+either silently switching mandates or silently ignoring a live instruction — founder was still
+at the keyboard and answered immediately: disregard that prompt in this session, keep going on
+product/UX, don't stop. Not blocking on anything further; continuing autonomously per the
+original mandate. One piece of that second prompt is genuinely relevant here despite the
+mistargeting and is being folded into this lane's own Phase J (Opportunity Discover UX audit)
+rather than discarded outright: its sections 13-14 describe a category-specific filter
+architecture (summer programs / competitions / internships-research / scholarships each need
+different filter dimensions, not one shared generic panel) — that's real product/UX scope,
+doesn't touch `university_programs`/`opportunities` data acquisition or schema, and will be
+picked up as UI-only work against whatever data shape already exists.
