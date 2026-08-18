@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { differenceInCalendarDays } from "date-fns";
 import { ExternalLink, Bookmark, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ import { DeadlineBadge } from "@/components/oryn/deadline-badge";
 import { setOpportunityStatus } from "@/app/(app)/opportunities/actions";
 import type { Opportunity, SavedOpportunityStatus } from "@/types/database";
 
-const NOT_INTERESTED_REASONS = [
+export const NOT_INTERESTED_REASONS = [
   { value: "not_interested_topic", label: "Not interested in this topic" },
   { value: "too_expensive", label: "Too expensive" },
   { value: "no_time", label: "No time" },
@@ -113,7 +114,11 @@ export function OpportunityCard({
               <DeadlineBadge date={opportunity.deadline} />
             ) : null}
           </div>
-          <h3 className="font-semibold leading-snug">{opportunity.title}</h3>
+          <h3 className="font-semibold leading-snug">
+            <Link href={`/opportunities/${opportunity.id}`} className="hover:underline">
+              {opportunity.title}
+            </Link>
+          </h3>
           {opportunity.organization ? <p className="text-sm text-muted-foreground">{opportunity.organization}</p> : null}
         </div>
       </div>
