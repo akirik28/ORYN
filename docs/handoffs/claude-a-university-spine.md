@@ -783,25 +783,46 @@ read them directly (the same two conditions that justified `student_size`).
    `application_system` and the new undergraduate/postgraduate student counts render anywhere
    a student would actually see them, and whether the audit generalizes across world regions
    (only spot-checked via Bocconi/Italy so far, not a systematic multi-region pass).
-3. Phase 6 — OpenAlex retry once its budget resets (retryAfter window from the last 429 hadn't
-   elapsed as of this pass; circuit breaker means a retry costs 3 requests to confirm, not
-   another wasted full run).
+3. ~~Phase 6 — OpenAlex retry~~ — **done 2026-08-18**, see "Current state" above.
+   `research_topics_top5` 30/1010 → 923/925.
 4. Resume `acquire:admissions` once the Tavily plan-limit blocker (see "Current state") is
-   resolved — 413 universities still missing `admissions_url`. Not a code blocker.
-5. Student counts beyond the US: Germany (37 QS universities missing `total_students`),
-   India (33), Italy (31), Spain (27) — investigate each country's own statistics-office bulk
-   dataset the same way College Scorecard was verified (live `curl`, spot-check known figures,
-   confirm headcount/FTE/institution/system scope before trusting it). UK/HESA investigated
-   and is a genuine dead end (Cloudflare-protected) — don't re-attempt it the same way.
+   resolved — 413 universities still missing `admissions_url`. Not a code blocker. Re-checked
+   2026-08-18: still HTTP 432, unchanged.
+5. ~~Student counts beyond the US: Germany~~ — **done 2026-08-18.** Found Destatis
+   (Statistisches Bundesamt, the federal statistics office) publishes exactly the right table:
+   "Statistischer Bericht - Statistik der Studierenden - WS 2024/2025", table 21311-12, broken
+   down to individual Hochschule level (not just national/state totals) — downloaded and
+   inspected the actual XLSX (`python3`/`openpyxl`, this environment already had it) rather
+   than trusting the page copy alone. Genuinely abbreviated German institution names ("U
+   Freiburg i.Br.", "U des Saarlandes Saarbrücken") don't string-match our spine's names
+   (mixed native-German/English across this spine's own history) — hand-built and individually
+   verified a name mapping for all 49 German universities against the extracted table
+   (`scripts/enrich-student-counts-de.ts`, `DESTATIS_TOTALS`), the same explicit-override
+   discipline `enrich-student-counts-us.ts` already uses for its hard cases, just for
+   (almost) every entry instead of a handful. Sanity-checked several figures against known
+   real-world institution sizes before trusting any of it (Köln/Münster large ~40-47k,
+   Konstanz/Hohenheim small ~8-10k — all landed as expected) and cross-checked TU München's
+   own Destatis row (53,970) against our already-stored 51,954 as an independent consistency
+   check (close, same ballpark, different semester). Dry run reviewed, then `--apply`: **37/37
+   written**, `total_students` coverage 320/1019 → 357/1019. 11 German universities left
+   genuinely unresolved rather than guessed (RWTH Aachen and TUM have no clear top-level
+   Destatis row under their spine name but already had a stored value anyway; Constructor
+   University's only candidate row showed an implausibly low 536; TUHH not found at all).
+   Full gate green after (lint/tsc/677 tests/build).
+   
+   **India (33 missing), Italy (31), Spain (27) still queued, not started.** Same methodology
+   (find the national statistics office's own bulk dataset, verify live, hand-map genuinely
+   abbreviated/translated names, never guess) should generalize, but each country's own
+   source needs the same live investigation Germany and the US each got — don't assume any of
+   them publish institution-level data as cleanly as Destatis did. UK/HESA investigated and is
+   a genuine dead end (Cloudflare-protected) — don't re-attempt it the same way.
 6. Migration 0043 + the 5 read-path filters (see Phase 2 above) — founder/DDL-access blocked,
    not code-blocked.
-7. The ~200-row external-ID-unresolved bucket (Phase 7) — a fresh full-spine
-   `acquire:universities --from-db` re-run was started this pass specifically to get a
-   *current* evidence-classified breakdown (the DB has changed materially since the original
-   203-count: 9 new institutions, merges, etc.) rather than trust a stale number. Check
-   whether it finished and what the new per-reason breakdown looks like before doing anything
-   else with it — the script already buckets by reason (no ROR hit / country mismatch /
-   ambiguous exact-name collision / no exact match among candidates), this is about acting on
-   the current numbers, not building new classification logic.
+7. ~~The ~200-row external-ID-unresolved bucket~~ — **current breakdown captured 2026-08-18**
+   from the same full-spine re-run as item 3: 94 unresolved of 1019 (was ~203, but against a
+   smaller/different spine, not directly comparable) — ambiguous/no-exact-name-match 72,
+   country mismatch 5, no ROR hit 1, other 16. The 72-bucket is the one that might have real
+   KFUPM/UCL-style manual-search wins in it, but is a large individual-investigation effort,
+   not one query — left queued rather than started this pass.
 
 ~~Bocconi University's missing QS 2027 row~~ — **done this pass**, see Phase 5.

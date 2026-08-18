@@ -16,6 +16,7 @@
     "entities:audit": "tsx scripts/entities-audit.ts",
     "enrich:student-counts": "tsx scripts/enrich-student-counts.ts",
     "enrich:student-counts-us": "tsx scripts/enrich-student-counts-us.ts",
+    "enrich:student-counts-de": "tsx scripts/enrich-student-counts-de.ts",
     "report:universities": "tsx scripts/university-data-report.ts",
     "acquire:universities": "tsx scripts/acquire-university-facts.ts",
     "import:universities": "tsx scripts/import-university-facts.ts",
