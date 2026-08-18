@@ -1140,8 +1140,40 @@ tables' own documentation and a StatCan "interactive tool" page for exactly this
 tables are unchanged: still provincial averages weighted by 2018 enrolment, not a
 per-university breakdown). No comparable per-institution bulk file found this check (unlike
 Germany's Destatis or Spain's ciencia.gob.es). So Canada needs the same per-university
-official-page research as the UK batch above, not a different, faster pipeline — noted here
-so a future pass doesn't re-spend time re-discovering this. Not started this pass; queued next.
+official-page research as the UK batch above, not a different, faster pipeline.
+
+**Canada — pilot started same day, 1/27 universities, `scripts/acquire-university-statistics-ca.ts`.**
+A genuine structural difference from the UK batch surfaced immediately: every Canadian
+university checked bills tuition **per credit**, not a flat annual figure. Caught a real
+mistake before it reached `--apply`: a first draft reused the UK batch's
+`tuition_international_annual`/`tuition_domestic_annual` metric codes for this per-credit
+data — exactly the "collapse different cost concepts" the founder's spec forbids, since the
+detail page already renders those two codes as "£X/yr" (a per-credit figure under that code
+would silently display as if it were annual). Fixed before any write: new, distinct
+`tuition_international_per_credit`/`tuition_domestic_per_credit` metric codes. **Not wired
+into any UI yet** — deliberately; a per-credit figure needs its own correctly-labeled display,
+not a relabeled copy of the annual one, and one university isn't yet enough to justify that UI
+work properly.
+
+**UBC (University of British Columbia)**: real, live, directly-readable table (not a PDF) —
+`https://vancouver.calendar.ubc.ca/fees/tuition-fees/undergraduate`, explicitly the 2026/27
+calendar. International, per credit, students commencing 2026/27: $1,434.70 (Music, lowest) to
+$2,222.61 (Commerce, highest). Domestic per-credit low end (most Year 1 programs): $206.69 —
+recorded as a low anchor only, not a full domestic range, since this pass's focus was the
+international figure. High confidence.
+
+**McGill and University of Toronto investigated, genuinely left unresolved — not attempted-
+and-abandoned.** McGill: Quebec's tuition structure is real but complex (a base per-credit
+Quebec rate plus separate out-of-province supplements, plus a cohort-guaranteed international
+rate), and McGill's own international fee schedule is published only as a PDF with no readable
+static page found; search-derived figures conflicted between sources ($31,836 vs $49,000,
+likely different years or faculties). University of Toronto: fee schedules are fragmented per
+constituent college (Trinity, Victoria, University College, St. Michael's, Innis, Woodsworth
+each publish their own PDF) on top of per-faculty variation — all PDF-only, none readable live.
+Neither downloaded (file downloads need explicit user permission, out of scope for an
+unattended pass) or written. 25 further Canadian universities queued, not attempted.
+
+Full gate green (`tsc`/lint/713 tests/build) after this batch.
 
 After tuition progresses meaningfully: (1) India student counts (~33 remaining, AISHE >
 annual report > official institutional stats > official facts page — see the India dead-end
