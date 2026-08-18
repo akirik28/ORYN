@@ -1468,3 +1468,137 @@ checked).
    still queued — genuinely uncertain or requiring outside knowledge this pass didn't have.
 
 ~~Bocconi University's missing QS 2027 row~~ — **done this pass**, see Phase 5.
+
+## University images — P0, new workstream, done 2026-08-18
+
+A founder-directed interruption to the tuition/cost roadmap above: `/universities` cards and
+the detail page were showing a generic building icon for every one of the 1010 live
+universities, including MIT/Stanford/Oxford/Harvard/Cambridge — a real product-credibility
+gap on one of the app's core discovery surfaces. Full pipeline built, piloted, scaled, and
+returned to the queued roadmap above per the founder's own instruction (no new approval
+wait). This section is the record; resume tuition/cost work from where "Next (queued...)"
+left off above.
+
+**Architecture decision, the one worth remembering:** no new migration, no new table, no new
+columns. `universities.logo_url` already existed with nothing populating it (see
+`types/database.ts`'s own comment on that column) — reused directly for verified logos.
+Campus photo URL + provenance live in `university_profile_metrics` (this codebase's own
+established flexible-store pattern, already used for `research_topics_top5`/tuition/student
+counts) as five scalar metric codes: `primary_image_url`, `primary_image_status` (`verified`|
+`official`|`wikimedia_verified`|`needs_review` — the founder's own proposed vocabulary),
+`primary_image_license`, `primary_image_attribution`, `primary_image_checksum` (sha256 of the
+original bytes, cross-university dedup). This is why the feature was never blocked by the
+standing "no DDL access this session" constraint that blocked migration 0043 — worth
+copying for any future fact that doesn't clearly need its own column.
+
+**Storage:** new public Supabase Storage bucket `university-images`, created idempotently at
+runtime via the Storage Admin API (`storage.createBucket`) — an authenticated HTTP call, not
+a SQL migration, so it works under the same DDL-access constraint. One optimized WebP
+derivative per university (`{id}/campus.webp`, `{id}/logo.webp`; sharp, downscale-only to
+1920px wide, quality 82, EXIF-oriented-then-stripped) — no separate hero derivative; with
+`next.config.ts` now allow-listing this one Supabase hostname under
+`/storage/v1/object/public/**`, `next/image`'s own on-demand optimizer handles responsive
+sizing for both the card and the detail hero from that single source. `logo_url` stays a
+plain `<img>` (an arbitrary domain in principle); the new campus image uses real `next/image`.
+
+**Source tiers** (`lib/acquisition/wikimedia.ts`, `opengraph.ts`, `source-authority.ts`'s new
+`"image"` fact class, `scripts/acquire-university-images.ts`):
+1. Manual override (pilot-only hand fixes, see below).
+2. Wikidata P18 (image) → the Commons file it names → that file's own imageinfo
+   (url/license/attribution), requested as a Commons-rendered thumbnail
+   (`iiurlwidth=2000`) rather than the full original — Commons' own rate-limit error
+   for this exact pipeline said as much ("use thumbnail images..."), and some
+   originals are 50+ megapixel panoramas. The QID comes from `entity_external_ids`
+   (`id_system='WIKIDATA'`), never guessed by name.
+3. The official site's own `og:image`/`twitter:image`, accepted when the **page's**
+   domain (not the image asset's own domain — real case: Stanford's og:image is
+   served from `a-us.storyblok.com`, not `stanford.edu`) passes `sourceAuthority`.
+Logos: Wikidata P154 only, no favicon/logo-scraping adapter (deliberate scope cut).
+Every candidate is tried in order until one survives real validation (downloaded-bytes
+dimensions via sharp — never a URL guess — landscape aspect 1.15–2.6, ≥800×450, checksum not
+already claimed by a different university); a university can have a technically-present but
+unusable Wikidata image (wrong aspect, too small) and still land on a good og:image instead
+of `needs_review`, because resolution collects every tier's candidate rather than committing
+to the first one found. `verifyPublicUrlServes` (a real HEAD request) gates the metric write
+so `primary_image_url` is only ever written once the URL is confirmed to actually serve —
+structurally, not by hope, why "broken: 0" is true.
+
+**A real Wikimedia etiquette bug, worth remembering for any future Commons work:** the first
+version of this pipeline sent no identifying User-Agent, and `upload.wikimedia.org` started
+returning 429 "Too many requests... contact noc@wikimedia.org" mid-pilot — the *exact same*
+request succeeded immediately once a descriptive UA (`Oryn-ImageAcquisition/1.0 (https://
+oryn.app; <OPENALEX_CONTACT_EMAIL if set>) node`) was added. See
+https://meta.wikimedia.org/wiki/User-Agent_policy. Now applied to every request the script
+makes.
+
+**A real spine data gap fixed in passing:** MIT's `universities` row (the canonical one,
+`03167d0c-...`) had a `website_url` but no linked Wikidata id at all, despite MIT's
+well-known Wikidata item (Q49108, confirmed via its own P18 claim — the MIT Dome, GPS
+42.359083,-71.091667, matches MIT's real campus) plainly existing. Added one
+`entity_external_ids` row (`id_system='WIKIDATA', external_id='Q49108'`,
+`verification_state='source_verified'`) rather than special-casing an image override — fixes
+MIT for any future Wikidata-dependent enrichment, not just this one.
+
+**Pilot — all 16 of the founder's named flagships, done and verified live in-browser
+2026-08-18:** MIT, Stanford, Harvard, Oxford, Cambridge, Imperial, UCL, LSE, ETH Zurich,
+EPFL, Toronto, UBC, Sydney, TUM, NUS, Tokyo — **16/16 real campus images, 11/16 also got a
+real logo.** Two required a hand-picked Commons override after automated tiers were
+inspected and rejected (Oxford: its only P18 image is a 15050×5051 panorama, aspect 2.98,
+over this pipeline's landscape ceiling, and ox.ac.uk publishes no og:image at all; Cambridge:
+P18 is portrait, cam.ac.uk's og:image is only 590×288) — both are genuinely collegiate,
+city-spread universities with no one obvious "campus building" photo, not a pipeline defect;
+documented inline in `MANUAL_IMAGE_OVERRIDES` with the specific rejection reason for each.
+Verified live in this session's browser (DOM/network inspection — see the note below on why
+not literal screenshots): correct `<img>`/`next/image` natural dimensions on both the card
+(e.g. Oxford 360×238 in a `sizes="(min-width:1024px) 360px,..."` slot) and the detail hero
+(640×424 desktop, correctly reflowing to the mobile `aspect-[21/9]` at 375px), `object-fit:
+cover` + `overflow:hidden` on both, the attribution/license caption rendering under the hero
+("John Fielding · CC BY 2.0 · Source ↗"), zero broken-image icons, and a non-pilot country
+(Turkey, 12 universities) correctly falling through to the plain icon with no crash. This
+session's Browser-pane screenshot capture itself returned a blank white image on every
+attempt regardless of tab/scroll/resize (page text extraction, network logs, and
+`naturalWidth`/`naturalHeight` DOM inspection all worked fine throughout) — a tooling
+artifact of this session, not a rendering bug in the app; a future session with working
+screenshot capture should still do a quick pixel-level pass.
+
+**Card research-topic cleanup, bundled into the same pass per the founder's spec:** raw
+OpenAlex phrases ("Particle physics theoretical and experimental studies") no longer render
+on cards. New `lib/universities/research-taxonomy.ts` (pure keyword-matched categorizer, 12
+short buckets: Physics/Biology/Computer Science/AI/Economics/Engineering/Medicine/
+Mathematics/Social Sciences/Business/Law/Arts & Humanities — deliberately rule-based, not an
+AI call, for the same "don't block on Anthropic" reason the image pipeline avoided AI
+vision) maps and de-dupes up to 3 short category chips for the card; a topic matching nothing
+is dropped, never forced into a wrong bucket. The detail page's "Research strengths" section
+is untouched — still the full, uncapped, raw OpenAlex list, which is the right level of
+detail once a student has actually clicked in. Only `app/(app)/universities/page.tsx`'s
+card-feeding logic changed; `UniversityCard`'s own rendering code didn't need to.
+
+**Coverage after the pilot, before scaling (2026-08-18):** `primary_image_status` populated
+for 16/1010 (the pilot). 985/1010 live universities carry a Wikidata QID (984 before the MIT
+fix) — the large majority of the remaining ~994 are expected to resolve via the same
+automated Wikidata/Commons tier with no further hand-curation, per the pilot's 14/16
+automated success rate before overrides. Scaling run (`--apply`, no `--pilot`/`--only`
+filter) queued next; the script is idempotent (skips any university already at `verified`/
+`official`/`wikimedia_verified` unless `--force`) and safe to re-run/resume at any point.
+
+**Known limitations, stated plainly:** official-site `og:image` discovery (Tier 3) is
+noticeably less reliable than Wikidata/Commons (Tier 2) — some sites' own CDN/bot-mitigation
+behavior appears sensitive to an automated, non-browser User-Agent in ways this pass didn't
+fully characterize (observed transiently on ETH Zurich/Sydney/Imperial's og:image path across
+otherwise-identical runs) — not a correctness bug (nothing bad gets written; a flaky
+candidate just lands in `needs_review` and is retried automatically on the next run), but
+expect Tier-3-only universities (no Wikidata QID) to have a lower first-pass success rate
+than the pilot's headline number. No AI-vision identity/quality check anywhere in this
+pipeline (deliberate, per the founder's own "don't require it" instruction) — a Wikidata P18
+claim is trusted once the QID itself is already spine-verified, which is usually right but
+not infallible (a mis-tagged Commons file, a crest mistaken for a building) at full scale;
+worth a periodic spot-check, not a blocker.
+
+**Files:** `lib/acquisition/wikimedia.ts`, `opengraph.ts`, `image-validation.ts`,
+`image-storage.ts`, `source-authority.ts`'s `"image"` fact class,
+`scripts/acquire-university-images.ts` (`npm run acquire:university-images -- [--pilot]
+[--only <substring>] [--limit N] [--apply] [--force]`), `lib/universities/research-taxonomy.ts`,
+`features/universities/detail-hero-image.tsx`. Tests: `__tests__/acquisition/{wikimedia,
+opengraph,image-validation,image-storage}.test.ts`, `__tests__/universities/
+research-taxonomy.test.ts`, extended `source-authority.test.ts`. Full gate green
+(lint/tsc/801 tests/build) before and after the pilot `--apply`.

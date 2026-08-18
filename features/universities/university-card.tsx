@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { MapPin, Bookmark, BookmarkCheck, Landmark, Users, Trophy, DollarSign, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { addTargetUniversity } from "@/app/(app)/universities/actions";
@@ -9,15 +10,20 @@ import { useCompare } from "@/features/universities/compare-context";
 import type { University } from "@/types/database";
 
 // Larger, calmer card (founder direction: "fewer larger cards ... not a dense database
-// row") — a visual identity band up top (the university's real `logo_url` when the data
-// has one, never a fabricated photo otherwise — Rule 4 forbids inventing imagery this
-// product has no actual source for) instead of packing every field into a small row.
+// row") — a visual identity band up top instead of packing every field into a small row.
+// Three tiers, in order, never a fabricated photo when none of them apply (Rule 4 forbids
+// inventing imagery this product has no actual source for): a verified campus photo
+// (`imageUrl`, acquired via lib/acquisition/wikimedia.ts / opengraph.ts and re-hosted on our
+// own storage — see scripts/acquire-university-images.ts), then the real `logo_url` when one
+// exists, then a plain gradient + Landmark mark. Each tier falls through to the next on a
+// broken/failed load rather than showing a broken-image icon (P0 "broken image protection").
 export function UniversityCard({
   university,
   isSaved,
   qsRank,
   cost,
   researchTopics,
+  imageUrl,
 }: {
   university: University;
   isSaved: boolean;
@@ -28,27 +34,43 @@ export function UniversityCard({
    * own published all-in estimate, not a tuition-only figure. Currently US-only coverage
    * (128/1019) — omitted entirely, not shown as "Unavailable", everywhere else. */
   cost?: { amount: number; currency: string | null };
-  /** Up to 3 of research_topics_top5 (OpenAlex), pre-sliced by the caller — a card is not
-   * the place for the full 5. */
+  /** Up to 3 short research category labels (e.g. "Physics", "Computer Science"), derived
+   * from OpenAlex's research_topics_top5 via lib/universities/research-taxonomy.ts and
+   * de-duplicated by the caller — a card is not the place for raw, long OpenAlex topic
+   * phrases (the detail page's "Research strengths" section keeps those in full). */
   researchTopics?: string[];
+  /** `primary_image_url` from university_profile_metrics — a verified campus photo, re-hosted
+   * on our own Supabase Storage bucket. Absent for most universities today; falls back to
+   * `logo_url` then a plain icon, never to a placeholder pretending to be a real photo. */
+  imageUrl?: string | null;
 }) {
   const [saved, setSaved] = useState(isSaved);
   const [isPending, startTransition] = useTransition();
+  const [photoFailed, setPhotoFailed] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
   const compare = useCompare();
   const isComparing = compare.isSelected(university.id);
 
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border bg-card">
-      <div className="relative flex h-32 items-center justify-center bg-gradient-to-br from-brand-primary-subtle to-brand-primary-soft">
-        {university.logo_url ? (
-          // Plain <img>, not next/image: logo_url can point at any official university
-          // domain (unbounded, admin/sync-populated) — Next's <Image> requires every
-          // remote hostname allow-listed in next.config.ts ahead of time, which doesn't
-          // fit a source this open-ended without an overly broad wildcard. Next only
-          // optimizes/proxies through its own remote-image pipeline; a plain <img> has no
-          // such restriction and still renders the real logo when one exists.
+      <div className="relative flex h-32 items-center justify-center overflow-hidden bg-gradient-to-br from-brand-primary-subtle to-brand-primary-soft">
+        {imageUrl && !photoFailed ? (
+          <Image
+            src={imageUrl}
+            alt={`Campus of ${university.name}`}
+            fill
+            sizes="(min-width: 1024px) 360px, (min-width: 640px) 50vw, 100vw"
+            className="object-cover"
+            onError={() => setPhotoFailed(true)}
+          />
+        ) : university.logo_url && !logoFailed ? (
+          // Plain <img>, not next/image: logo_url can still point at an arbitrary official
+          // university domain in principle — Next's <Image> requires every remote hostname
+          // allow-listed in next.config.ts ahead of time, which doesn't fit a source this
+          // open-ended without an overly broad wildcard. A plain <img> has no such
+          // restriction and still renders the real logo when one exists.
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={university.logo_url} alt="" className="max-h-full max-w-full object-contain p-6" />
+          <img src={university.logo_url} alt="" className="max-h-full max-w-full object-contain p-6" onError={() => setLogoFailed(true)} />
         ) : (
           <Landmark className="size-9 text-brand-primary-strong/60" aria-hidden />
         )}

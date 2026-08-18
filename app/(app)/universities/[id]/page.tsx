@@ -11,6 +11,7 @@ import { SourceBadge } from "@/components/oryn/source-badge";
 import { PageHeader } from "@/components/oryn/page-header";
 import { SectionHeader } from "@/components/oryn/section-header";
 import { SaveUniversityButton } from "@/features/universities/save-university-button";
+import { DetailHeroImage } from "@/features/universities/detail-hero-image";
 import { RequirementEvaluationBadge } from "@/features/universities/requirement-evaluation-badge";
 import { AdminRequirementForm } from "@/features/universities/admin-requirement-form";
 import { canonicalUniversityId, isSupersededUniversityId } from "@/lib/universities/canonical";
@@ -76,6 +77,9 @@ export default async function UniversityDetailPage({ params }: { params: Promise
         "qs_size_category",
         "tuition_international_annual",
         "tuition_domestic_annual",
+        "primary_image_url",
+        "primary_image_license",
+        "primary_image_attribution",
       ]),
   ]);
 
@@ -126,8 +130,31 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   const domesticTuition = domesticTuitionMetric?.value_numeric ?? null;
   const qsSizeLabel = qsSizeCode ? (QS_SIZE_LABELS[qsSizeCode] ?? qsSizeCode) : null;
 
+  const imageMetric = metricByCode.get("primary_image_url");
+  const imageLicenseMetric = metricByCode.get("primary_image_license");
+  const imageAttributionMetric = metricByCode.get("primary_image_attribution");
+  const imageCaptionParts = [imageAttributionMetric?.value_text, imageLicenseMetric?.value_text].filter((v): v is string => Boolean(v));
+
   return (
     <div className="space-y-8">
+      {imageMetric?.value_text ? (
+        <DetailHeroImage
+          src={imageMetric.value_text}
+          alt={`Main campus of ${university.name}`}
+          caption={
+            imageCaptionParts.length > 0 || imageMetric.source_url ? (
+              <p className="flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
+                {imageCaptionParts.length > 0 ? <span>{imageCaptionParts.join(" · ")}</span> : null}
+                {imageMetric.source_url ? (
+                  <a href={imageMetric.source_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                    {imageCaptionParts.length > 0 ? "· Source ↗" : "Source ↗"}
+                  </a>
+                ) : null}
+              </p>
+            ) : undefined
+          }
+        />
+      ) : null}
       <PageHeader
         title={university.name}
         description={

@@ -67,6 +67,21 @@ describe("sourceAuthority", () => {
     expect(sourceAuthority("cost", "https://some-random-blog.example/fees")).toBeNull();
   });
 
+  test("Wikimedia Commons is HIGH for image, but not for any other fact class", () => {
+    expect(sourceAuthority("image", "https://commons.wikimedia.org/wiki/File:MIT_Dome.jpg")).toEqual({ tier: "HIGH", sourceType: "wikimedia_commons" });
+    expect(sourceAuthority("image", "https://upload.wikimedia.org/wikipedia/commons/x/MIT_Dome.jpg")).toEqual({ tier: "HIGH", sourceType: "wikimedia_commons" });
+    expect(sourceAuthority("identity", "https://commons.wikimedia.org/wiki/File:MIT_Dome.jpg")).toBeNull();
+    expect(sourceAuthority("population", "https://commons.wikimedia.org/wiki/File:MIT_Dome.jpg")).toBeNull();
+  });
+
+  test("Wikidata itself is still never a source for image, index only, same as every other fact class", () => {
+    expect(sourceAuthority("image", "https://www.wikidata.org/wiki/Q49108")).toBeNull();
+  });
+
+  test("an institution's own domain is HIGH for image too", () => {
+    expect(sourceAuthority("image", "https://www.ed.ac.uk/about")).toEqual({ tier: "HIGH", sourceType: "official_primary" });
+  });
+
   test("a caller-supplied official domain is accepted for institutions without an academic suffix", () => {
     // ETH sits on .ch, TUM on .de — real universities whose own domains carry no academic
     // suffix. They are only trusted when the caller established the domain from an

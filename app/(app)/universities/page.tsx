@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Landmark, Search } from "lucide-react";
 import { UniversityExplorerHero } from "@/features/universities/university-explorer-hero";
 import { UniversityCard } from "@/features/universities/university-card";
+import { categorizeAndDedupeResearchTopics } from "@/lib/universities/research-taxonomy";
 import { SUPPORTED_COUNTRIES } from "@/lib/data/country-geo";
 import { regionById } from "@/lib/data/regions";
 import { searchUniversityRows } from "@/lib/universities/alias-search";
@@ -256,19 +257,30 @@ export default async function UniversitiesPage({
   const qsRankByUniId = new Map<string, string>();
   const costByUniId = new Map<string, { amount: number; currency: string | null }>();
   const researchTopicsByUniId = new Map<string, string[]>();
+  const imageUrlByUniId = new Map<string, string>();
   if (universities.length > 0) {
     const ids = universities.map((u) => u.id);
     const [{ data: rankings }, { data: stats }, { data: metrics }] = await Promise.all([
       supabase.from("university_rankings").select("university_id, rank_display").eq("ranking_provider", "QS").in("university_id", ids),
       supabase.from("university_statistics").select("university_id, cost_of_attendance, cost_currency").in("university_id", ids).not("cost_of_attendance", "is", null),
-      supabase.from("university_profile_metrics").select("university_id, value_text").eq("metric_code", "research_topics_top5").in("university_id", ids),
+      supabase
+        .from("university_profile_metrics")
+        .select("university_id, metric_code, value_text")
+        .in("metric_code", ["research_topics_top5", "primary_image_url"])
+        .in("university_id", ids),
     ]);
     for (const r of rankings ?? []) qsRankByUniId.set(r.university_id, r.rank_display);
     for (const s of stats ?? []) {
       if (s.cost_of_attendance != null) costByUniId.set(s.university_id, { amount: s.cost_of_attendance, currency: s.cost_currency });
     }
     for (const m of metrics ?? []) {
-      if (m.value_text) researchTopicsByUniId.set(m.university_id, m.value_text.split(" | ").filter(Boolean).slice(0, 3));
+      if (!m.value_text) continue;
+      if (m.metric_code === "research_topics_top5") {
+        const categories = categorizeAndDedupeResearchTopics(m.value_text.split(" | ").filter(Boolean));
+        if (categories.length > 0) researchTopicsByUniId.set(m.university_id, categories);
+      } else if (m.metric_code === "primary_image_url") {
+        imageUrlByUniId.set(m.university_id, m.value_text);
+      }
     }
   }
 
@@ -388,6 +400,7 @@ export default async function UniversitiesPage({
                 qsRank={qsRankByUniId.get(university.id)}
                 cost={costByUniId.get(university.id)}
                 researchTopics={researchTopicsByUniId.get(university.id)}
+                imageUrl={imageUrlByUniId.get(university.id)}
               />
             ))}
           </div>
