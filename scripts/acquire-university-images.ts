@@ -53,6 +53,23 @@ try {
   // No .env.local — fine, maybe using real environment variables.
 }
 
+// The official-site sub-page discovery tier (added this session) hits dozens of arbitrary,
+// unvetted hosts per run instead of just Wikidata/Commons's own well-behaved endpoints — one of
+// them sent a malformed/truncated response that crashed a full ~900-university run partway
+// through with a raw Node/undici socket-teardown assertion (`Parser.finish` /
+// `TLSSocket.onHttpSocketEnd`), a failure mode below the fetch Promise itself, so no per-call
+// try/catch in this file ever saw it. A single bad server should cost one university's
+// candidate, not the whole run's already-completed writes' worth of progress. Logging and
+// continuing is the correct tradeoff for a batch script that writes incrementally per
+// university (unlike a long-lived server, where surviving an uncaughtException is genuinely
+// unsafe) — nothing here holds process-wide mutable state a corrupted socket could poison.
+process.on("uncaughtException", (error) => {
+  console.error(`  [uncaughtException, continuing] ${error instanceof Error ? error.message : error}`);
+});
+process.on("unhandledRejection", (reason) => {
+  console.error(`  [unhandledRejection, continuing] ${reason instanceof Error ? reason.message : reason}`);
+});
+
 import { fetchAllRowsVerified, type PostgrestTarget } from "../lib/acquisition/paginate";
 import { getSupersededUniversityIds } from "../lib/universities/canonical";
 import { domainOf, sourceAuthority } from "../lib/acquisition/source-authority";
