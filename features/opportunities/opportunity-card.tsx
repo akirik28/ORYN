@@ -62,11 +62,19 @@ export function OpportunityCard({
   matchScore,
   reasonCodes,
   initialStatus,
+  eligible = true,
+  eligibilityNotes = null,
 }: {
   opportunity: Opportunity;
   matchScore: number;
   reasonCodes: string[];
   initialStatus: SavedOpportunityStatus | null;
+  /** Browse mode (unlike "For you", which pre-filters to eligible-only) can surface an
+   * opportunity this student doesn't qualify for — a Discover surface shouldn't silently
+   * narrow what's visible. Shown as a plain factual note, not a warning: not qualifying
+   * today isn't a defect in the opportunity. */
+  eligible?: boolean;
+  eligibilityNotes?: string | null;
 }) {
   const [status, setStatus] = useState(initialStatus);
   const [isPending, startTransition] = useTransition();
@@ -90,7 +98,11 @@ export function OpportunityCard({
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="mb-1 flex flex-wrap items-center gap-2">
-            <StatusBadge label={tier.label} tone={tier.tone} icon={Sparkles} />
+            {eligible ? (
+              <StatusBadge label={tier.label} tone={tier.tone} icon={Sparkles} />
+            ) : (
+              <StatusBadge label="Not eligible" tone="neutral" />
+            )}
             {SELECTIVITY_LABEL[opportunity.selectivity_tier] ? (
               <StatusBadge label={SELECTIVITY_LABEL[opportunity.selectivity_tier]!} tone="neutral" />
             ) : null}
@@ -107,6 +119,8 @@ export function OpportunityCard({
       </div>
 
       {opportunity.description ? <p className="line-clamp-2 text-sm text-muted-foreground">{opportunity.description}</p> : null}
+
+      {!eligible && eligibilityNotes ? <p className="text-xs text-muted-foreground">{eligibilityNotes}</p> : null}
 
       {reasonCodes.length > 0 ? (
         <p className="text-xs text-muted-foreground">
