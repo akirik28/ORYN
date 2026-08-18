@@ -86,16 +86,22 @@ export default async function UniversitiesPage({
   // -authored Database type can't model FK embedding reliably) rather than joined in the
   // main query, so cards can show "QS #N" without slowing down the primary browse path.
   const qsRankByUniId = new Map<string, string>();
+  const costByUniId = new Map<string, { amount: number; currency: string | null }>();
+  const researchTopicsByUniId = new Map<string, string[]>();
   if (universities.length > 0) {
-    const { data: rankings } = await supabase
-      .from("university_rankings")
-      .select("university_id, rank_display")
-      .eq("ranking_provider", "QS")
-      .in(
-        "university_id",
-        universities.map((u) => u.id)
-      );
+    const ids = universities.map((u) => u.id);
+    const [{ data: rankings }, { data: stats }, { data: metrics }] = await Promise.all([
+      supabase.from("university_rankings").select("university_id, rank_display").eq("ranking_provider", "QS").in("university_id", ids),
+      supabase.from("university_statistics").select("university_id, cost_of_attendance, cost_currency").in("university_id", ids).not("cost_of_attendance", "is", null),
+      supabase.from("university_profile_metrics").select("university_id, value_text").eq("metric_code", "research_topics_top5").in("university_id", ids),
+    ]);
     for (const r of rankings ?? []) qsRankByUniId.set(r.university_id, r.rank_display);
+    for (const s of stats ?? []) {
+      if (s.cost_of_attendance != null) costByUniId.set(s.university_id, { amount: s.cost_of_attendance, currency: s.cost_currency });
+    }
+    for (const m of metrics ?? []) {
+      if (m.value_text) researchTopicsByUniId.set(m.university_id, m.value_text.split(" | ").filter(Boolean).slice(0, 3));
+    }
   }
 
   const scopeLabel = country ?? region?.name ?? null;
@@ -147,6 +153,8 @@ export default async function UniversitiesPage({
                 university={university}
                 isSaved={savedIds.has(university.id)}
                 qsRank={qsRankByUniId.get(university.id)}
+                cost={costByUniId.get(university.id)}
+                researchTopics={researchTopicsByUniId.get(university.id)}
               />
             ))}
           </div>

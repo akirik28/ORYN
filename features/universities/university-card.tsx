@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { MapPin, Bookmark, BookmarkCheck, Landmark, Users, Trophy } from "lucide-react";
+import { MapPin, Bookmark, BookmarkCheck, Landmark, Users, Trophy, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { addTargetUniversity } from "@/app/(app)/universities/actions";
 import type { University } from "@/types/database";
@@ -15,11 +15,21 @@ export function UniversityCard({
   university,
   isSaved,
   qsRank,
+  cost,
+  researchTopics,
 }: {
   university: University;
   isSaved: boolean;
   /** QS 2027 rank_display for this university, when it has one (e.g. "1", "=2", "601-610"). */
   qsRank?: string | null;
+  /** From university_statistics.cost_of_attendance — labeled plainly as "cost of
+   * attendance" (not "tuition") since that's what this column actually is: the source's
+   * own published all-in estimate, not a tuition-only figure. Currently US-only coverage
+   * (128/1019) — omitted entirely, not shown as "Unavailable", everywhere else. */
+  cost?: { amount: number; currency: string | null };
+  /** Up to 3 of research_topics_top5 (OpenAlex), pre-sliced by the caller — a card is not
+   * the place for the full 5. */
+  researchTopics?: string[];
 }) {
   const [saved, setSaved] = useState(isSaved);
   const [isPending, startTransition] = useTransition();
@@ -73,6 +83,25 @@ export function UniversityCard({
 
         {university.institution_type ? (
           <span className="w-fit rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground">{university.institution_type}</span>
+        ) : null}
+
+        {cost ? (
+          <p className="flex items-center gap-1 text-sm font-medium">
+            <DollarSign className="size-3.5 shrink-0 text-muted-foreground" />
+            {cost.currency === "USD" || !cost.currency ? "$" : `${cost.currency} `}
+            {cost.amount.toLocaleString("en-US")}
+            <span className="font-normal text-muted-foreground">/ year, cost of attendance</span>
+          </p>
+        ) : null}
+
+        {researchTopics && researchTopics.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {researchTopics.map((topic) => (
+              <span key={topic} className="rounded-full border bg-muted/50 px-2 py-0.5 text-xs text-muted-foreground">
+                {topic}
+              </span>
+            ))}
+          </div>
         ) : null}
 
         <div className="mt-auto flex items-center gap-2 pt-2">
