@@ -2,6 +2,7 @@ import type { EntityScope } from "@/lib/entities/field-policy";
 import { INTEREST_SUGGESTIONS } from "@/lib/validation/onboarding";
 import { COURSE_NAME_SUGGESTIONS } from "@/lib/vocabularies/subjects";
 import { TEST_NAME_SUGGESTIONS } from "@/lib/vocabularies/tests";
+import { COUNTRY_SUGGESTIONS } from "@/lib/vocabularies/countries";
 
 // Essay Story Bank (founder-confirmed MVP scope) reads this field as candidate material —
 // never CV-facing, never auto-summarized. One shared field, one shared prompt list, reused
@@ -244,7 +245,7 @@ export const WORK_EXPERIENCE_FIELDS: FieldConfig[] = [
 
 export const EDUCATION_FIELDS: FieldConfig[] = [
   { type: "entity", name: "school_name", entityIdField: "school_entity_id", scope: "school", label: "School name", allowCustom: true, customLabel: "school" },
-  { type: "text", name: "country", label: "Country", span: "half" },
+  { type: "suggest", name: "country", label: "Country", suggestions: COUNTRY_SUGGESTIONS, span: "half" },
   { type: "select", name: "stage", label: "Stage", options: EDUCATION_STAGE_OPTIONS, span: "half" },
   { type: "select", name: "curriculum", label: "Curriculum", options: CURRICULUM_FIELD_OPTIONS, span: "half" },
   { type: "checkbox", name: "is_current", label: "Currently attending" },
