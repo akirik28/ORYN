@@ -90,7 +90,8 @@ export function AdvisorChat({
                 <button
                   key={prompt}
                   onClick={() => submit(prompt)}
-                  className="rounded-full border px-3.5 py-1.5 text-sm transition-colors duration-(--duration-fast) hover:border-brand-primary-border hover:bg-brand-primary-subtle"
+                  disabled={!aiConfigured}
+                  className="rounded-full border px-3.5 py-1.5 text-sm transition-colors duration-(--duration-fast) hover:border-brand-primary-border hover:bg-brand-primary-subtle disabled:pointer-events-none disabled:opacity-50"
                 >
                   {prompt}
                 </button>
