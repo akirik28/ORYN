@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
 import { uploadAndExtractCV } from "@/app/(onboarding)/onboarding/actions";
+import { EntityCombobox } from "@/features/entities/entity-combobox";
+import type { EntityScope } from "@/lib/entities/field-policy";
 import type { CVExtractionResult } from "@/lib/ai/cv-extraction";
 
 export type ExtractedCategory = "education" | "activities" | "awards" | "projects" | "research" | "workExperience";
@@ -17,6 +19,11 @@ export interface ReviewedExtractedItem {
   category: ExtractedCategory;
   title: string;
   organization: string | null;
+  /** Set only when the student links the extracted organization/school text to a real
+   * canonical-entity result below — never inferred from the raw CV text itself (an AI
+   * guess at which registry row a string means would be exactly the kind of silent
+   * auto-merge lib/entities/resolve.ts's own duplicate-check exists to prevent). */
+  organizationEntityId: string | null;
   description: string | null;
   startDate: string | null;
   endDate: string | null;
@@ -33,6 +40,18 @@ const CATEGORY_LABELS: Record<ExtractedCategory, string> = {
   workExperience: "Work experience",
 };
 
+/** Mirrors features/profile/field-config.ts's per-table entity scopes exactly — CV-import
+ * items land in the same tables the manual profile forms do, so a school extracted here
+ * and a school typed by hand on /profile must resolve against the same registry slice. */
+const CATEGORY_TO_ORGANIZATION_SCOPE: Record<ExtractedCategory, EntityScope> = {
+  education: "school",
+  activities: "activity_organization",
+  awards: "award_organization",
+  projects: "project_organization",
+  research: "research_organization",
+  workExperience: "work_organization",
+};
+
 function flatten(result: CVExtractionResult): ReviewedExtractedItem[] {
   let counter = 0;
   const items: ReviewedExtractedItem[] = [];
@@ -44,6 +63,7 @@ function flatten(result: CVExtractionResult): ReviewedExtractedItem[] {
         category,
         title: raw.title,
         organization: raw.organization,
+        organizationEntityId: null,
         description: raw.description,
         startDate: raw.startDate,
         endDate: raw.endDate,
@@ -58,9 +78,11 @@ function flatten(result: CVExtractionResult): ReviewedExtractedItem[] {
 export function ImportStep({
   reviewedItems,
   setReviewedItems,
+  country,
 }: {
   reviewedItems: ReviewedExtractedItem[];
   setReviewedItems: (items: ReviewedExtractedItem[]) => void;
+  country?: string | null;
 }) {
   const [method, setMethod] = useState<"choose" | "cv" | "manual">("choose");
   const [status, setStatus] = useState<"idle" | "uploading" | "error">("idle");
@@ -205,13 +227,21 @@ export function ImportStep({
                 className="h-8"
                 disabled={!item.included}
               />
-              <Input
-                value={item.organization ?? ""}
-                onChange={(e) => updateItem(item.id, { organization: e.target.value || null })}
-                placeholder="Organization"
-                className="h-8 text-muted-foreground"
-                disabled={!item.included}
-              />
+              {/* EntityCombobox has no native `disabled` — an unincluded item still won't be
+                  persisted (gated on `included` at submit time), this just mutes the affordance
+                  to match the title input's own disabled look above. */}
+              <div className={item.included ? "" : "pointer-events-none opacity-50"}>
+                <EntityCombobox
+                  scope={CATEGORY_TO_ORGANIZATION_SCOPE[item.category]}
+                  value={item.organization ?? ""}
+                  entityId={item.organizationEntityId}
+                  context={{ country: country?.trim() || null }}
+                  placeholder={item.category === "education" ? "School" : "Organization"}
+                  allowCustom
+                  customLabel={item.category === "education" ? "school" : "organization"}
+                  onChange={(next) => updateItem(item.id, { organization: next.displayName, organizationEntityId: next.id })}
+                />
+              </div>
             </div>
             <button
               type="button"
