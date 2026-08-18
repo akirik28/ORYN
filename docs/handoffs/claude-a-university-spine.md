@@ -1080,24 +1080,43 @@ IS a single clean figure at every one of these), not guessed at or skipped silen
 pass wanting these specific three would need to either drive the search tool interactively
 (course-by-course, a bigger job) or find a per-department static page.
 
-**A duplicate-identity finding, surfaced not fixed**: the two "London School of Economics" rows
-(`cfd5cd77-...` and `cc117524-...`) share one `canonical_entity_id` — already merged at the
-entity level — but neither `universities.id` is in `lib/universities/canonical.ts`'s row-level
-`SUPERSESSIONS` map, so the explorer still renders LSE as two separate cards today. This
-script wrote to the more complete row (`cfd5cd77-...`: has `website_url`/`admissions_url`,
-`institution_type: "Public"`; the other has neither and a bare "university" placeholder type)
-but did not add a supersession entry — that needs the same ROR-cross-check discipline the
-other 28 merged pairs got (Phase 2), not a decision made mid-task. **Queued as a follow-up**,
-worth checking whether other similarly-already-merged-at-entity-level-but-not-row-level pairs
-exist beyond just this one.
+**A real mistake caught and fixed before this reached `main`, worth naming precisely**: this
+script's first version keyed its table entry as `UCL`, matching `universities.name` for the id
+`cf8adcbd-...`. That row IS a known duplicate — `lib/universities/duplicate-supersessions.json`
+already resolves it (Phase 2, this doc's line ~422): `University College London`
+(`03c8faf1-...`) is the winner, `UCL` (`cf8adcbd-...`) the loser. Writing to `UCL` put real,
+carefully-verified tuition data on a row `getSupersededUniversityIds()` excludes from every
+browse/search/detail surface — permanently invisible, exactly the **"KFUPM/UCL mistake"** the
+founder's own prompt named by example as the thing to avoid. Caught by cross-checking the
+existing supersession registry directly rather than independently judging "which row looks more
+complete" from scratch — which is also what happened, unnoticed, for the LSE entry below: it
+happened to land on the correct (already-registered) winner row by the same "more complete
+row" heuristic, not because that registry was actually consulted at the time. **Lesson,
+stated plainly for next time**: before writing to a `universities.id` picked by name lookup,
+check `isSupersededUniversityId()`/the supersession registry FIRST — don't reason about row
+completeness from scratch when an authoritative answer already exists. Fixed: deleted the
+stray metric row on the loser id, re-ran the script keyed to `"University College London"`.
+
+**Not a new finding, just a reminder it already exists**: the "London School of Economics" and
+"University of Warwick" duplicate pairs used by this pass (`cfd5cd77-...`/`cc117524-...` and
+`0b204add-...`/`ad3ef0a4-...`) are ALSO already correctly resolved in the same
+`duplicate-supersessions.json` — this pass's LSE entry happened to target the correct winner
+row already, Warwick wasn't written to at all this pass. No new duplicate-registry gap here;
+the gap was in this script's own process, not in the registry.
 
 **UI wiring**: `app/(app)/universities/[id]/page.tsx`'s "Cost of attendance" StatCard now
-shows US `cost_of_attendance` when present, or the new `tuition_international_annual` metric
-(labeled "International tuition," phrased "From £X/yr" since it's always a range so far) when
-present, or "Unavailable" — verified live for Edinburgh (real range), Cambridge (real range),
-and UCL (correctly falls back to "Unavailable," no fabricated figure). **Not yet wired into
-the explorer grid/cards or the cost filter** — those still read `university_statistics` only,
-so a UK university with real tuition data acquired this pass still shows no cost on its
+shows, in order: US `cost_of_attendance` when present; else `tuition_international_annual`
+(labeled "International tuition," phrased "From £X/yr" since it's always a range so far), with
+the UK/Home rate in the caption when both exist; else `tuition_domestic_annual` alone, labeled
+plainly **"UK Home tuition"** (never just "tuition," so it can't be mistaken for what an
+international applicant would pay) — this last branch was missing in the first version of this
+wiring (UCL/Manchester/King's College's acquired domestic-only data was invisible, a real
+data-readiness gap caught in the same pass as the UCL row mistake, fixed together); else
+"Unavailable". Verified live for Edinburgh (international + caption), Cambridge (international
+range), and University College London at both its winner id and its (auto-redirecting) loser
+id (UK Home tuition, correctly, post-fix). **Not yet wired into the explorer grid/cards or the
+cost filter** — those still read `university_statistics` only, so a UK university with real
+tuition data acquired this pass still shows no cost on its
 explorer card and gets swept into the cost filter's "excluded because unavailable" count. A
 deliberate scope cut this pass (the explorer's cost concept and this new metric need genuinely
 distinct visual treatment, not a quick prop swap, per the same anti-conflation rule), not an
