@@ -39,7 +39,7 @@ export function WorldMapExplorer({ countryCounts, region = WORLD_REGION }: { cou
   const regionCountrySet = useMemo(() => new Set(region.countries), [region]);
   const visibleCountries = useMemo(() => SUPPORTED_COUNTRIES.filter((c) => regionCountrySet.has(c.name)), [regionCountrySet]);
   const supportedIds = useMemo(() => new Set(visibleCountries.map((c) => c.numericId)), [visibleCountries]);
-  const selectedNumericId = selected ? (countryByName.get(selected)?.numericId ?? null) : null;
+  const selectedGeoNumericId = selected ? (countryByName.get(selected)?.numericId ?? null) : null;
 
   function selectCountry(name: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -95,7 +95,7 @@ export function WorldMapExplorer({ countryCounts, region = WORLD_REGION }: { cou
             // type doesn't state, not an unsafe guess.
             (geographies as PreparedFeature[]).map((geo) => {
               const isSupported = supportedIds.has(String(geo.id));
-              const isThisSelected = selectedNumericId !== null && String(geo.id) === selectedNumericId;
+              const isThisSelected = selectedGeoNumericId !== null && String(geo.id) === selectedGeoNumericId;
               return (
                 <Geography
                   key={geo.rsmKey}
