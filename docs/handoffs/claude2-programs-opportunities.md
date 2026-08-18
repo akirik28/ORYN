@@ -305,9 +305,19 @@ Full lint/typecheck/725-test/build gate clean after this batch. Skipped the pipe
 every one of the 7 was already read live via WebFetch during research, not sourced from an
 unverified corpus row.
 
-**Next**: `architecture` (2), `finance` (4), `law` (3), `international_relations` (2),
-`physics` (1), and `entrepreneurship` (1) are the next-thinnest subjects — same
-already-in-spine-university approach (add a missing subject at a covered institution) is the
-fastest way to keep closing gaps without touching Claude 1's canonical-registry territory.
-Independent opportunity research into `scholarship`/`fellowship` (still zero from the founder
-corpus) is the other clear next priority.
+**Batch 2** (`independent_batch2_2026-08-18.jsonl`, 3 records, 3 accepted): Architecture BSc
+at UCL (Bartlett School of Architecture) and at ETH Zurich (BSc ETH Arch — correctly noted as
+German-taught, not English, unlike this branch's other programs; a real fact worth keeping
+accurate rather than smoothing over), plus BSc International Relations at LSE.
+`subject_taxonomy` breakdown corrected once actual data landed: `architecture` was genuinely
+at **zero** before this batch (not "2" as the previous note guessed — that number was
+`design`'s count, a different taxonomy value, misread while working from memory rather than a
+fresh query) — now at 2. `international_relations` 2 → 3. `university_programs` 189 → 192 (49
+universities unchanged, same pattern as batch 1: new subjects at already-covered
+institutions). Lint/typecheck/725-test/build clean.
+
+**Next**: `finance` (4), `law` (3), `physics` (1), and `entrepreneurship` (1) are the
+next-thinnest subjects — same already-in-spine-university approach (add a missing subject at
+a covered institution) is the fastest way to keep closing gaps without touching Claude 1's
+canonical-registry territory. Independent opportunity research into `scholarship`/`fellowship`
+(still zero from the founder corpus) is the other clear next priority.
