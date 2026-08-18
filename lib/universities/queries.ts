@@ -56,6 +56,75 @@ export async function getUniversityCountByCountry(supabase: SupabaseClient<Datab
   return counts;
 }
 
+/**
+ * Every university with a recorded cost_of_attendance, paginated + exact-count-verified —
+ * same discipline as getUniversityCountByCountry, for the same reason: university_statistics
+ * is one row per university (no fan-out), so as the tuition-acquisition roadmap (UK, Canada,
+ * Australia, ...) fills it in, an unpaginated `.select()` here would silently start dropping
+ * universities from the cost filter with no error once the table crosses 1000 rows — exactly
+ * the bug class this file exists to prevent. Currently 128 rows (US only), well under the
+ * cap, but built paginated from the start rather than waiting to hit it.
+ */
+export async function getAllCostOfAttendance(supabase: SupabaseClient<Database>): Promise<Map<string, number>> {
+  const result = new Map<string, number>();
+  let offset = 0;
+  let expectedTotal: number | null = null;
+  let seen = 0;
+  for (;;) {
+    const { data, count, error } = await supabase
+      .from("university_statistics")
+      .select("university_id, cost_of_attendance", { count: "exact" })
+      .not("cost_of_attendance", "is", null)
+      .order("university_id", { ascending: true })
+      .range(offset, offset + PAGE_SIZE - 1);
+    if (error) throw new Error(`getAllCostOfAttendance: ${error.message}`);
+    if (expectedTotal === null) expectedTotal = count ?? 0;
+    for (const row of data ?? []) {
+      if (row.cost_of_attendance != null) result.set(row.university_id, row.cost_of_attendance);
+    }
+    seen += (data ?? []).length;
+    if (!data || data.length < PAGE_SIZE) break;
+    offset += PAGE_SIZE;
+  }
+  if (seen !== expectedTotal) {
+    throw new Error(`getAllCostOfAttendance: assembled ${seen} rows but the server counts ${expectedTotal}. Refusing to return a partial result.`);
+  }
+  return result;
+}
+
+/**
+ * Every university's QS rank_numeric, paginated + exact-count-verified. Same rationale as
+ * getAllCostOfAttendance — university_rankings is already at 1009 rows for QS alone, i.e.
+ * already effectively at PostgREST's 1000-row cap today, not just "will get there eventually."
+ */
+export async function getAllQsRankNumeric(supabase: SupabaseClient<Database>): Promise<Map<string, number>> {
+  const result = new Map<string, number>();
+  let offset = 0;
+  let expectedTotal: number | null = null;
+  let seen = 0;
+  for (;;) {
+    const { data, count, error } = await supabase
+      .from("university_rankings")
+      .select("university_id, rank_numeric", { count: "exact" })
+      .eq("ranking_provider", "QS")
+      .not("rank_numeric", "is", null)
+      .order("university_id", { ascending: true })
+      .range(offset, offset + PAGE_SIZE - 1);
+    if (error) throw new Error(`getAllQsRankNumeric: ${error.message}`);
+    if (expectedTotal === null) expectedTotal = count ?? 0;
+    for (const row of data ?? []) {
+      if (row.rank_numeric != null) result.set(row.university_id, row.rank_numeric);
+    }
+    seen += (data ?? []).length;
+    if (!data || data.length < PAGE_SIZE) break;
+    offset += PAGE_SIZE;
+  }
+  if (seen !== expectedTotal) {
+    throw new Error(`getAllQsRankNumeric: assembled ${seen} rows but the server counts ${expectedTotal}. Refusing to return a partial result.`);
+  }
+  return result;
+}
+
 export interface TargetUniversityWithDetails extends TargetUniversity {
   university: University | null;
 }

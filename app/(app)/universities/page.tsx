@@ -7,13 +7,16 @@ import { SUPPORTED_COUNTRIES } from "@/lib/data/country-geo";
 import { regionById } from "@/lib/data/regions";
 import { searchUniversityRows } from "@/lib/universities/alias-search";
 import { getSupersededUniversityIds } from "@/lib/universities/canonical";
-import { getUniversityCountByCountry } from "@/lib/universities/queries";
+import { getUniversityCountByCountry, getAllCostOfAttendance, getAllQsRankNumeric } from "@/lib/universities/queries";
+import { COST_BUCKETS, SIZE_BUCKETS, TYPE_OPTIONS, RANK_TIERS, RANK_OPTIONS, applyRangeFilters, matchesInstitutionType } from "@/lib/universities/filters";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/oryn/page-header";
 import { EmptyState } from "@/components/oryn/empty-state";
 import { Pagination } from "@/components/oryn/pagination";
 import { SortSelect } from "@/features/universities/sort-select";
+import { FilterSheet, type FilterOption } from "@/features/universities/filter-sheet";
+import { CompareBar } from "@/features/universities/compare-bar";
 import type { University } from "@/types/database";
 
 export const metadata = { title: "Universities" };
@@ -30,15 +33,39 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
 export default async function UniversitiesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ country?: string; region?: string; q?: string; page?: string; sort?: string }>;
+  searchParams: Promise<{
+    country?: string;
+    region?: string;
+    q?: string;
+    page?: string;
+    sort?: string;
+    cost?: string;
+    type?: string;
+    size?: string;
+    rank?: string;
+  }>;
 }) {
-  const { country, region: regionId, q, page: pageParam, sort: sortParam } = await searchParams;
+  const {
+    country,
+    region: regionId,
+    q,
+    page: pageParam,
+    sort: sortParam,
+    cost: costParam,
+    type: typeParam,
+    size: sizeParam,
+    rank: rankParam,
+  } = await searchParams;
   const region = regionId ? regionById.get(regionId) : undefined;
   const page = Math.max(1, Number(pageParam) || 1);
   // "Recommended" isn't offered: there's no real personalization engine behind this browse
   // view yet, and a fake relevance score would be exactly the "sahte scoring" a founder
   // review explicitly ruled out. Ranking is the closest honest default.
   const sort: SortOption = sortParam === "students" || sortParam === "name" ? sortParam : "ranking";
+  const cost = COST_BUCKETS.find((b) => b.value === costParam)?.value ?? null;
+  const type = TYPE_OPTIONS.find((t) => t.value === typeParam)?.value ?? null;
+  const size = SIZE_BUCKETS.find((b) => b.value === sizeParam)?.value ?? null;
+  const rank = (RANK_TIERS as readonly string[]).includes(rankParam ?? "") ? (rankParam as (typeof RANK_TIERS)[number]) : null;
   const session = await requireUser();
   const supabase = await createClient();
 
@@ -55,44 +82,98 @@ export default async function UniversitiesPage({
   // search, so none of the three shows a duplicate card or an inflated per-country count.
   const supersededIds = getSupersededUniversityIds();
 
+  // cost/size/rank are checked via an in-memory intersection (see fetchViaIdIntersection)
+  // rather than a `.in("id", [...])` filter, because that filter has a real, verified server-
+  // side size limit: a live test against this project during this build showed `.in()` starting
+  // to fail (Bad Request / connection reset) somewhere around 400-700 uuids, well under the
+  // ~1019 universities a "World" scope can produce. A rank filter alone ("Top 500") can already
+  // exceed that on its own. Fetching the full column once (paginated, see getAllCostOfAttendance/
+  // getAllQsRankNumeric) and intersecting client-side avoids the limit entirely, at the cost of
+  // one extra small query when these filters (or Ranking sort) are actually in use.
+  const needsQsRankMap = !q && (sort === "ranking" || rank !== null);
+  const [costMap, qsRankMap] = await Promise.all([
+    cost ? getAllCostOfAttendance(supabase) : Promise.resolve(null),
+    needsQsRankMap ? getAllQsRankNumeric(supabase) : Promise.resolve(null),
+  ]);
+
+  const rangeFilters = { size, cost, rank };
+  const rangeData = { costMap: costMap ?? undefined, qsRankMap: qsRankMap ?? undefined };
+
   /**
-   * `sort === "ranking"` needs a different PRIMARY table: `universities` has no ranking
-   * column of its own (rankings live in `university_rankings`, a separate table — this
-   * codebase's hand-authored Database type can't reliably embed a foreign-table order-by,
-   * per the same constraint `getTargetUniversitiesWithDetails` documents), so a true
-   * database-level ranking sort has to start FROM `university_rankings` and fetch the
-   * matching `universities` rows after, not the other way around.
+   * Country/region scope + the (high-coverage, 1002/1019) institution_type filter, applied
+   * as real Postgres filters — paginated + exact-count-verified against PostgREST's 1000-row
+   * cap (the same bug class fixed in getUniversityCountByCountry: a "World" scope alone is
+   * 1019 rows, already past it). student_size travels along unfiltered here (size bucketing
+   * happens in applyRangeFilters, not as a DB filter) specifically so an unknown-size
+   * university can still be counted as "excluded because unavailable" instead of just
+   * vanishing from an unfiltered `.gte()` the way a NULL comparison silently would.
+   */
+  async function getScopedRows(): Promise<{ id: string; name: string; student_size: number | null }[]> {
+    const rows: { id: string; name: string; student_size: number | null }[] = [];
+    let offset = 0;
+    let expectedTotal: number | null = null;
+    for (;;) {
+      let q2 = supabase
+        .from("universities")
+        .select("id, name, student_size", { count: "exact" })
+        .order("id", { ascending: true })
+        .range(offset, offset + 999);
+      if (scopedCountries) q2 = q2.in("country", scopedCountries);
+      if (supersededIds.length > 0) q2 = q2.not("id", "in", `(${supersededIds.join(",")})`);
+      if (type) q2 = q2.ilike("institution_type", `%${type}%`);
+      const { data, count, error } = await q2;
+      if (error) throw new Error(`getScopedRows: ${error.message}`);
+      if (expectedTotal === null) expectedTotal = count ?? 0;
+      rows.push(...(data ?? []));
+      if (!data || data.length < 1000) break;
+      offset += 1000;
+    }
+    if (rows.length !== expectedTotal) {
+      throw new Error(`getScopedRows: assembled ${rows.length} rows but the server counts ${expectedTotal}. Refusing to return a partial result.`);
+    }
+    return rows;
+  }
+
+  /**
+   * Used whenever a query can't be expressed as one direct Postgrest filter chain: Ranking
+   * sort (rank lives in `university_rankings`, a separate table — see the historical note
+   * below) or any of the cost/size/rank filters (see applyRangeFilters above for why those
+   * are TS-side, not `.in()`-based). Every other case (no filters, or type-only) stays on the
+   * cheaper single-query `browseQuery` path below.
    *
-   * Known, honest limitation: only 1009/1019 universities have a QS rank at all. The 10
-   * without one simply don't appear under Ranking sort — not hidden on purpose, just not
-   * produced by a query that starts from the rankings table. Name or Student population
-   * sort show them fine. A real fix needs either a denormalized sort column on
+   * Known, honest limitation carried over from the original Ranking-sort implementation: only
+   * 1009/1019 universities have a QS rank at all. The 10 without one simply don't appear under
+   * Ranking sort or the rank tier filter — not hidden on purpose, just not produced by a query
+   * that starts from the rankings table. A real fix needs either a denormalized sort column on
    * `universities` or a Postgres view/RPC joining the two — neither buildable without
    * migration/DDL access this session; noted for the founder backlog rather than blocked on.
    */
-  async function fetchRankingSortedPage(): Promise<{ data: University[]; count: number }> {
-    let idsQuery = supabase.from("universities").select("id").order("id", { ascending: true });
-    if (scopedCountries) idsQuery = idsQuery.in("country", scopedCountries);
-    if (supersededIds.length > 0) idsQuery = idsQuery.not("id", "in", `(${supersededIds.join(",")})`);
-    const { data: scopedIdRows } = await idsQuery;
-    const scopedIds = (scopedIdRows ?? []).map((r) => r.id);
-    if (scopedIds.length === 0) return { data: [], count: 0 };
+  async function fetchViaIdIntersection(): Promise<{ data: University[]; count: number; sizeUnknownCount?: number; costUnknownCount?: number }> {
+    const scopedRows = await getScopedRows();
+    const { matched, sizeUnknown, costUnknown } = applyRangeFilters(scopedRows, rangeFilters, rangeData);
 
-    const { data: rankRows, count } = await supabase
-      .from("university_rankings")
-      .select("university_id", { count: "exact" })
-      .eq("ranking_provider", "QS")
-      .in("university_id", scopedIds)
-      .order("rank_numeric", { ascending: true, nullsFirst: false })
-      .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
-    const orderedIds = (rankRows ?? []).map((r) => r.university_id);
-    if (orderedIds.length === 0) return { data: [], count: count ?? 0 };
+    let ordered: typeof matched;
+    if (sort === "ranking") {
+      ordered = matched.filter((r) => qsRankMap!.has(r.id)).sort((a, b) => qsRankMap!.get(a.id)! - qsRankMap!.get(b.id)!);
+    } else if (sort === "students") {
+      ordered = matched.filter((r) => r.student_size != null).sort((a, b) => (b.student_size ?? 0) - (a.student_size ?? 0));
+    } else {
+      ordered = matched.slice().sort((a, b) => a.name.localeCompare(b.name));
+    }
 
-    const { data: rows } = await supabase.from("universities").select("*").in("id", orderedIds);
+    const count = ordered.length;
+    const pageIds = ordered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((r) => r.id);
+    if (pageIds.length === 0) return { data: [], count, sizeUnknownCount: sizeUnknown, costUnknownCount: costUnknown };
+
+    // pageIds.length is always <= PAGE_SIZE (48) here — always well under the `.in()` size
+    // limit documented above, unlike the ids this function narrows FROM.
+    const { data: rows } = await supabase.from("universities").select("*").in("id", pageIds);
     const byId = new Map((rows ?? []).map((u) => [u.id, u]));
-    const ordered = orderedIds.map((id) => byId.get(id)).filter((u): u is University => u != null);
-    return { data: ordered, count: count ?? 0 };
+    const finalRows = pageIds.map((id) => byId.get(id)).filter((u): u is University => u != null);
+    return { data: finalRows, count, sizeUnknownCount: sizeUnknown, costUnknownCount: costUnknown };
   }
+
+  const useIdIntersectionPath = sort === "ranking" || cost !== null || size !== null || rank !== null;
 
   let browseQuery = supabase
     .from("universities")
@@ -102,9 +183,10 @@ export default async function UniversitiesPage({
   else browseQuery = browseQuery.order("name", { ascending: true });
   if (scopedCountries) browseQuery = browseQuery.in("country", scopedCountries);
   if (supersededIds.length > 0) browseQuery = browseQuery.not("id", "in", `(${supersededIds.join(",")})`);
+  if (type) browseQuery = browseQuery.ilike("institution_type", `%${type}%`);
 
   const [universitiesRes, liveCountryCounts, targetsRes] = await Promise.all([
-    q ? Promise.resolve(null) : sort === "ranking" ? fetchRankingSortedPage() : browseQuery,
+    q ? Promise.resolve(null) : useIdIntersectionPath ? fetchViaIdIntersection() : browseQuery,
     // 2026-08-18 fix: this used to be a single unpaginated `.select("country")` filtered
     // client-side against a 12-country hardcoded allowlist (SUPPORTED_COUNTRIES) — the
     // combination silently dropped 77 of the 89 real countries in the data from every
@@ -130,9 +212,29 @@ export default async function UniversitiesPage({
   const totalUniversities = [...liveCountryCounts.values()].reduce((sum, n) => sum + n, 0);
 
   const savedIds = new Set((targetsRes.data ?? []).map((t) => t.university_id));
-  const searchResult = q ? await searchUniversityRows(supabase, q, { limit: PAGE_SIZE, countries: scopedCountries }) : null;
-  const universities = searchResult ?? universitiesRes?.data ?? [];
-  const totalResults = q ? universities.length : (universitiesRes?.count ?? 0);
+  const rawSearchResult = q ? await searchUniversityRows(supabase, q, { limit: PAGE_SIZE, countries: scopedCountries }) : null;
+  let sizeUnknownCount: number | undefined;
+  let costUnknownCount: number | undefined;
+  let universities: University[];
+  let totalResults: number;
+  if (rawSearchResult) {
+    const typeFiltered = rawSearchResult.filter((u) => matchesInstitutionType(u.institution_type, type));
+    const { matched, sizeUnknown, costUnknown } = applyRangeFilters(typeFiltered, rangeFilters, rangeData);
+    universities = matched;
+    totalResults = matched.length;
+    sizeUnknownCount = sizeUnknown;
+    costUnknownCount = costUnknown;
+  } else if (useIdIntersectionPath) {
+    const result = universitiesRes as Awaited<ReturnType<typeof fetchViaIdIntersection>>;
+    universities = result.data;
+    totalResults = result.count;
+    sizeUnknownCount = result.sizeUnknownCount;
+    costUnknownCount = result.costUnknownCount;
+  } else {
+    const result = universitiesRes as Awaited<typeof browseQuery>;
+    universities = result.data ?? [];
+    totalResults = result.count ?? 0;
+  }
   const totalPages = q ? 1 : Math.max(1, Math.ceil(totalResults / PAGE_SIZE));
 
   // Batch-fetched separately (see getTargetUniversitiesWithDetails for why: our hand
@@ -159,26 +261,43 @@ export default async function UniversitiesPage({
 
   const scopeLabel = country ?? region?.name ?? null;
 
-  function buildPageHref(targetPage: number): string {
+  function buildHref(overrides: { page?: number; sort?: SortOption; cost?: string | null; type?: string | null; size?: string | null; rank?: string | null }): string {
     const params = new URLSearchParams();
     if (country) params.set("country", country);
     if (region) params.set("region", region.id);
     if (q) params.set("q", q);
-    if (sort !== "ranking") params.set("sort", sort);
-    if (targetPage > 1) params.set("page", String(targetPage));
+    const nextSort = overrides.sort ?? sort;
+    if (nextSort !== "ranking") params.set("sort", nextSort);
+    const nextCost = "cost" in overrides ? overrides.cost : cost;
+    const nextType = "type" in overrides ? overrides.type : type;
+    const nextSize = "size" in overrides ? overrides.size : size;
+    const nextRank = "rank" in overrides ? overrides.rank : rank;
+    if (nextCost) params.set("cost", nextCost);
+    if (nextType) params.set("type", nextType);
+    if (nextSize) params.set("size", nextSize);
+    if (nextRank) params.set("rank", nextRank);
+    // Any filter or sort change resets to page 1 (the result set just changed size); explicit
+    // pagination passes its own target page.
+    const nextPage = overrides.page ?? 1;
+    if (nextPage > 1) params.set("page", String(nextPage));
     const qs = params.toString();
     return qs ? `/universities?${qs}` : "/universities";
   }
 
-  function buildSortHref(nextSort: SortOption): string {
-    const params = new URLSearchParams();
-    if (country) params.set("country", country);
-    if (region) params.set("region", region.id);
-    if (q) params.set("q", q);
-    if (nextSort !== "ranking") params.set("sort", nextSort);
-    const qs = params.toString();
-    return qs ? `/universities?${qs}` : "/universities";
+  const buildPageHref = (targetPage: number) => buildHref({ page: targetPage });
+  const buildSortHref = (nextSort: SortOption) => buildHref({ sort: nextSort });
+  const buildFilterHref = (overrides: { cost?: string | null; type?: string | null; size?: string | null; rank?: string | null }) => buildHref(overrides);
+
+  function toOptions<V extends string>(defs: { value: V; label: string }[], current: V | null, key: "cost" | "type" | "size" | "rank"): FilterOption[] {
+    return defs.map((d) => ({
+      value: d.value,
+      label: d.label,
+      active: current === d.value,
+      href: buildFilterHref({ [key]: current === d.value ? null : d.value }),
+    }));
   }
+
+  const activeFilterCount = [cost, type, size, rank].filter(Boolean).length;
 
   return (
     <div className="space-y-8">
@@ -193,14 +312,26 @@ export default async function UniversitiesPage({
             {scopeLabel ? `Filtered to ${scopeLabel}` : "Across all supported regions"} · {totalUniversities.toLocaleString("en-US")} universities total
           </p>
         </div>
-        <form className="flex gap-2" action="/universities" method="GET">
-          {country ? <input type="hidden" name="country" value={country} /> : null}
-          {region ? <input type="hidden" name="region" value={region.id} /> : null}
-          <Input name="q" defaultValue={q} placeholder="Search by university name…" className="sm:w-72" />
-          <Button type="submit" variant="outline" size="sm">
-            <Search className="size-3.5" /> Search
-          </Button>
-        </form>
+        <div className="flex gap-2">
+          <form className="flex gap-2" action="/universities" method="GET">
+            {country ? <input type="hidden" name="country" value={country} /> : null}
+            {region ? <input type="hidden" name="region" value={region.id} /> : null}
+            <Input name="q" defaultValue={q} placeholder="Search by university name…" className="sm:w-72" />
+            <Button type="submit" variant="outline" size="sm">
+              <Search className="size-3.5" /> Search
+            </Button>
+          </form>
+          <FilterSheet
+            activeCount={activeFilterCount}
+            clearHref={buildFilterHref({ cost: null, type: null, size: null, rank: null })}
+            groups={[
+              { label: "Cost of attendance", options: toOptions(COST_BUCKETS, cost, "cost") },
+              { label: "Institution type", options: toOptions(TYPE_OPTIONS, type, "type") },
+              { label: "Student population", options: toOptions(SIZE_BUCKETS, size, "size") },
+              { label: "QS ranking", options: toOptions(RANK_OPTIONS, rank, "rank") },
+            ]}
+          />
+        </div>
       </div>
 
       {universities.length > 0 ? (
@@ -213,6 +344,12 @@ export default async function UniversitiesPage({
             </p>
             {!q ? <SortSelect value={sort} options={SORT_OPTIONS.map((o) => ({ ...o, href: buildSortHref(o.value) }))} /> : null}
           </div>
+          {costUnknownCount || sizeUnknownCount ? (
+            <p className="text-xs text-muted-foreground/80">
+              {costUnknownCount ? `${costUnknownCount.toLocaleString("en-US")} additional ${costUnknownCount === 1 ? "university is" : "universities are"} excluded because cost data is unavailable. ` : ""}
+              {sizeUnknownCount ? `${sizeUnknownCount.toLocaleString("en-US")} additional ${sizeUnknownCount === 1 ? "university is" : "universities are"} excluded because student population data is unavailable.` : ""}
+            </p>
+          ) : null}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {universities.map((university) => (
               <UniversityCard
@@ -225,13 +362,18 @@ export default async function UniversitiesPage({
               />
             ))}
           </div>
+          <CompareBar />
           {!q ? <Pagination currentPage={page} totalPages={totalPages} buildHref={buildPageHref} /> : null}
         </>
       ) : (
         <EmptyState
           icon={Landmark}
           title={`No universities found${q ? ` matching "${q}"` : ""}${scopeLabel ? ` in ${scopeLabel}` : ""}`}
-          description="University data is added over time — check back soon, or try another region."
+          description={
+            activeFilterCount > 0
+              ? "No universities match the current filters — try widening the cost, size, or ranking range."
+              : "University data is added over time — check back soon, or try another region."
+          }
         />
       )}
 
