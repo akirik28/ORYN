@@ -155,7 +155,74 @@ trace), and the coursework Subject field shows the same Economics/Business/Compu
 suggestions onboarding uses. Both dialogs canceled rather than saved (real account data via a
 shared session, not a fixture).
 
-**Other free-text traps (Phase I)**: not yet audited beyond tests/coursework.
+**Other free-text traps (Phase I) — audited and fixed, 2026-08-18.** Read every `FieldConfig` in
+`features/profile/field-config.ts` (all 7 achievement-shaped forms) plus the onboarding wizard,
+classified each, checked the backing column against the migrations before touching anything (no
+DDL access this session, so any fix had to work against the live schema as-is):
+
+- **Already correct, no change** — `organization` across every section (activity/project/
+  award/research/volunteering/work/certification) is already `type: "entity"` with
+  `allowCustom: true`, properly a CONTROLLED ENTITY via the canonical registry; `curriculum`,
+  `stage`, `course_level`, `employment_type`, `activity_category`, `research_output_type`,
+  `sport_level`, `skill_category`, `goal_status` are all `type: "select"` backed by a real DB
+  enum (checked each against its migration). The founder brief's own example list
+  ("organizations") turned out to already be handled — worth confirming rather than assuming a
+  gap existed.
+- **Fixed, converted `"text"` → `"suggest"`** (all five backing columns are plain `text` in
+  Postgres with no CHECK constraint — confirmed in `supabase/migrations/0002/0003/0004`, which
+  rules out `"select"`: `dynamic-form-fields.tsx`'s select case has no fallback for a stored
+  value outside its options list, so forcing a hard select on a non-enum column would silently
+  blank any existing free-text value the moment a student reopens the edit form):
+  - `EDUCATION_FIELDS.country` and the onboarding wizard's own `country` input (`profiles.
+    country`, same fragmentation risk, higher blast radius — every student sets this at
+    signup) → new `lib/vocabularies/countries.ts`, ~195 common English short names.
+    Concretely useful beyond cosmetics: `EntityCombobox`'s school search does
+    `.eq("country", context.country)` (`lib/entities/search.ts:153`) — a school search
+    currently silently degrades for any student whose typed country string doesn't
+    byte-match, with no visible error. A consistent suggestion list narrows that.
+  - `AWARD_FIELDS.level` → new `AWARD_LEVEL_SUGGESTIONS` (School/Regional/State-Provincial/
+    National/International) — deliberately not a reuse of `SPORT_LEVEL_OPTIONS` (different
+    column, different constraint, and awards don't have a "recreational"/"club" tier).
+  - `RESEARCH_FIELDS.field` → reuses the existing `INTEREST_SUGGESTIONS` (zero new list —
+    same DRY reasoning as Phase H's coursework subject).
+  - `VOLUNTEERING_FIELDS.cause_area` → new `CAUSE_AREA_SUGGESTIONS` (Education, Environment &
+    Climate, Health & Medicine, Poverty & Homelessness, Animal Welfare, Human Rights, ...).
+  - `SKILL_FIELDS.proficiency` → new `PROFICIENCY_SUGGESTIONS` (Beginner/Intermediate/
+    Advanced/Fluent/Native) — also the natural list for `languages.proficiency` whenever that
+    table gets a CRUD UI (see gap below), not built now to keep this a pure suggestion-list
+    swap, not a new feature.
+  - New shared file `lib/vocabularies/profile-fields.ts` for the last three (small, related,
+    didn't each need their own file the way subjects/tests did).
+- **Audited, deliberately left as TRUE FREE TEXT** — `title`, `location` (all sections),
+  `role`, the four `*_url` fields, `mentor_name`, `independence_level`, `academic_year`,
+  `grade_value`/`grade_scale`, `score`/`max_score`, goal `category`, sport `discipline`/
+  `position`/`us_specific_label`, and `SKILL_FIELDS.name` itself. That last one is the one
+  genuine judgment call: skill names ("Python", "Public speaking") do fragment, but the field's
+  own existing comment already documents it as an intentionally weak, self-declared signal
+  (the `category` select is the actual scored/grouped axis) — curating a skills taxonomy for an
+  open-ended domain would be real scope creep beyond "audit the existing inputs," not a fix this
+  pass should force.
+- **Gap noted, not built**: `public.languages` (`name text`, `proficiency text`) has no CRUD UI
+  anywhere in the app yet — checked, zero references outside `lib/requirements/facts.ts` and
+  `lib/export/tables.ts`. Not a free-text-fragmentation problem (no form exists to fragment
+  anything), so out of Phase I's scope; flagged for whichever phase eventually builds the
+  languages editor.
+- **Small shared fix while in this code**: `SuggestInput`'s filter was plain
+  `.toLowerCase().includes()` — accent-sensitive, so a country/subject typed without diacritics
+  wouldn't match a suggestion stored with them. Added a local NFD-decompose accent fold (same
+  technique as `lib/acquisition/normalize.ts`'s `nameKey()`, reimplemented locally rather than
+  importing the acquisition-pipeline module into a client component). None of the current
+  suggestion lists actually contain a diacritic (deliberately — ASCII common-name spellings
+  throughout, e.g. "Turkey" not "Türkiye", matching `CURRICULUM_FIELD_OPTIONS`'s existing
+  "Turkish curriculum" convention), so this is prophylactic for whatever gets added next, not
+  fixing an active bug today.
+- **Verified live**: `/design-preview/onboarding` (no-auth dev-only route, mounts the real
+  `OnboardingWizard`) — typed "turk" into the new country field, dropdown showed exactly
+  "Turkey" / "Turkmenistan", selecting "Turkey" set the underlying input's real DOM value to
+  `"Turkey"` (checked directly). The other four converted fields share the identical
+  `DynamicFormFields` `"suggest"` code path already proven here and in Phase G/H, just with a
+  different `suggestions` array, so not each individually re-verified through an authenticated
+  profile-edit flow.
 
 **Shared components created**: `lib/universities/canonical.ts` (the application-layer canonical-
 resolution layer, the actual novel infrastructure this pass built) + its generator script. No
@@ -185,16 +252,18 @@ regression.test.ts` — 34 tests covering all 9 named pairs individually and com
 "genuinely different institutions stay separate" case). `npm run lint` / `npx tsc --noEmit` /
 `npm run build` all clean after every commit in this pass.
 
-**Remaining, explicitly scoped next steps** (not blockers — just not yet done): Phase I (other
-free-text fields worth the same suggest/entity treatment — countries, curricula, degree types,
-organizations not already covered by an existing `"entity"` scope); Phase Q (existing free-text
-data cleanup — PLAN → REVIEW → APPLY → VERIFY over already-stored `test_name`/`subject` values
-now that G/H exist to prevent new fragmentation; e.g. normalizing pre-existing "sat"/"Sat" rows
-to "SAT" — only obvious deterministic cases, never destructive on ambiguous custom values); Phase
-O (site-wide visual audit beyond the surfaces already touched + Claude-B handoff for shared-
-token adoption on their surfaces). Commits this pass, in order: `8247819` (P0 fix), `cccb74d`
-(Phase D surface fixes), `61eff71` (audit artifact), `a55cb92` (Phase F regression tests),
-`3192962` (light-theme default), `c0fb731` (docs), `b632149` (Phase G/H suggestion fields).
+**Remaining, explicitly scoped next steps** (not blockers — just not yet done): Phase Q (existing
+free-text data cleanup — PLAN → REVIEW → APPLY → VERIFY over already-stored `test_name`/
+`subject`/`country`/`level`/`cause_area`/`proficiency` values now that G/H/I exist to prevent new
+fragmentation; e.g. normalizing pre-existing "sat"/"Sat" rows to "SAT" — only obvious
+deterministic cases, never destructive on ambiguous custom values — `npm run reconcile:custom-
+vocabulary` already reports the candidate list for the original 3 columns, would need the same
+treatment extended to the 5 new Phase I columns); Phase O (site-wide visual audit beyond the
+surfaces already touched + Claude-B handoff for shared-token adoption on their surfaces).
+Commits this pass, in order: `8247819` (P0 fix), `cccb74d` (Phase D surface fixes), `61eff71`
+(audit artifact), `a55cb92` (Phase F regression tests), `3192962` (light-theme default),
+`c0fb731` (docs), `b632149` (Phase G/H suggestion fields), Phase I suggestion fields (this
+commit).
 
 ## Measured baseline (live, `npm run report:universities`, 2026-08-17)
 

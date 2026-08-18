@@ -5,6 +5,14 @@ import { Input } from "@/components/ui/input";
 
 const MAX_VISIBLE = 8;
 
+/** Accent-insensitive so typing the plain-ASCII spelling ("turkey") still matches a
+ * suggestion stored with diacritics ("Türkiye") — same NFD-strip technique as
+ * lib/acquisition/normalize.ts's nameKey(), reimplemented locally since that module is the
+ * server-side acquisition pipeline's, not a shared client utility. */
+function fold(s: string): string {
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+}
+
 /**
  * Canonical-suggestion text input for closed-ish vocabularies that don't warrant the full
  * canonical-entity registry (lib/entities/*, EntityCombobox): test names, course subjects —
@@ -45,8 +53,8 @@ export function SuggestInput({
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
-  const query = value.trim().toLowerCase();
-  const filtered = (query ? suggestions.filter((s) => s.toLowerCase().includes(query)) : suggestions).slice(0, MAX_VISIBLE);
+  const query = fold(value.trim());
+  const filtered = (query ? suggestions.filter((s) => fold(s).includes(query)) : suggestions).slice(0, MAX_VISIBLE);
 
   function select(suggestion: string) {
     onChange(suggestion);
