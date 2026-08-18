@@ -1114,9 +1114,16 @@ documented negatives — see below), Germany (**done, 49/49** — a real state-l
 below), Netherlands (**done, 13/13** — statutory fee scalable, institutional fee per-university,
 see below), France (**done, 19/30 standard universities** — 11 confirmed to have a genuinely
 different, decree-independent fee status, see below), Switzerland (**done, 7/11** — ETH-domain
-federal policy + per-canton research, see below), **Italy next** (web-accessible sources only, per
-the Phase 3/"Next" note below that MUR/USTAT times out), Singapore, Hong Kong, then other
-high-count countries — reorder for efficiency if a better bulk source turns up elsewhere, same
+federal policy + per-canton research, see below), Italy (**done for this pass, 4/38** — a real
+ISEE-income-based framework, not a flat number, see below). **Next: coverage-driven, not
+geography-driven** — run `npm run report:universities` (now includes a per-country tuition
+table) and prioritize by missing-count × likelihood of a scalable source, not a fixed list.
+As of right after Italy: Spain (29 missing — a promising lead already flagged in the Canada
+script's own header, `ciencia.gob.es`, never verified), China (64), South Korea (31), Malaysia
+(25), Japan (22) are the largest zero-coverage pools; India (37) and the US (131, shown as 0 in
+the tuition table by design — see the report's own note — already has 128/131 via the separate
+`cost_of_attendance` column) are lower priority per the founder's own sequencing. Reorder for
+efficiency if a better bulk source turns up elsewhere, same
 as the German/Spanish student-count pipelines below already did. Per-country pipeline:
 discover → acquire → normalize → match → fixture → validate → `--plan` → `--apply` → verify,
 same shape as `enrich-student-counts-de.ts`/`-es.ts`. Source hierarchy: official university fees
@@ -1539,6 +1546,80 @@ bug. Verified live: ETH Zurich ("CHF 4,380/yr" / "Domestic rate: CHF 1,460/yr");
 1,000/yr" / "Domestic rate: CHF 1,000/yr" — the same-fee case renders correctly, just
 duplicated, which is honest rather than a bug). Full gate green (`tsc`/lint/801 tests/build)
 after.
+
+**Italy — 4/38, done for this pass; the real finding is the data MODEL, not a source.**
+dati-ustat.mur.gov.it (flagged unreachable in an earlier session) was not re-hit. Universitaly
+has no bulk tuition dataset either. Went to individual pages, and found something genuinely
+different from every country so far: Italian PUBLIC university tuition is not a flat number or
+even a course-based range — it's **ISEE income-based** (the same concept, "Indicatore della
+Situazione Economica Equivalente," for domestic AND international students; non-EU students
+use an equivalent foreign-income calculation, "ISEE Parificato"). A national ministerial floor
+sets a "no tax area" below which tuition is €0, but sources disagreed on the exact floor
+(€22,000 / €27,000 / €30,000 depending on source and possibly year) — not resolved to one
+figure, not needed for what was written. Each university sets its own bands AND its own
+**maximum** above that floor — no single national ceiling either. What every researched
+university publishes clearly is that maximum, so that's what's written: **Politecnico di
+Milano** (€3,898, students who miss the ISEE deadline are locked into this bracket), **University
+of Milan** (€5,207, from its own signed 2026/27 fee regulation), **University of Pisa** (€2,900,
+the university's own page literally says "varies between €0 and €2,900 based on your ISEE"),
+**Bocconi University** (private — €17,000, but Bocconi runs its own separate income-based system,
+Bocconi4Access, reaching down to €0 for the lowest-income bracket; not the public framework, a
+private university choosing a similar shape independently).
+
+**Schema check done before writing anything, per the founder's own instruction not to assume a
+migration is needed**: `precision_state` has a check constraint
+(`supabase/migrations/0038_canonical_entity_registry.sql`) allowing `'exact','approximate',
+'lower_bound','upper_bound','range','category_only','unknown'` — `upper_bound` already exists
+and fits exactly (a real ceiling, not a course-driven range, not a universal flat rate). No
+migration proposal needed. Used for every Italy row.
+
+**Public vs private kept strictly separate**: 4 of this spine's 38 Italian universities are
+genuinely private and not subject to any public ISEE regulation — Bocconi, LUISS Guido Carli,
+Università Cattolica del Sacro Cuore, Università Vita-Salute San Raffaele (the latter two are
+NOT reliably flagged as private in `institution_type` for this spine — identified from outside
+knowledge, not assumed public just because the column says "university"; worth a data-quality
+note for whoever owns that field). Only Bocconi resolved this pass; LUISS's only sources found
+were third-party aggregators, never luiss.it — not trusted, same discipline held throughout
+this project.
+
+**A real near-miss, caught before `--apply`, worth naming**: an initial draft had University of
+Naples Federico II at €2,384 with a clean-looking regional-tax breakdown. A follow-up
+site-restricted search of unina.it itself surfaced a DIFFERENT regional-tax figure than the
+first pass found (€130/151/173 vs €125.50/146.50/167.50) and revealed the fee is actually
+resolved through a calculator tool (calcolatrice.unina.it) — the same "no static figure, tool
+only" shape as several Australian universities. Dropped from the batch entirely rather than
+kept on a source that turned out to be aggregator-only and possibly stale — the same bar LUISS
+was held to, applied to itself mid-research.
+
+**A real UI bug found live, fixed in the same pass — this one a genuine regression, not a new
+data shape's first exposure**: the detail page's tuition StatCard computed one `precisionState`
+qualifier from the INTERNATIONAL figure and reused it for both the international value and the
+domestic figure in the caption. This was invisible while every country's domestic figure
+happened to be `"exact"` too, but Italy's income-based `"upper_bound"` case made the sharing
+pattern obviously wrong, and re-verifying Edinburgh (UK) right after — international `"range"`,
+domestic `"exact"` — caught it in the act: domestic had silently started rendering "From
+£9,790/yr" instead of "£9,790/yr". Fixed by computing each figure's qualifier from its OWN
+`precision_state` independently. While fixing it, extracted `formatTuition`/`currencyPrefix`/
+`tuitionQualifier` out of the page into `lib/universities/tuition-format.ts` specifically so
+this class of bug is unit-testable going forward, not just re-discoverable by manually
+re-clicking through countries — `__tests__/universities/tuition-format.test.ts` pins the
+regression down directly. Verified live after the fix: Politecnico di Milano ("Up to €3,898/yr"
+/ "Income-based (ISEE) — most students pay less. Domestic rate: Up to €3,898/yr"), Bocconi
+(same shape, €17,000), Sapienza (genuinely unresolved — "Cost of attendance: Unavailable", no
+fabricated ceiling), Edinburgh re-confirmed correct post-fix ("From £29,600/yr" / "Domestic
+rate: £9,790/yr", no stray "From"). Full gate green (`tsc`/lint/809 tests/build) after — one
+build attempt transiently failed on a type error in the OTHER session's own uncommitted,
+in-progress `lib/acquisition/image-storage.ts`/`scripts/acquire-university-images.ts` (neither
+touched here); retried once and it was clean, consistent with those files being mid-edit by
+that session at that exact moment, not a problem introduced by this work.
+
+**Coverage report extended, a small permanent addition, not a one-off**: `npm run
+report:universities` (`scripts/university-data-report.ts`) now includes a per-country tuition
+table (known/missing/total/coverage%, sorted by missing count) plus a note explaining why the
+US shows 0 there by design (its cost data lives in the separate `university_statistics.
+cost_of_attendance` column, 128/131 covered) rather than as a real gap. This is the tool the
+founder's new coverage-driven-selection instruction expects to be run before picking each next
+country — see "Next" above for what it showed right after Italy.
 
 After tuition progresses meaningfully: (1) India student counts (~33 remaining, AISHE >
 annual report > official institutional stats > official facts page — see the India dead-end

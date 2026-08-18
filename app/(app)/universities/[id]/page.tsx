@@ -15,6 +15,7 @@ import { DetailHeroImage } from "@/features/universities/detail-hero-image";
 import { RequirementEvaluationBadge } from "@/features/universities/requirement-evaluation-badge";
 import { AdminRequirementForm } from "@/features/universities/admin-requirement-form";
 import { canonicalUniversityId, isSupersededUniversityId } from "@/lib/universities/canonical";
+import { formatTuition, tuitionQualifier } from "@/lib/universities/tuition-format";
 import type { ProfileDimension, RequirementEvaluationStatus, UniversityRequirement } from "@/types/database";
 
 /** QS's own official Size classification (S/M/L/XL) — a coarse FTE-based band, not an exact
@@ -28,24 +29,6 @@ const QS_SIZE_LABELS: Record<string, string> = {
   XL: "Extra large",
 };
 
-/** `university_profile_metrics.unit` for a tuition figure is a currency/basis string like
- * "GBP/year" or "CAD/credit" — this table has no dedicated currency column, so the unit string
- * is what a reader has to parse. A prior version of this page hardcoded "£", which silently
- * mislabeled Canada's CAD figures as GBP the moment non-UK data existed — caught live 2026-08-18
- * viewing University of Alberta's page. Extend this map as new countries' currencies get
- * acquired; an unrecognized prefix falls back to the raw currency code plus a space rather than
- * guessing a symbol. */
-const CURRENCY_SYMBOLS: Record<string, string> = { GBP: "£", USD: "$", EUR: "€", CAD: "CA$", AUD: "AU$" };
-function currencyPrefix(unit: string): string {
-  const code = unit.split("/")[0];
-  return CURRENCY_SYMBOLS[code] ?? `${code} `;
-}
-/** `0` is real, verified data for Germany's public universities outside Baden-Württemberg (no
- * tuition charged by law — see acquire-university-statistics-de.ts), not a missing value; shown
- * as "Free" rather than "€0/yr" since that's what a reader actually wants to know. */
-function formatTuition(amount: number, unit: string): string {
-  return amount === 0 ? "Free" : `${currencyPrefix(unit)}${amount.toLocaleString("en-US", { maximumFractionDigits: 0 })}/yr`;
-}
 
 export default async function UniversityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -219,37 +202,46 @@ export default async function UniversityDetailPage({ params }: { params: Promise
         {stats?.cost_of_attendance ? (
           <StatCard icon={DollarSign} label="Cost of attendance" value={`$${stats.cost_of_attendance.toLocaleString("en-US")}`} />
         ) : internationalTuition != null ? (
-          // A "range" precision_state means the published figure genuinely varies by course
-          // (UK/Canada/Australia-style fee bands) — "From X, varies by course" is honest there.
-          // An "exact" precision_state (Germany's state-law-set or private-university flat
-          // rate) is a single real number with no course-to-course variation to caveat.
-          <StatCard
-            icon={DollarSign}
-            label="International tuition"
-            value={
-              internationalTuitionMetric!.precision_state === "range"
-                ? `From ${formatTuition(internationalTuition, internationalTuitionMetric!.unit)}`
-                : formatTuition(internationalTuition, internationalTuitionMetric!.unit)
-            }
-            caption={
-              domesticTuition != null
-                ? `${internationalTuitionMetric!.precision_state === "range" ? "Varies by course. " : ""}Domestic rate: ${formatTuition(domesticTuition, domesticTuitionMetric!.unit)}`
-                : internationalTuitionMetric!.precision_state === "range"
-                  ? "Varies by course — see university for your exact fee"
-                  : undefined
-            }
-          />
+          (() => {
+            // Each figure's own precision_state governs its own prefix — international being
+            // a range (or income-based) does not mean domestic is too, and vice versa. A prior
+            // version of this block reused international's qualifier for both figures, which
+            // silently mislabelled a UK domestic exact figure ("£9,790/yr") as "From £9,790/yr"
+            // whenever the international side happened to be a range — caught live 2026-08-18
+            // re-verifying Edinburgh right after adding the Italy upper_bound case.
+            const q = tuitionQualifier(internationalTuitionMetric!.precision_state);
+            const domesticQ = domesticTuitionMetric ? tuitionQualifier(domesticTuitionMetric.precision_state) : null;
+            return (
+              <StatCard
+                icon={DollarSign}
+                label="International tuition"
+                value={`${q.valuePrefix}${formatTuition(internationalTuition, internationalTuitionMetric!.unit)}`}
+                caption={
+                  domesticTuition != null
+                    ? `${q.note}Domestic rate: ${domesticQ!.valuePrefix}${formatTuition(domesticTuition, domesticTuitionMetric!.unit)}`
+                    : q.note
+                      ? `${q.note}— see university for your exact fee`
+                      : undefined
+                }
+              />
+            );
+          })()
         ) : domesticTuition != null ? (
           // International tuition genuinely isn't published as a single figure at this
           // university (see acquire-university-statistics-uk.ts's header) — the domestic
           // rate is real, verified data too, just clearly labeled as NOT what most of this
           // product's international-applicant audience would actually pay.
-          <StatCard
-            icon={DollarSign}
-            label="Domestic tuition"
-            value={formatTuition(domesticTuition, domesticTuitionMetric!.unit)}
-            caption="International fee not published as a single figure — varies by course"
-          />
+          (() => {
+            const q = tuitionQualifier(domesticTuitionMetric!.precision_state);
+            return (
+              <StatCard
+                icon={DollarSign}
+                label="Domestic tuition"
+                value={`${q.valuePrefix}${formatTuition(domesticTuition, domesticTuitionMetric!.unit)}`}
+                caption={q.note ? `${q.note}International fee not separately published` : "International fee not published as a single figure — varies by course"}
+              />
+            );
+          })()
         ) : (
           <StatCard icon={DollarSign} label="Cost of attendance" value="Unavailable" />
         )}

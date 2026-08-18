@@ -202,6 +202,8 @@ async function main() {
     ["international_student_percentage metric", distinctUnisFor("international_student_percentage")],
     ["faculty_count metric", distinctUnisFor("faculty_count")],
     ["student_faculty_ratio metric", distinctUnisFor("student_faculty_ratio")],
+    ["tuition_domestic_annual metric", distinctUnisFor("tuition_domestic_annual")],
+    ["tuition_international_annual metric", distinctUnisFor("tuition_international_annual")],
   ];
   for (const [label, n] of coreFields) {
     console.log(`  ${label.padEnd(42)} ${String(n).padStart(5)} / ${total}  (${pct(n, total)})`);
@@ -235,6 +237,46 @@ async function main() {
   for (const [bucket, count] of Object.entries(bucketsNewOnly)) {
     console.log(`    ${bucket.padEnd(24)} ${String(count).padStart(4)}  (${pct(count, newN)})`);
   }
+
+  console.log("\n" + "-".repeat(70));
+  console.log("TUITION COVERAGE BY COUNTRY (any of domestic/international known)");
+  console.log("-".repeat(70));
+  const tuitionUniIds = new Set<string>([
+    ...(metricsByCode.get("tuition_domestic_annual") ?? []).map((m) => m!.university_id),
+    ...(metricsByCode.get("tuition_international_annual") ?? []).map((m) => m!.university_id),
+  ]);
+  const countryStats = new Map<string, { total: number; known: number }>();
+  for (const u of universities) {
+    const country = u.country ?? "(unknown)";
+    const s = countryStats.get(country) ?? { total: 0, known: 0 };
+    s.total++;
+    if (tuitionUniIds.has(u.id)) s.known++;
+    countryStats.set(country, s);
+  }
+  const ranked = [...countryStats.entries()]
+    .map(([country, s]) => ({ country, ...s, missing: s.total - s.known }))
+    .sort((a, b) => b.missing - a.missing);
+  console.log(`  ${"Country".padEnd(30)} ${"Known".padStart(6)} ${"Missing".padStart(8)} ${"Total".padStart(6)}  Coverage`);
+  for (const row of ranked) {
+    if (row.total === 0) continue;
+    console.log(`  ${row.country.padEnd(30)} ${String(row.known).padStart(6)} ${String(row.missing).padStart(8)} ${String(row.total).padStart(6)}  ${pct(row.known, row.total)}`);
+  }
+  console.log(`\n  Overall: ${tuitionUniIds.size} / ${total}  (${pct(tuitionUniIds.size, total)})`);
+  console.log(`  Sorted by missing count descending — a starting point for "which country next," not a`);
+  console.log(`  full answer: whether a country has a scalable official source still needs real research,`);
+  console.log(`  this table can't predict it.`);
+  const { count: costOfAttendanceCount } = await admin
+    .from("university_statistics")
+    .select("university_id", { count: "exact", head: true })
+    .not("cost_of_attendance", "is", null);
+  console.log(
+    `\n  NOTE: United States shows 0 above by design, not as a real gap — US cost data lives in a`
+  );
+  console.log(
+    `  separate column, university_statistics.cost_of_attendance (IPEDS all-in estimate, a different`
+  );
+  console.log(`  concept from tuition_*_annual — see any acquire-university-statistics-*.ts header for why`);
+  console.log(`  they're never merged): ${costOfAttendanceCount ?? 0} US universities covered there.`);
 
   const { data: opportunities } = await admin
     .from("opportunities")
