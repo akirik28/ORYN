@@ -208,7 +208,61 @@ summer_program 16, entrepreneurship 3, research 3 (was 1 — Özyeğin, SIP), on
 (new), internship 1 (new — InvestIN). `scholarship` and `fellowship` still at zero — not
 covered by this file. Full lint/typecheck/725-test/build gate re-run clean after this batch.
 
-**Next**: `06_ORYN_Competitions_and_Awards.xlsx` (structure not yet confirmed — apply the same
-dedupe-by-id check immediately after parsing, and the same discipline of reading
-`verification_note`/evidence text by hand rather than trusting the status column, before
-trusting any count).
+## Batch 3: `06_ORYN_Competitions_and_Awards.xlsx`
+
+README states 54 verified identity / 23 "2026 confirmed" / 3 review. File was too large for
+one `read_file_content` call (98K chars) — extracted via `jq` to the scratchpad and parsed
+with the same script shape as `04`/`05`, this time with the dedupe-by-id step built in from
+the start rather than bolted on after: 80 record boundaries found, 77 parsed cleanly, 55
+unique after dedup, **zero mismatched duplicate groups** (same clean pattern as `05` — the
+`04` file's duplicate-emission bug hasn't recurred here).
+
+**New failure mode this batch, not seen in `04`/`05`: the corpus's `current_cycle_status` tag
+can be right about the *year* while my own re-verification fetch is wrong about *whether that
+year is still in the future*.** Several records read as clearly evidencing "2026" (IYPT's
+page literally said "Relive the IYPT 2026 Final in Zurich!", CMIMC gave an exact March 28 /
+April 18-20 2026 date) — but today's actual date is 2026-08-18, so events with 2026 dates
+earlier in the year have **already happened**. This matters because the WebFetch extraction
+step itself doesn't know today's date and will confidently assert something like "registration
+is currently open" purely from the page's own forward-looking phrasing, without checking that
+against the present. Concretely: BIYSC's fetch summary said the July 2026 (10th edition) "is
+the next one students can currently apply to" — wrong, that edition already ran; the correct
+next cycle is BIYSC 2027 (applications open December 2026, per the same fetch's own quoted
+text). YIS Stock Pitch's fetch said its cycle "has not yet closed" — wrong, its own quoted
+deadline (February 20, 2026) is six months in the past. Both were corrected by hand: the
+quoted facts from each fetch were trustworthy, the fetch's own "is this current" *conclusion*
+was not, and had to be checked myself against 2026-08-18. Worth remembering for every future
+batch, not just this one: **always do the today-vs-quoted-date comparison manually — never
+trust an extraction step's own framing of "current/upcoming/still open".**
+
+Also excluded `Stockholm Water Prize` entirely rather than guess — this file's competition/
+award category mixes genuine student competitions with what may be the *main* (career-
+achievement, not student) Stockholm Water Prize; a clarifying WebFetch came back truncated/
+inconclusive, and given the real risk of misrepresenting a career-researcher award as
+something a high schooler can enter, left it out rather than publish an unverified guess. A
+cleaner path for a future batch: look up the Stockholm *Junior* Water Prize's own site
+directly (siwi.org) instead of this ambiguous URL. Two live-fetch attempts (Battlecode-MIT,
+iGEM's general competition page) failed outright (socket closed / empty content) — left both
+out; iGEM doesn't need re-adding regardless, it's already live (`iGEM High School
+Competition`, added in an earlier session).
+
+**Batch 3 result** (`data/research/opportunities/drive_batch3_2026-08-18.jsonl`, 9 records: 120
+Hours, BIYSC, IYPT, STEM Racing, WWD Youth Art Contest (IFAW), YIS Stock Pitch, BrUMO, CMIMC,
+plus GENIUS Olympiad as a dedup-check) — **8 accepted, 1 correctly caught as duplicate**
+(GENIUS Olympiad, already live from an earlier session). `opportunities` 33 → 41. Full
+lint/typecheck/725-test/build gate re-run clean after this batch.
+
+**Cumulative so far this pivot** (baseline 11 → 41, +30 across three batches): competition 4→12,
+summer_program 3→16, research 1→3, online_program 0→6, internship 0→1, entrepreneurship 3
+(unchanged). `scholarship` and `fellowship` still at zero — none of the three founder files
+mined so far (`04`/`05`/`06`) produced a clean-evidenced scholarship or fellowship candidate;
+worth targeted independent research once the founder corpus is exhausted (per PRIORITY 6).
+
+**Next**: founder's named opportunity files (04/05/06) are now substantially mined at their
+highest-confidence tiers. Remaining lower-confidence tiers in each file (the large
+"official/provider search evidence" buckets — ambiguous whether page-fetched or search-only,
+same discipline required) are a option for a future pass, but marginal value is dropping
+per-record. Higher-leverage next step is likely pivoting to Priority 1 (university programs —
+still only 182 rows / 49 universities, 0 with ≥5 programs) or beginning independent research
+into scholarship/fellowship candidates specifically, since the founder corpus produced zero of
+either.
