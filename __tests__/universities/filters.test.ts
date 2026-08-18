@@ -20,18 +20,18 @@ describe("applyRangeFilters — size", () => {
   });
 
   test("a size bucket keeps only rows inside its [min, max] range", () => {
-    const { matched } = applyRangeFilters(ROWS, { size: "under5k" });
+    const { matched } = applyRangeFilters(ROWS, { size: ["under5k"] });
     expect(matched.map((r) => r.id)).toEqual(["a"]);
   });
 
   test("an unbounded top bucket (max: null) has no upper edge", () => {
-    const { matched } = applyRangeFilters(ROWS, { size: "30k-plus" });
+    const { matched } = applyRangeFilters(ROWS, { size: ["30k-plus"] });
     expect(matched.map((r) => r.id)).toEqual(["c"]);
   });
 
   test("a row with null student_size is excluded from every bucket, never defaulted to 0", () => {
     for (const bucket of SIZE_BUCKETS) {
-      const { matched } = applyRangeFilters(ROWS, { size: bucket.value });
+      const { matched } = applyRangeFilters(ROWS, { size: [bucket.value] });
       expect(matched.some((r) => r.id === "d")).toBe(false);
     }
   });
@@ -39,8 +39,29 @@ describe("applyRangeFilters — size", () => {
   test("sizeUnknown counts rows with no student_size at all — separate from rows that just didn't match the range", () => {
     // Row "b" (10000) genuinely doesn't fit "under5k" (known, out of range) — must not be
     // counted alongside "d" (unknown). Only "d" has no data.
-    const { sizeUnknown } = applyRangeFilters(ROWS, { size: "under5k" });
+    const { sizeUnknown } = applyRangeFilters(ROWS, { size: ["under5k"] });
     expect(sizeUnknown).toBe(1);
+  });
+
+  test("multiple selected buckets OR together — the founder-reported gap ('can't do between 10 and 50')", () => {
+    // "under5k" (row a, 3000) + "30k-plus" (row c, 40000) selected together should match BOTH
+    // even though they're not adjacent and row b (10000, in neither bucket) must stay excluded.
+    const { matched } = applyRangeFilters(ROWS, { size: ["under5k", "30k-plus"] });
+    expect(matched.map((r) => r.id).sort()).toEqual(["a", "c"]);
+  });
+
+  test("two adjacent buckets selected together span a continuous wider range", () => {
+    // "5-15k" + "15-30k" together should behave like one combined "5k-30k" range — row b
+    // (10000) falls in the first, and nothing here falls in the second, but the combined
+    // selection must still just be the union, not silently drop row b.
+    const { matched } = applyRangeFilters(ROWS, { size: ["5-15k", "15-30k"] });
+    expect(matched.map((r) => r.id)).toEqual(["b"]);
+  });
+
+  test("an empty size array behaves like no filter at all", () => {
+    const { matched, sizeUnknown } = applyRangeFilters(ROWS, { size: [] });
+    expect(matched).toHaveLength(4);
+    expect(sizeUnknown).toBeUndefined();
   });
 });
 
@@ -53,13 +74,13 @@ describe("applyRangeFilters — cost", () => {
   // universities today.
 
   test("a cost bucket keeps only rows whose known cost falls in range", () => {
-    const { matched } = applyRangeFilters(ROWS, { cost: "25-50k" }, { costMap });
+    const { matched } = applyRangeFilters(ROWS, { cost: ["25-50k"] }, { costMap });
     expect(matched.map((r) => r.id)).toEqual(["b"]);
   });
 
   test("rows absent from costMap are excluded from every bucket, never treated as $0", () => {
     for (const bucket of COST_BUCKETS) {
-      const { matched } = applyRangeFilters(ROWS, { cost: bucket.value }, { costMap });
+      const { matched } = applyRangeFilters(ROWS, { cost: [bucket.value] }, { costMap });
       expect(matched.some((r) => r.id === "c" || r.id === "d")).toBe(false);
     }
   });
@@ -67,14 +88,23 @@ describe("applyRangeFilters — cost", () => {
   test("costUnknown counts rows missing from costMap — the founder-required 'excluded because unavailable' number", () => {
     // Within the 4 rows: "a" and "b" are known (regardless of whether they match this
     // particular bucket), "c" and "d" are unknown.
-    const { costUnknown } = applyRangeFilters(ROWS, { cost: "under10k" }, { costMap });
+    const { costUnknown } = applyRangeFilters(ROWS, { cost: ["under10k"] }, { costMap });
     expect(costUnknown).toBe(2);
   });
 
   test("missing costMap (filter active, no data fetched) treats every row as unknown rather than throwing", () => {
-    const { matched, costUnknown } = applyRangeFilters(ROWS, { cost: "under10k" });
+    const { matched, costUnknown } = applyRangeFilters(ROWS, { cost: ["under10k"] });
     expect(matched).toEqual([]);
     expect(costUnknown).toBe(4);
+  });
+
+  test("selecting two adjacent cost buckets spans them — the exact founder report: '$10k to $50k'", () => {
+    const spanningMap = new Map([
+      ["a", 15000], // inside "10-25k"
+      ["b", 40000], // inside "25-50k"
+    ]);
+    const { matched } = applyRangeFilters(ROWS, { cost: ["10-25k", "25-50k"] }, { costMap: spanningMap });
+    expect(matched.map((r) => r.id).sort()).toEqual(["a", "b"]);
   });
 });
 
@@ -103,7 +133,7 @@ describe("applyRangeFilters — combined filters narrow together (AND, not OR)",
       ["b", 5000],
     ]);
     // "a" fits size (<5k) and cost (<10k); "b" fits cost but not size.
-    const { matched } = applyRangeFilters(ROWS, { size: "under5k", cost: "under10k" }, { costMap });
+    const { matched } = applyRangeFilters(ROWS, { size: ["under5k"], cost: ["under10k"] }, { costMap });
     expect(matched.map((r) => r.id)).toEqual(["a"]);
   });
 });

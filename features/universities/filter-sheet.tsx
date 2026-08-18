@@ -19,6 +19,10 @@ export interface FilterOption {
 
 export interface FilterGroup {
   label: string;
+  /** Shown under the label — used for the two multi-select groups (cost, student population)
+   * to make the "select more than one to span a range" behavior discoverable, since nothing
+   * about a row of chips says that on its own. */
+  description?: string;
   options: FilterOption[];
 }
 
@@ -53,7 +57,10 @@ export function FilterSheet({ groups, clearHref, activeCount }: { groups: Filter
           <div className="flex-1 space-y-6 overflow-y-auto p-4">
             {groups.map((group) => (
               <div key={group.label} className="space-y-2">
-                <p className="text-sm font-medium">{group.label}</p>
+                <div>
+                  <p className="text-sm font-medium">{group.label}</p>
+                  {group.description ? <p className="text-xs text-muted-foreground">{group.description}</p> : null}
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {group.options.map((option) => (
                     <Link key={option.value} href={option.href} className={cn(CHIP, option.active ? CHIP_ACTIVE : CHIP_INACTIVE)}>

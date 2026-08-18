@@ -8,7 +8,17 @@ import { regionById } from "@/lib/data/regions";
 import { searchUniversityRows } from "@/lib/universities/alias-search";
 import { getSupersededUniversityIds } from "@/lib/universities/canonical";
 import { getUniversityCountByCountry, getAllCostOfAttendance, getAllQsRankNumeric } from "@/lib/universities/queries";
-import { COST_BUCKETS, SIZE_BUCKETS, TYPE_OPTIONS, RANK_TIERS, RANK_OPTIONS, applyRangeFilters, matchesInstitutionType } from "@/lib/universities/filters";
+import {
+  COST_BUCKETS,
+  SIZE_BUCKETS,
+  TYPE_OPTIONS,
+  RANK_TIERS,
+  RANK_OPTIONS,
+  applyRangeFilters,
+  matchesInstitutionType,
+  type CostBucketValue,
+  type SizeBucketValue,
+} from "@/lib/universities/filters";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/oryn/page-header";
@@ -62,9 +72,12 @@ export default async function UniversitiesPage({
   // view yet, and a fake relevance score would be exactly the "sahte scoring" a founder
   // review explicitly ruled out. Ranking is the closest honest default.
   const sort: SortOption = sortParam === "students" || sortParam === "name" ? sortParam : "ranking";
-  const cost = COST_BUCKETS.find((b) => b.value === costParam)?.value ?? null;
+  // Comma-separated, not a single value: cost and student-population are multi-select (see
+  // lib/universities/filters.ts's RangeFilters) so a student can span adjacent buckets rather
+  // than being stuck with whatever single preset boundary happens to be drawn.
+  const cost = (costParam?.split(",") ?? []).filter((v): v is CostBucketValue => COST_BUCKETS.some((b) => b.value === v));
   const type = TYPE_OPTIONS.find((t) => t.value === typeParam)?.value ?? null;
-  const size = SIZE_BUCKETS.find((b) => b.value === sizeParam)?.value ?? null;
+  const size = (sizeParam?.split(",") ?? []).filter((v): v is SizeBucketValue => SIZE_BUCKETS.some((b) => b.value === v));
   const rank = (RANK_TIERS as readonly string[]).includes(rankParam ?? "") ? (rankParam as (typeof RANK_TIERS)[number]) : null;
   const session = await requireUser();
   const supabase = await createClient();
@@ -173,7 +186,7 @@ export default async function UniversitiesPage({
     return { data: finalRows, count, sizeUnknownCount: sizeUnknown, costUnknownCount: costUnknown };
   }
 
-  const useIdIntersectionPath = sort === "ranking" || cost !== null || size !== null || rank !== null;
+  const useIdIntersectionPath = sort === "ranking" || cost.length > 0 || size.length > 0 || rank !== null;
 
   let browseQuery = supabase
     .from("universities")
@@ -261,20 +274,20 @@ export default async function UniversitiesPage({
 
   const scopeLabel = country ?? region?.name ?? null;
 
-  function buildHref(overrides: { page?: number; sort?: SortOption; cost?: string | null; type?: string | null; size?: string | null; rank?: string | null }): string {
+  function buildHref(overrides: { page?: number; sort?: SortOption; cost?: string[]; type?: string | null; size?: string[]; rank?: string | null }): string {
     const params = new URLSearchParams();
     if (country) params.set("country", country);
     if (region) params.set("region", region.id);
     if (q) params.set("q", q);
     const nextSort = overrides.sort ?? sort;
     if (nextSort !== "ranking") params.set("sort", nextSort);
-    const nextCost = "cost" in overrides ? overrides.cost : cost;
+    const nextCost = overrides.cost ?? cost;
     const nextType = "type" in overrides ? overrides.type : type;
-    const nextSize = "size" in overrides ? overrides.size : size;
+    const nextSize = overrides.size ?? size;
     const nextRank = "rank" in overrides ? overrides.rank : rank;
-    if (nextCost) params.set("cost", nextCost);
+    if (nextCost.length > 0) params.set("cost", nextCost.join(","));
     if (nextType) params.set("type", nextType);
-    if (nextSize) params.set("size", nextSize);
+    if (nextSize.length > 0) params.set("size", nextSize.join(","));
     if (nextRank) params.set("rank", nextRank);
     // Any filter or sort change resets to page 1 (the result set just changed size); explicit
     // pagination passes its own target page.
@@ -286,9 +299,12 @@ export default async function UniversitiesPage({
 
   const buildPageHref = (targetPage: number) => buildHref({ page: targetPage });
   const buildSortHref = (nextSort: SortOption) => buildHref({ sort: nextSort });
-  const buildFilterHref = (overrides: { cost?: string | null; type?: string | null; size?: string | null; rank?: string | null }) => buildHref(overrides);
+  const buildFilterHref = (overrides: { cost?: string[]; type?: string | null; size?: string[]; rank?: string | null }) => buildHref(overrides);
 
-  function toOptions<V extends string>(defs: { value: V; label: string }[], current: V | null, key: "cost" | "type" | "size" | "rank"): FilterOption[] {
+  /** Single-select: type and rank. Clicking the active option clears it, clicking another
+   * replaces it — QS rank tiers are already cumulative ("Top 50" ⊇ "Top 10"), so more than one
+   * active at once couldn't express anything a single, wider tier doesn't already cover. */
+  function toOptions<V extends string>(defs: { value: V; label: string }[], current: V | null, key: "type" | "rank"): FilterOption[] {
     return defs.map((d) => ({
       value: d.value,
       label: d.label,
@@ -297,7 +313,20 @@ export default async function UniversitiesPage({
     }));
   }
 
-  const activeFilterCount = [cost, type, size, rank].filter(Boolean).length;
+  /** Multi-select: cost and student population. Clicking a chip toggles it in/out of the
+   * active set instead of replacing whatever was selected — this is what lets a student span
+   * adjacent buckets ("$10k-$25k" + "$25k-$50k" for an effective "$10k-$50k") instead of being
+   * stuck picking exactly one preset boundary. See lib/universities/filters.ts's RangeFilters. */
+  function toMultiOptions<V extends string>(defs: { value: V; label: string }[], currentArr: V[], key: "cost" | "size"): FilterOption[] {
+    return defs.map((d) => ({
+      value: d.value,
+      label: d.label,
+      active: currentArr.includes(d.value),
+      href: buildFilterHref({ [key]: currentArr.includes(d.value) ? currentArr.filter((v) => v !== d.value) : [...currentArr, d.value] }),
+    }));
+  }
+
+  const activeFilterCount = cost.length + size.length + (type ? 1 : 0) + (rank ? 1 : 0);
 
   return (
     <div className="space-y-8">
@@ -323,11 +352,11 @@ export default async function UniversitiesPage({
           </form>
           <FilterSheet
             activeCount={activeFilterCount}
-            clearHref={buildFilterHref({ cost: null, type: null, size: null, rank: null })}
+            clearHref={buildFilterHref({ cost: [], type: null, size: [], rank: null })}
             groups={[
-              { label: "Cost of attendance", options: toOptions(COST_BUCKETS, cost, "cost") },
+              { label: "Cost of attendance", description: "Select as many as you need to span a wider range.", options: toMultiOptions(COST_BUCKETS, cost, "cost") },
               { label: "Institution type", options: toOptions(TYPE_OPTIONS, type, "type") },
-              { label: "Student population", options: toOptions(SIZE_BUCKETS, size, "size") },
+              { label: "Student population", description: "Select as many as you need to span a wider range.", options: toMultiOptions(SIZE_BUCKETS, size, "size") },
               { label: "QS ranking", options: toOptions(RANK_OPTIONS, rank, "rank") },
             ]}
           />

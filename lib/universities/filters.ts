@@ -54,8 +54,16 @@ export interface RangeFilterRow {
 }
 
 export interface RangeFilters {
-  size?: SizeBucketValue | null;
-  cost?: CostBucketValue | null;
+  // Arrays, not a single value: cost and size are multi-select (OR within the category, still
+  // AND against every other filter) so a student can span adjacent buckets — e.g. select both
+  // "$10,000 – $25,000" and "$25,000 – $50,000" to effectively get "$10k-$50k". A first version
+  // of this filter only allowed one bucket active at a time; live feedback ("10 ile 50 arasını
+  // yapamıyorum" — can't do between 10 and 50) is exactly the gap a single-select preset always
+  // has no matter how the boundaries are drawn. rank stays single-select deliberately: QS tiers
+  // are already cumulative ("Top 50" is a superset of "Top 10"), so multi-selecting two tiers
+  // can't express anything a single selection of the wider one doesn't already cover.
+  size?: SizeBucketValue[];
+  cost?: CostBucketValue[];
   rank?: RankTierValue | null;
 }
 
@@ -91,20 +99,22 @@ export function applyRangeFilters<T extends RangeFilterRow>(
   let stage = rows;
 
   let sizeUnknown: number | undefined;
-  if (filters.size) {
-    const bucket = SIZE_BUCKETS.find((b) => b.value === filters.size)!;
+  if (filters.size && filters.size.length > 0) {
+    const buckets = SIZE_BUCKETS.filter((b) => filters.size!.includes(b.value));
     sizeUnknown = stage.filter((r) => r.student_size == null).length;
-    stage = stage.filter((r) => r.student_size != null && r.student_size >= bucket.min && (bucket.max == null || r.student_size <= bucket.max));
+    stage = stage.filter(
+      (r) => r.student_size != null && buckets.some((bucket) => r.student_size! >= bucket.min && (bucket.max == null || r.student_size! <= bucket.max))
+    );
   }
 
   let costUnknown: number | undefined;
-  if (filters.cost) {
-    const bucket = COST_BUCKETS.find((b) => b.value === filters.cost)!;
+  if (filters.cost && filters.cost.length > 0) {
+    const buckets = COST_BUCKETS.filter((b) => filters.cost!.includes(b.value));
     const costMap = data.costMap ?? new Map<string, number>();
     costUnknown = stage.filter((r) => !costMap.has(r.id)).length;
     stage = stage.filter((r) => {
       const amount = costMap.get(r.id);
-      return amount != null && amount >= bucket.min && (bucket.max == null || amount <= bucket.max);
+      return amount != null && buckets.some((bucket) => amount >= bucket.min && (bucket.max == null || amount <= bucket.max));
     });
   }
 
