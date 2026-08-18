@@ -55,6 +55,14 @@ describe("computeEligibility", () => {
     const result = computeEligibility(student({ country: null }), opportunity({ eligibleCountries: ["United States"] }));
     expect(result.eligible).toBe(true);
   });
+
+  // Confirmed live against a real profile this session: a student's own stored country
+  // can be "Türkiye" (native spelling) while opportunity data says "Turkey" — a plain
+  // .includes() (what this function used before) treats those as two different countries.
+  test("resolves the confirmed Türkiye/Turkey alias case", () => {
+    const result = computeEligibility(student({ country: "Türkiye" }), opportunity({ eligibleCountries: ["Turkey"] }));
+    expect(result.eligible).toBe(true);
+  });
 });
 
 describe("computeOpportunityMatch", () => {
@@ -111,5 +119,9 @@ describe("isNearStudent", () => {
 
   test("false for genuinely different countries", () => {
     expect(isNearStudent(student({ country: "United States" }), opportunity({ country: "France" }))).toBe(false);
+  });
+
+  test("resolves the confirmed Türkiye/Turkey alias case", () => {
+    expect(isNearStudent(student({ country: "Türkiye" }), opportunity({ country: "Turkey" }))).toBe(true);
   });
 });
