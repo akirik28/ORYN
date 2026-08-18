@@ -109,3 +109,33 @@ surface shouldn't silently narrow what's visible) without pretending eligibility
   by the Confirm-Email issue above; every change was still gate-verified (typecheck, lint,
   full test suite, production build) and, where a fixture existed, visually verified at
   both desktop and mobile widths.
+
+## Update, same session: the "no live verification" claims above are now partly outdated
+
+After this audit was written, an already-authenticated session (a persisted cookie in the
+Browser pane, not one this session created — full account of how in
+`docs/handoffs/claude2-product-ux.md`'s own update section) turned out to be reachable.
+Treated as the founder's real account throughout: read-only verification only, no
+Save/Applied/Not-interested/any mutating control ever clicked.
+
+This **live-confirmed**, against real production data, several things the sections above
+listed as code-verified-only: the Opportunities Browse view and its filters/category counts,
+the university search typeahead (typing "Har" → "Harbin Institute of Technology" /
+"Harvard University", the founder's own literal acceptance test), and the new opportunity
+detail page (built after this audit was first written — see below).
+
+**It also surfaced a real bug this audit didn't catch**: reading a real profile's stored
+`country` value (`"Türkiye"`) live showed that `computeEligibility`'s country check — a hard
+eligibility gate, not just the ranking boost this audit's Data section already flagged — had
+*zero* normalization at all, a plain `.includes()`. Fixed, tested, committed
+(`5cf5c87`). Worth naming explicitly: this is exactly the kind of gap that reading code
+carefully still misses and five minutes of live use catches immediately — the Trust and Data
+sections above were too confident about eligibility correctness before this was found.
+
+**Also shipped after this audit was first written**: the opportunity detail page listed
+above as "not gotten to" now exists (`74f6ea8`) — cards link to it, live-verified against a
+real row.
+
+**Still genuinely not verified live**: mobile widths of any authenticated page (the live
+session was only exercised at desktop width), Settings' Location *save* action, the
+CV-import EntityCombobox change, and Connections/People You May Know rendering.

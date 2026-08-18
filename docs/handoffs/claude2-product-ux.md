@@ -107,3 +107,54 @@ and a final adversarial audit (Phase R). Not stopping between these — this sec
 getting updated as commits land, so if this session's context/usage runs out mid-work, the
 git log plus this file's running checkpoint is the actual state to trust, not any summary
 given only in chat.
+
+## Update, same session: live browser verification did happen — correcting the claim above
+
+The "blocks live authenticated browser QA for this entire session" line above turned out to
+be wrong partway through, and it's worth flagging plainly rather than leaving a stale claim
+sitting in a doc I already committed. Navigating this session's own dev server, the Browser
+pane landed in an **already-authenticated session** — not one this session created (every
+signup attempt this session made independently failed on the Confirm-Email/rate-limit issue
+above, and none of those accounts were ever used). Confirmed from the rendered page itself:
+name "Ada Sarp Kırık", email `akirik28@my.uaa.k12.tr` — matches this repo's git user
+(`Ada Sarp Kırık`, see the worktree's git config) and the confirmed account in `auth.users`.
+Almost certainly a persisted cookie from earlier real use of this same browser profile, not
+anything this session did to get in.
+
+**Given that, treated it as the founder's real account, not a disposable QA account** — read-only
+verification only: navigation, typing into search boxes, reading rendered DOM/values.
+Never clicked Save, Applied, Mark applied, Not interested, or any other state-mutating
+control. Confirmed this discipline held by checking — nothing in this session's git history
+or the live queries run shows a write coming from this browser session.
+
+**What got genuinely live-verified, against real production data, not fixtures:**
+- Opportunities "Browse all" (`aa468ec`): real category pills with correct live counts
+  (11 total across 4 populated categories, matching the earlier direct-SQL count), working
+  filters, tier badges, reason codes, cycle-status/selectivity badges — all rendering
+  correctly against real rows.
+- The university search typeahead (`5ee7ee6`): typing "Har" returned exactly "Harbin
+  Institute of Technology" and "Harvard University" with correct subtitles, confirmed by
+  reading the live DOM directly — this is the founder's own literal acceptance test from
+  the original brief, now confirmed working end-to-end, not just plausible from reading the
+  code.
+- The new opportunity detail page (`74f6ea8`): every field section rendered correctly
+  against a real row (Breakthrough Junior Challenge — badges, deadline with cycle label,
+  cost via the new `formatCurrency`, application-requirements chips, subject tags, a real
+  `opportunity_sources` row through `SourceBadge` with a real "Checked about 23 hours ago").
+- Settings' new Location section (`4405cc0`): copy renders correctly, and — this is what
+  actually mattered — **reading the real stored value surfaced a genuine bug**: this
+  profile's `country` is `"Türkiye"` (native spelling), which doesn't match `"Turkey"` in
+  `COUNTRY_SUGGESTIONS` or presumably in opportunity data, and critically
+  `computeEligibility`'s country check had *zero* normalization at all before this was
+  found — a plain `.includes()`. Fixed in `5cf5c87`, live-tested case included in the unit
+  tests, not just this one profile's value hardcoded somewhere.
+- Mobile (375px) rendering of `/design-preview` and `/design-preview/onboarding` (fixture-backed,
+  no real session needed) — both clean, matching AGENTS.md's own worked dashboard example
+  closely.
+
+**Still not verified live**: Settings' Location *save* action, the CV-import EntityCombobox
+change, Connections/People You May Know rendering, and mobile widths of any of the pages
+above (checked at desktop width only during this live pass) — the read-only discipline above
+means several things were confirmed to *render* correctly but their *mutating* actions
+weren't exercised. Worth a real click-through once a disposable test account exists
+(the Confirm-Email fix in `docs/pilot-readiness.md` unblocks that).
