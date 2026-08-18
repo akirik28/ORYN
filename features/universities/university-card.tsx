@@ -2,9 +2,10 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { MapPin, Bookmark, BookmarkCheck, Landmark, Users, Trophy, DollarSign } from "lucide-react";
+import { MapPin, Bookmark, BookmarkCheck, Landmark, Users, Trophy, DollarSign, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { addTargetUniversity } from "@/app/(app)/universities/actions";
+import { useCompare } from "@/features/universities/compare-context";
 import type { University } from "@/types/database";
 
 // Larger, calmer card (founder direction: "fewer larger cards ... not a dense database
@@ -33,6 +34,8 @@ export function UniversityCard({
 }) {
   const [saved, setSaved] = useState(isSaved);
   const [isPending, startTransition] = useTransition();
+  const compare = useCompare();
+  const isComparing = compare.isSelected(university.id);
 
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border bg-card">
@@ -121,6 +124,16 @@ export function UniversityCard({
           >
             {saved ? <BookmarkCheck className="size-3.5" /> : <Bookmark className="size-3.5" />}
             {saved ? "Saved" : "Save"}
+          </Button>
+          <Button
+            variant={isComparing ? "secondary" : "outline"}
+            size="sm"
+            disabled={!isComparing && compare.atLimit}
+            onClick={() => compare.toggle({ id: university.id, name: university.name })}
+            title={!isComparing && compare.atLimit ? "Compare up to 4 at a time" : undefined}
+          >
+            <Scale className="size-3.5" />
+            {isComparing ? "Comparing" : "Compare"}
           </Button>
         </div>
       </div>
