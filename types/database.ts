@@ -1251,15 +1251,21 @@ export interface AdvisorConversation {
 }
 export type AdvisorConversationInsert = Insertable<AdvisorConversation, "id" | "created_at" | "updated_at" | "title">;
 
+export type AdvisorMessageStatus = "complete" | "failed";
+
 export interface AdvisorMessage {
   id: string;
   conversation_id: string;
   user_id: string;
   role: MessageRole;
-  content: string;
+  /** Nullable since migration 0046 — a failed assistant turn has no real content to store. */
+  content: string | null;
+  status: AdvisorMessageStatus;
+  /** Safe, user-facing text only (see lib/ai/advisor-failure.ts) — never the raw caught error. */
+  error_message: string | null;
   created_at: string;
 }
-export type AdvisorMessageInsert = Insertable<AdvisorMessage, "id" | "created_at">;
+export type AdvisorMessageInsert = Insertable<AdvisorMessage, "id" | "created_at" | "status" | "error_message">;
 
 // ---------- Notifications ----------
 

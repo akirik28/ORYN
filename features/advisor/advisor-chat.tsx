@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Sparkles, ArrowUp, User } from "lucide-react";
+import { Sparkles, ArrowUp, User, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { sendAdvisorMessage } from "@/app/(app)/advisor/actions";
+import { sendAdvisorMessage, retryAdvisorMessage } from "@/app/(app)/advisor/actions";
 import type { AdvisorMessage } from "@/types/database";
 
 interface LocalMessage {
@@ -13,6 +13,10 @@ interface LocalMessage {
   role: "user" | "assistant";
   content: string;
   pending?: boolean;
+  /** Persisted (migration 0046) — a failed turn renders as its own bubble with a Retry
+   * affordance, sourced from the DB on load, not only from transient submit-time state. */
+  failed?: boolean;
+  errorMessage?: string;
 }
 
 const SUGGESTED_PROMPTS = [
@@ -32,11 +36,18 @@ export function AdvisorChat({
 }) {
   const [convId, setConvId] = useState(conversationId);
   const [messages, setMessages] = useState<LocalMessage[]>(
-    initialMessages.map((m) => ({ id: m.id, role: m.role, content: m.content }))
+    initialMessages.map((m) => ({
+      id: m.id,
+      role: m.role,
+      content: m.content ?? "",
+      failed: m.status === "failed",
+      errorMessage: m.error_message ?? undefined,
+    }))
   );
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [retryingId, setRetryingId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const localIdCounter = useRef(0);
 
@@ -58,12 +69,18 @@ export function AdvisorChat({
       if (result.conversationId) setConvId(result.conversationId);
 
       if (result.error) {
-        setMessages((prev) => prev.filter((m) => m.id !== "thinking"));
-        setError(
-          result.error === "not_configured"
-            ? "The AI Advisor isn't configured yet. See API_SETUP.md to add an Anthropic API key."
-            : result.error
-        );
+        if (result.assistantMessageId) {
+          // A real, persisted failed turn — render it as a retry-able bubble, same as one
+          // loaded from the DB on refresh, instead of only an ephemeral banner.
+          setMessages((prev) =>
+            prev.map((m) => (m.id === "thinking" ? { id: result.assistantMessageId!, role: "assistant", content: "", failed: true, errorMessage: result.error } : m))
+          );
+        } else {
+          // A pre-message failure (rate limit, validation) — nothing was persisted, so
+          // there's nothing to retry against; drop the placeholder and show the banner.
+          setMessages((prev) => prev.filter((m) => m.id !== "thinking"));
+          setError(result.error);
+        }
         return;
       }
 
@@ -71,6 +88,22 @@ export function AdvisorChat({
       // trust the round trip completed and drop the optimistic placeholder. The page
       // revalidates on next navigation, so history stays consistent.
       setMessages((prev) => prev.filter((m) => m.id !== "thinking"));
+    });
+  }
+
+  function retry(messageId: string) {
+    if (retryingId) return;
+    setRetryingId(messageId);
+    setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, pending: true, failed: false } : m)));
+
+    startTransition(async () => {
+      const result = await retryAdvisorMessage(messageId);
+      setRetryingId(null);
+      if (result.error) {
+        setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, pending: false, failed: true, errorMessage: result.error } : m)));
+        return;
+      }
+      setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, pending: false, failed: false, content: result.content ?? "" } : m)));
     });
   }
 
@@ -104,7 +137,11 @@ export function AdvisorChat({
               <span
                 className={cn(
                   "flex size-7 shrink-0 items-center justify-center rounded-full",
-                  message.role === "assistant" ? "bg-brand-primary-soft text-brand-primary-strong" : "bg-muted text-muted-foreground"
+                  message.failed
+                    ? "bg-destructive/10 text-destructive"
+                    : message.role === "assistant"
+                      ? "bg-brand-primary-soft text-brand-primary-strong"
+                      : "bg-muted text-muted-foreground"
                 )}
               >
                 {message.role === "assistant" ? <Sparkles className="size-4" /> : <User className="size-4" />}
@@ -112,7 +149,7 @@ export function AdvisorChat({
               <div
                 className={cn(
                   "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
-                  message.role === "assistant" ? "bg-muted" : "bg-brand-primary text-primary-foreground"
+                  message.failed ? "border border-destructive/30 bg-destructive/5" : message.role === "assistant" ? "bg-muted" : "bg-brand-primary text-primary-foreground"
                 )}
               >
                 {message.pending ? (
@@ -121,6 +158,14 @@ export function AdvisorChat({
                     <span className="size-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.15s]" />
                     <span className="size-1.5 animate-bounce rounded-full bg-current" />
                   </span>
+                ) : message.failed ? (
+                  <div className="space-y-2">
+                    <p className="text-destructive">{message.errorMessage || "Oryn couldn't generate this response."}</p>
+                    <Button variant="outline" size="sm" onClick={() => retry(message.id)} disabled={retryingId === message.id}>
+                      <RotateCcw className="size-3.5" />
+                      Retry
+                    </Button>
+                  </div>
                 ) : (
                   <p className="whitespace-pre-wrap">{message.content}</p>
                 )}
