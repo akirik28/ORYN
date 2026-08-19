@@ -144,6 +144,14 @@ describe("runCounselorPipeline", () => {
     expect(result.profileReadiness.sufficientForJudgment).toBe(true);
   });
 
+  test("never produces two recommendations with the same id (spec: one DB record cannot silently become two recommendations)", () => {
+    const opps = ["a", "b", "c"].map((id) => opportunity(`opp-${id}`));
+    const state = baseState({ eligibleOpportunityMatches: opps.map((o) => ({ opportunity: o, match: match(o.id) })) });
+    const result = runCounselorPipeline(state);
+    const ids = result.recommendations.map((r) => r.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
   test("deterministic: running the same state twice produces the same recommendation ids in the same order", () => {
     const opp = opportunity("opp-1");
     const state = baseState({ eligibleOpportunityMatches: [{ opportunity: opp, match: match("opp-1") }] });

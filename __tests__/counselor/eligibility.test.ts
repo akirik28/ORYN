@@ -148,6 +148,21 @@ describe("evaluateCandidateEligibility — opportunities", () => {
     const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ cycle_status: "closed", citizenship_restrictions: "US only" })));
     expect(result.verdict).toBe("known_ineligible");
   });
+
+  // Defense-in-depth (spec §37 invariant: "unverified opportunities never appear as
+  // verified"): state.ts's DB query already filters to verification_state='verified_current'
+  // before this point, but that filter is untested DB-boundary code (this repo's own
+  // convention — see docs/counselor-core-plan.md §14). This check makes the invariant hold
+  // even if a caller ever constructs a CounselorState without going through state.ts.
+  test("known_ineligible when the opportunity is not verified_current, even if otherwise eligible", () => {
+    const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ verification_state: "unverified" })));
+    expect(result.verdict).toBe("known_ineligible");
+  });
+
+  test("known_eligible when verification_state is verified_current (the normal case)", () => {
+    const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ verification_state: "verified_current" })));
+    expect(result.verdict).toBe("known_eligible");
+  });
 });
 
 describe("evaluateCandidateEligibility — non-opportunity candidates", () => {

@@ -19,6 +19,15 @@ function evaluateOpportunityEligibility(candidate: CandidateAction & { source: {
   }
   const { opportunity } = entry;
 
+  // Defense-in-depth for spec §37's "unverified opportunities never appear as verified"
+  // invariant: lib/counselor/state.ts's DB query already restricts eligibleOpportunityMatches
+  // to verification_state = 'verified_current' before this point, but that's untested
+  // DB-boundary code (this repo's convention) — this check makes the invariant hold on its
+  // own, independent of the caller having filtered correctly upstream.
+  if (opportunity.verification_state !== "verified_current") {
+    return { verdict: "known_ineligible", notes: ["This opportunity is not currently verified."] };
+  }
+
   // A hard, structured "not actionable right now" check — independent of matching.ts,
   // which never looks at cycle_status at all.
   if (INACTIVE_CYCLE_STATUSES.has(opportunity.cycle_status)) {
