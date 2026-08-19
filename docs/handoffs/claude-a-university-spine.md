@@ -1842,6 +1842,24 @@ idempotently), `--apply` clean, full gate green. A separate mandatory $900/year 
 hospital insurance fee also exists — not tuition, not recorded, same treatment as every other
 country's administrative fees in this project. 22 Canadian universities remain queued.
 
+**Australia — second batch, 2026-08-19, 1→2/38 (+1: University of the Sunshine Coast).**
+Re-confirms this file's own header note: ANU, University of Queensland, Monash, Macquarie, and
+Victoria University all re-checked independently this pass, same negative result as before
+(per-course fee-tool only, no static table) — the "only Sydney has a real page-wide table"
+pattern from the header holds for a 7th/8th/9th/10th/11th university now, not a fluke.
+University of Canberra: same pattern, one concrete non-award-program figure ($23,500) but no
+undergraduate-degree figure. USC (which rebranded to "UniSC" on a new domain since the header
+was written, still stored as "University of the Sunshine Coast" in this spine) breaks the
+pattern with a real official program-tier table: $21,000 (1-year Diploma, a different
+qualification level, excluded — same discipline as Foundation-year exclusions elsewhere in
+this file) up to $38,500 (Physiotherapy Honours); $28,500 (the true low end among actual
+Bachelor's programs) used as `value_numeric`. 2 metric rows written (USC + Sydney
+re-confirmed), `--apply` clean, full gate green. 36 Australian universities remain queued —
+the smaller/regional ones (Charles Darwin, CQUniversity, Southern Cross, Federation-style
+institutions) are now the more promising remaining targets, per the same "smaller schools
+publish flatter fee tables" pattern already observed in the UK (Bath/Surrey) and Canada
+(Laval) batches above.
+
 **Coverage, verified live via `npm run report:universities`**: 110/1019 (10.8%) going into
 Italy → 124/1019 (12.2%) after Italy + Spain → 126/1019 (12.4%) after South Korea → 143/1019
 (14.0%) after Japan → **148/1019 (14.5%)** after a concurrent UK fourth batch (Surrey) and
@@ -1849,7 +1867,7 @@ Canada third batch (Simon Fraser University) — both found already written in t
 mid-turn (the same autonomous-continuation pattern documented earlier in this file for the UK
 third batch), verified and gated exactly like every other batch before committing rather than
 assumed already-applied. Countries done so far this workstream: UK (25/79), Canada (5/27),
-Australia (1/38), Germany (49/49), Netherlands (13/13), France (19/30), Switzerland (7/11),
+Australia (2/38), Germany (49/49), Netherlands (13/13), France (19/30), Switzerland (7/11),
 Italy (4/38), Spain (10/29), South Korea (2/31), Japan (17/22). China and Malaysia both
 investigated, deliberately not written (see above).
 

@@ -72,6 +72,20 @@ const AU_TUITION: Record<string, AuTuitionEntry> = {
     notes:
       "Real, clearly-labeled table: 'Full-time fees (guide for 2026 entry)' column, 'Undergraduate' row specifically (distinguished in the same tables from 'Postgraduate coursework'/'Postgraduate research' rows — the Undergraduate figure was read from that row only, not an unscoped min/max across the page, which would have mixed levels). 13 faculty tables scanned: $49,200 (lowest faculty) to $60,600 (highest). The page itself calls these 'a guide only' — course pages carry the precise figure.",
   },
+
+  // Second batch, 2026-08-19 — University of the Sunshine Coast only (Canberra, Victoria
+  // University checked, no bulk figure — same per-course-tool pattern as the six universities
+  // named in the header above; ANU/UQ/Monash/Macquarie re-checked independently this pass,
+  // same negative result confirmed again). The university rebranded to "UniSC" on a new
+  // unisc.edu.au domain (usc.edu.au 301-redirects there) — the spine's stored name is still
+  // "University of the Sunshine Coast", used as the dict key regardless.
+  "University of the Sunshine Coast": {
+    international: [28500, 38500],
+    statsAsOf: "2026 entry",
+    sourceUrl: "https://www.unisc.edu.au/international/programs-and-fees/tuition-fees-and-other-costs",
+    notes:
+      "Real official page, fees stated by program tier: $21,000 (1-year Diploma programs — a different, shorter qualification level than a Bachelor's degree, excluded from the range as not representative, same discipline as this file's sibling scripts excluding Foundation-year fees) to $38,500 (Bachelor of Physiotherapy Honours, the highest standard Bachelor's-level program). Mid-range $28,500-$31,500 covers most Bachelor's degrees in arts/business/science/education; $32,500-$33,500 covers engineering/health sciences/nursing/law. value_numeric uses $28,500, the true low end among actual Bachelor's-level programs.",
+  },
 };
 
 async function main(): Promise<void> {
