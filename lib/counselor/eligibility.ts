@@ -1,6 +1,8 @@
 import type { CandidateAction, CounselorState, EligibilityResult, EligibilityVerdict } from "./types";
 
-const INACTIVE_CYCLE_STATUSES = new Set(["closed", "historical", "discontinued"]);
+/** Exported for lib/opportunities/readiness.ts's data-quality audit to reuse — one
+ * definition of "not currently actionable," not a second copy of the same rule. */
+export const INACTIVE_CYCLE_STATUSES = new Set(["closed", "historical", "discontinued"]);
 
 /**
  * Finer-grained, opportunity-specific classification layered on top of
