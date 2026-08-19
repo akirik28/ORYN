@@ -9,8 +9,12 @@ database wins and this file is stale — re-measure before trusting either.
 
 ## Repository
 
-- main HEAD: `b92c72f` — "docs: re-point Drive acquisition record at its current ID"
-- integration HEAD: `c2b5417` (branch `oryn/integration-2026-08-19`) — not yet merged to main
+- main HEAD: `2b9796c` — "merge: integrate university-intelligence-spine, programs-pipeline-
+  reconciled, and selected product-ux/programs-opportunities-intel work" (the prior integration
+  checkpoint; `b92c72f` referenced by an earlier version of this file was stale — this repo's
+  own `git log` is authoritative, not a doc snapshot).
+- feature branch: `oryn/counselor-core-v1` (off `main` @ `2b9796c`), pushed, **not merged** —
+  Counselor Core (see Product Direction below). Clean, all commits logical units, no force-push.
 - date: 2026-08-19
 
 ## Product Direction
@@ -24,10 +28,13 @@ VERIFIED DATA -> STUDENT UNDERSTANDING -> GAP DETECTION -> RECOMMENDATION
 ```
 
 "Here are 1,000 universities" is not the goal. "Your research is weak relative to your
-leadership, here are three things worth doing about it this week" is. Counselor Core
-(deeper gap-driven, opportunity-cost-aware recommendation) is the highest-leverage thing to
-build next — see Next Phase — but was deliberately **not** touched this session; this was a
-consolidation pass, not a feature pass.
+leadership, here are three things worth doing about it this week" is. **Counselor Core is now
+built** on `oryn/counselor-core-v1` (not yet merged to main) — see `docs/counselor-core.md` for
+the full technical reference. Deterministic gap-detection -> candidate-generation -> eligibility
+-> ranking -> evidence pipeline, fully TDD'd (100+ new tests), zero LLM dependency for the core
+loop; an optional LLM narration layer sits on top, never required. Not yet live/browser QA'd — a
+concurrent session held the only `next dev` lock for this entire build; verification is
+typecheck + full test suite + production build only. See the branch's completion report.
 
 ## University Data
 
@@ -154,7 +161,11 @@ actual current state.
 
 ## Migrations
 
-- Latest integrated migration: **0045** (`0045_opportunity_online_program_category.sql`).
+- Latest on `main`: **0045** (`0045_opportunity_online_program_category.sql`). **0046**
+  (`0046_advisor_message_failure_state.sql`, additive: `advisor_messages.status`/`error_message`,
+  `content` now nullable) exists on `oryn/counselor-core-v1` only, not yet merged, not yet applied
+  to any live database — same no-DDL-access constraint as 0043 below. Syntactically reviewed,
+  pattern-consistent with 0043/0044/0045's own additive `ALTER TABLE`s, not live-tested.
 - Full sequence: 0001-0042 unchanged from main. **0043** = `university_duplicate_supersession`
   (spine's; written, NOT yet applied to any live database — no DDL access in this
   environment, founder-blocked-backlog item 25). **0044** = `university_programs_enrichment`
@@ -180,6 +191,7 @@ actual current state.
 ## Tests
 
 ```
+On main (2b9796c):
 npm run lint          -> clean, 0 warnings/errors
 npm run typecheck     -> clean (tsc --noEmit)
 npm run test          -> 884/884 passing (79 test files)
@@ -189,11 +201,20 @@ npm run check:university-spine-health -> 9/10 checks PASS; 1 FAIL is the known,
                                           expected, already-documented 0043-blocked
                                           canonical_entity_id sharing (9 pairs) —
                                           not a regression
+
+On oryn/counselor-core-v1 (not yet merged):
+npm run lint          -> clean, 0 warnings/errors
+npm run typecheck     -> clean (tsc --noEmit)
+npm run test          -> 994/994 passing (88 test files) — 100+ new, all TDD'd
+npm run build         -> succeeds, 39 routes compiled
 ```
 
 Live browser QA: see Product section above — genuinely exercised in a real authenticated
-session, not simulated. Full new-account/messaging/admin flows remain code-reviewed-only,
-blocked on the founder actions below.
+session on `main`, not simulated. Full new-account/messaging/admin flows remain
+code-reviewed-only, blocked on the founder actions below. **Counselor Core specifically has
+not been live/browser QA'd** — a concurrent session held this environment's only `next dev`
+lock for the duration of this build; killing another session's dev server unilaterally was
+judged too risky. Do this before merging to main.
 
 ## Founder Actions Required
 
@@ -220,24 +241,26 @@ backlog.md` (25 items) and `docs/qa-environment-readiness-audit.md`.
 
 Recommended order, highest-leverage first:
 
-1. **Counselor Core** — the actual product per AGENTS.md: turn the gap-detection data
-   that already exists (profile scores, biggest-gap card) into the full opportunity-cost-
-   aware recommendation loop (do/consider/deprioritize/avoid_for_now, "why" explanations,
-   weekly plan grounded in real gaps not generic activity). Currently blocked on Anthropic
-   credit for anything AI-driven; the deterministic scaffolding (scoring, gap detection) is
-   already live and can be extended without it.
-2. **Wire and run the rescued programme-catalog pipeline** (`lib/acquisition/programs.ts` +
+1. **Live/browser QA `oryn/counselor-core-v1`, then merge it.** The dev-server lock that
+   blocked this during the build should be free now — run the Advisor page end to end
+   (sufficient profile, near-empty profile, zero-recommendation state, the failed-message
+   retry flow), confirm `npm run test`/`build` still green, then merge via the normal
+   non-force workflow. See `docs/counselor-core.md` for exactly what to check.
+2. **Apply migration 0046** (`advisor_message_failure_state`) once DDL access exists — same
+   blocker as 0043 below, same fix (founder SQL-editor pass or granted DDL access).
+3. **Wire and run the rescued programme-catalog pipeline** (`lib/acquisition/programs.ts` +
    `scripts/acquire-programs.ts`) — add an `acquire:programs` package.json script, decide
    how its deterministic HTML-extraction output merges with the existing research-handoff
    JSONL ingestion path (`lib/programs/ingest.ts`) rather than running as a second,
    uncoordinated pipeline.
-3. **Apply migration 0043** once DDL access exists, then run the one-time script that moves
+4. **Apply migration 0043** once DDL access exists, then run the one-time script that moves
    the 9 duplicate pairs from `duplicate-supersessions.json` into
    `duplicate_status`/`superseded_by_id`, and delete the generated-file workaround.
-4. **Opportunity data quality**: fill `deadline` (277 missing) and `eligible_countries` (290
+5. **Opportunity data quality**: fill `deadline` (277 missing) and `eligible_countries` (290
    missing) — these gate real matching/eligibility logic that currently can't be fully
-   trusted; spot-check the 290-count for title-similarity dedup misses from the 2026-08-18
-   bulk import.
-5. **Production readiness**: legal review (COPPA/GDPR for minors), hosting + error-
+   trusted (Counselor Core's own output is directly bounded by this — see
+   `docs/counselor-core.md`'s Data-quality limitations section); spot-check the 290-count
+   for title-similarity dedup misses from the 2026-08-18 bulk import.
+6. **Production readiness**: legal review (COPPA/GDPR for minors), hosting + error-
    monitoring provider choice, CI running lint/typecheck/test on push — all founder
    decisions or founder-unblocked, listed in Founder Actions Required above.
