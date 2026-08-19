@@ -1123,12 +1123,12 @@ specifically-named extraction blockers, see below), Japan (**done for this pass,
 real, government-set, two-decade-stable national-university standard rate, see below),
 Malaysia (**investigated, deliberately not written** — every major public university's fee
 data is PDF-gated, see below), Russia (**investigated, deliberately not written** — 6 major
-universities individually checked, no reliable general figure anywhere, see below).
-**Coverage-driven, not geography-driven, per the founder's own instruction** — run `npm run
-report:universities` (now includes a per-country tuition table) before picking each next
-country. As of right now (Malaysia and Russia both added no rows, so the ranking is
-unchanged): Saudi Arabia (18 missing), Taiwan (16), UAE (12) are the largest remaining
-zero-coverage pools not yet investigated; India (37)
+universities individually checked, no reliable general figure anywhere, see below), Saudi
+Arabia (**done for this pass, 13/18** — a real, decades-old national free-tuition policy for
+domestic students, see below). **Coverage-driven, not geography-driven, per the founder's own
+instruction** — run `npm run report:universities` (now includes a per-country tuition table)
+before picking each next country. As of right after Saudi Arabia: Taiwan (16 missing), UAE
+(12) are the largest remaining zero-coverage pools not yet investigated; India (37)
 and the US (131, shown as 0 in the tuition table by design — see the report's own note —
 already has 128/131 via the separate `cost_of_attendance` column) are lower priority per the
 founder's own sequencing. Reorder for efficiency if a better bulk source turns up elsewhere, same
@@ -1792,6 +1792,44 @@ research approach — six for six individually-checked major universities return
 "no reliable general figure" result is a real, consistent finding about this country, not six
 separate near-misses that might resolve with more searching.
 
+**Saudi Arabia — 13/18, done for this pass, a real national policy for domestic students, a
+genuinely per-institution one for international.** Domestic: Saudi Arabia has never charged
+its own citizens tuition at public universities — confirmed directly on KFUPM's own page
+("Saudi national students admitted directly to KFUPM receive government scholarships that
+cover their tuition, making education tuition-free for domestic students"), framed as a
+national government mechanism tied to admission itself, not a KFUPM-specific programme.
+Extended to the other 12 confirmed-public universities in this spine as a national policy fact
+— the same "confirm on a sample, extend to the legal category, flag it honestly" discipline
+already used for Germany's Baden-Württemberg law and Japan's MEXT standard, not individually
+re-verified per institution. International: genuinely different, and NOT the same blanket
+story — the widely-repeated claim that Saudi public universities are "free for international
+students too" turns out, on checking the actual mechanism, to run through a real competitive
+government scholarship programme ("Study in Saudi," studyinsaudi.moe.gov.sa) — King Saud
+University's own page explicitly states scholarships "are not automatic but require an
+application process." KFUPM's own page gives the clearest real figure: SAR 20,000/year sticker
+tuition, with a separate, competitive, needs/merit-based committee awarding 10-100% coverage —
+not automatic. Written as `precision_state: "upper_bound"`, only for KFUPM (the other 12
+public universities' international sticker prices weren't individually researched this pass).
+A real supersession caught before writing: this spine's KFUPM duplicate pair ("King Fahd
+University of Petroleum and Minerals (KFUPM)" winner, "KFUPM" loser) checked against
+`duplicate-supersessions.json` first, same discipline as every country in this project. 4
+private universities (Prince Mohammad Bin Fahd, Prince Sultan, Alfaisal, Effat) excluded, not
+researched. 14 metric rows written (`--apply`).
+
+**A real UI bug caught live, fixed in the same pass**: the `"upper_bound"` caption hardcoded
+"Income-based (ISEE)" — correct wording for Italy, but factually wrong the moment a second,
+differently-mechanised country used the same `precision_state`: KFUPM's page rendered "Maximum
+— Income-based (ISEE)..." for a merit-scholarship system that has nothing to do with income or
+Italy's ISEE system. Fixed by making `tuitionQualifier()`'s "upper_bound" copy deliberately
+mechanism-agnostic ("Maximum — many students pay less based on aid or eligibility"), true for
+Italy's income-based case and Saudi Arabia's merit-based case alike without naming either
+mechanism specifically. `__tests__/universities/tuition-format.test.ts` updated to assert the
+generic wording and explicitly check "ISEE" is absent, so a future country-specific term
+doesn't quietly leak back in. Verified live after the fix: KFUPM ("Up to SAR 20,000/yr" /
+"Maximum — many students pay less based on aid or eligibility. Domestic rate: Free"); Politecnico
+di Milano re-checked, still reads correctly with the generic wording. Full gate green
+(`tsc`/lint/821 tests/build) after.
+
 **UK — third batch, 2026-08-19, 20→24/79.** Added Bath (a genuinely clean official three-band
 table — Band 1/2/3 £25,400/£28,650/£32,000 international, £9,790 Home — the best UK
 international source found across all three UK batches so far), plus York, Newcastle, and
@@ -1878,14 +1916,17 @@ rows written (Southern Cross + Sydney + USC re-confirmed), `--apply` clean, full
 
 **Coverage, verified live via `npm run report:universities`**: 110/1019 (10.8%) going into
 Italy → 124/1019 (12.2%) after Italy + Spain → 126/1019 (12.4%) after South Korea → 143/1019
-(14.0%) after Japan → **148/1019 (14.5%)** after a concurrent UK fourth batch (Surrey) and
-Canada third batch (Simon Fraser University) — both found already written in their scripts
-mid-turn (the same autonomous-continuation pattern documented earlier in this file for the UK
-third batch), verified and gated exactly like every other batch before committing rather than
-assumed already-applied. Countries done so far this workstream: UK (25/79), Canada (5/27),
-Australia (3/38), Germany (49/49), Netherlands (13/13), France (19/30), Switzerland (7/11),
-Italy (4/38), Spain (10/29), South Korea (2/31), Japan (17/22). China and Malaysia both
-investigated, deliberately not written (see above).
+(14.0%) after Japan → 148/1019 (14.5%) after a concurrent UK fourth batch (Surrey) and Canada
+third batch (Simon Fraser University) — both found already written in their scripts mid-turn
+(the same autonomous-continuation pattern documented earlier in this file for the UK third
+batch), verified and gated exactly like every other batch before committing rather than
+assumed already-applied — → **163/1019 (16.0%)** after Saudi Arabia (Australia also gained 2
+more batches, 1→3/38, from further concurrent autonomous work, folded into the count above
+without a documentation collision this time). Countries done so far this workstream: UK
+(25/79), Canada (5/27), Australia (3/38), Germany (49/49), Netherlands (13/13), France (19/30),
+Switzerland (7/11), Italy (4/38), Spain (10/29), South Korea (2/31), Japan (17/22), Saudi
+Arabia (13/18). China, Malaysia, and Russia all investigated, deliberately not written (see
+above).
 
 After tuition progresses meaningfully: (1) India student counts (~33 remaining, AISHE >
 annual report > official institutional stats > official facts page — see the India dead-end

@@ -29,15 +29,22 @@ export function formatTuition(amount: number, unit: string): string {
 
 /** Four tuition shapes this product actually has, each needing different honesty framing:
  * "range" (UK/Canada/Australia/Netherlands course-fee bands) genuinely varies by programme;
- * "upper_bound" (Italy's ISEE-based public-university ceiling — see
- * acquire-university-statistics-it.ts) is a real number, but most students pay less, sometimes
- * €0, based on family income, not course choice; "approximate" (Spain's per-credit regional
- * price × the national standard 60-ECTS full-time course load — see
- * acquire-university-statistics-es.ts) is a real, officially-derivable figure but not itself
- * the literal number any decree states, and doesn't capture the per-field "experimentality"
- * variance some regions still apply. Each of these gets its own copy rather than reusing
- * another's, which would make a different, wrong claim about WHY the figure isn't exact.
- * Anything else ("exact") is a single real figure with nothing to caveat.
+ * "upper_bound" is a real ceiling figure, but the actual amount a given student pays is often
+ * lower — the MECHANISM varies by country and is deliberately not named in this shared copy
+ * (Italy's is family-income/ISEE-based, see acquire-university-statistics-it.ts; Saudi
+ * Arabia's KFUPM is a competitive needs/merit scholarship committee, see
+ * acquire-university-statistics-sa.ts; KAIST's — not yet written, see the South Korea script's
+ * header — would be GPA-conditional). An earlier version of this copy hardcoded "Income-based
+ * (ISEE)," which was correct for Italy but factually wrong for Saudi Arabia's merit-scholarship
+ * case — caught live 2026-08-19 viewing KFUPM's page right after this precision_state got a
+ * second, differently-mechanised user. Generic wording avoids repeating that mistake for
+ * whatever the next `upper_bound` country's real mechanism turns out to be; "approximate"
+ * (Spain's per-credit regional price × the national standard 60-ECTS full-time course load —
+ * see acquire-university-statistics-es.ts) is a real, officially-derivable figure but not
+ * itself the literal number any decree states, and doesn't capture the per-field
+ * "experimentality" variance some regions still apply. Each of these gets its own copy rather
+ * than reusing another's, which would make a different, wrong claim about WHY the figure isn't
+ * exact. Anything else ("exact") is a single real figure with nothing to caveat.
  *
  * IMPORTANT: call this separately for the international figure and the domestic figure — each
  * has its own `precision_state` and they can differ (e.g. a UK university's international fee
@@ -48,7 +55,7 @@ export function formatTuition(amount: number, unit: string): string {
  * range that pass. */
 export function tuitionQualifier(precisionState: string): { valuePrefix: string; note: string } {
   if (precisionState === "range") return { valuePrefix: "From ", note: "Varies by course. " };
-  if (precisionState === "upper_bound") return { valuePrefix: "Up to ", note: "Income-based (ISEE) — most students pay less. " };
+  if (precisionState === "upper_bound") return { valuePrefix: "Up to ", note: "Maximum — many students pay less based on aid or eligibility. " };
   if (precisionState === "approximate") return { valuePrefix: "~", note: "Estimated from the region's official per-credit price. " };
   return { valuePrefix: "", note: "" };
 }

@@ -28,11 +28,17 @@ describe("tuitionQualifier", () => {
     expect(tuitionQualifier("range")).toEqual({ valuePrefix: "From ", note: "Varies by course. " });
   });
 
-  test("upper_bound: 'Up to' prefix, income-based note — distinct wording from range, not reused", () => {
+  test("upper_bound: 'Up to' prefix, a mechanism-agnostic 'maximum' note — distinct wording from range, not reused", () => {
+    // Deliberately does not name a specific mechanism (ISEE, GPA, scholarship committee...) —
+    // this precision_state is shared by Italy's income-based ceiling and Saudi Arabia's
+    // merit-scholarship ceiling (acquire-university-statistics-sa.ts), which are genuinely
+    // different mechanisms. An earlier version hardcoded "Income-based (ISEE)," which was
+    // correct for Italy but factually wrong on KFUPM's page — caught live 2026-08-19.
     const q = tuitionQualifier("upper_bound");
     expect(q.valuePrefix).toBe("Up to ");
-    expect(q.note).toContain("Income-based");
+    expect(q.note.toLowerCase()).toContain("maximum");
     expect(q.note).not.toContain("course");
+    expect(q.note).not.toContain("ISEE");
   });
 
   test("approximate: '~' prefix, per-credit-derivation note — distinct from range and upper_bound", () => {
@@ -40,7 +46,7 @@ describe("tuitionQualifier", () => {
     expect(q.valuePrefix).toBe("~");
     expect(q.note).toContain("per-credit");
     expect(q.note).not.toContain("course");
-    expect(q.note).not.toContain("Income-based");
+    expect(q.note).not.toContain("ISEE");
   });
 
   test("exact (and any other value) gets no prefix and no note", () => {
