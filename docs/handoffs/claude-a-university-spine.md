@@ -1122,11 +1122,13 @@ written** — conflicting sources, no official domain confirmed, see below), Sou
 specifically-named extraction blockers, see below), Japan (**done for this pass, 17/22** — a
 real, government-set, two-decade-stable national-university standard rate, see below),
 Malaysia (**investigated, deliberately not written** — every major public university's fee
-data is PDF-gated, see below). **Coverage-driven, not geography-driven, per the founder's own
-instruction** — run `npm run report:universities` (now includes a per-country tuition table)
-before picking each next country. As of right after Japan (Malaysia added no rows, so the
-ranking is unchanged): Russia (21 missing), Saudi Arabia (18), Taiwan (16), UAE (12) are the
-largest remaining zero-coverage pools not yet investigated; India (37)
+data is PDF-gated, see below), Russia (**investigated, deliberately not written** — 6 major
+universities individually checked, no reliable general figure anywhere, see below).
+**Coverage-driven, not geography-driven, per the founder's own instruction** — run `npm run
+report:universities` (now includes a per-country tuition table) before picking each next
+country. As of right now (Malaysia and Russia both added no rows, so the ranking is
+unchanged): Saudi Arabia (18 missing), Taiwan (16), UAE (12) are the largest remaining
+zero-coverage pools not yet investigated; India (37)
 and the US (131, shown as 0 in the tuition table by design — see the report's own note —
 already has 128/131 via the separate `cost_of_attendance` column) are lower priority per the
 founder's own sequencing. Reorder for efficiency if a better bulk source turns up elsewhere, same
@@ -1761,6 +1763,34 @@ PDF-to-text extraction for Malaysian university fee documents specifically — t
 needed for KAIST's and Korea University's blockers in the South Korea section above; this
 looks like a genuinely recurring tooling gap across several countries' PDF-only fee schedules
 this session, worth a dedicated look if the pattern keeps recurring on the next country too.
+
+**Russia — investigated across 6 major universities, deliberately not written, the pattern
+this time is fragmentation and staleness rather than PDF-gating.** No national-level bulk
+figure exists — international tuition at Russian universities is a real per-institution,
+often per-programme decision, no equivalent of Japan's MEXT standard or Germany's state law.
+Checked individually, each with a specific, different reason for staying unresolved: **Lomonosov
+Moscow State University** — the only figure found (539,070 RUB/year) came from one specific
+faculty's page (Faculty of Television, ftv.msu.ru), not a university-wide source — the same
+"don't generalize one department's rate university-wide" caution that caught Leiden's
+near-miss in the Netherlands pass, applied here before ever reaching `--apply`. **HSE
+University** — the only figure found is for one named programme (the International Bachelor's
+in Economics and Finance, 225,000-900,000 RUB, itself a discount-scaled range not a base rate),
+and HSE's own page states 2026 figures aren't finalized yet — both programme-specific and
+year-uncertain. **ITMO University** — a real near-miss caught before writing anything: a
+search summary claimed a general "450,000-679,000 RUB" institution-wide 2026-27 range, but
+directly fetching ITMO's own official bachelor's-programmes overview page
+(int.itmo.ru/en/bachelors_programs) shows it explicitly states there is NO general figure —
+fees are calculated per individual programme, with no static range published anywhere on that
+page. The search-derived range was likely blended from several individual programme pages and
+does not represent a real institution-wide figure — not written. **MIPT** — the only figure
+found is explicitly stale (2021), search results themselves flagged this. **RUDN** and
+**Bauman** — no official-domain figures found at all, aggregator-only vague estimates
+(unipage.net, sulekha.com, unirank.org), each explicitly declining to give a number and
+directing to "contact admissions" instead. Nothing written. Queued for a future pass with
+either working PDF extraction (same blocker as Malaysia/Korea above) or a genuinely different
+research approach — six for six individually-checked major universities returning the same
+"no reliable general figure" result is a real, consistent finding about this country, not six
+separate near-misses that might resolve with more searching.
 
 **UK — third batch, 2026-08-19, 20→24/79.** Added Bath (a genuinely clean official three-band
 table — Band 1/2/3 £25,400/£28,650/£32,000 international, £9,790 Home — the best UK
