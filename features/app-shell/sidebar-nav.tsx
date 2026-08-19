@@ -28,9 +28,15 @@ export function SidebarNav({ onNavigate, idPrefix = "desktop" }: { onNavigate?: 
             layoutId={`${idPrefix}-sidebar-active-pill`}
             transition={transition("fast")}
             className="absolute inset-0 rounded-lg bg-sidebar-accent"
-          />
+          >
+            {/* A precise brand-colored edge, not just a tinted background — the background
+                tint alone (--sidebar-accent, low chroma by design so it stays calm) reads as
+                "selected" but not distinctly as ORYN's own blue; this small solid accent is
+                what actually makes the active state recognizable at a glance. */}
+            <span className="absolute inset-y-1 left-0 w-0.5 rounded-full bg-brand-primary" />
+          </motion.span>
         ) : null}
-        <Icon className="relative size-4 shrink-0" />
+        <Icon className={cn("relative size-4 shrink-0", active && "text-brand-primary")} />
         <span className="relative">{item.label}</span>
       </Link>
     );

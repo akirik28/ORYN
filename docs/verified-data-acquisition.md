@@ -6,7 +6,14 @@ audit that identified the gaps; this file is how ORYN closes them without loweri
 standards.
 
 Founder-facing record for this phase: Google Drive doc **"ORYN — Verified Data Acquisition:
-Architecture, Pilot & Coverage"**, ID `1nsd14SDhzysW66n0v_nAHd8_hyergnu5qbgyPHeujCM`, in the
+Architecture, Pilot & Coverage"**, ID `1Wdr08WbyZTfiwJKbCR6OAEV3ooLJrIJ12Zidsn-ySMA` (final
+update for the 2026-08-17 University Intelligence Spine pass — nine duplicate identities
+merged, 73 evidence-less `official_verified` entities downgraded, admissions_url/
+application_system acquisition built and scaled across four batches to 36.4%/7.3% with four
+live bugs found and fixed, a Unicode-encoding-variant duplicate-name finding documented but
+deliberately not auto-merged; superseded prior IDs
+`1nsd14SDhzysW66n0v_nAHd8_hyergnu5qbgyPHeujCM`, `1qUVXwcK5UIEg7Mhxvb38bBUQgjJJiE_-3aF2N3ijgoc`,
+`1YIUanBkI7lLshVfPwNg6mU2EybIluiJTBdSVCmYdGfo`), in the
 Drive `ORYN` folder. That document is the living implementation/coverage record; the audit doc
 (`1SeLGD4y8Rj4twWpZWeMj5fP_OIEahlwhTNBCtYubVLA`) stays the stable record of the audit itself.
 They are split deliberately: the Drive connector cannot edit a document body in place, so every

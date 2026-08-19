@@ -893,3 +893,29 @@ entities with no evidence are queued for human review (backlog items 19 and 20).
 accepted with reasons in `0040_post_reconciliation_security.sql`. Both Postgres roles were
 simulated directly against RLS to confirm every read and deny boundary. Browser coverage
 is partial and honestly bounded — see the Phase 12 section of the reconciliation doc.
+
+---
+
+## University images (2026-08-18)
+
+`/universities` cards and the detail page had no real campus imagery — every card, including
+MIT/Stanford/Oxford/Harvard/Cambridge, showed a generic building icon. Built a full
+acquisition pipeline (Wikidata P18/P154 → Wikimedia Commons, official-site `og:image` as a
+fallback tier, sharp-based validation/optimization, a new public `university-images` Supabase
+Storage bucket) and wired real images into both the card and a new detail-page hero, with
+short research-category chips replacing raw OpenAlex topic strings on cards. No new database
+migration — reused the existing (empty) `universities.logo_url` column and the existing
+`university_profile_metrics` flexible-store pattern. Piloted end-to-end on all 16 founder-
+named flagship universities (16/16 real images, verified live in-browser), then scaled to the
+full spine, then pushed further with official-site sub-page discovery and a crash fix (a
+Node/undici assertion from one malformed response on an arbitrary official-site host — now
+survived via process-level handlers): **721/1010 live universities (71.4%) real campus
+images**, 98 logo fallback, 191 ORYN-icon fallback — **display-safe 1010/1010, broken 0**,
+after finding and fixing a Wikimedia rate-limiting bug mid-scale (a real User-Agent stops the
+429 for one request but not under this script's sustained volume — fixed with a shared
+minimum-gap throttle). `npm run report:university-images` gives the full real-vs-fallback
+breakdown plus needs_review reason categorization on demand. Full detail, architecture
+rationale, and known limitations (including why opportunity/programme image work is
+deliberately deferred — that table is owned by a separate, actively-writing workstream):
+`docs/handoffs/claude-a-university-spine.md`'s "University images" section. Full gate green
+throughout (lint/tsc/801 tests/build).

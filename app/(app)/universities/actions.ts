@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { refreshAdmissionOutlook } from "@/lib/admissions/persist";
 import { logEvent } from "@/lib/analytics/log";
+import { canonicalUniversityId } from "@/lib/universities/canonical";
 import type { TargetStatus } from "@/types/database";
 
 /** Ownership-scoped lookup for an existing target, correctly handling the "no specific
@@ -17,10 +18,17 @@ async function findExistingTarget(supabase: Awaited<ReturnType<typeof createClie
   return data;
 }
 
-export async function addTargetUniversity(universityId: string, programId: string | null = null): Promise<{ error?: string; targetId?: string }> {
+export async function addTargetUniversity(rawUniversityId: string, programId: string | null = null): Promise<{ error?: string; targetId?: string }> {
   const session = await requireUser();
   const userId = session.userId!;
   const supabase = await createClient();
+
+  // The one place a university selection actually becomes permanent — every browse/search
+  // surface upstream should already exclude known-duplicate rows, but this is the backstop:
+  // whatever id reaches here (an old bookmark, a program search result, a future caller that
+  // isn't filtered) gets resolved to its canonical winner before it's ever written, so a loser
+  // id can never be permanently saved to a student's profile. See lib/universities/canonical.ts.
+  const universityId = canonicalUniversityId(rawUniversityId);
 
   // Deliberately not `.upsert(..., { onConflict: "user_id,university_id,program_id" })`:
   // program_id is nullable, and Postgres never treats NULL as conflicting with NULL for

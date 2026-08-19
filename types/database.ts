@@ -679,6 +679,12 @@ export interface University {
   country_entity_id: string | null;
   city_entity_id: string | null;
   website_url: string | null;
+  /** Official admissions entry point (migration 0042). Must be on the institution's own
+   * domain — see lib/acquisition/source-authority.ts. */
+  admissions_url: string | null;
+  /** The application route students actually use (UCAS, Common App, Studielink,
+   * Parcoursup, ÖSYM/YKS, uni-assist, direct). Null means unknown, never "direct". */
+  application_system: string | null;
   logo_url: string | null;
   description: string | null;
   selectivity: string | null;
@@ -712,6 +718,8 @@ export type UniversityInsert = Insertable<
   | "canonical_entity_id"
   | "country_entity_id"
   | "city_entity_id"
+  | "admissions_url"
+  | "application_system"
 >;
 export type UniversityUpdate = Updatable<University, "id" | "created_at" | "updated_at">;
 

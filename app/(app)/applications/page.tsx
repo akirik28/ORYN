@@ -3,6 +3,7 @@ import { ClipboardCheck } from "lucide-react";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { computeReadiness } from "@/lib/applications/readiness";
+import { canonicalUniversityId } from "@/lib/universities/canonical";
 import { NewApplicationDialog } from "@/features/applications/new-application-dialog";
 import { Progress } from "@/components/ui/progress";
 import { PageHeader } from "@/components/oryn/page-header";
@@ -37,12 +38,14 @@ export default async function ApplicationsPage() {
   const applications = applicationsRes.data ?? [];
   const targets = targetsRes.data ?? [];
 
-  const universityIds = [...new Set(targets.map((t) => t.university_id))];
+  // Canonicalized so a target referencing a known-duplicate loser row self-heals to the
+  // winner's name at read time. See lib/universities/canonical.ts.
+  const universityIds = [...new Set(targets.map((t) => canonicalUniversityId(t.university_id)))];
   const { data: universities } = universityIds.length
     ? await supabase.from("universities").select("id, name").in("id", universityIds)
     : { data: [] };
   const universityNameByTargetUniversityId = new Map((universities ?? []).map((u) => [u.id, u.name]));
-  const universityNameByTargetId = new Map(targets.map((t) => [t.id, universityNameByTargetUniversityId.get(t.university_id) ?? "Unknown"]));
+  const universityNameByTargetId = new Map(targets.map((t) => [t.id, universityNameByTargetUniversityId.get(canonicalUniversityId(t.university_id)) ?? "Unknown"]));
 
   const applicationIds = applications.map((a) => a.id);
   const { data: requirements } = applicationIds.length

@@ -33,7 +33,7 @@ import { dirname } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 
 import { searchRorByName, type RorRecord } from "../lib/acquisition/ror";
-import { countryFromIso2, nameKey, sameCountry } from "../lib/acquisition/normalize";
+import { countryFromIso2, nameKey, nameVariants, sameCountry } from "../lib/acquisition/normalize";
 import { sourceAuthority } from "../lib/acquisition/source-authority";
 import { fetchAllRowsVerified } from "../lib/acquisition/paginate";
 import { CADENCE_DAYS, resolveVerificationState } from "../lib/acquisition/verification";
@@ -58,11 +58,102 @@ const USER_AGENT = "ORYN-data-acquisition/1.0 (+https://github.com/akirik28/ORYN
  * summary, which reads identically to "this source has nothing for these institutions".
  * Missing data and a broken source are different facts and are now reported differently.
  */
-const sourceOutcomes: Record<string, { ok: number; rateLimited: number; failed: number }> = {
-  ror: { ok: 0, rateLimited: 0, failed: 0 },
-  openalex: { ok: 0, rateLimited: 0, failed: 0 },
+const sourceOutcomes: Record<string, { ok: number; rateLimited: number; failed: number; skipped: number }> = {
+  ror: { ok: 0, rateLimited: 0, failed: 0, skipped: 0 },
+  openalex: { ok: 0, rateLimited: 0, failed: 0, skipped: 0 },
 };
+
+/**
+ * Circuit breaker for OpenAlex specifically. A plain per-request 429 backoff (below) is fine
+ * for a transient limit, but OpenAlex has been observed returning a *budget* exhaustion
+ * (HTTP 429, JSON body `{"error":"Rate limit exceeded","message":"Insufficient budget...",
+ * "retryAfter":34062}` — i.e. hours, not seconds) that will not clear mid-run. Without this,
+ * a 1,010-university run wastes ~2s/request re-discovering the same fact ~1,010 times. After
+ * OPENALEX_CIRCUIT_THRESHOLD consecutive non-ok responses, stop calling it for the rest of
+ * this run and say so once, loudly — research_topics_top5 is then correctly reported absent
+ * because the source was unavailable, never silently guessed or left unexplained.
+ */
+const OPENALEX_CIRCUIT_THRESHOLD = 3;
+let openAlexConsecutiveFailures = 0;
+let openAlexCircuitLogged = false;
 const DEFAULT_OUT = "supabase/fixtures/university-identity-pilot.json";
+
+/**
+ * Hand-verified overrides for declared names that `nameVariants()` genuinely cannot bridge to
+ * ROR's own name forms — not formatting noise (that's what `nameVariants()` already handles),
+ * but real gaps: German ae/oe/ue vs ä/ö/ü ASCII transliteration ("Universitaet" vs
+ * "Universität"), German-name vs ROR's English-name form ("Universität Heidelberg" vs
+ * "Heidelberg University"), or a declared name using a well-known short/legacy form ROR
+ * doesn't list as a name at all ("Verona University" vs "University of Verona"). Every entry
+ * individually verified 2026-08-18 by fetching the ROR record directly (not just trusting the
+ * unresolved log's truncated candidate preview — several of those previews genuinely didn't
+ * show the right answer in their top 3, e.g. Purdue/St. Gallen/"University of the Philippines",
+ * which is exactly why those are NOT in this list) and confirming: `status active`, country
+ * matches our declared country, and the declared name (or an unambiguous variant of it) appears
+ * in the record's own `names`. Deliberately NOT used for genuinely ambiguous cases (multiple
+ * plausible ROR records, a merged/successor institution question, or an institution this
+ * pass has no confident outside knowledge of) — those stay unresolved rather than guessed.
+ */
+const MANUAL_ROR_OVERRIDES: Record<string, string> = {
+  "Albert-Ludwigs-Universitaet Freiburg": "0245cg223",
+  "Christian-Albrechts-University zu Kiel": "04v76ef78",
+  "Freie Universitaet Berlin": "046ak2485",
+  "Goethe-University Frankfurt am Main": "04cvxnb49",
+  "Johannes Kepler University Linz": "052r2xn60",
+  "Karl-Franzens-Universitaet Graz": "01faaaf77",
+  "Radboud University": "016xsfp80",
+  "Trinity College Dublin, The University of Dublin": "02tyrky19",
+  "TUHH Hamburg University of Technology": "04bs1pb34",
+  "Ulster University": "01yp9g959",
+  "Universität Heidelberg": "038t36y30",
+  "Universität Jena": "05qpz1x62",
+  "Universitat Politècnica de Catalunya · BarcelonaTech (UPC)": "03mb6wj31",
+  "Zurich University of Applied Sciences (ZHAW)": "05pmsvm27",
+  "Stony Brook University, State University of New York": "05qghxh33",
+  "University at Buffalo SUNY": "01y64my43",
+  "Kingston University, London": "05bbqza97",
+  "Northumbria University at Newcastle": "049e6bc10",
+  "Manipal Academy of Higher Education, Manipal, Karnataka, India": "02xzytt36",
+  "Symbiosis International (Deemed University)": "005r2ww51",
+  "Vellore Institute of Technology (VIT), Vellore, India": "00qzypv28",
+  "Verona University": "039bp8j42",
+  "University of Wroclaw": "00yae6e25",
+  "Wroclaw University of Science and Technology (Wrocław Tech)": "008fyn775",
+  "Anna University": "01qhf1r47",
+  "Ain Shams University in Cairo (ASU, Cairo)": "00cb9w016",
+  "Catania University": "03a64bh57",
+  "Czech University of Life Sciences in Prague": "0415vcw02",
+  "Kazan (Volga region) Federal University": "05256ym39",
+  "National Research Tomsk Polytechnic University": "00a45v709",
+  "Tomsk State University": "02he2nc27",
+  "Ural Federal University - UrFU": "00hs7dr46",
+  "Universidad Espíritu Santo (UEES), Ecuador": "00b210x50",
+  "Universit degli Studi della Campania Luigi Vanvitelli": "02kqnpp86",
+  "Adam Mickiewicz University, Poznań": "04g6bbq64",
+  "Auezov South Kazakhstan University (SKU)": "05xzaq362",
+  "Canadian University Dubai": "029zgsn59",
+  "Asia Pacific University of Technology and Innovation (APU) Malaysia": "03c52a632",
+  "Asia University Taiwan": "038a1tp19",
+  "Applied Science Private University - Jordan": "01ah6nb52",
+  "Applied Science University - Bahrain": "059zrbe49",
+  "HUFS - Hankuk (Korea) University of Foreign Studies": "051q2m369",
+  "Indian Institute of Science (IISc) Bangalore": "04dese585",
+  "Indian Institute of Technology (Indian School of Mines), Dhanbad": "013v3cc28",
+  "Indian Institute of Technology BHU Varanasi (IIT BHU Varanasi)": "01kh5gc44",
+  "Kyrgyz Russian Slavic University": "020qfzf72",
+  "Nanyang Technological University, Singapore (NTU Singapore)": "02e7b5302",
+  "National University of Sciences & Technology (NUST) Islamabad": "03w2j5y17",
+  "National University of Uzbekistan named after Mirzo Ulugbek": "011647w73",
+  "Queen's University at Kingston": "02y72wh86",
+  "Renmin (People's) University of China": "041pakw92",
+  "The University of Tennessee, Knoxville": "020f3ap87",
+  "University of Engineering & Technology (UET) Lahore": "0051w2v06",
+  "NLC «Buketov Karaganda National Research University»": "00eq8hh49",
+  "Tashkent Institute of Irrigation and Agricultural Mechanization Engineers - National Research University (TIIAME-NRU)": "01s4mx151",
+  "Universidad Anáhuac México": "02z9t1k38",
+  "Universidad Iberoamericana Ciudad de México - IBERO": "05vss7635",
+  "Universiti Teknologi MARA - UiTM": "05n8tts92",
+};
 
 /**
  * Pilot roster: 30 universities across 23 countries and 6 continents.
@@ -121,23 +212,52 @@ interface OpenAlexInstitution {
  * lookup cannot drift onto a different institution the way a second name search could.
  */
 async function fetchOpenAlexByRor(rorId: string): Promise<OpenAlexInstitution | null> {
+  if (openAlexConsecutiveFailures >= OPENALEX_CIRCUIT_THRESHOLD) {
+    if (!openAlexCircuitLogged) {
+      openAlexCircuitLogged = true;
+      console.log(
+        `\n  OpenAlex circuit breaker OPEN after ${OPENALEX_CIRCUIT_THRESHOLD} consecutive non-ok responses — skipping it for the rest of ` +
+          `this run instead of spending ~2s/request re-discovering the same outage. research_topics_top5 will be reported absent because the ` +
+          `source was unavailable, not because these institutions lack the data.\n`
+      );
+    }
+    sourceOutcomes.openalex.skipped += 1;
+    return null;
+  }
+
   const url = `https://api.openalex.org/institutions/${encodeURIComponent(rorId)}?mailto=oryn-data@oryn.app`;
   const response = await fetch(url, { headers: { "User-Agent": USER_AGENT } }).catch(() => null);
   if (!response) {
     sourceOutcomes.openalex.failed += 1;
+    openAlexConsecutiveFailures += 1;
     return null;
   }
   if (response.status === 429) {
     // Being rate limited is a fact about the run, not about the institution. Slow down so a
     // transient limit does not silently erase a whole field from the output.
     sourceOutcomes.openalex.rateLimited += 1;
+    openAlexConsecutiveFailures += 1;
+    // Best-effort: OpenAlex has been observed returning a structured budget-exhaustion body
+    // (retryAfter in seconds) rather than a plain 429 — surface it once so a human knows this
+    // is hours, not the few seconds a generic rate limit would suggest.
+    if (openAlexConsecutiveFailures === 1) {
+      const body = (await response
+        .clone()
+        .json()
+        .catch(() => null)) as { message?: string; retryAfter?: number } | null;
+      if (body?.retryAfter) {
+        console.log(`  OpenAlex: ${body.message ?? "rate limited"} (retryAfter=${body.retryAfter}s ≈ ${(body.retryAfter / 3600).toFixed(1)}h)`);
+      }
+    }
     await sleep(2000);
     return null;
   }
   if (!response.ok) {
     sourceOutcomes.openalex.failed += 1;
+    openAlexConsecutiveFailures += 1;
     return null;
   }
+  openAlexConsecutiveFailures = 0;
   sourceOutcomes.openalex.ok += 1;
   const body = (await response.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body) return null;
@@ -278,10 +398,14 @@ function factsFor(ror: RorRecord, openAlex: OpenAlexInstitution | null, retrieve
   // Deliberately NOT acquired from ROR, after inspecting the pilot output:
   //
   // * institution_type — ROR's vocabulary for every university in the roster is just
-  //   ["education", "funder"]. That is strictly coarser than what this column already holds
-  //   for hand-researched rows ("Public research university"), so importing it would make the
-  //   column worse while looking like enrichment. The public/private and research-intensity
-  //   distinction ORYN's filters actually need is not in ROR at all.
+  //   ["education", "funder"], strictly coarser than a real public/private/research-intensity
+  //   classification, so importing it would look like enrichment while adding nothing. (An
+  //   earlier version of this comment claimed the existing column already held richer text
+  //   like "Public research university" — re-checked live 2026-08-18 while investigating a
+  //   founder question about a different metric, and that is not what's actually there: the
+  //   live distribution is 743 rows of the bare word "university", 217 "Public", 35 "Private
+  //   not for Profit", 7 "Private nonprofit" — no row holds anything richer. The conclusion
+  //   ROR is still the wrong source stands, just not for the reason originally written here.)
   // * established_year — no column exists for it, it carries no student value, and it is the
   //   one field where ROR is demonstrably shaky for merged institutions (it states 2010 for
   //   Sorbonne Université, which was formed in 2018).
@@ -386,7 +510,18 @@ async function main(): Promise<void> {
 
     // Prefer an exact name match inside the country; otherwise the top in-country hit, but
     // only when it is unambiguous. Anything else is left unresolved for a human.
-    const exact = candidates.filter((r) => r.names.some((n) => nameKey(n.value) === nameKey(entry.name)));
+    //
+    // Matched against every nameVariants() form of our declared name, not just the raw
+    // string — a real gap found this session: ~194/1019 unresolved rows turned out to have
+    // ROR's exact record sitting right there in `candidates`, just under a name our own
+    // declared name differs from by exactly the pattern nameVariants() already strips (a
+    // trailing parenthetical acronym — "Auckland University of Technology (AUT)" only
+    // matched because ROR's own record is bare "Auckland University of Technology"). Still a
+    // strict post-normalization EXACT match, never fuzzy — this widens which of OUR already-
+    // known-legitimate name forms gets compared, not how loosely two strings may resemble
+    // each other.
+    const ourVariantKeys = new Set(nameVariants(entry.name).map(nameKey));
+    const exact = candidates.filter((r) => r.names.some((n) => ourVariantKeys.has(nameKey(n.value))));
     let chosen: RorRecord | null = null;
     if (exact.length === 1) chosen = exact[0];
     else if (exact.length > 1) {
@@ -399,16 +534,22 @@ async function main(): Promise<void> {
       continue;
     } else if (candidates.length === 1) chosen = candidates[0];
     else {
-      unresolved.push({
-        declaredName: entry.name,
-        declaredCountry: entry.country,
-        reason: `No exact name match among ${candidates.length} in-country ROR records; top candidates: ${candidates
-          .slice(0, 3)
-          .map((r) => `"${r.displayName}" (${r.id})`)
-          .join(", ")}.`,
-      });
-      if (roster.length <= 60) console.log(`UNRESOLVED  ${entry.name} — no exact name match among ${candidates.length} in-country records`);
-      continue;
+      const overrideId = MANUAL_ROR_OVERRIDES[entry.name];
+      const overrideMatch = overrideId ? candidates.find((r) => r.id === `https://ror.org/${overrideId}`) : undefined;
+      if (overrideMatch) {
+        chosen = overrideMatch;
+      } else {
+        unresolved.push({
+          declaredName: entry.name,
+          declaredCountry: entry.country,
+          reason: `No exact name match among ${candidates.length} in-country ROR records; top candidates: ${candidates
+            .slice(0, 3)
+            .map((r) => `"${r.displayName}" (${r.id})`)
+            .join(", ")}.`,
+        });
+        if (roster.length <= 60) console.log(`UNRESOLVED  ${entry.name} — no exact name match among ${candidates.length} in-country records`);
+        continue;
+      }
     }
 
     if (chosen.status !== "active") {
@@ -489,12 +630,12 @@ async function main(): Promise<void> {
 
   console.log(`\nSource outcomes:`);
   for (const [provider, o] of Object.entries(sourceOutcomes)) {
-    console.log(`  ${provider.padEnd(10)} ok=${o.ok} rate_limited=${o.rateLimited} failed=${o.failed}`);
+    console.log(`  ${provider.padEnd(10)} ok=${o.ok} rate_limited=${o.rateLimited} failed=${o.failed} skipped=${o.skipped}`);
   }
-  const degraded = Object.entries(sourceOutcomes).filter(([, o]) => o.ok === 0 && o.rateLimited + o.failed > 0);
+  const degraded = Object.entries(sourceOutcomes).filter(([, o]) => o.ok === 0 && o.rateLimited + o.failed + o.skipped > 0);
   for (const [provider, o] of degraded) {
     console.log(
-      `\n  WARNING: ${provider} returned no successful response in this run (rate_limited=${o.rateLimited}, failed=${o.failed}).\n` +
+      `\n  WARNING: ${provider} returned no successful response in this run (rate_limited=${o.rateLimited}, failed=${o.failed}, skipped=${o.skipped}).\n` +
         `  Fields sourced from it are ABSENT because the source was unavailable, not because the\n` +
         `  institutions lack the data. Re-run for those fields once the source recovers.`
     );
