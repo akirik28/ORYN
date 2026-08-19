@@ -68,3 +68,15 @@ export const RANKING_THRESHOLDS = {
    * matched dimensions are all this strong gets deprioritized rather than recommended. */
   strongDimensionScore: 75,
 } as const;
+
+/** Spec §16 — "do not overrecommend". `do` is already capped at doSlots by construction
+ * (scoring.ts); this caps the secondary "consider" bucket the same way at the pipeline
+ * layer (lib/counselor/pipeline.ts), so the rule lives with the other ranking config
+ * instead of being left to the UI to remember. */
+export const MAX_CONSIDER_RECOMMENDATIONS = 5;
+
+/** Below this measured profile completeness, Counselor Core should lead with
+ * profile-completion tasks and say plainly that it doesn't know the student well enough
+ * yet (spec §58's near-empty-profile contract test), rather than presenting judgment-based
+ * opportunity/requirement recommendations with unearned confidence. */
+export const MIN_COMPLETENESS_FOR_JUDGMENT = 40;
