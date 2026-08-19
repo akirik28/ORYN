@@ -1109,7 +1109,7 @@ Full gate green (`tsc`/lint/799 tests/build) at time of commit. Commits: `10c45d
 enrichment ordering below until it progresses meaningfully**: global tuition/cost-of-attendance
 acquisition for the ~890 non-US universities still showing "Unavailable" (`university_statistics`
 is 128/1019, US-only — see Phase 10's P0K numbers). Country order: UK (done, 25/79), Canada
-(done for this pass, 4/27 + well-documented negatives), Australia (closed out, 1/38 + 6
+(done for this pass, 5/27 + well-documented negatives), Australia (closed out, 1/38 + 6
 documented negatives — see below), Germany (**done, 49/49** — a real state-law pattern, see
 below), Netherlands (**done, 13/13** — statutory fee scalable, institutional fee per-university,
 see below), France (**done, 19/30 standard universities** — 11 confirmed to have a genuinely
@@ -1799,7 +1799,6 @@ addition: a third genuine per-unit billing system for this country (after UBC/Wa
 "no assumed credit-load multiplier" discipline — basic rate $1,262.88/unit (2024/25+ entry
 cohort), up to $1,492.13/unit for Beedie School of Business. 5 metric rows written this pass
 (SFU + the 4 already-live entries re-confirmed idempotently), `--apply` clean, full gate green.
-23 Canadian universities remain queued.
 
 **Canada — fourth batch, 2026-08-19, 4→5/27 (+1: Université Laval).** A genuinely clean hit:
 the official page found is Fall-2026/Winter-2027-specific (unlike several other entries in
@@ -1809,7 +1808,9 @@ credits, $11,362.12 at 12, etc.) combine base tuition with foreign-student suppl
 admin/tech/transit fees — recognized as a different, non-comparable concept and not used; only
 the clean base per-credit rate is recorded, consistent with every other CAD/credit entry in
 this file. 6 metric rows written (Laval + the 5 already-live entries re-confirmed
-idempotently), `--apply` clean, full gate green. 22 Canadian universities remain queued.
+idempotently), `--apply` clean, full gate green. A separate mandatory $900/year health/
+hospital insurance fee also exists — not tuition, not recorded, same treatment as every other
+country's administrative fees in this project. 22 Canadian universities remain queued.
 
 **Coverage, verified live via `npm run report:universities`**: 110/1019 (10.8%) going into
 Italy → 124/1019 (12.2%) after Italy + Spain → 126/1019 (12.4%) after South Korea → 143/1019
