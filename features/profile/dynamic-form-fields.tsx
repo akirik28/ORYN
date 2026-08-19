@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { EntityCombobox } from "@/features/entities/entity-combobox";
+import { SuggestInput } from "@/features/entities/suggest-input";
 import type { FieldConfig } from "./field-config";
 
 export type FormValues = Record<string, string | number | boolean | null>;
@@ -120,6 +121,21 @@ export function DynamicFormFields({
                   onChange(field.name, next.displayName || null);
                   onChange(field.entityIdField, next.id);
                 }}
+              />
+            </div>
+          );
+        }
+
+        if (field.type === "suggest") {
+          return (
+            <div key={field.name} className={cn("space-y-1.5", span)}>
+              <Label htmlFor={field.name}>{field.label}</Label>
+              <SuggestInput
+                id={field.name}
+                value={(value as string) ?? ""}
+                onChange={(next) => onChange(field.name, next || null)}
+                suggestions={field.suggestions}
+                placeholder={field.placeholder}
               />
             </div>
           );

@@ -1,8 +1,8 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import { computeOpportunityMatch } from "./matching";
-import type { StudentMatchProfile } from "./matching";
+import { computeOpportunityMatch, isNearStudent } from "./matching";
+import type { StudentMatchProfile, OpportunityForMatching } from "./matching";
 
 /**
  * Recomputes and upserts opportunity_matches for one student against every active
@@ -16,7 +16,7 @@ export async function refreshOpportunityMatches(userId: string): Promise<void> {
     supabase.from("profiles").select("birth_year, country").eq("id", userId).single(),
     supabase.from("profile_scores").select("dimension, score").eq("user_id", userId),
     supabase.from("student_interests").select("label").eq("user_id", userId),
-    supabase.from("opportunities").select("id, category, minimum_age, maximum_age, eligible_countries, fields").eq("status", "active"),
+    supabase.from("opportunities").select("id, category, minimum_age, maximum_age, eligible_countries, fields, country").eq("status", "active"),
   ]);
 
   const opportunities = opportunitiesRes.data ?? [];
@@ -38,13 +38,15 @@ export async function refreshOpportunityMatches(userId: string): Promise<void> {
   };
 
   const rows = opportunities.map((opportunity) => {
-    const match = computeOpportunityMatch(studentProfile, {
+    const forMatching: OpportunityForMatching = {
       category: opportunity.category,
       minimumAge: opportunity.minimum_age,
       maximumAge: opportunity.maximum_age,
       eligibleCountries: opportunity.eligible_countries,
       fields: opportunity.fields,
-    });
+      country: opportunity.country,
+    };
+    const match = computeOpportunityMatch(studentProfile, forMatching);
 
     return {
       user_id: userId,
@@ -55,7 +57,7 @@ export async function refreshOpportunityMatches(userId: string): Promise<void> {
       profile_need_score: match.profileNeedScore,
       match_score: match.matchScore,
       effort_estimate: null,
-      reason_codes: buildReasonCodes(match),
+      reason_codes: buildReasonCodes(match, studentProfile, forMatching),
       calculated_at: new Date().toISOString(),
     };
   });
@@ -63,10 +65,15 @@ export async function refreshOpportunityMatches(userId: string): Promise<void> {
   await supabase.from("opportunity_matches").upsert(rows, { onConflict: "user_id,opportunity_id" });
 }
 
-function buildReasonCodes(match: ReturnType<typeof computeOpportunityMatch>): string[] {
+function buildReasonCodes(
+  match: ReturnType<typeof computeOpportunityMatch>,
+  student: StudentMatchProfile,
+  opportunity: OpportunityForMatching
+): string[] {
   const codes: string[] = [];
   if (!match.eligible) codes.push("ineligible");
   if (match.relevanceScore >= 70) codes.push("matches_your_interests");
   if (match.profileNeedScore >= 70) codes.push("addresses_a_current_gap");
+  if (isNearStudent(student, opportunity)) codes.push("near_you");
   return codes;
 }

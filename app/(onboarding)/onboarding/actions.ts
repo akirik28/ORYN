@@ -160,6 +160,7 @@ export async function completeOnboarding(input: CompleteOnboardingInput): Promis
             ? {
                 user_id: userId,
                 school_name: item.organization || item.title,
+                school_entity_id: item.organizationEntityId,
                 start_date: item.startDate,
                 end_date: item.endDate,
                 notes: item.description,
@@ -170,6 +171,7 @@ export async function completeOnboarding(input: CompleteOnboardingInput): Promis
                   user_id: userId,
                   title: item.title,
                   organization: item.organization || "Unknown",
+                  organization_entity_id: item.organizationEntityId,
                   description: item.description,
                   start_date: item.startDate,
                   end_date: item.endDate,
@@ -179,6 +181,7 @@ export async function completeOnboarding(input: CompleteOnboardingInput): Promis
                   user_id: userId,
                   title: item.title,
                   organization: item.organization,
+                  organization_entity_id: item.organizationEntityId,
                   description: item.description,
                   start_date: item.startDate,
                   end_date: item.endDate,

@@ -5,6 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createNotification } from "@/lib/notifications/create";
+import { canonicalUniversityId } from "@/lib/universities/canonical";
 
 /** Days-until-deadline thresholds that trigger a reminder (Phase 23/24). A student gets
  * at most one reminder per deadline per threshold — see the dedup check below. */
@@ -61,9 +62,11 @@ async function scanApplications(supabase: SupabaseClient<Database>, today: Date)
   const { data: targets } = targetIds.length
     ? await supabase.from("target_universities").select("id, university_id").in("id", targetIds)
     : { data: [] };
-  const universityIdByTarget = new Map((targets ?? []).map((t) => [t.id, t.university_id]));
+  // Canonicalized so a target referencing a known-duplicate loser row still resolves to a
+  // real name in the notification body. See lib/universities/canonical.ts.
+  const universityIdByTarget = new Map((targets ?? []).map((t) => [t.id, canonicalUniversityId(t.university_id)]));
 
-  const universityIds = [...new Set((targets ?? []).map((t) => t.university_id))];
+  const universityIds = [...new Set(universityIdByTarget.values())];
   const { data: universities } = universityIds.length
     ? await supabase.from("universities").select("id, name").in("id", universityIds)
     : { data: [] };
@@ -120,7 +123,10 @@ async function scanTargetUniversityDeadlines(supabase: SupabaseClient<Database>,
     .in("status", ACTIVE_TARGET_STATUSES);
   if (!targets || targets.length === 0) return { notified: 0, checked: 0 };
 
-  const universityIds = [...new Set(targets.map((t) => t.university_id))];
+  // Canonicalized: both so university_deadlines is queried for the winner row (where real
+  // deadline data actually lives, per how pickCanonicalWinner scores FK richness) and so a
+  // pre-existing loser-referencing target self-heals. See lib/universities/canonical.ts.
+  const universityIds = [...new Set(targets.map((t) => canonicalUniversityId(t.university_id)))];
   const [{ data: deadlines }, { data: universities }] = await Promise.all([
     supabase.from("university_deadlines").select("university_id, program_id, deadline_type, deadline_date").in("university_id", universityIds).not("deadline_date", "is", null),
     supabase.from("universities").select("id, name").in("id", universityIds),
@@ -130,19 +136,18 @@ async function scanTargetUniversityDeadlines(supabase: SupabaseClient<Database>,
   let notified = 0;
   let checked = 0;
   for (const target of targets) {
+    const canonicalId = canonicalUniversityId(target.university_id);
     // A university-level deadline (program_id null) always applies; a program-specific
     // one only applies once the student has actually picked that program — otherwise we
     // can't tell which of a university's many programs it belongs to.
-    const relevant = (deadlines ?? []).filter(
-      (d) => d.university_id === target.university_id && (d.program_id === null || d.program_id === target.program_id)
-    );
-    const universityName = universityNameById.get(target.university_id) ?? "A target university";
+    const relevant = (deadlines ?? []).filter((d) => d.university_id === canonicalId && (d.program_id === null || d.program_id === target.program_id));
+    const universityName = universityNameById.get(canonicalId) ?? "A target university";
     for (const deadline of relevant) {
       checked += 1;
       const wasNotified = await notifyIfThresholdCrossed(supabase, today, {
         userId: target.user_id,
         deadlineDate: deadline.deadline_date!,
-        link: `/universities/${target.university_id}`,
+        link: `/universities/${canonicalId}`,
         body: `${universityName} — ${deadline.deadline_type} deadline approaching.`,
       });
       if (wasNotified) notified += 1;

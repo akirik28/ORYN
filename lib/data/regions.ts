@@ -50,10 +50,29 @@ export const MAP_REGIONS: MapRegion[] = [
   {
     id: "asia",
     name: "Asia",
-    // Genuinely empty today — no Asian country has university data or map placement
-    // yet. Shown anyway (the founder brief wants it visible now, as a discoverable,
-    // honest "not yet" entry point) rather than hidden until data exists.
+    // Was genuinely empty here until 2026-08-18 — not because the data didn't exist (China
+    // alone has always had dozens of universities), but because SUPPORTED_COUNTRIES never
+    // listed a single Asian country. See lib/data/country-geo.ts's header for the full
+    // root-cause writeup; this comment used to (wrongly) explain away the symptom as an
+    // honest "not yet", which is exactly the kind of self-fulfilling assumption that let a
+    // real bug sit undetected — worth a caveat here so it isn't mistaken for a design
+    // choice again.
     countries: SUPPORTED_COUNTRIES.filter((c) => c.region === "Asia").map((c) => c.name),
+  },
+  {
+    id: "oceania",
+    name: "Oceania",
+    countries: SUPPORTED_COUNTRIES.filter((c) => c.region === "Oceania").map((c) => c.name),
+  },
+  {
+    id: "south_america",
+    name: "South America",
+    countries: SUPPORTED_COUNTRIES.filter((c) => c.region === "South America").map((c) => c.name),
+  },
+  {
+    id: "africa",
+    name: "Africa",
+    countries: SUPPORTED_COUNTRIES.filter((c) => c.region === "Africa").map((c) => c.name),
   },
 ];
 

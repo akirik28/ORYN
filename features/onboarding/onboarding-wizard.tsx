@@ -20,6 +20,8 @@ import type { CurriculumType, TargetGeography } from "@/types/database";
 import type { CompleteOnboardingInput } from "@/lib/validation/onboarding";
 import { completeOnboarding } from "@/app/(onboarding)/onboarding/actions";
 import { EntityCombobox } from "@/features/entities/entity-combobox";
+import { SuggestInput } from "@/features/entities/suggest-input";
+import { COUNTRY_SUGGESTIONS } from "@/lib/vocabularies/countries";
 import { InterestsStep } from "./steps/interests-step";
 import { ImportStep, type ReviewedExtractedItem } from "./steps/import-step";
 
@@ -107,10 +109,11 @@ export function OnboardingWizard() {
       targetGeographies,
       extractedItems: reviewedItems
         .filter((item) => item.included)
-        .map(({ category, title, organization, description, startDate, endDate }) => ({
+        .map(({ category, title, organization, organizationEntityId, description, startDate, endDate }) => ({
           category,
           title,
           organization,
+          organizationEntityId,
           description,
           startDate,
           endDate,
@@ -145,7 +148,7 @@ export function OnboardingWizard() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="country">Country</Label>
-                <Input id="country" value={country} onChange={(e) => setCountry(e.target.value)} placeholder="United States" />
+                <SuggestInput id="country" value={country} onChange={setCountry} suggestions={COUNTRY_SUGGESTIONS} placeholder="United States" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="school">School</Label>
@@ -220,7 +223,7 @@ export function OnboardingWizard() {
 
         {step === 4 && (
           <StepShell key="4" title="Import your profile" subtitle="Upload a CV to save time, or start fresh — either way takes a minute.">
-            <ImportStep reviewedItems={reviewedItems} setReviewedItems={setReviewedItems} />
+            <ImportStep reviewedItems={reviewedItems} setReviewedItems={setReviewedItems} country={country} />
           </StepShell>
         )}
       </AnimatePresence>

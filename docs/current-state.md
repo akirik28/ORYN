@@ -1,240 +1,243 @@
-# Current State
+# ORYN Current State
 
-**Update — 2026-08-17**: a competitive/data audit of Cialfo landed. Engineering record:
-[cialfo-public-intelligence-audit.md](./cialfo-public-intelligence-audit.md). Founder-facing
-record (strategy, field maps, gap matrix, coverage, source rights): Google Drive doc
-**"ORYN — Cialfo Public Intelligence & Data Gap Audit"**, ID
-`1SeLGD4y8Rj4twWpZWeMj5fP_OIEahlwhTNBCtYubVLA`, in the Drive `ORYN` folder. Live data state
-is tracked in the Drive doc **"ORYN University & Opportunity Enrichment — Canonical Report"**
-(`1jxIAa6_pMTTh8j7efTXYheGLzTzpwnt2NtwULQy85s8`) — **not** in `data-readiness.md`, which is
-now stale (it still reports 21 universities; live is 1,010, with 11 opportunities). Four new
-founder-blocked items (21–24) were added to `founder-blocked-backlog.md`.
+This file is the single short operational source of truth. It is rewritten, not appended
+to, at each integration checkpoint — history lives in `docs/handoffs/*` and git log, not
+here. Every number below was measured live against the working `oryn-qa-scratch` Supabase
+project on 2026-08-19, not copied from an earlier doc. If this file and a handoff doc
+disagree, this file is newer and wins; if this file and the live database disagree, the
+database wins and this file is stale — re-measure before trusting either.
 
-**Phase 2 (same day, commit `0953d67`)**: the verified data-acquisition architecture landed —
-`lib/acquisition/*`, a 30-university / 23-country pilot fixture, migration 0042, and 123 new
-tests (578/578 passing). Engineering detail:
-[verified-data-acquisition.md](./verified-data-acquisition.md). Founder-facing record: Drive doc
-**"ORYN — Verified Data Acquisition: Architecture, Pilot & Coverage"**
-(`1nsd14SDhzysW66n0v_nAHd8_hyergnu5qbgyPHeujCM`). Nothing was written to the database — the
-import path is implemented and gated on `SUPABASE_SECRET_KEY`.
+## Repository
 
-**Correction (same day)**: credentials arrived and the pipeline ran live. A mid-session claim
-that the spine is "1000, not 1010" was **wrong** — it came from PostgREST silently truncating
-unpaginated reads at 1000 rows with a 200 status. The live spine is **1010**, exactly as the
-canonical Drive report always said. Fixed in `lib/acquisition/paginate.ts`, which asserts every
-complete read against the server's exact count. Treat any 1000-based figure from that window as
-truncated.
+- main HEAD: `b92c72f` — "docs: re-point Drive acquisition record at its current ID"
+- integration HEAD: `c2b5417` (branch `oryn/integration-2026-08-19`) — not yet merged to main
+- date: 2026-08-19
 
-**Update — 2026-08-16, founder away**: four further autonomous passes landed after this
-file was written — CI, moderation, realtime messaging, rate limiting, an open-redirect
-fix, and 230 automated tests (up from 113). Start at `docs/founder-blocked-backlog.md`
-for what's actually still blocking launch and the exact next action; this file's account
-of Chat 1–4 below is unchanged and still an accurate history of that period, just no
-longer the most current status.
+## Product Direction
 
-**Update — autonomous pass, same day (2026-08-15), founder away**: found and staged a real
-Drive-corpus data batch (31 universities, 189 programs, 520 requirements, 273
-opportunities — not yet applied, no working `SUPABASE_SECRET_KEY`), built the CV
-Generator (a founder-confirmed MVP feature that didn't exist yet), and found a real
-conflict between the founder's own Drive planning doc and same-day chat instructions on
-both messaging and the visual theme — kept the chat-instructed versions, flagged the
-conflict rather than silently picking a side. Start at `docs/pre-publish-checklist.md` for
-exactly what's left, and `docs/known-issues.md`'s top section for the conflict.
-
-Snapshot after Chat 1 (Functional Completion / Backend / AI / Data), Chat 2 (World-Class
-UI/UX/Brand/Interaction Design), Chat 3 (Adversarial QA), and Chat 4 (Data Readiness /
-Launch Readiness / messaging + Sports). Any future session should read this file,
-`known-issues.md`, `SECURITY.md`, `product-decisions.md`, `data-readiness.md`,
-`launch-readiness.md`, and the other root docs rather than any prior conversation
-transcript — the repository is the source of truth.
-
-## Update — Chat 4: data readiness, launch readiness, messaging, Sports (2026-08-15)
-
-The app now has a real, live, working backend (`.env.local` → a Supabase project;
-`check:integrations` reports Supabase OK for the first time). Audited actual data instead
-of assuming: zero opportunities, zero university programs/requirements, and the ingestion
-pipeline had literally never run (not "run and produced bad data" — never run at all).
-Root cause is three missing external API keys, not a code problem. Added 21 real,
-individually-sourced universities (never fabricated statistics) covering the founder's
-initial Turkey/UK/Europe/US market. Full findings: `docs/data-readiness.md`.
-
-Founder expanded V1 scope mid-pass to include 1:1 messaging (accepted connections only)
-and a first-class Sports profile section. Both shipped, both live-verified — messaging's
-authorization model specifically against a 10-scenario adversarial matrix on the real
-database (non-participant read, forged sender, every non-accepted connection state,
-both directions of a block, and disconnect/block preserving history while blocking new
-messages). See `product-decisions.md`'s "Chat 4 pass" and
-`supabase/tests/messaging_authorization_manual.sql`.
-
-Full launch-blocker / high-priority / backlog classification: `docs/launch-readiness.md`.
-
-**Follow-up within the same founder-labeled pass**: a fresh session re-audited this work
-line-by-line instead of trusting the commit message, found and fixed two real gaps (Sports
-missing from Portfolio/public-profile presentation; no Message button on an accepted
-connection's `/u/[id]` page), and attempted the live two-account browser QA this section's
-"both live-verified" doesn't cover. Confirmed root cause: `SUPABASE_SECRET_KEY` is still
-the placeholder, so there's no way to admin-create or auto-confirm a disposable test
-account in this session, and it has no Supabase project-admin MCP tool either. See
-`docs/known-issues.md`'s "Chat 4 continuation" section for the full account, including a
-harmless leftover unconfirmed test user in the live dev database.
-
-## Update — Chat 3 adversarial security audit complete (2026-08-15)
-
-Completed and hardened the connection-privacy fix (`0024`) a prior Chat 3 session had
-started, found and fixed a second, independent, more severe bug in the same area
-(`0023_social_v1.sql` had never successfully applied to any real database — see
-`known-issues.md`), and — for the first time in this product's history — live-verified
-both fixes plus the wider RLS/social layer against a real, disposable Supabase project via
-the Supabase MCP, rather than continuing the review-by-hand-only pattern every prior
-session was limited to. Also fixed six further concrete bugs found during a wider
-adversarial pass (false-precision cross-scale GPA comparison, missing prompt-injection
-framing on AI-extracted web content, global search swallowing real backend errors as
-empty results, an application-status UI with no rollback on a failed save, an unfiltered
-"don't repeat this" advisor query, and busy-mode-until never reaching the advisor). Full
-detail in `docs/final-product-audit.md`, `PHASE_STATUS.md`'s "Chat 3" section, and
-`known-issues.md`. Every "not run against a live Postgres" caveat elsewhere in this repo's
-docs is now stale for anything through migration `0025` specifically — it *has* been run,
-live, and the two real bugs that surfaced are fixed. The underlying sandbox limitation
-(no app-level Supabase/Anthropic/Tavily credentials, so the running app itself still can't
-be exercised end-to-end here) is unchanged and still applies to everything else.
-
-## Update — Chat 2 UI/UX pass complete (2026-08-15)
-
-Full design system (brand tokens, Newsreader/Geist typography split, motion, `components/oryn/*`
-primitives) applied across every major surface — Home dashboard, app shell, landing/auth,
-onboarding, university exploration, profile, advisor, opportunities, plan/applications
-(incl. a new acceptance-moment celebration), and a rebuilt command-palette global search.
-Full detail, including exactly what was and wasn't live-verified in this sandbox's
-no-Supabase environment, in `chat-2-handoff.md`. Also shipped mid-pass: the founder's V1
-social/network scope update (see `product-decisions.md`).
-
-## Update — V1 social/network scope (Chat 2 pass, 2026-08-15)
-
-The founder locked a narrow V1 social scope mid-build: an optionally-shareable public
-profile, mutual-consent connections, and a "currently looking for" status — explicitly
-**not** a feed, DMs, comments, likes, teammate matching, or a mentor marketplace. Full
-reasoning in `product-decisions.md`'s "Chat 2 pass" section (read that before touching
-`connections`/`public_profiles`/`is_public`/`looking_for`). Built this pass:
-
-- `supabase/migrations/0023_social_v1.sql` — `profiles.is_public`/`looking_for`, a
-  `public_profiles` view (fixed safe-column whitelist, never the raw table), and a
-  `connections` table (request → accept, RLS-scoped, order-independent uniqueness).
-- `lib/social/public-profile.ts`, `lib/social/connections.ts`.
-- `app/(app)/u/[id]/` (public profile page), `app/(app)/connections/` (requests +
-  accepted list), a "Visibility" section on `/settings`.
-- `notification_category` gained a `'connection'` value; request-sent and
-  request-accepted both notify through the existing in-app notification system.
-
-Chat 3 found this migration had a real bug preventing it from ever applying to a live
-database at all (fixed in place), and a real privacy vulnerability in the carve-out
-described above (fixed in `0024`) — both now live-verified. See the Chat 3 update above
-and `known-issues.md` for the full account; this section is left as the original
-implementation record.
-
-## What's functionally complete
-
-Everything `README.md`'s "Known limitations" section used to list as missing is now built,
-plus the pre-existing product surface documented in `PHASE_STATUS.md`:
-
-- **Per-program requirement checklist (Phase 69)** — `lib/requirements/`. Deterministic
-  evaluation (met/likely_met/not_met/unknown/needs_manual_review) of a student's profile
-  against a university/program's stated requirements. Two ways rows get populated: an admin
-  entry point (optionally AI-assisted structuring, always human-reviewed before save) and
-  an automated discovery job (`lib/requirements/discover.ts`, `POST
-  /api/jobs/discover-requirements` — Tavily search → AI extraction → dedupe → store,
-  bounded to 5 universities/run, university-wide only). Student-facing: a "Requirement
-  check" section on the university detail page.
-- **Peer benchmarking (Phase 19)** — `lib/benchmarking/`. Cohort-based percentile
-  comparison (graduation year + curriculum), gated at n≥100 comparable peers per dimension,
-  shown on the Career Profile page. Pre-launch every cohort is genuinely n=0 — this is
-  architecture that activates itself once there's real user data, not a stub.
-- **Global search (Phase 25)** — `lib/search/`, `/search`. Universities, programs,
-  opportunities, every achievement-shaped profile table, goals, and applications, ranked
-  and merged into one result list. Reachable from a search icon in both the desktop and
-  mobile headers.
-- **AI Advisor context gaps closed** — `lib/ai/student-context.ts` now includes: evidence
-  status (`[self-reported]`) and ongoing status on activities/projects/research; the
-  cross-source Deadline Engine (previously the advisor only saw application deadlines, not
-  saved-opportunity or university-program ones — a real gap, now fixed by reusing
-  `lib/deadlines/upcoming.ts` instead of a second, narrower query); recent weekly-action
-  outcomes (completed/skipped/expired, with the student's own reflection note) so advice
-  can learn from what actually happened instead of only avoiding repeated titles; and
-  unfinished application checklist items.
-- **A real functional bug fixed**: `lib/ai/usage.ts`'s `logAIUsage` was writing through the
-  RLS-scoped client to a table whose policy is deliberately select-only, so every insert
-  silently failed. This meant `ai_usage` was never populated and `lib/ai/rate-limit.ts`'s
-  sliding window (sourced from it) never actually throttled anyone. Fixed — see
-  `SECURITY.md`.
-
-## What's partially complete (by deliberate scope decision, not oversight)
-
-- **Per-program requirement discovery is university-wide only, bounded per run.**
-  `lib/requirements/discover.ts` (Tavily search → AI extraction → dedupe → store, mirroring
-  `lib/opportunities/discover.ts`) populates `university_requirements` automatically now —
-  built within this pass after initially being scoped out, see `known-issues.md`. It covers
-  5 universities per run by default and only university-wide requirements (not
-  program-specific ones, which would need more targeted per-program queries); a university
-  already covered isn't re-scanned for freshness yet.
-- **Peer benchmarking cohorts are real but currently empty.** Pre-launch, there's no
-  population to compare against. The honest empty state ("Not enough comparable Oryn
-  students yet") is what every viewer sees today; this is correct, not a bug.
-- **`RecommendationClass`'s `consider`/`deprioritize` values are declared in the schema but
-  never produced.** Only `do` (the weekly plan's top 1-3 actions, implicitly) and
-  `avoid_for_now` (the plan's optional single callout) are ever generated. See
-  `known-issues.md` for why this was scoped out rather than built now.
-
-## Architecture quick-reference
-
-- **AI**: `lib/ai/provider.ts` (interface) → `lib/ai/anthropic-provider.ts` (only concrete
-  implementation, only file that imports `@anthropic-ai/sdk`). Every structured AI output
-  is Zod-validated with one retry on schema failure. `lib/ai/student-context.ts` is the one
-  place that assembles what the model sees about a student — never the raw database.
-- **University data**: `universities` / `university_programs` / `university_requirements` /
-  `university_statistics` / `university_deadlines` / `university_sources` (Phase 35
-  canonical entities, no wide nullable-column table). College Scorecard sync
-  (`lib/universities/sync-us-universities.ts`) populates U.S. institutions; everything else
-  needs manual/admin population or a future country-specific provider (see AGENTS.md Phase
-  8 — there is deliberately no "universal European admissions API").
-- **Opportunities**: `lib/opportunities/discover.ts` (Tavily search → AI-structure →
-  dedupe → store) → `lib/opportunities/matching.ts` (deterministic, no AI call, cheap
-  enough to recompute per view).
-- **Requirements**: see `lib/requirements/` above. Evaluation is 100% deterministic
-  (`lib/requirements/evaluate.ts`) — the AI only ever helps an admin *structure* a
-  requirement's already-sourced text (`lib/ai/interpret-requirement.ts`), never invents or
-  evaluates one unsupervised.
-- **Benchmarking**: see `lib/benchmarking/` above.
-- **Search**: see `lib/search/` above.
-- **Security**: RLS on all 44 tables, live-verified against a real Postgres in Chat 3 (not
-  just cross-checked by grep — method + result in `SECURITY.md`, including the "Social /
-  connections" section covering the `public_profiles` security-definer view specifically).
-  Every foreign-key column checked against index coverage in Chat 1 (method + result in
-  `DATABASE.md`).
-
-## Verification status as of this handoff
+The database (universities, programs, opportunities) is infrastructure, not the product.
+The product is the counselor loop:
 
 ```
-npm run typecheck   -> clean
-npm run lint        -> clean
-npm run test         -> 113/113 passing (19 files)
-npm run build        -> succeeds
-npm run check:integrations -> OpenAlex OK (keyless); Supabase OK as of the end of this
-                              session (see below); Anthropic/Tavily/College Scorecard/
-                              Supabase-secret-key still report "Missing credential" —
-                              correct, honest degraded state for what's genuinely not
-                              configured.
+VERIFIED DATA -> STUDENT UNDERSTANDING -> GAP DETECTION -> RECOMMENDATION
+-> ACTION -> OUTCOME -> UPDATED RECOMMENDATION
 ```
 
-**Update, same session, after the numbers above were captured**: the founder chose to
-keep the Chat 3 scratch Supabase project as ORYN's real dev backend. `.env.local` now
-holds real `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` values —
-`npm run check:integrations` reports `Supabase OK`, the first time that's been true for
-this product. `SUPABASE_SECRET_KEY` is intentionally still blank (Supabase's MCP server
-doesn't expose service-role keys, by design — the founder needs to paste it in from their
-dashboard), so admin-client-backed features still degrade correctly. `.env.example` was
-also added — referenced by `.gitignore` since early in this project's history but never
-actually created.
+"Here are 1,000 universities" is not the goal. "Your research is weak relative to your
+leadership, here are three things worth doing about it this week" is. Counselor Core
+(deeper gap-driven, opportunity-cost-aware recommendation) is the highest-leverage thing to
+build next — see Next Phase — but was deliberately **not** touched this session; this was a
+consolidation pass, not a feature pass.
 
-## Recommended UI surfaces for Chat 2 to prioritize
+## University Data
 
-These are functionally complete but deliberately plain (Chat 1 was told not to spend time
-on visual design) — see `chat-1-handoff.md` for the full list and reasoning.
+- Total `universities` rows: **1,019** (floor-checked, `npm run check:university-spine-health`)
+- Canonical/display-active (superseded rows excluded): **1,010**
+- Images: 721 real verified (71.4%) / 98 official-logo fallback / 191 ORYN-branded fallback
+  / 0 broken — **1,010/1,010 display-safe**. 180 need-review (rejected: 106 too_small, 52
+  portrait-or-near-square, 13 extreme-panorama, 9 download-failed), 109 no candidate ever
+  found.
+- Tuition/cost coverage: **163/1,019 (16.0%)** on `tuition_*_annual`. Germany and
+  Netherlands are 100% (national-scale statutory-fee sources); most countries are still
+  0% — no scalable official source found yet, not a bug. Separately, US `cost_of_attendance`
+  covers 127 institutions via IPEDS (a different concept from tuition, never merged with it
+  — see any `acquire-university-statistics-*.ts` header).
+- Research topics (`research_topics_top5`, OpenAlex): 923/925 of institutions with an
+  OpenAlex match, per the last full re-acquisition pass (`claude-a-university-spine.md`).
+- Sources/provenance: every published fact carries `source_url` + `retrieved_at` via
+  `university_sources` / `university_profile_metrics`; `SourceBadge` renders it on the
+  detail page. No fabricated statistics — missing data renders "Unavailable", not a guess.
+
+## University Programs
+
+- `university_programs`: **198 rows, 100% `verified_current`**, 0 missing
+  `official_program_url` or `source_url`, 0 duplicate-key candidates.
+- Universities represented: **49** of 1,010.
+- Subject mix (verified_current): economics 51, computer_science 33, business 24,
+  engineering 21, other 22, and 12 smaller categories.
+- Country mix: UK 43, US 38, Netherlands 24, Turkey 24, Italy 20, Germany 18,
+  Switzerland 16, France 15 — eight countries, no coverage yet outside them.
+- `program_research_queue`: 262 candidates across 7 batches — 201 accepted (76.7%), 32
+  unresolved_university, 29 insufficient_evidence.
+- Known blocker: a genuinely new, uncommitted, deterministic (no-LLM) official-catalogue
+  HTML extraction pipeline (`lib/acquisition/programs.ts`, `scripts/acquire-programs.ts`)
+  was found and rescued this session — see Next Phase. It is a second, complementary
+  acquisition method (official catalogue scraping) alongside the existing research-handoff
+  JSONL ingestion path (`lib/programs/ingest.ts`), not a duplicate of it; not yet wired into
+  `package.json` or run.
+
+## Opportunities
+
+- Total: **290**.
+- Verification: 64 verified_current (22.1%), 1 verified_historical, 225 unverified (77.6%).
+- Cycle status: 11 open, 14 upcoming, 18 closed, 12 date_not_announced, 1 historical, 234
+  unverified (80.7%).
+- Selectivity: 251 unknown (86.6%), 16 highly_selective, 12 selective, 5
+  extremely_selective, 5 open_enrollment, 1 competitive_award — never displayed as false
+  precision.
+- Data gaps, honestly stated rather than backfilled with guesses: 277/290 (95.5%) missing
+  `deadline`, 290/290 (100%) missing `eligible_countries`, 221/290 (76.2%) missing an
+  organizer link/name. 0% missing `source_url`.
+- No image columns yet on `opportunities` or `university_programs` — deliberately deferred,
+  university images shipped first.
+- A same-day (2026-08-18) sequential write pattern is worth knowing about, not a live bug:
+  Claude 2's own opportunity-mining session measured 52 rows mid-session; a separate,
+  founder-directed bulk Drive-corpus import ran afterward and took live count 69 -> 290. The
+  290 figure above is what's live now. Dedup during that import relied on title-similarity
+  only — a live duplicate-title spot-check is worth doing before citing 290 as fully deduped
+  (not done this session; low-confidence-but-plausible risk, not a confirmed defect).
+
+## Canonical Entity Health
+
+- **9 confirmed duplicate university pairs** (MIT, UCL, HKUST, LSE, Warwick, UTS, University
+  of Newcastle Australia, Al-Farabi Kazakh National University, KFUPM) — merged at the
+  *identity* layer (`canonical_entity_id`, migration 0038) and, since migration 0043 can't
+  be applied yet (see Migrations), also suppressed at the *application* layer:
+  `lib/universities/canonical.ts` (`canonicalUniversityId()`, `isSupersededUniversityId()`,
+  `getSupersededUniversityIds()`, `excludeSupersededUniversities()`), backed by the
+  generated `lib/universities/duplicate-supersessions.json`. Live-verified this session:
+  searching/browsing "UCL" returns University College London exactly once; navigating
+  directly to a known superseded row's URL redirects to the canonical row and renders its
+  full detail page (programs, stats, sources) correctly.
+- 16 read surfaces already filter through `canonical.ts` (browse, search, detail-page
+  redirect, target-university writes, `EntityCombobox`, global search, applications,
+  dashboard, Advisor context, both deadline jobs, the new `UniversitySearchBox` typeahead).
+  One gap found and fixed this session: `lib/requirements/discover.ts`'s
+  `getUniversitiesNeedingRequirementDiscovery` did not exclude superseded rows, so a
+  scheduled discovery run could spend a Tavily+AI call on a row no product surface shows —
+  now filtered the same way. `lib/universities/sync-us-universities.ts` and ~10 dev/admin/
+  report scripts still don't filter; accepted as low-priority (not live student-facing
+  reads).
+- Entity audit (`npm run entities:audit`) flags a further set of *possible* near-duplicate
+  names for human review (e.g. "Université PSL" vs "Université Paris Dauphine - PSL") —
+  correctly not auto-merged; matches founder-blocked-backlog item 19 (43 exact-name orphan
+  pairs, investigated, zero product impact, still queued).
+
+## Product
+
+Live-verified in-browser this session (authenticated session, real data, no mocks):
+Home dashboard (Career Profile score + trend, biggest-gap card, opportunity/university
+previews), University Explorer (world map with country fill + labels, region/country
+browse, live typeahead search, filters, real campus images, QS-ranking sort), university
+detail page (canonical redirect, student-size/admission-rate/cost-or-tuition/test-scores/
+graduation-rate stat cards, grouped Programs section, Research strengths, Requirement
+check, Sources), Opportunities (personalized matches with real match reasoning and honest
+verification-state caveats in the copy itself), global `/search` (universities +
+opportunities + profile, deduped).
+
+Known issue, not new: the weekly-plan AI generation on the dashboard fails visibly
+("We couldn't generate this week's plan") because `ANTHROPIC_API_KEY` is billing-blocked —
+this is the existing, documented, honest-degradation behavior (Rule 4: no fake data on
+failure), not a regression.
+
+Not exercised this session (needs a founder credential unblock first — see below):
+signup/login as a *new* account, messaging between two accounts, `/admin`, account
+deletion, applications CRUD, connections.
+
+## External Service Status
+
+Measured live via `npm run check:integrations`, this environment, 2026-08-19:
+
+| Service | Status |
+|---|---|
+| Supabase (anon key) | OK |
+| Supabase (secret key) | OK |
+| Anthropic | Blocked — 400, insufficient credit balance (billing, not a missing key) |
+| Tavily | Blocked — HTTP 432, plan usage limit |
+| College Scorecard | Missing credential (optional; US stats obtained via a public bulk CSV workaround instead) |
+| OpenAlex | OK (keyless) |
+
+Both credential values (Supabase secret key, Anthropic key) were reported inconsistently
+across sessions/worktrees earlier this week — resolved by measuring directly in this
+environment rather than trusting either prior claim; the table above is this environment's
+actual current state.
+
+## Migrations
+
+- Latest integrated migration: **0045** (`0045_opportunity_online_program_category.sql`).
+- Full sequence: 0001-0042 unchanged from main. **0043** = `university_duplicate_supersession`
+  (spine's; written, NOT yet applied to any live database — no DDL access in this
+  environment, founder-blocked-backlog item 25). **0044** = `university_programs_enrichment`
+  (programs-pipeline-reconciled's; content confirmed **already applied live** under its old
+  filename/number before renumbering — verified safe via Supabase's migration-history table,
+  which tracks by synthetic version, not filename, per `docs/handoffs/claude2-programs-
+  opportunities.md`). **0045** = new, additive, not yet applied (`alter type ... add value
+  if not exists`, safe to re-run).
+- **The 0043 collision, explained**: `oryn/university-intelligence-spine` and
+  `oryn/programs-pipeline-reconciled` each independently created a different migration
+  numbered 0043. `oryn/programs-opportunities-intel` had already merged spine in and hit
+  this exact collision, resolving it by keeping spine's `duplicate_supersession` at 0043 and
+  renumbering the programs migration to 0044 (content byte-identical, diff-confirmed). This
+  integration followed that same precedent rather than inventing a new one. A third, older
+  migration — `oryn/programs-pipeline`'s (pre-reconciliation) `0042_university_programs_
+  enrichment.sql` — is fully superseded by 0044's content and was never a live candidate.
+- QA DB state: 0001-0042 applied (confirmed via the 2026-08-16 live-database-reconciliation
+  pass, `docs/live-db-reconciliation.md`); 0043 written and blocked; 0044's content already
+  live under its prior number; 0045 not yet applied. **The current QA DB is not assumed
+  identical to a fresh migration run** — this section states the actual known divergence
+  rather than assuming one.
+
+## Tests
+
+```
+npm run lint          -> clean, 0 warnings/errors
+npm run typecheck     -> clean (tsc --noEmit)
+npm run test          -> 884/884 passing (79 test files)
+npm run build         -> succeeds, 39 routes compiled
+npm run check:integrations         -> see External Service Status above
+npm run check:university-spine-health -> 9/10 checks PASS; 1 FAIL is the known,
+                                          expected, already-documented 0043-blocked
+                                          canonical_entity_id sharing (9 pairs) —
+                                          not a regression
+```
+
+Live browser QA: see Product section above — genuinely exercised in a real authenticated
+session, not simulated. Full new-account/messaging/admin flows remain code-reviewed-only,
+blocked on the founder actions below.
+
+## Founder Actions Required
+
+Only items Claude cannot do. Full detail and reasoning for each: `docs/founder-blocked-
+backlog.md` (25 items) and `docs/qa-environment-readiness-audit.md`.
+
+1. Disable "Confirm email" on the QA Supabase project (Authentication -> Providers) — single
+   highest-leverage unblock, enables full new-account browser QA.
+2. Add billing credit to the Anthropic account (key is present; failure is 400
+   insufficient-credit, not a missing key) — unblocks the Advisor, weekly plans, CV
+   extraction, requirement/opportunity AI-structuring.
+3. Resolve the Tavily plan-usage limit (HTTP 432) — unblocks `admissions_url` acquisition
+   (~413 universities still missing it) and opportunity/requirement discovery jobs.
+4. Grant DDL access (or apply directly via the Supabase SQL editor) so migration 0043 can
+   finally be applied — moves the 9 duplicate pairs from application-layer suppression to
+   the correct schema-layer fix, and unblocks 0044/0045 being formally recorded as applied
+   too.
+5. The remaining 21 founder-blocked-backlog items (QA accounts, `is_admin` grant, legal
+   review, hosting/deploy choice, error-monitoring provider, scholarship-sourcing policy,
+   QS-ranking licensing position, etc.) — see that file directly, not reproduced here to
+   avoid a second copy going stale.
+
+## Next Phase
+
+Recommended order, highest-leverage first:
+
+1. **Counselor Core** — the actual product per AGENTS.md: turn the gap-detection data
+   that already exists (profile scores, biggest-gap card) into the full opportunity-cost-
+   aware recommendation loop (do/consider/deprioritize/avoid_for_now, "why" explanations,
+   weekly plan grounded in real gaps not generic activity). Currently blocked on Anthropic
+   credit for anything AI-driven; the deterministic scaffolding (scoring, gap detection) is
+   already live and can be extended without it.
+2. **Wire and run the rescued programme-catalog pipeline** (`lib/acquisition/programs.ts` +
+   `scripts/acquire-programs.ts`) — add an `acquire:programs` package.json script, decide
+   how its deterministic HTML-extraction output merges with the existing research-handoff
+   JSONL ingestion path (`lib/programs/ingest.ts`) rather than running as a second,
+   uncoordinated pipeline.
+3. **Apply migration 0043** once DDL access exists, then run the one-time script that moves
+   the 9 duplicate pairs from `duplicate-supersessions.json` into
+   `duplicate_status`/`superseded_by_id`, and delete the generated-file workaround.
+4. **Opportunity data quality**: fill `deadline` (277 missing) and `eligible_countries` (290
+   missing) — these gate real matching/eligibility logic that currently can't be fully
+   trusted; spot-check the 290-count for title-similarity dedup misses from the 2026-08-18
+   bulk import.
+5. **Production readiness**: legal review (COPPA/GDPR for minors), hosting + error-
+   monitoring provider choice, CI running lint/typecheck/test on push — all founder
+   decisions or founder-unblocked, listed in Founder Actions Required above.

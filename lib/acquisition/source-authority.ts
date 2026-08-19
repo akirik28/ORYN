@@ -31,14 +31,21 @@ export type FactClass =
   /** Programme/course catalogue facts. */
   | "programs"
   /** Research output/topic strength. */
-  | "research_strength";
+  | "research_strength"
+  /** Primary campus/institution imagery and logos. */
+  | "image"
+  /** Competitions, summer programs, internships, fellowships and similar opportunities —
+   * organizer's own domain, or nothing. Behaves identically to "programs"/"cost"/"policy"
+   * (official-domain-or-nothing, no registry/third-party tier); listed separately because
+   * the claim itself (an opportunity's own facts) is conceptually distinct. */
+  | "opportunities";
 
 export type AuthorityTier = "HIGH" | "MEDIUM";
 
 export interface SourceAuthority {
   tier: AuthorityTier;
   /** Written to `source_type` columns so provenance survives in the database, not just here. */
-  sourceType: "official_primary" | "open_registry" | "third_party_structured";
+  sourceType: "official_primary" | "open_registry" | "third_party_structured" | "wikimedia_commons";
 }
 
 /**
@@ -97,6 +104,15 @@ const EXCLUDED_DOMAINS = new Set([
   "explore.study",
 ]);
 
+/**
+ * Wikimedia Commons is a separately-licensed file host, not Wikidata itself — the
+ * EXCLUDED_DOMAINS policy above is about never trusting wikidata.org/wikipedia.org AS a fact
+ * value; a Commons-hosted file carries its own per-file license/attribution/author metadata,
+ * checkable the same way ROR is authoritative for identity. Only accepted for `image` — it is
+ * not a source for any other fact class.
+ */
+const WIKIMEDIA_COMMONS_DOMAINS = new Set(["commons.wikimedia.org", "upload.wikimedia.org"]);
+
 /** Hostname, lowercased, `www.` stripped. Empty string for anything unparseable. */
 export function domainOf(url: string): string {
   try {
@@ -145,8 +161,22 @@ export function looksOfficial(domain: string): boolean {
  * official when it carries no academic suffix — plenty of real universities sit on `.ch`,
  * `.nl`, `.de`, `.sg`. The caller must have established that domain from an authoritative
  * identity source (ROR's `links`/`domains`) rather than guessing it, which is why this is a
- * parameter and not another hardcoded list.
+ * parameter and not another hardcoded list. Matched the same suffix-aware way as the other
+ * domain lists (`domainMatches`), not exact-only — a department/faculty subdomain of a known
+ * official domain (`phys.ethz.ch` under `ethz.ch`) is exactly the shape most program/course
+ * pages actually live on.
+ *
+ * Overloaded so a caller restricted to a non-`image` factClass (the AcquiredFact fixture
+ * pipeline's `sourceType`, a Zod enum that deliberately doesn't know about `wikimedia_commons`
+ * — see lib/acquisition/fixture.ts) gets that guarantee back at compile time, rather than every
+ * caller seeing the full four-way union whether or not "image" was ever a possibility for them.
  */
+export function sourceAuthority(
+  factClass: Exclude<FactClass, "image">,
+  url: string,
+  officialDomains?: ReadonlySet<string>
+): { tier: AuthorityTier; sourceType: "official_primary" | "open_registry" | "third_party_structured" } | null;
+export function sourceAuthority(factClass: FactClass, url: string, officialDomains?: ReadonlySet<string>): SourceAuthority | null;
 export function sourceAuthority(
   factClass: FactClass,
   url: string,
@@ -156,7 +186,7 @@ export function sourceAuthority(
   if (!domain) return null;
   if (domainMatches(domain, EXCLUDED_DOMAINS)) return null;
 
-  const isOfficial = looksOfficial(domain) || officialDomains.has(domain);
+  const isOfficial = looksOfficial(domain) || domainMatches(domain, officialDomains);
   // An institution's own site is authoritative for everything it publishes about itself.
   if (isOfficial) return { tier: "HIGH", sourceType: "official_primary" };
 
@@ -166,6 +196,10 @@ export function sourceAuthority(
       return { tier: "HIGH", sourceType: "open_registry" };
     }
     return null;
+  }
+
+  if (factClass === "image" && domainMatches(domain, WIKIMEDIA_COMMONS_DOMAINS)) {
+    return { tier: "HIGH", sourceType: "wikimedia_commons" };
   }
 
   if (domainMatches(domain, THIRD_PARTY_STRUCTURED_DOMAINS)) {

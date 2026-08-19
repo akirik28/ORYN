@@ -67,12 +67,39 @@ describe("sourceAuthority", () => {
     expect(sourceAuthority("cost", "https://some-random-blog.example/fees")).toBeNull();
   });
 
+  test("Wikimedia Commons is HIGH for image, but not for any other fact class", () => {
+    expect(sourceAuthority("image", "https://commons.wikimedia.org/wiki/File:MIT_Dome.jpg")).toEqual({ tier: "HIGH", sourceType: "wikimedia_commons" });
+    expect(sourceAuthority("image", "https://upload.wikimedia.org/wikipedia/commons/x/MIT_Dome.jpg")).toEqual({ tier: "HIGH", sourceType: "wikimedia_commons" });
+    expect(sourceAuthority("identity", "https://commons.wikimedia.org/wiki/File:MIT_Dome.jpg")).toBeNull();
+    expect(sourceAuthority("population", "https://commons.wikimedia.org/wiki/File:MIT_Dome.jpg")).toBeNull();
+  });
+
+  test("Wikidata itself is still never a source for image, index only, same as every other fact class", () => {
+    expect(sourceAuthority("image", "https://www.wikidata.org/wiki/Q49108")).toBeNull();
+  });
+
+  test("an institution's own domain is HIGH for image too", () => {
+    expect(sourceAuthority("image", "https://www.ed.ac.uk/about")).toEqual({ tier: "HIGH", sourceType: "official_primary" });
+  });
+
   test("a caller-supplied official domain is accepted for institutions without an academic suffix", () => {
     // ETH sits on .ch, TUM on .de — real universities whose own domains carry no academic
     // suffix. They are only trusted when the caller established the domain from an
     // authoritative identity source, never by guessing.
     expect(sourceAuthority("cost", "https://ethz.ch/fees", new Set(["ethz.ch"]))).toEqual({ tier: "HIGH", sourceType: "official_primary" });
     expect(sourceAuthority("cost", "https://ethz.ch/fees")).toBeNull();
+  });
+
+  test("a caller-supplied official domain also covers its department/faculty subdomains", () => {
+    // Program/course pages overwhelmingly live on a department subdomain, not the bare
+    // domain — physics.ethz.ch, wiwi.hu-berlin.de. Matched the same suffix-aware way as
+    // EXCLUDED/OPEN_REGISTRY/THIRD_PARTY_STRUCTURED, not an exact-only Set lookup.
+    expect(sourceAuthority("programs", "https://phys.ethz.ch/bachelor", new Set(["ethz.ch"]))).toEqual({
+      tier: "HIGH",
+      sourceType: "official_primary",
+    });
+    // An unrelated domain that merely shares a suffix-unsafe substring must still fail.
+    expect(sourceAuthority("programs", "https://notethz.ch/bachelor", new Set(["ethz.ch"]))).toBeNull();
   });
 
   test("an excluded domain stays excluded even if a caller claims it is official", () => {

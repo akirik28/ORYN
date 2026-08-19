@@ -1,0 +1,56 @@
+{
+  "0e01bc5d-0e1e-4e35-a629-2befec4e3cb3": {
+    "winnerId": "62929169-4cb9-4ef2-b1f4-bfd1b34cf164",
+    "winnerName": "King Fahd University of Petroleum and Minerals (KFUPM)",
+    "loserName": "KFUPM",
+    "reason": "9 vs 1 FK references"
+  },
+  "29e16fe0-3f8f-46d3-8d34-f5fa48370a14": {
+    "winnerId": "75761b06-781d-4e7a-8e05-9d6a116771c9",
+    "winnerName": "The Hong Kong University of Science and Technology",
+    "loserName": "The Hong Kong University of Science and Technology (HKUST)",
+    "reason": "2 vs 1 FK references"
+  },
+  "6bdd71e9-9ab3-4f64-bf9b-b6a821784115": {
+    "winnerId": "54d29f0d-ce64-4342-ba0f-0d0895e36797",
+    "winnerName": "The University of Newcastle, Australia",
+    "loserName": "The University of Newcastle, Australia (UON)",
+    "reason": "tie-broken by name form / creation order"
+  },
+  "6f0df596-4ee5-49da-82ad-8057bfaa890d": {
+    "winnerId": "37f12391-462d-4aba-8947-d9cf159627cb",
+    "winnerName": "Al-Farabi Kazakh National University",
+    "loserName": "Farabi University (former Al - Farabi Kazakh National University)",
+    "reason": "has a website_url, loser doesn't"
+  },
+  "ad3ef0a4-1502-4bca-bc2c-69c71e40e2d5": {
+    "winnerId": "0b204add-2507-45b0-85f4-917e725b16c2",
+    "winnerName": "University of Warwick",
+    "loserName": "The University of Warwick",
+    "reason": "6 vs 2 FK references"
+  },
+  "ba3a30b2-c6e2-4a0f-ba32-6da028175d35": {
+    "winnerId": "03167d0c-2315-49e3-a37e-f9c9c7d2d27c",
+    "winnerName": "Massachusetts Institute of Technology",
+    "loserName": "Massachusetts Institute of Technology (MIT)",
+    "reason": "9 vs 4 FK references"
+  },
+  "cc117524-044e-49b9-8ddd-a628d021d3e1": {
+    "winnerId": "cfd5cd77-5a6b-46b6-b5fe-1b58c0f8632d",
+    "winnerName": "London School of Economics and Political Science",
+    "loserName": "The London School of Economics and Political Science (LSE)",
+    "reason": "7 vs 2 FK references"
+  },
+  "cf8adcbd-7164-462e-ba76-f95ef23214ea": {
+    "winnerId": "03c8faf1-4b30-47fe-b09e-8851b96c1f6e",
+    "winnerName": "University College London",
+    "loserName": "UCL",
+    "reason": "7 vs 2 FK references"
+  },
+  "f1d7d625-4c39-4132-a54e-e567e1390185": {
+    "winnerId": "6c88ddfe-1b49-411f-a4e8-bb82436ae1ed",
+    "winnerName": "University of Technology Sydney",
+    "loserName": "The University of Technology Sydney (UTS)",
+    "reason": "tie-broken by name form / creation order"
+  }
+}
