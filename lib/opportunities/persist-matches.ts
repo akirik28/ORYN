@@ -3,6 +3,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { computeOpportunityMatch, isNearStudent } from "./matching";
 import type { StudentMatchProfile, OpportunityForMatching } from "./matching";
+import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
 
 /**
  * Recomputes and upserts opportunity_matches for one student against every active
@@ -12,12 +13,18 @@ import type { StudentMatchProfile, OpportunityForMatching } from "./matching";
 export async function refreshOpportunityMatches(userId: string): Promise<void> {
   const supabase = await createClient();
 
-  const [profileRes, scoresRes, interestsRes, opportunitiesRes] = await Promise.all([
+  const [profileRes, scoresRes, interestsRes, opportunitiesRes, savedRes] = await Promise.all([
     supabase.from("profiles").select("birth_year, country").eq("id", userId).single(),
-    supabase.from("profile_scores").select("dimension, score").eq("user_id", userId),
+    supabase.from("profile_scores").select("dimension, score, confidence, reason_codes").eq("user_id", userId),
     supabase.from("student_interests").select("label").eq("user_id", userId),
     supabase.from("opportunities").select("id, category, minimum_age, maximum_age, eligible_countries, fields, country").eq("status", "active"),
+    // Counselor Core fix: an opportunity the student already applied to or explicitly
+    // dismissed must never resurface as a fresh recommendation — see computeEligibility's
+    // savedStatus parameter (lib/opportunities/matching.ts).
+    supabase.from("saved_opportunities").select("opportunity_id, status").eq("user_id", userId),
   ]);
+
+  const savedStatusByOpportunityId = new Map((savedRes.data ?? []).map((s) => [s.opportunity_id, s.status]));
 
   const opportunities = opportunitiesRes.data ?? [];
   if (opportunities.length === 0) return;
@@ -25,10 +32,10 @@ export async function refreshOpportunityMatches(userId: string): Promise<void> {
   const currentYear = new Date().getFullYear();
   const age = profileRes.data?.birth_year ? currentYear - profileRes.data.birth_year : null;
 
-  const weakestDimensions = [...(scoresRes.data ?? [])]
-    .sort((a, b) => a.score - b.score)
+  // Counselor Core Phase D — see app/(app)/dashboard/page.tsx's identical usage.
+  const weakestDimensions = rankDimensionGaps(toDimensionScoreRows(scoresRes.data ?? []))
     .slice(0, 3)
-    .map((s) => s.dimension);
+    .map((g) => g.dimension);
 
   const studentProfile: StudentMatchProfile = {
     age,
@@ -46,7 +53,7 @@ export async function refreshOpportunityMatches(userId: string): Promise<void> {
       fields: opportunity.fields,
       country: opportunity.country,
     };
-    const match = computeOpportunityMatch(studentProfile, forMatching);
+    const match = computeOpportunityMatch(studentProfile, forMatching, savedStatusByOpportunityId.get(opportunity.id) ?? null);
 
     return {
       user_id: userId,

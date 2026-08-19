@@ -4,15 +4,16 @@ import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { generateAdvisorReply } from "@/lib/ai/advisor-chat";
-import { AIProviderNotConfiguredError } from "@/lib/ai";
+import { classifyAdvisorFailure } from "@/lib/ai/advisor-failure";
 import { assertWithinAIRateLimit, RateLimitExceededError } from "@/lib/ai/rate-limit";
 import { logEvent } from "@/lib/analytics/log";
 import { isUuidLike } from "@/lib/validation/uuid";
+import type { AIMessage } from "@/lib/ai/provider";
 
 export async function sendAdvisorMessage(
   conversationId: string | null,
   content: string
-): Promise<{ conversationId: string; error?: string }> {
+): Promise<{ conversationId: string; assistantMessageId?: string; error?: string }> {
   const session = await requireUser();
   const userId = session.userId!;
   const trimmed = content.trim();
@@ -55,11 +56,15 @@ export async function sendAdvisorMessage(
     convId = conversation.id;
   }
 
+  // Only successful prior turns feed the model's own conversation history — a failed turn
+  // has no real content (migration 0046).
   const { data: priorMessages } = await supabase
     .from("advisor_messages")
     .select("role, content")
     .eq("conversation_id", convId)
+    .eq("status", "complete")
     .order("created_at", { ascending: true });
+  const history: AIMessage[] = (priorMessages ?? []).map((m) => ({ role: m.role, content: m.content ?? "" }));
 
   const { error: userMessageError } = await supabase
     .from("advisor_messages")
@@ -70,20 +75,91 @@ export async function sendAdvisorMessage(
   await logEvent(userId, "advisor_message_sent", { conversationId: convId });
 
   try {
-    const reply = await generateAdvisorReply({
-      userId,
-      history: priorMessages ?? [],
-      newMessage: trimmed,
-    });
-    await supabase.from("advisor_messages").insert({ conversation_id: convId, user_id: userId, role: "assistant", content: reply });
+    const reply = await generateAdvisorReply({ userId, history, newMessage: trimmed });
+    const { data: assistantMessage } = await supabase
+      .from("advisor_messages")
+      .insert({ conversation_id: convId, user_id: userId, role: "assistant", content: reply, status: "complete" })
+      .select("id")
+      .single();
+    revalidatePath("/advisor");
+    return { conversationId: convId, assistantMessageId: assistantMessage?.id };
   } catch (error) {
-    if (error instanceof AIProviderNotConfiguredError) {
-      return { conversationId: convId, error: "not_configured" };
-    }
+    // P0 fix: previously nothing was written here at all — the user's message stayed
+    // saved with no reply and no persisted failure signal, only an ephemeral client-side
+    // toast that vanished on reload (see docs/counselor-core-plan.md §2/§11 and
+    // docs/handoffs/claude-a-to-claude-b.md). Now a failed turn gets its own row, so a
+    // reload shows a retry-able failed bubble instead of a silent gap.
     console.error("[advisor] failed to generate reply", error);
-    return { conversationId: convId, error: "Something went wrong. Please try again." };
+    const { status, errorMessage } = classifyAdvisorFailure(error);
+    const { data: failedMessage } = await supabase
+      .from("advisor_messages")
+      .insert({ conversation_id: convId, user_id: userId, role: "assistant", content: null, status, error_message: errorMessage })
+      .select("id")
+      .single();
+    revalidatePath("/advisor");
+    return { conversationId: convId, assistantMessageId: failedMessage?.id, error: errorMessage };
+  }
+}
+
+/**
+ * Retries a single failed assistant turn in place (same row id, same position in the
+ * conversation) — never inserts a duplicate user message, never loses the student's
+ * original question.
+ */
+export async function retryAdvisorMessage(failedMessageId: string): Promise<{ content?: string; error?: string }> {
+  const session = await requireUser();
+  const userId = session.userId!;
+  if (!isUuidLike(failedMessageId)) return { error: "Invalid message." };
+
+  const supabase = await createClient();
+
+  const { data: failedMessage } = await supabase
+    .from("advisor_messages")
+    .select("id, conversation_id, role, status")
+    .eq("id", failedMessageId)
+    .eq("user_id", userId) // ownership re-check, same discipline as sendAdvisorMessage above
+    .maybeSingle();
+  if (!failedMessage || failedMessage.role !== "assistant" || failedMessage.status !== "failed") {
+    return { error: "This message can't be retried." };
   }
 
-  revalidatePath("/advisor");
-  return { conversationId: convId };
+  try {
+    await assertWithinAIRateLimit(userId, "advisor_chat", { maxCalls: 30, windowMinutes: 10 });
+  } catch (error) {
+    if (error instanceof RateLimitExceededError) return { error: error.message };
+    throw error;
+  }
+
+  const { data: allMessages } = await supabase
+    .from("advisor_messages")
+    .select("id, role, content, status")
+    .eq("conversation_id", failedMessage.conversation_id)
+    .order("created_at", { ascending: true });
+  const messages = allMessages ?? [];
+  const failedIndex = messages.findIndex((m) => m.id === failedMessageId);
+  // The failed row is always inserted immediately after the user message that triggered it
+  // (sendAdvisorMessage above never writes anything in between) — so the immediately
+  // preceding row is always that user message, regardless of what's been sent since.
+  const userMessage = failedIndex > 0 ? messages[failedIndex - 1] : null;
+  if (!userMessage || userMessage.role !== "user" || userMessage.content === null) {
+    return { error: "Couldn't find the original message to retry." };
+  }
+
+  const history: AIMessage[] = messages
+    .slice(0, failedIndex - 1)
+    .filter((m) => m.status === "complete" && m.content !== null)
+    .map((m) => ({ role: m.role, content: m.content ?? "" }));
+
+  try {
+    const reply = await generateAdvisorReply({ userId, history, newMessage: userMessage.content });
+    await supabase.from("advisor_messages").update({ content: reply, status: "complete", error_message: null }).eq("id", failedMessageId);
+    revalidatePath("/advisor");
+    return { content: reply };
+  } catch (error) {
+    console.error("[advisor] retry failed", error);
+    const { status, errorMessage } = classifyAdvisorFailure(error);
+    await supabase.from("advisor_messages").update({ status, error_message: errorMessage }).eq("id", failedMessageId);
+    revalidatePath("/advisor");
+    return { error: errorMessage };
+  }
 }

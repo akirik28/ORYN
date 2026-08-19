@@ -89,3 +89,40 @@ describe("contact_info's one permitted consumer is completeness, never a dimensi
     expect(persist).not.toMatch(/computeCareerProfile\([^)]*contact/i);
   });
 });
+
+describe("Counselor Core's student-state boundary (lib/counselor/state.ts) follows the same rules", () => {
+  const state = source("lib/counselor/state.ts");
+
+  test.each(CONTACT_COLUMNS)("does not select contact column %s outside the approved contact_info completeness check", (column) => {
+    // contact_info itself is a legitimate, approved read here (same hasContactInfo-only
+    // pattern as lib/scoring/persist.ts, asserted below) — this guards against a *second*,
+    // wider contact surface sneaking in. Each column legitimately appears exactly twice:
+    // once in the .select() list, once in the hasContactInfo boolean check — a third
+    // occurrence would mean the value escaped that one boolean-deriving use.
+    const occurrences = state.split(column).length - 1;
+    expect(occurrences).toBeLessThanOrEqual(2);
+  });
+
+  test("never queries the messages, skill_endorsements, or recommendations tables", () => {
+    for (const table of ["messages", "skill_endorsements", "recommendations"]) {
+      expect(state).not.toContain(`from("${table}")`);
+    }
+  });
+
+  test("reads contact_info only to derive hasContactInfo for the completeness checklist, same as lib/scoring/persist.ts", () => {
+    expect(state).toContain('from("contact_info")');
+    expect(state).toContain("hasContactInfo");
+    expect(state).toMatch(/getCompletenessChecklist\(\{/);
+  });
+
+  test("never uses the admin/service-role client — every query stays RLS-scoped", () => {
+    expect(state).not.toContain("createAdminClient");
+    expect(state).toContain("createClient");
+  });
+
+  test("still reads the strong-evidence sources it's supposed to (guards against this test passing vacuously)", () => {
+    for (const table of ["profile_scores", "opportunity_matches", "university_requirements", "opportunities"]) {
+      expect(state).toContain(`from("${table}")`);
+    }
+  });
+});

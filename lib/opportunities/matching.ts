@@ -1,6 +1,6 @@
 import { clampScore } from "@/lib/scoring/math";
 import { normalizeEntitySearchText } from "@/lib/entities/normalize";
-import type { OpportunityCategory, ProfileDimension } from "@/types/database";
+import type { OpportunityCategory, ProfileDimension, SavedOpportunityStatus } from "@/types/database";
 
 export interface StudentMatchProfile {
   age: number | null;
@@ -49,8 +49,27 @@ function isSameCountry(a: string, b: string): boolean {
   return canonicalCountryKey(a) === canonicalCountryKey(b);
 }
 
-/** Hard eligibility gate — unknown student attributes never disqualify (e.g. no country on file means country restrictions simply aren't evaluated), only known mismatches do. */
-export function computeEligibility(student: StudentMatchProfile, opportunity: OpportunityForMatching): EligibilityResult {
+/**
+ * Hard eligibility gate — unknown student attributes never disqualify (e.g. no country on
+ * file means country restrictions simply aren't evaluated), only known mismatches do.
+ *
+ * `savedStatus` is this student's own `saved_opportunities.status` for this opportunity, if
+ * any. `applied`/`not_interested` are a hard exclusion — the student already acted on it, so
+ * it must not keep resurfacing as a fresh recommendation (a live-confirmed bug: previously
+ * this function had no idea a saved-opportunity record existed at all). A plain `saved`
+ * bookmark is not an exclusion — the student hasn't decided yet.
+ */
+export function computeEligibility(
+  student: StudentMatchProfile,
+  opportunity: OpportunityForMatching,
+  savedStatus: SavedOpportunityStatus | null = null
+): EligibilityResult {
+  if (savedStatus === "applied") {
+    return { eligible: false, notes: "You already applied to this." };
+  }
+  if (savedStatus === "not_interested") {
+    return { eligible: false, notes: "You already marked this not interested." };
+  }
   if (opportunity.minimumAge !== null && student.age !== null && student.age < opportunity.minimumAge) {
     return { eligible: false, notes: `Requires minimum age ${opportunity.minimumAge}.` };
   }
@@ -67,8 +86,11 @@ export function computeEligibility(student: StudentMatchProfile, opportunity: Op
   return { eligible: true, notes: null };
 }
 
-/** Which profile dimensions a category of opportunity primarily develops — used to compute "profile need" (does this address a real gap, or a strength the student doesn't need more of). */
-const CATEGORY_DIMENSIONS: Record<OpportunityCategory, ProfileDimension[]> = {
+/** Which profile dimensions a category of opportunity primarily develops — used to compute
+ * "profile need" (does this address a real gap, or a strength the student doesn't need more
+ * of). Exported for lib/counselor/candidates.ts to reuse — one category→dimension mapping,
+ * not a second copy. */
+export const CATEGORY_DIMENSIONS: Record<OpportunityCategory, ProfileDimension[]> = {
   competition: ["awards_distinction", "academics"],
   research: ["research", "intellectual_curiosity"],
   internship: ["career_exploration", "execution_project_depth"],
@@ -128,8 +150,12 @@ export interface OpportunityMatchResult {
  * but both are also exposed individually — the UI shows meaningful fields, not one opaque
  * number.
  */
-export function computeOpportunityMatch(student: StudentMatchProfile, opportunity: OpportunityForMatching): OpportunityMatchResult {
-  const { eligible, notes } = computeEligibility(student, opportunity);
+export function computeOpportunityMatch(
+  student: StudentMatchProfile,
+  opportunity: OpportunityForMatching,
+  savedStatus: SavedOpportunityStatus | null = null
+): OpportunityMatchResult {
+  const { eligible, notes } = computeEligibility(student, opportunity, savedStatus);
   const relevanceScore = computeRelevanceScore(student, opportunity);
   const profileNeedScore = computeProfileNeedScore(student, opportunity);
   const matchScore = eligible ? clampScore(relevanceScore * 0.4 + profileNeedScore * 0.6) : 0;

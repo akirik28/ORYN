@@ -15,7 +15,9 @@ export interface UpcomingDeadline {
 }
 
 const ACTIVE_APPLICATION_STATUSES = ["not_started", "in_progress", "submitted", "under_review"] as const;
-const ACTIVE_TARGET_STATUSES = ["exploring", "target", "applying"] as const;
+/** Exported for lib/counselor/state.ts to reuse — one definition of "an active target",
+ * not a second copy of the same business rule. */
+export const ACTIVE_TARGET_STATUSES = ["exploring", "target", "applying"] as const;
 
 async function getUpcomingApplicationDeadlines(supabase: SupabaseClient<Database>, userId: string, today: string): Promise<UpcomingDeadline[]> {
   const { data: applications } = await supabase
