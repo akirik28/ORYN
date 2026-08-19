@@ -3,6 +3,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { computeOpportunityMatch, isNearStudent } from "./matching";
 import type { StudentMatchProfile, OpportunityForMatching } from "./matching";
+import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
 
 /**
  * Recomputes and upserts opportunity_matches for one student against every active
@@ -14,7 +15,7 @@ export async function refreshOpportunityMatches(userId: string): Promise<void> {
 
   const [profileRes, scoresRes, interestsRes, opportunitiesRes] = await Promise.all([
     supabase.from("profiles").select("birth_year, country").eq("id", userId).single(),
-    supabase.from("profile_scores").select("dimension, score").eq("user_id", userId),
+    supabase.from("profile_scores").select("dimension, score, confidence, reason_codes").eq("user_id", userId),
     supabase.from("student_interests").select("label").eq("user_id", userId),
     supabase.from("opportunities").select("id, category, minimum_age, maximum_age, eligible_countries, fields, country").eq("status", "active"),
   ]);
@@ -25,10 +26,10 @@ export async function refreshOpportunityMatches(userId: string): Promise<void> {
   const currentYear = new Date().getFullYear();
   const age = profileRes.data?.birth_year ? currentYear - profileRes.data.birth_year : null;
 
-  const weakestDimensions = [...(scoresRes.data ?? [])]
-    .sort((a, b) => a.score - b.score)
+  // Counselor Core Phase D — see app/(app)/dashboard/page.tsx's identical usage.
+  const weakestDimensions = rankDimensionGaps(toDimensionScoreRows(scoresRes.data ?? []))
     .slice(0, 3)
-    .map((s) => s.dimension);
+    .map((g) => g.dimension);
 
   const studentProfile: StudentMatchProfile = {
     age,

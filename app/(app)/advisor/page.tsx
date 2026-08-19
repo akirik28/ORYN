@@ -5,6 +5,7 @@ import { AdvisorChat } from "@/features/advisor/advisor-chat";
 import { AdvisorContextStrip } from "@/features/advisor/advisor-context-strip";
 import { PageHeader } from "@/components/oryn/page-header";
 import { isAIConfigured } from "@/lib/ai";
+import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
 
 export const metadata = { title: "Advisor" };
 
@@ -16,7 +17,7 @@ export default async function AdvisorPage() {
   const [conversationRes, profile, scoresRes, upcomingDeadlines] = await Promise.all([
     supabase.from("advisor_conversations").select("*").eq("user_id", userId).order("updated_at", { ascending: false }).limit(1).maybeSingle(),
     getCurrentProfile(),
-    supabase.from("profile_scores").select("dimension, score").eq("user_id", userId),
+    supabase.from("profile_scores").select("dimension, score, confidence, reason_codes").eq("user_id", userId),
     getUpcomingDeadlines(supabase, userId, 10),
   ]);
 
@@ -32,7 +33,8 @@ export default async function AdvisorPage() {
     : [];
 
   const scores = scoresRes.data ?? [];
-  const biggestGap = [...scores].sort((a, b) => a.score - b.score)[0] ?? null;
+  // Counselor Core Phase D — see app/(app)/dashboard/page.tsx's identical usage.
+  const biggestGap = rankDimensionGaps(toDimensionScoreRows(scores))[0] ?? null;
 
   return (
     <div className="flex h-[calc(100svh-8rem)] flex-col">
