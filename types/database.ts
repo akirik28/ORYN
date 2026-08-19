@@ -723,21 +723,119 @@ export type UniversityInsert = Insertable<
 >;
 export type UniversityUpdate = Updatable<University, "id" | "created_at" | "updated_at">;
 
+/** See lib/programs/subject-taxonomy.ts SUBJECT_TAXONOMY — must stay in sync with the
+ * university_programs.subject_taxonomy CHECK constraint (migration 0042). */
+export type ProgramSubjectTaxonomy =
+  | "economics"
+  | "business"
+  | "finance"
+  | "computer_science"
+  | "artificial_intelligence"
+  | "engineering"
+  | "medicine"
+  | "law"
+  | "psychology"
+  | "political_science"
+  | "international_relations"
+  | "mathematics"
+  | "physics"
+  | "architecture"
+  | "design"
+  | "entrepreneurship"
+  | "other";
+
+export type ProgramVerificationState = "verified_current" | "verified_historical" | "discontinued" | "unverified" | "conflicting";
+export type ProgramDeliveryMode = "online" | "in_person" | "hybrid";
+export type ProgramSourceType = "official_primary" | "official_secondary" | "third_party_structured" | "unverified_secondary";
+
 export interface UniversityProgram {
   id: string;
   university_id: string;
   name: string;
+  normalized_name: string;
   degree_level: string | null;
+  degree_type: string | null;
+  faculty_or_school: string | null;
   field: string | null;
+  subject_taxonomy: ProgramSubjectTaxonomy | null;
+  secondary_subject_tags: string[];
   duration_years: number | null;
   tuition_amount: number | null;
   tuition_currency: string | null;
   language_of_instruction: string | null;
+  campus: string | null;
+  delivery_mode: ProgramDeliveryMode | null;
+  full_time_part_time: "full_time" | "part_time" | "both" | null;
+  international_eligible: boolean | null;
+  official_program_url: string | null;
+  admissions_url: string | null;
+  source_url: string | null;
+  source_type: ProgramSourceType;
+  verification_state: ProgramVerificationState;
+  verified_at: string;
+  notes: string | null;
   data_confidence: DataConfidence;
   created_at: string;
   updated_at: string;
 }
-export type UniversityProgramInsert = Insertable<UniversityProgram, "id" | "created_at" | "updated_at" | "data_confidence">;
+export type UniversityProgramInsert = Insertable<
+  UniversityProgram,
+  | "id"
+  | "created_at"
+  | "updated_at"
+  | "data_confidence"
+  | "secondary_subject_tags"
+  | "source_type"
+  | "verification_state"
+  | "verified_at"
+  // Optional descriptive fields not every ingestion source populates
+  | "degree_type"
+  | "faculty_or_school"
+  | "field"
+  | "subject_taxonomy"
+  | "duration_years"
+  | "tuition_amount"
+  | "tuition_currency"
+  | "language_of_instruction"
+  | "campus"
+  | "delivery_mode"
+  | "full_time_part_time"
+  | "international_eligible"
+  | "official_program_url"
+  | "admissions_url"
+  | "source_url"
+  | "notes"
+>;
+export type UniversityProgramUpdate = Updatable<UniversityProgram, "id" | "university_id" | "created_at" | "updated_at">;
+
+/** Audit trail for every university_programs ingestion attempt — see
+ * docs/research-handoff-university-programs.md. Internal tooling only, not read by the
+ * product UI (no RLS policy grants the authenticated-user client access). */
+export type ProgramIngestOutcome = "accepted" | "duplicate" | "unresolved_university" | "insufficient_evidence" | "malformed_source" | "conflicting" | "rejected";
+
+export interface ProgramResearchQueue {
+  id: string;
+  batch_id: string;
+  research_program_id: string | null;
+  university_id: string | null;
+  university_name_input: string;
+  university_country_input: string | null;
+  program_name_input: string;
+  degree_level_input: string | null;
+  official_program_url_input: string | null;
+  source_url_input: string | null;
+  source_type_input: string | null;
+  verification_status_input: string | null;
+  raw_payload: Record<string, unknown>;
+  outcome: ProgramIngestOutcome;
+  outcome_detail: string | null;
+  promoted_program_id: string | null;
+  created_at: string;
+}
+export type ProgramResearchQueueInsert = Insertable<
+  ProgramResearchQueue,
+  "id" | "created_at" | "research_program_id" | "university_id" | "university_country_input" | "official_program_url_input" | "source_url_input" | "source_type_input" | "verification_status_input" | "raw_payload" | "outcome_detail" | "promoted_program_id"
+>;
 
 export interface UniversityRequirement {
   id: string;
@@ -1299,7 +1397,8 @@ export interface Database {
       universities: Table<University, UniversityInsert, UniversityUpdate>;
       university_rankings: Table<UniversityRanking, UniversityRankingInsert, Partial<UniversityRankingInsert>>;
       university_profile_metrics: Table<UniversityProfileMetric, UniversityProfileMetricInsert, Partial<UniversityProfileMetricInsert>>;
-      university_programs: Table<UniversityProgram, UniversityProgramInsert, Partial<UniversityProgramInsert>>;
+      university_programs: Table<UniversityProgram, UniversityProgramInsert, UniversityProgramUpdate>;
+      program_research_queue: Table<ProgramResearchQueue, ProgramResearchQueueInsert, Partial<ProgramResearchQueueInsert>>;
       university_requirements: Table<UniversityRequirement, UniversityRequirementInsert, Partial<UniversityRequirementInsert>>;
       university_statistics: Table<UniversityStatistic, UniversityStatisticInsert, Partial<UniversityStatisticInsert>>;
       university_deadlines: Table<UniversityDeadline, UniversityDeadlineInsert, Partial<UniversityDeadlineInsert>>;
