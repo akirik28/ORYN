@@ -32,7 +32,7 @@ function RecommendationCard({ recommendation }: { recommendation: CounselorRecom
         <StatusBadge label={recommendation.warnings[0]} tone="warning" icon={TriangleAlert} />
       ) : null}
       <div className="pt-1">
-        <Button variant="outline" size="sm" render={<Link href={recommendation.nextAction.href} />}>
+        <Button variant="outline" size="sm" render={<Link href={recommendation.nextAction.href} />} nativeButton={false}>
           {recommendation.nextAction.label}
         </Button>
       </div>
@@ -59,7 +59,7 @@ export function CounselorPriorities({ result }: { result: CounselorResult }) {
           title="Oryn needs a bit more information before it can make confident recommendations"
           description={`Profile completeness: ${result.profileReadiness.completenessPercent}%. The items below are the highest-value ones to add first.`}
           action={
-            <Button size="sm" render={<Link href="/profile" />}>
+            <Button size="sm" render={<Link href="/profile" />} nativeButton={false}>
               Complete your profile
             </Button>
           }
