@@ -243,6 +243,38 @@ const UK_TUITION: Record<string, UkTuitionEntry> = {
     notes:
       "2026/27 entry. Home fee £9,790/year, independently confirmed live on this page (Foundation-year variants differ: £9,790 Science/Engineering integrated, £5,760 Humanities/Social Sciences integrated — not representative of the standard rate, excluded). International standard-programme fee: no single published figure on this page — directed to a per-course finder; only the International Foundation Year figure (£25,500) is stated directly, which isn't the standard undergraduate rate, so not written as `tuition_international_annual`.",
   },
+
+  // THIRD BATCH, 2026-08-19 — 4 more (Bath, York, Newcastle, Swansea). Bath is a genuinely
+  // clean official three-band table, the best international source found this batch. York,
+  // Newcastle and Swansea join the now-repeated "Home fee is a single published £9,790 figure;
+  // international is course-specific with no overview table" pattern (Newcastle's international
+  // gap was already noted in the second-batch header above — this batch adds its Home figure,
+  // which that pass never captured).
+  "University of Bath": {
+    domestic: 9790,
+    international: [25400, 32000],
+    sourceUrl: "https://www.bath.ac.uk/corporate-information/tuition-fees-for-undergraduate-students-starting-in-2026/",
+    notes:
+      "2026/27 entry. Home fee £9,790/year (most full-time campus-based courses; MArch Architecture Year 1 is a lower £5,873 exception, not representative, excluded). International fee published as three subject bands, not one figure: Band 1 (Humanities & Social Sciences) £25,400, Band 2 (Economics and Management) £28,650, Band 3 (Science, Engineering, Health, Psychology) £32,000/year — value_numeric set to the Band 1 low end.",
+  },
+  "University of York": {
+    domestic: 9790,
+    sourceUrl: "https://www.york.ac.uk/study/undergraduate/fees-funding/uk/",
+    notes:
+      "2026/27 entry. Home fee £9,790/year, independently confirmed live on this page. International fee: no single published figure — the international fees page states fees vary by course and points to individual course pages with no overview table; not written as `tuition_international_annual`.",
+  },
+  "Newcastle University": {
+    domestic: 9790,
+    sourceUrl: "https://www.ncl.ac.uk/undergraduate/fees-funding/tuition-fees/",
+    notes:
+      "2026/27 entry. Home fee £9,790/year, independently confirmed live on this page. International fee: confirmed (again, same as the second-batch header's note) to have no single published figure — set out per individual degree page only.",
+  },
+  "Swansea University": {
+    domestic: 9790,
+    sourceUrl: "https://www.swansea.ac.uk/undergraduate/fees-and-funding/tuition-fees/",
+    notes:
+      "2026/27 entry. Home fee £9,790/year, independently confirmed live on this page (\"Your Tuition fees in 2026/27 will be £9790\"). International fee: no consolidated 2026/27 figure on this page — directed to individual course pages (2025/26 figures only, in the course listing's own key-details box); not written as `tuition_international_annual`.",
+  },
 };
 
 async function main(): Promise<void> {

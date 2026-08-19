@@ -1108,7 +1108,7 @@ Full gate green (`tsc`/lint/799 tests/build) at time of commit. Commits: `10c45d
 **Active priority as of 2026-08-18, per explicit founder direction — supersedes the general
 enrichment ordering below until it progresses meaningfully**: global tuition/cost-of-attendance
 acquisition for the ~890 non-US universities still showing "Unavailable" (`university_statistics`
-is 128/1019, US-only — see Phase 10's P0K numbers). Country order: UK (done, 20/79), Canada
+is 128/1019, US-only — see Phase 10's P0K numbers). Country order: UK (done, 24/79), Canada
 (done for this pass, 3/27 + well-documented negatives), Australia (closed out, 1/38 + 6
 documented negatives — see below), Germany (**done, 49/49** — a real state-law pattern, see
 below), Netherlands (**done, 13/13** — statutory fee scalable, institutional fee per-university,
@@ -1119,11 +1119,13 @@ ISEE-income-based framework, not a flat number, see below), Spain (**done for th
 10/29** — per-region ECTS-credit pricing, see below), China (**investigated, deliberately not
 written** — conflicting sources, no official domain confirmed, see below), South Korea
 (**done for this pass, 2/31** — no national/regional price, per-university research with two
-specifically-named extraction blockers, see below). **Coverage-driven, not geography-driven,
-per the founder's own instruction** — run `npm run report:universities` (now includes a
-per-country tuition table) before picking each next country. As of right after South Korea:
-Malaysia (25 missing), Japan (22), Russia (21), Saudi Arabia (18), Taiwan (16) are the largest
-zero-coverage pools; India (37) and the US (131, shown as 0 in the tuition table by design —
+specifically-named extraction blockers, see below), Japan (**done for this pass, 17/22** — a
+real, government-set, two-decade-stable national-university standard rate, see below).
+**Coverage-driven, not geography-driven, per the founder's own instruction** — run `npm run
+report:universities` (now includes a per-country tuition table) before picking each next
+country. As of right after Japan: Malaysia (25 missing), Russia (21), Saudi Arabia (18), Taiwan
+(16), UAE (12) are the largest zero-coverage pools; India (37) and the US (131, shown as 0 in
+the tuition table by design —
 see the report's own note — already has 128/131 via the separate `cost_of_attendance` column)
 are lower priority per the founder's own sequencing. Reorder for efficiency if a better bulk
 source turns up elsewhere, same
@@ -1247,6 +1249,23 @@ called out as different — the two universities structure their own fee schedul
 each followed as published rather than forced into one convention). 30 metric rows written
 (`--apply`). Remaining 59 UK universities queued. Full gate green (lint/tsc/801 tests/build)
 after this batch.
+
+**UK — third batch, 2026-08-19, 24/79 (+4: Bath, York, Newcastle, Swansea).** Found already
+written in `scripts/acquire-university-statistics-uk.ts` when resuming this session — the
+source itself is well-formed and matches this file's own established discipline exactly
+(real official URLs, negative results recorded not skipped), so treated as this session's own
+completed research and carried through the same verify → apply → gate → commit sequence as
+every other batch rather than assumed already-live. Bath is the standout: a genuinely clean,
+official three-band international table (Band 1 Humanities/Social Sciences £25,400, Band 2
+Economics & Management £28,650, Band 3 Science/Engineering/Health/Psychology £32,000 —
+value_numeric set to the Band 1 low end, same convention as every UK range entry). York and
+Swansea both confirmed their own Home fee live but found no consolidated international figure
+(Swansea's international course pages carry only 2025/26 figures in a per-course key-details
+box, not a 2026/27 overview). Newcastle's Home fee (£9,790) is added this batch specifically —
+its international gap was already recorded in the second batch above, but that pass never
+captured its (separately confirmed) Home rate. 35 metric rows written (`--apply`). Verified
+live: University of Bath ("From £25,400/yr" / "Varies by course. Domestic rate: £9,790/yr").
+Remaining 55 UK universities queued. Full gate green (`tsc`/lint/821 tests/build) after.
 
 **Canada — quick source check done 2026-08-18, before switching countries: no bulk per-
 institution win available, same manual-per-university shape as UK.** Statistics Canada's
@@ -1713,11 +1732,45 @@ but, unlike SNU/Yonsei, no search-engine-indexed rescue existed for its specific
 **Unblocks with**: the same PDF-extraction fix, applied to that specific document. 27 further
 South Korean universities queued, not attempted.
 
+**Japan — 17/22, done for this pass, the best single-adapter yield of this entire workstream.**
+Japan's national universities (国立大学, a distinct legal category under the National University
+Corporation Act) charge one MEXT-set standard amount, **¥535,800/year**, unchanged since 2005
+— confirmed directly on the University of Osaka's own tuition page ("Undergraduate student
+¥535,800," no domestic/international distinction stated anywhere on the page), independently
+corroborated for University of Tokyo (explicitly no separate international rate). 16 of this
+spine's 22 Japanese universities are true national universities; a 17th, Osaka Metropolitan
+University, is technically a different legal category (a municipal/prefectural "public
+university corporation," not "national") — checked specifically rather than assumed onto the
+same rate just because it's publicly governed (the same caution that correctly excluded
+several non-Go8 Australian universities from an assumed pattern earlier in this workstream),
+and turned out to genuinely follow the identical ¥535,800 figure, confirmed via its own English
+tuition page. The remaining 5 Japanese universities in this spine (Waseda, Keio, Ritsumeikan,
+Sophia, Tokyo University of Science) are private, set their own tuition independently, not
+researched this pass. 34 metric rows written in one `--apply` pass —
+`scripts/acquire-university-statistics-jp.ts`. A small UI quality addition alongside this: JPY
+and KRW now render with their real symbols (¥, ₩) instead of the generic code-plus-space
+fallback, added to `lib/universities/tuition-format.ts`'s `CURRENCY_SYMBOLS` map now that real
+data in both currencies exists. Verified live: University of Tokyo ("¥535,800/yr" / "Domestic
+rate: ¥535,800/yr").
+
+**UK — third batch, 2026-08-19, 20→24/79.** Added Bath (a genuinely clean official three-band
+table — Band 1/2/3 £25,400/£28,650/£32,000 international, £9,790 Home — the best UK
+international source found across all three UK batches so far), plus York, Newcastle, and
+Swansea (Home £9,790 only, each independently confirmed live; each joins the now-repeated
+"Home is one published figure, international is course-specific with no overview table"
+pattern — Newcastle's international gap was already noted in the second-batch note above, this
+batch adds its Home figure, which that pass never captured). Cardiff attempted, blocked (HTTP
+403 to this pass's fetch tooling, same as the second batch's note — not re-solved). Leicester,
+Reading, Liverpool, Sussex, Dundee checked, no clean bulk figure found (per-course only or
+figure not yet published for 2026/27) — not written, not guessed. 35 metric rows written,
+`--apply` clean. 55 UK universities remain queued.
+
 **Coverage, verified live via `npm run report:universities`**: 110/1019 (10.8%) going into
-Italy → 124/1019 (12.2%) after Italy + Spain → 126/1019 (12.4%) after South Korea. Countries
-done so far this workstream: UK (20/79), Canada (3/27), Australia (1/38), Germany (49/49),
-Netherlands (13/13), France (19/30), Switzerland (7/11), Italy (4/38), Spain (10/29), South
-Korea (2/31). China investigated, deliberately not written (see above).
+Italy → 124/1019 (12.2%) after Italy + Spain → 126/1019 (12.4%) after South Korea → 143/1019
+(14.0%) after Japan. Countries done so far this workstream: UK (24/79), Canada (3/27),
+Australia (1/38), Germany (49/49), Netherlands (13/13), France (19/30), Switzerland (7/11),
+Italy (4/38), Spain (10/29), South Korea (2/31), Japan (17/22). China investigated,
+deliberately not written (see above).
 
 After tuition progresses meaningfully: (1) India student counts (~33 remaining, AISHE >
 annual report > official institutional stats > official facts page — see the India dead-end
