@@ -133,6 +133,14 @@ const CA_TUITION: Record<string, CaTuitionEntry> = {
     notes:
       "Per-unit rate, not annual — same 'no assumed credit-load multiplier' discipline as UBC/Waterloo above. Basic rate for students entering 2024/2025 or later: $1,262.88/unit. Premium-program rates, same cohort: Beedie School of Business $1,492.13/unit (the range's high end used here), Engineering/Mechatronic/Sustainable Energy $1,348.19/unit, Computing Science $1,327.97/unit. Earlier-cohort students pay lower legacy rates ($1,239.06/unit for 2017/18-2023/24 entrants, $1,087.78/unit for 2016/17-or-earlier) — not relevant to a prospective student, not recorded. Domestic rate not captured this pass — left unresolved rather than guessed.",
   },
+  "Université Laval": {
+    feeBasis: "per_credit",
+    international: [933.53, 933.53],
+    statsAsOf: "Fall 2026/Winter 2027",
+    sourceUrl: "https://www.ulaval.ca/etudes/droits-de-scolarite/etudiant-de-linternational/programmes-de-1er-cycle/automne-2026-hiver-2027",
+    notes:
+      "A real Fall-2026/Winter-2027-specific official page (unlike several other entries in this file still on a stale year) — base international rate is a single uniform $933.53/credit, no indication of variation by faculty or program (both tuple elements the same, honestly representing one flat rate rather than a real range). Example bundled totals on the page (1 credit $933.53, 3 credits $2,800.59, 12 credits $11,362.12, 15 credits $14,116.48) combine base tuition with foreign-student supplements, admin/technology/transit fees — not comparable to the other CAD/credit entries in this file, which are base tuition only; not used as the recorded rate. International students also pay a separate mandatory $900/year health/hospital insurance fee, not tuition, not recorded here.",
+  },
 };
 
 /**

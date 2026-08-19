@@ -1109,7 +1109,7 @@ Full gate green (`tsc`/lint/799 tests/build) at time of commit. Commits: `10c45d
 enrichment ordering below until it progresses meaningfully**: global tuition/cost-of-attendance
 acquisition for the ~890 non-US universities still showing "Unavailable" (`university_statistics`
 is 128/1019, US-only — see Phase 10's P0K numbers). Country order: UK (done, 25/79), Canada
-(done for this pass, 3/27 + well-documented negatives), Australia (closed out, 1/38 + 6
+(done for this pass, 4/27 + well-documented negatives), Australia (closed out, 1/38 + 6
 documented negatives — see below), Germany (**done, 49/49** — a real state-law pattern, see
 below), Netherlands (**done, 13/13** — statutory fee scalable, institutional fee per-university,
 see below), France (**done, 19/30 standard universities** — 11 confirmed to have a genuinely
@@ -1801,12 +1801,26 @@ cohort), up to $1,492.13/unit for Beedie School of Business. 5 metric rows writt
 (SFU + the 4 already-live entries re-confirmed idempotently), `--apply` clean, full gate green.
 23 Canadian universities remain queued.
 
+**Canada — fourth batch, 2026-08-19, 4→5/27 (+1: Université Laval).** A genuinely clean hit:
+the official page found is Fall-2026/Winter-2027-specific (unlike several other entries in
+this file still pinned to a stale year), a single uniform international rate of $933.53/credit
+with no faculty variation stated. The page's own bundled multi-credit totals ($2,800.59 at 3
+credits, $11,362.12 at 12, etc.) combine base tuition with foreign-student supplements and
+admin/tech/transit fees — recognized as a different, non-comparable concept and not used; only
+the clean base per-credit rate is recorded, consistent with every other CAD/credit entry in
+this file. 6 metric rows written (Laval + the 5 already-live entries re-confirmed
+idempotently), `--apply` clean, full gate green. 22 Canadian universities remain queued.
+
 **Coverage, verified live via `npm run report:universities`**: 110/1019 (10.8%) going into
 Italy → 124/1019 (12.2%) after Italy + Spain → 126/1019 (12.4%) after South Korea → 143/1019
-(14.0%) after Japan. Countries done so far this workstream: UK (25/79), Canada (4/27),
+(14.0%) after Japan → **148/1019 (14.5%)** after a concurrent UK fourth batch (Surrey) and
+Canada third batch (Simon Fraser University) — both found already written in their scripts
+mid-turn (the same autonomous-continuation pattern documented earlier in this file for the UK
+third batch), verified and gated exactly like every other batch before committing rather than
+assumed already-applied. Countries done so far this workstream: UK (25/79), Canada (5/27),
 Australia (1/38), Germany (49/49), Netherlands (13/13), France (19/30), Switzerland (7/11),
-Italy (4/38), Spain (10/29), South Korea (2/31), Japan (17/22). China investigated,
-deliberately not written (see above).
+Italy (4/38), Spain (10/29), South Korea (2/31), Japan (17/22). China and Malaysia both
+investigated, deliberately not written (see above).
 
 After tuition progresses meaningfully: (1) India student counts (~33 remaining, AISHE >
 annual report > official institutional stats > official facts page — see the India dead-end
