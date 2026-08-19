@@ -114,9 +114,7 @@ export const SPORT_LEVEL_OPTIONS = [
 // "unset" into "Academics"/"Beginner"/"School" the moment the form re-renders. `suggest`
 // preserves genuine optionality (an empty SuggestInput stays empty) while still cutting
 // fragmentation for the common cases.
-export const AWARD_LEVEL_SUGGESTIONS = ["School", "Regional", "State/Provincial", "National", "International"];
 export const GOAL_CATEGORY_SUGGESTIONS = ["Academics", "Career", "Personal", "Financial", "Community/Leadership"];
-export const PROFICIENCY_SUGGESTIONS = ["Beginner", "Intermediate", "Advanced", "Expert"];
 
 export const ACTIVITY_FIELDS: FieldConfig[] = [
   { type: "text", name: "title", label: "Title", placeholder: "e.g. Robotics Club Captain" },
