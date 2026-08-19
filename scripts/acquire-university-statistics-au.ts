@@ -86,6 +86,18 @@ const AU_TUITION: Record<string, AuTuitionEntry> = {
     notes:
       "Real official page, fees stated by program tier: $21,000 (1-year Diploma programs — a different, shorter qualification level than a Bachelor's degree, excluded from the range as not representative, same discipline as this file's sibling scripts excluding Foundation-year fees) to $38,500 (Bachelor of Physiotherapy Honours, the highest standard Bachelor's-level program). Mid-range $28,500-$31,500 covers most Bachelor's degrees in arts/business/science/education; $32,500-$33,500 covers engineering/health sciences/nursing/law. value_numeric uses $28,500, the true low end among actual Bachelor's-level programs.",
   },
+
+  // Third batch, 2026-08-19 — Southern Cross University only (Charles Darwin, CQUniversity,
+  // Federation University checked: real 2026 fee schedules exist but are PDF-only or
+  // per-course-tool-only, no static page this pass's tooling could read cleanly — same
+  // treatment as every other PDF-only negative result in this file).
+  "Southern Cross University": {
+    international: [26000, 26000],
+    statsAsOf: "2026 entry",
+    sourceUrl: "https://www.scu.edu.au/study/international-courses-and-fees/",
+    notes:
+      "MEDIUM CONFIDENCE — search-cited from the official domain's own '2026 International Student Guide' PDF content, not independently re-derived via direct page fetch (three separate scu.edu.au fee pages fetched this pass, none surfaced the figure directly — it appears to live only inside the PDF guide or a per-course JS tool). A single flat annual figure ($26,000) for most courses, based on the standard full-time load of 8 units/96 credit points, explicitly stated as excluding: Master of Nursing, Bachelor of Veterinary Technology, Bachelor of Veterinary Medicine, Study Abroad, English Language Programs, Higher Degree Research, and non-award programs. Both range elements set equal ($26,000) since this is a genuinely flat rate, not a real range, honestly represented rather than manufacturing a fake spread.",
+  },
 };
 
 async function main(): Promise<void> {

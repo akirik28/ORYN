@@ -1860,6 +1860,22 @@ institutions) are now the more promising remaining targets, per the same "smalle
 publish flatter fee tables" pattern already observed in the UK (Bath/Surrey) and Canada
 (Laval) batches above.
 
+**Australia — third batch, 2026-08-19, 2→3/38 (+1: Southern Cross University).** Charles
+Darwin, CQUniversity, Federation University all checked: real 2026 fee schedules exist (found
+real, current PDF filenames) but every one is PDF-only or a per-course tool, nothing this
+pass's fetch tooling could read as a clean static page — same treatment as the header's
+existing PDF-only negative results. Southern Cross University breaks the pattern with a single
+flat annual figure, **$26,000 for most courses** (8 units/96 credit points standard load),
+with a named exclusion list (Nursing Masters, two Veterinary bachelor's programs, Study
+Abroad, English Language, HDR, non-award) — but flagged **MEDIUM CONFIDENCE**: this figure is
+search-cited from the official domain's own "2026 International Student Guide" content, not
+independently re-derived — three separate scu.edu.au fee pages were fetched directly this
+pass and none of them surfaced the number on the page itself (it appears to live only inside
+the PDF guide or behind a per-course JS tool this pass's tooling didn't reach), same
+"medium confidence, search-cited" treatment this workstream already gave LSE and QUB. 3 metric
+rows written (Southern Cross + Sydney + USC re-confirmed), `--apply` clean, full gate green.
+35 Australian universities remain queued.
+
 **Coverage, verified live via `npm run report:universities`**: 110/1019 (10.8%) going into
 Italy → 124/1019 (12.2%) after Italy + Spain → 126/1019 (12.4%) after South Korea → 143/1019
 (14.0%) after Japan → **148/1019 (14.5%)** after a concurrent UK fourth batch (Surrey) and
@@ -1867,7 +1883,7 @@ Canada third batch (Simon Fraser University) — both found already written in t
 mid-turn (the same autonomous-continuation pattern documented earlier in this file for the UK
 third batch), verified and gated exactly like every other batch before committing rather than
 assumed already-applied. Countries done so far this workstream: UK (25/79), Canada (5/27),
-Australia (2/38), Germany (49/49), Netherlands (13/13), France (19/30), Switzerland (7/11),
+Australia (3/38), Germany (49/49), Netherlands (13/13), France (19/30), Switzerland (7/11),
 Italy (4/38), Spain (10/29), South Korea (2/31), Japan (17/22). China and Malaysia both
 investigated, deliberately not written (see above).
 
