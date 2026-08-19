@@ -13,12 +13,18 @@ import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
 export async function refreshOpportunityMatches(userId: string): Promise<void> {
   const supabase = await createClient();
 
-  const [profileRes, scoresRes, interestsRes, opportunitiesRes] = await Promise.all([
+  const [profileRes, scoresRes, interestsRes, opportunitiesRes, savedRes] = await Promise.all([
     supabase.from("profiles").select("birth_year, country").eq("id", userId).single(),
     supabase.from("profile_scores").select("dimension, score, confidence, reason_codes").eq("user_id", userId),
     supabase.from("student_interests").select("label").eq("user_id", userId),
     supabase.from("opportunities").select("id, category, minimum_age, maximum_age, eligible_countries, fields, country").eq("status", "active"),
+    // Counselor Core fix: an opportunity the student already applied to or explicitly
+    // dismissed must never resurface as a fresh recommendation — see computeEligibility's
+    // savedStatus parameter (lib/opportunities/matching.ts).
+    supabase.from("saved_opportunities").select("opportunity_id, status").eq("user_id", userId),
   ]);
+
+  const savedStatusByOpportunityId = new Map((savedRes.data ?? []).map((s) => [s.opportunity_id, s.status]));
 
   const opportunities = opportunitiesRes.data ?? [];
   if (opportunities.length === 0) return;
@@ -47,7 +53,7 @@ export async function refreshOpportunityMatches(userId: string): Promise<void> {
       fields: opportunity.fields,
       country: opportunity.country,
     };
-    const match = computeOpportunityMatch(studentProfile, forMatching);
+    const match = computeOpportunityMatch(studentProfile, forMatching, savedStatusByOpportunityId.get(opportunity.id) ?? null);
 
     return {
       user_id: userId,
