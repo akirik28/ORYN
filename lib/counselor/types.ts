@@ -11,6 +11,7 @@ import type { ReasonCode } from "@/lib/scoring/types";
 import type { RequirementEvaluationResult } from "@/lib/requirements/types";
 import type { CompletenessChecklistItem } from "@/lib/scoring/completeness";
 import type { StudentAdvisorContext } from "@/lib/ai/student-context";
+import { COUNSELOR_SCORE_VERSION } from "./config";
 
 // Canonical profile-dimension taxonomy is `@/types/database`'s `ProfileDimension` (the
 // Postgres `profile_dimension` enum, `lib/scoring/index.ts`'s `DIMENSION_SCORERS` order,
@@ -18,8 +19,7 @@ import type { StudentAdvisorContext } from "@/lib/ai/student-context";
 // never defines a second taxonomy. Re-exported here only for a single counselor-local
 // import surface.
 export type { ProfileDimension, RecommendationClass, DataConfidence };
-
-export const COUNSELOR_SCORE_VERSION = "counselor_ranking_v1";
+export { COUNSELOR_SCORE_VERSION };
 
 // ---------------------------------------------------------------------------
 // Gaps (Phase D)
@@ -81,14 +81,7 @@ export interface EligibilityResult {
 
 export type BoundedLevel = "low" | "medium" | "high";
 
-export const SCORE_WEIGHTS = {
-  gapRelevance: 0.4,
-  fieldAlignment: 0.25,
-  urgency: 0.15,
-  dataQuality: 0.2,
-} as const;
-
-export type ScoreComponent = keyof typeof SCORE_WEIGHTS;
+export type ScoreComponent = "gapRelevance" | "fieldAlignment" | "urgency" | "dataQuality";
 
 export interface RankedCandidate {
   candidate: CandidateAction;
