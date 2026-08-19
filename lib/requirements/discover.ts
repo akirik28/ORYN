@@ -5,6 +5,7 @@ import { extractRequirementsFromContent } from "@/lib/ai/requirement-extraction"
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isDuplicateRequirement } from "./dedup";
 import { categoryToRuleKind } from "./types";
+import { getSupersededUniversityIds } from "@/lib/universities/canonical";
 import type { RequirementCategory } from "@/types/database";
 
 export interface RequirementDiscoveryResult {
@@ -104,7 +105,14 @@ const DEFAULT_BATCH_SIZE = 5;
 export async function getUniversitiesNeedingRequirementDiscovery(limit = DEFAULT_BATCH_SIZE): Promise<{ id: string; name: string }[]> {
   const admin = createAdminClient();
 
-  const { data: universities } = await admin.from("universities").select("id, name").order("created_at", { ascending: true }).limit(200);
+  // A superseded row (a confirmed duplicate of another universities row — see
+  // lib/universities/canonical.ts) must never reach a discovery run: it can't be attached to
+  // requirements a student would ever see, so a Tavily search + AI extraction call against it
+  // is pure waste. Same filter already applied to browse/search/target-university surfaces.
+  const supersededIds = getSupersededUniversityIds();
+  let query = admin.from("universities").select("id, name").order("created_at", { ascending: true }).limit(200);
+  if (supersededIds.length > 0) query = query.not("id", "in", `(${supersededIds.join(",")})`);
+  const { data: universities } = await query;
   if (!universities || universities.length === 0) return [];
 
   const { data: withRequirements } = await admin.from("university_requirements").select("university_id");
