@@ -1250,23 +1250,6 @@ each followed as published rather than forced into one convention). 30 metric ro
 (`--apply`). Remaining 59 UK universities queued. Full gate green (lint/tsc/801 tests/build)
 after this batch.
 
-**UK — third batch, 2026-08-19, 24/79 (+4: Bath, York, Newcastle, Swansea).** Found already
-written in `scripts/acquire-university-statistics-uk.ts` when resuming this session — the
-source itself is well-formed and matches this file's own established discipline exactly
-(real official URLs, negative results recorded not skipped), so treated as this session's own
-completed research and carried through the same verify → apply → gate → commit sequence as
-every other batch rather than assumed already-live. Bath is the standout: a genuinely clean,
-official three-band international table (Band 1 Humanities/Social Sciences £25,400, Band 2
-Economics & Management £28,650, Band 3 Science/Engineering/Health/Psychology £32,000 —
-value_numeric set to the Band 1 low end, same convention as every UK range entry). York and
-Swansea both confirmed their own Home fee live but found no consolidated international figure
-(Swansea's international course pages carry only 2025/26 figures in a per-course key-details
-box, not a 2026/27 overview). Newcastle's Home fee (£9,790) is added this batch specifically —
-its international gap was already recorded in the second batch above, but that pass never
-captured its (separately confirmed) Home rate. 35 metric rows written (`--apply`). Verified
-live: University of Bath ("From £25,400/yr" / "Varies by course. Domestic rate: £9,790/yr").
-Remaining 55 UK universities queued. Full gate green (`tsc`/lint/821 tests/build) after.
-
 **Canada — quick source check done 2026-08-18, before switching countries: no bulk per-
 institution win available, same manual-per-university shape as UK.** Statistics Canada's
 Tuition and Living Accommodation Costs (TLAC) tables (37-10-0003 through -0006, -0045-01 — the
@@ -1763,7 +1746,8 @@ batch adds its Home figure, which that pass never captured). Cardiff attempted, 
 403 to this pass's fetch tooling, same as the second batch's note — not re-solved). Leicester,
 Reading, Liverpool, Sussex, Dundee checked, no clean bulk figure found (per-course only or
 figure not yet published for 2026/27) — not written, not guessed. 35 metric rows written,
-`--apply` clean. 55 UK universities remain queued.
+`--apply` clean. Verified live: University of Bath ("From £25,400/yr" / "Varies by course.
+Domestic rate: £9,790/yr"). 55 UK universities remain queued.
 
 **Coverage, verified live via `npm run report:universities`**: 110/1019 (10.8%) going into
 Italy → 124/1019 (12.2%) after Italy + Spain → 126/1019 (12.4%) after South Korea → 143/1019

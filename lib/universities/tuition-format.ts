@@ -13,7 +13,7 @@
  * viewing University of Alberta's page. Extend this map as new countries' currencies get
  * acquired; an unrecognized prefix falls back to the raw currency code plus a space rather than
  * guessing a symbol. */
-const CURRENCY_SYMBOLS: Record<string, string> = { GBP: "£", USD: "$", EUR: "€", CAD: "CA$", AUD: "AU$" };
+const CURRENCY_SYMBOLS: Record<string, string> = { GBP: "£", USD: "$", EUR: "€", CAD: "CA$", AUD: "AU$", JPY: "¥", KRW: "₩" };
 
 export function currencyPrefix(unit: string): string {
   const code = unit.split("/")[0];
