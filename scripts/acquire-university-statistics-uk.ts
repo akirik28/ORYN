@@ -275,6 +275,24 @@ const UK_TUITION: Record<string, UkTuitionEntry> = {
     notes:
       "2026/27 entry. Home fee £9,790/year, independently confirmed live on this page (\"Your Tuition fees in 2026/27 will be £9790\"). International fee: no consolidated 2026/27 figure on this page — directed to individual course pages (2025/26 figures only, in the course listing's own key-details box); not written as `tuition_international_annual`.",
   },
+
+  // FOURTH BATCH, 2026-08-19 — Surrey only (Queen's University Belfast, Kent, Strathclyde,
+  // Aston checked, not written — see below). QUB is a real, distinct case worth naming: it
+  // publishes a genuinely different Home fee for Northern-Ireland-domiciled students
+  // (£4,985, per search-cited official figures) than for GB-domiciled students at the same
+  // university (£9,535/£9,790-class) — collapsing that into one `tuition_domestic_annual`
+  // figure would misrepresent whichever group isn't shown, and qub.ac.uk returned HTTP 403 to
+  // this pass's fetch tooling on every URL tried (same class of block as Cardiff, second/third
+  // batch), so no live re-verification was possible either. Left genuinely unresolved rather
+  // than guessed or collapsed. Kent, Strathclyde, Aston: confirmed no single published
+  // international figure (per-course only), same repeated pattern as the rest of this file.
+  "University of Surrey": {
+    domestic: 9790,
+    international: [14600, 48400],
+    sourceUrl: "https://www.surrey.ac.uk/fees-and-funding/tuition-fees/undergraduate-2026-entry",
+    notes:
+      "2026/27 entry. Home fee £9,790/year. International fee published as a genuinely wide set of course bands, not one figure: £14,600 (International Airline and Airport Management) to £48,400 (Medicine Graduate Entry) — value_numeric set to the true lowest published standard-course band rather than a curated 'representative' figure, per this file's now-established low-end convention. Full spread: £14,600 (Airline/Airport Mgmt), £17,500 (Nursing/Midwifery/Paramedic Science), £19,800 (Foundation Acting/Musical Theatre), £21,800 (business/economics/computer science), £22,900 (Criminology/English Lit/Law/Politics/Sociology), £23,700 (Accounting/Business Mgmt/Music), £24,300 (Acting/Theatre), £27,000 (Engineering/Sciences/Psychology/Sport Science/Vet Biosciences), £27,800 (Musical Theatre), £43,200 (Vet Medicine), £48,400 (Medicine Graduate Entry). Fees rise 4%/year for continuing students.",
+  },
 };
 
 async function main(): Promise<void> {

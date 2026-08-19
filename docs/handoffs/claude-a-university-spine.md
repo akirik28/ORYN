@@ -1108,7 +1108,7 @@ Full gate green (`tsc`/lint/799 tests/build) at time of commit. Commits: `10c45d
 **Active priority as of 2026-08-18, per explicit founder direction — supersedes the general
 enrichment ordering below until it progresses meaningfully**: global tuition/cost-of-attendance
 acquisition for the ~890 non-US universities still showing "Unavailable" (`university_statistics`
-is 128/1019, US-only — see Phase 10's P0K numbers). Country order: UK (done, 24/79), Canada
+is 128/1019, US-only — see Phase 10's P0K numbers). Country order: UK (done, 25/79), Canada
 (done for this pass, 3/27 + well-documented negatives), Australia (closed out, 1/38 + 6
 documented negatives — see below), Germany (**done, 49/49** — a real state-law pattern, see
 below), Netherlands (**done, 13/13** — statutory fee scalable, institutional fee per-university,
@@ -1120,15 +1120,16 @@ ISEE-income-based framework, not a flat number, see below), Spain (**done for th
 written** — conflicting sources, no official domain confirmed, see below), South Korea
 (**done for this pass, 2/31** — no national/regional price, per-university research with two
 specifically-named extraction blockers, see below), Japan (**done for this pass, 17/22** — a
-real, government-set, two-decade-stable national-university standard rate, see below).
-**Coverage-driven, not geography-driven, per the founder's own instruction** — run `npm run
-report:universities` (now includes a per-country tuition table) before picking each next
-country. As of right after Japan: Malaysia (25 missing), Russia (21), Saudi Arabia (18), Taiwan
-(16), UAE (12) are the largest zero-coverage pools; India (37) and the US (131, shown as 0 in
-the tuition table by design —
-see the report's own note — already has 128/131 via the separate `cost_of_attendance` column)
-are lower priority per the founder's own sequencing. Reorder for efficiency if a better bulk
-source turns up elsewhere, same
+real, government-set, two-decade-stable national-university standard rate, see below),
+Malaysia (**investigated, deliberately not written** — every major public university's fee
+data is PDF-gated, see below). **Coverage-driven, not geography-driven, per the founder's own
+instruction** — run `npm run report:universities` (now includes a per-country tuition table)
+before picking each next country. As of right after Japan (Malaysia added no rows, so the
+ranking is unchanged): Russia (21 missing), Saudi Arabia (18), Taiwan (16), UAE (12) are the
+largest remaining zero-coverage pools not yet investigated; India (37)
+and the US (131, shown as 0 in the tuition table by design — see the report's own note —
+already has 128/131 via the separate `cost_of_attendance` column) are lower priority per the
+founder's own sequencing. Reorder for efficiency if a better bulk source turns up elsewhere, same
 as the German/Spanish student-count pipelines below already did. Per-country pipeline:
 discover → acquire → normalize → match → fixture → validate → `--plan` → `--apply` → verify,
 same shape as `enrich-student-counts-de.ts`/`-es.ts`. Source hierarchy: official university fees
@@ -1736,6 +1737,31 @@ fallback, added to `lib/universities/tuition-format.ts`'s `CURRENCY_SYMBOLS` map
 data in both currencies exists. Verified live: University of Tokyo ("¥535,800/yr" / "Domestic
 rate: ¥535,800/yr").
 
+**Malaysia — investigated across 25 universities, deliberately not written, a genuine PDF-
+gating finding, not a vague skip.** No MOHE-level bulk figure found (one search's own summary
+claimed "According to the Ministry of Higher Education (2026)" but that framing wasn't traced
+back to an actual MOHE page — not trusted on that basis alone). Checked the 5 major public
+research universities individually, one at a time, same rigor as every other country: **UM**
+(Universiti Malaya) — the exact right official fee pages found on `study.um.edu.my`, including
+a specifically-titled "Fee Structure, UG, International" PDF — but every one of them is a PDF,
+and this pass's WebFetch tool could not extract text from it (garbled binary, the same failure
+class as Padova's Italy PDF and Korea University's PDF). **UPM** (Universiti Putra Malaysia) —
+same story: an official PDF found directly on `eng.upm.edu.my` ("INTERNATIONAL UNDERGRADUATE
+STUDIES FEES"), fetched, also unreadable binary. A consistent RM 12,000-22,000/year range
+*was* found across two independent searches, but only ever attributed to third-party
+aggregators, never confirmed on upm.edu.my's own readable content — the same "don't trust
+aggregator-only, even when a real official PDF is known to exist somewhere" bar this project
+held Naples Federico II and LUISS to, applied to itself here rather than relaxed just because
+a range happened to look clean. **USM** (Universiti Sains Malaysia) — an official fee page
+found on `admission.usm.my`, but the actual figure came back truncated mid-sentence in every
+search attempt. **UTM** (Universiti Teknologi Malaysia) and **UKM** (Universiti Kebangsaan
+Malaysia) — only aggregator-derived figures, describing whole-degree totals rather than clean
+annual figures, no official-domain confirmation. Nothing written. **Unblocks with**: working
+PDF-to-text extraction for Malaysian university fee documents specifically — the same fix
+needed for KAIST's and Korea University's blockers in the South Korea section above; this
+looks like a genuinely recurring tooling gap across several countries' PDF-only fee schedules
+this session, worth a dedicated look if the pattern keeps recurring on the next country too.
+
 **UK — third batch, 2026-08-19, 20→24/79.** Added Bath (a genuinely clean official three-band
 table — Band 1/2/3 £25,400/£28,650/£32,000 international, £9,790 Home — the best UK
 international source found across all three UK batches so far), plus York, Newcastle, and
@@ -1749,9 +1775,35 @@ figure not yet published for 2026/27) — not written, not guessed. 35 metric ro
 `--apply` clean. Verified live: University of Bath ("From £25,400/yr" / "Varies by course.
 Domestic rate: £9,790/yr"). 55 UK universities remain queued.
 
+**UK — fourth batch, 2026-08-19, 24→25/79 (+1: Surrey).** Surrey publishes a genuinely wide
+international course-band spread (£14,600 International Airline and Airport Management to
+£48,400 Medicine Graduate Entry) — value_numeric set to the true lowest standard-course band,
+consistent with this file's low-end convention. Queen's University Belfast checked and left
+genuinely unresolved, worth naming: it publishes a real, different Home fee for
+Northern-Ireland-domiciled students (£4,985) than for GB-domiciled students at the same
+institution — collapsing that into one `tuition_domestic_annual` figure would misrepresent
+whichever group isn't shown, and qub.ac.uk returned HTTP 403 to every URL tried (same block
+class as Cardiff), so no live re-verification was possible either — not written rather than
+guessed at or collapsed. Kent, Strathclyde, Aston: no single published international figure,
+same repeated pattern. 37 metric rows written, `--apply` clean. Verified live: University of
+Surrey ("From £14,600/yr" / "Varies by course. Domestic rate: £9,790/yr"). 54 UK universities
+remain queued. Full gate green (`tsc`/lint/821 tests/build) after.
+
+**Canada — third batch, 2026-08-19, 3→4/27 (+1: Simon Fraser).** Calgary, Ottawa, Dalhousie,
+Victoria, Manitoba, Carleton all checked — no single official-page bulk figure found this pass
+(per-course lookup tools, PDF-only schedules, or the fetch tooling itself blocked/paywalled) —
+not written, not guessed from an aggregator (several of these have plausible-looking ranges
+floating around student-news/aggregator sites — dalgazette.com, leverageedu.com, shiksha.com —
+deliberately not used; not an official source per this file's own hierarchy). SFU is a real
+addition: a third genuine per-unit billing system for this country (after UBC/Waterloo), same
+"no assumed credit-load multiplier" discipline — basic rate $1,262.88/unit (2024/25+ entry
+cohort), up to $1,492.13/unit for Beedie School of Business. 5 metric rows written this pass
+(SFU + the 4 already-live entries re-confirmed idempotently), `--apply` clean, full gate green.
+23 Canadian universities remain queued.
+
 **Coverage, verified live via `npm run report:universities`**: 110/1019 (10.8%) going into
 Italy → 124/1019 (12.2%) after Italy + Spain → 126/1019 (12.4%) after South Korea → 143/1019
-(14.0%) after Japan. Countries done so far this workstream: UK (24/79), Canada (3/27),
+(14.0%) after Japan. Countries done so far this workstream: UK (25/79), Canada (4/27),
 Australia (1/38), Germany (49/49), Netherlands (13/13), France (19/30), Switzerland (7/11),
 Italy (4/38), Spain (10/29), South Korea (2/31), Japan (17/22). China investigated,
 deliberately not written (see above).

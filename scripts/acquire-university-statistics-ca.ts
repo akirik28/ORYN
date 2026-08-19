@@ -119,6 +119,20 @@ const CA_TUITION: Record<string, CaTuitionEntry> = {
     notes:
       "IMPORTANT: the live fee-schedule page found is explicitly Fall 2025, not 2026/27 — no 2026/27 schedule was found at time of check; same honest-about-staleness treatment as the Alberta entry above. Waterloo bills per 0.5-unit COURSE (its own real billing unit, e.g. a standard one-term course), not a generic 'credit' — a genuinely different denomination from UBC's per-credit figure above, kept in its own `unit` string so the two are never displayed as if comparable. Range across standard faculties: $4,698.20 (Health/Science) to $6,919.40 (Engineering/Mathematics, top band); Environment $4,719.60. Excludes Optometry ($36,011/term) and Pharmacy ($35,561/term), which are professional per-term program fees on a completely different structure, not comparable to a per-course undergraduate rate.",
   },
+
+  // --- Third batch, 2026-08-19 --- Calgary, Ottawa, Dalhousie, Victoria, Manitoba, Carleton
+  // checked, no single official-page bulk figure found (per-course lookup tools, PDF-only
+  // schedules, or the fetch tooling itself blocked/paywalled by the site) — not written, not
+  // guessed from an aggregator. SFU is the one real addition: another genuine per-unit billing
+  // system, same discipline as UBC/Waterloo above — no credit-load multiplier applied.
+  "Simon Fraser University": {
+    feeBasis: "per_credit",
+    international: [1262.88, 1492.13],
+    statsAsOf: "2024/2025-or-later entry cohort, read 2026-08-19",
+    sourceUrl: "https://www.sfu.ca/students/calendar/fees-and-regulations/tuition-fees/undergraduate.html",
+    notes:
+      "Per-unit rate, not annual — same 'no assumed credit-load multiplier' discipline as UBC/Waterloo above. Basic rate for students entering 2024/2025 or later: $1,262.88/unit. Premium-program rates, same cohort: Beedie School of Business $1,492.13/unit (the range's high end used here), Engineering/Mechatronic/Sustainable Energy $1,348.19/unit, Computing Science $1,327.97/unit. Earlier-cohort students pay lower legacy rates ($1,239.06/unit for 2017/18-2023/24 entrants, $1,087.78/unit for 2016/17-or-earlier) — not relevant to a prospective student, not recorded. Domestic rate not captured this pass — left unresolved rather than guessed.",
+  },
 };
 
 /**
