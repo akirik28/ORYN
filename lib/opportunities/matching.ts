@@ -86,8 +86,11 @@ export function computeEligibility(
   return { eligible: true, notes: null };
 }
 
-/** Which profile dimensions a category of opportunity primarily develops — used to compute "profile need" (does this address a real gap, or a strength the student doesn't need more of). */
-const CATEGORY_DIMENSIONS: Record<OpportunityCategory, ProfileDimension[]> = {
+/** Which profile dimensions a category of opportunity primarily develops — used to compute
+ * "profile need" (does this address a real gap, or a strength the student doesn't need more
+ * of). Exported for lib/counselor/candidates.ts to reuse — one category→dimension mapping,
+ * not a second copy. */
+export const CATEGORY_DIMENSIONS: Record<OpportunityCategory, ProfileDimension[]> = {
   competition: ["awards_distinction", "academics"],
   research: ["research", "intellectual_curiosity"],
   internship: ["career_exploration", "execution_project_depth"],

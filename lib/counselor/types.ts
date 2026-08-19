@@ -1,10 +1,16 @@
 import type {
   DataConfidence,
+  Opportunity,
+  OpportunityMatch,
   ProfileDimension,
   RecommendationClass,
   RequirementEvaluationStatus,
+  UniversityRequirement,
 } from "@/types/database";
 import type { ReasonCode } from "@/lib/scoring/types";
+import type { RequirementEvaluationResult } from "@/lib/requirements/types";
+import type { CompletenessChecklistItem } from "@/lib/scoring/completeness";
+import type { StudentAdvisorContext } from "@/lib/ai/student-context";
 
 // Canonical profile-dimension taxonomy is `@/types/database`'s `ProfileDimension` (the
 // Postgres `profile_dimension` enum, `lib/scoring/index.ts`'s `DIMENSION_SCORERS` order,
@@ -118,6 +124,34 @@ export interface CounselorRecommendation {
   evidence: { sourceType: CandidateSource["kind"]; sourceId: string; sourceUrl: string | null; verificationState: string | null }[];
   warnings: string[];
   nextAction: { label: string; type: NextActionType; href: string };
+}
+
+// ---------------------------------------------------------------------------
+// Student state (Phase B/I) — assembled once per pipeline run by lib/counselor/state.ts,
+// consumed as plain data by every pure function below it (gaps/candidates/eligibility/
+// scoring/evidence never fetch anything themselves).
+// ---------------------------------------------------------------------------
+
+/** One target university's requirements, pre-evaluated (lib/requirements/evaluate.ts) — only
+ * evaluable, non-informational requirements are included (see lib/requirements/types.ts's
+ * MANUAL_REVIEW_CATEGORIES/INFORMATIONAL_CATEGORIES; those never become candidates). */
+export interface RequirementCandidateInput {
+  universityId: string;
+  universityName: string;
+  requirement: UniversityRequirement;
+  evaluation: RequirementEvaluationResult;
+}
+
+export interface CounselorState {
+  userId: string;
+  advisor: StudentAdvisorContext;
+  dimensionScores: DimensionScoreRow[];
+  completenessChecklist: CompletenessChecklistItem[];
+  /** Pre-filtered to opportunity_matches.eligible = true and opportunities.verification_state
+   * = 'verified_current' (Assumption A1, docs/counselor-core-plan.md §7) — matching.ts's
+   * hard-ineligible and unverified opportunities are already excluded before this point. */
+  eligibleOpportunityMatches: { match: OpportunityMatch; opportunity: Opportunity }[];
+  requirementCandidateInputs: RequirementCandidateInput[];
 }
 
 export interface CounselorResult {
