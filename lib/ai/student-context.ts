@@ -18,6 +18,8 @@ export interface StudentAdvisorContext {
     weeklyTimeBudget: string | null;
     busyMode: boolean;
     busyModeUntil: string | null;
+    /** Counselor Core eligibility (age gates on opportunities) — not used in prompt text today. */
+    birthYear: number | null;
   };
   profileScores: { dimension: string; score: number; confidence: string }[];
   overallScore: number;
@@ -33,7 +35,10 @@ export interface StudentAdvisorContext {
    * for a superficial new activity), not a profile-strength score. */
   sports: { sport: string; level: string | null; isCaptain: boolean; hoursPerWeek: number | null; ongoing: boolean; achievements: string | null }[];
   goals: { title: string; category: string | null }[];
-  targetUniversities: { name: string; status: string; outlook: string | null }[];
+  /** Counselor Core field/relevance matching (mirrors lib/opportunities/persist-matches.ts's
+   * existing use of this table) — not included in formatContextForPrompt today. */
+  interests: string[];
+  targetUniversities: { id: string; universityId: string; programId: string | null; name: string; status: string; outlook: string | null }[];
   upcomingDeadlines: { title: string; date: string; source: string }[];
   recentRecommendationTitles: string[];
   /** Phase 10/62/63 — what actually happened after past advice, so the advisor learns from
@@ -98,19 +103,25 @@ async function getPendingApplicationRequirements(
 async function getTargetUniversitiesForContext(
   supabase: SupabaseClient<Database>,
   userId: string
-): Promise<{ name: string; status: string; outlook: string | null }[]> {
-  const { data: targets } = await supabase.from("target_universities").select("status, outlook, university_id").eq("user_id", userId);
+): Promise<{ id: string; universityId: string; programId: string | null; name: string; status: string; outlook: string | null }[]> {
+  const { data: targets } = await supabase.from("target_universities").select("id, status, outlook, university_id, program_id").eq("user_id", userId);
   if (!targets || targets.length === 0) return [];
 
   const universityIds = [...new Set(targets.map((t) => canonicalUniversityId(t.university_id)))];
   const { data: universities } = await supabase.from("universities").select("id, name").in("id", universityIds);
   const universityNameById = new Map((universities ?? []).map((u) => [u.id, u.name]));
 
-  return targets.map((t) => ({
-    name: universityNameById.get(canonicalUniversityId(t.university_id)) ?? "Unknown",
-    status: t.status,
-    outlook: t.outlook,
-  }));
+  return targets.map((t) => {
+    const canonicalId = canonicalUniversityId(t.university_id);
+    return {
+      id: t.id,
+      universityId: canonicalId,
+      programId: t.program_id,
+      name: universityNameById.get(canonicalId) ?? "Unknown",
+      status: t.status,
+      outlook: t.outlook,
+    };
+  });
 }
 
 /**
@@ -123,10 +134,10 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
   const facts = await assembleScoringFacts(supabase, userId);
   const { dimensions, overallScore } = computeCareerProfile(facts);
 
-  const [profileRes, targetUniversities, upcomingDeadlines, recentRecsRes, recentActionsRes, pendingApplicationRequirements, sportsRes] = await Promise.all([
+  const [profileRes, targetUniversities, upcomingDeadlines, recentRecsRes, recentActionsRes, pendingApplicationRequirements, sportsRes, interestsRes] = await Promise.all([
     supabase
       .from("profiles")
-      .select("display_name, country, school_name, graduation_year, curriculum, weekly_time_budget, busy_mode, busy_mode_until, completeness_percent")
+      .select("display_name, country, school_name, graduation_year, curriculum, weekly_time_budget, busy_mode, busy_mode_until, completeness_percent, birth_year")
       .eq("id", userId)
       .single(),
     getTargetUniversitiesForContext(supabase, userId),
@@ -160,6 +171,7 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
       .limit(10),
     getPendingApplicationRequirements(supabase, userId),
     supabase.from("sports_experiences").select("sport, level, is_captain, hours_per_week, ongoing, achievements").eq("user_id", userId),
+    supabase.from("student_interests").select("label").eq("user_id", userId),
   ]);
 
   const profile = profileRes.data;
@@ -174,6 +186,7 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
       weeklyTimeBudget: profile?.weekly_time_budget ?? null,
       busyMode: profile?.busy_mode ?? false,
       busyModeUntil: profile?.busy_mode_until ?? null,
+      birthYear: profile?.birth_year ?? null,
     },
     profileScores: dimensions.map((d) => ({ dimension: d.dimension, score: d.score, confidence: d.confidence })),
     overallScore,
@@ -200,6 +213,7 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
     })),
     awards: facts.awards.map((a) => ({ title: a.title, level: a.level, selfReported: a.evidence_status === "self_reported" })),
     goals: facts.goals.map((g) => ({ title: g.title, category: g.category })),
+    interests: (interestsRes.data ?? []).map((i) => i.label),
     sports: (sportsRes.data ?? []).map((s) => ({
       sport: s.sport,
       level: s.level,
