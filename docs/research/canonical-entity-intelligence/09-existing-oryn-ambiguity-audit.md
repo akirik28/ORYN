@@ -117,6 +117,42 @@ loosely, since this session's own first read of the German case briefly overstat
 second, more careful query corrected it — the kind of self-correction this package's method
 section commits to rather than hides.
 
+## Finding 7: 70 active university entities lack any ROR id — including MIT, UCL, and LSE,
+which turn out to belong to a different, already-known gap
+
+Broadening Finding 2 beyond the 41 exact-duplicate pairs: **70 of 1,055 active
+`entity_type='university'` canonical entities (6.6%) have no ROR external id at all** — a
+different cut than the 41-pair count, since this one also catches under-enriched rows with no
+duplicate at all. This splits cleanly into two distinct, differently-actionable groups:
+
+- **8 famous universities — MIT, UCL, LSE, University of Warwick, KFUPM, The Hong Kong University
+  of Science and Technology, University of Technology Sydney, The University of Newcastle
+  (Australia)** — turn out to belong to a *different* known gap than Finding 2's duplicate pairs:
+  each has **one** `canonical_entities` row but **two** `universities` rows pointing at it
+  (`created_at 2026-08-16T14:06:40Z`, earlier than either bulk-import timestamp in Finding 2 —
+  consistent with these being part of the original small hand-seeded pilot set, per
+  `docs/handoffs/claude-a-university-spine.md`'s own account of a "30-roster pilot" predating the
+  full ROR/OpenAlex pipeline run). This is precisely the shape `lib/universities/canonical.ts`'s
+  header comment describes as the original "UCL search returns both rows" bug — these are
+  **already flagged and application-layer-patched** via `duplicate-supersessions.json`, but the
+  *underlying* `canonical_entities` row for each still has no ROR id, unlike the 985 that do. UCL
+  and LSE specifically have **zero** external ids of any kind (not even Wikidata); MIT has
+  Wikidata but no ROR. Worth flagging precisely because a prior session's own account states a
+  full-registry ROR re-run reached "1018/1019 ok" — this finding doesn't contradict that (the run
+  likely iterated `universities` rows, which these 8 entities also have, just pointing at an
+  already-consolidated identity that the run's write path may not have revisited); it just means
+  the claimed coverage figure and this session's direct, entity-level query diverge for exactly
+  these 8, worth Claude A's own look rather than this session guessing at the mechanism further.
+- **18 single-row universities with no duplicate involved at all** — genuine, uncomplicated
+  enrichment gaps, spanning several of ORYN's explicit target countries: Université de
+  Franche-Comté and Université Paul Sabatier Toulouse III (France), University Duesseldorf
+  (Germany), plus Al-Quds University, Eastern Mediterranean University, European University of
+  Lefke, Khoja Akhmet Yassawi International Kazakh-Turkish University, Lingnan University (Hong
+  Kong), Moscow Institute of Physics and Technology, National Chung Hsing University, Near East
+  University, Northwest Agriculture and Forestry University, Rutgers University–New Brunswick,
+  Rutgers University–Newark, The New School, University of the Philippines. Full list with ids:
+  `data/research/canonical-entities/university-ror-gaps.json`.
+
 ## What this audit deliberately checked and found clean
 
 - **No duplicate pairs found outside `entity_type='university'`** via the same exact-name

@@ -15,11 +15,15 @@ recommendation).
 
 ## P1 — Large, mechanical, already-scoped
 
-**2. Re-run ROR enrichment targeted at the 41 "incomplete" university rows.**
+**2. Re-run ROR enrichment targeted at the 41 "incomplete" university rows, plus the 70 entities
+in `09` Finding 7 (a different, complementary gap).**
 `data/research/canonical-entities/duplicate-candidates-university.json` has the exact 41 ids
 ready. This is expected to resolve the majority of the Phase 6 duplicate-audit backlog (open since
 migration 0039) with zero new classification logic — see `05`, `09`. One row (Purdue University)
-needs both sides checked, since neither currently has a ROR id.
+needs both sides checked, since neither currently has a ROR id. Separately,
+`university-ror-gaps.json` has 8 already-known duplicate-supersession entities (MIT, UCL, LSE,
+Warwick, KFUPM, HKUST, UTS, Newcastle-Australia) and 16 genuine single-row gaps (several in
+France/Germany) that also need ROR — worth running in the same pass since it's the same pipeline.
 
 **3. Decide the disposition of the ~45 "orphan" canonical_entities rows with no `universities` row.**
 Overlaps heavily with #2 but is a distinct question: even after ROR-enrichment resolves the

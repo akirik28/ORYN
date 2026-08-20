@@ -31,12 +31,16 @@ not a blind bulk `UPDATE`.
 ## Data operations (existing tooling, new target set)
 
 **4. Run the existing ROR-enrichment pipeline against the 41 IDs in
-`data/research/canonical-entities/duplicate-candidates-university.json`'s `incomplete` side.**
+`data/research/canonical-entities/duplicate-candidates-university.json`'s `incomplete` side, plus
+the 70 entities in `university-ror-gaps.json`.**
 This is the same pipeline already responsible for 93.4% ROR coverage elsewhere — no new code
 expected, just a targeted run. Once both sides of a pair carry a ROR id,
 `classifyDuplicateCandidate()` requires no changes to correctly resolve most of these to
 `SAFE_TO_CANONICALIZE` (`05`). Purdue University needs both sides checked (neither currently has
-ROR).
+ROR). Worth a direct look at why MIT/UCL/LSE/Warwick specifically show no ROR despite a prior
+session's account of a near-complete (1018/1019) registry-wide ROR pass — this session's live
+query and that account diverge for exactly these already-duplicate-flagged entities, and this
+session could not determine the mechanism from a read-only pass (`09` Finding 7).
 
 **5. Decide disposition of the ~45 `universities`-row-less canonical_entities rows.**
 `09` Finding 2. Options: delete (if genuinely unreachable dead weight), or leave and confirm
