@@ -313,6 +313,66 @@
       "claim_supported": "UK admissions for competitive courses reward 'super-curricular' (subject-extending) activity far more than generic extracurricular breadth; 80:20 or 90:10 academic:co-curricular guidance; medicine as a named exception where work experience/volunteering carries unusual weight.",
       "used_in_rules": ["RULE-COUNSEL-058", "RULE-COUNSEL-059", "RULE-COUNSEL-060"],
       "limitations": "UCAS's own official guidance was not independently re-fetched this pass; sourced from admissions-consulting descriptions of UCAS practice."
+    },
+    {
+      "id": "SRC-CS-027",
+      "title": "Parcoursup 2026 official overview and admissions-criteria pages",
+      "publisher": "Campus France; French Ministry of National Education (education.gouv.fr) — both official",
+      "url": "https://www.campusfrance.org/en/parcoursup-2026-your-best-companion-for-an-overview-of-the-25000-training-courses-in-france",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high_for_mechanism_medium_for_relative_weighting",
+      "claim_supported": "Parcoursup dossier composition (grades, Fiche Avenir teacher evaluation, activities/interests info, program-dependent motivation letter); weighting varies by program selectivity.",
+      "used_in_rules": ["RULE-COUNSEL-061"],
+      "limitations": "Official for mechanism; exact relative weight of activities vs. grades is described as program-dependent, not quantified centrally."
+    },
+    {
+      "id": "SRC-CS-028",
+      "title": "Numerus Clausus / German university admissions guidance (multiple sources, converging)",
+      "publisher": "Various German-higher-education admissions-guide sources",
+      "url": "https://www.topuniversities.com/blog/german-university-admissions-numerus-clausus",
+      "type": "secondary_practitioner_consensus",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high_for_mechanism_medium_for_prevalence",
+      "claim_supported": "NC (Abitur-grade cutoff, recalculated per cycle) gates a minority of high-demand programs; a large 'zulassungsfrei' (open-admission) category exists with no selection; no general extracurricular-activity factor found for the standard pathway.",
+      "used_in_rules": ["RULE-COUNSEL-062"],
+      "limitations": "No single consolidated official statistic found for what share of programs nationally are zulassungsfrei."
+    },
+    {
+      "id": "SRC-CS-029",
+      "title": "Dutch numerus fixus / decentralized-selection admissions guidance (multiple sources)",
+      "publisher": "Various university and study-abroad admissions-guide sources (e.g. Erasmus University Rotterdam official numerus fixus page)",
+      "url": "https://www.eur.nl/en/education/practical-matters/bachelor-admission-and-application/programmes-limited-places-numerus-fixus",
+      "type": "mixed_official_and_secondary",
+      "retrieved_at": "2026-08-21",
+      "confidence": "medium-high",
+      "claim_supported": "Most Dutch programs are diploma-based/open; numerus fixus programs use university-set decentralized selection (motivation letter/CV/sometimes test); generally does not emphasize extracurricular activities specifically.",
+      "used_in_rules": ["RULE-COUNSEL-063"],
+      "limitations": "The 'does not emphasize extracurriculars' claim is sourced from a single describing secondary source, not cross-verified against multiple universities' own published criteria."
+    },
+    {
+      "id": "SRC-CS-030",
+      "title": "Italian medicine-admissions guidance (IMAT-focused, multiple sources)",
+      "publisher": "Various medicine-abroad admissions-consulting sources",
+      "url": "https://gyanberry.com/blog/admission-and-eligibility-for-medical-studies-in-italy/",
+      "type": "secondary_practitioner_consensus",
+      "retrieved_at": "2026-08-21",
+      "confidence": "medium",
+      "claim_supported": "Public-university IMAT-based admission requires no extracurricular activities; private institutions vary and may request holistic portfolios.",
+      "used_in_rules": ["RULE-COUNSEL-064"],
+      "limitations": "Medicine-specific; not verified for non-medicine Italian degree programs."
+    },
+    {
+      "id": "SRC-CS-031",
+      "title": "ETH Zürich official Bachelor's admission pages",
+      "publisher": "ETH Zürich (official)",
+      "url": "https://ethz.ch/en/studies/bachelor/application/bachelor-human-medicine/application-admission.html",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "A passing Swiss Matura grants admission to nearly all Swiss university programs including ETH/EPFL with no entrance exam, interview, or activity review; medicine is the sole exception, gated by a separate aptitude test (EMS), not an activity portfolio.",
+      "used_in_rules": ["RULE-COUNSEL-065"],
+      "limitations": "Directly verified for ETH specifically; the general-Swiss-system claim beyond ETH is corroborated by secondary sources, not independently checked at every Swiss university."
     }
   ]
 }
