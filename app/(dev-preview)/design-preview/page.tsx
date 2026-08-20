@@ -3,6 +3,7 @@ import { DashboardView } from "@/features/dashboard/dashboard-view";
 import { UniversityExplorerHero } from "@/features/universities/university-explorer-hero";
 import { AcceptanceMoment } from "@/features/applications/status-control";
 import { OpportunityDetailView } from "@/features/opportunities/opportunity-detail-view";
+import { DetailHeroImage as UniversityDetailHeroImage } from "@/features/universities/detail-hero-image";
 import { SUPPORTED_COUNTRIES } from "@/lib/data/country-geo";
 import { PreviewShell } from "./preview-shell";
 import {
@@ -39,6 +40,24 @@ export default function DesignPreviewPage() {
       <div className="mb-16 space-y-3">
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Opportunity detail — sparse record</p>
         <OpportunityDetailView {...FIXTURE_OPPORTUNITY_DETAIL_SPARSE} />
+      </div>
+
+      <div className="mb-16 max-w-3xl space-y-6">
+        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+          University detail hero — 3-tier fallback (photo / logo / icon, same-origin test assets to avoid a network dependency)
+        </p>
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">Tier 1 — verified photo</p>
+          <UniversityDetailHeroImage photoUrl="/icon.png" logoUrl={null} name="Test University" />
+        </div>
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">Tier 2 — no photo, has a logo</p>
+          <UniversityDetailHeroImage photoUrl={null} logoUrl="/apple-icon.png" name="Test University" />
+        </div>
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">Tier 3 — no photo, no logo</p>
+          <UniversityDetailHeroImage photoUrl={null} logoUrl={null} name="Test University" />
+        </div>
       </div>
 
       <div className="mb-16 space-y-3">

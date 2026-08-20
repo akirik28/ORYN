@@ -132,24 +132,23 @@ export default async function UniversityDetailPage({ params }: { params: Promise
 
   return (
     <div className="space-y-8">
-      {imageMetric?.value_text ? (
-        <DetailHeroImage
-          src={imageMetric.value_text}
-          alt={`Main campus of ${university.name}`}
-          caption={
-            imageCaptionParts.length > 0 || imageMetric.source_url ? (
-              <p className="flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
-                {imageCaptionParts.length > 0 ? <span>{imageCaptionParts.join(" · ")}</span> : null}
-                {imageMetric.source_url ? (
-                  <a href={imageMetric.source_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                    {imageCaptionParts.length > 0 ? "· Source ↗" : "Source ↗"}
-                  </a>
-                ) : null}
-              </p>
-            ) : undefined
-          }
-        />
-      ) : null}
+      <DetailHeroImage
+        photoUrl={imageMetric?.value_text ?? null}
+        logoUrl={university.logo_url}
+        name={university.name}
+        caption={
+          imageCaptionParts.length > 0 || imageMetric?.source_url ? (
+            <p className="flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
+              {imageCaptionParts.length > 0 ? <span>{imageCaptionParts.join(" · ")}</span> : null}
+              {imageMetric?.source_url ? (
+                <a href={imageMetric.source_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                  {imageCaptionParts.length > 0 ? "· Source ↗" : "Source ↗"}
+                </a>
+              ) : null}
+            </p>
+          ) : undefined
+        }
+      />
       <PageHeader
         title={university.name}
         description={
