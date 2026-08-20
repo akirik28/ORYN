@@ -115,6 +115,53 @@ layout as the strongest reference direction for opportunity discovery (summer pr
 competitions, internships, research, etc.) — using ORYN's real opportunity taxonomy and real
 data/imagery, not reference-specific categories or fake fit scores. Do not start this yet.
 
+6. **Premium Visual Convergence V1, approved and shipped** (`233e944` dashboard, `5a174f1`
+   profile). Same rule as every package this session: references are hierarchy/spacing/
+   polish targets, never feature specs — nothing below adds a capability, a number, or a
+   metric ORYN doesn't already have.
+
+   **Dashboard** — before: University outlook / Opportunities rows were plain text with zero
+   interaction (not even a hover state), and the primary→secondary transition had no visual
+   separation beyond the same `space-y-10` rhythm as everything else. After: every row is a
+   real link to its detail page with a subtle hover lift (`rounded-lg` `hover:bg-background`
+   against the muted card wash — reuses the app's existing hover-state language, not a new
+   one), and the secondary grid gets `pt-4` on top of the existing rhythm so the break reads
+   as deliberate. Opportunity `id` was already available in the query and just wasn't passed
+   through — no new query.
+
+   **Profile** — before: four sections (Professional profile, Featured, Profile Strength,
+   score hero) all used `rounded-3xl`, directly against `design-system.md`'s own rule ("at
+   most one `rounded-3xl` element per screen... a signal, not a size utility"). After: three
+   demoted to `rounded-2xl`; the score hero (the one with the actual gradient/brand
+   treatment, same visual language as the dashboard's own hero) is the one that stays.
+   `AchievementSection` — the shared component backing all 13 of the profile's repeated list
+   sections — gained a row hover state and moved from `rounded-lg` to `rounded-xl` to match
+   the radius scale everywhere else lists appear; one fix, 13 sections benefit. Reviewed
+   `DynamicFormFields` (the add/edit dialog) and left it alone — already a clean, consistent
+   2-column grid, not the "bureaucratic form fatigue" this pass targets.
+
+   **Found and fixed one real accessibility gap along the way**: `OpenToForm`'s toggle chips
+   (`features/profile/open-to-form.tsx`) were a raw native `<button>` with no focus-visible
+   styling at all — the only interactive element in either page missing it. Added the same
+   `focus-visible:ring-3 focus-visible:ring-ring/50` pattern `button.tsx` and this session's
+   own `ProfileSectionNav`/dashboard CTA already establish. Grepped the rest of
+   `features/profile/` for the same gap — nothing else missing it.
+
+   **QA**: typecheck/lint/test (1140/1140) clean after every commit and again after each
+   merge. Dashboard confirmed live — desktop via `getComputedStyle`/`getBoundingClientRect`
+   (screenshot capture is unreliable at this specific scroll depth on this specific
+   map-heavy page, a recurring tool artifact this whole session, not a rendering bug — DOM
+   measurement substitutes every time it happens), mobile via screenshot, no horizontal
+   overflow. **Also tested an incomplete-profile/all-empty-states scenario** (temporarily
+   zeroed every dashboard prop in the design-preview harness, never committed) — every
+   section degrades correctly: no orphaned cards, no broken layout, "Not scored yet" /
+   "No weekly plan yet" / "No target universities yet" / "Personalized matches appear here
+   once your profile has enough signal" all render exactly as their existing (untouched)
+   fallback branches always have. Profile's own live render still isn't possible in this
+   sandbox (same email-confirm blocker) — its changes are precedented, low-risk token/class
+   reuses of patterns already proven correct elsewhere this session, not asserted as
+   visually confirmed.
+
 ## Blockers
 
 None for this lane's own work. Noted, not owned by this lane: `oryn-qa-scratch`'s Supabase Auth
