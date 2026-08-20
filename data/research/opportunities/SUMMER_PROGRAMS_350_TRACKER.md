@@ -148,6 +148,31 @@ Central European University Summer School, ETH Zurich Summer Programs, Koç Univ
 Summer School, Bilkent University Summer School, Boğaziçi University Summer School, ODTÜ
 (METU) Summer School, UWC Short Courses.
 
+## Wave 2 — dispatched 2026-08-20 (background agent, 16 candidates, groups I+J)
+
+| Wave | Candidates sent | Accepted | Duplicate | Rejected/skipped | Status |
+|------|-----------------|----------|-----------|-------------------|--------|
+| 2, groups I+J | 16 | 6 | 1 (WPI Frontiers — exact `official_url` match to an existing row from the 2026-08-18 bulk import) | 9 (see note) | Applied 2026-08-20 |
+
+**Note on Wave 2 groups I+J:** accepted Worldwide Youth in Science and Engineering (WYSE,
+UIUC Grainger), Case Western Reserve University Online Pre-College Program, Wharton
+Global Youth "Future of the Business World" (FBW), Penn Medicine Summer Program for High
+School Students, Idyllwild Arts Summer Program, Boston University Tanglewood Institute
+(BUTI). Dropped for cause: Purdue Summer Engineering Workshop (current URLs all redirect
+to a generic landing page, no live official page to read), University of Rochester Xerox
+Engineering Research Program (confirmed undergraduate-only, wrong audience), Columbia
+Science Honors Program (confirmed a school-year Saturday program, not summer), University
+of Washington Discovery Program (no program under this name found at UW), University of
+Wisconsin-Madison PEOPLE program (official page marked "RETIRED"), Stanford SPCS
+entrepreneurship track (a course within the already-live Stanford Pre-Collegiate Summer
+Institutes record, not distinct), Duke TIP health track (Duke TIP was discontinued
+2020/2021, already noted on the existing Duke record), Georgetown Summer Medical
+Institute (stale page, last showing 2019 data; the current "Medical Academy" track is
+already covered by the existing Georgetown Summer record), Icahn School of Medicine at
+Mount Sinai HS summer research (both SPARKED and SPICE pages blocked/unreadable —
+HTTP 403 and JS-rendered respectively). Live count after Wave 2: 340 total, 235
+`summer_program`.
+
 ## Queued candidate pool for Wave 2+ (not yet dispatched)
 
 **US STEM (more):** Purdue Summer Engineering Workshop, University of Illinois WYSE, WPI

@@ -2610,3 +2610,13 @@ its own page names uni-assist as the preliminary admissions service for non-Germ
 applicants), École Centrale de Lyon → Parcoursup (France, its BSc Data Science page names
 Parcoursup directly). `admissions_url`: 582 → **594/1019 (58.3%)**, `application_system`:
 79 → 83/1019.
+
+**Wave 2 groups I/J applied (summer programs)**: background agent research (16
+candidates from the tracker's queued pool) returned 7 verified programs; live dedup
+check immediately before insert caught one the agent's own JSONL-only dedup pass
+couldn't see — WPI Frontiers had an exact `official_url` match to an existing row from
+the 2026-08-18 bulk import — so 6 net-new landed: WYSE (UIUC Grainger), Case Western
+Reserve Online Pre-College Program, Wharton "Future of the Business World", Penn
+Medicine Summer Program for HS Students, Idyllwild Arts Summer Program, Boston
+University Tanglewood Institute. Full drop list (9, all with cause) in the tracker.
+Live: 340 total, 235 `summer_program`.
