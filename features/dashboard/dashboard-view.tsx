@@ -5,10 +5,12 @@ import { SectionHeader } from "@/components/oryn/section-header";
 import { InsightCard } from "@/components/oryn/insight-card";
 import { EmptyState } from "@/components/oryn/empty-state";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
+import { StatusBadge } from "@/components/oryn/status-badge";
 import { ScoreRing } from "@/features/dashboard/score-ring";
 import { WeeklyFocus } from "@/features/dashboard/weekly-focus";
 import { GeneratePlanButton } from "@/features/dashboard/generate-plan-button";
 import { OutlookBadge } from "@/features/universities/outlook-badge";
+import { tierFor } from "@/lib/opportunities/match-tier";
 import { DIMENSION_LABELS } from "@/lib/scoring/labels";
 import type { getTargetUniversitiesWithDetails } from "@/lib/universities/queries";
 import type { getUpcomingDeadlines, DeadlineSource } from "@/lib/deadlines/upcoming";
@@ -190,9 +192,11 @@ export function DashboardView({
           {opportunityPreview.length > 0 ? (
             <ul className="space-y-2">
               {opportunityPreview.map((opp) => (
-                <li key={opp.title} className="flex items-center justify-between text-sm">
+                <li key={opp.title} className="flex items-center justify-between gap-2 text-sm">
                   <span className="truncate pr-2">{opp.title}</span>
-                  <span className="shrink-0 text-xs text-muted-foreground">{opp.matchScore}% match</span>
+                  <span className="shrink-0">
+                    <StatusBadge label={tierFor(opp.matchScore).label} tone={tierFor(opp.matchScore).tone} />
+                  </span>
                 </li>
               ))}
             </ul>

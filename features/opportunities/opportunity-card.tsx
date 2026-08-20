@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { StatusBadge, type StatusTone } from "@/components/oryn/status-badge";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
 import { setOpportunityStatus } from "@/app/(app)/opportunities/actions";
+import { tierFor } from "@/lib/opportunities/match-tier";
 import type { Opportunity, SavedOpportunityStatus } from "@/types/database";
 
 export const NOT_INTERESTED_REASONS = [
@@ -26,13 +27,6 @@ export const NOT_INTERESTED_REASONS = [
   { value: "already_applied", label: "Already applied" },
   { value: "other", label: "Other" },
 ];
-
-function tierFor(score: number): { label: string; tone: StatusTone; cardClassName: string } {
-  if (score >= 80) return { label: "Exceptional match", tone: "brand", cardClassName: "border-brand-primary bg-brand-primary-subtle" };
-  if (score >= 60) return { label: "Strong match", tone: "brand", cardClassName: "border-brand-primary-border" };
-  if (score >= 40) return { label: "Worth a look", tone: "neutral", cardClassName: "border-border" };
-  return { label: "Low priority", tone: "neutral", cardClassName: "border-border opacity-70" };
-}
 
 // Factual selectivity is a separate signal from ORYN's match score above — RSI and an
 // open-enrollment summer course should never read the same just because both matched a
