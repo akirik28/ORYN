@@ -3,16 +3,17 @@
 **Answers:** Consolidated registry of every inference pattern ORYN must never make, pulled from
 every other document in this package.
 
-**Cross-branch consolidation note:** this package was executed by two concurrent sessions after a
-working-directory collision early in the night (see `docs/handoffs/research-counseling-
-intelligence.md`). This document consolidates `RULE-COUNSEL-001` through `031` from the peer
-session's branch (`oryn/counseling-intelligence-research-013956`, docs `00`–`02` + `05`, current as
-of this document's writing) and `034` through `055` from this session's own branch (docs `03`,
-`06-major-family-evidence/`, `07`). **`RULE-COUNSEL-015`–`022` are reserved for the peer session's
-`04-profile-gap-framework.md`, not yet committed as of this writing** — this document should be
-refreshed once that lands (see `10-open-questions.md`, peer-owned, for the equivalent open-item
-tracking on their side). This is a living index, not a final artifact — re-check both branches'
-rule counts before treating this list as complete.
+**Cross-branch consolidation note (updated after this document's first pass):** this package was
+executed by two concurrent sessions after a working-directory collision early in the night (see
+`docs/handoffs/research-counseling-intelligence.md`). This document consolidates
+`RULE-COUNSEL-001`–`014` and `023`–`031` from the peer session's branch
+(`oryn/counseling-intelligence-research-013956`, docs `00`–`02`, `04`–`06`(families 10-17), `09`,
+`10` — all now committed on that branch) and `034`–`062` from this session's own branch (docs `03`,
+`06-major-family-evidence/`, `07`, `08`). Both sessions have now completed their originally-assigned
+document sets; remaining work is the country-notes pass (this session, in progress — see §9) and the
+final unified rules.json/sources.json integration (deferred by mutual agreement, see the "known open
+item" section below for one confirmed numbering collision already found). This is a living index —
+re-check both branches' rule counts before treating this list as complete.
 
 ## How to read this document
 
@@ -96,13 +97,43 @@ mission's own request for a "consolidated registry," not a duplicate of the sour
 | Assuming US professional-licensure structures (PE, actuarial exams) apply unchanged outside the US | Stated explicitly in every relevant family doc's §6 and sources table (`02`, `05`, `06`) rather than as one numbered rule — treated as a standing sourcing-discipline requirement, not a single discrete inference to number | `06-major-family-evidence/02-mathematics-statistics.md` §6, `05-engineering-me-ce-ae-ee.md` §6, `06-biomedical-engineering.md` §6 |
 | Treating a field with a genuine licensure gate (medicine, law, architecture, clinical psychology, engineering-PE) as equivalent in structure to one without any (CS, business, most of the humanities) | Cross-cutting requirement stated in `00-family-taxonomy.md` §5 point 3 | `06-major-family-evidence/00-family-taxonomy.md` |
 
+## 9. Admission-system-type overgeneralization (added post-cross-branch finding — see note below)
+
+| Pattern | Rule(s) | Source |
+|---|---|---|
+| Applying US-holistic-admissions-derived reasoning (depth-over-breadth, extracurricular signaling, redundancy/saturation) uniformly to a student targeting an exam-score-dominated placement system | RULE-COUNSEL-062 (this session, verifying and extending a finding the peer session's persona-testing pass surfaced first) | `03-recommendation-timing.md` §6; peer's `10-open-questions.md` |
+| Framing Oryn's own developmental dimensions as admissions-relevant with equal directness regardless of target geography | RULE-COUNSEL-062 | `03-recommendation-timing.md` §6 |
+| Treating UK "super-curricular" (subject-relevant) engagement and general "extracurricular" breadth as interchangeable evidence of the same thing | RULE-COUNSEL-062 | `03-recommendation-timing.md` §6 |
+
+**This section was added after this document's initial version**, once the peer session's
+persona-testing pass (`09-persona-testing.md`) surfaced — and this session independently verified
+via ÖSYM/YKS and UCAS official-guidance sourcing — that most of this package's admissions-signaling
+reasoning assumes a US-style holistic-review admissions system, which does not describe Turkey's
+YKS (a centralized, exam-score-ranked placement system with no application file) or the UK's UCAS
+system (which draws an explicit, structurally different super-curricular/extracurricular
+distinction) with anything like the same fidelity. **This is assessed as the single highest-
+leverage open item this whole research package surfaced** — both sessions' `10-open-questions.md`-
+equivalent documents should treat it as the top priority for any future continuation of this work,
+above adding further major-family depth.
+
+## Known open item: a real cross-branch numbering collision (not yet resolved, flagged not fixed)
+
+Both sessions independently minted **`RULE-COUNSEL-056`** for two different things: this session's
+branch uses it for "never present an unverified named opportunity as confirmed" (§1 above); the
+peer session's `09-persona-testing.md`, on their own branch, independently used the same number for
+a redundancy/timing-composition fix. Per direct cross-session coordination, this is **flagged, not
+fixed** — whoever performs the final unified-numbering pass across both branches (see
+`docs/handoffs/research-counseling-intelligence.md`) must renumber one of the two and propagate the
+change everywhere that number is cross-referenced. Do not assume either usage is "the real" 056
+until that pass happens.
+
 ## New rules minted in this document
 
 - **RULE-COUNSEL-056** — Never present a specific named opportunity/program sourced only from
   secondary/aggregator discovery as a confirmed, current, verified offering to a student; it must
   first pass through ORYN's actual opportunity-acquisition/verification pipeline (a separate,
   already-existing workstream — this research package documents pathway *types*, not a verified
-  directory).
+  directory). **(Collision with the peer branch's independent `RULE-COUNSEL-056` — see above.)**
 - **RULE-COUNSEL-057** — Never infer a student's aptitude, interest, or fit for any field from a
   demographic attribute (nationality, gender, school type, socioeconomic signal, or any similar
   proxy).
@@ -110,8 +141,20 @@ mission's own request for a "consolidated registry," not a duplicate of the sour
   (e.g., by salary or prestige) independent of the specific student's own stated interests/goals.
 - **RULE-COUNSEL-059** — Never equate a career family's aggregate popularity or labor-market growth
   rate with a claim about a specific student's likely fit or success in it.
+- **RULE-COUNSEL-062** — Never apply US-holistic-admissions-derived reasoning (depth-over-breadth,
+  extracurricular signaling, redundancy/saturation logic) with the same directness to a student
+  targeting an admissions system with a fundamentally different structure (e.g., Turkey's
+  exam-score-dominated YKS placement, or — to a lesser but real degree — the UK's UCAS
+  super-curricular-weighted system); Oryn's developmental framing remains valid, but its
+  admissions-relevance framing must be geography-conditional. (Rules 060/061 were minted in
+  `06-major-family-evidence/01-computing-information-sciences.md` §7 and
+  `05-engineering-me-ce-ae-ee.md` §7 respectively — country-notes additions, not unsafe-inference
+  rules, so not indexed in this document's main tables above; listed here only to keep this
+  session's rule sequence externally traceable.)
 
 ## Sources referenced in this document
 
 Pure internal consolidation — every citation above is to another document in this same package
-(both branches). No new external sources fetched.
+(both branches), plus this session's own `03-recommendation-timing.md` §6 (itself grounded in
+S-YKS and S-UCAS-SUPERCURRICULAR, see that document's sources table). No new external sources
+fetched directly into this document.

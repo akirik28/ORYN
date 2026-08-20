@@ -83,13 +83,30 @@ medicine, etc.) — covered under the peer session's family 10, not this one; th
 explicitly the non-clinical, research-science reading of the life sciences, per the scope note at
 the top of this document.
 
+## 7. Country notes (UK / EU / Turkey)
+
+**United Kingdom:** National Careers Service's official **Biologist** profile describes tasks
+spanning crop-production/medical-research trial work, endangered-species conservation, disease
+research, and scientific publishing [S-NCS-BIO] — usefully broader than a single BLS occupation
+code, since it reads across what this document's §1 already calls out as the family's real
+internal split (molecular/cellular vs. organismal/ecological). No licensure gate applies.
+
+**EU:** ESCO covers life-science occupations across EU languages (see
+`01-computing-information-sciences.md` §7). No EU-wide licensure gate applies to non-clinical
+life-science roles.
+
+**Turkey:** no field-specific official source independently verified this pass. Flagged in
+`10-open-questions.md`.
+
 ## Sources referenced in this document
 
 | ID | Source | Type | Confidence | Used for |
 |---|---|---|---|---|
 | S-BLS-BIOCHEM | [BLS-adjacent occupational data for Biochemists and Biophysicists](https://www.careeronestop.org/Toolkit/Careers/Occupations/occupation-profile.aspx?keyword=Biochemists+and+Biophysicists&location=US&onetcode=19-1021.00) (CareerOneStop, a US Department of Labor-sponsored site presenting BLS/O*NET data), [BLS OOH — Biological Technicians](https://www.bls.gov/ooh/life-physical-and-social-science/biological-technicians.htm) | Official (US DOL-sponsored) | High for skills/education-level framing; the specific growth-rate figure surfaced in search (11%, 2016–2026 cycle) is from an older BLS cycle and should be re-verified against BLS's current live page before being quoted as current to a student | §2, §3 |
 | S-IBO | [International Biology Olympiad — official site](https://www.ibo-info.org/en/), corroborated by [USABO/CEE's official IBO page](https://usabo-trc.org/international-biology-olympiad-ibo) | Official (competition's own governing body + national organizing committee) | High | §4, §5 |
+| S-NCS-BIO | [National Careers Service — Biologist](https://www.careerpilot.org.uk/job-sectors/science/job-profile/biologist) (Careerpilot, presenting UK official careers-service-aligned content), corroborated by NCS's own science-and-research job category listing | Official (UK) | Medium-high — the specific profile page was accessed via a careers-guidance aggregator that presents NCS-aligned UK content rather than nationalcareers.service.gov.uk's own domain directly this pass | §7 |
+| S-ESCO | ESCO classification (see `01-computing-information-sciences.md` §7) | Official (EU) | High for classification structure | §7 |
 
 US-specific labor-market data where BLS-sourced; the IBO source is genuinely international
-(70+ countries). UK/EU/Turkey-specific life-science labor-market data not separately verified this
-pass (flagged in `10-open-questions.md`).
+(70+ countries); UK biologist profile noted above. Turkey-specific life-science labor-market data
+not separately verified this pass (flagged in `10-open-questions.md`).

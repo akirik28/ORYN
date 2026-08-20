@@ -91,10 +91,44 @@ entire career without a PE license, since the legal requirement generally attach
 engineering services directly to the public* rather than to the job title itself. **This package
 does not have a verified, complete breakdown of exactly which roles require it** — a specific
 student's situation should be checked against their target industry/employer expectations, not
-inferred from subfield alone. **Outside the US**, engineering licensure/chartered-status structures
-differ by country (e.g., Chartered Engineer status via the UK's Engineering Council, through a
-professional institution such as the IET or ICE) — **not independently verified in this research
-pass**; flagged in `10-open-questions.md` rather than assumed equivalent to the US PE structure.
+inferred from subfield alone.
+
+**United Kingdom** (verified in a follow-up research pass, superseding this document's earlier
+"not independently verified" flag): the analogous credential is **Chartered Engineer (CEng)**,
+administered by the **Engineering Council** through a network of licensed professional
+institutions specific to subfield (e.g., the IET for electrical/electronic, the ICE for civil, the
+IMechE for mechanical, the RAeS for aerospace). Per the UK-SPEC (UK Standard for Professional
+Engineering Competence), the "traditional" academic route requires an accredited integrated
+Master of Engineering (MEng), or an accredited bachelor's plus an accredited master's (or
+equivalent further learning), followed by demonstrated professional competence built over several
+years of postgraduate practice and assessed via professional review — **not exam-sequence-based
+the way the US PE system is**, a structural difference worth stating plainly rather than assuming
+the two systems merely use different names for the same process [S-CENG]. A non-standard/
+experiential route exists for those without the accredited-degree route. As in the US, **chartered
+status is not a universal requirement to work as an engineer in the UK** — it is a career
+progression/recognition marker, most consequential for civil/structural roles and for senior
+positions generally, not a gate on entering the profession itself.
+
+**Turkey** (verified in a follow-up pass): Turkey has its own genuinely distinct,
+**legally-mandated title-protection system** — under Law No. 3458 (Engineering and Architecture
+Law) and the constitutionally-recognized **TMMOB** (Türk Mühendis ve Mimar Odaları Birliği / Union
+of Chambers of Turkish Engineers and Architects, established 1954, organized into 24 discipline-
+specific chambers with over 700,000 members as of the most recent figures found), engineers and
+architects must register with their discipline's chamber to practice work requiring the
+profession and may not use a professional title other than the one they are legally entitled to
+[S-TMMOB]. **RULE-COUNSEL-061 (new):** this is structurally distinct from both the US (voluntary-
+until-triggered-by-specific-practice PE licensure) and UK (institution-administered chartered
+status layered on top of a base, unrestricted right to practice) systems — Turkey's chamber
+registration is a more general, title-level gate closer to (though not identical to) medicine/law-
+style licensure elsewhere in this package. A Turkey-target student should not have the US/UK
+framing above applied to them by default.
+
+**EU:** engineering licensure/chartership is not EU-wide; it runs through each member state's own
+system (sometimes mutually recognized via EU professional-qualification directives) — not
+independently mapped per-country in this pass beyond the UK detail above (noting the UK's own
+system now sits outside the EU framework post-Brexit in any case). ESCO's occupation classification
+still covers engineering occupations for taxonomy/skills-matching purposes across EU languages
+[S-ESCO] independent of any national licensure question.
 
 ## Sources referenced in this document
 
@@ -102,7 +136,11 @@ pass**; flagged in `10-open-questions.md` rather than assumed equivalent to the 
 |---|---|---|---|---|
 | S-BLS-ENG | [BLS Career Outlook — Engineers: Employment, pay, and outlook](https://blsmon1.bls.gov/careeroutlook/2018/article/print/engineers.htm), [BLS OOH — Aerospace Engineering and Operations Technologists and Technicians](https://www.bls.gov/ooh/architecture-and-engineering/aerospace-engineering-and-operations-technicians.htm) | Official (US BLS) | High for skills framing; the Career Outlook article's publication date (2018) predates the growth figures below — treat the two S-BLS-ENG* sources as different vintages, not one consistent snapshot | §2 |
 | S-BLS-ENG-GROWTH | [BLS OOH — Mechanical Engineers](https://www.bls.gov/ooh/architecture-and-engineering/mechanical-engineers.htm), [BLS OOH — Aerospace Engineers](https://www.bls.gov/ooh/architecture-and-engineering/aerospace-engineers.htm), [BLS OOH — Architecture and Engineering Occupations overview](https://www.bls.gov/ooh/architecture-and-engineering/) | Official (US BLS), current 2024-2034 cycle per search results | High (US-specific) | §3 |
-| S-NSPE-PE | [NSPE — How To Get Licensed](https://www.nspe.org/about/about-professional-engineering/how-get-licensed), [NSPE — What Is a PE?](https://www.nspe.org/about/about-professional-engineering/what-pe), [NCEES — Exams](https://ncees.org/exams/) | Official (National Society of Professional Engineers; NCEES, the exam administrator every US state uses) | High for the US process; explicitly not verified for non-US jurisdictions | §6 |
+| S-NSPE-PE | [NSPE — How To Get Licensed](https://www.nspe.org/about/about-professional-engineering/how-get-licensed), [NSPE — What Is a PE?](https://www.nspe.org/about/about-professional-engineering/what-pe), [NCEES — Exams](https://ncees.org/exams/) | Official (National Society of Professional Engineers; NCEES, the exam administrator every US state uses) | High for the US process | §6 |
+| S-CENG | [Engineering Council / IET — Becoming a Chartered Engineer (CEng)](https://www.theiet.org/career/professional-registration/chartered-engineer), [Engineering Council — Chartered Engineer (CEng)](https://www.engc.org.uk/professional-registration/our-professional-titles/chartered-engineer-ceng) | Official (UK Engineering Council and its licensed member institutions) | High (UK-specific) | §6 |
+| S-TMMOB | [TMMOB official site](https://www.tmmob.org.tr/), [Law No. 6235 (TMMOB's founding law)](http://www.tmmob.org.tr/hukuk/yasal-cerceve/6235-sayili-turk-muhendis-ve-mimar-odalari-birligi-kanunu) | Official (Turkish state-recognized professional body, constitutionally referenced) | High (Turkey-specific) | §6 |
+| S-ESCO | ESCO classification (see `01-computing-information-sciences.md` §7) | Official (EU) | High for classification structure | §6 |
 
-US-specific labor-market and licensure data throughout. UK/EU/Turkey engineering licensure/
-chartership structures not independently verified this pass (flagged in `10-open-questions.md`).
+US, UK, and Turkey engineering-licensure structures now verified and sourced above (a correction
+from this document's earlier draft, which had flagged UK/Turkey as unverified). EU-wide licensure
+remains a member-state-by-member-state question not fully mapped in this pass.

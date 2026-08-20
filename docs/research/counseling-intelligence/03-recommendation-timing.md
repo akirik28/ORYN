@@ -123,7 +123,64 @@ Concrete cases:
   `yearsUntilGraduation` mapping at all — this must degrade to "insufficient data for timing
   context," never a silent default to one specific country's grade system.
 
-## 6. What this implies for a future implementation (not built here)
+## 6. A bigger caveat than timing alone: not every target geography evaluates a "developed profile" the same way
+
+**This section exists because of a cross-branch finding worth flagging prominently rather than
+burying**: the peer session's persona-testing pass (`09-persona-testing.md`) surfaced that this
+entire package's admissions-signaling reasoning — depth-over-breadth, sustained extracurricular
+commitment, the redundancy/saturation logic — is sourced almost entirely from **US holistic-review**
+institutions (NACAC, the Common Data Set, MIT/Harvard GSE) and does not transfer uniformly across
+ORYN's five target geographies (USA/UK/Europe/Turkey/international). Verified independently for
+this document (not merely taken on the peer's word):
+
+**Turkey — YKS is a centralized, exam-score-dominated placement system, not a holistic review.**
+The Yükseköğretim Kurumları Sınavı (YKS), administered by ÖSYM, consists of standardized exam
+sessions (the Basic Proficiency Test/TYT taken by all applicants, plus Field Qualification Tests/AYT
+and a Foreign Language Test/YDT as applicable); students are placed into programs by score-ranked
+preference matching, not by an application file containing essays, recommendations, or an
+activities list [S-YKS]. **RULE-COUNSEL-062:** for a student targeting Turkish public university
+placement specifically (as opposed to targeting a private Turkish university with its own
+supplementary admission criteria, or targeting abroad), this package's entire "build a developed,
+holistic profile across 9 dimensions" framing is **largely inapplicable to the admission decision
+itself** — academic exam performance (this package's `academics` dimension, narrowly) is doing
+nearly all of the admissions work, and the other 8 dimensions matter for the student's own genuine
+development and future readiness, but should never be framed to a YKS-track student as "this will
+help your admission chances" the way it legitimately could be for a US-holistic-track student. This
+is a **structural, not incremental, difference** — the single most consequential country-caveat
+this whole research package surfaced, and it applies to the redundancy/saturation framework
+(peer's `05-redundancy-saturation.md`) and this document's own two-phase model at least as much as
+to anything career-family-specific.
+
+**UK — UCAS runs on a "super-curricular," subject-relevant logic, not a general "well-rounded
+profile" logic.** UK admissions guidance draws an explicit, named distinction between
+*super-curricular* activity (subject-relevant academic engagement beyond the school curriculum —
+reading beyond the syllabus, attending relevant lectures, an independent project in the applied-for
+subject) and *extracurricular* activity (general activities — sports, clubs, volunteering,
+leadership) that would broaden a student as a person rather than demonstrate subject engagement
+specifically [S-UCAS-SUPERCURRICULAR]. The 2026-entry UCAS personal statement format has a
+dedicated question structure built around subject-specific engagement, with UCAS's own guidance
+suggesting the large majority of statement content should be academic/subject-focused (already
+noted in `01-development-taxonomy.md` §2.1's 80/20 framing) — meaning general extracurricular
+breadth across many `ProfileDimension`s is **a much weaker admissions signal for a UK-track
+student than the same breadth would be for a US-track student**, even though it may still be
+genuinely valuable for the student's own development. **RULE-COUNSEL-062 extends to this case**:
+for a UK-track student, a recommendation drawing on this package's general depth-over-breadth
+reasoning should specifically favor subject-relevant (super-curricular) deepening over general
+extracurricular breadth, more sharply than for a US-track student.
+
+**What this does not mean**: this package's underlying developmental content (what actually
+constitutes genuine research depth, real leadership substance, etc. — `01-development-taxonomy.md`,
+`06-major-family-evidence/`) remains valid regardless of target geography, since it describes real
+skill/experience development, not an admissions-signaling claim. What changes by geography is
+**whether, and how directly, that development is framed as mattering for admission** — the
+`RULE-COUNSEL-051`-style boundary (never let Oryn's own developmental framing imply a university
+requirement) already established in `07-explainability-framework.md` becomes even more load-bearing
+for Turkey/UK-track students, where the gap between "genuinely useful for your development" and
+"moves the needle on this specific admission decision" is largest. This is flagged as the highest-
+leverage open item for future work by the peer session's `10-open-questions.md` and this document
+concurs.
+
+## 7. What this implies for a future implementation (not built here)
 
 1. Compute `yearsUntilGraduation` from existing `graduation_year`; expose it as *context*, not a new
    `ProfileDimension` or a hard eligibility gate — closest existing analogue is how
@@ -144,6 +201,8 @@ Concrete cases:
 | S-COLLEGEBOARD-TIMELINE | College Board's own [SAT Suite test dates page](https://satsuite.collegeboard.org/psat-nmsqt/test-dates) plus corroborating grade-by-grade guidance | Official (test-dates page) + secondary corroboration for the narrative timeline | High for the official dates structure (PSAT 10 sophomore spring, PSAT/NMSQT junior fall); medium for the narrative "most sophomores aren't ready" framing (secondary-sourced) | §3 standardized-testing row |
 | S-IB-SUBJECTS | Cross-referenced IB subject-selection guidance (school/counseling sources; no single official IBO page found with the full timeline in one place) | Secondary, convergent across sources | Medium | §3 IB subject-selection row, §1 IB staging |
 | S-SUMMER-RESEARCH-ELIGIBILITY | Pattern observed across multiple named pre-college research program pages (Harvard Pre-College, Stanford SIMR, Davidson Research Initiative, Rockefeller, Max Planck Florida — surveyed via secondary aggregation, not every program's own page individually fetched this pass) | Secondary aggregation of program eligibility patterns | Medium — the *pattern* (rising junior/senior gating) is consistent and directly relevant; individual program specifics should be re-verified against each program's own official page before being cited to a student as fact, which is exactly what `data/research/opportunities/*` acquisition work (a separate ORYN workstream) is already responsible for doing per-opportunity | §1 introductory framing, §3 summer-program row |
+| S-YKS | [Student Selection and Placement System — overview](https://en.wikipedia.org/wiki/Student_Selection_and_Placement_System) corroborated by multiple independent sources describing ÖSYM's official YKS structure (TYT/AYT/YDT sessions, score-ranked preference placement); ÖSYM's own site (osym.gov.tr) not directly fetched this pass | Secondary description of an official, government-run exam system | Medium-high — the system's existence and general structure (centralized exam, score-based placement, no holistic application file) is well-corroborated and low-controversy; exact current-year exam-format details should be re-verified against ÖSYM's own site before being quoted as current | §6 |
+| S-UCAS-SUPERCURRICULAR | Cross-referenced UK admissions-guidance sources describing UCAS's official super-curricular/extracurricular distinction and the 2026-entry personal statement's three-question format (the format change itself is confirmed via UCAS's own site, already cited as S-UCAS-PS in `01-development-taxonomy.md`) | Secondary description of an official UCAS structural change | Medium-high — the distinction and format change are well-corroborated; this document's own S-UCAS-PS entry (see `01-development-taxonomy.md`) is the primary-source anchor for the format itself | §6 |
 
 Full registry: `data/research/counseling-intelligence/sources.json` — this document's entries will
 be merged into the unified registry at the final-integration pass (see handoff doc), using IDs

@@ -82,13 +82,40 @@ distinct body (the Institute and Faculty of Actuaries in the UK) with its own ex
 independently verified in this research pass**; flagged in `10-open-questions.md` rather than
 assumed equivalent to the US/Canada SOA/CAS structure.
 
+## 7. Country notes (UK / EU / Turkey)
+
+**United Kingdom:** the actuarial credential structure translates directly, run by a distinct
+body — the **Institute and Faculty of Actuaries (IFoA)**, the UK's chartered professional body for
+actuaries, formed in 2010 from a merger of the historically separate Institute of Actuaries and
+Faculty of Actuaries. Its qualification is exam/course-based across core technical, core
+applications, specialist technical, and specialist applications stages, plus a minimum three years
+of qualifying work experience and ongoing recorded professional development [S-IFOA] — structurally
+parallel to the US SOA/CAS system in §6 (exam sequence + supervised experience, not a university-
+major gate) but a genuinely separate credentialing body a UK-facing student should be pointed to by
+name, not assumed interchangeable with SOA/CAS. For general mathematician/statistician roles, the
+UK National Careers Service publishes its own official job profiles [S-NCS-UK].
+
+**EU:** ESCO's occupation classification (see `01-computing-information-sciences.md` §7 for ESCO's
+general description) covers mathematics/statistics occupations across EU languages [S-ESCO];
+actuarial credentialing in individual EU member states runs through national/regional actuarial
+associations (federated under the Actuarial Association of Europe) rather than one single EU-wide
+body — not independently verified per-country in this pass.
+
+**Turkey:** no field-specific official actuarial or mathematics/statistics career source was
+independently verified in this pass. General official infrastructure exists (İŞKUR, YÖK Atlas —
+see `01-computing-information-sciences.md` §7) but this pass did not confirm what either says
+specifically about this family. Flagged in `10-open-questions.md`.
+
 ## Sources referenced in this document
 
 | ID | Source | Type | Confidence | Used for |
 |---|---|---|---|---|
 | S-BLS-MATHSTAT | [BLS OOH — Mathematicians and Statisticians](https://www.bls.gov/ooh/math/mathematicians-and-statisticians.htm) | Official (US BLS) | High (US-specific) | §2, §3 |
 | S-BLS-ACTUARY | [BLS OOH — Actuaries](https://www.bls.gov/ooh/math/actuaries.htm) | Official (US BLS) | High (US-specific) | §2, §3 |
-| S-SOA-PATH | [Society of Actuaries — How to Become an Actuary](https://www.soa.org/future-actuaries/precandidate/how/), [SOA Education overview](https://www.soa.org/education/overview/), [Casualty Actuarial Society — Exams](https://www.casact.org/exams-admissions/exams) | Official (professional credentialing bodies) | High for US/Canada; UK/EU equivalent not verified this pass | §3, §4, §6 |
+| S-SOA-PATH | [Society of Actuaries — How to Become an Actuary](https://www.soa.org/future-actuaries/precandidate/how/), [SOA Education overview](https://www.soa.org/education/overview/), [Casualty Actuarial Society — Exams](https://www.casact.org/exams-admissions/exams) | Official (professional credentialing bodies) | High for US/Canada | §3, §4, §6 |
+| S-IFOA | [Institute and Faculty of Actuaries — Route to becoming an actuary](https://actuaries.org.uk/qualify/become-an-actuary/route-to-becoming-an-actuary/), [IFoA Exams](https://actuaries.org.uk/exams/) | Official (UK chartered actuarial body) | High (UK-specific) | §7 |
+| S-NCS-UK | National Careers Service general job-profile structure (see `01-computing-information-sciences.md` §7 for the base citation) | Official (UK) | High | §7 |
+| S-ESCO | ESCO classification (see `01-computing-information-sciences.md` §7 for the base citation) | Official (EU) | High for classification structure | §7 |
 
-US/Canada-specific data and credentialing structure — not assumed to generalize to UK/EU/Turkey
-without separate verification (flagged in `10-open-questions.md`).
+US/Canada/UK data points as tabled above; Turkey-specific sourcing not independently verified this
+pass (flagged in `10-open-questions.md`).

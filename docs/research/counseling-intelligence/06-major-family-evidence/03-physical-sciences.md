@@ -77,6 +77,25 @@ license for the scientist) — not elaborated further here as a general caution 
 counseling, since it affects a specific employer/industry context rather than the field of study
 itself.
 
+## 7. Country notes (UK / EU / Turkey)
+
+**United Kingdom:** National Careers Service publishes official profiles for chemist, biochemist,
+and physicist roles specifically — noting, for chemists, a **Chartered Chemist (CChem)** and
+**Chartered Scientist (CSci)** progression path available to experienced practitioners [S-NCS-SCI],
+a UK-specific professional-recognition layer with no direct US equivalent (the US has no
+chartered-scientist-style title for these roles — recognition there runs through employer/
+institutional reputation and, for some roles, board certifications specific to a narrow subfield,
+not a single national chartered title). No licensure gate applies to entering physicist/chemist
+roles themselves in the UK, matching §6's US picture — chartered status is a career-long
+professional-recognition track, not an entry requirement.
+
+**EU:** ESCO covers physical-science occupations across EU languages [S-ESCO — see
+`01-computing-information-sciences.md` §7]. No EU-wide licensure gate applies to this family.
+
+**Turkey:** no field-specific official source independently verified this pass; general
+infrastructure exists (İŞKUR, YÖK Atlas) but not fetched for this specific family. Flagged in
+`10-open-questions.md`.
+
 ## Sources referenced in this document
 
 | ID | Source | Type | Confidence | Used for |
@@ -84,6 +103,8 @@ itself.
 | S-BLS-PHYSICS | [BLS OOH — Physicists and Astronomers](https://www.bls.gov/ooh/life-physical-and-social-science/physicists-and-astronomers.htm) | Official (US BLS) | High (US-specific; note the fetched snapshot cited 2018-2028 projections — BLS updates this page on a cycle, so the specific growth percentage should be re-verified against the current live page before being quoted to a student as current) | §2, §3 |
 | S-BLS-CHEM | [BLS OOH — Chemists and Materials Scientists](https://www.bls.gov/ooh/life-physical-and-social-science/chemists-and-materials-scientists.htm) | Official (US BLS) | High (US-specific) | §2 |
 | S-ACS-OLYMPIAD | [ACS — How to Participate (US National Chemistry Olympiad)](https://www.acs.org/education/students/highschool/olympiad/participate.html), [ACS — Resources for Student Engagement](https://www.acs.org/education/policies/middle-and-high-school-chemistry/training-and-support/student-engagement-resources.html) | Official (American Chemical Society) | High | §4 |
+| S-NCS-SCI | [National Careers Service — Chemist](https://nationalcareers.service.gov.uk/job-profiles/chemist), [Physicist](https://nationalcareersservice.direct.gov.uk/advice/planning/jobprofiles/Pages/physicist.aspx), [Biochemist](https://nationalcareers.service.gov.uk/job-profiles/biochemist) | Official (UK) | High (UK-specific) | §7 |
+| S-ESCO | ESCO classification (see `01-computing-information-sciences.md` §7) | Official (EU) | High for classification structure | §7 |
 
 US-specific labor-market data; UK/EU/Turkey equivalents not verified this pass (flagged in
 `10-open-questions.md`).

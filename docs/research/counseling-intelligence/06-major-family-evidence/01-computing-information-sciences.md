@@ -107,14 +107,45 @@ US states for "software engineer" as a legally protected title in a small number
 are real but narrow exceptions, not the general case — flagged here for completeness, not elaborated
 further given how small a fraction of the field this affects.
 
+## 7. Country notes (UK / EU / Turkey)
+
+**United Kingdom:** the UK government's own **National Careers Service** (nationalcareers.service.gov.uk,
+run by the Department for Education) publishes official job profiles — including qualifications,
+typical salary bands, and progression — for this family's roles (app developer, web developer,
+computer games developer, and the broader "computing, technology and digital" job category)
+[S-NCS-UK]. **RULE-COUNSEL-060 (new):** where a UK-facing student needs career-outlook grounding,
+prefer National Careers Service job profiles over BLS/O*NET — they are the UK's own official
+equivalent, not a secondary source, and salary/qualification framing does not transfer across
+countries even when the occupation name is identical. No licensure gate applies to this family in
+the UK, matching the US picture in §6.
+
+**EU:** the European Commission's **ESCO** (European Skills, Competences, Qualifications and
+Occupations, esco.ec.europa.eu) classification covers this family's occupations across all EU
+languages, describing roughly 3,000 occupations and close to 14,000 linked skills, explicitly built
+to support cross-border job/training matching within the EU [S-ESCO]. ESCO is a *classification*
+(a structured vocabulary), not a narrative careers-guidance site like NCS or BLS's Occupational
+Outlook Handbook — useful for this package's taxonomy purposes but not a source of growth/salary
+narrative the way BLS/NCS are. No EU-wide licensure gate applies to this family.
+
+**Turkey:** no field-specific official source was independently fetched for computing/software
+roles in this pass. Turkey's general official occupational-information infrastructure exists
+(İŞKUR's Meslek Bilgi Sistemi / "Türk Meslekler Sözlüğü," and YÖK Atlas's Meslek Atlası for
+higher-education program-to-career mapping — both confirmed to exist and to be genuinely official,
+see `10-open-questions.md`) but this pass did not verify what either says specifically about
+software/computing roles. No licensure gate is believed to apply to this family in Turkey (software
+engineering is not among the title-protected professions under Turkey's engineering-title law,
+Law No. 3458 — see `05-engineering-me-ce-ae-ee.md` §7 for that law's actual scope), but this specific
+negative claim was not independently verified against Turkish law for this family and should be
+treated as a reasonable inference, not a sourced fact.
+
 ## Sources referenced in this document
 
 | ID | Source | Type | Confidence | Used for |
 |---|---|---|---|---|
 | S-ONET-CS | [O*NET Computer and Information Research Scientists (15-1221.00)](https://www.onetonline.org/link/summary/15-1221.00), [O*NET Software Developers (15-1252.00)](https://www.onetonline.org/link/summary/15-1252.00) | Official (US Dept. of Labor-sponsored occupational database) | High | §2 core skills |
 | S-BLS-CIT | [BLS Occupational Outlook Handbook — Computer and Information Technology Occupations](https://www.bls.gov/ooh/computer-and-information-technology/), [Computer and Information Research Scientists](https://www.bls.gov/ooh/computer-and-information-technology/computer-and-information-research-scientists.htm) | Official (US Bureau of Labor Statistics) | High — US-specific; not assumed to generalize internationally (mission's own caution against mixing national labor statistics) | §3 career families, growth/demand framing |
+| S-NCS-UK | [National Careers Service — App developer](https://nationalcareers.service.gov.uk/job-profiles/app-developer), [Web developer](https://nationalcareers.service.gov.uk/job-profiles/web-developer), [Computer games developer](https://nationalcareers.service.gov.uk/job-profiles/computer-games-developer), [All careers in digital](https://nationalcareers.service.gov.uk/explore-careers/job-sector/digital/view-all-sector-careers) | Official (UK Department for Education-run public service) | High (UK-specific) | §7 |
+| S-ESCO | [ESCO — What is ESCO](https://esco.ec.europa.eu/en/about-esco/what-esco), [ESCO Occupations classification](https://esco.ec.europa.eu/en/classification/occupation_main) | Official (European Commission) | High for the classification's existence/structure; not a narrative careers-guidance source | §7 |
 
-US-only data point — per the mission's explicit caution, these BLS/O*NET figures describe the US
-labor market only and are not applied to UK/Europe/Turkey students as if universal. No equivalent
-official UK/EU/Turkey occupational-outlook source was fetched for this specific family in this
-pass — flagged in `10-open-questions.md` as remaining work.
+US/UK/EU data points as tabled above; Turkey-specific computing-career sourcing not independently
+verified this pass — flagged in `10-open-questions.md` as remaining work.
