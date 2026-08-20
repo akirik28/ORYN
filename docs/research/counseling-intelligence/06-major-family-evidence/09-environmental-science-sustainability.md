@@ -106,7 +106,11 @@ entrants.
 distinct policy area — EU environmental law/directives) is out of scope for this document's own
 depth; noted only as existing, not characterized further here.
 
-**Turkey:** no field-specific official source independently verified this pass. Flagged in
+**Turkey:** İŞKUR's official future-occupations list names **Çevre Mühendisi** (Environmental
+Engineer) explicitly, plus the adjacent **Güneş Enerjisi Paneli Montaj Elemanı** (Solar Panel
+Installation Technician) as a renewable-energy-specific role [S-ISKUR-FUTURE — see
+`01-computing-information-sciences.md` §7]. "Environmental science" or "sustainability" as
+standalone (non-engineering) named entries did not appear on that list. Flagged in
 `10-open-questions.md`.
 
 ## Sources referenced in this document
@@ -119,7 +123,9 @@ depth; noted only as existing, not characterized further here.
 | S-CITIZEN-SCIENCE | [Youth-focused citizen science: Examining the role of environmental science learning and agency for conservation — *Biological Conservation* (ScienceDirect)](https://www.sciencedirect.com/science/article/pii/S0006320716302051) | Peer-reviewed research (abstract/summary accessed) | Medium — abstract-level access, full methodology not independently reviewed this pass | §4 |
 | S-ENV-PROGRAMS-CATEGORY | Multiple secondary aggregator sources describing named teen environmental research/conservation-internship/mentorship programs | Secondary, discovery-context only, per this package's own source-discipline rule | Low-to-medium as *confirmation of the opportunity category existing*; explicitly not sufficient confidence to present any specific named program as a verified, current opportunity to a student | §4 (explicitly caveated in-line) |
 | S-NCS-ENVCON | [National Careers Service — Environmental consultant](https://nationalcareers.service.gov.uk/job-profiles/environmental-consultant) | Official (UK) | High (UK-specific) | §7 |
+| S-ISKUR-FUTURE | İŞKUR Geleceğin Meslekleri (see `01-computing-information-sciences.md` §7) | Official (Turkey) | High for the document; names 2 relevant occupations | §7 |
 
-US-specific labor-market data; UK environmental-consultant detail verified directly against NCS.
+US-specific labor-market data; UK environmental-consultant detail verified directly against NCS;
+Turkey partially verified via the İŞKUR future-occupations list.
 EU/Turkey-specific sourcing not independently verified this pass (flagged in
 `10-open-questions.md`).

@@ -92,8 +92,12 @@ professional-recognition track, not an entry requirement.
 **EU:** ESCO covers physical-science occupations across EU languages [S-ESCO — see
 `01-computing-information-sciences.md` §7]. No EU-wide licensure gate applies to this family.
 
-**Turkey:** no field-specific official source independently verified this pass; general
-infrastructure exists (İŞKUR, YÖK Atlas) but not fetched for this specific family. Flagged in
+**Turkey:** İŞKUR's official "Geleceğin Meslekleri" future-occupations list names **Kimyager**
+(Chemist) explicitly [S-ISKUR-FUTURE — see `01-computing-information-sciences.md` §7 for this
+source]; physics does not appear as a named standalone entry on that particular list (a list of
+93 selected occupations, not exhaustive — its absence is not evidence physics careers aren't
+recognized in Turkey, just that this specific document doesn't name one). No detailed official
+skills/salary profile source found for either occupation in this pass. Flagged in
 `10-open-questions.md`.
 
 ## Sources referenced in this document
@@ -105,6 +109,8 @@ infrastructure exists (İŞKUR, YÖK Atlas) but not fetched for this specific fa
 | S-ACS-OLYMPIAD | [ACS — How to Participate (US National Chemistry Olympiad)](https://www.acs.org/education/students/highschool/olympiad/participate.html), [ACS — Resources for Student Engagement](https://www.acs.org/education/policies/middle-and-high-school-chemistry/training-and-support/student-engagement-resources.html) | Official (American Chemical Society) | High | §4 |
 | S-NCS-SCI | [National Careers Service — Chemist](https://nationalcareers.service.gov.uk/job-profiles/chemist), [Physicist](https://nationalcareersservice.direct.gov.uk/advice/planning/jobprofiles/Pages/physicist.aspx), [Biochemist](https://nationalcareers.service.gov.uk/job-profiles/biochemist) | Official (UK) | High (UK-specific) | §7 |
 | S-ESCO | ESCO classification (see `01-computing-information-sciences.md` §7) | Official (EU) | High for classification structure | §7 |
+| S-ISKUR-FUTURE | İŞKUR Geleceğin Meslekleri (see `01-computing-information-sciences.md` §7) | Official (Turkey) | High for the document; names Kimyager only | §7 |
 
-US-specific labor-market data; UK/EU/Turkey equivalents not verified this pass (flagged in
-`10-open-questions.md`).
+US-specific labor-market data; UK/Turkey partially verified (Turkey via the İŞKUR future-occupations
+list only, no detailed profile); EU classification-level only. Detailed Turkey profile sourcing
+remains flagged in `10-open-questions.md`.

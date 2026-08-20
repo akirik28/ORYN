@@ -121,7 +121,15 @@ until-triggered-by-specific-practice PE licensure) and UK (institution-administe
 status layered on top of a base, unrestricted right to practice) systems — Turkey's chamber
 registration is a more general, title-level gate closer to (though not identical to) medicine/law-
 style licensure elsewhere in this package. A Turkey-target student should not have the US/UK
-framing above applied to them by default.
+framing above applied to them by default. Separately, İŞKUR's official "Geleceğin Meslekleri"
+future-occupations list (see `01-computing-information-sciences.md` §7) independently names
+**İnşaat Mühendisi** (Civil), **Elektrik Elektronik Mühendisi** and **Elektrik Mühendisi**
+(Electrical), **Makine Mühendisi** (Mechanical), **Mekatronik Mühendisi** (Mechatronics),
+**Telekomünikasyon Mühendisi** (Telecommunications), **Harita Mühendisi** (Geomatics/Surveying),
+and **Maden Mühendisi** (Mining) among its 93 entries [S-ISKUR-FUTURE] — aerospace engineering
+specifically does not appear by name (plausibly reflecting Turkey's much smaller aerospace-industry
+base relative to the US, though this document does not have direct evidence for that inference —
+flagged as an inference, not a sourced fact).
 
 **EU:** engineering licensure/chartership is not EU-wide; it runs through each member state's own
 system (sometimes mutually recognized via EU professional-qualification directives) — not
@@ -140,6 +148,7 @@ still covers engineering occupations for taxonomy/skills-matching purposes acros
 | S-CENG | [Engineering Council / IET — Becoming a Chartered Engineer (CEng)](https://www.theiet.org/career/professional-registration/chartered-engineer), [Engineering Council — Chartered Engineer (CEng)](https://www.engc.org.uk/professional-registration/our-professional-titles/chartered-engineer-ceng) | Official (UK Engineering Council and its licensed member institutions) | High (UK-specific) | §6 |
 | S-TMMOB | [TMMOB official site](https://www.tmmob.org.tr/), [Law No. 6235 (TMMOB's founding law)](http://www.tmmob.org.tr/hukuk/yasal-cerceve/6235-sayili-turk-muhendis-ve-mimar-odalari-birligi-kanunu) | Official (Turkish state-recognized professional body, constitutionally referenced) | High (Turkey-specific) | §6 |
 | S-ESCO | ESCO classification (see `01-computing-information-sciences.md` §7) | Official (EU) | High for classification structure | §6 |
+| S-ISKUR-FUTURE | İŞKUR Geleceğin Meslekleri (see `01-computing-information-sciences.md` §7) | Official (Turkey) | High for the document; names 7 of this family's subfields, not aerospace | §6 |
 
 US, UK, and Turkey engineering-licensure structures now verified and sourced above (a correction
 from this document's earlier draft, which had flagged UK/Turkey as unverified). EU-wide licensure

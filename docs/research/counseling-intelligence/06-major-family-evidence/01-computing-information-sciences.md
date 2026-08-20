@@ -128,12 +128,22 @@ to support cross-border job/training matching within the EU [S-ESCO]. ESCO is a 
 Outlook Handbook — useful for this package's taxonomy purposes but not a source of growth/salary
 narrative the way BLS/NCS are. No EU-wide licensure gate applies to this family.
 
-**Turkey:** no field-specific official source was independently fetched for computing/software
-roles in this pass. Turkey's general official occupational-information infrastructure exists
-(İŞKUR's Meslek Bilgi Sistemi / "Türk Meslekler Sözlüğü," and YÖK Atlas's Meslek Atlası for
-higher-education program-to-career mapping — both confirmed to exist and to be genuinely official,
-see `10-open-questions.md`) but this pass did not verify what either says specifically about
-software/computing roles. No licensure gate is believed to apply to this family in Turkey (software
+**Turkey (updated in a follow-up research pass — official source found):** İŞKUR's own
+"Geleceğin Meslekleri" ("Occupations of the Future") report explicitly lists **Yazılım Mühendisi**
+(Software Engineer), **Bilgisayar Mühendisi** (Computer Engineer), **Yapay Zeka Uzmanı** (AI
+Specialist), **Büyük Veri Analisti** (Big Data Analyst), **Veri Analisti** (Data Analyst),
+**Bilgi Güvenliği Uzmanı** (Information Security Specialist), **Siber Güvenlik Personelleri**
+(Cybersecurity Personnel), and **Robotik Kodlama Uzmanı** (Robotics/Coding Specialist) among its
+93 named future-oriented occupations [S-ISKUR-FUTURE] — direct, official Turkish government
+confirmation that this family is recognized as a growth area, independent of the BLS/O*NET/NCS/ESCO
+sources above. This document does not itself give skills/salary detail per occupation (it is a
+named list, not a narrative profile page the way NCS/BLS are) — Turkey's more detailed occupational-
+information infrastructure (İŞKUR's Meslek Bilgi Sistemi, YÖK Atlas's Meslek Atlası, and MYK's —
+Mesleki Yeterlilik Kurumu, the official vocational-qualifications authority — occupational
+standards, which include a real "Yazılım Geliştirici" (Software Developer) Level-4 standard
+document) exists and is confirmed genuinely official, but this pass could not reliably extract full
+text from those specific documents (PDF/JS-rendering access issues, not a claim that the content
+doesn't exist) — see `10-open-questions.md` for the remaining gap. No licensure gate is believed to apply to this family in Turkey (software
 engineering is not among the title-protected professions under Turkey's engineering-title law,
 Law No. 3458 — see `05-engineering-me-ce-ae-ee.md` §6 for that law's actual scope), but this specific
 negative claim was not independently verified against Turkish law for this family and should be
@@ -147,6 +157,8 @@ treated as a reasonable inference, not a sourced fact.
 | S-BLS-CIT | [BLS Occupational Outlook Handbook — Computer and Information Technology Occupations](https://www.bls.gov/ooh/computer-and-information-technology/), [Computer and Information Research Scientists](https://www.bls.gov/ooh/computer-and-information-technology/computer-and-information-research-scientists.htm) | Official (US Bureau of Labor Statistics) | High — US-specific; not assumed to generalize internationally (mission's own caution against mixing national labor statistics) | §3 career families, growth/demand framing |
 | S-NCS-UK | [National Careers Service — App developer](https://nationalcareers.service.gov.uk/job-profiles/app-developer), [Web developer](https://nationalcareers.service.gov.uk/job-profiles/web-developer), [Computer games developer](https://nationalcareers.service.gov.uk/job-profiles/computer-games-developer), [All careers in digital](https://nationalcareers.service.gov.uk/explore-careers/job-sector/digital/view-all-sector-careers) | Official (UK Department for Education-run public service) | High (UK-specific) | §7 |
 | S-ESCO | [ESCO — What is ESCO](https://esco.ec.europa.eu/en/about-esco/what-esco), [ESCO Occupations classification](https://esco.ec.europa.eu/en/classification/occupation_main) | Official (European Commission) | High for the classification's existence/structure; not a narrative careers-guidance source | §7 |
+| S-ISKUR-FUTURE | [İŞKUR — Geleceğin Meslekleri (Occupations of the Future)](https://statik.iskur.gov.tr/docs/gelecegin-meslekleri.pdf) | Official (Turkish Employment Agency / Türkiye İş Kurumu) | High for the document's authenticity and content (fetched and read directly); the document is a named list without per-occupation skill/salary detail | §7 |
 
-US/UK/EU data points as tabled above; Turkey-specific computing-career sourcing not independently
-verified this pass — flagged in `10-open-questions.md` as remaining work.
+US/UK/EU data points as tabled above; Turkey computing-career sourcing partially strengthened
+(official future-occupations list confirms the field's recognized growth status) but still lacks a
+detailed official profile source — flagged in `10-open-questions.md` as remaining work.

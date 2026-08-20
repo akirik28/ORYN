@@ -5,6 +5,23 @@
   "id_prefix_convention": "S-<NAME> — distinct from the peer branch's SRC-### numeric convention, so no ID-level collision exists between the two shards (unlike the RULE-COUNSEL-### numbers, which do collide — see rules-session2.json's header note).",
   "sources": [
     {
+      "id": "S-ISKUR-FUTURE",
+      "title": "İŞKUR (Türkiye İş Kurumu / Turkish Employment Agency) — Geleceğin Meslekleri (Occupations of the Future)",
+      "urls": ["https://statik.iskur.gov.tr/docs/gelecegin-meslekleri.pdf"],
+      "type": "official",
+      "confidence": "high_for_authenticity_no_per_occupation_detail",
+      "retrieved_at": "2026-08-21",
+      "claim_supported": "Official Turkish government list of 93 named future/emerging occupations, fetched and read directly (PDF). Confirms official recognition of software engineering, computer engineering, AI, data analysis, cybersecurity, civil/electrical/mechanical/mechatronics/telecom/mining/geomatics engineering, chemistry, environmental engineering, solar-panel installation, e-commerce, marketing, HR, and digital marketing/social media roles as future-oriented in Turkey.",
+      "limitations": "A named list only, no per-occupation skills/salary/education detail. Absence of an occupation from this specific 93-item list is not evidence that occupation is unrecognized in Turkey. Found and read successfully after two other Turkish government sources (YÖK Atlas Meslek Atlası, MYK vocational-standard PDFs) failed to yield readable content via WebFetch/search this session (JS-rendering and PDF-encoding issues respectively) — Turkish official sources are confirmed harder to access programmatically than US/UK/EU equivalents, a real infrastructure finding in its own right.",
+      "used_in": [
+        "docs/research/counseling-intelligence/06-major-family-evidence/01-computing-information-sciences.md §7",
+        "docs/research/counseling-intelligence/06-major-family-evidence/03-physical-sciences.md §7",
+        "docs/research/counseling-intelligence/06-major-family-evidence/05-engineering-me-ce-ae-ee.md §6",
+        "docs/research/counseling-intelligence/06-major-family-evidence/08-business-management-entrepreneurship.md §7",
+        "docs/research/counseling-intelligence/06-major-family-evidence/09-environmental-science-sustainability.md §7"
+      ]
+    },
+    {
       "id": "S-GRADE-CONV",
       "title": "Cross-referenced UK Year Group / US Grade / age conversion resources",
       "urls": [

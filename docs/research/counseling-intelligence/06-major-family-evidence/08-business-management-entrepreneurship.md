@@ -110,7 +110,13 @@ management/business roles, National Careers Service publishes its own official p
 youth entrepreneurship activity across many EU countries — not independently verified in this pass,
 named here only as a discovery lead for `10-open-questions.md`, not a confirmed source.
 
-**Turkey:** no field-specific official source independently verified this pass. Flagged in
+**Turkey:** İŞKUR's official future-occupations list names **E-Ticaret Uzmanı** (E-Commerce
+Specialist), **Pazarlamacı** (Marketer), **İnsan Kaynakları Uzmanı** (HR Specialist), **Dijital
+Pazarlama** (Digital Marketing), and **Sosyal Medya Uzmanı** (Social Media Specialist) among its
+93 entries [S-ISKUR-FUTURE — see `01-computing-information-sciences.md` §7], though "general
+management" or "entrepreneurship" as such do not appear as standalone named entries (plausibly
+because they're less occupation-specific than the listed roles, not evidence they're unrecognized).
+No Turkey-specific equivalent to DECA/FBLA/Young Enterprise was identified in this pass — flagged in
 `10-open-questions.md`.
 
 ## Sources referenced in this document
@@ -120,9 +126,11 @@ named here only as a discovery lead for `10-open-questions.md`, not a confirmed 
 | S-BLS-BUSINESS | [BLS OOH — Management Occupations overview](https://www.bls.gov/ooh/management/), [BLS Career Outlook — Business career options: Outlook, wages, and entry requirements](https://www.bls.gov/careeroutlook/2025/article/business-career-options.htm) | Official (US BLS) | High (US-specific) | §2, §3 |
 | S-DECA-FBLA | Secondary corroboration across multiple independent sources describing DECA's and FBLA's official program structures; this pass did not fetch deca.org/fbla.org directly | Secondary description of well-known, real official student organizations | Medium — the organizations and their general structure are real and well-established; a student should be pointed to deca.org/fbla.org directly for current event lists/deadlines rather than this document's paraphrase | §4 |
 | S-YE-UK | [Young Enterprise — Company Programme](https://www.young-enterprise.org.uk/what-we-do/programmes/company-programme), corroborated by [GOV.UK's own business-support listing](https://www.gov.uk/business-finance-support/young-enterprise) | Official (UK-registered charity; independently corroborated by a GOV.UK listing) | High | §7 |
+| S-ISKUR-FUTURE | İŞKUR Geleceğin Meslekleri (see `01-computing-information-sciences.md` §7) | Official (Turkey) | High for the document; names 5 business-adjacent occupations | §7 |
 
 US-specific BLS data; UK Young Enterprise detail verified directly against its own site plus a
-GOV.UK corroboration. EU/Turkey-specific sourcing not independently verified this pass (flagged in
+GOV.UK corroboration. Turkey partially verified via the İŞKUR future-occupations list; EU-specific
+sourcing not independently verified this pass (flagged in
 `10-open-questions.md`).
 
 US-specific throughout (BLS data; DECA/FBLA are US-centered, though DECA in particular has some
