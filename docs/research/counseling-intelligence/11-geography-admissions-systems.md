@@ -64,20 +64,35 @@ it remains directly applicable here without modification.
   share of seats — the one place a non-grades factor formally enters). **A large share of programs
   are "zulassungsfrei" (officially: no admission restriction) — meeting the formal Abitur
   requirement grants a place with no selection process at all.** (Source: multiple
-  admissions-guide sources for the NC mechanism, high confidence for the mechanism itself;
-  official German university pages for the `zulassungsfrei` category's existence, confirming the
-  category is real, medium confidence on what share of all programs nationally fall into it, which
-  this package did not find a single consolidated statistic for.) [[RULE-COUNSEL-062]] No source
-  checked names extracurricular activities as a general admissions factor for the standard
+  admissions-guide sources for the NC mechanism; **corroborated for the mechanism itself, on a
+  follow-up pass, by DAAD's own official admission-requirements pages** (`daad.de`, Germany's
+  official national academic exchange service — as close to an authoritative government-adjacent
+  source as exists for this system) — high confidence for the `zulassungsfrei`/`zulassungsbeschränkt`
+  mechanism existing exactly as described; **still medium confidence on what share of all programs
+  nationally fall into each category** — DAAD's own pages describe the categories and point
+  students to a per-program admissions database rather than publishing one national aggregate
+  percentage, so this specific number remains genuinely not centrally published anywhere this
+  package could find, not merely unresearched.) [[RULE-COUNSEL-062]] No source checked, official or
+  secondary, names extracurricular activities as a general admissions factor for the standard
   domestic pathway.
-- **Netherlands** — most programs are open-enrollment on the qualifying diploma; capacity-limited
+- **Netherlands** — most programs are open-enrollment on the qualifying diploma (confirmed
+  officially: `government.nl`'s own education pages describe non-numerus-fixus programmes as
+  having a straightforward 1 May application deadline with no selection step, versus a 15 January
+  deadline and an explicit selection step for numerus fixus programmes); capacity-limited
   ("numerus fixus") programs use **decentralized selection** set independently by each university,
-  which can include a motivation letter, CV, and sometimes a test/interview — a genuine soft-
-  holistic element, but explicitly narrower than US practice: one source describes Dutch
-  universities as generally not emphasizing extracurricular activities specifically, with academic
-  performance remaining the key measure even within decentralized selection. (Source: university
-  admissions-guide pages describing `numerus fixus`/`decentrale selectie` — medium-high confidence
-  for the mechanism; medium confidence for the specific "don't emphasize extracurriculars" claim,
+  which can include a motivation letter, CV, and sometimes a test/interview, alongside an official,
+  named **"Studiekeuzecheck" (Study Choice Check)** — a government-described pre-entrance
+  fit/readiness check, sometimes compulsory, that is explicitly about *whether this course is the
+  right choice for the student*, not a competitive achievement evaluation, per `government.nl`'s
+  own description. This is a genuine soft-holistic element, but explicitly narrower than US
+  practice: one source describes Dutch universities as generally not emphasizing extracurricular
+  activities specifically, with academic performance remaining the key measure even within
+  decentralized selection — this specific claim was **not** independently found on an official
+  page on the follow-up pass and remains a secondary-source claim, honestly still at medium
+  confidence, now clearly distinguished from the *mechanism* claims above it, which are official-
+  source-confirmed at high confidence. (Source: `government.nl`, `studielink.nl` official pages for
+  the mechanism/deadlines/Studiekeuzecheck; university admissions-guide pages describing
+  `numerus fixus`/`decentrale selectie` for the extracurricular-emphasis claim specifically —
   sourced from a single describing source rather than official university policy pages directly.)
   [[RULE-COUNSEL-063]]
 - **Italy** — bifurcated by institution type. Public universities in restricted fields (medicine

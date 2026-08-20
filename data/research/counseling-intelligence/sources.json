@@ -373,6 +373,30 @@
       "claim_supported": "A passing Swiss Matura grants admission to nearly all Swiss university programs including ETH/EPFL with no entrance exam, interview, or activity review; medicine is the sole exception, gated by a separate aptitude test (EMS), not an activity portfolio.",
       "used_in_rules": ["RULE-COUNSEL-065"],
       "limitations": "Directly verified for ETH specifically; the general-Swiss-system claim beyond ETH is corroborated by secondary sources, not independently checked at every Swiss university."
+    },
+    {
+      "id": "SRC-CS-032",
+      "title": "Studienvoraussetzungen im Überblick / official admission-requirements and admissions-database pages",
+      "publisher": "DAAD (Deutscher Akademischer Austauschdienst / German Academic Exchange Service, official)",
+      "url": "https://www.daad.de/de/in-deutschland-studieren/voraussetzungen/ueberblick/",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high_for_mechanism_no_national_percentage_published",
+      "claim_supported": "Confirms zulassungsfrei/zulassungsbeschränkt as the official categorization of German admission mechanisms; DAAD directs students to a per-program database rather than publishing one national aggregate percentage of open vs. restricted programs.",
+      "used_in_rules": ["RULE-COUNSEL-062"],
+      "limitations": "Upgrades the mechanism claim to official-source confidence; the specific national prevalence percentage remains genuinely unpublished in a single consolidated place, not merely unresearched by this package."
+    },
+    {
+      "id": "SRC-CS-033",
+      "title": "Government.nl and Studielink official pages on tertiary-education application deadlines and numerus fixus",
+      "publisher": "Government of the Netherlands (government.nl); Studielink (the official national application portal)",
+      "url": "https://www.government.nl/themes/education/secondary-vocational-education-mbo-and-tertiary-higher-education/tertiary-higher-education/applying-for-a-course-at-an-institute-of-tertiary-education",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high_for_mechanism",
+      "claim_supported": "Non-numerus-fixus programmes have a 1 May deadline with no selection step; numerus fixus programmes have a 15 January deadline with an explicit selection step; the official 'Studiekeuzecheck' (Study Choice Check) is a fit/readiness check, not a competitive achievement evaluation.",
+      "used_in_rules": ["RULE-COUNSEL-063"],
+      "limitations": "Confirms the mechanism officially; does not itself state whether extracurricular activities specifically are weighted within decentralized selection — that narrower claim remains secondary-sourced (SRC-CS-029), not upgraded by this source."
     }
   ]
 }
