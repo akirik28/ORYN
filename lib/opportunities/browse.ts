@@ -10,6 +10,7 @@ export interface OpportunityBrowseFilters {
   remoteOnly?: boolean;
   freeOnly?: boolean;
   cycleStatus?: Opportunity["cycle_status"];
+  savedOnly?: boolean;
 }
 
 export interface OpportunityBrowseRow {
@@ -18,6 +19,11 @@ export interface OpportunityBrowseRow {
   eligible: boolean;
   eligibilityNotes: string | null;
   reasonCodes: string[];
+}
+
+export interface OpportunityCountryCount {
+  country: string;
+  count: number;
 }
 
 const PAGE_SIZE = 24;
@@ -38,7 +44,7 @@ export async function browseOpportunities(
   userId: string,
   filters: OpportunityBrowseFilters,
   page: number
-): Promise<{ rows: OpportunityBrowseRow[]; total: number; pageSize: number }> {
+): Promise<{ rows: OpportunityBrowseRow[]; total: number; pageSize: number; countryCounts: OpportunityCountryCount[] }> {
   let query = supabase.from("opportunities").select("*").eq("status", "active");
 
   if (filters.category) query = query.eq("category", filters.category);
@@ -63,8 +69,33 @@ export async function browseOpportunities(
     );
   }
 
+  if (filters.savedOnly) {
+    const { data: saved } = await supabase
+      .from("saved_opportunities")
+      .select("opportunity_id")
+      .eq("user_id", userId)
+      .eq("status", "saved");
+    const savedIds = new Set((saved ?? []).map((s) => s.opportunity_id));
+    opportunities = opportunities.filter((o) => savedIds.has(o.id));
+  }
+
   const total = opportunities.length;
-  if (opportunities.length === 0) return { rows: [], total, pageSize: PAGE_SIZE };
+  if (opportunities.length === 0) return { rows: [], total, pageSize: PAGE_SIZE, countryCounts: [] };
+
+  // Aggregated from this same filtered-and-searched set, before pagination slices it — the
+  // map and the list it sits above can never disagree about what's currently in scope,
+  // unlike the university explorer's map (a known, separate bug: its country counts come
+  // from an entirely unfiltered query). Every opportunity always has *some* country_entity_id
+  // or free-text `country` intent, but a genuinely null `country` (fully remote, no base
+  // location on file) is simply excluded from the map tally rather than inventing a country.
+  const countryTally = new Map<string, number>();
+  for (const o of opportunities) {
+    if (!o.country) continue;
+    countryTally.set(o.country, (countryTally.get(o.country) ?? 0) + 1);
+  }
+  const countryCounts: OpportunityCountryCount[] = [...countryTally.entries()]
+    .map(([country, count]) => ({ country, count }))
+    .sort((a, b) => b.count - a.count || a.country.localeCompare(b.country));
 
   const { data: matches } = await supabase
     .from("opportunity_matches")
@@ -92,7 +123,7 @@ export async function browseOpportunities(
   rows.sort((a, b) => b.matchScore - a.matchScore);
 
   const start = (page - 1) * PAGE_SIZE;
-  return { rows: rows.slice(start, start + PAGE_SIZE), total, pageSize: PAGE_SIZE };
+  return { rows: rows.slice(start, start + PAGE_SIZE), total, pageSize: PAGE_SIZE, countryCounts };
 }
 
 export interface OpportunityFacets {
@@ -125,6 +156,7 @@ export async function getOpportunityFacets(supabase: SupabaseClient<Database>): 
     "entrepreneurship",
     "hackathon",
     "academic_program",
+    "online_program",
     "conference",
     "student_program",
   ];

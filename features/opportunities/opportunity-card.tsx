@@ -17,6 +17,7 @@ import { StatusBadge, type StatusTone } from "@/components/oryn/status-badge";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
 import { setOpportunityStatus } from "@/app/(app)/opportunities/actions";
 import { tierFor } from "@/lib/opportunities/match-tier";
+import { CATEGORY_ICON } from "@/lib/opportunities/category-visuals";
 import type { Opportunity, SavedOpportunityStatus } from "@/types/database";
 
 export const NOT_INTERESTED_REASONS = [
@@ -60,6 +61,8 @@ export function OpportunityCard({
   initialStatus,
   eligible = true,
   eligibilityNotes = null,
+  detailHref,
+  selected = false,
 }: {
   opportunity: Opportunity;
   matchScore: number;
@@ -71,6 +74,13 @@ export function OpportunityCard({
    * today isn't a defect in the opportunity. */
   eligible?: boolean;
   eligibilityNotes?: string | null;
+  /** Where the title links — defaults to the full detail route. The Discovery/map Browse
+   * view passes a `?selected=id` URL instead, so a click previews in-context in the right
+   * panel rather than navigating away; "For you" leaves this unset and keeps its original
+   * direct-navigation behavior unchanged. */
+  detailHref?: string;
+  /** Visual highlight for the card currently shown in the Discovery detail panel. */
+  selected?: boolean;
 }) {
   const [status, setStatus] = useState(initialStatus);
   const [isPending, startTransition] = useTransition();
@@ -96,10 +106,21 @@ export function OpportunityCard({
 
   if (status === "not_interested") return null;
 
+  const CategoryIcon = CATEGORY_ICON[opportunity.category];
+
   return (
-    <div className={cn("space-y-3 rounded-xl border p-5 transition-colors duration-(--duration-fast)", tier.cardClassName)}>
-      <div className="flex items-start justify-between gap-3">
-        <div>
+    <div
+      className={cn(
+        "space-y-3 rounded-xl border p-5 transition-colors duration-(--duration-fast)",
+        tier.cardClassName,
+        selected && "ring-2 ring-brand-primary ring-offset-2 ring-offset-background"
+      )}
+    >
+      <div className="flex items-start gap-3">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand-primary-subtle to-brand-primary-soft">
+          <CategoryIcon className="size-4.5 text-brand-primary-strong" />
+        </span>
+        <div className="min-w-0 flex-1">
           <div className="mb-1 flex flex-wrap items-center gap-2">
             {eligible ? (
               <StatusBadge label={tier.label} tone={tier.tone} icon={Sparkles} />
@@ -122,7 +143,7 @@ export function OpportunityCard({
             ) : null}
           </div>
           <h3 className="font-semibold leading-snug">
-            <Link href={`/opportunities/${opportunity.id}`} className="hover:underline">
+            <Link href={detailHref ?? `/opportunities/${opportunity.id}`} scroll={!detailHref} className="hover:underline">
               {opportunity.title}
             </Link>
           </h3>

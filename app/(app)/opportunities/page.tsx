@@ -6,7 +6,13 @@ import { createClient } from "@/lib/supabase/server";
 import { refreshOpportunityMatches } from "@/lib/opportunities/persist-matches";
 import { browseOpportunities, getOpportunityFacets } from "@/lib/opportunities/browse";
 import { OpportunityCard } from "@/features/opportunities/opportunity-card";
-import { OpportunityFilterBar } from "@/features/opportunities/opportunity-filter-bar";
+import { OpportunityFilterRail } from "@/features/opportunities/opportunity-filter-rail";
+import { OpportunityMapHero } from "@/features/opportunities/opportunity-map-hero";
+import { OpportunityCountryPills } from "@/features/opportunities/opportunity-country-pills";
+import { OpportunityDetailPanel } from "@/features/opportunities/opportunity-detail-panel";
+import { OpportunityMobileFilterSheet } from "@/features/opportunities/opportunity-mobile-filter-sheet";
+import { OpportunityMobileViewToggle } from "@/features/opportunities/opportunity-mobile-view-toggle";
+import { OpportunityMobileSelectedSheet } from "@/features/opportunities/opportunity-mobile-selected-sheet";
 import { integrationStatus } from "@/lib/env";
 import { PageHeader } from "@/components/oryn/page-header";
 import { EmptyState } from "@/components/oryn/empty-state";
@@ -35,8 +41,10 @@ export default async function OpportunitiesPage({
     country?: string;
     remote?: string;
     free?: string;
+    saved?: string;
     cycle?: string;
     page?: string;
+    selected?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -53,6 +61,7 @@ export default async function OpportunitiesPage({
   if (params.country) tabParams.set("country", params.country);
   if (params.remote) tabParams.set("remote", params.remote);
   if (params.free) tabParams.set("free", params.free);
+  if (params.saved) tabParams.set("saved", params.saved);
   if (params.cycle) tabParams.set("cycle", params.cycle);
 
   return (
@@ -157,8 +166,10 @@ async function BrowseAllView({
     country?: string;
     remote?: string;
     free?: string;
+    saved?: string;
     cycle?: string;
     page?: string;
+    selected?: string;
   };
 }) {
   const page = Math.max(1, Number(params.page) || 1);
@@ -168,10 +179,11 @@ async function BrowseAllView({
     country: params.country,
     remoteOnly: params.remote === "1",
     freeOnly: params.free === "1",
+    savedOnly: params.saved === "1",
     cycleStatus: params.cycle as Opportunity["cycle_status"] | undefined,
   };
 
-  const [facets, { rows, total, pageSize }, savedRes] = await Promise.all([
+  const [facets, { rows, total, pageSize, countryCounts }, savedRes] = await Promise.all([
     getOpportunityFacets(supabase),
     browseOpportunities(supabase, userId, filters, page),
     supabase.from("saved_opportunities").select("opportunity_id, status").eq("user_id", userId),
@@ -179,75 +191,143 @@ async function BrowseAllView({
   const statusById = new Map((savedRes.data ?? []).map((s) => [s.opportunity_id, s.status]));
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  // Every param except `page` and `selected` — the two the map/list/panel each own their
+  // own copy of below, so selecting a country or an opportunity never silently drops a
+  // page number (or vice versa) that a plain shared object would let one interaction stomp.
   const linkParams = new URLSearchParams({ view: "browse" });
   if (params.q) linkParams.set("q", params.q);
   if (params.category) linkParams.set("category", params.category);
   if (params.country) linkParams.set("country", params.country);
   if (params.remote) linkParams.set("remote", params.remote);
   if (params.free) linkParams.set("free", params.free);
+  if (params.saved) linkParams.set("saved", params.saved);
   if (params.cycle) linkParams.set("cycle", params.cycle);
 
-  return (
-    <div className="space-y-6">
-      <OpportunityFilterBar
-        facets={facets}
-        current={{
-          q: params.q,
-          category: params.category,
-          country: params.country,
-          remoteOnly: params.remote === "1",
-          freeOnly: params.free === "1",
-          cycleStatus: params.cycle,
-        }}
-      />
+  function selectedHref(opportunityId: string): string {
+    const p = new URLSearchParams(linkParams);
+    if (params.selected === opportunityId) p.delete("selected");
+    else p.set("selected", opportunityId);
+    return `/opportunities?${p.toString()}`;
+  }
 
-      {rows.length > 0 ? (
-        <>
-          <p className="text-xs text-muted-foreground">
-            {total} opportunit{total === 1 ? "y" : "ies"} match{total === 1 ? "es" : ""}
-          </p>
-          <div className="grid gap-4 md:grid-cols-2">
-            {rows.map(({ opportunity, matchScore, eligible, eligibilityNotes, reasonCodes }) => (
-              <OpportunityCard
-                key={opportunity.id}
-                opportunity={opportunity}
-                matchScore={matchScore}
-                reasonCodes={reasonCodes}
-                eligible={eligible}
-                eligibilityNotes={eligibilityNotes}
-                initialStatus={statusById.get(opportunity.id) ?? null}
-              />
-            ))}
+  const hasAnyFilter = Boolean(
+    params.q || params.category || params.country || params.remote || params.free || params.saved || params.cycle
+  );
+  const currentFilters = {
+    q: params.q,
+    category: params.category,
+    country: params.country,
+    remoteOnly: params.remote === "1",
+    freeOnly: params.free === "1",
+    savedOnly: params.saved === "1",
+    cycleStatus: params.cycle,
+  };
+
+  // Computed once and placed in more than one spot below (desktop sidebar + mobile sheet) —
+  // this is a plain resolved React element at that point, not a re-invoked component, so
+  // reusing it doesn't mean OpportunityDetailPanel's own data fetch runs twice.
+  const detailPanel = params.selected ? (
+    <OpportunityDetailPanel opportunityId={params.selected} closeHref={pageHref(linkParams, page)} />
+  ) : null;
+
+  const resultsList =
+    rows.length > 0 ? (
+      <>
+        <p className="text-xs text-muted-foreground">
+          {total} opportunit{total === 1 ? "y" : "ies"} match{total === 1 ? "es" : ""}
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {rows.map(({ opportunity, matchScore, eligible, eligibilityNotes, reasonCodes }) => (
+            <OpportunityCard
+              key={opportunity.id}
+              opportunity={opportunity}
+              matchScore={matchScore}
+              reasonCodes={reasonCodes}
+              eligible={eligible}
+              eligibilityNotes={eligibilityNotes}
+              initialStatus={statusById.get(opportunity.id) ?? null}
+              detailHref={selectedHref(opportunity.id)}
+              selected={params.selected === opportunity.id}
+            />
+          ))}
+        </div>
+        {totalPages > 1 ? (
+          <div className="flex items-center justify-between text-sm">
+            {page > 1 ? (
+              <Link href={pageHref(linkParams, page - 1)} className="text-brand-primary hover:underline">
+                ← Previous
+              </Link>
+            ) : (
+              <span />
+            )}
+            <span className="text-muted-foreground">
+              Page {page} of {totalPages}
+            </span>
+            {page < totalPages ? (
+              <Link href={pageHref(linkParams, page + 1)} className="text-brand-primary hover:underline">
+                Next →
+              </Link>
+            ) : (
+              <span />
+            )}
           </div>
-          {totalPages > 1 ? (
-            <div className="flex items-center justify-between text-sm">
-              {page > 1 ? (
-                <Link href={pageHref(linkParams, page - 1)} className="text-brand-primary hover:underline">
-                  ← Previous
-                </Link>
-              ) : (
-                <span />
-              )}
-              <span className="text-muted-foreground">
-                Page {page} of {totalPages}
-              </span>
-              {page < totalPages ? (
-                <Link href={pageHref(linkParams, page + 1)} className="text-brand-primary hover:underline">
-                  Next →
-                </Link>
-              ) : (
-                <span />
-              )}
-            </div>
-          ) : null}
-        </>
-      ) : (
-        <EmptyState
-          icon={Compass}
-          title={`No opportunities found${params.q ? ` matching "${params.q}"` : ""}`}
-          description="Try a different search, or clear a filter — Oryn's opportunity catalog grows over time."
-        />
-      )}
+        ) : null}
+      </>
+    ) : (
+      <EmptyState
+        icon={Compass}
+        title={`No opportunities found${params.q ? ` matching "${params.q}"` : ""}`}
+        description="Try a different search, or clear a filter — Oryn's opportunity catalog grows over time."
+      />
+    );
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3 md:hidden">
+        <p className="text-sm text-muted-foreground">
+          {total} result{total === 1 ? "" : "s"}
+        </p>
+        <OpportunityMobileFilterSheet hasActive={hasAnyFilter}>
+          <OpportunityFilterRail facets={facets} current={currentFilters} />
+        </OpportunityMobileFilterSheet>
+      </div>
+
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+        <aside className="hidden md:block lg:w-64 lg:shrink-0">
+          <OpportunityFilterRail facets={facets} current={currentFilters} />
+        </aside>
+
+        <div className="min-w-0 flex-1 space-y-4">
+          <div className="hidden space-y-4 md:block">
+            <OpportunityMapHero countryCounts={countryCounts} filterParams={linkParams} />
+            <OpportunityCountryPills countryCounts={countryCounts} selected={params.country ?? null} filterParams={linkParams} />
+            {resultsList}
+          </div>
+
+          <OpportunityMobileViewToggle
+            countryCounts={countryCounts}
+            filterParamsString={linkParams.toString()}
+            selectedCountry={params.country ?? null}
+            selectedId={params.selected ?? null}
+            rows={rows.map((r) => ({
+              opportunity: r.opportunity,
+              matchScore: r.matchScore,
+              eligible: r.eligible,
+              eligibilityNotes: r.eligibilityNotes,
+              reasonCodes: r.reasonCodes,
+              savedStatus: statusById.get(r.opportunity.id) ?? null,
+            }))}
+          />
+        </div>
+
+        {detailPanel ? (
+          <aside className="hidden overflow-hidden rounded-2xl border bg-card lg:block lg:sticky lg:top-6 lg:w-96 lg:shrink-0 lg:self-start">
+            {detailPanel}
+          </aside>
+        ) : null}
+      </div>
+
+      {detailPanel ? <OpportunityMobileSelectedSheet>{detailPanel}</OpportunityMobileSelectedSheet> : null}
     </div>
   );
 }
