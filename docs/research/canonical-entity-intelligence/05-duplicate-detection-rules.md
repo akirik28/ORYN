@@ -58,6 +58,54 @@ The full 41-pair table, with both sides' ids, is in
 `data/research/canonical-entities/duplicate-candidates-university.json` — ready for whoever runs
 the enrichment pass to verify against, without re-deriving the query.
 
+## Verifying the recommendation itself: two real failure modes a naive ROR-enrichment pass would hit
+
+This document's own top recommendation (re-run ROR enrichment on the 41-orphan set and on `09`
+Finding 7's 70-entity gap) was tested directly against ROR's live API for two of the trickier
+candidates, rather than assumed to be a purely mechanical, risk-free operation. It found two real,
+distinct failure modes worth knowing before running that pass — both discovered by actually
+looking, not by extrapolating from the pattern alone.
+
+**Mode A — a system-level ROR entity outranks the campus-specific one in a naive search
+(Purdue).** `university-ror-gaps.json` flags Purdue University as the one pair where *neither*
+side has ROR yet. Direct query of ROR's API: a plain search for "Purdue University" most
+prominently surfaces `ror.org/05p8z3f47`, **"Purdue University System"** — the multi-campus parent
+covering Purdue Fort Wayne, Purdue Northwest, Purdue Global, and Purdue University West Lafayette
+as separate ROR *children*. ORYN's "Purdue University" rows (city "West Lafayette"/"West
+Lafayette, IN") should resolve to the **child** entity, `ror.org/02dqehb95` ("Purdue University
+West Lafayette," Wikipedia-linked to plain "Purdue University," the institution ORYN's data
+actually means) — not the system-level parent. Confirmed by fetching both records directly
+(`curl` against `api.ror.org`, not a secondary source). A researcher trusting the first search
+result rather than checking for a more specific child entity would attach the wrong ROR id to
+both ORYN rows.
+
+**Mode B — no campus-specific ROR entity exists at all, so ORYN's finer split has no clean 1:1
+match (Rutgers).** ORYN already models "Rutgers University–New Brunswick" and "Rutgers
+University–Newark" as two separate `canonical_entities` rows (both in `university-ror-gaps.json`'s
+genuine-single-row-gap list) — a defensible product choice, since the two campuses genuinely
+differ in character and selectivity for a student-facing use case. **ROR does not make the same
+split**: querying ROR directly finds exactly one entity, `ror.org/05vt9qd57`, "Rutgers, The State
+University of New Jersey," with no New Brunswick- or Newark-specific child in its relationships
+(only research centers and affiliated hospitals). Consequence, stated precisely: if a researcher
+enriches both ORYN rows with the one Rutgers ROR id, the *second* insert into
+`entity_external_ids` will fail outright — `unique(id_system, external_id)` does not permit two
+different `entity_id`s to claim the same `(ROR, 05vt9qd57)` pair. This is not a hypothetical; it
+is exactly what the live constraint (`09`, "external_id uniqueness" clean-check) will do.
+
+**What this means for the enrichment recommendation, restated correctly:** it is not a purely
+mechanical, risk-free run for every one of the 111 combined candidates (41 + 70). For any
+candidate where ORYN's own entity granularity might be finer than the source registry's (a
+multi-campus US public university system is the most likely shape — check for this specifically,
+not just for Purdue/Rutgers), a researcher needs to decide, case by case, whether (a) a
+campus-specific external id exists and should be used (Purdue's shape), or (b) no such id exists
+and the two ORYN rows should either share one external id under a *different, non-unique-per-row*
+representation, stay without a ROR id at all, or be reconsidered as a single entity with two
+`entity_locations` rows instead (Rutgers' shape, and the same modeling choice `03`'s addendum
+already validated for BISI's two campuses). Neither Purdue nor Rutgers should be treated as
+resolved by this document — both are flagged for the same human/researcher judgment call as
+everything else in `10`, now with the specific pitfall named instead of left to be discovered
+mid-enrichment-run.
+
 ## Restating the four-tier taxonomy the mission brief asks for
 
 The mission brief asks for `AUTO-SAFE MATCH` / `HIGH-CONFIDENCE REVIEW` / `AMBIGUOUS` /

@@ -83,6 +83,16 @@
       "claim_supported": "All four institutions' ASCII-folded-normalized_name duplicate row is already verification_state='merged' (zero universities rows, zero external ids) while the un-folded row is the live, fully-ROR/GRID/ISNI/Wikidata/CrossRef-enriched one -- confirming isPureEncodingVariant()-driven cleanup already correctly resolved this pattern, and that doc 09 Finding 6's broader zero-result query (no active row shares a display_name with a disagreeing normalized_name, for any entity type) is accurate",
       "confidence": "high",
       "limitations": "This session's own first read of the aggregate count (before checking verification_state per row) briefly mis-read this as an unresolved duplicate -- corrected within the same session before anything was published; recorded in doc 09 Finding 6 as a deliberate example of the verify-before-claiming discipline this package tries to model throughout."
+    },
+    {
+      "id": "SRC-009",
+      "source_title": "ROR API direct records for Purdue University (system and West Lafayette campus) and Rutgers, The State University of New Jersey",
+      "source_url": "https://api.ror.org/v2/organizations/05p8z3f47, https://api.ror.org/v2/organizations/02dqehb95, https://api.ror.org/v2/organizations/05vt9qd57 (fetched via curl, not WebFetch -- WebFetch returned a socket error against this API in this session)",
+      "source_type": "open_registry",
+      "retrieved_at": "2026-08-21T01:00:00Z approx (session window)",
+      "claim_supported": "Purdue: ror.org/05p8z3f47 is the multi-campus 'Purdue University System' parent; ror.org/02dqehb95 ('Purdue University West Lafayette') is the correct, more specific child entity ORYN's rows should map to. Rutgers: only one ROR entity exists (ror.org/05vt9qd57) for the entire university -- no separate New Brunswick/Newark child, unlike ORYN's own two-row split.",
+      "confidence": "high",
+      "limitations": "Confirms current ROR state as of the retrieval date only -- ROR records can change (new child entities added, relationships revised)."
     }
   ]
 }

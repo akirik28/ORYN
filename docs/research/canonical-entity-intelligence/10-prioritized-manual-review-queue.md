@@ -35,6 +35,15 @@ needs both sides checked, since neither currently has a ROR id. Separately,
 `university-ror-gaps.json` has 8 already-known duplicate-supersession entities (MIT, UCL, LSE,
 Warwick, KFUPM, HKUST, UTS, Newcastle-Australia) and 16 genuine single-row gaps (several in
 France/Germany) that also need ROR — worth running in the same pass since it's the same pipeline.
+**Not purely mechanical, though — verified directly against ROR's live API (`05`'s "Verifying the
+recommendation itself" section): Purdue needs the campus-specific child id
+(`ror.org/02dqehb95`), not the system-level one a naive search returns first
+(`ror.org/05p8z3f47`); Rutgers–New Brunswick and Rutgers–Newark have no separate ROR entities at
+all — ROR models all of Rutgers as one record (`ror.org/05vt9qd57`), which will hit the
+`entity_external_ids` uniqueness constraint if both ORYN rows are enriched with it naively. Both
+are flagged `WARNING_verified_live_against_ror_api` in their respective JSON entries — check for
+this "ORYN splits finer than the registry does" shape on any other multi-campus US public
+university system before running the pass unattended.**
 
 **3. Decide the disposition of the ~45 "orphan" canonical_entities rows with no `universities` row.**
 Overlaps heavily with #2 but is a distinct question: even after ROR-enrichment resolves the
