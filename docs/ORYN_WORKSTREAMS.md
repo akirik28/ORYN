@@ -35,6 +35,7 @@ evidence if it's actually wrong.
 | PROD-B | Claude B | `oryn/counselor-data-quality-v1` | Counselor data-quality hardening + product-integration/data-contracts/counselor-surfacing/UI-foundation/QA package (B1-B12) | Counselor intelligence, product/UX, opportunity data quality, canonical entity integration, `main` integration ownership per the strategy doc | Active. Latest pushed commit as of this check: `88061d6` (merge of `origin/main`'s 3 commits, zero conflicts — 2 were byte-identical patches already independently on this branch, 1 was this file's sibling `MASTER-EXECUTION-STRATEGY.md` itself). 5 correctness fixes shipped this checkpoint (see `docs/current-state.md`) plus `docs/current-product-capability-map.md`. Not yet merged to `main`. |
 | COORD | Claude B | `oryn/coordination-integration-2026-08-20` | This coordination-only package: bring this file in from DATA-A's branch without merging it wholesale, re-measure and rewrite `docs/current-state.md` with proper measurement-provenance framing, correct this table | Docs only (`docs/ORYN_WORKSTREAMS.md`, `docs/current-state.md`) — no code/schema/data changes | In progress this checkpoint; branched from `origin/main`, will merge back to `main` once verified, then this branch's owning session syncs its product branch with the result. |
 | (unclaimed) | — | `oryn/university-intelligence-spine`, `oryn/counselor-core-v1`, `oryn/integration-2026-08-19`, `oryn/recovery-pre-integration-2026-08-19` | — | Re-checked this session: no commits ahead of what's already in the DATA-A/PROD-B lineage — treat as historical/superseded unless a session actively resumes one. | Dormant as of this check (2026-08-20). |
+| RESEARCH | Research Claude | `oryn/research-turkey-schools` (isolated worktree at `.claude/worktrees/research-intelligence`, branched from `origin/main`@`5c59115`) | Turkey high-schools canonical registry, Wave 1 (target: 100 total schools relevant to students applying abroad) | `docs/research/**`, `data/research/schools/**`, `docs/handoffs/research-turkey-high-schools.md` — research/evidence only, no schema/app/production writes | Active this checkpoint. Read-only live-DB query found 58 Turkish schools already canonical (`entity_type='school'`, loaded ~2026-08-15/17 from the founder's Drive corpus, see `docs/entity-canonicalization-audit.md` and `docs/live-db-reconciliation.md`) plus an `entity_verification_queue` with several more names proposed but unresolved. This pass documents those 58 as already-canonical (not re-researched) and researches genuinely new schools — including resolving the queue's unresolved names — to reach 100 total, with deliberate geographic spread into cities currently absent from the registry. Output is a research handoff for DATA-A/whoever owns canonical-entity ingestion to review before any live write — this lane does not write to Supabase. |
 
 ## Known cross-branch facts worth not re-discovering
 
@@ -62,3 +63,18 @@ evidence if it's actually wrong.
   `qtcvcflzxbuagvvwahhu`, and its research went through `WebFetch`/`WebSearch` rather than
   this repo's own Tavily integration. A session with real credentials can run
   `scripts/acquire-programs.ts`/`scripts/ingest-university-programs.ts` directly instead.
+- **Turkish school registry (`canonical_entities` where `entity_type='school'` and
+  `country_code='TR'`) is further along than any doc currently states**: 58 schools live,
+  133 aliases, `school_profiles` populated for all 58, and `school_credentials` already
+  carries 42 IB Diploma Programme rows plus assorted AP/Cambridge IGCSE/German
+  Abitur-DSD/French Baccalaureate-equivalency rows — re-measured directly 2026-08-20 via
+  Supabase MCP `execute_sql`, not copied from `docs/entity-canonicalization-audit.md`
+  (which predates it and undercounts at "54 of 58"). `entity_verification_queue` also has
+  ~50 more school rows in `queued`/`in_progress`/`verified` states from that same
+  2026-08-15/17 pass — 8 of them (`Aka Koleji`, `AlJazari International School of Science
+  and Technology`, `Anka Bilim Koleji`, `Ankara ABC Okulları`, `BALIKESIR ACI COLLEGE`,
+  `Cakir Schools`, `Yeni Yol Schools`, `ZAFER COLLEGE`) have no matching `canonical_entities`
+  row yet — genuinely unresolved, not just unverified. Nobody currently owns finishing this
+  queue or extending the school registry further; the RESEARCH row above is picking up
+  exactly that (resolving the 8 open queue names plus new geographic coverage), as a
+  research handoff, not a live write.
