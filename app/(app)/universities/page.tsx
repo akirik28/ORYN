@@ -155,12 +155,14 @@ export default async function UniversitiesPage({
    * are TS-side, not `.in()`-based). Every other case (no filters, or type-only) stays on the
    * cheaper single-query `browseQuery` path below.
    *
-   * Known, honest limitation carried over from the original Ranking-sort implementation: only
-   * 1009/1019 universities have a QS rank at all. The 10 without one simply don't appear under
-   * Ranking sort or the rank tier filter — not hidden on purpose, just not produced by a query
-   * that starts from the rankings table. A real fix needs either a denormalized sort column on
-   * `universities` or a Postgres view/RPC joining the two — neither buildable without
-   * migration/DDL access this session; noted for the founder backlog rather than blocked on.
+   * 10/1019 universities have no QS World University Ranking row at all (several are
+   * specialist business schools QS ranks separately, not in the World Ranking this product
+   * currently ingests — ESSEC, ESCP, LUISS, Bocconi, St. Gallen among them; genuinely absent
+   * data, not a bug). They used to be silently dropped from Ranking-sorted views and the
+   * rank-tier filter entirely — found live 2026-08-20 alongside the band-ranking gap fixed in
+   * getAllQsListPositions(). Now appended after every ranked result (alphabetically, since
+   * there's no rank to order them by) rather than vanishing — a student can still find and
+   * open them, their card just correctly shows no QS badge instead of a fabricated one.
    */
   async function fetchViaIdIntersection(): Promise<{ data: University[]; count: number; sizeUnknownCount?: number; costUnknownCount?: number }> {
     const scopedRows = await getScopedRows();
@@ -168,7 +170,9 @@ export default async function UniversitiesPage({
 
     let ordered: typeof matched;
     if (sort === "ranking") {
-      ordered = matched.filter((r) => qsRankMap!.has(r.id)).sort((a, b) => qsRankMap!.get(a.id)! - qsRankMap!.get(b.id)!);
+      const ranked = matched.filter((r) => qsRankMap!.has(r.id)).sort((a, b) => qsRankMap!.get(a.id)! - qsRankMap!.get(b.id)!);
+      const unranked = matched.filter((r) => !qsRankMap!.has(r.id)).sort((a, b) => a.name.localeCompare(b.name));
+      ordered = [...ranked, ...unranked];
     } else if (sort === "students") {
       ordered = matched.filter((r) => r.student_size != null).sort((a, b) => (b.student_size ?? 0) - (a.student_size ?? 0));
     } else {
