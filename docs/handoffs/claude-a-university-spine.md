@@ -2701,3 +2701,35 @@ off-domain to the Greek Ministry of Education's own announcements rather than an
 NTUA-owned application page — recorded its Undergraduate Studies overview page instead,
 the closest genuinely NTUA-owned page to admissions. `admissions_url`: 606 →
 **618/1019 (60.6%)**, `application_system`: 87 → 89/1019.
+
+**Program catalogue batch 4 — Nanyang Technological University, Singapore, 65 new
+programmes**: background agent's worktree turned out to be several commits stale
+(missing batch 2/3 entirely); confirmed via `git merge-base --is-ancestor` it was a
+clean ancestor with no unique commits of its own, fast-forwarded it losslessly before
+starting — a real instance of the worktree-staleness gotcha this campaign has hit
+before, handled correctly rather than risking a lossy merge. NTU's catalogue
+(`ntu.edu.sg/education/degree-programmes`) matched via URL-path evidence
+(`/education/undergraduate-programme/`) since the link text itself carries no degree
+token — the same technique already used for TU Delft and IE University. A real bug
+caught mid-verification: the agent ran a full liveness check on all 66 extracted URLs
+before writing anything and found one of NTU's own published catalogue links 404s live
+(`bachelor-of-accountancy-with-minor-in-strategic-communication`) — excluded from
+`university_programs`, recorded as `outcome='rejected'` with the 404 detail in
+`program_research_queue` rather than silently dropped or force-inserted. This agent had
+Supabase MCP access and used it correctly: pulled a live snapshot of
+`universities`/`entity_aliases`/`entity_external_ids`/`university_programs`, ran the
+real `extractPrograms()`/`decideIngestion()`/`programUrlKey()` logic against it (nothing
+reimplemented), and wrote both the accepted rows and the `program_research_queue` audit
+trail — the more complete provenance path this session's own batch 3 had to skip for
+budget reasons. 16 other candidates tried and dropped this round, grouped by failure
+class in `scripts/acquire-programs.ts`'s own header comment for future sessions: bot-
+protected (McMaster, Alberta, Monash, NUS — rechecked at a fresh URL, still blocked),
+JS-driven finders with no server-rendered links (UBC, Auckland, Adelaide), empty SPA
+shell (Peking University), catalogue is a PDF/Excel attachment not HTML (Shanghai Jiao
+Tong, Fudan), card-grid with no anchor tags (Seoul National University), department-
+subdomain directory not degree names (IIT Bombay), nav-only (KAIST, Korea University),
+genuinely broken 404/private-IP-redirect (University of Delhi). None of the originally-
+targeted zero-coverage countries (China, India, Australia, Japan, Korea, Russia, Saudi
+Arabia, Taiwan) actually resolved this round — every candidate failed cleanly for a
+documented reason; Singapore (NTU) is what landed instead. `university_programs`:
+599 → **664 rows**.
