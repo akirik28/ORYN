@@ -2325,3 +2325,83 @@ needed there), real programs showing real "Strong match" reasoning (Breakthrough
 Challenge, Boston University Summer Term, İTÜ Lise Yaz Okulu, etc.). Still no image/media
 column on `opportunities` — that gap (and the schema-choice question) is exactly as described
 above, unchanged by this import. Pure DML, no migration, no schema touched.
+
+## 2026-08-20: branch reconciliation, programme-catalog pipeline wired, admissions_url batch (24 top-ranked universities)
+
+Session start: `oryn/programs-pipeline-reconciled` was ~50 commits behind `origin/main`
+(missing the 2026-08-19 Counselor Core merge, two QS-ranking bugfixes, and a rescued
+programme-catalogue pipeline) but carried 4 unmerged commits of its own. Reconciled per
+`docs/MASTER-EXECUTION-STRATEGY.md` (reset same day, confirms this branch as the ongoing
+Computer A data lane): merged `origin/main` cleanly (git auto-detected the stale-numbered
+`0043_university_programs_enrichment.sql` as a rename to main's renumbered `0044`, no
+conflict), found and fixed a pre-existing eslint bug in the process (`.next/**` ignore
+didn't reach `.claude/worktrees/**`'s own build output, producing 50k false positives),
+full gate green after — commits `9e3d338`, `ec84e28`.
+
+**Wave 1 groups C/D/F applied** (`a3a7564`): re-fetched live `opportunities` (290 rows)
+immediately before dedup, per this doc's own established practice — caught all 7 of group
+C and 2 of group D as duplicates of the 2026-08-18 bulk import. 11 net-new rows.
+`opportunities`: 290 → 301.
+
+**Programme-catalogue pipeline wired** (`bf59310`): `lib/acquisition/programs.ts` +
+`scripts/acquire-programs.ts` (rescued, previously uncommitted-elsewhere, landed on `main`
+via the integration merge but never wired) got an `acquire:programs` package.json script
+and a JSONL-emission adapter so its deterministic extraction output flows through the
+existing, tested `npm run ingest:university-programs -- <path> --apply` path instead of
+becoming a second write path. Live-verifying it against TU Delft and Trinity College
+Dublin's real catalogue pages surfaced two real correctness bugs (fixed): a standalone
+"Diploma" (TCD's "Diploma in Acting and Theatre") was being asserted as bachelor's-level
+purely from page context, since `NON_BACHELOR_TOKENS` only excluded "Graduate Diploma";
+and TCD's rule matched two non-programme nav pages ("Your Trinity Pathways", "Your Trinity
+education") that happened to satisfy the URL pattern. Also found and fixed a real dedup
+gap in `lib/programs/ingest.ts`'s `decideIngestion()`: it deduped by normalized name only,
+so TU Delft's existing "Computer Science and Engineering" row and the catalogue's current
+link text "Computer Science & Engineering - English" — same `official_program_url`, same
+real programme — would have inserted as two rows. Added `programUrlKey()`-based dedup
+(checked alongside the existing name key), a regression test using this exact case, and
+updated `scripts/ingest-university-programs.ts` to populate both key types. 995/995 tests
+(994 + 1 new), lint/typecheck/build clean.
+
+Applied live via the real `decideIngestion()` logic (run against MCP-sourced university
+data, since this environment has no local `SUPABASE_SECRET_KEY`): 133 extracted, 130
+accepted / 3 duplicate (all 3 correctly caught by the new URL-based dedup — Delft's
+Aerospace Engineering, Computer Science & Engineering, and Earth/Climate/Technology all
+already existed under different display text). `university_programs`: 198 → 328 (Delft
+4→15, Trinity College Dublin 0→119). Full `program_research_queue` audit trail written.
+Committed as a follow-up once verified — see git log for the exact commit completing this
+(a background session finished the chunked application + JSONL commit after this note was
+written; check `git log -- data/research/university-programs/` for the exact SHA if it
+matters later).
+
+**Admissions URL batch — 24 top-QS-ranked universities missing `admissions_url`**: live
+audit (`university_profile_metrics`, `universities` columns) showed 407/1019 (40%) had
+`admissions_url`, with a long tail of top-60 QS-ranked institutions missing it entirely.
+Selected the 25 highest-ranked misses; each URL verified by direct `WebFetch` of that
+university's own domain (not guessed from a pattern) — Oxford, Cambridge, Caltech, UCL,
+NTU Singapore, UPenn, Yale, CUHK, UNSW, UC Berkeley, EPFL, U Chicago, ANU, U Toronto, PSL,
+Yonsei, UBC, UCLA, Michigan, CityU HK, Korea University, NTU Taiwan, Universiti Malaya,
+Bristol — 24 written. **Zhejiang University skipped, not guessed**: its undergraduate
+admissions process is genuinely fragmented across campus/institute (International Campus,
+International College, ZIBS each have their own separate international-admissions page,
+no single institution-wide undergraduate admissions URL found) — per this repo's
+conflicting-source rule, left `admissions_url` null rather than picking one arbitrarily.
+Two borderline picks used each institution's *international* applicants page rather than
+a domestic-only one (ANU, National Taiwan University) since that's the more relevant
+front door for ORYN's stated international-student audience — noted here in case a future
+pass wants the domestic page instead. Every row also got a `university_sources` entry
+(source_url, retrieved_at, confidence, raw_excerpt) — that table was previously very
+sparse (29 rows for 1019 universities). `admissions_url`: 407 → 431. Applied via Supabase
+MCP `execute_sql` (no local `SUPABASE_SECRET_KEY` in this environment); not yet run through
+`npm run check:integrations` in this session — see that command's own output earlier this
+session for the full current external-service status (Anthropic/Tavily/College Scorecard
+all unconfigured locally, Supabase MCP and OpenAlex both working).
+
+**Live coverage snapshot after this session's changes** (re-measured, not carried over from
+an earlier doc): `universities` 1019, `admissions_url` 431/1019 (42.3%), `application_system`
+77/1019 (7.6%, untouched this session — next candidate), `total_students` 383/1019 (37.6%),
+`tuition_domestic_annual` 157/1019, `tuition_international_annual` 135/1019,
+`primary_image_url` 721/1019 (70.8%), `university_programs` 328 rows. Program-catalogue
+coverage remains the starkest gap: entire large markets (China 64 universities, India 37,
+Australia 37, South Korea 31, Spain 29, Canada 27, Malaysia 25, Japan 22, Russia 21, Saudi
+Arabia 18, Taiwan 16) have **zero** `university_programs` rows — highest-leverage next
+target for that specific campaign.
