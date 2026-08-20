@@ -7,6 +7,7 @@ import { PreviewShell } from "./preview-shell";
 import {
   FIXTURE_STUDENT,
   FIXTURE_BIGGEST_GAP,
+  FIXTURE_TOP_STRENGTH,
   FIXTURE_BIGGEST_IMPROVEMENT,
   FIXTURE_WEEKLY_PLAN,
   FIXTURE_AVOID_RECOMMENDATION,
@@ -42,6 +43,7 @@ export default function DesignPreviewPage() {
         score={FIXTURE_STUDENT.profileStrengthScore}
         trend={FIXTURE_STUDENT.trend}
         biggestGap={FIXTURE_BIGGEST_GAP}
+        topStrength={FIXTURE_TOP_STRENGTH}
         biggestImprovement={FIXTURE_BIGGEST_IMPROVEMENT}
         weeklyPlan={FIXTURE_WEEKLY_PLAN}
         planError={null}

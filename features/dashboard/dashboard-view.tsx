@@ -6,6 +6,7 @@ import { InsightCard } from "@/components/oryn/insight-card";
 import { EmptyState } from "@/components/oryn/empty-state";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
 import { StatusBadge } from "@/components/oryn/status-badge";
+import { Button } from "@/components/ui/button";
 import { ScoreRing } from "@/features/dashboard/score-ring";
 import { WeeklyFocus } from "@/features/dashboard/weekly-focus";
 import { CounselorWeekFallback } from "@/features/dashboard/counselor-week-fallback";
@@ -16,7 +17,7 @@ import { DIMENSION_LABELS } from "@/lib/scoring/labels";
 import type { getTargetUniversitiesWithDetails } from "@/lib/universities/queries";
 import type { getUpcomingDeadlines, DeadlineSource } from "@/lib/deadlines/upcoming";
 import type { WeeklyPlanWithActions } from "@/lib/plan/persist";
-import type { CounselorRecommendation } from "@/lib/counselor";
+import type { CounselorRecommendation, ProfileStrength } from "@/lib/counselor";
 import type { ProfileDimension } from "@/types/database";
 
 const DEADLINE_SOURCE_ICONS: Record<DeadlineSource, typeof FileText> = {
@@ -31,6 +32,10 @@ export interface DashboardViewProps {
   score: number | null;
   trend: number | null;
   biggestGap: { dimension: ProfileDimension; score: number } | null;
+  /** ASSESSMENT — Counselor Core's top-ranked dimension (lib/counselor/strengths.ts), paired
+   * with biggestGap as one "where you stand" statement rather than a separate module — only
+   * rendered when the tier is genuinely standout/notable, never forced. */
+  topStrength: ProfileStrength | null;
   biggestImprovement: { dimension: ProfileDimension; delta: number } | null;
   weeklyPlan: WeeklyPlanWithActions | null;
   planError: "not_configured" | "failed" | null;
@@ -50,6 +55,7 @@ export function DashboardView({
   score,
   trend,
   biggestGap,
+  topStrength,
   biggestImprovement,
   weeklyPlan,
   planError,
@@ -61,6 +67,21 @@ export function DashboardView({
 }: DashboardViewProps) {
   const hasAiPlan = Boolean(weeklyPlan && weeklyPlan.actions.length > 0);
   const usingCounselorFallback = !hasAiPlan && counselorThisWeek.length > 0;
+  const showTopStrength = topStrength != null && (topStrength.tier === "standout" || topStrength.tier === "notable");
+
+  // "Due soon" duplicated deadlines already visible on a currently-rendered focus action
+  // (both WeeklyFocus and CounselorWeekFallback show a DeadlineBadge per action). Matching by
+  // date string only — neither action shape carries the deadline's own id — is a deliberate,
+  // view-only heuristic: a rare same-day coincidence hides a second, unrelated deadline here
+  // too, but it stays fully reachable via the linked applications/calendar view either way.
+  const shownDeadlineDates = new Set(
+    hasAiPlan
+      ? weeklyPlan!.actions.map((a) => a.deadline).filter((d): d is string => Boolean(d))
+      : usingCounselorFallback
+        ? counselorThisWeek.map((a) => a.deadline?.date).filter((d): d is string => Boolean(d))
+        : []
+  );
+  const remainingDeadlines = upcomingDeadlines.filter((d) => !shownDeadlineDates.has(d.date));
 
   return (
     <div className="space-y-10">
@@ -88,6 +109,12 @@ export function DashboardView({
                 </p>
               </div>
             )}
+            {showTopStrength ? (
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">{DIMENSION_LABELS[topStrength!.dimension]}</span>
+                {topStrength!.tier === "standout" ? " is already one of your strongest areas." : " is a relative strength right now."}
+              </p>
+            ) : null}
             {biggestImprovement ? (
               <div className="flex items-center gap-2 text-sm font-medium text-success">
                 <TrendingUp className="size-4" />
@@ -96,9 +123,9 @@ export function DashboardView({
                 </span>
               </div>
             ) : null}
-            <Link href="/profile" className="inline-flex items-center gap-1 text-sm text-brand-primary hover:underline">
+            <Button variant="outline" size="sm" render={<Link href="/profile" />} nativeButton={false} className="w-fit">
               View your full profile <ArrowRight className="size-3.5" />
-            </Link>
+            </Button>
           </div>
         </div>
       </section>
@@ -142,11 +169,11 @@ export function DashboardView({
         </InsightCard>
       ) : null}
 
-      {upcomingDeadlines.length > 0 ? (
+      {remainingDeadlines.length > 0 ? (
         <section className="space-y-3">
           <SectionHeader title="Due soon" />
           <ul className="divide-y rounded-xl border">
-            {upcomingDeadlines.map((deadline) => {
+            {remainingDeadlines.map((deadline) => {
               const SourceIcon = DEADLINE_SOURCE_ICONS[deadline.source];
               return (
                 <li key={deadline.id}>
@@ -168,7 +195,7 @@ export function DashboardView({
       ) : null}
 
       <div className="grid gap-6 md:grid-cols-2">
-        <section className="space-y-3 rounded-xl border p-5">
+        <section className="min-w-0 space-y-3 rounded-xl border bg-muted/40 p-5">
           <SectionHeader
             title="University outlook"
             action={
@@ -181,7 +208,7 @@ export function DashboardView({
             <ul className="space-y-2">
               {targetUniversities.map((target) => (
                 <li key={target.id} className="flex items-center justify-between text-sm">
-                  <span className="truncate pr-2">{target.university?.name ?? "Unknown university"}</span>
+                  <span className="min-w-0 truncate pr-2">{target.university?.name ?? "Unknown university"}</span>
                   <OutlookBadge outlook={target.outlook} />
                 </li>
               ))}
@@ -197,7 +224,7 @@ export function DashboardView({
           )}
         </section>
 
-        <section className="space-y-3 rounded-xl border p-5">
+        <section className="min-w-0 space-y-3 rounded-xl border bg-muted/40 p-5">
           <SectionHeader
             title="Opportunities"
             action={
@@ -210,7 +237,7 @@ export function DashboardView({
             <ul className="space-y-2">
               {opportunityPreview.map((opp) => (
                 <li key={opp.title} className="flex items-center justify-between gap-2 text-sm">
-                  <span className="truncate pr-2">{opp.title}</span>
+                  <span className="min-w-0 truncate pr-2">{opp.title}</span>
                   <span className="shrink-0">
                     <StatusBadge label={tierFor(opp.matchScore).label} tone={tierFor(opp.matchScore).tone} />
                   </span>

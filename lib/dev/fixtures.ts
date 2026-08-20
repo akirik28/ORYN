@@ -6,6 +6,7 @@
 import type { ImpactLevel, OutlookLabel, Opportunity, ProfileDimension, University, WeeklyAction } from "@/types/database";
 import type { TargetUniversityWithDetails } from "@/lib/universities/queries";
 import type { WeeklyPlanWithActions } from "@/lib/plan/persist";
+import type { ProfileStrength } from "@/lib/counselor";
 
 export const FIXTURE_STUDENT = {
   displayName: "Ada",
@@ -38,6 +39,15 @@ export const FIXTURE_SCORES = (Object.entries(DIMENSION_SCORES) as [ProfileDimen
 
 export const FIXTURE_BIGGEST_GAP = { dimension: "research" as ProfileDimension, score: 42 };
 export const FIXTURE_BIGGEST_IMPROVEMENT = { dimension: "research" as ProfileDimension, delta: 8 };
+export const FIXTURE_TOP_STRENGTH: ProfileStrength = {
+  dimension: "leadership",
+  score: 91,
+  confidence: "high",
+  tier: "standout",
+  rank: 1,
+  spreadFromWeakest: 49,
+  reasonCodes: [],
+};
 
 export const FIXTURE_AVOID_RECOMMENDATION = {
   title: "Starting another entrepreneurship club",

@@ -143,6 +143,7 @@ export default async function DashboardPage() {
       score={profile?.profile_strength_score ?? null}
       trend={trend}
       biggestGap={biggestGap ? { dimension: biggestGap.dimension, score: biggestGap.score } : null}
+      topStrength={counselorContract?.strengths?.[0] ?? null}
       biggestImprovement={biggestImprovement}
       weeklyPlan={weeklyPlan}
       planError={planError}
