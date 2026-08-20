@@ -72,11 +72,16 @@ broadening and deepening... do not stop because the first set is complete" instr
 concurrent-session split documented in `docs/handoffs/research-counseling-intelligence.md`): `11-
 geography-admissions-systems.md` (how admissions logic itself varies by target country — the
 single highest-leverage finding either session surfaced, see `03-recommendation-timing.md` §6 for
-this session's own independent verification of the same finding) and `12-activity-progression-
-pathways.md`, **both written on the concurrent session's own branch/worktree
-(`oryn/counseling-intelligence-research-013956`), not on this branch** — named here only so this
-overview stays a complete map of the whole overnight effort across both branches; see that branch's
-own commits for the actual files. This table intentionally is not updated further per-document as
+this session's own independent verification of the same finding), `12-activity-progression-
+pathways.md`, and `13-implementation-readiness.md`, **all three written on the concurrent session's
+own branch/worktree (`oryn/counseling-intelligence-research-013956`), not on this branch** — named
+here only so this overview stays a complete map of the whole overnight effort across both branches;
+see that branch's own commits for the actual files. This branch separately has its own
+`14-field-opportunity-mapping.md` (answering the mission's deliverable #5 directly — opportunity
+category → most-relevant fields, the reverse direction from `02`'s category → dimension mapping).
+**Both branches have agreed new documents from here start at 14+, to avoid a third filename
+collision** (the first was `01`/`02` content itself; this was the second, at the `13` slot
+specifically). This table intentionally is not updated further per-document as
 the package keeps growing overnight — check `docs/handoffs/research-counseling-intelligence.md` and
 each branch's own git log for the current full file list rather than trusting this table as
 exhaustive after this point.
