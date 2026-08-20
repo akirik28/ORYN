@@ -61,9 +61,13 @@ export function DynamicFormFields({
           return (
             <div key={field.name} className={cn("space-y-1.5", span)}>
               <Label htmlFor={field.name}>{field.label}</Label>
-              <Select value={(value as string) ?? field.options[0]?.value} onValueChange={(v) => onChange(field.name, v)}>
+              {/* Unset stays unset — never falls back to options[0]. A nullable column
+                  (e.g. education_records.curriculum) has no correct "first" answer, and
+                  silently pre-selecting one (previously AP) misrepresents an unset field
+                  as a real, US-centric choice the student never made. */}
+              <Select value={(value as string) ?? undefined} onValueChange={(v) => onChange(field.name, v)}>
                 <SelectTrigger id={field.name} className="w-full">
-                  <SelectValue />
+                  <SelectValue placeholder={field.placeholder ?? "Select…"} />
                 </SelectTrigger>
                 <SelectContent>
                   {field.options.map((option) => (

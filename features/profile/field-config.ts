@@ -23,7 +23,7 @@ export type FieldConfig =
   | { type: "date"; name: string; label: string; span?: "full" | "half" }
   | { type: "number"; name: string; label: string; span?: "full" | "half" }
   | { type: "checkbox"; name: string; label: string }
-  | { type: "select"; name: string; label: string; options: { value: string; label: string }[]; span?: "full" | "half" }
+  | { type: "select"; name: string; label: string; options: { value: string; label: string }[]; placeholder?: string; span?: "full" | "half" }
   // Canonical Entity Autocomplete System. `name` is the existing legacy free-text column
   // (kept in sync with the linked entity's display name at selection time);
   // `entityIdField` is the nullable `*_entity_id` column that links to the canonical
