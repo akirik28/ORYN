@@ -2688,3 +2688,16 @@ was deliberately not pursued — the agent judged it overwhelmingly likely alrea
 and prioritized avoiding a probable duplicate over hitting a count, the right call given
 no live-DB access from its sandbox to check directly. `opportunities` by category:
 competition 63→**72**, internship 7→**8**, scholarship 7→**9**.
+
+**Admissions URL batch 11 — 12 more universities, crossing 60%**: Multimedia University
+(Malaysia), Northumbria University, O.P. Jindal Global University (India), NUST Islamabad,
+Pusan National University, Radboud University, National Technical University of Athens,
+Prince Sattam Bin Abdulaziz University, Princess Nourah bint Abdulrahman University,
+Pontificia Universidad Católica Argentina, PUC-Rio, Peter the Great St. Petersburg
+Polytechnic University. 2 new `application_system` tags: Northumbria → UCAS (UK),
+Radboud → Studielink (Netherlands, its own page names Studielink as the national
+enrolment system). NTUA's own admissions info for international candidates points
+off-domain to the Greek Ministry of Education's own announcements rather than an
+NTUA-owned application page — recorded its Undergraduate Studies overview page instead,
+the closest genuinely NTUA-owned page to admissions. `admissions_url`: 606 →
+**618/1019 (60.6%)**, `application_system`: 87 → 89/1019.
