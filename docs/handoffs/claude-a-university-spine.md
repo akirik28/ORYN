@@ -2488,3 +2488,22 @@ admissions_url written here uses the correct domain, but the `website_url` field
 was not corrected (out of scope for this campaign) — worth a future fix.
 `admissions_url`: 512 → 529/1019 (51.9%), 122 universities total across five batches
 this session.
+
+**Admissions URL batch 6 — next 17 ranked universities**: Albert-Ludwigs-Universität
+Freiburg, Université Paris 1 Panthéon-Sorbonne, University of Surrey, Université libre
+de Bruxelles, University of Calgary, TU Darmstadt, University of Rochester, UC Irvine,
+University of Maryland College Park, University of Minnesota Twin Cities, University of
+Porto, University of Canterbury, UMass Amherst, Universiti Teknologi PETRONAS, University
+of Göttingen, Universitat Pompeu Fabra, Vanderbilt University — same rigor. `admissions_url`:
+529 → 546/1019 (53.6%), 139 universities total across six batches this session — over
+half the corpus now has a verified admissions URL.
+
+**All background campaigns from this session's parallel-capacity dispatch are now
+complete and pushed**: competitions (`0222441`), student-counts (`7b2a548`), research/
+internship/scholarship (`4720b40`), and Waterloo application + Edinburgh audit-trail
+backfill (`d8ed48e` — Waterloo: 105 rows, 0 accidental duplicates confirmed; Edinburgh:
+90 missing audit-trail rows backfilled honestly from live data with an explicit
+reconstruction caveat, not fabricated as if they were the original research payloads).
+The `scripts/acquire-programs.ts` bachelor-of-arts/bachelor-of-science exclude fix (see
+above) is committed in this same checkpoint, since the finishing agent correctly left it
+for whoever actually owned it rather than guessing.

@@ -135,7 +135,22 @@ const CATALOGUES: CatalogueConfig[] = [
       // "minors"/"environmental-degrees"/"exchange-programs" are hub/CTA pages ("Minors and
       // specializations", "Environmental programs", "Study abroad") that the same A-Z-shaped
       // hrefPattern otherwise matches as if they were named degree programmes — found live.
-      excludePatterns: ["/programs/themes", "/programs/by-faculty", "/programs/minors", "/programs/environmental-degrees", "/programs/exchange-programs"],
+      // "bachelor-of-arts"/"bachelor-of-science" are purely descriptive ("A Bachelor of Arts
+      // (BA) is a university degree that focuses on...") with no admission-plan language and no
+      // apply instruction — found live, confirmed by direct fetch, and excluded. Contrast kept
+      // deliberately: "physical-sciences" etc. are NOT excluded, since Waterloo's own page for
+      // those says "Apply to Physical Sciences and choose one of these eight majors" — a real
+      // first-year admission plan a student genuinely applies to, not a hub page, even though it
+      // also leads to choosing a major — also confirmed by direct fetch before deciding to keep it.
+      excludePatterns: [
+        "/programs/themes",
+        "/programs/by-faculty",
+        "/programs/minors",
+        "/programs/environmental-degrees",
+        "/programs/exchange-programs",
+        "/programs/bachelor-of-arts",
+        "/programs/bachelor-of-science",
+      ],
       sectionIsUndergraduate: true,
     },
   },
