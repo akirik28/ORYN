@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { StatusBadge } from "@/components/oryn/status-badge";
 import { OpportunityActions } from "./opportunity-actions";
 import { CATEGORY_ICON, humanizeCategory } from "@/lib/opportunities/category-visuals";
-import { formatCurrency } from "@/lib/i18n/format";
+import { formatCurrency, formatDate, formatDuration } from "@/lib/i18n/format";
 
 const SELECTIVITY_LABEL: Partial<Record<string, string>> = {
   extremely_selective: "Extremely selective",
@@ -48,12 +48,7 @@ export async function OpportunityDetailPanel({ opportunityId, closeHref }: { opp
   const match = matchRes.data;
   const Icon = CATEGORY_ICON[opportunity.category];
 
-  const duration =
-    opportunity.start_date && opportunity.end_date
-      ? `${opportunity.start_date} – ${opportunity.end_date}`
-      : opportunity.start_date
-        ? `Starts ${opportunity.start_date}`
-        : null;
+  const duration = formatDuration(opportunity.start_date, opportunity.end_date);
 
   return (
     <div className="flex h-full flex-col">
@@ -90,7 +85,7 @@ export async function OpportunityDetailPanel({ opportunityId, closeHref }: { opp
             <div className="flex items-center gap-2">
               <Calendar className="size-4 shrink-0 text-muted-foreground" />
               <span>
-                Deadline <span className="font-medium">{opportunity.deadline}</span>
+                Deadline <span className="font-medium">{formatDate(opportunity.deadline)}</span>
               </span>
             </div>
           ) : null}
