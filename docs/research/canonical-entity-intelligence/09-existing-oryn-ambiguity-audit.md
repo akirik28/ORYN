@@ -192,3 +192,12 @@ evidence — whoever owns that pipeline can decide whether to re-run it.
   risks from `docs/handoffs/claude-b-to-claude-a.md` — were all independently re-checked this
   session and confirmed correctly resolved (right relationship or correctly kept separate, per
   `03`/`04`).
+- **`entity_external_ids`' `unique(id_system, external_id)` constraint holds with zero exceptions**
+  in the live data — no external id value is ever shared across two different `canonical_entities`
+  rows within the same registry. A structural integrity check on the constraint itself, not an
+  assumption that it works.
+- **`entity_evidence` (110+ rows) is in real, healthy use** — entirely from the Turkish IB-schools
+  research effort, consistently `official_primary`/`official_registry`/`official_government`
+  source types across field groups like `IB_WORLD_SCHOOL`, `IDENTITY_PROFILE`,
+  `INTERNATIONAL_OUTCOMES`. Named here so this package's coverage of what's *working well* isn't
+  only university-registry examples.
