@@ -56,10 +56,14 @@ export default async function UniversityDetailPage({ params }: { params: Promise
     supabase.from("university_sources").select("*").eq("university_id", id).order("retrieved_at", { ascending: false }),
     supabase.from("target_universities").select("*").eq("university_id", id).eq("user_id", session.userId!).maybeSingle(),
     supabase.from("profile_scores").select("dimension, score").eq("user_id", session.userId!),
-    supabase.from("university_rankings").select("ranking_provider, ranking_edition, rank_display, source_url").eq("university_id", id).order("ranking_provider"),
+    supabase
+      .from("university_rankings")
+      .select("ranking_provider, ranking_edition, rank_display, source_url, verified_at, data_quality_flag")
+      .eq("university_id", id)
+      .order("ranking_provider"),
     supabase
       .from("university_profile_metrics")
-      .select("metric_code, value_numeric, value_text, unit, source_url, source_type, verified_at, precision_state")
+      .select("metric_code, value_numeric, value_text, unit, source_url, source_type, verified_at, precision_state, data_quality_flag")
       .eq("university_id", id)
       .in("metric_code", [
         "research_topics_top5",
