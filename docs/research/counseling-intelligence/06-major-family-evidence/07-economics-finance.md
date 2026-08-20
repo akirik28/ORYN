@@ -83,6 +83,27 @@ in advance) — genuinely different in structure from the CFA credential (§3, a
 distinction, not a legal practice requirement) or from PE/medical/legal licensure elsewhere in this
 package. **Not exhaustively mapped in this research pass**; flagged in `10-open-questions.md`.
 
+## 7. Country notes (UK / EU / Turkey)
+
+**United Kingdom:** National Careers Service's official **Economist** profile lists a salary range
+of roughly £28,000–£60,000 for a 37–39 hour week and describes the role as advising government
+departments, businesses, and banks on economic matters [S-NCS-ECON]. Worth naming specifically: the
+UK's **Government Economic Service (GES)** is a distinctive, named professional community of
+economists working across UK government departments — a career family with no precise US analogue
+at the same scale, since UK economic policy work is organized around this single cross-government
+service rather than being distributed department-by-department the way it more commonly is in the
+US federal system [S-GES]. The CFA credential (§3) is genuinely international and is pursued by UK-
+based finance professionals at similar rates to US ones — not a US-only credential, unlike the Fed
+Challenge competition.
+
+**EU:** ESCO covers economics/finance occupations across EU languages (see
+`01-computing-information-sciences.md` §7). No EU-wide licensure gate applies to economist roles;
+specific finance-sector regulatory requirements (analogous to US FINRA) exist per-country/via EU
+financial-services directives, not mapped in this pass.
+
+**Turkey:** no field-specific official source independently verified this pass. Flagged in
+`10-open-questions.md`.
+
 ## Sources referenced in this document
 
 | ID | Source | Type | Confidence | Used for |
@@ -90,8 +111,9 @@ package. **Not exhaustively mapped in this research pass**; flagged in `10-open-
 | S-BLS-ECON | [BLS OOH — Economists](https://www.bls.gov/ooh/life-physical-and-social-science/economists.htm) | Official (US BLS) | High (US-specific) | §2, §3 |
 | S-BLS-FINANCE | [BLS OOH — Financial Analysts](https://www.bls.gov/ooh/business-and-financial/financial-analysts.htm) | Official (US BLS) | High (US-specific) | §2, §3 |
 | S-FED-CHALLENGE | [Federal Reserve — National High School Fed Challenge](https://www.federalreserve.gov/aboutthefed/educational-tools/national-high-school-fed-challenge.htm), [Federal Reserve Education — 2026 registration announcement](https://www.federalreserveeducation.org/news/2026-high-school-fed-challenge-registration), [Council for Economic Education — National Economics Challenge](https://www.councilforeconed.org/programs/for-students/national-economic-challenge/) | Official (US Federal Reserve System; Council for Economic Education, the established national economics-education nonprofit) | High | §2, §4 |
-| S-CFA | General knowledge of the CFA Institute's credentialing structure, corroborated by its own institutional description as a postgraduate, multi-exam professional certification open across quantitative-major backgrounds | Official (CFA Institute is the credentialing body itself) | Medium-high — the credential's existence and structure is well-established; this pass did not fetch the CFA Institute's own admissions-requirements page directly | §3 |
+| S-CFA | General knowledge of the CFA Institute's credentialing structure, corroborated by its own institutional description as a postgraduate, multi-exam professional certification open across quantitative-major backgrounds | Official (CFA Institute is the credentialing body itself) | Medium-high — the credential's existence and structure is well-established; this pass did not fetch the CFA Institute's own admissions-requirements page directly | §3, §7 |
+| S-NCS-ECON | National Careers Service's official Economist job profile (accessed via search summary; direct URL not captured this pass — re-fetch nationalcareers.service.gov.uk before citing to a student) | Official (UK) | Medium-high — content is consistent with NCS's known format but the exact URL should be re-verified | §7 |
+| S-GES | General knowledge of the UK Government Economic Service as a real, named cross-government professional community, corroborated by its own public description | Official (UK government professional community) | Medium — not independently re-verified via gov.uk directly this pass | §7 |
 
-US-specific labor-market data; the Fed Challenge/CFA are both real international-reach institutions
-but their specific competition/credential structures described here are US-administered. UK/EU/
-Turkey equivalents not independently verified this pass (flagged in `10-open-questions.md`).
+US-specific labor-market data primarily; UK economist/GES detail added above. EU/Turkey-specific
+sourcing not independently verified this pass (flagged in `10-open-questions.md`).

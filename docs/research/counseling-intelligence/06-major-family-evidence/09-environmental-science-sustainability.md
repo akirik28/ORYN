@@ -97,6 +97,39 @@ verification performed for this family beyond what's already noted in the engine
 | S-CITIZEN-SCIENCE | [Youth-focused citizen science: Examining the role of environmental science learning and agency for conservation — *Biological Conservation* (ScienceDirect)](https://www.sciencedirect.com/science/article/pii/S0006320716302051) | Peer-reviewed research (abstract/summary accessed) | Medium — abstract-level access, full methodology not independently reviewed this pass | §4 |
 | S-ENV-PROGRAMS-CATEGORY | Multiple secondary aggregator sources describing named teen environmental research/conservation-internship/mentorship programs | Secondary, discovery-context only, per this package's own source-discipline rule | Low-to-medium as *confirmation of the opportunity category existing*; explicitly not sufficient confidence to present any specific named program as a verified, current opportunity to a student | §4 (explicitly caveated in-line) |
 
-US-specific labor-market data; the citizen-science research finding is not geographically limited
-in the same way. UK/EU/Turkey environmental-science career-pathway specifics not independently
-verified this pass (flagged in `10-open-questions.md`).
+## 7. Country notes (UK / EU / Turkey)
+
+**United Kingdom:** National Careers Service's official **Environmental Consultant** profile
+(salary range roughly £25,000 starting to £50,000 experienced) explicitly names **Chartered
+Environmentalist** status as a career-progression marker, alongside routes into running one's own
+consultancy or moving into environmental research/education [S-NCS-ENVCON] — the same
+"chartered status as career-long recognition, not entry gate" pattern already established for UK
+chemistry/engineering elsewhere in this document set (`03-physical-sciences.md` §7,
+`05-engineering-me-ce-ae-ee.md` §6). Entry routes include both university degrees and
+apprenticeships, and accept related-but-not-identical subjects (biology, chemistry, geoscience,
+ecology) alongside a dedicated environmental-science degree — directly corroborating this
+document's own §3 "major≠career" note about this family being receptive to adjacent-science
+entrants.
+
+**EU:** ESCO covers environmental-science/engineering occupations across EU languages (see
+`01-computing-information-sciences.md` §7). EU environmental regulation (a large, genuinely
+distinct policy area — EU environmental law/directives) is out of scope for this document's own
+depth; noted only as existing, not characterized further here.
+
+**Turkey:** no field-specific official source independently verified this pass. Flagged in
+`10-open-questions.md`.
+
+## Sources referenced in this document
+
+| ID | Source | Type | Confidence | Used for |
+|---|---|---|---|---|
+| S-BLS-ENVENG | [BLS OOH — Environmental Engineers](https://www.bls.gov/ooh/architecture-and-engineering/environmental-engineers.htm) | Official (US BLS) | High (US-specific) | §2, §3 |
+| S-BLS-ENVSCI | [BLS OOH — Environmental Scientists and Specialists](https://www.bls.gov/ooh/life-physical-and-social-science/environmental-scientists-and-specialists.htm) | Official (US BLS) | High (US-specific) | §2 |
+| S-BLS-CONSERVATION | [BLS OOH — Conservation Scientists and Foresters](https://www.bls.gov/ooh/life-physical-and-social-science/conservation-scientists.htm) | Official (US BLS) | High (US-specific) | §2, §3 |
+| S-CITIZEN-SCIENCE | [Youth-focused citizen science: Examining the role of environmental science learning and agency for conservation — *Biological Conservation* (ScienceDirect)](https://www.sciencedirect.com/science/article/pii/S0006320716302051) | Peer-reviewed research (abstract/summary accessed) | Medium — abstract-level access, full methodology not independently reviewed this pass | §4 |
+| S-ENV-PROGRAMS-CATEGORY | Multiple secondary aggregator sources describing named teen environmental research/conservation-internship/mentorship programs | Secondary, discovery-context only, per this package's own source-discipline rule | Low-to-medium as *confirmation of the opportunity category existing*; explicitly not sufficient confidence to present any specific named program as a verified, current opportunity to a student | §4 (explicitly caveated in-line) |
+| S-NCS-ENVCON | [National Careers Service — Environmental consultant](https://nationalcareers.service.gov.uk/job-profiles/environmental-consultant) | Official (UK) | High (UK-specific) | §7 |
+
+US-specific labor-market data; UK environmental-consultant detail verified directly against NCS.
+EU/Turkey-specific sourcing not independently verified this pass (flagged in
+`10-open-questions.md`).

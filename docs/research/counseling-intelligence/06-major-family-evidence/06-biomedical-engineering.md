@@ -83,12 +83,36 @@ not what credential the *engineer* must personally hold to practice. Equivalent 
 bodies exist in the UK/EU (e.g., UKCA/CE marking regimes) and Turkey — **not independently verified
 in this research pass**; flagged in `10-open-questions.md`.
 
+## 7. Country notes (UK / EU / Turkey)
+
+**United Kingdom:** National Careers Service publishes an official **Clinical Engineer** job
+profile (working within healthcare settings, closer to §3's "clinical engineering" career family
+than to product-design roles specifically), alongside a separate **Biomedical Scientist** profile
+that is actually closer to a lab-diagnostics/clinical-science role than to engineering — worth
+distinguishing explicitly to a student, since the naming overlap ("biomedical") between these two
+UK job-title conventions and this document's own "biomedical engineering" field is a real source of
+confusion this document should not silently reproduce [S-NCS-UK-BME]. Device regulation in the UK
+runs through the UKCA marking scheme (post-Brexit) rather than FDA — not elaborated further, since
+verifying its exact scope was out of this pass's depth.
+
+**EU:** device regulation runs through CE marking under the EU Medical Device Regulation framework;
+ESCO covers the occupational/skills classification side (see `01-computing-information-sciences.md`
+§7). Neither independently verified in depth this pass beyond confirming the CE-marking regime's
+existence as common knowledge.
+
+**Turkey:** no field-specific official source independently verified this pass — including whether
+"biyomedikal mühendisliği" (biomedical engineering) sits under one of TMMOB's 24 existing chambers
+or is treated separately; genuinely unresolved, not merely unfetched. Flagged in
+`10-open-questions.md`.
+
 ## Sources referenced in this document
 
 | ID | Source | Type | Confidence | Used for |
 |---|---|---|---|---|
 | S-BLS-BME | [BLS OOH — Bioengineers and Biomedical Engineers](https://www.bls.gov/ooh/architecture-and-engineering/biomedical-engineers.htm) | Official (US BLS) | High (US-specific) | §2, §3 |
 | S-BLS-BME-REG | Regulatory-affairs/FDA-compliance framing corroborated across secondary career-information sources describing this BLS-adjacent career path | Secondary, describing an official regulatory process (FDA) | Medium — the underlying FDA process is official and real; the specific secondary sources describing it as a career path were not each independently cross-checked against FDA's own site this pass | §3, §6 |
+| S-NCS-UK-BME | [National Careers Service — Clinical engineer](https://nationalcareers.service.gov.uk/job-profiles/clinical-engineer) | Official (UK) | High (UK-specific) | §7 |
 
-US-specific data throughout; UK/EU/Turkey medical-device regulatory equivalents not independently
-verified this pass (flagged in `10-open-questions.md`).
+US/UK data as tabled above; EU CE-marking noted at common-knowledge confidence only; Turkey's
+biomedical-engineering professional-body status genuinely unresolved (flagged in
+`10-open-questions.md`).
