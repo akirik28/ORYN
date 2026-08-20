@@ -104,6 +104,11 @@ export function OpportunityCard({
             ) : (
               <StatusBadge label="Not eligible" tone="neutral" />
             )}
+            {/* Eligible-but-unverified is not the same claim as eligible-and-confirmed — a
+                restriction exists but Oryn is missing the fact needed to check it (see
+                computeEligibility's unknownNotes). Never silently badge that as a plain
+                match. */}
+            {eligible && eligibilityNotes ? <StatusBadge label="Eligibility unknown" tone="warning" /> : null}
             {SELECTIVITY_LABEL[opportunity.selectivity_tier] ? (
               <StatusBadge label={SELECTIVITY_LABEL[opportunity.selectivity_tier]!} tone="neutral" />
             ) : null}
@@ -125,7 +130,7 @@ export function OpportunityCard({
 
       {opportunity.description ? <p className="line-clamp-2 text-sm text-muted-foreground">{opportunity.description}</p> : null}
 
-      {!eligible && eligibilityNotes ? <p className="text-xs text-muted-foreground">{eligibilityNotes}</p> : null}
+      {eligibilityNotes ? <p className="text-xs text-muted-foreground">{eligibilityNotes}</p> : null}
 
       {reasonCodes.length > 0 ? (
         <p className="text-xs text-muted-foreground">

@@ -135,6 +135,8 @@ async function ForYouView({
           opportunity={opportunity!}
           matchScore={match.match_score}
           reasonCodes={match.reason_codes as string[]}
+          eligible={match.eligible}
+          eligibilityNotes={match.eligibility_notes}
           initialStatus={statusById.get(match.opportunity_id) ?? null}
         />
       ))}

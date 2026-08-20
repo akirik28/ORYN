@@ -14,10 +14,13 @@ export async function refreshOpportunityMatches(userId: string): Promise<void> {
   const supabase = await createClient();
 
   const [profileRes, scoresRes, interestsRes, opportunitiesRes, savedRes] = await Promise.all([
-    supabase.from("profiles").select("birth_year, country").eq("id", userId).single(),
+    supabase.from("profiles").select("birth_year, country, graduation_year, citizenship_countries").eq("id", userId).single(),
     supabase.from("profile_scores").select("dimension, score, confidence, reason_codes").eq("user_id", userId),
     supabase.from("student_interests").select("label").eq("user_id", userId),
-    supabase.from("opportunities").select("id, category, minimum_age, maximum_age, eligible_countries, fields, country").eq("status", "active"),
+    supabase
+      .from("opportunities")
+      .select("id, category, minimum_age, maximum_age, eligible_countries, eligible_citizenships, eligible_grades, fields, country")
+      .eq("status", "active"),
     // Counselor Core fix: an opportunity the student already applied to or explicitly
     // dismissed must never resurface as a fresh recommendation — see computeEligibility's
     // savedStatus parameter (lib/opportunities/matching.ts).
@@ -42,6 +45,8 @@ export async function refreshOpportunityMatches(userId: string): Promise<void> {
     country: profileRes.data?.country ?? null,
     interests: (interestsRes.data ?? []).map((i) => i.label),
     weakestDimensions,
+    citizenshipCountries: profileRes.data?.citizenship_countries ?? [],
+    graduationYear: profileRes.data?.graduation_year ?? null,
   };
 
   const rows = opportunities.map((opportunity) => {
@@ -50,6 +55,8 @@ export async function refreshOpportunityMatches(userId: string): Promise<void> {
       minimumAge: opportunity.minimum_age,
       maximumAge: opportunity.maximum_age,
       eligibleCountries: opportunity.eligible_countries,
+      eligibleCitizenships: opportunity.eligible_citizenships ?? [],
+      eligibleGrades: opportunity.eligible_grades ?? [],
       fields: opportunity.fields,
       country: opportunity.country,
     };

@@ -1,5 +1,6 @@
 import { clampScore } from "@/lib/scoring/math";
 import { normalizeEntitySearchText } from "@/lib/entities/normalize";
+import { currentGradeLevel, gradeMatchesEligibility } from "@/lib/profile/grade-level";
 import type { OpportunityCategory, ProfileDimension, SavedOpportunityStatus } from "@/types/database";
 
 export interface StudentMatchProfile {
@@ -8,6 +9,11 @@ export interface StudentMatchProfile {
   interests: string[];
   /** Typically the bottom 2-3 profile_scores dimensions. */
   weakestDimensions: ProfileDimension[];
+  /** Distinct from `country` (residence/school location) — migration 0047. Optional/empty
+   * for callers that don't have it yet; never inferred from `country`. */
+  citizenshipCountries?: string[];
+  /** Feeds currentGradeLevel() for eligible_grades checks below. */
+  graduationYear?: number | null;
 }
 
 export interface OpportunityForMatching {
@@ -15,6 +21,12 @@ export interface OpportunityForMatching {
   minimumAge: number | null;
   maximumAge: number | null;
   eligibleCountries: string[];
+  /** Structured citizenship restriction (migration 0047) — genuinely distinct from
+   * eligibleCountries/residency. Optional for callers that don't fetch it yet. */
+  eligibleCitizenships?: string[];
+  /** Structured grade restriction (migration 0041), e.g. ["9","10","11","12"]. Optional
+   * for callers that don't fetch it yet. */
+  eligibleGrades?: string[];
   fields: string[];
   /** The opportunity's own base country (distinct from `eligibleCountries`, which is who
    * may apply — an in-person program based in France could still be open worldwide).
@@ -54,8 +66,14 @@ export function isSameCountry(a: string, b: string): boolean {
 }
 
 /**
- * Hard eligibility gate — unknown student attributes never disqualify (e.g. no country on
- * file means country restrictions simply aren't evaluated), only known mismatches do.
+ * Hard eligibility gate — a known mismatch is the only thing that excludes (`eligible:
+ * false`). But "unknown" and "confirmed eligible" are NOT the same claim, even though both
+ * currently persist as `eligible: true` (changing that to a 3-state column is a larger,
+ * separate migration — see lib/counselor/eligibility.ts's own richer verdict type for the
+ * fuller version of this same distinction). When a restriction exists but ORYN doesn't have
+ * the fact needed to check it, that's surfaced via `notes` instead of being silently treated
+ * as identical to "no restriction at all" — a caller must not badge an unverified match the
+ * same as a confirmed one just because both have `eligible: true`.
  *
  * `savedStatus` is this student's own `saved_opportunities.status` for this opportunity, if
  * any. `applied`/`not_interested` are a hard exclusion — the student already acted on it, so
@@ -74,20 +92,50 @@ export function computeEligibility(
   if (savedStatus === "not_interested") {
     return { eligible: false, notes: "You already marked this not interested." };
   }
-  if (opportunity.minimumAge !== null && student.age !== null && student.age < opportunity.minimumAge) {
-    return { eligible: false, notes: `Requires minimum age ${opportunity.minimumAge}.` };
+
+  const unknownNotes: string[] = [];
+
+  const hasAgeRestriction = opportunity.minimumAge !== null || opportunity.maximumAge !== null;
+  if (hasAgeRestriction && student.age === null) {
+    unknownNotes.push("Has an age requirement — add your birth year to check.");
+  } else {
+    if (opportunity.minimumAge !== null && student.age !== null && student.age < opportunity.minimumAge) {
+      return { eligible: false, notes: `Requires minimum age ${opportunity.minimumAge}.` };
+    }
+    if (opportunity.maximumAge !== null && student.age !== null && student.age > opportunity.maximumAge) {
+      return { eligible: false, notes: `Requires maximum age ${opportunity.maximumAge}.` };
+    }
   }
-  if (opportunity.maximumAge !== null && student.age !== null && student.age > opportunity.maximumAge) {
-    return { eligible: false, notes: `Requires maximum age ${opportunity.maximumAge}.` };
+
+  if (opportunity.eligibleCountries.length > 0) {
+    if (!student.country) {
+      unknownNotes.push("Restricted by country — add your country to check.");
+    } else if (!opportunity.eligibleCountries.some((eligible) => isSameCountry(eligible, student.country!))) {
+      return { eligible: false, notes: `Not currently open to students from ${student.country}.` };
+    }
   }
-  if (
-    opportunity.eligibleCountries.length > 0 &&
-    student.country &&
-    !opportunity.eligibleCountries.some((eligible) => isSameCountry(eligible, student.country!))
-  ) {
-    return { eligible: false, notes: `Not currently open to students from ${student.country}.` };
+
+  const eligibleCitizenships = opportunity.eligibleCitizenships ?? [];
+  if (eligibleCitizenships.length > 0) {
+    const citizenshipCountries = student.citizenshipCountries ?? [];
+    if (citizenshipCountries.length === 0) {
+      unknownNotes.push("Requires a specific citizenship — add yours in Settings to check.");
+    } else if (!citizenshipCountries.some((c) => eligibleCitizenships.some((e) => isSameCountry(c, e)))) {
+      return { eligible: false, notes: `Requires citizenship in ${eligibleCitizenships.join(", ")}.` };
+    }
   }
-  return { eligible: true, notes: null };
+
+  const eligibleGrades = opportunity.eligibleGrades ?? [];
+  if (eligibleGrades.length > 0) {
+    const grade = currentGradeLevel(student.graduationYear ?? null);
+    if (grade === null) {
+      unknownNotes.push("Restricted by grade level — add your graduation year to check.");
+    } else if (!gradeMatchesEligibility(grade, eligibleGrades)) {
+      return { eligible: false, notes: `Restricted to grades ${eligibleGrades.join(", ")}.` };
+    }
+  }
+
+  return { eligible: true, notes: unknownNotes.length > 0 ? unknownNotes.join(" ") : null };
 }
 
 /** Which profile dimensions a category of opportunity primarily develops — used to compute
