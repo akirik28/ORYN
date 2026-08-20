@@ -165,7 +165,7 @@ describe("Test J (spec Part R) — deadline urgency", () => {
     const gaps = toDimensionScoreRows(DIMENSIONS.map((d) => ({ dimension: d, score: 60, confidence: "high" as const, reason_codes: [] })));
     const state: CounselorState = {
       userId: "user-1",
-      advisor: { student: { birthYear: 2009, country: "Turkey", citizenshipCountries: [], graduationYear: 2028 }, completenessPercent: 80 } as CounselorState["advisor"],
+      advisor: { student: { birthYear: 2009, country: "Turkey", citizenshipCountries: [], graduationYear: 2028 }, completenessPercent: 80 } as unknown as CounselorState["advisor"],
       dimensionScores: gaps,
       completenessChecklist: [],
       eligibleOpportunityMatches: [
@@ -195,7 +195,7 @@ describe("Test J (spec Part R) — deadline urgency", () => {
     ]);
     const state: CounselorState = {
       userId: "user-1",
-      advisor: { student: { birthYear: 2009, country: "Turkey", citizenshipCountries: [], graduationYear: 2028 }, completenessPercent: 80 } as CounselorState["advisor"],
+      advisor: { student: { birthYear: 2009, country: "Turkey", citizenshipCountries: [], graduationYear: 2028 }, completenessPercent: 80 } as unknown as CounselorState["advisor"],
       dimensionScores: gaps,
       completenessChecklist: [],
       eligibleOpportunityMatches: [
@@ -224,7 +224,7 @@ describe("Test K (spec Part R) — historical/past deadline never contributes cu
     const gaps = toDimensionScoreRows(DIMENSIONS.map((d) => ({ dimension: d, score: 60, confidence: "high" as const, reason_codes: [] })));
     const state: CounselorState = {
       userId: "user-1",
-      advisor: { student: { birthYear: 2009, country: "Turkey", citizenshipCountries: [], graduationYear: 2028 }, completenessPercent: 80 } as CounselorState["advisor"],
+      advisor: { student: { birthYear: 2009, country: "Turkey", citizenshipCountries: [], graduationYear: 2028 }, completenessPercent: 80 } as unknown as CounselorState["advisor"],
       dimensionScores: gaps,
       completenessChecklist: [],
       eligibleOpportunityMatches: [
