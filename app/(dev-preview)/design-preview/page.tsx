@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { DashboardView } from "@/features/dashboard/dashboard-view";
 import { UniversityExplorerHero } from "@/features/universities/university-explorer-hero";
 import { AcceptanceMoment } from "@/features/applications/status-control";
+import { OpportunityDetailView } from "@/features/opportunities/opportunity-detail-view";
 import { SUPPORTED_COUNTRIES } from "@/lib/data/country-geo";
 import { PreviewShell } from "./preview-shell";
 import {
@@ -14,6 +15,8 @@ import {
   FIXTURE_DEADLINES,
   FIXTURE_TARGET_UNIVERSITIES,
   FIXTURE_OPPORTUNITIES,
+  FIXTURE_OPPORTUNITY_DETAIL_RICH,
+  FIXTURE_OPPORTUNITY_DETAIL_SPARSE,
 } from "@/lib/dev/fixtures";
 
 // Dev-only visual harness (AGENTS.md Phase 72 "Development Mode"). This sandbox has no
@@ -28,6 +31,16 @@ export default function DesignPreviewPage() {
 
   return (
     <PreviewShell score={FIXTURE_STUDENT.profileStrengthScore}>
+      <div className="mb-16 space-y-3">
+        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Opportunity detail — richly populated record</p>
+        <OpportunityDetailView {...FIXTURE_OPPORTUNITY_DETAIL_RICH} />
+      </div>
+
+      <div className="mb-16 space-y-3">
+        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Opportunity detail — sparse record</p>
+        <OpportunityDetailView {...FIXTURE_OPPORTUNITY_DETAIL_SPARSE} />
+      </div>
+
       <div className="mb-16 space-y-3">
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">University exploration</p>
         <UniversityExplorerHero countryCounts={FIXTURE_COUNTRY_COUNTS} selected={null} selectedRegion={null} />

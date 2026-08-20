@@ -3,7 +3,17 @@
 // outside development. See lib/dev/fixtures.ts's sibling README note in
 // /docs/design-system.md for why this exists: this sandbox has no Supabase/Docker, so
 // authenticated pages can't be rendered against real data during design work.
-import type { ImpactLevel, OutlookLabel, Opportunity, ProfileDimension, University, WeeklyAction } from "@/types/database";
+import type {
+  ImpactLevel,
+  OutlookLabel,
+  Opportunity,
+  OpportunityMatch,
+  OpportunitySource,
+  ProfileDimension,
+  SavedOpportunityStatus,
+  University,
+  WeeklyAction,
+} from "@/types/database";
 import type { TargetUniversityWithDetails } from "@/lib/universities/queries";
 import type { WeeklyPlanWithActions } from "@/lib/plan/persist";
 import type { ProfileStrength } from "@/lib/counselor";
@@ -323,6 +333,168 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
     reasonCodes: ["addresses_a_current_gap"],
   },
 ];
+
+// Opportunity Detail package: FIXTURE_OPPORTUNITIES above is shaped for the card/dashboard
+// preview ({opportunity, matchScore, reasonCodes}), not the full OpportunityMatch row the
+// detail view actually receives — these are additive, new fixtures, not a reshape of that
+// one (nothing else that reads FIXTURE_OPPORTUNITIES changes shape). One maximally rich
+// record and one maximally sparse one, chosen to exercise every conditional section in
+// opportunity-detail-view.tsx at once rather than one fixture per field.
+export const FIXTURE_OPPORTUNITY_DETAIL_RICH: {
+  opportunity: Opportunity;
+  match: OpportunityMatch;
+  savedStatus: SavedOpportunityStatus | null;
+  sources: OpportunitySource[];
+} = {
+  opportunity: {
+    id: "opp-detail-rich",
+    title: "Research Science Institute — Summer Research Program for Advanced Secondary Students",
+    organization: "Center for Excellence in Education",
+    description:
+      "A six-week, fully-funded residential research program pairing students with university and industry mentors for original scientific research, culminating in a written paper and public presentation.",
+    category: "research",
+    official_url: "https://example.org/rsi",
+    application_url: "https://example.org/rsi/apply",
+    country: "United States",
+    remote_allowed: false,
+    minimum_age: 16,
+    maximum_age: 18,
+    eligible_countries: ["United States", "Canada", "United Kingdom"],
+    fields: ["Biology", "Computer Science", "Mathematics", "Physics"],
+    cost: 0,
+    funding_available: true,
+    deadline: daysFromNow(9),
+    start_date: daysFromNow(120),
+    end_date: daysFromNow(162),
+    source: "official site",
+    source_url: "https://example.org/rsi",
+    source_confidence: "high",
+    last_verified_at: daysFromNow(-2),
+    status: "active",
+    normalized_title: "research science institute",
+    cycle_status: "open",
+    selectivity_tier: "extremely_selective",
+    verification_state: "verified_current",
+    application_open_date: daysFromNow(-30),
+    eligible_grades: ["11"],
+    citizenship_restrictions: null,
+    residency_restrictions: "Open to residents of participating countries only; a small number of international slots are available.",
+    eligible_citizenships: ["United States", "Canadian"],
+    location_mode: "in_person",
+    financial_aid_available: true,
+    application_requirements: ["transcript", "recommendation", "essay", "test_scores"],
+    current_cycle_label: "Summer 2027",
+    verified_at: daysFromNow(-2),
+    organization_entity_id: null,
+    country_entity_id: null,
+    created_at: daysFromNow(-90),
+    updated_at: daysFromNow(-2),
+  },
+  match: {
+    id: "match-detail-rich",
+    user_id: "fixture-user",
+    opportunity_id: "opp-detail-rich",
+    eligible: true,
+    eligibility_notes: null,
+    relevance_score: 88,
+    profile_need_score: 74,
+    effort_estimate: null,
+    match_score: 91,
+    reason_codes: ["matches_your_interests", "addresses_a_current_gap"],
+    calculated_at: daysFromNow(0),
+  },
+  savedStatus: "saved",
+  sources: [
+    {
+      id: "source-rich-1",
+      opportunity_id: "opp-detail-rich",
+      source_url: "https://example.org/rsi",
+      source_domain: "example.org",
+      retrieved_at: daysFromNow(-2),
+      source_type: "official_page",
+      confidence: "high",
+      raw_excerpt: null,
+      created_at: daysFromNow(-2),
+    },
+    {
+      id: "source-rich-2",
+      opportunity_id: "opp-detail-rich",
+      source_url: "https://example.org/rsi/eligibility",
+      source_domain: "example.org",
+      retrieved_at: daysFromNow(-14),
+      source_type: "official_page",
+      confidence: "medium",
+      raw_excerpt: null,
+      created_at: daysFromNow(-14),
+    },
+  ],
+};
+
+export const FIXTURE_OPPORTUNITY_DETAIL_SPARSE: {
+  opportunity: Opportunity;
+  match: OpportunityMatch;
+  savedStatus: SavedOpportunityStatus | null;
+  sources: OpportunitySource[];
+} = {
+  opportunity: {
+    id: "opp-detail-sparse",
+    title: "Regional Robotics Meetup",
+    organization: null,
+    description: null,
+    category: "hackathon",
+    official_url: null,
+    application_url: null,
+    country: null,
+    remote_allowed: null,
+    minimum_age: null,
+    maximum_age: null,
+    eligible_countries: [],
+    fields: [],
+    cost: null,
+    funding_available: null,
+    deadline: null,
+    start_date: null,
+    end_date: null,
+    source: null,
+    source_url: null,
+    source_confidence: "low",
+    last_verified_at: null,
+    status: "active",
+    normalized_title: "regional robotics meetup",
+    cycle_status: "closed",
+    selectivity_tier: "unknown",
+    verification_state: "unverified",
+    application_open_date: null,
+    eligible_grades: [],
+    citizenship_restrictions: null,
+    residency_restrictions: null,
+    eligible_citizenships: [],
+    location_mode: null,
+    financial_aid_available: null,
+    application_requirements: [],
+    current_cycle_label: null,
+    verified_at: null,
+    organization_entity_id: null,
+    country_entity_id: null,
+    created_at: daysFromNow(-200),
+    updated_at: daysFromNow(-200),
+  },
+  match: {
+    id: "match-detail-sparse",
+    user_id: "fixture-user",
+    opportunity_id: "opp-detail-sparse",
+    eligible: true,
+    eligibility_notes: "Oryn couldn't confirm whether your grade level meets this program's requirements — check the official page before applying.",
+    relevance_score: 40,
+    profile_need_score: 20,
+    effort_estimate: null,
+    match_score: 35,
+    reason_codes: [],
+    calculated_at: daysFromNow(0),
+  },
+  savedStatus: null,
+  sources: [],
+};
 
 export const FIXTURE_DEADLINES = [
   { id: "d1", title: "Apply to the Economics Challenge", date: daysFromNow(6), href: "/opportunities", source: "opportunity" as const },
