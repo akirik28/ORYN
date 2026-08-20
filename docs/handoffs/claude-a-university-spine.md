@@ -2450,3 +2450,20 @@ duplicates — flagged here for a future pass with deeper verification, not auto
 caught 2 as duplicates of the 2026-08-18 bulk import (AwesomeMath, BU RISE — matched by
 `official_url`). 3 net-new: Rutgers Young Scholars Program in Discrete Mathematics,
 Carnegie Mellon SAMS, Secondary Student Training Program (SSTP, University of Iowa).
+
+**Admissions URL batch 4 — next 23 ranked universities**: Wuhan, Geneva, IIT Madras, UC
+Santa Barbara, NYCU, Queen's Kingston, Cape Town, TU Dresden, Al-Farabi Kazakh National,
+Wollongong, UCLouvain, Reading, Otago, Complutense Madrid, Waseda, Tel Aviv, Gadjah Mada,
+Hamad Bin Khalifa, FAU Erlangen-Nürnberg, King Abdulaziz, IIT Kharagpur, Hebrew University
+of Jerusalem, UCC — same rigor (IISc Bangalore dropped after repeated TLS/cert failures
+rather than guessed). `admissions_url`: 489 → 512/1019 (50.2%) — crossed the halfway mark,
+110 universities total across four batches this session.
+
+**Parallel background campaigns launched this session** (per the founder's explicit
+parallel-capacity directive), running concurrently with this foreground work: programme-
+catalogue expansion batch 2 (still in progress as of this note — see uncommitted changes
+to `lib/acquisition/programs.ts`/`scripts/acquire-programs.ts` if picking this up before
+it finishes, do not edit those files while that agent owns them), competitions dataset
+expansion, research/internship/scholarship opportunities expansion, and student-count
+coverage. Results not yet known — check git log and live DB state directly rather than
+trusting this note once those land, per this file's own standing practice.
