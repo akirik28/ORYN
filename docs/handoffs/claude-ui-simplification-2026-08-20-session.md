@@ -791,3 +791,152 @@ next work, none blocking, founder's call:
   instruction ("Do not start University Explorer yet").
 
 STATUS: OPPORTUNITY DETAIL EXPERIENCE V1 SHIPPED — COMMITTED, PUSHED, CLEAN TREE.
+
+---
+
+# SESSION UPDATE — 2026-08-21 (overnight), app-wide premium-convergence sweep
+
+Continuation of the same session/lineage, after the founder explicitly authorized extended
+autonomous work overnight ("work at least 8 hours, make the UI really good, check every
+branch, run tests, never lose a feature") and separately confirmed University Explorer was
+next. Recovered clean again before starting (`git fetch`; Claude A had one new data-only
+commit — Wave 3 summer programs — zero app-code overlap; Claude B unchanged).
+
+## What shipped, in commit order
+
+1. **`cf4a1af` — University detail hero, guaranteed 3-tier fallback.** Audited
+   `app/(app)/universities/[id]/page.tsx` (481 lines — far more mature than opportunity
+   detail was: already has a real outlook/strengths/gaps section, programs, requirements,
+   sources) and found the one real gap: `DetailHeroImage` rendered **nothing at all** when a
+   university had no verified photo — and per `UniversityCard`'s own comment, that's *most*
+   universities today. One screen away, the same university's list card already has a proper
+   photo → `logo_url` → gradient+icon fallback and is never naked. Gave the detail hero the
+   same three tiers, scaled to a full banner, verified via `design-preview` with same-origin
+   test assets (`/icon.png`, `/apple-icon.png` — no network dependency) exercising all three
+   tiers plus the `onError` fallthrough.
+2. **`7dd046e` — Applications detail: raw ISO date → `formatDate`.** Found via a two-agent
+   survey pass (see below): `application.deadline` was interpolated directly into the page
+   description ("Due 2027-02-14"), same class of bug as opportunity detail's own pre-fix
+   state. One-line fix, existing shared helper.
+3. **`7c14291` — CV/portfolio date ranges → shared `formatDuration`.** Both
+   `features/profile/cv-builder.tsx` and `features/profile/portfolio-view.tsx` hand-rolled
+   their own raw `[startDate, endDate].join(...)`. `portfolio-view.tsx` is reused verbatim on
+   the **public** `u/[id]` profile, so this one fix cleaned up three surfaces (authenticated
+   CV, authenticated portfolio, and what connections/strangers see) at once. Extended
+   `formatDuration` (not a third ad-hoc composition) with an `ongoing` parameter — CV/
+   portfolio dates have a "Present" concept opportunity dates never do — backward compatible,
+   two new regression tests (16/16 in `format.test.ts` now).
+4. **`4d3e6f8` — Documents page: hand-rolled `h1` → `PageHeader`.** Smallest fix in the
+   batch, only page-title inconsistency the survey found outside settings.
+5. **`087838c` — Settings: real card hierarchy.** The flattest page surveyed — six sections
+   (Account/Location/Citizenship/Study capacity/Visibility/Your data), zero card separation,
+   one continuous `space-y-10` stack, the only page-title on the whole site not going through
+   `PageHeader`. Wrapped each section in `rounded-xl border p-6` + `SectionHeader`. Visual
+   wrapper only — every form component, field, and action (export data, delete account, sign
+   out) untouched.
+6. **`c74a5c4` — Public profile (`u/[id]`): icon-lead Featured + Contact, SectionHeader
+   everywhere.** The survey's #1 target after settings — highest-traffic "showcase" page
+   (shown to connections and strangers) but least converged. Featured cards now lead with a
+   category icon-on-gradient band (`lib/social/featured-visuals.ts`, new — same pattern as
+   `category-visuals.ts`, `ResolvedFeaturedItem.itemType` already existed and simply wasn't
+   used). Contact's 8 rows get a leading icon each, **additive to** the existing label (not a
+   replacement — a handle-only row like Instagram has no URL to self-disclose the platform,
+   so dropping the label would have made it a real regression, caught and fixed before
+   committing). Verified `lucide-react@1.31.0` ships no brand icons before picking anything
+   (`node -e` check, not an assumption) — every icon is a generic Lucide glyph, not a logo
+   substitute.
+
+## How the targets were found: two parallel survey agents
+
+Rather than guess which of the ~15 remaining pages needed work, ran two `Explore` agents in
+parallel (`Applications/Plan/Advisor/Compare` and `Profile sub-pages/Settings/Documents/
+Messages/Search/Connections/u/[id]`), each briefed on the specific "already good" vs
+"database record" signal this session had already established (PageHeader/SectionHeader/
+StatusBadge/EmptyState usage, `rounded-lg/xl/2xl/3xl` tiering, raw-date interpolation). Real
+findings, not guesses: **Applications list, Plan, Advisor, Search, Connections, Messages,
+Profile/history, Profile/story-bank were already fully converged** — confirmed, not touched.
+**University Compare was flagged and deliberately left alone** — its own code comment frames
+the plain-table approach as an explicit product decision ("P0H — a plain table, not a new
+design system"), not neglect; redesigning it would have been overriding a real decision
+without founder input, exactly the kind of change this lane doesn't make unilaterally.
+
+## A real investigation that turned out to be a false alarm — Button focus-visible ring
+
+Mid-session, the founder escalated the Button focus-ring accessibility bug flagged in the
+Opportunity Detail handoff section above (`task_899aeecf`) with a detailed root-cause brief,
+and a **separate live session had already been started** against that same task
+independently. Investigated properly rather than deferring to the other session or to the
+original report:
+
+- Confirmed via direct CSS inspection that every relevant piece is correctly generated: the
+  `focus-visible:ring-3`/`focus-visible:ring-ring/50` classes survive `cn()`/`tailwind-merge`
+  unchanged (checked in isolation via a throwaway Node script against the project's actual
+  installed `tailwind-merge`, not assumed); the compiled CSS rule exists with correct
+  selectors; every `@property` custom property Tailwind's ring system needs
+  (`--tw-ring-shadow`, `--tw-ring-color`, etc. — 10 checked) is registered; `--tw-ring-color`
+  and `--tw-ring-shadow` compute to real, non-empty values on a genuinely `:focus-visible`
+  button element.
+- Then found the actual problem: **not in the app**. `getComputedStyle(el).boxShadow` in
+  this Browser pane tool does not reflect live style changes after a JS mutation in the same
+  session — proven by setting `box-shadow: red !important` inline via script and finding
+  `getComputedStyle` still reported the old value, while **a screenshot of that exact state
+  showed the red ring rendering correctly**. This is the same family of capture/observation
+  staleness already documented twice earlier in this file (map-heavy-page screenshot
+  blanking; `document.hidden`/`hasFocus()` flakiness) — a third, distinct manifestation
+  (`getComputedStyle` staleness specifically), not the same bug, but the same *tool*, and now
+  three-for-three on "don't trust one capture method, cross-check."
+- Redid the check with clean screenshots at a wide viewport (avoiding the crop/zoom
+  limitation by narrowing the window instead) and real keyboard Tab navigation, no JS
+  mutation involved: the ring **renders correctly and visibly** on every variant tested —
+  primary (`Apply`), outline (`Official page`), ghost icon (`Not interested`). Confirmed via
+  direct unfocused/focused screenshot pairs of the same element, not a single ambiguous
+  frame.
+- **Conclusion: no real bug.** The original report (this file, Opportunity Detail section)
+  and the founder's follow-up brief were both built on a tool artifact. Attempted to dismiss
+  `task_899aeecf` — already started by the founder in a separate session, can't be withdrawn
+  via the tool. **Flagged clearly to the founder in-session; that other session may currently
+  be trying to fix a bug that doesn't exist and should be checked/stopped.**
+- No code change made to `components/ui/button.tsx` — correctly, since there was nothing to
+  fix.
+
+## QA / validation
+
+- `npm run typecheck` / `lint` / `test` / `build`: all clean, run after **every** commit in
+  this section (not just once at the end) — 1152/1152 tests at the end (1140 baseline + 10
+  from the Opportunity Detail package's `formatDate`/`formatDuration` tests + 2 new `ongoing`
+  regression tests this batch).
+- University hero: live-verified via `design-preview` (screenshot + DOM query, all 3 tiers).
+- Applications/CV/portfolio date fixes: covered by `formatDuration`'s own 16 unit tests
+  (shared implementation, already proven correct); not independently re-verified live on
+  each of the three call-site pages.
+- Documents/Settings/Public profile: **not live-verified** — same recurring Supabase-session
+  limitation as every authenticated page this whole session, compounded on the public profile
+  by the social-graph data (connections, contact info, featured items) it needs. All three
+  are typecheck/lint-clean, structurally-reviewed, low-risk (wrapper/additive changes, no
+  form/query logic touched) — flagged honestly as reviewed-not-rendered rather than asserted
+  as visually confirmed. If the founder wants these actually seen before trusting them, that
+  needs either the live-auth blocker resolved or a `*-view.tsx` split + fixtures built for
+  each, the same investment Opportunity Detail got.
+
+## Final state
+
+- Branch: `oryn/ui-simplification-v1`, worktree `.claude/worktrees/ui-simplification-v1`.
+- HEAD: `c74a5c4` — **pushed**, `origin` in sync.
+- Working tree: **clean**.
+- **Not merged to `main`** — standing instruction, unchanged.
+
+## Next
+
+- **Check on the other live session working `task_899aeecf`** — per the false-alarm finding
+  above, it may be mid-fix on a non-bug. Highest-priority item for whoever reads this next.
+- University Explorer (list/map/compare) was confirmed already well-converged this pass — not
+  a real next target despite being named as "next" before this session started; redirect that
+  expectation.
+- Settings/Documents/Public-profile live verification, if it matters before trusting them
+  further (see QA section above).
+- Real opportunity imagery — still blocked on Computer A's data pipeline, not a UI task.
+- The mobile-toggle click-hang noted in the Discovery section (still just a tooling note, not
+  reproduced against real user behavior).
+
+STATUS: OVERNIGHT SWEEP COMPLETE — 6 REAL FIXES SHIPPED, 1 FALSE-ALARM BUG INVESTIGATION
+CLOSED AND FLAGGED, CLEAN TREE, PUSHED.
