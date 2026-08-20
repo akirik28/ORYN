@@ -660,3 +660,134 @@ Candidate next work, none blocking, founder's call:
 - Sub-country clustering if/when the catalog outgrows country-level aggregation.
 
 STATUS: DISCOVERY/MAP PACKAGE SHIPPED — COMMITTED, PUSHED, CLEAN TREE.
+
+---
+
+# SESSION UPDATE — 2026-08-21, Opportunity Detail Experience V1 shipped
+
+Continuation of the same session, same fresh-context lineage as the update above. The
+founder approved Discovery/Map as complete and handed over a new, separate 18-section brief
+for the opportunity detail page (`/opportunities/[id]`). Recovered cleanly (`git fetch`,
+zero new commits on Claude B's branch since last check, Claude A's newest commits —
+`25e43be` competitions/research/scholarship data batch, `cfe6338` programme-catalogue +
+"2 real engine fixes" — touch only `lib/acquisition/programs.ts`, scripts, and data files,
+zero overlap with anything this package touches). Everything below is committed and pushed.
+
+## What shipped
+
+`features/opportunities/opportunity-detail-view.tsx` (new) replaces the old flat, single-
+column, raw-ISO-date, no-tier, no-reason-codes, no-verification-state detail page. Full
+detail in the commit message (`2001482`); summary:
+
+- **Hero** — the page's one `rounded-3xl` element (design-system.md's "at most one per
+  screen" rule). Category icon-band (still zero image data anywhere in the opportunity/
+  organizer schema — re-audited, not just trusted from memory: `Opportunity`, `CanonicalEntity`,
+  and `OpportunitySource` all still have no image/logo column). Match-tier + eligibility +
+  selectivity + cycle-status + deadline-urgency badges (the same `tierFor`/`DeadlineBadge`/
+  reason-codes system Discovery's cards already use — this page just wasn't using it before).
+- **Why Oryn surfaced this** — `InsightCard`, populated only from the real, already-computed
+  `reason_codes` (`matches_your_interests` / `addresses_a_current_gap` / `near_you`), silent
+  when there's nothing real to say or the student isn't eligible.
+- **About this program** — description + subject-field pills, real data only. No fabricated
+  "learning outcomes"/"schedule"/"tracks" sections — audited the schema, nothing backs them.
+- **Eligibility** — age/grade, citizenship (structured `eligible_citizenships` with free-text
+  `citizenship_restrictions` fallback), residency (same pattern with `eligible_countries`),
+  application requirements. No academic-prerequisites/language/test-score buckets — nothing
+  in the schema supports them, so they're omitted rather than shown empty.
+- **Source & verification** — existing `SourceBadge`/`ConfidenceIndicator` rendering, plus
+  `verification_state` (migration 0041, live since before Discovery shipped, never actually
+  displayed anywhere until now) surfaced as a badge — "Verified" only for `verified_current`,
+  silent for the common `unverified` default, same restraint `selectivity_tier`/`cycle_status`
+  already use elsewhere on this page.
+- **No related-opportunities section** — audited for real similarity/relation logic first
+  (`lib/opportunities/dedup.ts`/`duplicates.ts` exist but are title-dedup for the ingestion
+  pipeline, a different purpose entirely); none exists for "show the student similar
+  opportunities", so per the brief's own instruction this section is skipped, not faked.
+
+**Architecture**: mirrors `dashboard-view.tsx`'s page/`*-view.tsx` split — `page.tsx` is now
+pure data-fetching (unchanged queries) rendering `<OpportunityDetailView>`, a presentational
+component. Did this specifically so it could be mounted in `app/(dev-preview)/design-preview`
+with fixture data for real visual QA, instead of another scratch-and-delete harness — two new
+fixtures added to `lib/dev/fixtures.ts` (`FIXTURE_OPPORTUNITY_DETAIL_RICH`/`_SPARSE`), chosen
+to exercise every conditional section at once (long title, full eligibility, multiple
+sources, near-deadline urgency vs. no image/cost/duration/eligibility/sources/deadline at
+all, closed cycle, eligibility-unknown callout).
+
+**Real bugs found and fixed before ever being committed** (caught by this package's own
+fixtures, not by production data — real DB date columns are plain `YYYY-MM-DD`, but the dev
+fixtures build dates via `.toISOString()`, which happens to be exactly the shape that broke
+this): a duration calculation that unconditionally appended `T00:00:00Z` to a date string
+produced `NaN` when the string already carried a full timestamp; a second, related bug where
+the end date's year printed twice. Both fixed at a shared, now-unit-tested root
+(`parseDbDate`/`formatDate`/`formatDuration` in `lib/i18n/format.ts`, `__tests__/i18n/
+format.test.ts` — 10 new tests, including a regression test reproducing the exact
+timestamp-shaped-input scenario that caused it) rather than patched at the call site. The
+previous detail page rendered deadline/date fields as raw unformatted ISO strings — also
+fixed, same shared helper.
+
+## Real bug found and flagged, not fixed here (out of this package's scope)
+
+The shared `Button` component's `focus-visible` ring does not actually render — confirmed via
+`getComputedStyle`, not a visual glance: `:focus-visible` correctly matches on Tab, but
+`--tw-ring-color`/`--tw-ring-shadow` are empty/reset and the computed `box-shadow` is `none`.
+Verified on 3 independent elements: this page's own "Apply" (Button-as-`<a>`) and "Saved"
+(native `<button>`) actions, **and** the sidebar's icon-only "Search" button — completely
+unrelated, pre-existing code, proving this isn't something this package introduced. Every
+button in the app uses this component, so this is a real, currently-shipped, product-wide
+keyboard-accessibility gap. Not root-caused (checked `app/globals.css` for a competing
+`box-shadow`/`:focus` rule — none found; the actual cause is somewhere in `button.tsx`'s
+`cva()` setup or how Base UI's polymorphic `render` prop interacts with the Tailwind build).
+Flagged as a separate task (`task_899aeecf`, full repro steps and diagnostic findings
+included) rather than fixed inline — wrong scope and blast radius for this package, needs its
+own dedicated pass across the whole app. This page reuses the exact same focus classes
+everything else does, so it's no worse than the rest of the product on this axis; it just
+doesn't fix a pre-existing, unrelated gap either.
+
+## QA performed
+
+- **Visual**: desktop + 375px, both fixtures (rich and sparse), via `design-preview` —
+  screenshots confirmed hero/badges/facts/actions, "Why Oryn surfaced this", "About this
+  program", "Eligibility", and "Source & verification" all render correctly, and that the
+  sparse record degrades to a clean, intentional-looking minimal card (hero + badges + title
+  + eligibility-unknown callout + Save/Mark-applied — every section that has no real data
+  disappears completely, confirmed both via DOM query and screenshot, not one or the other).
+  **Tooling note**: the Browser pane's screenshot capture went blank/`document.hidden` at
+  deep scroll positions on this design-preview page multiple times this pass (same family of
+  issue as the map-heavy-page capture unreliability noted in the Discovery section above,
+  now also reproduced on a long-but-not-map page) — worked around by reordering
+  `design-preview/page.tsx` to put the new fixtures near the top rather than fighting the
+  capture tool, and by cross-checking every visual claim via `getComputedStyle`/DOM query
+  before trusting a screenshot. Real rendering was never in question at any point (confirmed
+  live via DOM the whole time); only the screenshot tool's own capture was flaky.
+- **Keyboard/focus**: real Tab-key walk (not programmatic `.focus()`, which doesn't reliably
+  trigger `:focus-visible`) through this page's own new interactive elements. This is where
+  the Button focus-ring bug above was found — everything else (heading order: `h1` → `h2` →
+  `h2` → `h2`, no skipped levels; `InsightCard`'s title is a styled `<p>` not a heading,
+  which is `InsightCard`'s own pre-existing, already-shipped-elsewhere pattern, not something
+  to change unilaterally here) checked out.
+- **Reduced motion / alt text**: not applicable — no new animation, no images anywhere on
+  this page (audited, none exist in the data).
+- `npm run typecheck` / `lint` / `test` (1150/1150, +10 new) / `build`: all clean, run after
+  every change in this section, not just once at the start.
+
+## Final state
+
+- Branch: `oryn/ui-simplification-v1`, worktree `.claude/worktrees/ui-simplification-v1`.
+- HEAD: `2001482` ("ui(opportunity-detail): premium detail page — hero, why-it-matters,
+  eligibility, trust") — **pushed**, `origin` in sync.
+- Working tree: **clean**.
+- **Not merged to `main`** — per standing instruction, this lane never merges main itself.
+
+## Next (nothing blocking)
+
+Both Discovery/Map and Opportunity Detail are shipped and founder-facing-ready. Candidate
+next work, none blocking, founder's call:
+- The Button focus-ring bug above (`task_899aeecf`) — real, product-wide, worth a dedicated
+  session; deliberately not folded into this package.
+- The mobile-toggle click-hang noted in the Discovery section above, if it turns out to
+  matter on a real device.
+- Real opportunity imagery — still blocked on Computer A's data pipeline, not a UI task.
+- University Explorer — explicitly out of scope for this session per the founder's own
+  instruction ("Do not start University Explorer yet").
+
+STATUS: OPPORTUNITY DETAIL EXPERIENCE V1 SHIPPED — COMMITTED, PUSHED, CLEAN TREE.
