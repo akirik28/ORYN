@@ -67,6 +67,59 @@ peer's branch has no `04`/`06/10-17`/`09`/`10`, plus carries unrelated noise fro
 canonical-entity mission. **A real integration pass is required** — see "Integration instructions"
 below. Do not merge either branch into `main` as-is and call it done.
 
+## CORRECTED, complete rule-ID collision map (supersedes earlier "just RULE-COUNSEL-056" notes below)
+
+A self-consistency audit run late in this session (checking that every `RULE-COUNSEL-###` this
+branch cites is minted exactly once) found the true scope of the numbering collision is much
+larger than the single instance originally flagged. **The collision is not one rule — it is nearly
+the entire 034-059 range (26 numbers), independently minted by both branches for completely
+different content**, because the peer branch started its own numbering at 034 (a reasonable guess,
+made before either branch could know this branch's family docs alone would consume 032-051) and
+both branches kept minting sequentially through their own remaining documents without further
+live coordination on exact numbers. Verified by fetching and reading the peer branch's `03`,
+`07`, `08`, and family docs `02`,`03`,`05`,`06`,`07`,`08`,`09` directly (`git show`, not trusted
+from memory of earlier messages):
+
+| # | This branch (`-013956`) | Peer branch (`oryn/counseling-intelligence-research`) |
+|---|---|---|
+| 034 | Never cite MCAT/med-school benchmarks to a HS student (`06/10` medicine) | Derive `yearsUntilGraduation` from `graduation_year`, never claim precision (`03` §1) |
+| 035 | APA HS research pathways as official channel (`06/11` psychology) | Stage determines recommendation *type*, time budget determines *size* (`03` §4) |
+| 036 | Apply achievement-tier ladder to psychology-track research (`06/11`) | A student outside the typical phase pattern isn't automatically a gap (`03` §5) |
+| 037 | Don't extend "research needs institutional access" uniformly (`06/11`) | CS is an umbrella, not one skill (`06/01` computing) |
+| 038 | Official UN MUN guidance is authoritative (`06/12` poli-sci) | Distinguish sustained-build / algorithmic-competition / hackathon as different evidence types (`06/01`) |
+| 039 | Don't treat MUN alone as sufficient evidence (`06/12`) | "I like math" is ambiguous — probe what a student actually means (`06/02` math) |
+| 040 | Don't read absent campaign-internship evidence as a motivation gap (`06/12`) | Applied-chemistry / materials-science-adjacent distinction (`06/02` or `03`) |
+| 041 | No required "pre-law" major (`06/13` law) | "Biology" spans wet-lab / field / computational work (`06/04` life sciences) |
+| 042 | Recommend broad skill-building, not a narrow law-track path (`06/13`) | A biology major is not required for medicine (`06/04`) |
+| 043 | Court observation as a low-access-barrier evidence channel (`06/13`) | *Not independently confirmed by this session this pass — likely `06/03` physical sciences* |
+| 044 | National History Day as an official evidence source (`06/14` soc/hist/phil) | PE-licensure necessity varies by context (`06/05` engineering) |
+| 045 | Ethics Bowl as a legitimate, distinct-format evidence source (`06/14`) | Biomedical engineering is not a subset of [X] (`06/06` biomedical eng) |
+| 046 | Favor substantive edited journalism pieces over volume (`06/15` lit/journ) | Economics quantitative-mismatch is a real, mild, non-disqualifying signal (`06/07` econ) |
+| 047 | Scholastic Awards as a well-established tiered channel (`06/15`) | Entrepreneurship = originating/testing a venture, distinct from general business (`06/08`) |
+| 048 | Architecture/design evidence is portfolio-and-process-centered (`06/16`) | DECA/FBLA-style simulated competition ≠ real entrepreneurship evidence (`06/08`) |
+| 049 | A thin design portfolio ≠ an access barrier the way a paid program would (`06/16`) | "Environmental science" ≠ "sustainability" — different activity profiles (`06/09`) |
+| 050 | National Portfolio Day as the reference model (`06/17` visual arts) | Never state a probability without a validated statistical basis (`07` §1) |
+| 051 | Never suggest equipment/production value is a priority gap for film (`06/17`) | Never let a `ProfileGap` imply a university "requires" anything (`07` §1) |
+| 052 | Tier-aware redundancy is honestly executable only for `research` today (`09`) | Never hide low confidence behind confident-sounding phrasing (`07` §1) |
+| 053 | Don't assume US-style curriculum-context mechanisms do/don't exist elsewhere (`09`) | Distinguish "verified information" from "Oryn analysis" (`07`, spec Phase 28) |
+| 054 | Check concurrent research lanes before treating a gap as unowned (`09`) | An opportunity-cost observation is not a judgment about an activity's inherent worth (`07`) |
+| 055 | Recognize paid part-time work as `career_exploration` evidence (`09`) | Every piece of this package's reasoning should be traceable (`07`) |
+| 056 | Exempt breadth-dimension candidates from redundancy decay for Phase-1 students (`09`) | Never present a secondary-sourced opportunity as confirmed/current (`08`) |
+| 057 | Turkish YKS admission is exam-score-dominated (`10`) | Never infer aptitude/fit from a demographic attribute (`08`) |
+| 058 | UK UCAS rewards subject-relevant evidence over general breadth (`10`) | Never present one career family as objectively "better" than another (`08`) |
+| 059 | This package's taxonomy/redundancy findings are general development guidance, not admissions-strategy, outside US-holistic systems (`10`) | Never equate a career family's popularity/growth with an individual student's fit (`08`) |
+
+**None of these are errors** — every rule on both sides is independently valid, sourced, and
+correct on its own branch. The only problem is the shared numeric namespace. **Whoever integrates
+must renumber one side's 034-059 range before merging `rules.json` files** — this table is the
+exact, ready-to-execute input for that pass; it does not need to be re-derived. This session
+deliberately did **not** renumber its own rules unilaterally, consistent with this whole package's
+standing principle (see "Protect everything first... never auto-merge" in this project's own
+`[[feedback-parallel-session-reconciliation]]` memory) — a mechanical renumbering across 8+
+documents and two JSON files, done under time pressure while the peer branch is still actively
+changing, risks introducing reference errors for a problem that has to be re-checked at
+integration time regardless of which branch does the renumbering.
+
 ## Integration instructions for whoever does the merge
 
 1. This branch (`-013956`) is the recommended merge *target* — it has no unrelated noise, unlike
