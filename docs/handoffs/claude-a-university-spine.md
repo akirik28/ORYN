@@ -2598,3 +2598,15 @@ QS rank, weaker web presence, several in non-English-primary domains) is genuine
 to verify than the ranked tier batches 1-7 worked through; stopped at 12 rather than
 padding to a round 20-25, consistent with quality-over-count. `admissions_url`: 570 →
 **582/1019 (57.1%)**.
+
+**Admissions URL batch 9 — 12 more universities**: Dartmouth College (a real, notable
+gap in the earlier ranked batches — its QS-rank join must have missed it, worth a future
+look at why), University of Essex, Goethe-University Frankfurt, École Centrale de Lyon,
+Free University of Bozen-Bolzano, Federal University of Minas Gerais (UFMG), El Colegio
+de México, Hasselt University, Czech University of Life Sciences Prague, DGIST, GIST,
+IIT BHU Varanasi. Four new `application_system` tags under the country-gated rule:
+Dartmouth → Common App (US), Essex → UCAS (UK), Goethe Frankfurt → uni-assist (Germany,
+its own page names uni-assist as the preliminary admissions service for non-German-Abitur
+applicants), École Centrale de Lyon → Parcoursup (France, its BSc Data Science page names
+Parcoursup directly). `admissions_url`: 582 → **594/1019 (58.3%)**, `application_system`:
+79 → 83/1019.
