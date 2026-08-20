@@ -61,6 +61,12 @@ export function EntityCombobox({
   const [open, setOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [isSearching, setIsSearching] = useState(false);
+  const [searchFailed, setSearchFailed] = useState(false);
+  // The query a search has actually resolved (or failed) for — distinguishes "we looked
+  // and found nothing" from "nothing's been searched yet" (e.g. focusing a field that
+  // already has a linked value, before the user types anything), which would otherwise
+  // both look like an empty `results` array.
+  const [searchedQuery, setSearchedQuery] = useState<string | null>(null);
   const [customOpen, setCustomOpen] = useState(false);
   const [customDialogKey, setCustomDialogKey] = useState(0);
   const listboxId = useId();
@@ -82,16 +88,30 @@ export function EntityCombobox({
     if (trimmed.length < MIN_QUERY_LENGTH) {
       setResults([]);
       setIsSearching(false);
+      setSearchFailed(false);
       return;
     }
     setIsSearching(true);
+    setSearchFailed(false);
     const thisRequest = ++requestIdRef.current;
     debounceRef.current = setTimeout(async () => {
-      const found = await searchEntitiesAction(scope, trimmed, context);
-      if (requestIdRef.current === thisRequest) {
-        setResults(found);
-        setIsSearching(false);
-        setHighlightedIndex(-1);
+      try {
+        const found = await searchEntitiesAction(scope, trimmed, context);
+        if (requestIdRef.current === thisRequest) {
+          setResults(found);
+          setIsSearching(false);
+          setHighlightedIndex(-1);
+          setSearchedQuery(trimmed);
+        }
+      } catch {
+        // A failed lookup must never leave the spinner running forever — surface it as a
+        // real (if terse) state instead of looking unresponsive.
+        if (requestIdRef.current === thisRequest) {
+          setResults([]);
+          setIsSearching(false);
+          setSearchFailed(true);
+          setSearchedQuery(trimmed);
+        }
       }
     }, DEBOUNCE_MS);
   }
@@ -129,6 +149,10 @@ export function EntityCombobox({
     }
   }
 
+  const trimmedValue = value.trim();
+  const hasQuery = trimmedValue.length >= MIN_QUERY_LENGTH;
+  const noResults = hasQuery && !isSearching && !searchFailed && searchedQuery === trimmedValue && results.length === 0;
+
   return (
     <div ref={containerRef} className="relative">
       <div className="relative">
@@ -143,7 +167,7 @@ export function EntityCombobox({
           value={value}
           placeholder={placeholder}
           onChange={(e) => handleTextChange(e.target.value)}
-          onFocus={() => value.trim().length >= MIN_QUERY_LENGTH && setOpen(true)}
+          onFocus={() => hasQuery && setOpen(true)}
           onKeyDown={handleKeyDown}
           autoComplete="off"
         />
@@ -152,8 +176,13 @@ export function EntityCombobox({
 
       {entityId ? <p className="mt-1 text-xs text-muted-foreground">Linked to a verified entry.</p> : null}
 
-      {open && (results.length > 0 || (canAddCustom && value.trim().length >= MIN_QUERY_LENGTH)) ? (
+      {open && hasQuery && (results.length > 0 || canAddCustom || searchFailed || noResults) ? (
         <ul id={listboxId} role="listbox" className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-lg border bg-popover py-1 text-popover-foreground shadow-md ring-1 ring-foreground/10">
+          {searchFailed ? (
+            <li className="px-3 py-2 text-sm text-muted-foreground">Search isn&apos;t working right now — try again in a moment.</li>
+          ) : noResults && !canAddCustom ? (
+            <li className="px-3 py-2 text-sm text-muted-foreground">No matches found.</li>
+          ) : null}
           {results.map((result, index) => (
             <li key={result.id} role="option" aria-selected={index === highlightedIndex}>
               <button
