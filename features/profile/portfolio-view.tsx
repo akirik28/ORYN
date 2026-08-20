@@ -4,10 +4,11 @@ import { FolderOpen } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/oryn/empty-state";
+import { formatDuration } from "@/lib/i18n/format";
 import { PORTFOLIO_CATEGORY_LABELS, type PortfolioItem, type PortfolioCategory } from "@/lib/portfolio/types";
 
 function ItemCard({ item }: { item: PortfolioItem }) {
-  const dateRange = [item.startDate, item.ongoing ? "Present" : item.endDate].filter(Boolean).join(" — ");
+  const dateRange = formatDuration(item.startDate, item.endDate, item.ongoing);
   return (
     <div className="space-y-1 rounded-xl border p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">

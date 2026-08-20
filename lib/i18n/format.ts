@@ -37,9 +37,12 @@ export function formatDate(date: string | Date, options?: Intl.DateTimeFormatOpt
 
 /** "Jun 15 – Aug 7, 2026" when both ends are known and fall in the same year; "Dec 18, 2026
  * – Jan 29, 2027" when they don't (both ends carry a year rather than only the second);
- * whichever single end is known when only one is; `null` when neither is — the caller omits
- * the whole section rather than rendering a fabricated "Duration: TBD". */
-export function formatDuration(startDate: string | null, endDate: string | null): string | null {
+ * "February 14, 2024 – Present" when `ongoing` (profile/CV/portfolio activities — an
+ * opportunity's own start/end dates never have this concept, only student-entered ones do);
+ * whichever single end is known when only one is; `null` when nothing is known — the caller
+ * omits the whole section rather than rendering a fabricated "Duration: TBD". */
+export function formatDuration(startDate: string | null, endDate: string | null, ongoing = false): string | null {
+  if (ongoing) return startDate ? `${formatDate(startDate)} – Present` : null;
   if (startDate && endDate) {
     const sameYear = parseDbDate(startDate).getUTCFullYear() === parseDbDate(endDate).getUTCFullYear();
     // The end date always carries its own year (formatDate's default); the start date's

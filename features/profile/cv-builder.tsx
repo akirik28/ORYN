@@ -6,14 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/oryn/empty-state";
+import { formatDuration } from "@/lib/i18n/format";
 import { PORTFOLIO_CATEGORY_LABELS, type PortfolioCategory, type PortfolioItem } from "@/lib/portfolio/types";
 
-/** Student's own words only — bullets come straight from `description`/`meta` already on
- * the record (the same fields Profile's "Improve with AI" already helps sharpen). No AI
- * call happens here: this view organizes and formats existing facts, never invents new
- * ones, matching the founder's own "AI improves wording, never invents facts" CV principle. */
-function dateRange(item: PortfolioItem) {
-  return [item.startDate, item.ongoing ? "Present" : item.endDate].filter(Boolean).join(" – ");
+function dateRange(item: PortfolioItem): string | null {
+  return formatDuration(item.startDate, item.endDate, item.ongoing);
 }
 
 export function CVBuilder({

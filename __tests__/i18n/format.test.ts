@@ -77,4 +77,12 @@ describe("formatDuration", () => {
   test("returns null when neither end is known, rather than a fabricated placeholder", () => {
     expect(formatDuration(null, null)).toBeNull();
   });
+
+  test("shows 'Present' for an ongoing activity, ignoring any endDate", () => {
+    expect(formatDuration("2024-02-14", "2025-01-01", true)).toBe("February 14, 2024 – Present");
+  });
+
+  test("ongoing with no startDate returns null rather than a bare 'Present'", () => {
+    expect(formatDuration(null, "2025-01-01", true)).toBeNull();
+  });
 });
