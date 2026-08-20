@@ -132,7 +132,16 @@ export function EntityCombobox({
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (!open || results.length === 0) return;
+    if (!open) return;
+    // Escape must dismiss the popup whenever it's actually open — including the
+    // zero-result states (no matches, search failed, or nothing but the "add custom"
+    // affordance) — not only when there are options to navigate. Checked before the
+    // results-length guard below, which exists for the option-navigation keys only.
+    if (e.key === "Escape") {
+      setOpen(false);
+      return;
+    }
+    if (results.length === 0) return;
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setHighlightedIndex((i) => Math.min(i + 1, results.length - 1));
@@ -144,8 +153,6 @@ export function EntityCombobox({
         e.preventDefault();
         selectResult(results[highlightedIndex]);
       }
-    } else if (e.key === "Escape") {
-      setOpen(false);
     }
   }
 
