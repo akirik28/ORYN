@@ -2865,3 +2865,12 @@ on this branch expecting the main checkout to be safe: check `git worktree list`
 `git branch --show-current` in this repo right now — the main checkout is being actively
 repurposed by whichever session doesn't yet have its own worktree, so "on branch X" at session
 start is not a durable guarantee for the rest of the session.**
+
+**Program catalogue batch 6 — Manchester, Michigan, Northwestern, UCLA, CMU, Bristol, 591 new**
+(from the isolated worktree onward, `.claude/worktrees/programs-pipeline-night`): continues the
+same US/UK zero-coverage QS-rank list. Full per-university sourcing method and known gaps (partial
+UCLA, Michigan LSA-only) are in that commit's own message rather than duplicated here — see
+`ace81f4`/`12005d3` on this branch. Running total this session: 832 programs across 10 previously-
+zero-coverage universities (`data/research/university-programs/independent_batch5_2026-08-21.jsonl`,
+`independent_batch6_2026-08-21.jsonl`), all file-only per this session's own no-live-write mandate —
+none of it has been ingested or applied anywhere.
