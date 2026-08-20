@@ -93,11 +93,24 @@ export async function getAllCostOfAttendance(supabase: SupabaseClient<Database>)
 }
 
 /**
- * Every university's QS rank_numeric, paginated + exact-count-verified. Same rationale as
- * getAllCostOfAttendance — university_rankings is already at 1009 rows for QS alone, i.e.
- * already effectively at PostgREST's 1000-row cap today, not just "will get there eventually."
+ * Every QS-ranked university's sort position, paginated + exact-count-verified. Same
+ * rationale as getAllCostOfAttendance — university_rankings is already at 1009 rows for QS
+ * alone, i.e. already effectively at PostgREST's 1000-row cap today, not just "will get there
+ * eventually."
+ *
+ * Sourced from `list_position` (QS's own row order in the published table), not
+ * `rank_numeric` — 300 of 1009 QS rows are band-ranked ("951-1000", not a single number) and
+ * `rank_numeric` is correctly NULL for every one of them (migration 0038's own constraint;
+ * `check:university-spine-health` guards the inverse). Filtering on `rank_numeric` excluded
+ * all 300 from every Ranking-sorted view and the "Top N" filter entirely — found live
+ * 2026-08-20: a country whose only university happened to be band-ranked (e.g. Ethiopia's
+ * Addis Ababa University, "951-1000") showed a truthful "· 1" count chip but then "No
+ * universities found" under the default Ranking sort. `list_position` is populated for all
+ * 1009 rows (verified), and is never displayed to a student directly — only `rank_display`
+ * is (see the separate `qsRankByUniId` fetch in app/(app)/universities/page.tsx) — so using
+ * it purely as an internal sort/threshold key adds no false precision.
  */
-export async function getAllQsRankNumeric(supabase: SupabaseClient<Database>): Promise<Map<string, number>> {
+export async function getAllQsListPositions(supabase: SupabaseClient<Database>): Promise<Map<string, number>> {
   const result = new Map<string, number>();
   let offset = 0;
   let expectedTotal: number | null = null;
@@ -105,22 +118,22 @@ export async function getAllQsRankNumeric(supabase: SupabaseClient<Database>): P
   for (;;) {
     const { data, count, error } = await supabase
       .from("university_rankings")
-      .select("university_id, rank_numeric", { count: "exact" })
+      .select("university_id, list_position", { count: "exact" })
       .eq("ranking_provider", "QS")
-      .not("rank_numeric", "is", null)
+      .not("list_position", "is", null)
       .order("university_id", { ascending: true })
       .range(offset, offset + PAGE_SIZE - 1);
-    if (error) throw new Error(`getAllQsRankNumeric: ${error.message}`);
+    if (error) throw new Error(`getAllQsListPositions: ${error.message}`);
     if (expectedTotal === null) expectedTotal = count ?? 0;
     for (const row of data ?? []) {
-      if (row.rank_numeric != null) result.set(row.university_id, row.rank_numeric);
+      if (row.list_position != null) result.set(row.university_id, row.list_position);
     }
     seen += (data ?? []).length;
     if (!data || data.length < PAGE_SIZE) break;
     offset += PAGE_SIZE;
   }
   if (seen !== expectedTotal) {
-    throw new Error(`getAllQsRankNumeric: assembled ${seen} rows but the server counts ${expectedTotal}. Refusing to return a partial result.`);
+    throw new Error(`getAllQsListPositions: assembled ${seen} rows but the server counts ${expectedTotal}. Refusing to return a partial result.`);
   }
   return result;
 }

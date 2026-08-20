@@ -46,8 +46,8 @@ describe("universities explorer never repeats the 1000-row / large-.in() bug cla
     expect(extractFunction(queries, "getAllCostOfAttendance")).toContain(".range(");
   });
 
-  test("getAllQsRankNumeric paginates with .range()", () => {
-    expect(extractFunction(queries, "getAllQsRankNumeric")).toContain(".range(");
+  test("getAllQsListPositions paginates with .range()", () => {
+    expect(extractFunction(queries, "getAllQsListPositions")).toContain(".range(");
   });
 
   test("fetchViaIdIntersection only ever calls .in(\"id\", ...) against a page-sized slice, never a full scope array", () => {

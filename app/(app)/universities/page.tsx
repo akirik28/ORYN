@@ -9,7 +9,7 @@ import { SUPPORTED_COUNTRIES } from "@/lib/data/country-geo";
 import { regionById } from "@/lib/data/regions";
 import { searchUniversityRows } from "@/lib/universities/alias-search";
 import { getSupersededUniversityIds } from "@/lib/universities/canonical";
-import { getUniversityCountByCountry, getAllCostOfAttendance, getAllQsRankNumeric } from "@/lib/universities/queries";
+import { getUniversityCountByCountry, getAllCostOfAttendance, getAllQsListPositions } from "@/lib/universities/queries";
 import {
   COST_BUCKETS,
   SIZE_BUCKETS,
@@ -102,12 +102,12 @@ export default async function UniversitiesPage({
   // to fail (Bad Request / connection reset) somewhere around 400-700 uuids, well under the
   // ~1019 universities a "World" scope can produce. A rank filter alone ("Top 500") can already
   // exceed that on its own. Fetching the full column once (paginated, see getAllCostOfAttendance/
-  // getAllQsRankNumeric) and intersecting client-side avoids the limit entirely, at the cost of
-  // one extra small query when these filters (or Ranking sort) are actually in use.
+  // getAllQsListPositions) and intersecting client-side avoids the limit entirely, at the cost
+  // of one extra small query when these filters (or Ranking sort) are actually in use.
   const needsQsRankMap = !q && (sort === "ranking" || rank !== null);
   const [costMap, qsRankMap] = await Promise.all([
     cost ? getAllCostOfAttendance(supabase) : Promise.resolve(null),
-    needsQsRankMap ? getAllQsRankNumeric(supabase) : Promise.resolve(null),
+    needsQsRankMap ? getAllQsListPositions(supabase) : Promise.resolve(null),
   ]);
 
   const rangeFilters = { size, cost, rank };
