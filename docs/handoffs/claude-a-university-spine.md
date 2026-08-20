@@ -2892,3 +2892,25 @@ static A-Z page found even via the Browser pane), Nottingham (course finder pagi
 at a time via the Browser pane, no single-page A-Z view found), Penn State (every candidate URL
 either 404'd or hung), Queen Mary/Southampton/Bath (all three are JS course finders with no
 fetchable static list or A-Z fallback found this session).
+
+**Program catalogue batch 10-11 — Exeter/Georgia Tech/Liverpool (400), Duke/York/UT Austin
+(214), 614 more, running session total 2,386 across 25 universities.** UT Austin's earlier
+"dropped, too messy" verdict (batches 7-9 note above) was revisited with a more targeted
+fetch prompt (constrain to entries with an explicit degree abbreviation) and succeeded well
+enough to publish 119 programs, A-through-Nutrition only -- the earlier drop was the right
+call at the time (that extraction genuinely was untrustworthy), not a case that should have
+been pushed through anyway. Duke's `trinity.duke.edu` block also worked around, via
+`admissions.duke.edu` instead (same domain family, same official_primary tier). Two more
+spot-check catches, same pattern as the Wisconsin Dairy Science one: UT Austin's new "Great
+Books" BA is real and already in the live catalogue with a working URL, but a January 2026
+news article describes it as pending Texas Higher Education Coordinating Board approval for
+a Fall 2027 launch -- caveated, not silently presented as open now. **Newly attempted and
+dropped this round**: UC Davis (every catalog.ucdavis.edu majors URL tried 404'd), Newcastle
+and USC (both paginated JS course finders -- USC alone reports 53 pages with no A-Z static
+fallback), UNC (registrar domains refused/404'd), WashU (majors page is a pure navigation
+shell, no static list). This session's original ~40-university QS-rank target list is now
+25 done, 1 partial-and-dropped (UT Austin, O-Z remaining), and the rest genuinely blocked by
+one of the failure shapes documented across these notes -- diminishing returns on continuing
+to retry the same blocked set, so the next stretch of this session is moving to a different
+lane (opportunities/summer-programs, or new-country spine expansion) rather than a 12th
+programme-catalogue batch against the same handful of stubborn course finders.
