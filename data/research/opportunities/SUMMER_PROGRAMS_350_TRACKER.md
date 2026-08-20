@@ -23,6 +23,17 @@ and honesty over hitting the number.
 | 1, group G | 8 | 7 | 0 | 1 (UCL Junior Summer School: no such program exists under that name — UCL's own "UCL Summer School" is undergrad-only; similarly-named third-party operators merely rent UCL's campus) | Applied 2026-08-20 |
 | 1, group H | 8 | pending | | | not yet researched — background agent in flight |
 
+**Note on group G (applied 2026-08-20):** checking the 7 new records against the live
+table also surfaced and removed 3 pre-existing junk rows (0 references in
+`opportunity_matches`/`saved_opportunities` confirmed before deleting): "IE University
+Business School: Madrid, Spain" and "Immerse Education Residential and Online
+Programmes 2025-2026" both had `official_url` = the bare organization homepage with a
+raw marketing-email scrape as the description (UTM tracking params, an "Exclusively
+for UAA Students" discount code); "Immerse Education" had a title/URL mismatch —
+`official_url` pointed at the essay-competition page already captured separately,
+while its description was actually a directory listing of 4 other sub-programme URLs.
+Live count after group G + cleanup: 329 total, 227 `summer_program`.
+
 **Note on groups C/D/F (applied 2026-08-20):** all 7 of group C (Cornell, Duke, Johns
 Hopkins CTY, Northwestern CTD, Stanford Pre-Collegiate, Penn, Emory) turned out to be
 duplicates already present from the 2026-08-18 founder-directed bulk Drive-corpus import
