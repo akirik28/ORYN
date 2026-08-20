@@ -102,11 +102,12 @@ database directly rather than trusting any prior session's report.
 | 12 | `12-institution-collision-traps.md` | Sourced, cross-country register of real same-name-different-institution traps (Sorbonne, TU-prefix, American University of X, etc.) |
 | 13 | `13-opportunity-organizer-research-batch2.md` | Official-URL/entity-type research for the long tail of single-occurrence opportunity organizers |
 | 14 | `14-trigram-similarity-discovery-audit.md` | A new discovery-only candidate-finding method tried against live data, including one candidate researched to a sourced, resolved conclusion |
+| 15 | `15-country-city-entity-gap.md` | `entity_type='country'`/`'city'` have zero rows despite six schema-enforced FK columns requiring them — the largest, cleanest gap this session found, and the one case where bulk pre-population is actually the right call |
 
 Docs 12–13 were produced by two background research agents dispatched partway through this
 session with the same evidence standard and non-duplication discipline as 00–11 (see
-`docs/handoffs/research-canonical-entity-intelligence.md` for exactly when/how); 14 continues the
-lead session's own direct-query method. All three are integrated here, not bolted on — read them
+`docs/handoffs/research-canonical-entity-intelligence.md` for exactly when/how); 14–15 continue
+the lead session's own direct-query method. All are integrated here, not bolted on — read them
 in the same pass as the rest of the package.
 
 Machine-readable companions live in `data/research/canonical-entities/`:

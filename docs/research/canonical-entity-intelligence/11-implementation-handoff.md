@@ -47,6 +47,12 @@ session could not determine the mechanism from a read-only pass (`09` Finding 7)
 `search_canonical_entities()`'s behavior against them is actually benign in the live product (not
 verified this session — flagged, not confirmed, as a risk).
 
+**6. Bootstrap `entity_type='country'` from ISO 3166-1, then backfill the six FK columns that
+require it.** `15`, `10` item 1b — this session's highest-priority *infrastructure* (not bug) gap:
+schema-required, DB-enforced, and 0% populated. Not this session's to build (would need write
+access and a real decision on the disputed-territory edge cases), but it's a self-contained,
+one-time bulk operation unlike everything else in this handoff.
+
 **6. Populate `opportunities.organization_entity_id`, starting from
 `data/research/canonical-entities/opportunity-organizer-candidates.json`'s two worked clusters
 (University of Pennsylvania/Wharton, MIT) plus the ≥2-occurrence tier.**

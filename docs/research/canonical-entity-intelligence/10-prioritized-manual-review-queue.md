@@ -3,15 +3,26 @@
 What a human or a future automated pass should look at first, and why — synthesizing `05`–`09`
 into one ordered list rather than leaving the priority implicit across five documents.
 
-## P0 — Structural, affects an entire language/script
+## P0 — Structural, affects the whole registry or an entire language/script
 
-**1. Fix Turkish `ı` handling in `dbNormalizedName()` and decide `nameKey()`'s behavior for it.**
+**1. Fix Turkish `ı`/German `ß` handling in `dbNormalizedName()` and decide `nameKey()`'s behavior
+for them.**
 Not a queue item in the usual sense — a code fix (`07`). Ordered first because every other
-Turkish-script entity created from today forward inherits this gap until it's fixed, and because
-`canonical_entities_identity_uq` is not actually protecting against duplicate Turkish-school/
-university inserts right now. Audit-then-fix the ~26+ already-affected stored rows as a follow-up
-once the function itself is corrected (regenerate-and-diff, not a blind bulk update, per `07`'s
-recommendation).
+Turkish- or German-script entity created from today forward inherits this gap until it's fixed,
+and because `canonical_entities_identity_uq` is not actually protecting against duplicate
+Turkish-school/university inserts right now. Audit-then-fix the ~26+ already-affected stored rows
+as a follow-up once the function itself is corrected (regenerate-and-diff, not a blind bulk
+update, per `07`'s recommendation).
+
+**1b. Bulk-populate `entity_type='country'` from ISO 3166-1.**
+`15`. Different in kind from every other item here: this is the one entity type where a full
+upfront bulk population is *correct*, not a shortcut — a bounded, authoritatively-enumerated set.
+Six schema-enforced FK columns (`profiles`, `education_records`, `universities`, `opportunities`)
+already require it (`canonical_required`, the strictest policy tier) and currently have nothing to
+point at. The underlying free-text `country` columns are already clean, so the backfill after
+bootstrap should be close to mechanical. Decide the small number of disputed-territory edge cases
+(Northern Cyprus, Taiwan, Hong Kong/Macao SAR — all already present in live `country` text values)
+deliberately rather than letting the bulk import default silently.
 
 ## P1 — Large, mechanical, already-scoped
 
