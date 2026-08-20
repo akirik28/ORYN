@@ -7,7 +7,7 @@ BRANCH:
 `oryn/research-turkey-schools` (isolated worktree, branched from `origin/main`@`5c59115`)
 
 LATEST COMMIT:
-(this file's own commit — see `git log` on this branch; research/handoff commits only, no schema/app changes)
+`28d851a` ("research(schools): complete Turkey high-schools Wave 1 registry (100/100)") — research/handoff commits only, no schema/app changes
 
 SCHOOLS:
 100 / 100 — **58 already-canonical** (live in production `canonical_entities`, not
