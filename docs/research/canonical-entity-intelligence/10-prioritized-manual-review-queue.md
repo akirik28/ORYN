@@ -60,16 +60,21 @@ request in `03`/`09` for a second live example). None of these five are this ses
 ## P2 — Real gaps, smaller blast radius, need product/schema judgment (not this session's to decide)
 
 **4. Add `partner_of` to the `entity_relationships.relationship_type` constraint.**
-A migration, so out of this session's scope entirely — but the need is concrete and evidenced
-(`08`): at least 4 live `opportunities.organization` strings are unmodeled joint-organizer credit.
+A migration, so out of this session's scope entirely — but the need is concrete and evidenced: 11
+live `opportunities.organization` strings across `08` and `13` are unmodeled joint-organizer
+credit, in at least three distinguishable shapes (symmetric co-brand partnership, asymmetric
+funder/sponsor, unincorporated joint effort with no parent at all) — see
+`relationship-taxonomy-mapping.json` for the breakdown, worth designing the migration against all
+three rather than just the original four simplest cases.
 
-**5. Populate `opportunities.organization_entity_id` for the ≥2-occurrence organizer clusters.**
-`data/research/canonical-entities/opportunity-organizer-candidates.json` has the University of
-Pennsylvania/Wharton and MIT clusters worked out in detail, plus the next tier
-(Stanford/CMU/Northwestern/Columbia/Boston University/Horn Entrepreneurship) flagged as
-likely-straightforward alias-resolver runs against the existing 1055+ university registry — not
-new research for most of them. The remaining ~160 single-occurrence organizer strings are real
-but lower-value per string; tackle after the clusters above.
+**5. Populate `opportunities.organization_entity_id` — all 171 distinct organizer strings now
+have a researched candidate, not just the high-value clusters.**
+`opportunity-organizer-candidates.json` (Penn/Wharton, MIT, next-tier ≥2-occurrence organizers)
+plus `opportunity-organizer-candidates-batch2.json` (the remaining 147, from `13`) together cover
+every distinct string in `opportunities.organization`. Apply `RULE-ENTITY-021` when doing this
+work: the FK must point at the organizing body, never at a `program`/`competition`/`scholarship`
+entity even when that's literally the organizer string's own name (`opportunities.organization_
+entity_id`'s trigger rejects those three types on this specific column).
 
 **6. Add a `campus_of` example.** Zero live rows of this type exist. Not urgent (nothing is
 currently modeled incorrectly), but worth watching for — the first genuine branch-campus case

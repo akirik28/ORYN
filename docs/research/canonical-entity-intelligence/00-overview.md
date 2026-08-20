@@ -100,7 +100,7 @@ database directly rather than trusting any prior session's report.
 | 10 | `10-prioritized-manual-review-queue.md` | What a human/agent should look at first, in what order, and why |
 | 11 | `11-implementation-handoff.md` | Concrete next actions for Claude A / data architecture, in priority order |
 | 12 | `12-institution-collision-traps.md` | Sourced, cross-country register of real same-name-different-institution traps (Sorbonne, TU-prefix, American University of X, etc.) |
-| 13 | `13-opportunity-organizer-research-batch2.md` | Official-URL/entity-type research for the long tail of single-occurrence opportunity organizers |
+| 13 | `13-opportunity-organizer-research-batch2.md` | The remaining 147 opportunity organizer strings, all resolved to a sourced official URL and proposed `entity_type` — completes coverage of all 171 distinct strings in `opportunities.organization` across `08`+`13` combined |
 | 14 | `14-trigram-similarity-discovery-audit.md` | A new discovery-only candidate-finding method tried against live data, including one candidate researched to a sourced, resolved conclusion |
 | 15 | `15-country-city-entity-gap.md` | `entity_type='country'`/`'city'` have zero rows despite six schema-enforced FK columns requiring them — the largest, cleanest gap this session found, and the one case where bulk pre-population is actually the right call |
 

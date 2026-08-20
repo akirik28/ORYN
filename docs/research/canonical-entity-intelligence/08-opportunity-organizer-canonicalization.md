@@ -4,7 +4,25 @@
 opportunity's organizer is still exactly the raw text a researcher typed into `organization`. This
 document works the problem directly from that live text (171 non-null distinct values across 369
 rows; 198 rows have no organizer text at all) rather than from theory, because the real strings
-already contain nearly every hard case this package's framework needs to handle.
+already contain nearly every hard case this package's framework needs to handle. `13
+-opportunity-organizer-research-batch2.md` (a background research agent's follow-on pass, reviewed
+and integrated) covers the ~147 remaining organizer strings this document's own worked clusters
+below don't — **all 147 resolved to a sourced official URL and proposed `entity_type`**, along
+with a real correction to this document's own earlier candidates (next paragraph) and 7 more
+joint-organizer cases beyond the four found here.
+
+**Correction, found by `13`:** `opportunities.organization_entity_id`'s own trigger
+(`trg_opportunities_org_entity_type`, migration 0038) only permits `entity_type in
+('opportunity_provider','organization','university','school','employer','research_institution',
+'lab','ngo','club')` — **`program`/`competition`/`scholarship` are not valid for this specific
+column**, even though they are valid `canonical_entities.entity_type` values generally. This
+document's own `opportunity-organizer-candidates.json` originally proposed PennApps and MIT
+Battlecode as `entity_type='competition'` without noting that distinction. The corrected rule
+(`RULE-ENTITY-021`, `06`): PennApps/MIT Battlecode should still exist as their own `competition`
+rows (for aliasing, search, and `provider_for` relationships back to their university) — but the
+actual `opportunities.organization_entity_id` value for a PennApps- or Battlecode-organized
+opportunity must point at University of Pennsylvania / MIT, never at the competition entity
+itself. Fixed in the JSON companion's `_meta`, not silently.
 
 ## The granularity ladder, read directly from live organizer text
 
@@ -102,12 +120,15 @@ symmetric relationship type (store one row; treat the pair as unordered at the a
 the way the mission brief's own vocabulary already assumed it would work) — a migration-level
 change flagged in `11`, not applied here.
 
-## What this document recommends as next research (not done in this pass)
+## Coverage status (updated after `13`)
 
-`data/research/canonical-entities/opportunity-organizer-candidates.json` proposes canonical-entity
-candidates for the highest-value cluster only (University of Pennsylvania/Wharton, MIT, and the
-next handful of ≥2-occurrence organizers: Stanford, CMU, Northwestern, Columbia, Boston
-University) rather than all 171 distinct strings — building all 171 out to full researched
-candidates (official URL, ROR/registry id where applicable, entity_type, proposed relationships)
-is real work this session did not have time to finish for the long tail and should not rush.
-`10` prioritizes the remaining organizers by how many opportunity rows they'd disambiguate.
+`data/research/canonical-entities/opportunity-organizer-candidates.json` covers the highest-value
+cluster (University of Pennsylvania/Wharton, MIT, and the next handful of ≥2-occurrence
+organizers). `13`'s `opportunity-organizer-candidates-batch2.json` covers the remaining 147 —
+**all 171 distinct organizer strings in `opportunities.organization` now have a researched,
+sourced candidate.** None of this has been written to `canonical_entities` — every candidate
+across both files is exactly that, a candidate, for whoever owns write access to confirm. `13`'s
+own method note is worth repeating here: query `opportunities.official_url` (already populated
+per-opportunity by an earlier researcher) *before* starting new web research on an organizer
+string — it resolved three genuine ambiguities `13` hit that web search alone would have gotten
+wrong or left uncertain.

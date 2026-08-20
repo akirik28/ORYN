@@ -53,21 +53,26 @@ schema-required, DB-enforced, and 0% populated. Not this session's to build (wou
 access and a real decision on the disputed-territory edge cases), but it's a self-contained,
 one-time bulk operation unlike everything else in this handoff.
 
-**6. Populate `opportunities.organization_entity_id`, starting from
-`data/research/canonical-entities/opportunity-organizer-candidates.json`'s two worked clusters
-(University of Pennsylvania/Wharton, MIT) plus the ≥2-occurrence tier.**
-Most of the ≥2-occurrence organizers (Stanford, CMU, Northwestern, Columbia, Boston University)
-are expected to be straightforward alias-resolver runs against the existing university registry —
-real research is only needed for the school/center/program-granularity decisions (Wharton, Horn
-Entrepreneurship) per `08`'s ladder.
+**6. Populate `opportunities.organization_entity_id` — every one of the 171 distinct organizer
+strings now has a researched candidate**, not just the high-value clusters:
+`opportunity-organizer-candidates.json` (Penn/Wharton, MIT, next-tier) plus
+`opportunity-organizer-candidates-batch2.json` (the remaining 147: 118 high confidence, 28
+medium, 1 low, `13`). Most of the ≥2-occurrence organizers (Stanford, CMU, Northwestern, Columbia,
+Boston University) are expected to be straightforward alias-resolver runs against the existing
+university registry. Apply `RULE-ENTITY-021`/`022` (`06`) when writing these: the FK always points
+at the organizing body, never at a `program`/`competition`/`scholarship` entity (the column's own
+trigger rejects those three types); `opportunity_provider` vs. generic `organization` is a
+judgment call `13` §4 documents a working heuristic for.
 
 ## Schema changes (migration required — this session recommends, does not draft)
 
 **7. Add `partner_of` to `entity_relationships.relationship_type`'s check constraint.**
-Evidence: `03`, `08` — at least 4 live `opportunities.organization` strings encode joint-organizer
-credit with no relationship type to express it. Recommend a symmetric-in-practice convention
-(store one row per pair, treat order as insignificant at the application layer) rather than
-requiring both directions stored.
+Evidence: `03`, `08`, `13` — 11 live `opportunities.organization` strings (not 4; `13` found 7
+more) encode joint-organizer credit with no relationship type to express it, in at least three
+distinguishable shapes (see `relationship-taxonomy-mapping.json`: symmetric partnership,
+asymmetric sponsor, unincorporated joint effort). Recommend a symmetric-in-practice convention for
+the peer-partnership shape (store one row per pair, treat order as insignificant at the
+application layer) and design against all three shapes, not just the simplest one.
 
 **8. Consider `organized_by` (or a temporal-validity pair, `valid_from`/`valid_to`, added to
 `entity_relationships` generally) for the cycle-varying-operator case.**
@@ -78,7 +83,13 @@ already what the one live example correctly does, so this is an improvement, not
 **9. (Lower priority, no live evidence yet) Consider whether `campus_of` and
 `successor_of`/`predecessor_of` need any structural support beyond what exists.**
 Both types are already in the constraint and unpopulated — this is a "watch for the first real
-case" item, not a schema gap. Recorded so it isn't mistaken for one.
+case" item, not a schema gap. Recorded so it isn't mistaken for one. Separately, `13` found 5 of
+147 researched opportunity organizers are government bodies with no clean `entity_type` fit among
+the current 14 (European Commission DG R&I, US Office of Naval Research, NASA, Turkey's YTB, US
+State Department ECA) — `organization` used as the closest available type throughout. Noted here
+at the same low priority as `campus_of`/`successor_of` (small blast radius, `organization` works
+as a stopgap) — not elevated to its own numbered recommendation below, consistent with this
+document's stated bias against proposing new `entity_type` values lightly.
 
 **10. Consider a `split_from`/`split_into` relationship type.** Evidence: `12` case 12 (İstanbul
 University's 2018 legislative split into İstanbul University and İstanbul University-Cerrahpaşa,
