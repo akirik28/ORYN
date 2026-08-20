@@ -2746,3 +2746,17 @@ Common Application") — left `application_system` null for both, consistent wit
 established caution that a mentioned system isn't automatically *the* system unless a
 university's page names it as the sole or clearly primary route.
 `admissions_url`: 618 → **630/1019 (61.8%)**, `application_system`: 89 → 90/1019.
+
+**Wave 3 summer programs applied — 17 net-new**: background agent research (28 UK/Europe
++ US STEM candidates from the tracker's remaining queue) returned 20 verified; live
+dedup check before insert caught 3 exact `official_url` duplicates the agent's file-only
+dedup pass couldn't see (Durham Global Futures, TECHCAMP @ Politecnico di Milano, Warwick
+Pre-University — all already live from earlier waves/imports). 17 net-new landed: St
+Andrews, KCL, Bath "Step into Bath", Sorbonne, FU Berlin SommerUNI, Istanbul Bilgi HS
+Summer School, Terp Young Scholars, Aggie STEM, CU Boulder PCDP, CO School of Mines,
+NHSI Cherubs, Boys State, Vanderbilt PTY, WashU CPP, UVA Emerging Engineers, ASU Barrett
+Summer Scholars, UT Austin WiSTEM. Full 8-item drop list (all with cause) in the
+tracker. Notable research discipline: the agent caught a hallucinated WebSearch claim
+that Istanbul Bilgi University had been "closed by decree," checked it directly against
+the university's own homepage, found it false, and disclaimed it explicitly in that
+record rather than trusting the AI summary. Live: 369 total, 252 `summer_program`.

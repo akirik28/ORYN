@@ -173,6 +173,38 @@ Mount Sinai HS summer research (both SPARKED and SPICE pages blocked/unreadable 
 HTTP 403 and JS-rendered respectively). Live count after Wave 2: 340 total, 235
 `summer_program`.
 
+## Wave 3 — dispatched 2026-08-21 (background agent, 28 candidates, UK/Europe more + US STEM more)
+
+| Wave | Candidates sent | Accepted | Duplicate | Rejected/skipped | Status |
+|------|-----------------|----------|-----------|-------------------|--------|
+| 3, UK/EU + US more | 28 | 17 | 3 (Durham Global Futures, TECHCAMP @ Politecnico di Milano, Warwick Pre-University — all exact `official_url` matches to existing rows) | 8 (see note) | Applied 2026-08-21 |
+
+**Note on Wave 3:** accepted University of St Andrews Summer Academic Experience,
+King's College London Pre-University Summer School, University of Bath "Step into Bath",
+Sorbonne Université Summer University, Freie Universität Berlin SommerUNI, Istanbul Bilgi
+University High School Summer School, Terp Young Scholars (UMD), Aggie STEM Overnight
+Camp (Texas A&M), CU Boulder Precollegiate Development Program, Colorado School of Mines
+Engineering Design Summer Camp, Northwestern NHSI "The Cherubs", American Legion Boys
+State, Vanderbilt PTY (Summer Institutes + Summer Academy), WashU College Prep Program,
+Emerging Engineers @ UVA, ASU Barrett Summer Scholars, UT Austin Women in STEM (WiSTEM)
+High School Camps. Dropped for cause: Imperial College Reach Out Lab (a year-round
+outreach lab, not a distinct summer program), University of Edinburgh "Pathways" (no
+standalone program exists; overlaps with the already-live Sutton Trust Summer School),
+Trinity College Dublin Explorer programme (no program found under this name), Vienna
+University of Economics and Business Summer University (undergrad/exchange-level, wrong
+audience; the teen "WU4Juniors" alternative has no confirmed cycle since 2022), Stockholm
+School of Economics and Panthéon-Sorbonne (no high-school-level program found for
+either), UVA Young Writers Workshop (official site cites "contractual obstacles" for
+2026, status unconfirmed), UNC Chapel Hill Summer Academy (summer.unc.edu bot-protected;
+the literal "Morehead-Cain Summer Academy" is an already-enrolled-scholars benefit, not
+an open-application program). The researcher also caught and refuted a hallucinated
+WebSearch claim that Istanbul Bilgi University had been "closed by decree" — checked
+directly against the official homepage and found false; flagged explicitly in that
+record rather than silently trusted. Several accepted records (CU Boulder PCDP, WashU
+CPP) are narrow, multi-year access-pipeline programs rather than general single-summer
+applications — flagged in their own records for Oryn's matching logic to weight
+accordingly. Live count after Wave 3: 369 total, 252 `summer_program`.
+
 ## Queued candidate pool for Wave 2+ (not yet dispatched)
 
 **US STEM (more):** Purdue Summer Engineering Workshop, University of Illinois WYSE, WPI
