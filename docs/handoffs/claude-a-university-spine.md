@@ -2570,3 +2570,21 @@ the pre-existing base. Continuing per the standing long-run/parallel-capacity ex
 mode — next up: Wave 2 candidate pool (queued in the tracker's own "Wave 2+" section) and/or
 the sparser data packages (`application_system` at 77/1019, program catalogs for
 zero-coverage countries) as background campaigns while foreground work continues.
+
+**Admissions URL batch 7 — 24 next-tier (unranked-tail) universities**: Hyderabad, New
+Brunswick, Hawaiʻi at Mānoa, Nebraska-Lincoln, Tartu, Frankfurt School of Finance &
+Management, Paris Dauphine-PSL, Stavanger, St. Gallen, Delhi, ESSEC, UNEC (Azerbaijan
+State University of Economics), IIUM, Kaohsiung Medical, NSYSU, National Taipei
+University of Technology, NJIT, Taiwan Tech (NTUST), Delaware, Iowa, Kansas, UC Santa
+Cruz, UMBC, Ghana — same domain-restricted-search-then-verify rigor as prior batches.
+National Taiwan Normal University (NTNU) was queued but not reached this batch — genuinely
+not researched, not dropped for cause. Two `application_system` values added under the
+existing country-gated rule (Phase 4): Paris Dauphine → **Parcoursup** (France institution,
+its own page names Parcoursup as the primary route for baccalauréat/EU/prior-French-study
+applicants) and NJIT → **Common App** (US institution, its own page states NJIT is a Common
+App member). Deliberately left `application_system` null for several candidates whose own
+pages named a portal only as one of multiple valid routes (Nebraska-Lincoln, Iowa — both
+"our own application OR Common App") or a system outside the tracked/known list (Delhi's
+CUET, UC Santa Cruz's UC-systemwide application) — consistent with the DCU/SJTU lesson
+that a mentioned system isn't automatically *the* system.
+`admissions_url`: 546 → **570/1019 (55.9%)**, `application_system`: 77 → 79/1019.
