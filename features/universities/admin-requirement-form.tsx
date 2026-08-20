@@ -132,7 +132,7 @@ export function AdminRequirementForm({ universityId, programs }: { universityId:
       </div>
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      {status ? <p className="text-sm text-emerald-700 dark:text-emerald-400">{status}</p> : null}
+      {status ? <p className="text-sm text-success">{status}</p> : null}
 
       <Button
         disabled={isPending || !title || !sourceUrl}

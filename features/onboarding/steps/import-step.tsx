@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
+import { StatusBadge } from "@/components/oryn/status-badge";
 import { uploadAndExtractCV } from "@/app/(onboarding)/onboarding/actions";
 import { EntityCombobox } from "@/features/entities/entity-combobox";
 import type { EntityScope } from "@/lib/entities/field-policy";
@@ -219,7 +220,7 @@ export function ImportStep({
             <div className="flex-1 space-y-1.5">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <span className="rounded bg-muted px-1.5 py-0.5">{CATEGORY_LABELS[item.category]}</span>
-                {item.confidence === "low" ? <span className="text-amber-600">Low confidence — please check</span> : null}
+                {item.confidence === "low" ? <StatusBadge label="Low confidence — please check" tone="warning" /> : null}
               </div>
               <Input
                 value={item.title}
