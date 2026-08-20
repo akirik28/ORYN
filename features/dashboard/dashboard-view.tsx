@@ -46,7 +46,7 @@ export interface DashboardViewProps {
   avoidRecommendation: { title: string; reason: string } | null;
   upcomingDeadlines: Awaited<ReturnType<typeof getUpcomingDeadlines>>;
   targetUniversities: Awaited<ReturnType<typeof getTargetUniversitiesWithDetails>>;
-  opportunityPreview: { title: string; matchScore: number }[];
+  opportunityPreview: { id: string; title: string; matchScore: number }[];
 }
 
 export function DashboardView({
@@ -194,7 +194,7 @@ export function DashboardView({
         </section>
       ) : null}
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 pt-4 md:grid-cols-2">
         <section className="min-w-0 space-y-3 rounded-xl border bg-muted/40 p-5">
           <SectionHeader
             title="University outlook"
@@ -205,11 +205,16 @@ export function DashboardView({
             }
           />
           {targetUniversities.length > 0 ? (
-            <ul className="space-y-2">
+            <ul className="space-y-1">
               {targetUniversities.map((target) => (
-                <li key={target.id} className="flex items-center justify-between text-sm">
-                  <span className="min-w-0 truncate pr-2">{target.university?.name ?? "Unknown university"}</span>
-                  <OutlookBadge outlook={target.outlook} />
+                <li key={target.id}>
+                  <Link
+                    href={target.university?.id ? `/universities/${target.university.id}` : "/universities"}
+                    className="-mx-2 flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-background"
+                  >
+                    <span className="min-w-0 truncate pr-2">{target.university?.name ?? "Unknown university"}</span>
+                    <OutlookBadge outlook={target.outlook} />
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -234,13 +239,18 @@ export function DashboardView({
             }
           />
           {opportunityPreview.length > 0 ? (
-            <ul className="space-y-2">
+            <ul className="space-y-1">
               {opportunityPreview.map((opp) => (
-                <li key={opp.title} className="flex items-center justify-between gap-2 text-sm">
-                  <span className="min-w-0 truncate pr-2">{opp.title}</span>
-                  <span className="shrink-0">
-                    <StatusBadge label={tierFor(opp.matchScore).label} tone={tierFor(opp.matchScore).tone} />
-                  </span>
+                <li key={opp.id}>
+                  <Link
+                    href={`/opportunities/${opp.id}`}
+                    className="-mx-2 flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-background"
+                  >
+                    <span className="min-w-0 truncate pr-2">{opp.title}</span>
+                    <span className="shrink-0">
+                      <StatusBadge label={tierFor(opp.matchScore).label} tone={tierFor(opp.matchScore).tone} />
+                    </span>
+                  </Link>
                 </li>
               ))}
             </ul>

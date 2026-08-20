@@ -121,8 +121,8 @@ export default async function DashboardPage() {
     : { data: [] };
   const titleById = new Map((matchedOpportunities ?? []).map((o) => [o.id, o.title]));
   const opportunityPreview = opportunityMatches
-    .map((m) => ({ title: titleById.get(m.opportunity_id), matchScore: m.match_score }))
-    .filter((o): o is { title: string; matchScore: number } => Boolean(o.title));
+    .map((m) => ({ id: m.opportunity_id, title: titleById.get(m.opportunity_id), matchScore: m.match_score }))
+    .filter((o): o is { id: string; title: string; matchScore: number } => Boolean(o.title));
 
   const displayName = profile?.display_name || profile?.first_name || "there";
 
