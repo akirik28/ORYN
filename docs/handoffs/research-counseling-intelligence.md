@@ -130,19 +130,48 @@ before treating any claim as settled, especially anything marked `medium` or low
 `148a2d6` scaffold → `51b1978` doc 01 → `abe4248` doc 02 (recreated after collision) → `99a7459`
 workstreams row update → `be55634` doc 05 → `0b5b0e2` family docs 10-12 → `1146f88` family docs
 13-17 → `bf89f1b` doc 09 (persona testing) → `0b0563e` doc 10 (open questions) → `c48c472`
-rules.json + sources.json → this file.
+rules.json + sources.json → `91f3a8e` this handoff (first draft) → `79b4eda` doc 11
+(geography-conditional admissions systems — France/Germany/Netherlands/Italy/Switzerland
+researched, USA/UK/Turkey deepened) → `ffeb51c` rules.json/sources.json updated with doc 11's
+entries (now 68 rules, 31 sources) → this update.
 
-## What's next (if this session's time/context runs out before finishing it)
+## Doc 11 landed — geography-conditional admissions systems
 
-Per the mission's own "AFTER CORE PACKAGE... do NOT stop" instruction, and given substantial time
-remained after the core 10-document package finished, this session is continuing into the
-highest-leverage gap its own research identified (`RULE-COUNSEL-060`): a geography-conditional
-admissions-system research layer (how much do USA/UK/non-UK-Europe/Turkey systems actually reward
-holistic profile-building vs. exam performance vs. subject-depth-only, and what should that mean
-for how ORYN's counselor weights its recommendations by target geography). If this file's own git
-log (above) doesn't yet show a commit past `c48c472` continuing this, that work either wasn't
-reached or is still in progress — check `docs/research/counseling-intelligence/11-*` (if it
-exists) and this file's most recent version before assuming it was never attempted.
+The "What's next" this handoff originally pointed to is done: `11-geography-admissions-systems.md`
+researched France (Parcoursup dossier, official sources), Germany (Abitur/Numerus-Clausus,
+including the large `zulassungsfrei`/open-admission category), Netherlands (diploma-based open
+admission + decentralized selection for `numerus fixus` programs), Italy (IMAT-driven public
+medicine vs. more holistic private), and Switzerland (Matura pass/fail admission to nearly
+everything including ETH/EPFL, no activity review at all outside medicine's separate aptitude
+test) — and cross-verified the peer session independently reached the same YKS/UCAS conclusion via
+its own research (their `03` §6/`RULE-COUNSEL-062`, cross-indexed into their `08` §9; note their
+`RULE-COUNSEL-062` is a **different rule** from this branch's `RULE-COUNSEL-062**, another
+numbering collision for the final-integration pass to resolve, same pattern as the already-flagged
+`RULE-COUNSEL-056` collision).
+
+**Core finding**: every system checked sorts into one of three tiers by how much a holistic
+activity profile actually affects admission — Tier 1 (USA, full holistic), Tier 2 (UK/France,
+partial/subject-focused), Tier 3 (Germany/Netherlands/Italy-public/Switzerland/Turkey,
+credential-or-exam-score-gated, minimal-to-no activity weight). Proposes (research only, not
+implemented) that ORYN's counselor key recommendation *framing* off this tier, conditioned on the
+student's **stated target institution**, never on nationality/residence — a Tier-3-track student
+should be led toward exam/grade preparation as the primary admissions lever, with development-
+dimension guidance reframed honestly as growth/alternative-pathway value rather than implied
+primary-admission relevance.
+
+## What's next (if this session continues further, or for whoever resumes)
+
+This session's own assigned scope plus its self-identified highest-leverage extension are both
+complete as of this update. Genuinely good next steps if more time/a future session picks this up,
+roughly in priority order: (1) the final cross-branch integration this handoff's own
+"Integration instructions" section describes — not something either research session should do
+unilaterally; (2) deepen doc 11 with primary-source (official government/ministry, not
+admissions-consulting-secondary) verification for Germany/Netherlands/Italy specifically, which
+this pass sourced mostly from secondary admissions-guide consensus rather than each country's own
+ministry/UCAS-equivalent page; (3) extend doc 11's tier framework to the remaining
+`AGENTS.md`-named "generic Europe fallback" case and to Canada (mentioned in onboarding's target-
+geography options, `AGENTS.md` Screen 4, but not in the original mission's five explicit
+geographies) if ORYN's actual user base shows meaningful Canada-track demand.
 
 **Founder-level decision this package cannot make on its own**: whether/how to reconcile this
 branch with the peer's — both are real, validated, non-overlapping-in-content work, and the

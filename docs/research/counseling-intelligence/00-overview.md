@@ -66,6 +66,7 @@ the mission's own non-negotiables: no production code changes).
 | 08 | `08-unsafe-inference-rules.md` | Consolidated registry of inference patterns ORYN must never make, pulled from every other document |
 | 09 | `09-persona-testing.md` | Do the frameworks above hold up against concrete hypothetical student profiles, including edge cases? |
 | 10 | `10-open-questions.md` | What remains genuinely unresolved, and what data does ORYN not yet have to execute these rules? |
+| 11 | `11-geography-admissions-systems.md` | Added after `10` identified it as the highest-leverage gap: how much does holistic profile-building actually matter across USA/UK/France/Germany/Netherlands/Italy/Switzerland/Turkey, and what should that mean for how the counselor weights recommendations by target geography? |
 
 Machine-readable companions live in `data/research/counseling-intelligence/`:
 
