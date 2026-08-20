@@ -2588,3 +2588,13 @@ pages named a portal only as one of multiple valid routes (Nebraska-Lincoln, Iow
 CUET, UC Santa Cruz's UC-systemwide application) — consistent with the DCU/SJTU lesson
 that a mentioned system isn't automatically *the* system.
 `admissions_url`: 546 → **570/1019 (55.9%)**, `application_system`: 77 → 79/1019.
+
+**Admissions URL batch 8 — 12 more unranked-tail universities**: Adam Mickiewicz
+University (Poznań), Ain Shams University (Cairo), Ankara Üniversitesi, Anna University,
+Auckland University of Technology, Bar-Ilan University, Ben-Gurion University of the
+Negev, Bina Nusantara University (BINUS), Brno University of Technology, Cairo
+University, Beihang University, Canadian University Dubai — this tier of the corpus (no
+QS rank, weaker web presence, several in non-English-primary domains) is genuinely harder
+to verify than the ranked tier batches 1-7 worked through; stopped at 12 rather than
+padding to a round 20-25, consistent with quality-over-count. `admissions_url`: 570 →
+**582/1019 (57.1%)**.
