@@ -27,32 +27,40 @@ starting large work; update it again when you finish or hand off. Do not rewrite
 agent's row from assumption — verify from git log/live DB first, then correct with
 evidence if it's actually wrong.
 
-## Current rows (last updated 2026-08-20, by the Computer A session on `oryn/programs-pipeline-reconciled`)
+## Current rows (last updated 2026-08-20, merged from both sessions — DATA-A row re-corrected again by DATA-A itself, since Claude B's version was already one checkpoint stale by the time it landed; that's expected in a live file like this, not a criticism)
 
 | Workstream | Owner | Branch | Current package | Scope | Status |
 |---|---|---|---|---|---|
-| DATA-A | Claude A (this session) | `oryn/programs-pipeline-reconciled` | Admissions-URL coverage campaign (batches 1-3, 82 universities done, continuing) + programme-catalogue pipeline expansion (delegated to a background agent, batch 2 in flight) | University/opportunity data acquisition, canonical graph, ingestion pipelines, data QA — see `docs/MASTER-EXECUTION-STRATEGY.md` §3 "Computer A" for the full scope list | Active. Latest pushed commit: `ef93277`. Not yet merged to `main` — `main`'s integration owner is Computer B per the strategy doc. |
-| PROD-B | Claude B (other computer) | `oryn/counselor-data-quality-v1` | Counselor data-quality hardening: opportunity eligibility evidence, duplicate audits, university-programs-card frontend fix (`036792f`), eligibility-badge rendering fix (`5cdf1bd`) | Counselor intelligence, product/UX, opportunity data quality as it gates counselor output, integration to `main` | Active as of `5cdf1bd` (most recent commit seen this session). Not yet merged to `main` — branched off `main`@`1f9c474` (post counselor-core-v1 merge), main hasn't moved since. |
-| (unclaimed) | — | `oryn/university-intelligence-spine`, `oryn/product-ux`, `oryn/programs-opportunities-intel`, `oryn/programs-pipeline` | — | These branches exist on origin and have local worktrees on this machine (`.claude/worktrees/product-ux`, `.claude/worktrees/programs-opportunities`) but showed no commits ahead of what's already merged into the lineage this session inspected — treat as historical/superseded unless a session actively resumes one. Don't build new work on these without first checking whether their content already landed via the `2b9796c` integration merge. | Dormant as of this check. |
+| DATA-A | Claude A | `oryn/programs-pipeline-reconciled` | Admissions-URL coverage campaign (4 batches, 512/1019 universities, 50.2%) + programme-catalogue pipeline (Delft/Trinity pilot + Edinburgh/Waterloo/Glasgow batch 2, 6 real extraction bugs found and fixed with tests) + opportunities Wave 1 groups B/C/D/F applied + a 3-record opportunities dedup QA cleanup. 3 more background research agents in flight as of this checkpoint: competitions expansion, research/internship/scholarship expansion, student-count coverage. | University/opportunity data acquisition, canonical graph, ingestion pipelines, data QA — see `docs/MASTER-EXECUTION-STRATEGY.md` §3 "Computer A" for the full scope list | Active. Latest pushed commit as of this note: `29c2f97`. Not yet merged to `main`. |
+| PROD-B | Claude B | `oryn/counselor-data-quality-v1` | Counselor data-quality hardening + product-integration/data-contracts/counselor-surfacing/UI-foundation/QA package (B1-B12) | Counselor intelligence, product/UX, opportunity data quality, canonical entity integration, `main` integration ownership per the strategy doc | Active. Latest pushed commit as of Claude B's own last check: `88061d6`. 5 correctness fixes shipped that checkpoint plus `docs/current-product-capability-map.md`. Not yet merged to `main`. |
+| COORD | Claude B | `oryn/coordination-integration-2026-08-20` | Coordination-only package: brought this file in from DATA-A's branch without merging it wholesale, re-measured and rewrote `docs/current-state.md` with proper measurement-provenance framing, corrected this table — merged to `main` as `5c59115`. | Docs only (`docs/ORYN_WORKSTREAMS.md`, `docs/current-state.md`) — no code/schema/data changes | Landed on `main`; DATA-A merged it back into `oryn/programs-pipeline-reconciled` this checkpoint (resolving the add/add conflict this file itself hit — both sessions edited it concurrently, exactly the scenario this file exists to reduce). |
+| UI-SIMPLIFY | Claude (third session) | `oryn/ui-simplification-v1` | UX research / simplification analysis (per the founder's `MASTER-EXECUTION-STRATEGY.md` §"UI / Simplification Claude" workstream) — first-pass simplification analysis, a dashboard opportunity-preview fix, a profile_views visibility-check fix, a profile-completeness scoring fix. | UX research, cognitive-load reduction, progressive disclosure, final information architecture | Active as of `1b964d0` (newest branch seen this checkpoint, not yet deeply investigated by DATA-A — different territory, no overlap expected). |
+| (unclaimed) | — | `oryn/university-intelligence-spine`, `oryn/counselor-core-v1`, `oryn/integration-2026-08-19`, `oryn/recovery-pre-integration-2026-08-19`, `oryn/product-ux`, `oryn/programs-opportunities-intel`, `oryn/programs-pipeline` | — | No commits ahead of what's already in the DATA-A/PROD-B lineage as of the last check by either session — treat as historical/superseded unless a session actively resumes one. | Dormant. |
 
 ## Known cross-branch facts worth not re-discovering
 
-- `origin/main` tip is `9c06610` ("docs: add canonical parallel execution strategy") —
-  unchanged since this session's own merge into `oryn/programs-pipeline-reconciled`
-  (`9e3d338`). Neither active branch (DATA-A, PROD-B) has been merged to `main` yet as of
-  this row's timestamp.
-- Migration numbering: `main` has 0001-0046 applied/committed cleanly (the 0043 collision
-  between the spine and programs-pipeline branches was already resolved during the
-  `2b9796c` integration — spine kept `0043_university_duplicate_supersession`, programs
-  content moved to `0044`). `0047_structured_eligibility_facts.sql` exists only on
-  `counselor-data-quality-v1` (PROD-B), not yet merged or applied live — DATA-A should use
-  `0048+` for any new migration to avoid re-colliding.
-- This environment (DATA-A's machine) has no local `SUPABASE_SECRET_KEY`,
-  `ANTHROPIC_API_KEY`, or `TAVILY_API_KEY` — confirmed via `npm run check:integrations`.
-  All DB writes this session went through the Supabase MCP tool (`execute_sql`) directly
-  against project `qtcvcflzxbuagvvwahhu` (`oryn-qa-scratch`), not through the app's own
-  `.env.local`-based scripts. `WebFetch`/`WebSearch` (Claude's own tools, not this repo's
-  Tavily integration) were used for all admissions-URL and programme-catalogue research —
-  real, verified, evidence-based, just not routed through the repo's own credential-gated
-  pipeline. A session with real credentials can run `scripts/acquire-programs.ts` /
-  `scripts/ingest-university-programs.ts` directly instead of the MCP workaround.
+- `origin/main` tip is `5c59115` ("docs: coordination integration — workstreams map +
+  re-measured current-state"), merged from `oryn/coordination-integration-2026-08-20`. DATA-A
+  has merged this into `oryn/programs-pipeline-reconciled`. Neither DATA-A nor PROD-B's
+  product work has been merged into `main` yet as of this note.
+- **Migration numbering, corrected by PROD-B, still current**: PROD-B's branch has migrations
+  through **0048** (`0047_structured_eligibility_facts.sql`,
+  `0048_profile_view_visibility_guard.sql` — both written, reviewed, **not yet applied
+  live**). **DATA-A should use 0049+** for any new migration — DATA-A has not added any
+  migrations this session, so this remains purely a heads-up, not yet consumed.
+- **Live DB re-measured 2026-08-20 by Claude B** (`oryn-qa-scratch`, `qtcvcflzxbuagvvwahhu`,
+  via Supabase MCP): migration `0043_university_duplicate_supersession`'s DDL **is now live**
+  (the `duplicate_status`/`superseded_by_id` columns genuinely exist) — this corrects the
+  prior "never applied" narrative still circulating in `docs/founder-blocked-backlog.md`.
+  However the **data backfill has not run** (`select count(*) from universities where
+  duplicate_status = 'superseded'` = 0 as of that check) — the 9 known duplicate pairs are
+  still only suppressed by `lib/universities/duplicate-supersessions.json` at the application
+  layer. `0046` is also confirmed live. This is a data-migration task now, not a DDL/access
+  problem — DATA-A has not run it yet this session (out of scope for the batches run so far;
+  a good next candidate). Also flagged by Claude B: a **new Supabase-secret-key regression**
+  ("JWT issued in future") — full detail in `docs/current-state.md`.
+- DATA-A's machine has no local `SUPABASE_SECRET_KEY`/`ANTHROPIC_API_KEY`/`TAVILY_API_KEY` —
+  all its DB writes went through the Supabase MCP tool (`execute_sql`) directly against
+  `qtcvcflzxbuagvvwahhu`, and its research went through `WebFetch`/`WebSearch` rather than
+  this repo's own Tavily integration. A session with real credentials can run
+  `scripts/acquire-programs.ts`/`scripts/ingest-university-programs.ts` directly instead.
