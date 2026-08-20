@@ -2416,3 +2416,37 @@ Two fetches that came back as unverified guesses ("would likely be at...") were 
 and re-verified via a second, real search+fetch pass rather than accepted on a first weak
 answer (Birmingham, NYU). `admissions_url`: 431 → 460/1019 (45.1%). `university_sources`
 provenance rows added for all 29.
+
+**Admissions URL batch 3 — next 29 ranked universities**: Helsinki, Bath, Macquarie,
+Universiti Sains Malaysia, Universiti Kebangsaan Malaysia, Oslo, Wisconsin-Madison, USP,
+IIT Bombay, USTC, Exeter, UC Davis, Universiti Putra Malaysia, Liverpool, Vienna, NTHU
+Taiwan, Western University, UNAM, Newcastle, Basel, USC, Wageningen, Groningen, TU Berlin,
+Universiti Teknologi Malaysia, UNC Chapel Hill, York, WashU St Louis, Universitat de
+Barcelona — same rigor. `admissions_url`: 460 → 489/1019 (48.0%), 82 universities total
+across the three batches this session.
+
+**Opportunities data-quality sweep (evidence-based, not fuzzy-matched)**: while cross-
+checking Wave 1 group B candidates against the live table, spotted and verified three
+junk/duplicate `opportunities` rows and removed them (0 `opportunity_matches`/
+`saved_opportunities` referenced any of them, confirmed before deleting): "Breathrough
+Challenge" (typo'd title, `unverified`, same `breakthroughjuniorchallenge.org` domain and
+underlying competition as the properly-researched, `verified_current` "Breakthrough
+Junior Challenge" — a raw-scrape duplicate, not a genuinely different opportunity);
+"Young Investors Society" (title/description was literally just the organization's own
+homepage URL restated — not a specific opportunity at all, and the real programme,
+"YIS Stock Pitch Competition", already exists as a proper `verified_current` record);
+"Immerse Education Competitions" (a hub/directory page whose own scraped description
+is explicitly about "The Immerse Education Essay Competition 2026" — the same essay
+competition already captured separately and correctly as "Immerse Education Essay
+Competition"). Left one lower-confidence case alone rather than merging on assumption:
+"iGEM High School Competition" vs "International Genetically Engineered Machine
+Competition (iGEM)" have genuinely different official URLs (a HS-specific track page vs.
+the general competition page) and could legitimately be parent/child rather than
+duplicates — flagged here for a future pass with deeper verification, not auto-merged.
+`opportunities`: 304 → 301 after the 3 deletions (net of the +3 from group B below).
+
+**Wave 1 group B applied**: of the 5 records this session's research agent wrote to
+`data/research/opportunities/wave1_2026-08-18_groupB.jsonl`, live-refetch-before-dedup
+caught 2 as duplicates of the 2026-08-18 bulk import (AwesomeMath, BU RISE — matched by
+`official_url`). 3 net-new: Rutgers Young Scholars Program in Discrete Mathematics,
+Carnegie Mellon SAMS, Secondary Student Training Program (SSTP, University of Iowa).
