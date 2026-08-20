@@ -18,9 +18,22 @@ and honesty over hitting the number.
 |------|-----------------|----------|-----------|-------------------|--------|
 | 0 (pre-existing `batch1_2026-08-17.jsonl`) | 7 | 6 | 1 (M&TSI) | 0 | Applied — commit `9cefbee` |
 | 1, groups A+E | 16 | 10 | 0 | 6 (E: BETA Camp, Notre Dame Business Scholars, Wharton Foundations in Business, JSA, TASP, Georgetown Law/Advocacy — all ruled out as non-existent-under-that-name/discontinued/renamed/duplicate) | Applied — commit `b6167a4` |
-| 1, groups B/C/D/F/G/H | 48 | pending | | | in progress — see note below |
+| 1, groups C/D/F | 20 | 11 | 9 | 0 | Applied 2026-08-20 (see note below) |
+| 1, groups B/G/H | 24 | pending | | | not yet researched — see note below |
 
-Live `opportunities` count after groups A+E: 62 total, 30 `summer_program`.
+**Note on groups C/D/F (applied 2026-08-20):** all 7 of group C (Cornell, Duke, Johns
+Hopkins CTY, Northwestern CTD, Stanford Pre-Collegiate, Penn, Emory) turned out to be
+duplicates already present from the 2026-08-18 founder-directed bulk Drive-corpus import
+(69→290) — re-fetching live `opportunities` immediately before dedup (per this repo's
+established parallel-session practice) caught this before any duplicate insert. D02 (USC)
+and D03 (UChicago) also matched existing rows under different titles. Net: 11 new rows
+(NYU Precollege, Harvard SSP, MIT BWSI, Georgia Tech PEAKS, Caltech SRC, NYLF Medicine,
+Interlochen, RISD, Parsons, Tisch, Iowa Young Writers' Studio).
+
+Live `opportunities` count after groups A+E+C+D+F: 301 total, 217 `summer_program`.
+(217 reflects both this campaign's own adds and the separate 2026-08-18 bulk import,
+which added far more summer programs than this campaign has run so far — not a claim
+that 217 came from this tracker's own waves alone.)
 
 **Operational note (2026-08-18/19):** the account's rolling session usage limit was hit
 twice while running 8 parallel research agents at once (each burn appears to exhaust a
@@ -43,7 +56,15 @@ Online Summer, Stanford SASI, Stanford ULO, Tufts Pre-College, Wharton M&TSI, Ox
 Academic Programs, Sabancı University Summer School, Notre Dame Pre-College Summer
 Scholars, Özyeğin University Summer Research Program, Summer Science Program (SSP),
 Wharton LBW, Ross Mathematics Program, Pioneer Research Institute, Wharton Investment
-Competition, World Scholar's Cup.
+Competition, World Scholar's Cup, Cornell Precollege Studies Summer Residential Program,
+Duke Pre-College Program, Johns Hopkins CTY Summer Residential Program, Northwestern CTD
+3-Week Academic Summer Camps, Stanford Pre-Collegiate Summer Institutes, Penn Pre-College
+Program, Emory Pre-College Program, NYU Precollege Program, USC Summer Programs
+(Pre-College), UChicago Pre-College Summer Session, Harvard Secondary School Program
+(SSP), MIT Beaver Works Summer Institute (BWSI), Georgia Tech Summer PEAKS, Caltech
+Summer Research Connection (SRC), NYLF Medicine & Health Care, Interlochen Arts Camp,
+RISD Pre-College, Parsons Summer Intensive Studies, Tisch Summer High School, Iowa Young
+Writers' Studio.
 
 ## Wave 1 — dispatched 2026-08-18 (8 parallel research agents, 8 programs each)
 
