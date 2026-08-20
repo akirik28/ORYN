@@ -90,6 +90,33 @@ package's contribution is the 41-pair diagnosis above and the normalization find
 re-triage of the Turkish-schools queue, which another concurrent effort already owns and is
 visibly handling well.
 
+## Finding 6: the accent-folding duplicate shape (distinct from Finding 2) was already found and
+correctly resolved — verified by direct query, not assumed
+
+While extending `07`'s normalization testing to German, this session initially suspected a
+*second*, distinct duplicate pattern: four major German universities (Eberhard Karls Universität
+Tübingen, Friedrich-Alexander-Universität Erlangen-Nürnberg, Humboldt-Universität zu Berlin,
+Ludwig-Maximilians-Universität München) each appeared to have two `canonical_entities` rows with
+the same `display_name` but *different* stored `normalized_name` — one ASCII-folded
+("universitat...tubingen"), one not ("universität...tübingen"). Direct inspection of each pair
+(not just the aggregate count) found this was a false alarm: in all four cases, the ASCII-folded
+row is already `verification_state='merged'` (tombstoned, zero `universities` rows, zero external
+ids) and the un-folded row is the live, fully-enriched one (full ROR/GRID/ISNI/Wikidata/CrossRef
+coverage). **This is `isPureEncodingVariant()` working exactly as designed** — its own code
+comment claims "26 of 28 name-variant pairs in one pass turned out to be exactly this," and these
+four are consistent with that cleanup having already run and correctly resolved them.
+
+Broadening the check to every entity type, active rows only
+(`group by entity_type, display_name having count(distinct normalized_name) > 1`): **zero
+results.** No entity of any type currently has two active rows sharing a `display_name` with
+disagreeing `normalized_name` values. This precisely re-scopes Finding 1: the Turkish `ı` gap is
+confirmed to be exactly what `07` describes — **a single-row stored-value/live-convention
+mismatch, a protection gap against a *future* duplicate insert — not a currently-manifested
+duplicate row**, for any entity, Turkish or otherwise. Worth recording precisely rather than
+loosely, since this session's own first read of the German case briefly overstated it before a
+second, more careful query corrected it — the kind of self-correction this package's method
+section commits to rather than hides.
+
 ## What this audit deliberately checked and found clean
 
 - **No duplicate pairs found outside `entity_type='university'`** via the same exact-name

@@ -63,6 +63,26 @@
       "claim_supported": "Every organizer-granularity example in doc 08, including the University of Pennsylvania/Wharton six-way cluster and the METU/Arber-Kongre-A.Ş./Radyo-ODTÜ cycle-operator string",
       "confidence": "high",
       "limitations": "Text as entered by whichever research pass sourced each opportunity -- this session did not re-verify each organizer string against the opportunity's own official source page; the *canonicalization problem* these strings illustrate is the claim, not each individual opportunity's factual accuracy."
+    },
+    {
+      "id": "SRC-007",
+      "source_title": "PostgreSQL unaccent extension behavior on German ß (eszett) and apostrophe characters",
+      "source_url": "internal: direct SQL query against oryn-qa-scratch, `select unaccent('Weißensee')`",
+      "source_type": "primary_live_database",
+      "retrieved_at": "2026-08-21T00:00:00Z approx (session window, second normalization-testing pass)",
+      "claim_supported": "unaccent('Weißensee') = 'Weissensee' (confirms ß->ss folding, the same mechanism gap as Turkish ı, in dbNormalizedName()); unaccent() does not touch apostrophe characters at all (confirms the apostrophe-style finding is not a JS/DB disagreement, unlike ı/ß)",
+      "confidence": "high",
+      "limitations": "No live canonical_entities row containing ß was found to test end-to-end (checked, zero matches) -- this finding is mechanism-verified and defensive, not evidence of a currently-manifested duplicate the way the Turkish ı finding is."
+    },
+    {
+      "id": "SRC-008",
+      "source_title": "Live canonical_entities rows for four major German universities, re-verified after an initial mis-read",
+      "source_url": "internal: oryn-qa-scratch, direct id-level query on Eberhard Karls Universität Tübingen / Friedrich-Alexander-Universität Erlangen-Nürnberg / Humboldt-Universität zu Berlin / Ludwig-Maximilians-Universität München",
+      "source_type": "primary_live_database",
+      "retrieved_at": "2026-08-20T23:50:00Z approx (session window)",
+      "claim_supported": "All four institutions' ASCII-folded-normalized_name duplicate row is already verification_state='merged' (zero universities rows, zero external ids) while the un-folded row is the live, fully-ROR/GRID/ISNI/Wikidata/CrossRef-enriched one -- confirming isPureEncodingVariant()-driven cleanup already correctly resolved this pattern, and that doc 09 Finding 6's broader zero-result query (no active row shares a display_name with a disagreeing normalized_name, for any entity type) is accurate",
+      "confidence": "high",
+      "limitations": "This session's own first read of the aggregate count (before checking verification_state per row) briefly mis-read this as an unresolved duplicate -- corrected within the same session before anything was published; recorded in doc 09 Finding 6 as a deliberate example of the verify-before-claiming discipline this package tries to model throughout."
     }
   ]
 }

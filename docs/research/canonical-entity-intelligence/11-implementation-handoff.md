@@ -7,11 +7,13 @@ session had no write access to production/live-write paths and no migration auth
 
 ## Code changes (no migration required)
 
-**1. Fix `dbNormalizedName()` in `lib/acquisition/normalize.ts` for Turkish dotless-ı.**
-Evidence: `07`. The function currently leaves `ı` (U+0131) unfolded, disagreeing with the
-database's own `lower(unaccent(x))` convention its docstring says it must match. Minimal shape of
-the fix: an explicit `ı`→`i` (and `İ`→`i`, though that case already works correctly once NFD runs
-first — see `07`'s corrected hypothesis) mapping, placed so it survives the existing
+**1. Fix `dbNormalizedName()` in `lib/acquisition/normalize.ts` for Turkish dotless-ı — and German
+ß, confirmed to be the identical bug in a second language, not a Turkish-specific case.**
+Evidence: `07`. The function currently leaves `ı` (U+0131) and `ß` unfolded, disagreeing with the
+database's own `lower(unaccent(x))` convention its docstring says it must match — confirmed live
+that `unaccent()` folds both (`ı`→`i`, `ß`→`ss`) while `dbNormalizedName()` folds neither. Minimal
+shape of the fix: explicit `ı`→`i` and `ß`→`ss` mappings (`İ`→`i` already works correctly once NFD
+runs first — see `07`'s corrected hypothesis), placed so they survive the existing
 NFD/diacritic-strip/lowercase chain. Add the full Turkish alphabet (`ç ğ ı ö ş ü` + capitals) as a
 permanent test fixture once fixed.
 

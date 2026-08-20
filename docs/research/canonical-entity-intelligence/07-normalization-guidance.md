@@ -118,22 +118,69 @@ single highest-severity concrete finding — see `09`/`11`.
 
 ## What this document recommends (not implements)
 
-1. Trace and fix `dbNormalizedName()` to fold `ı`/`I`/`İ`/`i` the same way Postgres's `unaccent()`
-   does — likely a small, explicit addition (e.g. `.replace(/ı/g, "i").replace(/İ/g, "i")` placed
-   correctly relative to the existing NFD/diacritic-strip/lowercase chain) rather than a rewrite;
-   the İ path already works once NFD runs first, so only the bare-`ı` case needs a new rule.
-2. Separately decide, deliberately, what `nameKey()` *should* do with `ı` — folding it to `i`
-   (matching `dbNormalizedName()`'s fix) rather than deleting it is almost certainly right, since
-   `nameKey()`'s entire purpose is loose matching and silent deletion actively works against that
-   purpose.
-3. Audit (not guess-fix) the existing stored `normalized_name` values for every Turkish-script
+1. Trace and fix `dbNormalizedName()` to fold every letter Postgres's `unaccent()` folds beyond
+   simple diacritic removal — confirmed so far: `ı`→`i` (`İ`→`i` already works once NFD runs
+   first, no fix needed there) and `ß`→`ss`. Likely a small, explicit addition (e.g.
+   `.replace(/ı/g, "i").replace(/ß/g, "ss")`, placed correctly relative to the existing
+   NFD/diacritic-strip/lowercase chain) rather than a rewrite — but scope the fix as "match
+   `unaccent()`'s ruleset," not "handle Turkish," since this session independently confirmed the
+   identical mechanism breaks a second, unrelated language. Worth checking `unaccent()`'s full
+   rules file for other such letters (Danish/Norwegian `ø`, ligature `æ`/`œ`) before considering
+   the fix complete, though this session did not find a live example of either to justify testing
+   them as anything more than a documentation note.
+2. Separately decide, deliberately, what `nameKey()` *should* do with `ı`/`ß` — folding to
+   `i`/`ss` (matching `dbNormalizedName()`'s fix) rather than deleting/splitting is almost
+   certainly right, since `nameKey()`'s entire purpose is loose matching and silent deletion
+   actively works against that purpose.
+3. Lower priority: consider normalizing apostrophe *style* (straight vs curly) in
+   `dbNormalizedName()`/the database convention itself — narrower and more cosmetic than 1-2, and
+   unlike them is not a JS-vs-database disagreement (neither side currently handles it).
+4. Audit (not guess-fix) the existing stored `normalized_name` values for every Turkish-script
    entity — a regenerate-and-diff pass, the same pattern this codebase already uses elsewhere
    ("regenerate full-spine fixture, apply the delta," per `docs/handoffs/claude-a-university-spine.md`)
    rather than a blind bulk UPDATE, since some rows may have additional hand-verified content in
    other fields worth preserving exactly as-is.
-4. Add this exact case (`ı`, and ideally the full Turkish-alphabet set: `ç, ğ, ı, ö, ş, ü` plus
-   their capitals) as a permanent unit-test fixture for both functions once fixed, so this
-   regressing again is caught mechanically rather than requiring another manual Turkish-name audit.
+5. Add this exact case (`ı` and `ß` at minimum, and ideally the full Turkish-alphabet set:
+   `ç, ğ, ı, ö, ş, ü` plus their capitals) as a permanent unit-test fixture for both functions once
+   fixed, so this regressing again is caught mechanically rather than requiring another manual
+   per-language audit.
+
+## Verified, live, and the same bug in a second language: German `ß` (eszett)
+
+Extending this session's testing beyond Turkish, per the mission brief's instruction to try
+several target markets: German `ß` has no NFD decomposition (it is a distinct letter, not an
+accented one — same structural shape as Turkish `ı`), so it passes through
+`nameKey()`/`dbNormalizedName()`'s diacritic-strip step untouched, exactly like `ı` did. Tested
+directly: `nameKey("Weißensee")` → `"wei ensee"` (split into two fragments, same failure mode as
+`Yıldız`); `dbNormalizedName("Weißensee")` → `"weißensee"` (raw, unfolded). Confirmed directly
+against live Postgres: **`unaccent('Weißensee')` = `'Weissensee'`** — the database's own
+convention *does* fold `ß`→`ss`, exactly as it folds `ı`→`i`, and exactly as `dbNormalizedName()`
+fails to. This means the fix recommended in `11` item 1 should not be scoped as "handle Turkish
+`ı`" narrowly — it needs to cover every letter Postgres's `unaccent()` folds beyond simple
+diacritic removal, and `ß` is a second, independently-confirmed member of that set alongside `ı`.
+**No live `canonical_entities` row currently contains `ß`** (checked — zero matches), so this is a
+defensive, mechanism-verified finding rather than a currently-manifested duplicate risk, unlike
+the Turkish case — recorded now specifically so it doesn't have to be independently rediscovered
+the first time a German institution name containing `ß` is acquired (art schools and some
+place-name-derived institution names are the most likely source, per the "Kunsthochschule
+Berlin-Weißensee" style of name).
+
+## Verified, live, and lower-severity: apostrophe *style* (straight `'` vs curly `’`) is unhandled
+by `dbNormalizedName()`, though it is not a JS-vs-database disagreement
+
+Real live examples of apostrophes in `canonical_entities.display_name`: `Ca' Foscari University
+of Venice`, `King's College London`, `Queen's University Belfast`, `Université Côte d'Azur`,
+`Universita' degli Studi di Ferrara` (the last an Italian orthographic convention using a trailing
+apostrophe in place of an accented `À/À`-style vowel some sources render without diacritics).
+Tested: `nameKey()` correctly folds both straight and curly apostrophes to the same result (its
+explicit `.replace(/[’'\`]/g, "")` step). `dbNormalizedName()` has no equivalent step, and neither
+does Postgres's `unaccent()` (confirmed — `unaccent()` only folds accents, not punctuation) — so
+**this is not a JS/database disagreement** the way `ı`/`ß` are, but it does mean the database's
+own convention would fail to match, say, `"Ca' Foscari"` (straight apostrophe) against a
+differently-sourced `"Ca’ Foscari"` (curly apostrophe) for the same real institution. Lower
+priority than the `ı`/`ß` findings (both sides of the JS/DB boundary already agree with each
+other here, and apostrophe-style collisions are narrower and more cosmetic than a deleted letter),
+but worth a line in `11` for completeness rather than leaving it undiscovered.
 
 ## City-string and other formatting normalization
 
