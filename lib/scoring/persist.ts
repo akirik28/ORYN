@@ -3,7 +3,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { assembleScoringFacts } from "./assemble-facts";
 import { computeCareerProfile } from "./index";
-import { computeCompleteness } from "./completeness";
+import { computeCounselingCompleteness } from "./completeness";
 
 /**
  * Recomputes a student's full career profile and persists it: upserts the current
@@ -44,7 +44,7 @@ export async function recomputeCareerProfile(userId: string, opts?: { snapshotRe
   );
 
   const careerProfile = computeCareerProfile(facts);
-  const completeness = computeCompleteness({
+  const completeness = computeCounselingCompleteness({
     ...facts,
     profile: profileRow,
     skillCount: skillsResult.count ?? 0,
