@@ -66,6 +66,22 @@ live row already correctly put it) rather than forcing it into a relationship ta
 expire. This is not a novel recommendation — it is naming what the researcher who wrote this
 specific live row already did correctly, generalized as guidance for the next one.
 
+## Location and online/residential variants: checked, not yet a live problem
+
+The mission brief separately flags "location variant" and "online vs residential variant" as
+opportunity-canonicalization risks (the same real program offered at multiple sites, or in both
+online and in-person form, potentially entered as separate-looking records). Checked directly:
+`opportunities.location_mode` is populated for 164/369 rows (`in_person` 103, `online` 32,
+`hybrid` 29 — the other 205 unset, a data-completeness question for whoever owns this table, not
+an entity-identity one) and **zero opportunities currently share the same `normalized_title`** —
+meaning no location- or mode-variant duplicate exists yet in live data. Recorded as a validated
+negative, not a gap to build guidance for prematurely: the right rule (when this does arise) is
+that the same program in two genuinely different formats is one `program`/`competition` entity
+with either two `entity_locations` rows (physical variants) or a `location_mode` distinction
+already available on `opportunities` itself (online/hybrid/in-person) — not two separate
+canonical entities — but this session did not need to invent that guidance in detail against zero
+real examples.
+
 ## Joint / co-organizer credit: the missing `partner_of`
 
 At least four live rows name two independent organizations jointly with no ownership implied
