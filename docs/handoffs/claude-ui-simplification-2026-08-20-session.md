@@ -940,3 +940,31 @@ original report:
 
 STATUS: OVERNIGHT SWEEP COMPLETE — 6 REAL FIXES SHIPPED, 1 FALSE-ALARM BUG INVESTIGATION
 CLOSED AND FLAGGED, CLEAN TREE, PUSHED.
+
+## Addendum — `95fbb91`, one more real fix found via systematic sweep
+
+After the batch above, instead of guessing whether more instances of the same raw-date bug
+existed beyond what the two survey agents happened to sample, ran a direct grep for the whole
+pattern class (`\.(deadline|startDate|endDate|...)\}` outside a `formatDate`/`formatDuration`/
+`date-fns` call) across all of `app/` and `features/`. Found one real instance neither agent's
+file list covered: `features/opportunities/opportunity-detail-panel.tsx` — Discovery/Map's own
+right-panel/bottom-sheet preview component (shipped in the *first* package this session,
+before `formatDuration` existed), still had its own raw duration join and unformatted
+`deadline`. Fixed the same way, using the shared, unit-tested helpers. The end-date-only case
+(previously silently dropped — no branch for it at all) now renders "Ends `<date>`" like every
+other `formatDuration` call site — a small completeness gain, not a behavior anyone was
+relying on.
+
+Followed up with two more targeted sweeps that came back clean (verified, not just assumed):
+a currency/amount-field sweep (one hit, in `universities/compare/page.tsx` — already uses
+`.toLocaleString("en-US")` with an *explicit* locale, so not actually vulnerable to the
+locale-drift bug `formatNumber`/`formatCurrency` guard against; left alone, matches that
+page's own "plain table" product decision); an icon-only-button aria-label sweep (6 files
+matched the icon pattern, all 6 already had a real `aria-label` — the `OpenToForm` gap from
+earlier this session was the outlier, not a systemic pattern); a bare "No X found/yet" sweep
+(every hit either feeds a properly-composed `EmptyState`-style component via a `text` prop,
+like `AchievementSection` on the explicitly-not-touched profile page, or is a small inline
+hover-tooltip/contextual fallback that was never meant to be a full-screen empty state).
+
+typecheck/lint/test (1152/1152)/build clean after this fix, same as every commit in this
+file. Working tree clean, pushed, `origin` in sync at `95fbb91`.
