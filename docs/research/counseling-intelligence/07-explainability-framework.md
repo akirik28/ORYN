@@ -96,7 +96,8 @@ table's own framing rather than inventing new stage-language ad hoc.
 redundancy/saturation, major-family evidence-type distinctions, evidence-state ladders) must enter
 `why[]`/`warnings[]` the same way today's templates already work — as a **parameterized template
 string keyed to a real, structured fact** (a computed `yearsUntilGraduation`, a `REDUNDANCY_DECAY`-
-adjusted rank, an `evidenceRung` if implemented per `02-opportunity-development-mapping.md` §4) —
+adjusted rank, an `evidenceRung`-style achievement-tier fact of the kind
+`02-opportunity-development-mapping.md` proposes) —
 never as a place where an LLM is asked to "explain this recommendation in your own words" for the
 deterministic pipeline. The existing, correct boundary (`lib/ai/counselor-explain.ts` is the *only*
 place an LLM touches this contract, strictly additive/optional, per

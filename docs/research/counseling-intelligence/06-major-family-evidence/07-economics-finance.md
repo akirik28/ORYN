@@ -58,7 +58,7 @@ as accessible to beginners, and (c) produces a genuine written-research output r
 competition placement. The **National Economics Challenge** (Council for Economic Education) is a
 comparable, separately-organized option [S-FED-CHALLENGE]. Beyond competitions: an independent
 research project analyzing real economic data (directly usable as `research` dimension evidence per
-`01-development-taxonomy.md` §2.4), or a sustained personal-investing/portfolio-tracking project
+`01-development-taxonomy.md`'s `research` section), or a sustained personal-investing/portfolio-tracking project
 with genuine analytical reflection (not merely "I invested money" — the analysis and reasoning is
 the evidence, not the account balance).
 

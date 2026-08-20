@@ -87,16 +87,6 @@ such. **Environmental engineering** inherits the same PE-licensure structure dis
 infrastructure/safety — not a separate licensure system, the same one. No further country-specific
 verification performed for this family beyond what's already noted in the engineering document.
 
-## Sources referenced in this document
-
-| ID | Source | Type | Confidence | Used for |
-|---|---|---|---|---|
-| S-BLS-ENVENG | [BLS OOH — Environmental Engineers](https://www.bls.gov/ooh/architecture-and-engineering/environmental-engineers.htm) | Official (US BLS) | High (US-specific) | §2, §3 |
-| S-BLS-ENVSCI | [BLS OOH — Environmental Scientists and Specialists](https://www.bls.gov/ooh/life-physical-and-social-science/environmental-scientists-and-specialists.htm) | Official (US BLS) | High (US-specific) | §2 |
-| S-BLS-CONSERVATION | [BLS OOH — Conservation Scientists and Foresters](https://www.bls.gov/ooh/life-physical-and-social-science/conservation-scientists.htm) | Official (US BLS) | High (US-specific) | §2, §3 |
-| S-CITIZEN-SCIENCE | [Youth-focused citizen science: Examining the role of environmental science learning and agency for conservation — *Biological Conservation* (ScienceDirect)](https://www.sciencedirect.com/science/article/pii/S0006320716302051) | Peer-reviewed research (abstract/summary accessed) | Medium — abstract-level access, full methodology not independently reviewed this pass | §4 |
-| S-ENV-PROGRAMS-CATEGORY | Multiple secondary aggregator sources describing named teen environmental research/conservation-internship/mentorship programs | Secondary, discovery-context only, per this package's own source-discipline rule | Low-to-medium as *confirmation of the opportunity category existing*; explicitly not sufficient confidence to present any specific named program as a verified, current opportunity to a student | §4 (explicitly caveated in-line) |
-
 ## 7. Country notes (UK / EU / Turkey)
 
 **United Kingdom:** National Careers Service's official **Environmental Consultant** profile

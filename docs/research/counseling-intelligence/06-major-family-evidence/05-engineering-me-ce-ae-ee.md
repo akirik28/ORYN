@@ -28,8 +28,8 @@ Per BLS's occupational profiles across this cluster: applied mathematics and phy
 foundation common to all four; for aerospace specifically, BLS names both design-oriented technical
 skill and troubleshooting/problem-solving as an engineer moves from design intent to a working
 system [S-BLS-ENG]. Beyond BLS: iterative design-build-test practice (common across all four,
-directly the `execution_project_depth` construct from `01-development-taxonomy.md` §2.9 — a
-physical or simulated prototype that was actually built/tested is stronger evidence than a design
+directly the `execution_project_depth` construct from `01-development-taxonomy.md`'s section on
+that dimension — a physical or simulated prototype that was actually built/tested is stronger evidence than a design
 on paper alone), CAD/simulation tooling (already in `lib/vocabularies/skills.ts`'s suggestion list),
 and, for civil specifically, an explicit orientation toward public safety and regulatory compliance
 that the other three subfields don't share to the same degree.
@@ -55,8 +55,8 @@ illustration.
 robotics or CAD exposure), general physics/math coursework engagement.
 
 **Phase 2:** a sustained build project with a working, tested result (this is the single strongest
-evidence type across this whole family, per `01-development-taxonomy.md` §2.9 — a design sketch
-that was never built is materially weaker evidence than a smaller project that was actually
+evidence type across this whole family, per `01-development-taxonomy.md`'s `execution_project_depth`
+section — a design sketch that was never built is materially weaker evidence than a smaller project that was actually
 completed and tested); robotics competitions (demonstrate team-based design-build-test under
 deadline pressure — structurally similar to a hackathon's evidence profile per
 `02-opportunity-development-mapping.md`, but sustained over a season rather than a single event, so

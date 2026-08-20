@@ -14,7 +14,7 @@ human-computer interaction, cybersecurity). **RULE-COUNSEL-037:** treat "Compute
 umbrella, not a single skill — a student drawn to competitive-programming-style algorithmic puzzle
 solving and a student drawn to building and shipping user-facing products are both legitimately
 "interested in CS" but are developing measurably different things, mirroring exactly the
-sub-type-heterogeneity problem `02-opportunity-development-mapping.md` §1 already documents for the
+sub-type-heterogeneity problem `02-opportunity-development-mapping.md` already documents for the
 `competition`/`hackathon` categories. Named subfields worth distinguishing in counseling
 conversations: software engineering (building maintainable systems), data science (extracting
 insight from data, statistics-heavy), machine learning/AI (building and training models,
@@ -70,7 +70,8 @@ yet) — this breadth is appropriate and should not be read as unfocused at this
 
 **Phase 2 (deepening, ~2–1 years from graduation):** a sustained project with real scope (something
 that took more than a few weekends, ideally with a live demo/repo — directly the
-`execution_project_depth` evidence pattern from `01-development-taxonomy.md` §2.9); contributing to
+`execution_project_depth` evidence pattern from `01-development-taxonomy.md`'s section on that
+dimension); contributing to
 an existing open-source project (a genuinely differentiated signal from a solo-only project,
 because it demonstrates working within someone else's codebase/constraints and, often, code review);
 competitive programming (USACO, national/international informatics olympiads) *specifically*
@@ -83,7 +84,7 @@ either of the above two. **RULE-COUNSEL-038:** when counseling a CS-interested s
 at least these three evidence types (sustained build, algorithmic competition, time-boxed
 hackathon/team build) rather than treating "did something CS-related" as one undifferentiated
 signal — this is the concrete, field-specific instance of the general principle
-`02-opportunity-development-mapping.md` §1 raises abstractly.
+`02-opportunity-development-mapping.md` raises abstractly.
 
 ## 5. Interdisciplinary connections (per `00-family-taxonomy.md` §6)
 
@@ -134,7 +135,7 @@ higher-education program-to-career mapping — both confirmed to exist and to be
 see `10-open-questions.md`) but this pass did not verify what either says specifically about
 software/computing roles. No licensure gate is believed to apply to this family in Turkey (software
 engineering is not among the title-protected professions under Turkey's engineering-title law,
-Law No. 3458 — see `05-engineering-me-ce-ae-ee.md` §7 for that law's actual scope), but this specific
+Law No. 3458 — see `05-engineering-me-ce-ae-ee.md` §6 for that law's actual scope), but this specific
 negative claim was not independently verified against Turkish law for this family and should be
 treated as a reasonable inference, not a sourced fact.
 

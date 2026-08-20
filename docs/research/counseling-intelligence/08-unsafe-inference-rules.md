@@ -148,7 +148,7 @@ until that pass happens.
   super-curricular-weighted system); Oryn's developmental framing remains valid, but its
   admissions-relevance framing must be geography-conditional. (Rules 060/061 were minted in
   `06-major-family-evidence/01-computing-information-sciences.md` §7 and
-  `05-engineering-me-ce-ae-ee.md` §7 respectively — country-notes additions, not unsafe-inference
+  `05-engineering-me-ce-ae-ee.md` §6 respectively — country-notes additions, not unsafe-inference
   rules, so not indexed in this document's main tables above; listed here only to keep this
   session's rule sequence externally traceable.)
 

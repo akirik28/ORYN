@@ -113,8 +113,8 @@ automatically a gap — the "why" must distinguish *time remaining* (an objectiv
 Concrete cases:
 - A Phase-1 student who has already found deep focus (e.g., a 14-year-old with two years of
   sustained, self-directed project work in one area) should not be nudged toward artificial breadth
-  "for its own sake" — `01-development-taxonomy.md` §2.2 already notes breadth is valuable mainly as
-  a *precursor* to depth, not a requirement independent of it.
+  "for its own sake" — `01-development-taxonomy.md`'s `intellectual_curiosity` section already
+  notes breadth is valuable mainly as a *precursor* to depth, not a requirement independent of it.
 - A Phase-2 student who is still broad because of a genuine, recent, legitimate interest shift
   (goal-system data, Phase 66 of the founder spec, would show a recently changed or added goal)
   should have that context surfaced explicitly ("your focus shifted recently, which is why
@@ -159,8 +159,8 @@ subject) and *extracurricular* activity (general activities — sports, clubs, v
 leadership) that would broaden a student as a person rather than demonstrate subject engagement
 specifically [S-UCAS-SUPERCURRICULAR]. The 2026-entry UCAS personal statement format has a
 dedicated question structure built around subject-specific engagement, with UCAS's own guidance
-suggesting the large majority of statement content should be academic/subject-focused (already
-noted in `01-development-taxonomy.md` §2.1's 80/20 framing) — meaning general extracurricular
+suggesting the large majority of statement content should be academic/subject-focused — meaning
+general extracurricular
 breadth across many `ProfileDimension`s is **a much weaker admissions signal for a UK-track
 student than the same breadth would be for a US-track student**, even though it may still be
 genuinely valuable for the student's own development. **RULE-COUNSEL-062 extends to this case**:

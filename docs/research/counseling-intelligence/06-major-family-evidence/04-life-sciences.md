@@ -59,7 +59,7 @@ exams (animal anatomy, plant biology, bioinformatics) [S-IBO] — a strong, inte
 comparable evidence point structurally similar to the chemistry olympiad in
 `03-physical-sciences.md` §4. Beyond competition: a sustained lab-based or field-based research
 project (ideally with a named mentor and a described methodology, per
-`01-development-taxonomy.md` §2.4's research sub-facet ladder), or a structured pre-college
+`01-development-taxonomy.md`'s `research` section and its sub-facet ladder), or a structured pre-college
 research/lab-exposure program — genuinely valuable *exposure*-stage evidence even without a
 publication, per that same section's caution against requiring publication for a strong signal.
 

@@ -17,7 +17,8 @@ business/management study is about operating and improving an existing one. A st
 "business" broadly may be drawn to either or both, and a strong management-track profile
 (operational, process-improvement-oriented) is not automatically evidence of entrepreneurial
 capability, and vice versa — this directly reinforces the over-counting risk already named in
-`01-development-taxonomy.md` §2.5 (a club role is not automatically entrepreneurship evidence).
+`01-development-taxonomy.md`'s `entrepreneurship` section (a club role is not automatically
+entrepreneurship evidence).
 
 ## 2. Core skills
 
@@ -25,9 +26,9 @@ Per BLS's overview of management occupations: leadership, adaptability, and prob
 decision-making are named as critical management-occupation skills, alongside detail-orientation and
 information-technology fluency as expectations even at entry-level business roles generally
 [S-BLS-BUSINESS]. Beyond BLS: for the entrepreneurship-specific track, the founder spec's own
-framing (§6.4, reused directly in `01-development-taxonomy.md` §2.5) is the clearest available
-statement of what actually matters — originating, building, and testing against a real outcome,
-not idea generation alone.
+framing (§6.4, reused directly in `01-development-taxonomy.md`'s `entrepreneurship` section) is the
+clearest available statement of what actually matters — originating, building, and testing against
+a real outcome, not idea generation alone.
 
 ## 3. Career families
 
@@ -42,8 +43,8 @@ career mode. **Counter-stereotypical example:** a large fraction of successful v
 operators hold degrees entirely outside business (engineering, computer science, the sciences) —
 business/entrepreneurship is one of the fields in this whole taxonomy where the major↔career
 relationship is loosest, since the "credential" the field cares most about in practice
-(demonstrated execution — see `01-development-taxonomy.md` §2.5 and §2.9) is available to build
-independent of any specific major.
+(demonstrated execution — see `01-development-taxonomy.md`'s `entrepreneurship` and
+`execution_project_depth` sections) is available to build independent of any specific major.
 
 ## 4. Exploration pathways by stage
 
@@ -59,8 +60,9 @@ entrepreneurship, accounting, business law, and several technology-adjacent cate
 [S-DECA-FBLA]. **RULE-COUNSEL-048:** participation and placement in a DECA/FBLA-style competitive
 event demonstrates applied business-scenario reasoning and presentation/communication skill under a
 structured simulation — genuinely valuable evidence for the "business/management" side of this
-family, but it is **not** entrepreneurship evidence in the sense `01-development-taxonomy.md` §2.5
-defines it (originating and testing a real venture), since it is a simulation of a business
+family, but it is **not** entrepreneurship evidence in the sense `01-development-taxonomy.md`'s
+`entrepreneurship` section defines it (originating and testing a real venture), since it is a
+simulation of a business
 scenario, not the operation of a real one — the same evidence-type discipline
 `02-opportunity-development-mapping.md` establishes generally, applied concretely here. For
 entrepreneurship specifically: the strongest evidence is a real, even small, tested venture
