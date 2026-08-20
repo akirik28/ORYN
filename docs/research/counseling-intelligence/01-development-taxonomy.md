@@ -1,268 +1,527 @@
-# 01 — Student Development Taxonomy
+# 01 — Development Taxonomy
 
 **Answers:** What dimensions of student development are actually meaningful for counseling, and
 how do they map onto the 9 shipped `ProfileDimension` values?
 
-**Binding constraint (see `00-overview.md`):** this document reuses `ProfileDimension` exactly as
-shipped (`types/database.ts:65`) — `academics`, `intellectual_curiosity`, `leadership`, `research`,
-`entrepreneurship`, `community_impact`, `awards_distinction`, `career_exploration`,
-`execution_project_depth`. It proposes **zero new top-level dimensions**. Where research surfaces a
-distinction the current taxonomy can't express, it is written up as a **sub-facet** — an evidence
-attribute a future scorer could weigh — never a schema change.
+**Reuses, does not replace:** `ProfileDimension` (`types/database.ts`), `evidence_status`
+(`supabase/migrations/0004_achievements.sql`), and every achievement table in
+`0004_achievements.sql`/`0005_evidence_and_goals.sql`. Every claim below about "what's shipped"
+was checked directly against those files and `lib/scoring/dimensions/leadership.ts`, not assumed.
+See `00-overview.md` for the full non-duplication rationale.
+
+This document covers five cross-cutting semantic layers that apply *across* all nine dimensions
+(activity types, roles, time/duration, outputs, evidence provenance) before walking the nine
+dimensions themselves — cross-cutting concepts belong once, not repeated nine times.
 
 ---
 
-## 1. Why a "development taxonomy" is a distinct question from "a scoring formula"
+## 1. Activity taxonomy — what kind of thing is this evidence?
 
-`lib/scoring/dimensions/*.ts` already computes a 0–100 score per dimension from structured facts.
-That is a **measurement** question (how do we turn stored facts into a number). This document
-answers a prior, **conceptual** question: what is each dimension actually trying to capture, what
-does strength in it look like at different ages, and where do real students' lives blur the
-boundaries between dimensions. Counselor Core's candidate/ranking logic consumes the *scores*
-`lib/scoring` already produces — it does not need this document to run. What this document is for
-is the parts of Counselor Core that are still templated English (`lib/counselor/evidence.ts`'s
-`why[]` strings) and the parts that are still open questions (how `candidates.ts` might eventually
-reason about "deepen an existing project," explicitly out of scope per
-`docs/counselor-core-plan.md` §6) — both need a shared, written-down understanding of what each
-dimension *means*, not just how it's scored.
+The mission brief's requested categories, reconciled against what's actually shipped:
 
-## 2. The nine dimensions, what each actually measures, and its sub-facets
+| Evidence family | Shipped home | Gap |
+|---|---|---|
+| Course / course level | `courses`, `education_records` | Curriculum-relative rigor (is this the hardest course this school offers?) has no field — see §6 |
+| Internal grade / predicted / final result | `grades`, `test_scores` | Predicted vs. final is a real confidence distinction (§5 evidence-provenance) not currently tagged at the row level |
+| External exam / diploma | `test_scores`, `education_records` | — |
+| Academic award | `awards` | Conflated with non-academic awards in one table — fine structurally (§8 awards_distinction explains why) |
+| Club membership, student government, community org | `activities` (`activity_category`) | — |
+| Project | `projects` | No `activity_category`-style typing for *kind* of project (technical/creative/research-adjacent/civic) |
+| Research | `research_experiences` | Best-modeled table in the schema — see §4 |
+| Internship | `work_experiences` (`employment_type = 'internship'`) | — |
+| Volunteering | `volunteering_experiences` | — |
+| Leadership | attribute (`is_leadership_role`) on `activities`, not a category | Correct modeling choice — leadership is a role you hold *within* an activity, not a separate activity type. See §3. |
+| Entrepreneurship | `projects` (revenue/users/live_url fields) or `activities` (`category = 'other'` in practice) | No `activity_category` value for entrepreneurship specifically; founders currently have to pick `'other'` or force-fit `'community_org'`/`'academic_program'` |
+| Employment | `work_experiences` | — |
+| Competition | `activities` (`activity_category = 'competition_team'`) *or* `awards` for the result | A competition *entered* and a competition *result* are different rows in different tables with no required link — flagged hard in §8 and again in `02-opportunity-development-mapping.md` |
+| Summer program | `activities` (`activity_category = 'summer_program'`) | — |
+| Publication | `research_experiences.output_type` | Only reachable through research. A published creative-writing piece, journalism byline, or open-source library has no clean home — see §4 output taxonomy |
+| Presentation | `research_experiences.output_type` | Same gap — a non-research presentation (e.g. a MUN speech, a TEDx-style talk) has no field |
+| Arts performance | *(none)* | Genuine gap. Would currently be forced into `activities` with category `'other'`, losing anything performance-specific (venue, audience size, jury/audition process) |
+| Athletics | `sports_experiences` (`supabase/migrations/0026_sports.sql`, `is_captain`, `team_entity_id`) | Already a dedicated, well-modeled table — mirrors the leadership pattern (`is_captain` alongside team_entity_id, not a free-text "role"). Not a gap. |
 
-For each dimension: **construct** (plain-English definition), **what over-counts it today**
-(a known false-positive pattern worth a future scorer refinement, not a claim the current scorer is
-wrong), **sub-facets** (attributes within the dimension a future evidence model could distinguish),
-and **cross-dimension overlap** (where a single real activity legitimately feeds more than one
-dimension — expected, not a bug, per `lib/scoring/dimensions/leadership.ts`'s own existing pattern
-of combining role scope + people led + duration + selectivity + impact into one score).
+**Takeaway:** ORYN's schema is closer to complete than the mission brief assumes for academics,
+research, sports, and standard extracurricular categories. The genuine, verified gaps are: (a) no
+first-class home for arts performance/exhibition, (b) no first-class home for non-research
+publication or presentation, (c) no `activity_category` value for entrepreneurship, and (d) no
+required link between a competition *entered* (`activities`) and its *result* (`awards`). All four
+are carried into `10-open-questions.md` as concrete, scoped proposals — not silently absorbed.
 
-### 2.1 `academics`
+---
 
-**Construct:** demonstrated command of school-level subject material — grades, course rigor
-relative to what was available, standardized testing where present, and consistency over time.
+## 2. Role taxonomy — what was the student's relationship to the activity?
 
-**Sub-facets:** absolute performance vs. *rigor-adjusted* performance (a B+ in the most advanced
-track available at a student's school is a different signal than a B+ in a standard track — this
-is already partially handled by `CourseLevel` in `types/database.ts`, e.g. `ap`/`ib_hl`/
-`dual_enrollment` vs. `regular`); trajectory (improving vs. flat vs. declining); breadth across
-subjects vs. depth in a declared interest area.
+Mission-requested roles: participant, member, team member, founder, co-founder, president,
+captain, research assistant, independent researcher, intern, volunteer, organizer, mentor.
 
-**Over-counting risk:** treating a single strong test score as equivalent to sustained multi-year
-rigor. UCAS's own official guidance to applicants is explicit that admissions readers want
-"wider reading" and sustained subject engagement, not a single credential — see
-`docs/research/counseling-intelligence/03-recommendation-timing.md` for the sourced detail
-[S-UCAS-PS].
+**What's shipped today:** no table has a structured `role` field. What exists instead is a set of
+per-table proxies:
 
-**Cross-dimension overlap:** a rigorous independent-study course can also feed
-`intellectual_curiosity` or `research` depending on whether it was self-directed and produced
-output.
+- `activities.is_leadership_role` (boolean) + `activities.organization_scope` (free text) — role is
+  inferred from a flag plus prose, not stored as a value.
+- `sports_experiences.is_captain` (boolean) — same pattern, sport-specific.
+- `work_experiences.employment_type` — distinguishes *kind of employment*, not role-within-it.
+- `research_experiences.independence_level` (free text) — closest thing to a role field, but
+  unstructured.
 
-### 2.2 `intellectual_curiosity`
+**RULE-COUNSEL-001:** Role is not a leadership/non-leadership binary. "Founder," "president of an
+existing 40-year-old club," "team member," and "research assistant" are four different evidence
+patterns that a single `is_leadership_role: true/false` boolean cannot distinguish, and *founding*
+specifically is evidence for **two** dimensions at once (leadership *and* entrepreneurship) in a
+way a pure leadership flag under-credits. Until role is a structured field, treat
+`organization_scope` free text as a weak, unverified signal for founder-vs-joined status — never
+as a confirmed fact the way a boolean column would be.
 
-**Construct:** self-directed engagement with ideas beyond what is assigned — reading, independent
-projects, online coursework, competitions entered for interest rather than requirement, exploring
-a field before committing to it.
+**RULE-COUNSEL-002:** "Captain," "president," and "founder" are titles, not evidence of
+substance — this generalizes the principle `lib/scoring/dimensions/leadership.ts` already encodes
+correctly for the `leadership` dimension (title alone contributes a small, capped bonus; duration,
+scope, and people-led carry the real weight) to *every* dimension a role touches, including
+`execution_project_depth` and `entrepreneurship`. A "founder" with no `live_url`/`repo_url`/
+`users_reached`/`revenue_amount` on the linked project is exactly the "President" case from
+`leadership.ts`'s own doc-comment, restated for a different dimension.
 
-**Sub-facets:** *breadth of exploration* (sampling several fields, valuable especially before
-grade 10–11) vs. *depth of follow-through* (staying with one thread long enough to produce
-something); self-reported interest vs. interest evidenced by time actually spent.
+**Mentor / organizer** are the two mission-requested roles with no shipped analogue anywhere
+(a student who mentors younger students, or organizes an event/competition rather than competing
+in it, has no field to say so — they'd be entered as a generic `activities` row indistinguishable
+from participation). Carried to `10-open-questions.md`.
 
-**Over-counting risk:** treating stated interest ("I love biology") as equivalent to demonstrated
-engagement (an online course completed, a book list, a science-fair project). ORYN's own
-`career_goals`/`interests` fields are exactly this kind of *stated*-interest data — the mission's
-own non-negotiable that "field interest should be supported by increasingly meaningful evidence
-when feasible" (`RULE-CAREER-004` in the parallel career-intelligence research package, if that
-session has run; if not yet, this package independently arrives at the same rule — see
-`08-unsafe-inference-rules.md`) applies directly here: a stated interest is a starting hypothesis
-for exploration, not itself development evidence.
+---
 
-**Cross-dimension overlap:** the highest-overlap dimension in the taxonomy — almost any genuine
-`research`, `entrepreneurship`, or `execution_project_depth` activity also demonstrates curiosity.
-This is why `intellectual_curiosity` should be read as the "did they go looking, regardless of
-where it led" signal, while the more specific dimensions capture "what did they do once they got
-there."
+## 3. Time / duration semantics
 
-### 2.3 `leadership`
+Mission-requested fields: start date, end date, ongoing, hours/week, weeks/year, duration,
+academic year, grade level at time of activity.
 
-**Construct:** responsibility for other people or an organization's direction — not a title alone.
+**Shipped:** `start_date`, `end_date`, `ongoing`, `hours_per_week`, `weeks_per_year` exist
+identically across `activities`, `awards` (dates only), `research_experiences`,
+`volunteering_experiences`, `work_experiences`. `monthsBetween()` (`lib/scoring/math.ts`, used by
+`leadership.ts`) already derives duration from `start_date`/`end_date`/a reference date — duration
+itself is not a gap.
 
-**Sub-facets** (already anticipated almost verbatim by the founder spec §6.3 and implemented in
-`lib/scoring/dimensions/leadership.ts`): scope of role, number of people led, duration held,
-selectivity of the position (elected/competitive vs. default/only-applicant), organizational scope
-(school club vs. multi-chapter/regional), and measurable outcome of the leadership itself (grew
-membership, ran an event, changed how the organization operates) vs. the leadership being purely
-titular.
+**RULE-COUNSEL-003 — false precision on `hours_per_week` × `weeks_per_year`:** These two fields
+multiply naturally into an implied total-hours figure, and that arithmetic is tempting to score
+directly. Don't. Both fields are self-reported estimates with no upper sanity bound in the schema
+(nothing stops `hours_per_week = 40` on a school-term club). Treat the product as a coarse
+*ordering* signal (roughly none / light / moderate / substantial commitment) rather than a precise
+quantity, and never display it as a computed total-hours figure back to the student or a counselor
+as if it were measured, not estimated.
 
-**Over-counting risk:** the founder spec names this directly — "President" alone should not score
-highly. The failure mode worth flagging for a future scorer refinement: a founder-title on a
-club with 3 members and no activity record should not out-score a non-titled but substantial
-organizing role (e.g., "coordinated logistics for a 200-person regional tournament" without
-holding an elected title). Title is a weak proxy for the construct, not the construct itself.
+**RULE-COUNSEL-004 — the one genuinely missing field: grade level at time of activity.** No table
+captures the student's grade/year level when an activity happened — only calendar dates. This
+matters because the *same* activity means something different at different ages (see
+`03-recommendation-timing.md` in full), and because a student's `graduation_year`
+(`profiles`) lets ORYN derive *approximate* grade level from `start_date` only if the curriculum's
+grade-to-age mapping is known and consistent — which it often isn't across the countries in scope
+(a "10th grade" US student and a "Year 11" UK student are not the same age-stage, and Turkish
+`lise` numbering differs again). Deriving grade-at-time-of-activity from dates is an **unsafe
+inference** across curricula (see `08-unsafe-inference-rules.md`) unless the curriculum's specific
+grade/age mapping is encoded — it is not, today. This is the single highest-value schema gap this
+research identified; detailed in `10-open-questions.md`.
 
-**Cross-dimension overlap:** leadership that produces a concrete shipped result overlaps with
-`execution_project_depth`; leadership of a venture with revenue or users overlaps with
-`entrepreneurship`; leadership of a service organization overlaps with `community_impact`. A
-single real activity legitimately contributing evidence to 2–3 dimensions is expected, not
-double-counting to avoid — each dimension is measuring a different facet of the same activity.
+**"Ongoing" needs a freshness signal, not just a boolean.** `ongoing = true` is a point-in-time
+claim that goes stale — nothing re-confirms it. An activity marked ongoing with `updated_at` from
+eight months ago is a different confidence tier than one confirmed last week. See
+`05-redundancy-saturation.md` and `execution_project_depth` below (§8.9).
 
-### 2.4 `research`
+---
 
-**Construct:** exposure to and execution of a research process — asking a scoped question,
-choosing a method, working with or generating data/evidence, and producing a written or presented
-output.
+## 4. Output / artifact taxonomy
 
-**Sub-facets (the single most important refinement this package recommends, elaborated in
-`06-major-family-evidence/`):** **exposure** (took a course, attended a program, read primary
-literature) vs. **execution** (actually ran a small study or analysis) vs. **independence** (did it
-under close instruction vs. designed their own question) vs. **output** (nothing external yet vs.
-school-level presentation vs. `preprint`/`peer_reviewed_publication` — `ResearchOutputType` in
-`types/database.ts` already encodes exactly this ladder). The founder spec (§6.5) is explicit that
-publication should not be *required* for a strong score — this package agrees and treats
-publication as the rare top rung of a ladder most legitimate research development happens well
-below.
+Mission-requested outputs: paper, poster, prototype, software, portfolio, exhibition,
+presentation, business/product, social-impact outcome.
 
-**Over-counting risk:** a large, real pattern in pre-university "research" — paid or unpaid
-summer "research" programs that are substantively structured coursework or shadowing rather than
-independent inquiry. This is not a reason to devalue such programs (they are often a legitimate and
-valuable *exposure*-stage experience — see `06-major-family-evidence/`), but a future scorer should
-not treat "attended a research program" and "co-authored a paper" as the same evidence strength.
-`ResearchOutputType`'s existing ladder is exactly the right lever for this — a future refinement to
-`lib/scoring/dimensions/research.ts` could weight by rung rather than presence/absence alone (out of
-scope to implement here; flagged for the engineering handoff).
+**Shipped, and genuinely good:** `research_experiences.output_type` — a real enum (`none`,
+`presentation`, `poster`, `school_journal`, `preprint`, `peer_reviewed_publication`, `other`), not
+free text. This is the most precise piece of output modeling in the schema and should be the
+*template* for fixing the gaps below, not replaced.
 
-**Cross-dimension overlap:** research with a policy or social-impact angle can overlap
-`community_impact`; research that becomes a startup overlaps `entrepreneurship`; a rigorous solo
-research project overlaps `execution_project_depth`.
+**Shipped, but loosely typed:** `projects` has `outcome_summary` (free text), `users_reached`,
+`revenue_amount`, `repo_url`, `live_url` — enough to distinguish "shipped with a checkable
+artifact" from "described only," but no `output_type` enum the way research has one. A prototype,
+a piece of software, a business, and a social-impact outcome are all just "a project" today,
+differentiated only by which optional fields happen to be filled in.
 
-### 2.5 `entrepreneurship`
+**Not shipped at all:** portfolio (as an artifact — e.g. a design/art portfolio), exhibition,
+arts performance output. These have no field anywhere, matching the activity-taxonomy gap in §1.
 
-**Construct:** originating and driving a venture (commercial, nonprofit, or product) from idea
-toward some real-world test — not merely "has business ideas."
+**RULE-COUNSEL-005:** A URL field being populated (`repo_url`, `live_url`, `output_url`) is
+evidence *an artifact exists and is checkable*, not evidence of its quality, reach, or reception —
+ORYN can safely say "produced a checkable output" and must not infer "produced a *good*" one from
+the URL's mere presence. Quality inference from an unvisited link is out of scope for any counselor
+logic — verifying content at a URL is a human/AI-review task, not a scoring one, and is explicitly
+not proposed anywhere in this package.
 
-**Sub-facets:** idea-stage (has a plan) vs. built (has a product/prototype) vs. tested (has users,
-customers, or beneficiaries) vs. sustained (survived past the initial launch). Revenue is one
-possible signal of "tested" but the founder spec is explicit that revenue should not be *required*
-(§6.4 "revenue if relevant").
+**RULE-COUNSEL-006:** Free-text `outcome_summary` describing impact ("reached thousands of
+users," "went viral") is a claim, not a verified outcome, regardless of `evidence_status` — see §5.
+`evidence_added` means a document was attached to *something* on this record, not that the specific
+numeric claim in the description was checked against it.
 
-**Over-counting risk:** treating "started a club" as entrepreneurship-equivalent to founding a
-venture with an external test. A student-run club is real `leadership`/`community_impact` evidence,
-but it is not automatically `entrepreneurship` unless it involved originating a genuinely new
-venture/product concept and testing it, per the founder spec's own worked example in Phase 39 ("do
-not prioritize another club... unless this new club creates a unique measurable outcome").
+---
 
-**Cross-dimension overlap:** almost all entrepreneurship overlaps `execution_project_depth`
-(shipping something) and often `leadership` (recruiting/leading a team); when it addresses a social
-problem, `community_impact`.
+## 5. Evidence / provenance model — the verification axis
 
-### 2.6 `community_impact`
+**Shipped:** `evidence_status` (`self_reported` | `evidence_added` | `verified` |
+`verification_rejected`), defined once (`0004_achievements.sql`) and reused identically across
+every achievement table, plus `evidence_files` (polymorphic `linked_table`/`linked_id`,
+`verification_status` reusing the same enum, `file_path` or `external_url`,
+`uploaded_at`). Read the state machine precisely, because it is easy to over-trust:
 
-**Construct:** service to others beyond the student's own advancement — volunteering, mentoring,
-organizing aid, sustained civic participation.
+- `self_reported` — the default. A text entry with no attached file or link.
+- `evidence_added` — a file or URL has been attached. **This is a completeness state, not a trust
+  state.** Nothing in the shipped pipeline reviews the attached document's content — `PHASE_STATUS.md`
+  confirms evidence upload "moves `evidence_status` to `evidence_added` — never `verified`." An
+  unrelated PDF attached to the wrong field would still read as `evidence_added`.
+- `verified` — per `AGENTS.md` §11, this status must never be set merely because a file exists;
+  it requires an actual verification process. As of this research pass, no verification workflow
+  is visible in `lib/counselor/**` or the achievements pipeline — `verified` appears to be a
+  reserved future state, not yet reachable in the product. Treat any `verified` row encountered
+  as trustworthy *if* it occurs, but do not assume the pathway to reach it is exercised yet;
+  confirm in `10-open-questions.md`'s follow-up rather than asserting it here as fact.
+- `verification_rejected` — a verification attempt was made and failed. Distinct from
+  `self_reported`: this is a *negative* signal (someone tried to verify and could not), not an
+  absence of a signal. **RULE-COUNSEL-007:** `verification_rejected` must never be silently
+  treated the same as `self_reported` in any downstream scoring — a rejected verification is worse
+  evidence than no verification attempt, and collapsing the two loses that.
 
-**Sub-facets:** one-off service hours vs. sustained commitment; direct service vs. organizing others
-to serve; locally scoped vs. broader reach; self-initiated vs. joined an existing structure (both
-are legitimate — the founder spec does not privilege founding over joining for this dimension the
-way it does for `leadership`/`entrepreneurship`).
+**The mission asks for a richer state set** (`student_reported` / `document_verified` /
+`official_result` / `organizer_verified` / `school_verified` / `unknown`) than the shipped
+four-value enum carries. Reconciling without proposing a breaking schema change: the shipped enum
+answers *"has this been checked, and how did the check go"* (a workflow-state question); the
+mission's richer list answers *"checked by whom, against what"* (a provenance-source question).
+These are different axes, not competing versions of the same one. **Recommendation (non-binding,
+detailed in `10-open-questions.md`):** the richer list is best added as an optional
+`verifier_type` attribute on `evidence_files` (e.g. `self` | `document` | `organizer` |
+`school` | `official_third_party`), layered *on top of* the existing `verification_status`, not
+replacing it — additive and reversible, per the mission's own architecture principle. Until that
+field exists, **RULE-COUNSEL-008:** never present an `evidence_added` row to a student or
+counselor with language implying *who* confirmed it — the schema does not yet know.
 
-**Over-counting risk:** treating volunteer *hours logged* as a complete signal independent of what
-was actually done. A large hours count from a single low-engagement recurring task (e.g., signing
-in at a desk) is a different signal than fewer hours in a role with real responsibility. Existing
-`cause_area` free-text (`lib/vocabularies/profile-fields.ts`) gives topical breadth; it does not
-by itself give depth.
+---
 
-**Cross-dimension overlap:** service that involves organizing other volunteers overlaps
-`leadership`; a service project that is also a sustained built initiative (e.g., founded a
-recurring donation drive) overlaps `entrepreneurship`/`execution_project_depth`.
+## 6. The commitment / depth axis
 
-### 2.7 `awards_distinction`
+Cuts across every dimension below. A single ladder, from weakest to strongest evidence pattern,
+independent of *which* dimension the activity feeds:
 
-**Construct:** external, third-party recognition of achievement — competition placements,
-scholarships won, honors.
+1. **Exposure** — one-off or very short engagement (a single workshop, a one-day event, an
+   initial visit). Weeks/months not applicable; `ongoing` false, short or absent duration.
+2. **Participation** — recurring engagement over a defined period, not leading it. Regular
+   attendance, `hours_per_week`/`weeks_per_year` populated, no `is_leadership_role`.
+3. **Sustained commitment** — participation continuing across a substantial duration. This
+   research does not hardcode a universal threshold (e.g. "6 months") as a bright line — rigor
+   varies by activity type and by how much of a school year is realistically available (see
+   `04-profile-gap-framework.md`'s context model) — but treats "spans at least one full
+   academic term with regular hours" as the working reference point pending real usage data.
+4. **Contribution** — identifiable output or deliverable within the activity, not just attendance
+   (ran a specific project within a larger club, authored a specific report).
+5. **Leadership** — formal or de facto responsibility for others or for outcomes. Maps directly to
+   `is_leadership_role`/`is_captain` plus the substance fields `leadership.ts` already weighs
+   (duration, people led, scope).
+6. **Creation** — originated the activity/organization/project rather than joining an existing
+   one. Strongest tier; see §2's founder/co-founder discussion. Not mutually exclusive with
+   leadership — creation is usually also leadership, but the reverse isn't true (an elected
+   president of an existing club has leadership without creation).
 
-**Sub-facets:** the most important sub-facet is **selectivity/level**, which the codebase already
-tracks as free-text suggestions (`AWARD_LEVEL_SUGGESTIONS`: School / Regional / State-Provincial /
-National / International, `lib/vocabularies/profile-fields.ts:15`) — this ladder should anchor any
-future weighting far more than the number of awards held. A second sub-facet: individual vs. team
-award (team awards are real evidence but attenuated per-student, especially for large teams).
+**RULE-COUNSEL-009:** These six levels are not a single numeric scale to sum or average across a
+profile — a student with one "creation"-level activity and nothing else is not equivalent to a
+student with six "exposure"-level activities, even if some naive point-summation would make them
+land near the same total. Depth-axis reads must stay per-activity, feeding into whichever
+dimension(s) that activity addresses, never flattened into one cross-profile "commitment score."
 
-**Over-counting risk (the most consequential one in this whole taxonomy):** treating award *count*
-as the signal rather than award *selectivity*. Five School-level certificates are not equivalent
-to one State-level placement; this package's strong recommendation (elaborated in
-`05-redundancy-saturation.md`) is that a future scorer refinement should weight by the
-highest-selectivity tier achieved plus a mild bonus for breadth, not a linear count. This is also
-the dimension most exposed to "self-reported, no evidence" risk (Phase 11 of the founder spec) —
-`EvidenceStatus` (`self_reported` / `evidence_added` / `verified` / `verification_rejected`)
-already exists precisely to carry that distinction; a score should never imply more certainty than
-the evidence status supports (see `07-explainability-framework.md`).
+---
 
-**Cross-dimension overlap:** an award in a research competition also feeds `research`; an award
-for a founded venture also feeds `entrepreneurship`.
+## 7. The nine dimensions
 
-### 2.8 `career_exploration`
+Each entry: definition, what legitimately feeds it (mapped to real schema), the naive-but-wrong
+read, its specific depth ladder, and rules minted. Cross-references to `lib/scoring/dimensions/`
+scorers are noted where one is shipped.
 
-**Construct:** deliberate exposure to what a field or career is actually like in practice —
-internships, job shadowing, informational interviews, structured career-exposure programs,
-`work_experiences`.
+### 7.1 `academics`
 
-**Sub-facets:** passive exposure (attended a talk, read about a field) vs. active exposure (shadowed
-a professional, held an internship) vs. tested-against-reality (did substantive work and formed a
-view on fit, ideally recorded via the reflection loop in `PHASE 10` of the founder spec).
+**Definition:** sustained, verifiable academic performance and rigor relative to what was actually
+available to the student — not a raw grade number in isolation.
 
-**Over-counting risk:** conflating *breadth* of career exploration (attractive at younger ages —
-see `03-recommendation-timing.md`) with *depth of conviction* (more expected by application time).
-A 14-year-old who has "explored" five fields shallowly is doing exactly what that age should be
-doing; a 17-year-old with the same shallow-breadth pattern and no deepening in a stated field of
-interest is a legitimate signal worth surfacing, not a strength.
+**Feeds it:** `education_records`, `courses` (curriculum, level), `grades`, `test_scores`.
 
-**Cross-dimension overlap:** almost every other dimension's activities also generate some career
-exploration value as a side effect (a research project is also career exploration for a research
-career; a founded venture is also career exploration for entrepreneurship) — this dimension is
-best read as "exploration for its own sake," distinct from the deeper, output-producing version of
-the same activity that feeds another dimension more strongly.
+**Naive-but-wrong read:** comparing raw grade numbers across curricula without normalization
+(`AGENTS.md` §7 already prohibits this explicitly for university-side comparisons; the same
+prohibition applies student-side). Also: course *enrollment* with no recorded grade reading as
+either strength or weakness — it's a completeness gap, not a performance data point.
 
-### 2.9 `execution_project_depth`
+**Depth ladder:** single-year snapshot → multi-year rigor trajectory (is course difficulty
+increasing over time, not just grades staying flat) → external validation (standardized test,
+external exam board result) confirms internally-reported grades independently.
 
-**Construct:** the founder spec's own framing is the clearest available: reward execution over
-idea creation. This dimension measures whether a student **actually finished and shipped something**
-— a piece of software, a piece of writing, a physical build, a dataset, a designed object —
-regardless of which field it's in.
+**RULE-COUNSEL-010:** Never numerically compare or combine grades from two different grading
+scales without an explicit normalization step; if normalization metadata is absent, the comparison
+is `unknown`, not an average or a midpoint guess.
 
-**Sub-facets:** duration/sustained effort; iteration (v1 vs. multiple revisions in response to
-feedback/results); adoption or use by anyone beyond the student themself; complexity relative to
-the student's stage; individual vs. team contribution (and, for team projects, the student's
-specific, attributable contribution — a real measurement gap noted in `10-open-questions.md`).
+**RULE-COUNSEL-011:** A course record with no grade is missing data, not a zero — must never
+silently lower a computed score the way an actual low grade would.
 
-**Over-counting risk:** treating an unfinished, ambitious-sounding project description as
-equivalent to a smaller, actually-completed one. This is the dimension where the founder spec's
-"no half-finished implementations" principle (stated for ORYN's own build, but equally true of what
-ORYN should reward in a student) is most directly on point — completion is the signal, not scope
-of ambition.
+### 7.2 `intellectual_curiosity`
 
-**Cross-dimension overlap:** essentially every other dimension's most legitimate evidence *also*
-tends to produce `execution_project_depth` evidence when done well — this is by design, not an
-error: `execution_project_depth` is closer to a cross-cutting "did they finish" quality check than
-a separate subject-matter area, which is exactly why the founder spec pairs it with "Reward
-execution more than idea creation" rather than defining a topic area for it.
+**Definition:** evidence the student pursues understanding beyond what's required — self-directed,
+not compliance-driven.
 
-## 3. What this taxonomy implies for future scoring work (not implemented here)
+**Feeds it:** `academic_program`/`online_program`/`conference` participation,
+self-directed projects with no external grading requirement behind them, research exposure short
+of full independent research (§7.4), `student_interests` *only when linked to instantiating
+evidence*.
 
-1. Within-dimension **evidence ladders** (exposure → execution → independence → output, or
-   self-reported → evidence-added → verified) are a more accurate lever than raw counts for at
-   least `research`, `awards_distinction`, and `execution_project_depth`. `ResearchOutputType` and
-   `EvidenceStatus` already exist as the data substrate for this; the gap is in how
-   `lib/scoring/dimensions/research.ts` and `awards.ts` weight them today (not audited line-by-line
-   in this research pass — flagged for the engineering handoff as a concrete, scoped next step,
-   not asserted as a current bug).
-2. Cross-dimension overlap is expected and should not be "fixed" by forcing one activity into
-   exactly one dimension — `leadership.ts`'s existing multi-factor design is the right pattern to
-   extend to other dimensions, not a special case.
-3. None of the above requires a new `ProfileDimension` value or a schema change.
+**Naive-but-wrong read:** a long `student_interests` list with no corresponding activity is a
+stated preference, not a developmental signal — and attending a selective summer program is
+retroactively weak evidence the *underlying* curiosity predates the program; the selection process
+that got them in is a separate signal (achievement) from the curiosity that (maybe) motivated
+applying.
 
-## Sources referenced in this document
+**Depth ladder:** stated interest (no evidence) → exposure (attended, no follow-through) →
+sustained self-directed pursuit (reading, small independent projects) → originated inquiry (asked
+an own question and pursued it, e.g. an EPQ-shaped independent project regardless of which table
+it happens to be filed under).
 
-| ID | Source | Type | Confidence | Used for |
-|---|---|---|---|---|
-| S-UCAS-PS | [UCAS — Personal statement toolkit](https://www.ucas.com/advisers/help-and-training/toolkits/personal-statement-toolkit) and [How to write your personal statement for 2026 entry onwards](https://www.ucas.com/applying/applying-to-university/writing-your-personal-statement/how-to-write-your-personal-statement-for-2026-entry-onwards) | Official education-platform guidance | High | §2.1 academics/rigor framing, corroborates depth-over-breadth |
-| S-EXTRA-DEV | [Extracurricular Involvement and Adolescent Adjustment: Impact of Duration, Number of Activities, and Breadth of Participation — *Applied Developmental Science*](https://www.tandfonline.com/doi/abs/10.1207/s1532480xads1003_3); see also [Recent advances in research on school-based extracurricular activities and adolescent development — *Developmental Review* (ScienceDirect)](https://www.sciencedirect.com/science/article/abs/pii/S0273229711000359) | Peer-reviewed research (abstract accessed; full text paywalled) | Medium — abstracts/summaries accessed directly, full-text methodology not independently verified this session | §2.2, §5 framing of breadth vs. depth vs. duration as genuinely distinct, separately-studied constructs |
+**RULE-COUNSEL-012:** A `student_interests` row with zero linked activity/project/research
+evidence must never by itself raise this dimension's score — see also `04-profile-gap-framework.md`
+on why a stated-but-unactioned interest is informative for *goal tracking*, not for *strength
+scoring*.
 
-Full registry with retrieval timestamps: `data/research/counseling-intelligence/sources.json`
-(`S-UCAS-PS`, `S-EXTRA-DEV`).
+### 7.3 `leadership`
+
+**Definition:** genuine responsibility for people or outcomes — substance, not title.
+
+**Feeds it:** `activities` where `is_leadership_role = true`, weighted by `people_led`,
+`organization_scope`, and duration. Already scored (`lib/scoring/dimensions/leadership.ts`):
+title contributes a small, capped bonus (3 of up to ~56 raw points before capping/diminishing);
+duration up to 12; people-led log-scaled up to 10; scope +4; diminishing returns after the third
+leadership role at a 0.4 factor, so five shallow roles cannot outscore one substantive one. **This
+already correctly implements the mission's explicit "do not infer leadership from title alone"
+requirement** — worth stating plainly so a future session doesn't "fix" something that isn't
+broken.
+
+**Naive-but-wrong read (the part that's *not* yet covered):** founding vs. joining an existing
+structure is not distinguished (§2) — a founder of a brand-new club and the third successive
+elected president of a 40-year-old one can currently produce similar `leadership.ts` inputs if
+duration/scope/people-led happen to match, even though founding is the strictly rarer, harder-to-
+fake signal.
+
+**Depth ladder:** member → delegated task ownership within a group → elected/appointed formal role
+→ founding role. (This is the commitment axis, §6, specialized for this dimension.)
+
+**RULE-COUNSEL-013** *(restates existing code behavior as an explicit rule so it survives future
+edits)*: title text alone is capped near-zero contribution; duration, people led, and
+organizational scope carry leadership's real weight. Any future change to
+`lib/scoring/dimensions/leadership.ts` that increases the title-alone weight should be treated as
+a regression against this rule, not a neutral tuning change.
+
+**RULE-COUNSEL-014:** Founding status is currently unrecoverable from the schema
+(`organization_scope` is free text) — until a structured role field exists (§2), do not attempt to
+infer founder-vs-joined from description text with any confidence above `low`.
+
+### 7.4 `research`
+
+**Definition:** structured inquiry — exposure, methodology, and independence are three different
+things that happen to often correlate but must be read separately.
+
+**Feeds it:** `research_experiences` (the best-modeled table in the schema: `mentor_name`,
+`field`, `methodology`, `independence_level`, `output_type`).
+
+**Naive-but-wrong read:** "did research" claimed with no methodology or output populated reading
+the same as a fully described independent project. The mission is explicit that **publication
+should not be required** for a strong score — but "no output yet, project still active,"
+"concluded with a defined next step," and "concluded with nothing produced" are three different
+confidence states current schema cannot distinguish (only `output_type = 'none'` vs. not, with no
+"why none" signal).
+
+**Depth ladder:** attended/shadowed (exposure) → assisted with data collection under close
+direction (structured exposure) → owned a sub-question under mentorship (guided independent) →
+owned the full question, design, and execution independently → presented or published the result.
+
+**RULE-COUNSEL-015:** Read `independence_level` (free text today) as a genuine gate on how strongly
+a `research_experiences` row feeds this dimension, not as decorative detail — "shadowed a lab" and
+"designed and ran an independent study with remote mentor check-ins" are different evidence tiers
+even when every other field (duration, hours) matches.
+
+**RULE-COUNSEL-016:** `output_type = 'none'` is not automatically a weaker row than one with an
+output — an active, well-described, in-progress independent research effort can be stronger
+evidence than a shallow effort that happened to produce a poster. Do not let output-type presence
+alone dominate this dimension's read; independence and methodology matter at least as much.
+
+### 7.5 `entrepreneurship`
+
+**Definition:** founding and executing, not ideating.
+
+**Feeds it:** `projects` with `revenue_amount`/`users_reached`/`live_url`/`repo_url`, founder/
+co-founder roles on `activities`.
+
+**Naive-but-wrong read:** an idea or plan with no execution artifact scoring the same as a shipped
+one — this is spec Phase 6.4's "reward execution more than idea creation" applied literally.
+Equally naive: reading `revenue_amount` as a magnitude to rank students by, rather than as one
+binary-ish corroboration that real execution occurred (see §4, RULE-COUNSEL-006).
+
+**Depth ladder:** idea only → prototype/MVP → live with any users → live with measurable traction
+(repeat users, revenue, growth over time, not a single snapshot) → sustained across multiple
+periods, not shut down the moment a grade was received.
+
+**RULE-COUNSEL-017:** An entrepreneurship-flavored project with none of `live_url`, `repo_url`,
+`users_reached`, `revenue_amount` populated is a plan, not executed entrepreneurship, regardless of
+description language.
+
+**RULE-COUNSEL-018:** `revenue_amount` and `users_reached` are corroborating signals that
+execution happened, not magnitude-scored outcomes to rank profiles by — a $50 and a $5,000 project
+both clear the "this was real" bar; treating the raw number as proportionally more score is the
+same false-precision risk the mission warns against for impact claims generally (§ "Impact /
+output" in the mission brief).
+
+### 7.6 `community_impact`
+
+**Definition:** sustained service to others — depth and relationship, not hours totals.
+
+**Feeds it:** `volunteering_experiences` (`cause_area`, `hours_per_week`, `weeks_per_year`),
+`community_org` activity category.
+
+**Naive-but-wrong read:** summing hours across many unrelated one-off events as if equivalent to
+the same total concentrated in one cause. NACAC-aligned holistic-review guidance treats
+depth/consistency as more informative than breadth for this exact category (see `sources.json`
+entry on NACAC holistic review, `confidence: medium` — general finding, not this-specific-claim
+sourced). "People served" is a self-reported estimate in every case current schema can produce;
+nothing corroborates it externally.
+
+**Depth ladder:** one-off event → recurring but shallow (occasional shifts, no single-org
+continuity) → sustained regular commitment to one cause/org → designed or led a service initiative
+(overlaps `leadership`) → externally corroborated outcome (rare; flag confidence honestly when
+absent, which is nearly always).
+
+**RULE-COUNSEL-019:** Total volunteering hours summed across many unrelated one-off entries is a
+weaker signal than the same total concentrated in one `cause_area`/organization — never rank two
+students by raw summed hours alone.
+
+**RULE-COUNSEL-020:** Beneficiary/"people served" counts are self-reported estimates regardless of
+`evidence_status` — an attached document (`evidence_added`) confirms *a document exists*, not that
+the specific number was independently checked. Never present such a figure without that qualifier.
+
+### 7.7 `awards_distinction`
+
+**Definition:** where a result landed on a recognition ladder, relative to the selectivity of what
+it was measured against. Two independent axes, both currently compressed into one free-text
+`level` field.
+
+**Feeds it:** `awards` table.
+
+**Naive-but-wrong read:** treating "award" as one tier. The mission is explicit that
+participation/qualification/finalist/honorable-mention/award/winner/national/international
+recognition are meaningfully different — full ladder built out in
+`02-opportunity-development-mapping.md` (this is that document's central contribution; not
+duplicated here). The second, easily-missed naive read: an award with no link back to the activity
+or competition that produced it is unfalsifiable from ORYN's side — nothing to cross-check hours
+invested or activity category against.
+
+**Depth ladder:** *is* the recognition ladder (§ full treatment in doc 02) crossed with a
+selectivity/scope axis (school / regional / national / international, and roughly how large the
+entrant pool was).
+
+**RULE-COUNSEL-021:** An award's strength depends on selectivity/scope *and* result-tier as two
+independent facts — "national award" from an unspecified-size, unspecified-scope competition should
+be read at `medium`, not `high`, confidence until scope is clarified, even though the word
+"national" appears in the record.
+
+**RULE-COUNSEL-022:** An `awards` row with no discoverable link to an originating `activities`
+entry is a lower-context, harder-to-corroborate data point — treat with one confidence tier lower
+than an equivalent award that does link back to a described activity.
+
+### 7.8 `career_exploration`
+
+**Definition:** purposeful investigation of a career direction — sustained focus, not breadth of
+one-off exposure.
+
+**Feeds it:** `work_experiences` (internships), `summer_program`/`conference`/`student_program`
+activities, `career_goals`.
+
+**Naive-but-wrong read:** counting distinct one-day "career taster" events as equivalent to one
+sustained internship — mirrors the community_impact hours-totaling trap (§7.6) in a different
+dimension. Separately: a `career_goals` row is a stated intention; nothing in the schema currently
+links a goal to the activities/opportunities pursued because of it, so a goal's mere existence
+(and age) says nothing about whether it's being acted on.
+
+**Depth ladder:** one-off exposure event → multiple unrelated exposure events (breadth, still
+shallow) → one sustained focused exploration (internship, multi-month shadowing) → career_goal
+actively linked to concrete pursued actions over time.
+
+**RULE-COUNSEL-023:** A `career_goals` row with no plausibly-connected activity, project, work
+experience, or saved/applied opportunity is a stated intention, not a demonstrated exploration
+pattern — its age (how long it's been "active") must never imply progress on its own.
+
+**RULE-COUNSEL-024:** Count distinct *sustained* explorations, not total career-exposure event
+attendance — several unrelated one-day events do not sum into the same signal as one focused,
+multi-week-or-longer exploration.
+
+### 7.9 `execution_project_depth`
+
+**Definition:** cross-cutting by design (spec §6.4) — not *what* was attempted, but whether it was
+finished and is checkable. The dimension that exists specifically to separate claims from shipped
+reality.
+
+**Feeds it:** `projects` primarily, plus any activity/research/entrepreneurship entry with a
+describable, checkable output.
+
+**Naive-but-wrong read:** `ongoing = true` with no `end_date`, no populated output field, and no
+recent `updated_at` movement reading the same as an actively-progressing effort. Equally naive:
+complexity claimed in free text ("built a machine learning model") counting the same with or
+without a corroborating `repo_url`/`live_url` — for *this specific dimension*, description text is
+close to the weakest possible evidence, precisely because the dimension's purpose is separating
+claims from artifacts.
+
+**Depth ladder:** idea/plan → in progress, no output yet → completed with a describable output →
+completed with an externally checkable output (URL) → completed with evidence of external use
+(users_reached; no generic "adoption" field exists beyond that one project-specific column — see
+`10-open-questions.md`).
+
+**RULE-COUNSEL-025:** An `ongoing = true` record with no `end_date`, no populated output field, and
+no recent `updated_at` movement should be read as *stale*, not as *actively strong* — evidence of
+execution decays when nothing has changed for a long time with no shipped result. (This research
+does not compute a specific staleness threshold or decay function — flagged as a scoring-logic
+follow-up in `10-open-questions.md`, consistent with `05-redundancy-saturation.md`'s similar
+treatment of `REDUNDANCY_DECAY`.)
+
+**RULE-COUNSEL-026:** A complexity or impact claim in free-text description carries materially less
+weight for this dimension than the same claim accompanied by a corroborating URL — description is
+a claim about evidence, not evidence.
+
+---
+
+## 8. Cross-dimension evidence matrix
+
+Which dimensions a given schema table's rows can plausibly feed — not exclusively (most rows feed
+more than one dimension; a founding leadership role feeds both `leadership` and
+`entrepreneurship`, an independent research project with a live web tool feeds both `research` and
+`execution_project_depth`):
+
+| Table | Primary dimension(s) | Secondary, when evidence supports it |
+|---|---|---|
+| `education_records`, `courses`, `grades`, `test_scores` | `academics` | `intellectual_curiosity` (unusually rigorous elective choices) |
+| `activities` (general) | varies by `activity_category` | `leadership` (if `is_leadership_role`) |
+| `activities` (`is_leadership_role = true`) | `leadership` | `entrepreneurship` (if founding), `community_impact` (if a service org) |
+| `awards` | `awards_distinction` | the dimension of the underlying activity, when linkable |
+| `certifications` | `academics` or `career_exploration`, depending on field | — |
+| `projects` | `execution_project_depth` | `entrepreneurship` (if product-shaped), `research` (if research-shaped and not filed under `research_experiences`) |
+| `research_experiences` | `research` | `intellectual_curiosity`, `execution_project_depth` (if it has output) |
+| `volunteering_experiences` | `community_impact` | `leadership` (if organizing/leading the effort) |
+| `work_experiences` | `career_exploration` | `execution_project_depth` (internship with real deliverables), `academics` (rare, e.g. research-lab technician role) |
+| `sports_experiences` | *(not currently a scored dimension — see below)* | `leadership` (if `is_captain`) |
+| `student_interests` | none directly (§7.2 RULE-COUNSEL-012) | signals *where to look* for corroborating evidence elsewhere |
+| `career_goals` | none directly (§7.8 RULE-COUNSEL-023) | same — a lens for interpreting other tables, not a scoring input itself |
+
+**Observation, not a rule:** `sports_experiences` has no clean home in the current 9-dimension
+taxonomy — athletics maps weakly to `community_impact` (team contribution) or `leadership`
+(captaincy) but a purely athletic achievement with no leadership/service angle currently has
+nowhere to register at all. This is either a real gap or an intentional scope decision (athletics
+may simply not be a counseling-relevant signal for academic admissions in most target
+geographies except as a minor holistic-review contextual note) — flagged as a genuine open
+question, not resolved here. See `10-open-questions.md`.
+
+---
+
+## Rules minted in this document
+
+RULE-COUNSEL-001 through RULE-COUNSEL-026 (26 rules). Full registry, cross-referenced with source
+document section and any supporting `sources.json` entries, lives in
+`data/research/counseling-intelligence/rules.json`.

@@ -1,225 +1,158 @@
-# 02 — Opportunity → Development Mapping
+# 02 — Opportunity → Development Mapping & Evidence-State Model
 
 **Answers:** What does participating in a given opportunity type actually demonstrate or develop,
 and how does that differ by evidence state (participated vs. finalist vs. award vs. leadership
 role)?
 
-**Ground truth this document extends:** `lib/opportunities/matching.ts`'s exported
-`CATEGORY_DIMENSIONS` — a flat `Record<OpportunityCategory, ProfileDimension[]>` over the 13 real
-`OpportunityCategory` values. That mapping is reused as-is by `lib/counselor/candidates.ts` to set
-`addressesDimensions` on every opportunity-sourced `CandidateAction`. This document does not
-propose changing that constant's shape (still category → 1-2 dimensions) — it documents the
-**evidence-state layer** that sits on top of it, which is real, load-bearing counseling knowledge
-that the current flat mapping cannot express, and which a future scorer refinement could consume
-without changing `CATEGORY_DIMENSIONS`'s type signature at all (e.g., as a multiplier applied
-alongside it, not a replacement for it).
+**Extends, does not replace:** `CATEGORY_DIMENSIONS` in `lib/opportunities/matching.ts` (13
+`opportunity_category` values → 1-2 `ProfileDimension`s each, flat, no state distinction — read in
+full before writing this document). Every table below is additive guidance for a future scoring
+change, not a redesign of the matching pipeline's architecture.
 
-## 1. The two things a flat category→dimension map cannot express
+## The mission brief's own example conflates three different axes
 
-**Problem A — evidence-state blindness.** Today, a student who merely *registered* for a
-competition and a student who *won* it at the international level both produce a
-`CandidateAction`/match tagged with the same `["awards_distinction", "academics"]` dimensions, at
-implied-equal strength, if both are represented as "a competition opportunity the student is
-linked to." In practice: `opportunity_matches`/`saved_opportunities` records *interest and
-application status* (`SavedOpportunityStatus`: `saved`/`applied`/`not_interested`), while actual
-*outcome* (finalist, placed, won) is captured, if at all, as a free-text `awards` entry the student
-creates separately with its own `AWARD_LEVEL_SUGGESTIONS` tier. **These two data paths are not
-currently joined** — this is a real, concrete gap worth naming plainly for the engineering handoff:
-there is no structural link from "applied to Opportunity X" to "the awards.title entry describing
-the outcome of Opportunity X," so a future evidence-state model needs either a new relational link
-or a matching heuristic, neither of which this research package implements.
+The mission brief asks for evidence-state distinctions using the example list "participated /
+finalist / award / winner / publication / leadership role." Read literally as one sequence, this
+mixes three independent facts:
 
-**Problem B — sub-type heterogeneity within one category.** `"competition"` alone spans:
-mathematical/algorithmic olympiads, business-plan/case competitions, science fairs, debate,
-robotics, hackathon-adjacent build competitions, and creative-writing contests. These develop
-materially different things — a mathematics olympiad demonstrates quantitative/algorithmic
-reasoning under time pressure; a business-plan competition demonstrates applied
-strategy/communication; a science fair demonstrates the `research` construct from
-`01-development-taxonomy.md` far more than `academics`. The current `["awards_distinction",
-"academics"]` mapping for `competition` is a reasonable central tendency but is not equally true of
-every real opportunity tagged `competition`. The same heterogeneity exists inside `hackathon`
-(a 24-hour build sprint develops `execution_project_depth` very differently depending on whether it
-was solo or a 5-person team with a specific individual contribution) and `academic_program`/
-`online_program` (a rigorous graded university-extension course vs. a self-paced exploratory MOOC).
-This is the same distinction the parallel career-intelligence research package's mission brief names
-directly — "this competition provides algorithmic problem-solving evidence rather than
-software-development evidence" — and this package independently confirms it is real and worth a
-future `fields`/skill-tag refinement on the `opportunities` row itself (currently `fields: string[]`
-is free-text and does not carry this distinction). Flagged in `10-open-questions.md`, not solved
-here.
+1. **Result tier** — participated, finalist, award, winner. A position on a recognition ladder.
+2. **Output type** (`01-development-taxonomy.md` §4) — publication. What was produced, not how it
+   was recognized. A student can publish without winning anything, or win without publishing.
+3. **Role** (`01-development-taxonomy.md` §2 and §6) — leadership role. Who the student was
+   relative to the activity, not how far they advanced in it.
 
-## 2. A generic evidence-state ladder (applies across categories)
+**RULE-COUNSEL-027:** Never model recognition as a single flat list mixing result-tier, output-
+type, and role together — a student who was a competition's *student organizer* (role) and one who
+*won* it (result) are both meaningful but answer different questions; collapsing them loses
+whichever one isn't asked first. This document keeps the three axes separate throughout, plus a
+fourth (scope/selectivity) introduced below.
 
-Ordered weakest → strongest; a given opportunity/student pairing sits at exactly one rung, and a
-future model should treat each rung as *raising the confidence/strength* of the same
-`CATEGORY_DIMENSIONS` dimensions, not changing which dimensions apply:
+---
 
-| Rung | Description | Typical current data trace |
+## Axis 1: Result tier
+
+The recognition ladder *within* a given opportunity's own structure, independent of how
+prestigious that structure is (that's Axis 2). Ordered weakest to strongest:
+
+| Tier | Meaning | Notes |
 |---|---|---|
-| 0. Interested | Saved, not yet acted on | `saved_opportunities.status = 'saved'` |
-| 1. Applied/Enrolled | Applied or accepted into the program | `status = 'applied'` |
-| 2. Participated | Attended/completed without special distinction | usually untracked structurally today — would live in free-text `activities`/`summer_programs` description |
-| 3. Advanced/Selected further | Made a cut beyond base participation (semifinalist, selected cohort within a program, invited to present) | free-text only today |
-| 4. Placed/Awarded | Ranked, medaled, won | `awards` entry, `AWARD_LEVEL_SUGGESTIONS` tier |
-| 5. Led/Organized | Took on organizing or mentoring responsibility within the activity itself (team captain, competition organizer, teaching assistant in a program) | free-text `activities`/`leadership_experiences` |
-| 6. Produced lasting output | Something exists after the opportunity ends that didn't before — a paper, a shipped repo, a founded follow-on initiative | `projects`, `research_experiences.output_type`, `ResearchOutputType` ladder |
+| `registered` | Signed up / applied; no evidence of starting | Weak signal of intent only — see `04-profile-gap-framework.md` on why an unstarted registration should almost never feed a dimension score |
+| `participated` | Took part / attended; no further distinction available | The default for anything without a competitive structure (most `summer_program`, `conference`, `volunteering`) |
+| `completed` | Finished a defined program with a real dropout possibility | Relevant specifically for structured programs (summer programs, courses, fellowships) where "started but didn't finish" is a real, distinct outcome from "finished" |
+| `advanced` / `qualified` | Passed at least one elimination round in a multi-round process | The first tier at which competitive selectivity has actually been demonstrated |
+| `finalist` / `shortlisted` | Reached the final round or shortlist without placing | |
+| `placed` | Ranked at a specific, named position that is not the top (e.g. "3rd of 40 teams") | Store the actual rank as a fact when known — "placed" alone is less informative than "3rd" |
+| `honorable_mention` | A named recognition tier below the top prize | Distinct from `placed` — some competitions have both a numeric ranking *and* a separate honorable-mention track |
+| `won` / `first_place` | The top recognition tier for that specific opportunity | |
 
-Rungs 4–6 are not strictly ordered relative to each other in every case (a student can place in a
-competition without ever taking an organizing role, or vice versa) — treat rung as a profile per
-opportunity, not a single scalar, consistent with `07-explainability-framework.md`'s "no fake
-single-number certainty" principle.
+**RULE-COUNSEL-028:** `registered` must never feed any `ProfileDimension` score above a negligible
+floor — signing up demonstrates intent, which is a goal-tracking signal
+(`03-recommendation-timing.md`, `career_goals` discussion in `01-development-taxonomy.md` §7.8),
+not a development signal. A profile with many `registered`-tier entries and few higher-tier ones is
+evidence of *breadth of intent*, not breadth of achievement — these must be presented differently.
 
-## 3. Per-category detail
+**RULE-COUNSEL-029 — the core fix this document proposes:** `awards_distinction`
+(`01-development-taxonomy.md` §7.7) should only activate at `advanced`/`qualified` tier or above.
+Below that, an opportunity should credit only its *participation-level* dimensions (typically
+`academics`, `intellectual_curiosity`, or `career_exploration`, category-dependent — see the
+per-category table below), never `awards_distinction`. This directly closes the gap
+`00-overview.md` opened with: today, a student who entered a competition and one who won it
+produce an identical `CATEGORY_DIMENSIONS` lookup (`["awards_distinction", "academics"]`) at
+identical implied strength.
 
-Each entry: **primary current mapping** (from `CATEGORY_DIMENSIONS`, unchanged), **what the ladder
-adds**, **sub-type heterogeneity note** where real, **what "strong evidence" looks like for a
-counselor reading it themselves** (used to sanity-check any future automated weighting against
-human judgment).
+---
 
-### `competition` → `["awards_distinction", "academics"]`
+## Axis 2: Scope / selectivity
 
-Ladder adds: rung 2 (entered/competed) is real career-exploration/curiosity evidence even with no
-placement — the founder spec's own worked example (Phase 39) explicitly treats *entering* a
-competition as lower-value than a placement, not valueless. Rung 4 (placement) is where
-`awards_distinction` strength should scale steeply by `AWARD_LEVEL_SUGGESTIONS` tier — a
-School-level certificate and an International medal should not read as the same strength of
-evidence even though both are technically "an award."
+How prestigious the pool being measured against was — independent of where the student landed in
+it. A `won`-tier result at school level and a `won`-tier result at international level are the same
+*result tier* but very different evidence:
 
-Sub-type heterogeneity: high (see §1). A counselor-quality read always asks *which kind* of
-competition before judging what it demonstrates, not just that it was "a competition."
+- `school` — school-internal only
+- `regional` — city/state/provincial, or a single-country regional round
+- `national` — country-wide
+- `international` — multi-country
 
-### `research` → `["research", "intellectual_curiosity"]`
+Optionally, when known: approximate entrant/pool size. **Usually unknown** — treat its absence as
+`unknown`, not as implicitly "small."
 
-Ladder adds: this category benefits most directly from `ResearchOutputType`'s existing ladder
-(`none` → `presentation`/`poster`/`school_journal` → `preprint` → `peer_reviewed_publication`).
-Rung 1-2 (enrolled in/attending a structured summer research program) is a legitimate
-**exposure**-stage signal, especially for younger students (see `03-recommendation-timing.md`) —
-it should not be scored as equivalent to rung 6 (own independent project with real output), but it
-is not nothing either; it is evidence the student sought out research exposure, which is itself
-part of `career_exploration`. This is the dimension where conflating rungs is most consequential
-(§2.4 of `01-development-taxonomy.md`).
+**RULE-COUNSEL-030:** Do not assign a specific numeric multiplier to scope tiers in this research
+package — that is a scoring-implementation decision (would live in a future edit to
+`lib/counselor/config.ts`-equivalent constants) requiring product judgment this research does not
+have standing to fix in place, consistent with the mission's non-negotiable against inventing false
+precision. What this research does assert: scope must be read as a **qualitative modifier on top
+of** result tier, never merged into a single combined "prestige score," and a `national`-scope
+`won` result must never be presented as equivalent to an `international`-scope `won` result even
+though both are top-tier by Axis 1 alone.
 
-Sub-type heterogeneity: moderate — bench-lab research, computational/data research, and humanities
-research produce different skill evidence (`06-major-family-evidence/` covers this per field), but
-the core `research`/`intellectual_curiosity` mapping holds reasonably well across all of them.
+**RULE-COUNSEL-031:** An award/result record with `scope: unknown` (the competition's selectivity
+was never established) should be read at one confidence tier below an otherwise-identical record
+with known scope — an unqualified claim like "won an award" carries real but bounded weight until
+its context is known.
 
-### `internship` → `["career_exploration", "execution_project_depth"]`
+---
 
-Ladder adds: an internship's `execution_project_depth` credit should hinge on whether the student
-did substantive, attributable work (rung 6-adjacent: "built X," "analyzed Y dataset") vs.
-observational shadowing (rung 2: valuable `career_exploration` evidence, weak
-`execution_project_depth` evidence). Today nothing in `work_experiences` structurally distinguishes
-these beyond free-text `description` — a real gap, not solved here.
+## How the four axes combine — worked examples
 
-Sub-type heterogeneity: moderate, mostly along the observation-vs-substantive-work axis above
-rather than across fields.
+*(Axis 3 = commitment/depth, Axis 4 = role — both fully defined in
+`01-development-taxonomy.md` §6 and §2; shown here only in combination.)*
 
-### `summer_program` → `["intellectual_curiosity", "career_exploration"]`
+**Example A — "Entered the school's Model UN club."**
+Result tier: `registered`/`participated` (no competitive result yet). Scope: `school`. Commitment:
+`exposure` or `participation`, depending on duration. Role: `member`.
+→ Feeds `intellectual_curiosity` lightly. Does **not** feed `awards_distinction` (RULE-COUNSEL-029)
+or `leadership`.
 
-Ladder adds: summer programs are disproportionately an **exposure**-stage opportunity (see
-`03-recommendation-timing.md`'s grade-banding) — the current mapping is well-suited to rungs 1–3 and
-should not be inflated by a mere selective-admission summer program into implying deep, sustained
-capability the way rung 6 in `research`/`entrepreneurship` would. Selectivity of the *program itself*
-(a well-known highly selective summer program vs. an open-enrollment one) is a real but
-separate-from-dimension-mapping signal — closer to `awards_distinction`-adjacent prestige than to
-what the program taught, and should not be silently folded into `intellectual_curiosity` strength.
+**Example B — Same student, one year later: "Placed 2nd at a national Model UN conference,
+organizing the school's delegation."**
+Result tier: `placed` (rank 2). Scope: `national`. Commitment: `sustained` + `contribution`. Role:
+`organizer`/de facto leadership.
+→ Now feeds `awards_distinction` (result tier cleared the `advanced` gate) at a `national`-scope
+qualitative weight, `leadership` (organizing role, if `is_leadership_role` is set with supporting
+duration/scope per `01-development-taxonomy.md` §7.3), and continues to feed
+`intellectual_curiosity` from the underlying sustained engagement.
 
-Sub-type heterogeneity: high — a summer program can be almost anything (STEM research immersion,
-pre-college coursework, leadership/civic program, arts intensive) so `fields`/subject tags matter
-more here than for any other category to know what it actually develops.
+**Example C — "Published a paper in a peer-reviewed student journal after a summer research
+program."**
+This is two separate opportunity records: the `summer_program` itself (result tier likely
+`completed`; feeds `intellectual_curiosity`/`career_exploration` per the category table below) and
+a `research_experiences` row with `output_type = peer_reviewed_publication` (output axis,
+`01-development-taxonomy.md` §4 — feeds `research`). **RULE-COUNSEL-032:** A summer program that
+happens to culminate in a publication should not have its own program-attendance credit inflated
+by the publication — the publication is separately evidenced output, not a multiplier on the
+program's participation tier. Model as two linked facts, not one merged one.
 
-### `fellowship` → `["leadership", "research"]`
+---
 
-Ladder adds: "fellowship" varies enormously by organizer — some are effectively research
-apprenticeships (research-heavy), others are youth-leadership/civic cohorts with a
-capstone-project structure (leadership-heavy, execution-heavy). The current dual mapping is a
-reasonable average but a counselor reading a specific fellowship's actual structure would weight
-one or the other dimension much more heavily than the flat mapping implies. Rung 6 (a fellowship
-capstone project that ships something real) should credit `execution_project_depth` too, which the
-current flat mapping omits entirely.
+## Per-category result-tier gating
 
-### `scholarship` → `["academics"]`
+Extends `CATEGORY_DIMENSIONS` for the categories where result tier meaningfully changes what's
+credited (categories omitted below — `scholarship`, `student_program` — are binary-outcome or
+inherently non-competitive enough that the existing flat mapping is adequate as-is; not every
+category needs this treatment).
 
-Ladder adds: winning is nearly always rung-4-equivalent by definition (a scholarship is an award),
-so the evidence-state distinction that matters most here is *selectivity of the scholarship* itself
-(need-based vs. merit vs. highly competitive national scholarship), not participation depth — a
-different axis than most other categories. A scholarship *application* alone (rung 1, not yet
-decided) should not be treated as `academics` evidence at all.
+| Category | Below gate (`registered`–`participated`) | At/above gate (`advanced`+) |
+|---|---|---|
+| `competition` | `academics` or `intellectual_curiosity` only (subject-dependent), light weight | adds `awards_distinction` per RULE-COUNSEL-029, weighted by scope |
+| `hackathon` | `execution_project_depth` only (building happened regardless of result) | adds `awards_distinction`-equivalent recognition credit; `entrepreneurship` unaffected by result tier — it's driven by the artifact, not the placement |
+| `fellowship` | `research` only, light weight (fellowships are typically selective *to enter*, so even `participated` here is already post-selection — see note below) | `leadership` activates fully once role/duration substantiate it, independent of result tier — fellowships rarely have a "result tier" beyond completion |
+| `research` (as an opportunity, not the `research_experiences` table) | `intellectual_curiosity` only | `research` dimension activates fully once `research_experiences`' own `independence_level`/`output_type` fields (§7.4) substantiate it — this is *not* gated by this category's result tier at all, since research quality is read from the research record itself, not from a competition-style ladder |
 
-### `volunteering` → `["community_impact"]`
+**Note on `fellowship`:** unlike `competition`, most fellowships are selective at the *entry* gate
+(the application itself is the competitive filter), so `participated` in a fellowship already
+implies a real selection event happened — this document does not recommend gating fellowship
+credit as aggressively as competition credit. Flagged for the next document's redundancy treatment
+too (`05-redundancy-saturation.md`).
 
-Ladder adds: rung 5 (led/organized volunteers, e.g., founded or ran a recurring service initiative)
-should add `leadership` as a secondary dimension — the current flat single-dimension mapping misses
-this legitimate overlap (see `01-development-taxonomy.md` §2.6). Hours logged alone (rung 2, no
-distinguishing responsibility) is the weakest legitimate signal in this category, consistent with
-the over-counting risk already flagged in the taxonomy doc.
+**RULE-COUNSEL-033:** Selectivity-at-entry (had to be selected to *start*, e.g. most fellowships,
+selective summer programs) and selectivity-at-result (had to outperform others *within* the
+program, e.g. most competitions) are different mechanisms and must not share one gating rule. A
+category's `CATEGORY_DIMENSIONS` entry should note which mechanism applies before this document's
+result-tier gating is applied to it.
 
-### `entrepreneurship` → `["entrepreneurship", "execution_project_depth"]`
+---
 
-Ladder adds: the single category where rung matters most acutely — "idea stage" (rung 1-2
-equivalent: has a business plan, joined an entrepreneurship program) is real
-`intellectual_curiosity`/`career_exploration` evidence but materially weaker
-`entrepreneurship`/`execution_project_depth` evidence than rung 6 (built, launched, tested against
-real users/customers) per `01-development-taxonomy.md` §2.5's sub-facet ladder
-(idea → built → tested → sustained). The founder spec's Phase 39 worked example ("avoid another
-club... unless it creates a unique measurable outcome") is precisely a rung-based judgment already.
+## Rules minted in this document
 
-### `hackathon` → `["execution_project_depth", "entrepreneurship"]`
-
-Ladder adds: rung 4 (placed/won) matters, but even rung 2 (participated, shipped a working demo in
-the time box) is legitimate `execution_project_depth` evidence in a way that mere `hackathon`
-*registration* is not — hackathons are unusual among these categories in that meaningful rung-2
-attendance almost always implies at least a minimal build, given the format. Team-size/individual
-contribution is the biggest open measurement gap here (same as `internship`).
-
-### `academic_program` → `["intellectual_curiosity", "academics"]`
-
-Ladder adds: distinguish credit-bearing/graded programs (closer to `academics`-strength evidence,
-comparable in spirit to `CourseLevel`'s `dual_enrollment`) from ungraded/exploratory ones (closer to
-pure `intellectual_curiosity`). The current flat mapping already hedges across both via the
-two-dimension list, which is reasonable; the ladder mainly helps decide *which* of the two to weight
-higher for a specific program.
-
-### `online_program` → `["intellectual_curiosity", "academics"]`
-
-Same reasoning as `academic_program`, with one addition: online/MOOC-style programs have the
-**lowest floor** of any category (extremely low- or no-selectivity enrollment is common and
-legitimate), so rung 1 ("enrolled") should carry noticeably less weight here than rung 1 in a
-selective in-person `summer_program` or `fellowship` — completion (rung 2/3, e.g., an issued
-certificate of completion) is the meaningful threshold, not enrollment.
-
-### `conference` → `["intellectual_curiosity", "career_exploration"]`
-
-Ladder adds: attending (rung 2) is a legitimate but shallow signal, appropriate mainly for younger
-students per `03-recommendation-timing.md`; presenting/speaking at a conference (rung 5-adjacent) is
-meaningfully stronger and should add `awards_distinction`-adjacent or `leadership` credit depending
-on context — the current single-mapping-regardless-of-role is the least differentiated of any
-category and the one most likely to need this ladder in practice, since "attended" and "presented
-research at" are described by the same `conference` category today.
-
-### `student_program` → `["career_exploration"]`
-
-The catch-all category (leadership/civic cohort programs, model UN, youth advisory boards, etc. —
-whatever does not fit a more specific category). Given its breadth, the ladder here should be read
-per-program rather than generalized; this is the category where relying on the specific program's
-own `fields`/description matters most, and the single generic `career_exploration` mapping is
-appropriately conservative as a floor.
-
-## 4. Recommended shape for a future refinement (not implemented here)
-
-A `strengthMultiplier` (e.g., `0.3` participated / `0.6` advanced / `1.0` placed-or-shipped-output /
-`1.2` led-or-organized) applied to whatever `CATEGORY_DIMENSIONS` already returns, driven by a
-small, explicit `evidenceRung` field a future migration could add per relevant achievement record
-— additive to the existing schema, not a replacement. This preserves
-`lib/opportunities/matching.ts`'s existing exported contract exactly (still category → dimensions)
-while letting `lib/counselor/scoring.ts`'s `dataQuality`/`gapRelevance` weighting (already
-documented in `docs/counselor-core-plan.md` §8) consume a sharper signal than presence/absence.
-Concrete schema shape intentionally left to the engineering handoff, not specified here (research
-scope, not implementation scope).
-
-## Sources referenced in this document
-
-Reuses `S-UCAS-PS` and `S-EXTRA-DEV` from `01-development-taxonomy.md` (depth/leadership-substance
-framing applies identically here). No new external sources were load-bearing for this document —
-its content is primarily a structural analysis of ORYN's own existing code (`lib/opportunities/
-matching.ts`, `types/database.ts`), cited by file path throughout rather than by external claim.
+RULE-COUNSEL-027 through RULE-COUNSEL-033 (7 rules). Registry:
+`data/research/counseling-intelligence/rules.json`.

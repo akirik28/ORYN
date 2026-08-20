@@ -1,0 +1,80 @@
+{
+  "schema_version": "1.0",
+  "package": "oryn/counseling-intelligence-research",
+  "last_updated": "2026-08-21",
+  "method_note": "Priority order and discipline documented in full in docs/research/counseling-intelligence/00-overview.md's \"Method and source standard\" section. Blogs/aggregators appear here only where no higher-tier source was fetchable, and are always source_type discovery_or_secondary with confidence capped at medium.",
+  "sources": [
+    {
+      "id": "SRC-001",
+      "title": "New UCAS personal statement format for 2026 entry",
+      "url": "https://www.dundee.ac.uk/feature/new-ucas-personal-statement-format-2026-entry",
+      "publisher": "University of Dundee (official university admissions communication)",
+      "source_type": "official_institutional_guidance",
+      "retrieval_method": "WebFetch (direct fetch, full page content reviewed)",
+      "retrieved_at": "2026-08-21",
+      "claim_supported": "UCAS personal statement for 2026 entry changes from one free-form essay to three structured questions (motivation for course; how qualifications/studies prepared them; what else done outside education and why useful), minimum 350 characters per section, 4,000 characters total.",
+      "confidence": "high",
+      "limitations": "Fetched from a university's own admissions communication about UCAS policy, not ucas.com directly (ucas.com returned HTTP 403 to automated fetch). Cross-validated against independent WebSearch synthesis of 9 other sources describing the same three questions and character limits before being treated as reliable."
+    },
+    {
+      "id": "SRC-002",
+      "title": "Common App Activities section structure (2026-27 cycle)",
+      "url": "https://collegeessay.org/blog/how-to-write-a-common-app-essay/common-app-activities-section",
+      "publisher": "Multiple independent college-counseling sites (collegeessay.org, ivy-way.com, scholarships360.org, orieladmissions.com, others) — WebSearch synthesis, not a single fetch",
+      "source_type": "counseling_org_secondary",
+      "retrieval_method": "WebSearch synthesis across 8 results",
+      "retrieved_at": "2026-08-21",
+      "claim_supported": "Common App allows up to 10 activities (slots not required to be filled), 50/100/150 character limits (position, organization, description respectively), a separate Honors section (up to 5 entries, 100 characters each), and category selection guidance to pick the most specific fitting category.",
+      "confidence": "medium",
+      "limitations": "Not fetched from commonapp.org itself — these specific character limits circulate via counseling-industry blogs each cycle and could drift year to year. Re-verify directly against commonapp.org before treating exact character-count figures as current in any future cycle."
+    },
+    {
+      "id": "SRC-003",
+      "title": "IB CAS (Creativity, Activity, Service) requirements — removal of 150-hour rule, reflection-based evidence",
+      "url": "https://en.wikipedia.org/wiki/Creativity,_activity,_service",
+      "publisher": "Wikipedia, cross-referenced against tutorchase.com, structural-learning.com, globalschoolguide.com (WebSearch synthesis)",
+      "source_type": "discovery_or_secondary",
+      "retrieval_method": "WebSearch synthesis across 8 results",
+      "retrieved_at": "2026-08-21",
+      "claim_supported": "IB removed the 150-hour CAS requirement (pre-2017 rule) in favor of an expectation of regular commitment across all three strands (Creativity, Activity, Service), evidenced through reflections against seven learning outcomes, plus at least one CAS project. Reflection is explicitly distinguished from description (what changed in thinking/skills vs. what happened).",
+      "confidence": "high",
+      "limitations": "Not fetched from ibo.org directly. The core fact (hour requirement removed, reflection-based model) is well-corroborated across multiple independent secondary sources and stable since ~2017, which raises confidence despite no primary-source fetch."
+    },
+    {
+      "id": "SRC-004",
+      "title": "NACAC holistic review and extracurricular activity weighting in U.S. admissions",
+      "url": "https://nacacnet.org/wp-content/uploads/2022/10/nacac_brief_character-0120_2.pdf",
+      "publisher": "NACAC (primary PDF identified but not fetched) — claim as stated is a WebSearch synthesis of secondary summaries",
+      "source_type": "discovery_or_secondary",
+      "retrieval_method": "WebSearch synthesis across 9 results",
+      "retrieved_at": "2026-08-21",
+      "claim_supported": "General finding that extracurricular involvement is a 'considerably' or 'moderately' important factor for a majority of colleges in holistic review, with depth/impact of involvement (leadership, sustained commitment) valued over breadth/quantity, secondary relative to academic factors (grades, curriculum rigor).",
+      "confidence": "medium",
+      "limitations": "This is a general, widely-repeated finding paraphrased from secondary summaries of NACAC's State of College Admission survey series, not a fetch of the primary PDF or a specific cited statistic verified at the source. Used in this research only to support qualitative claims (depth over breadth) already independently justified by the schema/rule reasoning, never as the sole basis for a specific number."
+    },
+    {
+      "id": "SRC-005",
+      "title": "Turkey e-okul / YKS system — transcript and university admission mechanics",
+      "url": "https://openeducat.org/gradebook/turkey/",
+      "publisher": "Multiple secondary education-system reference sites (openeducat.org, educationbenchmark.com, euroeducation.net) — WebSearch synthesis",
+      "source_type": "discovery_or_secondary",
+      "retrieval_method": "WebSearch synthesis across 6 results",
+      "retrieved_at": "2026-08-21",
+      "claim_supported": "MEB (Turkish Ministry of National Education) uses a 1-5 achievement scale at primary level and 0-100 at secondary level; e-okul (e-okul.meb.gov.tr) is the official record system student educational information must be current in; YKS (Yükseköğretim Kurumları Sınavı) is the national university placement exam system, eligibility tied to secondary completion.",
+      "confidence": "medium",
+      "limitations": "Not fetched from meb.gov.tr or the official ÖSYM (exam authority) site directly. Sufficient for this research's purpose (establishing that Turkey's system is exam-placement-based with a distinct 0-100 secondary grading scale, relevant to RULE-COUNSEL-010's cross-scale comparison warning) but not sufficient to cite specific current-year YKS mechanics or dates without re-verification."
+    },
+    {
+      "id": "SRC-006",
+      "title": "A-Level Extended Project Qualification (EPQ) — structure and independent-research skill development",
+      "url": "https://qualifications.pearson.com/en/qualifications/edexcel-project-qualification/about-the-project-qualification/about-level-3-project-qualification/the-edexcel-extended-project-and-universities.html",
+      "publisher": "Pearson (Edexcel exam board — official qualification-awarding body) and University of Manchester widening-participation page, cross-referenced via WebSearch synthesis",
+      "source_type": "official_program_page",
+      "retrieval_method": "WebSearch synthesis across 9 results, anchored on an exam-board-official URL",
+      "retrieved_at": "2026-08-21",
+      "claim_supported": "EPQ is a single independently-chosen piece of work requiring planning, research, and independent learning, resulting in a report (or product + report) and a presentation; accepted by all 24 Russell Group universities; some universities lower standard A-level grade offers in recognition of EPQ attainment.",
+      "confidence": "high",
+      "limitations": "Grade-offer-reduction specifics ('AAB to ABB') are illustrative/commonly-cited examples, not a verified universal policy — varies by university and should not be treated as a general rule in any student-facing claim."
+    }
+  ]
+}

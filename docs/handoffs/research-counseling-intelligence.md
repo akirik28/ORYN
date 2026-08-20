@@ -73,19 +73,19 @@ Do not trust a document's presence alone; note whether it's drafted, sourced, or
 
 | Doc | Status |
 |---|---|
-| 00-overview.md | Done, committed (`148a2d6`) |
-| 01-development-taxonomy.md | Not started |
-| 02-opportunity-development-mapping.md | Not started |
-| 03-recommendation-timing.md | Not started |
-| 04-profile-gap-framework.md | Not started |
-| 05-redundancy-saturation.md | Not started |
-| 06-major-family-evidence/ (14 families) | Not started |
-| 07-explainability-framework.md | Not started |
-| 08-unsafe-inference-rules.md | Not started (consolidation — write near the end) |
-| 09-persona-testing.md | Not started (needs 01–08 to exist first) |
-| 10-open-questions.md | Not started (write last) |
-| `data/research/counseling-intelligence/rules.json` | Not started (populate incrementally as each doc mints `RULE-COUNSEL-###` entries) |
-| `data/research/counseling-intelligence/sources.json` | Not started (populate incrementally as sources are actually fetched) |
+| 00-overview.md | Done, committed (`148a2d6`, other session) |
+| 01-development-taxonomy.md | Done (this session's version), committed on top of the collision at a commit after `3bbedb3` — see git log for the exact hash; a competing version also exists at `51b1978` (other session) — **founder reconciliation needed, do not auto-merge**, see collision note above |
+| 02-opportunity-development-mapping.md | Done (this session), same commit as 01 above |
+| 03-recommendation-timing.md | Owned by the other session's new worktree going forward (see collision note above) — not started by this session |
+| 04-profile-gap-framework.md | Owned by the other session's new worktree — not started by this session |
+| 05-redundancy-saturation.md | Owned by the other session's new worktree — not started by this session |
+| 06-major-family-evidence/ (14 families) | Owned by the other session's new worktree — not started by this session |
+| 07-explainability-framework.md | Owned by the other session's new worktree — not started by this session |
+| 08-unsafe-inference-rules.md | Owned by the other session's new worktree — not started by this session |
+| 09-persona-testing.md | Owned by the other session's new worktree — not started by this session |
+| 10-open-questions.md | Owned by the other session's new worktree — not started by this session |
+| `data/research/counseling-intelligence/rules.json` | Populated: RULE-COUNSEL-001 through 033, sourced from 01-02. The other session mints new rules from `034` onward in its own worktree to avoid collision — will need a merge pass at reconciliation time, not before. |
+| `data/research/counseling-intelligence/sources.json` | Populated: SRC-001 through 006 (UCAS, Common App, IB CAS, NACAC, Turkey MEB/YKS, EPQ), all with retrieval method and confidence noted. |
 
 ## Working conventions established this session
 
@@ -105,5 +105,12 @@ Do not trust a document's presence alone; note whether it's drafted, sourced, or
 
 ## Next action
 
-Resume at whichever row in the progress table above is earliest and still "Not started." As of
-this checkpoint, that's `01-development-taxonomy.md`.
+01 and 02 are done and committed by this session. 03 onward is owned by the other session's
+isolated worktree per the collision note above — this session is not writing further into the
+`0X-*.md` sequence. If resuming this session cold and 03+ already shows real content above, check
+`git log`/`git branch -a` for the other session's worktree branch before assuming this session
+should pick up where it left off — the split agreed here may already be stale. This session's own
+remaining-time plan (see reply sent to the peer session): hold 00-02 stable, do a reconciliation
+pass against the competing `51b1978` attempt at 01 to fold in anything genuinely additive, and act
+as an integration/QA checkpoint for the combined package once the other session's 03-10 exist,
+rather than duplicating 03-10 work in this same working directory.
