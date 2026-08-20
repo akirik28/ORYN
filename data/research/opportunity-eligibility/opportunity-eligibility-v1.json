@@ -1,0 +1,1792 @@
+{
+  "package": "R4",
+  "topic": "opportunity_eligibility",
+  "version": "v1",
+  "researcher": "ORYN Research Claude",
+  "generated_at": "2026-08-20",
+  "consumer": "Claude A (DATA-A) primarily for the extraction_audit_sample; Claude B (PROD-B) primarily for the methodology/taxonomy/schema-gap sections",
+  "live_db_snapshot": {
+    "measured_at": "2026-08-21",
+    "measured_via": "Supabase MCP execute_sql, project qtcvcflzxbuagvvwahhu (oryn-qa-scratch), read-only",
+    "opportunities_total": 352,
+    "field_population": {
+      "eligible_countries": {
+        "populated": 18,
+        "pct": 5.1
+      },
+      "minimum_age": {
+        "populated": 55,
+        "pct": 15.6
+      },
+      "maximum_age": {
+        "populated": 45,
+        "pct": 12.8
+      },
+      "eligible_grades": {
+        "populated": 69,
+        "pct": 19.6
+      },
+      "citizenship_restrictions": {
+        "populated": 30,
+        "pct": 8.5
+      },
+      "residency_restrictions": {
+        "populated": 31,
+        "pct": 8.8
+      },
+      "application_requirements": {
+        "populated": 98,
+        "pct": 27.8
+      },
+      "current_cycle_label": {
+        "populated": 115,
+        "pct": 32.7
+      },
+      "cycle_status": {
+        "populated": 352,
+        "pct": 100.0
+      }
+    },
+    "category_breakdown": {
+      "summer_program": 235,
+      "competition": 72,
+      "research": 13,
+      "scholarship": 9,
+      "internship": 8,
+      "online_program": 6,
+      "entrepreneurship": 3,
+      "academic_program": 3,
+      "fellowship": 2,
+      "volunteering": 1
+    },
+    "note": "This is the same live gap first flagged at the R2.1 checkpoint (14/334 eligible_countries then; re-measured now at 18/352 -- the table has grown by 18 rows and eligible_countries coverage has moved from ~4.2% to ~5.1%, i.e. the gap has not materially closed since R2.1). Re-measure before citing in any future package -- this is a snapshot, not a live value."
+  },
+  "grade_age_normalization": {
+    "topic": "grade_age_normalization",
+    "system_grade_age_mapping": [
+      {
+        "system": "US",
+        "terms_last_4_years": [
+          "Grade 9",
+          "Grade 10",
+          "Grade 11",
+          "Grade 12"
+        ],
+        "typical_age_range_per_term": {
+          "Grade 9": "14-15",
+          "Grade 10": "15-16",
+          "Grade 11": "16-17",
+          "Grade 12": "17-18"
+        },
+        "notes": "US school year runs Sept-Aug; grade placement is governed by state-set birthdate cutoffs (typically Aug/Sept/Oct 1), so a given grade normally spans two consecutive age-years (a student is one age at the start of the school year, one year older by the end). This is the baseline convention ORYN's eligible_grades field already uses.",
+        "sources": [
+          {
+            "url": "https://en.wikipedia.org/wiki/Twelfth_grade",
+            "note": "General grade/age structure, cross-checked against multiple secondary education-guide sources converging on the same 14-15/15-16/16-17/17-18 breakdown for grades 9-12."
+          }
+        ]
+      },
+      {
+        "system": "turkiye_meb",
+        "terms_last_4_years": [
+          "9. sınıf",
+          "10. sınıf",
+          "11. sınıf",
+          "12. sınıf"
+        ],
+        "typical_age_range_per_term": {
+          "9. sınıf": "14-15",
+          "10. sınıf": "15-16",
+          "11. sınıf": "16-17",
+          "12. sınıf": "17-18"
+        },
+        "notes": "Türkiye's 'lise' (general upper secondary) is a 4-year stage (9.-12. sınıf) covering ages 14-18 as an aggregate range per Eurydice and NCES comparative-indicators sources. The MEB's own school-starting-age rules for ilkokul 1. sınıf (registration keyed to age-in-months as of 30 Sept) place first grade entry at essentially the same nominal age (~6) as the typical US kindergarten/grade-1 cutoff, so the on-time progression that produces '9. sınıf at 14-15' etc. is a reasonable, though not a directly-quoted-per-grade, extrapolation from the aggregate 14-18 range plus standard on-time progression -- see unresolved_questions.",
+        "sources": [
+          {
+            "url": "https://eurydice.eacea.ec.europa.eu/national-education-systems/turkiye/organisation-general-upper-secondary-education",
+            "note": "Eurydice (EU network) page on Türkiye upper secondary organisation; confirms enrolment age ceiling ('under the age of 18 at the start of the academic year' for non-interrupted students) and that general upper secondary graduates are typically 17-19."
+          },
+          {
+            "url": "https://nces.ed.gov/pubs2016/2016100/app_a17.asp",
+            "note": "US National Center for Education Statistics comparative note on Türkiye: secondary education (lise) covers grades 9-12, ages 14-18, 4-year duration, part of 12-year compulsory education."
+          },
+          {
+            "url": "https://eokulyd.meb.gov.tr/yasHesap.ASPX",
+            "note": "MEB's own e-Okul school-starting-age calculator; used to confirm ilkokul 1. sınıf entry is keyed to age-in-months as of 30 September, aligning with a ~age-6 start comparable to the US convention."
+          }
+        ]
+      },
+      {
+        "system": "uk_cambridge",
+        "terms_last_4_years": [
+          "Year 10",
+          "Year 11",
+          "Year 12",
+          "Year 13"
+        ],
+        "typical_age_range_per_term": {
+          "Year 9": "13-14",
+          "Year 10": "14-15",
+          "Year 11": "15-16",
+          "Year 12": "16-17",
+          "Year 13": "17-18"
+        },
+        "notes": "England/Wales year groups are keyed to age on 1 September (a child who is 4 on 1 Sept starts Reception; ages increase by exactly one year group per birth-year band). Year 10-11 = GCSE/IGCSE stage; Year 12-13 = A-Level/Sixth Form stage. Because the UK's compulsory-schooling age band starts one year earlier in its numbering than the US's, UK Year N is age-equivalent to US Grade (N-1) for N=10..13 -- see naive_1to1_mapping_safety_assessment for the full derivation.",
+        "sources": [
+          {
+            "url": "https://www.havering.gov.uk/school-admissions-1/year-group-child",
+            "note": "Official UK local-authority (.gov.uk) page giving exact birth-date-range-to-year-group table: Year 7 = born 1 Sep 2014-31 Aug 2015 ... Year 9 = born 1 Sep 2012-31 Aug 2013, directly confirming the age-per-year-group figures used here."
+          },
+          {
+            "url": "https://www.gov.uk/schools-admissions/school-starting-age",
+            "note": "Official GOV.UK page confirming the general rule that compulsory school age is reached following the child's fifth birthday, and Reception typically starts the September after a child's fourth birthday -- the anchor point from which all later year-group ages are counted forward."
+          }
+        ]
+      },
+      {
+        "system": "ib_dp",
+        "terms_last_4_years": [
+          "N/A (pre-DP)",
+          "N/A (pre-DP)",
+          "DP Year 1 (\"DP1\")",
+          "DP Year 2 (\"DP2\")"
+        ],
+        "typical_age_range_per_term": {
+          "DP Year 1": "16-17",
+          "DP Year 2": "17-18/19"
+        },
+        "notes": "The IB Diploma Programme is a 2-year programme, not a 4-year one, and the IBO's own official framing of eligibility is AGE-based ('open to any student aged 16 to 19') rather than grade-number-based. IBO does not itself standardize 'DP1/DP2' as official terminology; schools running the DP embed the two years into whichever host-country grade/year numbering they already use (e.g., 'Year 12/Year 13' at UK-pattern schools, 'Grade 11/Grade 12' at US-pattern schools, 'Klasse 12/13' at German-pattern schools). This means a program stating 'IB DP1' eligibility cannot be resolved to a specific US grade without also knowing the host school's own numbering convention.",
+        "sources": [
+          {
+            "url": "https://ibo.org/programmes/diploma-programme/",
+            "note": "Official IBO page; per search-indexed content, states DP is 'a two-year international education programme that prepares students age 16-19 years for university and higher education' and 'open to any student aged 16 to 19'. Direct WebFetch of ibo.org returned HTTP 403 on repeated attempts; this figure is drawn from search-engine-indexed snippets of the official page plus cross-confirmation from Wikipedia's citation of the same figure -- flagged in unresolved_questions as not independently read in full."
+          }
+        ]
+      },
+      {
+        "system": "germany",
+        "terms_last_4_years": [
+          "Klasse 9",
+          "Klasse 10",
+          "Klasse 11",
+          "Klasse 12 (G8 final year) / Klasse 12 (G9, not final)"
+        ],
+        "typical_age_range_per_term": {
+          "Klasse 9": "14-15",
+          "Klasse 10": "15-16",
+          "Klasse 11": "16-17",
+          "Klasse 12": "17-18",
+          "Klasse 13 (G9 states only)": "18-19"
+        },
+        "notes": "Germany runs two coexisting Gymnasium tracks depending on Bundesland (state) and reform era: G8 (8-year Gymnasium, Abitur after Klasse 12) and G9 (9-year Gymnasium, Abitur after Klasse 13). The Bavarian state ministry's own gymnasiale-oberstufe page states Bavaria's Oberstufe spans 'Jahrgangsstufen 11 bis 13' (i.e., Bavaria uses G9), while the Hessian ministry page describes Oberstufe as 'Jahrgangsstufen 10 bis 12 (G8) bzw. 11 bis 13 (G9)', confirming both tracks exist and the same nominal 'Klasse 12' label maps to different points in a student's trajectory (final year vs. second-to-last year) depending on state. Age-per-Klasse below age 11 is inferred from Bavaria's own admission rule (see source) that caps Gymnasium Klasse-5 entry at 'not yet 12 by 30 September', i.e., entry around age 10-11, which anchors the standard Klasse-5=10-11 ... Klasse-9=14-15 progression used here.",
+        "sources": [
+          {
+            "url": "https://www.gymnasiale-oberstufe.bayern.de/allgemeines",
+            "note": "Official Bavarian state ministry (Bayerisches Staatsministerium) page: 'Die gymnasiale Oberstufe umfasst die Jahrgangsstufen 11 bis 13' -- confirms Bavaria is a G9 state."
+          },
+          {
+            "url": "https://kultus.hessen.de/schulsystem/schulformen-und-bildungsgaenge/gymnasium/gymnasiale-oberstufe",
+            "note": "Official Hessian state ministry page: Oberstufe = 'Jahrgangsstufen 10 bis 12 (G8) bzw. 11 bis 13 (G9)' -- explicitly documents both tracks exist side by side."
+          },
+          {
+            "url": "https://www.km.bayern.de/lernen/schularten/gymnasium/eignung-und-uebertritt",
+            "note": "Official Bavarian ministry admissions page: students who are already 12 years old by 30 September of the relevant year are generally not admitted to Gymnasium Klasse 5, anchoring the age-10/11-at-Klasse-5 starting point for the rest of the age-per-Klasse progression used above."
+          }
+        ]
+      },
+      {
+        "system": "france",
+        "terms_last_4_years": [
+          "Troisième (last year of collège, NOT lycée)",
+          "Seconde",
+          "Première",
+          "Terminale"
+        ],
+        "typical_age_range_per_term": {
+          "Troisième": "14-15",
+          "Seconde": "15-16",
+          "Première": "16-17",
+          "Terminale": "17-18"
+        },
+        "notes": "French secondary education is institutionally split into collège (4 years, 6e-3e, ages ~11-15) and lycée (3 years, Seconde-Terminale, ages ~15-18) -- NOT a single continuous 4-year 'high school' the way the US/UK/Turkey/Germany models are. Terminology is inverted/descending (Seconde > Première > Terminale) rather than ascending numbers, so no numeric parsing is possible; a literal string match against 'grade 10/11/12' will never match French records. Ages converge from several secondary sources at Seconde~15, Première~16, Terminale~17 (turning 18 during Terminale, coincident with the Baccalauréat). Could not independently confirm via a directly-fetched primary education.gouv.fr/eduscol.education.gouv.fr page (both returned HTTP 403 on WebFetch) -- see unresolved_questions.",
+        "sources": [
+          {
+            "url": "https://fr.wikipedia.org/wiki/Lyc%C3%A9e_en_France",
+            "note": "French Wikipedia: lycée described as covering ages 'en principe, de quinze à dix-huit ans' (in principle, 15 to 18 years old) across the 3-year Seconde/Première/Terminale span."
+          },
+          {
+            "url": "https://www.education.gouv.fr/reussir-au-lycee/les-enseignements-de-la-seconde-generale-et-technologique-41651",
+            "note": "Official French Ministry of Education page on Seconde -- content could not be directly read via WebFetch (HTTP 403); title/URL confirm the Ministry's own naming of the stage as 'seconde générale et technologique', corroborating the terminology even though the age text itself was not independently re-verified from this specific page."
+          }
+        ]
+      }
+    ],
+    "naive_1to1_mapping_safety_assessment": {
+      "is_it_safe": "partially",
+      "explanation": "Safety of a naive numeric 1:1 mapping depends entirely on the specific country pair and cannot be assumed uniformly. It is reasonably safe for US<->Turkiye (both use ascending 9-12 numbering with functionally equivalent school-starting-age conventions, so grade N carries the same age range in both systems for an on-time student). It is UNSAFE for US<->UK: UK Year numbering is offset by one full year relative to US grade numbering because English year groups count from an earlier anchor point (Year 1 begins the September a child turns 5-6) than US grades do, so UK Year N is age-equivalent to US Grade (N-1), not Grade N. It BREAKS DOWN STRUCTURALLY (not just by an offset) for France, where the last four years of secondary schooling straddle two different institution types (collège and lycée) with non-numeric, descending-order names (Troisième/Seconde/Première/Terminale) that cannot be parsed as numbers at all. It is AMBIGUOUS for Germany, where the same nominal grade label ('Klasse 12') denotes the final pre-university year in G8 states but the second-to-last year in G9 states -- the correct interpretation depends on which Bundesland/track the school follows, information a naive numeric mapping does not capture. It is NOT APPLICABLE for the IB Diploma Programme, whose own official eligibility framing (per IBO) is age-based (16-19) rather than grade-number-based; the programme's two years are labeled using whatever host-country numbering the school already has, so 'IB DP1' alone carries no inherent grade number to map.",
+      "specific_offsets_found": [
+        {
+          "pair": "UK Year vs US Grade",
+          "actual_relationship": "UK Year N (secondary range, N=10..13) is age-equivalent to US Grade (N-1), i.e. UK Year 12 (first year of A-Levels/Sixth Form) matches the age range of US Grade 11 (junior year), both ages 16-17 -- NOT US Grade 12 as a naive same-number match would assume. Correspondingly: UK Year 10 <-> US Grade 9 (age 14-15), Year 11 <-> Grade 10 (age 15-16), Year 12 <-> Grade 11 (age 16-17), Year 13 <-> Grade 12 (age 17-18).",
+          "evidence": "Havering London Borough Council (official .gov.uk source): Year 9 = born 1 Sept 2012-31 Aug 2013 (age 13-14 for the 2026-27 school year), and general UK year-group age charts converging on Year 12 = ages 16-17, Year 13 = ages 17-18, cross-checked against the standard US Grade 11 = 16-17 / Grade 12 = 17-18 breakdown."
+        },
+        {
+          "pair": "Türkiye 'sınıf' vs US Grade",
+          "actual_relationship": "9. sınıf through 12. sınıf numerically and age-wise line up with US Grade 9-12 (both approx. ages 14-18 across the 4-year span), because Turkish ilkokul entry age (~age 6, per MEB's own age-in-months registration rules) closely matches the US kindergarten/Grade-1 entry convention, unlike the UK's earlier-anchored numbering.",
+          "evidence": "Eurydice Türkiye page (general upper secondary organisation) and NCES comparative-indicators note both describe lise as grades 9-12 spanning ages 14-18; MEB's own e-Okul age-registration tool anchors ilkokul entry at an age comparable to the US start."
+        },
+        {
+          "pair": "France 'Terminale' vs US Grade 12",
+          "actual_relationship": "Age-wise the two roughly coincide at the very end (Terminale students turn 18 during the year, same as US Grade 12 seniors), but the naming itself is non-numeric and the preceding year (age 14-15, equivalent to US Grade 9) falls in a structurally different institution (collège's Troisième) rather than in 'lycée' at all -- so the mapping problem in France is one of institutional/terminological structure, not primarily an age offset like the UK case.",
+          "evidence": "French Wikipedia (Lycée en France): lycée = 3 years (Seconde/Première/Terminale) for ages 'in principle 15 to 18'; collège = separate 4-year prior stage."
+        },
+        {
+          "pair": "Germany 'Klasse 12' vs US Grade 12",
+          "actual_relationship": "Klasse 12 is the FINAL (Abitur) year in G8 (8-year Gymnasium) states, age-equivalent to US Grade 12, but is only the SECOND-TO-LAST year in G9 (9-year Gymnasium) states, where the final Abitur year is Klasse 13 instead -- so the same label 'Klasse 12' denotes two different points in the trajectory depending on the state/school's track.",
+          "evidence": "Official Bavarian state ministry page (G9: Oberstufe = Jahrgangsstufen 11-13) versus official Hessian state ministry page documenting both 'Jahrgangsstufen 10 bis 12 (G8) bzw. 11 bis 13 (G9)' side by side."
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.havering.gov.uk/school-admissions-1/year-group-child",
+          "note": "Official UK council birth-date-to-year-group table."
+        },
+        {
+          "url": "https://eurydice.eacea.ec.europa.eu/national-education-systems/turkiye/organisation-general-upper-secondary-education",
+          "note": "Eurydice Türkiye upper-secondary organisation and enrolment-age rules."
+        },
+        {
+          "url": "https://fr.wikipedia.org/wiki/Lyc%C3%A9e_en_France",
+          "note": "French lycée age range and institutional structure."
+        },
+        {
+          "url": "https://www.gymnasiale-oberstufe.bayern.de/allgemeines",
+          "note": "Bavaria (G9) Oberstufe grade range."
+        },
+        {
+          "url": "https://kultus.hessen.de/schulsystem/schulformen-und-bildungsgaenge/gymnasium/gymnasiale-oberstufe",
+          "note": "Hesse ministry documenting both G8 and G9 grade ranges."
+        }
+      ]
+    },
+    "proposed_normalization_approach": {
+      "description": "ORYN should not store or match on raw grade-number strings across countries. Instead, define a canonical, AGE-anchored 'secondary_stage' enum (S1-S4) for the last four years of pre-tertiary schooling, where each stage is defined primarily by its typical age range, with a per-country lookup table translating each country's own grade/year label into the corresponding canonical stage. Eligibility matching for a given opportunity should run on whichever of (a) explicit age range or (b) canonical stage the opportunity itself states, converting the ORYN user's country-specific grade label into both an age estimate and a canonical stage at profile-entry time (using the country's own on-time-progression convention), rather than ever comparing raw grade-number strings across two different countries directly. Countries whose terminology doesn't reduce to a clean number (France) or whose grade number is ambiguous without extra context (Germany's G8/G9) get an explicit country-specific resolver rather than being forced into the same lookup shape as US/UK/Turkey.",
+      "canonical_stages": [
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "mapping_table": [
+        {
+          "canonical_stage": "S1",
+          "us_grade": "Grade 9",
+          "uk_year": "Year 10",
+          "turkiye_sinif": "9. sınıf",
+          "ib_dp_year": "not yet in DP (pre-DP)",
+          "germany_klasse": "Klasse 9 (both G8 and G9 tracks)",
+          "france_term": "Troisième (last year of collège, not lycée)",
+          "typical_age_range": "14-15"
+        },
+        {
+          "canonical_stage": "S2",
+          "us_grade": "Grade 10",
+          "uk_year": "Year 11",
+          "turkiye_sinif": "10. sınıf",
+          "ib_dp_year": "not yet in DP (pre-DP)",
+          "germany_klasse": "Klasse 10 (both tracks)",
+          "france_term": "Seconde (first year of lycée)",
+          "typical_age_range": "15-16"
+        },
+        {
+          "canonical_stage": "S3",
+          "us_grade": "Grade 11",
+          "uk_year": "Year 12",
+          "turkiye_sinif": "11. sınıf",
+          "ib_dp_year": "DP Year 1 (\"DP1\") -- typical but host-school numbering varies",
+          "germany_klasse": "Klasse 11 (both tracks, approx.)",
+          "france_term": "Première",
+          "typical_age_range": "16-17"
+        },
+        {
+          "canonical_stage": "S4",
+          "us_grade": "Grade 12",
+          "uk_year": "Year 13",
+          "turkiye_sinif": "12. sınıf",
+          "ib_dp_year": "DP Year 2 (\"DP2\") -- typical but host-school numbering varies",
+          "germany_klasse": "Klasse 12 (FINAL year in G8 states; NOT final in G9 states -- G9 has a Klasse 13 beyond S4)",
+          "france_term": "Terminale",
+          "typical_age_range": "17-18"
+        }
+      ],
+      "cases_that_dont_map_cleanly": [
+        "Germany G9 states (e.g. Bavaria) have a 5th year (Klasse 13) beyond canonical S4 that is the actual final/Abitur year -- a 'S4 = final year' assumption is wrong for roughly half of German states; ORYN needs a per-Bundesland G8/G9 flag, not just a country flag, to place a German student correctly.",
+        "France's S1-equivalent year (age 14-15, Troisième) is institutionally part of collège, not lycée -- so a French student's 'first of the last 4 secondary years' is enrolled in a different school type than their Seconde/Première/Terminale years; any UI or matching logic that assumes 'last 4 years of secondary = one continuous high school' will misrepresent the French case.",
+        "IB DP does not have its own grade-number system at all -- IBO's authoritative eligibility criterion is age (16-19), and 'DP1/DP2' is descriptive shorthand riding on top of whatever host-country numbering (Year 12/13, Grade 11/12, Klasse 12/13, etc.) the school already uses. ORYN should treat 'IB DP' as a curriculum tag layered on top of a student's host-country grade, not as an independent grade system to map.",
+        "Individual students who repeated a year, skipped a year, or enrolled early/late will have a grade label that does not match the typical age for their canonical stage in any country -- the mapping table gives the ON-TIME/modal correspondence only, and should never be used to override a student's or a program's own directly-stated age or grade criterion when both are available."
+      ]
+    },
+    "age_as_of_date_conventions": {
+      "conventions_found": [
+        "as_of_program_start",
+        "as_of_fixed_date",
+        "as_of_program_end (used as a maximum-age ceiling, paired with a program-start minimum)",
+        "grade_based_only_no_birthdate",
+        "age_based_only_no_grade",
+        "descriptive_age_range_not_a_binding_criterion (grade is the actual binding gate; a quoted age range is only typical/illustrative)"
+      ],
+      "real_examples": [
+        {
+          "program_name": "Simons Summer Research Program (Stony Brook University)",
+          "official_url": "https://www.stonybrook.edu/commcms/simons/applying_to/how-to-apply.php",
+          "convention_used": "as_of_program_start",
+          "exact_quoted_language": "currently be in their junior year (11th grade) of high school at the time of applying ... must be at least 16 years of age by the start of the program"
+        },
+        {
+          "program_name": "Research Science Institute (RSI), Center for Excellence in Education",
+          "official_url": "https://www.cee.org/programs/apply-rsi",
+          "convention_used": "as_of_fixed_date",
+          "exact_quoted_language": "Applicants must be 16 years of age by July 1 of the program year (grade requirement: high school juniors, or international equivalent, who will enter senior year after the program)"
+        },
+        {
+          "program_name": "Telluride Association Summer Seminar (TASS, formerly TASP)",
+          "official_url": "https://tellurideassociation.org/tass/",
+          "convention_used": "as_of_program_start (minimum) combined with as_of_program_end (maximum)",
+          "exact_quoted_language": "must be at least age 15 at the start of the program and no older than 17 by the end of the program (grade requirement: current high school sophomore or junior, or equivalent)"
+        },
+        {
+          "program_name": "Yale Young Global Scholars (YYGS)",
+          "official_url": "https://globalscholars.yale.edu/eligibility-requirements",
+          "convention_used": "grade_based_only / as_of_application (age given only descriptively, not as the binding rule)",
+          "exact_quoted_language": "must be in US Grade 10 or US Grade 11 (or the international equivalent) at the time of application; program descriptions elsewhere characterize participants as 'typically between the ages of 15 and 17' -- but the codified eligibility gate is the grade requirement, not this age figure"
+        },
+        {
+          "program_name": "Sutton Trust Summer Schools (UK)",
+          "official_url": "https://summerschools.suttontrust.com/eligibility/",
+          "convention_used": "grade/year_based primary gate + soft age ceiling with a named exception (not a strict as-of-date birthdate check)",
+          "exact_quoted_language": "Are studying in Year 12 in England or Wales, Year 13 in Northern Ireland, or S5 in Scotland (or equivalent) ... Generally, you will need to be under-18 in order to apply ... some of our partner universities do allow students in Year 12 (or equivalent) who are over the age of 18 on their programmes"
+        },
+        {
+          "program_name": "International Economics Olympiad (econolympiad.org)",
+          "official_url": "https://www.econolympiad.org/faq",
+          "convention_used": "age_based_only_no_grade, and no explicit as-of date stated on this particular page",
+          "exact_quoted_language": "The International Economics Olympiad is a global economics competition for high school students between the ages of 14-18"
+        },
+        {
+          "program_name": "National History Day (NHD)",
+          "official_url": "https://nhd.org/en/resources/nhd-contest-rule-book/",
+          "convention_used": "grade_based_only_no_birthdate",
+          "exact_quoted_language": "open to middle and high-school students (generally grades 6-12) ... Junior Division (grades 6, 7, and 8) [and] Senior Division (grades 9, 10, 11, and 12)"
+        },
+        {
+          "program_name": "GENIUS Olympiad",
+          "official_url": "https://geniusolympiad.org/",
+          "convention_used": "both grade and age stated as independent criteria; age additionally triggers a secondary (chaperone) requirement rather than only gating eligibility",
+          "exact_quoted_language": "open to students in grades 8-12 (or the equivalent) from any country ... minimum age for participation is 13 years old ... Students younger than 18 must have an adult chaperone"
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.stonybrook.edu/commcms/simons/applying_to/how-to-apply.php",
+          "note": "Confirmed by direct WebFetch of the official page."
+        },
+        {
+          "url": "https://www.cee.org/programs/apply-rsi",
+          "note": "Language confirmed via search-indexed snippet of the official CEE page after direct WebFetch returned HTTP 403."
+        },
+        {
+          "url": "https://tellurideassociation.org/tass/",
+          "note": "Confirmed via search-indexed content of the official Telluride Association site."
+        },
+        {
+          "url": "https://globalscholars.yale.edu/eligibility-requirements",
+          "note": "Grade language confirmed via search-indexed snippet of the official page (direct WebFetch returned HTTP 403); the inconsistent descriptive age figures (15-17 in one place, 16-18 in program-year promotional copy elsewhere) were both observed in search results, underscoring that descriptive age text on this program should not be treated as authoritative."
+        },
+        {
+          "url": "https://summerschools.suttontrust.com/eligibility/",
+          "note": "Confirmed by direct WebFetch of the official page."
+        },
+        {
+          "url": "https://www.econolympiad.org/faq",
+          "note": "Confirmed by direct WebFetch of the official page. Note: multiple unrelated organizations use an 'International/National Economics Olympiad' name with differing eligibility criteria (one variant found in search results, not independently verified, cited an 'under 20 as of 30 June' fixed-date rule) -- ORYN must disambiguate by official URL/organizer, not name alone, when storing this opportunity."
+        },
+        {
+          "url": "https://nhd.org/en/resources/nhd-contest-rule-book/",
+          "note": "Confirmed via search-indexed description of the official NHD rule book and site."
+        },
+        {
+          "url": "https://geniusolympiad.org/",
+          "note": "Confirmed via search-indexed content citing the Institute of Competition Sciences description and official Genius Olympiad application rules PDF."
+        }
+      ]
+    },
+    "grade_vs_age_interaction": {
+      "patterns_found": [
+        "Both required independently (AND gate): several selective, single-institution research/academic programs (Simons, RSI, Telluride/TASS, Genius Olympiad) state a grade requirement AND a separately-defined age requirement that a student must satisfy simultaneously; nothing in their materials treats one as derivable from the other.",
+        "Grade stated as the sole authoritative gate; age mentioned only descriptively/inconsistently: Yale Young Global Scholars codifies eligibility in grade terms ('Grade 10 or 11 ... at the time of application') while separate program materials describe the age range differently in different places (15-17 vs 16-18) -- illustrating that descriptive age text should never be parsed as a strict filter when a grade-based rule is the actual codified gate.",
+        "Grade/year as primary gate, age as a soft ceiling with a documented, named exception for non-traditional-age students: Sutton Trust ties eligibility to UK Year group but layers a 'generally under 18' expectation on top, and explicitly documents that some partner universities waive that ceiling for over-18 students still in the qualifying year group -- i.e. the program itself resolves the grade/age tension for atypical students rather than leaving it to inference.",
+        "Age partially decouples from eligibility itself and instead modifies a different requirement: Genius Olympiad's age-13 floor is a hard eligibility gate, but its age-18 threshold changes only whether an adult chaperone is required, not admission eligibility -- age criteria are not always a binary eligible/ineligible signal.",
+        "Grade-only criteria resolve mixed-grade/age group entries via the grade axis alone: National History Day, which states no age criterion at all, resolves group projects spanning multiple grades by placing the whole group in the division (Junior 6-8 / Senior 9-12) of its oldest member -- a real, sourced example of a grade-based (not age-based) tie-break rule for a scenario ORYN's task description flagged (mixed-level participants)."
+      ],
+      "real_examples": [
+        {
+          "program_name": "Simons Summer Research Program",
+          "official_url": "https://www.stonybrook.edu/commcms/simons/applying_to/how-to-apply.php",
+          "pattern": "Grade AND age both required, independently defined, both as-of the program start."
+        },
+        {
+          "program_name": "Research Science Institute (RSI)",
+          "official_url": "https://www.cee.org/programs/apply-rsi",
+          "pattern": "Grade AND age both required; age keyed to a fixed calendar date (July 1) rather than the program's own start date."
+        },
+        {
+          "program_name": "Telluride Association Summer Seminar (TASS)",
+          "official_url": "https://tellurideassociation.org/tass/",
+          "pattern": "Grade AND age both required; age given as a bounded range (min at program start, max at program end) rather than a single cutoff."
+        },
+        {
+          "program_name": "Yale Young Global Scholars",
+          "official_url": "https://globalscholars.yale.edu/eligibility-requirements",
+          "pattern": "Grade is the binding gate; age is descriptive only and stated inconsistently across the program's own materials."
+        },
+        {
+          "program_name": "Sutton Trust Summer Schools",
+          "official_url": "https://summerschools.suttontrust.com/eligibility/",
+          "pattern": "Year-group is the binding gate; age is a soft ceiling with an explicit, named exception for over-18 students in the qualifying year group."
+        },
+        {
+          "program_name": "GENIUS Olympiad",
+          "official_url": "https://geniusolympiad.org/",
+          "pattern": "Grade AND age both stated; the age-18 threshold changes a logistics requirement (chaperone) rather than eligibility itself."
+        },
+        {
+          "program_name": "National History Day",
+          "official_url": "https://nhd.org/en/resources/nhd-contest-rule-book/",
+          "pattern": "Grade-only criterion; explicit tie-break rule (oldest group member's grade governs division) for groups spanning multiple grade levels."
+        }
+      ]
+    },
+    "unsafe_inferences": [
+      "Do not assume UK 'Year N' equals US 'Grade N' for the same number. UK Year 12 (first year of A-Levels/Sixth Form, ages 16-17) is age-equivalent to US Grade 11 (junior year, ages 16-17), not Grade 12. The verified offset is UK Year N <-> US Grade (N-1) across the secondary range (Year 10-13 <-> Grade 9-12).",
+      "Do not assume a Turkish '9. sınıf' (or any sınıf number) student's age from the grade number alone without checking whether a program's stated criterion is grade-based or age-based -- even though the on-time Turkey<->US numeric correspondence is safe in the aggregate/typical case, an individual student's actual age can diverge (grade repetition, early/late enrollment, accelerated track), so a directly-stated age (when a program gives one) should always take precedence over an age inferred from the grade label.",
+      "Do not assume a German 'Klasse 12' student is in their final pre-university year. In G9 (9-year Gymnasium) states, Klasse 12 is the second-to-last year (final year is Klasse 13); in G8 states, Klasse 12 IS the final year. The correct interpretation requires knowing the state/school's G8-vs-G9 track, not just the country.",
+      "Do not parse French 'Seconde', 'Première', or 'Terminale' as if they were numbered grades, and do not assume a US-style 'grade 9-12' 4-year window maps onto a single French institution -- the age-14-15 year (equivalent to US Grade 9 / UK Year 10) is institutionally part of collège (Troisième), not lycée, in the French system.",
+      "Do not treat 'IB DP1' or 'IB DP2' as directly convertible to a specific US grade number without knowing the host school's own grade-numbering convention. IBO's own authoritative eligibility criterion for the DP is age-based (16-19), not a DP-specific grade number; 'DP1/DP2' is informal shorthand riding on top of whatever numbering the host country/school already uses.",
+      "Do not assume a program's descriptive/illustrative age text (e.g., marketing copy saying participants are 'typically 15-17') is a binding eligibility filter when the program's actual codified rule is grade-based (as seen with Yale Young Global Scholars, where two different official materials give two different descriptive age ranges for the same grade-based rule).",
+      "Do not apply one universal 'age as of X date' convention to all opportunities. Real programs measure age as of the program start (Simons), a fixed calendar date unrelated to the program's own start (RSI: July 1), a bounded start/end range (Telluride), or not at all (grade-only programs like National History Day) -- defaulting to a single assumed convention will misclassify eligibility for students near a cutoff.",
+      "Do not infer a missing grade or age field for an opportunity by back-calculating from the other field using a typical age-per-grade chart, when the program itself only published one of the two dimensions (e.g., National History Day states grades 6-12 with no age at all; some Economics Olympiad variants state ages 14-18 with no grade at all). Fabricating the missing dimension risks silently excluding or including students the program never actually screened on that axis.",
+      "Do not assume grade and age criteria are always jointly required (AND) versus independently sufficient (OR) without checking the specific program's language -- most researched examples that state both treat them as AND (both must be satisfied), but this was not universal or explicitly guaranteed across all programs studied, and no researched example gave explicit guidance for the case where they conflict (see unresolved_questions)."
+    ],
+    "safe_inferences": [
+      "Within the US, and within Türkiye (given its verified age-aligned convention with the US), typical on-time progression is approximately one grade per age-year, with Grade/sınıf 9 starting around age 14 and Grade/sınıf 12 finishing around age 18 -- usable as a default estimate ONLY when a program does not itself state an age, and clearly labeled as an estimate rather than a program-stated fact.",
+      "When a program explicitly states both a grade requirement and an age requirement (e.g., Simons: grade 11 AND age >=16 by program start; RSI: junior year AND age >=16 by July 1), ORYN should store and evaluate both independently as separate, jointly-required gates -- not derive one from the other or treat them as redundant.",
+      "When a program states only a grade requirement (no age given, e.g., National History Day), ORYN should leave the age eligibility fields (minimum_age/maximum_age) null/unknown rather than back-filling them from a generic age-per-grade chart -- the absence of an age criterion in the source is itself meaningful information.",
+      "When a program states only an age requirement (no grade given, e.g., the Econ Olympiad variant researched here), ORYN should leave eligible_grades null/unknown for the same reason.",
+      "A student's self-reported country plus current grade/year label can be safely converted to an approximate age range for matching purposes ONLY when that specific country-pair's offset/structure has been explicitly verified and encoded (Turkiye<->US: safe direct mapping; UK<->US: apply the verified -1 Year-to-Grade offset; France and Germany: apply the documented special-case resolvers) -- never apply one single global numeric-offset constant across all countries.",
+      "When both a program's grade criterion and a student's profile grade are available and match, and no age criterion is stated by the program, it is safe to treat the student as grade-eligible without further age verification -- the program has signaled that grade alone is its intended screen."
+    ],
+    "unresolved_questions": [
+      "No researched program (Simons, RSI, Telluride, YYGS, Sutton Trust, Genius Olympiad, National History Day) publishes an explicit tie-break rule for the case where a student's grade and age genuinely conflict (e.g., an accelerated student who is Grade 11 but only 15, or a grade-repeating student who is Grade 11 but already 18-19). ORYN cannot assume a universal resolution from the evidence gathered and should likely route such profiles to manual or AI-assisted review rather than auto-determining eligibility either way.",
+      "Could not directly read the primary French Ministry of Education pages (education.gouv.fr and eduscol.education.gouv.fr both returned HTTP 403 on WebFetch across multiple attempts) to obtain a first-party quote on Seconde/Première/Terminale ages. The France age figures used here rest on convergent secondary sources (French Wikipedia and multiple independent French education-guide sites) rather than a directly-fetched .gouv.fr page.",
+      "Could not directly read ibo.org's Diploma Programme pages in full (HTTP 403 on WebFetch); the '16 to 19' age figure is drawn from search-engine-indexed snippets of IBO's own official pages, cross-confirmed by Wikipedia's citation of the same wording, but was not independently verified by reading the full official page.",
+      "Whether Germany's G8/G9 split (which varies by Bundesland and has been partially reversed/re-reversed by several states in the past decade) is stable enough to hardcode as a static per-country or even per-state lookup, or whether ORYN needs to capture it per-school (since some states allow individual Gymnasien to choose their track), was not resolved within this research's scope -- would need a dedicated state-by-state and possibly school-level data pass.",
+      "No official Eurydice or MEB source was found giving a directly-quoted PER-INDIVIDUAL-GRADE (9 vs 10 vs 11 vs 12) age breakdown for Türkiye -- only the aggregate 'lise = ages 14-18 across 4 years' figure is directly sourced; the per-grade breakdown used in this document is an extrapolation from that aggregate plus the standard on-time-progression assumption, not a directly quoted official table.",
+      "Only one clear real-world example of an 'as of program end' maximum-age convention was found (Telluride/TASS: 'no older than 17 by the end of the program'). Whether this is a common pattern across other selective programs, or largely specific to Telluride, was not established from the sample of programs researched here."
+    ]
+  },
+  "citizenship_residency_taxonomy": {
+    "topic": "citizenship_residency_taxonomy",
+    "methodology_note": "18 real, currently active programs were examined directly via their own official domains (university, nonprofit, government, or EU project pages) across summer programs, competitions, scholarships, research programs, and internships, plus 2 grounding examples already in ORYN's live database (Simons Summer Research Program, Science Olympiad, Tisch NYU) referenced for continuity. One official page (cee.org, Research Science Institute) returned HTTP 403 to automated fetch; for that program the quoted text is the closest available paraphrase drawn from a live search-engine summary of the cee.org page content, flagged as such below rather than presented as a directly-fetched verbatim quote.",
+    "pattern_taxonomy": [
+      {
+        "pattern_name": "open_worldwide_explicit",
+        "description": "The program's own official eligibility page affirmatively states that applicants of any nationality/country may apply. This is a stronger, different finding than merely finding no restriction mentioned -- it is a positive claim of openness.",
+        "real_examples": [
+          {
+            "program_name": "Yale Young Global Scholars (YYGS)",
+            "official_url": "https://globalscholars.yale.edu/eligibility-requirements",
+            "quoted_language": "YYGS accepts applications from ALL countries. There is no citizenship restriction -- the program is open to international students worldwide. The program welcomes talented students from over 150 countries.",
+            "category": "summer_program"
+          },
+          {
+            "program_name": "Diamond Challenge (Horn Entrepreneurship, University of Delaware)",
+            "official_url": "https://diamondchallenge.org/competition/",
+            "quoted_language": "Any Idea, Any Team, Any Country. High school students aged 14-18 from any country may develop and submit original business or social venture concepts.",
+            "category": "competition"
+          },
+          {
+            "program_name": "John Locke Institute Essay Competition",
+            "official_url": "https://en.johnlocke.org.cn/rules",
+            "quoted_language": "Open to candidates from any country who are 18 or younger on the submission date (must not turn 19 before 30 June of the competition year).",
+            "category": "competition"
+          }
+        ]
+      },
+      {
+        "pattern_name": "restricted_to_citizens_or_permanent_residents_of_one_country",
+        "description": "The program requires proof of citizenship or permanent-resident (immigration) status in one specific country -- most commonly the US in this database's sample -- with no pathway for other nationalities regardless of where they live or attend school. This is a STATUS test, not a location test.",
+        "real_examples": [
+          {
+            "program_name": "Simons Summer Research Program (Stony Brook University)",
+            "official_url": "https://www.stonybrook.edu/commcms/simons/about/faqs.php",
+            "quoted_language": "All applicants must currently be in their junior year (11th grade) of high school at the time of applying; must be US citizens and/or permanent residents; and must be at least 16 years of age by the start of the program. If admitted into the Simons program, all participants will need to provide documentation/proof of being a US citizen or holding a valid/current permanent/resident card. There are no exceptions to this requirement.",
+            "category": "research"
+          },
+          {
+            "program_name": "Davidson Fellows Scholarship (Davidson Institute)",
+            "official_url": "https://www.davidsongifted.org/gifted-programs/fellows-scholarship/eligibility/",
+            "quoted_language": "Be a U.S. citizen residing in the United States, or a Permanent Resident of the United States residing in the United States, or be stationed overseas due to active U.S. military duty.",
+            "category": "scholarship"
+          },
+          {
+            "program_name": "NASA OSTEM / Pathways Internships",
+            "official_url": "https://www.nasa.gov/learning-resources/internship-programs/intern-frequently-asked-questions",
+            "quoted_language": "Be a U.S. citizen. ... The International Internship (I2) program is not being offered at this time. International students are encouraged to participate in select NASA student challenges and citizen science projects instead.",
+            "category": "internship"
+          }
+        ]
+      },
+      {
+        "pattern_name": "restricted_by_current_school_enrollment_or_physical_residency_not_citizenship",
+        "description": "Eligibility is gated on where the student currently lives and/or attends school, not on their passport/citizenship. A non-citizen who resides in and attends school in the qualifying country IS eligible; a citizen of that same country who lives and studies abroad is NOT. This is a genuinely different axis from the citizenship-status pattern above.",
+        "real_examples": [
+          {
+            "program_name": "MIT PRIMES / PRIMES-USA",
+            "official_url": "https://math.mit.edu/research/highschool/primes/apply.html",
+            "quoted_language": "PRIMES is available only to students who reside in the United States. PRIMES-USA serves high school juniors and sophomores from across the United States (outside of Greater Boston). International students who do not reside in the US are not eligible for PRIMES but may participate in CrowdMath, which is open to all high school and college students around the world.",
+            "category": "research"
+          },
+          {
+            "program_name": "North Carolina Governor's School",
+            "official_url": "https://www.dpi.nc.gov/students-families/enhanced-opportunities/north-carolina-governors-school/frequently-asked-questions-about-nc-governors-school",
+            "quoted_language": "You must be a North Carolina resident; exchange students are not eligible. [Students must] attend a North Carolina public or non-public school and be enrolled in Grade 11 at the time of nomination.",
+            "category": "summer_program"
+          },
+          {
+            "program_name": "Sutton Trust US/UK Summer Schools Programme",
+            "official_url": "https://summerschools.suttontrust.com/eligibility/",
+            "quoted_language": "Attend, and have always attended, a state-funded, non-fee paying school/college. [Must be] studying in Year 12 in England or Wales, Year 13 in Northern Ireland, or S5 in Scotland.",
+            "category": "summer_program"
+          }
+        ]
+      },
+      {
+        "pattern_name": "mixed_school_location_and_citizenship_carve_out",
+        "description": "A single program combines two distinct qualifying tests in one eligibility statement -- e.g. 'attend school here OR hold citizenship of here' -- proving these are not interchangeable criteria even within one program's own rules.",
+        "real_examples": [
+          {
+            "program_name": "QuestBridge National College Match",
+            "official_url": "https://www.questbridge.org/apply-to-college/programs/national-college-match/apply",
+            "quoted_language": "It is open to any high school senior currently attending high school in the U.S. and U.S. Citizens and Permanent Residents living abroad. International students living outside the U.S. are not eligible.",
+            "category": "scholarship"
+          },
+          {
+            "program_name": "DAAD RISE Germany",
+            "official_url": "https://www.daad.de/rise/en/rise-germany/find-an-internship/what-applicants-need-to-know/faq/",
+            "quoted_language": "Provided that you have been studying at a university/college in the United States, Canada, the United Kingdom or Ireland for more than 12 months by the application deadline, you are very welcome to apply. [German citizens:] You are only eligible to apply if you can prove that you have been living outside of Germany for six years or more.",
+            "category": "internship"
+          }
+        ]
+      },
+      {
+        "pattern_name": "eligibility_mediated_through_national_quota_or_nomination_system",
+        "description": "The student cannot apply directly as an individual regardless of nationality; eligibility instead runs through a country-specific gatekeeper (a national committee, national organiser, or an ISEF-affiliated regional/national fair) that itself may or may not exist for a given country in a given year. A flat 'eligible_countries' list badly misrepresents this mechanism.",
+        "real_examples": [
+          {
+            "program_name": "European Union Contest for Young Scientists (EUCYS)",
+            "official_url": "https://www.eucys2025.eu/en/about/",
+            "quoted_language": "Young scientists aged between 14 and 20 who have won first prize in their respective national science competitions. ... The selection of participants is coordinated by National Organisers, who nominate the top projects from their national contests for EUCYS. Each country can submit up to three projects, with a maximum of six contestants in total.",
+            "category": "competition"
+          },
+          {
+            "program_name": "United World Colleges (UWC) scholarship route",
+            "official_url": "https://uwc.org/apply-ibdp/apply-via-a-national-committee/",
+            "quoted_language": "Most students apply to UWC through a UWC national committee ... this ensures they are assessed in context -- by people who understand their background, potential and the realities of the local education system. If there's no UWC national committee in your country of residence, you may still be eligible to apply through the committee in your country of nationality.",
+            "category": "scholarship"
+          },
+          {
+            "program_name": "Regeneron International Science and Engineering Fair (ISEF)",
+            "official_url": "https://www.societyforscience.org/isef/international-rules/rules-for-all-projects/",
+            "quoted_language": "Students may compete in only one ISEF affiliated fair, except when proceeding to a state/national fair affiliated with ISEF from an affiliated regional fair.",
+            "category": "competition"
+          }
+        ]
+      },
+      {
+        "pattern_name": "variable_non_public_eligible_country_list",
+        "description": "The set of eligible countries is real and does change eligibility outcomes, but it is not published as a single fixed public list -- it is decided by the organizer annually and a prospective applicant is told to inquire directly. Recording this as a static eligible_countries array would be misleading the moment the list is refreshed.",
+        "real_examples": [
+          {
+            "program_name": "Research Science Institute (RSI), Center for Excellence in Education",
+            "official_url": "https://www.cee.org/programs/apply-rsi",
+            "quoted_language": "U.S. citizens and permanent residents, as well as international students from participating countries, can apply. ... CEE selects the participating countries for the summer Research Science Institute [annually]; the program does not have a fixed list of eligible countries, and international students should check with CEE staff to learn if their country is participating that year. (NOTE: this program's own domain returned HTTP 403 to automated fetch during this research; the quoted text above is a paraphrase reconstructed from a live search-engine summary of the cee.org page, not a directly-fetched verbatim sentence, and should be treated as lower-confidence than the other quotes in this document until independently re-verified against the live page.)",
+            "category": "research"
+          }
+        ]
+      },
+      {
+        "pattern_name": "visa_documentation_note_not_an_eligibility_restriction",
+        "description": "The program is eligibility-open to international students, but separately notes a visa/immigration-status logistics requirement. This is a distinct axis from eligibility and should never be recorded in citizenship_restrictions or residency_restrictions as if it were a restriction.",
+        "real_examples": [
+          {
+            "program_name": "Telluride Association Summer Seminar (TASS)",
+            "official_url": "https://tellurideassociation.org/our-programs/high-school-students/tass-faq-2/",
+            "quoted_language": "For students studying outside the US who do not have a US passport, birthdates must be between [program-specific dates]; international students (those studying outside the US who do not have a US passport) must be sophomores to apply. [Separately, per program materials:] the program is not able to assist with acquiring visas for international travel.",
+            "category": "summer_program"
+          },
+          {
+            "program_name": "PROMYS (Program in Mathematics for Young Scientists), Boston University",
+            "official_url": "https://promys.org/programs/promys/for-students/for-international-students/",
+            "quoted_language": "While international students are welcome to apply for admission to PROMYS, space is limited. ... PROMYS students are not enrolled in college courses at Boston University, so participants come on a visitor's visa, not a student (F-1) visa.",
+            "category": "summer_program"
+          },
+          {
+            "program_name": "Johns Hopkins Center for Talented Youth (CTY) On-Campus Programs",
+            "official_url": "https://help.cty.jhu.edu/support/solutions/articles/43000647462-student-visa-faqs",
+            "quoted_language": "Non-U.S. citizens or non-U.S. permanent residents who are not already in the U.S. with an immigration status that allows study must request a nonimmigrant F-1 student visa to attend CTY's on-campus programs. CTY summer On-Campus Programs are full-time academic programs requiring the F-1 student visa; students should not use a visitor's visa or the Visa Waiver Program.",
+            "category": "summer_program"
+          }
+        ]
+      },
+      {
+        "pattern_name": "no_statement_found_on_official_page",
+        "description": "A comprehensive-looking official page was located and read, but it simply does not address international/non-citizen applicants either way. This is NOT evidence the program is open, and NOT evidence it is restricted -- it is an honest information gap that must be recorded as such, matching ORYN's existing Science Olympiad row.",
+        "real_examples": [
+          {
+            "program_name": "Science Olympiad (ORYN live database example, re-examined for this research)",
+            "official_url": "https://www.soinc.org/",
+            "quoted_language": "Teams must be composed entirely of students from a single school under a single administrator, recruited through the school's state chapter; the official homepage does not describe an international participation pathway. (Existing ORYN residency_restrictions value -- confirmed as the correct honest classification: the org's structure is described, but no affirmative in/out statement about non-US students was found.)",
+            "category": "competition"
+          }
+        ]
+      }
+    ],
+    "citizenship_vs_residency_vs_school_location": {
+      "distinction_explanation": "These are three legally and practically distinct tests, and real programs use all three independently: (1) CITIZENSHIP/immigration status -- a passport or green-card fact about the person, unrelated to where they currently live or study (Simons, Davidson Fellows, NASA, RSI's 'citizens and permanent residents' branch); (2) RESIDENCY/domicile -- where the person is legally or physically based, which can be a country or a sub-national unit like a US state (NC Governor's School requires NC residency specifically, not just US citizenship -- a US citizen resident of Georgia is not eligible); (3) CURRENT SCHOOL ENROLLMENT LOCATION -- which school/country the student is physically attending right now, independent of both citizenship and legal residency (MIT PRIMES: 'reside in the United States' / attending a US school -- a Turkish citizen attending a US high school on a student visa qualifies, while a US citizen attending school in Turkey does not). A single program can even combine two of these as alternate qualifying paths (QuestBridge: US high school ENROLLMENT, OR citizenship+PR status if living abroad) or layer a citizenship carve-out on top of a school-location gate (DAAD RISE: university location in US/Canada/UK/Ireland, PLUS a separate exclusion for German citizens unless they've lived outside Germany 6+ years).",
+      "real_example_illustrating_the_difference": "A Turkish citizen enrolled at a public high school in North Carolina: ELIGIBLE for MIT PRIMES-USA (school-location test only, citizenship irrelevant) and INELIGIBLE for NC Governor's School (requires NC residency/domicile, and explicitly excludes exchange students even though they may attend an NC school) and INELIGIBLE for Simons Summer Research Program or Davidson Fellows (require actual US citizenship or a green card, and physical school enrollment in the US does not substitute for that status). Three different verdicts for the same student across three real, currently active programs -- proof that citizenship, residency, and school-location are not interchangeable and cannot be safely collapsed into one field.",
+      "gap_assessment_against_orn_current_schema": "ORYN's current 3-field model (eligible_countries array + citizenship_restrictions text + residency_restrictions text) has no dedicated field for 'current school enrollment location,' which is a genuinely distinct and commonly-used eligibility axis (MIT PRIMES, QuestBridge's first path, NC Governor's School, Sutton Trust). Today that criterion has nowhere clean to live and would either get force-fit into residency_restrictions (plausible but conflates domicile with school attendance -- these differ for boarding-school and exchange students) or get missed entirely. citizenship_restrictions and residency_restrictions as free text can technically hold any of these facts, but because there is no structured 'restriction_basis' enum (citizenship | permanent_residency | domicile_residency | school_enrollment_location | national_quota_nomination), there is no way to query or display 'is this a citizenship test or a residency test' programmatically, and no way to prevent exactly the kind of multi-fact conflation already visible in ORYN's own Tisch NYU row (age + housing + citizenship/visa-documentation all crammed into residency_restrictions). eligible_countries as a flat array is also structurally unable to represent sub-national restrictions (NC Governor's School is state-level, not country-level) or nomination-mediated eligibility (EUCYS/UWC/ISEF, where 'is this country eligible' is the wrong question -- the right question is 'does this country currently have an active national organiser/affiliate, and did the student win/get nominated there').",
+      "recommended_direction": "Add a structured restriction_basis enum per opportunity (citizenship, permanent_residency, domicile_residency, school_enrollment_location, national_quota_nomination, none_stated) alongside the existing free-text fields, and consider a separate school_location_restrictions text field distinct from residency_restrictions so domicile and school-attendance facts are not forced into the same slot."
+    },
+    "visa_documentation_vs_eligibility_distinction": {
+      "explanation": "Eligibility answers 'are you the kind of applicant this program accepts at all' (a yes/no gate based on citizenship, residency, or school location). Visa/documentation requirements answer a completely different, later-stage question: 'given that you ARE eligible and admitted, what travel/immigration paperwork must you personally arrange to physically attend.' Conflating the two is a real and harmful error for an international student -- telling a Turkish student a program is 'restricted' because it mentions F-1 visas would incorrectly turn them away from a program that actually welcomes them and merely expects them to handle their own visa application, exactly as any international student attending any US program must. The three examples researched show a spectrum: pure logistics disclaimer with zero eligibility implication (Telluride: 'we cannot assist with visas,' eligibility itself unaffected), a factual note about which visa category applies (PROMYS: visitor visa, not F-1 -- purely informational, no eligibility gate), and a procedural requirement that is functionally closer to a soft eligibility gate because failure to obtain the visa blocks attendance (CTY: 'must request a nonimmigrant F-1 student visa' -- still not a nationality exclusion, but the practical bar is higher than Telluride's or PROMYS's disclaimers).",
+      "real_examples": [
+        {
+          "program_name": "Telluride Association Summer Seminar (TASS)",
+          "official_url": "https://tellurideassociation.org/our-programs/high-school-students/tass-faq-2/",
+          "quoted_language": "The program is not able to assist with acquiring visas for international travel; international applicants must handle their own visa arrangements independently. This is stated as a logistics limitation, not an eligibility restriction -- both US and international students remain equally eligible to apply."
+        },
+        {
+          "program_name": "PROMYS, Boston University",
+          "official_url": "https://promys.org/programs/promys/for-students/for-international-students/",
+          "quoted_language": "PROMYS students are not enrolled in college courses at Boston University, so participants come on a visitor's visa, not a student (F-1) visa. -- A factual documentation note, not a restriction; the same page affirmatively welcomes international applicants."
+        },
+        {
+          "program_name": "Johns Hopkins CTY On-Campus Programs",
+          "official_url": "https://help.cty.jhu.edu/support/solutions/articles/43000647462-student-visa-faqs",
+          "quoted_language": "Non-U.S. citizens or non-U.S. permanent residents who are not already in the U.S. with an immigration status that allows study must request a nonimmigrant F-1 student visa to attend CTY's on-campus programs. -- A procedural requirement tied to attendance logistics, worded as a 'must obtain' rather than a nationality exclusion."
+        }
+      ]
+    },
+    "extraction_rules": {
+      "when_to_mark_appears_open": "Mark 'appears open' ONLY when (a) the page checked is clearly the program's own canonical eligibility/FAQ/rules page (not a marketing landing page, not a third-party aggregator/blog), AND (b) that page contains an explicit, affirmative statement that applicants of any nationality/country/citizenship are welcome (e.g. 'open to any country,' 'students worldwide,' 'no citizenship restriction') -- not merely the absence of a restriction elsewhere on the same page, AND (c) no other section of that same page introduces a narrower, unaddressed restriction (e.g. a grade-level or school-type rule) that would need its own separate classification. Record the exact quoted sentence and URL alongside the classification.",
+      "when_to_mark_unknown_not_stated": "This is the DEFAULT position and should be used whenever: the program's own eligibility/FAQ/rules page could not be located or fetched at all; a page was found but it describes some eligibility criteria (age, grade, subject) without affirmatively addressing citizenship/residency/international applicants either way (the Science Olympiad case); the only available source is a secondary/aggregator site (blog, 'how to apply' guide) rather than the org's own domain, even if that secondary source claims a specific answer; or the organizer's own materials indicate the answer is genuinely variable/non-public (RSI's annually-changing, unpublished 'participating countries' list). Do not upgrade 'unknown' to 'appears open' or 'restricted' based on inference from the organizer's type, country, or reputation.",
+      "when_to_mark_restricted": "Mark 'restricted' when the official page contains an explicit affirmative statement naming a citizenship requirement (e.g. 'must be a U.S. citizen'), a permanent-residency requirement, a sub-national domicile/residency requirement (e.g. 'must be a North Carolina resident'), or a current-school-enrollment-location requirement (e.g. 'available only to students who reside in the United States' / 'attending school in the U.S.'). When a program is restricted via a national-quota/nomination mechanism (EUCYS, UWC, ISEF) rather than a direct citizenship test, record it as restricted-via-national-mechanism with a note explaining the mechanism, rather than as a simple binary, since the practical answer for a given student depends on whether their country currently has an active national organiser/affiliate -- itself a fact requiring its own sourcing and periodic re-verification.",
+      "general_non_fabrication_principle": "Absence of a stated restriction is not evidence of an explicit opening, and organizer type/location is not a reliable proxy for restriction in either direction -- multiple US-university-hosted programs in this research (Yale YYGS, PROMYS, Diamond Challenge, Telluride TASS, John Locke) are explicitly open worldwide despite being US-based, while others (Simons, Davidson, MIT PRIMES, NASA) are tightly restricted despite superficially similar profiles. Every classification recorded must trace to a specific quoted sentence and URL; if no such quotable sentence exists, the correct output is 'unknown,' never a plausible-sounding guess, even when the guess would likely be correct (e.g. assuming a federal U.S. government program requires citizenship is usually right but must still be sourced before being stated as fact to a student)."
+    },
+    "data_model_gap_notes": [
+      "No field captures 'current school enrollment location' as its own eligibility axis, distinct from citizenship and from domicile/residency -- needed for MIT PRIMES, QuestBridge's school-enrollment path, NC Governor's School's exchange-student exclusion, and Sutton Trust's state-school requirement.",
+      "No structured restriction_basis enum (citizenship | permanent_residency | domicile_residency | school_enrollment_location | national_quota_nomination | none_stated) exists to make citizenship_restrictions/residency_restrictions machine-queryable; today they are opaque free text, which is how ORYN's own Tisch NYU row ended up conflating an age rule, a housing rule, and a citizenship/visa-documentation rule into a single field.",
+      "No separate field exists for visa/documentation logistics notes (Telluride, PROMYS, CTY-style) that are explicitly NOT eligibility restrictions; today these have nowhere to go except residency_restrictions or citizenship_restrictions, which risks exactly the false impression this research was asked to avoid -- that a program mentioning visas is therefore closed to international students.",
+      "No mechanism exists to flag that an eligible-country list is organizer-determined and non-public/annually variable (RSI) rather than a fixed, citable fact -- a snapshot eligible_countries array would silently go stale or overstate certainty for this pattern.",
+      "eligible_countries as a flat array cannot represent sub-national restrictions (state/region-level, as in NC Governor's School) since it is country-granularity only.",
+      "eligible_countries as a flat array cannot represent national-quota/nomination-mediated programs (EUCYS, UWC, ISEF) without misleading simplification -- listing 'Turkey' as an eligible_country for EUCYS would be true only if Turkey currently has an active National Organiser sending a winning project that year, a fact the flat list cannot express.",
+      "No field distinguishes citizenship from permanent-residency status even though several programs explicitly treat them as equivalent ('citizens and/or permanent residents') -- this research did not find a real counter-example where the two are treated differently, but the schema currently has no way to represent that distinction if one is later found, since both would collapse into the same citizenship_restrictions text string."
+    ],
+    "unsafe_inferences": [
+      "Assuming a program hosted at or run by a US university/organization defaults to 'US citizens/permanent residents only' -- contradicted by Yale YYGS, PROMYS, Diamond Challenge, Telluride TASS, and John Locke Institute, all explicitly open worldwide.",
+      "Treating the absence of eligibility language on a marketing/landing page as proof the program is open to all countries -- landing pages routinely omit eligibility detail that lives only on a dedicated FAQ/eligibility subpage.",
+      "Assuming 'the student currently attends school in the eligible country' satisfies a citizenship-status requirement, or vice versa -- Davidson Fellows/Simons/NASA require actual citizenship/PR status regardless of current school location; MIT PRIMES requires current US residency/school attendance regardless of citizenship. These are not substitutable.",
+      "Treating a country's appearance in a 'students from N countries have attended' promotional statistic as a guarantee that country is eligible in the current cycle -- RSI's participating-countries list is annually redetermined and not fixed.",
+      "Treating any mention of visa/F-1/immigration-status language as evidence of a nationality restriction -- Telluride, PROMYS, and CTY all mention visas while remaining open (or open-with-a-documentation-step) to international applicants.",
+      "Inferring 'restricted' purely because the word 'citizenship' or 'residency' never appears on a program's site -- some restrictions are phrased entirely in school-enrollment-location terms (MIT PRIMES never uses the word 'citizenship' at all)."
+    ],
+    "safe_inferences": [
+      "If the official eligibility/FAQ/rules page contains explicit language such as 'open to any country,' 'students worldwide,' or an equivalent affirmative statement, it is safe to record 'appears open,' quoting that language and its URL.",
+      "If the official page explicitly states a citizenship or permanent-residency requirement with no international alternative described, it is safe to record 'restricted -- citizenship/residency basis,' quoting that language.",
+      "If a program's stated application path requires nomination or qualification through a country-specific national committee, organiser, or affiliated fair, it is safe to record the mechanism explicitly (national-quota-mediated) rather than force it into a simple open/restricted binary, since the real-world answer depends on a fact (does an active organiser exist for this student's country this cycle) that itself needs its own verification and refresh cycle.",
+      "If a program's own materials draw an explicit line between where a student currently attends school/resides and their citizenship (as QuestBridge and DAAD RISE both do, each offering two distinct qualifying paths), it is safe to preserve both facts as separate structured data points rather than merging them, since they can and do produce different eligibility outcomes for the same individual student."
+    ],
+    "unresolved_questions": [
+      "How should ORYN represent eligible-country lists that are organizer-determined and non-public/annually variable (RSI) -- a boolean 'list_is_non_public_and_variable' flag plus a mandatory re-verification cadence, or something else?",
+      "Should national-quota/nomination-mediated programs (EUCYS, UWC, ISEF) get their own eligibility_type value, or is that too complex for a student-facing product that mainly needs a fast yes/no/unclear read -- i.e., is there a tradeoff between taxonomic accuracy and UI simplicity that needs a product decision, not just a data-model one?",
+      "This research did not find a real example of a program that accepts citizenship but explicitly excludes permanent residents (or vice versa) -- do such programs exist in ORYN's actual 352-row dataset, and if so, does the schema need a citizenship/permanent-residency split, or is 'citizens and/or permanent residents' effectively always treated as one bucket in practice?",
+      "Where should visa/documentation logistics notes (Telluride/PROMYS/CTY-style) live in the schema -- a new dedicated field, or deliberately left out of ORYN's structured data entirely and only surfaced via the source link, given they are informational rather than eligibility-determining?",
+      "How should ORYN handle sub-national (state/region-level) residency restrictions like NC Governor's School within a country-granularity eligible_countries field -- is this common enough across the 352-row dataset to justify a geographic_scope (country vs. region/state) field, or rare enough to leave as free text?",
+      "What confidence tier, if any, should apply to eligibility facts sourced only via a search-engine paraphrase of an official page that itself could not be directly fetched (the RSI case in this research) -- should ORYN require a second, independent confirmation before treating such a fact as anything above 'low confidence'?"
+    ]
+  },
+  "prerequisites_and_timing": {
+    "topic": "prerequisites_and_timing_by_category",
+    "prerequisites_by_category": [
+      {
+        "category": "summer_program",
+        "common_patterns": [
+          "portfolio_audition",
+          "coursework_prerequisite",
+          "gpa_academic_standing",
+          "school_sponsorship_required"
+        ],
+        "real_examples": [
+          {
+            "program_name": "Interlochen Arts Camp - Intermediate Classical Ballet (Grades 6-8)",
+            "official_url": "https://www.interlochen.org/dance/camp-programs/grades-6-8/audition-requirements",
+            "quoted_language": "Students should have had five consecutive years of training at the time of application.",
+            "pattern_type": "portfolio_audition (with an explicit years-of-training prerequisite gating the audition itself)"
+          },
+          {
+            "program_name": "Interlochen Arts Camp - Intermediate Contemporary Dance (Grades 6-8)",
+            "official_url": "https://www.interlochen.org/dance/camp-programs/grades-6-8/audition-requirements",
+            "quoted_language": "Students should have had at least three years of dance training, and be free of injury prior to arrival.",
+            "pattern_type": "portfolio_audition"
+          },
+          {
+            "program_name": "Johns Hopkins Center for Talented Youth (CTY)",
+            "official_url": "https://cty.jhu.edu/testing/identification-levels",
+            "quoted_language": "Students must score in the 98th percentile or higher (based on grade, not age) or demonstrate ability two or more grade levels above their current grade level in specified domains. Advanced CTY-Level reflects ability approximately four grade levels above the current enrolled grade, while CTY-Level reflects ability approximately two grade levels above the current enrolled grade.",
+            "pattern_type": "gpa_academic_standing (standardized-test-based academic-ability gate, not a coursework list; NOTE: direct fetch of cty.jhu.edu returned 403 so this is drawn from a search-engine-rendered excerpt of the official page rather than a live verbatim fetch -- treat with slightly lower confidence than the directly-fetched quotes in this file)"
+          },
+          {
+            "program_name": "MIT PRIMES / PRIMES-USA (research + reading track for high schoolers)",
+            "official_url": "https://math.mit.edu/research/highschool/primes/usa/apply-usa.html",
+            "quoted_language": "Students are selected on the basis of their demonstrated extraordinary mathematical ability, potential for conducting original research or advanced reading, and self-motivation for independent study... it is preferable that the applicant meets at least one criterion such as participation in a summer math program like Canada/USA MathCamp, AwesomeMath, HCSSiM, MathILy, PROMYS, Ross Program, or SUMaC.",
+            "pattern_type": "prior_experience (stated as preferred/non-mandatory prior programs rather than a hard coursework prerequisite)"
+          },
+          {
+            "program_name": "PROMYS (Program in Mathematics for Young Scientists)",
+            "official_url": "https://promys.org/programs/promys/for-students/",
+            "quoted_language": "PROMYS looks for the desire and ability to think deeply about fundamental mathematical principles... the core requirement is that students must have completed at least 9th grade and be at least 14 years old by the start of the program, but no older than 18. PROMYS explicitly does not require prior calculus or advanced math coursework.",
+            "pattern_type": "coursework_prerequisite (notable negative example -- explicitly disclaims a coursework prerequisite that applicants commonly assume exists)"
+          }
+        ]
+      },
+      {
+        "category": "competition",
+        "common_patterns": [
+          "school_sponsorship_required",
+          "team/individual structure",
+          "prior_experience (rare)",
+          "gpa_academic_standing (rare)"
+        ],
+        "real_examples": [
+          {
+            "program_name": "Science Olympiad (Team Qualification and Home School Policy)",
+            "official_url": "https://www.soinc.org/team-qualification-and-home-school-policy",
+            "quoted_language": "Science Olympiad requires all participants in Science Olympiad competitions to participate as members of a team, not as individuals... [public school students] may participate in Science Olympiad only as members of a team that is formed in the local public school that they attend... a roster signed by the principal of the school is considered proper validation [for school teams]; for home school teams, the roster must be signed by the President of the home school association or the head of the independent home school... A student may only participate on a single team.",
+            "pattern_type": "school_sponsorship_required"
+          },
+          {
+            "program_name": "National Science Bowl (regional competitions)",
+            "official_url": "https://science.osti.gov/wdts/nsb/Regional-Competitions",
+            "quoted_language": "Teams must first locate the regional that is designated for their school, as registrations are based on the location of your school. The deadline to register for any event is no later than 3 weeks prior to the event.",
+            "pattern_type": "school_sponsorship_required"
+          },
+          {
+            "program_name": "Diamond Challenge (global high-school entrepreneurship competition)",
+            "official_url": "https://diamondchallenge.org/competition/",
+            "quoted_language": "Teams must consist of 2-4 high school students aged 14-18 at the submission deadline... each team requires one adult advisor aged 21 or older. Multiple advisors are permitted, though only one can be listed in the official submission. Each student may participate on only one team and submit one concept per competition year.",
+            "pattern_type": "school_sponsorship_required (adult-advisor variant, less strict than Science Olympiad's single-school rule -- advisor need not be from the student's own school)"
+          },
+          {
+            "program_name": "Regeneron Science Talent Search (STS) 2027",
+            "official_url": "https://www.societyforscience.org/regeneron-sts/application-requirements/",
+            "quoted_language": "Only independent, individual research is eligible for the competition. Team research, even if different parts of the experiment were conducted by different high school students, is not eligible. Homeschooled students are also eligible to participate in the Regeneron STS. They will need to provide a document indicating what courses they have completed and their success in those courses, and submit that as a school transcript.",
+            "pattern_type": "team/individual structure (explicit individual-only rule, opposite of Diamond Challenge/Science Olympiad's team-based structures) + implicit coursework disclosure via transcript"
+          }
+        ]
+      },
+      {
+        "category": "research",
+        "common_patterns": [
+          "coursework_prerequisite (mostly absent/soft)",
+          "gpa_academic_standing",
+          "prior_experience (explicitly NOT required, stated defensively)"
+        ],
+        "real_examples": [
+          {
+            "program_name": "Simons Summer Research Program (Stony Brook University)",
+            "official_url": "https://www.stonybrook.edu/commcms/simons/applying_to/how-to-apply.php",
+            "quoted_language": "Prior research experience is not a prerequisite for the program... the only eligibility requirements are the grade and age cutoffs listed above [rising juniors, US citizens/permanent residents, at least 16 by the start of the program]. The application requires a school nomination, official transcript, two letters of recommendation (preferably from math or science teachers).",
+            "pattern_type": "prior_experience (explicitly disclaimed as a requirement -- a recurring pattern in elite research programs, which state 'no prior research needed' to counter applicant assumptions, while still favoring students with 'excellent academic records especially in math/science')"
+          },
+          {
+            "program_name": "Research Science Institute (RSI) - Center for Excellence in Education",
+            "official_url": "https://www.cee.org/programs/research-science-institute",
+            "quoted_language": "You must be a rising senior and 16 or older by July 1, 2026... gather your official transcript, standardized test scores (PSAT, SAT, ACT, or AP), up to three recommendation letters. RSI suggests strong PSAT scores (Math >= 740, EBRW >= 700) or ACT equivalents.",
+            "pattern_type": "gpa_academic_standing (uses standardized test-score benchmarks as an academic-standing proxy rather than a GPA number; direct fetch of cee.org returned 403 so this is a search-engine-rendered excerpt rather than a live verbatim fetch)"
+          },
+          {
+            "program_name": "MIT PRIMES (main program, Boston-area)",
+            "official_url": "https://math.mit.edu/research/highschool/primes/apply.html",
+            "quoted_language": "Students are selected on the basis of their demonstrated extraordinary mathematical ability, potential for conducting original research or advanced reading, and self-motivation for independent study. A very advanced background is expected of the small number of admitted candidates.",
+            "pattern_type": "gpa_academic_standing (qualitative 'very advanced background' standard, not a numeric GPA)"
+          },
+          {
+            "program_name": "MIT Homeschool Internship Program (HIP-SAT)",
+            "official_url": "https://hip-sat.mit.edu/requirements",
+            "quoted_language": "[Applicants should have] demonstrated interest in chemistry, biology, and/or bioengineering, and strong scientific preparation at the high school level. Interest and preparation in computer programming or scientific software is also helpful.",
+            "pattern_type": "coursework_prerequisite (soft/qualitative -- 'strong scientific preparation' rather than a named course list; no explicit GPA or test-score threshold stated)"
+          },
+          {
+            "program_name": "Stanford Institutes of Medicine Summer Research Program (SIMR)",
+            "official_url": "https://med.stanford.edu/simr.html",
+            "quoted_language": "A strong SIMR application typically includes a high GPA with rigorous coursework in biology, chemistry, and mathematics... Applicants who have prior laboratory experience, even informal, have an advantage.",
+            "pattern_type": "coursework_prerequisite + prior_experience (both stated as advantage/preference rather than hard requirement -- summarized by secondary sources, not a direct verbatim quote from med.stanford.edu since the raw eligibility page was not independently re-verified word-for-word)"
+          }
+        ]
+      },
+      {
+        "category": "scholarship",
+        "common_patterns": [
+          "gpa_academic_standing",
+          "need_based_criteria",
+          "prior_experience (leadership-based, distinct from research prior-experience)"
+        ],
+        "real_examples": [
+          {
+            "program_name": "Coca-Cola Scholars Foundation Scholarship",
+            "official_url": "https://www.coca-colascholarsfoundation.org/about/faq",
+            "quoted_language": "High school seniors with a minimum 3.0 unweighted GPA may apply.",
+            "pattern_type": "gpa_academic_standing (a rare example of a scholarship stating a precise numeric GPA floor, explicitly unweighted)"
+          },
+          {
+            "program_name": "QuestBridge National College Match",
+            "official_url": "https://www.questbridge.org/resources/match-requirements-guide",
+            "quoted_language": "QuestBridge reviews all applications holistically... there are no absolute criteria or cut-offs for GPA, standardized test scores, income, or other factors... Standardized test score requirements vary across our college partners. Some schools are test-optional, while others will require test scores for Match Scholarship consideration. Typical National College Match Finalists come from households earning less than $65,000 annually for a family of four with minimal assets.",
+            "pattern_type": "need_based_criteria (explicitly holistic / no hard income cutoff, contrasts with Horatio Alger and Gates Scholarship below which DO state hard income ceilings)"
+          },
+          {
+            "program_name": "Horatio Alger National Scholarship Program",
+            "official_url": "https://horatioalger.org/scholarships-and-services/undergraduate-scholarships/",
+            "quoted_language": "Applicants must demonstrate critical financial need with $55,000 or lower adjusted gross family income for the National Scholars Program... some other Horatio Alger scholarship programs require $100,000 or lower adjusted gross family income... income verification requires parents' tax form or alternative documentation if unavailable.",
+            "pattern_type": "need_based_criteria (hard, documented income ceiling with tax-form verification -- summarized from official-site-adjacent secondary sources; not independently re-fetched verbatim from horatioalger.org)"
+          },
+          {
+            "program_name": "The Gates Scholarship",
+            "official_url": "https://www.thegatesscholarship.org/scholarship/",
+            "quoted_language": "Students must be a high school senior, Pell-eligible, a U.S. citizen or permanent resident, and in good academic standing with a minimum cumulative weighted GPA of 3.3 on a 4.0 scale (or equivalent)... A completed FAFSA is required to verify Pell Grant eligibility and financial need.",
+            "pattern_type": "need_based_criteria + gpa_academic_standing (combines a hard numeric GPA floor with federal-aid-linked need documentation -- FAFSA/Pell eligibility rather than a self-reported income figure)"
+          },
+          {
+            "program_name": "Davidson Fellows Scholarship",
+            "official_url": "https://www.davidsongifted.org/gifted-programs/fellows-scholarship/eligibility/",
+            "quoted_language": "Scholarships are awarded on the basis of significant work... Literature applicants must submit a 60-75 page portfolio, a process essay, and possibly a video... Science, mathematics, and technology applicants submit formal research reports.",
+            "pattern_type": "portfolio_audition (a scholarship, not a summer program, gated primarily on a submitted portfolio/project rather than GPA or need -- a merit/project-based scholarship contrasted against the need-based examples above)"
+          }
+        ]
+      },
+      {
+        "category": "internship",
+        "common_patterns": [
+          "gpa_academic_standing",
+          "prior_experience (leadership, not research)",
+          "coursework_prerequisite (rare/soft)"
+        ],
+        "real_examples": [
+          {
+            "program_name": "NASA Office of STEM Engagement (OSTEM) internships",
+            "official_url": "https://www.nasa.gov/learning-resources/internship-programs/",
+            "quoted_language": "3.0 on a 4.0 scale [GPA]... Be a full-time or part-time college student... currently attending a certificate or degree-granting program at a U.S. accredited technical school, college or university.",
+            "pattern_type": "gpa_academic_standing (NOTE: this official page's explicit text describes the college-level OSTEM/Pathways tiers; secondary sources report a parallel 16+/3.0 GPA high-school-eligible OSSI track, but the 3.0 GPA figure quoted here is verified only against the general OSTEM page, not a page specific to the high-school cohort -- flagged as a gap, not fabricated)"
+          },
+          {
+            "program_name": "Bank of America Student Leaders Program",
+            "official_url": "https://about.bankofamerica.com/en/making-an-impact/student-leaders-program-faq",
+            "quoted_language": "Have served in a leadership role within the last 2 years (24 months). Demonstrate active involvement outside of educational coursework -- including hours spent in the community, volunteering, working at a job or work study or with individual entrepreneurial endeavors.",
+            "pattern_type": "prior_experience (a leadership/activity-history prerequisite, not a coursework or GPA prerequisite -- no GPA requirement is stated anywhere on this page)"
+          },
+          {
+            "program_name": "MIT Homeschool Internship Program (HIP-SAT)",
+            "official_url": "https://hip-sat.mit.edu/requirements",
+            "quoted_language": "at least 16 years of age by 6/1/2026... demonstrated interest in chemistry, biology, and/or bioengineering, and strong scientific preparation at the high school level... approximately 20 hours/week over the 8-week period.",
+            "pattern_type": "coursework_prerequisite (soft/qualitative, no named courses or GPA number)"
+          }
+        ]
+      }
+    ],
+    "timing_patterns_by_category": [
+      {
+        "category": "summer_program",
+        "deadline_architecture": "priority_then_regular",
+        "explanation": "Many competitive US pre-college summer programs (arts and academic) use a priority/early deadline that gives applicants a scheduling advantage (first choice of session/course, or earlier decision) followed by a later regular/rolling deadline that continues until programs fill. Rolling-admission programs without a hard cutoff also exist (e.g., some university precollege programs admit continuously starting in January and encourage applying early because 'most programs fill before the deadline').",
+        "real_examples": [
+          {
+            "program_name": "Interlochen Arts Camp",
+            "official_url": "https://www.interlochen.org/summer-camp/admission/how-to-apply-to-arts-camp",
+            "quoted_language": "Applications for programs that do not require an audition or portfolio will enroll on a first-come, first-served basis starting in December. All other applications will be reviewed after the priority application deadline on Jan. 15. They will continue to accept applications following the deadline until program enrollment is full."
+          },
+          {
+            "program_name": "Wharton Global Youth Program (pre-baccalaureate summer sessions)",
+            "official_url": "https://globalyouth.wharton.upenn.edu/application-information/",
+            "quoted_language": "The priority deadline is the early deadline, and allows a greater chance of admission into preferred session dates. Students who apply by the priority deadline will also be notified of their admissions decisions earlier. (2026 cycle priority deadline reported as January 28, 2026; a $100 non-refundable application fee applies.)"
+          },
+          {
+            "program_name": "Johns Hopkins Center for Talented Youth (CTY) summer programs",
+            "official_url": "https://cty.jhu.edu/",
+            "quoted_language": "Applications typically open in early January, with a priority deadline in late January for students hoping to secure the most competitive courses and campuses. After the priority round, CTY continues to accept applications on a rolling basis through the spring, usually into April, as long as space remains available. (Summarized from secondary guidance; the live CTY deadlines page returned 403 on direct fetch and was not independently re-verified verbatim.)"
+          }
+        ]
+      },
+      {
+        "category": "competition",
+        "deadline_architecture": "registration_vs_event_date_split",
+        "explanation": "Team-based, multi-round competitions commonly separate a REGISTRATION/entry deadline from the actual COMPETITION EVENT date(s) -- sometimes by months, and often with an intermediate 'kickoff' or season-start milestone. Individual-research competitions (e.g. Regeneron STS) instead tend toward a single fixed annual submission deadline with no separate 'event' concept beyond the deadline itself.",
+        "real_examples": [
+          {
+            "program_name": "National Science Bowl (DOE Office of Science)",
+            "official_url": "https://science.osti.gov/wdts/nsb/Regional-Competitions",
+            "quoted_language": "Registration for the 2027 regional competitions will open Monday, October 5, 2026... The deadline to register for any event is no later than 3 weeks prior to the event. For example, if a regional is on Saturday, February 20, no registrations will be accepted after Saturday, January 30... The national finals are scheduled for April 29 to May 3 in 2027."
+          },
+          {
+            "program_name": "FIRST Robotics Competition (2026-2027 season)",
+            "official_url": "https://www.firstinspires.org/programs/frc/game-and-season",
+            "quoted_language": "Lead coaches may enter or edit their kickoff information during the kickoff selection dates of September 24, 2026 Noon ET through November 17, 2026 Noon ET. Every FIRST Robotics Competition team must select one of the options by November 17, 2026 (noon) Eastern Time... Kickoff kit shipments will start in December once a team has secured their registration fee. [Kickoff/season-start:] January 9, 2027, 12:00 p.m. ET."
+          },
+          {
+            "program_name": "Diamond Challenge 2027",
+            "official_url": "https://diamondchallenge.org/competition/",
+            "quoted_language": "Concept Development begins: September 16 (submission window opens). Submission Deadline: January 14 | Submission Deadline (5PM EST). Pitching Round: February 10 (advancing teams notified); March 9 (finalists announced). Final Event: April 29-30 | Limitless World Summit."
+          },
+          {
+            "program_name": "Regeneron Science Talent Search (STS) 2027",
+            "official_url": "https://sciencetalentsearch.smapply.org/prog/regeneron_science_talent_search_2027/",
+            "quoted_language": "The Regeneron STS 2027 application is now open through 8PM ET on Thursday, November 5, 2026. All parts of the application, including recommendations and transcripts, are due by the deadline -- no exceptions."
+          }
+        ]
+      },
+      {
+        "category": "scholarship",
+        "deadline_architecture": "annual_cycle_tied_to_academic_year",
+        "explanation": "Scholarships overwhelmingly run one fixed annual cycle keyed to the applicant's graduating class / academic year, with a single hard close date (in contrast to competitions' registration/event split and summer programs' priority/regular split). A minority run multi-window cycles for different applicant types within the same year (e.g. Horatio Alger's separate senior vs. associate-degree windows).",
+        "real_examples": [
+          {
+            "program_name": "Coca-Cola Scholars Foundation Scholarship",
+            "official_url": "https://www.coca-colascholarsfoundation.org/about/faq",
+            "quoted_language": "The Coke Scholars application will reopen for students graduating high school during the 2026-2027 academic year on August 3, 2026, after 10 am Eastern... The deadline for the 2027 Coke Scholars application is 5 pm Eastern on September 30, 2026."
+          },
+          {
+            "program_name": "Horatio Alger National & State Scholarship Programs",
+            "official_url": "https://horatioalger.org/scholarships/",
+            "quoted_language": "For the 2027 application cycle, the senior application period is December 1 - February 15, and for students interested in pursuing an associate's degree or certificate program, the application period is March 15 - June 15.",
+            "note": "Two separate annual windows within one program year, segmented by applicant track rather than a rolling or priority structure."
+          },
+          {
+            "program_name": "Bank of America Student Leaders Program",
+            "official_url": "https://about.bankofamerica.com/en/making-an-impact/student-leaders-program-faq",
+            "quoted_language": "The deadline for the Student Leaders application is March 16, 2026, at 11:59 pm eastern/8:59 pm pacific... there will be no deadline extensions."
+          }
+        ]
+      },
+      {
+        "category": "research",
+        "deadline_architecture": "annual_cycle_tied_to_academic_year",
+        "explanation": "Summer research programs run a single annual application window (roughly November-March) that closes well before the program's June-August start, i.e. a winter/spring application deadline for a fixed summer cohort. This differs from generic 'summer_program' priority/regular tiering in that research programs more often have exactly one hard deadline rather than two tiers, likely because cohort sizes are small and highly selective (RSI ~100 students nationally; PRIMES a handful).",
+        "real_examples": [
+          {
+            "program_name": "Research Science Institute (RSI) 2026 cycle",
+            "official_url": "https://www.cee.org/programs/research-science-institute",
+            "quoted_language": "Applications for RSI 2026 are now closed. The application deadline was December 10, 2025. [Program runs each summer at MIT.]"
+          },
+          {
+            "program_name": "Seattle Children's Research Training Program",
+            "official_url": "https://www.seattlechildrens.org/research/centers-programs/science-education-department/high-school-training-programs/",
+            "quoted_language": "Applications for the 2026 Research Training Program closed on Sunday, March 8, 2026. Please check back in late 2026 for information for summer 2027."
+          },
+          {
+            "program_name": "MITES Summer (MIT)",
+            "official_url": "https://mitadmissions.org/apply/prepare/summer/",
+            "quoted_language": "Applications open in November with a student application deadline of February 1. Recommenders must submit by February 15, with admission decisions released in mid-April. [Six-week residential program held over the summer.]"
+          },
+          {
+            "program_name": "Stanford Institutes of Medicine Summer Research Program (SIMR) 2027",
+            "official_url": "https://med.stanford.edu/simr.html",
+            "quoted_language": "For the 2027 program, students must be in the graduating class of 2027 or 2028... Applications will be due in late February 2027. [Program runs summer 2027.]"
+          }
+        ]
+      },
+      {
+        "category": "internship",
+        "deadline_architecture": "rolling",
+        "explanation": "High-school-relevant internships cluster into two sub-patterns: (a) session-based rolling windows that repeat several times a year (e.g., NASA's spring/summer/fall OSTEM sessions, each with its own closing date, allowing near-continuous applicability across the year), and (b) single fixed-deadline annual programs tied to one summer cohort (e.g., Bank of America Student Leaders). Both differ from scholarships' single annual-cycle pattern in that internships more often have multiple entry points per year rather than one.",
+        "real_examples": [
+          {
+            "program_name": "NASA OSTEM internships",
+            "official_url": "https://www.nasa.gov/learning-resources/internship-programs/",
+            "quoted_language": "Spring 2027: September 14, 2026 (11:59 p.m. ET). Summer 2027: February 26, 2027 (11:59 p.m. ET). Fall 2027: May 21, 2027 (11:59 p.m. ET)."
+          },
+          {
+            "program_name": "Bank of America Student Leaders Program",
+            "official_url": "https://about.bankofamerica.com/en/making-an-impact/student-leaders-program-faq",
+            "quoted_language": "Eligible students can apply online starting February 9, 2026, with a deadline of March 16, 2026... The internship is a full-time (minimum 35 hours weekly) 6-week paid internship at a local nonprofit between June and July."
+          }
+        ]
+      }
+    ],
+    "current_cycle_label_conventions": {
+      "typical_formats_found": [
+        "'Applications for RSI 2026 are now closed. The application deadline was December 10, 2025.' -- program name + year + explicit past-tense closure statement + literal deadline date",
+        "'Applications for the 2026 Research Training Program closed on Sunday, March 8, 2026. Please check back in late 2026 for information for summer 2027.' -- explicit closed-year + explicit next-check-back window naming the NEXT cycle's year",
+        "'Applications for 2026 have closed. Please check back in October for 2027 program details.' -- same pattern (MD Anderson High School Summer Program), with 66th-annual framing establishing program longevity",
+        "'The Regeneron STS 2027 application is now open through 8PM ET on Thursday, November 5, 2026.' -- forward-looking cycle label ('2027' names the AWARD/COHORT year even though the deadline falls in the prior calendar year, 2026) combined with an explicit open-with-end-time statement",
+        "'The Coke Scholars application will reopen for students graduating high school during the 2026-2027 academic year on August 3, 2026.' -- cycle labeled by graduating class / academic year span rather than a single year number",
+        "'Program dates for the current cycle: June 1 - August 7, 2026' paired with '66th Annual ... High School Summer Program' -- explicit start/end date range functioning as the de facto cycle label"
+      ],
+      "stale_vs_current_signals": [
+        "CURRENT signal: the page states an explicit future or in-progress deadline with a specific date/time and no closure language (e.g. Regeneron STS: 'now open through 8PM ET on Thursday, November 5, 2026').",
+        "STALE signal: the page states 'Applications are now closed' / 'applications closed on [past date]' without being updated to the next cycle -- this is the single clearest lexical marker found across every category researched.",
+        "STALE signal (subtler, and the most dangerous for ORYN): a page shows a specific PAST calendar year in its title, dates, or 'Apply by [date]' language with no closure statement at all -- e.g. a program page that still displays 'RSI 2024' or 'Summer 2023 program dates' with no update; several secondary/aggregator sources returned by search were themselves stale in exactly this way (guide articles referencing 2024/2025 cycles), which is a caution for any pipeline that scrapes aggregator content rather than official pages.",
+        "CURRENT/transitional signal: pages that explicitly name BOTH the just-closed cycle and the next cycle together ('Applications for 2026 have closed. Please check back in October for 2027 program details.') are unambiguous and safest to parse -- the presence of a forward-pointing 'next cycle' year is the strongest positive signal that the page is being actively maintained, versus a page that only shows a past year with no forward pointer.",
+        "AMBIGUOUS case worth flagging: cycle-year numbering conventions are inconsistent across programs -- some label by the program/cohort year (Regeneron 'STS 2027' for an application closing Nov 2026), others by application-opening academic year (Coca-Cola 'graduating high school during the 2026-2027 academic year'), and others by literal calendar program dates (MD Anderson 'June 1 - August 7, 2026'). A `current_cycle_label` field cannot assume a single numbering convention; it must be parsed per-program rather than pattern-matched against one fixed 'YYYY' regex.",
+        "Rolling-deadline programs (NASA OSTEM, some CTY tracks) do not have a single 'closed/open' binary at all -- they cycle through several session windows per year, so a 'stale' determination for these requires checking whether the MOST RECENT of several session dates has passed, not just whether any deadline text is present."
+      ],
+      "real_examples": [
+        {
+          "program_name": "Research Science Institute (RSI)",
+          "official_url": "https://www.cee.org/programs/research-science-institute",
+          "quoted_language": "Applications for RSI 2026 are now closed. The application deadline was December 10, 2025.",
+          "signal_type": "stale"
+        },
+        {
+          "program_name": "Seattle Children's Research Training Program",
+          "official_url": "https://www.seattlechildrens.org/research/centers-programs/science-education-department/high-school-training-programs/",
+          "quoted_language": "Applications for the 2026 Research Training Program closed on Sunday, March 8, 2026. Please check back in late 2026 for information for summer 2027.",
+          "signal_type": "stale (but self-labeling and forward-pointing, i.e. the 'good' kind of stale that tells a scraper exactly when to re-check)"
+        },
+        {
+          "program_name": "MD Anderson High School Summer Program",
+          "official_url": "https://www.mdanderson.org/education-training/research-training/early-career-pathway-programs/summer-research-programs/programs/high-school-summer-program.html",
+          "quoted_language": "Jan. 14, 2026 Applications close - no new applications accepted... Applications for 2026 have closed. Please check back in October for 2027 program details.",
+          "signal_type": "stale (self-labeling, forward-pointing)"
+        },
+        {
+          "program_name": "Regeneron Science Talent Search 2027",
+          "official_url": "https://sciencetalentsearch.smapply.org/prog/regeneron_science_talent_search_2027/",
+          "quoted_language": "The Regeneron STS 2027 application is now open through 8PM ET on Thursday, November 5, 2026.",
+          "signal_type": "current"
+        },
+        {
+          "program_name": "Diamond Challenge 2027",
+          "official_url": "https://diamondchallenge.org/competition/",
+          "quoted_language": "Submission Deadline: January 14 | Submission Deadline (5PM EST) [as part of a full forward-dated 2027 timeline from September 2026 through the April 2027 Summit]",
+          "signal_type": "current"
+        }
+      ]
+    },
+    "unsafe_inferences": [
+      "Do not assume every program in a category shares the same prerequisite pattern -- within 'research' alone, Simons explicitly disclaims a prior-research requirement while MIT PRIMES explicitly expects 'a very advanced background' and named prior programs; category-level defaults will misclassify specific programs.",
+      "Do not infer a numeric GPA threshold when a program uses qualitative language ('strong academic record,' 'rigorous coursework') -- most programs researched (Simons, PRIMES, HIP-SAT, SIMR) deliberately avoid a hard GPA number even when GPA clearly matters to selection; inventing a number from vague language would violate ORYN's no-false-precision principle just as much as inventing an admissions probability would.",
+      "Do not treat 'school sponsorship required' as universal for competitions -- Science Olympiad and National Science Bowl require it (school-designated regional/single-school team), but Regeneron STS is explicitly individual research with no school-team structure, and Diamond Challenge requires only a generic 'adult advisor' who need not be from the student's school.",
+      "Do not assume a single 'YYYY' regex safely extracts the current cycle year -- the same literal year number can refer to different things across programs (cohort year vs. academic year vs. deadline year vs. program-start year), and a naive extraction risks silently mislabeling a closed cycle as current or vice versa.",
+      "Do not assume 'applications closed' automatically means the row should be hidden/deprioritized without checking whether the page also names the next cycle -- some 'closed' pages (Seattle Children's, MD Anderson) are more current/trustworthy signals of an actively maintained program than a page with a stale, unlabeled deadline from a prior year and no closure statement at all.",
+      "Do not use secondary/aggregator 'guide' sites (Pioneer Academics, AdmissionSight, CollegeEssayGuy, Immerse Education, etc.) as the sole source for any single fact -- several of these sites' own indexed pages referenced stale years (2024/2025) even while writing about 'current' cycles, showing that aggregators themselves lag official sources and should only be used for discovery, exactly as ORYN's stated source standard specifies.",
+      "Do not assume rolling-admission programs have no risk of staleness -- NASA OSTEM and CTY's session-based rolling deadlines still have real per-session close dates that pass; 'rolling' is not synonymous with 'always open.'"
+    ],
+    "safe_inferences": [
+      "A page containing both a past-tense closure statement ('applications closed on [date]') AND a named next-cycle year or a 'check back in [month]' pointer is a strong CURRENT/well-maintained signal, even though the immediate application itself is closed -- ORYN should distinguish 'closed-but-freshly-maintained' from 'stale-and-abandoned' rather than collapsing both into one 'closed' state.",
+      "Competitions that are team-based and multi-round (robotics, science bowl, entrepreneurship challenges) reliably separate a registration/entry deadline from the event date(s) -- this justifies ORYN modeling `deadline` as potentially plural/staged for competition-category rows rather than a single field, at least for well-known team competitions.",
+      "Scholarships reliably run one deadline per applicant-track per year tied to graduating class or academic year, which supports a simpler single `deadline` + `current_cycle_label` (formatted as an academic-year span, e.g. '2026-2027') model for that category specifically.",
+      "Research programs reliably show a single winter/spring deadline for a summer cohort -- this is consistent enough across RSI, Simons, MITES, and SIMR that a 'one annual deadline, ~4-6 months before program start' default is a reasonable prior for this category, while still requiring per-program verification before display.",
+      "When a program explicitly disclaims a prerequisite ('prior research experience is not a prerequisite,' 'PROMYS does not require prior calculus'), that disclaimer is itself useful structured data for ORYN's advisor -- it tells a student that a commonly assumed barrier does not actually apply, which is exactly the kind of fact-vs-assumption distinction the advisor is supposed to surface.",
+      "GPA numbers, when actually stated, tend to cluster in two clear bands across the programs found: ~3.0 as a baseline eligibility floor (Coca-Cola Scholars, general OSTEM) and ~3.3 as a 'strong academic standing' floor (Gates Scholarship) -- useful as a rough calibration reference, not as a rule to impute onto programs that don't state a number."
+    ],
+    "unresolved_questions": [
+      "Could not independently verify verbatim text from several official pages that blocked automated fetching (403 responses) -- notably cee.org (RSI), stonybrook.edu (Simons), cty.jhu.edu (CTY), horatioalger.org, med.stanford.edu, drew.edu (NJ Governor's School), chemistry.berkeley.edu (SYIP). For these, the quoted language in this file is drawn from search-engine-rendered excerpts of the official pages (in most cases) rather than a direct live fetch, and should be re-verified by a human or a differently-configured fetcher before being treated as fully authoritative by ORYN.",
+      "Could not find an official page that unambiguously states an internship-specific (not general OSTEM/college-level) GPA requirement for a high-school-eligible NASA internship track -- the 3.0 GPA figure is documented on NASA's general OSTEM page, which explicitly frames its eligibility text around college students; whether the identical 3.0 threshold applies to the youngest eligible (16+, high-school) applicants was not independently confirmed on an HS-specific page.",
+      "Could not find a real, currently-active program with an explicit, hard-stated coursework prerequisite in the strict sense the task asked about (e.g. 'must have completed AP Chemistry or equivalent' as a literal named-course gate). Every program found that touches coursework (SIMR, HIP-SAT, MITES, PRIMES, RSI) uses qualitative/preference language ('strong preparation,' 'rigorous coursework,' 'advanced background') rather than naming a specific required course by name. This is itself a finding worth surfacing to ORYN: named-course prerequisites appear to be rare-to-nonexistent among elite/selective US programs researched, which typically prefer to gate on demonstrated ability (test scores, GPA, portfolio, recommendation) rather than a specific transcript line item -- but this could not be verified in more heavily coursework-gated domains ORYN's database likely also contains (e.g. European program-specific subject prerequisites, medical/health-track programs, or engineering programs with named-course gates like 'completed Algebra II'), which fell outside the scope of what was searched.",
+      "Could not access an official Governor's School (NJ or Kentucky) page directly (fetches returned only navigation, not body content) to verify whether these state-run academic programs state any coursework prerequisite beyond the junior-year/nomination requirement found via search summaries -- flagged as an open gap rather than resolved.",
+      "The scope of 'real, currently active programs' researched here skews heavily toward well-known, elite/selective US-based programs (RSI, PRIMES, Simons, Regeneron STS, QuestBridge, Gates Scholarship, etc.) because these dominate search results and have well-maintained official pages. ORYN's actual database is 67% summer_program and heavily populated with less prominent programs; the patterns documented here (soft qualitative prerequisites, priority/regular deadline tiers, explicit stale/current cycle language) may be less reliably present -- or stated in less standardized language -- on the pages of smaller or less resourced programs that were not sampled in this research pass.",
+      "Volunteering and fellowship categories (1 and 2 rows respectively in ORYN's live data) were not researched at all per the task's explicit scope (5 major categories only); no claims should be inferred about those categories from this file."
+    ]
+  },
+  "extraction_audit_sample": {
+    "methodology": "2 batches of 51 live opportunities.eligible_countries=null-or-similarly-gapped rows each (102 total, drawn from the live opportunities table), each row's existing official_url/description re-examined by an agent against the extraction rules established in the taxonomy/methodology files in this same package, to (a) validate whether the methodology holds up against real rows and (b) produce a directly reviewable, sourced proposed-value batch. This is a research audit artifact, not a database write -- no opportunities row was modified.",
+    "rows_processed": 102,
+    "rows_with_proposed_new_values": 32,
+    "rows_with_no_extractable_value_found": 70,
+    "rows": [
+      {
+        "opportunity_id": "d4450b97-5d23-4ab1-acf7-8f3908117fd6",
+        "title": "International Academic Marathon",
+        "category": "competition",
+        "extracted": {
+          "minimum_age": null,
+          "maximum_age": null,
+          "eligible_grades": [
+            "9",
+            "10",
+            "11",
+            "12"
+          ],
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": null
+        },
+        "evidence": {
+          "eligible_grades": "General eligibility: Grade: 9 to 12"
+        },
+        "notes": "Explicit grade range stated directly under a 'General eligibility' label."
+      },
+      {
+        "opportunity_id": "4a1ef2dd-ab26-44e0-b6a5-2e49aca13dc0",
+        "title": "Genesys Works",
+        "category": "internship",
+        "extracted": {
+          "minimum_age": null,
+          "maximum_age": null,
+          "eligible_grades": null,
+          "citizenship_restrictions": "Must be authorized to work in the US.",
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": null
+        },
+        "evidence": {
+          "citizenship_restrictions": "applicant should be \"a motivated rising high school senior,\" on track to graduate, authorized to work in the US, and able to adjust their senior-year school schedule for internship hours"
+        },
+        "notes": "This is a work-authorization requirement rather than an explicit citizenship/permanent-residency statement, but it is the closest schema field and is stated explicitly among the official eligibility criteria. Grade eligibility ('rising high school senior') is already populated in the source (eligible_grades: [\"11\"]), so not re-extracted here."
+      },
+      {
+        "opportunity_id": "08ee973d-9dce-485e-b2f2-51deeb48c2ff",
+        "title": "NYU Tandon Machine Learning Summer Program",
+        "category": "summer_program",
+        "extracted": {
+          "minimum_age": 15,
+          "maximum_age": null,
+          "eligible_grades": null,
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": null
+        },
+        "evidence": {
+          "minimum_age": "introduces high school students (min 15 year-age) to the computer science, data analyses..."
+        },
+        "notes": ""
+      },
+      {
+        "opportunity_id": "216c88aa-8950-4f45-aea9-62939682be0a",
+        "title": "Nanoteknoloji ve Biyoteknoloji Lise Kış Kampı",
+        "category": "summer_program",
+        "extracted": {
+          "minimum_age": null,
+          "maximum_age": null,
+          "eligible_grades": null,
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": [
+            "English language proficiency at CEFR B2 or above (for courses taught in English)"
+          ]
+        },
+        "evidence": {
+          "application_requirements": "İngilizce dilinde gerçekleşecek dersler için dil yeterliliği şartlarını sağlayan (CEFR B2 ve üzeri) tüm lise öğrencileri başvurabilir"
+        },
+        "notes": "Description states grade eligibility using Turkish terminology ('Hazırlık, 9., 10. veya 11. sınıfı tamamlamış olan ... tüm lise öğrencileri başvurabilir' -- prep year, or having completed 9th/10th/11th grade). Left eligible_grades null rather than guess a Sınıf-to-US-grade conversion, per instructions treating this kind of terminology as non-convertible without guessing; the 'tamamlamış olan' (having completed) phrasing adds a further completed-vs-current-grade ambiguity."
+      },
+      {
+        "opportunity_id": "1e54b150-ceb2-4c22-92b9-a0d93fc34df6",
+        "title": "RISE (Research in Science and Engineering) at BU",
+        "category": "summer_program",
+        "extracted": {
+          "minimum_age": 15,
+          "maximum_age": null,
+          "eligible_grades": null,
+          "citizenship_restrictions": "International students not eligible.",
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": null
+        },
+        "evidence": {
+          "minimum_age": "At least 15 yrs old and entering their senior year",
+          "citizenship_restrictions": "(INTERNATIONAL STUDENTS NOT ELIGIBLE)"
+        },
+        "notes": "Description contains two different, conflicting grade statements: 'The competitive programs are the High School Honors and the Research in Science and Engineering both for rising grade 11 and 12 students' vs. (immediately after, apparently specific to RISE, which matches this row's official_url) 'entering their senior year.' Left eligible_grades null rather than guess which applies to this specific row/program."
+      },
+      {
+        "opportunity_id": "ff5d9710-80d3-47ae-959a-b8b40406f003",
+        "title": "Warwick University Pre-University Summer Programme 2026",
+        "category": "summer_program",
+        "extracted": {
+          "minimum_age": 16,
+          "maximum_age": 17,
+          "eligible_grades": null,
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": null
+        },
+        "evidence": {
+          "minimum_age": "you are an enthusiastic and motivated 16-17 year old student for the duration of the program",
+          "maximum_age": "you are an enthusiastic and motivated 16-17 year old student for the duration of the program"
+        },
+        "notes": ""
+      },
+      {
+        "opportunity_id": "2bbea7da-09bb-4eca-b46b-c3b5363e3b92",
+        "title": "The Rockefeller University Summer Science Research Program (SSRP)",
+        "category": "summer_program",
+        "extracted": {
+          "minimum_age": 16,
+          "maximum_age": null,
+          "eligible_grades": [
+            "11",
+            "12"
+          ],
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": [
+            "online application form",
+            "essay (one of two essay questions)",
+            "commentary on an article on the Rockefeller website",
+            "school transcript",
+            "resume",
+            "two letters of recommendation"
+          ]
+        },
+        "evidence": {
+          "minimum_age": "Students must be a current high school junior or senior (age 16+ at program start, no exceptions)",
+          "eligible_grades": "Students must be a current high school junior or senior",
+          "application_requirements": "Online application form One out of two essay questions A commentary on an article on the Rockefeller website School transcript Resume Two letters of recommendation"
+        },
+        "notes": "Application requirements were run together without punctuation in the source description; parsed conservatively into discrete list items."
+      },
+      {
+        "opportunity_id": "cb2e1b38-c154-4cc7-9186-bb1aa4e724a7",
+        "title": "Stanford Summer Humanities Institute",
+        "category": "summer_program",
+        "extracted": {
+          "minimum_age": null,
+          "maximum_age": null,
+          "eligible_grades": null,
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": [
+            "application form",
+            "academic records",
+            "work sample(s) in the humanities or social sciences",
+            "teacher recommendation (from an English, history, or social science teacher)",
+            "video essay (optional)",
+            "$65 application fee"
+          ]
+        },
+        "evidence": {
+          "application_requirements": "Application form, Academic Records, Work Sample(s) in the humanities or social sciences ..., Teacher Recommendation (one online rec.form from English, history or social science teacher), Video Essay (Optional), $65 Appl…"
+        },
+        "notes": "Source description is truncated mid-word after '$65 Appl…' (presumably 'Application fee'); the $65 figure and general application-fee nature are visible and included, but exact fee wording is cut off."
+      },
+      {
+        "opportunity_id": "f9421944-556f-46ed-b748-cfdce8ed8cf7",
+        "title": "Tulane University Pre-College, New Orleans",
+        "category": "summer_program",
+        "extracted": {
+          "minimum_age": null,
+          "maximum_age": null,
+          "eligible_grades": null,
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": [
+            "English language proficiency test (TOEFL, IELTS, Duolingo English Test, or Cambridge C1/C2) required if not a native English speaker",
+            "valid passport (at least six months)"
+          ]
+        },
+        "evidence": {
+          "application_requirements": "English language proficiency is required for admission to Tulane Pre-College Programs. TOEFL, IELTS, Duolingo English Test or Cambridge C1/C2 scores are required if you are not a native speaker of English. You must have a passport that is valid for at least six mo…"
+        },
+        "notes": "Grade eligibility is split by course track and cannot be reduced to one value: 'rising high school freshman, sophomore, junior or senior' (grades 9-12) is stated for enrichment courses, but 'rising high school junior or senior' (grades 11-12) only for credit-bearing courses. Left eligible_grades null since this row doesn't specify which track it represents. Passport detail is truncated ('mo…') in the source text."
+      },
+      {
+        "opportunity_id": "1b636769-b88d-4c54-a270-79c3f68a044c",
+        "title": "iD Tech Camps",
+        "category": "summer_program",
+        "extracted": {
+          "minimum_age": 7,
+          "maximum_age": 18,
+          "eligible_grades": null,
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": null
+        },
+        "evidence": {
+          "minimum_age": "They serve students aged 7 to 18.",
+          "maximum_age": "They serve students aged 7 to 18."
+        },
+        "notes": "This is the overall age span across iD Tech's full camp portfolio (many age tiers/locations), not necessarily specific to any single high-school-relevant course; flagged for reviewer awareness since it extends well below typical ORYN high-school users."
+      },
+      {
+        "opportunity_id": "89117ca8-52f4-41fb-8674-dd23998e7281",
+        "title": "UChicago College Pathway Program in Economics (Immersion)",
+        "category": "summer_program",
+        "extracted": {
+          "minimum_age": null,
+          "maximum_age": null,
+          "eligible_grades": [
+            "9",
+            "10",
+            "11"
+          ],
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": null
+        },
+        "evidence": {
+          "eligible_grades": "This program introduces 9-10-11th grade students to the approaches to economic research and experimentation"
+        },
+        "notes": ""
+      },
+      {
+        "opportunity_id": "dfd08c03-75c6-4bc2-b087-70c58c64db2a",
+        "title": "Woodstock School: Mussoorie, India",
+        "category": "summer_program",
+        "extracted": {
+          "minimum_age": null,
+          "maximum_age": null,
+          "eligible_grades": [
+            "9",
+            "10",
+            "11",
+            "12"
+          ],
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": null
+        },
+        "evidence": {
+          "eligible_grades": "combining academic rigour with the energy and excitement of a summer camp for Grades 9-12"
+        },
+        "notes": ""
+      },
+      {
+        "opportunity_id": "17d177de-6ca7-4754-ab15-3a9dd93f4893",
+        "title": "Columbia University: New York, NY",
+        "category": "summer_program",
+        "extracted": {
+          "minimum_age": 16,
+          "maximum_age": null,
+          "eligible_grades": [
+            "9",
+            "10",
+            "11",
+            "12"
+          ],
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": null
+        },
+        "evidence": {
+          "eligible_grades": "Domestic and international students who will be enrolled in grades 9–12 in the fall and students currently enrolled in grade 12 are invited to apply",
+          "minimum_age": "the NYC Residential Summer program is open to students who will be 16 years of age or older by the start of the program"
+        },
+        "notes": "The 16+ minimum age is stated specifically for the 'NYC Residential Summer Program' track, not necessarily for all Columbia Pre-College offerings (e.g. online courses may differ). Applied here with that caveat since this row appears to represent the general Columbia High School Programs listing rather than one specific course."
+      },
+      {
+        "opportunity_id": "5af50558-fcb5-4390-a8ff-5a6946e65862",
+        "title": "Durham University Global Futures Summer School 2026",
+        "category": "summer_program",
+        "extracted": {
+          "minimum_age": 16,
+          "maximum_age": 17,
+          "eligible_grades": null,
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": null
+        },
+        "evidence": {
+          "minimum_age": "Age: 16–17",
+          "maximum_age": "Age: 16–17"
+        },
+        "notes": ""
+      },
+      {
+        "opportunity_id": "018f5962-6e43-4941-af90-ead024ebf8f3",
+        "title": "University of Toronto (Toronto, CANADA) - 2025",
+        "category": "summer_program",
+        "extracted": {
+          "minimum_age": null,
+          "maximum_age": null,
+          "eligible_grades": [
+            "9",
+            "10",
+            "11",
+            "12"
+          ],
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": null
+        },
+        "evidence": {
+          "eligible_grades": "Enrichment and Summer programs are offered on all three U of T campuses in a wide range of topics for grades 9-12"
+        },
+        "notes": ""
+      },
+      {
+        "opportunity_id": "889c580c-dbb6-4490-9078-9faf2a2a2ed0",
+        "title": "Two-week UM Academies (non-credit)",
+        "category": "summer_program",
+        "extracted": {
+          "minimum_age": null,
+          "maximum_age": null,
+          "eligible_grades": [
+            "9",
+            "10",
+            "11"
+          ],
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": null
+        },
+        "evidence": {
+          "eligible_grades": "For high school freshmen, sophomores, and juniors"
+        },
+        "notes": "Text explicitly lists freshmen/sophomores/juniors only -- seniors are not mentioned, so grade 12 is excluded rather than treated as ambiguous."
+      },
+      {
+        "opportunity_id": "66c76976-90e5-4637-8afe-6828992e838a",
+        "title": "Harvard University (MA, USA)",
+        "category": "summer_program",
+        "extracted": {
+          "minimum_age": 16,
+          "maximum_age": 18,
+          "eligible_grades": null,
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": null
+        },
+        "evidence": {
+          "minimum_age": "at least 16 years old by June 20, 2026",
+          "maximum_age": "will not turn 19 years old before July 31, 2026"
+        },
+        "notes": "maximum_age of 18 is derived from the explicit constraint 'will not turn 19 years old before July 31, 2026' (i.e. must be 18 or younger as of that date) rather than a directly stated 'maximum age: 18.' The underlying constraint is explicit and unambiguous in the text, but flagging the one-step translation for reviewer verification. Graduation-year phrasing ('graduate from high school and enter college in 2027 or 2028') was not used to infer eligible_grades since that requires assumptions about the current academic-year calendar."
+      },
+      {
+        "opportunity_id": "e03e1172-cc32-4c92-8eff-668cd6ea6fe7",
+        "title": "Summer High School Programs - at BU",
+        "category": "summer_program",
+        "extracted": {
+          "minimum_age": null,
+          "maximum_age": null,
+          "eligible_grades": null,
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": [
+            "English proficiency test: TOEFL iBT 90-100 (minimum 20 per section), IELTS 7, or Duolingo score (High School Honors track requires above 120 on Duolingo)"
+          ]
+        },
+        "evidence": {
+          "application_requirements": "90–100 on the internet-based TOEFL (iBT) with a minimum of 20 in each section. 7 on the International English Language Testing System (IELTS). If you are not able to obtain a TOEFL or IELTS score, you may submit a Duolingo score this year. High School Honors students are expected to score above a 120 on the Duolingo test."
+        },
+        "notes": "These test-score requirements are standard for non-native-English-speaking applicants; the excerpt doesn't restate 'non-native speaker' immediately before this passage, so worth reviewer confirmation that it applies universally vs. to international applicants specifically."
+      },
+      {
+        "opportunity_id": "6a932044-4fc8-483d-95df-9737262321f1",
+        "title": "RISE for the World",
+        "category": "scholarship",
+        "extracted": {
+          "minimum_age": 15,
+          "maximum_age": 17,
+          "eligible_grades": null,
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": null
+        },
+        "evidence": {
+          "minimum_age": "a starter technology package for high-need, high-potential students aged 15-17",
+          "maximum_age": "a starter technology package for high-need, high-potential students aged 15-17"
+        },
+        "notes": ""
+      },
+      {
+        "opportunity_id": "a2c63505-1481-4a1f-94cc-6ab86dc35405",
+        "title": "QuestBridge National College Match",
+        "category": "scholarship",
+        "extracted": {
+          "minimum_age": null,
+          "maximum_age": null,
+          "eligible_grades": [
+            "12"
+          ],
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": null
+        },
+        "evidence": {
+          "eligible_grades": "Open to U.S. high school seniors and U.S. citizens/permanent residents living abroad"
+        },
+        "notes": "Citizenship restriction already populated in source. Description does not state a specific list of eligible countries -- U.S. citizens/permanent residents living abroad are eligible regardless of which country they live in -- so eligible_countries intentionally left null rather than set to a single country."
+      },
+      {
+        "opportunity_id": "2b1886f1-29dd-4014-8044-b6ae04d6fb41",
+        "title": "Nat Geo Slingshot",
+        "category": "competition",
+        "extracted": {
+          "minimum_age": 13,
+          "maximum_age": 18,
+          "eligible_grades": null,
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": null
+        },
+        "evidence": {
+          "minimum_age": "13–18 year olds challenge and create 1-minute videos describing their ideas for solving environmental issues",
+          "maximum_age": "13–18 year olds challenge and create 1-minute videos describing their ideas for solving environmental issues"
+        },
+        "notes": "Age range is stated directly and unambiguously. No grade-level, citizenship, or residency information is given in the description."
+      },
+      {
+        "opportunity_id": "75952d25-c434-491d-becb-c3e78bda5e12",
+        "title": "Harvard Alumni for Global Women's Empowerment Essay Contest",
+        "category": "competition",
+        "extracted": {
+          "minimum_age": null,
+          "maximum_age": null,
+          "eligible_grades": [
+            "11"
+          ],
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": null
+        },
+        "evidence": {
+          "eligible_grades": "The contest is open to 11th grade students in partnership schools around the world"
+        },
+        "notes": "Description lists partnership-school locations (Turkey, Pakistan, Chicago, Connecticut, Los Angeles, Mexico, Philippines) but explicitly states 'eligibility may vary by location' and mixes cities/states with countries, so eligible_countries was left null rather than guessed at a country-level list."
+      },
+      {
+        "opportunity_id": "d99d1a5c-2b77-4bc1-af84-e429410eef68",
+        "title": "InvestIN Young Lawyer / Young Political Leader Summer Experience (London)",
+        "category": "internship",
+        "extracted": {
+          "minimum_age": 15,
+          "maximum_age": 18,
+          "eligible_grades": null,
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": null
+        },
+        "evidence": {
+          "minimum_age": "immersive law/politics experience for ages 15-18",
+          "maximum_age": "immersive law/politics experience for ages 15-18"
+        },
+        "notes": "No grade-level, citizenship, or residency information given."
+      },
+      {
+        "opportunity_id": "a29d4ef0-735f-4281-b486-51c1450077eb",
+        "title": "Summer Science Research Program (SSRP) 2023",
+        "category": "summer_program",
+        "extracted": {
+          "minimum_age": 16,
+          "maximum_age": null,
+          "eligible_grades": [
+            "11",
+            "12"
+          ],
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": null
+        },
+        "evidence": {
+          "minimum_age": "age 16+ at program start, no exceptions",
+          "eligible_grades": "Students must be a current high school junior or senior"
+        },
+        "notes": "No maximum age stated (only a floor). No citizenship/residency statement in the text."
+      },
+      {
+        "opportunity_id": "16d56c3b-376b-4cf6-b8b1-12daaecf0068",
+        "title": "Purdue University",
+        "category": "summer_program",
+        "extracted": {
+          "minimum_age": 15,
+          "maximum_age": null,
+          "eligible_grades": null,
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": null
+        },
+        "evidence": {
+          "minimum_age": "allows high school students age 15 and older to experience college life"
+        },
+        "notes": "No stated maximum age or explicit grade levels."
+      },
+      {
+        "opportunity_id": "e0960bef-227f-4360-ad8f-d910e5e8dc2b",
+        "title": "University of St. Andrews (Scotland, UK)",
+        "category": "summer_program",
+        "extracted": {
+          "minimum_age": 16,
+          "maximum_age": 18,
+          "eligible_grades": null,
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": null
+        },
+        "evidence": {
+          "minimum_age": "If you are between 16 and 18 years old, on arrival, you can submit an application for a Summer Academic Experience course.",
+          "maximum_age": "If you are between 16 and 18 years old, on arrival, you can submit an application for a Summer Academic Experience course."
+        },
+        "notes": "Description also says students must have 'a good level of English' but gives no specific test/score threshold, so no application_requirements value was extracted for that."
+      },
+      {
+        "opportunity_id": "f52db280-638a-49ec-a972-d1658b046234",
+        "title": "International Summer Schools St Andrews, Cambridge and Yale Universities (ISSOS)",
+        "category": "summer_program",
+        "extracted": {
+          "minimum_age": 13,
+          "maximum_age": 18,
+          "eligible_grades": null,
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": null
+        },
+        "evidence": {
+          "minimum_age": "offers students aged 13 - 18, from all over the world",
+          "maximum_age": "offers students aged 13 - 18, from all over the world"
+        },
+        "notes": "'From all over the world' is general marketing language, not an explicit citizenship/country eligibility list, so no citizenship, residency, or eligible_countries value was extracted."
+      },
+      {
+        "opportunity_id": "fad2bef3-80e8-4b7e-a4a5-f7021f34767f",
+        "title": "Wharton Global Youth Program",
+        "category": "summer_program",
+        "extracted": {
+          "minimum_age": null,
+          "maximum_age": null,
+          "eligible_grades": null,
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": [
+            "Minimum 3.3 unweighted GPA, or equivalent (minimum 3.5 unweighted GPA preferred for Leadership in the Business World and the Management and Technology Summer Institute)",
+            "Thoughtful, well-written essays that express interest in the program content",
+            "Recommendations that convey academic performance and potential",
+            "An array of extracurricular activities and/or personal achievements that denote intellectual curiosity and ability to collaborate"
+          ]
+        },
+        "evidence": {
+          "application_requirements": "Minimum 3.3 unweighted GPA, or equivalent (minimum 3.5 unweighted GPA preferred for Leadership in the Business World and the Management and Technology Summer Institute.) | Thoughtful, well-written essays that express interest in the program content. | Recommendations that convey academic performance and potential. | An array of extracurricular activities and/or personal achievements that denote intellectual curiosity, ability to colla…"
+        },
+        "notes": "No explicit age/grade eligibility stated (only that admission is 'highly selective'). The source description text is cut off mid-word at '...ability to colla…', so the last requirement item was paraphrased to close the sentence rather than left truncated; treat that final item as slightly less precise than the others, which are verbatim."
+      },
+      {
+        "opportunity_id": "676bc788-9ce0-4bf8-873a-d5e897a24ccf",
+        "title": "Clark Scholars Program",
+        "category": "summer_program",
+        "extracted": {
+          "minimum_age": 17,
+          "maximum_age": null,
+          "eligible_grades": [
+            "11",
+            "12"
+          ],
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": [
+            "Three teacher recommendations",
+            "Transcript (optional)",
+            "Test scores (SAT etc.)",
+            "Extracurriculars"
+          ]
+        },
+        "evidence": {
+          "minimum_age": "Applicants must be at least 17 years of age by the pro…",
+          "eligible_grades": "intensive seven week summer research program for 12 highly qualified high school juniors and seniors",
+          "application_requirements": "Three teacher recommendations Transcript (optional) Test scores (SAT etc.) Extracurriculars"
+        },
+        "notes": "Source description text is truncated after 'Applicants must be at least 17 years of age by the pro…' (likely 'program start date', but that word is cut off in the captured text, so quoted verbatim rather than completed). No maximum age is stated. The application-requirements line in the source has no separating punctuation between items; it was split into a list based on the four distinct phrases given."
+      },
+      {
+        "opportunity_id": "7081b03a-3e04-4843-8bc5-0078cfd040f2",
+        "title": "TechGirls",
+        "category": "fellowship",
+        "extracted": {
+          "minimum_age": null,
+          "maximum_age": null,
+          "eligible_grades": null,
+          "citizenship_restrictions": "Must be citizens of a 2026 participating country (37 eligible countries/territories, explicitly including Turkiye)",
+          "residency_restrictions": "Must be current residents of a 2026 participating country",
+          "eligible_countries": null,
+          "application_requirements": null
+        },
+        "evidence": {
+          "citizenship_restrictions": "be citizens and current residents of 2026 participating countries (including Turkiye)",
+          "residency_restrictions": "be citizens and current residents of 2026 participating countries (including Turkiye)"
+        },
+        "notes": "Full list of the 37 eligible countries/territories is not given in the description (only the count and one named example, Turkiye), so eligible_countries was left null rather than guessed. Program is also restricted to young women, but this schema has no gender field to record that. minimum_age/maximum_age were already populated in the source (15/17) and are not repeated here."
+      },
+      {
+        "opportunity_id": "690eba7f-0de9-4298-b746-c3456391b9b5",
+        "title": "Coca-Cola Scholars Program",
+        "category": "scholarship",
+        "extracted": {
+          "minimum_age": null,
+          "maximum_age": null,
+          "eligible_grades": [
+            "12"
+          ],
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": null
+        },
+        "evidence": {
+          "eligible_grades": "Achievement-based scholarship for graduating high school seniors, recognizing leadership and service."
+        },
+        "notes": "citizenship_restrictions was already populated in the source and is not repeated here."
+      },
+      {
+        "opportunity_id": "31856863-be50-440d-8ccc-229812277425",
+        "title": "UNO - United Nations Online",
+        "category": "online_program",
+        "extracted": {
+          "minimum_age": null,
+          "maximum_age": null,
+          "eligible_grades": [
+            "11",
+            "12"
+          ],
+          "citizenship_restrictions": null,
+          "residency_restrictions": null,
+          "eligible_countries": null,
+          "application_requirements": [
+            "Application fee ($200, waivable via school counselor)",
+            "TOEFL 90+ (required for non-US students)"
+          ]
+        },
+        "evidence": {
+          "eligible_grades": "10-week online program on international relations and diplomacy for rising 11th/12th graders",
+          "application_requirements": "non-US students need TOEFL 90+"
+        },
+        "notes": "Program is also explicitly open to 'college freshmen/sophomores,' which falls outside this high-school grade schema and was not encoded. A minimum 3.5 unweighted GPA is mentioned but there is no GPA field in this schema. application_requirements array includes the pre-existing item plus the newly found TOEFL requirement."
+      }
+    ]
+  }
+}
