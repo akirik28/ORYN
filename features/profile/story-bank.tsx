@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/oryn/empty-state";
 import { generateStoryOutlines } from "@/app/(app)/profile/story-bank/actions";
 import type { EssayOutlineResponse } from "@/lib/ai/essay-outlines";
 import type { StoryBankItem } from "@/lib/story-bank/collect";
@@ -53,10 +54,11 @@ export function StoryBank({ experiences }: { experiences: StoryBankItem[] }) {
 
   if (experiences.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed p-12 text-center text-sm text-muted-foreground">
-        Add activities, projects, research, sports, volunteering, or work to your profile first — your essay
-        stories come from things you&apos;ve actually done, never from something invented for you.
-      </p>
+      <EmptyState
+        icon={NotebookPen}
+        title="Add experiences to your profile first"
+        description="Add activities, projects, research, sports, volunteering, or work to your profile first — your essay stories come from things you've actually done, never from something invented for you."
+      />
     );
   }
 

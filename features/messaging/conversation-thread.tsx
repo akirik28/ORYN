@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { Send, ShieldOff, ShieldCheck, Flag, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -122,14 +123,22 @@ export function ConversationThread({
   function toggleBlock() {
     startTransition(async () => {
       const result = blocked ? await unblockUser(otherUserId) : await blockUser(otherUserId);
-      if (!result.error) setBlocked((prev) => !prev);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      setBlocked((prev) => !prev);
     });
   }
 
   function submitReport() {
     if (!reportTarget || !reportReason.trim()) return;
     startTransition(async () => {
-      await reportMessage(reportTarget.id, otherUserId, reportReason);
+      const result = await reportMessage(reportTarget.id, otherUserId, reportReason);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
       setReportOpen(false);
       setReportReason("");
       setReportTarget(null);

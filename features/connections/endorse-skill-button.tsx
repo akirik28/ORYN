@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { ThumbsUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { endorseSkill, withdrawEndorsement } from "@/app/(app)/u/[id]/endorsement-actions";
@@ -28,13 +29,17 @@ export function EndorseSkillButton({
     startTransition(async () => {
       if (endorsed) {
         const result = await withdrawEndorsement(skillId, skillOwnerId);
-        if (!result.error) {
+        if (result.error) {
+          toast.error(result.error);
+        } else {
           setEndorsed(false);
           setCount((c) => Math.max(0, c - 1));
         }
       } else {
         const result = await endorseSkill(skillId, skillOwnerId);
-        if (!result.error) {
+        if (result.error) {
+          toast.error(result.error);
+        } else {
           setEndorsed(true);
           setCount((c) => c + 1);
         }

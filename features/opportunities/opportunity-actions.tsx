@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { ExternalLink, Bookmark, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -27,9 +28,16 @@ export function OpportunityActions({
   const [isPending, startTransition] = useTransition();
 
   function updateStatus(next: SavedOpportunityStatus, notInterestedReason?: string) {
+    const previous = status;
     setStatus(next);
     startTransition(async () => {
-      await setOpportunityStatus({ opportunityId, status: next, notInterestedReason });
+      const result = await setOpportunityStatus({ opportunityId, status: next, notInterestedReason });
+      if (result.error) {
+        // Roll back — otherwise a failed write leaves the button showing a status that
+        // was never actually saved, with no indication anything went wrong.
+        setStatus(previous);
+        toast.error(result.error);
+      }
     });
   }
 

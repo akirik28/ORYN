@@ -37,7 +37,7 @@ export function NewApplicationDialog({ availableTargets }: { availableTargets: {
 
   if (availableTargets.length === 0) {
     return (
-      <Button variant="outline" disabled>
+      <Button variant="outline" disabled title="Save a target university first — applications start from a target.">
         <Plus className="size-4" /> Start an application
       </Button>
     );

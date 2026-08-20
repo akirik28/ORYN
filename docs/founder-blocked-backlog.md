@@ -334,7 +334,18 @@ consent is designed, not retrofitted.
 **Blocks**: Phase 18 outcome-based benchmarking, and any peer comparison grounded in real
 decisions rather than profile scores.
 
-## 25. ~~Merge duplicate university identities~~ — IDENTITY LAYER RESOLVED 2026-08-17, ROW LAYER STILL BLOCKED
+## 25. ~~Merge duplicate university identities~~ — IDENTITY + ROW-SUPPRESSION LAYERS RESOLVED; APPLICATION READ PATHS STILL ON THE INTERIM FIX
+
+**Update 2026-08-20**: migration 0043's DDL turned out to already be live (found during a
+routine live-DB re-measurement, contradicting this item's own "no DDL access" framing below
+— that framing is now stale, kept for history) and its data backfill has since been run and
+verified: all 9 pairs below now show `duplicate_status='superseded'` with the correct
+`superseded_by_id`, matching `lib/universities/duplicate-supersessions.json` exactly. What's
+left is purely an application-layer refactor — `lib/universities/canonical.ts`'s 16 read
+surfaces still filter via that static JSON file, not a live `duplicate_status` query. Not
+blocked on anything anymore, just not yet done — see that file's own header comment for the
+scoped upgrade path (it's a deliberate wider refactor, not a drop-in swap, since the current
+functions are synchronous and a DB-native replacement naturally isn't).
 
 **9 pairs, not 8** — this list was missing KFUPM/King Fahd University of Petroleum and
 Minerals (its second row's `canonical_name` is literally just "KFUPM", so it didn't match
@@ -357,23 +368,23 @@ via a `university_rankings` audit — two `universities.id` rows both claiming Q
 | University of Newcastle, Australia ×2 | Both resolve to `ror.org/00eae9z71` (not UK Newcastle University, `01kj2bm70`). |
 | University of Technology Sydney ×2 | Both resolve to `ror.org/03f0f6041` (not the unrelated University of Sydney). |
 
-**What's still open**: `merge_canonical_entities()` merges the identity layer only (aliases,
-external ids, evidence, repoints `universities.canonical_entity_id`) — it never touches the
-`universities` rows themselves, so all 18 still exist and the University Explorer would
-still show 9 duplicate cards. A non-destructive fix (`universities.duplicate_status` /
-`superseded_by_id`, migration `0043_university_duplicate_supersession.sql`) is written and
-committed but **not applied** — this session had no Supabase MCP / linked CLI / direct
-Postgres access, only PostgREST (which cannot run DDL). Deliberately not a straight `DELETE`
-of the losing row either way: `university_programs`/`university_requirements` reference
-`universities(id) on delete cascade`, and 4 of these 9 pairs already carry real
+**What was open, historical framing (superseded by the 2026-08-20 update above)**:
+`merge_canonical_entities()` merges the identity layer only (aliases, external ids, evidence,
+repoints `universities.canonical_entity_id`) — it never touches the `universities` rows
+themselves, so all 18 still exist and the University Explorer would still show 9 duplicate
+cards. A non-destructive fix (`universities.duplicate_status` / `superseded_by_id`, migration
+`0043_university_duplicate_supersession.sql`) is written and committed but *(at the time this
+paragraph was originally written)* not applied — that session had no Supabase MCP / linked
+CLI / direct Postgres access, only PostgREST (which cannot run DDL). Deliberately not a
+straight `DELETE` of the losing row either way: `university_programs`/`university_requirements`
+reference `universities(id) on delete cascade`, and 4 of these 9 pairs already carry real
 `university_programs` rows on one side — an automated delete is a standing risk to that
 data, a superseded flag is not.
-**To finish**: apply the migration (Supabase SQL editor, or grant CLI/MCP access), then
-`npm run audit:university-duplicates -- --supersede` (already written, probe-gated, tested
-against the current unapplied state), then add the `duplicate_status != 'superseded'` filter
-to the 4 read paths + 1 dependent join mapped in `docs/handoffs/claude-a-university-spine.md`.
-**Depends on**: DB/DDL access for this repo's automated sessions, or a founder SQL-editor
-pass. Related: item 19's remaining ~63 lower-confidence orphan pairs (no visible-card impact,
+**To finish** (DDL + backfill are now done, per the 2026-08-20 update above — this is what's
+actually left): switch `lib/universities/canonical.ts`'s read paths to query
+`duplicate_status`/`superseded_by_id` directly instead of the JSON file, per that file's own
+header comment. **No longer depends on DDL/founder action** — it's ordinary application work
+now. Related: item 19's remaining ~63 lower-confidence orphan pairs (no visible-card impact,
 lower priority).
 
 ---

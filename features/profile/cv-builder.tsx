@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Printer } from "lucide-react";
+import { Printer, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { EmptyState } from "@/components/oryn/empty-state";
 import { PORTFOLIO_CATEGORY_LABELS, type PortfolioCategory, type PortfolioItem } from "@/lib/portfolio/types";
 
 /** Student's own words only — bullets come straight from `description`/`meta` already on
@@ -62,10 +63,11 @@ export function CVBuilder({
 
   if (items.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed p-12 text-center text-sm text-muted-foreground">
-        Add achievements to your profile first — your CV is built entirely from your structured profile, never
-        written from scratch.
-      </p>
+      <EmptyState
+        icon={FileText}
+        title="Add achievements to your profile first"
+        description="Your CV is built entirely from your structured profile, never written from scratch."
+      />
     );
   }
 

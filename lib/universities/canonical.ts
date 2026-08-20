@@ -12,10 +12,14 @@
  * the reported bug ("UCL" search returning both "UCL" and "University College London").
  *
  * The architecturally correct fix is `universities.superseded_by_id` (migration
- * 0043_university_duplicate_supersession.sql, already written, never applied — this
- * environment has no DDL access, only PostgREST reads/writes and existing RPCs; see
- * founder-blocked-backlog.md item 25). Until that migration can be applied, this module is
- * the same fix implemented at the application layer instead of the schema layer:
+ * 0043_university_duplicate_supersession.sql). **Status as of 2026-08-20: applied and
+ * backfilled live** — `duplicate_status`/`superseded_by_id` are populated for all 9 known
+ * pairs, verified to match this file's own JSON mapping exactly (see
+ * docs/founder-blocked-backlog.md and the commit that ran the backfill). This module has
+ * NOT yet been switched over, though — the DB now agrees with the JSON file, but every read
+ * path below still goes through the JSON snapshot below, not a live query. Until that
+ * migration happens, this module remains the same fix implemented at the application layer
+ * instead of the schema layer:
  *
  *   1. `scripts/resolve-university-duplicates.ts` finds every `canonical_entity_id` shared by
  *      more than one live `universities` row (this can ONLY happen for entities a human/session
@@ -26,11 +30,13 @@
  *   2. This module reads that generated file and exposes the primitives every read path needs:
  *      is this id superseded, what's its canonical id, filter a row list down to canonical-only.
  *
- * Upgrade path once DDL access exists: apply migration 0043, run a one-time script that writes
- * this same mapping into `superseded_by_id`/`duplicate_status`, then delete this file and
- * switch read paths to a `.is("duplicate_status", null)` (or equivalent) filter instead. Until
- * then, re-run the generation script whenever a new pair is merged via
- * `merge_canonical_entities()` — this file is a build artifact, not hand-maintained.
+ * Remaining upgrade step (DDL/backfill are done, this part isn't): delete this file and
+ * switch every read path below to a `.is("duplicate_status", null)` (or equivalent) filter
+ * against the live column instead — a deliberate, wider refactor (these functions are
+ * synchronous and used broadly; a DB-native replacement is naturally async, so this isn't a
+ * drop-in internals swap, every call site needs its own update) rather than something to
+ * change opportunistically. Until then, re-run the generation script whenever a new pair is
+ * merged via `merge_canonical_entities()` — this file is a build artifact, not hand-maintained.
  */
 
 import supersessionsData from "./duplicate-supersessions.json";

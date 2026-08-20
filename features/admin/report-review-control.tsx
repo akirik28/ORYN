@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,14 +30,22 @@ export function ReportReviewControl({
     setStatus(next);
     startTransition(async () => {
       const result = await updateReportReview(reportId, { status: next });
-      if (result.error) setStatus(previous); // roll back — don't show a status that never saved
+      if (result.error) {
+        setStatus(previous); // roll back — don't show a status that never saved
+        toast.error(result.error);
+        return;
+      }
       router.refresh();
     });
   }
 
   function saveNote() {
     startTransition(async () => {
-      await updateReportReview(reportId, { resolutionNote: note });
+      const result = await updateReportReview(reportId, { resolutionNote: note });
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
       router.refresh();
     });
   }

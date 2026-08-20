@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Eye, EyeOff, Flag, Loader2, Plus, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Flag, Loader2, Plus, Quote, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/oryn/empty-state";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -203,7 +204,7 @@ export function RecommendationsSection({
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-muted-foreground">No recommendations yet.</p>
+        <EmptyState icon={Quote} title="No recommendations yet" className="py-6" />
       )}
 
       <Dialog open={writeOpen} onOpenChange={setWriteOpen}>

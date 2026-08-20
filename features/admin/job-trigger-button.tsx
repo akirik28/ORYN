@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Loader2, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -17,7 +18,11 @@ export function JobTriggerButton({ label, action }: { label: string; action: () 
       onClick={() =>
         startTransition(async () => {
           const result = await action();
-          if (!result.error) router.refresh();
+          if (result.error) {
+            toast.error(result.error);
+            return;
+          }
+          router.refresh();
         })
       }
     >
