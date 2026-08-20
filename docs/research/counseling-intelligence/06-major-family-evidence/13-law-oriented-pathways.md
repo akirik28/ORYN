@@ -62,3 +62,12 @@ should be read from the student's own goals, not inferred from activity type alo
   channel for this family, distinct from internships which are more consistently access-gated.
   Confidence: medium (reasoned; public-court-access rules vary by jurisdiction and this package did
   not verify them country-by-country).
+- `RULE-COUNSEL-085` — İŞKUR's official Future Occupations list includes Avukat (Lawyer),
+  confirming domestic Turkish labor-market relevance for career-exploration framing only.
+  Confidence: high (official source, for the list's content).
+
+## Turkey career-outlook note
+
+Career-outlook context, not admissions-evidence guidance — see `10-medicine-clinical-pathways.md`
+for the full method/bounding statement. İŞKUR's official "Geleceğin Meslekleri" list includes
+**Avukat** (Lawyer) among its 93 designated future occupations. [[RULE-COUNSEL-085]]

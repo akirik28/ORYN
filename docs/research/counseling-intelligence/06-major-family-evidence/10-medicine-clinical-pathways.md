@@ -60,6 +60,23 @@ lab-bench science** — directly consistent with `01-development-taxonomy.md`'s 
   research is common but not universal among successful applicants even at the *undergraduate*
   admissions stage, let alone required evidence for a high schooler still exploring the field.
 
+## Turkey career-outlook note
+
+Added on a later pass, mirroring the peer session's UK/EU/Turkey country-note pattern for
+consistency across the full 17-family set. **This is career-outlook context, not admissions-
+evidence guidance** — a different kind of claim from the rest of this document, and should not be
+conflated with it. İŞKUR (Türkiye İş Kurumu, Turkey's official state employment agency)'s
+**"Geleceğin Meslekleri" (Future Occupations)** list — 93 occupations the agency designates as
+growth-relevant to Turkey's labor market — includes **Doktor** (Doctor), **Hemşire** (Nurse),
+**Fizyoterapist** (Physiotherapist), **Ergoterapist** (Occupational/ergo-therapist), and **Dil ve
+Konuşma Terapisti** (Speech and Language Therapist) among its 93 entries. (Source: İŞKUR official
+PDF, `statik.iskur.gov.tr/docs/gelecegin-meslekleri.pdf` — official Turkish government source,
+high confidence for the list's content; no date/methodology page was independently reviewed
+beyond the list itself.) [[RULE-COUNSEL-083]] **Use of this source, precisely bounded**: it
+confirms this family has real, officially-recognized domestic labor-market relevance in Turkey —
+useful for a career-exploration conversation — but says nothing about admissions evidence or
+weighting, and must never be cited as if it did.
+
 ## Rules established in this document
 
 - `RULE-COUNSEL-032` — Evaluate medicine-track evidence across three areas (clinical exposure,
@@ -72,3 +89,7 @@ lab-bench science** — directly consistent with `01-development-taxonomy.md`'s 
   standardized).
 - `RULE-COUNSEL-034` — Never cite MCAT/med-school-admission benchmarks to a high-school-stage
   student; these are a later-stage, different-population concern. Confidence: high.
+- `RULE-COUNSEL-083` — İŞKUR's official Future Occupations list includes several medicine/clinical
+  roles, confirming real domestic Turkish labor-market relevance — usable for career-exploration
+  framing only, never as admissions-evidence guidance. Confidence: high (official government
+  source, for the list's content).

@@ -67,3 +67,13 @@ sustained creative work even without a Key award.
   official evidence channel for creative writing specifically, calibrated against its own large
   applicant pool so non-medaling submission is still treated as real evidence of sustained craft.
   Confidence: high (official source).
+
+## Turkey career-outlook note
+
+Checked against İŞKUR's official "Geleceğin Meslekleri" list (see `10-medicine-clinical-
+pathways.md` for full sourcing/bounding statement) — **no direct match for literature or
+journalism specifically**; the closest entries are **Dijital Pazarlama** (Digital Marketing) and
+**Sosyal Medya Uzmanı** (Social Media Specialist), which are communications-*adjacent* but not
+literature/journalism in the sense this document means — noted here explicitly as a weak,
+tangential match rather than cited as if it confirmed this family directly, consistent with this
+package's discipline against overstating a source's actual support for a claim.

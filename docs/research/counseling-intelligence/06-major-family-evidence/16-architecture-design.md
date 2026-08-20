@@ -56,3 +56,15 @@ directly (NAAB accredits degree programs, not individual student portfolios).
   elsewhere in this package. Confidence: medium (reasoned distinction; material/software cost
   floors do vary by specific design sub-field, e.g. digital/product design may have a higher
   software-access bar than sketch-based work).
+- `RULE-COUNSEL-086` — İŞKUR's official Future Occupations list includes Mimar (Architect), İç
+  Mimar (Interior Architect), Tasarım (Design), and Modelist (Fashion/Pattern Designer),
+  confirming domestic Turkish labor-market relevance for career-exploration framing only.
+  Confidence: high (official source, for the list's content).
+
+## Turkey career-outlook note
+
+Career-outlook context, not admissions-evidence guidance — see `10-medicine-clinical-pathways.md`
+for the full method/bounding statement. İŞKUR's official "Geleceğin Meslekleri" list includes
+**Mimar** (Architect), **İç Mimar** (Interior Architect), **Tasarım** (Design), and **Modelist**
+(Fashion/Pattern Designer) among its 93 designated future occupations — the strongest match of any
+family this package checked against this source. [[RULE-COUNSEL-086]]

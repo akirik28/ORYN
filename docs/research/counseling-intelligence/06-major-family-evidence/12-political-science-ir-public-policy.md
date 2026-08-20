@@ -58,3 +58,13 @@ skill relative to the real-world engagement this field's actual work involves.
 - `RULE-COUNSEL-040` — Do not read absence of campaign/government/NGO internship evidence as a
   motivation gap without considering geographic access. Confidence: high (direct application of
   the general access-aware gap principle from `04`).
+
+## Turkey career-outlook note
+
+Checked against İŞKUR's official "Geleceğin Meslekleri" (Future Occupations) list (see
+`10-medicine-clinical-pathways.md` for the full sourcing/bounding statement) — **no direct match
+found**. The list is skewed toward technical/vocational/engineering roles rather than white-collar
+social-science professions, so its absence here says nothing about this field's real relevance in
+Turkey, only that this particular government list doesn't happen to name it. Written down honestly
+as a gap rather than forced into a weak citation, consistent with this package's own "unknown is
+written down as unknown" discipline.

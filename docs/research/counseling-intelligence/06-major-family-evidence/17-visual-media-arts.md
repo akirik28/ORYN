@@ -59,3 +59,12 @@ recommend "get better equipment" as a priority fix ahead of "tighten the story/e
   for film/media work; storytelling, composition, and editing are what reviewers name as
   differentiating. Confidence: medium-high (consistent guidance across sourced material, not a
   single primary-authority citation).
+
+## Turkey career-outlook note
+
+Checked against İŞKUR's official "Geleceğin Meslekleri" list (see `10-medicine-clinical-
+pathways.md` for full sourcing/bounding statement) — the closest entries are **Grafiker** (Graphic
+Designer) and **Teknik Ressam** (Technical Draftsman), a moderate but not strong match: both are
+commercial/technical design roles rather than fine-art, film, or media-art specifically as this
+document means them. Noted as a partial, honestly-bounded match rather than either a full citation
+or a silent gap.

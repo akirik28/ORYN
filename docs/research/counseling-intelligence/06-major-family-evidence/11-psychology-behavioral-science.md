@@ -58,3 +58,15 @@ original thinking"** — an unusually direct restatement of this package's evide
   than lab/bench-science research, and gap-severity reasoning should reflect that difference rather
   than a single blanket rule. Confidence: medium (reasoned distinction, not independently
   empirically tested by this package).
+- `RULE-COUNSEL-084` — İŞKUR's official Future Occupations list includes Psikolog (Psychologist)
+  and Özel Eğitim Öğretmeni (Special Education Teacher, psychology-adjacent), confirming domestic
+  Turkish labor-market relevance for career-exploration framing only. Confidence: high (official
+  source, for the list's content).
+
+## Turkey career-outlook note
+
+Career-outlook context, not admissions-evidence guidance — see `10-medicine-clinical-pathways.md`'s
+identically-framed note for the full method/bounding statement, not repeated here. İŞKUR's official
+"Geleceğin Meslekleri" list includes **Psikolog** (Psychologist) and **Özel Eğitim Öğretmeni**
+(Special Education Teacher — psychology-adjacent) among its 93 designated future occupations.
+[[RULE-COUNSEL-084]]

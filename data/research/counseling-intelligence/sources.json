@@ -481,6 +481,18 @@
       "claim_supported": "Most Ontario programs admit on a computed grade average (top 6 Grade 12 U/M courses) against a published minimum threshold; a specifically-named subset of high-demand competitive programs (Queen's Commerce, Waterloo Engineering, UofT Engineering Science, McMaster Health Sciences) use holistic supplementary applications where grades are described as 'the floor, not the ceiling.'",
       "used_in_rules": ["RULE-COUNSEL-073", "RULE-COUNSEL-082"],
       "limitations": "Ontario-specific; not independently verified for other Canadian provinces' own systems (British Columbia, Alberta, Quebec, etc. each have distinct processes not researched this pass)."
+    },
+    {
+      "id": "SRC-CS-041",
+      "title": "Geleceğin Meslekleri (Future Occupations) — official list of 93 occupations",
+      "publisher": "İŞKUR (Türkiye İş Kurumu — Turkey's official state employment agency)",
+      "url": "https://statik.iskur.gov.tr/docs/gelecegin-meslekleri.pdf",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high_for_list_content",
+      "claim_supported": "93 occupations İŞKUR (Turkey's state employment agency) officially designates as growth/future-relevant to Turkey's domestic labor market — used exclusively as career-outlook context for this package's family docs, never as admissions-evidence guidance.",
+      "used_in_rules": ["RULE-COUNSEL-083", "RULE-COUNSEL-084", "RULE-COUNSEL-085", "RULE-COUNSEL-086"],
+      "limitations": "Shared with this session by the peer session (socket 71534/\"7\"), who found it first; this session independently downloaded and extracted it via pypdf (WebFetch and the Read tool's PDF renderer both failed in this environment — no poppler-utils installed) rather than trusting the peer's characterization of its contents. No date/methodology page beyond the list itself was reviewed. The list itself is vocational/technical-skewed — a real limitation for using it across non-technical families, noted explicitly per-family below rather than smoothed over."
     }
   ]
 }

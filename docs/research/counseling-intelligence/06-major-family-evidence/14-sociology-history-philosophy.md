@@ -61,3 +61,11 @@ Day"-equivalent means the student lacks options.
   philosophy/ethics specifically, distinct in format (collaborative reasoning depth, not
   adversarial debate) from other competitive-speech activities. Confidence: high (official source
   for existence/format).
+
+## Turkey career-outlook note
+
+Checked against İŞKUR's official "Geleceğin Meslekleri" list (see `10-medicine-clinical-
+pathways.md` for full sourcing/bounding statement) — **no direct match found**, consistent with
+`12-political-science-ir-public-policy.md`'s same finding; the list's vocational/technical skew
+doesn't cover this family's white-collar humanities professions. Written down honestly rather than
+forced.
