@@ -65,14 +65,55 @@ not duplicated here.
 
 4. `docs/dashboard-simplification-analysis.md` — the "what matters now, not show everything we
    know" pass for the dashboard, as requested. Categorizes every current module as primary/
-   secondary/collapsed-progressive/contextual-only. One concrete finding: "Due soon" duplicates
-   deadline info already shown per-action in both the AI weekly-plan cards and Computer B's new
-   `CounselorWeekFallback` cards (B4) — proposes deduping the *presentation*, not the data.
-   Also proposes pairing the not-yet-rendered "Strengths" concept with "Biggest gap" as one
-   comparative line rather than a new competing card, once Computer B wires it in. **Analysis
-   only, no code touched** — `dashboard-view.tsx`/`app/(app)/dashboard/page.tsx` have Computer
-   B's live in-progress commits (B4 landed mid-analysis), so implementation is explicitly held
-   for a fresh collision check and a go-ahead.
+   secondary/collapsed-progressive/contextual-only. **Approved by the founder in full**, along
+   with a visual north star (references are hierarchy/spacing/polish targets, not feature specs
+   — no fake precision, categorical language only unless backed by real deterministic logic).
+
+5. **Dashboard hierarchy pass, approved and shipped** (`22e7c20`, plus two merge commits pulling
+   in Computer B's B4/B6/B7/B10/B11 packages — re-checked for file overlap before each merge,
+   found none). Re-fetched and confirmed B4 (`dashboard-view.tsx`'s deterministic weekly-focus
+   fallback) had fully landed as reviewed atomic commits — not still in flight, despite Computer
+   B's own handoff text saying so (stale relative to its own git history) — before touching
+   anything.
+
+   - Pairs Counselor Core's top-ranked strength (`lib/counselor/strengths.ts`, already computed,
+     already tested) with Biggest Gap as one line — "Leadership is already one of your strongest
+     areas" — only when the tier is standout/notable, never forced. No new backend logic, no
+     invented numbers.
+   - Dedupes "Due soon" against whatever's already on the current focus-block actions (date-string
+     match, view-layer only — neither action shape carries the deadline's own id). Confirmed live
+     against fixture data: the Economics Challenge deadline correctly drops out of Due Soon since
+     it's already the subject of a focus action.
+   - Secondary cards (University outlook, Opportunities) get `bg-muted/40` instead of the primary
+     sections' weight; the hero's profile link becomes a real (still subtle) `Button` instead of a
+     plain text link.
+   - **Found and fixed a real, pre-existing bug during the mobile QA pass this required**: both
+     secondary-grid rows were missing `min-w-0` on their truncating flex children *and* on the
+     grid items themselves (a classic flex/grid default-min-width gotcha — two nesting levels
+     both needed it), so long badge text silently overflowed past 375px with no scrollbar to
+     reveal it. Unrelated to this session's own earlier match-tier change — the University
+     Outlook badges were affected too, and that section was never touched before this pass.
+
+   QA: typecheck/lint/test (1140/1140) clean after both merges. Desktop confirmed via
+   `getComputedStyle`/`getBoundingClientRect` (2-column grid active, `bg-muted/40` fill
+   present, focus-visible ring on the new button) after screenshot capture proved unreliable
+   at this scroll position on this specific page (DOM measurements confirmed content was
+   correctly positioned regardless — a capture tool artifact, not a rendering bug). Mobile
+   confirmed via screenshot + measurement, both before and after the overflow fix.
+
+## Visual north star (approved, for every future package)
+
+References are hierarchy/spacing/polish/premium-card-treatment targets — never feature specs.
+Don't copy reference-specific capabilities, metrics, nav items, or scores ORYN doesn't actually
+have. No fake precision anywhere (no bare percentages, no invented admission probabilities) —
+categorical, explainable language only, and only when backed by real deterministic logic.
+
+## Noted for a later pass (not started)
+
+Discovery/map redesign: the founder flagged a filters → map → selected-opportunity-detail
+layout as the strongest reference direction for opportunity discovery (summer programs,
+competitions, internships, research, etc.) — using ORYN's real opportunity taxonomy and real
+data/imagery, not reference-specific categories or fake fit scores. Do not start this yet.
 
 ## Blockers
 
@@ -82,8 +123,8 @@ None for this lane's own work. Noted, not owned by this lane: `oryn-qa-scratch`'
 
 ## Next
 
-Pending founder direction on `docs/dashboard-simplification-analysis.md`'s proposals
-(Due-soon dedup, Strengths+Gap pairing, 2-tier visual weight pass) — held for Computer B's
-dashboard-contract work to settle and an explicit go-ahead, consistent with how the profile
-jump-nav was handled. No blocking question otherwise; ready for redirection to a different
-package or real visual references at any point.
+No blocking question. Continuing autonomously per the founder's standing instruction — next
+candidate work would be further scoped polish within the approved dashboard/profile direction,
+or redirection to a different package (discovery/map is explicitly not started yet). Will stop
+only for: a genuine new file collision, anything that would remove working capability, undefined
+counselor/product logic, missing backend support, or a real founder-level product decision.
