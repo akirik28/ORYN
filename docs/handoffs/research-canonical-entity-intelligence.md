@@ -10,91 +10,83 @@ migrations. No production Supabase writes at any point — every database access
 This file is updated as work lands, not chronologically archived — read top-to-bottom for current
 state, matching the convention `docs/handoffs/claude-a-university-spine.md` already established.
 
-## Current state (updated 2026-08-21 ~02:34 Europe/Istanbul)
+## Current state (updated 2026-08-21 ~02:57 Europe/Istanbul) — major milestone
 
-**Package: 16 documents (00–15) + 10 JSON data files**, all committed and pushed to
-`oryn/counseling-intelligence-research` @ `1ab9118`. Full index in `00-overview.md`.
-
-Two background research agents were dispatched mid-session, same evidence standard as the lead
-session; agent 1 (institution collision traps → doc `12`) completed and is reviewed/integrated.
-Agent 2 (opportunity-organizer research batch 2 → doc `13`) still running as of this update.
-
-Commit history (this session's own commits only — narrow `git add` throughout, since this is a
-shared working tree with at least one other concurrent session, confirmed still active): scaffold
-→ 01-04 → 05-06 → 07 → 08-09 → data companions → 10-11 → normalization/German-ß extension →
-14 (trigram method) → Finding 7 (ROR gaps) → Finding 8 (cross-lane observation) → 15 (country/city
-gap) → 12 (agent 1, reviewed + integrated). Every push was preceded by `git fetch` +
-divergence check; zero conflicts across ~14 pushes.
+**Package: 18 documents (00–15, including 12–13 from two background research agents) + 12 JSON
+data files.** Both dispatched background agents have completed, been reviewed in full, and been
+integrated (not just appended) — cross-references, corrections, and new rules flow both
+directions between the lead session's own work and the agents' findings. Full index in
+`00-overview.md`. All committed and pushed to `oryn/counseling-intelligence-research` @ `caecb1b`.
 
 ## The highest-value findings, if you read nothing else
 
 1. **P0 — Turkish dotless-ı (U+0131) *and* German ß normalization are both broken in
-   `lib/acquisition/normalize.ts`, live, right now** — not historical, and not Turkish-specific.
-   `dbNormalizedName()` doesn't fold either the way Postgres's own `unaccent()` does (confirmed
-   directly: `unaccent('Kırıkkale')='Kirikkale'`, `unaccent('Weißensee')='Weissensee'`);
-   `nameKey()` actively deletes/splits words on both. Confirmed 26/26 sampled Turkish-script
-   `canonical_entities` rows already have a stored `normalized_name` that disagrees with the
-   database's own convention — `canonical_entities_identity_uq` is not actually protecting
-   against duplicate inserts for these institutions today. No live ß example exists yet (defensive
-   finding). `07`, `09` Findings 1 & 6, `11` items 1-3.
-2. **P1 — The Phase 6 duplicate-audit backlog (migration 0039, open since) is mechanically
-   solvable.** All 41 live university-type pairs are exactly one "complete" row (ROR + a
-   `universities` row, created `2026-08-16T21:42:51Z`) paired against one "orphan" row (no
-   external ids, no `universities` row, created `2026-08-16T23:29:46Z`, 1h47m later).
-   `duplicate-candidates-university.json` has the exact ids. `05`, `09` Finding 2, `11` item 4.
-3. **A different, complementary ROR gap: 70 active university entities have no ROR at all**,
-   including MIT, UCL, and LSE — which turn out to belong to the *original* known "two
-   `universities` rows, one `canonical_entities` row" duplicate-supersession set (a pre-pipeline
-   pilot batch, `created_at` even earlier than the pairs above), not a new problem. `university-
-   ror-gaps.json`. `09` Finding 7, `11` item 4.
-4. **`entity_type='country'`/`'city'` have zero rows despite six schema-enforced, `canonical_
-   required` FK columns needing them.** The underlying free-text `country` data is already clean
-   (checked directly) — this is a pure infrastructure gap. Argues country is the one entity type
-   where bulk pre-population (from ISO 3166-1) is actually correct, unlike everything else in this
-   registry. `15`, `10` item 1b, `11` item 6.
-5. **`entity_relationships` (9 rows) and `opportunities.organization_entity_id` (0/369) are both
-   almost entirely white space.** `03`/`08` build real frameworks from live data (Bilkent/MEF/
-   İSTEK/Terakki; the Wharton six-way opportunity-organizer cluster; the METU/Arber-Kongre-A.Ş./
-   Radyo-ODTÜ cycle-operator case). `12` (agent 1) adds 3 concrete, sourced, ready-to-populate
-   `entity_relationships` candidates using types that already exist (Charité/AUC as two-parent
-   `part_of` cases, King's/UCL/LSE `member_of` University of London) plus a genuine new
-   relationship-type gap (`split_from`, from İstanbul University's 2018 split). `10` item 3b.
+   `lib/acquisition/normalize.ts`, live, right now.** `dbNormalizedName()` doesn't fold either the
+   way Postgres's own `unaccent()` does (verified directly); `nameKey()` deletes/splits words on
+   both. 26/26 sampled Turkish-script `canonical_entities` rows already have a stored
+   `normalized_name` that disagrees with the database's own convention. `07`, `09` Findings 1 & 6,
+   `11` items 1-3.
+2. **P1 — The Phase 6 duplicate-audit backlog (41 live pairs) is mechanically solvable, but not
+   risk-free — verified against ROR's live API, not just assumed.** Every pair is one "complete"
+   row (ROR-enriched) against one "orphan" row from an earlier, less-complete import batch.
+   Testing the recommended fix (re-run ROR enrichment) against two real candidates found two
+   concrete pitfalls: **Purdue** needs the campus-specific ROR child
+   (`ror.org/02dqehb95`), not the system-level parent a naive search returns first
+   (`ror.org/05p8z3f47`); **Rutgers** has only one ROR entity for the whole university, so
+   enriching both ORYN rows (New Brunswick, Newark) with it would violate a live uniqueness
+   constraint. `05` "Verifying the recommendation itself," `RULE-ENTITY-023`.
+3. **All 171 distinct `opportunities.organization` strings now have a researched candidate**,
+   combining `08`'s worked clusters with `13`'s 147-string follow-on pass (118 high confidence, 28
+   medium, 1 low, 0 unresolved). `13` also caught a real correction to `08`'s own earlier
+   candidates: `opportunities.organization_entity_id`'s trigger rejects
+   `program`/`competition`/`scholarship` types, so PennApps/MIT Battlecode must be linked via
+   their parent university, never themselves (`RULE-ENTITY-021`). 11 joint-organizer cases now
+   documented across 3 distinguishable shapes, up from `08`'s original 4.
+4. **`entity_type='country'`/`'city'` have zero rows despite six schema-enforced,
+   `canonical_required` FK columns needing them** — the largest, cleanest infrastructure gap
+   found. Country is the one entity type where bulk pre-population (ISO 3166-1) is actually
+   correct, unlike everything else in this registry. `15`, `RULE-ENTITY-020`.
+5. **15 sourced institution name-collision traps** across US/UK/France/Germany/Netherlands/
+   Switzerland/Turkey (agent 1, `12`) — the sharpest is the 4-way Sorbonne cluster, where even
+   city-scoping doesn't disambiguate. Found a genuine new relationship-type gap (`split_from`,
+   from İstanbul University's 2018 split) and 3 concrete, sourced, ready-to-populate
+   `entity_relationships` candidates using types that already exist.
+6. **`entity_relationships` (9 rows) is real, careful work, not neglect** — reading the live rows
+   directly (Bilkent/MEF/İSTEK/Terakki) plus the 3 live `entity_locations` rows (BISI's two
+   campuses) shows the Turkish-schools research effort correctly distinguishing "one entity,
+   multiple sites" from "multiple entities, one relationship" throughout. `03`'s addendum.
 
 ## Coordination notes
 
-- Sent a clarifying message early in the session to the peer session that authored a
-  counseling-intelligence collision warning (`uds:/tmp/cc-socks/70081.sock`) confirming this
-  mission is a separate, non-colliding effort — no response needed, informational only.
-- `ListAgents` showed 7 concurrent peer sessions when checked (~01:35). This branch/working
-  directory is shared by at minimum 2 (this mission + counseling-intelligence, confirmed still
-  active via ongoing file changes visible in `git status` throughout this session); the other ~5
-  are presumably on different branches/worktrees per this repo's established parallel-lane pattern.
-- Every commit this session used a narrow, explicit `git add <path>` (never `-A`/`.`) and was
-  preceded by `git fetch` + a divergence check. Zero conflicts across ~14 pushes. If resuming this
-  work in a fresh session, keep the same discipline — the working tree is still shared and active.
-- Two of this session's own background agents (general-purpose, `run_in_background: true`) were
-  dispatched with explicit instructions not to run git commands themselves — the lead session
-  reviews and commits their output after reading it in full, not blindly.
+- Sent a clarifying message early in the session to a peer session that raised a counseling-
+  intelligence collision warning (`uds:/tmp/cc-socks/70081.sock`) — confirmed this mission is
+  separate and non-colliding. No response needed.
+- Shared working directory with at least the counseling-intelligence session throughout (confirmed
+  via ongoing file changes visible in `git status` across the whole session). Every commit used a
+  narrow, explicit `git add <path>` (never `-A`/`.`) preceded by `git fetch` + a divergence check —
+  zero conflicts across 22 pushes.
+- Two background agents (general-purpose, `run_in_background: true`) were dispatched with explicit
+  instructions not to run git commands themselves. Both were read in full and reviewed for quality
+  before integration — not trusted blindly. Both delivered genuinely high-quality, well-sourced
+  work; agent 2 in particular caught a real correction to the lead session's own earlier output.
 
-## What's next (continuing past the core package, per the mission's "continue until 11:00")
+## What's next (continuing past this milestone, per the mission's "continue until 11:00")
 
-1. Waiting for agent 2 (opportunity-organizer batch 2, doc `13` + JSON) to complete, then review
-   and integrate the same way agent 1's output was handled.
-2. Continuing direct live-DB research: alias-vs-canonical cross-matching and `pg_trgm`
-   similarity-based discovery are both done (`14`); considering `entity_evidence`/`entity_
-   locations` table population next (not yet checked), and whether more of the 171 opportunity
-   organizer strings warrant individual research beyond what agent 2 covers.
-3. Periodic re-reads of the whole package for internal consistency as it grows — last full
-   consistency pass was after integrating agent 1's output.
-
-This section will be updated again as agent 2 lands and again before the 11:00 cutoff with final
-status.
+The package now comprehensively covers every category in the mission brief with real, verified
+evidence. Remaining time will continue in this pattern: periodic additional direct research
+(favoring genuine external verification, like the ROR API check above, over more DB-only mining
+where returns are diminishing), light ongoing consistency maintenance, and a final wrap-up pass
+before 11:00. Not planning further background agent dispatches unless a clearly-scoped,
+non-duplicative need presents itself — the two already run covered the highest-value delegable
+work well.
 
 ## If you are resuming this session cold
 
 Read `00-overview.md` first (method, scope, non-duplication rationale, full document index), then
 `11` for the actionable handoff, then whichever of `01`-`15` your task touches. The
 machine-readable JSON in `data/research/canonical-entities/` is meant to be consumed directly, not
-re-derived — especially `duplicate-candidates-university.json` and `university-ror-gaps.json`
-(ready-to-enrich id lists) and `institution-collision-traps.json` (ROR ids for 40+ verified
-institutions across 15 collision-trap cases).
+re-derived. Before running the P1 ROR-enrichment recommendation, read `05`'s "Verifying the
+recommendation itself" section and check every `WARNING_verified_live_against_ror_api` field in
+`duplicate-candidates-university.json`/`university-ror-gaps.json` — two of the ~111 candidate
+entities have a confirmed pitfall, and the same "registry granularity doesn't match ORYN's" shape
+may affect others not individually checked.
