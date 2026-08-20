@@ -20,7 +20,8 @@ and honesty over hitting the number.
 | 1, groups A+E | 16 | 10 | 0 | 6 (E: BETA Camp, Notre Dame Business Scholars, Wharton Foundations in Business, JSA, TASP, Georgetown Law/Advocacy — all ruled out as non-existent-under-that-name/discontinued/renamed/duplicate) | Applied — commit `b6167a4` |
 | 1, groups C/D/F | 20 | 11 | 9 | 0 | Applied 2026-08-20 (see note below) |
 | 1, group B | 8 | 3 | 2 | 3 (MMSS: Cloudflare-blocked, page never fetched; COSMOS: confirmed not hosted at Berkeley; UCSD Academic Connections: confirmed discontinued for 2026) | Applied 2026-08-20 |
-| 1, groups G/H | 16 | pending | | | not yet researched — background agents in flight |
+| 1, group G | 8 | 7 | 0 | 1 (UCL Junior Summer School: no such program exists under that name — UCL's own "UCL Summer School" is undergrad-only; similarly-named third-party operators merely rent UCL's campus) | Applied 2026-08-20 |
+| 1, group H | 8 | pending | | | not yet researched — background agent in flight |
 
 **Note on groups C/D/F (applied 2026-08-20):** all 7 of group C (Cornell, Duke, Johns
 Hopkins CTY, Northwestern CTD, Stanford Pre-Collegiate, Penn, Emory) turned out to be
