@@ -21,6 +21,46 @@ at `RULE-COUNSEL-034` to avoid colliding with the existing sequence. If you are 
 this while `03` onward already shows progress below, **re-check `git log` before rewriting anything
 this note claims — this note itself can go stale exactly the way the rest of this file can.**
 
+**Update — this is genuinely a 3+ session situation, not 2 (confirmed via `git log`/`git branch -a`,
+not assumed).** As of this checkpoint:
+
+- `oryn/counseling-intelligence-research` (this branch, unsuffixed) has commits from **at least
+  two** different sessions past the point above: `01`/`02` finalized + `rules.json`/`sources.json`
+  (RULE-COUNSEL-001–033, then 901–902 added in a reconciliation pass against a *third* competing
+  `01` draft at commit `51b1978` — see below) from the session writing this file, **and**
+  `03-recommendation-timing.md` + `06-major-family-evidence/01`–`05` (computing,
+  math/stats, physical sciences, life sciences, engineering) with `RULE-COUNSEL-034`–`044`+ from a
+  *different* session (self-identified over cross-session messaging as socket `71534`, referred to
+  here as "session 7" — never directly contacted by this session; observed only through commits
+  landing on this shared branch). This branch also independently carries unrelated
+  `docs/research/canonical-entity-intelligence/**` commits (`01`–`07`, a different mandate
+  entirely, per `docs/ORYN_WORKSTREAMS.md`'s `Claude 1`/university-intelligence-spine
+  ownership) — this branch is functioning as a shared scratch branch for multiple unrelated
+  overnight research efforts tonight, not a single-purpose one.
+- A **third** session (self-identified over cross-session messaging as socket `70081`, referred to
+  here as "session 1") independently produced its own `01-development-taxonomy.md` at commit
+  `51b1978` on this same branch before moving to an isolated worktree/branch,
+  `oryn/counseling-intelligence-research-013956`, to write its own complete, independent set of
+  the assigned docs — reachable at `RULE-COUNSEL-022` (branch-local, sequential, **not**
+  coordinated with either this branch's `001-044+` sequence) as of session 1's last message to
+  this session. Session 1 had, separately from this session, already agreed a "00–10 split" with
+  session 7 that this session was not party to — the two agreements (this session's with session 1,
+  and session 1's with session 7) were inconsistent with each other, discovered only because this
+  session happened to notice session 7's commits landing on the shared branch.
+- **No single session has full visibility into all the others.** This session has direct
+  cross-session-message contact with session 1 only; session 7 is known only through its commits;
+  there may be more parties neither this session nor session 1 is aware of. Do not trust this
+  note's session count as exhaustive — verify current `git log`/`git branch -a`/`ListAgents` before
+  relying on it.
+- **Explicit, mutual decision (this session and session 1): do not attempt live cross-session
+  numbering reconciliation.** Each session's `RULE-COUNSEL-###` sequence is internally consistent
+  and sourced within its own branch/commits, but the sequences are **not** globally unique or
+  ordered across branches (`001-033`+`901-902` here, `034-044`+ from session 7 on the same branch,
+  `001-022`+ from session 1 on the `-013956` branch — three different numbering universes sharing
+  a prefix). **Reconciling this into one global registry is real, non-trivial work explicitly
+  deferred to a future integration pass** — do not assume it has been done, and do not attempt to
+  silently renumber any session's existing rules to "fix" this.
+
 ## Mandate
 
 Overnight, single-session, autonomous research task: design a semantic evidence taxonomy for
@@ -76,10 +116,10 @@ Do not trust a document's presence alone; note whether it's drafted, sourced, or
 | 00-overview.md | Done, committed (`148a2d6`, other session) |
 | 01-development-taxonomy.md | Done (this session's version), committed on top of the collision at a commit after `3bbedb3` — see git log for the exact hash; a competing version also exists at `51b1978` (other session) — **founder reconciliation needed, do not auto-merge**, see collision note above |
 | 02-opportunity-development-mapping.md | Done (this session), same commit as 01 above |
-| 03-recommendation-timing.md | Owned by the other session's new worktree going forward (see collision note above) — not started by this session |
-| 04-profile-gap-framework.md | Owned by the other session's new worktree — not started by this session |
-| 05-redundancy-saturation.md | Owned by the other session's new worktree — not started by this session |
-| 06-major-family-evidence/ (14 families) | Owned by the other session's new worktree — not started by this session |
+| 03-recommendation-timing.md | **Correction — see the 3+ session update above**: done, but by "session 7" directly on this shared branch (`b20cdee`), not by session 1's worktree as originally assumed here. Good quality on inspection (grade/age portability across US/UK/IB, two-phase exploration/deepening model, explicit exceptions to avoid mechanical stage-penalizing) — one minor citation slip found: cites "`01-development-taxonomy.md` §2.2`" for the breadth-precedes-depth point, but this document has no §2.2 at any point in its history (closest match is §7.2 or the newer §8) — worth a light fix at integration time, not urgent. |
+| 04-profile-gap-framework.md | Not started by anyone as of this checkpoint, as far as this session can observe |
+| 05-redundancy-saturation.md | Not started by anyone as of this checkpoint, as far as this session can observe |
+| 06-major-family-evidence/ (14 families) | In progress by "session 7" on this shared branch — 5 of 14 done as of this checkpoint (computing, math/stats, physical sciences, life sciences, engineering) |
 | 07-explainability-framework.md | Owned by the other session's new worktree — not started by this session |
 | 08-unsafe-inference-rules.md | Owned by the other session's new worktree — not started by this session |
 | 09-persona-testing.md | Owned by the other session's new worktree — not started by this session |
