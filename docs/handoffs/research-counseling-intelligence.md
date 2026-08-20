@@ -135,6 +135,23 @@ rules.json + sources.json → `91f3a8e` this handoff (first draft) → `79b4eda`
 researched, USA/UK/Turkey deepened) → `ffeb51c` rules.json/sources.json updated with doc 11's
 entries (now 68 rules, 31 sources) → this update.
 
+## Process note: a real near-miss, caught by routine verification, not luck
+
+`04-profile-gap-framework.md` was written early in this session (right after the collision
+resolution) but a `git commit` for it was **skipped** in the busy flow of handling incoming
+cross-session coordination messages — it sat correctly on disk, but uncommitted and unpushed, for
+roughly the next two hours of work while five more documents were written and committed on top of
+that gap without anyone (including this session) noticing. It was caught by a routine
+`git status --short` sanity check run before committing `12-activity-progression-pathways.md`, not
+by any specific suspicion — nothing on disk looked wrong, only `git status` revealed the file was
+untracked. **Fixed** at commit `939be07`, with an honest commit message describing exactly what
+happened, and a full `git ls-files` vs. `find` cross-check confirmed no other file had the same
+problem. Recorded here deliberately, not smoothed over: this is a concrete instance of exactly the
+discipline this project's own memory (`[[feedback-parallel-session-reconciliation]]`: "measure
+live state directly before claiming anything... never trust a memory of what should be true")
+exists to enforce, including against this session's own assumptions about its own prior actions,
+not only a peer's.
+
 ## Doc 11 landed — geography-conditional admissions systems
 
 The "What's next" this handoff originally pointed to is done: `11-geography-admissions-systems.md`
@@ -161,17 +178,29 @@ primary-admission relevance.
 
 ## What's next (if this session continues further, or for whoever resumes)
 
-This session's own assigned scope plus its self-identified highest-leverage extension are both
-complete as of this update. Genuinely good next steps if more time/a future session picks this up,
-roughly in priority order: (1) the final cross-branch integration this handoff's own
-"Integration instructions" section describes — not something either research session should do
-unilaterally; (2) deepen doc 11 with primary-source (official government/ministry, not
-admissions-consulting-secondary) verification for Germany/Netherlands/Italy specifically, which
-this pass sourced mostly from secondary admissions-guide consensus rather than each country's own
-ministry/UCAS-equivalent page; (3) extend doc 11's tier framework to the remaining
-`AGENTS.md`-named "generic Europe fallback" case and to Canada (mentioned in onboarding's target-
-geography options, `AGENTS.md` Screen 4, but not in the original mission's five explicit
-geographies) if ORYN's actual user base shows meaningful Canada-track demand.
+Doc 11's Germany/Netherlands mechanism claims were upgraded to official DAAD/government.nl/
+Studielink sources on a follow-up pass (commit `ae9e942`) — item (2) below from this handoff's
+prior version is now done; Italy/Switzerland's medicine-specific and ETH-specific sourcing was
+already official-tier from the first pass. `12-activity-progression-pathways.md` (commit
+`765c68a`) is also done — three sourced multi-year pathway examples (STEM/research,
+entrepreneurship, creative/arts) plus explicit late-start handling, connecting `02`'s evidence-
+tier ladder, `05`'s redundancy model, and peer's `03` timing phases into concrete worked cases,
+grounded in a directly-verified official source (Simons Summer Research Program's "current
+11th-grade junior, no exceptions" eligibility rule) rather than only the aggregate pattern peer's
+own `03` had sourced at lower confidence.
+
+This session's package is now 13 documents (`00`-`12`, with `06` as 8 sub-files), 72
+`RULE-COUNSEL-###` entries, 34 registered sources. Genuinely good next steps if more time/a future
+session picks this up, roughly in priority order: (1) the final cross-branch integration this
+handoff's own "Integration instructions" section describes — not something either research session
+should do unilaterally; (2) independent verification of a sample of the *peer* branch's specific
+factual claims (this session has verified every claim about its own half in depth, but per `10`
+§5's own honest limitation, has only "read and found reasonable," not independently re-verified,
+the peer's content) — in progress this session, see below if a commit past `765c68a` exists; (3)
+extend doc 11's tier framework to the remaining `AGENTS.md`-named "generic Europe fallback" case
+and to Canada (mentioned in onboarding's target-geography options, `AGENTS.md` Screen 4, but not
+in the original mission's five explicit geographies) if ORYN's actual user base shows meaningful
+Canada-track demand.
 
 **Founder-level decision this package cannot make on its own**: whether/how to reconcile this
 branch with the peer's — both are real, validated, non-overlapping-in-content work, and the
