@@ -22,6 +22,7 @@ and honesty over hitting the number.
 | 1, group B | 8 | 3 | 2 | 3 (MMSS: Cloudflare-blocked, page never fetched; COSMOS: confirmed not hosted at Berkeley; UCSD Academic Connections: confirmed discontinued for 2026) | Applied 2026-08-20 |
 | 1, group G | 8 | 7 | 0 | 1 (UCL Junior Summer School: no such program exists under that name — UCL's own "UCL Summer School" is undergrad-only; similarly-named third-party operators merely rent UCL's campus) | Applied 2026-08-20 |
 | 1, group H | 8 | 5 new + 1 refreshed | 1 (H06 Boğaziçi BOUN101 — already covered by 2 existing rows) | 1 (Central European University Summer School — no record returned by the researcher; presumed dropped as unverifiable, per this campaign's no-forced-candidates rule) | Applied 2026-08-20 |
+| 4 (night-research session, diverse) | 9 researched | 7 | 0 (not yet dedup-checked against live) | 2 (EPFL: confirmed undergrad/grad-only, wrong audience for a HS-facing catalog; UvA Pre-University Summer Courses: specific course page 404'd, not independently re-found this session) | **Researched + file-committed only, NOT applied** — `data/research/opportunities/wave4_2026-08-21_diverse.jsonl`. This session's own brief is explicitly research-only (no live Supabase writes); unlike every prior wave, these 7 records have not been dedup-checked against the live table or inserted. Whoever applies this file next should do the live-refetch-before-dedup step first, per this tracker's own established practice, since 3+ days have passed since the last live count below. |
 
 **Note on group H (applied 2026-08-20):** H01 (Copenhagen Business School Summer
 University), H03 (AI Summer Week @ ETH Zurich), H05 (Bilkent University Summer Camp),
@@ -102,7 +103,11 @@ Program, Emory Pre-College Program, NYU Precollege Program, USC Summer Programs
 (SSP), MIT Beaver Works Summer Institute (BWSI), Georgia Tech Summer PEAKS, Caltech
 Summer Research Connection (SRC), NYLF Medicine & Health Care, Interlochen Arts Camp,
 RISD Pre-College, Parsons Summer Intensive Studies, Tisch Summer High School, Iowa Young
-Writers' Studio.
+Writers' Studio. Princeton Summer Journalism Program, MIT Women's Technology Program (WTP),
+Summer@Brown (Pre-College Programs), Berkeley Pre-College Scholars, University of Toronto
+Pre-University Program / DEEP Summer Academy, MEF University High School Summer School,
+Kadir Has University AI High School Summer Academy (researched Wave 4, not yet applied —
+see Progress table).
 
 ## Wave 1 — dispatched 2026-08-18 (8 parallel research agents, 8 programs each)
 
