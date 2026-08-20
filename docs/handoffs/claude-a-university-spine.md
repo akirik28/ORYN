@@ -2733,3 +2733,16 @@ targeted zero-coverage countries (China, India, Australia, Japan, Korea, Russia,
 Arabia, Taiwan) actually resolved this round — every candidate failed cleanly for a
 documented reason; Singapore (NTU) is what landed instead. `university_programs`:
 599 → **664 rows**.
+
+**Admissions URL batch 12 — 12 more universities**: Rochester Institute of Technology,
+Stony Brook University, Ruhr-Universität Bochum, TU Braunschweig, TU Bergakademie
+Freiberg, Sofia University "St. Kliment Ohridski", Taipei Medical University, Symbiosis
+International, SUSTech, South China University of Technology, Saint Joseph University of
+Beirut, Taras Shevchenko National University of Kyiv. 1 new `application_system` tag:
+TU Bergakademie Freiberg → uni-assist (Germany, explicit — "applicants have to apply...
+via uni-assist"). RIT and Stony Brook both name Common App as one of two valid routes
+(RIT: "Common Application or RIT Application"; Stony Brook: "SUNY Application and the
+Common Application") — left `application_system` null for both, consistent with the
+established caution that a mentioned system isn't automatically *the* system unless a
+university's page names it as the sole or clearly primary route.
+`admissions_url`: 618 → **630/1019 (61.8%)**, `application_system`: 89 → 90/1019.
