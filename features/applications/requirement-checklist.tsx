@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { toast } from "sonner";
 import { Circle, CircleDot, CircleCheck, CircleSlash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -43,8 +44,9 @@ export function RequirementChecklist({ requirements }: { requirements: Applicati
               size="sm"
               disabled={isPending}
               onClick={() =>
-                startTransition(() => {
-                  void updateRequirementStatus(requirement.id, nextStatus(requirement.status));
+                startTransition(async () => {
+                  const result = await updateRequirementStatus(requirement.id, nextStatus(requirement.status));
+                  if (result.error) toast.error(result.error);
                 })
               }
               className={cn(

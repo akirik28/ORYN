@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { UserPlus, Clock, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { sendConnectionRequest, respondToConnectionRequest } from "@/app/(app)/connections/actions";
@@ -34,7 +35,12 @@ export function ConnectButton({
         <Button
           size="sm"
           disabled={isPending}
-          onClick={() => startTransition(async () => { await respondToConnectionRequest(initialConnectionId, true); })}
+          onClick={() =>
+            startTransition(async () => {
+              const result = await respondToConnectionRequest(initialConnectionId, true);
+              if (result.error) toast.error(result.error);
+            })
+          }
         >
           Accept
         </Button>
@@ -42,7 +48,12 @@ export function ConnectButton({
           size="sm"
           variant="outline"
           disabled={isPending}
-          onClick={() => startTransition(async () => { await respondToConnectionRequest(initialConnectionId, false); })}
+          onClick={() =>
+            startTransition(async () => {
+              const result = await respondToConnectionRequest(initialConnectionId, false);
+              if (result.error) toast.error(result.error);
+            })
+          }
         >
           Decline
         </Button>

@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { Check, X, UserMinus, MessageCircle } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -59,7 +60,12 @@ export function PendingRequestRow({ connection }: { connection: ConnectionWithPr
         <Button
           size="sm"
           disabled={isPending}
-          onClick={() => startTransition(async () => { await respondToConnectionRequest(connection.id, true); })}
+          onClick={() =>
+            startTransition(async () => {
+              const result = await respondToConnectionRequest(connection.id, true);
+              if (result.error) toast.error(result.error);
+            })
+          }
         >
           <Check className="size-3.5" /> Accept
         </Button>
@@ -67,7 +73,12 @@ export function PendingRequestRow({ connection }: { connection: ConnectionWithPr
           size="sm"
           variant="outline"
           disabled={isPending}
-          onClick={() => startTransition(async () => { await respondToConnectionRequest(connection.id, false); })}
+          onClick={() =>
+            startTransition(async () => {
+              const result = await respondToConnectionRequest(connection.id, false);
+              if (result.error) toast.error(result.error);
+            })
+          }
         >
           <X className="size-3.5" /> Decline
         </Button>
@@ -94,7 +105,12 @@ export function ConnectionRow({ connection, pending = false }: { connection: Con
           variant="ghost"
           aria-label={pending ? "Withdraw request" : "Remove connection"}
           disabled={isPending}
-          onClick={() => startTransition(async () => { await removeConnection(connection.id); })}
+          onClick={() =>
+            startTransition(async () => {
+              const result = await removeConnection(connection.id);
+              if (result.error) toast.error(result.error);
+            })
+          }
           className="text-muted-foreground hover:text-destructive"
         >
           <UserMinus className="size-3.5" />

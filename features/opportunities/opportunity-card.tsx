@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { differenceInCalendarDays } from "date-fns";
 import { ExternalLink, Bookmark, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -86,9 +87,16 @@ export function OpportunityCard({
     : null;
 
   function updateStatus(next: SavedOpportunityStatus, notInterestedReason?: string) {
+    const previous = status;
     setStatus(next);
     startTransition(async () => {
-      await setOpportunityStatus({ opportunityId: opportunity.id, status: next, notInterestedReason });
+      const result = await setOpportunityStatus({ opportunityId: opportunity.id, status: next, notInterestedReason });
+      if (result.error) {
+        // Roll back — a failed write shouldn't leave the card showing (or hiding, for
+        // "not interested") a status that was never actually saved.
+        setStatus(previous);
+        toast.error(result.error);
+      }
     });
   }
 
