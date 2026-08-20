@@ -60,7 +60,7 @@ to keep it visible as the canonical example of "ambiguous, and that's fine."
 | `relationship_type` | Subject is... | Object is... | Distinguishing test |
 |---|---|---|---|
 | `part_of` | A component with its own legal/operational identity | A larger organization/system that owns or federates it | Would the subject still be recognizable/nameable if the object disappeared? If yes, `part_of`, not the same row. |
-| `campus_of` | A physical location of an institution | The institution | Same legal entity, different address — reserved for true single-institution multi-site cases (a branch campus with no independent admissions/degree-granting identity). **Zero live rows** — flagged in `10` as worth populating once a real candidate (e.g. a university with a distinct branch campus abroad) is identified with evidence, not asserted from this session's general knowledge. |
+| `campus_of` | A physical location of an institution | The institution | Same legal entity, different address — reserved for true single-institution multi-site cases (a branch campus with no independent admissions/degree-granting identity). **Zero live rows** — but this now reads as a correct, explained zero rather than an unexplained gap: `entity_locations` (a separate table, `03` addendum below) is what the live data actually uses for "same entity, multiple physical sites" — e.g. British International School Istanbul (BISI) has two `entity_locations` rows (Etiler STEAM Campus, Zekeriyaköy Forest Campus) under one `canonical_entities` row, not two entities linked by `campus_of`. A `campus_of` *relationship* row would only be the right tool if a specific campus were significant enough to arguably deserve its own entity row while still being legally the same institution — genuinely rare, and not encountered in live data yet. |
 | `school_of` | A K-12 or preparatory school | A university that operates/sponsors it | Direction matters (see Bilkent above) — subject is always the smaller/dependent entity. |
 | `operated_by` | Any entity | The organization that runs it day-to-day, which may not be its namesake | The general-purpose "who actually runs this" relationship — see `08` for its central role in opportunity-organizer modeling, including operators that change by edition/cycle. |
 | `provider_for` | An organization | A program/competition/scholarship it provides | Distinguishes the provider (an `organization`/`university`/`opportunity_provider` entity) from the specific offering (a `program`/`competition`/`scholarship` entity) — see `08`. |
@@ -111,3 +111,26 @@ multi-campus-organization research:
 4. When official evidence does not clearly separate two campuses (the Terakki Levent case), leave
    both as they currently are (whatever granularity the source material already established) and
    queue the granularity question rather than guessing a `part_of` row into existence.
+
+## Addendum: `entity_locations` is not `entity_relationships`, and the live data already gets this right
+
+A distinction worth stating explicitly, confirmed by reading the 3 live `entity_locations` rows
+directly rather than assumed from the schema alone: **`entity_locations` (one entity, multiple
+physical sites) and `entity_relationships`'s `campus_of` (two entities, a legal/organizational
+tie) answer different questions, and mixing them up is an easy mistake this document exists to
+head off.** British International School Istanbul (BISI) has two `entity_locations` rows —
+"Etiler STEAM Campus" and "Zekeriyaköy Forest Campus," both under the *same* `canonical_entities`
+row, `is_primary=false` on both (worth someone eventually deciding which, if either, is primary) —
+correctly modeling "one school, two addresses," never two entities. Compare this with MEF
+Okulları's three schools (`03` main text above): those are `part_of` rows between three genuinely
+*separate* `canonical_entities` rows, because each has its own admissions/curriculum identity, not
+merely a different building. The test: **if closing one site would not end the other's ability to
+operate independently, it's one entity with multiple `entity_locations`; if the two operate with
+genuinely separate admissions/identity, they are separate entities related by `part_of`/`school_
+of`.** The third live `entity_locations` row (Şişli Terakki Tepeören Anadolu Lisesi's "Tepeören
+Campus," `is_primary=true`) has a notes field that states its own purpose directly: *"this location
+prevents collapse into Terakki Levent schools"* — a researcher using `entity_locations` explicitly
+to keep the Tepeören/Levent granularity question (`03` main text, the still-open
+`entity_verification_queue` item) from being accidentally resolved by an address field rather than
+real research. This is exactly the discipline `RULE-ENTITY-002`/`013` argue for, already being
+practiced correctly in this one small table.
