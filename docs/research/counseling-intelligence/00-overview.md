@@ -73,7 +73,10 @@ concurrent-session split documented in `docs/handoffs/research-counseling-intell
 geography-admissions-systems.md` (how admissions logic itself varies by target country — the
 single highest-leverage finding either session surfaced, see `03-recommendation-timing.md` §6 for
 this session's own independent verification of the same finding) and `12-activity-progression-
-pathways.md`, both peer-authored. This table intentionally is not updated further per-document as
+pathways.md`, **both written on the concurrent session's own branch/worktree
+(`oryn/counseling-intelligence-research-013956`), not on this branch** — named here only so this
+overview stays a complete map of the whole overnight effort across both branches; see that branch's
+own commits for the actual files. This table intentionally is not updated further per-document as
 the package keeps growing overnight — check `docs/handoffs/research-counseling-intelligence.md` and
 each branch's own git log for the current full file list rather than trusting this table as
 exhaustive after this point.
