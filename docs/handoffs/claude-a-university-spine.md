@@ -2671,3 +2671,20 @@ pages couldn't be fetched (403s, empty JS-rendered pages, PDF-gated), not guesse
 New `scripts/acquire-university-statistics-tw.ts`/`-ae.ts`, following the established
 per-country script pattern (skip-if-exists, never overwrite). Data verified live in the
 database (agent had direct Supabase MCP access in its sandbox, same as this session).
+
+**Competitions/research/internship/scholarship batch 2 — 12 net-new**: background agent
+researched 16 candidates; live dedup check before insert caught 4 exact duplicates the
+agent's file-only check couldn't see (Diamond Challenge, John Locke Institute Global Essay
+Prize, Journal of Emerging Investigators, and "Rise" — all matched on `official_url`;
+Boston University's separately-named "RISE (Research in Science and Engineering)" is a
+genuinely different program and was correctly left alone, not merged). 12 net-new landed:
+National Economics Challenge, Scholastic Art & Writing Awards, DECA Competitive Events,
+Science Olympiad (Division C), FIRST Robotics Competition, EUCYS, UK Chemistry Olympiad,
+HOSA Competitive Events, ARML, Nuffield Research Placements, Davidson Fellows Scholarship,
+Türkiye Scholarships. Several records honestly leave fields null with an explicit note
+rather than guess (Nuffield's STEM Learning application portal and Türkiye Scholarships'
+stipend/deadline pages both returned access errors on every fetch attempt). Regeneron STS
+was deliberately not pursued — the agent judged it overwhelmingly likely already covered
+and prioritized avoiding a probable duplicate over hitting a count, the right call given
+no live-DB access from its sandbox to check directly. `opportunities` by category:
+competition 63→**72**, internship 7→**8**, scholarship 7→**9**.
