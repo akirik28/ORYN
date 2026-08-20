@@ -19,7 +19,8 @@ and honesty over hitting the number.
 | 0 (pre-existing `batch1_2026-08-17.jsonl`) | 7 | 6 | 1 (M&TSI) | 0 | Applied — commit `9cefbee` |
 | 1, groups A+E | 16 | 10 | 0 | 6 (E: BETA Camp, Notre Dame Business Scholars, Wharton Foundations in Business, JSA, TASP, Georgetown Law/Advocacy — all ruled out as non-existent-under-that-name/discontinued/renamed/duplicate) | Applied — commit `b6167a4` |
 | 1, groups C/D/F | 20 | 11 | 9 | 0 | Applied 2026-08-20 (see note below) |
-| 1, groups B/G/H | 24 | pending | | | not yet researched — see note below |
+| 1, group B | 8 | 3 | 2 | 3 (MMSS: Cloudflare-blocked, page never fetched; COSMOS: confirmed not hosted at Berkeley; UCSD Academic Connections: confirmed discontinued for 2026) | Applied 2026-08-20 |
+| 1, groups G/H | 16 | pending | | | not yet researched — background agents in flight |
 
 **Note on groups C/D/F (applied 2026-08-20):** all 7 of group C (Cornell, Duke, Johns
 Hopkins CTY, Northwestern CTD, Stanford Pre-Collegiate, Penn, Emory) turned out to be
@@ -34,6 +35,12 @@ Live `opportunities` count after groups A+E+C+D+F: 301 total, 217 `summer_progra
 (217 reflects both this campaign's own adds and the separate 2026-08-18 bulk import,
 which added far more summer programs than this campaign has run so far — not a claim
 that 217 came from this tracker's own waves alone.)
+
+**Note on group B (applied 2026-08-20):** AwesomeMath and BU RISE turned out to be
+duplicates of the same 2026-08-18 bulk import (matched by official_url) — caught by the
+standard live-refetch-before-dedup practice. 3 net-new: Rutgers Young Scholars Program in
+Discrete Mathematics, Carnegie Mellon SAMS, Secondary Student Training Program (SSTP,
+University of Iowa). Live count after group B: 304 total, 220 `summer_program`.
 
 **Operational note (2026-08-18/19):** the account's rolling session usage limit was hit
 twice while running 8 parallel research agents at once (each burn appears to exhaust a
