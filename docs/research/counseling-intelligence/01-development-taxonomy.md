@@ -488,7 +488,79 @@ a claim about evidence, not evidence.
 
 ---
 
-## 8. Cross-dimension evidence matrix
+## 8. External validation and two structural principles
+
+*(Added during reconciliation with a second session that independently researched this exact
+document from a different angle — external admissions evidence and a full read of every
+`lib/scoring/dimensions/*.ts` scorer, vs. this document's schema/migration-first grounding. Both
+versions are preserved in git history — this session's at the commit noted in
+`docs/handoffs/research-counseling-intelligence.md`, the other's at `51b1978`. This section folds
+in what that research verified and added that this document didn't already cover, rather than
+leaving two competing documents for the founder to manually diff. Every scorer file claim below
+was independently re-verified against `lib/scoring/dimensions/*.ts` by this session before being
+stated here — not copied on trust.)*
+
+**The 9-dimension taxonomy is independently corroborated by the outside evidence, not just
+internally consistent.** The Common Data Set (the shared reporting template ~1,700 US
+institutions use) rates 19 admission factors across academic and nonacademic categories; NACAC's
+State of College Admission survey ranks curriculum rigor and grades above every other factor,
+with extracurriculars/essays/recommendations providing supporting context. MIT's own official
+admissions page states "We don't expect applicants to do a million things. Choose quality over
+quantity" and names eight applicant qualities (mission alignment, collaborative spirit,
+initiative, risk-taking, hands-on creativity, intensity/curiosity, balance, community character) —
+independently confirmed by direct fetch of `mitadmissions.org/apply/process/what-we-look-for/`
+during this reconciliation (`sources.json` SRC-007). None of this argues for a 10th dimension; it
+argues the existing 9 are well-chosen. Two structural principles from that research are genuinely
+additive to what this document had:
+
+**Principle 1 — breadth dimensions vs. depth dimensions is a real, code-verified split, not just
+an intuition.** `intellectual_curiosity.ts` and `career_exploration.ts` both explicitly skip the
+diminishing-returns aggregator (`scoreCommitments`) that every other dimension uses — by design,
+per their own doc-comments, because breadth (distinct subjects, distinct activity categories) is
+the thing being rewarded, so more distinct exploration should never be penalized the way five
+shallow *commitments* would be under a depth dimension. **RULE-COUNSEL-901:** a counselor must be
+able to recommend an exploratory/breadth-building action without treating it as inherently
+lower-value than a depth-building one — which one is higher-value depends on whether the student
+has explored enough yet to know what to commit to (`03-recommendation-timing.md`'s territory),
+not on a fixed hierarchy where depth always outranks breadth.
+
+**Principle 2 — "major/field alignment" is a relevance axis, not a development dimension, and the
+codebase already correctly keeps it separate.** `fieldAlignment` (`lib/counselor/config.ts`
+scoring weights) and `relevanceScore` (`lib/opportunities/matching.ts`) already implement this as
+a distinct axis from the 9 `ProfileDimension` scores. **RULE-COUNSEL-902:** never fold
+field/major alignment into the 9-dimension taxonomy as if it answered "how strong is this
+evidence" — it answers "how well does this evidence match what the student says they want," a
+different question. A strong research program in an unrelated field is still genuine `research`
+dimension evidence, just poorly targeted; both facts should reach the counselor, not be merged
+into one number.
+
+**Two verified, code-confirmed data points worth citing precisely** (both independently re-read
+by this session in `lib/scoring/dimensions/`, not taken on trust): `awards.ts` maps award level
+text to points via regex tiers — international/global/world → 15, national → 11,
+state/regional/provincial → 7, school/local/district → 3, unrecognized wording → 4 default (never
+punished for phrasing) — a concrete illustration of this document's own RULE-COUNSEL-021
+(selectivity/scope as an independent axis), now with the actual shipped numbers.
+`entrepreneurship.ts` scores only the subset of `projects` where `role` matches `/founder/i` or
+`revenue_amount` is set — meaning one real venture legitimately scores against both
+`entrepreneurship` and `execution_project_depth` at once through the *same underlying row*. **This
+is correct modeling, not double-counting** — the redundancy unit should be the dimension, not the
+underlying activity, since a single piece of evidence can genuinely demonstrate two different
+things. Directly relevant to whoever writes `05-redundancy-saturation.md`.
+
+**One gap this document's schema-first approach missed and the other session's scorer-first
+approach caught:** neither `writing/communication` nor `creative production` (non-technical
+creative work — writing, art, design, music, film) has any dedicated evidence path anywhere in
+the codebase — not a table (this document's §1 finding), *and* not a scoring modifier in any
+scorer (the other session's finding, reading the code itself rather than the schema). Both
+independently point at the same real gap from different directions, which raises confidence it's
+genuine rather than an artifact of either session's method. Carried forward for whichever session
+writes `10-open-questions.md`.
+
+*(New rules this section mints — RULE-COUNSEL-901/902 above — are deliberately numbered in a
+900-range block reserved for this reconciliation pass, to avoid colliding with the other session's
+own new worktree, which mints forward from `034`. See `data/research/counseling-intelligence/rules.json`.)*
+
+## 9. Cross-dimension evidence matrix
 
 Which dimensions a given schema table's rows can plausibly feed — not exclusively (most rows feed
 more than one dimension; a founding leadership role feeds both `leadership` and
@@ -522,6 +594,6 @@ question, not resolved here. See `10-open-questions.md`.
 
 ## Rules minted in this document
 
-RULE-COUNSEL-001 through RULE-COUNSEL-026 (26 rules). Full registry, cross-referenced with source
-document section and any supporting `sources.json` entries, lives in
-`data/research/counseling-intelligence/rules.json`.
+RULE-COUNSEL-001 through RULE-COUNSEL-026 (26 rules), plus RULE-COUNSEL-901/902 added during the
+reconciliation pass in §8. Full registry, cross-referenced with source document section and any
+supporting `sources.json` entries, lives in `data/research/counseling-intelligence/rules.json`.

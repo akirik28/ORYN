@@ -75,6 +75,18 @@
       "claim_supported": "EPQ is a single independently-chosen piece of work requiring planning, research, and independent learning, resulting in a report (or product + report) and a presentation; accepted by all 24 Russell Group universities; some universities lower standard A-level grade offers in recognition of EPQ attainment.",
       "confidence": "high",
       "limitations": "Grade-offer-reduction specifics ('AAB to ABB') are illustrative/commonly-cited examples, not a verified universal policy — varies by university and should not be treated as a general rule in any student-facing claim."
+    },
+    {
+      "id": "SRC-007",
+      "title": "MIT Admissions — What We Look For",
+      "url": "https://mitadmissions.org/apply/process/what-we-look-for/",
+      "publisher": "MIT Admissions (official university admissions office)",
+      "source_type": "official_institutional_guidance",
+      "retrieval_method": "WebFetch (direct fetch, full page content reviewed)",
+      "retrieved_at": "2026-08-21",
+      "claim_supported": "MIT states 'We don't expect applicants to do a million things. Choose quality over quantity,' and names eight qualities sought in applicants: alignment with MIT's mission, collaborative spirit, initiative, risk-taking, hands-on creativity, intensity/curiosity, balance, and community character.",
+      "confidence": "high",
+      "limitations": "One institution's stated philosophy, used as a representative example of official admissions guidance on depth-over-breadth, not a claim that all institutions weigh activities identically. Originally surfaced by a second concurrent session's research (see docs/handoffs/research-counseling-intelligence.md collision note); independently re-fetched and confirmed by this session before being cited here."
     }
   ]
 }
