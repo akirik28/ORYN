@@ -2874,3 +2874,21 @@ UCLA, Michigan LSA-only) are in that commit's own message rather than duplicated
 zero-coverage universities (`data/research/university-programs/independent_batch5_2026-08-21.jsonl`,
 `independent_batch6_2026-08-21.jsonl`), all file-only per this session's own no-live-write mandate —
 none of it has been ingested or applied anywhere.
+
+**Program catalogue batches 7-9 — UIUC/Glasgow/UCSD (295), Sheffield/UW/Boston University (266),
+Rice/Wisconsin-Madison/St Andrews (379), 940 more, running session total 1,772 across 19
+universities.** Full per-university sourcing method, known gaps, and spot-checks are each in
+their own commit message (`2fed88f`, `e73db2b`, `b22441c`) rather than repeated here. One
+data-quality catch worth flagging beyond the individual commits: a Wisconsin spot-check
+(Dairy Science BS) found a real, catalogued major with admissions already suspended and
+scheduled for discontinuation in 2029 — caught before commit, not after, and the record's
+`researcher_notes` carries the caveat rather than the major being silently presented as open.
+**Universities attempted and dropped this session, with failure shape, so a future pass
+doesn't re-attempt blind**: Duke (`trinity.duke.edu` refused by the fetch tool — domain-
+verification block, not a content problem; try `duke.edu` directly or the Browser pane next
+time), UT Austin (catalog A-Z index mixed majors/minors/certificates without clean structure,
+extraction wasn't trustworthy enough to publish), Durham (course finder is search-only, no
+static A-Z page found even via the Browser pane), Nottingham (course finder paginates 32-of-416
+at a time via the Browser pane, no single-page A-Z view found), Penn State (every candidate URL
+either 404'd or hung), Queen Mary/Southampton/Bath (all three are JS course finders with no
+fetchable static list or A-Z fallback found this session).
