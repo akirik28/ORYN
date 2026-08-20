@@ -2620,3 +2620,14 @@ Reserve Online Pre-College Program, Wharton "Future of the Business World", Penn
 Medicine Summer Program for HS Students, Idyllwild Arts Summer Program, Boston
 University Tanglewood Institute. Full drop list (9, all with cause) in the tracker.
 Live: 340 total, 235 `summer_program`.
+
+**Admissions URL batch 10 — 12 more universities**: Kingston University London, Johannes
+Kepler University Linz, Julius-Maximilians-Universität Würzburg, Justus-Liebig-University
+Giessen, Karl-Franzens-Universität Graz, Leibniz University Hannover, Linköping
+University, LUMS (Lahore University of Management Sciences), Kyung Hee University,
+Manipal Academy of Higher Education, Martin-Luther-Universität Halle-Wittenberg, Jilin
+University. 4 new `application_system` tags: Kingston → UCAS (UK), and three German
+universities (Würzburg, Hannover, Halle-Wittenberg) → uni-assist, each confirmed by its
+own page explicitly naming uni-assist's VPD (preliminary examination documentation) as
+required for non-EU applicants. `admissions_url`: 594 → **606/1019 (59.5%)**,
+`application_system`: 83 → 87/1019.
