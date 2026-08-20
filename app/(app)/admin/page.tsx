@@ -2,7 +2,8 @@ import { formatDistanceToNow } from "date-fns";
 import { formatNumber } from "@/lib/i18n/format";
 import { requireAdmin } from "@/lib/security/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/oryn/page-header";
+import { StatusBadge, type StatusTone } from "@/components/oryn/status-badge";
 import { JobTriggerButton } from "@/features/admin/job-trigger-button";
 import { ReportReviewControl } from "@/features/admin/report-review-control";
 import { resolveReportedContentPreview } from "@/lib/moderation/content-preview";
@@ -10,18 +11,22 @@ import { triggerOpportunityDiscovery, triggerUniversitySync, triggerDeadlineScan
 
 export const metadata = { title: "Admin" };
 
-const STATUS_CLASS: Record<string, string> = {
-  healthy: "border-emerald-500/30 text-emerald-700 dark:text-emerald-400",
-  succeeded: "border-emerald-500/30 text-emerald-700 dark:text-emerald-400",
-  resolved: "border-emerald-500/30 text-emerald-700 dark:text-emerald-400",
-  degraded: "border-amber-500/30 text-amber-700 dark:text-amber-400",
-  reviewing: "border-amber-500/30 text-amber-700 dark:text-amber-400",
-  down: "border-red-500/30 text-red-700 dark:text-red-400",
-  failed: "border-red-500/30 text-red-700 dark:text-red-400",
-  open: "border-red-500/30 text-red-700 dark:text-red-400",
-  running: "border-primary/30 text-primary",
-  dismissed: "text-muted-foreground",
-  unknown: "text-muted-foreground",
+// Was raw Tailwind color classes on a plain Badge (border-emerald-500/30, border-amber-500/30,
+// ...) instead of the one shared tone system every other status pill in the product goes
+// through (components/oryn/status-badge.tsx) -- found in the same premium-convergence sweep
+// as everything else this session, not a deliberate "admin looks different" choice.
+const STATUS_TONE: Record<string, StatusTone> = {
+  healthy: "success",
+  succeeded: "success",
+  resolved: "success",
+  degraded: "warning",
+  reviewing: "warning",
+  down: "error",
+  failed: "error",
+  open: "error",
+  running: "brand",
+  dismissed: "neutral",
+  unknown: "neutral",
 };
 
 export default async function AdminPage() {
@@ -66,10 +71,7 @@ export default async function AdminPage() {
 
   return (
     <div className="space-y-10">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Admin</h1>
-        <p className="mt-1 text-muted-foreground">Provider health, background jobs, and AI usage. Not linked from navigation.</p>
-      </div>
+      <PageHeader title="Admin" description="Provider health, background jobs, and AI usage. Not linked from navigation." />
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
@@ -88,9 +90,7 @@ export default async function AdminPage() {
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span>{formatDistanceToNow(new Date(report.created_at), { addSuffix: true })}</span>
-                    <Badge variant="outline" className={STATUS_CLASS[report.status]}>
-                      {report.status}
-                    </Badge>
+                    <StatusBadge label={report.status} tone={STATUS_TONE[report.status] ?? "neutral"} />
                   </div>
                 </div>
                 <p className="text-muted-foreground">{report.reason}</p>
@@ -127,9 +127,7 @@ export default async function AdminPage() {
                   <span className="text-xs">
                     {provider.last_success_at ? `Last OK ${formatDistanceToNow(new Date(provider.last_success_at), { addSuffix: true })}` : "Never succeeded"}
                   </span>
-                  <Badge variant="outline" className={STATUS_CLASS[provider.status]}>
-                    {provider.status}
-                  </Badge>
+                  <StatusBadge label={provider.status} tone={STATUS_TONE[provider.status] ?? "neutral"} />
                 </div>
               </li>
             ))}
@@ -155,9 +153,7 @@ export default async function AdminPage() {
                 <div className="flex items-center gap-3 text-muted-foreground">
                   <span className="text-xs">{job.items_processed} processed</span>
                   <span className="text-xs">{formatDistanceToNow(new Date(job.started_at), { addSuffix: true })}</span>
-                  <Badge variant="outline" className={STATUS_CLASS[job.status]}>
-                    {job.status}
-                  </Badge>
+                  <StatusBadge label={job.status} tone={STATUS_TONE[job.status] ?? "neutral"} />
                 </div>
               </li>
             ))}
