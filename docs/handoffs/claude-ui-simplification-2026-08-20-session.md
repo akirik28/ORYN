@@ -37,23 +37,53 @@ not duplicated here.
    dashboard already strong (fix above), opportunities/universities no issue found, profile is
    the one real open IA question.
 
-## In progress / proposed, not yet implemented
+3. **Profile jump-nav, approved and shipped** (`f182db2`). `ProfileSectionNav` — sticky,
+   horizontally-overflowing on narrow screens, real `<a href="#id">` anchors, IntersectionObserver
+   scroll-spy, reuses SidebarNav's active-pill motion pattern and button.tsx's focus-visible
+   ring classes. Purely additive: existing 18 sections got `id`-anchor wrappers only, nothing
+   reordered except folding Certifications/Skills into the "Academic record" anchor range (a
+   labeling choice, not a DOM move) so all 5 groups are contiguous and the scroll-spy highlight
+   moves monotonically instead of flickering across non-contiguous ranges. No tabs, nothing
+   hidden, no second profile architecture. Checked for overlap with Computer B's active files
+   before starting (none on `app/(app)/profile/**`/`features/profile/**` at the time) and again
+   before pushing.
 
-`docs/ui-simplification-analysis.md` §2 proposes a lightweight jump-navigation for the profile
-page (18 regions across 13 achievement sections + 5 other blocks, one continuous scroll) —
-grouping into About / Your standing / Academic record / Experience & achievements / Goals via
-anchor links, deliberately *not* a tab rebuild (tabs would hide capability the product has
-already decided not to hide, and would touch the same files Computer B's queued package list
-also touches next). Held for an explicit founder go-ahead before starting, since it's the
-first visible structural change from this lane and the one area with real overlap risk with
-Computer B's active files.
+   QA: typecheck/lint/test (1051/1051) clean. Live `/profile` itself isn't reachable in this
+   sandbox — `oryn-qa-scratch`'s Supabase Auth "Confirm email" is on (a founder-blocked item,
+   `docs/founder-blocked-backlog.md`; also tried a scratch-DB SQL confirm as a workaround, which
+   the permission system correctly declined — didn't route around it). Built a throwaway,
+   never-committed harness under `/design-preview` instead, mounting the real component with
+   dummy sections at the real page's actual container padding. Confirmed via direct DOM/
+   computed-style inspection: correct scroll target + `scrollY`, active-state tracking, full
+   keyboard tab order, a real focus-visible ring (3px, right color, verified via
+   `getComputedStyle`), and working mobile `overflow-x-auto` (verified both via
+   `scrollWidth > clientWidth` and an actual `scrollLeft` move). Two things didn't visibly work
+   in this specific automated browser pane — `scrollIntoView`'s smooth *animation*, and a
+   synthetic Enter keypress triggering a native link click — both standard, unmodified browser
+   primitives with no code-level reason to fail for a real user; flagged as a tooling limitation
+   rather than asserted as fully verified.
+
+4. `docs/dashboard-simplification-analysis.md` — the "what matters now, not show everything we
+   know" pass for the dashboard, as requested. Categorizes every current module as primary/
+   secondary/collapsed-progressive/contextual-only. One concrete finding: "Due soon" duplicates
+   deadline info already shown per-action in both the AI weekly-plan cards and Computer B's new
+   `CounselorWeekFallback` cards (B4) — proposes deduping the *presentation*, not the data.
+   Also proposes pairing the not-yet-rendered "Strengths" concept with "Biggest gap" as one
+   comparative line rather than a new competing card, once Computer B wires it in. **Analysis
+   only, no code touched** — `dashboard-view.tsx`/`app/(app)/dashboard/page.tsx` have Computer
+   B's live in-progress commits (B4 landed mid-analysis), so implementation is explicitly held
+   for a fresh collision check and a go-ahead.
 
 ## Blockers
 
-None.
+None for this lane's own work. Noted, not owned by this lane: `oryn-qa-scratch`'s Supabase Auth
+"Confirm email" setting blocks live-account browser QA for any UI package — already tracked in
+`docs/founder-blocked-backlog.md`, needs a founder dashboard toggle to clear.
 
 ## Next
 
-Pending founder direction: either (a) proceed with the profile jump-navigation package, or
-(b) real visual references arrive and get folded in alongside it, or (c) redirect to a
-different package. Not starting the profile change without one of those.
+Pending founder direction on `docs/dashboard-simplification-analysis.md`'s proposals
+(Due-soon dedup, Strengths+Gap pairing, 2-tier visual weight pass) — held for Computer B's
+dashboard-contract work to settle and an explicit go-ahead, consistent with how the profile
+jump-nav was handled. No blocking question otherwise; ready for redirection to a different
+package or real visual references at any point.
