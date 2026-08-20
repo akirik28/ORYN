@@ -178,6 +178,22 @@ primary-admission relevance.
 
 ## What's next (if this session continues further, or for whoever resumes)
 
+**Peer-branch spot-verification, done, positive result**: rather than leave `10` §5's "read and
+found reasonable, not independently re-verified" caveat about the peer branch unaddressed, this
+session independently re-checked three specific, falsifiable factual claims from the peer's
+`06-major-family-evidence/01-computing-information-sciences.md` and `04-life-sciences.md`: (1) the
+O*NET Software Developers knowledge-profile quote ("arithmetic, algebra, geometry, calculus,
+statistics, and their applications") — confirmed **word-for-word accurate** against a direct fetch
+of the O*NET page; (2) the BLS "about 317,700 average annual openings" figure for computer/IT
+occupations — confirmed accurate against BLS's own 2024-2034 projection cycle; (3) the
+International Biology Olympiad "70+ countries" participation figure — confirmed accurate (current
+sourcing puts it at 78-81 countries depending on year, so "70+" is a safe, correct
+characterization). **All three checks passed with precision, including one exact quote match** —
+this materially upgrades this session's confidence in the peer branch's overall sourcing
+discipline beyond the earlier, more cautious "read and found reasonable" framing. Not an
+exhaustive audit (3 claims across 2 of the peer's 17 total documents), but a genuine, positive,
+independently-obtained data point for whoever does final integration.
+
 Doc 11's Germany/Netherlands mechanism claims were upgraded to official DAAD/government.nl/
 Studielink sources on a follow-up pass (commit `ae9e942`) — item (2) below from this handoff's
 prior version is now done; Italy/Switzerland's medicine-specific and ETH-specific sourcing was
