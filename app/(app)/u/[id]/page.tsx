@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Lock, Sparkles, MessageCircle } from "lucide-react";
+import { Camera, Code2, Globe, Link as LinkIcon, Lock, Mail, MessageCircle, MessageSquare, Phone, Sparkles } from "lucide-react";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { getPublicProfile, getPublicPortfolio, getPublicSkills, isCurrentlyPublic } from "@/lib/social/public-profile";
@@ -23,6 +23,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/oryn/status-badge";
 import { ErrorState } from "@/components/oryn/error-state";
+import { SectionHeader } from "@/components/oryn/section-header";
+import { FEATURED_ITEM_ICON } from "@/lib/social/featured-visuals";
 import { ConnectButton } from "@/features/connections/connect-button";
 import { PortfolioView } from "@/features/profile/portfolio-view";
 import type { PublicSkill } from "@/lib/social/public-profile";
@@ -48,7 +50,7 @@ function SkillList({
   if (skills.length === 0) return null;
   return (
     <div className="space-y-2">
-      <h2 className="font-semibold">Skills</h2>
+      <SectionHeader title="Skills" />
       <div className="flex flex-wrap gap-1.5">
         {skills.map((skill) => {
           const info = endorsements[skill.id] ?? { count: 0, endorsedByMe: false };
@@ -180,7 +182,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
       {display.about ? (
         <div className="space-y-2">
-          <h2 className="font-semibold">About</h2>
+          <SectionHeader title="About" />
           <p className="whitespace-pre-wrap text-sm text-muted-foreground">{display.about}</p>
         </div>
       ) : null}
@@ -189,28 +191,39 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
       {featured.length > 0 ? (
         <div className="space-y-3">
-          <h2 className="font-semibold">Featured</h2>
+          <SectionHeader title="Featured" />
           <div className="grid gap-3 sm:grid-cols-2">
-            {featured.map((item) =>
-              item.url ? (
+            {featured.map((item) => {
+              const Icon = FEATURED_ITEM_ICON[item.itemType];
+              return item.url ? (
                 <a
                   key={item.id}
                   href={item.url}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="space-y-1 rounded-xl border p-4 hover:border-brand-primary/50"
+                  className="flex items-start gap-3 rounded-xl border p-4 hover:border-brand-primary/50"
                 >
-                  <p className="font-medium">{item.title}</p>
-                  <p className="truncate text-xs text-muted-foreground">{item.url}</p>
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand-primary-subtle to-brand-primary-soft">
+                    <Icon className="size-4 text-brand-primary-strong" />
+                  </span>
+                  <span className="min-w-0 space-y-1">
+                    <p className="font-medium">{item.title}</p>
+                    <p className="truncate text-xs text-muted-foreground">{item.url}</p>
+                  </span>
                 </a>
               ) : (
-                <div key={item.id} className="space-y-1 rounded-xl border p-4">
-                  <p className="font-medium">{item.title}</p>
-                  {item.organization ? <p className="text-sm text-muted-foreground">{item.organization}</p> : null}
-                  {item.description ? <p className="text-sm text-muted-foreground">{item.description}</p> : null}
+                <div key={item.id} className="flex items-start gap-3 rounded-xl border p-4">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand-primary-subtle to-brand-primary-soft">
+                    <Icon className="size-4 text-brand-primary-strong" />
+                  </span>
+                  <span className="min-w-0 space-y-1">
+                    <p className="font-medium">{item.title}</p>
+                    {item.organization ? <p className="text-sm text-muted-foreground">{item.organization}</p> : null}
+                    {item.description ? <p className="text-sm text-muted-foreground">{item.description}</p> : null}
+                  </span>
                 </div>
-              )
-            )}
+              );
+            })}
           </div>
         </div>
       ) : null}
@@ -221,7 +234,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
         <>
           <SkillList skills={skills} endorsements={endorsements} ownerId={id} canEndorse={!isSelf && hasAcceptedConnection} />
           <div className="space-y-3">
-            <h2 className="font-semibold">Portfolio</h2>
+            <SectionHeader title="Portfolio" />
             <PortfolioView items={portfolio} />
           </div>
         </>
@@ -237,7 +250,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
       {contact.openTo.length > 0 ? (
         <div className="space-y-2">
-          <h2 className="font-semibold">Open to</h2>
+          <SectionHeader title="Open to" />
           <div className="flex flex-wrap gap-1.5">
             {contact.openTo.map((option) => (
               <Badge key={option} variant="outline">
@@ -250,61 +263,69 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
       {hasAnyContact ? (
         <div className="space-y-2">
-          <h2 className="font-semibold">Contact</h2>
-          <ul className="space-y-1.5 text-sm">
+          <SectionHeader title="Contact" />
+          <ul className="space-y-2 text-sm">
             {contact.email ? (
-              <li>
-                <span className="text-muted-foreground">Email: </span>
+              <li className="flex items-center gap-2">
+                <Mail className="size-4 shrink-0 text-muted-foreground" />
+                <span className="text-muted-foreground">Email:</span>
                 <a href={`mailto:${contact.email}`} className="text-brand-primary hover:underline">
                   {contact.email}
                 </a>
               </li>
             ) : null}
             {contact.phone ? (
-              <li>
-                <span className="text-muted-foreground">Phone: </span>
+              <li className="flex items-center gap-2">
+                <Phone className="size-4 shrink-0 text-muted-foreground" />
+                <span className="text-muted-foreground">Phone:</span>
                 {contact.phone}
               </li>
             ) : null}
             {contact.linkedinUrl ? (
-              <li>
-                <span className="text-muted-foreground">LinkedIn: </span>
-                <a href={contact.linkedinUrl} target="_blank" rel="noreferrer noopener" className="text-brand-primary hover:underline">
+              <li className="flex items-center gap-2">
+                <LinkIcon className="size-4 shrink-0 text-muted-foreground" />
+                <span className="text-muted-foreground">LinkedIn:</span>
+                <a href={contact.linkedinUrl} target="_blank" rel="noreferrer noopener" className="truncate text-brand-primary hover:underline">
                   {contact.linkedinUrl}
                 </a>
               </li>
             ) : null}
             {contact.githubUrl ? (
-              <li>
-                <span className="text-muted-foreground">GitHub: </span>
-                <a href={contact.githubUrl} target="_blank" rel="noreferrer noopener" className="text-brand-primary hover:underline">
+              <li className="flex items-center gap-2">
+                <Code2 className="size-4 shrink-0 text-muted-foreground" />
+                <span className="text-muted-foreground">GitHub:</span>
+                <a href={contact.githubUrl} target="_blank" rel="noreferrer noopener" className="truncate text-brand-primary hover:underline">
                   {contact.githubUrl}
                 </a>
               </li>
             ) : null}
             {contact.websiteUrl ? (
-              <li>
-                <span className="text-muted-foreground">Website: </span>
-                <a href={contact.websiteUrl} target="_blank" rel="noreferrer noopener" className="text-brand-primary hover:underline">
+              <li className="flex items-center gap-2">
+                <Globe className="size-4 shrink-0 text-muted-foreground" />
+                <span className="text-muted-foreground">Website:</span>
+                <a href={contact.websiteUrl} target="_blank" rel="noreferrer noopener" className="truncate text-brand-primary hover:underline">
                   {contact.websiteUrl}
                 </a>
               </li>
             ) : null}
             {contact.instagramHandle ? (
-              <li>
-                <span className="text-muted-foreground">Instagram: </span>
+              <li className="flex items-center gap-2">
+                <Camera className="size-4 shrink-0 text-muted-foreground" />
+                <span className="text-muted-foreground">Instagram:</span>
                 {contact.instagramHandle}
               </li>
             ) : null}
             {contact.twitterHandle ? (
-              <li>
-                <span className="text-muted-foreground">X / Twitter: </span>
+              <li className="flex items-center gap-2">
+                <MessageSquare className="size-4 shrink-0 text-muted-foreground" />
+                <span className="text-muted-foreground">X / Twitter:</span>
                 {contact.twitterHandle}
               </li>
             ) : null}
             {contact.discordHandle ? (
-              <li>
-                <span className="text-muted-foreground">Discord: </span>
+              <li className="flex items-center gap-2">
+                <MessageCircle className="size-4 shrink-0 text-muted-foreground" />
+                <span className="text-muted-foreground">Discord:</span>
                 {contact.discordHandle}
               </li>
             ) : null}
