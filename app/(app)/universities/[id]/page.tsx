@@ -50,7 +50,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   if (!university) notFound();
 
   const [programsRes, requirementsRes, statsRes, sourcesRes, targetRes, scoresRes, rankingsRes, metricsRes] = await Promise.all([
-    supabase.from("university_programs").select("*").eq("university_id", id),
+    supabase.from("university_programs").select("*").eq("university_id", id).eq("verification_state", "verified_current"),
     supabase.from("university_requirements").select("*").eq("university_id", id),
     supabase.from("university_statistics").select("*").eq("university_id", id).order("stat_year", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("university_sources").select("*").eq("university_id", id).order("retrieved_at", { ascending: false }),
@@ -401,11 +401,13 @@ function groupProgramsBySubject(programs: UniversityProgram[]): [string, Univers
     bySubject.set(label, [...(bySubject.get(label) ?? []), program]);
   }
   const otherLabel = SUBJECT_LABELS.other;
-  return [...bySubject.entries()].sort(([labelA, itemsA], [labelB, itemsB]) => {
-    if (labelA === otherLabel) return 1;
-    if (labelB === otherLabel) return -1;
-    return itemsB.length - itemsA.length;
-  });
+  return [...bySubject.entries()]
+    .map(([label, items]): [string, UniversityProgram[]] => [label, [...items].sort((a, b) => a.name.localeCompare(b.name))])
+    .sort(([labelA, itemsA], [labelB, itemsB]) => {
+      if (labelA === otherLabel) return 1;
+      if (labelB === otherLabel) return -1;
+      return itemsB.length - itemsA.length;
+    });
 }
 
 /** SAT preferred over ACT when both are on file — no ranking claim, just a stable pick so
