@@ -113,14 +113,51 @@ it remains directly applicable here without modification.
   official source for ETH specifically; general-Swiss-system claim corroborated by secondary
   sources.) [[RULE-COUNSEL-065]]
 
+### Extension — Canada and a "generic Europe" fallback pattern
+
+Added on a further pass, since `AGENTS.md` explicitly offers Canada as an onboarding target-
+geography option (Screen 4) even though it wasn't one of the mission's original five named
+geographies, and explicitly calls for a "generic Europe fallback" (§8) for the many European
+countries this package cannot research individually.
+
+- **Canada** — genuinely intermediate, and distinct enough from both UK and US to warrant its own
+  entry rather than folding into either. Grades remain described as "the primary admissions
+  factor" at most Canadian institutions, but competitive programs and top universities (the
+  University of Toronto named specifically, using an explicitly holistic process weighing
+  "leadership, community involvement, and extracurricular activities" alongside academics)
+  increasingly layer holistic review on top of a grades-first baseline. (Source: university-
+  admissions-guidance sources describing Canadian practice — medium confidence, general pattern;
+  not verified against every Canadian institution's own published criteria.) [[RULE-COUNSEL-073]]
+  **Provisional tier: 2, closer to the UK than to the US** — grades-first with holistic elements
+  concentrated in competitive programs, rather than holistic review as a universal, independently-
+  weighted input the way US practice treats it.
+- **Generic Europe fallback** — rather than leave "any other European country" completely
+  unaddressed, this document spot-checked one additional representative case: **Spain**, whose
+  EBAU/Selectividad system computes admission as **60% high-school grades + 40% national exam
+  score**, with sourced guidance stating plainly "there is no interview, no essay, no
+  extracurricular that tips the scale." (Source: Spain-admissions-guidance sources — medium
+  confidence.) [[RULE-COUNSEL-074]] **Combined with the five countries researched in depth above,
+  this gives a 7-country European sample where 5 (Germany, Netherlands, Italy-public, Switzerland,
+  Spain) are Tier 3 (formula/credential-driven, no meaningful activity weight) and only 2 (UK,
+  France) show real holistic elements.** The reasoned, honestly-labeled fallback this document
+  proposes: **for a European country not specifically researched, default to treating it as Tier 3
+  (grades/exam-formula-driven) unless and until specifically verified otherwise** — this is a
+  probabilistic default based on a 7-country sample, not a verified fact about any unresearched
+  country, and must be presented to a student as exactly that level of uncertainty if ORYN's
+  counselor ever needs to say anything about an unresearched European system.
+  [[RULE-COUNSEL-075]]
+
 ### Synthesis table
 
 | Country | Tier | Primary admission lever | Activity-profile weight |
 |---|---|---|---|
 | USA | 1 | Full holistic review | High, independently weighted |
+| Canada | 2 (closer to UK) | Grades-first, holistic layered on for competitive programs | Low-moderate, concentrated in competitive programs |
 | UK | 2 | Predicted grades + subject-relevant ("super-curricular") evidence | Moderate, narrowly subject-scoped; medicine partial exception toward Tier 1 |
 | France | 2 (lighter than UK) | Grades/bac + program-dependent dossier | Low-moderate, varies sharply by program selectivity |
 | Germany | 3 | Abitur grade (NC cutoff) or open admission | Minimal to none (small aptitude-quota exception) |
+| Spain | 3 | 60% grades + 40% EBAU/Selectividad exam score | None ("no extracurricular that tips the scale") |
+| Unresearched European country | **3 (probabilistic default)** | Unknown — assume grades/exam-formula until verified | Assume minimal until verified |
 | Netherlands | 3 (soft exception for numerus fixus) | Diploma (open) or university-set decentralized selection | Low where present at all; absent for most programs |
 | Italy | 3 (public) / 2 (private, uneven) | National test (restricted fields) or diploma | Minimal (public/IMAT); moderate (some private) |
 | Switzerland | 3 (near-absolute) | Matura pass/fail | None (medicine: separate aptitude test, still not activity-based) |
@@ -219,6 +256,18 @@ conditioning would produce technically-accurate-but-strategically-misleading gui
   must never be used as a proxy for which admissions system's rules apply to their goals.
   Confidence: high (direct application of the existing demographic-inference prohibition,
   peer-owned `RULE-COUNSEL-057`, to a new context).
+- `RULE-COUNSEL-073` — Treat Canada as Tier 2, closer to the UK than the US: grades-first baseline
+  with holistic elements concentrated in competitive programs, not a universal independently-
+  weighted input. Confidence: medium (general pattern, not verified per-institution).
+- `RULE-COUNSEL-074` — Spain's EBAU/Selectividad system is Tier 3 (60% grades + 40% national exam,
+  explicitly no extracurricular weight) — a representative additional European Tier-3 data point.
+  Confidence: medium.
+- `RULE-COUNSEL-075` — For a European country not specifically researched by this package, default
+  to a Tier-3 (formula/credential-driven) assumption until specifically verified otherwise, based
+  on a 7-country sample where 5 of 7 researched countries were Tier 3 — present this to a student
+  as a probabilistic default, not a verified fact about the specific unresearched country.
+  Confidence: high that this is the right *default posture*; explicitly low/unknown confidence
+  about any single unresearched country's actual system, which is the entire point of the rule.
 
 ## Sources referenced in this document
 

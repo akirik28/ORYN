@@ -409,6 +409,30 @@
       "claim_supported": "Applicants must be current 11th-grade (junior) high school students at time of application, no exceptions — a concrete, official, primary-source-verified instance of the 'rising junior/senior' structured-research-program eligibility pattern.",
       "used_in_rules": ["RULE-COUNSEL-069"],
       "limitations": "One program, used as a representative, officially-verified example of a broader pattern peer's own 03-recommendation-timing.md documents at aggregate/secondary-source confidence across several programs."
+    },
+    {
+      "id": "SRC-CS-035",
+      "title": "Canadian university admissions-guidance sources on holistic review and extracurricular weight (multiple, converging)",
+      "publisher": "Various university-admissions-consulting sources describing Canadian practice, including reference to University of Toronto's own stated holistic process",
+      "url": "https://www.careervillage.org/questions/239949/how-much-emphasis-do-canadian-universities-put-on-extracurriculars",
+      "type": "secondary_practitioner_consensus",
+      "retrieved_at": "2026-08-21",
+      "confidence": "medium",
+      "claim_supported": "Grades remain the primary Canadian admissions factor generally; competitive programs and top universities (U of T named) layer holistic review including extracurriculars on top.",
+      "used_in_rules": ["RULE-COUNSEL-073"],
+      "limitations": "General pattern description, not verified against every Canadian institution's own published admissions criteria."
+    },
+    {
+      "id": "SRC-CS-036",
+      "title": "Spain EBAU/Selectividad admissions-system overview sources (multiple, converging)",
+      "publisher": "Various Spain-education-system overview sources",
+      "url": "https://www.nidoliving.com/en-gb/blog/national-exams-in-spain",
+      "type": "secondary_practitioner_consensus",
+      "retrieved_at": "2026-08-21",
+      "confidence": "medium",
+      "claim_supported": "Spanish university admission is computed as 60% high-school grades + 40% national EBAU exam score, with no interview, essay, or extracurricular weight.",
+      "used_in_rules": ["RULE-COUNSEL-074", "RULE-COUNSEL-075"],
+      "limitations": "Not independently verified against Spain's own Ministry of Education official publication this pass."
     }
   ]
 }
