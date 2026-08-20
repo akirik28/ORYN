@@ -2528,3 +2528,45 @@ still works and was left untouched — this backfill makes the schema state cons
 what the app was already enforcing, it doesn't require an app-code change to take effect
 safely. `docs/founder-blocked-backlog.md` item about migration 0043 can now be marked
 resolved by whoever owns that file next.
+
+**Wave 1 group H applied** (summer programs — Europe/Turkey/international): of 8
+candidates dispatched, 7 came back researched (Central European University Summer School
+returned no record — presumed dropped by the researcher as unverifiable, consistent with
+this campaign's no-forced-candidates rule; no CEU record exists in the group H JSONL to
+investigate further). Live dedup re-check against `opportunities` before any write (per
+this session's standing practice) surfaced two real findings, not simple net-adds:
+- **Koç University** ("Summer Academy") — an existing row ("Koç Uni Yaz Okulu") already
+  covered this program, but as a stale, minimal 2023-dated capture (URL
+  `highschoolprograms.ku.edu.tr/2023-lise-yaz-okulu/...`, no organization/cost/dates,
+  `verification_state='unverified'`, description was literally just the URL). Same
+  real-world Koç HS summer program, not a distinct offering. Per this session's
+  accuracy-and-freshness-over-blind-volume standard, this was **updated in place** with
+  the freshly verified 2026 data (current URL, fees, dates, requirements,
+  `verification_state='verified_current'`) rather than left stale or duplicated — a new
+  `opportunity_sources` provenance row was added alongside. The separate "Koç University
+  Research Program KUSRP" row was confirmed genuinely different (a research program, not
+  the Summer Academy) and left untouched.
+- **Boğaziçi University BOUN101** — skipped entirely, no insert. Two existing rows already
+  cover it: one shares the exact same `official_url` as the new candidate
+  (`buyem.bogazici.edu.tr/`), and the other (`.../course/boun101-lise-yaz-okulu`) carries
+  a fuller 2025 course list (38 named courses) than this wave's own research could
+  re-confirm, since the specific course page had already been taken down by the time of
+  this research (the researcher correctly left cost/dates blank rather than reuse stale
+  figures — see the JSONL record's own honest caveat). Inserting would have created a
+  three-way duplicate with zero net new information. The separate winter-edition row
+  (`boun101-online-kis-okulu`) is a genuinely distinct seasonal offering and was left
+  alone, as was "UWC Türkiye" (a different-scope national-committee page, not a duplicate
+  of the new "UWC Short Courses" global directory entry).
+
+5 net-new rows inserted with `opportunity_sources` provenance (Copenhagen Business School
+Summer University, AI Summer Week @ ETH Zurich, Bilkent University Summer Camp, ODTÜ/METU
+Engineering Summer School, UWC Short Courses) + 1 existing row refreshed (Koç). Live count
+after group H: 335 total opportunities, 232 `summer_program`. Tracker updated:
+`data/research/opportunities/SUMMER_PROGRAMS_350_TRACKER.md`.
+
+This closes out Wave 1 (groups A–H) of the 350-target summer-program campaign: 227 → 232
+`summer_program` rows added/refreshed through this wave's own adds net of duplicates, atop
+the pre-existing base. Continuing per the standing long-run/parallel-capacity execution
+mode — next up: Wave 2 candidate pool (queued in the tracker's own "Wave 2+" section) and/or
+the sparser data packages (`application_system` at 77/1019, program catalogs for
+zero-coverage countries) as background campaigns while foreground work continues.

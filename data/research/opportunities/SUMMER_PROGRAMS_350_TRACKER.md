@@ -21,7 +21,26 @@ and honesty over hitting the number.
 | 1, groups C/D/F | 20 | 11 | 9 | 0 | Applied 2026-08-20 (see note below) |
 | 1, group B | 8 | 3 | 2 | 3 (MMSS: Cloudflare-blocked, page never fetched; COSMOS: confirmed not hosted at Berkeley; UCSD Academic Connections: confirmed discontinued for 2026) | Applied 2026-08-20 |
 | 1, group G | 8 | 7 | 0 | 1 (UCL Junior Summer School: no such program exists under that name — UCL's own "UCL Summer School" is undergrad-only; similarly-named third-party operators merely rent UCL's campus) | Applied 2026-08-20 |
-| 1, group H | 8 | pending | | | not yet researched — background agent in flight |
+| 1, group H | 8 | 5 new + 1 refreshed | 1 (H06 Boğaziçi BOUN101 — already covered by 2 existing rows) | 1 (Central European University Summer School — no record returned by the researcher; presumed dropped as unverifiable, per this campaign's no-forced-candidates rule) | Applied 2026-08-20 |
+
+**Note on group H (applied 2026-08-20):** H01 (Copenhagen Business School Summer
+University), H03 (AI Summer Week @ ETH Zurich), H05 (Bilkent University Summer Camp),
+H07 (ODTÜ/METU Engineering Summer School), and H08 (UWC Short Courses) inserted as
+net-new. H04 (Koç University Summer Academy) was NOT inserted as a new row — the live
+dedup check found an existing record ("Koç Uni Yaz Okulu", stale 2023-dated
+`highschoolprograms.ku.edu.tr` URL, no organization/cost/dates, `verification_state`
+unverified) that is clearly the same real-world Koç HS summer program under an older
+URL/branding, so per the freshness-over-duplication principle it was UPDATED in place
+with the fully verified 2026 data instead of creating a duplicate; a matching
+`opportunity_sources` provenance row was added. The separate "Koç University Research
+Program KUSRP" row was left untouched — confirmed to be a genuinely different program
+(a research program, not the Summer Academy). H06 (Boğaziçi BOUN101 High School Summer
+School) was skipped entirely: two existing rows already cover it exactly
+(`buyem.bogazici.edu.tr/` and `buyem.bogazici.edu.tr/course/boun101-lise-yaz-okulu`,
+the latter with a fuller 2025 course list than H06's own research could re-confirm,
+since the specific course page had been taken offline by the time of this research) —
+inserting would have added zero information and created a 3-way duplicate. Live count
+after group H: 335 total, 232 `summer_program`.
 
 **Note on group G (applied 2026-08-20):** checking the 7 new records against the live
 table also surfaced and removed 3 pre-existing junk rows (0 references in
