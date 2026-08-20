@@ -2631,3 +2631,43 @@ universities (Würzburg, Hannover, Halle-Wittenberg) → uni-assist, each confir
 own page explicitly naming uni-assist's VPD (preliminary examination documentation) as
 required for non-EU applicants. `admissions_url`: 594 → **606/1019 (59.5%)**,
 `application_system`: 83 → 87/1019.
+
+**Program catalogue batch 3 — Universiti Sains Malaysia (USM) and IE University, closing
+out two more zero-coverage countries (Malaysia, Spain)**: background agent extended the
+deterministic `extractPrograms()` pipeline with two real fixes to `lib/acquisition/
+programs.ts` — an href entity-decoding bug (USM's Joomla links render `&amp;amp;` in
+query strings, corrupting the `id` param) and a new opt-in `CatalogueRule.
+disableDefaultExcludes` (USM's `/index.php` front-controller URLs were being rejected by
+the pipeline's default `/index` exclude pattern) — both covered by new regression tests.
+61/62 USM programmes extracted (1 legitimately dropped for exceeding the name-length cap)
+and 15/15 IE University programmes extracted cleanly. Tried and dropped this batch (docs
+in `scripts/acquire-programs.ts`'s own header): ANU, University of Navarra (programme
+name lives in a sibling heading, not the anchor text), HSE University (Vue SPA), UKM,
+KFUPM, Yonsei GOSC, Zhejiang ICZU, NTU, IIT Delhi, Prince Sultan, Effat (nav-only or
+per-college, no unified index), UAM (client-rendered), Universitat de Barcelona (403),
+Alfaisal (404). Live dedup re-check before applying caught 9 USM rows the agent had
+already applied directly; the remaining 67 (52 USM + 15 IE) were run back through the
+real `decideIngestion()` logic (not reimplemented by hand) via a throwaway script feeding
+it the live university/existing-program lookup data, then inserted. `university_programs`:
+523 → **599 rows**. One judgment call flagged for visibility, not resolved further: USM's
+own undergraduate index lists "Doctor of Medicine (MD)" and "Doctor of Dental Surgery
+(DDS)" as first-entry-from-school degrees alongside its other bachelor's programmes —
+included under the same catalogue_section evidence as the existing MBBS/MBChB precedent.
+
+**Non-US tuition/cost acquisition — Taiwan and UAE, 9 verified rows**: background agent
+found real official per-institution fee pages for 3 Taiwan universities (National Taiwan
+University, Chang Gung University, National Taipei University of Technology) and 3 UAE
+universities (Khalifa University, Zayed University, United Arab Emirates University),
+writing to `university_profile_metrics` (`tuition_domestic_annual`/`_international_annual`/
+`_per_credit`, in each page's own stated currency — never converted or assumed USD) rather
+than `university_statistics.cost_of_attendance`, correctly following this session's own
+established precedent that column is IPEDS's US-specific all-in concept, not a fit for
+tuition-only non-US figures. Investigated and ruled out (not attempted-and-abandoned) two
+bulk-source candidates: Taiwan's MOE/data.gov.tw only publish national averages, no
+per-institution dataset; the UAE's Commission for Academic Accreditation regulates
+licensure only — tuition is fully institution-set, so there is structurally no government
+rate to find. Real negative results recorded for 8 further institutions whose official
+pages couldn't be fetched (403s, empty JS-rendered pages, PDF-gated), not guessed around.
+New `scripts/acquire-university-statistics-tw.ts`/`-ae.ts`, following the established
+per-country script pattern (skip-if-exists, never overwrite). Data verified live in the
+database (agent had direct Supabase MCP access in its sandbox, same as this session).
