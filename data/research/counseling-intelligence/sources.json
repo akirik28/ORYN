@@ -457,6 +457,30 @@
       "claim_supported": "Roughly 15-20% of US young people live with a chronic medical condition — cited as context for why chronic-illness-aware college counseling is a real, non-edge-case need.",
       "used_in_rules": ["RULE-COUNSEL-080"],
       "limitations": "Population estimate cited by secondary sources; not independently traced to a primary epidemiological study by this package."
+    },
+    {
+      "id": "SRC-CS-039",
+      "title": "Accesso Programmato official portal and MUR ministry announcement pages",
+      "publisher": "MUR (Ministero dell'Università e della Ricerca — Italy's actual government ministry for universities and research)",
+      "url": "https://accessoprogrammato.mur.gov.it/2026/",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high_for_mechanism_medium_for_no_extracurricular_claim",
+      "claim_supported": "IMAT and the parallel Italian-language admission test are directly administered by Italy's university ministry (MUR, formerly MIUR), which has written the questions itself since 2023; confirms the test's official structure and administering body.",
+      "used_in_rules": ["RULE-COUNSEL-064"],
+      "limitations": "Upgrades mechanism confidence to official; the specific 'no extracurricular weight' characterization remains sourced from admissions-consulting guidance, not MUR's own explicit statement."
+    },
+    {
+      "id": "SRC-CS-040",
+      "title": "Ontario university admission-requirements guidance, including named supplementary-application programs",
+      "publisher": "Various Ontario-admissions-guidance sources, corroborated by individual institution pages (e.g. Toronto Metropolitan University, OCAD University official admission-requirements pages)",
+      "url": "https://www.torontomu.ca/admissions/undergraduate/requirements/ontario/",
+      "type": "mixed_official_and_secondary",
+      "retrieved_at": "2026-08-21",
+      "confidence": "medium-high",
+      "claim_supported": "Most Ontario programs admit on a computed grade average (top 6 Grade 12 U/M courses) against a published minimum threshold; a specifically-named subset of high-demand competitive programs (Queen's Commerce, Waterloo Engineering, UofT Engineering Science, McMaster Health Sciences) use holistic supplementary applications where grades are described as 'the floor, not the ceiling.'",
+      "used_in_rules": ["RULE-COUNSEL-073", "RULE-COUNSEL-082"],
+      "limitations": "Ontario-specific; not independently verified for other Canadian provinces' own systems (British Columbia, Alberta, Quebec, etc. each have distinct processes not researched this pass)."
     }
   ]
 }

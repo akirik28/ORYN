@@ -100,10 +100,18 @@ it remains directly applicable here without modification.
   track, an Italian-Ministry-designed test for the Italian track) — sourced guidance states plainly
   that for the IMAT-based public pathway "there is no need for top scoring high school grades,
   interviews, or other extracurricular activities." Private institutions, by contrast, more
-  frequently request holistic portfolios including extracurricular/volunteer evidence. (Source:
-  medicine-admissions-guidance sources — medium confidence, medicine-specific; this package did
-  not verify whether the same public/private split holds as cleanly for non-medicine Italian
-  programs.) [[RULE-COUNSEL-064]]
+  frequently request holistic portfolios including extracurricular/volunteer evidence. **Mechanism
+  upgraded to official-source confidence on a follow-up pass**: the IMAT (and the parallel
+  Italian-language admission test) is directly administered by Italy's actual government ministry
+  — MUR, Ministero dell'Università e della Ricerca (the successor body to MIUR, having taken over
+  question-writing itself from 2023 onward) — confirmed via MUR's own official
+  `accessoprogrammato.mur.gov.it` portal and ministry announcement pages. (Source: MUR official
+  pages — high confidence for the test's existence, administering body, and structure; the
+  specific "no extracurricular weight" characterization remains sourced from medicine-admissions-
+  consulting guidance rather than MUR's own explicit statement, so that narrower claim stays at
+  medium confidence — the same mechanism/specific-claim confidence split already applied to
+  Germany and Netherlands above.) [[RULE-COUNSEL-064]] This package did not verify whether the
+  same public/private split holds as cleanly for non-medicine Italian programs.
 - **Switzerland** — the most extreme Tier-3 case found. A passing Swiss Matura (or recognized
   equivalent) grants admission to essentially all Swiss university programs with **no entrance
   exam, interview, or activity review at all** — explicitly true even for ETH Zürich and EPFL,
@@ -120,14 +128,37 @@ geography option (Screen 4) even though it wasn't one of the mission's original 
 geographies, and explicitly calls for a "generic Europe fallback" (§8) for the many European
 countries this package cannot research individually.
 
-- **Canada** — genuinely intermediate, and distinct enough from both UK and US to warrant its own
-  entry rather than folding into either. Grades remain described as "the primary admissions
-  factor" at most Canadian institutions, but competitive programs and top universities (the
+- **Canada** — genuinely intermediate, sharper on a follow-up pass than this document's first draft
+  characterized it. For the *general case*, Ontario (the largest and best-documented provincial
+  system, via OUAC) is closer to grade-formula-driven than the first pass suggested: admission for
+  most programs runs on an **admission average computed from a fixed rule** (top six Grade 12 U/M
+  courses including program prerequisites), against a published minimum threshold per institution
+  — a mechanism, not a holistic read. **Holistic review is real but concentrated specifically in a
+  named, narrower set of high-demand competitive programs with their own supplementary
+  application** (Queen's Commerce, Waterloo Engineering, UofT Engineering Science, McMaster Health
+  Sciences are the specifically-named examples), where sourced guidance states plainly "grades are
+  the floor, not the ceiling" — a genuinely holistic layer, but scoped to specific programs rather
+  than the general Canadian system the way US practice applies broadly. (Source: Ontario-
+  admissions-guidance sources describing OUAC practice and named supplementary-application
+  programs — medium-high confidence for the general-case mechanism and the specific named
+  programs; this remains an Ontario-specific finding, not independently verified for other
+  Canadian provinces' own systems.) [[RULE-COUNSEL-073]] **Revised tier: 3 for the general case,
+  with a Tier-1/2-like holistic layer only for a specifically-named subset of competitive
+  programs** — closer to how Turkey/Germany's own aptitude-quota exceptions work (a narrow, named
+  carve-out within an otherwise formula-driven system) than to the UK's broader super-curricular
+  weighting, revising this document's own earlier "Tier 2, closer to UK" framing now that more
+  precise sourcing is available. [[RULE-COUNSEL-082]]
+
+  Below, this document's *original* first-pass framing is preserved rather than deleted, since it
+  remains accurate as a *description of top/competitive Canadian universities specifically* (where
+  much of ORYN's actual Canada-track user interest likely concentrates) even though it overstated
+  how broadly that pattern holds across the *general* Canadian system: grades remain "the primary
+  admissions factor" at most institutions, but competitive programs and top universities (the
   University of Toronto named specifically, using an explicitly holistic process weighing
   "leadership, community involvement, and extracurricular activities" alongside academics)
   increasingly layer holistic review on top of a grades-first baseline. (Source: university-
   admissions-guidance sources describing Canadian practice — medium confidence, general pattern;
-  not verified against every Canadian institution's own published criteria.) [[RULE-COUNSEL-073]]
+  not verified against every Canadian institution's own published criteria.)
   **Provisional tier: 2, closer to the UK than to the US** — grades-first with holistic elements
   concentrated in competitive programs, rather than holistic review as a universal, independently-
   weighted input the way US practice treats it.
@@ -152,7 +183,7 @@ countries this package cannot research individually.
 | Country | Tier | Primary admission lever | Activity-profile weight |
 |---|---|---|---|
 | USA | 1 | Full holistic review | High, independently weighted |
-| Canada | 2 (closer to UK) | Grades-first, holistic layered on for competitive programs | Low-moderate, concentrated in competitive programs |
+| Canada | 3 general case, with a named-program Tier-1/2 carve-out | Computed admission average (Ontario: top-6 U/M courses) vs. supplementary application for named competitive programs | None for most programs; real but narrow for specifically-named competitive programs (Queen's Commerce, Waterloo Eng., UofT Eng. Sci., McMaster Health Sci., etc.) |
 | UK | 2 | Predicted grades + subject-relevant ("super-curricular") evidence | Moderate, narrowly subject-scoped; medicine partial exception toward Tier 1 |
 | France | 2 (lighter than UK) | Grades/bac + program-dependent dossier | Low-moderate, varies sharply by program selectivity |
 | Germany | 3 | Abitur grade (NC cutoff) or open admission | Minimal to none (small aptitude-quota exception) |
@@ -268,6 +299,11 @@ conditioning would produce technically-accurate-but-strategically-misleading gui
   as a probabilistic default, not a verified fact about the specific unresearched country.
   Confidence: high that this is the right *default posture*; explicitly low/unknown confidence
   about any single unresearched country's actual system, which is the entire point of the rule.
+- `RULE-COUNSEL-082` — Canada's general case is Tier 3 (grade-formula-driven), with a genuinely
+  holistic layer only for a specifically-named subset of competitive programs — structurally
+  closer to Turkey/Germany's narrow aptitude-quota carve-outs than to the UK's broader
+  super-curricular weighting. Confidence: medium-high (Ontario-specific, not verified for other
+  Canadian provinces).
 
 ## Sources referenced in this document
 
