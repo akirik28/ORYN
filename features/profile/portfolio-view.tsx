@@ -1,7 +1,9 @@
 "use client";
 
+import { FolderOpen } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/oryn/empty-state";
 import { PORTFOLIO_CATEGORY_LABELS, type PortfolioItem, type PortfolioCategory } from "@/lib/portfolio/types";
 
 function ItemCard({ item }: { item: PortfolioItem }) {
@@ -31,9 +33,11 @@ export function PortfolioView({ items }: { items: PortfolioItem[] }) {
 
   if (items.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed p-12 text-center text-sm text-muted-foreground">
-        Nothing here yet — achievements you add to your profile will appear here automatically.
-      </p>
+      <EmptyState
+        icon={FolderOpen}
+        title="Nothing here yet"
+        description="Achievements you add to your profile will appear here automatically."
+      />
     );
   }
 

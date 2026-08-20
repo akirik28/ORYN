@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Pencil, Trash2, Loader2, Sparkles, Check } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Sparkles, Check, Inbox, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,6 +15,7 @@ import type { FieldConfig } from "./field-config";
 import { refineAchievement } from "@/app/(app)/profile/actions";
 import type { AchievementRefinement } from "@/lib/ai/refine-achievement";
 import { SectionHeader } from "@/components/oryn/section-header";
+import { EmptyState } from "@/components/oryn/empty-state";
 
 interface AchievementSectionProps<T extends { id: string }> {
   title: string;
@@ -36,6 +37,10 @@ interface AchievementSectionProps<T extends { id: string }> {
   onUpdate: (id: string, values: FormValues) => Promise<{ error?: string }>;
   onDelete: (id: string) => Promise<{ error?: string }>;
   emptyStateText: string;
+  /** Defaults to a generic "nothing here" glyph — this one component backs ~15 unrelated
+   * section types (Goals, Activities, Research, Skills, ...), so no single icon fits all
+   * of them; callers may pass a more specific one where it's worth the prop. */
+  emptyStateIcon?: LucideIcon;
 }
 
 export function AchievementSection<T extends { id: string }>({
@@ -49,6 +54,7 @@ export function AchievementSection<T extends { id: string }>({
   onUpdate,
   onDelete,
   emptyStateText,
+  emptyStateIcon = Inbox,
 }: AchievementSectionProps<T>) {
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -142,7 +148,7 @@ export function AchievementSection<T extends { id: string }>({
       />
 
       {items.length === 0 ? (
-        <p className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">{emptyStateText}</p>
+        <EmptyState icon={emptyStateIcon} title={emptyStateText} className="py-6" />
       ) : (
         <ul className="divide-y rounded-lg border">
           {items.map((item) => {

@@ -56,7 +56,7 @@ export default async function ConnectionsPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">Accepted connections will appear here.</p>
+              <EmptyState icon={Users} title="Accepted connections will appear here." className="py-6" />
             )}
           </section>
 

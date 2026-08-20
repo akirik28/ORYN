@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { getMonthlyReview } from "@/lib/scoring/monthly-review";
 import { DIMENSION_LABELS } from "@/lib/scoring/labels";
+import { EmptyState } from "@/components/oryn/empty-state";
 
 export const metadata = { title: "Progress" };
 
@@ -41,12 +42,11 @@ export default async function ProgressPage() {
       </div>
 
       {!review.hasHistory ? (
-        <div className="rounded-xl border border-dashed p-8 text-center">
-          <p className="text-sm text-muted-foreground">
-            Not enough history yet — check back after your profile has had a chance to change over a few weeks.
-            {review.overallAfter !== null ? ` Your current Career Profile score is ${review.overallAfter}/100.` : ""}
-          </p>
-        </div>
+        <EmptyState
+          icon={TrendingUp}
+          title="Not enough history yet"
+          description={`Check back after your profile has had a chance to change over a few weeks.${review.overallAfter !== null ? ` Your current Career Profile score is ${review.overallAfter}/100.` : ""}`}
+        />
       ) : (
         <>
           <section className="rounded-2xl border border-brand-primary-border bg-brand-primary-subtle p-6">
