@@ -2460,10 +2460,31 @@ rather than guessed). `admissions_url`: 489 → 512/1019 (50.2%) — crossed the
 110 universities total across four batches this session.
 
 **Parallel background campaigns launched this session** (per the founder's explicit
-parallel-capacity directive), running concurrently with this foreground work: programme-
-catalogue expansion batch 2 (still in progress as of this note — see uncommitted changes
-to `lib/acquisition/programs.ts`/`scripts/acquire-programs.ts` if picking this up before
-it finishes, do not edit those files while that agent owns them), competitions dataset
-expansion, research/internship/scholarship opportunities expansion, and student-count
-coverage. Results not yet known — check git log and live DB state directly rather than
-trusting this note once those land, per this file's own standing practice.
+parallel-capacity directive): competitions dataset expansion landed clean (52 → 63,
+commit `0222441`); student-count coverage landed clean (383 → 403 universities, commit
+`7b2a548`); research/internship/scholarship opportunities still in progress as of this
+note; the programme-catalogue batch 2 agent stalled once (10 min no-progress), was
+resumed (found and fixed a real bug along the way — Waterloo's rule matched
+"Bachelor of Arts"/"Bachelor of Science" as if they were named programmes, when the
+official pages are purely descriptive hub pages with no "apply to X" language — contrast
+kept deliberately against genuine admission-plan pages like "Physical Sciences", whose
+own page says "Apply to Physical Sciences and choose one of these eight majors"), and a
+second agent is now finishing the remaining Waterloo chunks plus backfilling a genuine
+Edinburgh audit-trail gap found along the way (95 applied rows, only 5 had a matching
+`program_research_queue` entry). Still uncommitted as of this note: the Waterloo
+bachelor-of-arts/bachelor-of-science exclude fix in `scripts/acquire-programs.ts` — do
+not edit that file until the finishing agent commits it.
+
+**Admissions URL batch 5 — next 17 ranked universities**: Universidad de Chile, VU
+Amsterdam, Harbin Institute of Technology, University of Bern, IIT Kanpur, American
+University of Beirut, University of Twente, University of Gothenburg, Universidad
+Autónoma de Madrid, University of Florida, University of Ottawa, University of
+Strathclyde, University of Lausanne, ENS de Lyon, University of Lisbon, QUT, Victoria
+University of Wellington — same rigor (IISc Bangalore and National Cheng Kung University
+dropped after repeated fetch failures / insufficient evidence rather than guessed).
+One incidental finding: ENS de Lyon's stored `website_url` (`ens-lyon.eu`) appears to be
+wrong/outdated — the real official domain confirmed via search is `ens-lyon.fr`; the
+admissions_url written here uses the correct domain, but the `website_url` field itself
+was not corrected (out of scope for this campaign) — worth a future fix.
+`admissions_url`: 512 → 529/1019 (51.9%), 122 universities total across five batches
+this session.
