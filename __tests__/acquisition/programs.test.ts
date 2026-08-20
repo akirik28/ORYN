@@ -129,3 +129,46 @@ describe("subjectCategoryOf — unaffected by the token-priority fix", () => {
     expect(subjectCategoryOf("Chemistry [BSc/MSci]")).toBe("chemistry");
   });
 });
+
+describe("extractPrograms — entity-encoded query-string hrefs (found live: Universiti Sains Malaysia undergraduate index)", () => {
+  test("an &amp;-joined query string decodes to a real, correctly-keyed URL rather than a mangled one", () => {
+    // Real case: USM's programme links are Joomla article URLs like
+    // "?view=article&id=716&catid=76", rendered in the raw HTML as "&amp;" like any other
+    // entity. Before decoding the href first, the literal characters "&amp;" (which contain a
+    // real "&") would split the query string in the wrong place when handed to `new URL()`,
+    // silently storing the id under the mangled key "amp;id" instead of "id".
+    const html = anchor("/index.php/undergraduate/undergraduate-international?view=article&amp;id=716&amp;catid=76", "Bachelor in Computer Science with Honours");
+    const rule: CatalogueRule = {
+      hrefPattern: "undergraduate-international\\?view=article&id=[0-9]+&catid=[0-9]+",
+      disableDefaultExcludes: ["/index"],
+      sectionIsUndergraduate: true,
+    };
+    const result = extract(html, rule);
+    expect(result).toHaveLength(1);
+    expect(result[0].officialUrl).toBe("https://study.example.ac.uk/index.php/undergraduate/undergraduate-international?view=article&id=716&catid=76");
+  });
+});
+
+describe("extractPrograms — disableDefaultExcludes (found live: Universiti Sains Malaysia undergraduate index)", () => {
+  test("DEFAULT_EXCLUDES' '/index' substring match rejects every URL on a Joomla-run site (front controller is /index.php) unless opted out", () => {
+    const html = anchor("/index.php/undergraduate/undergraduate-international?view=article&amp;id=716&amp;catid=76", "Bachelor in Computer Science with Honours");
+    const withoutOverride: CatalogueRule = {
+      hrefPattern: "undergraduate-international\\?view=article&id=[0-9]+&catid=[0-9]+",
+      sectionIsUndergraduate: true,
+    };
+    expect(extract(html, withoutOverride)).toHaveLength(0);
+
+    const withOverride: CatalogueRule = { ...withoutOverride, disableDefaultExcludes: ["/index"] };
+    expect(extract(html, withOverride)).toHaveLength(1);
+  });
+
+  test("other DEFAULT_EXCLUDES entries still apply when only '/index' is disabled", () => {
+    const html = anchor("/index.php/undergraduate/apply-now", "Apply now");
+    const rule: CatalogueRule = {
+      hrefPattern: "/index\\.php/undergraduate/[a-z-]+",
+      disableDefaultExcludes: ["/index"],
+      sectionIsUndergraduate: true,
+    };
+    expect(extract(html, rule)).toHaveLength(0);
+  });
+});

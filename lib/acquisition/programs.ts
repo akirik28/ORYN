@@ -210,6 +210,16 @@ export interface CatalogueRule {
   hrefPattern: string;
   /** Hrefs matching any of these are rejected (index pages, fee pages, language switchers). */
   excludePatterns?: string[];
+  /**
+   * DEFAULT_EXCLUDES entries to skip for this one catalogue. Rare, and opt-in only so every
+   * other catalogue's behaviour is unaffected — added because DEFAULT_EXCLUDES' "/index" (meant
+   * to drop generic landing/index pages) also matches "/index.php", which is Joomla's front
+   * controller and therefore a substring of *every* URL on a Joomla-run site, not just landing
+   * pages. Found live against Universiti Sains Malaysia's official undergraduate index, whose
+   * real programme links are "/index.php/undergraduate/undergraduate-international?view=article
+   * &id=...&catid=..." — without this, "/index" silently rejected all of them.
+   */
+  disableDefaultExcludes?: string[];
   /** True when the catalogue section itself establishes undergraduate level. */
   sectionIsUndergraduate: boolean;
   /** Shortest acceptable link text, to drop nav fragments. */
@@ -248,14 +258,27 @@ export function extractPrograms(
   const { pageUrl, officialWebsite, universityId, rule } = context;
   const anchor = /<a[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
   const hrefRe = new RegExp(rule.hrefPattern, "i");
-  const excludes = [...(rule.excludePatterns ?? []), ...DEFAULT_EXCLUDES];
+  const disabledDefaults = new Set(rule.disableDefaultExcludes ?? []);
+  const excludes = [...(rule.excludePatterns ?? []), ...DEFAULT_EXCLUDES.filter((x) => !disabledDefaults.has(x))];
   const minLength = rule.minTextLength ?? 4;
 
   const byKey = new Map<string, ExtractedProgram>();
   let match: RegExpExecArray | null;
 
   while ((match = anchor.exec(html)) !== null) {
-    const rawHref = match[1];
+    // Entity-decoded before anything else touches it: a catalogue whose programme links are
+    // query strings (`?view=article&id=716&catid=76`) renders that as `&amp;` in the raw HTML
+    // attribute, same as any other text. Matching hrefPattern/excludePatterns against the raw,
+    // undecoded attribute is harmless for the path-only catalogues this pipeline started with
+    // (Delft, Trinity, Edinburgh, Waterloo, Glasgow — no entities in any of their hrefs), but
+    // feeding that undecoded string straight into `new URL()` is not: the literal characters
+    // "&amp;" contain a real "&" (the one that starts the entity), so the URL parser would
+    // split the query string there and silently store the id under the mangled key "amp;id"
+    // instead of "id" — found live against Universiti Sains Malaysia's official undergraduate
+    // index, whose programme links are exactly this shape. Decoding first, like a browser
+    // would, is what makes the stored official_program_url the same URL a person clicking the
+    // link actually lands on.
+    const rawHref = decodeEntities(match[1]);
     const text = decodeEntities(match[2].replace(/<[^>]*>/g, " "));
     if (text.length < minLength || text.length > 120) continue;
     if (!hrefRe.test(rawHref)) continue;

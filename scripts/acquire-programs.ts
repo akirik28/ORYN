@@ -160,6 +160,63 @@ const CATALOGUES: CatalogueConfig[] = [
     catalogueUrl: "https://www.gla.ac.uk/undergraduate/degrees/",
     rule: { hrefPattern: "/undergraduate/degrees/[a-z0-9-]{3,}/", sectionIsUndergraduate: true },
   },
+  {
+    // Batch 3 (2026-08-20). First entries in China/India/Australia/Japan/Korea/Spain/Malaysia/
+    // Russia/Saudi Arabia/Taiwan's zero-coverage bracket — every candidate below was fetched raw
+    // (not through a browser) and its matched-link list eyeballed by hand before being trusted,
+    // same discipline as batches 1-2. Far more candidates were tried and dropped than kept, and
+    // the failure shapes were new ones this pipeline hadn't hit before, worth recording precisely
+    // so a future pass doesn't re-attempt them blind:
+    //   - Card-grid catalogues where the programme's own name lives in a sibling heading/paragraph
+    //     next to the link rather than inside the anchor's own text — Australian National
+    //     University's "all-programs-and-courses" page (h4 title beside a bare "Course details"
+    //     link) and University of Navarra's "studies/degrees" page (title/category/duration/campus
+    //     all concatenated inside one anchor). extractPrograms() reads only the anchor's own text,
+    //     by design (see this file's header on that constraint), so both would need a materially
+    //     different extraction shape to support rather than a same-shape hrefPattern/exclude tweak.
+    //   - Client-rendered SPA shells that return real HTML over curl but populate the actual
+    //     programme list after hydration — HSE University's Vue app (`bachelor/language/en`; only
+    //     9 incidental links in the raw response against a claimed 40+ programmes).
+    //   - Nav-only / mega-menu pages with no per-programme link at all, just links to colleges or
+    //     department subdomains a student would still have to browse individually — Universiti
+    //     Kebangsaan Malaysia ("undergraduate-programmes"), King Fahd University of Petroleum and
+    //     Minerals ("admissions/majors"), Yonsei University's Global One-Stop Center
+    //     ("gosc/academics/undergraduate"), Zhejiang University's International Campus bachelor
+    //     list (a CMS-mangled URL with only nav links, no programme entries), National Taiwan
+    //     University's "academics_list" (a directory of college subdomains, not degree names),
+    //     IIT Delhi's academics.iitd.ac.in (WordPress content pages, not a programme index),
+    //     Prince Sultan University and Effat University (each splits its catalogue per-college
+    //     with no unified index page).
+    //   - Client-rendered with no server fallback at all — Universidad Autónoma de Madrid's
+    //     "todos-grados" page (nav chrome only, zero degree links in the raw response).
+    //   - Bot-protected — Universitat de Barcelona ("oferta_formativa/graus", HTTP 403 to a
+    //     declared, honest User-Agent).
+    //   - Unreachable/renamed — Alfaisal University's "academics/undergraduate-programs" (404) and
+    //     Australian National University's htaccess-redirect guess before the real
+    //     study.anu.edu.au URL was found (also dropped for the card-grid reason above once found).
+    universityName: "Universiti Sains Malaysia (USM)",
+    country: "Malaysia",
+    catalogueUrl: "https://admission.usm.my/index.php/undergraduate/undergraduate-international",
+    rule: {
+      hrefPattern: "undergraduate-international\\?view=article&id=[0-9]+&catid=[0-9]+",
+      // USM's site is Joomla-run: every real URL, including every genuine programme page,
+      // starts with the "/index.php" front controller. DEFAULT_EXCLUDES' "/index" (meant for
+      // generic index/landing pages) would otherwise reject all 62 of them — found live.
+      disableDefaultExcludes: ["/index"],
+      sectionIsUndergraduate: true,
+    },
+  },
+  {
+    universityName: "IE University",
+    country: "Spain",
+    // Page's own <title> is "Undergraduate Degrees | IE University" — the official undergraduate
+    // index, not a general programmes page that happens to include bachelor's degrees.
+    catalogueUrl: "https://www.ie.edu/university/studies/academic-programs/",
+    rule: {
+      hrefPattern: "academic-programs/bachelor-[a-z-]+/",
+      sectionIsUndergraduate: true,
+    },
+  },
 ];
 
 interface ProgramFact {
