@@ -267,8 +267,29 @@ grounded in a directly-verified official source (Simons Summer Research Program'
 11th-grade junior, no exceptions" eligibility rule) rather than only the aggregate pattern peer's
 own `03` had sourced at lower confidence.
 
-This session's package is now **14 documents** (`00`-`13`, with `06` as 8 sub-files), **81
-`RULE-COUNSEL-###` entries, 38 registered sources**. All three "next steps" this handoff previously
+This session's package is now **14 documents** (`00`-`13`, with `06` as 8 sub-files), **86
+`RULE-COUNSEL-###` entries, 41 registered sources**. Also since the last update: fixed a stale
+"14 major families" count in `00-overview.md` (now correctly says 17, and the doc table now marks
+which rows are peer-branch-only, since this branch's directory alone doesn't contain `03`/`06`
+families `00`-`09`/`07`/`08`); upgraded Italy's mechanism sourcing to an official MUR (Italy's
+actual university ministry) source; sharpened the Canada finding after Ontario-specific research
+showed the general case is closer to Tier 3 than this document's first-pass "Tier 2" framing, with
+holistic review concentrated in a specifically-named subset of competitive programs
+(`RULE-COUNSEL-082`); and added Turkey career-outlook notes (explicitly bounded as career-outlook
+context, never admissions-evidence) to all 8 family docs, using İŞKUR's official "Geleceğin
+Meslekleri" list — a source the peer session found first and shared; this session independently
+downloaded and extracted it itself (`pypdf`, after both WebFetch and the Read tool's PDF renderer
+failed in this environment) rather than trusting the peer's characterization of its contents, and
+wrote down honest "no direct match" notes for the 3 families (poli-sci, soc/hist/phil,
+lit/journ/comm — a weak/tangential match only) the vocational-skewed list doesn't actually cover,
+rather than forcing weak citations everywhere for consistency's sake.
+
+**Second file-numbering collision caught and resolved quickly**: the peer session began a new
+`13-field-opportunity-mapping.md` on its own branch, not realizing this session's `13` was already
+taken (`13-implementation-readiness.md`). Caught and flagged before much was written; peer
+renamed to `14-field-opportunity-mapping.md` (their commit `b8a120a`) and both sessions now
+explicitly agree **new documents on either branch start at 14+** going forward, to prevent a third
+occurrence. All three "next steps" this handoff previously
 listed here are now done: peer-branch spot-verification (5/5 claims checked, all accurate — see
 above), doc 11's Canada + generic-Europe-fallback extension (commit `5139681`), and — found only
 by actually doing a self-consistency audit, not anticipated in an earlier version of this list —
