@@ -217,6 +217,86 @@ const CATALOGUES: CatalogueConfig[] = [
       sectionIsUndergraduate: true,
     },
   },
+  {
+    // Batch 4 (2026-08-21). Continuing the same China/India/Australia/Japan/Korea/Russia/Saudi
+    // Arabia/Taiwan zero-coverage push (Malaysia and Spain were closed out by batch 3 above).
+    // Sixteen candidates were fetched raw and inspected by hand this round; NTU Singapore below
+    // is the only one that survived — every other candidate is recorded here, by failure shape,
+    // so a future pass doesn't re-attempt any of them blind. None of batch 1-3's already-tried
+    // list (see the batch-3 comment above) was re-attempted.
+    //   - Bot-protected, confirmed with both the declared acquisition User-Agent AND a standard
+    //     browser User-Agent (so this is not a UA-sniffing issue a nicer header would fix) —
+    //     McMaster University's Acalog calendar (academiccalendars.romcmaster.ca, AWS WAF
+    //     `x-amzn-waf-action: challenge`, HTTP 202 with an empty body to both UAs), University of
+    //     Alberta (ualberta.ca/en/undergraduate-programs, CloudFront HTTP 403; its Acalog calendar
+    //     at calendar.ualberta.ca hit the identical AWS WAF challenge as McMaster), Monash
+    //     University (monash.edu/study/courses/find-a-course, HTTP 403), and National University
+    //     of Singapore re-checked at a different, cleaner-looking URL than the batch-2 attempt
+    //     (nus.edu.sg/oam/undergraduate-programmes — still Incapsula-protected, `noindex,nofollow`
+    //     shell with only an `_Incapsula_Resource` challenge script, same as before).
+    //   - JS-driven course-finder/degree-finder widgets, same failure shape as Melbourne/Sydney/
+    //     UNSW/Queensland from batch 2 — University of British Columbia (you.ubc.ca/programs/,
+    //     1.3MB response but only 126 anchors, all nav/footer chrome, zero programme links),
+    //     University of Auckland (find-a-study-option.html, a "Filter by programme type" tab
+    //     widget with no per-programme links in the raw response), University of Adelaide
+    //     (degree-finder/subjectsearch, nav-only, the tool's own results are client-rendered).
+    //   - Client-rendered SPA shell returning almost no markup over curl, same shape as HSE
+    //     University from batch 3 — Peking University's international-admission undergraduate page
+    //     (isd.pku.edu.cn/en/undergraduate_program.php; raw response is an empty `<html><head>
+    //     </head><body></body></html>`).
+    //   - New failure shape this batch: the official programme list published as a downloadable
+    //     PDF or spreadsheet attachment rather than as HTML links — Shanghai Jiao Tong
+    //     University's international-undergraduate page links out to a PDF ("List of 2026 SJTU
+    //     Undergraduate Program in Chinese for International Students") instead of listing named
+    //     programmes as anchors; Fudan University's "Undergraduate" section is a news/announcement
+    //     feed whose only two real entries are a PDF-linked article and an .xlsx attachment, not a
+    //     catalogue of programme pages.
+    //   - New failure shape this batch: a card-grid where even the department/programme name is
+    //     plain text next to the link, not inside it — closely related to (but distinct from) the
+    //     ANU/Navarra card-grid shape from batch 3, which at least put a title in a sibling
+    //     element; Seoul National University's undergraduate colleges page renders every
+    //     department name as `<p class="text">Dept. of X</p>` with no enclosing `<a>` at all — only
+    //     the parent *college* (not department) is a link, so there is no per-programme anchor to
+    //     extract in the first place, not even a mislabeled one.
+    //   - Directory of department subdomains, not degree names — same shape as IIT Delhi from
+    //     batch 3 — IIT Bombay's "Bachelors' Programmes" page (acad.iitb.ac.in/admissions/
+    //     bachelors) links each subject to that department's own homepage (e.g. che.iitb.ac.in,
+    //     cse.iitb.ac.in), not to a named "X B.Tech" programme page.
+    //   - Nav-only, no majors list at all — KAIST's admission-information page
+    //     (kaist.ac.kr/en/html/admission/0201.html; entirely site chrome, no department/major
+    //     content) and Korea University (oia.korea.ac.kr's admission pages 404 or redirect to
+    //     `about:blank` without a session).
+    //   - Broken/misconfigured page, not merely blocked — University of Delhi's course-listing
+    //     page (du.ac.in/du/index.php?page=courses-offered) returns a ~1KB stub whose only content
+    //     is a JS redirect to a private IP address (192.168.1.1), not a real 403/404 or a
+    //     JS-rendered SPA — most likely a stale reverse-proxy or geo-routing artifact on DU's own
+    //     infrastructure. Recorded as broken rather than retried, since there is no clean page
+    //     behind it to target differently.
+    universityName: "Nanyang Technological University, Singapore (NTU Singapore)",
+    country: "Singapore",
+    // Page lists both the university's overall "Degree Programmes" and links out to graduate/
+    // other-faculty pages, but every genuine undergraduate entry's own URL carries the literal
+    // path segment "/education/undergraduate-programme/" (singular "programme", NTU's own
+    // taxonomy term) — confirmed live: none of the 55+ matched links name a master's, PhD, MBA,
+    // or diploma award, and the segment itself is what sectionIsUndergraduate below asserts as
+    // evidence, the same "the URL path itself carries the degree-level claim" design already used
+    // for Delft and IE University above. Deliberately narrow: this excludes real undergraduate
+    // pages hosted under other faculty subpaths (e.g. .../mae/admissions/undergraduate-programmes/
+    // detail/... for Robotics, or the Nanyang Business School's shared single-major/double-major
+    // hub pages) rather than risk a looser pattern pulling in minors or search-filter links.
+    catalogueUrl: "https://www.ntu.edu.sg/education/degree-programmes",
+    rule: {
+      hrefPattern: "/education/undergraduate-programme/[a-z0-9()-]+",
+      // One link in the live page points at wcms-prod-admin.ntu.edu.sg instead of the public
+      // www.ntu.edu.sg — confirmed by direct fetch to be a non-public CMS staging host (HTTP 403
+      // to the declared acquisition User-Agent), evidently a content-authoring mistake left in the
+      // published page. Same institution domain (so sameInstitutionDomain wouldn't catch it) but
+      // not a URL a real visitor can land on, so it is excluded explicitly rather than stored as a
+      // broken official_program_url.
+      excludePatterns: ["wcms-prod-admin"],
+      sectionIsUndergraduate: true,
+    },
+  },
 ];
 
 interface ProgramFact {
