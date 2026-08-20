@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -37,7 +38,11 @@ export function SaveUniversityButton({
         disabled={isPending}
         onClick={() =>
           startTransition(async () => {
-            await addTargetUniversity(universityId);
+            const result = await addTargetUniversity(universityId);
+            if (result.error) {
+              toast.error(result.error);
+              return;
+            }
             router.refresh();
           })
         }
@@ -53,7 +58,11 @@ export function SaveUniversityButton({
       onValueChange={(value) =>
         value &&
         startTransition(async () => {
-          await updateTargetUniversityStatus(targetId, value as TargetStatus);
+          const result = await updateTargetUniversityStatus(targetId, value as TargetStatus);
+          if (result.error) {
+            toast.error(result.error);
+            return;
+          }
           router.refresh();
         })
       }

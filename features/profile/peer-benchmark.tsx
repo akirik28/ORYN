@@ -1,5 +1,7 @@
+import { Users } from "lucide-react";
 import { DIMENSION_LABELS } from "@/lib/scoring/labels";
 import { MIN_COHORT_SIZE, type PeerBenchmarkSummary } from "@/lib/benchmarking";
+import { EmptyState } from "@/components/oryn/empty-state";
 
 /**
  * Phase 19 — deliberately shows nothing precise below MIN_COHORT_SIZE. Pre-launch, that's
@@ -12,10 +14,12 @@ export function PeerBenchmark({ summary }: { summary: PeerBenchmarkSummary }) {
 
   if (withData.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-        Not enough comparable Oryn students yet to show peer comparison ({summary.cohortDescription.toLowerCase()}, minimum{" "}
-        {MIN_COHORT_SIZE}).
-      </div>
+      <EmptyState
+        icon={Users}
+        title="Not enough comparable Oryn students yet"
+        description={`To show peer comparison (${summary.cohortDescription.toLowerCase()}, minimum ${MIN_COHORT_SIZE}).`}
+        className="py-6"
+      />
     );
   }
 

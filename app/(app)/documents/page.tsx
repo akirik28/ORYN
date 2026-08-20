@@ -1,8 +1,10 @@
+import { FileText } from "lucide-react";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { listLinkableItems } from "@/lib/profile/list-linkable-items";
 import { UploadEvidenceDialog } from "@/features/documents/upload-evidence-dialog";
 import { EvidenceRow } from "@/features/documents/evidence-row";
+import { EmptyState } from "@/components/oryn/empty-state";
 import { EVIDENCE_LINKABLE_LABELS, type EvidenceLinkableTable } from "@/lib/validation/evidence";
 
 export const metadata = { title: "Documents" };
@@ -51,9 +53,11 @@ export default async function DocumentsPage() {
           ))}
         </ul>
       ) : (
-        <div className="rounded-xl border border-dashed p-12 text-center text-sm text-muted-foreground">
-          No evidence uploaded yet. Evidence is always optional — self-reported achievements are still fully valid.
-        </div>
+        <EmptyState
+          icon={FileText}
+          title="No evidence uploaded yet"
+          description="Evidence is always optional — self-reported achievements are still fully valid."
+        />
       )}
     </div>
   );

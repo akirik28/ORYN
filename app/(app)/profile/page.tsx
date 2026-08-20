@@ -285,7 +285,7 @@ export default async function ProfilePage() {
         items={activities}
         summaries={summaryMap(activities, (item) => ({ title: item.title, subtitle: item.organization ?? undefined }))}
         fields={ACTIVITY_FIELDS}
-        defaultValues={{ title: "", organization: null, organization_entity_id: null, category: "club", description: null, is_leadership_role: false, people_led: null, organization_scope: null, opportunity_title: null, opportunity_id: null, start_date: null, end_date: null, ongoing: false, hours_per_week: null, weeks_per_year: null, location: null, story_notes: null }}
+        defaultValues={{ title: "", organization: null, organization_entity_id: null, category: "other", description: null, is_leadership_role: false, people_led: null, organization_scope: null, opportunity_title: null, opportunity_id: null, start_date: null, end_date: null, ongoing: false, hours_per_week: null, weeks_per_year: null, location: null, story_notes: null }}
         onCreate={createActivity as (v: FormValues) => Promise<{ error?: string }>}
         onUpdate={updateActivity as (id: string, v: FormValues) => Promise<{ error?: string }>}
         onDelete={deleteActivity}

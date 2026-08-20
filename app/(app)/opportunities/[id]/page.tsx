@@ -73,9 +73,10 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
         {CYCLE_STATUS_LABEL[opportunity.cycle_status] ? <StatusBadge label={CYCLE_STATUS_LABEL[opportunity.cycle_status]!} tone="info" /> : null}
         <StatusBadge label={humanize(opportunity.category)} tone="brand" />
         {match && !match.eligible ? <StatusBadge label="Not eligible for you" tone="neutral" /> : null}
+        {match && match.eligible && match.eligibility_notes ? <StatusBadge label="Eligibility unknown" tone="warning" /> : null}
       </div>
 
-      {match && !match.eligible && match.eligibility_notes ? (
+      {match && match.eligibility_notes ? (
         <p className="rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">{match.eligibility_notes}</p>
       ) : null}
 

@@ -65,7 +65,10 @@ export interface CompletenessChecklistItem {
  * list (getCompletenessChecklist, used by the new Profile Strength UI) so the two can
  * never drift out of sync with each other.
  */
-function buildChecklist(facts: CompletenessFacts): CompletenessChecklistItem[] {
+/** Counseling-relevant signal (spec Phase 67: "do we know enough about the student to
+ * counsel them") — academics, activities, goals, targets. Deliberately excludes the
+ * professional-profile-pack items below. */
+function coreChecklist(facts: CompletenessFacts): CompletenessChecklistItem[] {
   return [
     {
       label: "Add your school and academic details",
@@ -83,6 +86,15 @@ function buildChecklist(facts: CompletenessFacts): CompletenessChecklistItem[] {
     { label: "Set a career goal", done: facts.goals.length > 0 },
     { label: "Add an interest", done: facts.interests.length > 0 },
     { label: "Add a target university", done: facts.targetUniversities.length > 0 },
+  ];
+}
+
+/** Professional-profile polish (spec section 14, Profile Strength) — headline/bio/skills/
+ * featured/contact. Real signal for "how filled-out is your public professional profile,"
+ * but not counseling signal: a student who writes a bio and adds 3 skills but has no
+ * activities, goals, or target universities doesn't thereby give Oryn more to counsel on. */
+function professionalProfileChecklist(facts: CompletenessFacts): CompletenessChecklistItem[] {
+  return [
     { label: "Add a headline", done: Boolean(facts.profile.headline) },
     { label: "Write an About summary", done: Boolean(facts.profile.about) },
     { label: "Add 3 or more skills", done: facts.skillCount >= 3 },
@@ -91,10 +103,31 @@ function buildChecklist(facts: CompletenessFacts): CompletenessChecklistItem[] {
   ];
 }
 
-export function computeCompleteness(facts: CompletenessFacts): number {
-  const checklist = buildChecklist(facts);
+function buildChecklist(facts: CompletenessFacts): CompletenessChecklistItem[] {
+  return [...coreChecklist(facts), ...professionalProfileChecklist(facts)];
+}
+
+function scorePercent(checklist: CompletenessChecklistItem[]): number {
   const completedCount = checklist.filter((item) => item.done).length;
   return clampScore((completedCount / checklist.length) * 100);
+}
+
+/** Full checklist (all 15 items) as a single percentage — "how filled-out is the whole
+ * profile," professional polish included. Kept for any existing caller of the broad
+ * concept; the counseling-facing score below is what should feed counseling logic. */
+export function computeCompleteness(facts: CompletenessFacts): number {
+  return scorePercent(buildChecklist(facts));
+}
+
+/** What `profiles.completeness_percent` should actually mean: does Oryn know enough about
+ * the student to counsel them. Feeds lib/admissions/persist.ts's admission-outlook data
+ * confidence and the AI advisor's stated "Profile completeness: X%" context line
+ * (lib/ai/student-context.ts) — both should reflect academic/activity/goal signal, not
+ * whether the student wrote a headline. The Profile Strength UI checklist
+ * (getCompletenessChecklist, below) intentionally keeps the full 15-item list — that's a
+ * different, legitimate "how filled-out is your public profile" concept, unchanged here. */
+export function computeCounselingCompleteness(facts: CompletenessFacts): number {
+  return scorePercent(coreChecklist(facts));
 }
 
 /** Powers the Profile Strength suggestions list — only the owner ever sees this

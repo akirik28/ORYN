@@ -7,12 +7,14 @@ import { EmptyState } from "@/components/oryn/empty-state";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
 import { ScoreRing } from "@/features/dashboard/score-ring";
 import { WeeklyFocus } from "@/features/dashboard/weekly-focus";
+import { CounselorWeekFallback } from "@/features/dashboard/counselor-week-fallback";
 import { GeneratePlanButton } from "@/features/dashboard/generate-plan-button";
 import { OutlookBadge } from "@/features/universities/outlook-badge";
 import { DIMENSION_LABELS } from "@/lib/scoring/labels";
 import type { getTargetUniversitiesWithDetails } from "@/lib/universities/queries";
 import type { getUpcomingDeadlines, DeadlineSource } from "@/lib/deadlines/upcoming";
 import type { WeeklyPlanWithActions } from "@/lib/plan/persist";
+import type { CounselorRecommendation } from "@/lib/counselor";
 import type { ProfileDimension } from "@/types/database";
 
 const DEADLINE_SOURCE_ICONS: Record<DeadlineSource, typeof FileText> = {
@@ -30,6 +32,10 @@ export interface DashboardViewProps {
   biggestImprovement: { dimension: ProfileDimension; delta: number } | null;
   weeklyPlan: WeeklyPlanWithActions | null;
   planError: "not_configured" | "failed" | null;
+  /** Counselor Core's deterministic "do" candidates (B4) — rendered in place of the AI
+   * weekly plan whenever that plan is empty/unavailable, so "This week" always has a real,
+   * useful answer without requiring an AI call. See features/dashboard/counselor-week-fallback.tsx. */
+  counselorThisWeek: CounselorRecommendation[];
   avoidRecommendation: { title: string; reason: string } | null;
   upcomingDeadlines: Awaited<ReturnType<typeof getUpcomingDeadlines>>;
   targetUniversities: Awaited<ReturnType<typeof getTargetUniversitiesWithDetails>>;
@@ -45,11 +51,15 @@ export function DashboardView({
   biggestImprovement,
   weeklyPlan,
   planError,
+  counselorThisWeek,
   avoidRecommendation,
   upcomingDeadlines,
   targetUniversities,
   opportunityPreview,
 }: DashboardViewProps) {
+  const hasAiPlan = Boolean(weeklyPlan && weeklyPlan.actions.length > 0);
+  const usingCounselorFallback = !hasAiPlan && counselorThisWeek.length > 0;
+
   return (
     <div className="space-y-10">
       <PageHeader title={`${greeting}, ${displayName}.`} description="Here's what matters most right now." />
@@ -92,9 +102,16 @@ export function DashboardView({
       </section>
 
       <section className="space-y-4">
-        <SectionHeader title="Your focus this week" description={weeklyPlan?.plan.summary ?? undefined} />
-        {weeklyPlan && weeklyPlan.actions.length > 0 ? (
-          <WeeklyFocus actions={weeklyPlan.actions} />
+        <SectionHeader
+          title="Your focus this week"
+          description={
+            weeklyPlan?.plan.summary ?? (usingCounselorFallback ? "Based on your verified profile data — no AI required." : undefined)
+          }
+        />
+        {hasAiPlan ? (
+          <WeeklyFocus actions={weeklyPlan!.actions} />
+        ) : usingCounselorFallback ? (
+          <CounselorWeekFallback actions={counselorThisWeek} />
         ) : (
           <EmptyState
             icon={Compass}

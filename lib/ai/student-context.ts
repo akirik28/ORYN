@@ -20,6 +20,10 @@ export interface StudentAdvisorContext {
     busyModeUntil: string | null;
     /** Counselor Core eligibility (age gates on opportunities) — not used in prompt text today. */
     birthYear: number | null;
+    /** Counselor Core eligibility (citizenship gates on opportunities, migration 0047) — never
+     * inferred from `country` (residence/school location, a separate fact). Not used in
+     * prompt text today, same as birthYear. */
+    citizenshipCountries: string[];
   };
   profileScores: { dimension: string; score: number; confidence: string }[];
   overallScore: number;
@@ -135,11 +139,13 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
   const { dimensions, overallScore } = computeCareerProfile(facts);
 
   const [profileRes, targetUniversities, upcomingDeadlines, recentRecsRes, recentActionsRes, pendingApplicationRequirements, sportsRes, interestsRes] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("display_name, country, school_name, graduation_year, curriculum, weekly_time_budget, busy_mode, busy_mode_until, completeness_percent, birth_year")
-      .eq("id", userId)
-      .single(),
+    // select("*"), not an explicit column list: an explicit list naming a column that
+    // doesn't exist yet on a given environment (citizenship_countries, migration 0047 — same
+    // no-DDL-access constraint as 0043/0046) makes PostgREST reject the WHOLE query
+    // (42703 "column does not exist"), silently degrading every other field here to its
+    // fallback too, not just the missing one. Confirmed live this session. select("*") only
+    // returns whatever columns actually exist, self-healing once the migration lands.
+    supabase.from("profiles").select("*").eq("id", userId).single(),
     getTargetUniversitiesForContext(supabase, userId),
     // Reuses the same cross-source Deadline Engine the dashboard's "Due soon" widget and
     // the deadline-reminder job use (lib/deadlines/upcoming.ts) — this used to be a bespoke
@@ -187,6 +193,7 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
       busyMode: profile?.busy_mode ?? false,
       busyModeUntil: profile?.busy_mode_until ?? null,
       birthYear: profile?.birth_year ?? null,
+      citizenshipCountries: profile?.citizenship_countries ?? [],
     },
     profileScores: dimensions.map((d) => ({ dimension: d.dimension, score: d.score, confidence: d.confidence })),
     overallScore,

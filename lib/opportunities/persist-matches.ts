@@ -14,10 +14,19 @@ export async function refreshOpportunityMatches(userId: string): Promise<void> {
   const supabase = await createClient();
 
   const [profileRes, scoresRes, interestsRes, opportunitiesRes, savedRes] = await Promise.all([
-    supabase.from("profiles").select("birth_year, country").eq("id", userId).single(),
+    // select("*"), not an explicit column list: an explicit list naming citizenship_countries
+    // (migration 0047, not applied on every environment) makes PostgREST reject the WHOLE
+    // query (42703 "column does not exist"), silently degrading every other profile field
+    // here to its fallback too -- confirmed live against this environment's DB. Same fix as
+    // 08ddf0f applied to lib/ai/student-context.ts for the identical failure mode.
+    supabase.from("profiles").select("*").eq("id", userId).single(),
     supabase.from("profile_scores").select("dimension, score, confidence, reason_codes").eq("user_id", userId),
     supabase.from("student_interests").select("label").eq("user_id", userId),
-    supabase.from("opportunities").select("id, category, minimum_age, maximum_age, eligible_countries, fields, country").eq("status", "active"),
+    // select("*") for the same reason as above -- eligible_citizenships is migration 0047.
+    supabase
+      .from("opportunities")
+      .select("*")
+      .eq("status", "active"),
     // Counselor Core fix: an opportunity the student already applied to or explicitly
     // dismissed must never resurface as a fresh recommendation — see computeEligibility's
     // savedStatus parameter (lib/opportunities/matching.ts).
@@ -42,6 +51,8 @@ export async function refreshOpportunityMatches(userId: string): Promise<void> {
     country: profileRes.data?.country ?? null,
     interests: (interestsRes.data ?? []).map((i) => i.label),
     weakestDimensions,
+    citizenshipCountries: profileRes.data?.citizenship_countries ?? [],
+    graduationYear: profileRes.data?.graduation_year ?? null,
   };
 
   const rows = opportunities.map((opportunity) => {
@@ -50,6 +61,8 @@ export async function refreshOpportunityMatches(userId: string): Promise<void> {
       minimumAge: opportunity.minimum_age,
       maximumAge: opportunity.maximum_age,
       eligibleCountries: opportunity.eligible_countries,
+      eligibleCitizenships: opportunity.eligible_citizenships ?? [],
+      eligibleGrades: opportunity.eligible_grades ?? [],
       fields: opportunity.fields,
       country: opportunity.country,
     };

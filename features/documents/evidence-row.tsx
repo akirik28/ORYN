@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { File, Trash2, Loader2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +45,11 @@ export function EvidenceRow({
           disabled={isPending}
           onClick={() =>
             startTransition(async () => {
-              await deleteEvidence(id);
+              const result = await deleteEvidence(id);
+              if (result.error) {
+                toast.error(result.error);
+                return;
+              }
               router.refresh();
             })
           }

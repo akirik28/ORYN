@@ -46,6 +46,27 @@ export interface ProfileGap {
 }
 
 // ---------------------------------------------------------------------------
+// Strengths — first-class counterpart to Gaps above (lib/counselor/strengths.ts). Before
+// this existed, "strength" was only ever inferred indirectly (as "not the weakest
+// dimension") — never a typed, rankable concept of its own. Mirrors ProfileGap's shape
+// exactly: same DimensionScoreRow input, same rank/spread/reasonCodes anatomy, just
+// oriented strongest-first instead of weakest-first.
+// ---------------------------------------------------------------------------
+
+export type StrengthTier = "standout" | "notable" | "typical" | "insufficient_data";
+
+export interface ProfileStrength {
+  dimension: ProfileDimension;
+  score: number;
+  confidence: DataConfidence;
+  tier: StrengthTier;
+  /** 1 = strongest dimension. */
+  rank: number;
+  spreadFromWeakest: number;
+  reasonCodes: ReasonCode[];
+}
+
+// ---------------------------------------------------------------------------
 // Candidates (Phase E)
 // ---------------------------------------------------------------------------
 

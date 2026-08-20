@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { computeCompleteness, getCompletenessChecklist } from "@/lib/scoring/completeness";
+import { computeCompleteness, computeCounselingCompleteness, getCompletenessChecklist } from "@/lib/scoring/completeness";
 import type { CompletenessFacts } from "@/lib/scoring/completeness";
 
 function emptyFacts(): CompletenessFacts {
@@ -112,6 +112,45 @@ describe("computeCompleteness", () => {
     const result = computeCompleteness(facts);
     expect(result).toBeGreaterThan(0);
     expect(result).toBeLessThan(20); // 1 of 15 items now, not 1 of 10
+  });
+});
+
+// This is what actually persists to profiles.completeness_percent (lib/scoring/persist.ts)
+// and feeds lib/admissions/persist.ts's data-confidence gate and the AI advisor's stated
+// completeness line — must reflect counseling signal only, never professional-profile
+// polish, so a bio-and-skills-only profile can't buy "high" admission-outlook confidence.
+describe("computeCounselingCompleteness", () => {
+  test("is 0 for a completely empty profile", () => {
+    expect(computeCounselingCompleteness(emptyFacts())).toBe(0);
+  });
+
+  test("reaches 100 from the 10 core items alone, with every professional-profile field still empty", () => {
+    const facts = emptyFacts();
+    facts.profile = { country: "US", school_name: "Lincoln High", graduation_year: 2027, curriculum: "ap", headline: null, about: null };
+    facts.educationRecords = [{ id: "e1" } as never];
+    facts.courses = [{ id: "c1" } as never];
+    facts.activities = [{ id: "a1" } as never];
+    facts.awards = [{ id: "aw1" } as never];
+    facts.projects = [{ id: "p1" } as never];
+    facts.researchExperiences = [{ id: "r1" } as never];
+    facts.goals = [{ id: "g1" } as never];
+    facts.interests = [{ id: "i1" } as never];
+    facts.targetUniversities = [{ id: "tu1" } as never];
+    // headline/about/skillCount/featuredCount/hasContactInfo deliberately left at empty-facts defaults.
+    expect(computeCounselingCompleteness(facts)).toBe(100);
+  });
+
+  test("stays 0 when only professional-profile fields are filled — the exact regression this fixes", () => {
+    const facts = emptyFacts();
+    facts.profile.headline = "Aspiring Economist";
+    facts.profile.about = "I like building things.";
+    facts.skillCount = 5;
+    facts.featuredCount = 1;
+    facts.hasContactInfo = true;
+    // The broad 15-item score would read ~33% (5/15) here; the counseling-facing score
+    // must not credit any of it, since none of it is academic/activity/goal signal.
+    expect(computeCounselingCompleteness(facts)).toBe(0);
+    expect(computeCompleteness(facts)).toBeGreaterThan(0);
   });
 });
 

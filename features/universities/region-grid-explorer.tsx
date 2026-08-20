@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { Globe2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { EmptyState } from "@/components/oryn/empty-state";
 import { MAP_REGIONS } from "@/lib/data/regions";
 import type { CountryCount } from "./world-map-explorer";
 
@@ -70,9 +72,12 @@ export function RegionGridExplorer({
       </div>
 
       {withData.length === 0 ? (
-        <p className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
-          {region ? `No ${region.name} universities yet — check back soon.` : "University data is still being added. Check back soon."}
-        </p>
+        <EmptyState
+          icon={Globe2}
+          title={region ? `No ${region.name} universities yet` : "University data is still being added"}
+          description="Check back soon."
+          className="py-6"
+        />
       ) : (
         <div role="navigation" aria-label="Browse universities by country">
           <div className="flex flex-wrap gap-2">

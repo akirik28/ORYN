@@ -44,6 +44,26 @@ export async function updateLocation(country: string, city: string | null): Prom
   return {};
 }
 
+/** Distinct from updateLocation's `country` (residence/school location) — citizenship
+ * (migration 0047), never inferred from it, feeds Counselor Core's structured eligibility
+ * check (lib/counselor/eligibility.ts) against opportunities.eligible_citizenships. Never
+ * required — an empty list is a valid, honest "not stated," not an error; Counselor treats
+ * citizenship-restricted opportunities as unknown-eligibility (not confirmed either way)
+ * rather than blocking anything on this being filled in. */
+export async function updateCitizenship(citizenshipCountries: string[]): Promise<{ error?: string }> {
+  const session = await requireUser();
+  const trimmed = [...new Set(citizenshipCountries.map((c) => c.trim()).filter(Boolean))];
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("profiles").update({ citizenship_countries: trimmed }).eq("id", session.userId!);
+  if (error) return { error: "Couldn't save your citizenship." };
+
+  revalidatePath("/settings");
+  revalidatePath("/opportunities");
+  revalidatePath("/advisor");
+  return {};
+}
+
 export async function updateBusyMode(busyMode: boolean, busyModeUntil: string | null): Promise<{ error?: string }> {
   const session = await requireUser();
   const supabase = await createClient();

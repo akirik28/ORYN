@@ -56,6 +56,58 @@ describe("computeEligibility", () => {
     expect(result.eligible).toBe(true);
   });
 
+  // Unknown must never read the same as confirmed — eligible stays true (a restriction
+  // absent evidence doesn't hard-exclude), but notes must say so, so a caller can't badge
+  // an unverified match identically to a confirmed one.
+  test("surfaces an unknown-eligibility note when a country restriction can't be checked", () => {
+    const result = computeEligibility(student({ country: null }), opportunity({ eligibleCountries: ["United States"] }));
+    expect(result.eligible).toBe(true);
+    expect(result.notes).toMatch(/country/i);
+  });
+
+  test("surfaces an unknown-eligibility note when an age restriction can't be checked", () => {
+    const result = computeEligibility(student({ age: null }), opportunity({ minimumAge: 16 }));
+    expect(result.eligible).toBe(true);
+    expect(result.notes).toMatch(/age/i);
+  });
+
+  test("is ineligible when a citizenship restriction is known to exclude the student", () => {
+    const result = computeEligibility(
+      student({ citizenshipCountries: ["Canada"] }),
+      opportunity({ eligibleCitizenships: ["United States"] })
+    );
+    expect(result.eligible).toBe(false);
+    expect(result.notes).toMatch(/citizenship/i);
+  });
+
+  test("is eligible when the student holds one of the eligible citizenships", () => {
+    const result = computeEligibility(
+      student({ citizenshipCountries: ["Canada", "United States"] }),
+      opportunity({ eligibleCitizenships: ["United States"] })
+    );
+    expect(result.eligible).toBe(true);
+    expect(result.notes).toBeNull();
+  });
+
+  test("surfaces an unknown-eligibility note when a citizenship restriction can't be checked", () => {
+    const result = computeEligibility(student({ citizenshipCountries: [] }), opportunity({ eligibleCitizenships: ["United States"] }));
+    expect(result.eligible).toBe(true);
+    expect(result.notes).toMatch(/citizenship/i);
+  });
+
+  test("is ineligible when a grade restriction is known to exclude the student", () => {
+    const nextYear = new Date().getFullYear() + 1;
+    const result = computeEligibility(student({ graduationYear: nextYear }), opportunity({ eligibleGrades: ["9", "10"] }));
+    expect(result.eligible).toBe(false);
+    expect(result.notes).toMatch(/grade/i);
+  });
+
+  test("surfaces an unknown-eligibility note when a grade restriction can't be checked", () => {
+    const result = computeEligibility(student({ graduationYear: null }), opportunity({ eligibleGrades: ["9", "10"] }));
+    expect(result.eligible).toBe(true);
+    expect(result.notes).toMatch(/grade/i);
+  });
+
   // Confirmed live against a real profile this session: a student's own stored country
   // can be "Türkiye" (native spelling) while opportunity data says "Turkey" — a plain
   // .includes() (what this function used before) treats those as two different countries.
