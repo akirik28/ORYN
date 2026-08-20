@@ -62,7 +62,9 @@ export function evaluateRecommendationReadiness(opportunity: Opportunity): Recom
   const hasAgeInfo = opportunity.minimum_age !== null || opportunity.maximum_age !== null;
   const hasCountryInfo = opportunity.eligible_countries.length > 0;
   const hasGradeInfo = opportunity.eligible_grades.length > 0;
-  const hasCitizenshipInfo = Boolean(opportunity.citizenship_restrictions || opportunity.residency_restrictions);
+  const hasCitizenshipInfo = Boolean(
+    opportunity.citizenship_restrictions || opportunity.residency_restrictions || opportunity.eligible_citizenships?.length
+  );
   if (!hasAgeInfo && !hasCountryInfo && !hasGradeInfo && !hasCitizenshipInfo) {
     qualitySignals.push("No eligibility information at all (age/country/grade/citizenship) — every student will see this as 'unknown, verify'.");
   }

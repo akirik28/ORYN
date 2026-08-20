@@ -93,6 +93,29 @@ async function main(): Promise<void> {
   for (const [reason, count] of [...signalCounts.entries()].sort((a, b) => b[1] - a[1])) {
     console.log(`  ${count.toString().padStart(4)}  ${reason}`);
   }
+
+  // Data-quality sprint, Part T — "how many opportunities can Counselor responsibly reason
+  // about" broken down by category, not just a total. A category with 0 ready rows is
+  // invisible to Counselor for every gap that category addresses (lib/opportunities/
+  // matching.ts's CATEGORY_DIMENSIONS) regardless of how many raw rows it has.
+  console.log("\n=== By category ===");
+  const byCategory = new Map<string, { total: number; ready: number; deadline: number; age: number; grade: number; citizenship: number }>();
+  for (const o of opportunities) {
+    const entry = byCategory.get(o.category) ?? { total: 0, ready: 0, deadline: 0, age: 0, grade: 0, citizenship: 0 };
+    entry.total += 1;
+    if (reports.find((r) => r.opportunityId === o.id)?.tier === "recommendation_ready") entry.ready += 1;
+    if (o.deadline) entry.deadline += 1;
+    if (o.minimum_age !== null || o.maximum_age !== null) entry.age += 1;
+    if (o.eligible_grades.length > 0) entry.grade += 1;
+    if (o.citizenship_restrictions || o.residency_restrictions || (o as { eligible_citizenships?: string[] }).eligible_citizenships?.length) entry.citizenship += 1;
+    byCategory.set(o.category, entry);
+  }
+  for (const [category, c] of [...byCategory.entries()].sort((a, b) => b[1].total - a[1].total)) {
+    console.log(
+      `  ${category.padEnd(18)} total ${c.total.toString().padStart(3)}  ready ${c.ready.toString().padStart(3)}  ` +
+        `deadline ${c.deadline.toString().padStart(3)}  age ${c.age.toString().padStart(3)}  grade ${c.grade.toString().padStart(3)}  citizenship/residency ${c.citizenship.toString().padStart(3)}`
+    );
+  }
 }
 
 main();
