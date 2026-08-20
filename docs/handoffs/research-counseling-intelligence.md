@@ -241,10 +241,19 @@ of the O*NET page; (2) the BLS "about 317,700 average annual openings" figure fo
 occupations — confirmed accurate against BLS's own 2024-2034 projection cycle; (3) the
 International Biology Olympiad "70+ countries" participation figure — confirmed accurate (current
 sourcing puts it at 78-81 countries depending on year, so "70+" is a safe, correct
-characterization). **All three checks passed with precision, including one exact quote match** —
-this materially upgrades this session's confidence in the peer branch's overall sourcing
+characterization). **All three checks passed with precision, including one exact quote match.** Extended further on a
+later pass: (4) peer's `06/05-engineering-me-ce-ae-ee.md` claim that civil engineering accounts for
+the largest share of new engineering-occupation jobs per BLS — confirmed directionally accurate,
+with the same "older BLS cycle, worth re-checking against the live page" caveat peer had already
+self-flagged for a similar figure in their own life-sciences doc, so this isn't even a new gap,
+just a second confirmed instance of a caveat peer had already applied to itself; (5) peer's `07`
+citation of `AGENTS.md` Phase 28 ("distinguish verified information from Oryn analysis") — checked
+directly against this repo's own `AGENTS.md` (not a web source) and confirmed to match the actual
+Phase 28 text precisely. **Five for five checks now, spanning four different peer documents and
+two different source types (external web sources and an internal repo citation) — all accurate.**
+This materially upgrades this session's confidence in the peer branch's overall sourcing
 discipline beyond the earlier, more cautious "read and found reasonable" framing. Not an
-exhaustive audit (3 claims across 2 of the peer's 17 total documents), but a genuine, positive,
+exhaustive audit (5 claims across 4 of the peer's 21 total documents), but a genuine, positive,
 independently-obtained data point for whoever does final integration.
 
 Doc 11's Germany/Netherlands mechanism claims were upgraded to official DAAD/government.nl/
@@ -258,18 +267,25 @@ grounded in a directly-verified official source (Simons Summer Research Program'
 11th-grade junior, no exceptions" eligibility rule) rather than only the aggregate pattern peer's
 own `03` had sourced at lower confidence.
 
-This session's package is now 13 documents (`00`-`12`, with `06` as 8 sub-files), 72
-`RULE-COUNSEL-###` entries, 34 registered sources. Genuinely good next steps if more time/a future
-session picks this up, roughly in priority order: (1) the final cross-branch integration this
-handoff's own "Integration instructions" section describes — not something either research session
-should do unilaterally; (2) independent verification of a sample of the *peer* branch's specific
-factual claims (this session has verified every claim about its own half in depth, but per `10`
-§5's own honest limitation, has only "read and found reasonable," not independently re-verified,
-the peer's content) — in progress this session, see below if a commit past `765c68a` exists; (3)
-extend doc 11's tier framework to the remaining `AGENTS.md`-named "generic Europe fallback" case
-and to Canada (mentioned in onboarding's target-geography options, `AGENTS.md` Screen 4, but not
-in the original mission's five explicit geographies) if ORYN's actual user base shows meaningful
-Canada-track demand.
+This session's package is now **14 documents** (`00`-`13`, with `06` as 8 sub-files), **81
+`RULE-COUNSEL-###` entries, 38 registered sources**. All three "next steps" this handoff previously
+listed here are now done: peer-branch spot-verification (5/5 claims checked, all accurate — see
+above), doc 11's Canada + generic-Europe-fallback extension (commit `5139681`), and — found only
+by actually doing a self-consistency audit, not anticipated in an earlier version of this list —
+the corrected, complete rule-ID collision map (26 numbers, not 1) documented above. Also added
+since: `13-implementation-readiness.md` (a prioritized punch-list synthesizing everything `00`-`12`
+propose for a future engineering session) and a health/disability-context extension to `04`
+(`RULE-COUNSEL-079-081`, held carefully against `AGENTS.md` Phase 12's minor-safe privacy
+commitments — explicitly recommends against collecting any new health data, only against assuming
+a thin profile reflects low effort).
+
+Genuinely good remaining next steps if more time/a future session picks this up, roughly in
+priority order: (1) the final cross-branch integration this handoff's own "Integration
+instructions" section describes — not something either research session should do unilaterally,
+now with both the file-topology map and the full rule-ID collision table ready as direct inputs;
+(2) further peer-branch spot-verification beyond this session's 5 checks, for even broader
+coverage; (3) primary-source (not secondary-consulting-source) verification for Canada/Spain,
+mirroring the upgrade already done for Germany/Netherlands.
 
 **Founder-level decision this package cannot make on its own**: whether/how to reconcile this
 branch with the peer's — both are real, validated, non-overlapping-in-content work, and the
