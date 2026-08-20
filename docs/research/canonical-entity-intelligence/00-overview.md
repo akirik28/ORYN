@@ -117,6 +117,8 @@ Machine-readable companions live in `data/research/canonical-entities/`:
 - `sources.json` — the source registry backing every non-obvious claim.
 - `duplicate-candidates-university.json` — the live-queried university duplicate pairs, full
   evidence, ready for a follow-up ROR-enrichment pass.
+- `university-ror-gaps.json` — the complementary 70-entity ROR-gap list from `09` Finding 7
+  (8 already-duplicate-flagged, 16 genuine single-row gaps).
 - `opportunity-organizer-candidates.json` — proposed canonical-entity/alias/relationship
   candidates derived from real `opportunities.organization` text.
 - `alias-taxonomy-examples.json` — worked alias examples across entity types and languages.
