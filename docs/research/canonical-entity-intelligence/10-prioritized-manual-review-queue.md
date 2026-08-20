@@ -93,6 +93,18 @@ Not a data-quality issue — a live-database timing artifact from concurrent wri
 research window (`09`). Recorded so a future session doesn't waste time reconciling two numbers
 that were never meant to agree exactly.
 
+**10. Trivial, isolated fix: `"Universit degli Studi della Campania Luigi Vanvitelli"` is missing
+its `à`.** `09` Finding 9 — a one-row `display_name` correction (`"Università..."`), confirmed not
+part of a broader pattern. Lowest-effort item in this entire document; sequenced last only because
+it's genuinely this small, not because it's unimportant to the one student who'd see it rendered
+wrong.
+
+**11. Improve Italian university alias coverage (3/38 currently have any alias).** `09` Finding 9.
+Same shape as the opportunity-organizer/school alias work elsewhere in this package — research
+each institution's well-known English/common forms ("La Sapienza," "Milan Polytechnic," etc.)
+rather than bulk-guessing. Not urgent, but a concrete, scoped, real gap once higher-priority items
+above are clear.
+
 ## Explicitly out of scope for any review — do not act on these without new evidence
 
 - Do not merge any of the 41 university pairs on this package's evidence alone (no external-id

@@ -174,6 +174,33 @@ was never re-run through the resolver after the fix. **This package makes no rec
 `program_research_queue` itself** (not its table, not its lane) beyond surfacing the exact
 evidence — whoever owns that pipeline can decide whether to re-run it.
 
+## Finding 9: Italy's alias coverage is real but thin (3/38), plus one isolated data-entry defect
+
+Spot-checking a target country not otherwise covered in depth by this session's own live-data
+work (France/Germany/Turkey got the most direct attention; `12`, produced by a background agent
+this session, separately covers France/Germany/Netherlands/Switzerland from a collision-risk
+angle): all 38 active Italian university entities have full ROR coverage, but only **3/38 (7.9%)
+carry any `entity_aliases` row at all** — meaning well-known English forms a student would
+actually search with ("La Sapienza" for Sapienza University of Rome, "Milan Polytechnic" for
+Politecnico di Milano) are very likely missing, the same class of gap `02` documents generally,
+now confirmed concretely for one specific country. Separately, **one isolated data-entry defect**:
+`canonical_entities.display_name` for one row reads `"Universit degli Studi della Campania Luigi
+Vanvitelli"` — missing the `à` entirely (should read "Università..."), not merely a normalization
+artifact but a malformed stored display name a student would see rendered incorrectly. Checked
+whether this is systemic (a broader dropped-diacritic import bug) via a regex sweep for other
+truncated words across the whole registry — **found only this one row**; recorded as an isolated
+defect worth a direct fix, not a pattern requiring a broader audit.
+
+**Context for interpreting every finding in this document:** `activities`, `work_experiences`,
+`volunteering_experiences`, `research_experiences`, `projects`, `awards`, `certifications`,
+`sports_experiences`, and `education_records` are all currently **empty** (0 rows), and `profiles`
+has only 2 rows, neither with `school_entity_id` set. This is expected pre-launch state, not a
+gap — but it means every `canonical_preferred_custom_fallback` field this package discusses (`01`)
+has never yet been exercised by a real student, and `create_or_resolve_user_submitted_entity()`'s
+only 3 live `user_submitted` aliases are almost certainly from testing, not real usage. Worth
+knowing before treating any of this package's findings as validated against real product traffic —
+they are validated against the reference-data registry, which is what currently exists.
+
 ## What this audit deliberately checked and found clean
 
 - **No duplicate pairs found outside `entity_type='university'`** via the same exact-name
