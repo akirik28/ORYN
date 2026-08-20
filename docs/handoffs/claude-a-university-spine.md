@@ -2760,3 +2760,108 @@ tracker. Notable research discipline: the agent caught a hallucinated WebSearch 
 that Istanbul Bilgi University had been "closed by decree," checked it directly against
 the university's own homepage, found it false, and disclaimed it explicitly in that
 record rather than trusting the AI summary. Live: 369 total, 252 `summer_program`.
+
+## Night-research session, 2026-08-21 — program catalogue batch 5 + a live shared-checkout collision found and fixed
+
+**Mandate for this session**: an "ORYN NIGHT RESEARCH" brief (university/program intelligence,
+research-only, explicit "do not write directly to production Supabase" / "do not ingest
+production" constraints — stricter than this doc's own earlier sessions, which wrote straight to
+the live DB via Supabase MCP when it was available). Treated as continuing this exact DATA-A
+lane (same branch), just file-output-only for this stretch rather than apply-to-live. No
+Tavily/Anthropic/Supabase-secret-key credentials in this sandbox either (`check:integrations`:
+all three "Missing credential", only anon-key Supabase + OpenAlex OK) — research done via
+`WebSearch`/`WebFetch`/the Claude Browser pane, matching this doc's own established pattern for
+credential-less sessions.
+
+**Live coverage re-measured (read-only, via Supabase MCP `execute_sql` against
+`qtcvcflzxbuagvvwahhu`) before picking a target, specifically to avoid re-researching ground
+already covered**: `universities` 1019 rows; by country, `university_programs` coverage is
+strikingly low exactly where ORYN's population is largest — **United States 131 universities /
+only 9 with any programs**, **United Kingdom 79 / only 8**. Every other populous country (China
+64/0, India 37/0, Australia 37/0, South Korea 31/0, Japan 22/0, Russia 21/0) is at or near zero
+too, but those are the same countries the programme-catalogue batch 4 note above already
+documented as bot-protected/JS-broken/PDF-only dead ends for a fetch-based approach — re-attempting
+them blind was exactly what that note warned against. US/UK majors pages are comparatively
+fetch-friendly (English, mostly server-rendered or renderable via the Browser pane) and are
+ORYN's largest actual target market, so this session prioritized the highest-QS-ranked, zero-
+program US/UK universities instead: a real, previously-undocumented high-leverage gap, not a
+re-run of an already-explored dead end.
+
+**Program catalogue batch 5 — Caltech, Cornell, Johns Hopkins, University of Chicago, 241
+programs, all QS top-25 or top-100, all previously zero-coverage**:
+`data/research/university-programs/independent_batch5_2026-08-21.jsonl`. Per-university method,
+each fetched and read directly (not search-snippet-only):
+- **Caltech** (26 majors): official Admissions majors/minors listing page, WebFetch asked
+  specifically for anchor hrefs this time (first pass returned names only) — 24 of 26 majors
+  resolved to their own individual page this way (e.g. `.../majors-minors/business-economics-
+  and-management`, spot-verified live and real after a first cross-check against the wrong
+  divisional sub-page wrongly suggested it might not exist). Explicit degree-type letters (BS)
+  are NOT stated anywhere on the fetched page, so `degree_type` is left null rather than
+  asserting the widely-known-but-unconfirmed-on-this-page fact that Caltech awards only the B.S.
+- **Cornell** (81 majors): official Admissions majors listing page — WebFetch extracted a full
+  name + college + individual-URL table directly in one pass, the highest-efficiency source of
+  the batch.
+- **Johns Hopkins** (74: 58 Krieger/Whiting + 16 Peabody): `e-catalogue.jhu.edu`'s interactive
+  program explorer returned HTTP 403/empty to plain WebFetch (the exact "JS-driven, no server-
+  rendered links" failure shape programme-catalogue batch 4 catalogued for other universities) —
+  read successfully via the Claude Browser pane instead (real rendered session), full text
+  extracted (106KB, saved and processed with a small Python filter rather than by hand) and
+  narrowed programmatically to Bachelor's-level entries at Krieger/Whiting/Peabody only (JHU's
+  explorer lists ~400 programs across 10 schools and every degree level unfiltered; graduate/
+  certificate/other-school entries were excluded, not miscounted as majors). No stable individual
+  program URL was captured from the explorer, so `official_program_url` = the catalogue page for
+  every JHU record.
+- **University of Chicago** (60 majors): `collegecatalog.uchicago.edu` (the registrar's own
+  catalog domain) connection-reset on every attempt, plain WebFetch and Browser-pane navigation
+  both — a real, distinct failure shape from the batch-4 list (not bot-protection, not JS, a
+  transport-level failure on that specific host) worth recording so a future pass doesn't retry
+  the same host blind. `collegeadmissions.uchicago.edu/academics/areas-study` (still uchicago.edu,
+  still official_primary) has the same content and worked via the Browser pane. That page tags
+  every program Major/Minor/Specialization/Joint/Interdisciplinary/Careers-in explicitly; only
+  Major-tagged entries were kept — UChicago's own Biological Sciences sub-tracks (Cancer Biology,
+  Immunology, etc.) and Middle Eastern Studies language specializations are real content on the
+  page but are marked Specialization-only there, not independently declarable majors, so counting
+  them as separate programs would have overstated the catalogue relative to UChicago's own
+  classification.
+
+Spot-checked before treating the batch as done (this doc's own established discipline): Cornell's
+"Viticulture and Enology" (unusual-sounding, confirmed real and B.S.-conferring on its own page)
+and Caltech's "Business, Economics, and Management" (first check hit the wrong divisional
+sub-page and looked unconfirmed; a second, correctly-scoped search found the real page and
+resolved it). Not run through `ingest:university-programs` even as a dry run — this sandbox has
+no `SUPABASE_SECRET_KEY` either (confirmed: the script refuses to read or write anything without
+it), so entity-name matching against `universities.name` was instead confirmed directly from the
+same live read-only query above (all four `university_name` strings here are verbatim copies of
+that query's own output, not retyped from memory).
+
+### A live shared-working-directory collision, found and fixed this session
+
+Not a git-history/branch-divergence collision (the kind [[project-oryn-parallel-sessions]] and
+[[feedback-parallel-session-reconciliation]] already document) — a **literal shared filesystem
+working directory**, live, mid-session. This session started in the main checkout (not a
+worktree) on `oryn/programs-pipeline-reconciled` as instructed by its own git state, same as
+apparently every other session's own starting assumption. Mid-session, a cross-session message
+arrived from a `counseling-intelligence` session describing exactly this class of collision on
+its own branch (two sessions both writing `docs/research/counseling-intelligence/*.md` in the
+same directory, one overwriting the other's uncommitted work before either could commit — nothing
+lost, both preserved in separate commits, but actively corrupting each other's in-progress files
+going forward). Checking this session's own state in response found the main checkout's *current
+branch had silently changed* to `oryn/counseling-intelligence-research` mid-session — some other
+session had run `git checkout` in the same shared directory this session was about to commit
+into. `git worktree list` at that point showed **eight** concurrent worktrees/checkouts across
+this one repo (admissions-intelligence, counseling-intelligence-research ×2, integration-2026-08-
+20, night-opportunities-research-2026-08-21, product-ux, programs-opportunities-intel, research-
+turkey-schools) — a large coordinated multi-lane push, not an isolated incident, and this
+session's own branch (`oryn/programs-pipeline-reconciled`) had no dedicated worktree of its own
+yet, meaning it was the one still exposed to the shared main checkout.
+
+Fixed the same way the peer session fixed its own version of this problem: `git worktree add
+.claude/worktrees/programs-pipeline-night oryn/programs-pipeline-reconciled` (confirmed first via
+`git worktree list` that this branch wasn't already checked out anywhere else), then moved this
+session into it. No data was lost — the one file this session had generated before the branch
+switch was untracked and copied out to the session scratchpad as a precaution before touching git
+at all, then copied back into the new worktree. **How to apply, for any future session that lands
+on this branch expecting the main checkout to be safe: check `git worktree list` before trusting
+`git branch --show-current` in this repo right now — the main checkout is being actively
+repurposed by whichever session doesn't yet have its own worktree, so "on branch X" at session
+start is not a durable guarantee for the rest of the session.**
