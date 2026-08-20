@@ -7,6 +7,7 @@ import { RequirementChecklist } from "@/features/applications/requirement-checkl
 import { ApplicationStatusControl } from "@/features/applications/status-control";
 import { PageHeader } from "@/components/oryn/page-header";
 import { Progress } from "@/components/ui/progress";
+import { formatDate } from "@/lib/i18n/format";
 
 export default async function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -35,7 +36,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
     <div className="max-w-2xl space-y-6">
       <PageHeader
         title={universityName}
-        description={`${applicationTypeCapitalized}${application.deadline ? ` · Due ${application.deadline}` : ""}`}
+        description={`${applicationTypeCapitalized}${application.deadline ? ` · Due ${formatDate(application.deadline)}` : ""}`}
       />
 
       <ApplicationStatusControl applicationId={application.id} initialStatus={application.status} universityName={universityName} />
