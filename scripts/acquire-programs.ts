@@ -26,6 +26,21 @@
  *   npm run acquire:programs                    # all configured universities
  *   npm run acquire:programs -- --only Delft    # substring filter while iterating
  *   npm run acquire:programs -- --out path.json
+ *
+ * Output and how it reaches the database:
+ *
+ * This script only extracts and writes files — it never touches `university_programs`
+ * itself. Two files are written: the raw fixture (`--out`, full extraction detail incl.
+ * blockers, for audit) and a `.jsonl` batch in the exact
+ * docs/research-handoff-university-programs.md contract (`ResearchProgramRecord`) next to
+ * it. That JSONL is applied the same way any researched batch is — through the existing,
+ * already-tested ingestion path, not a second write path:
+ *
+ *   npm run ingest:university-programs -- <the .jsonl path> --apply
+ *
+ * That command performs identity resolution, source-authority checking, and dedup against
+ * live `university_programs`, and writes a `program_research_queue` audit row for every
+ * outcome (not just accepted ones) — all logic this script deliberately does not duplicate.
  */
 
 import { writeFileSync, mkdirSync } from "node:fs";
@@ -37,6 +52,7 @@ import { sourceAuthority } from "../lib/acquisition/source-authority";
 import { CADENCE_DAYS, resolveVerificationState } from "../lib/acquisition/verification";
 import { fetchAllRowsVerified } from "../lib/acquisition/paginate";
 import { nameKey } from "../lib/acquisition/normalize";
+import type { ResearchProgramRecord } from "../lib/programs/ingest";
 
 export {};
 
@@ -48,6 +64,7 @@ try {
 
 const USER_AGENT = "ORYN-data-acquisition/1.0 (+https://github.com/akirik28/ORYN)";
 const DEFAULT_OUT = "supabase/fixtures/university-programs-pilot.json";
+const DEFAULT_JSONL_OUT = "data/research/university-programs/acquire-programs-batch.jsonl";
 
 interface CatalogueConfig {
   /** Must match `universities.name` in the live spine (compared via nameKey). */
@@ -76,7 +93,14 @@ const CATALOGUES: CatalogueConfig[] = [
     universityName: "Trinity College Dublin, The University of Dublin",
     country: "Ireland",
     catalogueUrl: "https://www.tcd.ie/courses/undergraduate/a-z-of-ug-courses/",
-    rule: { hrefPattern: "/courses/undergraduate/[a-z0-9-]{4,}", excludePatterns: ["a-z-of-ug-courses"], sectionIsUndergraduate: true },
+    rule: {
+      hrefPattern: "/courses/undergraduate/[a-z0-9-]{4,}",
+      // "a-z-of-ug-courses" is the index page itself; "your-trinity-pathways"/"your-trinity-education"
+      // are informational nav pages under the same URL prefix, not named degree programmes — found
+      // live: without these, the pattern matched them as bachelor's programmes on page-context alone.
+      excludePatterns: ["a-z-of-ug-courses", "your-trinity-pathways", "your-trinity-education"],
+      sectionIsUndergraduate: true,
+    },
   },
 ];
 
@@ -127,6 +151,8 @@ async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const outIndex = args.indexOf("--out");
   const outPath = outIndex >= 0 && args[outIndex + 1] ? args[outIndex + 1] : DEFAULT_OUT;
+  const jsonlOutIndex = args.indexOf("--jsonl-out");
+  const jsonlOutPath = jsonlOutIndex >= 0 && args[jsonlOutIndex + 1] ? args[jsonlOutIndex + 1] : DEFAULT_JSONL_OUT;
   const onlyIndex = args.indexOf("--only");
   const only = onlyIndex >= 0 ? args[onlyIndex + 1]?.toLowerCase() : null;
 
@@ -247,6 +273,35 @@ async function main(): Promise<void> {
   mkdirSync(dirname(outPath), { recursive: true });
   writeFileSync(outPath, `${JSON.stringify(fixture, null, 2)}\n`);
 
+  // Convert into the existing research-handoff contract rather than inventing a second
+  // write path — see the file header. Degree level here is asserted only because
+  // ProgramFact.degreeLevelEvidence is non-"none" (extractPrograms() already enforced
+  // that), so verification_status can honestly say "Verified" without overclaiming.
+  const jsonlRecords: ResearchProgramRecord[] = entries.flatMap((entry, entryIndex) =>
+    entry.programs.map((p, programIndex) => ({
+      research_program_id: `ACQ-PRG-${retrievedAt.slice(0, 10)}-${entryIndex}-${programIndex}`,
+      university_name: entry.universityName,
+      university_country: entry.country,
+      university_official_domain: new URL(entry.officialWebsite).hostname.replace(/^www\./, ""),
+      program_name: p.officialName,
+      // Every existing university_programs row (all 198 as of 2026-08-20) uses the descriptive
+      // string "Bachelor / first-cycle", not the internal "bachelor" token ExtractedProgram
+      // carries — mapped here so this pipeline's rows dedup-key and read identically to the
+      // research-handoff path's rows rather than silently forking the convention.
+      degree_level: p.degreeLevel === "bachelor" ? "Bachelor / first-cycle" : null,
+      degree_type: p.degreeToken,
+      subject_hint: p.subjectCategory,
+      official_program_url: p.officialUrl,
+      source_url: p.sourceUrl,
+      source_type: p.sourceType,
+      verification_status: `Verified - official catalogue page fetched and parsed (degree evidence: ${p.degreeLevelEvidence})`,
+      researched_at: p.retrievedAt,
+      researcher_notes: `Deterministic extraction, scripts/acquire-programs.ts, catalogue ${entry.catalogueUrl}.`,
+    }))
+  );
+  mkdirSync(dirname(jsonlOutPath), { recursive: true });
+  writeFileSync(jsonlOutPath, jsonlRecords.map((r) => JSON.stringify(r)).join("\n") + (jsonlRecords.length > 0 ? "\n" : ""));
+
   console.log(`\nUniversities with programmes: ${entries.length}/${selected.length}`);
   console.log(`Programmes extracted:         ${total}`);
   console.log(`Duplicate keys:               ${duplicateKeys}`);
@@ -257,7 +312,9 @@ async function main(): Promise<void> {
   for (const e of entries) for (const p of e.programs) bySubject.set(p.subjectCategory ?? "(unmapped)", (bySubject.get(p.subjectCategory ?? "(unmapped)") ?? 0) + 1);
   console.log(`\nBy subject category:`);
   for (const [s, n] of [...bySubject.entries()].sort((a, b) => b[1] - a[1])) console.log(`  ${s.padEnd(20)} ${n}`);
-  console.log(`\nWritten to ${outPath}`);
+  console.log(`\nWritten fixture to ${outPath}`);
+  console.log(`Written research-handoff batch to ${jsonlOutPath}`);
+  console.log(`\nTo apply: npm run ingest:university-programs -- ${jsonlOutPath} --apply`);
 }
 
 main().catch((error: unknown) => {

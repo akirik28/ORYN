@@ -26,7 +26,7 @@
  * constraint as scripts/enrich-student-counts.ts).
  */
 import { readFileSync } from "node:fs";
-import { decideIngestion, type ResearchProgramRecord, type UniversityLookupRow } from "../lib/programs/ingest";
+import { decideIngestion, programUrlKey, type ResearchProgramRecord, type UniversityLookupRow } from "../lib/programs/ingest";
 import { fetchAllRowsVerified, type PostgrestTarget } from "../lib/acquisition/paginate";
 
 try {
@@ -70,6 +70,7 @@ interface ExistingProgramRow {
   university_id: string;
   normalized_name: string;
   degree_level: string | null;
+  official_program_url: string;
 }
 
 /** Full candidate pool for identity resolution — every university, alias-enriched, read
@@ -126,11 +127,14 @@ async function main() {
 
   const [universities, { rows: existing }] = await Promise.all([
     loadUniversityCandidates(target),
-    fetchAllRowsVerified<ExistingProgramRow>(target, "university_programs", "university_id,normalized_name,degree_level", "order=id"),
+    fetchAllRowsVerified<ExistingProgramRow>(target, "university_programs", "university_id,normalized_name,degree_level,official_program_url", "order=id"),
   ]);
   console.log(`Candidate pool: ${universities.length} universities (paginated + exact-count verified).`);
 
-  const existingKeys = new Set(existing.map((r) => `${r.university_id}|${r.normalized_name}|${r.degree_level ?? ""}`));
+  const existingKeys = new Set([
+    ...existing.map((r) => `${r.university_id}|${r.normalized_name}|${r.degree_level ?? ""}`),
+    ...existing.map((r) => programUrlKey(r.university_id, r.official_program_url)),
+  ]);
 
   const { createClient } = await import("@supabase/supabase-js");
   const admin = createClient(url, secretKey, { auth: { autoRefreshToken: false, persistSession: false } });
@@ -154,6 +158,7 @@ async function main() {
     if (decision.outcome === "accepted" && decision.programRow) {
       const key = `${decision.programRow.university_id}|${decision.programRow.normalized_name}|${decision.programRow.degree_level ?? ""}`;
       existingKeys.add(key);
+      existingKeys.add(programUrlKey(decision.programRow.university_id, decision.programRow.official_program_url));
     }
 
     const { data: inserted, error: programError } =

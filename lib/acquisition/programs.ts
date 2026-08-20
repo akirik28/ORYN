@@ -59,8 +59,12 @@ const BACHELOR_TOKENS = [
 
 /** Tokens that mean a listing is NOT an undergraduate programme. Checked before acceptance so a
  * masters or doctoral entry sitting inside an undergraduate index is rejected rather than
- * mislabelled — the single most likely way to publish a wrong level. */
-const NON_BACHELOR_TOKENS = ["MSc", "MA ", "MEng", "MBA", "LLM", "PhD", "MPhil", "MRes", "Doctorate", "Masters", "Master's", "Graduate Diploma"];
+ * mislabelled — the single most likely way to publish a wrong level. Includes standalone
+ * "Diploma" (not just "Graduate Diploma"): a diploma is not a bachelor's degree, but a
+ * catalogue-section rule with sectionIsUndergraduate=true would otherwise mislabel it as one
+ * purely from page context — found live against Trinity College Dublin's undergraduate index,
+ * which lists "Diploma in Acting and Theatre" alongside its BA/BSc programmes. */
+const NON_BACHELOR_TOKENS = ["MSc", "MA ", "MEng", "MBA", "LLM", "PhD", "MPhil", "MRes", "Doctorate", "Masters", "Master's", "Diploma"];
 
 /** Decode the handful of HTML entities that actually appear in programme names. */
 export function decodeEntities(raw: string): string {
