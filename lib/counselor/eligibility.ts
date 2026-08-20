@@ -80,15 +80,20 @@ function evaluateOpportunityEligibility(candidate: CandidateAction & { source: {
   }
 
   // --- Citizenship (structured, migration 0047) — genuinely distinct from country/residency
-  // above (spec Part A: a Turkey-resident student is not automatically a Turkish citizen). ---
-  const hasCitizenshipRestriction = opportunity.eligible_citizenships.length > 0;
+  // above (spec Part A: a Turkey-resident student is not automatically a Turkish citizen).
+  // Defensive fallback, not just type-trust (same reasoning as citizenshipCountries above):
+  // migration 0047 may not be applied to every environment yet, so a real row fetched from a
+  // live DB that predates it genuinely has no `eligible_citizenships` key at all despite the
+  // type saying `string[]` — must degrade to "no structured restriction," never crash. ---
+  const eligibleCitizenships = opportunity.eligible_citizenships ?? [];
+  const hasCitizenshipRestriction = eligibleCitizenships.length > 0;
   if (hasCitizenshipRestriction) {
     if (citizenshipCountries.length === 0) {
       notes.push("This opportunity requires a specific citizenship and yours isn't on file yet.");
-    } else if (!matchesAnyKnownCountry(citizenshipCountries, opportunity.eligible_citizenships)) {
+    } else if (!matchesAnyKnownCountry(citizenshipCountries, eligibleCitizenships)) {
       return {
         verdict: "known_ineligible",
-        notes: [`Requires citizenship in ${opportunity.eligible_citizenships.join(", ")}; citizenship on file is ${citizenshipCountries.join(", ")}.`],
+        notes: [`Requires citizenship in ${eligibleCitizenships.join(", ")}; citizenship on file is ${citizenshipCountries.join(", ")}.`],
       };
     }
   }

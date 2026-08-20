@@ -46,7 +46,7 @@ export default async function AdvisorPage() {
   try {
     counselorResult = await getCounselorRecommendations(userId);
   } catch (error) {
-    console.error("[advisor] failed to compute counselor recommendations", error);
+    console.error("[advisor] failed to compute counselor recommendations", error instanceof Error ? error.stack : error);
   }
 
   return (
