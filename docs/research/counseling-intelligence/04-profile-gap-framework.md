@@ -186,6 +186,49 @@ nowhere in the pipeline. This is additive to, not a replacement for, the existin
 consistent with this whole package's binding constraint of proposing sub-facets and presentation
 logic rather than schema or architecture changes.
 
+## 7. A second, distinct access category this document initially missed: health/disability context
+
+Added on a later pass, deliberately appended here rather than inserted into §3's numbering (which
+`09`/`10`/`13` already cite by number) to avoid disturbing those cross-references. §3's access-
+inequality finding (Park et al.) covers *economic/geographic* access. A **separate, equally real
+category this document did not originally address: health conditions and disabilities as a reason
+a profile may show fewer or less continuous activities**, unrelated to either effort or economic
+access.
+
+**This has direct, official precedent in the actual admissions systems ORYN's students will use** —
+not a hypothetical fairness concern this package is inventing. The Common Application (used by
+hundreds of US institutions) has **two dedicated, official disclosure mechanisms** for exactly this:
+the long-standing "Additional Information" section (up to 650 words, optional, never required), and
+a newer, narrower **"Challenges and Circumstances" section** (introduced for the 2025 application
+cycle specifically) — an optional 250-word space whose stated purpose is "context for any situation
+or circumstance that negatively impacted grades, test scores, or activities." Students with a
+disability that affected their ability to participate in activities are specifically, officially
+encouraged to use this space. (Source: Common App-focused admissions-guidance sources describing
+this official application feature — medium-high confidence for the mechanism's existence and
+purpose, not independently verified against Common App's own raw application-platform
+documentation this pass.) [[RULE-COUNSEL-079]] Separately, chronic health conditions are common
+enough in this population to not be an edge case: cited guidance describing this population puts
+the share of US young people with a chronic medical condition at roughly 15-20%. (Source:
+college-counselor-research sources — medium confidence, a population estimate cited by secondary
+sources rather than independently traced to a primary epidemiological study this pass.)
+[[RULE-COUNSEL-080]]
+
+**What this means for ORYN, held against the product's own minor-safe privacy principles
+(`AGENTS.md` Phase 12 — minimize data collection, avoid requesting unnecessary identification/
+medical information):** this document does **not** recommend ORYN collect, prompt for, or store
+health/disability information — doing so would directly contradict the product's own binding
+privacy commitments and would be exactly the kind of scope creep this research package should
+flag against, not propose. What it *does* recommend, consistent with §3's economic-access finding
+and requiring no new data collection at all: **the same default posture** — a thin or gapped
+profile should never default to a "low effort" reading, and the counselor's uncertainty about
+*why* a gap exists should be held honestly (per §4's existing framework) rather than resolved by
+assuming either explanation (economic access, health, or genuine low engagement) without evidence
+either way. If a student *voluntarily* writes health/circumstantial context into an existing
+free-text field (e.g., `EducationRecord.notes`, already a schema-present, optional field — no new
+column needed), the counselor should treat that disclosure with the same care the mission's own
+"fact / inference / unknown" discipline already demands elsewhere: read and respected, never
+demanded, never inferred from its absence. [[RULE-COUNSEL-081]]
+
 ## Rules established in this document
 
 - `RULE-COUNSEL-015` — Evaluate course rigor relative to what was actually offered to the student,
@@ -220,3 +263,16 @@ logic rather than schema or architecture changes.
   computed severity score itself — surface context in the explanation layer, consistent with the
   existing `docs/counselor-core-plan.md` §5 design decision for the same problem in a different
   dimension. Confidence: high (consistency with an existing, deliberate architectural choice).
+- `RULE-COUNSEL-079` — Real admissions systems (Common App's "Additional Information" and
+  "Challenges and Circumstances" sections) officially expect and accommodate health/disability
+  context for exactly the kind of gap this framework addresses — treat this as direct precedent,
+  not an invented consideration. Confidence: medium-high (mechanism well-described, not
+  independently verified against Common App's own platform documentation).
+- `RULE-COUNSEL-080` — Chronic health conditions are common enough in this population (~15-20% by
+  cited estimate) to treat as a standing, not edge-case, possible explanation for a thin profile.
+  Confidence: medium (secondary-sourced population estimate).
+- `RULE-COUNSEL-081` — Never collect, prompt for, or store health/disability information — this
+  would contradict ORYN's own minor-safe privacy commitments. Only ever read and respect
+  voluntarily-disclosed context in existing free-text fields; never infer health circumstances
+  from their absence, and never demand disclosure as a condition of fair treatment. Confidence:
+  high (direct, binding consequence of `AGENTS.md` Phase 12's existing privacy commitments).

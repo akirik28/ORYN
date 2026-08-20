@@ -433,6 +433,30 @@
       "claim_supported": "Spanish university admission is computed as 60% high-school grades + 40% national EBAU exam score, with no interview, essay, or extracurricular weight.",
       "used_in_rules": ["RULE-COUNSEL-074", "RULE-COUNSEL-075"],
       "limitations": "Not independently verified against Spain's own Ministry of Education official publication this pass."
+    },
+    {
+      "id": "SRC-CS-037",
+      "title": "Common App 'Additional Information' and 'Challenges and Circumstances' section guidance (multiple admissions-consulting sources)",
+      "publisher": "Various college-admissions-consulting sources describing Common Application platform features",
+      "url": "https://www.collegeessayguy.com/blog/common-app-additional-info-guide-examples",
+      "type": "secondary_practitioner_consensus",
+      "retrieved_at": "2026-08-21",
+      "confidence": "medium-high",
+      "claim_supported": "Common App has an optional 'Additional Information' section (up to 650 words) and a newer (2025 cycle) 'Challenges and Circumstances' section (250 words) specifically for context that negatively impacted grades/scores/activities; students with a disability affecting activity participation are specifically encouraged to use it.",
+      "used_in_rules": ["RULE-COUNSEL-079"],
+      "limitations": "Described via admissions-consulting sources, not independently verified against Common App's own raw platform documentation this pass."
+    },
+    {
+      "id": "SRC-CS-038",
+      "title": "College-counselor research on chronic illness prevalence and college transition (multiple sources, converging)",
+      "publisher": "Various college-counseling-research sources (including an ERIC-indexed study on counselor perceptions of chronic-illness transition needs)",
+      "url": "https://files.eric.ed.gov/fulltext/EJ1483220.pdf",
+      "type": "secondary_research_synthesis",
+      "retrieved_at": "2026-08-21",
+      "confidence": "medium",
+      "claim_supported": "Roughly 15-20% of US young people live with a chronic medical condition — cited as context for why chronic-illness-aware college counseling is a real, non-edge-case need.",
+      "used_in_rules": ["RULE-COUNSEL-080"],
+      "limitations": "Population estimate cited by secondary sources; not independently traced to a primary epidemiological study by this package."
     }
   ]
 }
