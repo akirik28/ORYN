@@ -4,6 +4,7 @@ import { signOut } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
 import { DisplayNameForm } from "@/features/settings/display-name-form";
 import { LocationForm } from "@/features/settings/location-form";
+import { CitizenshipForm } from "@/features/settings/citizenship-form";
 import { CapacityForm } from "@/features/settings/capacity-form";
 import { VisibilityForm } from "@/features/settings/visibility-form";
 import { DeleteAccountDialog } from "@/features/settings/delete-account-dialog";
@@ -44,6 +45,16 @@ export default async function SettingsPage() {
           </p>
         </div>
         <LocationForm initialCountry={profile?.country ?? ""} initialCity={profile?.city ?? null} />
+      </section>
+
+      <section className="space-y-4">
+        <div>
+          <h2 className="font-semibold">Citizenship</h2>
+          <p className="text-sm text-muted-foreground">
+            Different from your location above — used to check citizenship-restricted opportunities. Optional; add as many as apply.
+          </p>
+        </div>
+        <CitizenshipForm initialCitizenships={profile?.citizenship_countries ?? []} />
       </section>
 
       <section className="space-y-4">
