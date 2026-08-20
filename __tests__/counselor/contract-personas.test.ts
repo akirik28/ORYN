@@ -58,6 +58,7 @@ function opportunity(id: string, overrides: Partial<Opportunity> = {}): Opportun
     eligible_grades: [],
     citizenship_restrictions: null,
     residency_restrictions: null,
+    eligible_citizenships: [],
     location_mode: null,
     financial_aid_available: null,
     application_requirements: [],

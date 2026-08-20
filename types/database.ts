@@ -90,6 +90,10 @@ export interface Profile {
   display_name: string | null;
   birth_year: number | null;
   country: string | null;
+  /** Distinct from `country` (residence/school location) — citizenship (migration 0047),
+   * never inferred from country. Multi-valued for dual/multiple citizenship. Empty = not
+   * stated; onboarding/settings never forces a value. */
+  citizenship_countries: string[];
   city: string | null;
   school_name: string | null;
   /** Canonical Entity Autocomplete System — preferred over school_name once set; kept in
@@ -1079,6 +1083,13 @@ export interface Opportunity {
   eligible_grades: string[];
   citizenship_restrictions: string | null;
   residency_restrictions: string | null;
+  /** Structured citizenship restriction (migration 0047), populated only from an unambiguous
+   * official statement — distinct from the free-text citizenship_restrictions above, which
+   * stays the fallback for anything too complex to safely reduce to a flat list. Empty means
+   * "no structured rule known," never "open to all citizenships." Residency has no separate
+   * structured column — `eligible_countries` already fills that role against the student's
+   * one country-like profile field; see migration 0047's own comment. */
+  eligible_citizenships: string[];
   location_mode: "online" | "in_person" | "hybrid" | null;
   financial_aid_available: boolean | null;
   application_requirements: string[];
@@ -1110,6 +1121,7 @@ export type OpportunityInsert = Insertable<
   | "eligible_grades"
   | "citizenship_restrictions"
   | "residency_restrictions"
+  | "eligible_citizenships"
   | "location_mode"
   | "financial_aid_available"
   | "application_requirements"

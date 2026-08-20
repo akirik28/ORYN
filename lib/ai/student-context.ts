@@ -20,6 +20,10 @@ export interface StudentAdvisorContext {
     busyModeUntil: string | null;
     /** Counselor Core eligibility (age gates on opportunities) — not used in prompt text today. */
     birthYear: number | null;
+    /** Counselor Core eligibility (citizenship gates on opportunities, migration 0047) — never
+     * inferred from `country` (residence/school location, a separate fact). Not used in
+     * prompt text today, same as birthYear. */
+    citizenshipCountries: string[];
   };
   profileScores: { dimension: string; score: number; confidence: string }[];
   overallScore: number;
@@ -137,7 +141,9 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
   const [profileRes, targetUniversities, upcomingDeadlines, recentRecsRes, recentActionsRes, pendingApplicationRequirements, sportsRes, interestsRes] = await Promise.all([
     supabase
       .from("profiles")
-      .select("display_name, country, school_name, graduation_year, curriculum, weekly_time_budget, busy_mode, busy_mode_until, completeness_percent, birth_year")
+      .select(
+        "display_name, country, school_name, graduation_year, curriculum, weekly_time_budget, busy_mode, busy_mode_until, completeness_percent, birth_year, citizenship_countries"
+      )
       .eq("id", userId)
       .single(),
     getTargetUniversitiesForContext(supabase, userId),
@@ -187,6 +193,7 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
       busyMode: profile?.busy_mode ?? false,
       busyModeUntil: profile?.busy_mode_until ?? null,
       birthYear: profile?.birth_year ?? null,
+      citizenshipCountries: profile?.citizenship_countries ?? [],
     },
     profileScores: dimensions.map((d) => ({ dimension: d.dimension, score: d.score, confidence: d.confidence })),
     overallScore,

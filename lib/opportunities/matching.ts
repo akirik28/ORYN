@@ -45,7 +45,11 @@ function canonicalCountryKey(country: string): string {
   return COUNTRY_ALIASES[normalized] ?? normalized;
 }
 
-function isSameCountry(a: string, b: string): boolean {
+/** Exported for lib/counselor/eligibility.ts's own independent country/residency/citizenship
+ * checks — one country-equivalence rule, not a second copy that could silently drift
+ * (e.g. "Türkiye" vs "Turkey" being treated as different countries in one check and not the
+ * other would be exactly the kind of inconsistent-eligibility bug this product can't afford). */
+export function isSameCountry(a: string, b: string): boolean {
   return canonicalCountryKey(a) === canonicalCountryKey(b);
 }
 
