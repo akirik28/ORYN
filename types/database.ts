@@ -59,7 +59,7 @@ export type RequirementCategory =
   | "supplemental_requirement"
   | "international_requirement";
 export type RequirementEvaluationStatus = "met" | "likely_met" | "not_met" | "unknown" | "needs_manual_review";
-export type OpportunityCategory = "competition" | "research" | "internship" | "summer_program" | "fellowship" | "scholarship" | "volunteering" | "entrepreneurship" | "hackathon" | "academic_program" | "conference" | "student_program";
+export type OpportunityCategory = "competition" | "research" | "internship" | "summer_program" | "fellowship" | "scholarship" | "volunteering" | "entrepreneurship" | "hackathon" | "academic_program" | "online_program" | "conference" | "student_program";
 export type OpportunityStatus = "active" | "expired" | "under_review" | "disabled";
 export type SavedOpportunityStatus = "saved" | "applied" | "not_interested";
 export type ProfileDimension = "academics" | "intellectual_curiosity" | "leadership" | "research" | "entrepreneurship" | "community_impact" | "awards_distinction" | "career_exploration" | "execution_project_depth";
@@ -679,6 +679,12 @@ export interface University {
   country_entity_id: string | null;
   city_entity_id: string | null;
   website_url: string | null;
+  /** Official admissions entry point (migration 0042). Must be on the institution's own
+   * domain — see lib/acquisition/source-authority.ts. */
+  admissions_url: string | null;
+  /** The application route students actually use (UCAS, Common App, Studielink,
+   * Parcoursup, ÖSYM/YKS, uni-assist, direct). Null means unknown, never "direct". */
+  application_system: string | null;
   logo_url: string | null;
   description: string | null;
   selectivity: string | null;
@@ -712,6 +718,8 @@ export type UniversityInsert = Insertable<
   | "canonical_entity_id"
   | "country_entity_id"
   | "city_entity_id"
+  | "admissions_url"
+  | "application_system"
 >;
 export type UniversityUpdate = Updatable<University, "id" | "created_at" | "updated_at">;
 
@@ -1243,15 +1251,21 @@ export interface AdvisorConversation {
 }
 export type AdvisorConversationInsert = Insertable<AdvisorConversation, "id" | "created_at" | "updated_at" | "title">;
 
+export type AdvisorMessageStatus = "complete" | "failed";
+
 export interface AdvisorMessage {
   id: string;
   conversation_id: string;
   user_id: string;
   role: MessageRole;
-  content: string;
+  /** Nullable since migration 0046 — a failed assistant turn has no real content to store. */
+  content: string | null;
+  status: AdvisorMessageStatus;
+  /** Safe, user-facing text only (see lib/ai/advisor-failure.ts) — never the raw caught error. */
+  error_message: string | null;
   created_at: string;
 }
-export type AdvisorMessageInsert = Insertable<AdvisorMessage, "id" | "created_at">;
+export type AdvisorMessageInsert = Insertable<AdvisorMessage, "id" | "created_at" | "status" | "error_message">;
 
 // ---------- Notifications ----------
 

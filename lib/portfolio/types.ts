@@ -27,6 +27,10 @@ export interface PortfolioItem {
   endDate: string | null;
   ongoing: boolean;
   meta: string | null;
+  /** When the row was added to Oryn — distinct from startDate (which is often backdated
+   * to when the activity actually happened). Powers "recently added" on a public profile
+   * (lib/portfolio/recent.ts), never shown as if it were the achievement's own date. */
+  createdAt: string;
 }
 
 export const PORTFOLIO_CATEGORY_LABELS: Record<PortfolioCategory, string> = {

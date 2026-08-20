@@ -55,22 +55,65 @@ async function main() {
   const { createClient } = await import("@supabase/supabase-js");
   const admin = createClient(url, secretKey, { auth: { autoRefreshToken: false, persistSession: false } });
 
-  const [{ data: entityRows, error }, { data: aliasRows, error: aliasError }] = await Promise.all([
-    admin.from("canonical_entities").select("id, entity_type, display_name, country_code, city, official_url, verification_state"),
-    admin.from("entity_aliases").select("entity_id, alias"),
-  ]);
-  if (error || aliasError) {
-    console.error(`Couldn't read the canonical registry: ${error?.message ?? aliasError?.message}`);
-    process.exitCode = 1;
-    return;
+  /**
+   * PostgREST caps an unpaginated read at 1000 rows with a 200 status and no error —
+   * confirmed live here: this function's caller was previously a plain `.select()` with no
+   * `.range()`, and the registry has grown past 1000 canonical_entities. The audit was
+   * silently running over an arbitrary 1000-row slice, not the full registry (same bug
+   * class documented in lib/acquisition/paginate.ts and university-data-report.ts's own
+   * `selectAll`, whose approach this mirrors).
+   */
+  async function selectAll<T>(table: string, columns: string): Promise<T[]> {
+    const out: T[] = [];
+    const PAGE = 1000;
+    for (let from = 0; ; from += PAGE) {
+      const { data, error: pageError } = await admin
+        .from(table)
+        .select(columns)
+        .order("id", { ascending: true })
+        .range(from, from + PAGE - 1);
+      if (pageError) throw new Error(`${table}: ${pageError.message}`);
+      const page = (data ?? []) as unknown as T[];
+      out.push(...page);
+      if (page.length < PAGE) break;
+    }
+    return out;
   }
 
+  interface EntityRow {
+    id: string;
+    entity_type: string;
+    display_name: string;
+    country_code: string | null;
+    city: string | null;
+    official_url: string | null;
+    verification_state: string;
+  }
+  interface AliasRow {
+    entity_id: string;
+    alias: string;
+  }
+
+  const [entityRows, aliasRows] = await Promise.all([
+    selectAll<EntityRow>("canonical_entities", "id, entity_type, display_name, country_code, city, official_url, verification_state").catch((e: unknown) => {
+      console.error(`Couldn't read the canonical registry: ${e instanceof Error ? e.message : String(e)}`);
+      process.exitCode = 1;
+      return null;
+    }),
+    selectAll<AliasRow>("entity_aliases", "entity_id, alias").catch((e: unknown) => {
+      console.error(`Couldn't read entity_aliases: ${e instanceof Error ? e.message : String(e)}`);
+      process.exitCode = 1;
+      return null;
+    }),
+  ]);
+  if (entityRows === null || aliasRows === null) return;
+
   const aliasesByEntity = new Map<string, string[]>();
-  for (const row of aliasRows ?? []) {
+  for (const row of aliasRows) {
     aliasesByEntity.set(row.entity_id, [...(aliasesByEntity.get(row.entity_id) ?? []), row.alias]);
   }
 
-  const entities: AuditableEntity[] = (entityRows ?? []).map((row) => ({
+  const entities: AuditableEntity[] = entityRows.map((row) => ({
     id: row.id,
     canonicalName: row.display_name,
     aliases: aliasesByEntity.get(row.id) ?? [],

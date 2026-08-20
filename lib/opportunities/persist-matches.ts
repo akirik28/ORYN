@@ -1,8 +1,9 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import { computeOpportunityMatch } from "./matching";
-import type { StudentMatchProfile } from "./matching";
+import { computeOpportunityMatch, isNearStudent } from "./matching";
+import type { StudentMatchProfile, OpportunityForMatching } from "./matching";
+import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
 
 /**
  * Recomputes and upserts opportunity_matches for one student against every active
@@ -12,12 +13,18 @@ import type { StudentMatchProfile } from "./matching";
 export async function refreshOpportunityMatches(userId: string): Promise<void> {
   const supabase = await createClient();
 
-  const [profileRes, scoresRes, interestsRes, opportunitiesRes] = await Promise.all([
+  const [profileRes, scoresRes, interestsRes, opportunitiesRes, savedRes] = await Promise.all([
     supabase.from("profiles").select("birth_year, country").eq("id", userId).single(),
-    supabase.from("profile_scores").select("dimension, score").eq("user_id", userId),
+    supabase.from("profile_scores").select("dimension, score, confidence, reason_codes").eq("user_id", userId),
     supabase.from("student_interests").select("label").eq("user_id", userId),
-    supabase.from("opportunities").select("id, category, minimum_age, maximum_age, eligible_countries, fields").eq("status", "active"),
+    supabase.from("opportunities").select("id, category, minimum_age, maximum_age, eligible_countries, fields, country").eq("status", "active"),
+    // Counselor Core fix: an opportunity the student already applied to or explicitly
+    // dismissed must never resurface as a fresh recommendation — see computeEligibility's
+    // savedStatus parameter (lib/opportunities/matching.ts).
+    supabase.from("saved_opportunities").select("opportunity_id, status").eq("user_id", userId),
   ]);
+
+  const savedStatusByOpportunityId = new Map((savedRes.data ?? []).map((s) => [s.opportunity_id, s.status]));
 
   const opportunities = opportunitiesRes.data ?? [];
   if (opportunities.length === 0) return;
@@ -25,10 +32,10 @@ export async function refreshOpportunityMatches(userId: string): Promise<void> {
   const currentYear = new Date().getFullYear();
   const age = profileRes.data?.birth_year ? currentYear - profileRes.data.birth_year : null;
 
-  const weakestDimensions = [...(scoresRes.data ?? [])]
-    .sort((a, b) => a.score - b.score)
+  // Counselor Core Phase D — see app/(app)/dashboard/page.tsx's identical usage.
+  const weakestDimensions = rankDimensionGaps(toDimensionScoreRows(scoresRes.data ?? []))
     .slice(0, 3)
-    .map((s) => s.dimension);
+    .map((g) => g.dimension);
 
   const studentProfile: StudentMatchProfile = {
     age,
@@ -38,13 +45,15 @@ export async function refreshOpportunityMatches(userId: string): Promise<void> {
   };
 
   const rows = opportunities.map((opportunity) => {
-    const match = computeOpportunityMatch(studentProfile, {
+    const forMatching: OpportunityForMatching = {
       category: opportunity.category,
       minimumAge: opportunity.minimum_age,
       maximumAge: opportunity.maximum_age,
       eligibleCountries: opportunity.eligible_countries,
       fields: opportunity.fields,
-    });
+      country: opportunity.country,
+    };
+    const match = computeOpportunityMatch(studentProfile, forMatching, savedStatusByOpportunityId.get(opportunity.id) ?? null);
 
     return {
       user_id: userId,
@@ -55,7 +64,7 @@ export async function refreshOpportunityMatches(userId: string): Promise<void> {
       profile_need_score: match.profileNeedScore,
       match_score: match.matchScore,
       effort_estimate: null,
-      reason_codes: buildReasonCodes(match),
+      reason_codes: buildReasonCodes(match, studentProfile, forMatching),
       calculated_at: new Date().toISOString(),
     };
   });
@@ -63,10 +72,15 @@ export async function refreshOpportunityMatches(userId: string): Promise<void> {
   await supabase.from("opportunity_matches").upsert(rows, { onConflict: "user_id,opportunity_id" });
 }
 
-function buildReasonCodes(match: ReturnType<typeof computeOpportunityMatch>): string[] {
+function buildReasonCodes(
+  match: ReturnType<typeof computeOpportunityMatch>,
+  student: StudentMatchProfile,
+  opportunity: OpportunityForMatching
+): string[] {
   const codes: string[] = [];
   if (!match.eligible) codes.push("ineligible");
   if (match.relevanceScore >= 70) codes.push("matches_your_interests");
   if (match.profileNeedScore >= 70) codes.push("addresses_a_current_gap");
+  if (isNearStudent(student, opportunity)) codes.push("near_you");
   return codes;
 }

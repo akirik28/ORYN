@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createAdminClient } from "@/lib/supabase/admin";
+import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import { isExcludedFromPeopleYouMayKnow, scorePeopleYouMayKnowCandidate, hasAnyPeopleYouMayKnowSignal, isSameSchool } from "./people-you-may-know";
 import { normalizeEntitySearchText } from "@/lib/entities/normalize";
 
@@ -27,7 +27,13 @@ function orInList(column: string, ids: string[]): string {
  * uses (Connect only ever appears from an already-public profile page).
  */
 export async function getPeopleYouMayKnow(userId: string, limit = 10): Promise<PYMKResult[]> {
-  const admin = createAdminClient();
+  // Live-caught this session: this was the one cross-user "read past RLS" call site
+  // tryCreateAdminClient's own sweep missed — createAdminClient() throws synchronously
+  // when SUPABASE_SECRET_KEY is unset, uncaught out of this function's Promise.all, which
+  // crashed the entire Connections page rather than just leaving suggestions empty (a
+  // supplementary section, not load-bearing for the page to render).
+  const admin = tryCreateAdminClient();
+  if (!admin) return [];
 
   const [connectionsRes, blockedRes, myProfileRes, myInterestsRes, mySkillsRes] = await Promise.all([
     admin.from("connections").select("requester_id, recipient_id, status").or(`requester_id.eq.${userId},recipient_id.eq.${userId}`),

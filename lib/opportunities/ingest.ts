@@ -55,6 +55,7 @@ const VALID_CATEGORIES = new Set([
   "entrepreneurship",
   "hackathon",
   "academic_program",
+  "online_program",
   "conference",
   "student_program",
 ]);

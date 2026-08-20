@@ -6,6 +6,7 @@ import { ENTITY_SCOPES, type EntityScope } from "./field-policy";
 import { normalizeEntitySearchText } from "./normalize";
 import { rankEntityCandidates, type EntityCandidate } from "./rank";
 import type { EntitySearchResult, EntitySearchContext } from "./types";
+import { getSupersededUniversityIds } from "@/lib/universities/canonical";
 
 export type { EntityScope, EntitySearchResult, EntitySearchContext } from "./types";
 
@@ -108,10 +109,18 @@ async function searchUniversities(
   const rows = await searchCanonicalRegistry(supabase, "university", query, context);
   if (rows.length === 0) return [];
 
-  const { data } = await supabase
+  // A known-duplicate universities row (both sides confirmed the same institution, but never
+  // row-level cleaned up — see lib/universities/canonical.ts) shares its canonical_entity_id
+  // with its winner, so without this exclusion the Map below could non-deterministically keep
+  // whichever row Postgres returns last for that key — sometimes the loser. Excluding at the
+  // query level is also what stops a loser row from ever being offered as a selectable result.
+  const supersededIds = getSupersededUniversityIds();
+  let universitiesQuery = supabase
     .from("universities")
     .select("id, name, city, country, institution_type, canonical_entity_id")
     .in("canonical_entity_id", rows.map((row) => row.entity_id));
+  if (supersededIds.length > 0) universitiesQuery = universitiesQuery.not("id", "in", `(${supersededIds.join(",")})`);
+  const { data } = await universitiesQuery;
 
   const byEntityId = new Map((data ?? []).map((row) => [row.canonical_entity_id, row]));
 

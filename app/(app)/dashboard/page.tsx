@@ -5,6 +5,7 @@ import { getTargetUniversitiesWithDetails } from "@/lib/universities/queries";
 import { getUpcomingDeadlines } from "@/lib/deadlines/upcoming";
 import { refreshOpportunityMatches } from "@/lib/opportunities/persist-matches";
 import { AIProviderNotConfiguredError } from "@/lib/ai";
+import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
 import { DashboardView } from "@/features/dashboard/dashboard-view";
 import type { ProfileDimension } from "@/types/database";
 
@@ -54,7 +55,9 @@ export default async function DashboardPage() {
       ? profile.profile_strength_score - previousSnapshot.overall_score
       : null;
 
-  const biggestGap = [...scores].sort((a, b) => a.score - b.score)[0] ?? null;
+  // Counselor Core Phase D — single source of truth for "weakest dimension" (was three
+  // duplicated one-liners across this page, the advisor page, and persist-matches.ts).
+  const biggestGap = rankDimensionGaps(toDimensionScoreRows(scores))[0] ?? null;
 
   let biggestImprovement: { dimension: ProfileDimension; delta: number } | null = null;
   if (previousSnapshot) {

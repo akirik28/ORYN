@@ -15,6 +15,8 @@ import { recordProfileView } from "@/lib/social/profile-views";
 import { OPEN_TO_LABELS, type OpenToOption } from "@/lib/social/open-to";
 import { EndorseSkillButton } from "@/features/connections/endorse-skill-button";
 import { RecommendationsSection } from "@/features/profile/recommendations-section";
+import { RecentActivityStrip } from "@/features/profile/recent-activity-strip";
+import { getRecentPortfolioItems } from "@/lib/portfolio/recent";
 import { isUuidLike } from "@/lib/validation/uuid";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -182,6 +184,8 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
           <p className="whitespace-pre-wrap text-sm text-muted-foreground">{display.about}</p>
         </div>
       ) : null}
+
+      {!loadFailed ? <RecentActivityStrip items={getRecentPortfolioItems(portfolio)} /> : null}
 
       {featured.length > 0 ? (
         <div className="space-y-3">

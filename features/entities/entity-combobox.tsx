@@ -158,7 +158,7 @@ export function EntityCombobox({
             <li key={result.id} role="option" aria-selected={index === highlightedIndex}>
               <button
                 type="button"
-                className={`flex w-full flex-col items-start gap-0.5 px-3 py-1.5 text-left text-sm hover:bg-muted ${index === highlightedIndex ? "bg-muted" : ""}`}
+                className={`flex w-full flex-col items-start gap-0.5 px-3 py-1.5 text-left text-sm hover:bg-brand-primary-subtle ${index === highlightedIndex ? "bg-brand-primary-subtle" : ""}`}
                 onMouseDown={(e) => e.preventDefault()}
                 onMouseEnter={() => setHighlightedIndex(index)}
                 onClick={() => selectResult(result)}
@@ -175,7 +175,7 @@ export function EntityCombobox({
             <li>
               <button
                 type="button"
-                className="flex w-full items-center gap-1.5 border-t px-3 py-2 text-left text-sm text-brand-primary hover:bg-muted"
+                className="flex w-full items-center gap-1.5 border-t px-3 py-2 text-left text-sm text-brand-primary hover:bg-brand-primary-subtle"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => {
                   setOpen(false);

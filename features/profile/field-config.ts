@@ -1,4 +1,11 @@
 import type { EntityScope } from "@/lib/entities/field-policy";
+import { INTEREST_SUGGESTIONS } from "@/lib/validation/onboarding";
+import { COURSE_NAME_SUGGESTIONS } from "@/lib/vocabularies/subjects";
+import { TEST_NAME_SUGGESTIONS } from "@/lib/vocabularies/tests";
+import { COUNTRY_SUGGESTIONS } from "@/lib/vocabularies/countries";
+import { AWARD_LEVEL_SUGGESTIONS, CAUSE_AREA_SUGGESTIONS, PROFICIENCY_SUGGESTIONS } from "@/lib/vocabularies/profile-fields";
+import { SKILL_NAME_SUGGESTIONS } from "@/lib/vocabularies/skills";
+import { SPORT_NAME_SUGGESTIONS } from "@/lib/vocabularies/sports";
 
 // Essay Story Bank (founder-confirmed MVP scope) reads this field as candidate material —
 // never CV-facing, never auto-summarized. One shared field, one shared prompt list, reused
@@ -34,7 +41,13 @@ export type FieldConfig =
       customLabel?: string;
       placeholder?: string;
       span?: "full" | "half";
-    };
+    }
+  // Canonical-suggestion text field (features/entities/suggest-input.tsx) — for a small,
+  // mostly-closed vocabulary (test names, course subjects) that doesn't warrant the full
+  // registry `"entity"` uses. Unlike "select", never rejects or forces a value to be one of
+  // `suggestions` — a genuinely custom entry is always valid and stored as typed.
+  | { type: "suggest"; name: string; label: string; suggestions: string[]; placeholder?: string; span?: "full" | "half" };
+
 
 export const ACTIVITY_CATEGORY_OPTIONS = [
   { value: "club", label: "Club" },
@@ -93,6 +106,15 @@ export const SPORT_LEVEL_OPTIONS = [
   { value: "national", label: "National" },
   { value: "international", label: "International" },
 ];
+
+// Plain suggestion lists, not `select` options like SPORT_LEVEL_OPTIONS above: every one
+// of these three fields is explicitly optional (nullable, no default), and DynamicFormFields'
+// `type: "select"` always resolves to a concrete value (`field.options[0]?.value` when
+// unset — see that component) — forcing one of these into a `select` would silently turn
+// "unset" into "Academics"/"Beginner"/"School" the moment the form re-renders. `suggest`
+// preserves genuine optionality (an empty SuggestInput stays empty) while still cutting
+// fragmentation for the common cases.
+export const GOAL_CATEGORY_SUGGESTIONS = ["Academics", "Career", "Personal", "Financial", "Community/Leadership"];
 
 export const ACTIVITY_FIELDS: FieldConfig[] = [
   { type: "text", name: "title", label: "Title", placeholder: "e.g. Robotics Club Captain" },
@@ -163,7 +185,7 @@ export const AWARD_FIELDS: FieldConfig[] = [
     customLabel: "organization",
     span: "half",
   },
-  { type: "text", name: "level", label: "Level (school, national, international...)", span: "half" },
+  { type: "suggest", name: "level", label: "Level", suggestions: AWARD_LEVEL_SUGGESTIONS, placeholder: "e.g. School, National, International", span: "half" },
   { type: "textarea", name: "description", label: "Description" },
   { type: "date", name: "award_date", label: "Date", span: "half" },
   { type: "text", name: "location", label: "Location", span: "half" },
@@ -183,7 +205,7 @@ export const RESEARCH_FIELDS: FieldConfig[] = [
     span: "half",
   },
   { type: "text", name: "mentor_name", label: "Mentor", span: "half" },
-  { type: "text", name: "field", label: "Field", span: "half" },
+  { type: "suggest", name: "field", label: "Field", suggestions: INTEREST_SUGGESTIONS, placeholder: "e.g. Economics", span: "half" },
   { type: "select", name: "output_type", label: "Output", options: RESEARCH_OUTPUT_OPTIONS, span: "half" },
   { type: "textarea", name: "description", label: "Description" },
   { type: "textarea", name: "methodology", label: "Methodology" },
@@ -209,7 +231,7 @@ export const VOLUNTEERING_FIELDS: FieldConfig[] = [
     customLabel: "organization",
     span: "half",
   },
-  { type: "text", name: "cause_area", label: "Cause area", span: "half" },
+  { type: "suggest", name: "cause_area", label: "Cause area", suggestions: CAUSE_AREA_SUGGESTIONS, placeholder: "e.g. Education", span: "half" },
   { type: "textarea", name: "description", label: "Description" },
   { type: "date", name: "start_date", label: "Start date", span: "half" },
   { type: "date", name: "end_date", label: "End date", span: "half" },
@@ -235,7 +257,7 @@ export const WORK_EXPERIENCE_FIELDS: FieldConfig[] = [
 
 export const EDUCATION_FIELDS: FieldConfig[] = [
   { type: "entity", name: "school_name", entityIdField: "school_entity_id", scope: "school", label: "School name", allowCustom: true, customLabel: "school" },
-  { type: "text", name: "country", label: "Country", span: "half" },
+  { type: "suggest", name: "country", label: "Country", suggestions: COUNTRY_SUGGESTIONS, placeholder: "e.g. United States", span: "half" },
   { type: "select", name: "stage", label: "Stage", options: EDUCATION_STAGE_OPTIONS, span: "half" },
   { type: "select", name: "curriculum", label: "Curriculum", options: CURRICULUM_FIELD_OPTIONS, span: "half" },
   { type: "checkbox", name: "is_current", label: "Currently attending" },
@@ -262,9 +284,9 @@ export const COURSE_LEVEL_OPTIONS = [
 export const COURSE_LEVEL_LABELS: Record<string, string> = Object.fromEntries(COURSE_LEVEL_OPTIONS.map((o) => [o.value, o.label]));
 
 export const COURSE_FIELDS: FieldConfig[] = [
-  { type: "text", name: "course_name", label: "Course", placeholder: "e.g. AP Microeconomics" },
+  { type: "suggest", name: "course_name", label: "Course", suggestions: COURSE_NAME_SUGGESTIONS, placeholder: "e.g. AP Microeconomics" },
   { type: "select", name: "level", label: "Level", options: COURSE_LEVEL_OPTIONS, span: "half" },
-  { type: "text", name: "subject", label: "Subject", placeholder: "e.g. Economics", span: "half" },
+  { type: "suggest", name: "subject", label: "Subject", suggestions: INTEREST_SUGGESTIONS, placeholder: "e.g. Economics", span: "half" },
   { type: "text", name: "academic_year", label: "Academic year", placeholder: "e.g. 2026-27", span: "half" },
   { type: "text", name: "grade_value", label: "Grade (optional)", placeholder: "e.g. A, 5, 7", span: "half" },
   { type: "text", name: "grade_scale", label: "Grade scale (optional)", placeholder: "e.g. A-F, 1-5, 1-7", span: "half" },
@@ -272,7 +294,7 @@ export const COURSE_FIELDS: FieldConfig[] = [
 ];
 
 export const TEST_SCORE_FIELDS: FieldConfig[] = [
-  { type: "text", name: "test_name", label: "Test name (e.g. SAT, IB Predicted)" },
+  { type: "suggest", name: "test_name", label: "Test name", suggestions: TEST_NAME_SUGGESTIONS, placeholder: "e.g. SAT, IB Predicted" },
   { type: "text", name: "score", label: "Score", span: "half" },
   { type: "text", name: "max_score", label: "Max score", span: "half" },
   { type: "date", name: "test_date", label: "Date" },
@@ -303,13 +325,13 @@ export const GOAL_STATUS_OPTIONS = [
 
 export const GOAL_FIELDS: FieldConfig[] = [
   { type: "text", name: "title", label: "Goal", placeholder: "e.g. Study Economics in the UK" },
-  { type: "text", name: "category", label: "Category (optional)", placeholder: "e.g. Academics, Career", span: "half" },
+  { type: "suggest", name: "category", label: "Category (optional)", suggestions: GOAL_CATEGORY_SUGGESTIONS, placeholder: "e.g. Academics, Career", span: "half" },
   { type: "date", name: "target_date", label: "Target date", span: "half" },
   { type: "select", name: "status", label: "Status", options: GOAL_STATUS_OPTIONS },
 ];
 
 export const SPORTS_FIELDS: FieldConfig[] = [
-  { type: "text", name: "sport", label: "Sport", placeholder: "e.g. Swimming", span: "half" },
+  { type: "suggest", name: "sport", label: "Sport", suggestions: SPORT_NAME_SUGGESTIONS, placeholder: "e.g. Swimming", span: "half" },
   { type: "text", name: "discipline", label: "Discipline / event", placeholder: "e.g. 200m Freestyle", span: "half" },
   {
     type: "entity",
@@ -349,7 +371,7 @@ export const SKILL_CATEGORY_OPTIONS = [
  * so a weak Digital Twin signal on its own (spec: Digital Twin rules) — endorsements from
  * accepted connections add real context on top, but neither becomes a quantitative score. */
 export const SKILL_FIELDS: FieldConfig[] = [
-  { type: "text", name: "name", label: "Skill", placeholder: "e.g. Python, Public speaking", span: "half" },
+  { type: "suggest", name: "name", label: "Skill", suggestions: SKILL_NAME_SUGGESTIONS, placeholder: "e.g. Python, Public speaking", span: "half" },
   { type: "select", name: "category", label: "Category", options: SKILL_CATEGORY_OPTIONS, span: "half" },
-  { type: "text", name: "proficiency", label: "Proficiency (optional)", placeholder: "e.g. Intermediate" },
+  { type: "suggest", name: "proficiency", label: "Proficiency (optional)", suggestions: PROFICIENCY_SUGGESTIONS, placeholder: "e.g. Intermediate" },
 ];

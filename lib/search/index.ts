@@ -5,6 +5,7 @@ import type { Database } from "@/types/database";
 import { createClient } from "@/lib/supabase/server";
 import { rankResults, toIlikePattern } from "./rank";
 import { searchUniversityRows } from "@/lib/universities/alias-search";
+import { canonicalUniversityId } from "@/lib/universities/canonical";
 import type { SearchResult } from "./types";
 
 type DB = SupabaseClient<Database>;
@@ -46,8 +47,14 @@ async function searchPrograms(supabase: DB, pattern: string): Promise<SearchResu
     title: p.name,
     subtitle: [p.degree_level, p.field].filter(Boolean).join(" · ") || null,
     // Programs have no detail route of their own — link to the parent university, which
-    // lists its programs (see app/(app)/universities/[id]/page.tsx).
-    href: `/universities/${p.university_id}`,
+    // lists its programs (see app/(app)/universities/[id]/page.tsx). university_programs.
+    // university_id is a raw FK that could point at a known-duplicate loser row (none of
+    // today's 9 known pairs happen to have programs on their loser side, but nothing
+    // guarantees that for a future pair) — canonicalizing here means the link always lands
+    // on the page the student expects rather than depending on that coincidence, and the
+    // detail page's own redirect (see app/(app)/universities/[id]/page.tsx) is only a
+    // second, redundant safety net rather than the sole protection.
+    href: `/universities/${canonicalUniversityId(p.university_id)}`,
   }));
 }
 
@@ -107,7 +114,11 @@ async function searchApplications(supabase: DB, userId: string, term: string): P
 
   const targetIds = [...new Set(applications.map((a) => a.target_university_id))];
   const targets = unwrap(await supabase.from("target_universities").select("id, university_id").in("id", targetIds));
-  const universityIdByTarget = new Map(targets.map((t) => [t.id, t.university_id]));
+  // Resolved through the canonical winner, not the raw stored id — target_universities.
+  // university_id could be a pre-existing loser id (saved before the write-path fix in
+  // app/(app)/universities/actions.ts existed), and this makes that self-healing at read time
+  // instead of permanently showing a stale duplicate's name. See lib/universities/canonical.ts.
+  const universityIdByTarget = new Map(targets.map((t) => [t.id, canonicalUniversityId(t.university_id)]));
 
   const universityIds = [...new Set([...universityIdByTarget.values()])];
   const universities = universityIds.length > 0 ? unwrap(await supabase.from("universities").select("id, name").in("id", universityIds)) : [];

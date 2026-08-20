@@ -2,6 +2,7 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
+import { canonicalUniversityId } from "@/lib/universities/canonical";
 
 export type DeadlineSource = "application" | "opportunity" | "university";
 
@@ -14,7 +15,9 @@ export interface UpcomingDeadline {
 }
 
 const ACTIVE_APPLICATION_STATUSES = ["not_started", "in_progress", "submitted", "under_review"] as const;
-const ACTIVE_TARGET_STATUSES = ["exploring", "target", "applying"] as const;
+/** Exported for lib/counselor/state.ts to reuse — one definition of "an active target",
+ * not a second copy of the same business rule. */
+export const ACTIVE_TARGET_STATUSES = ["exploring", "target", "applying"] as const;
 
 async function getUpcomingApplicationDeadlines(supabase: SupabaseClient<Database>, userId: string, today: string): Promise<UpcomingDeadline[]> {
   const { data: applications } = await supabase
@@ -30,9 +33,10 @@ async function getUpcomingApplicationDeadlines(supabase: SupabaseClient<Database
   const { data: targets } = targetIds.length
     ? await supabase.from("target_universities").select("id, university_id").in("id", targetIds)
     : { data: [] };
-  const universityIdByTarget = new Map((targets ?? []).map((t) => [t.id, t.university_id]));
+  // Canonicalized — see lib/universities/canonical.ts.
+  const universityIdByTarget = new Map((targets ?? []).map((t) => [t.id, canonicalUniversityId(t.university_id)]));
 
-  const universityIds = [...new Set((targets ?? []).map((t) => t.university_id))];
+  const universityIds = [...new Set(universityIdByTarget.values())];
   const { data: universities } = universityIds.length
     ? await supabase.from("universities").select("id, name").in("id", universityIds)
     : { data: [] };
@@ -80,7 +84,8 @@ async function getUpcomingUniversityDeadlines(supabase: SupabaseClient<Database>
     .in("status", ACTIVE_TARGET_STATUSES);
   if (!targets || targets.length === 0) return [];
 
-  const universityIds = [...new Set(targets.map((t) => t.university_id))];
+  // Canonicalized — see lib/universities/canonical.ts.
+  const universityIds = [...new Set(targets.map((t) => canonicalUniversityId(t.university_id)))];
   const [{ data: deadlines }, { data: universities }] = await Promise.all([
     supabase
       .from("university_deadlines")
@@ -93,9 +98,10 @@ async function getUpcomingUniversityDeadlines(supabase: SupabaseClient<Database>
   const universityNameById = new Map((universities ?? []).map((u) => [u.id, u.name]));
   const programIdsByUniversity = new Map<string, Set<string | null>>();
   for (const target of targets) {
-    const set = programIdsByUniversity.get(target.university_id) ?? new Set<string | null>();
+    const canonicalId = canonicalUniversityId(target.university_id);
+    const set = programIdsByUniversity.get(canonicalId) ?? new Set<string | null>();
     set.add(target.program_id);
-    programIdsByUniversity.set(target.university_id, set);
+    programIdsByUniversity.set(canonicalId, set);
   }
 
   const result: UpcomingDeadline[] = [];
