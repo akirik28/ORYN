@@ -99,6 +99,15 @@ database directly rather than trusting any prior session's report.
 | 09 | `09-existing-oryn-ambiguity-audit.md` | What direct query of the live registry actually found — evidence, not estimate |
 | 10 | `10-prioritized-manual-review-queue.md` | What a human/agent should look at first, in what order, and why |
 | 11 | `11-implementation-handoff.md` | Concrete next actions for Claude A / data architecture, in priority order |
+| 12 | `12-institution-collision-traps.md` | Sourced, cross-country register of real same-name-different-institution traps (Sorbonne, TU-prefix, American University of X, etc.) |
+| 13 | `13-opportunity-organizer-research-batch2.md` | Official-URL/entity-type research for the long tail of single-occurrence opportunity organizers |
+| 14 | `14-trigram-similarity-discovery-audit.md` | A new discovery-only candidate-finding method tried against live data, including one candidate researched to a sourced, resolved conclusion |
+
+Docs 12–13 were produced by two background research agents dispatched partway through this
+session with the same evidence standard and non-duplication discipline as 00–11 (see
+`docs/handoffs/research-canonical-entity-intelligence.md` for exactly when/how); 14 continues the
+lead session's own direct-query method. All three are integrated here, not bolted on — read them
+in the same pass as the rest of the package.
 
 Machine-readable companions live in `data/research/canonical-entities/`:
 
@@ -112,6 +121,8 @@ Machine-readable companions live in `data/research/canonical-entities/`:
 - `alias-taxonomy-examples.json` — worked alias examples across entity types and languages.
 - `relationship-taxonomy-mapping.json` — mission-brief relationship vocabulary mapped onto the
   live `entity_relationships.relationship_type` constraint, with gaps called out explicitly.
+- `institution-collision-traps.json`, `opportunity-organizer-candidates-batch2.json`,
+  `trigram-similarity-candidates.json` — companions to docs 12–14 respectively.
 
 ## Method and source standard
 
