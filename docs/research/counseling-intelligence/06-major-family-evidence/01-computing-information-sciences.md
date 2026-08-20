@@ -97,6 +97,19 @@ or pure-econ project alone for a student with this specific interest combination
 `07-economics-finance.md`. **AI + medicine**: relevant to a student interested in clinical machine
 learning — see `10-medicine-clinical-pathways.md` (peer-authored) for the reciprocal note; this
 document flags it here so the connection isn't lost if that document is drafted independently.
+**CS + law** (tech policy, intellectual-property/patent law involving software): a student drawn to
+both should be pointed toward projects/exploration that engage the actual policy or legal question
+directly (e.g., analyzing a real tech-regulation debate, or a mock-legal exercise involving a real
+software/IP scenario) rather than treating the two interests as requiring an early either/or choice
+— see the peer session's `13-law-oriented-pathways.md` for the reciprocal framing (this combination
+is also named from the engineering side in `05-engineering-me-ce-ae-ee.md` §3, via the technical-
+background-into-patent-law pathway). **CS + business** (product management, tech
+entrepreneurship): see `08-business-management-entrepreneurship.md` §5 for the reciprocal framing —
+a technical project with a real user/customer angle (not just working code) is the strongest
+combined evidence for this specific interest pair. (Both this entry and the CS + law entry above
+were found missing from this document during this session's own cross-reference audit against
+`00-family-taxonomy.md` §6, which lists both combinations as belonging in "both family docs" —
+fixed here rather than left as a silent gap.)
 
 ## 6. Professional/licensure notes
 
