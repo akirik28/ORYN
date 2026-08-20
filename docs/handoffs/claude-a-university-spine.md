@@ -2914,3 +2914,22 @@ one of the failure shapes documented across these notes -- diminishing returns o
 to retry the same blocked set, so the next stretch of this session is moving to a different
 lane (opportunities/summer-programs, or new-country spine expansion) rather than a 12th
 programme-catalogue batch against the same handful of stubborn course finders.
+
+**Opportunities Wave 4-5 (this session) — 10 new candidates, research/fellowship/scholarship-
+focused plus regional diversity.** Full detail in `data/research/opportunities/
+wave4_2026-08-21_diverse.jsonl` / `wave5_2026-08-21_thin-categories.jsonl` commit messages
+and `SUMMER_PROGRAMS_350_TRACKER.md`'s own Progress table -- not repeated here since these are
+a different owner's territory (opportunities/`university_requirements`), just noted for
+cross-lane visibility. Same file-only, not-live-applied constraint as the programme-catalogue
+batches.
+
+**Program catalogue batch 12 — Trinity College Dublin + UCD, 181 new, first Ireland
+coverage, running session total 2,567 across 27 universities.** Genuine geographic-breadth
+win after Canada/Australia proved much harder to scrape than UK/US (see batch 10-11 note):
+Ireland uses the same UK-style A-Z-catalogue convention TCD/Liverpool/Sheffield/Manchester
+all had, so the same method transferred directly. Full detail in that commit's own message
+(`3b17eb1`). This confirms a useful heuristic for the rest of the night: try the actual
+academic-catalogue/A-Z-course-list URL pattern first (works well for UK-tradition
+institutions, including former-Commonwealth ones), and don't sink much time into a
+university's flashy marketing "study with us" portal if the catalogue equivalent isn't
+found quickly -- those are reliably JS-only navigation shells with no static list.
