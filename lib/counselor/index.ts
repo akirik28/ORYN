@@ -12,8 +12,13 @@ export type {
   EligibilityResult,
   EligibilityVerdict,
   ProfileGap,
+  ProfileStrength,
   RankedCandidate,
+  StrengthTier,
 } from "./types";
+export type { CounselorDashboardContract } from "./dashboard-contract";
+export { buildCounselorDashboardContract } from "./dashboard-contract";
+export { rankDimensionStrengths } from "./strengths";
 
 /**
  * Counselor Core's single public entry point (docs/counselor-core-plan.md). Assembles the

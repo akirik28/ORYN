@@ -45,6 +45,7 @@ export default function DesignPreviewPage() {
         biggestImprovement={FIXTURE_BIGGEST_IMPROVEMENT}
         weeklyPlan={FIXTURE_WEEKLY_PLAN}
         planError={null}
+        counselorThisWeek={[]}
         avoidRecommendation={FIXTURE_AVOID_RECOMMENDATION}
         upcomingDeadlines={FIXTURE_DEADLINES}
         targetUniversities={FIXTURE_TARGET_UNIVERSITIES}
