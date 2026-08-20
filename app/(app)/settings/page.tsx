@@ -2,6 +2,8 @@ import { Download, LogOut } from "lucide-react";
 import { getCurrentProfile, requireUser } from "@/lib/security/dal";
 import { signOut } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/oryn/page-header";
+import { SectionHeader } from "@/components/oryn/section-header";
 import { DisplayNameForm } from "@/features/settings/display-name-form";
 import { LocationForm } from "@/features/settings/location-form";
 import { CitizenshipForm } from "@/features/settings/citizenship-form";
@@ -21,13 +23,11 @@ export default async function SettingsPage() {
   const profile = await getCurrentProfile();
 
   return (
-    <div className="max-w-xl space-y-10">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Settings</h1>
-      </div>
+    <div className="max-w-xl space-y-8">
+      <PageHeader title="Settings" description="Manage your account, privacy, and data." />
 
-      <section className="space-y-4">
-        <h2 className="font-semibold">Account</h2>
+      <section className="space-y-4 rounded-xl border p-6">
+        <SectionHeader title="Account" />
         <p className="text-sm text-muted-foreground">{session.email}</p>
         <DisplayNameForm initialName={profile?.display_name ?? ""} />
         <form action={signOut}>
@@ -37,31 +37,24 @@ export default async function SettingsPage() {
         </form>
       </section>
 
-      <section className="space-y-4">
-        <div>
-          <h2 className="font-semibold">Location</h2>
-          <p className="text-sm text-muted-foreground">
-            Used to prioritize nearby opportunities. Country is part of your public profile if you turn that on below; city is never shown publicly.
-          </p>
-        </div>
+      <section className="space-y-4 rounded-xl border p-6">
+        <SectionHeader
+          title="Location"
+          description="Used to prioritize nearby opportunities. Country is part of your public profile if you turn that on below; city is never shown publicly."
+        />
         <LocationForm initialCountry={profile?.country ?? ""} initialCity={profile?.city ?? null} />
       </section>
 
-      <section className="space-y-4">
-        <div>
-          <h2 className="font-semibold">Citizenship</h2>
-          <p className="text-sm text-muted-foreground">
-            Different from your location above — used to check citizenship-restricted opportunities. Optional; add as many as apply.
-          </p>
-        </div>
+      <section className="space-y-4 rounded-xl border p-6">
+        <SectionHeader
+          title="Citizenship"
+          description="Different from your location above — used to check citizenship-restricted opportunities. Optional; add as many as apply."
+        />
         <CitizenshipForm initialCitizenships={profile?.citizenship_countries ?? []} />
       </section>
 
-      <section className="space-y-4">
-        <div>
-          <h2 className="font-semibold">Study capacity</h2>
-          <p className="text-sm text-muted-foreground">Helps the weekly plan match what you can realistically do.</p>
-        </div>
+      <section className="space-y-4 rounded-xl border p-6">
+        <SectionHeader title="Study capacity" description="Helps the weekly plan match what you can realistically do." />
         <CapacityForm
           initialTimeBudget={profile?.weekly_time_budget ?? null}
           initialBusyMode={profile?.busy_mode ?? false}
@@ -69,11 +62,8 @@ export default async function SettingsPage() {
         />
       </section>
 
-      <section className="space-y-4">
-        <div>
-          <h2 className="font-semibold">Visibility</h2>
-          <p className="text-sm text-muted-foreground">Control what other Oryn students can see about you.</p>
-        </div>
+      <section className="space-y-4 rounded-xl border p-6">
+        <SectionHeader title="Visibility" description="Control what other Oryn students can see about you." />
         <VisibilityForm
           userId={session.userId!}
           initialIsPublic={profile?.is_public ?? false}
@@ -81,11 +71,8 @@ export default async function SettingsPage() {
         />
       </section>
 
-      <section className="space-y-3">
-        <h2 className="font-semibold">Your data</h2>
-        <p className="text-sm text-muted-foreground">
-          Download everything Oryn has stored about you, or permanently delete your account.
-        </p>
+      <section className="space-y-3 rounded-xl border p-6">
+        <SectionHeader title="Your data" description="Download everything Oryn has stored about you, or permanently delete your account." />
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" render={<a href="/api/export-data" />} nativeButton={false}>
             <Download className="size-4" /> Export my data
@@ -94,12 +81,10 @@ export default async function SettingsPage() {
         </div>
       </section>
 
-      <section className="space-y-2 border-t pt-6 text-xs text-muted-foreground">
-        <p>
-          Career profile scores are Oryn&apos;s own development assessment, not an official admissions
-          probability. See individual pages for source information on university and opportunity data.
-        </p>
-      </section>
+      <p className="border-t pt-6 text-xs text-muted-foreground">
+        Career profile scores are Oryn&apos;s own development assessment, not an official admissions
+        probability. See individual pages for source information on university and opportunity data.
+      </p>
     </div>
   );
 }
