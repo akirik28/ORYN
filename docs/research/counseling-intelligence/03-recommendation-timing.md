@@ -151,6 +151,28 @@ this whole research package surfaced, and it applies to the redundancy/saturatio
 (peer's `05-redundancy-saturation.md`) and this document's own two-phase model at least as much as
 to anything career-family-specific.
 
+**A real gap this rule doesn't resolve on its own, surfaced by testing it against a concrete
+persona (a 14-year-old in Turkey, `yearsUntilGraduation` ≈ 4, interested in Computer Science, no
+`target_universities` added yet):** RULE-COUNSEL-062's Turkey clause is conditioned on the student
+"targeting Turkish public university placement specifically" — but ORYN has no direct signal for
+this until a student adds actual target universities, and a young Phase-1 student very plausibly
+hasn't yet. `TargetGeography` only has one `"turkey"` value, not a public/YKS-track vs. private/
+foundation-university vs. studying-abroad-from-Turkey split. **RULE-COUNSEL-064 (new):** absent a
+specific target-university signal, a `target_geography = "turkey"` student should be treated as
+*probably* YKS-track by default — not because every Turkey-targeting student is (some target
+foundation/private universities with supplementary criteria, or study abroad, per the clause
+above), but because YKS-track public-university placement is the larger, more common case in
+Turkey's system, and the failure mode of wrongly suppressing US-holistic-style admissions framing
+for a student who turns out to be private-track/abroad-track is far less harmful than the reverse
+failure mode (implying a YKS-track student's extracurricular profile "helps their admission
+chances," which this document's own analysis shows is close to false). This should be revisited
+the moment the student adds a specific target university — at which point the actual institution's
+admission model (checkable, at least approximately, from whether it is a state/public university
+using the centralized YKS placement or a vakıf/foundation university with its own supplementary
+process) should override this default, the same "unknown fact, safe default, override once known"
+pattern already established elsewhere in this package (e.g. `lib/counselor/eligibility.ts`'s
+`unknown` verdict never hard-excluding).
+
 **UK — UCAS runs on a "super-curricular," subject-relevant logic, not a general "well-rounded
 profile" logic.** UK admissions guidance draws an explicit, named distinction between
 *super-curricular* activity (subject-relevant academic engagement beyond the school curriculum —

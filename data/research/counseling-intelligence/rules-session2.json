@@ -1,6 +1,6 @@
 {
   "$schema_note": "Rule registry for THIS session's shard only (oryn/counseling-intelligence-research, main checkout). Named rules-session2.json, not rules.json, for the same reason as sources-session2.json.",
-  "$collision_warning": "CRITICAL for whoever integrates: this session independently minted RULE-COUNSEL-034 through 063. The peer branch (oryn/counseling-intelligence-research-013956) independently minted its OWN RULE-COUNSEL-034 through 059+ range for completely different content (confirmed by the peer session's own self-consistency audit, reported 2026-08-21). The two ranges are NOT the same rules under different descriptions -- they are genuinely different rules that happen to share ID numbers by coincidence of two sessions numbering independently without a synced counter. DO NOT merge this file with the peer's equivalent by ID -- every RULE-COUNSEL-### in the 034-063 range needs one side renumbered (recommend renumbering this session's range, since the peer branch is the agreed final-integration target and already has a documented collision map in its own docs/handoffs/research-counseling-intelligence.md). RULE-COUNSEL-001 through 033 belong solely to the peer branch (this session never minted below 034). This file's rules are internally self-consistent and correctly numbered WITHIN this session's own document set -- the problem is purely cross-branch.",
+  "$collision_warning": "CRITICAL for whoever integrates: this session independently minted RULE-COUNSEL-034 through 064. The peer branch (oryn/counseling-intelligence-research-013956) independently minted its OWN RULE-COUNSEL-034 through 059+ range for completely different content (confirmed by the peer session's own self-consistency audit, reported 2026-08-21). The two ranges are NOT the same rules under different descriptions -- they are genuinely different rules that happen to share ID numbers by coincidence of two sessions numbering independently without a synced counter. DO NOT merge this file with the peer's equivalent by ID -- every RULE-COUNSEL-### in the 034-063 range needs one side renumbered (recommend renumbering this session's range, since the peer branch is the agreed final-integration target and already has a documented collision map in its own docs/handoffs/research-counseling-intelligence.md). RULE-COUNSEL-001 through 033 belong solely to the peer branch (this session never minted below 034). This file's rules are internally self-consistent and correctly numbered WITHIN this session's own document set -- the problem is purely cross-branch.",
   "branch": "oryn/counseling-intelligence-research",
   "generated_at": "2026-08-21",
   "rules": [
@@ -246,6 +246,15 @@
       "source_section": "§7",
       "category": "country_specific_sourcing",
       "evidence_source_ids": ["S-YE-UK"]
+    },
+    {
+      "id": "RULE-COUNSEL-064",
+      "statement": "Absent a specific target-university signal, a target_geography='turkey' student should be treated as PROBABLY YKS-track by default for the purposes of RULE-COUNSEL-062 (not framing Oryn's developmental dimensions as admissions-relevant) -- not because every Turkey-targeting student is YKS-track (some target private/foundation universities with their own supplementary admissions criteria, or study abroad), but because YKS-track public-university placement is the larger, more common case, and wrongly suppressing US-holistic-style framing for a private/abroad-track student is a much less harmful failure mode than the reverse. Revisit the moment the student adds a specific target university whose actual admission model can be checked.",
+      "source_document": "docs/research/counseling-intelligence/03-recommendation-timing.md",
+      "source_section": "§6",
+      "category": "admissions_system_overgeneralization",
+      "evidence_source_ids": [],
+      "note": "Surfaced by this session's own persona-stress-test of RULE-COUNSEL-062 against a concrete hypothetical (14-year-old, Turkey, no target universities yet) -- found that the rule's own 'targeting Turkish public university placement specifically' condition has no way to be checked for a young student, and needed an explicit default."
     }
   ]
 }

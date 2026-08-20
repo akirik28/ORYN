@@ -104,6 +104,7 @@ mission's own request for a "consolidated registry," not a duplicate of the sour
 | Applying US-holistic-admissions-derived reasoning (depth-over-breadth, extracurricular signaling, redundancy/saturation) uniformly to a student targeting an exam-score-dominated placement system | RULE-COUNSEL-062 (this session, verifying and extending a finding the peer session's persona-testing pass surfaced first) | `03-recommendation-timing.md` §6; peer's `10-open-questions.md` |
 | Framing Oryn's own developmental dimensions as admissions-relevant with equal directness regardless of target geography | RULE-COUNSEL-062 | `03-recommendation-timing.md` §6 |
 | Treating UK "super-curricular" (subject-relevant) engagement and general "extracurricular" breadth as interchangeable evidence of the same thing | RULE-COUNSEL-062 | `03-recommendation-timing.md` §6 |
+| Having no fallback default for a Turkey-targeting student when it isn't yet known whether they're on the YKS public-placement track specifically (vs. private/foundation-university or abroad) | RULE-COUNSEL-064 (this session, found via persona-stress-testing RULE-COUNSEL-062 against a 14-year-old-in-Turkey hypothetical) | `03-recommendation-timing.md` §6 |
 
 **This section was added after this document's initial version**, once the peer session's
 persona-testing pass (`09-persona-testing.md`) surfaced — and this session independently verified
