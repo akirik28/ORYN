@@ -67,6 +67,7 @@ the mission's own non-negotiables: no production code changes).
 | 09 | `09-persona-testing.md` | Do the frameworks above hold up against concrete hypothetical student profiles, including edge cases? |
 | 10 | `10-open-questions.md` | What remains genuinely unresolved, and what data does ORYN not yet have to execute these rules? |
 | 11 | `11-geography-admissions-systems.md` | Added after `10` identified it as the highest-leverage gap: how much does holistic profile-building actually matter across USA/UK/France/Germany/Netherlands/Italy/Switzerland/Turkey, and what should that mean for how the counselor weights recommendations by target geography? |
+| 12 | `12-activity-progression-pathways.md` | Added per the mission's own "AFTER CORE PACKAGE" list: what does a realistic multi-year progression look like in a given area, and how should a late or non-standard start be handled without penalty? |
 
 Machine-readable companions live in `data/research/counseling-intelligence/`:
 

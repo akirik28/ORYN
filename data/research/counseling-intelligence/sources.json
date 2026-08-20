@@ -397,6 +397,18 @@
       "claim_supported": "Non-numerus-fixus programmes have a 1 May deadline with no selection step; numerus fixus programmes have a 15 January deadline with an explicit selection step; the official 'Studiekeuzecheck' (Study Choice Check) is a fit/readiness check, not a competitive achievement evaluation.",
       "used_in_rules": ["RULE-COUNSEL-063"],
       "limitations": "Confirms the mechanism officially; does not itself state whether extracurricular activities specifically are weighted within decentralized selection — that narrower claim remains secondary-sourced (SRC-CS-029), not upgraded by this source."
+    },
+    {
+      "id": "SRC-CS-034",
+      "title": "Simons Summer Research Program — Application Guidelines / eligibility page",
+      "publisher": "Stony Brook University (official program operator)",
+      "url": "https://www.stonybrook.edu/commcms/simons/applying_to/how-to-apply.php",
+      "type": "official_program_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Applicants must be current 11th-grade (junior) high school students at time of application, no exceptions — a concrete, official, primary-source-verified instance of the 'rising junior/senior' structured-research-program eligibility pattern.",
+      "used_in_rules": ["RULE-COUNSEL-069"],
+      "limitations": "One program, used as a representative, officially-verified example of a broader pattern peer's own 03-recommendation-timing.md documents at aggregate/secondary-source confidence across several programs."
     }
   ]
 }
