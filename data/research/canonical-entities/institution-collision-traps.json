@@ -1,0 +1,334 @@
+{
+  "_meta": {
+    "title": "Institution collision traps — machine-readable companion to docs/research/canonical-entity-intelligence/12-institution-collision-traps.md",
+    "generated": "2026-08-21",
+    "method": "Every institution below was checked against its own official website and/or ROR (Research Organization Registry, ror.org), fetched live via api.ror.org/v2/organizations this session. Wikipedia and Wikidata were used only as a discovery index (to learn an institution exists / find search terms), never cited as a source of record, matching lib/acquisition/source-authority.ts's exclusion of both domains as fact sources.",
+    "confidence_definition": {
+      "high": "Distinctness confirmed by independent ROR record(s) and/or independent official domains, checked directly this session.",
+      "medium": "Core distinctness confirmed at high confidence, but a specific supporting detail (a date, a legal mechanism, a historical narrative) rests on secondary/news sourcing not independently confirmed against a primary document this session.",
+      "low": "Not used in this file — every case here reached at least medium confidence on its core claim; lower-confidence sub-details are noted in trap_description/recommendation text instead of lowering the whole case."
+    }
+  },
+  "cases": [
+    {
+      "case_name": "The Sorbonne cluster",
+      "institutions": [
+        {"name": "Sorbonne Université", "country": "France", "official_url": "https://www.sorbonne-universite.fr", "ror_id_if_known": "https://ror.org/02en5vm52"},
+        {"name": "Université Paris 1 Panthéon-Sorbonne", "country": "France", "official_url": "https://www.pantheonsorbonne.fr", "ror_id_if_known": "https://ror.org/002t25c44"},
+        {"name": "Université Sorbonne Nouvelle (Paris 3)", "country": "France", "official_url": "https://www.sorbonne-nouvelle.fr", "ror_id_if_known": "https://ror.org/03z6jp965"},
+        {"name": "Université Sorbonne Paris Nord", "country": "France", "official_url": "https://www.univ-spn.fr", "ror_id_if_known": "https://ror.org/0199hds37"}
+      ],
+      "trap_description": "Four legally separate public universities in Paris are all routinely called 'the Sorbonne' in casual English. Unlike every other cluster in this package, country- or city-scoping does not disambiguate them — all four sit in Paris, which is a strictly harder case than the already-documented UM/UP/UPM abbreviation collisions in 02-alias-taxonomy.md, where a country field alone resolves the ambiguity. A fifth, now-defunct grouping ('Sorbonne Paris Cité', a COMUE active roughly 2013-2019, ror.org/001z21q04) is noted so a source dated in that window is not mistaken for a fifth live candidate.",
+      "verified_distinct": true,
+      "confidence": "high",
+      "sources": [
+        "https://ror.org/02en5vm52",
+        "https://ror.org/002t25c44",
+        "https://ror.org/03z6jp965",
+        "https://ror.org/0199hds37",
+        "https://ror.org/001z21q04",
+        "https://www.pantheonsorbonne.fr/universite/",
+        "https://www.univ-spn.fr/"
+      ],
+      "recommendation": "Keep as four fully separate university entities, no entity_relationships row among them. Do not auto-create an entity_aliases row for bare 'Sorbonne'/'La Sorbonne' pointing at any one of the four without a disambiguating qualifier (subject/faculty is the only real signal) — this is a genuinely harder case than the existing UM/UP/UPM pattern and needs human disambiguation per occurrence, not a registry fix."
+    },
+    {
+      "case_name": "Sciences Po network",
+      "institutions": [
+        {"name": "Institut d'Études Politiques de Paris (Sciences Po)", "country": "France", "official_url": "https://www.sciencespo.fr", "ror_id_if_known": "https://ror.org/05fe7ax82"},
+        {"name": "Sciences Po Lyon", "country": "France", "official_url": "https://www.sciencespo-lyon.fr", "ror_id_if_known": "https://ror.org/02h3vcz70"},
+        {"name": "Sciences Po Bordeaux", "country": "France", "official_url": "https://www.sciencespobordeaux.fr", "ror_id_if_known": "https://ror.org/01b5nw197"},
+        {"name": "Sciences Po Lille", "country": "France", "official_url": "https://www.sciencespo-lille.eu", "ror_id_if_known": "https://ror.org/05dm31p35"},
+        {"name": "Sciences Po Toulouse", "country": "France", "official_url": "http://www.sciencespo-toulouse.fr", "ror_id_if_known": "https://ror.org/022scmy89"},
+        {"name": "Sciences Po Grenoble", "country": "France", "official_url": "http://www.sciencespo-grenoble.fr", "ror_id_if_known": "https://ror.org/03c7zyj82"},
+        {"name": "Sciences Po Aix", "country": "France", "official_url": "https://www.sciencespo-aix.fr", "ror_id_if_known": "https://ror.org/0406m4x33"},
+        {"name": "Sciences Po Rennes", "country": "France", "official_url": "https://www.sciencespo-rennes.fr", "ror_id_if_known": "https://ror.org/01fmctt82"}
+      ],
+      "trap_description": "'Sciences Po' with no qualifier almost always means the Paris institute in casual English, but it is also the shared public brand of at least eight separately-chartered French public institutions (IEPs), each with its own admissions, campus, and ROR record. The Paris institute itself is additionally two linked legal bodies (the IEP, a 'grand établissement' since a 1984 decree, plus the separately-governed Fondation nationale des sciences politiques). Sciences Po Strasbourg and a campus at Saint-Germain-en-Laye are named in secondary sources but were not found in this session's ROR queries — recorded as unconfirmed, not asserted.",
+      "verified_distinct": true,
+      "confidence": "high",
+      "sources": [
+        "https://ror.org/05fe7ax82",
+        "https://ror.org/02h3vcz70",
+        "https://ror.org/01b5nw197",
+        "https://ror.org/05dm31p35",
+        "https://ror.org/022scmy89",
+        "https://ror.org/03c7zyj82",
+        "https://ror.org/0406m4x33",
+        "https://ror.org/01fmctt82",
+        "https://www.sciencespo.fr/fr/a-propos/gouvernance-budget/"
+      ],
+      "recommendation": "Keep all eight as fully separate university entities, no relationship rows among them by default — they cooperate (a shared entrance exam for a subset since 2008) but are not one legal parent. A future 'Réseau ScPo' organization entity with member_of rows from participating IEPs is a candidate worth flagging (mirroring the PSL/École Polytechnique pattern already in 03), not something to create from this research alone."
+    },
+    {
+      "case_name": "American University of ___",
+      "institutions": [
+        {"name": "American University", "country": "United States", "official_url": "https://american.edu", "ror_id_if_known": "https://ror.org/052w4zt36"},
+        {"name": "American University of Beirut", "country": "Lebanon", "official_url": "https://www.aub.edu.lb", "ror_id_if_known": "https://ror.org/04pznsd21"},
+        {"name": "American University in Cairo", "country": "Egypt", "official_url": "https://www.aucegypt.edu", "ror_id_if_known": "https://ror.org/0176yqn58"},
+        {"name": "American University of Paris", "country": "France", "official_url": "https://www.aup.edu", "ror_id_if_known": "https://ror.org/05t197591"},
+        {"name": "American University of Central Asia", "country": "Kyrgyzstan", "official_url": "https://www.auca.kg", "ror_id_if_known": "https://ror.org/03vvzk644"},
+        {"name": "American University / Universidad Americana", "country": "Nicaragua", "official_url": "https://uam.edu.ni", "ror_id_if_known": "https://ror.org/038e47q18"}
+      ],
+      "trap_description": "At least six separately-chartered institutions worldwide use 'American University' as their full or leading name, following a recognizable naming convention (an American-liberal-arts-model university operating abroad, or a Spanish-language 'Universidad Americana') rather than shared ownership. Several more exist under the same convention (Sharjah, Armenia, Bulgaria, Nigeria, Afghanistan, Kuwait, Malta) and were not individually re-verified this pass.",
+      "verified_distinct": true,
+      "confidence": "high",
+      "sources": [
+        "https://ror.org/052w4zt36",
+        "https://ror.org/04pznsd21",
+        "https://ror.org/0176yqn58",
+        "https://ror.org/05t197591",
+        "https://ror.org/03vvzk644",
+        "https://ror.org/038e47q18",
+        "https://www.american.edu/about/history.cfm",
+        "https://www.aucegypt.edu/about/mission-and-history",
+        "https://www.aup.edu/about/aup-recognition/accreditation"
+      ],
+      "recommendation": "Keep as fully separate university entities, no relationship rows. Never auto-resolve a bare 'American University' (no city/country qualifier) to the Washington DC institution by default — treat like the existing UM/UP/UPM pattern, resolve by country. A shared US accreditor (several hold Middle States Commission on Higher Education accreditation) is not evidence for any entity_relationships row — accreditation is a fact about an institution, not a relationship between institutions."
+    },
+    {
+      "case_name": "German TU prefix cluster",
+      "institutions": [
+        {"name": "Technische Universität Berlin", "country": "Germany", "official_url": "https://www.tu.berlin", "ror_id_if_known": "https://ror.org/03v4gjf40"},
+        {"name": "Technical University of Munich", "country": "Germany", "official_url": "https://www.tum.de", "ror_id_if_known": "https://ror.org/02kkvpp62"},
+        {"name": "Technische Universität Dresden", "country": "Germany", "official_url": "https://tu-dresden.de", "ror_id_if_known": "https://ror.org/042aqky30"},
+        {"name": "Technische Universität Darmstadt", "country": "Germany", "official_url": "https://www.tu-darmstadt.de", "ror_id_if_known": "https://ror.org/05n911h24"},
+        {"name": "TU Wien (Vienna University of Technology)", "country": "Austria", "official_url": "https://www.tuwien.at", "ror_id_if_known": "https://ror.org/04d836q62"}
+      ],
+      "trap_description": "'TU [City]' is a live, productive naming pattern across Germany and Austria for technical universities, all colloquially interchangeable in casual speech ('TU Berlin,' 'TU Munich'). On verification this is a soft trap: every instance carries a distinguishing city name as part of its own standard short form, and country alone correctly separates TU Wien (Austria) from the five German institutions.",
+      "verified_distinct": true,
+      "confidence": "high",
+      "sources": [
+        "https://ror.org/03v4gjf40",
+        "https://ror.org/02kkvpp62",
+        "https://ror.org/042aqky30",
+        "https://ror.org/05n911h24",
+        "https://ror.org/04d836q62"
+      ],
+      "recommendation": "Keep fully separate, no relationship rows. Low practical risk once city is captured as part of the alias string, which it naturally already is in how people write these names. Recorded as a contrast case to the Sorbonne cluster: same 'shared institutional prefix' shape, much lower real collision risk."
+    },
+    {
+      "case_name": "Berlin's universities",
+      "institutions": [
+        {"name": "Humboldt-Universität zu Berlin", "country": "Germany", "official_url": "https://www.hu-berlin.de", "ror_id_if_known": "https://ror.org/01hcx6992"},
+        {"name": "Freie Universität Berlin", "country": "Germany", "official_url": "https://www.fu-berlin.de", "ror_id_if_known": "https://ror.org/046ak2485"},
+        {"name": "Technische Universität Berlin", "country": "Germany", "official_url": "https://www.tu.berlin", "ror_id_if_known": "https://ror.org/03v4gjf40"},
+        {"name": "Charité – Universitätsmedizin Berlin", "country": "Germany", "official_url": "https://www.charite.de", "ror_id_if_known": "https://ror.org/001w7jn25"}
+      ],
+      "trap_description": "Three major, independently-chartered Berlin universities plus a jointly-run medical school are all reducible to 'Berlin University' by an international student describing them loosely in English. Charité is not a fourth peer: it is the joint medical faculty of Freie Universität Berlin and Humboldt-Universität zu Berlin, formed as a single joint corporation in 2003.",
+      "verified_distinct": true,
+      "confidence": "medium",
+      "sources": [
+        "https://ror.org/01hcx6992",
+        "https://ror.org/046ak2485",
+        "https://ror.org/03v4gjf40",
+        "https://ror.org/001w7jn25"
+      ],
+      "recommendation": "HU, FU, and TU Berlin — no relationship rows among them, fully separate peers. Charité is a genuine two-parent case: two part_of rows (Charité part_of Humboldt-Universität zu Berlin, Charité part_of Freie Universität Berlin) are schema-legal today under the existing part_of semantics and would correctly capture the joint structure without a new relationship type — a populatable candidate, not just a flagged gap."
+    },
+    {
+      "case_name": "Trinity College (global)",
+      "institutions": [
+        {"name": "Trinity College Dublin / University of Dublin", "country": "Ireland", "official_url": "https://www.tcd.ie", "ror_id_if_known": "https://ror.org/02tyrky19"},
+        {"name": "Trinity College, Cambridge", "country": "United Kingdom", "official_url": "https://www.trin.cam.ac.uk", "ror_id_if_known": null},
+        {"name": "Trinity College, Oxford", "country": "United Kingdom", "official_url": "https://www.trinity.ox.ac.uk", "ror_id_if_known": null},
+        {"name": "Trinity College (Hartford, Connecticut)", "country": "United States", "official_url": "https://www.trincoll.edu", "ror_id_if_known": "https://ror.org/03j3dbz94"},
+        {"name": "Trinity College of Florida", "country": "United States", "official_url": "http://www.trinitycollege.edu", "ror_id_if_known": "https://ror.org/01w466f66"},
+        {"name": "Trinity College London", "country": "United Kingdom", "official_url": "https://www.trinitycollege.com", "ror_id_if_known": "https://ror.org/02gcnpr25"}
+      ],
+      "trap_description": "'Trinity College' is claimed by a university, two constituent colleges of other universities, two unrelated small American colleges, and a UK exam/awarding board — the widest variety of entity KIND in this document, not just the largest count. Trinity College Dublin self-describes as 'Trinity College Dublin, the University of Dublin' and ROR treats 'University of Dublin' as an alias within the same record (one entity, two names). Trinity College, Cambridge and Trinity College, Oxford have no independent ROR record — they do not independently grant degrees.",
+      "verified_distinct": true,
+      "confidence": "high",
+      "sources": [
+        "https://ror.org/02tyrky19",
+        "https://ror.org/03j3dbz94",
+        "https://ror.org/01w466f66",
+        "https://ror.org/02gcnpr25",
+        "https://www.tcd.ie/about/",
+        "https://www.trinitycollege.com/about-us"
+      ],
+      "recommendation": "Trinity College Dublin and 'University of Dublin' — one university entity, never two. Hartford and Florida — separate university entities, no relationship to Dublin or each other. Cambridge and Oxford colleges — do not create university-type entities for these unless ORYN needs college-level granularity; the schema has no 'constituent college' entity_type today. Trinity College London — separate entity, but flag that university is the wrong entity_type; it is an exam/awarding body."
+    },
+    {
+      "case_name": "Oxford- and Cambridge-branded institutions beyond the flagship",
+      "institutions": [
+        {"name": "University of Oxford", "country": "United Kingdom", "official_url": "https://www.ox.ac.uk", "ror_id_if_known": "https://ror.org/052gg0110"},
+        {"name": "Oxford Brookes University", "country": "United Kingdom", "official_url": "https://www.brookes.ac.uk", "ror_id_if_known": "https://ror.org/04v2twj65"},
+        {"name": "University of Cambridge", "country": "United Kingdom", "official_url": "https://www.cam.ac.uk", "ror_id_if_known": "https://ror.org/013meh722"},
+        {"name": "Cambridge College", "country": "United States", "official_url": "https://www.cambridgecollege.edu", "ror_id_if_known": "https://ror.org/036qj5r13"}
+      ],
+      "trap_description": "Both UK flagship university names have at least one genuinely independent, similarly-named institution — Oxford Brookes University shares Oxford's city with zero governance relationship to the University of Oxford; Cambridge College (Massachusetts) is unrelated to the University of Cambridge. A separately-shaped, larger risk: Cambridge International (a genuine University of Cambridge department) is a licensed curriculum/exam brand used by an estimated 10,000+ independently-owned K-12 schools worldwide, many of which put 'Cambridge' directly in their own name (e.g. 'Cambridge International School (Moscow)') without being owned or governed by the University of Cambridge.",
+      "verified_distinct": true,
+      "confidence": "medium",
+      "sources": [
+        "https://ror.org/052gg0110",
+        "https://ror.org/04v2twj65",
+        "https://ror.org/013meh722",
+        "https://ror.org/036qj5r13"
+      ],
+      "recommendation": "Oxford Brookes and Cambridge College (MA) — fully separate university entities, no relationship rows. For any school-type entity whose name contains 'Cambridge International' or similar curriculum-brand strings: do not create an entity_relationships row to University of Cambridge on the strength of the name alone — a curriculum license is a fact for the school's own curriculum field, not an organizational relationship."
+    },
+    {
+      "case_name": "University of London federation",
+      "institutions": [
+        {"name": "University of London", "country": "United Kingdom", "official_url": "https://london.ac.uk", "ror_id_if_known": "https://ror.org/04cw6st05"},
+        {"name": "Imperial College London", "country": "United Kingdom", "official_url": "https://www.imperial.ac.uk", "ror_id_if_known": "https://ror.org/041kmwe10"},
+        {"name": "King's College London", "country": "United Kingdom", "official_url": "https://www.kcl.ac.uk", "ror_id_if_known": "https://ror.org/0220mzb33"},
+        {"name": "University College London", "country": "United Kingdom", "official_url": "https://www.ucl.ac.uk", "ror_id_if_known": "https://ror.org/02jx3x895"},
+        {"name": "London School of Economics and Political Science", "country": "United Kingdom", "official_url": "https://www.lse.ac.uk", "ror_id_if_known": "https://ror.org/0090zs177"}
+      ],
+      "trap_description": "Imperial, King's, UCL, and LSE were historically colleges of the federal University of London, and popular usage sometimes still treats 'University of London' as their shared parent brand today. Verified current reality: Imperial fully withdrew from the federation in July 2007 (own Royal Charter, independent since). King's, UCL, and LSE remain federation members today while each independently holds full degree-awarding powers and, per multiple sources, separately obtained formal 'university' status/title (King's reported October 2024, LSE reported May 2022) under the University of London Act 2018 — the two specific dates were not independently confirmed against one clean primary document this session.",
+      "verified_distinct": true,
+      "confidence": "medium",
+      "sources": [
+        "https://ror.org/04cw6st05",
+        "https://ror.org/041kmwe10",
+        "https://ror.org/0220mzb33",
+        "https://ror.org/02jx3x895",
+        "https://ror.org/0090zs177",
+        "https://www.imperial.ac.uk/news/2736/university-london-council-agrees-withdrawal-arrangements/",
+        "https://www.imperial.ac.uk/news/14175/independent-imperial-college-london-awards-first",
+        "https://self-service.kcl.ac.uk/article/KA-01073/en-us",
+        "https://www.lse.ac.uk/news/latest-news-from-lse/02-feb-19/university-status",
+        "https://www.london.ac.uk/federation/kings-college-london"
+      ],
+      "recommendation": "Populatable now: add member_of rows for King's College London, UCL, and LSE each pointing at University of London — mirroring the École Polytechnique / Institut Polytechnique de Paris pattern already validated in 03, and directly answering 10's open request for a second member_of example. No relationship row for Imperial College London — it fully exited, and the current relationship_type enum has no clean way to express 'formerly a member, now fully independent' (successor_of/predecessor_of is the wrong shape — no institutional discontinuity occurred). King's College, Cambridge has no independent ROR record and should not be confused with King's College London."
+    },
+    {
+      "case_name": "Erasmus — university, university of applied sciences, and EU funding brand",
+      "institutions": [
+        {"name": "Erasmus University Rotterdam", "country": "Netherlands", "official_url": "https://www.eur.nl", "ror_id_if_known": "https://ror.org/057w15z03"},
+        {"name": "Erasmus Brussels University of Applied Sciences and Arts (Erasmushogeschool Brussel)", "country": "Belgium", "official_url": "https://www.erasmushogeschool.be", "ror_id_if_known": "https://ror.org/01767d733"},
+        {"name": "Erasmus+ / Erasmus Mundus (EU programme, not an institution)", "country": "European Union", "official_url": "https://education.ec.europa.eu/education-levels/higher-education/erasmus-mundus", "ror_id_if_known": null}
+      ],
+      "trap_description": "'Erasmus' names a Dutch research university, a separate Belgian university of applied sciences and arts, and the EU's flagship student-mobility funding programme — three different kinds of thing. Confirmed directly from the European Commission's own education portal that Erasmus Mundus is part of Erasmus+ and funds joint master's degrees delivered by consortia of universities, not a university itself.",
+      "verified_distinct": true,
+      "confidence": "high",
+      "sources": [
+        "https://ror.org/057w15z03",
+        "https://ror.org/01767d733",
+        "https://education.ec.europa.eu/education-levels/higher-education/erasmus-mundus",
+        "https://www.erasmushogeschool.be/en"
+      ],
+      "recommendation": "Erasmus University Rotterdam and Erasmus Brussels University of Applied Sciences and Arts — fully separate university entities, no relationship row. Erasmus+ and Erasmus Mundus must never be modeled as, or aliased to, any university-type entity — per 08's framework, model as opportunity_provider/program/scholarship records provider_for the European Commission, since ORYN's opportunities table will plausibly ingest Erasmus Mundus programs directly and a raw 'Erasmus' organizer string must never resolve to Erasmus University Rotterdam's entity id."
+    },
+    {
+      "case_name": "Amsterdam cluster",
+      "institutions": [
+        {"name": "University of Amsterdam", "country": "Netherlands", "official_url": "https://www.uva.nl", "ror_id_if_known": "https://ror.org/04dkp9463"},
+        {"name": "Vrije Universiteit Amsterdam", "country": "Netherlands", "official_url": "https://vu.nl", "ror_id_if_known": "https://ror.org/008xxew50"},
+        {"name": "Amsterdam University College", "country": "Netherlands", "official_url": "http://www.auc.nl", "ror_id_if_known": "https://ror.org/03dpjfc73"},
+        {"name": "Amsterdam University of Applied Sciences (Hogeschool van Amsterdam)", "country": "Netherlands", "official_url": "https://www.hva.nl", "ror_id_if_known": "https://ror.org/00y2z2s03"}
+      ],
+      "trap_description": "Four Amsterdam institutions carry 'University of Amsterdam'-adjacent names. Amsterdam University College's own official site states directly that it is a joint initiative of UvA and VU and that its Liberal Arts and Sciences Bachelor's is a joint degree issued by both — a softer trap than it first appears, since AUC's own evidence states the joint relationship rather than requiring inference.",
+      "verified_distinct": true,
+      "confidence": "high",
+      "sources": [
+        "https://ror.org/04dkp9463",
+        "https://ror.org/008xxew50",
+        "https://ror.org/03dpjfc73",
+        "https://ror.org/00y2z2s03",
+        "https://www.auc.nl/about-auc/organisation/joint-initiative-uva-vu/two-universities.html"
+      ],
+      "recommendation": "UvA, VU, and HvA — fully separate entities, no relationship rows among them (HvA is a different institutional tier, university of applied sciences vs. research university). AUC — two part_of rows (AUC part_of University of Amsterdam, AUC part_of Vrije Universiteit Amsterdam), both schema-legal today and directly evidenced by AUC's own official page — a populatable candidate, not just a flagged gap."
+    },
+    {
+      "case_name": "Zurich 'University' cluster and Geneva addendum",
+      "institutions": [
+        {"name": "ETH Zurich", "country": "Switzerland", "official_url": "https://ethz.ch", "ror_id_if_known": "https://ror.org/05a28rw58"},
+        {"name": "University of Zurich", "country": "Switzerland", "official_url": "https://uzh.ch", "ror_id_if_known": "https://ror.org/02crff812"},
+        {"name": "ZHAW Zurich University of Applied Sciences", "country": "Switzerland", "official_url": "https://www.zhaw.ch", "ror_id_if_known": "https://ror.org/05pmsvm27"},
+        {"name": "Zurich University of the Arts", "country": "Switzerland", "official_url": "https://www.zhdk.ch", "ror_id_if_known": "https://ror.org/05r0ap620"},
+        {"name": "EPFL (École Polytechnique Fédérale de Lausanne)", "country": "Switzerland", "official_url": "http://www.epfl.ch", "ror_id_if_known": "https://ror.org/02s376052"},
+        {"name": "University of Geneva", "country": "Switzerland", "official_url": "https://www.unige.ch", "ror_id_if_known": "https://ror.org/01swzsf04"},
+        {"name": "Geneva Business School", "country": "Switzerland", "official_url": "https://gbsge.com", "ror_id_if_known": null}
+      ],
+      "trap_description": "The English translation '[Zurich] University' is shared by four institutions of three different tiers (federal institute of technology, cantonal research university, university of applied sciences, university of the arts). ETH Zurich/EPFL, seeded as a likely pair, turn out to be a soft trap on verification — their names and abbreviations do not actually overlap, so the risk is conceptual grouping rather than naming collision. Geneva addendum: University of Geneva (public) vs. Geneva Business School (private, IACBE-accredited since 2003, no ROR record found) is real but lower-confidence given the absence of independent registry coverage for the private side.",
+      "verified_distinct": true,
+      "confidence": "medium",
+      "sources": [
+        "https://ror.org/05a28rw58",
+        "https://ror.org/02crff812",
+        "https://ror.org/05pmsvm27",
+        "https://ror.org/05r0ap620",
+        "https://ror.org/02s376052",
+        "https://ror.org/01swzsf04",
+        "https://gbsge.com/about-us/accreditations-and-memberships/"
+      ],
+      "recommendation": "ETH Zurich, University of Zurich, ZHAW, ZHdK, EPFL — fully separate university entities, no relationship rows; true peers, not a federation. University of Geneva and Geneva Business School — also fully separate, no relationship, but flag Geneva Business School (and any private institution absent from ROR) for extra scrutiny before treating it as an equally authoritative source for prestige/selectivity-proxy signals elsewhere in ORYN."
+    },
+    {
+      "case_name": "İstanbul University split",
+      "institutions": [
+        {"name": "İstanbul University", "country": "Turkey", "official_url": "https://www.istanbul.edu.tr", "ror_id_if_known": "https://ror.org/03a5qrr21"},
+        {"name": "İstanbul University-Cerrahpaşa", "country": "Turkey", "official_url": "https://www.iuc.edu.tr", "ror_id_if_known": "https://ror.org/01dzn5f42"}
+      ],
+      "trap_description": "İstanbul University-Cerrahpaşa was created in 2018 by splitting several faculties (medicine, nursing, education, forestry, health sciences, sports sciences, veterinary, engineering) off İstanbul University via an act of the Turkish Grand National Assembly, and the new entity's name retained the parent's full name — unlike a rename (the original kept operating under its original name) and unlike a clean succession (the original did not stop existing). The same 2018 law restructured nine other Turkish universities into a total of 16 new state and 4 new private universities, but İstanbul is the only one where the spun-off entity's name collides with the parent's.",
+      "verified_distinct": true,
+      "confidence": "high",
+      "sources": [
+        "https://ror.org/03a5qrr21",
+        "https://ror.org/01dzn5f42"
+      ],
+      "recommendation": "Keep as two fully separate university entities, already correctly distinct in ROR. Exposes a genuine vocabulary gap in entity_relationships.relationship_type: neither successor_of/predecessor_of (reserved for cases where the original stops being independently referenceable — not true here) nor part_of (no ownership hierarchy post-split) cleanly fits 'split from.' Recommend flagging a future split_from/split_into relationship type as a migration candidate; until then, leave the pair with no relationship row rather than force an inaccurate one."
+    },
+    {
+      "case_name": "Fatih-prefix collision",
+      "institutions": [
+        {"name": "Fatih University (closed 2016)", "country": "Turkey", "official_url": null, "ror_id_if_known": "https://ror.org/02wbrth70"},
+        {"name": "Fatih Sultan Mehmet Vakıf University", "country": "Turkey", "official_url": "https://www.fsm.edu.tr", "ror_id_if_known": "https://ror.org/04mma4681"}
+      ],
+      "trap_description": "Two Istanbul foundation universities share the name 'Fatih' (a common Turkish given name/honorific, also an Istanbul district name). Fatih University (est. 1996) was closed by government decree in July 2016 following the coup attempt (alleged Gülen-movement links); its rectory and land were transferred to İstanbul University and its students reassigned to İstanbul University and Bezmialem Foundation University. Fatih Sultan Mehmet Vakıf University (est. 2010, under Law No. 5981, funded by five unrelated founding foundations) is unrelated and still operating. ROR's own status field for the closed Fatih University still reads 'active' as of this session — a directly confirmed registry-lag example, a second independent instance of the same pattern already flagged for Constructor University in 04-rename-history-framework.md.",
+      "verified_distinct": true,
+      "confidence": "medium",
+      "sources": [
+        "https://ror.org/02wbrth70",
+        "https://ror.org/04mma4681",
+        "https://www.fsm.edu.tr/Kurucu-Vakiflar"
+      ],
+      "recommendation": "Keep as two fully separate entities, no relationship, no shared alias. Fatih University is a strong candidate for verification_state='inactive' (already a supported value per migration 0038) once its 2016 closure is confirmed against a primary source — do not merge into İstanbul University despite the asset transfer, and do not add a successor_of row (a decree-driven asset/student transfer is not institutional succession). Do not trust ROR's active flag alone for Turkish foundation universities closed in the 2016 purges — a wider check of the ~15 similarly-closed institutions is a reasonable scoped follow-up, not attempted here."
+    },
+    {
+      "case_name": "Washington University in St. Louis vs. University of Washington",
+      "institutions": [
+        {"name": "Washington University in St. Louis", "country": "United States", "official_url": "http://wustl.edu", "ror_id_if_known": "https://ror.org/01yc7t268"},
+        {"name": "University of Washington", "country": "United States", "official_url": "https://www.washington.edu", "ror_id_if_known": "https://ror.org/00cvxb145"}
+      ],
+      "trap_description": "Zero shared history, ownership, or founding connection — the only risk is a fuzzy/token-based matcher blind to word order ('Washington University' vs. 'University of Washington' invert the same two words).",
+      "verified_distinct": true,
+      "confidence": "high",
+      "sources": [
+        "https://ror.org/01yc7t268",
+        "https://ror.org/00cvxb145"
+      ],
+      "recommendation": "Keep fully separate, no relationship rows — nothing to model. Recorded as a caution for tuning ORYN's fuzzy duplicate-candidate scorer: a similarity function insensitive to word order will misrank this pair as a likely duplicate; the existing classifyDuplicateCandidate()'s requirement for agreeing external ids before reaching SAFE_TO_CANONICALIZE already protects against this at the merge-decision layer."
+    },
+    {
+      "case_name": "University of Miami vs. Miami University",
+      "institutions": [
+        {"name": "University of Miami", "country": "United States", "official_url": "https://welcome.miami.edu", "ror_id_if_known": "https://ror.org/02dgjyy92"},
+        {"name": "Miami University", "country": "United States", "official_url": "https://miamioh.edu", "ror_id_if_known": "https://ror.org/05nbqxr67"}
+      ],
+      "trap_description": "Same 'name-order inversion' shape as the Washington pair: a private Florida university and a public Ohio university (est. 1809, in Oxford, Ohio) share the same two words in inverted order, with zero institutional connection.",
+      "verified_distinct": true,
+      "confidence": "high",
+      "sources": [
+        "https://ror.org/02dgjyy92",
+        "https://ror.org/05nbqxr67"
+      ],
+      "recommendation": "Keep fully separate, no relationship rows. Same algorithmic caution as the Washington pair — evidence that a word-order-blind similarity score is a real risk for ORYN's duplicate-candidate matching, not a one-off."
+    },
+    {
+      "case_name": "Boğaziçi Üniversitesi / ODTÜ (METU) — checked, no collision found",
+      "institutions": [
+        {"name": "Boğaziçi Üniversitesi", "country": "Turkey", "official_url": "https://www.boun.edu.tr", "ror_id_if_known": null},
+        {"name": "Orta Doğu Teknik Üniversitesi (METU)", "country": "Turkey", "official_url": "https://www.metu.edu.tr", "ror_id_if_known": null}
+      ],
+      "trap_description": "The mission brief for this document suggested checking whether the parent package's docs 02/03 already covered a 'common confusion' between these two well-known Turkish universities. On inspection, 02 only uses Boğaziçi as a worked example of the translation alias type (Turkish name vs. English form of the SAME institution) and 03/08 use METU/ODTÜ as a worked example of a cycle-varying opportunity operator — neither document claims, and this session found no evidence for, an actual naming collision between the two universities. Recorded explicitly as a negative result rather than silently dropped, matching this package's standard of not force-fitting a seeded item that did not pan out.",
+      "verified_distinct": "uncertain",
+      "confidence": "low",
+      "sources": [],
+      "recommendation": "No action needed — this is not a genuine collision trap. Boğaziçi Üniversitesi and METU are two well-known, clearly distinct universities with no shared name, abbreviation, or naming pattern found. Not included as a numbered case in the prose document; listed here only so the negative result is recorded rather than omitted."
+    }
+  ]
+}

@@ -44,6 +44,19 @@ previously-undocumented product-surface risk (`search_canonical_entities()` can 
 id with zero backing `universities` rows) worth a direct check against the live UI before deciding
 disposition.
 
+**3b. Populate five concrete, already-researched `entity_relationships` candidates.**
+`12-institution-collision-traps.md` cases 5, 8, and 10 name specific, sourced-not-guessed rows
+ready to create once whoever has write access confirms each institution's ORYN row id: `Charité
+– Universitätsmedizin Berlin part_of Humboldt-Universität zu Berlin` AND `part_of Freie
+Universität Berlin` (a genuine two-parent case, both legal per `03`'s `part_of` semantics);
+`Amsterdam University College part_of University of Amsterdam` AND `part_of Vrije Universiteit
+Amsterdam` (same two-parent shape, confirmed from AUC's own official page); `King's College
+London member_of University of London`, `University College London member_of University of
+London`, `London School of Economics member_of University of London` (mirrors the one existing
+`member_of` example, École Polytechnique / IP Paris — directly answers this document's earlier
+request in `03`/`09` for a second live example). None of these five are this session's or
+`12`'s to write — all five need each institution's actual ORYN row confirmed first.
+
 ## P2 — Real gaps, smaller blast radius, need product/schema judgment (not this session's to decide)
 
 **4. Add `partner_of` to the `entity_relationships.relationship_type` constraint.**

@@ -80,6 +80,21 @@ already what the one live example correctly does, so this is an improvement, not
 Both types are already in the constraint and unpopulated — this is a "watch for the first real
 case" item, not a schema gap. Recorded so it isn't mistaken for one.
 
+**10. Consider a `split_from`/`split_into` relationship type.** Evidence: `12` case 12 (İstanbul
+University's 2018 legislative split into İstanbul University and İstanbul University-Cerrahpaşa,
+both remaining live, independent, non-hierarchical peers) — neither `successor_of`/`predecessor_of`
+nor `part_of` cleanly fits an institutional split where nothing stopped being independently
+referenceable and neither half owns the other. Third priority after `partner_of` (#7) and
+`organized_by` (#8) — one confirmed real case so far, versus `partner_of`'s multiple live
+`opportunities.organization` instances.
+
+**11. Populate the five relationship candidates `12` researched and sourced directly**: Charité
+`part_of` both Humboldt-Universität zu Berlin and Freie Universität Berlin; Amsterdam University
+College `part_of` both University of Amsterdam and Vrije Universiteit Amsterdam; King's College
+London, UCL, and LSE each `member_of` University of London. All five use relationship types that
+already exist in the live constraint — no migration needed, just confirming each institution's
+ORYN row id before writing. See `10` item 3b.
+
 ## What this package explicitly does NOT recommend
 
 - No new `entity_type` values.
