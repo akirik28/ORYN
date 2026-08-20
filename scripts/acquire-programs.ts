@@ -102,6 +102,49 @@ const CATALOGUES: CatalogueConfig[] = [
       sectionIsUndergraduate: true,
     },
   },
+  {
+    // Batch 2 (2026-08-20). Same verification discipline as the pilot pair above: each catalogue
+    // below was fetched and its full matched-programme list eyeballed by hand before being
+    // trusted (see data/research/university-programs/acquire-programs-batch2_2026-08-20.jsonl and
+    // the session's commit history for the specifics). Several other candidate universities from
+    // the same research pass were tried and dropped rather than forced through a messy rule:
+    // University of Toronto (catalogue fragmented across multiple separate faculty calendars, no
+    // single clean index), University of Melbourne / University of Sydney / UNSW Sydney / National
+    // University of Singapore (bot-protected or JS-rendered course search, no static programme
+    // links in the fetched HTML), University of Manchester / King's College London / University
+    // of Bristol / University of Queensland (JS-driven course-finder widgets), McGill University
+    // (blocked the fetch outright), Universiti Malaya / Tsinghua University / Waseda University
+    // (no single-page catalogue with a clean, verifiable link pattern).
+    universityName: "The University of Edinburgh",
+    country: "United Kingdom",
+    catalogueUrl: "https://study.ed.ac.uk/programmes/undergraduate-a-z",
+    rule: { hrefPattern: "/programmes/undergraduate/[0-9]+-[a-z0-9-]+", sectionIsUndergraduate: true },
+  },
+  {
+    universityName: "University of Waterloo",
+    country: "Canada",
+    catalogueUrl: "https://uwaterloo.ca/future-students/programs",
+    rule: {
+      // Negative lookahead on "business" specifically (not excludePatterns' plain substring
+      // match): "/programs/business" is a hub page ("Business programs"), but
+      // "/programs/business-administration-...-double-degree" (two real programmes) share that
+      // exact prefix, so a substring exclude would have silently dropped both real programmes
+      // along with the hub — found live.
+      hrefPattern: "/future-students/programs/(?!business$)[a-z0-9-]{4,}",
+      // "themes"/"by-faculty" are alternate browse views of the same page, not programme pages;
+      // "minors"/"environmental-degrees"/"exchange-programs" are hub/CTA pages ("Minors and
+      // specializations", "Environmental programs", "Study abroad") that the same A-Z-shaped
+      // hrefPattern otherwise matches as if they were named degree programmes — found live.
+      excludePatterns: ["/programs/themes", "/programs/by-faculty", "/programs/minors", "/programs/environmental-degrees", "/programs/exchange-programs"],
+      sectionIsUndergraduate: true,
+    },
+  },
+  {
+    universityName: "University of Glasgow",
+    country: "United Kingdom",
+    catalogueUrl: "https://www.gla.ac.uk/undergraduate/degrees/",
+    rule: { hrefPattern: "/undergraduate/degrees/[a-z0-9-]{3,}/", sectionIsUndergraduate: true },
+  },
 ];
 
 interface ProgramFact {

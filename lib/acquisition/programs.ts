@@ -38,7 +38,13 @@ export interface ExtractedProgram {
   key: string;
 }
 
-/** Degree tokens that unambiguously indicate an undergraduate award. */
+/** Degree tokens that unambiguously indicate an undergraduate award. Includes "MBChB" alongside
+ * the already-listed "MBBS": both are the same qualification (Bachelor of Medicine, Bachelor of
+ * Surgery) under the two Latin orderings different Commonwealth medical schools use — Edinburgh
+ * and Glasgow's catalogues use "MBChB", not "MBBS" — found live against Edinburgh's official
+ * undergraduate A-Z (e.g. "MBChB Medicine (6-year programme) MBChB"). Despite the "M" prefix,
+ * neither is a postgraduate master's; both are the standard UK first professional/bachelor's
+ * medical qualification. */
 const BACHELOR_TOKENS = [
   "BSc",
   "BA",
@@ -54,6 +60,7 @@ const BACHELOR_TOKENS = [
   "BEd",
   "BN",
   "MBBS",
+  "MBChB",
   "BS",
 ];
 
@@ -63,8 +70,53 @@ const BACHELOR_TOKENS = [
  * "Diploma" (not just "Graduate Diploma"): a diploma is not a bachelor's degree, but a
  * catalogue-section rule with sectionIsUndergraduate=true would otherwise mislabel it as one
  * purely from page context — found live against Trinity College Dublin's undergraduate index,
- * which lists "Diploma in Acting and Theatre" alongside its BA/BSc programmes. */
-const NON_BACHELOR_TOKENS = ["MSc", "MA ", "MEng", "MBA", "LLM", "PhD", "MPhil", "MRes", "Doctorate", "Masters", "Master's", "Diploma"];
+ * which lists "Diploma in Acting and Theatre" alongside its BA/BSc programmes.
+ *
+ * Also includes the UK "integrated master's" family (MChem, MPhys, MMath, MChemPhys, MEarthSci,
+ * MBiol, MSci, alongside the already-listed MEng): a 4-5 year direct-entry-from-school
+ * qualification that is nonetheless a distinct, more advanced award from the 3-4 year BSc/BA in
+ * the same subject, not a first-cycle bachelor's. Found live against Edinburgh's official
+ * undergraduate A-Z, which lists e.g. "Chemistry MChem" and "Applied Mathematics MMath (Hons)" as
+ * separate catalogue entries from "Chemistry BSc (Hons)"/"Applied Mathematics BSc (Hons)" —
+ * before this fix, none of these tokens were recognised as either bachelor's or non-bachelor's,
+ * so they fell through to the catalogue-section rule and were mislabelled "Bachelor / first-cycle"
+ * purely from page context, the same failure mode the "Diploma" fix above addresses.
+ *
+ * "MSci" specifically is only safe to list here because of extractPrograms()'s token-priority
+ * order (bachelor's-token evidence is checked before this veto): Glasgow's catalogue names most
+ * of its science programmes as combined-award entries like "Chemistry [BSc/MSci]" (one entry, two
+ * exit awards), and a handful as MSci-only with no BSc alongside it, e.g. "Chemistry with Work
+ * Placement [MSci]" — found live. Without the priority fix this token would have wrongly vetoed
+ * every "[BSc/MSci]" entry over its own explicit BSc; with it, the explicit BSc wins for the
+ * combined entries and only the true MSci-only entries are excluded here.
+ *
+ * "CertHE" (Certificate of Higher Education) is a UK sub-degree qualification — a one-year
+ * foundation/widening-access award, below bachelor's level (RQF/SCQF level below an honours
+ * degree), not a shorter name for one. Found live against Glasgow's official undergraduate A-Z:
+ * "Medical Studies, Gateway to [CertHE]" is a pre-entry access programme for students who do not
+ * yet meet standard Medicine entry requirements, not itself a bachelor's degree. */
+const NON_BACHELOR_TOKENS = [
+  "MSc",
+  "MSci",
+  "MA ",
+  "MEng",
+  "MChem",
+  "MPhys",
+  "MMath",
+  "MChemPhys",
+  "MEarthSci",
+  "MBiol",
+  "CertHE",
+  "MBA",
+  "LLM",
+  "PhD",
+  "MPhil",
+  "MRes",
+  "Doctorate",
+  "Masters",
+  "Master's",
+  "Diploma",
+];
 
 /** Decode the handful of HTML entities that actually appear in programme names. */
 export function decodeEntities(raw: string): string {
@@ -213,10 +265,20 @@ export function extractPrograms(
     if (!url) continue;
     // A programme URL that is not on the institution's own domain is not an official source.
     if (!sameInstitutionDomain(url, officialWebsite)) continue;
-    // Reject a postgraduate award listed inside an undergraduate index rather than mislabel it.
-    if (looksPostgraduate(text)) continue;
 
+    // Positive bachelor's-token evidence is checked BEFORE the postgraduate veto, not after:
+    // many UK catalogues name a single programme's several exit awards together, e.g. Glasgow's
+    // "Chemistry [BSc/MSci]" (a 3-year BSc and a 4-year integrated master's from the same entry
+    // page) — found live. Checking looksPostgraduate() first would reject that whole entry over
+    // the co-occurring "MSci" substring despite the explicit "BSc" right next to it, which is
+    // exactly backwards: an explicit bachelor's token is direct, specific evidence of what the
+    // programme awards, and should win over a same-name mention of another award class. The
+    // postgraduate veto still applies, just now only when no positive bachelor's token was found
+    // — so a genuinely non-bachelor's entry (nothing but "Diploma", or nothing but "[MSci]" with
+    // no accompanying BSc/BA/etc.) is still rejected exactly as before.
     const degreeToken = degreeTokenOf(text);
+    if (!degreeToken && looksPostgraduate(text)) continue;
+
     const evidence: DegreeLevelEvidence = degreeToken ? "program_name" : rule.sectionIsUndergraduate ? "catalogue_section" : "none";
     if (evidence === "none") continue; // No evidence of level means no level claim, so no row.
 
