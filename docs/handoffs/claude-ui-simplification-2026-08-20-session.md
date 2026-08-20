@@ -968,3 +968,74 @@ hover-tooltip/contextual fallback that was never meant to be a full-screen empty
 
 typecheck/lint/test (1152/1152)/build clean after this fix, same as every commit in this
 file. Working tree clean, pushed, `origin` in sync at `95fbb91`.
+
+## Addendum 2 — `fd59b07`/`88f3675`, continuation round after a scheduled wakeup
+
+Re-fetched and re-checked branches before touching anything (per instruction, every round
+does this): 4 new branches appeared (`admissions-intelligence-research`,
+`counseling-intelligence-research` ×2, `night-opportunities-research-2026-08-21`) — all
+Claude A data/research lanes, diff-checked against `app/`/`features/`/`components/`/`types/`
+and confirmed zero overlap (they touch `lib/acquisition/`, `lib/programs/`,
+`lib/universities/canonical.ts`, `lib/universities/counseling-adapter.ts` — data/backend
+only). Also found a new worktree, `claude/magical-mestorf-466f8f` — almost certainly the
+separate session working `task_899aeecf` (the Button focus-ring false alarm from the section
+above) — inspected it: clean working tree, HEAD at the same commit as its base, **zero
+commits or uncommitted changes of its own**. Whatever that session has or hasn't done, it
+hasn't cost any real work yet as of this check.
+
+Two more real, well-scoped fixes found via fresh grep sweeps for pattern classes (not agent
+sampling this time — a direct, targeted search):
+
+- **`fd59b07`** — `app/(app)/admin/page.tsx` had the exact same two issues as everywhere
+  else this session: a hand-rolled `h1` instead of `PageHeader`, and a hardcoded
+  `STATUS_CLASS` map of raw Tailwind palette colors (`border-emerald-500/30`, etc.) on a
+  plain `Badge` instead of the shared `StatusBadge` tone system. Fixed both — scope
+  deliberately kept narrow (per AGENTS.md's own "admin stays minimal, not a CMS"
+  instruction): left the plain `h2` sub-headers and inline "No X recorded yet" list
+  fallbacks alone, since `EmptyState`'s actual design intent (icon + title + description) is
+  aimed at student-facing screens, not a dense internal ops list.
+- **`88f3675`** — a follow-up grep for *any* remaining ad-hoc palette color
+  (`text-emerald-*`, `text-amber-*`, etc., not just the admin instance) found two more real
+  hits: `features/onboarding/steps/import-step.tsx`'s CV-import "Low confidence — please
+  check" flag (a bare `text-amber-600` span — promoted to a real `StatusBadge(tone="warning")`
+  since it's genuinely a status flag and genuinely student-facing, part of the onboarding
+  flow AGENTS.md calls critical) and `features/universities/admin-requirement-form.tsx`'s
+  success message (`text-emerald-700`/`dark:text-emerald-400` sitting right next to a sibling
+  line that already correctly used `text-destructive` — swapped to `text-success`, one line,
+  admin-only). Re-ran the same grep after both fixes: the only remaining match is this
+  commit's own explanatory code comment, not live code.
+
+Three more sweeps run, all came back **clean** (verified, not assumed — reporting a real
+"nothing found" rather than manufacturing a finding to look busy, same discipline as the
+first round's clean sweeps):
+
+- **Image fallbacks**: every `next/image`/`<img>` usage app-wide is either the static bundled
+  `/brand/logo-full.png` (6 files — no error handling needed, a build-shipped asset can't
+  404 at runtime the way a user-controlled URL can) or one of the two real external-data
+  image spots (`university-card.tsx`, `detail-hero-image.tsx`), both already correctly
+  tiered with `onError` — one of which this same session already fixed.
+- **Icon-only `<Link>`/`<a>` aria-labels** (dispatched to an Explore agent, 32 files checked
+  — every mix of `<Link>`/`<a>` + a lucide-react import in `app/` and `features/`): zero
+  gaps. Every icon-only link either sits next to visible text, already has a real
+  `aria-label` (the map's `?selected=` panel close button, the documents evidence-row "View"
+  link), or wraps an `<Image>` whose own `alt` text supplies the accessible name. The
+  `OpenToForm` gap from earlier this session was confirmed the outlier, not a pattern.
+- **False-precision / bare percentages**: grepped for any unrounded score/rate/probability
+  displayed as a raw `%`, and for any bare `{score}%`/`{matchScore}%` bypassing the
+  categorical tier system (the exact historical bug this whole product's "no fake precision"
+  rule was written against). One hit, `dimension-bars.tsx`'s `style={{ width: \`${score}%\` }}`
+  — a progress-bar's own CSS fill width, not a number shown to the student. No real issue;
+  the core trust/precision invariant is intact, no regressions.
+
+typecheck/lint/test (1152/1152, no new tests this round — every fix was either a proven
+shared-helper reuse or a pure visual/token swap, no new pure-function logic)/build: clean
+after every commit. Working tree clean, pushed, `origin` in sync at `88f3675`.
+
+**Conclusion of this continuation round: swept dates/numbers, colors, headers, image
+fallbacks, icon accessibility, and precision/trust claims across the entire app. Found and
+fixed 2 more real, genuine issues (admin page, onboarding/admin-form colors); the remaining 3
+targeted sweeps came back clean. Not inventing further busywork — the app is now in a
+materially more consistent state than either session start, and further passes on these
+same pattern classes would be diminishing returns. Remaining honest gaps are the ones
+already on record above (Settings/Documents/Public-profile not live-verified; the Button
+false-alarm session to check on) — nothing new to add.**
