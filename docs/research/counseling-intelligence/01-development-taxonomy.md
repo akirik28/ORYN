@@ -1,301 +1,268 @@
-# Student-Development Taxonomy
+# 01 — Student Development Taxonomy
 
-Answers: *what dimensions of student development are actually meaningful for counseling, and
-how do they map onto the 9 `ProfileDimension` values already shipped in ORYN's scoring engine
-(`lib/scoring/dimensions/*.ts`)?*
+**Answers:** What dimensions of student development are actually meaningful for counseling, and
+how do they map onto the 9 shipped `ProfileDimension` values?
 
-## Method
+**Binding constraint (see `00-overview.md`):** this document reuses `ProfileDimension` exactly as
+shipped (`types/database.ts:65`) — `academics`, `intellectual_curiosity`, `leadership`, `research`,
+`entrepreneurship`, `community_impact`, `awards_distinction`, `career_exploration`,
+`execution_project_depth`. It proposes **zero new top-level dimensions**. Where research surfaces a
+distinction the current taxonomy can't express, it is written up as a **sub-facet** — an evidence
+attribute a future scorer could weigh — never a schema change.
 
-Cross-referenced three kinds of source: (1) the empirical/institutional record of what selective
-admissions actually names as evaluation factors (Common Data Set, NACAC), (2) official admissions
-offices' own stated philosophy about how those factors should be pursued (MIT, Harvard GSE), and
-(3) the shipped `lib/scoring/dimensions/*.ts` scorers, read in full for this document. The goal
-was not to invent a new taxonomy but to check whether the founder-spec's original 9 dimensions
-(`AGENTS.md` §6) hold up against outside evidence, and to identify sub-facets research supports
-that the scorers already encode, partially encode, or don't yet encode.
+---
 
-**Finding, stated up front: the 9-dimension taxonomy holds up well.** Every dimension maps onto a
-factor named in the Common Data Set's own 19-factor standard (the closest thing selective
-admissions has to an industry-wide vocabulary) or onto a quality MIT names explicitly in its own
-official admissions criteria. Nothing in the research pulled for this package supports adding a
-10th top-level dimension. Several candidate "missing dimensions" from the mission brief turned
-out, on inspection, to be either (a) already covered as evidence *within* an existing dimension,
-(b) a cross-cutting attribute that modulates several dimensions at once rather than being a
-dimension itself, or (c) a genuinely different kind of thing — a *relevance/fit* axis, not a
-*development* axis. Section 4 below documents that mapping explicitly so it isn't silently lost.
+## 1. Why a "development taxonomy" is a distinct question from "a scoring formula"
 
-## 1. The empirical anchor: what selective admissions actually names
+`lib/scoring/dimensions/*.ts` already computes a 0–100 score per dimension from structured facts.
+That is a **measurement** question (how do we turn stored facts into a number). This document
+answers a prior, **conceptual** question: what is each dimension actually trying to capture, what
+does strength in it look like at different ages, and where do real students' lives blur the
+boundaries between dimensions. Counselor Core's candidate/ranking logic consumes the *scores*
+`lib/scoring` already produces — it does not need this document to run. What this document is for
+is the parts of Counselor Core that are still templated English (`lib/counselor/evidence.ts`'s
+`why[]` strings) and the parts that are still open questions (how `candidates.ts` might eventually
+reason about "deepen an existing project," explicitly out of scope per
+`docs/counselor-core-plan.md` §6) — both need a shared, written-down understanding of what each
+dimension *means*, not just how it's scored.
 
-The **Common Data Set** (`commondataset.org`, the shared reporting template ~1,700 US
-institutions use, jointly maintained by *U.S. News*, *The Princeton Review*, and *Peterson's`)
-Section C7 asks every participating institution to rate 19 factors as "very important,"
-"important," "considered," or "not considered" for first-time first-year admission
-[[RULE-COUNSEL-001]]:
+## 2. The nine dimensions, what each actually measures, and its sub-facets
 
-- **Academic:** rigor of secondary school record, class rank, academic GPA, standardized test
-  scores, application essay, recommendation(s).
-- **Nonacademic:** interview, extracurricular activities, talent/ability, character/personal
-  qualities, first-generation status, alumni relation, geographical residence, state residency,
-  religious affiliation, racial/ethnic status, volunteer work, work experience, level of
-  applicant's interest.
-  (Source: Common Data Set 2024-2025 template, `commondataset.org` — official, high confidence.)
+For each dimension: **construct** (plain-English definition), **what over-counts it today**
+(a known false-positive pattern worth a future scorer refinement, not a claim the current scorer is
+wrong), **sub-facets** (attributes within the dimension a future evidence model could distinguish),
+and **cross-dimension overlap** (where a single real activity legitimately feeds more than one
+dimension — expected, not a bug, per `lib/scoring/dimensions/leadership.ts`'s own existing pattern
+of combining role scope + people led + duration + selectivity + impact into one score).
 
-**NACAC's State of College Admission** survey of member four-year colleges (Fall 2023 cycle, most
-recent published at research time) found grades in college-prep courses (76.8% "considerable
-importance") and strength of curriculum (63.8%) rank above every other factor, with character/
-personal qualities and essays next, and demonstrated interest, recommendations, extracurriculars,
-and work experience providing "additional context" rather than driving decisions on their own
-(Source: NACAC State of College Admission Factors fact sheet — official association survey data,
-high confidence; note NACAC surveys *member* institutions and skews toward more selective/
-NACAC-affiliated schools, not a random sample of all postsecondary admission — a documented
-limitation, not disqualifying). [[RULE-COUNSEL-002]]
+### 2.1 `academics`
 
-**Product implication:** this validates something ORYN's own product spec already asserts
-independently (`AGENTS.md` Non-Negotiable Requirement #11: "Career profile score is different
-from admissions probability") — academic factors (rigor + grades) are named as the *most*
-important factor category by every source checked, ahead of any extracurricular dimension. A
-counselor that spends most of its attention steering a student toward more extracurricular
-activity while that student's course rigor is weak relative to what's available to them would be
-optimizing the less-weighted factor. `lib/scoring/dimensions/academics.ts` already exists as a
-first-class dimension for exactly this reason — this research confirms, rather than changes, that
-design choice.
+**Construct:** demonstrated command of school-level subject material — grades, course rigor
+relative to what was available, standardized testing where present, and consistency over time.
 
-## 2. Why "prestige score" is the wrong model — the depth-over-breadth finding
+**Sub-facets:** absolute performance vs. *rigor-adjusted* performance (a B+ in the most advanced
+track available at a student's school is a different signal than a B+ in a standard track — this
+is already partially handled by `CourseLevel` in `types/database.ts`, e.g. `ap`/`ib_hl`/
+`dual_enrollment` vs. `regular`); trajectory (improving vs. flat vs. declining); breadth across
+subjects vs. depth in a declared interest area.
 
-Three independent source types converge on the same finding, which matters because it is the
-research backbone for the mission's explicit "opportunity cost" requirement and for
-`AGENTS.md`'s "avoid activity inflation" instruction to the AI advisor:
+**Over-counting risk:** treating a single strong test score as equivalent to sustained multi-year
+rigor. UCAS's own official guidance to applicants is explicit that admissions readers want
+"wider reading" and sustained subject engagement, not a single credential — see
+`docs/research/counseling-intelligence/03-recommendation-timing.md` for the sourced detail
+[S-UCAS-PS].
 
-- **MIT Admissions**, official "What We Look For" and "Extracurricular Activities" pages: *"We
-  don't expect applicants to do a million things. Choose quality over quantity."* MIT asks for at
-  most four activities on its application and states explicitly that activities should be chosen
-  "because they delight, intrigue, and challenge you — not because you think they'll look
-  impressive." (Source: `mitadmissions.org/apply/process/what-we-look-for/` — official, high
-  confidence.) [[RULE-COUNSEL-003]]
-- **Harvard Graduate School of Education's "Turning the Tide"** (Making Caring Common project,
-  2016, endorsed by dozens of admissions deans including Yale, MIT, and Michigan at publication):
-  argues explicitly for valuing "one or two meaningful, sustained, authentically chosen"
-  experiences over a checklist assembled for the application. Read this as a **normative,
-  advocacy-oriented report**, not a neutral description of how all admissions offices currently
-  behave — it is the admissions establishment's own stated aspiration, co-signed by many of the
-  offices ORYN's students will apply to, which makes it directly relevant to how ORYN should
-  counsel even though it is not a universal, binding rule. (Source: `gse.harvard.edu`/
-  `mcc.gse.harvard.edu`, official institutional report — high confidence as a statement of
-  institutional philosophy, medium confidence as a predictor of any *specific* admission
-  decision.) [[RULE-COUNSEL-004]]
-- **Admissions-counseling secondary sources** (converging, not single-source): sustained
-  commitment to two or three areas, especially with increasing responsibility over time, is
-  described consistently as reading as more credible than many surface-level memberships — the
-  reasoning given is that breadth-without-depth reads as résumé construction, while depth reads as
-  genuine investment. (Multiple counseling-industry sources; medium confidence — this is
-  consensus-of-practice among counselors and former admissions readers, not primary institutional
-  data, and should be treated as directionally reliable rather than quantitatively precise.)
-  [[RULE-COUNSEL-005]]
+**Cross-dimension overlap:** a rigorous independent-study course can also feed
+`intellectual_curiosity` or `research` depending on whether it was self-directed and produced
+output.
 
-**This is not an argument for zero breadth.** The same sources that argue for depth also assume a
-student got to that depth *by first exploring*. The taxonomy needs both a way to reward depth
-(most of the 9 dimensions) and a way to legitimately track exploration without penalizing it as
-unfocused — which is exactly what already exists structurally in the shipped scorers (§3).
+### 2.2 `intellectual_curiosity`
 
-## 3. The 9 dimensions: validated, with sub-facet detail
+**Construct:** self-directed engagement with ideas beyond what is assigned — reading, independent
+projects, online coursework, competitions entered for interest rather than requirement, exploring
+a field before committing to it.
 
-For each dimension: what it captures, why external evidence supports it as a distinct axis, and
-exactly what the shipped scorer already does (so this section is falsifiable against real code,
-not just prose).
+**Sub-facets:** *breadth of exploration* (sampling several fields, valuable especially before
+grade 10–11) vs. *depth of follow-through* (staying with one thread long enough to produce
+something); self-reported interest vs. interest evidenced by time actually spent.
 
-### `academics`
-**Captures:** grade performance, curriculum rigor, standardized-testing engagement — the single
-highest-weighted factor category per NACAC/CDS (§1).
-**Already shipped correctly, confidence-rated:** `lib/scoring/dimensions/academics.ts` normalizes
-GPA against its *own* declared scale (never cross-curriculum), weights AP/IB-HL/A-Level/dual
-enrollment above honors above regular coursework, and scores standardized-test *presence* rather
-than the score value itself — the code comment states plainly this is because comparing an SAT
-score to an IB predicted grade "without a validated conversion table would be exactly the kind of
-false-precision cross-system comparison the product spec prohibits." **Research confirms this
-caution is warranted**, not overcautious: score-concordance tables (e.g. SAT↔ACT) exist for
-*within-US-system* pairs from testing organizations themselves, but no validated public concordance
-exists across national curricula (IB predicted grade ↔ US GPA ↔ Turkish diploma grade) — treating
-that as a solved conversion problem would be inventing false precision. **Confidence: high** that
-this dimension and its current scoring approach are sound.
+**Over-counting risk:** treating stated interest ("I love biology") as equivalent to demonstrated
+engagement (an online course completed, a book list, a science-fair project). ORYN's own
+`career_goals`/`interests` fields are exactly this kind of *stated*-interest data — the mission's
+own non-negotiable that "field interest should be supported by increasingly meaningful evidence
+when feasible" (`RULE-CAREER-004` in the parallel career-intelligence research package, if that
+session has run; if not yet, this package independently arrives at the same rule — see
+`08-unsafe-inference-rules.md`) applies directly here: a stated interest is a starting hypothesis
+for exploration, not itself development evidence.
 
-### `intellectual_curiosity`
-**Captures:** self-directed learning and subject breadth *beyond* what a transcript requires —
-explicitly a **breadth** signal (`lib/scoring/dimensions/intellectual-curiosity.ts`'s own comment:
-"no diminishing-returns aggregation," unlike the depth dimensions below). Distinct course
-subjects, certifications outside the curriculum, and named research fields feed it.
-**Why distinct from `academics`:** CDS/NACAC group "rigor" and "curiosity" together informally,
-but they are logically separable — a student can max out available rigor (all AP the school
-offers) while showing zero self-directed exploration beyond it, or vice versa. Keeping them
-separate lets a gap show up correctly in either direction. **Confidence: medium-high** — the
-distinction is logically sound and matches how counseling literature discusses "intellectual
-vitality" as a named quality (a term Stanford's own admissions materials have historically used),
-but this package found no single official source that names this exact split explicitly the way
-MIT names its eight qualities in §2.
+**Cross-dimension overlap:** the highest-overlap dimension in the taxonomy — almost any genuine
+`research`, `entrepreneurship`, or `execution_project_depth` activity also demonstrates curiosity.
+This is why `intellectual_curiosity` should be read as the "did they go looking, regardless of
+where it led" signal, while the more specific dimensions capture "what did they do once they got
+there."
 
-### `leadership`
-**Captures:** substantive responsibility, not title. **This is the single best-evidenced dimension
-in the whole taxonomy.** Multiple converging sources (admissions-counseling consensus, §2) state
-that titles like "president," "captain," and "vice president" have become so common on
-applications that they no longer differentiate applicants on their own, and that admissions
-readers instead weight *demonstrated action, initiative, and measurable outcome*. **Already shipped
-precisely this way**: `lib/scoring/dimensions/leadership.ts` gives a title only a flat 3-point
-"title bonus" against a per-item cap of 30, with the bulk of the score coming from duration,
-people led (log-scaled, so leading 200 people isn't 20x leading 10), and organizational scope. A
-bare "President, no other signal" entry is explicitly designed to stay "well under a strong
-reading" per the code's own comment. **Confidence: high.**
+### 2.3 `leadership`
 
-### `research`
-**Captures:** two sub-facets research literature and the shipped scorer both already distinguish —
-**exposure/process** (duration, methodology description, named mentor, independence level) and
-**output** (presentation → poster → school journal → preprint → peer-reviewed publication, a
-graded bonus scale in `OUTPUT_BONUS`). **Publication is explicitly not required** for a strong
-score — the code comment states "duration, methodology, mentorship, and independence together can
-carry a strong score with output_type still 'none.'" **Research confirms this is the right
-model**: examining an official structured research program's own description (MIT's Research
-Science Institute, run by the Center for Excellence in Education) shows the program's own stated
-value proposition is the mentored process itself — "students learn how researchers approach
-unanswered questions... execute a detailed research plan... deliver conference-style reports" —
-not that every participant produces a publishable result. A program can be high-value evidence of
-`research` development even when no participant publishes. (Source: `cee.org/programs/
-research-science-institute`, official program description — high confidence for what the program
-provides; this is one program, used as a representative example of mentored-research-program
-structure generally, not a claim that all research programs are equivalent to RSI.)
-[[RULE-COUNSEL-006]] **Confidence: high.**
+**Construct:** responsibility for other people or an organization's direction — not a title alone.
 
-### `entrepreneurship`
-**Captures:** founder-role or revenue-generating ventures specifically — implemented as a strict
-*subset* of `execution_project_depth`'s projects (`isEntrepreneurial()` filters on founder-shaped
-role text or nonnull revenue). **This means one real venture legitimately feeds two dimensions at
-once** — not double-counting in the redundancy sense, but two different lenses on the same
-evidence (the venture demonstrates both "did I ship something real" and "did I originate and own
-something"). This is an important structural principle worth stating explicitly for the redundancy
-framework (`05-redundancy-saturation.md`): **the unit of redundancy analysis is the dimension, not
-the underlying activity** — the same activity should be allowed to score against every dimension
-it genuinely demonstrates. [[RULE-COUNSEL-007]] **Confidence: high** that the subset relationship
-is a sound design; no external source specifically validates the founder-role/revenue *operational
-test* used to detect it, which is a reasonable, narrow heuristic rather than a researched
-threshold.
+**Sub-facets** (already anticipated almost verbatim by the founder spec §6.3 and implemented in
+`lib/scoring/dimensions/leadership.ts`): scope of role, number of people led, duration held,
+selectivity of the position (elected/competitive vs. default/only-applicant), organizational scope
+(school club vs. multi-chapter/regional), and measurable outcome of the leadership itself (grew
+membership, ran an event, changed how the organization operates) vs. the leadership being purely
+titular.
 
-### `community_impact`
-**Captures:** sustained, structured volunteering — duration and weekly-hours-scaled, plus a bonus
-for a named cause area. CDS explicitly lists "volunteer work" as one of its 19 factors (§1),
-confirming it as a real, separately-tracked admissions signal, not a filler category.
-**Confidence: high** for the dimension's validity; **medium** for the specific weighting of
-duration vs. hours/week, which is a reasonable but unvalidated design choice (no source found that
-weighs these two sub-signals against each other empirically).
+**Over-counting risk:** the founder spec names this directly — "President" alone should not score
+highly. The failure mode worth flagging for a future scorer refinement: a founder-title on a
+club with 3 members and no activity record should not out-score a non-titled but substantial
+organizing role (e.g., "coordinated logistics for a 200-person regional tournament" without
+holding an elected title). Title is a weak proxy for the construct, not the construct itself.
 
-### `awards_distinction`
-**Captures:** external validation via competitive recognition, tiered by level (international >
-national > state/regional > school/local) via free-text pattern matching. CDS's own factor list
-separates "talent/ability" from general "extracurricular activities" — awards are the evidentiary
-proof point *for* talent/ability, distinct from simply having participated. **Confidence: medium** —
-the level-tiering concept (international > national > local) is intuitive and matches how
-counseling sources typically describe selectivity/prestige gradients, but this package found no
-official source that validates the *specific point values* (15/11/7/3) used; these remain product
-heuristics, flagged for the same reason `docs/counselor-core.md` flags `RANKING_THRESHOLDS`.
-[[RULE-COUNSEL-008]]
+**Cross-dimension overlap:** leadership that produces a concrete shipped result overlaps with
+`execution_project_depth`; leadership of a venture with revenue or users overlaps with
+`entrepreneurship`; leadership of a service organization overlaps with `community_impact`. A
+single real activity legitimately contributing evidence to 2–3 dimensions is expected, not
+double-counting to avoid — each dimension is measuring a different facet of the same activity.
 
-### `career_exploration`
-**Captures:** breadth of environments/roles tried (distinct activity categories, presence of an
-internship, multiple organizations) — explicitly a breadth signal, not run through
-diminishing-returns, matching `intellectual_curiosity`'s structural pattern. **Confidence:
-medium-high** — breadth-of-exploration as a distinct, legitimately-non-penalized signal is well
-supported by the timing research in `03-recommendation-timing.md` (exploration is
-developmentally appropriate at certain grades, §2 there), but "internship" as the single named
-boost (vs. e.g. job shadowing, informational interviews, structured career-exposure programs) is
-narrower than the mission brief's own "career exploration / professional exposure" framing
-suggests — flagged as a possible future scorer refinement in `10-open-questions.md`, not
-something this research package can resolve without seeing what data ORYN actually collects for
-non-internship career exposure.
+### 2.4 `research`
 
-### `execution_project_depth`
-**Captures:** the AGENTS.md §6.4 principle stated almost verbatim in the scorer's own comment:
-"reward execution more than idea creation." Duration, described outcome, users reached (log-scaled),
-revenue (log-scaled), and a live/repo URL ("shipped") all contribute; a bare idea with no evidence
-of being built floors at 2 base points. **Confidence: high** — "shipped > idea," "adoption evidence
-> claimed adoption," and log-scaling large numbers (1,000 users isn't 100x better evidence than 10)
-are all well-supported design choices, consistent with how technical/entrepreneurial evaluation
-generally treats scale claims.
+**Construct:** exposure to and execution of a research process — asking a scoped question,
+choosing a method, working with or generating data/evidence, and producing a written or presented
+output.
 
-## 4. What the mission's candidate dimensions map onto (not a 10th dimension each)
+**Sub-facets (the single most important refinement this package recommends, elaborated in
+`06-major-family-evidence/`):** **exposure** (took a course, attended a program, read primary
+literature) vs. **execution** (actually ran a small study or analysis) vs. **independence** (did it
+under close instruction vs. designed their own question) vs. **output** (nothing external yet vs.
+school-level presentation vs. `preprint`/`peer_reviewed_publication` — `ResearchOutputType` in
+`types/database.ts` already encodes exactly this ladder). The founder spec (§6.5) is explicit that
+publication should not be *required* for a strong score — this package agrees and treats
+publication as the rare top rung of a ladder most legitimate research development happens well
+below.
 
-The mission brief lists ~23 candidate "development dimensions" and explicitly warns not to assume
-the list is correct. Checked against the 9 shipped dimensions:
+**Over-counting risk:** a large, real pattern in pre-university "research" — paid or unpaid
+summer "research" programs that are substantively structured coursework or shadowing rather than
+independent inquiry. This is not a reason to devalue such programs (they are often a legitimate and
+valuable *exposure*-stage experience — see `06-major-family-evidence/`), but a future scorer should
+not treat "attended a research program" and "co-authored a paper" as the same evidence strength.
+`ResearchOutputType`'s existing ladder is exactly the right lever for this — a future refinement to
+`lib/scoring/dimensions/research.ts` could weight by rung rather than presence/absence alone (out of
+scope to implement here; flagged for the engineering handoff).
 
-| Candidate | Resolution |
-|---|---|
-| Academic depth, academic rigor, subject exploration | `academics` (rigor) + `intellectual_curiosity` (self-directed subject exploration) |
-| Major alignment | **Not a development dimension at all** — it's a *relevance/fit* axis. It already exists, separately, as `fieldAlignment` in `lib/counselor/config.ts`'s scoring weights and `relevanceScore` in `lib/opportunities/matching.ts`. Folding it into the 9 would conflate "how good is this evidence" with "how well does this evidence match what the student says they want," which are genuinely different questions — a strong research program in the wrong field is still real research-dimension evidence, just poorly targeted. |
-| Research exposure, research output | Both inside `research`, already distinguished as sub-facets (§3) |
-| Technical skill | Not a dimension — an implicit quality modifier inside `execution_project_depth` (complexity of what was shipped) and `research` (methodology rigor). Relevant mainly for CS/engineering major-family evidence (`06-major-family-evidence/`), not a general-purpose axis every student needs. |
-| Writing / communication | **Genuinely under-tracked.** Shows up implicitly (project `outcome_summary` quality, research written output type) but nothing scores communication *as such*. Flagged in `10-open-questions.md` — not resolved here, since resolving it would mean judging free-text quality, which risks exactly the kind of AI-invents-a-judgment problem `docs/counselor-core-plan.md` §6 already explicitly avoided for "deepen an existing project" candidates. |
-| Creative production | Not currently a first-class evidence type anywhere in the schema for non-technical creative work (writing, art, design, music, film). Relevant to the design/arts and humanities major families (`06-major-family-evidence/`) — flagged as a data-model gap in `10-open-questions.md`, not something this package can retrofit into the 9 dimensions without a schema conversation. |
-| Leadership, entrepreneurship, community impact, awards/distinction, career exploration, execution/project depth, intellectual curiosity | Direct 1:1 matches, §3. |
-| Initiative | **Cross-cutting, not a dimension.** MIT names "initiative" as one of eight top-level applicant qualities (§ MIT fetch, `mitadmissions.org/apply/process/what-we-look-for/`) but it shows up as a *quality of execution* across `leadership` (did they start something vs. just join), `execution_project_depth` (did they self-initiate the project), and `entrepreneurship` (founding is initiative by definition) rather than needing its own score. |
-| Teamwork | Cross-cutting — MIT explicitly names "collaborative and cooperative spirit" (§2) as a top applicant quality. Shows up inside `leadership` (people led, organizational scope) and `execution_project_depth` (team-built projects) rather than as a standalone axis; no source found that treats teamwork as separately admissions-relevant from those two. |
-| Service | Subsumed by `community_impact`. |
-| Global exposure | Not currently a dimension or tracked modifier. Better modeled as a *tag/context* (an international competition, a program in another country, a multinational team) than a scored dimension — a student without global exposure is not thereby weaker on any of the 9 dimensions, so scoring it as its own axis risks penalizing geography/cost-constrained students for something largely outside their control (directly relevant to `08-unsafe-inference-rules.md`). Flagged, not resolved. |
-| Competition evidence, external validation | These are **evidence-state** concepts (did the student place, place highly, win), not dimensions — they modulate the *strength* of evidence within `awards_distinction` primarily, but a competition result can also validate `research`, `academics`, `entrepreneurship`, etc. depending on the competition's subject. This is exactly what `02-opportunity-development-mapping.md`'s evidence-state model formalizes. |
-| Sustained commitment | Cross-cutting temporal attribute — every depth-scored dimension (all except `intellectual_curiosity`/`career_exploration`) already uses `monthsBetween(...)` as a direct scoring input. Not a 10th dimension; a shared mechanic. |
-| Independent project work | `execution_project_depth`, with `independence_level` also feeding `research` specifically for research-type independent work. |
-| Career exploration, professional exposure | `career_exploration`, §3. |
+**Cross-dimension overlap:** research with a policy or social-impact angle can overlap
+`community_impact`; research that becomes a startup overlaps `entrepreneurship`; a rigorous solo
+research project overlaps `execution_project_depth`.
 
-**Net finding for this section:** zero of the 23 candidates justify a 10th dimension. Two
-(writing/communication, creative production) are genuine, currently-unaddressed data-model gaps
-worth a founder decision later — flagged, not silently dropped, in `10-open-questions.md`. One
-(major alignment) is a different *kind* of axis already correctly implemented elsewhere. The rest
-resolve cleanly onto the existing 9, several as newly-explicit cross-cutting attributes
-(initiative, teamwork, sustained commitment) rather than dimensions.
+### 2.5 `entrepreneurship`
 
-## 5. Breadth dimensions vs. depth dimensions — a structural principle worth naming explicitly
+**Construct:** originating and driving a venture (commercial, nonprofit, or product) from idea
+toward some real-world test — not merely "has business ideas."
 
-The shipped code already implements a two-way split that this research confirms is
-evidence-backed, even though no doc previously named it as a deliberate principle:
+**Sub-facets:** idea-stage (has a plan) vs. built (has a product/prototype) vs. tested (has users,
+customers, or beneficiaries) vs. sustained (survived past the initial launch). Revenue is one
+possible signal of "tested" but the founder spec is explicit that revenue should not be *required*
+(§6.4 "revenue if relevant").
 
-- **Breadth dimensions** (`intellectual_curiosity`, `career_exploration`): reward distinct
-  exploration, explicitly not run through diminishing returns. A student trying five different
-  activity categories should score *better* on breadth than one who tried two, with no penalty.
-- **Depth dimensions** (the other 7): reward duration and escalating responsibility within fewer
-  commitments, explicitly diminishing-returns'd after 2-3 items (`scoreCommitments`'s
-  `diminishingAfter`/`diminishingFactor` in every depth scorer) so that quantity cannot substitute
-  for depth.
+**Over-counting risk:** treating "started a club" as entrepreneurship-equivalent to founding a
+venture with an external test. A student-run club is real `leadership`/`community_impact` evidence,
+but it is not automatically `entrepreneurship` unless it involved originating a genuinely new
+venture/product concept and testing it, per the founder spec's own worked example in Phase 39 ("do
+not prioritize another club... unless this new club creates a unique measurable outcome").
 
-This maps directly onto the §2 research finding: depth is what admissions offices say they value
-*in the activities a student ultimately commits to*, but a healthy developmental path requires
-breadth *first* (this is also the core of the timing framework, `03-recommendation-timing.md`).
-**A counselor recommendation engine that only ever pushes toward more depth, for a student who
-hasn't explored enough yet to know what to go deep on, would be optimizing against how
-development actually works.** [[RULE-COUNSEL-009]]
+**Cross-dimension overlap:** almost all entrepreneurship overlaps `execution_project_depth`
+(shipping something) and often `leadership` (recruiting/leading a team); when it addresses a social
+problem, `community_impact`.
 
-## Rules established in this document
+### 2.6 `community_impact`
 
-- `RULE-COUNSEL-001` — Use the Common Data Set's 19-factor academic/nonacademic split as the
-  external reference vocabulary when evaluating whether a proposed evidence category is
-  admissions-relevant. Confidence: high (official, industry-standard source).
-- `RULE-COUNSEL-002` — Weight academic rigor/grades above any single extracurricular dimension
-  when both compete for a student's limited time, consistent with NACAC's "considerable
-  importance" ranking. Confidence: high, with the noted NACAC member-institution sampling caveat.
-- `RULE-COUNSEL-003` — Never recommend an activity primarily because it "looks impressive" rather
-  than because it addresses a genuine interest or a genuine profile gap; MIT's own official
-  guidance names this as an anti-pattern. Confidence: high (official source), scope-limited to
-  "this is stated admissions philosophy," not a guarantee about any specific decision.
-- `RULE-COUNSEL-004` — Default counseling posture should favor 1-3 sustained, meaningful
-  commitments over many shallow ones, treating "Turning the Tide" as institutional-consensus
-  aspiration rather than a hard, universal rule. Confidence: medium-high.
-- `RULE-COUNSEL-005` — Treat "depth over breadth" as directional guidance, not a quantitative
-  formula — do not invent a specific numeric "ideal activity count." Confidence: medium (consensus
-  of practice, not primary data).
-- `RULE-COUNSEL-006` — Do not treat "no publication" as a research-dimension weakness on its own;
-  mentored process/methodology/independence are legitimate strong evidence without output.
-  Confidence: high.
-- `RULE-COUNSEL-007` — Redundancy/saturation logic must operate per-dimension, not per-activity —
-  one activity legitimately scoring against multiple dimensions is correct modeling, not
-  double-counting. Confidence: high (structural/logical, confirmed against shipped code).
-- `RULE-COUNSEL-008` — Treat `awards_distinction` level-tier point values as unvalidated product
-  heuristics (like `RANKING_THRESHOLDS`), safe to keep as a reasonable default, not safe to cite
-  as research-backed precision. Confidence: medium.
-- `RULE-COUNSEL-009` — A counselor should recognize when a student needs more *breadth*
-  (exploration) rather than more *depth*, and should be capable of recommending an exploratory
-  action without treating it as lower-value than a depth action — the two serve different
-  developmental purposes, especially by grade level (see `03-recommendation-timing.md`).
-  Confidence: high (structural, cross-validated against §2 research and shipped scorer design).
+**Construct:** service to others beyond the student's own advancement — volunteering, mentoring,
+organizing aid, sustained civic participation.
+
+**Sub-facets:** one-off service hours vs. sustained commitment; direct service vs. organizing others
+to serve; locally scoped vs. broader reach; self-initiated vs. joined an existing structure (both
+are legitimate — the founder spec does not privilege founding over joining for this dimension the
+way it does for `leadership`/`entrepreneurship`).
+
+**Over-counting risk:** treating volunteer *hours logged* as a complete signal independent of what
+was actually done. A large hours count from a single low-engagement recurring task (e.g., signing
+in at a desk) is a different signal than fewer hours in a role with real responsibility. Existing
+`cause_area` free-text (`lib/vocabularies/profile-fields.ts`) gives topical breadth; it does not
+by itself give depth.
+
+**Cross-dimension overlap:** service that involves organizing other volunteers overlaps
+`leadership`; a service project that is also a sustained built initiative (e.g., founded a
+recurring donation drive) overlaps `entrepreneurship`/`execution_project_depth`.
+
+### 2.7 `awards_distinction`
+
+**Construct:** external, third-party recognition of achievement — competition placements,
+scholarships won, honors.
+
+**Sub-facets:** the most important sub-facet is **selectivity/level**, which the codebase already
+tracks as free-text suggestions (`AWARD_LEVEL_SUGGESTIONS`: School / Regional / State-Provincial /
+National / International, `lib/vocabularies/profile-fields.ts:15`) — this ladder should anchor any
+future weighting far more than the number of awards held. A second sub-facet: individual vs. team
+award (team awards are real evidence but attenuated per-student, especially for large teams).
+
+**Over-counting risk (the most consequential one in this whole taxonomy):** treating award *count*
+as the signal rather than award *selectivity*. Five School-level certificates are not equivalent
+to one State-level placement; this package's strong recommendation (elaborated in
+`05-redundancy-saturation.md`) is that a future scorer refinement should weight by the
+highest-selectivity tier achieved plus a mild bonus for breadth, not a linear count. This is also
+the dimension most exposed to "self-reported, no evidence" risk (Phase 11 of the founder spec) —
+`EvidenceStatus` (`self_reported` / `evidence_added` / `verified` / `verification_rejected`)
+already exists precisely to carry that distinction; a score should never imply more certainty than
+the evidence status supports (see `07-explainability-framework.md`).
+
+**Cross-dimension overlap:** an award in a research competition also feeds `research`; an award
+for a founded venture also feeds `entrepreneurship`.
+
+### 2.8 `career_exploration`
+
+**Construct:** deliberate exposure to what a field or career is actually like in practice —
+internships, job shadowing, informational interviews, structured career-exposure programs,
+`work_experiences`.
+
+**Sub-facets:** passive exposure (attended a talk, read about a field) vs. active exposure (shadowed
+a professional, held an internship) vs. tested-against-reality (did substantive work and formed a
+view on fit, ideally recorded via the reflection loop in `PHASE 10` of the founder spec).
+
+**Over-counting risk:** conflating *breadth* of career exploration (attractive at younger ages —
+see `03-recommendation-timing.md`) with *depth of conviction* (more expected by application time).
+A 14-year-old who has "explored" five fields shallowly is doing exactly what that age should be
+doing; a 17-year-old with the same shallow-breadth pattern and no deepening in a stated field of
+interest is a legitimate signal worth surfacing, not a strength.
+
+**Cross-dimension overlap:** almost every other dimension's activities also generate some career
+exploration value as a side effect (a research project is also career exploration for a research
+career; a founded venture is also career exploration for entrepreneurship) — this dimension is
+best read as "exploration for its own sake," distinct from the deeper, output-producing version of
+the same activity that feeds another dimension more strongly.
+
+### 2.9 `execution_project_depth`
+
+**Construct:** the founder spec's own framing is the clearest available: reward execution over
+idea creation. This dimension measures whether a student **actually finished and shipped something**
+— a piece of software, a piece of writing, a physical build, a dataset, a designed object —
+regardless of which field it's in.
+
+**Sub-facets:** duration/sustained effort; iteration (v1 vs. multiple revisions in response to
+feedback/results); adoption or use by anyone beyond the student themself; complexity relative to
+the student's stage; individual vs. team contribution (and, for team projects, the student's
+specific, attributable contribution — a real measurement gap noted in `10-open-questions.md`).
+
+**Over-counting risk:** treating an unfinished, ambitious-sounding project description as
+equivalent to a smaller, actually-completed one. This is the dimension where the founder spec's
+"no half-finished implementations" principle (stated for ORYN's own build, but equally true of what
+ORYN should reward in a student) is most directly on point — completion is the signal, not scope
+of ambition.
+
+**Cross-dimension overlap:** essentially every other dimension's most legitimate evidence *also*
+tends to produce `execution_project_depth` evidence when done well — this is by design, not an
+error: `execution_project_depth` is closer to a cross-cutting "did they finish" quality check than
+a separate subject-matter area, which is exactly why the founder spec pairs it with "Reward
+execution more than idea creation" rather than defining a topic area for it.
+
+## 3. What this taxonomy implies for future scoring work (not implemented here)
+
+1. Within-dimension **evidence ladders** (exposure → execution → independence → output, or
+   self-reported → evidence-added → verified) are a more accurate lever than raw counts for at
+   least `research`, `awards_distinction`, and `execution_project_depth`. `ResearchOutputType` and
+   `EvidenceStatus` already exist as the data substrate for this; the gap is in how
+   `lib/scoring/dimensions/research.ts` and `awards.ts` weight them today (not audited line-by-line
+   in this research pass — flagged for the engineering handoff as a concrete, scoped next step,
+   not asserted as a current bug).
+2. Cross-dimension overlap is expected and should not be "fixed" by forcing one activity into
+   exactly one dimension — `leadership.ts`'s existing multi-factor design is the right pattern to
+   extend to other dimensions, not a special case.
+3. None of the above requires a new `ProfileDimension` value or a schema change.
+
+## Sources referenced in this document
+
+| ID | Source | Type | Confidence | Used for |
+|---|---|---|---|---|
+| S-UCAS-PS | [UCAS — Personal statement toolkit](https://www.ucas.com/advisers/help-and-training/toolkits/personal-statement-toolkit) and [How to write your personal statement for 2026 entry onwards](https://www.ucas.com/applying/applying-to-university/writing-your-personal-statement/how-to-write-your-personal-statement-for-2026-entry-onwards) | Official education-platform guidance | High | §2.1 academics/rigor framing, corroborates depth-over-breadth |
+| S-EXTRA-DEV | [Extracurricular Involvement and Adolescent Adjustment: Impact of Duration, Number of Activities, and Breadth of Participation — *Applied Developmental Science*](https://www.tandfonline.com/doi/abs/10.1207/s1532480xads1003_3); see also [Recent advances in research on school-based extracurricular activities and adolescent development — *Developmental Review* (ScienceDirect)](https://www.sciencedirect.com/science/article/abs/pii/S0273229711000359) | Peer-reviewed research (abstract accessed; full text paywalled) | Medium — abstracts/summaries accessed directly, full-text methodology not independently verified this session | §2.2, §5 framing of breadth vs. depth vs. duration as genuinely distinct, separately-studied constructs |
+
+Full registry with retrieval timestamps: `data/research/counseling-intelligence/sources.json`
+(`S-UCAS-PS`, `S-EXTRA-DEV`).
