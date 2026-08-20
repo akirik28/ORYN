@@ -213,6 +213,18 @@ college-counselor-research sources — medium confidence, a population estimate 
 sources rather than independently traced to a primary epidemiological study this pass.)
 [[RULE-COUNSEL-080]]
 
+**A closely related third category, surfaced incidentally by this session's own UK-admissions
+research for `11-geography-admissions-systems.md` rather than a separate search: caregiving
+responsibilities.** The UK UCAS-practice sourcing already cited in `11` names "work experience,
+volunteering, and caring responsibilities" together as legitimate context a personal statement can
+draw on — i.e., the UK's own admissions guidance already treats a student's unpaid care of a family
+member as belonging in the same category as a job or volunteering, not as an absence needing no
+explanation. This document extends the same posture: a student who cares for a sibling or family
+member is not exhibiting a motivation or access gap in the dimensions that time went to instead —
+the same "read voluntarily-disclosed context, never require or infer it" handling as the
+health/disability category above applies identically here, and for the same privacy reasons no new
+data collection is proposed.
+
 **What this means for ORYN, held against the product's own minor-safe privacy principles
 (`AGENTS.md` Phase 12 — minimize data collection, avoid requesting unnecessary identification/
 medical information):** this document does **not** recommend ORYN collect, prompt for, or store
@@ -271,8 +283,9 @@ demanded, never inferred from its absence. [[RULE-COUNSEL-081]]
 - `RULE-COUNSEL-080` — Chronic health conditions are common enough in this population (~15-20% by
   cited estimate) to treat as a standing, not edge-case, possible explanation for a thin profile.
   Confidence: medium (secondary-sourced population estimate).
-- `RULE-COUNSEL-081` — Never collect, prompt for, or store health/disability information — this
-  would contradict ORYN's own minor-safe privacy commitments. Only ever read and respect
-  voluntarily-disclosed context in existing free-text fields; never infer health circumstances
-  from their absence, and never demand disclosure as a condition of fair treatment. Confidence:
+- `RULE-COUNSEL-081` — Never collect, prompt for, or store health/disability or caregiving-
+  responsibility information — this would contradict ORYN's own minor-safe privacy commitments.
+  Only ever read and respect voluntarily-disclosed context in existing free-text fields; never
+  infer health or caregiving circumstances from their absence, and never demand disclosure as a
+  condition of fair treatment. Confidence:
   high (direct, binding consequence of `AGENTS.md` Phase 12's existing privacy commitments).
