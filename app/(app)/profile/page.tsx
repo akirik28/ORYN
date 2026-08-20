@@ -19,6 +19,7 @@ import { getProfileViewCounts } from "@/lib/social/profile-views";
 import { attachOpportunityTitles } from "@/lib/profile/activity-opportunities";
 import { getFeaturedItems } from "@/lib/social/featured";
 import { FeaturedManager, type FeaturedManagerItem } from "@/features/profile/featured-manager";
+import { ProfileSectionNav } from "@/features/profile/profile-section-nav";
 import { assembleScoringFacts } from "@/lib/scoring/assemble-facts";
 import { getCompletenessChecklist } from "@/lib/scoring/completeness";
 import { Progress } from "@/components/ui/progress";
@@ -81,6 +82,17 @@ import type { FormValues } from "@/features/profile/dynamic-form-fields";
 import type { ProfileDimension } from "@/types/database";
 
 export const metadata = { title: "Profile" };
+
+// Order matches the page's actual top-to-bottom section order (not the literal order the
+// groups were requested in) so the sticky nav's active highlight moves monotonically while
+// scrolling instead of jumping backward relative to the bar.
+const PROFILE_SECTIONS = [
+  { id: "about", label: "About" },
+  { id: "standing", label: "Your standing" },
+  { id: "goals", label: "Goals" },
+  { id: "experience", label: "Experience & achievements" },
+  { id: "academic", label: "Academic record" },
+];
 
 export default async function ProfilePage() {
   const session = await requireUser();
@@ -208,6 +220,9 @@ export default async function ProfilePage() {
         }
       />
 
+      <ProfileSectionNav items={PROFILE_SECTIONS} />
+
+      <div id="about" className="space-y-10">
       <section className="space-y-6 rounded-3xl border p-6 md:p-8">
         <SectionHeader title="Professional profile" description="What other Oryn students see on your public profile." />
         <ProfessionalIdentityForm
@@ -229,6 +244,9 @@ export default async function ProfilePage() {
         <FeaturedManager initialItems={featuredManagerItems} candidates={featuredCandidates} />
       </section>
 
+      </div>
+
+      <div id="standing" className="space-y-10">
       <section className="grid gap-6 rounded-3xl border p-6 md:grid-cols-[1fr_auto] md:items-start md:p-8">
         <div className="space-y-3">
           <SectionHeader
@@ -266,6 +284,9 @@ export default async function ProfilePage() {
         <PeerBenchmark summary={benchmarkSummary} />
       </section>
 
+      </div>
+
+      <div id="goals">
       <AchievementSection
         title="Goals"
         description="What you're working toward — recommendations trace back to these."
@@ -278,7 +299,9 @@ export default async function ProfilePage() {
         onDelete={deleteGoal}
         emptyStateText="No goals yet. What are you working toward?"
       />
+      </div>
 
+      <div id="experience" className="space-y-10">
       <AchievementSection
         title="Activities"
         description="Clubs, leadership roles, sports, summer programs."
@@ -393,7 +416,9 @@ export default async function ProfilePage() {
         onDelete={deleteVolunteering}
         emptyStateText="No volunteering yet."
       />
+      </div>
 
+      <div id="academic" className="space-y-10">
       <AchievementSection
         title="Education"
         description="Schools and academic stages."
@@ -463,6 +488,7 @@ export default async function ProfilePage() {
         onDelete={deleteSkill}
         emptyStateText="No skills yet. Add up to 15 — technical, creative, analytical, or otherwise."
       />
+      </div>
     </div>
   );
 }
