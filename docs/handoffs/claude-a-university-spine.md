@@ -2507,3 +2507,24 @@ reconstruction caveat, not fabricated as if they were the original research payl
 The `scripts/acquire-programs.ts` bachelor-of-arts/bachelor-of-science exclude fix (see
 above) is committed in this same checkpoint, since the finishing agent correctly left it
 for whoever actually owned it rather than guessing.
+
+**Migration 0043 data backfill — finished the one blocker Claude B flagged this
+session**: the `duplicate_status`/`superseded_by_id` DDL has been live since 2026-08-19
+evening (confirmed independently this session — DDL access clearly exists now, contrary
+to the "blocked" narrative in `docs/founder-blocked-backlog.md`), but the actual data
+backfill for the 9 known duplicate pairs had never run — all 9 loser rows still showed
+`duplicate_status='canonical'`. This was not a fresh identity decision: the 9 pairs were
+already ROR-verified and merged at the `canonical_entities` layer in an earlier session
+(`docs/handoffs/claude-a-university-spine.md`'s own 2026-08-17/18 entries), and
+`lib/universities/duplicate-supersessions.json` already encodes exactly this winner/loser
+mapping as the existing application-layer suppression source of truth — this backfill
+just applies that already-made decision at the schema level, per migration 0043's own
+stated purpose. Ran 9 `UPDATE` statements (KFUPM, HKUST, University of Newcastle
+Australia, Al-Farabi Kazakh National University, University of Warwick, MIT, LSE, UCL,
+University of Technology Sydney), verified live: all 9 loser rows now show
+`duplicate_status='superseded'` with the correct `superseded_by_id`, matching the JSON
+file exactly. The JSON-file application-layer suppression (`lib/universities/canonical.ts`)
+still works and was left untouched — this backfill makes the schema state consistent with
+what the app was already enforcing, it doesn't require an app-code change to take effect
+safely. `docs/founder-blocked-backlog.md` item about migration 0043 can now be marked
+resolved by whoever owns that file next.
