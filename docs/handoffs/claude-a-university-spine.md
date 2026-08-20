@@ -2405,3 +2405,14 @@ coverage remains the starkest gap: entire large markets (China 64 universities, 
 Australia 37, South Korea 31, Spain 29, Canada 27, Malaysia 25, Japan 22, Russia 21, Saudi
 Arabia 18, Taiwan 16) have **zero** `university_programs` rows — highest-leverage next
 target for that specific campaign.
+
+**Admissions URL batch 2 — next 29 ranked universities (same session, continuing the
+campaign)**: NYU, Amsterdam, Birmingham, UT Austin, UIUC, Paris-Saclay, Leeds, Glasgow,
+UC San Diego, Universidad de Buenos Aires, Heidelberg, Uppsala, Copenhagen, U Washington,
+U Alberta, Nottingham, FU Berlin, U Zurich, UCD, POSTECH, King Saud, KIT, Southampton,
+Waterloo, Utrecht, St Andrews, IIT Delhi, Leiden, Pontificia Universidad Católica de
+Chile — same rigor, each URL confirmed by direct fetch of that university's own domain.
+Two fetches that came back as unverified guesses ("would likely be at...") were rejected
+and re-verified via a second, real search+fetch pass rather than accepted on a first weak
+answer (Birmingham, NYU). `admissions_url`: 431 → 460/1019 (45.1%). `university_sources`
+provenance rows added for all 29.
