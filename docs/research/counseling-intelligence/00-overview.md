@@ -53,22 +53,30 @@ the mission's own non-negotiables: no production code changes).
 
 ## Documents in this package
 
-| # | Document | Answers |
-|---|---|---|
-| 00 | `00-overview.md` (this file) | Scope, method, non-duplication rationale |
-| 01 | `01-development-taxonomy.md` | What dimensions of student development are actually meaningful for counseling, and how do they map onto the 9 shipped `ProfileDimension` values? |
-| 02 | `02-opportunity-development-mapping.md` | What does participating in a given opportunity type actually demonstrate or develop, and how does that differ by evidence state (participated vs. finalist vs. award vs. leadership role)? |
-| 03 | `03-recommendation-timing.md` | When does a given recommendation type make sense, by grade/age, conditionally rather than universally? |
-| 04 | `04-profile-gap-framework.md` | How do we tell a real developmental gap from a harmless, context-explained absence? |
-| 05 | `05-redundancy-saturation.md` | When should ORYN *not* recommend more of an already-strong area? |
-| 06 | `06-major-family-evidence/` | For each of 14 major families, what experiences legitimately demonstrate genuine interest/ability? |
-| 07 | `07-explainability-framework.md` | How should a recommendation's "why" be constructed so it is honest, specific, and never a fake probability? |
-| 08 | `08-unsafe-inference-rules.md` | Consolidated registry of inference patterns ORYN must never make, pulled from every other document |
-| 09 | `09-persona-testing.md` | Do the frameworks above hold up against concrete hypothetical student profiles, including edge cases? |
-| 10 | `10-open-questions.md` | What remains genuinely unresolved, and what data does ORYN not yet have to execute these rules? |
-| 11 | `11-geography-admissions-systems.md` | Added after `10` identified it as the highest-leverage gap: how much does holistic profile-building actually matter across USA/UK/France/Germany/Netherlands/Italy/Switzerland/Turkey, and what should that mean for how the counselor weights recommendations by target geography? |
-| 12 | `12-activity-progression-pathways.md` | Added per the mission's own "AFTER CORE PACKAGE" list: what does a realistic multi-year progression look like in a given area, and how should a late or non-standard start be handled without penalty? |
-| 13 | `13-implementation-readiness.md` | Synthesis: of everything `00`-`12` propose, what should an engineering session build first, ranked by what each item actually requires (buildable today vs. needs new data vs. needs a founder-level scoping decision)? |
+**Important, added after the collision documented in `docs/handoffs/research-counseling-
+intelligence.md`: this table lists the full 14-document conceptual plan, but rows `03`, `06`'s
+families `00`-`09`, `07`, and `08` are authored by a peer session on a *different* branch
+(`oryn/counseling-intelligence-research`) and are not present as files in this worktree/branch
+(`oryn/counseling-intelligence-research-013956`).** Only `00`, `01`, `02`, `04`, `05`, `06`'s
+families `10`-`17`, `09`, `10`, `11`, `12`, `13` physically exist here. Read the handoff doc for
+the full branch topology before assuming this directory alone is the complete package.
+
+| # | Document | Answers | On this branch? |
+|---|---|---|---|
+| 00 | `00-overview.md` (this file) | Scope, method, non-duplication rationale | Yes |
+| 01 | `01-development-taxonomy.md` | What dimensions of student development are actually meaningful for counseling, and how do they map onto the 9 shipped `ProfileDimension` values? | Yes |
+| 02 | `02-opportunity-development-mapping.md` | What does participating in a given opportunity type actually demonstrate or develop, and how does that differ by evidence state (participated vs. finalist vs. award vs. leadership role)? | Yes |
+| 03 | `03-recommendation-timing.md` | When does a given recommendation type make sense, by grade/age, conditionally rather than universally? | **No — peer branch** |
+| 04 | `04-profile-gap-framework.md` | How do we tell a real developmental gap from a harmless, context-explained absence? | Yes |
+| 05 | `05-redundancy-saturation.md` | When should ORYN *not* recommend more of an already-strong area? | Yes |
+| 06 | `06-major-family-evidence/` | For each of 17 major families (grown from an initial ~14-family estimate once research began), what experiences legitimately demonstrate genuine interest/ability? | **Partial** — families `10`-`17` (medicine, psychology, poli-sci/IR, law, soc/hist/phil, lit/journ/comm, architecture/design, visual/media arts) are here; families `00`-`09` (taxonomy umbrella + STEM/quant/business cluster) are peer-branch |
+| 07 | `07-explainability-framework.md` | How should a recommendation's "why" be constructed so it is honest, specific, and never a fake probability? | **No — peer branch** |
+| 08 | `08-unsafe-inference-rules.md` | Consolidated registry of inference patterns ORYN must never make, pulled from every other document | **No — peer branch** |
+| 09 | `09-persona-testing.md` | Do the frameworks above hold up against concrete hypothetical student profiles, including edge cases? | Yes |
+| 10 | `10-open-questions.md` | What remains genuinely unresolved, and what data does ORYN not yet have to execute these rules? | Yes |
+| 11 | `11-geography-admissions-systems.md` | Added after `10` identified it as the highest-leverage gap: how much does holistic profile-building actually matter across USA/Canada/UK/France/Germany/Netherlands/Italy/Switzerland/Spain/Turkey, and what should that mean for how the counselor weights recommendations by target geography? | Yes |
+| 12 | `12-activity-progression-pathways.md` | Added per the mission's own "AFTER CORE PACKAGE" list: what does a realistic multi-year progression look like in a given area, and how should a late or non-standard start be handled without penalty? | Yes |
+| 13 | `13-implementation-readiness.md` | Synthesis: of everything `00`-`12` propose, what should an engineering session build first, ranked by what each item actually requires (buildable today vs. needs new data vs. needs a founder-level scoping decision)? | Yes |
 
 Machine-readable companions live in `data/research/counseling-intelligence/`:
 
