@@ -223,7 +223,7 @@ export default async function ProfilePage() {
       <ProfileSectionNav items={PROFILE_SECTIONS} />
 
       <div id="about" className="space-y-10">
-      <section className="space-y-6 rounded-3xl border p-6 md:p-8">
+      <section className="space-y-6 rounded-2xl border p-6 md:p-8">
         <SectionHeader title="Professional profile" description="What other Oryn students see on your public profile." />
         <ProfessionalIdentityForm
           initialHeadline={profile?.headline ?? null}
@@ -239,7 +239,7 @@ export default async function ProfilePage() {
         </div>
       </section>
 
-      <section className="space-y-3 rounded-3xl border p-6 md:p-8">
+      <section className="space-y-3 rounded-2xl border p-6 md:p-8">
         <SectionHeader title="Featured" description="Pin your best 3-5 items to the top of your public profile." />
         <FeaturedManager initialItems={featuredManagerItems} candidates={featuredCandidates} />
       </section>
@@ -247,7 +247,7 @@ export default async function ProfilePage() {
       </div>
 
       <div id="standing" className="space-y-10">
-      <section className="grid gap-6 rounded-3xl border p-6 md:grid-cols-[1fr_auto] md:items-start md:p-8">
+      <section className="grid gap-6 rounded-2xl border p-6 md:grid-cols-[1fr_auto] md:items-start md:p-8">
         <div className="space-y-3">
           <SectionHeader
             title="Profile Strength"

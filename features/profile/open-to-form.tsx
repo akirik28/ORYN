@@ -54,8 +54,8 @@ export function OpenToForm({
               onClick={() => toggle(option)}
               className={
                 active
-                  ? "rounded-full border border-brand-primary bg-brand-primary-subtle px-3 py-1 text-sm font-medium text-brand-primary-strong"
-                  : "rounded-full border border-input px-3 py-1 text-sm text-muted-foreground hover:border-brand-primary/50"
+                  ? "rounded-full border border-brand-primary bg-brand-primary-subtle px-3 py-1 text-sm font-medium text-brand-primary-strong outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50"
+                  : "rounded-full border border-input px-3 py-1 text-sm text-muted-foreground outline-none transition-colors hover:border-brand-primary/50 focus-visible:ring-3 focus-visible:ring-ring/50"
               }
             >
               {OPEN_TO_LABELS[option]}

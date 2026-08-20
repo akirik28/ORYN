@@ -150,11 +150,11 @@ export function AchievementSection<T extends { id: string }>({
       {items.length === 0 ? (
         <EmptyState icon={emptyStateIcon} title={emptyStateText} className="py-6" />
       ) : (
-        <ul className="divide-y rounded-lg border">
+        <ul className="divide-y overflow-hidden rounded-xl border">
           {items.map((item) => {
             const summary = summaries[item.id] ?? { title: "Untitled" };
             return (
-              <li key={item.id} className="flex items-center justify-between gap-3 px-4 py-3">
+              <li key={item.id} className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-accent/40">
                 <div className="min-w-0">
                   <p className="truncate font-medium">{summary.title}</p>
                   {summary.subtitle ? <p className="truncate text-sm text-muted-foreground">{summary.subtitle}</p> : null}
