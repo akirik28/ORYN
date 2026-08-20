@@ -1,0 +1,120 @@
+# 06.01 — Computing & Information Sciences
+
+Covers the mission's "computer science," "software engineering," "data science," and "artificial
+intelligence" raw fields as one family (they share most of their skill base and exploration
+pathways; where they diverge — e.g., data science leaning more statistical, AI/ML research leaning
+more mathematical — this is noted inline rather than split into separate documents, consistent
+with `00-family-taxonomy.md`'s grouping rationale). Onboarding anchor: **Computer Science**.
+
+## 1. Field identity and subfields
+
+Computing spans a genuine range from theoretical (algorithms, computational complexity) to applied
+(software engineering, systems) to interdisciplinary (data science, AI/ML, computational biology,
+human-computer interaction, cybersecurity). **RULE-COUNSEL-037:** treat "Computer Science" as an
+umbrella, not a single skill — a student drawn to competitive-programming-style algorithmic puzzle
+solving and a student drawn to building and shipping user-facing products are both legitimately
+"interested in CS" but are developing measurably different things, mirroring exactly the
+sub-type-heterogeneity problem `02-opportunity-development-mapping.md` §1 already documents for the
+`competition`/`hackathon` categories. Named subfields worth distinguishing in counseling
+conversations: software engineering (building maintainable systems), data science (extracting
+insight from data, statistics-heavy), machine learning/AI (building and training models,
+mathematics-heavy), cybersecurity (attack/defense of systems), human-computer interaction
+(designing usable interfaces, design-adjacent), and computer science theory/research (algorithms,
+complexity, formal methods).
+
+## 2. Core skills (grounded, not universally asserted)
+
+Per O*NET's occupational profiles for **Computer and Information Research Scientists** (15-1221.00)
+and **Software Developers** (15-1252.00): quantitative reasoning (the profile explicitly lists
+knowledge of "arithmetic, algebra, geometry, calculus, statistics, and their applications" as
+important), inductive and deductive reasoning, and — notably, and often underweighted by students —
+written and oral communication ("must communicate well with programmers and managers and be able to
+clearly explain their conclusions to people with no technical background") [S-ONET-CS]. This
+communication requirement is worth surfacing explicitly to students who assume CS is a purely
+technical field. Beyond the O*NET profile: programming languages (breadth across a few, depth in
+at least one, per `lib/vocabularies/skills.ts`'s own suggestion list which already includes Python/
+JavaScript/TypeScript/Java/C++/SQL), systems thinking, and — for the ML/AI subfield specifically —
+linear algebra and statistics as genuine prerequisites, not optional extras.
+
+**Do not invent a universal requirement.** Per the mission's own caution, not every computing career
+requires deep mathematics (product-focused software engineering leans more on systems design and
+communication) and not every path requires extensive prior programming experience before university
+(many students start CS coursework with no prior exposure) — this family's exploration pathways
+below are for *testing interest and building initial evidence*, not a claimed prerequisite ladder.
+
+## 3. Career families (illustrative, not exhaustive — per mission's "no job-title spam")
+
+Per BLS's Occupational Outlook Handbook overview for Computer and Information Technology
+occupations: this occupational group is large and growing much faster than average (BLS projects
+about 317,700 average annual openings from growth and replacement combined), with demand drivers
+named explicitly as cloud computing, big data, information security, and AI/e-commerce growth
+[S-BLS-CIT]. Illustrative career families (not a ranked or exhaustive list): software engineering
+(product/platform/infrastructure), data science and analytics, machine learning/AI research and
+applied ML engineering, cybersecurity/information security, systems/network architecture,
+human-computer interaction and product design, and computational research within another field
+entirely (see §5 interdisciplinary — this is the "CS as a tool for X" path, not a CS career per se).
+
+**Counter-stereotypical example (major≠career, per `00-family-taxonomy.md` §5.1):** a CS degree is
+also a common, well-trodden path into quantitative finance/trading (algorithmic trading systems),
+product management (technical PM roles), and entrepreneurship generally — not only "becomes a
+software engineer." Conversely, software engineering roles are regularly filled by graduates of
+mathematics, physics, and engineering degrees with no formal CS major at all — the major↔career
+relationship here is genuinely many-to-many in both directions, not a pipeline.
+
+## 4. Exploration pathways by stage (cross-referencing `03-recommendation-timing.md`'s two-phase model)
+
+**Phase 1 (exploration, ~4–3 years from graduation):** an introductory personal project (even
+small — a script, a simple website, a small game); a beginner-friendly online course; trying more
+than one subfield lightly (a data-analysis mini-project *and* a small web app, not committing to one
+yet) — this breadth is appropriate and should not be read as unfocused at this stage.
+
+**Phase 2 (deepening, ~2–1 years from graduation):** a sustained project with real scope (something
+that took more than a few weekends, ideally with a live demo/repo — directly the
+`execution_project_depth` evidence pattern from `01-development-taxonomy.md` §2.9); contributing to
+an existing open-source project (a genuinely differentiated signal from a solo-only project,
+because it demonstrates working within someone else's codebase/constraints and, often, code review);
+competitive programming (USACO, national/international informatics olympiads) *specifically*
+demonstrates algorithmic/mathematical problem-solving under constraints — **this is a different
+skill from software-development capability and should not be treated as interchangeable evidence
+for it**, directly the distinction the mission brief itself calls out ("this competition provides
+algorithmic problem-solving evidence rather than software-development evidence"). A hackathon
+demonstrates rapid-build/teamwork capability under time pressure — again a distinct skill from
+either of the above two. **RULE-COUNSEL-038:** when counseling a CS-interested student, distinguish
+at least these three evidence types (sustained build, algorithmic competition, time-boxed
+hackathon/team build) rather than treating "did something CS-related" as one undifferentiated
+signal — this is the concrete, field-specific instance of the general principle
+`02-opportunity-development-mapping.md` §1 raises abstractly.
+
+## 5. Interdisciplinary connections (per `00-family-taxonomy.md` §6)
+
+**CS + biology** (computational biology/bioinformatics): a student interested in both should be
+pointed toward projects/programs that combine data analysis with a real biological question, not
+treated as needing to choose one field prematurely — see `04-life-sciences.md` for the reciprocal
+framing. **CS + economics** (computational social science, algorithmic market analysis): a project
+analyzing real economic/social data with code is stronger combined evidence than either a pure-CS
+or pure-econ project alone for a student with this specific interest combination — see
+`07-economics-finance.md`. **AI + medicine**: relevant to a student interested in clinical machine
+learning — see `10-medicine-clinical-pathways.md` (peer-authored) for the reciprocal note; this
+document flags it here so the connection isn't lost if that document is drafted independently.
+
+## 6. Professional/licensure notes
+
+**No general licensure requirement** for software engineering or data science roles in the
+countries ORYN currently targets (USA/UK/Europe/Turkey) — unlike medicine, law, or engineering-PE
+tracks, this field has no universal credentialing gate. Certain narrow sub-areas (e.g., safety-
+critical embedded systems, or roles explicitly requiring a Professional Engineer license in some
+US states for "software engineer" as a legally protected title in a small number of jurisdictions)
+are real but narrow exceptions, not the general case — flagged here for completeness, not elaborated
+further given how small a fraction of the field this affects.
+
+## Sources referenced in this document
+
+| ID | Source | Type | Confidence | Used for |
+|---|---|---|---|---|
+| S-ONET-CS | [O*NET Computer and Information Research Scientists (15-1221.00)](https://www.onetonline.org/link/summary/15-1221.00), [O*NET Software Developers (15-1252.00)](https://www.onetonline.org/link/summary/15-1252.00) | Official (US Dept. of Labor-sponsored occupational database) | High | §2 core skills |
+| S-BLS-CIT | [BLS Occupational Outlook Handbook — Computer and Information Technology Occupations](https://www.bls.gov/ooh/computer-and-information-technology/), [Computer and Information Research Scientists](https://www.bls.gov/ooh/computer-and-information-technology/computer-and-information-research-scientists.htm) | Official (US Bureau of Labor Statistics) | High — US-specific; not assumed to generalize internationally (mission's own caution against mixing national labor statistics) | §3 career families, growth/demand framing |
+
+US-only data point — per the mission's explicit caution, these BLS/O*NET figures describe the US
+labor market only and are not applied to UK/Europe/Turkey students as if universal. No equivalent
+official UK/EU/Turkey occupational-outlook source was fetched for this specific family in this
+pass — flagged in `10-open-questions.md` as remaining work.
