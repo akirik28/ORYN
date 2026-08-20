@@ -1,0 +1,48 @@
+{
+  "_meta": {
+    "title": "Worked alias examples across entity types and languages, live-queried",
+    "source_document": "docs/research/canonical-entity-intelligence/02-alias-taxonomy.md",
+    "snapshot_note": "All rows below were directly queried from oryn-qa-scratch entity_aliases/canonical_entities this session (2026-08-20)."
+  },
+  "unambiguous_examples": [
+    {"canonical_display_name": "Massachusetts Institute of Technology", "entity_type": "university", "alias": "MIT", "alias_type": "abbreviation", "verified": false},
+    {"canonical_display_name": "University College London", "entity_type": "university", "alias": "UCL", "alias_type": "abbreviation", "verified": true},
+    {"canonical_display_name": "The Koç School", "entity_type": "school", "alias": "VKV Koç Özel Lisesi", "alias_type": "official", "language_code": "tr", "verified": true, "note": "official AND translation-adjacent simultaneously -- demonstrates alias_type and language_code are independent axes, not one standing in for the other"}
+  ],
+  "ambiguous_examples_live_and_correctly_coexisting": [
+    {
+      "alias": "UM",
+      "alias_type": "abbreviation",
+      "entities": [
+        {"display_name": "Universidad de Montevideo (UM)", "country": "Uruguay"},
+        {"display_name": "Universiti Malaya (UM)", "country": "Malaysia"}
+      ],
+      "note": "Both rows legitimately carry the alias 'UM'. Only resolveIdentity()'s country-scoping step disambiguates. No unique(alias) constraint exists in entity_aliases by design -- this is expected, correct behavior, not a data-quality bug."
+    },
+    {
+      "alias": "UP",
+      "alias_type": "abbreviation",
+      "entities": [
+        {"display_name": "Universidad de Palermo (UP)", "country": "Argentina"},
+        {"display_name": "Universidad Panamericana (UP)", "country": "Mexico"}
+      ]
+    },
+    {
+      "alias": "UPM",
+      "alias_type": "abbreviation",
+      "entities": [
+        {"display_name": "Universidad Politécnica de Madrid (UPM)", "country": "Spain"},
+        {"display_name": "Universiti Putra Malaysia (UPM)", "country": "Malaysia"}
+      ]
+    }
+  ],
+  "alias_type_distribution_snapshot": {
+    "common": 204,
+    "abbreviation": 180,
+    "official": 30,
+    "translation": 27,
+    "user_submitted": 3,
+    "legacy": 1,
+    "note": "legacy is real but nearly empty -- see 04-rename-history-framework.md for the Constructor University gap this motivates flagging"
+  }
+}

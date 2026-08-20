@@ -1,0 +1,68 @@
+{
+  "_meta": {
+    "title": "Source registry for canonical-entity-intelligence research claims",
+    "note": "Only non-obvious/load-bearing claims are listed here. Claims directly readable from repo source files (e.g. 'migration 0038 defines X table') are cited inline in the prose docs by file path instead of duplicated here."
+  },
+  "sources": [
+    {
+      "id": "SRC-001",
+      "source_title": "oryn-qa-scratch live Postgres database, canonical_entities/entity_aliases/entity_external_ids/entity_relationships/entity_verification_queue/opportunities tables",
+      "source_url": "supabase project qtcvcflzxbuagvvwahhu (internal, not a public URL)",
+      "source_type": "primary_live_database",
+      "retrieved_at": "2026-08-20T21:00:00Z through 2026-08-20T23:00:00Z (session window)",
+      "claim_supported": "All row counts, duplicate-pair evidence, relationship examples, opportunity-organizer text, and the Turkish-normalization drift finding in docs 05/07/08/09",
+      "confidence": "high",
+      "limitations": "Live, concurrently-written database -- exact counts are snapshots as of the query timestamp, not permanent facts. Every count in doc 09 is explicitly timestamped for this reason."
+    },
+    {
+      "id": "SRC-002",
+      "source_title": "ROR (Research Organization Registry) relationships field for École Polytechnique / Institut Polytechnique de Paris",
+      "source_url": "https://ror.org/05hy3tk52 (École Polytechnique), https://ror.org/042tfbd02 (Institut Polytechnique de Paris)",
+      "source_type": "open_registry",
+      "retrieved_at": "cited from docs/handoffs/claude-b-to-claude-a.md, originally researched by a prior session; re-confirmed live in canonical_entities/entity_relationships this session (2026-08-20)",
+      "claim_supported": "The member_of relationship modeled in the live registry between these two entities; used as the worked example in 03",
+      "confidence": "high",
+      "limitations": "This session did not re-fetch ROR's API directly -- it verified the *resolution already recorded in the live database* matches the prior session's cited ROR evidence, not the ROR API itself firsthand."
+    },
+    {
+      "id": "SRC-003",
+      "source_title": "Constructor University official identity (formerly Jacobs University Bremen / International University Bremen)",
+      "source_url": "https://constructor.university ; ROR https://ror.org/02yrs2n53",
+      "source_type": "official_primary / open_registry",
+      "retrieved_at": "cited from docs/handoffs/claude-b-to-claude-a.md (prior session); external-id presence re-confirmed live this session (2026-08-20)",
+      "claim_supported": "The rename history (International University Bremen -> Jacobs University Bremen 2007 -> Constructor University 2023) and the finding that no legacy alias exists for either former name",
+      "confidence": "medium",
+      "limitations": "The specific rename-year claims (2007, 2023) are general knowledge about this well-documented institutional rename, not independently re-verified against Constructor University's own official history page by this session -- flagged medium rather than high for that reason. The *absence of alias rows* in the live database, by contrast, is a directly queried, high-confidence fact."
+    },
+    {
+      "id": "SRC-004",
+      "source_title": "PostgreSQL unaccent extension behavior on Turkish dotless-ı and dotted-İ",
+      "source_url": "internal: direct SQL query against oryn-qa-scratch, `select unaccent('...')`",
+      "source_type": "primary_live_database",
+      "retrieved_at": "2026-08-20T22:40:00Z (session window)",
+      "claim_supported": "unaccent('Kırıkkale') = 'Kirikkale', unaccent('İSTEK Okulları') = 'ISTEK Okullari' -- the database-side convention that lib/acquisition/normalize.ts's dbNormalizedName() is documented to match and, per this session's testing, does not",
+      "confidence": "high",
+      "limitations": "Reflects this specific Postgres instance's unaccent extension version/rules file as installed on oryn-qa-scratch; not independently verified against a second Postgres instance, though unaccent's default rules file is standard/stable across installs."
+    },
+    {
+      "id": "SRC-005",
+      "source_title": "Node.js (v24.19.0) String.prototype.normalize/toLowerCase Unicode case-folding behavior",
+      "source_url": "internal: throwaway Node scripts run this session, replicating lib/acquisition/normalize.ts's nameKey()/dbNormalizedName() verbatim",
+      "source_type": "primary_computational_test",
+      "retrieved_at": "2026-08-20T22:20:00Z (session window)",
+      "claim_supported": "U+0130 (İ) has a canonical NFD decomposition to U+0049+U+0307 (confirmed, correcting this session's own initial wrong hypothesis); U+0131 (ı) has no decomposition and is deleted/splits words under nameKey()'s ASCII-only alnum-fold step",
+      "confidence": "high",
+      "limitations": "Verified against this session's exact copy of the two functions' current source; if either function is edited after this research lands, results should be re-verified against the new version rather than assumed to still hold."
+    },
+    {
+      "id": "SRC-006",
+      "source_title": "opportunities.organization raw text, live table",
+      "source_url": "internal: oryn-qa-scratch, `select organization, count(*) from opportunities group by organization`",
+      "source_type": "primary_live_database",
+      "retrieved_at": "2026-08-20T22:10:00Z (session window)",
+      "claim_supported": "Every organizer-granularity example in doc 08, including the University of Pennsylvania/Wharton six-way cluster and the METU/Arber-Kongre-A.Ş./Radyo-ODTÜ cycle-operator string",
+      "confidence": "high",
+      "limitations": "Text as entered by whichever research pass sourced each opportunity -- this session did not re-verify each organizer string against the opportunity's own official source page; the *canonicalization problem* these strings illustrate is the claim, not each individual opportunity's factual accuracy."
+    }
+  ]
+}

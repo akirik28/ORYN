@@ -1,0 +1,24 @@
+{
+  "_meta": {
+    "title": "Mission-brief relationship vocabulary mapped onto the live entity_relationships.relationship_type constraint",
+    "source_document": "docs/research/canonical-entity-intelligence/03-parent-campus-relationship-model.md",
+    "live_constraint": ["part_of", "operated_by", "campus_of", "school_of", "provider_for", "member_of", "successor_of", "predecessor_of", "related_brand"]
+  },
+  "mapping": [
+    {"mission_concept": "same_as", "schema_equivalent": null, "verdict": "not_applicable", "note": "Identity, not a relationship -- resolved by entity merge, never a persistent relationship row"},
+    {"mission_concept": "alias_of", "schema_equivalent": "entity_aliases (separate table)", "verdict": "covered_elsewhere", "note": "Correctly modeled outside entity_relationships"},
+    {"mission_concept": "parent_of / child_of", "schema_equivalent": "part_of (inverse direction) + member_of", "verdict": "covered_more_precisely", "note": "Live schema splits org-chart subordination (part_of) from federation membership (member_of) -- a real distinction a single generic parent_of/child_of pair would flatten"},
+    {"mission_concept": "campus_of", "schema_equivalent": "campus_of", "verdict": "covered_unpopulated", "note": "Present verbatim in the constraint; zero live rows as of this session"},
+    {"mission_concept": "operated_by", "schema_equivalent": "operated_by", "verdict": "covered", "note": "Present verbatim; zero live rows as of this session but conceptually ready"},
+    {"mission_concept": "organized_by", "schema_equivalent": null, "verdict": "gap_real", "note": "operated_by is the closest fit but conflates 'who legally operates this entity' (durable) with 'who is running this specific cycle/edition' (time-bound) -- see the METU/Arber-Kongre-A.S./Radyo-ODTU live case in doc 08. Secondary priority relative to partner_of."},
+    {"mission_concept": "formerly_known_as", "schema_equivalent": "entity_aliases alias_type='legacy' (same row) OR successor_of/predecessor_of (two rows)", "verdict": "covered_by_different_mechanism", "note": "Which mechanism applies depends on whether real institutional discontinuity occurred -- see doc 04's decision rule"},
+    {"mission_concept": "successor_of", "schema_equivalent": "successor_of", "verdict": "covered_unpopulated", "note": "Present verbatim; zero live rows as of this session -- no confirmed live succession case found to study"},
+    {"mission_concept": "partner_of", "schema_equivalent": null, "verdict": "gap_real_highest_priority", "note": "No symmetric peer/co-organizer relationship type exists. Live opportunities.organization text already contains multiple explicit 'in partnership with' joint-organizer strings with nothing to express the relationship. related_brand and member_of are both a poor fit."},
+    {"mission_concept": "unknown_relation", "schema_equivalent": "entity_verification_queue (typed queue item, not a relationship row)", "verdict": "covered_by_better_mechanism", "note": "An unknown relationship is a task to resolve, not a fact to assert -- the queue is arguably a better fit than a relationship_type='unknown' row would be"}
+  ],
+  "live_types_not_in_mission_brief_vocabulary": [
+    {"type": "school_of", "note": "K-12/preparatory school operated/sponsored by a university -- a real, populated, useful distinction (9 live rows total across all types; 2 are school_of, e.g. Bilkent University -> BELS/BLIS) the mission brief's generic parent_of/child_of would not have separated from part_of"},
+    {"type": "provider_for", "note": "Organization -> specific program/competition/scholarship it provides. Central to doc 08's opportunity-organizer granularity ladder (provider vs. the specific offering)"},
+    {"type": "related_brand", "note": "Loosest tie -- shared branding without operational/legal integration. Zero live rows; plausible future use is a university's executive-education arm marketed under a distinct brand"}
+  ]
+}
