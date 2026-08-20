@@ -543,3 +543,120 @@ packages got earlier this session (screenshots plus computed-style/geometry chec
 "it typechecks"); and the work is committed and pushed, not sitting only in the working tree.
 
 STATUS: HANDOFF COMPLETE — SAFE TO CONTINUE IN FRESH UI CLAUDE SESSION
+
+---
+
+# SESSION UPDATE — 2026-08-21, Discovery/Map shipped
+
+Continuation of the context-reset handoff above, in a fresh session. The founder sent real
+reference images mid-session (previously described only in text) and gave live visual
+feedback across two iterations. Everything below is committed and pushed — this package is
+no longer in the "uncommitted, needs review" state the handoff above describes.
+
+## What changed since the handoff above
+
+1. **Recovered clean** — zero collisions. Computer B (`counselor-data-quality-v1`) unchanged
+   since `4d3eb5e` (the handoff's own reference point); Computer A
+   (`programs-pipeline-reconciled`) never touched `features/opportunities/**`. Confirmed via
+   `git fetch --all --prune` + a branch-tip diff before touching anything, per §9.
+2. **§5.2's "geographically richer" open question — resolved via founder reference images**,
+   not guessed. The founder sent real reference mockups (one specifically labeled "Option 1 —
+   Split View Discovery Map") and confirmed the theme direction was right, "modifiable per
+   ORYN's real features." Extracted the visual language (richer land/ocean tones, numbered
+   cluster markers) and explicitly did **not** carry over the reference's fake-precision UI
+   (a `Fit Score` 0–100 slider, `"92 Excellent Fit"`, a `Genel Uyum Skoru`, a fake counselor)
+   — none of that exists in ORYN's real data model, consistent with every prior instruction
+   this workstream has had. **No map-tile dependency added** — the founder's own fresh-
+   context brief explicitly foreclosed that option ("do not introduce a major mapping-stack
+   migration just for aesthetics"), so the richer treatment is entirely CSS/SVG on the
+   existing country-shape layer: `--success`-token land (was a `--muted-foreground`/`--card`
+   gray), a deeper `--info`-token ocean radial-gradient (was diluted to 88%, read as blank),
+   and numbered cluster markers (the count now renders inside each marker circle, not just
+   encoded in its radius).
+3. **Second iteration, after the founder saw the first pass live**: explicitly asked for more
+   land/sea contrast, a more pronounced selected-country/cluster state, and more depth —
+   explicitly *not* a blanket darkening, and explicitly no fake terrain/geo data. Implemented
+   as: deeper land/ocean dilution percentages; a `drop-shadow` glow + wider stroke on the
+   selected country and marker (fill darkness deliberately left untouched — see the code
+   comment in `opportunity-map-explorer.tsx` — this avoids re-approaching the exact
+   near-undiluted-brand-primary zone that caused a real "selected country turned black"
+   regression on 2026-08-18); a subtle inset `box-shadow` on the map card for a "recessed
+   premium panel" depth cue; a small neutral `drop-shadow` on every marker. All color/shadow
+   only — no new dependency, no per-country texture, no invented biome/terrain data.
+4. **Found and fixed 3 more real bugs during this session's QA pass** (all introduced by this
+   same still-uncommitted-at-the-time package, so "fixed before it shipped anywhere," same
+   standard as everything else in this file):
+   - `opportunity-filter-rail.tsx`'s category pills and `opportunity-country-pills.tsx`'s
+     country pills had **no `focus-visible` ring at all** — caught via real keyboard Tab
+     navigation + `element.matches(':focus-visible')`, not a visual glance (programmatic
+     `.focus()` does not reliably trigger `:focus-visible` in Chromium, so a real keypress
+     was needed to find this). Both now use the same `focus-visible:border-ring
+     focus-visible:ring-3 focus-visible:ring-ring/50` pattern as `button.tsx` and every prior
+     fix in this workstream.
+   - `opportunity-mobile-view-toggle.tsx`'s List tab had **no empty-state fallback** — a
+     zero-result filter combination silently rendered a blank grid on mobile, while desktop's
+     equivalent (`page.tsx`'s `resultsList`) already had a proper `EmptyState`. Mirrored the
+     same icon/copy (this component only receives resolved `rows`, not the raw search-query
+     string desktop's exact wording needs, so it uses the static half of that message).
+   - (Pre-existing, found and fixed earlier in the uncommitted diff, restated here for the
+     record: `getOpportunityFacets` was silently missing `online_program` from its category
+     list.)
+5. **QA gaps from §10 closed**:
+   - Map hover tooltip — confirmed live (desktop).
+   - Selected-country/marker state — confirmed live, both visually and via direct DOM
+     property inspection (exact fill/stroke/filter values checked, not eyeballed).
+   - Mobile Map tab — **could not be confirmed via click** (see known issue below); confirmed
+     instead by temporarily flipping the toggle's default `useState` to `"map"` (never
+     committed, reverted immediately after) and reloading — proves the component itself
+     renders correctly at 375px with zero defect, isolating the gap to the click-triggered
+     transition specifically, not the map.
+   - Pagination UI — verified by code read only (`page.tsx`, the `resultsList`/`totalPages`
+     block): correct `pageHref` param preservation, correct `totalPages > 1` gating. The
+     scratch harness never actually exercised this path (it hand-rolled its own grid instead
+     of calling `page.tsx`'s real `resultsList`), and the live catalog is too small to
+     trigger a second page — this remains genuinely unverified live, flagged honestly rather
+     than asserted as confirmed.
+   - Empty state — confirmed live on mobile (after the fix above, via a temporary
+     `rows={[]}` in the scratch harness); desktop verified by code read only, same harness
+     limitation as pagination.
+   - Keyboard/focus — a real Tab-order walk across the filter rail, both pill components, and
+     the shared `Input`; sane order, each stop confirmed via `document.activeElement` after
+     an actual keypress, not assumed.
+   - `npm run build` — clean, run twice (once mid-session, once after the scratch-harness
+     deletion, to confirm nothing was orphaned in the route manifest).
+
+## New known issue (tooling, not app — flag if it recurs)
+
+Clicking the mobile List/Map toggle button hangs the Browser pane's `computer` tool for the
+full 30s timeout, reproduced 3/3 times across two different sessions now (this one and the
+one that wrote the handoff above), both times at the exact same interaction. Console and
+network are clean before and after — no JS error, no hanging request, and the map's
+code-split chunk was already loaded in every case. Isolated this time, not just re-flagged:
+mounting the identical `OpportunityMapExplorer` at the identical 375px viewport via a direct
+page load (no click involved) works instantly with zero defect — so the gap is specific to
+click-triggered `next/dynamic` mounting inside this particular automated browser tool, not
+the component, not the viewport, and — most likely — not a real user's experience (no
+evidence of an actual freeze, just this tool's own readiness heuristic apparently not
+handling a click-triggered lazy-mount well). Worth a real-device check if this ever becomes a
+founder complaint; nothing found here justifies a code change.
+
+## Final state
+
+- Branch: `oryn/ui-simplification-v1`, worktree `.claude/worktrees/ui-simplification-v1`.
+- HEAD: `808ee25` ("ui(discovery): ship opportunity Discovery/Map package") — **pushed**,
+  `origin` in sync.
+- Working tree: **clean**. Scratch harness deleted. Nothing uncommitted.
+- `npm run typecheck` / `lint` / `test` (1140/1140) / `build`: all clean, most recent run
+  this session (after every change in this section, not just once at the start).
+- **Not merged to `main`** — per standing instruction, this lane never merges main itself.
+
+## Next (nothing blocking)
+
+Discovery/Map's visual direction is founder-approved through two live iterations, and the one
+open design question from the prior handoff (§5.2, terrain richness) is resolved — see above.
+Candidate next work, none blocking, founder's call:
+- The mobile-toggle click-hang above, if it turns out to matter on a real device.
+- Real opportunity imagery — still blocked on Computer A's data pipeline, not a UI task.
+- Sub-country clustering if/when the catalog outgrows country-level aggregation.
+
+STATUS: DISCOVERY/MAP PACKAGE SHIPPED — COMMITTED, PUSHED, CLEAN TREE.
