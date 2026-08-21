@@ -53,36 +53,42 @@ the mission's own non-negotiables: no production code changes).
 
 ## Documents in this package
 
-**Important, added after the collision documented in `docs/handoffs/research-counseling-
-intelligence.md`: this table lists the full 14-document conceptual plan, but rows `03`, `06`'s
-families `00`-`09`, `07`, and `08` are authored by a peer session on a *different* branch
-(`oryn/counseling-intelligence-research`) and are not present as files in this worktree/branch
-(`oryn/counseling-intelligence-research-013956`).** Only `00`, `01`, `02`, `04`, `05`, `06`'s
-families `10`-`17`+`19`, `09`, `10`, `11`, `12`, `13`, `15`, `17` (top-level — a different
-document from family `17`, see the table's own note on this numbering below) physically exist
-here. Read the handoff doc for the full branch topology before assuming this directory alone is
-the complete package.
+| # | Document | Answers |
+|---|---|---|
+| 00 | `00-overview.md` (this file) | Scope, method, non-duplication rationale |
+| 01 | `01-development-taxonomy.md` | What dimensions of student development are actually meaningful for counseling, and how do they map onto the 9 shipped `ProfileDimension` values? |
+| 02 | `02-opportunity-development-mapping.md` | What does participating in a given opportunity type actually demonstrate or develop, and how does that differ by evidence state (participated vs. finalist vs. award vs. leadership role)? |
+| 03 | `03-recommendation-timing.md` | When does a given recommendation type make sense, by grade/age, conditionally rather than universally? |
+| 04 | `04-profile-gap-framework.md` | How do we tell a real developmental gap from a harmless, context-explained absence? |
+| 05 | `05-redundancy-saturation.md` | When should ORYN *not* recommend more of an already-strong area? |
+| 06 | `06-major-family-evidence/` | For each major family (a living, growing list — started as an initial 14-family estimate, reached 17 once both sessions' original assignments were complete, then grew further as each session kept finding genuine coverage gaps on review; see `06-major-family-evidence/00-family-taxonomy.md` §3 for the current authoritative list/count, never a specific number quoted elsewhere), what experiences legitimately demonstrate genuine interest/ability? |
+| 07 | `07-explainability-framework.md` | How should a recommendation's "why" be constructed so it is honest, specific, and never a fake probability? |
+| 08 | `08-unsafe-inference-rules.md` | Consolidated registry of inference patterns ORYN must never make, pulled from every other document |
+| 09 | `09-persona-testing.md` | Do the frameworks above hold up against concrete hypothetical student profiles, including edge cases? |
+| 10 | `10-open-questions.md` | What remains genuinely unresolved, and what data does ORYN not yet have to execute these rules? |
 
-| # | Document | Answers | On this branch? |
-|---|---|---|---|
-| 00 | `00-overview.md` (this file) | Scope, method, non-duplication rationale | Yes |
-| 01 | `01-development-taxonomy.md` | What dimensions of student development are actually meaningful for counseling, and how do they map onto the 9 shipped `ProfileDimension` values? | Yes |
-| 02 | `02-opportunity-development-mapping.md` | What does participating in a given opportunity type actually demonstrate or develop, and how does that differ by evidence state (participated vs. finalist vs. award vs. leadership role)? | Yes |
-| 03 | `03-recommendation-timing.md` | When does a given recommendation type make sense, by grade/age, conditionally rather than universally? | **No — peer branch** |
-| 04 | `04-profile-gap-framework.md` | How do we tell a real developmental gap from a harmless, context-explained absence? | Yes |
-| 05 | `05-redundancy-saturation.md` | When should ORYN *not* recommend more of an already-strong area? | Yes |
-| 06 | `06-major-family-evidence/` | For each major family (grown from an initial ~14-family estimate to a confirmed **20** as both sessions kept finding genuine gaps — education/teaching, social work, and performing arts/music among the additions found only after the "original" set felt complete; count confirmed against both branches' actual file trees and cross-checked against peer's `major-family-taxonomy.json`, which independently indexes all 20), what experiences legitimately demonstrate genuine interest/ability? | **Partial** — families `10`-`17` (medicine, psychology, poli-sci/IR, law, soc/hist/phil, lit/journ/comm, architecture/design, visual/media arts) and `19` (social work) are here; families `00`-`09` (taxonomy umbrella + STEM/quant/business cluster), `18` (education/teaching), and `20` (performing arts/music) are peer-branch |
-| 07 | `07-explainability-framework.md` | How should a recommendation's "why" be constructed so it is honest, specific, and never a fake probability? | **No — peer branch** |
-| 08 | `08-unsafe-inference-rules.md` | Consolidated registry of inference patterns ORYN must never make, pulled from every other document | **No — peer branch** |
-| 09 | `09-persona-testing.md` | Do the frameworks above hold up against concrete hypothetical student profiles, including edge cases? | Yes |
-| 10 | `10-open-questions.md` | What remains genuinely unresolved, and what data does ORYN not yet have to execute these rules? | Yes |
-| 11 | `11-geography-admissions-systems.md` | Added after `10` identified it as the highest-leverage gap: how much does holistic profile-building actually matter across USA/Canada/UK/France/Germany/Netherlands/Italy/Switzerland/Spain/Turkey, and what should that mean for how the counselor weights recommendations by target geography? | Yes |
-| 12 | `12-activity-progression-pathways.md` | Added per the mission's own "AFTER CORE PACKAGE" list: what does a realistic multi-year progression look like in a given area, and how should a late or non-standard start be handled without penalty? | Yes |
-| 13 | `13-implementation-readiness.md` | Synthesis: of everything `00`-`12` propose, what should an engineering session build first, ranked by what each item actually requires (buildable today vs. needs new data vs. needs a founder-level scoping decision)? | Yes |
-| — | `14-field-opportunity-mapping.md` | Peer-branch only — opportunity-category × relevant-fields index, a different axis from `02`'s category→dimension mapping. | **No — peer branch** |
-| 15 | `15-executive-summary.md` | **Read this one if you read exactly one.** A 5-minute consolidation of the night's highest-impact findings across both branches, for anyone who doesn't want to read 20+ documents. | Yes |
-| — | `16-worked-example-full-chain.md` | Peer-branch only — a single student profile traced end-to-end through every framework, as a concrete worked illustration rather than a new claim. | **No — peer branch** |
-| 17 | `17-dimension-weighting-by-target.md` | Operationalizes the gap `RULE-COUNSEL-059`/`060` named: not just tier-level framing language (`11`), but which of the 9 profile dimensions to weight up/down for a given target system, at a qualitative (not numeric) level. **Numbering note**: this is a top-level document, distinct from `06-major-family-evidence/17-visual-media-arts.md` — the two numbering sequences are independent (family docs vs. top-level docs) and this collision is cosmetic only, confirmed by checking both branches' actual file trees before claiming the number. | Yes |
+**Extended beyond this original 10-document plan** (per the mission brief's own "continue
+broadening and deepening... do not stop because the first set is complete" instruction, and per the
+concurrent-session split documented in `docs/handoffs/research-counseling-intelligence.md`): `11-
+geography-admissions-systems.md` (how admissions logic itself varies by target country — the
+single highest-leverage finding either session surfaced, see `03-recommendation-timing.md` §6 for
+this session's own independent verification of the same finding), `12-activity-progression-
+pathways.md`, and `13-implementation-readiness.md`, **all three written on the concurrent session's
+own branch/worktree (`oryn/counseling-intelligence-research-013956`), not on this branch** — named
+here only so this overview stays a complete map of the whole overnight effort across both branches;
+see that branch's own commits for the actual files (also since grown to include `15-executive-
+summary.md` — genuinely worth reading first if you read only one document from this whole
+package). This branch separately has its own `14-field-opportunity-mapping.md` (answering the
+mission's deliverable #5 directly — opportunity category → most-relevant fields, the reverse
+direction from `02`'s category → dimension mapping) and `16-worked-example-full-chain.md` (one
+concrete persona traced through the mission's own stated end-state, "You appear interested in X...
+here is a real opportunity," end to end through real content from across the package).
+**Both branches have agreed new documents from here start at 14+, to avoid a third filename
+collision** (the first was `01`/`02` content itself; this was the second, at the `13` slot
+specifically). This table intentionally is not updated further per-document as
+the package keeps growing overnight — check `docs/handoffs/research-counseling-intelligence.md` and
+each branch's own git log for the current full file list rather than trusting this table as
+exhaustive after this point.
 
 Machine-readable companions live in `data/research/counseling-intelligence/`:
 
@@ -90,6 +96,12 @@ Machine-readable companions live in `data/research/counseling-intelligence/`:
   section and its evidence.
 - `sources.json` — the source registry (`source_url`, `source_title`, `source_type`, `retrieved_at`,
   `claim_supported`, `confidence`, `limitations`) referenced by rules.
+- `major-family-taxonomy.json` — answers the mission brief's deliverable #11 directly: a structured
+  index over all 20 `06-major-family-evidence/` documents (both branches) capturing the actual
+  interest → skills → career-families → licensure/country-coverage → interdisciplinary-links graph
+  in one queryable form, rather than requiring a future engineering session to re-parse 20 prose
+  documents by hand. It is an index, not a replacement — every entry's `source_doc` field points to
+  the authoritative detail, and no new research was performed to build it.
 
 ## Method and source standard
 

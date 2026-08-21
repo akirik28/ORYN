@@ -1,0 +1,188 @@
+# Major-Family Evidence: Medicine & Clinical Pathways
+
+Scope: medicine, nursing/allied health interest, pre-clinical health-science tracks. Excludes
+biomedical *engineering* (a peer session's family, listed under STEM/quant) and psychology
+(`11-psychology-behavioral-science.md`, this session).
+
+## What actually matters, per pre-med/health-professions advising sources
+
+Converging guidance (pre-med advising offices, medical-school-admissions-consulting sources
+describing what committees report valuing — no single official AAMC "checklist" exists, so this
+is best-practice consensus, not one binding authority) names **three core evidence areas**:
+clinical exposure, research, and community involvement. Critically, these sources are explicit
+that admissions committees "aren't simply looking for hours" — they want evidence a student
+"consistently sought out patient exposure, invested in the experience, and took the time to
+reflect on what you learned." (Source: multiple pre-med-advising/consulting sources describing
+committee practice — medium-high confidence as consensus description, not a single official
+citation.) [[RULE-COUNSEL-032]]
+
+**Shadowing vs. clinical experience is a meaningful, named distinction**: shadowing (observing)
+confirms interest and exposes a student to what the work actually involves ("the paperwork, the
+hard conversations, the long days"); direct clinical experience (sustained patient interaction) is
+weighted more heavily where a student can access it. **This distinction matters enormously for
+high-school-stage students specifically** — most named direct-clinical roles in the source
+material (CNA, EMT, medical scribe, phlebotomist) require certification or are structured as
+paid/college-level positions, not realistically available before ~18. **For ORYN's actual
+population (14-18), the realistic evidence pathway is shadowing (where a school/family connection
+or a structured pre-college program can arrange it) and hospital/clinic *volunteering* programs**,
+many of which do accept younger teens (commonly 14-16+, varies by institution) — not the full
+adult clinical-role list. Flagged explicitly: a research package built for pre-med *undergraduates*
+does not map 1:1 onto high schoolers, and this package deliberately corrects for that rather than
+repeating undergraduate-stage guidance uncritically. [[RULE-COUNSEL-033]]
+
+**Research is common among competitive applicants but explicitly does not need to dominate or be
+lab-bench science** — directly consistent with `01-development-taxonomy.md`'s finding that
+`research.ts` correctly rewards process over output.
+
+**Added on a follow-up pass, found via `09-persona-testing.md`'s Persona J and
+`17-dimension-weighting-by-target.md`'s Canada carve-out research**: a meaningful share of medicine/
+health-sciences-track admissions (in the US and Canada specifically) use **CASPer** (Acuity
+Insights) — a standardized, timed, third-party-administered situational-judgment test (video and
+typed responses to hypothetical scenarios, scored by independent raters) — as part of the
+application, distinct from both the clinical-exposure/research/community-involvement evidence this
+document otherwise describes *and* from a general personal-statement/interview. About 50 US medical
+schools use it, alongside health sciences, PA, nursing, and dental hygiene programs, with the
+vendor's own page describing active expansion into other fields. (Source:
+`acuityinsights.com/products/admissions/casper/`, official vendor page — high confidence for what
+it is; medium confidence for exactly which programs currently require it, since that changes by
+admissions cycle per the vendor's own caveat.) **This is not evidence this document's existing
+framework (clinical exposure / research / community involvement) captures at all** — CASPer
+preparation is general situational-judgment practice, not activity-accumulation, and a counselor
+recommending "get more shadowing hours" to a CASPer-requiring-program-track student who is
+specifically weak on CASPer readiness would be solving the wrong problem. [[RULE-COUNSEL-120]]
+
+**The same category shows up UK-specifically too, checked directly on this same pass**: the
+**UCAT** (University Clinical Aptitude Test, `ucat.ac.uk`) — required by **57 UK universities**
+for medicine/dentistry entry for 2026, per the UCAT Consortium's own official page, including
+Oxford, Cambridge, Imperial, UCL, Manchester, Edinburgh, and Bristol — includes a **Situational
+Judgement Test (SJT)** subtest, officially described as measuring "your capacity to understand
+real world situations and to identify critical factors and appropriate behaviour in dealing with
+them," scored separately (Bands 1-4) from the test's cognitive subtests. (Source: `ucat.ac.uk`
+official pages — high confidence, directly fetched.) **This sharpens, not contradicts, this
+document's and `11`'s existing UK finding**: "medicine is a partial exception where clinical work
+experience/volunteering is specifically expected" (`RULE-COUNSEL-058`'s own text) describes the
+*holistic-evidence* side of UK medicine admission accurately, but is incomplete on its own — UK
+medicine is a **compound case**: predicted grades, *plus* a required standardized aptitude test
+with its own situational-judgment component (UCAT/SJT, not activity-based at all), *plus* the
+clinical-exposure evidence this document otherwise describes. **Confirms `RULE-COUNSEL-120`'s
+typology generalizes beyond CASPer/North America specifically** — "standardized third-party
+situational-judgment testing" is a real, recurring *category* of non-academic assessment (CASPer in
+the US/Canada, UCAT's SJT in the UK — different specific instruments, same structural type), not a
+single tool this package happened to find once. [[RULE-COUNSEL-121]]
+
+## Mapping onto the shipped taxonomy
+
+- `career_exploration` — shadowing, hospital volunteering, health-focused pre-college programs (the
+  primary evidence channel at HS stage).
+- `community_impact` — clinical-adjacent volunteering, especially where framed around service
+  (hospice, community health outreach) rather than purely resume-building.
+- `research` — any structured or self-directed health/bio-science research; per `01`/`02`,
+  process/mentorship evidence counts even without publication.
+- `academics` — biology/chemistry rigor relative to what the student's school offers (per
+  `04-profile-gap-framework.md`'s School Profile principle — do not assume a thin science course
+  list reflects lack of interest without checking availability).
+
+## Unsafe inferences specific to this family
+
+- **Do not treat "no clinical hours" as a weakness for a grade 9-10 student** — the realistic HS
+  pathway (shadowing/volunteering) is itself often age-gated (many hospital volunteer programs set
+  a minimum age around 14-16), so an early-stage student may have a genuine access constraint, not
+  a motivation gap. Cross-references `03-recommendation-timing.md` (peer-owned).
+- **Do not imply a specific test score or GPA threshold determines medical-school viability at the
+  high-school stage** — MCAT/pre-med GPA benchmarks are an undergraduate/professional-school
+  concern entirely outside ORYN's target age range; citing them to a 15-year-old would be
+  exactly the kind of false-precision, wrong-stage claim the mission prohibits. [[RULE-COUNSEL-034]]
+- **Do not require research to "prove" medical interest** — per the sourced finding above,
+  research is common but not universal among successful applicants even at the *undergraduate*
+  admissions stage, let alone required evidence for a high schooler still exploring the field.
+
+## Country notes (UK / Germany / EU / Turkey)
+
+Added on a later pass, mirroring the peer session's UK/EU/Turkey country-note pattern for
+consistency across the full 17-family set. **All of this is career-outlook context, not
+admissions-evidence guidance** — a different kind of claim from the rest of this document, and
+should not be conflated with it.
+
+**United Kingdom:** the UK government's official **National Careers Service**
+(`nationalcareers.service.gov.uk`, run by the Department for Education) publishes an official job
+profile for **GP** (General Practitioner) — entry requirements (5 GCSEs including sciences, 3
+A-levels including biology and chemistry, a GMC-recognized degree, foundation training, then
+specialist GP training), typical hours, and salary bands. (Source: `nationalcareers.service.gov.uk/
+job-profiles/gp` — official, high confidence.) [[RULE-COUNSEL-087]] Consistent with peer's own
+`06/01`'s finding for computing, prefer NCS job profiles over BLS/O*NET for a UK-facing student —
+occupation structure and entry requirements do not transfer across countries even where the
+occupation name is identical.
+
+**Germany, added on a further pass, upgraded to an official-source direct confirmation on a
+later pass**: a genuinely distinct, longer, more exam-heavy model than the UK's. Medical study
+(**Medizinstudium**) runs roughly 6 years, culminating in a state medical examination (commonly
+called the **Staatsexamen**, though — a precision found on the follow-up pass — the
+Approbationsordnung's own term is actually **Ärztliche Prüfung**, and the certificate received is
+the **"Zeugnis über die Ärztliche Prüfung,"** not a document labeled "Staatsexamen"); passing it,
+alongside health/conduct certification, grants **Approbation** — the license required to use the
+legally protected title **"Arzt"/"Ärztin"** and practice independently. Foreign-trained doctors
+whose qualification isn't recognized as equivalent take a separate **Kenntnisprüfung**
+(clinical-practical knowledge exam) instead. **Bundesärztekammer** (the German Medical Association,
+the official professional body) confirms the core requirement directly, in its own words: *"Die
+Ausübung der ärztlichen Tätigkeit in Deutschland ist nur mit einer gültigen Approbation oder
+Berufserlaubnis möglich"* (practicing medicine in Germany is only possible with a valid Approbation
+or professional permit) — unlimited in duration, valid nationwide, obtainable regardless of
+nationality, with mandatory membership in one of **17 regional Landesärztekammern** (State Medical
+Chambers) once practicing. (Source: `bundesaerztekammer.de`, official professional body — high
+confidence, directly fetched and quoted; upgraded from medium-high secondary-guidance sourcing.)
+[[RULE-COUNSEL-103]] **Same underlying two-part pattern this package keeps finding** (degree +
+separate state-controlled licensure step, per `06/18`'s and `06/19`'s own §6 findings for teaching
+and social work) — Germany's version is simply longer and more exam-intensive than the UK's or
+Turkey's.
+
+**EU:** ESCO (European Skills, Competences, Qualifications and Occupations,
+`esco.ec.europa.eu`, European Commission) covers medicine/clinical occupations across EU languages
+as a structured classification — useful for cross-border terminology matching, not a narrative
+careers-guidance source the way NCS/BLS are (see peer's `06/01` §7 for ESCO's full description,
+not repeated here). No EU-wide licensure gate exists independent of each member state's own
+medical-licensing body — licensure for clinical practice remains a per-country regulatory matter
+even within the EU.
+
+İŞKUR (Türkiye İş Kurumu, Turkey's official state employment agency)'s
+**"Geleceğin Meslekleri" (Future Occupations)** list — 93 occupations the agency designates as
+growth-relevant to Turkey's labor market — includes **Doktor** (Doctor), **Hemşire** (Nurse),
+**Fizyoterapist** (Physiotherapist), **Ergoterapist** (Occupational/ergo-therapist), and **Dil ve
+Konuşma Terapisti** (Speech and Language Therapist) among its 93 entries. (Source: İŞKUR official
+PDF, `statik.iskur.gov.tr/docs/gelecegin-meslekleri.pdf` — official Turkish government source,
+high confidence for the list's content; no date/methodology page was independently reviewed
+beyond the list itself.) [[RULE-COUNSEL-083]] **Use of this source, precisely bounded**: it
+confirms this family has real, officially-recognized domestic labor-market relevance in Turkey —
+useful for a career-exploration conversation — but says nothing about admissions evidence or
+weighting, and must never be cited as if it did.
+
+## Rules established in this document
+
+- `RULE-COUNSEL-032` — Evaluate medicine-track evidence across three areas (clinical exposure,
+  research, community involvement) with emphasis on reflection/depth over raw hours. Confidence:
+  medium-high (consensus advising practice).
+- `RULE-COUNSEL-033` — Reframe undergraduate-oriented pre-med evidence guidance for ORYN's actual
+  14-18 population: shadowing and age-appropriate hospital volunteering are the realistic evidence
+  channels, not certified clinical employment roles. Confidence: high (logical necessity given
+  typical program age minimums; specific age thresholds vary by institution and aren't centrally
+  standardized).
+- `RULE-COUNSEL-034` — Never cite MCAT/med-school-admission benchmarks to a high-school-stage
+  student; these are a later-stage, different-population concern. Confidence: high.
+- `RULE-COUNSEL-083` — İŞKUR's official Future Occupations list includes several medicine/clinical
+  roles, confirming real domestic Turkish labor-market relevance — usable for career-exploration
+  framing only, never as admissions-evidence guidance. Confidence: high (official government
+  source, for the list's content).
+- `RULE-COUNSEL-087` — Prefer UK National Careers Service job profiles over BLS/O*NET for a
+  UK-facing medicine-track student; entry requirements and structure do not transfer across
+  countries. Confidence: high (official source).
+- `RULE-COUNSEL-103` — Germany's medical-licensure model (Medizinstudium + Staatsexamen +
+  Approbation, protected "Arzt/Ärztin" title) is a genuinely distinct, longer, more exam-heavy
+  model than the UK's — same underlying degree-plus-licensure pattern this package keeps finding,
+  different specific mechanics. Confidence: medium-high (describes an official state-run process,
+  not independently fetched from a German federal ministry page directly).
+- `RULE-COUNSEL-121` — UK medicine/dentistry admission is a compound case, not just grades plus
+  holistic clinical-exposure evidence: 57 UK universities also require the UCAT, which includes a
+  separately-banded Situational Judgement Test subtest — not activity-based at all. Confirms
+  `RULE-COUNSEL-120`'s "standardized third-party situational-judgment testing" category
+  generalizes beyond CASPer/North America — it's a recurring structural type (different specific
+  instruments per region), not a single tool. Confidence: high (official `ucat.ac.uk` pages,
+  directly fetched).

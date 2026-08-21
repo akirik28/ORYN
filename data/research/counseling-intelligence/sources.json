@@ -1,1115 +1,798 @@
 {
-  "schema_version": "1.0",
-  "package": "oryn/counseling-intelligence-research",
-  "last_updated": "2026-08-21T05:20:00+03:00",
-  "method_note": "Priority order and discipline documented in full in docs/research/counseling-intelligence/00-overview.md's \"Method and source standard\" section. Blogs/aggregators appear here only where no higher-tier source was fetchable, and are always source_type discovery_or_secondary with confidence capped at medium. [Updated 2026-08-21] Merged with this session's own source shard (originally sources-session2.json, 45 sources, prefix S-<NAME> not SRC-### so no ID collision existed): docs 03, 06-major-family-evidence/00+01-09, 07, 08, 14. This file is still not yet merged with the peer branch's own separate, larger sources.json on oryn/counseling-intelligence-research-013956 -- that cross-branch merge remains the final integration step.",
+  "schema_note": "Source registry for this session's half of the counseling-intelligence research package (docs 00/01/02/04/05/06-family-docs-10-through-17/09/10, branch oryn/counseling-intelligence-research-013956). The peer session's sources (docs 03/07/08/06-family-docs-01-through-09) live in its own registry on oryn/counseling-intelligence-research and use an SRC-### prefix, not this ID scheme — the two are NOT yet merged, by agreement, until a final coordinated integration pass. See docs/handoffs/research-counseling-intelligence.md.",
+  "id_prefix": "SRC-CS-",
   "sources": [
     {
-      "id": "SRC-001",
-      "title": "New UCAS personal statement format for 2026 entry",
-      "url": "https://www.dundee.ac.uk/feature/new-ucas-personal-statement-format-2026-entry",
-      "publisher": "University of Dundee (official university admissions communication)",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch (direct fetch, full page content reviewed)",
+      "id": "SRC-CS-001",
+      "title": "Common Data Set 2024-2025 Template, Section C7",
+      "publisher": "Common Data Set Initiative (jointly maintained by U.S. News, The Princeton Review, Peterson's)",
+      "url": "https://commondataset.org/wp-content/uploads/2024/11/CDS-2024-2025-TEMPLATE.pdf",
+      "type": "official_industry_standard",
       "retrieved_at": "2026-08-21",
-      "claim_supported": "UCAS personal statement for 2026 entry changes from one free-form essay to three structured questions (motivation for course; how qualifications/studies prepared them; what else done outside education and why useful), minimum 350 characters per section, 4,000 characters total.",
       "confidence": "high",
-      "limitations": "Fetched from a university's own admissions communication about UCAS policy, not ucas.com directly (ucas.com returned HTTP 403 to automated fetch). Cross-validated against independent WebSearch synthesis of 9 other sources describing the same three questions and character limits before being treated as reliable."
+      "claim_supported": "The 19-factor academic/nonacademic admission-evaluation vocabulary used industry-wide by ~1,700 US institutions.",
+      "used_in_rules": ["RULE-COUNSEL-001"],
+      "limitations": "Describes what institutions report considering, not the actual weight applied in any specific decision."
     },
     {
-      "id": "SRC-002",
-      "title": "Common App Activities section structure (2026-27 cycle)",
-      "url": "https://collegeessay.org/blog/how-to-write-a-common-app-essay/common-app-activities-section",
-      "publisher": "Multiple independent college-counseling sites (collegeessay.org, ivy-way.com, scholarships360.org, orieladmissions.com, others) — WebSearch synthesis, not a single fetch",
-      "source_type": "counseling_org_secondary",
-      "retrieval_method": "WebSearch synthesis across 8 results",
+      "id": "SRC-CS-002",
+      "title": "State of College Admission: Factors in the Admission Decision (Fall 2023 cycle)",
+      "publisher": "National Association for College Admission Counseling (NACAC)",
+      "url": "https://resources.finalsite.net/images/v1707774240/shorelineschoolsorg/vrrbabkepntstznhrpre/SOCAAdmissionFactorsFactSheetNACAC.pdf",
+      "type": "official_association_survey",
       "retrieved_at": "2026-08-21",
-      "claim_supported": "Common App allows up to 10 activities (slots not required to be filled), 50/100/150 character limits (position, organization, description respectively), a separate Honors section (up to 5 entries, 100 characters each), and category selection guidance to pick the most specific fitting category.",
-      "confidence": "medium",
-      "limitations": "Not fetched from commonapp.org itself — these specific character limits circulate via counseling-industry blogs each cycle and could drift year to year. Re-verify directly against commonapp.org before treating exact character-count figures as current in any future cycle."
-    },
-    {
-      "id": "SRC-003",
-      "title": "IB CAS (Creativity, Activity, Service) requirements — removal of 150-hour rule, reflection-based evidence",
-      "url": "https://en.wikipedia.org/wiki/Creativity,_activity,_service",
-      "publisher": "Wikipedia, cross-referenced against tutorchase.com, structural-learning.com, globalschoolguide.com (WebSearch synthesis)",
-      "source_type": "discovery_or_secondary",
-      "retrieval_method": "WebSearch synthesis across 8 results",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "IB removed the 150-hour CAS requirement (pre-2017 rule) in favor of an expectation of regular commitment across all three strands (Creativity, Activity, Service), evidenced through reflections against seven learning outcomes, plus at least one CAS project. Reflection is explicitly distinguished from description (what changed in thinking/skills vs. what happened).",
       "confidence": "high",
-      "limitations": "Not fetched from ibo.org directly. The core fact (hour requirement removed, reflection-based model) is well-corroborated across multiple independent secondary sources and stable since ~2017, which raises confidence despite no primary-source fetch."
+      "claim_supported": "Grades in college-prep courses and curriculum rigor rank above every other admission factor among NACAC member institutions.",
+      "used_in_rules": ["RULE-COUNSEL-002"],
+      "limitations": "Surveys NACAC member institutions specifically, which skews toward more selective/counseling-affiliated schools, not a random sample of all postsecondary admission."
     },
     {
-      "id": "SRC-004",
-      "title": "NACAC holistic review and extracurricular activity weighting in U.S. admissions",
-      "url": "https://nacacnet.org/wp-content/uploads/2022/10/nacac_brief_character-0120_2.pdf",
-      "publisher": "NACAC (primary PDF identified but not fetched) — claim as stated is a WebSearch synthesis of secondary summaries",
-      "source_type": "discovery_or_secondary",
-      "retrieval_method": "WebSearch synthesis across 9 results",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "General finding that extracurricular involvement is a 'considerably' or 'moderately' important factor for a majority of colleges in holistic review, with depth/impact of involvement (leadership, sustained commitment) valued over breadth/quantity, secondary relative to academic factors (grades, curriculum rigor).",
-      "confidence": "medium",
-      "limitations": "This is a general, widely-repeated finding paraphrased from secondary summaries of NACAC's State of College Admission survey series, not a fetch of the primary PDF or a specific cited statistic verified at the source. Used in this research only to support qualitative claims (depth over breadth) already independently justified by the schema/rule reasoning, never as the sole basis for a specific number."
-    },
-    {
-      "id": "SRC-005",
-      "title": "Turkey e-okul / YKS system — transcript and university admission mechanics",
-      "url": "https://openeducat.org/gradebook/turkey/",
-      "publisher": "Multiple secondary education-system reference sites (openeducat.org, educationbenchmark.com, euroeducation.net) — WebSearch synthesis",
-      "source_type": "discovery_or_secondary",
-      "retrieval_method": "WebSearch synthesis across 6 results",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "MEB (Turkish Ministry of National Education) uses a 1-5 achievement scale at primary level and 0-100 at secondary level; e-okul (e-okul.meb.gov.tr) is the official record system student educational information must be current in; YKS (Yükseköğretim Kurumları Sınavı) is the national university placement exam system, eligibility tied to secondary completion.",
-      "confidence": "medium",
-      "limitations": "Not fetched from meb.gov.tr or the official ÖSYM (exam authority) site directly. Sufficient for this research's purpose (establishing that Turkey's system is exam-placement-based with a distinct 0-100 secondary grading scale, relevant to RULE-COUNSEL-010's cross-scale comparison warning) but not sufficient to cite specific current-year YKS mechanics or dates without re-verification."
-    },
-    {
-      "id": "SRC-006",
-      "title": "A-Level Extended Project Qualification (EPQ) — structure and independent-research skill development",
-      "url": "https://qualifications.pearson.com/en/qualifications/edexcel-project-qualification/about-the-project-qualification/about-level-3-project-qualification/the-edexcel-extended-project-and-universities.html",
-      "publisher": "Pearson (Edexcel exam board — official qualification-awarding body) and University of Manchester widening-participation page, cross-referenced via WebSearch synthesis",
-      "source_type": "official_program_page",
-      "retrieval_method": "WebSearch synthesis across 9 results, anchored on an exam-board-official URL",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "EPQ is a single independently-chosen piece of work requiring planning, research, and independent learning, resulting in a report (or product + report) and a presentation; accepted by all 24 Russell Group universities; some universities lower standard A-level grade offers in recognition of EPQ attainment.",
-      "confidence": "high",
-      "limitations": "Grade-offer-reduction specifics ('AAB to ABB') are illustrative/commonly-cited examples, not a verified universal policy — varies by university and should not be treated as a general rule in any student-facing claim."
-    },
-    {
-      "id": "SRC-007",
-      "title": "MIT Admissions — What We Look For",
+      "id": "SRC-CS-003",
+      "title": "What We Look For / Extracurricular Activities",
+      "publisher": "MIT Admissions (official)",
       "url": "https://mitadmissions.org/apply/process/what-we-look-for/",
-      "publisher": "MIT Admissions (official university admissions office)",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch (direct fetch, full page content reviewed)",
+      "type": "official_admissions_office",
       "retrieved_at": "2026-08-21",
-      "claim_supported": "MIT states 'We don't expect applicants to do a million things. Choose quality over quantity,' and names eight qualities sought in applicants: alignment with MIT's mission, collaborative spirit, initiative, risk-taking, hands-on creativity, intensity/curiosity, balance, and community character.",
       "confidence": "high",
-      "limitations": "One institution's stated philosophy, used as a representative example of official admissions guidance on depth-over-breadth, not a claim that all institutions weigh activities identically. Originally surfaced by a second concurrent session's research (see docs/handoffs/research-counseling-intelligence.md collision note); independently re-fetched and confirmed by this session before being cited here."
+      "claim_supported": "MIT's eight named applicant qualities (mission alignment, collaborative spirit, initiative, risk-taking, hands-on creativity, intensity/curiosity, balance, character); explicit 'quality over quantity' guidance.",
+      "used_in_rules": ["RULE-COUNSEL-003"],
+      "limitations": "Describes one institution's stated philosophy; not necessarily representative of all selective admissions offices, though widely echoed."
     },
     {
-      "id": "S-ISKUR-FUTURE",
-      "title": "İŞKUR (Türkiye İş Kurumu / Turkish Employment Agency) — Geleceğin Meslekleri (Occupations of the Future)",
-      "url": "https://statik.iskur.gov.tr/docs/gelecegin-meslekleri.pdf",
-      "additional_urls": [],
-      "publisher": "İŞKUR (Türkiye İş Kurumu / Turkish Employment Agency) — Geleceğin Meslekleri (Occupations of the Future)",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
+      "id": "SRC-CS-004",
+      "title": "Turning the Tide: Inspiring Concern for Others and the Common Good through College Admissions",
+      "publisher": "Making Caring Common, Harvard Graduate School of Education",
+      "url": "https://www.gse.harvard.edu/ideas/news/16/01/turning-tide-inspiring-concern-others-and-common-good-through-college-admissions",
+      "type": "institutional_report",
       "retrieved_at": "2026-08-21",
-      "claim_supported": "Official Turkish government list of 93 named future/emerging occupations, fetched and read directly (PDF). Confirms official recognition of software engineering, computer engineering, AI, data analysis, cybersecurity, civil/electrical/mechanical/mechatronics/telecom/mining/geomatics engineering, chemistry, environmental engineering, solar-panel installation, e-commerce, marketing, HR, and digital marketing/social media roles as future-oriented in Turkey.",
-      "confidence": "high_for_authenticity_no_per_occupation_detail",
-      "limitations": "A named list only, no per-occupation skills/salary/education detail. Absence of an occupation from this specific 93-item list is not evidence that occupation is unrecognized in Turkey. Found and read successfully after two other Turkish government sources (YÖK Atlas Meslek Atlası, MYK vocational-standard PDFs) failed to yield readable content via WebFetch/search this session (JS-rendering and PDF-encoding issues respectively) — Turkish official sources are confirmed harder to access programmatically than US/UK/EU equivalents, a real infrastructure finding in its own right.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/01-computing-information-sciences.md §7",
-        "docs/research/counseling-intelligence/06-major-family-evidence/03-physical-sciences.md §7",
-        "docs/research/counseling-intelligence/06-major-family-evidence/05-engineering-me-ce-ae-ee.md §6",
-        "docs/research/counseling-intelligence/06-major-family-evidence/08-business-management-entrepreneurship.md §7",
-        "docs/research/counseling-intelligence/06-major-family-evidence/09-environmental-science-sustainability.md §7"
-      ]
-    },
-    {
-      "id": "S-GRADE-CONV",
-      "title": "Cross-referenced UK Year Group / US Grade / age conversion resources",
-      "url": "https://blog.doris.school/uk-year-groups-vs-us-grades-complete-age-conversion-chart",
-      "additional_urls": [
-        "https://www.omnicalculator.com/uk-to-us-school-years"
-      ],
-      "publisher": "Cross-referenced UK Year Group / US Grade / age conversion resources",
-      "source_type": "secondary_aggregation",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "Approximate correspondence between years-until-graduation, US grade labels, UK Year labels, and IB staging.",
-      "confidence": "medium",
-      "limitations": "No single official source publishes a cross-country correspondence table (each government publishes only its own system); convergent across multiple independent sources but not a primary official source.",
-      "used_in": [
-        "docs/research/counseling-intelligence/03-recommendation-timing.md §1"
-      ]
-    },
-    {
-      "id": "S-COLLEGEBOARD-TIMELINE",
-      "title": "College Board SAT Suite test dates and grade-by-grade guidance",
-      "url": "https://satsuite.collegeboard.org/psat-nmsqt/test-dates",
-      "additional_urls": [],
-      "publisher": "College Board SAT Suite test dates and grade-by-grade guidance",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "PSAT 10 in sophomore spring, PSAT/NMSQT in junior fall; first official SAT typically junior spring; retakes into senior fall.",
-      "confidence": "high_for_dates_medium_for_narrative",
-      "limitations": "The 'most sophomores aren't ready for the SAT' narrative framing is secondary-sourced, not an official College Board statement verbatim.",
-      "used_in": [
-        "docs/research/counseling-intelligence/03-recommendation-timing.md §3"
-      ]
-    },
-    {
-      "id": "S-IB-SUBJECTS",
-      "title": "IB Diploma Programme subject-selection timeline (cross-referenced school/counseling guidance)",
-      "url": "https://ibo.org/programmes/diploma-programme/curriculum/",
-      "additional_urls": [
-        "https://ibo.org/programmes/diploma-programme/curriculum/example-subject-choices/",
-        "https://ibo.org/university-admission/support-students-transition-to-higher-education/course-selection-guidance/"
-      ],
-      "publisher": "International Baccalaureate Organization (ibo.org)",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "IBO's own official pages exist for DP curriculum/subject-choice guidance; critically, IBO does NOT standardize a single subject-selection timeline across the two-year DP -- this is left to individual schools, not centrally mandated. 'Grade 10/11 transition' (this package's earlier framing) is a common school-level convention, not an IBO rule.",
-      "confidence": "high_for_page_existence_medium_high_for_school_determined_finding",
-      "limitations": "ibo.org blocks direct automated page fetching (403), so this is grounded in confirming the official pages exist and their WebSearch-indexed summaries, not a full-page read -- re-verify via a human visit or an authenticated fetch method before treating the school-determined finding as fully confirmed.",
-      "used_in": [
-        "docs/research/counseling-intelligence/03-recommendation-timing.md §1, §3"
-      ]
-    },
-    {
-      "id": "S-SUMMER-RESEARCH-ELIGIBILITY",
-      "title": "Pre-college research program eligibility patterns (Harvard Pre-College, Stanford SIMR, Davidson Research Initiative, Rockefeller, Max Planck Florida)",
-      "url": null,
-      "additional_urls": [],
-      "publisher": "Pre-college research program eligibility patterns (Harvard Pre-College, Stanford SIMR, Davidson Research Initiative, Rockefeller, Max Planck Florida)",
-      "source_type": "secondary_aggregation",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "Selective pre-college research programs commonly gate on 'rising junior/senior' status (roughly 2-1 years from graduation), age 16-19.",
-      "confidence": "medium",
-      "limitations": "Pattern-level confidence only; individual program specifics should be re-verified against each program's own official page before citing to a student — that verification is the separate opportunity-acquisition workstream's job, not this research package's.",
-      "used_in": [
-        "docs/research/counseling-intelligence/03-recommendation-timing.md §1, §3"
-      ]
-    },
-    {
-      "id": "S-YKS",
-      "title": "Turkey's Student Selection and Placement System (YKS) — ÖSYM-administered",
-      "url": "https://en.wikipedia.org/wiki/Student_Selection_and_Placement_System",
-      "additional_urls": [],
-      "publisher": "Turkey's Student Selection and Placement System (YKS) — ÖSYM-administered",
-      "source_type": "secondary_description_of_official_system",
-      "retrieval_method": "WebSearch + direct WebFetch of osym.gov.tr pages (structure only; current-year coefficient tables not opened -- see S-YKS-OBP)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "YKS is a centralized, standardized-exam-based placement system (TYT/AYT/YDT sessions), with placement by score-ranked preference matching rather than a holistic application file.",
-      "confidence": "medium_high",
-      "limitations": "osym.gov.tr's YKS exam-group index and programs/quotas guide index were directly fetched this pass to confirm structure; the specific current-year numeric coefficient tables were not opened (see S-YKS-OBP). System existence/structure: high confidence. Exact current-year exam-format minutiae should still be re-verified before being quoted as current to a student.",
-      "used_in": [
-        "docs/research/counseling-intelligence/03-recommendation-timing.md §6"
-      ]
-    },
-    {
-      "id": "S-UCAS-SUPERCURRICULAR",
-      "title": "UCAS super-curricular vs. extracurricular distinction; 2026-entry personal statement format",
-      "url": "https://www.ucas.com/advisers/help-and-training/toolkits/personal-statement-toolkit",
-      "additional_urls": [
-        "https://www.ucas.com/applying/applying-to-university/writing-your-personal-statement/how-to-write-your-personal-statement-for-2026-entry-onwards"
-      ],
-      "publisher": "UCAS super-curricular vs. extracurricular distinction; 2026-entry personal statement format",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "UCAS draws an explicit distinction between subject-relevant 'super-curricular' engagement and general 'extracurricular' activity; the 2026-entry personal statement format is built around three subject-focused questions.",
-      "confidence": "high",
-      "limitations": "The peer branch's `01-development-taxonomy.md` may not independently cover UCAS at all (it appears US-source-focused) — flagged as a possible coverage gap, not assumed resolved.",
-      "used_in": [
-        "docs/research/counseling-intelligence/03-recommendation-timing.md §6"
-      ]
-    },
-    {
-      "id": "S-ONET-CS",
-      "title": "O*NET — Computer and Information Research Scientists (15-1221.00); Software Developers (15-1252.00)",
-      "url": "https://www.onetonline.org/link/summary/15-1221.00",
-      "additional_urls": [
-        "https://www.onetonline.org/link/summary/15-1252.00"
-      ],
-      "publisher": "O*NET — Computer and Information Research Scientists (15-1221.00); Software Developers (15-1252.00)",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "Core skills/knowledge for computing occupations: quantitative reasoning, inductive/deductive reasoning, written/oral communication.",
-      "confidence": "high",
-      "limitations": "US Dept. of Labor-sponsored database — US-specific occupational framing.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/01-computing-information-sciences.md §2"
-      ]
-    },
-    {
-      "id": "S-BLS-CIT",
-      "title": "BLS Occupational Outlook Handbook — Computer and Information Technology Occupations",
-      "url": "https://www.bls.gov/ooh/computer-and-information-technology/",
-      "additional_urls": [
-        "https://www.bls.gov/ooh/computer-and-information-technology/computer-and-information-research-scientists.htm"
-      ],
-      "publisher": "BLS Occupational Outlook Handbook — Computer and Information Technology Occupations",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "~317,700 average annual openings projected; growth drivers named as cloud computing, big data, information security, AI/e-commerce.",
-      "confidence": "high",
-      "limitations": "US-specific; not assumed to generalize internationally.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/01-computing-information-sciences.md §3"
-      ]
-    },
-    {
-      "id": "S-NCS-UK",
-      "title": "National Careers Service — digital/computing job profiles (app developer, web developer, computer games developer)",
-      "url": "https://nationalcareers.service.gov.uk/job-profiles/app-developer",
-      "additional_urls": [
-        "https://nationalcareers.service.gov.uk/job-profiles/web-developer",
-        "https://nationalcareers.service.gov.uk/job-profiles/computer-games-developer",
-        "https://nationalcareers.service.gov.uk/explore-careers/job-sector/digital/view-all-sector-careers"
-      ],
-      "publisher": "National Careers Service — digital/computing job profiles (app developer, web developer, computer games developer)",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "UK's official careers-service equivalent to BLS/O*NET for computing roles; qualifications, salary, progression per profile.",
-      "confidence": "high",
-      "limitations": "UK-specific (run by England's Department for Education).",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/01-computing-information-sciences.md §7"
-      ]
-    },
-    {
-      "id": "S-ESCO",
-      "title": "ESCO — European Skills, Competences, Qualifications and Occupations",
-      "url": "https://esco.ec.europa.eu/en/about-esco/what-esco",
-      "additional_urls": [
-        "https://esco.ec.europa.eu/en/classification/occupation_main"
-      ],
-      "publisher": "ESCO — European Skills, Competences, Qualifications and Occupations",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "EU-wide occupation/skills classification (~3,000 occupations, ~14,000 skills, 28+ languages), built for cross-border job/training matching.",
-      "confidence": "high_for_structure",
-      "limitations": "A classification/vocabulary, not a narrative careers-guidance source with growth/salary data the way BLS/NCS are.",
-      "used_in": [
-        "referenced from all 9 of this session's family docs' §7 country-notes sections"
-      ]
-    },
-    {
-      "id": "S-BLS-MATHSTAT",
-      "title": "BLS OOH — Mathematicians and Statisticians",
-      "url": "https://www.bls.gov/ooh/math/mathematicians-and-statisticians.htm",
-      "additional_urls": [],
-      "publisher": "BLS OOH — Mathematicians and Statisticians",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "Core skills: programming, staying current with statistical methods; communication skill differentiates job prospects.",
-      "confidence": "high",
-      "limitations": "US-specific.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/02-mathematics-statistics.md §2, §3"
-      ]
-    },
-    {
-      "id": "S-BLS-ACTUARY",
-      "title": "BLS OOH — Actuaries",
-      "url": "https://www.bls.gov/ooh/math/actuaries.htm",
-      "additional_urls": [],
-      "publisher": "BLS OOH — Actuaries",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "22% projected growth 2024-2034; core skills in math/statistics/business and analytical pattern-recognition.",
-      "confidence": "high",
-      "limitations": "US-specific; growth statistic is an aggregate labor-market figure, not an individual-student probability.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/02-mathematics-statistics.md §2, §3"
-      ]
-    },
-    {
-      "id": "S-SOA-PATH",
-      "title": "Society of Actuaries / Casualty Actuarial Society — actuarial credentialing path",
-      "url": "https://www.soa.org/future-actuaries/precandidate/how/",
-      "additional_urls": [
-        "https://www.soa.org/education/overview/",
-        "https://www.casact.org/exams-admissions/exams"
-      ],
-      "publisher": "Society of Actuaries / Casualty Actuarial Society — actuarial credentialing path",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "Actuarial credentialing (ASA/FSA) is exam-sequence-based (VEE course-credit + preliminary/fellowship exams), not gated behind one specific university major.",
-      "confidence": "high_for_us_canada",
-      "limitations": "US/Canada-specific; UK (IFoA) is a genuinely separate body, not interchangeable.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/02-mathematics-statistics.md §3, §4, §6"
-      ]
-    },
-    {
-      "id": "S-IFOA",
-      "title": "Institute and Faculty of Actuaries (UK) — route to becoming an actuary",
-      "url": "https://actuaries.org.uk/qualify/become-an-actuary/route-to-becoming-an-actuary/",
-      "additional_urls": [
-        "https://actuaries.org.uk/exams/"
-      ],
-      "publisher": "Institute and Faculty of Actuaries (UK) — route to becoming an actuary",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "UK's actuarial chartered body; exam/course structure (core technical/applications, specialist stages) plus 3+ years qualifying experience and PPD.",
-      "confidence": "high",
-      "limitations": "UK-specific; formed 2010 from a merger of two historically separate bodies.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/02-mathematics-statistics.md §7"
-      ]
-    },
-    {
-      "id": "S-BLS-PHYSICS",
-      "title": "BLS OOH — Physicists and Astronomers",
-      "url": "https://www.bls.gov/ooh/life-physical-and-social-science/physicists-and-astronomers.htm",
-      "additional_urls": [],
-      "publisher": "BLS OOH — Physicists and Astronomers",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "Physics/astronomy degrees' skills transfer broadly beyond the named occupation; BLS states this explicitly.",
-      "confidence": "high_but_recheck_growth_figure",
-      "limitations": "The fetched snapshot cited a 2018-2028 projection cycle — BLS updates on a rolling cycle, so the specific growth percentage should be re-verified against the live page before quoting as current.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/03-physical-sciences.md §2, §3"
-      ]
-    },
-    {
-      "id": "S-BLS-CHEM",
-      "title": "BLS OOH — Chemists and Materials Scientists",
-      "url": "https://www.bls.gov/ooh/life-physical-and-social-science/chemists-and-materials-scientists.htm",
-      "additional_urls": [],
-      "publisher": "BLS OOH — Chemists and Materials Scientists",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "Teamwork/leadership skill named explicitly (chemists typically work on research teams) — corrective to a 'solitary bench scientist' assumption.",
-      "confidence": "high",
-      "limitations": "US-specific.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/03-physical-sciences.md §2"
-      ]
-    },
-    {
-      "id": "S-ACS-OLYMPIAD",
-      "title": "American Chemical Society — US National Chemistry Olympiad, ChemClubs, Project SEED",
-      "url": "https://www.acs.org/education/students/highschool/olympiad/participate.html",
-      "additional_urls": [
-        "https://www.acs.org/education/policies/middle-and-high-school-chemistry/training-and-support/student-engagement-resources.html"
-      ],
-      "publisher": "American Chemical Society — US National Chemistry Olympiad, ChemClubs, Project SEED",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "USNCO's local->national->international-team structure; Project SEED is an ACS-sponsored paid summer research program for economically disadvantaged students.",
-      "confidence": "high",
-      "limitations": "US-specific (though the international-team stage is genuinely international).",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/03-physical-sciences.md §4"
-      ]
-    },
-    {
-      "id": "S-NCS-SCI",
-      "title": "National Careers Service — Chemist, Physicist, Biochemist job profiles",
-      "url": "https://nationalcareers.service.gov.uk/job-profiles/chemist",
-      "additional_urls": [
-        "https://nationalcareersservice.direct.gov.uk/advice/planning/jobprofiles/Pages/physicist.aspx",
-        "https://nationalcareers.service.gov.uk/job-profiles/biochemist"
-      ],
-      "publisher": "National Careers Service — Chemist, Physicist, Biochemist job profiles",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "UK chemist profile names Chartered Chemist (CChem)/Chartered Scientist (CSci) as a career-progression track, not an entry gate.",
-      "confidence": "high",
-      "limitations": "UK-specific.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/03-physical-sciences.md §7"
-      ]
-    },
-    {
-      "id": "S-BLS-BIOCHEM",
-      "title": "BLS/O*NET-adjacent data for Biochemists and Biophysicists (via CareerOneStop); BLS OOH Biological Technicians",
-      "url": "https://www.careeronestop.org/Toolkit/Careers/Occupations/occupation-profile.aspx?keyword=Biochemists+and+Biophysicists&location=US&onetcode=19-1021.00",
-      "additional_urls": [
-        "https://www.bls.gov/ooh/life-physical-and-social-science/biological-technicians.htm"
-      ],
-      "publisher": "BLS/O*NET-adjacent data for Biochemists and Biophysicists (via CareerOneStop); BLS OOH Biological Technicians",
-      "source_type": "official_government_sponsored",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "Analytical/technical/communication skills; PhD typical for independent research roles, bachelor's/master's for entry-level.",
-      "confidence": "high_for_skills_medium_for_growth_figure",
-      "limitations": "The 11% growth figure surfaced (2016-2026 cycle) is from an older BLS cycle — re-verify against the current live page.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/04-life-sciences.md §2, §3"
-      ]
-    },
-    {
-      "id": "S-IBO",
-      "title": "International Biology Olympiad — official site; USABO/CEE national organizing page",
-      "url": "https://www.ibo-info.org/en/",
-      "additional_urls": [
-        "https://usabo-trc.org/international-biology-olympiad-ibo"
-      ],
-      "publisher": "International Biology Olympiad — official site; USABO/CEE national organizing page",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "National-olympiad winners from 78-81 countries (varies by year, commonly described as '70+') compete in theoretical + hands-on practical exams including bioinformatics.",
-      "confidence": "high",
-      "limitations": "None significant — genuinely international, primary-sourced. (Independently re-verified by the peer session against the actual per-year country-count range.)",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/04-life-sciences.md §4, §5"
-      ]
-    },
-    {
-      "id": "S-NCS-BIO",
-      "title": "UK Biologist job profile (via Careerpilot, presenting NCS-aligned content)",
-      "url": "https://www.careerpilot.org.uk/job-sectors/science/job-profile/biologist",
-      "additional_urls": [],
-      "publisher": "UK Biologist job profile (via Careerpilot, presenting NCS-aligned content)",
-      "source_type": "official_via_secondary_aggregator",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "UK biologist role spans crop/medical research, conservation, disease research, and scientific publishing.",
-      "confidence": "medium_high",
-      "limitations": "Accessed via a careers-guidance aggregator presenting NCS-aligned content rather than nationalcareers.service.gov.uk's own domain directly this pass.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/04-life-sciences.md §7"
-      ]
-    },
-    {
-      "id": "S-BLS-ENG",
-      "title": "BLS Career Outlook — Engineers: Employment, pay, and outlook; BLS OOH Aerospace Eng. Technologists/Technicians",
-      "url": "https://blsmon1.bls.gov/careeroutlook/2018/article/print/engineers.htm",
-      "additional_urls": [
-        "https://www.bls.gov/ooh/architecture-and-engineering/aerospace-engineering-and-operations-technicians.htm"
-      ],
-      "publisher": "BLS Career Outlook — Engineers: Employment, pay, and outlook; BLS OOH Aerospace Eng. Technologists/Technicians",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "Applied math/physics as a foundation across ME/CE/AE/EE; design + troubleshooting skill for aerospace specifically.",
-      "confidence": "high_for_skills",
-      "limitations": "The Career Outlook article (2018) predates the growth-cycle figures in S-BLS-ENG-GROWTH — different vintages, not one consistent snapshot.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/05-engineering-me-ce-ae-ee.md §2"
-      ]
-    },
-    {
-      "id": "S-BLS-ENG-GROWTH",
-      "title": "BLS OOH — Mechanical Engineers; Aerospace Engineers; Architecture and Engineering Occupations overview",
-      "url": "https://www.bls.gov/ooh/architecture-and-engineering/mechanical-engineers.htm",
-      "additional_urls": [
-        "https://www.bls.gov/ooh/architecture-and-engineering/aerospace-engineers.htm",
-        "https://www.bls.gov/ooh/architecture-and-engineering/"
-      ],
-      "publisher": "BLS OOH — Mechanical Engineers; Aerospace Engineers; Architecture and Engineering Occupations overview",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "2024-2034 growth: ME +9%, CE +5%, AE +6%; civil is the largest engineering occupation by new-job count; aerospace growth drivers named (efficiency redesigns, satellite-launch cost, small-sat viability).",
-      "confidence": "high",
-      "limitations": "US-specific.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/05-engineering-me-ce-ae-ee.md §3"
-      ]
-    },
-    {
-      "id": "S-NSPE-PE",
-      "title": "NSPE — How to Get Licensed / What Is a PE?; NCEES Exams",
-      "url": "https://www.nspe.org/about/about-professional-engineering/how-get-licensed",
-      "additional_urls": [
-        "https://www.nspe.org/about/about-professional-engineering/what-pe",
-        "https://ncees.org/exams/"
-      ],
-      "publisher": "NSPE — How to Get Licensed / What Is a PE?; NCEES Exams",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "US PE licensure: accredited degree -> FE exam -> 4 years supervised experience -> PE exam, standardized nationally via NCEES.",
-      "confidence": "high_for_us",
-      "limitations": "US-specific; explicitly not assumed to describe UK/Turkey/EU systems (see S-CENG, S-TMMOB for those).",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/05-engineering-me-ce-ae-ee.md §6"
-      ]
-    },
-    {
-      "id": "S-CENG",
-      "title": "Engineering Council / IET — Chartered Engineer (CEng)",
-      "url": "https://www.theiet.org/career/professional-registration/chartered-engineer",
-      "additional_urls": [
-        "https://www.engc.org.uk/professional-registration/our-professional-titles/chartered-engineer-ceng"
-      ],
-      "publisher": "Engineering Council / IET — Chartered Engineer (CEng)",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "UK's CEng credential: accredited MEng (or bachelor's+master's) + demonstrated professional competence over years, assessed via professional review — not exam-sequence-based like the US PE system.",
-      "confidence": "high",
-      "limitations": "UK-specific; administered through subfield-specific licensed institutions (IET, ICE, IMechE, RAeS, etc.), not one single body.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/05-engineering-me-ce-ae-ee.md §6"
-      ]
-    },
-    {
-      "id": "S-TMMOB",
-      "title": "TMMOB (Türk Mühendis ve Mimar Odaları Birliği) official site; Law No. 6235",
-      "url": "https://www.tmmob.org.tr/",
-      "additional_urls": [
-        "http://www.tmmob.org.tr/hukuk/yasal-cerceve/6235-sayili-turk-muhendis-ve-mimar-odalari-birligi-kanunu"
-      ],
-      "publisher": "TMMOB (Türk Mühendis ve Mimar Odaları Birliği) official site; Law No. 6235",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "Turkey has a legally-mandated engineer/architect title-protection system (Law No. 3458) administered through 24 discipline-specific TMMOB chambers (700,000+ members) — chamber registration required to practice/use the title.",
-      "confidence": "high",
-      "limitations": "Turkey-specific; a genuinely distinct structure from both US PE and UK CEng, not a variant of either.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/05-engineering-me-ce-ae-ee.md §6"
-      ]
-    },
-    {
-      "id": "S-BLS-BME",
-      "title": "BLS OOH — Bioengineers and Biomedical Engineers",
-      "url": "https://www.bls.gov/ooh/architecture-and-engineering/biomedical-engineers.htm",
-      "additional_urls": [],
-      "publisher": "BLS OOH — Bioengineers and Biomedical Engineers",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "Growth driven by new medical-device technology and an aging population; graduate degree typical for leading a research team, not for entry-level industry roles.",
-      "confidence": "high",
-      "limitations": "US-specific.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/06-biomedical-engineering.md §2, §3"
-      ]
-    },
-    {
-      "id": "S-BLS-BME-REG",
-      "title": "Regulatory-affairs/FDA-compliance career framing (secondary corroboration)",
-      "url": "https://www.fda.gov/media/173576/download",
-      "additional_urls": [],
-      "publisher": "Regulatory-affairs/FDA-compliance career framing (secondary corroboration)",
-      "source_type": "official_government_document",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "FDA's own Title 21 Regulatory Specialist position description confirms this as a real government/regulatory role; RAC (Regulatory Affairs Certification, from RAPS) is the field's most recognized credential; common entry pathways include QA, clinical affairs, and technical writing roles.",
-      "confidence": "high_for_fda_document_medium_high_for_career_pathway_detail",
-      "limitations": "FDA document itself directly located and cited; RAC/RAPS credential detail not independently fetched from raps.org this pass.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/06-biomedical-engineering.md §3, §6"
-      ]
-    },
-    {
-      "id": "S-NCS-UK-BME",
-      "title": "National Careers Service — Clinical Engineer job profile",
-      "url": "https://nationalcareers.service.gov.uk/job-profiles/clinical-engineer",
-      "additional_urls": [],
-      "publisher": "National Careers Service — Clinical Engineer job profile",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "UK 'clinical engineer' (healthcare-setting role) is distinct from UK 'biomedical scientist' (lab-diagnostics role) — a naming overlap worth disambiguating for students.",
-      "confidence": "high",
-      "limitations": "UK-specific.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/06-biomedical-engineering.md §7"
-      ]
-    },
-    {
-      "id": "S-BLS-ECON",
-      "title": "BLS OOH — Economists",
-      "url": "https://www.bls.gov/ooh/life-physical-and-social-science/economists.htm",
-      "additional_urls": [],
-      "publisher": "BLS OOH — Economists",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "Economists conduct research, prepare reports, evaluate monetary/fiscal policy, analyze statistical data.",
-      "confidence": "high",
-      "limitations": "US-specific.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/07-economics-finance.md §2, §3"
-      ]
-    },
-    {
-      "id": "S-BLS-FINANCE",
-      "title": "BLS OOH — Financial Analysts",
-      "url": "https://www.bls.gov/ooh/business-and-financial/financial-analysts.htm",
-      "additional_urls": [],
-      "publisher": "BLS OOH — Financial Analysts",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "~29,900 average annual openings; analytical skill central; master's degree helps advancement (not required for entry).",
-      "confidence": "high",
-      "limitations": "US-specific.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/07-economics-finance.md §2, §3"
-      ]
-    },
-    {
-      "id": "S-FED-CHALLENGE",
-      "title": "Federal Reserve — National High School Fed Challenge; Council for Economic Education — National Economics Challenge",
-      "url": "https://www.federalreserve.gov/aboutthefed/educational-tools/national-high-school-fed-challenge.htm",
-      "additional_urls": [
-        "https://www.federalreserveeducation.org/news/2026-high-school-fed-challenge-registration",
-        "https://www.councilforeconed.org/programs/for-students/national-economic-challenge/"
-      ],
-      "publisher": "Federal Reserve — National High School Fed Challenge; Council for Economic Education — National Economics Challenge",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "National team research/writing competition run directly by the Federal Reserve System, grades 9-12, explicitly no prior economics coursework required; strong submissions published in the Journal of Future Economists.",
-      "confidence": "high",
-      "limitations": "US-administered.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/07-economics-finance.md §2, §4"
-      ]
-    },
-    {
-      "id": "S-CFA",
-      "title": "CFA Institute credentialing structure (general knowledge, corroborated by institutional self-description)",
-      "url": null,
-      "additional_urls": [],
-      "publisher": "CFA Institute credentialing structure (general knowledge, corroborated by institutional self-description)",
-      "source_type": "official_institutional_description",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "CFA is a postgraduate, multi-exam credential open across quantitative-major backgrounds (economics, finance, math, engineering), genuinely international.",
-      "confidence": "medium_high",
-      "limitations": "This pass did not fetch the CFA Institute's own admissions-requirements page directly.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/07-economics-finance.md §3, §7"
-      ]
-    },
-    {
-      "id": "S-NCS-ECON",
-      "title": "National Careers Service — Economist job profile",
-      "url": "https://nationalcareers.service.gov.uk/job-profiles/economist",
-      "additional_urls": [],
-      "publisher": "National Careers Service — Economist job profile",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch (direct fetch, upgraded from an earlier WebSearch-summary-only citation)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "UK economist salary range ~£28,000-£60,000, 37-39hr week, advises government/business/banks. Entry routes: university degree (economics/stats/maths/business/finance, A-levels incl. maths or economics) or Professional Economist Degree Apprenticeship (Level 6/7, requires GCSE+A-level maths).",
-      "confidence": "high",
-      "limitations": "UK-specific.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/07-economics-finance.md §7"
-      ]
-    },
-    {
-      "id": "S-GES",
-      "title": "UK Government Economic Service (general knowledge)",
-      "url": "https://www.gov.uk/government/organisations/civil-service-government-economic-service",
-      "additional_urls": [
-        "https://www.civil-service-careers.gov.uk/professions/ges-hub"
-      ],
-      "publisher": "UK Government Economic Service (general knowledge)",
-      "source_type": "official_institutional_description",
-      "retrieval_method": "WebSearch, direct gov.uk official organisation page (upgraded from general knowledge)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "GES is the UK Civil Service's professional body for economists, founded 1964, 3,500+ members, largest recruiter of economists in the UK; Fast Stream entry requires a degree in economics or a combined degree with at least 50% economics content.",
-      "confidence": "high",
-      "limitations": "UK-specific.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/07-economics-finance.md §7"
-      ]
-    },
-    {
-      "id": "S-BLS-BUSINESS",
-      "title": "BLS OOH — Management Occupations overview; BLS Career Outlook — Business career options",
-      "url": "https://www.bls.gov/ooh/management/",
-      "additional_urls": [
-        "https://www.bls.gov/careeroutlook/2025/article/business-career-options.htm"
-      ],
-      "publisher": "BLS OOH — Management Occupations overview; BLS Career Outlook — Business career options",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "~1.1M average annual management-occupation openings; leadership/adaptability/problem-solving named as critical; 'new roles emerging around AI, growth, human-centered experiences.'",
-      "confidence": "high",
-      "limitations": "US-specific.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/08-business-management-entrepreneurship.md §2, §3, §5"
-      ]
-    },
-    {
-      "id": "S-DECA-FBLA",
-      "title": "DECA and FBLA program structures (secondary corroboration across multiple sources)",
-      "url": "https://www.deca.org/compete",
-      "additional_urls": [],
-      "publisher": "DECA and FBLA program structures (secondary corroboration across multiple sources)",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "DECA's own official page confirms three event types: role-play/case-study, online simulations, and Business Operations Research Events (original research, individually or in teams of up to three, on an annually-changing topic) -- across career clusters marketing, business management/administration, finance, hospitality/tourism, plus entrepreneurship and personal financial literacy. FBLA's parallel structure (accounting, business law, technology-adjacent categories) remains secondary-sourced.",
-      "confidence": "high_for_deca_medium_for_fbla",
-      "limitations": "DECA's own page directly located and cited; FBLA's structure (fbla.org) was not independently re-located this pass.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/08-business-management-entrepreneurship.md §4"
-      ]
-    },
-    {
-      "id": "S-YE-UK",
-      "title": "Young Enterprise (UK) — Company Programme; GOV.UK business-support listing",
-      "url": "https://www.young-enterprise.org.uk/what-we-do/programmes/company-programme",
-      "additional_urls": [
-        "https://www.gov.uk/business-finance-support/young-enterprise"
-      ],
-      "publisher": "Young Enterprise (UK) — Company Programme; GOV.UK business-support listing",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "UK students set up a real student company (real bank account, real customers, in-person + online trading) with local->national competition tiers — structurally stronger entrepreneurship evidence than a simulated-scenario competition.",
-      "confidence": "high",
-      "limitations": "UK-specific; corroborated by an independent GOV.UK listing, not solely self-reported by the charity.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/08-business-management-entrepreneurship.md §7"
-      ]
-    },
-    {
-      "id": "S-BLS-ENVENG",
-      "title": "BLS OOH — Environmental Engineers",
-      "url": "https://www.bls.gov/ooh/architecture-and-engineering/environmental-engineers.htm",
-      "additional_urls": [],
-      "publisher": "BLS OOH — Environmental Engineers",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "Interpersonal/math/problem-solving skills; ~4% projected growth 2024-2034; median wage $104,170 (May 2024).",
-      "confidence": "high",
-      "limitations": "US-specific.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/09-environmental-science-sustainability.md §2, §3"
-      ]
-    },
-    {
-      "id": "S-BLS-ENVSCI",
-      "title": "BLS OOH — Environmental Scientists and Specialists",
-      "url": "https://www.bls.gov/ooh/life-physical-and-social-science/environmental-scientists-and-specialists.htm",
-      "additional_urls": [],
-      "publisher": "BLS OOH — Environmental Scientists and Specialists",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "Interpersonal, analytical, and communication skills (writing technical reports, presenting to varied audiences).",
-      "confidence": "high",
-      "limitations": "US-specific.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/09-environmental-science-sustainability.md §2"
-      ]
-    },
-    {
-      "id": "S-BLS-CONSERVATION",
-      "title": "BLS OOH — Conservation Scientists and Foresters",
-      "url": "https://www.bls.gov/ooh/life-physical-and-social-science/conservation-scientists.htm",
-      "additional_urls": [],
-      "publisher": "BLS OOH — Conservation Scientists and Foresters",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "Management/leadership skill (directing crews) and physical stamina named explicitly as job requirements; demand driven by 'heightened public interest' in habitat/water protection.",
-      "confidence": "high",
-      "limitations": "US-specific.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/09-environmental-science-sustainability.md §2, §3"
-      ]
-    },
-    {
-      "id": "S-CITIZEN-SCIENCE",
-      "title": "Youth-focused citizen science and environmental science learning/agency — Biological Conservation (ScienceDirect)",
-      "url": "https://www.sciencedirect.com/science/article/pii/S0006320716302051",
-      "additional_urls": [],
-      "publisher": "Youth-focused citizen science and environmental science learning/agency — Biological Conservation (ScienceDirect)",
-      "source_type": "peer_reviewed_research",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "Youth-focused citizen science is a legitimate entry point for building environmental science learning and agency, not merely busywork.",
-      "confidence": "medium",
-      "limitations": "Abstract/summary-level access only; full methodology not independently reviewed this pass.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/09-environmental-science-sustainability.md §4"
-      ]
-    },
-    {
-      "id": "S-ENV-PROGRAMS-CATEGORY",
-      "title": "Named teen environmental research/conservation-internship/mentorship programs (secondary aggregation)",
-      "url": null,
-      "additional_urls": [],
-      "publisher": "Named teen environmental research/conservation-internship/mentorship programs (secondary aggregation)",
-      "source_type": "secondary_discovery_context_only",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "A category of opportunity (fieldwork/conservation placement combined with scientist mentorship) genuinely exists in this field.",
-      "confidence": "low_to_medium",
-      "limitations": "Explicitly NOT sufficient confidence to present any specific named program as a verified, current opportunity to a student — discovery-context only, per this package's source discipline; hand off to ORYN's separate opportunity-acquisition/verification pipeline.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/09-environmental-science-sustainability.md §4 (explicitly caveated in-line)"
-      ]
-    },
-    {
-      "id": "S-NCS-ENVCON",
-      "title": "National Careers Service — Environmental Consultant job profile",
-      "url": "https://nationalcareers.service.gov.uk/job-profiles/environmental-consultant",
-      "additional_urls": [],
-      "publisher": "National Careers Service — Environmental Consultant job profile",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "UK environmental consultant salary ~£25,000-£50,000; Chartered Environmentalist named as a career-progression marker; entry via degree or apprenticeship, accepting adjacent-science degrees.",
-      "confidence": "high",
-      "limitations": "UK-specific.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/09-environmental-science-sustainability.md §7"
-      ]
-    },
-    {
-      "id": "S-BLS-TEACH",
-      "title": "BLS OOH -- Kindergarten and Elementary School Teachers; High School Teachers; Middle School Teachers",
-      "url": "https://www.bls.gov/ooh/education-training-and-library/kindergarten-and-elementary-school-teachers.htm",
-      "additional_urls": [
-        "https://www.bls.gov/ooh/education-training-and-library/high-school-teachers.htm",
-        "https://www.bls.gov/ooh/education-training-and-library/middle-school-teachers.htm"
-      ],
-      "publisher": "US Bureau of Labor Statistics",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebSearch",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "Elementary/high school teacher core skills, education requirements (bachelor's + state certification), median pay ($62,340 elementary, May 2024), ~1% projected growth / ~109,000 annual openings for elementary teachers through 2032.",
-      "confidence": "high",
-      "limitations": "US-specific.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/18-education-teaching.md §2, §3, §6"
-      ]
-    },
-    {
-      "id": "S-TEACH-CERT-US",
-      "title": "US state teacher certification/licensure structures (cross-referenced secondary sources)",
-      "url": null,
-      "additional_urls": [],
-      "publisher": "Multiple secondary education-careers sources",
-      "source_type": "secondary_aggregation",
-      "retrieval_method": "WebSearch",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "US teacher licensure is issued by state boards of education, typically requiring a bachelor's degree, a teacher-prep program, and a certification exam (e.g. Praxis); requirements vary meaningfully by state.",
       "confidence": "medium-high",
-      "limitations": "General structure well-corroborated across multiple sources; state-by-state specifics not individually verified.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/18-education-teaching.md §6"
-      ]
+      "claim_supported": "Institutional-consensus (dozens of co-signing admissions deans) preference for 1-2 sustained, authentic activities over a checklist.",
+      "used_in_rules": ["RULE-COUNSEL-004"],
+      "limitations": "A normative/advocacy report describing an aspiration many offices co-signed, not a binding rule or a neutral description of universal current practice."
     },
     {
-      "id": "S-QTS-UK",
-      "title": "GOV.UK -- Qualified Teacher Status (QTS); Department for Education QTS application portal",
-      "url": "https://www.gov.uk/guidance/qualified-teacher-status-qts",
-      "additional_urls": [
-        "https://apply-for-qts-in-england.education.gov.uk/eligibility/start"
-      ],
-      "publisher": "UK Department for Education / GOV.UK",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebSearch",
+      "id": "SRC-CS-005",
+      "title": "Multiple admissions-counseling-practice sources on depth-over-breadth ('two or three activities')",
+      "publisher": "Various college-counseling consultancies (converging consensus, no single primary source)",
+      "url": "https://www.usnews.com/education/best-high-schools/articles/how-colleges-weigh-high-school-extracurriculars",
+      "type": "secondary_practitioner_consensus",
       "retrieved_at": "2026-08-21",
-      "claim_supported": "QTS is required to teach in most state-maintained schools in England; awarded via undergraduate or postgraduate initial teacher training (PGCE, School Direct); requires GCSE Maths/English; followed by a 2-year Early Career Teacher induction period.",
+      "confidence": "medium",
+      "claim_supported": "Sustained commitment in few areas reads more credibly than many shallow memberships; titles alone no longer differentiate applicants.",
+      "used_in_rules": ["RULE-COUNSEL-005", "RULE-COUNSEL-020"],
+      "limitations": "Consensus of practice among counselors/consultants, not primary institutional data; directional not quantitatively precise."
+    },
+    {
+      "id": "SRC-CS-006",
+      "title": "Research Science Institute (RSI) program description",
+      "publisher": "Center for Excellence in Education (official program operator)",
+      "url": "https://www.cee.org/programs/research-science-institute",
+      "type": "official_program_source",
+      "retrieved_at": "2026-08-21",
       "confidence": "high",
-      "limitations": "England-specific; Scotland/Wales/Northern Ireland have separate systems not verified this pass.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/18-education-teaching.md §6"
-      ]
+      "claim_supported": "A flagship mentored-research program's own stated value proposition is the research process itself, not guaranteed publication.",
+      "used_in_rules": ["RULE-COUNSEL-006"],
+      "limitations": "One program, used as a representative example of mentored pre-college research program structure, not a claim all programs are equivalent."
     },
     {
-      "id": "S-MEB-TEACH",
-      "title": "Turkish Ministry of National Education (MEB) -- teacher appointment regulation (ogretmen atama ve yer degistirme yonetmeligi)",
-      "url": "https://oygm.meb.gov.tr/meb_iys_dosyalar/2017_11/08144242_mevzuat.pdf",
-      "additional_urls": [],
-      "publisher": "Turkiye Cumhuriyeti Milli Egitim Bakanligi (Turkish Ministry of National Education)",
-      "source_type": "official_government_regulation",
-      "retrieval_method": "WebSearch",
+      "id": "SRC-CS-007",
+      "title": "types/database.ts (ORYN repository source code)",
+      "publisher": "ORYN codebase, this repository",
+      "url": "types/database.ts, lib/scoring/dimensions/*.ts, lib/opportunities/matching.ts, lib/counselor/*.ts",
+      "type": "primary_code_artifact",
       "retrieved_at": "2026-08-21",
-      "claim_supported": "Turkish teaching appointment requires a relevant higher-education degree, pedagogical formation training, and a minimum KPSS score for the specific field; a new Milli Egitim Akademisi training requirement is reportedly being introduced beyond KPSS.",
-      "confidence": "high_for_existing_structure_medium_for_academy_transition",
-      "limitations": "The existing KPSS/pedagogical-formation structure is sourced from the actual MEB regulation; the National Education Academy transition is secondary-reported, not yet independently fetched from MEB's own final rule text.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/18-education-teaching.md §6"
-      ]
-    },
-    {
-      "id": "S-BLS-PERFORM",
-      "title": "BLS OOH -- Musicians and Singers; Dancers and Choreographers; Music Directors and Composers",
-      "url": "https://www.bls.gov/ooh/entertainment-and-sports/musicians-and-singers.htm",
-      "additional_urls": [
-        "https://blsmon1.bls.gov/ooh/entertainment-and-sports/dancers-and-choreographers.htm",
-        "https://www.bls.gov/ooh/entertainment-and-sports/music-directors-and-composers.htm"
-      ],
-      "publisher": "US Bureau of Labor Statistics",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebSearch",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "Musicians/singers typically don't need formal postsecondary education to enter the field (unlike most other families); dancers require many years of training starting young; career longevity considerations distinct from other families (dancers often stop performing by their late 30s).",
       "confidence": "high",
-      "limitations": "US-specific.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/20-performing-arts-music.md §2, §3"
-      ]
+      "claim_supported": "Every claim in this package about what ORYN's shipped scoring/counselor engine currently does or does not compute.",
+      "used_in_rules": ["RULE-COUNSEL-007", "RULE-COUNSEL-008", "RULE-COUNSEL-016", "RULE-COUNSEL-052", "RULE-COUNSEL-055"],
+      "limitations": "Point-in-time read of the codebase during this session; verify against current code before treating as still-current in a future session."
     },
     {
-      "id": "S-YOUTH-MUSIC",
-      "title": "Kennedy Center NSO Young Soloists Competition; Carnegie Hall National Youth Orchestra of the United States (NYO-USA)",
-      "url": "https://www.kennedy-center.org/education/opportunities-for-artists/competitions-and-commissions/nso-young-soloists/",
-      "additional_urls": [],
-      "publisher": "John F. Kennedy Center for the Performing Arts (US federally-chartered institution); Carnegie Hall (secondary-corroborated)",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebSearch",
+      "id": "SRC-CS-008",
+      "title": "\"School Profile\" mechanism descriptions (multiple independent college-counseling sources)",
+      "publisher": "Various college-counseling practice sources (converging description, no single official mandate found)",
+      "url": "https://collegiategateway.com/what-is-a-high-school-profile-and-what-role-does-it-play-in-college-admissions-2/",
+      "type": "secondary_practitioner_consensus",
       "retrieved_at": "2026-08-21",
-      "claim_supported": "Official, highly selective national youth music competition/ensemble programs exist, comparable in evidentiary weight to other families' national olympiads.",
-      "confidence": "high_for_kennedy_center_medium_high_for_nyo_usa",
-      "limitations": "NYO-USA specifics were secondary-corroborated, not independently fetched from carnegiehall.org directly this pass.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/20-performing-arts-music.md §4"
-      ]
+      "confidence": "medium-high",
+      "claim_supported": "US high schools submit a School Profile alongside transcripts specifically so admissions readers evaluate course rigor relative to what was actually offered.",
+      "used_in_rules": ["RULE-COUNSEL-015", "RULE-COUNSEL-016", "RULE-COUNSEL-021"],
+      "limitations": "Well-corroborated common practice, not one official normative citation from a single controlling body; US-specific, not verified for other countries' systems."
     },
     {
-      "id": "S-NCS-PERFORM",
-      "title": "National Careers Service -- Dancer, Actor, Musicians job profiles",
-      "url": "https://nationalcareers.service.gov.uk/job-profiles/dancer",
-      "additional_urls": [
-        "https://nationalcareers.service.gov.uk/job-profiles/actor",
-        "https://nationalcareers.service.gov.uk/job-groups/3415"
-      ],
-      "publisher": "UK National Careers Service",
-      "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebSearch",
+      "id": "SRC-CS-009",
+      "title": "Inequality Beyond Standardized Tests: Trends in Extracurricular Activity Reporting in College Applications Across Race and Class",
+      "publisher": "Park, Kim, Wong, Zheng, Breen, Lo, Baker, Rosinger, Nguyen, Poon; peer-reviewed (SAGE/AERA-affiliated journal), working paper via Annenberg Institute, Brown University (EdWorkingPaper 23-749)",
+      "url": "https://journals.sagepub.com/doi/10.3102/00028312241292309",
+      "type": "peer_reviewed_research",
       "retrieved_at": "2026-08-21",
-      "claim_supported": "UK dancer profile states academic qualifications may not be essential given sufficient audition talent; Equity named as actors' professional body, with a paid-work-or-student/graduate membership requirement.",
       "confidence": "high",
-      "limitations": "UK-specific.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/20-performing-arts-music.md §2, §6"
-      ]
+      "claim_supported": "Analysis of 6M+ Common App submissions: white/Asian American/wealthier/private-school students report more activities, leadership roles, and honors; disparities persist after controls; little racial/ethnic difference in the *percentage* of activities with top-level leadership roles specifically.",
+      "used_in_rules": ["RULE-COUNSEL-017"],
+      "limitations": "Population-level finding; not diagnostic for any individual student's profile."
     },
     {
-      "id": "S-CONSERVATORY-TR",
-      "title": "Turkish state conservatory special talent exam (ozel yetenek sinavi) guidance, multiple official university conservatories",
-      "url": "https://konservatuvar.omu.edu.tr/tr/haberler/omudkoys202627/omudkoys2026kilavuz.pdf",
-      "additional_urls": [
-        "https://msgsu.edu.tr/wp-content/uploads/2024/07/174832-Konservatuvar-Ozel-Yetenek-Sinav-Kilavuzu7.pdf"
-      ],
-      "publisher": "Multiple Turkish state university conservatories (Ondokuz Mayis University, Mimar Sinan Fine Arts University, and others)",
-      "source_type": "official_government_regulation",
-      "retrieval_method": "WebSearch",
+      "id": "SRC-CS-010",
+      "title": "Factors Predictive of Publication Among Medical Students Participating in School-Sponsored Research Programs",
+      "publisher": "PMC8530554, peer-reviewed",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8530554/",
+      "type": "peer_reviewed_research",
       "retrieved_at": "2026-08-21",
-      "claim_supported": "Turkish conservatory admission requires a minimum TYT score threshold (150 for most music/performing-arts programs, 180 for composition/theater/opera/musicology) plus a talent exam (performance, technique, musicality, interview) -- a hybrid academic-plus-audition mechanism distinct from pure YKS placement.",
+      "confidence": "high_for_population_studied_medium_as_hs_analogue",
+      "claim_supported": "Only ~25-26% of mentored medical-student research pairings resulted in publication, even in a well-resourced, individually-mentored context.",
+      "used_in_rules": ["RULE-COUNSEL-011"],
+      "limitations": "Population is medical students, not high schoolers; no equivalent published high-school-specific study found."
+    },
+    {
+      "id": "SRC-CS-011",
+      "title": "Regeneron ISEF Fact Sheet and Awards pages",
+      "publisher": "Society for Science (official ISEF organizer)",
+      "url": "https://www.societyforscience.org/isef/awards/",
+      "type": "official_program_source",
+      "retrieved_at": "2026-08-21",
       "confidence": "high",
-      "limitations": "Cross-referenced across multiple official university sources with consistent structure; not every individual conservatory's guidance was checked.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/20-performing-arts-music.md §6"
-      ]
+      "claim_supported": "~1,600 qualifying finalists reach the international stage; ~600 of those receive an award of some kind — most finalists, already highly selected, do not win.",
+      "used_in_rules": ["RULE-COUNSEL-012"],
+      "limitations": "One competition, used as a representative example of selective-competition award-rate patterns."
     },
     {
-      "id": "S-DE-INGENIEUR",
-      "title": "Germany's Ingenieurgesetz title-protection law and VDI (Verein Deutscher Ingenieure)",
-      "url": "https://www.vdi.de/news/detail/wer-darf-sich-ingenieur-oder-ingenieurin-nennen",
-      "additional_urls": [
-        "https://bingk.de/beratende-ingenieure-2/empfehlung-der-bingk-zur-berufsbezeichnung-ingenieur-und-beratender-ingenieur/",
-        "https://www.gesetze-bayern.de/Content/Document/BayIngG2016"
-      ],
-      "publisher": "VDI (Verein Deutscher Ingenieure) / Bundesingenieurkammer / Bavarian state government legal portal",
-      "source_type": "official_professional_body_page_plus_official_state_statutory_text",
-      "retrieval_method": "WebSearch + direct WebFetch of vdi.de",
+      "id": "SRC-CS-012",
+      "title": "Extracurricular Participation and Academic Outcomes: Testing the Over-Scheduling Hypothesis",
+      "publisher": "Journal of Youth and Adolescence (Springer), peer-reviewed, ELS:2002 dataset, N=13,130",
+      "url": "https://link.springer.com/article/10.1007/s10964-011-9704-0",
+      "type": "peer_reviewed_research",
       "retrieved_at": "2026-08-21",
-      "claim_supported": "The 'Ingenieur' title is legally protected in Germany (Ingenieurgesetz, 3-year engineering bachelor's minimum) but engineering practice itself is unregulated; VDI (~135,000 members, Western Europe's largest engineering association) is the field's central professional body, not a licensing authority.",
       "confidence": "high",
-      "limitations": "Bavaria's BayIngG was the one specific state law checked directly; the other 15 states' individual Ingenieurgesetze were not each independently fetched, though VDI's own page describes the cross-state-recognition principle generally, not state-by-state.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/05-engineering-me-ce-ae-ee.md §6"
-      ]
+      "claim_supported": "Nationally representative sample: most 10th graders participate in only 2-3 activities for ~5 hours/week on average; a large share report no involvement at all.",
+      "used_in_rules": ["RULE-COUNSEL-023"],
+      "limitations": "Descriptive population statistics, not a claim about any individual student."
     },
     {
-      "id": "S-YKS-OBP",
-      "title": "YKS placement-score OBP (Ortaogretim Basari Puani) component and its coefficient",
-      "url": "https://www.osym.gov.tr/yuksekogretim-programlari-ve-kontejanlari-kilavuzu",
-      "additional_urls": [
-        "https://www.multibem.com.tr/obp-hesaplama-2026/",
-        "https://www.gridanismanlik.com/obp-nedir-nasil-hesaplanir/"
-      ],
-      "publisher": "OSYM (structure confirmation) / multiple Turkish student-facing YKS-calculator sites (specific coefficient values)",
-      "source_type": "official_site_structure_confirmation_plus_convergent_secondary_coefficients",
-      "retrieval_method": "WebFetch of osym.gov.tr directly (confirmed ÖSYM publishes exact coefficient tables for placement-score calculation as standing practice, e.g. a historical 'ağırlıklı ortaöğretim başarı puanının çarpılacağı katsayılar' table on its own domain) + WebSearch convergence across multiple independent secondary sources for the current ~0.12/~0.06 coefficient values",
+      "id": "SRC-CS-013",
+      "title": "The Over-Scheduling Hypothesis Revisited: Intensity of Organized Activity Participation During Adolescence and Young Adult Outcomes",
+      "publisher": "Mahoney & Vest, Journal of Research on Adolescence, peer-reviewed, N=1,115 longitudinal",
+      "url": "https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1532-7795.2012.00808.x",
+      "type": "peer_reviewed_research",
       "retrieved_at": "2026-08-21",
-      "claim_supported": "YKS placement score includes an OBP (diploma-grade-derived school achievement score) component at a small, capped coefficient (~0.12 of placement score, ~0.06 if previously placed), distinct from and much smaller in scope than the TYT/AYT exam components, and itself grades-based rather than activity-based.",
-      "confidence": "high for the existence/rough size of the OBP channel; medium for the exact current-year coefficient values",
-      "limitations": "The current year's official ÖSYM coefficient table PDF was not directly opened this pass -- the specific ~0.12/~0.06 figures rest on convergence across multiple independent Turkish secondary sources (student-facing score calculators), not a primary re-derivation. Confirmed instead, via direct fetch, that ÖSYM's own site structurally publishes this kind of precise coefficient table as standing practice, which corroborates but does not independently re-verify the specific current values.",
-      "used_in": [
-        "docs/research/counseling-intelligence/03-recommendation-timing.md §6"
-      ]
+      "confidence": "medium",
+      "claim_supported": "Higher participation intensity during adolescence predicted more positive outcomes (psychological flourishing, civic engagement) into young adulthood — challenges a simple burnout narrative.",
+      "used_in_rules": ["RULE-COUNSEL-024"],
+      "limitations": "Single study; measures intensity within activities already engaged in, a different construct from breadth across many unrelated activities."
     },
     {
-      "id": "S-CASPER-TEACH",
-      "title": "Casper situational-judgment test used for teacher-education program admissions",
-      "url": "https://acuityinsights.com/solutions/teacher-education/",
-      "additional_urls": [
-        "https://www.viu.ca/programs/casper-test-bed-years-1-and-3",
-        "https://www.monash.edu/education/future-students/teacher-education/situational-judgement-test/casper",
-        "https://brocku.ca/admissions/consecutive/casper/"
-      ],
-      "publisher": "Acuity Insights (vendor) / Vancouver Island University, Monash, Brock University (adopting institutions)",
-      "source_type": "official_vendor_page_plus_official_institutional_admissions_pages",
-      "retrieval_method": "WebSearch + direct WebFetch of acuityinsights.com's Teacher Education solutions page",
+      "id": "SRC-CS-014",
+      "title": "Pre-med clinical-experience advising sources (multiple, converging)",
+      "publisher": "Various pre-med advising/consulting sources describing admissions-committee practice",
+      "url": "https://www.medschoolcoach.com/resource/medical-school-extracurricular-activities-shadowing-volunteering-research-clinical-experience-leadership",
+      "type": "secondary_practitioner_consensus",
       "retrieved_at": "2026-08-21",
-      "claim_supported": "Casper (a timed, open-response, human-rated situational-judgment test) is used for admission into teacher-education programs specifically at Vancouver Island University, Monash, and Brock University -- confirmed Canadian/Australian adopters; no US teacher-education adopter independently confirmed this pass.",
+      "confidence": "medium-high",
+      "claim_supported": "Three core evidence areas (clinical exposure, research, community involvement); shadowing vs. direct clinical experience as a named, meaningful distinction; depth over hour-count.",
+      "used_in_rules": ["RULE-COUNSEL-032", "RULE-COUNSEL-033"],
+      "limitations": "No single official AAMC checklist exists; describes undergraduate/professional-admission-stage practice, adapted by this package for high-school stage."
+    },
+    {
+      "id": "SRC-CS-015",
+      "title": "APA High School Summer Internship Program / Undergraduate Research Fellowships",
+      "publisher": "American Psychological Association (official)",
+      "url": "https://www.apa.org/about/awards/undergraduate-research-opportunity",
+      "type": "official_program_source",
+      "retrieved_at": "2026-08-21",
       "confidence": "high",
-      "limitations": "Acuity Insights' own page does not name specific institutional adopters (found via separate institutional pages instead); the search/fetch performed this pass did not confirm or rule out any US teacher-education program's use of Casper, only medicine's separately-documented ~50-school US footprint (a different family, sourced elsewhere).",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/18-education-teaching.md"
-      ]
+      "claim_supported": "APA runs official structured research pathways for high-school and undergraduate students.",
+      "used_in_rules": ["RULE-COUNSEL-035", "RULE-COUNSEL-036"],
+      "limitations": "None material — official professional-body source."
     },
     {
-      "id": "S-CASPER-ENG",
-      "title": "Casper situational-judgment test used for undergraduate engineering admissions",
-      "url": "https://acuityinsights.com/news/western-university-embraces-holistic-admissions/",
-      "additional_urls": [],
-      "publisher": "Acuity Insights (vendor press release, quoting Western University's own Assistant Dean of First Year Studies)",
-      "source_type": "official_vendor_press_release_quoting_institution",
-      "retrieval_method": "WebSearch + direct WebFetch",
+      "id": "SRC-CS-016",
+      "title": "UN Model United Nations resource/guide pages",
+      "publisher": "United Nations (official)",
+      "url": "https://www.un.org/en/model-united-nations/introduction",
+      "type": "official_source",
       "retrieved_at": "2026-08-21",
-      "claim_supported": "Western University's Faculty of Engineering (Canada) undergraduate program adopted Casper starting Fall 2024, ~7,500 annual applicants, explicitly to assess non-academic skills alongside grades.",
       "confidence": "high",
-      "limitations": "One named adopter only; not evidence of broader engineering-program adoption elsewhere.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/05-engineering-me-ce-ae-ee.md"
-      ]
+      "claim_supported": "Official UN guidance for MUN delegates stresses evidence-based argumentation (data, precedent, treaties) aligned to real-world positions.",
+      "used_in_rules": ["RULE-COUNSEL-038"],
+      "limitations": "Describes the simulation's own standards, not a claim about real-world policy engagement equivalence (see RULE-COUNSEL-039)."
     },
     {
-      "id": "S-CASPER-BUS",
-      "title": "Casper situational-judgment test marketed for business-education admissions",
-      "url": "https://acuityinsights.com/solutions/business-education/",
-      "additional_urls": [],
-      "publisher": "Acuity Insights",
-      "source_type": "official_vendor_page",
-      "retrieval_method": "WebSearch + direct WebFetch",
+      "id": "SRC-CS-017",
+      "title": "Pre-law advising guidance (multiple university pre-law office pages, converging)",
+      "publisher": "Various university pre-law advising offices",
+      "url": "https://blog.getintocollege.com/blogs/2024/05/17/20/18/the-top-3-faqs-about-pre-law",
+      "type": "official_institutional_advising",
       "retrieved_at": "2026-08-21",
-      "claim_supported": "Casper is marketed for business-education admissions; the one specific adopter named on the page is Dalhousie University's Faculty of Management MBA program -- graduate-level, not undergraduate.",
-      "confidence": "high for the one named adopter; low relevance to ORYN's actual undergraduate-applicant population given that adopter's graduate level",
-      "limitations": "Only one specific adopter named on the vendor's own page; no undergraduate business-program adopter was independently confirmed this pass.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/08-business-management-entrepreneurship.md"
-      ]
-    },
-    {
-      "id": "S-EMO-BME",
-      "title": "EMO (Chamber of Electrical Engineers of Turkey) confirms biomedical engineering as a dedicated internal professional branch",
-      "url": "https://www.emo.org.tr/genel/bizden_detay.php?kod=48491&tipi=46&sube=0",
-      "additional_urls": [],
-      "publisher": "EMO (Elektrik Mühendisleri Odası, a TMMOB-affiliated chamber)",
-      "source_type": "official_professional_body_page",
-      "retrieval_method": "WebSearch + direct WebFetch",
-      "retrieved_at": "2026-08-21",
-      "claim_supported": "Biomedical engineering in Turkey sits under EMO specifically, with its own named internal commission (Biyomedikal Mühendisligi Meslek Dali Ana Komisyonu), not an unaffiliated or separately-chambered field.",
       "confidence": "high",
-      "limitations": "Confirms EMO's own claimed jurisdiction over this field; did not independently cross-check whether any other TMMOB chamber also claims any overlapping jurisdiction.",
-      "used_in": [
-        "docs/research/counseling-intelligence/06-major-family-evidence/06-biomedical-engineering.md"
-      ]
+      "claim_supported": "No required 'pre-law' major exists; skills (writing, reasoning, communication) transfer from many majors; mock trial/moot court/debate build LSAT/law-school-relevant skills.",
+      "used_in_rules": ["RULE-COUNSEL-041", "RULE-COUNSEL-042"],
+      "limitations": "Consistent, non-controversial consensus across sources, no single central law-school authority issues this guidance the way NAAB/AAMC do for their fields."
+    },
+    {
+      "id": "SRC-CS-018",
+      "title": "National History Day official contest site",
+      "publisher": "National History Day, Inc. (official)",
+      "url": "https://nhd.org/en/contest/",
+      "type": "official_program_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Official structure: original historical research presented via chosen format (documentary/performance/exhibit/website/paper), with a judged feedback-and-revision cycle between contest levels.",
+      "used_in_rules": ["RULE-COUNSEL-044"],
+      "limitations": "None material — official contest source."
+    },
+    {
+      "id": "SRC-CS-019",
+      "title": "National High School Ethics Bowl official site",
+      "publisher": "National High School Ethics Bowl (official)",
+      "url": "https://nhseb.org/awards",
+      "type": "official_program_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Official, existing collaborative (not adversarial) ethics-reasoning competition format for high schoolers.",
+      "used_in_rules": ["RULE-COUNSEL-045"],
+      "limitations": "Confirms program existence/format; did not independently verify judging-criteria detail beyond what's on the public awards page."
+    },
+    {
+      "id": "SRC-CS-020",
+      "title": "University journalism-program portfolio/admissions guidance (multiple programs, converging)",
+      "publisher": "Various university journalism/communication school admissions pages",
+      "url": "https://communication.ucf.edu/wp-content/uploads/sites/2/2022/01/ElectronicJournalismPortfolioRequirements_update2022.pdf",
+      "type": "official_program_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Portfolios should show 3-5 best published/edited pieces over many mediocre clips; hard-news reporting is more differentiating than features/opinion alone for beginners.",
+      "used_in_rules": ["RULE-COUNSEL-046"],
+      "limitations": "Describes undergraduate/professional program admission specifically; adapted by this package for high-school stage."
+    },
+    {
+      "id": "SRC-CS-021",
+      "title": "Scholastic Art & Writing Awards official program page",
+      "publisher": "Scholastic Inc. (official, program running since 1923)",
+      "url": "https://www.scholastic.com/newsroom/online-press-kits/scholastic-art-writing-awards.html",
+      "type": "official_program_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Longest-running, ~330,000 annual submissions across ~29 categories, judged on originality/technical skill/personal voice, tiered awards (Gold/Silver Key/Honorable Mention).",
+      "used_in_rules": ["RULE-COUNSEL-047"],
+      "limitations": "None material — official, well-documented, long-running program."
+    },
+    {
+      "id": "SRC-CS-022",
+      "title": "Architecture-program portfolio-requirement pages (multiple programs, converging) + NAAB official accreditation pages",
+      "publisher": "Various architecture programs; National Architectural Accrediting Board (official, for the accreditation-authority claim only)",
+      "url": "https://newschoolarch.edu/how-to-apply/portfolio-requirements/",
+      "type": "mixed_official_and_program_level",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Portfolio-centered evidence (10-15 pages / 15-25 projects representative range), explicitly process-inclusive (sketches, works-in-progress welcomed); NAAB is the official US accrediting body for the profession.",
+      "used_in_rules": ["RULE-COUNSEL-048", "RULE-COUNSEL-049"],
+      "limitations": "Specific page/project counts vary by institution, cited as representative not universal; NAAB accredits degree programs, not student portfolios directly."
+    },
+    {
+      "id": "SRC-CS-023",
+      "title": "National Portfolio Day official/host-institution pages",
+      "publisher": "National Portfolio Day Association / host art & design colleges (official event)",
+      "url": "https://www.artacademy.edu/admissions/npd/",
+      "type": "official_program_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Free, official, nationwide portfolio-review events; standard guidance of 10-12 best/recent pieces, process-inclusive, feedback- not competition-oriented.",
+      "used_in_rules": ["RULE-COUNSEL-050"],
+      "limitations": "None material — describes a real, official, well-documented event series."
+    },
+    {
+      "id": "SRC-CS-024",
+      "title": "Film-program admissions/portfolio guidance (multiple sources, converging)",
+      "publisher": "Various film-program admissions-guidance sources",
+      "url": "https://www.sparkadmissions.com/blog/art-portfolio-college-admissions/",
+      "type": "secondary_practitioner_consensus",
+      "retrieved_at": "2026-08-21",
+      "confidence": "medium-high",
+      "claim_supported": "Reviewers value storytelling clarity/composition/editing over production value or equipment; simple, focused concepts often outperform ambitious under-focused ones.",
+      "used_in_rules": ["RULE-COUNSEL-051"],
+      "limitations": "Consistent across sourced material, not a single primary-authority citation (e.g., no single official body analogous to NAAB for film admissions)."
+    },
+    {
+      "id": "SRC-CS-025",
+      "title": "Turkish YKS university-admission system overview (multiple sources, converging)",
+      "publisher": "Various Turkey-education-system overview sources",
+      "url": "https://rasastudy.com/blog/yks-2026-base-scores-rankings-guide?lang=en",
+      "type": "secondary_practitioner_consensus",
+      "retrieved_at": "2026-08-21",
+      "confidence": "medium-high",
+      "claim_supported": "TYT (40%)/AYT (60%) exam score composition dominates Turkish university admission; extracurricular activities play a minimal role, especially for the most competitive faculties.",
+      "used_in_rules": ["RULE-COUNSEL-057", "RULE-COUNSEL-059", "RULE-COUNSEL-060"],
+      "limitations": "General structure well-corroborated across sources; exact current-year weighting percentages not independently verified against ÖSYM's own official publication this pass."
+    },
+    {
+      "id": "SRC-CS-026",
+      "title": "UK UCAS personal-statement/admissions guidance (multiple admissions-consulting sources, converging)",
+      "publisher": "Various UK admissions-consulting sources describing UCAS practice",
+      "url": "https://orieladmissions.com/how-to-get-into-lse/",
+      "type": "secondary_practitioner_consensus",
+      "retrieved_at": "2026-08-21",
+      "confidence": "medium-high",
+      "claim_supported": "UK admissions for competitive courses reward 'super-curricular' (subject-extending) activity far more than generic extracurricular breadth; 80:20 or 90:10 academic:co-curricular guidance; medicine as a named exception where work experience/volunteering carries unusual weight.",
+      "used_in_rules": ["RULE-COUNSEL-058", "RULE-COUNSEL-059", "RULE-COUNSEL-060"],
+      "limitations": "UCAS's own official guidance was not independently re-fetched this pass; sourced from admissions-consulting descriptions of UCAS practice."
+    },
+    {
+      "id": "SRC-CS-027",
+      "title": "Parcoursup 2026 official overview and admissions-criteria pages",
+      "publisher": "Campus France; French Ministry of National Education (education.gouv.fr) — both official",
+      "url": "https://www.campusfrance.org/en/parcoursup-2026-your-best-companion-for-an-overview-of-the-25000-training-courses-in-france",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high_for_mechanism_medium_for_relative_weighting",
+      "claim_supported": "Parcoursup dossier composition (grades, Fiche Avenir teacher evaluation, activities/interests info, program-dependent motivation letter); weighting varies by program selectivity.",
+      "used_in_rules": ["RULE-COUNSEL-061"],
+      "limitations": "Official for mechanism; exact relative weight of activities vs. grades is described as program-dependent, not quantified centrally."
+    },
+    {
+      "id": "SRC-CS-028",
+      "title": "Numerus Clausus / German university admissions guidance (multiple sources, converging)",
+      "publisher": "Various German-higher-education admissions-guide sources",
+      "url": "https://www.topuniversities.com/blog/german-university-admissions-numerus-clausus",
+      "type": "secondary_practitioner_consensus",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high_for_mechanism_medium_for_prevalence",
+      "claim_supported": "NC (Abitur-grade cutoff, recalculated per cycle) gates a minority of high-demand programs; a large 'zulassungsfrei' (open-admission) category exists with no selection; no general extracurricular-activity factor found for the standard pathway.",
+      "used_in_rules": ["RULE-COUNSEL-062"],
+      "limitations": "No single consolidated official statistic found for what share of programs nationally are zulassungsfrei."
+    },
+    {
+      "id": "SRC-CS-029",
+      "title": "Dutch numerus fixus / decentralized-selection admissions guidance (multiple sources)",
+      "publisher": "Various university and study-abroad admissions-guide sources (e.g. Erasmus University Rotterdam official numerus fixus page)",
+      "url": "https://www.eur.nl/en/education/practical-matters/bachelor-admission-and-application/programmes-limited-places-numerus-fixus",
+      "type": "mixed_official_and_secondary",
+      "retrieved_at": "2026-08-21",
+      "confidence": "medium-high",
+      "claim_supported": "Most Dutch programs are diploma-based/open; numerus fixus programs use university-set decentralized selection (motivation letter/CV/sometimes test); generally does not emphasize extracurricular activities specifically.",
+      "used_in_rules": ["RULE-COUNSEL-063"],
+      "limitations": "The 'does not emphasize extracurriculars' claim is sourced from a single describing secondary source, not cross-verified against multiple universities' own published criteria."
+    },
+    {
+      "id": "SRC-CS-030",
+      "title": "Italian medicine-admissions guidance (IMAT-focused, multiple sources)",
+      "publisher": "Various medicine-abroad admissions-consulting sources",
+      "url": "https://gyanberry.com/blog/admission-and-eligibility-for-medical-studies-in-italy/",
+      "type": "secondary_practitioner_consensus",
+      "retrieved_at": "2026-08-21",
+      "confidence": "medium",
+      "claim_supported": "Public-university IMAT-based admission requires no extracurricular activities; private institutions vary and may request holistic portfolios.",
+      "used_in_rules": ["RULE-COUNSEL-064"],
+      "limitations": "Medicine-specific; not verified for non-medicine Italian degree programs."
+    },
+    {
+      "id": "SRC-CS-031",
+      "title": "ETH Zürich official Bachelor's admission pages",
+      "publisher": "ETH Zürich (official)",
+      "url": "https://ethz.ch/en/studies/bachelor/application/bachelor-human-medicine/application-admission.html",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "A passing Swiss Matura grants admission to nearly all Swiss university programs including ETH/EPFL with no entrance exam, interview, or activity review; medicine is the sole exception, gated by a separate aptitude test (EMS), not an activity portfolio.",
+      "used_in_rules": ["RULE-COUNSEL-065"],
+      "limitations": "Directly verified for ETH specifically; the general-Swiss-system claim beyond ETH is corroborated by secondary sources, not independently checked at every Swiss university."
+    },
+    {
+      "id": "SRC-CS-032",
+      "title": "Studienvoraussetzungen im Überblick / official admission-requirements and admissions-database pages",
+      "publisher": "DAAD (Deutscher Akademischer Austauschdienst / German Academic Exchange Service, official)",
+      "url": "https://www.daad.de/de/in-deutschland-studieren/voraussetzungen/ueberblick/",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high_for_mechanism_no_national_percentage_published",
+      "claim_supported": "Confirms zulassungsfrei/zulassungsbeschränkt as the official categorization of German admission mechanisms; DAAD directs students to a per-program database rather than publishing one national aggregate percentage of open vs. restricted programs.",
+      "used_in_rules": ["RULE-COUNSEL-062"],
+      "limitations": "Upgrades the mechanism claim to official-source confidence; the specific national prevalence percentage remains genuinely unpublished in a single consolidated place, not merely unresearched by this package."
+    },
+    {
+      "id": "SRC-CS-033",
+      "title": "Government.nl and Studielink official pages on tertiary-education application deadlines and numerus fixus",
+      "publisher": "Government of the Netherlands (government.nl); Studielink (the official national application portal)",
+      "url": "https://www.government.nl/themes/education/secondary-vocational-education-mbo-and-tertiary-higher-education/tertiary-higher-education/applying-for-a-course-at-an-institute-of-tertiary-education",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high_for_mechanism",
+      "claim_supported": "Non-numerus-fixus programmes have a 1 May deadline with no selection step; numerus fixus programmes have a 15 January deadline with an explicit selection step; the official 'Studiekeuzecheck' (Study Choice Check) is a fit/readiness check, not a competitive achievement evaluation.",
+      "used_in_rules": ["RULE-COUNSEL-063"],
+      "limitations": "Confirms the mechanism officially; does not itself state whether extracurricular activities specifically are weighted within decentralized selection — that narrower claim remains secondary-sourced (SRC-CS-029), not upgraded by this source."
+    },
+    {
+      "id": "SRC-CS-034",
+      "title": "Simons Summer Research Program — Application Guidelines / eligibility page",
+      "publisher": "Stony Brook University (official program operator)",
+      "url": "https://www.stonybrook.edu/commcms/simons/applying_to/how-to-apply.php",
+      "type": "official_program_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Applicants must be current 11th-grade (junior) high school students at time of application, no exceptions — a concrete, official, primary-source-verified instance of the 'rising junior/senior' structured-research-program eligibility pattern.",
+      "used_in_rules": ["RULE-COUNSEL-069"],
+      "limitations": "One program, used as a representative, officially-verified example of a broader pattern peer's own 03-recommendation-timing.md documents at aggregate/secondary-source confidence across several programs."
+    },
+    {
+      "id": "SRC-CS-035",
+      "title": "Canadian university admissions-guidance sources on holistic review and extracurricular weight (multiple, converging)",
+      "publisher": "Various university-admissions-consulting sources describing Canadian practice, including reference to University of Toronto's own stated holistic process",
+      "url": "https://www.careervillage.org/questions/239949/how-much-emphasis-do-canadian-universities-put-on-extracurriculars",
+      "type": "secondary_practitioner_consensus",
+      "retrieved_at": "2026-08-21",
+      "confidence": "medium",
+      "claim_supported": "Grades remain the primary Canadian admissions factor generally; competitive programs and top universities (U of T named) layer holistic review including extracurriculars on top.",
+      "used_in_rules": ["RULE-COUNSEL-073"],
+      "limitations": "General pattern description, not verified against every Canadian institution's own published admissions criteria."
+    },
+    {
+      "id": "SRC-CS-036",
+      "title": "Spain EBAU/Selectividad admissions-system overview sources (multiple, converging)",
+      "publisher": "Various Spain-education-system overview sources",
+      "url": "https://www.nidoliving.com/en-gb/blog/national-exams-in-spain",
+      "type": "secondary_practitioner_consensus",
+      "retrieved_at": "2026-08-21",
+      "confidence": "medium",
+      "claim_supported": "Spanish university admission is computed as 60% high-school grades + 40% national EBAU exam score, with no interview, essay, or extracurricular weight.",
+      "used_in_rules": ["RULE-COUNSEL-074", "RULE-COUNSEL-075"],
+      "limitations": "Not independently verified against Spain's own Ministry of Education official publication this pass."
+    },
+    {
+      "id": "SRC-CS-037",
+      "title": "Common App 'Additional Information' and 'Challenges and Circumstances' section guidance (multiple admissions-consulting sources)",
+      "publisher": "Various college-admissions-consulting sources describing Common Application platform features",
+      "url": "https://www.collegeessayguy.com/blog/common-app-additional-info-guide-examples",
+      "type": "secondary_practitioner_consensus",
+      "retrieved_at": "2026-08-21",
+      "confidence": "medium-high",
+      "claim_supported": "Common App has an optional 'Additional Information' section (up to 650 words) and a newer (2025 cycle) 'Challenges and Circumstances' section (250 words) specifically for context that negatively impacted grades/scores/activities; students with a disability affecting activity participation are specifically encouraged to use it.",
+      "used_in_rules": ["RULE-COUNSEL-079"],
+      "limitations": "Described via admissions-consulting sources, not independently verified against Common App's own raw platform documentation this pass."
+    },
+    {
+      "id": "SRC-CS-038",
+      "title": "College-counselor research on chronic illness prevalence and college transition (multiple sources, converging) — SUPERSEDED, see SRC-CS-048",
+      "publisher": "Various college-counseling-research sources (including an ERIC-indexed study on counselor perceptions of chronic-illness transition needs)",
+      "url": "https://files.eric.ed.gov/fulltext/EJ1483220.pdf",
+      "type": "secondary_research_synthesis",
+      "retrieved_at": "2026-08-21",
+      "confidence": "medium",
+      "claim_supported": "Originally used for a 'roughly 15-20%' prevalence estimate — corrected on a follow-up pass (see SRC-CS-048) after peer-reviewed data showed this understated actual prevalence. Retained in this registry for provenance/audit-trail purposes, not as the current basis for RULE-COUNSEL-080.",
+      "used_in_rules": [],
+      "limitations": "Population estimate cited by secondary sources, not independently traced to a primary epidemiological study — this exact limitation is why it was superseded."
+    },
+    {
+      "id": "SRC-CS-048",
+      "title": "Prevalence and Trends in Pediatric-Onset Chronic Conditions in the United States, 1999-2018",
+      "publisher": "Peer-reviewed journal article (ScienceDirect-indexed)",
+      "url": "https://www.sciencedirect.com/science/article/pii/S187628592500035X",
+      "type": "peer_reviewed_research",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Prevalence of a chronic condition or functional limitation among US children/adolescents aged 5-17 rose from 22.57% (1999/2000) to 30.21% (2017/2018) — a rising longitudinal trend, corrects and strengthens this document's original, weaker 'roughly 15-20%' estimate (SRC-CS-038).",
+      "used_in_rules": ["RULE-COUNSEL-080"],
+      "limitations": "One study's specific definition and methodology; broader definitions (including behavioral/mental health conditions, obesity) found in other sources push estimates higher still (toward 40%+), presented as a range in the document rather than treating this single figure as the only true number."
+    },
+    {
+      "id": "SRC-CS-039",
+      "title": "Accesso Programmato official portal and MUR ministry announcement pages",
+      "publisher": "MUR (Ministero dell'Università e della Ricerca — Italy's actual government ministry for universities and research)",
+      "url": "https://accessoprogrammato.mur.gov.it/2026/",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high_for_mechanism_medium_for_no_extracurricular_claim",
+      "claim_supported": "IMAT and the parallel Italian-language admission test are directly administered by Italy's university ministry (MUR, formerly MIUR), which has written the questions itself since 2023; confirms the test's official structure and administering body.",
+      "used_in_rules": ["RULE-COUNSEL-064"],
+      "limitations": "Upgrades mechanism confidence to official; the specific 'no extracurricular weight' characterization remains sourced from admissions-consulting guidance, not MUR's own explicit statement."
+    },
+    {
+      "id": "SRC-CS-040",
+      "title": "Ontario university admission-requirements guidance, including named supplementary-application programs",
+      "publisher": "Various Ontario-admissions-guidance sources, corroborated by individual institution pages (e.g. Toronto Metropolitan University, OCAD University official admission-requirements pages)",
+      "url": "https://www.torontomu.ca/admissions/undergraduate/requirements/ontario/",
+      "type": "mixed_official_and_secondary",
+      "retrieved_at": "2026-08-21",
+      "confidence": "medium-high",
+      "claim_supported": "Most Ontario programs admit on a computed grade average (top 6 Grade 12 U/M courses) against a published minimum threshold; a specifically-named subset of high-demand competitive programs (Queen's Commerce, Waterloo Engineering, UofT Engineering Science, McMaster Health Sciences) use holistic supplementary applications where grades are described as 'the floor, not the ceiling.'",
+      "used_in_rules": ["RULE-COUNSEL-073", "RULE-COUNSEL-082"],
+      "limitations": "Ontario-specific; not independently verified for other Canadian provinces' own systems (British Columbia, Alberta, Quebec, etc. each have distinct processes not researched this pass)."
+    },
+    {
+      "id": "SRC-CS-041",
+      "title": "Geleceğin Meslekleri (Future Occupations) — official list of 93 occupations",
+      "publisher": "İŞKUR (Türkiye İş Kurumu — Turkey's official state employment agency)",
+      "url": "https://statik.iskur.gov.tr/docs/gelecegin-meslekleri.pdf",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high_for_list_content",
+      "claim_supported": "93 occupations İŞKUR (Turkey's state employment agency) officially designates as growth/future-relevant to Turkey's domestic labor market — used exclusively as career-outlook context for this package's family docs, never as admissions-evidence guidance.",
+      "used_in_rules": ["RULE-COUNSEL-083", "RULE-COUNSEL-084", "RULE-COUNSEL-085", "RULE-COUNSEL-086"],
+      "limitations": "Shared with this session by the peer session (socket 71534/\"7\"), who found it first; this session independently downloaded and extracted it via pypdf (WebFetch and the Read tool's PDF renderer both failed in this environment — no poppler-utils installed) rather than trusting the peer's characterization of its contents. No date/methodology page beyond the list itself was reviewed. The list itself is vocational/technical-skewed — a real limitation for using it across non-technical families, noted explicitly per-family below rather than smoothed over."
+    },
+    {
+      "id": "SRC-CS-042",
+      "title": "National Careers Service official job profiles: GP, Clinical Psychologist, Forensic Psychologist, Solicitor, Barrister, Architect",
+      "publisher": "National Careers Service (UK Department for Education, official)",
+      "url": "https://nationalcareers.service.gov.uk/job-profiles/gp",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Official UK job-profile pages (qualification pathway, entry requirements, typical hours/salary) for GP, Clinical Psychologist, Forensic Psychologist, Solicitor, Barrister, and Architect — used to add UK country-notes to this session's medicine, psychology, law, and architecture family docs, mirroring the peer session's own use of NCS for its 9 families.",
+      "used_in_rules": ["RULE-COUNSEL-087", "RULE-COUNSEL-088", "RULE-COUNSEL-089", "RULE-COUNSEL-090"],
+      "limitations": "No NCS profile was found this pass for poli-sci/IR, sociology/history/philosophy, literature/journalism, or visual/media-arts specifically — noted honestly as 'not independently reviewed' in each of those docs' country notes rather than a claim no such profile exists."
+    },
+    {
+      "id": "SRC-CS-043",
+      "title": "Creativity, activity, service (CAS) — official DP core component page",
+      "publisher": "International Baccalaureate Organization (IBO, official)",
+      "url": "https://ibo.org/programmes/diploma-programme/curriculum/dp-core/creativity-activity-and-service/",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "CAS is a real, current, officially-documented IB Diploma Programme core requirement — roughly 3-4 hours/week sustained across 18 months (the fixed 150-hour rule was removed c. 2017), spanning Creativity/Activity/Service strands, not formally graded but required for the diploma.",
+      "used_in_rules": ["RULE-COUNSEL-091"],
+      "limitations": "IB sets no single universal hour target; individual schools set their own CAS expectations, so the 3-4 hrs/week figure is IB's own general description, not a hard per-student number."
+    },
+    {
+      "id": "SRC-CS-044",
+      "title": "Social Workers — Occupational Outlook Handbook",
+      "publisher": "U.S. Bureau of Labor Statistics (official)",
+      "url": "https://www.bls.gov/ooh/community-and-social-service/social-workers.htm",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "US clinical social work requires a CSWE-accredited MSW plus supervised post-graduate clinical experience and state licensure; core skills (interpersonal, organizational, emotional resilience) as BLS describes them.",
+      "used_in_rules": ["RULE-COUNSEL-095", "RULE-COUNSEL-097"],
+      "limitations": "US-specific; the ~3,000-hour supervised-experience figure is commonly cited by secondary licensing-guide sources, not independently verified against BLS's own page as a fixed federal number (it varies by state)."
+    },
+    {
+      "id": "SRC-CS-045",
+      "title": "UK social work registration/qualification guidance (NHS Health Careers and professional/licensing-guide sources)",
+      "publisher": "Various UK sources describing Social Work England's registration requirement",
+      "url": "https://www.healthcareers.nhs.uk/explore-roles/wider-healthcare-team/roles-wider-healthcare-team/clinical-support-staff/social-worker",
+      "type": "secondary_describing_official_system",
+      "retrieved_at": "2026-08-21",
+      "confidence": "medium-high",
+      "claim_supported": "UK social work practice requires registration with Social Work England (or the devolved-nation equivalent) after an approved 3-4 year undergraduate or postgraduate qualification.",
+      "used_in_rules": ["RULE-COUNSEL-098"],
+      "limitations": "Social Work England's own official registration page was not independently fetched this pass; sourced via NHS/professional-guidance pages describing the system."
+    },
+    {
+      "id": "SRC-CS-046",
+      "title": "MEB 'Rehberlik Hizmetleri Yönetmeliği' (10 Kasım 2017, Resmî Gazete Sayı 30236), Articles 3(p) and 3(i) — UPGRADED to primary source on a follow-up pass",
+      "publisher": "Ministry of National Education (MEB, official Turkish government regulation) — primary text fetched directly by the peer session, reported to and incorporated by this session",
+      "url": "https://orgm.meb.gov.tr/meb_iys_dosyalar/2017_11/10113305_yeni_rehbrlk_yon.pdf",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high_for_confirmed_articles_low_medium_for_unconfirmed_associate_degree_claim",
+      "claim_supported": "Article 3(p) formally defines 'Sosyal Çalışmacı' as requiring bachelor's-level (lisans) education specifically in social work/social services — confirmed verbatim, not paraphrased. Article 3(i) formally defines 'Psikolog' as requiring bachelor's-level psychology education. This specific regulation does NOT address associate-degree ('ön lisans') titling for social work — that narrower claim in 19-social-work.md remains secondary-sourced only (see RULE-COUNSEL-107), not confirmed by this primary text.",
+      "used_in_rules": ["RULE-COUNSEL-099", "RULE-COUNSEL-108"],
+      "limitations": "This regulation specifically governs guidance/counseling-center staff, not all social-work or psychology employment generally — its silence on associate-degree titling doesn't confirm or deny that claim, which may be governed by a different regulation not yet checked. This session did not independently re-fetch the PDF itself; relied on the peer session's direct report of Article 3(p)/3(i) content, consistent with this package's own 'verify, don't just trust a summary' discipline applied at one remove (peer verified the primary text; this session trusted peer's specific, checkable quotation of it rather than peer's earlier looser paraphrase)."
+    },
+    {
+      "id": "SRC-CS-047",
+      "title": "EBAU / prueba de acceso a la universidad — official weighting description",
+      "publisher": "La Moncloa (official Spanish government press office) and Ministerio de Educación, Formación Profesional y Deportes (Spain's Ministry of Education, official .gob.es domain)",
+      "url": "https://www.lamoncloa.gob.es/serviciosdeprensa/notasprensa/educacion-fp-deportes/paginas/2024/ebau-evau-evaluacion-acceso-universidad.aspx",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Spain's EBAU admission grade is computed as 60% Bachillerato average + 40% mandatory-phase exam score, confirmed independently by both La Moncloa and the Ministry of Education's own official pages.",
+      "used_in_rules": ["RULE-COUNSEL-074"],
+      "limitations": "Confirms the weighting mechanism officially; does not itself make an explicit statement about the absence of extracurricular weighting, which remains sourced from admissions-guidance secondary description (SRC-CS-036)."
+    },
+    {
+      "id": "SRC-CS-049",
+      "title": "German medical-licensure (Approbation/Staatsexamen) guidance — upgraded to official Bundesärztekammer source on a follow-up pass",
+      "publisher": "Anerkennung in Deutschland (official BIBB portal) for the original structure; Bundesärztekammer (German Medical Association, the official professional body) for the direct confirmation",
+      "url": "https://www.anerkennung-in-deutschland.de/html/en/2688.php ; https://www.bundesaerztekammer.de/themen/aerzte/internationales/aerztliche-taetigkeit-in-deutschland",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Bundesärztekammer's own page states directly: \"Die Ausübung der ärztlichen Tätigkeit in Deutschland ist nur mit einer gültigen Approbation oder Berufserlaubnis möglich\" (practicing medicine in Germany is only possible with a valid Approbation or professional permit), unlimited in duration and valid nationwide, obtainable regardless of nationality, with mandatory membership in one of 17 regional Landesärztekammern (State Medical Chambers) once practicing. Confirms the core Approbation requirement directly from the licensing body itself.",
+      "used_in_rules": ["RULE-COUNSEL-103"],
+      "limitations": "A genuine terminology nuance found on this pass: the Bundesärztekammer page and the underlying Approbationsordnung regulation do not actually use the word \"Staatsexamen\" -- the formal document received after the medical exams is the \"Zeugnis über die Ärztliche Prüfung\" (Certificate of the Medical Examination). \"Staatsexamen\" remains extremely common colloquial/reference usage (including this package's own prior phrasing) but is not the regulation's own term. The 17-vs-16 Landesärztekammern/Bundesländer count was not independently reconciled (plausibly North Rhine-Westphalia having two separate chambers, not verified this pass)."
+    },
+    {
+      "id": "SRC-CS-050",
+      "title": "\"Juristenausbildung\" (Legal Education) — official Bundesrechtsanwaltskammer page for students and prospective students, directly fetched and quoted on a follow-up pass",
+      "publisher": "Bundesrechtsanwaltskammer (Federal Bar Association, official body) — page explicitly aimed at Schüler und angehende Studierende (students and prospective university students)",
+      "url": "https://www.brak.de/anwaltschaft/beruf-anwalt/juristenausbildung/",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "BRAK's own page states directly: the Jurastudium (\"Das Jurastudium dauert in der Regel 10 Semester, also 5 Jahre\" -- typically 10 semesters/5 years, a 4-semester foundation phase plus a 6-semester advanced/specialization phase) concludes with the Erste juristische Prüfung (70% state exam, 30% university-assessed coursework); then a 2-year Referendariat (\"innerhalb von zwei Jahren sogenannte Stationen oder Stagen\" -- rotating through civil courts, prosecution, an administrative authority, and a law firm) followed by the Zweite Staatsexamen. BRAK's own page states the total is approximately 9 years (5 years study + 2 years Referendariat + examination periods) before a Volljurist can apply for bar admission through their regional Rechtsanwaltskammer.",
+      "used_in_rules": ["RULE-COUNSEL-104"],
+      "limitations": "Directly fetched and quoted on a follow-up pass -- this URL was already registered at medium-high/mixed-source confidence from an earlier pass; now upgraded to a pure official source with BRAK's own precise breakdown, including its own ~9-year total figure (sharper than this package's earlier '7-11 years, commonly cited range' framing, though that range may still reflect real variation this specific page's single stated figure doesn't capture, e.g. part-time study or a longer Referendariat wait time in some Länder)."
+    },
+    {
+      "id": "SRC-CS-051",
+      "title": "German clinical-psychology licensure (Approbation/Psychotherapeutengesetz) guidance — upgraded to a direct Federal Ministry of Health (BMG) quote on a follow-up pass",
+      "publisher": "Bundesministerium für Gesundheit (BMG, German Federal Ministry of Health, official) for the direct confirmation; service.berlin.de / verwaltungsportal.hessen.de (official municipal/state portals) for the original application-process description",
+      "url": "https://www.bundesgesundheitsministerium.de/psychotherapeutenausbildung/faqs-psychthgausbrefg ; https://www.anerkennung-in-deutschland.de/html/en/2724.php",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "BMG's own page states directly: the (pre-reform) pathway is \"Studium der Psychologie oder – bei den Kinder- und Jugendlichenpsychotherapeuten der Pädagogik – mit anschließender Ausbildung zum Psychotherapeuten\" (a psychology degree, or education/pedagogy for child-and-adolescent specialists, followed by psychotherapist training), with \"Approbation nach Abschluss der Ausbildung\" (Approbation granted after completing training) -- confirming the core requirement directly from the responsible federal ministry, resolving this source's own previously-flagged limitation (no single consolidated federal ministry statement).",
+      "used_in_rules": ["RULE-COUNSEL-105"],
+      "limitations": "Directly fetched and quoted on a follow-up pass. BMG's page primarily describes this as the *previous* (pre-reform) framework while explaining why it was reformed (bachelor/master degree structures had eroded the old system's standardization) -- the newer post-reform training structure (broader competency training across multiple evidence-based approaches, ~2,500 expected annual graduates) was described by the same page but not independently cross-checked against the current 2020 Approbationsordnung's exact current requirements."
+    },
+    {
+      "id": "SRC-CS-052",
+      "title": "Bundesarchitektenkammer (Federal Chamber of German Architects) official regulation pages",
+      "publisher": "Bundesarchitektenkammer (official federal body)",
+      "url": "https://en.bak.de/regulation/",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "The title 'Architekt' (and related titles) is legally protected in Germany; registration requires a recognized architecture degree plus 2-3 years of practice, administered by one of 16 state-level Architektenkammer under the federal Bundesarchitektenkammer, with rules varying by Bundesland.",
+      "used_in_rules": ["RULE-COUNSEL-106"],
+      "limitations": "None material — official federal body source."
+    },
+    {
+      "id": "SRC-CS-053",
+      "title": "UCAS official personal-statement guidance — Personal Statement Toolkit and 2026-entry personal-statement-format page",
+      "publisher": "UCAS (official UK universities/colleges admissions service) — primary pages fetched directly by the peer session, reported to and incorporated by this session",
+      "url": "https://www.ucas.com/advisers/help-and-training/toolkits/personal-statement-toolkit ; https://www.ucas.com/applying/applying-to-university/writing-your-personal-statement/how-to-write-your-personal-statement-for-2026-entry-onwards",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Confirms, verbatim from UCAS's own advice rather than secondary paraphrase, the super-curricular/extracurricular distinction and the current three-subject-focused-question personal-statement format for 2026-entry applications.",
+      "used_in_rules": ["RULE-COUNSEL-058"],
+      "limitations": "This session did not independently re-fetch ucas.com itself; relied on the peer session's direct report with exact URLs, consistent with this package's discipline of treating a peer's specific, checkable primary-source quotation as upgradeable even when not independently re-verified by this session."
+    },
+    {
+      "id": "SRC-CS-054",
+      "title": "ÖSYM official domain structure (osym.gov.tr SinavGrubu/Index/2 and programs/quotas kılavuzu index) plus convergent independent Turkish YKS placement-score calculators",
+      "publisher": "ÖSYM (Ölçme, Seçme ve Yerleştirme Merkezi — Turkey's official student-selection/placement authority) for domain structure, fetched directly by the peer session; multiple independent Turkish YKS-calculator sites for the convergent formula, cross-checked by the peer session",
+      "url": "https://www.osym.gov.tr/",
+      "type": "mixed_official_and_secondary",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high_for_channel_existence_and_rough_size_medium_for_exact_current_coefficients",
+      "claim_supported": "ÖSYM publishes exact numeric coefficient tables for YKS placement-score calculation as standing practice (confirmed structurally on its own domain). Independent Turkish YKS-calculator sites converge on the same formula: Placement Score = (TYT raw × 0.40) + (AYT raw × 0.60) + (OBP × 0.12), where OBP (Ortaöğretim Başarı Puanı / diploma-grade-derived score) runs roughly 250-500 and the 0.12 coefficient halves to 0.06 for a candidate placed before. This confirms a real but purely grades-based (academics-dimension), small-in-scale (~60 points max on a score running into the hundreds) non-exam channel into YKS placement — zero channel for leadership/community_impact/entrepreneurship/research/awards_distinction.",
+      "used_in_rules": ["RULE-COUNSEL-057", "RULE-COUNSEL-109"],
+      "limitations": "The peer session's direct ÖSYM fetch corroborated the existence and general structure of coefficient-based placement scoring but did not itself retrieve the current-year table's exact values; those exact coefficient values (0.40/0.60/0.12/0.06) come from cross-checking several independent Turkish YKS-calculator sites that converge on the same numbers, not from a single primary ÖSYM publication re-derived by either session. This session did not independently verify any of this directly; relied on the peer session's report."
+    },
+    {
+      "id": "SRC-CS-055",
+      "title": "\"How Your Application is Considered\" — official UofT admissions-assessment page",
+      "publisher": "University of Toronto (official, Future Students)",
+      "url": "https://future.utoronto.ca/how-your-application-considered",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "UofT's general assessment emphasizes the most recent two years of academic results, prerequisite-course marks, and supplemental information 'where required' (program-specific, examples given: personal statements, profiles, auditions) — does not describe a general weighing of leadership/community involvement/extracurricular activities across all programs.",
+      "used_in_rules": ["RULE-COUNSEL-112"],
+      "limitations": "Directly fetched and quoted. Describes UofT's general process; does not itself characterize what any single UofT program's specific supplemental requirement ('profile') assesses, which could still include activity description for specific programs, parallel to Waterloo's AIF — not confirmed either way by this source."
+    },
+    {
+      "id": "SRC-CS-056",
+      "title": "Supplementary Application Rubric — official Queen's Commerce (Smith School of Business) page",
+      "publisher": "Queen's University (official, Undergraduate Admission & Recruitment)",
+      "url": "https://www.queensu.ca/admission/applying/supplementary-application-rubric",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Queen's Commerce supplementary application is scored via a five-point rubric on 'initiative, adaptability, and persistence,' 'problem-solving approach,' and 'self-reflection and personal growth,' assessed through a written response and a video response — contains no extracurricular-activities, leadership-position, or community-involvement scoring criterion.",
+      "used_in_rules": ["RULE-COUNSEL-110", "RULE-COUNSEL-111"],
+      "limitations": "Directly fetched and quoted. Describes Commerce's specific rubric; other Queen's programs with their own supplementary applications were not checked and may differ."
+    },
+    {
+      "id": "SRC-CS-057",
+      "title": "Admission Information Form (AIF) — official University of Waterloo page",
+      "publisher": "University of Waterloo (official, Future Students / Undergraduate Admissions)",
+      "url": "https://uwaterloo.ca/future-students/admissions/admission-information-form",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Waterloo's AIF explicitly asks applicants to describe involvement 'outside of your studies — in school, the community, and/or at home,' with reviewers stated to look for time management, interpersonal, and leadership skills and 'a variety of interests' — genuinely activity/accomplishment-referencing. Engineering-specific guidance adds 'we're not looking for specific extracurricular activities and do not expect you to have engineering-related experience.'",
+      "used_in_rules": ["RULE-COUNSEL-110", "RULE-COUNSEL-111"],
+      "limitations": "Directly fetched and quoted. None material beyond the general caveat that admissions guidance can change year to year."
+    },
+    {
+      "id": "SRC-CS-058",
+      "title": "Supplementary Application — official McMaster Honours Health Sciences Program (HHSP) page",
+      "publisher": "McMaster University (official, Honours Health Sciences Program)",
+      "url": "https://hhsp.healthsci.mcmaster.ca/future-students/supplementary-application/",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "medium-high",
+      "claim_supported": "McMaster HHSP's supplementary application is described as an opportunity to showcase critical thinking skills and methods of self-examination, scored by faculty/staff/senior-student reviewers with multiple reviewers per application — reflective-response assessment, consistent with Queen's Commerce's pattern and distinct from Waterloo's activity-description pattern.",
+      "used_in_rules": ["RULE-COUNSEL-110", "RULE-COUNSEL-111"],
+      "limitations": "This session could not directly fetch this page (HTTP 403); content is a search-engine-mediated summary of the official page, one step less direct than the UofT/Queen's/Waterloo checks in this same batch, hence medium-high rather than high confidence. McMaster's other Health Sciences streams (e.g. Nursing, which uses CASPer testing instead) were not checked and may differ."
+    },
+    {
+      "id": "SRC-CS-059",
+      "title": "\"Les Critères Généraux d'Examen des Vœux (CGEV) — Définitions et modalités de saisie\" (Session 2023)",
+      "publisher": "DGESIP (Direction générale de l'enseignement supérieur et de l'insertion professionnelle), French Ministry of Higher Education — official",
+      "url": "https://services.dgesip.fr/fichiers/note_de_cadrage_cgev_definitions_et_saisie.pdf",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Parcoursup applications are evaluated against exactly 5 nationally-defined evaluation fields (résultats académiques; compétences académiques/méthodologiques; savoir-être; motivation/connaissance de la formation; engagements/activités et centres d'intérêt), each mandatorily assigned a formation-specific percentage weight summing to 100%, with individual criteria rated on a 4-level importance scale. The document's own worked example gives résultats académiques = 30% and compétences académiques = 20%.",
+      "used_in_rules": ["RULE-COUNSEL-114", "RULE-COUNSEL-117"],
+      "limitations": "Directly downloaded and extracted via pypdf after WebFetch's built-in extractor returned only binary/unreadable content for this specific file. Document is dated \"Session 2023\"; this session did not independently confirm the identical 5-field structure and worked-example percentages still apply unchanged for the current 2026 cycle, though the structure is described in the document itself as continuous practice since at least 2019/2022. Page 9's worked-example percentages for the remaining 3 of 5 fields (savoir-être, motivation, engagements/activités) appear to be presented as a graphic rather than extractable text — not obtained, left unresolved rather than guessed. Any single formation's actual published percentage for any field is formation-specific and was not checked for any specific named program."
+    },
+    {
+      "id": "SRC-CS-060",
+      "title": "Casper Assessment Overview — official Acuity Insights product page",
+      "publisher": "Acuity Insights (official vendor)",
+      "url": "https://acuityinsights.com/products/admissions/casper/",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high_for_assessment_description_medium_for_current_program_coverage",
+      "claim_supported": "CASPer is a standardized, timed, third-party-administered situational-judgment test (video and typed responses to real-world hypothetical scenarios, no single correct answer, scored by independent human raters, reported as a z-score/percentile) -- structurally distinct from both achievement-evidence review and institution-authored reflective-response scoring (e.g. Queen's Commerce/McMaster HHSP). Used across 500+ partner programs in medicine, health sciences, PA, nursing, and dental hygiene currently, with the vendor's own page describing expansion into education, business, and engineering.",
+      "used_in_rules": ["RULE-COUNSEL-120"],
+      "limitations": "Vendor's own marketing/product page, not an independent third-party audit -- treated as high confidence for factual claims about assessment mechanics (verifiable, unlikely to be misrepresented) but the specific list of programs/fields currently requiring it changes by admissions cycle per the page's own caveat, so that part is medium confidence and will go stale."
+    },
+    {
+      "id": "SRC-CS-061",
+      "title": "UCAT official pages -- homepage, Test Format and Scoring (Situational Judgement Test), UK and Partner Universities list",
+      "publisher": "UCAT Consortium (official, established by a consortium of UK universities) -- ucat.ac.uk",
+      "url": "https://www.ucat.ac.uk/ ; https://www.ucat.ac.uk/about-ucat/test-format-and-scoring/ ; https://www.ucat.ac.uk/about-ucat/universities/",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "57 UK universities require the UCAT for 2026-entry medicine/dentistry applications (including Oxford, Cambridge, Imperial, UCL, Manchester, Edinburgh, Bristol). UCAT includes a Situational Judgement Test subtest (69 questions, 26 minutes) measuring 'capacity to understand real world situations and to identify critical factors and appropriate behaviour,' scored separately (Bands 1-4) from the cognitive subtests -- a standardized, non-activity-based admissions component distinct from holistic clinical-exposure evidence.",
+      "used_in_rules": ["RULE-COUNSEL-121"],
+      "limitations": "Directly fetched and quoted across three official pages. University-by-university usage nuances (e.g. some courses have alternative requirements, marked with an asterisk on the source page) were not individually verified per institution."
+    },
+    {
+      "id": "SRC-CS-062",
+      "title": "Irish Leaving Certificate Examination Points -- official CAO (Central Applications Office) scoring page",
+      "publisher": "CAO (Central Applications Office, Ireland's official centralized undergraduate admissions body)",
+      "url": "https://www.cao.ie/index.php?page=scoring&s=lce",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Irish general undergraduate admission is computed from Leaving Certificate points (best 6 subjects, Higher/Ordinary-level grade bands on a common points scale, up to 625 with the Higher Maths bonus), with no mention of extracurricular activities, personal statements, or interviews in the standard admission process.",
+      "used_in_rules": ["RULE-COUNSEL-122"],
+      "limitations": "Directly fetched and quoted. Confirms the general mechanism and the absence of general-process activity/interview mention; does not itself rule out individual-institution supplementary requirements for specific named programs, which the page's own text says to check directly with each HEI."
+    },
+    {
+      "id": "SRC-CS-063",
+      "title": "HPAT (Health Professions Admission Test) Ireland -- structure and content, multiple converging guidance sources plus the administering body's own framing",
+      "publisher": "ACER (Australian Council for Educational Research, the test's administering body) and multiple Irish medicine-admissions-guidance sources describing HPAT's structure",
+      "url": "https://hpat-ireland.acer.org/",
+      "type": "mixed_official_and_secondary",
+      "retrieved_at": "2026-08-21",
+      "confidence": "medium-high",
+      "claim_supported": "HPAT is a 2.5-hour, 117-question multiple-choice test required for Irish medicine/allied-health admission alongside Leaving Certificate points, explicitly not assessing academic knowledge: Section 1 (Logical Reasoning and Problem-Solving, 40%), Section 2 (Understanding People -- interpersonal/situational understanding, 40%), Section 3 (Non-Verbal Reasoning, 20%).",
+      "used_in_rules": ["RULE-COUNSEL-122"],
+      "limitations": "The administering body's own site (hpat-ireland.acer.org) was found via search but not itself directly WebFetched for a verbatim quote this pass -- the specific percentage breakdown and section names come from converging secondary guidance sources describing ACER's own published test structure, not a direct fetch of ACER's page. Medium-high rather than high for this reason."
+    },
+    {
+      "id": "SRC-CS-064",
+      "title": "Competitive Events (High School) -- official DECA Inc. page",
+      "publisher": "DECA Inc. (official, the organization itself)",
+      "url": "https://www.deca.org/compete",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "DECA names specific, distinct high-school entrepreneurship competitive events -- Business Growth Plan, Franchise Business Plan, Independent Business Plan, Innovation Plan, International Business Plan, Start-Up Business Plan, Principles of Entrepreneurship, Entrepreneurship Series, Entrepreneurship Team Decision Making, Virtual Business Challenge-Entrepreneurship -- alongside role-play/case-study, prepared, and online-simulation event categories generally.",
+      "used_in_rules": ["RULE-COUNSEL-123"],
+      "limitations": "Directly fetched and quoted for the specific event names. This specific page did not itself detail the district/state/international competition-tier structure (found instead via converging secondary DECA-guidance sources, medium-high confidence for that narrower claim)."
+    },
+    {
+      "id": "SRC-CS-065",
+      "title": "germany.md -- independently-researched country admissions file, admissions-intelligence lane",
+      "publisher": "oryn/admissions-intelligence-research branch (a separate ORYN research session), citing DAAD, hochschulstart.de/DoSV, Anabin (KMK), uni-assist e.V. as its own primary sources",
+      "url": "docs/research/admissions-systems/germany.md on oryn/admissions-intelligence-research, commit 931bcc0 (verified to exist via git cat-file/git ls-tree before use)",
+      "type": "cross_branch_independent_research",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Independently confirms RULE-COUNSEL-062 (Germany is credential-gate-based, not holistic; extracurricular activities explicitly 'not a primary factor' for the great majority of programmes) and adds new precision: the sole exception is NC Medicine's AdH quota specifically, health-related professional/vocational experience specifically, weighted at some universities only (reportedly Hannover), not a national policy.",
+      "used_in_rules": ["RULE-COUNSEL-124", "RULE-COUNSEL-127", "RULE-COUNSEL-128"],
+      "limitations": "This session did not independently re-fetch DAAD/hochschulstart/Anabin/uni-assist itself -- relying on the admissions-intelligence lane's own research, which this session spot-checked for internal rigor (explicit confidence flags, noted source limitations, consistent with this package's own discipline) but did not re-derive from primary sources. That lane's own document flags some sub-claims (e.g. exact Anabin H+/H- terminology, uni-assist's member-institution count) as medium confidence itself."
+    },
+    {
+      "id": "SRC-CS-066",
+      "title": "united-states.md -- independently-researched country admissions file, admissions-intelligence lane",
+      "publisher": "oryn/admissions-intelligence-research branch, citing College Board's own 'Understanding Holistic Review' material as its primary source for the holistic-review claim",
+      "url": "docs/research/admissions-systems/united-states.md on oryn/admissions-intelligence-research, commit 931bcc0",
+      "type": "cross_branch_independent_research",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Independently confirms this package's own Common-Data-Set/NACAC/MIT-sourced finding that grades/rigor rank above test scores, which rank above extracurriculars, in US holistic review -- a second, differently-sourced confirmation of RULE-COUNSEL-001-009's underlying claim.",
+      "used_in_rules": ["RULE-COUNSEL-124"],
+      "limitations": "That document's own text flags the College Board 'Understanding Holistic Review' PDF as 'could not be fully' verified/accessed this session on the admissions-intelligence lane's side -- so this specific claim carries an upstream limitation this session did not resolve, only observed and passed through honestly."
     }
   ]
 }
