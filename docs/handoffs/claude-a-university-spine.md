@@ -3897,3 +3897,83 @@ spine at all, per the coordinator's instruction to collect those as candidates (
 `universiteId` + domain) rather than create university rows directly, flagged for a separate
 canonical-entity resolution pass. Continuing to İTÜ next per the coordinator's approved
 pivot ("Yıldız, İTÜ, Hacettepe — carry on without checking in per university").
+
+**Batch 43 — Istanbul Technical University (İTÜ)** (24 new,
+`independent_batch43_2026-08-21.jsonl`): a materially different shape from every other
+Turkish university this session. 110 raw YÖK Atlas results across 45 unique base subjects
+against 45 existing (all-Turkish-named) ORYN records. Three things make İTÜ's data
+structurally distinct: (1) heavily English-medium/30%-English catalogue rather than mostly
+Turkish; (2) a genuinely separate second physical campus in Northern Cyprus (İTÜ-KKTC Eğitim
+Araştırma Yerleşkesi, Gazimağusa) with its own quotas/cutoffs, handled the same way as
+METU's Kuzey Kıbrıs campus in batch 40; (3) an unusually large UOLP joint-degree footprint —
+9 distinct foreign partner institutions named across the raw data (SUNY New Paltz, SUNY
+Binghamton, SUNY Maritime, SUNY Buffalo, Montana State, New Jersey Institute of Technology,
+Strathclyde, International University of Sarajevo, Azerbaijan University of Architecture and
+Construction), each kept as its own distinct record per this session's standing UOLP
+precedent. Matching found two more instances of the METU-style spelling/naming trap
+(confirmed same real programme, not guessed): YÖK Atlas "Makine Mühendisliği" = existing
+"Makina Mühendisliği" (old vs. modern Turkish spelling of "machine"), same for "...Gemi
+Makineleri..." = existing "...Gemi Makinaları...", and YÖK Atlas "Endüstriyel Tasarım
+(İngilizce)" = existing "Endüstri Ürünleri Tasarımı" (two customary Turkish phrasings of
+Industrial Design, both under the same Mimarlık Fakültesi).
+
+**New failure mode caught before it did damage**: the first DB lookup for İTÜ's existing
+programmes used `university.name ilike '%ITU%'` as a shortcut and returned a badly polluted
+result set — "ITU" as a bare substring matches "Institute" (Georgia Institute of Technology)
+and any other "...Institute..." named school, since I-N-S-T-**I-T-U**-T-E contains the
+literal substring. Caught immediately because the returned faculty names (Ivan Allen College
+of Liberal Arts, Scheller College of Business, plus several obviously-German faculty names)
+were clearly not İTÜ — re-ran against the exact `university_id` from a proper `universities`
+table lookup instead and got a clean 45-row result. Recorded here as a concrete warning
+against loose ILIKE shortcuts on ambiguous abbreviations, not just a private correction.
+
+**Two genuine rename-ambiguity cases, excluded and flagged rather than guessed (a different
+flavor of ambiguity from the Boğaziçi/Yıldız teacher-training pattern — this is "is this the
+same specific programme under an old vs. new name" rather than "does a broad umbrella already
+cover this specific subject")**: YÖK Atlas's "Harita Mühendisliği" (Cartography/Mapping
+Engineering, a historical pre-2009-era name for this field at several Turkish universities)
+has no existing İTÜ record under that name; the existing "Geomatik Mühendisliği" (the
+field's modern renamed term) has no YÖK Atlas match under its own name. Each is the other's
+most likely explanation but this was not confirmed against İTÜ's own site, so neither
+merged nor duplicated — left as-is, flagged. Identical reasoning for YÖK Atlas "İklim Bilimi
+ve Meteoroloji Mühendisliği" (Climate Science and Meteorology Engineering) against the
+existing "Meteoroloji Mühendisliği" (Meteorology Engineering), both under the Faculty of
+Aeronautics and Astronautics.
+
+**Separately noted, not chased**: 10 existing İTÜ records (7 Türk Musikisi Devlet
+Konservatuvarı / Turkish Music State Conservatory subjects — Bestecilik, Çalgı Eğitimi,
+Müzik Teknolojisi, Müzik Teorisi, Müzikoloji, Ses Eğitimi, Türk Halk Oyunları — plus Moda
+Tasarım, Tekstil Geliştirme ve Pazarlama, İmalat Mühendisliği) have no counterpart at all in
+this birimTuruId=46/Lisans result set. Most likely explanation is a different YÖK Atlas
+admission-track filter (talent-exam-based conservatory admission in particular is a
+well-documented separate track from standard YKS-score admission), not a real coverage gap —
+not investigated further this batch per the coordinator's "go wide, not deep on any one
+site" redirection, but recorded here rather than silently dropped.
+
+24 new records span 10 genuinely new subjects with no plausible existing match at all:
+Bilişim Sistemleri Mühendisliği (Information Systems Engineering), Biyomühendislik
+(Bioengineering), Denizcilik İşletmeleri Yönetimi (Maritime Business Administration, KKTC
+campus only), Ekonomi ve Finans (Economics and Finance, KKTC campus only, distinct from the
+existing plain "Ekonomi"), Elektrik-Elektronik Mühendisliği (combined Electrical-Electronics
+Engineering — only offered as a combined degree at the KKTC campus; the Istanbul campus
+splits it into the existing separate Elektrik Mühendisliği and Elektronik ve Haberleşme
+Mühendisliği), Endüstri Mühendisliği (Industrial Engineering — confirmed genuinely absent
+from the existing 45, distinct from the existing Industrial *Design* programme), Siber
+Güvenlik Mühendisliği (Cybersecurity Engineering), Veri Bilimi ve Analitiği (Data Science and
+Analytics), Çevre Mühendisliği (Environmental Engineering), and plain İşletme (Business
+Administration — only actually offered via the SUNY New Paltz UOLP partnership track, no
+standalone non-UOLP admission code exists for it at İTÜ). 6 records spot-checked against a
+fresh direct API re-query immediately before commit — quota/score/rank/language/faculty all
+matched exactly. Live DB query also confirmed zero collisions between these 24 program names
+and İTÜ's existing 45 records.
+
+**Running total, coordinator-redirected "go wide on YÖK Atlas" push (batches 37-43)**: 420
+new records across 7 Turkish universities (GTU 23, Ankara Üniversitesi 153, Istanbul
+University 127, METU/ODTÜ 79, Sabancı 9, Yıldız Technical 5, İTÜ 24). Combined with the UK
+push earlier in this continuation (batches 30-36, 919 records / 7 universities across
+DE/UK), this continuation's running total is now **1,491 new records across 14
+universities**.
+
+**Next, per the coordinator's approved pivot**: Hacettepe University (99 existing) — the
+last named target before returning to collecting not-yet-in-spine Turkish universities as
+candidates rather than continuing to deepen already-present ones indefinitely.
