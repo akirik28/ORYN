@@ -62,18 +62,12 @@ export interface AdmissionOutlookResult {
   estimateConfidence: DataConfidence | null;
   modelVersion: string;
   /**
-   * Non-null only for `admissionSystemType: "credential_gate"` inputs. `outlook_label` is a
-   * fixed Postgres enum (migration 0007) with no "not applicable" member, and adding one is a
-   * schema change out of this fix's bounds — so `outlook`/`compositeScore` below are still
-   * computed via the same profile-strength/selectivity formula as a holistic target, for
-   * backward type/DB compatibility, and are NOT a meaningful answer for a credential-gate
-   * target. This field is the actual fix: it's the caller's job to check it and suppress or
-   * reframe `outlook` rather than display it as a normal reach/likely-style classification —
-   * consistent with the design spec's own §7 point 4 (explanation generation must consume the
-   * mechanism, not just a label). What IS fully suppressed below, safely, is the numeric
-   * estimate range — a percentage-style figure is the one part of this result the shipped
-   * non-negotiables (AGENTS.md #5, "never presented with false precision") most directly
-   * prohibit for a system this formula doesn't actually model.
+   * Non-null only when `outlook === "not_applicable"` (i.e. `admissionSystemType:
+   * "credential_gate"` inputs) — the human-readable explanation to pair with that label so a
+   * caller never has to reverse-engineer why. Migration 0049 added `outlook_label`'s
+   * `not_applicable` member specifically so this field and `outlook` always agree instead of
+   * `outlook` still claiming a confident reach/likely-style classification while this field
+   * says it doesn't apply.
    */
   notApplicableReason: string | null;
 }
@@ -88,8 +82,12 @@ export interface AdmissionOutlookResult {
 export function computeAdmissionOutlook(inputs: AdmissionOutlookInputs): AdmissionOutlookResult {
   const tier = selectivityTier(inputs.admissionRate);
   const compositeScore = Math.max(0, Math.min(100, inputs.profileStrength - SELECTIVITY_PENALTY[tier]));
-  const outlook = classifyOutlook(compositeScore);
   const isCredentialGate = inputs.admissionSystemType === "credential_gate";
+  // compositeScore is still computed above (a real, if not admissions-relevant, read of raw
+  // profile strength vs. the target's selectivity) so callers keep a numeric field to persist/
+  // display if useful, but the LABEL itself must not claim a holistic-review classification
+  // that doesn't describe this target — that's what "not_applicable" (migration 0049) is for.
+  const outlook = isCredentialGate ? "not_applicable" : classifyOutlook(compositeScore);
 
   let estimateRangeLow: number | null = null;
   let estimateRangeHigh: number | null = null;
