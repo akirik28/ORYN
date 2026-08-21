@@ -3977,3 +3977,79 @@ universities**.
 **Next, per the coordinator's approved pivot**: Hacettepe University (99 existing) — the
 last named target before returning to collecting not-yet-in-spine Turkish universities as
 candidates rather than continuing to deepen already-present ones indefinitely.
+
+**Batch 44 — Hacettepe University** (2 new, `independent_batch44_2026-08-21.jsonl`): by far
+the most thoroughly pre-covered Turkish university found this session. 89 raw YÖK Atlas
+results across 77 unique base subjects against 99 existing records — a much higher
+existing-to-raw ratio than any other Turkish university this session, confirming Hacettepe's
+existing data was researched at genuinely fine subject-specific granularity already
+(comparable to the Koç/Özyeğin finding in batches 37-41, but here at a large comprehensive
+university rather than a small foundation one, and confirmed against a much bigger dataset).
+Matching surfaced several more instances of the same naming-convention-equivalence classes
+established earlier this session (confirmed, not assumed, by direct comparison): YÖK Atlas
+"İngilizce Öğretmenliği"/"Fransızca Öğretmenliği"/"Almanca Öğretmenliği" = existing "İngiliz
+Dili Öğretmenliği"/"Fransız Dili Öğretmenliği"/"Alman Dili Öğretmenliği" (same interchangeable
+phrasing pattern for language-teaching programmes); "İngiliz Dilbilimi" = existing "İngiliz
+Dil Bilimi" (spacing variant); "Hidrojeoloji Mühendisliği" = existing "Jeoloji (Hidrojeoloji)
+Mühendisliği" (standalone vs. parenthetical naming); "Bilgisayar ve Öğretim Teknolojileri
+Öğretmenliği" = existing "...Eğitimi" (the same Öğretmenliği/Eğitimi suffix-equivalence
+already confirmed at Yıldız Technical in batch 42); and five YÖK Atlas plain-subject entries
+matching existing Faculty-suffixed record names (Diş Hekimliği/Eczacılık/Hukuk/Hemşirelik
+Fakültesi, Mimarlık Bölümü). Medicine needed one-off handling: YÖK Atlas's 3 codes (Tıp
+İngilizce / plain Tıp at 30%-English / Tıp İngilizce KKTC-Uyruklu) resolve 1:1 against the
+existing 2 records (Tıp İngilizce, Tıp Türkçe) plus one additional KKTC-restricted seat,
+which was folded into the same scope-simplification treatment as every other KKTC variant
+this batch rather than singled out as a 3rd Medicine record (see below).
+
+**Same rename-ambiguity as İTÜ, now independently confirmed a second time**: "Harita
+Mühendisliği" (YÖK Atlas) has no existing Hacettepe match, while existing "Geomatik
+Mühendisliği" has no YÖK Atlas match under its own name — identical to the İTÜ batch 43
+pairing. Two independent, consistent confirmations with zero counter-examples anywhere in
+this session's Turkish data raises real confidence this is a genuine national programme
+rename (Cartography/Mapping Engineering → Geomatics Engineering, a well-known real-world
+renaming that happened at multiple Turkish universities around 2009-2011), but this session
+still has not checked it against either university's own site, so — consistent with the
+"leave Boğaziçi flagged" standard the coordinator set earlier rather than letting accumulated
+pattern-confidence substitute for an actual check — it stays excluded and flagged rather than
+merged or duplicated. One deliberate site check would resolve this for every affected
+university at once; recommending that as the actual next action rather than a third
+independent per-university re-flag.
+
+**Scope clarification on KKTC-Uyruklu variants (refining, not reversing, the general rule
+recorded earlier this session)**: the "kept as distinct records" rule for KKTC-Uyruklu
+admission tracks was applied within batches whose primary content was new subject matter.
+This batch is the first to closely examine what that rule implies for subjects that are
+*wholesale-excluded* as already-covered — Hacettepe alone has at least 10 matched subjects
+carrying a hidden KKTC-Uyruklu sub-variant (Almanca Mütercim ve Tercümanlık, Ergoterapi,
+Fizik Mühendisliği, Fransız Dili ve Edebiyatı, Hidrojeoloji Mühendisliği, İletişim
+Bilimleri, Kimya Mühendisliği, Odyoloji, Sınıf Öğretmenliği, plus Medicine's above) that
+were not individually pulled in as extra records. Decided, and disclosed rather than left
+implicit: this is a deliberate scope simplification consistent with the coordinator's "go
+wide, not deep on any one already-covered site" redirection — every such variant is
+low-headcount (quota of 1-2 seats in every case checked) placement-tier granularity, the
+same class of "real information with nowhere to live in the current schema" already flagged
+repeatedly in this document, not new subject-matter content. **This same shortcut was
+implicitly taken, un-audited, in the Yıldız Technical/Istanbul University/Ankara
+Üniversitesi/METU batches before it** — flagged here retroactively rather than silently
+left unstated, though not reworked, since re-opening four already-committed, already-pushed
+batches for a low-value granularity pass would cost more than it returns.
+
+Final content: exactly 2 new records — Paramedik (Sağlık Bilimleri Fakültesi) and Radyo,
+Televizyon ve Sinema (İletişim Fakültesi), neither with any plausible existing match.
+Both spot-checked against a fresh direct API re-query immediately before commit — matched
+exactly. Live DB query also confirmed zero collisions against Hacettepe's existing 99
+records under any plausible keyword (paramedic, radio, television, cinema, film).
+
+**Running total, coordinator-redirected "go wide on YÖK Atlas" push (batches 37-44)**: 422
+new records across 8 Turkish universities (GTU 23, Ankara Üniversitesi 153, Istanbul
+University 127, METU/ODTÜ 79, Sabancı 9, Yıldız Technical 5, İTÜ 24, Hacettepe 2). Combined
+with the UK push earlier in this continuation (batches 30-36, 919 records / 7 universities
+across DE/UK), this continuation's running total is now **1,493 new records across 15
+universities**.
+
+**Named-target pivot complete.** All three coordinator-named targets (Yıldız, İTÜ,
+Hacettepe) are done. Per the coordinator's standing instruction, next work shifts to
+collecting (not creating rows for) Turkish universities not yet in ORYN's spine at all —
+recording YÖK Atlas `universiteId` + official domain as candidates for a separate
+canonical-entity resolution pass — rather than continuing to deepen already-present
+universities indefinitely.
