@@ -15,7 +15,19 @@ that `unaccent()` folds both (`ı`→`i`, `ß`→`ss`) while `dbNormalizedName()
 shape of the fix: explicit `ı`→`i` and `ß`→`ss` mappings (`İ`→`i` already works correctly once NFD
 runs first — see `07`'s corrected hypothesis), placed so they survive the existing
 NFD/diacritic-strip/lowercase chain. Add the full Turkish alphabet (`ç ğ ı ö ş ü` + capitals) as a
-permanent test fixture once fixed.
+permanent test fixture once fixed. **This item is scoped to the acquisition pipeline only — `17`
+found a second, separate normalizer (`lib/entities/normalize.ts`) behind live student search,
+already correctly fixed for `ı` but not for `ß`; fix that one too (`17` §2), independently of
+this item, since it's a different file with its own copy of the same gap.**
+
+**1b. Add a `verificationState !== "merged" && verificationState !== "inactive"` filter to
+`lib/entities/audit.ts`'s `findExactDuplicates`/`findNearDuplicates`/`findDuplicateAliases`/
+`findAliasCollisions`.** Evidence: `17` §4. Without it, `npm run entities:audit`'s
+SAFE_EXACT_LINK bucket is currently 100% (24/24, checked completely) already-merged tombstones
+correctly retaining their old identity — not a data problem, but the tool reports it as one,
+indistinguishable from a real finding without checking each by hand. Small, precise, isolated
+fix; does not affect `entities-backfill-report.ts` or `search.ts`, which already filter
+correctly elsewhere in the same module.
 
 **2. Decide and fix `nameKey()`'s treatment of `ı` in the same file.**
 Currently deletes it or splits the word (`07`'s table: "Yıldız" → `"y ld z"`). Recommend folding
@@ -40,7 +52,13 @@ This is the same pipeline already responsible for 93.4% ROR coverage elsewhere �
 expected, just a targeted run. Once both sides of a pair carry a ROR id,
 `classifyDuplicateCandidate()` requires no changes to correctly resolve most of these to
 `SAFE_TO_CANONICALIZE` (`05`). Purdue University needs both sides checked (neither currently has
-ROR). **For 8 of the entities in `university-ror-gaps.json`'s duplicate-supersession list (MIT,
+ROR). **If running this incrementally, `17` independently cross-validated 9 of the 41 pairs via
+a second method (UCLA, UC Berkeley, UC San Diego, UC Santa Barbara, NYU, Caltech, City
+University of Hong Kong, National Cheng Kung University, National Yang Ming Chiao Tung
+University) — reasonable to merge first given several are high-application-volume US
+institutions; see `entities-lib-live-findings.json` for full detail. Not additional scope, just
+a sequencing suggestion.** **For 8 of the entities in `university-ror-gaps.json`'s
+duplicate-supersession list (MIT,
 UCL, LSE, Warwick, KFUPM, HKUST, UTS, Newcastle-Australia), skip the research step entirely —
 `npm run audit:university-duplicates` (`scripts/university-duplicates-audit.ts`) already
 identified and hand-verified the correct ROR id for each on 2026-08-17 (independently cross-

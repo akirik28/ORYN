@@ -60,6 +60,19 @@ against this specific path); flagged as worth a direct check, not asserted as an
 
 Full 41-row table, both sides' ids/cities/timestamps/ROR values: `duplicate-candidates-university.json`.
 
+**Cross-validated independently, late in this session (`17`)**: running `lib/entities/audit.ts`'s
+production code (the live Canonical Entity Autocomplete System's own audit tool, a completely
+different code path than the `entity_verification_queue` re-query above) against a fresh
+registry snapshot rediscovered nine of these 41 pairs on its own — via `entity_aliases` sharing
+an identical alias string, not via matching names — with no prompting from this finding. The
+nine: UCLA, UC Berkeley, UC San Diego, UC Santa Barbara, NYU, Caltech, City University of Hong
+Kong, National Cheng Kung University, National Yang Ming Chiao Tung University. Worth naming
+explicitly since several are exactly the high-application-volume US institutions ORYN's own
+users are most likely to search for — a reasonable basis for sequencing which of the 41 pairs
+to merge first once `10`/`11`'s recommended ROR-enrichment pass runs. See `17` §5 for the full
+detail, including a methodology note on how this was nearly mis-presented as a new finding
+before the overlap was caught.
+
 ## Finding 3: `entity_relationships` is almost entirely unpopulated
 
 **9 rows total** against 1,135 active (non-merged) canonical entities of every type, as of the

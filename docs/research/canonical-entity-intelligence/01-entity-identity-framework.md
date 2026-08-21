@@ -118,6 +118,22 @@ quite one, and treating it as strictly linear is a mistake worth naming explicit
   yet — it is a matter of *when*, not *if*, once `entity_type='school'`/`organization` coverage
   grows past its current ~70 rows.
 
+## Not every `entity_type` can originate from `user_submitted` — a precise correction
+
+The previous section treats `user_submitted` as a state reachable for any entity type behind a
+`preferred_custom_fallback` field. `lib/entities/field-policy.ts`'s `ENTITY_SCOPES` (found and
+read in full only late in this session — see `17`) makes this precise rather than implicit:
+only **six** of the fourteen `entity_type` values are ever assigned as a `customFallbackType`
+anywhere in the app — `school`, `organization`, `employer`, `ngo`, `research_institution`,
+`sports_team`. `university` and `opportunity` explicitly have no custom fallback at all (by
+design — both are curated, sourced catalogues, not student-typed). `lab`, `club`,
+`opportunity_provider`, `program`, `competition`, `scholarship`, `country`, and `city` are
+never a custom-fallback target either, which means a live row of any of those eight types was
+necessarily seeded or curated — never student-submitted, regardless of what
+`verification_state` it currently holds. Worth knowing before treating a `user_submitted` row
+of one of those eight types as "a student's guess needing review" — it did not get there that
+way.
+
 ## What this framework deliberately does not add
 
 No new `entity_type`, no new top-level identity table, no relaxation of the country-agreement

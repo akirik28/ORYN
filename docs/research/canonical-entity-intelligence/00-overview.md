@@ -104,12 +104,15 @@ database directly rather than trusting any prior session's report.
 | 14 | `14-trigram-similarity-discovery-audit.md` | A new discovery-only candidate-finding method tried against live data, including one candidate researched to a sourced, resolved conclusion |
 | 15 | `15-country-city-entity-gap.md` | `entity_type='country'`/`'city'` have zero rows despite six schema-enforced FK columns requiring them — the largest, cleanest gap this session found, and the one case where bulk pre-population is actually the right call |
 | 16 | `16-school-brand-license-networks.md` | Forward-looking (no live ORYN data yet): UK independent-school international brand-licensing networks (Harrow, Dulwich), giving `related_brand` its first real, sourced example |
+| 17 | `17-canonical-entity-autocomplete-system.md` | A second, more complete resolution architecture (`lib/entities/*`) this package had missed until late in the session — corrects and extends `01`/`07`/`09`/`10`/`11`/`15`, including a live-registry run of its production audit code and a self-caught correction where an apparent new duplicate finding turned out to already be documented in `09` Finding 2 |
 
 Docs 12–13 were produced by two background research agents dispatched partway through this
 session with the same evidence standard and non-duplication discipline as 00–11 (see
-`docs/handoffs/research-canonical-entity-intelligence.md` for exactly when/how); 14–16 continue
+`docs/handoffs/research-canonical-entity-intelligence.md` for exactly when/how); 14–17 continue
 the lead session's own direct-query/direct-research method. All are integrated here, not bolted
-on — read them in the same pass as the rest of the package.
+on — read them in the same pass as the rest of the package. **17 should be read especially
+carefully** — it corrects part of `07`'s framing (two different normalizer functions, not one)
+and sharpens `09` Finding 2 with nine specific, named, ready-to-merge pairs.
 
 Machine-readable companions live in `data/research/canonical-entities/`:
 
@@ -129,6 +132,10 @@ Machine-readable companions live in `data/research/canonical-entities/`:
   `trigram-similarity-candidates.json` — companions to docs 12–14 respectively.
 - `live-country-values.json` — every distinct live `country` value (90), checked against ISO
   3166-1, ready to use for the `15` country-entity bootstrap.
+- `entities-lib-live-findings.json` — companion to `17`: the nine confirmed duplicate pairs, the
+  three real abbreviation-collision pairs, the POSSIBLE_DUPLICATE calibration sample, and the
+  verification-state evidence audit, all from running `lib/entities/audit.ts`'s actual code
+  against a live registry snapshot.
 
 ## Method and source standard
 

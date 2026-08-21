@@ -583,6 +583,48 @@ a gap in it.
 
 ---
 
+## 16. University of Maryland system (US) — found while spot-checking `17`'s POSSIBLE_DUPLICATE calibration
+
+**The trap:** "University of Maryland, Baltimore" and "University of Maryland, Baltimore
+County" surfaced together in an unrelated check (`17` §6, a spot-check sample of
+`lib/entities/audit.ts`'s near-duplicate output) precisely because they look like a
+formatting-variant duplicate the way several genuine ones in this package's `09` Finding 2 are.
+They are not — both are real, independently-accredited institutions, verified live against
+ROR, not assumed from the name alone.
+
+| Institution | Character | Official site | ROR |
+|---|---|---|---|
+| University of Maryland, College Park | Flagship — the one most people mean by plain "University of Maryland" or "UMD"; full undergraduate/graduate research university | umd.edu | `ror.org/047s2c258` |
+| University of Maryland, Baltimore (UMB) | Graduate/professional only — medicine, law, pharmacy, dentistry, nursing, social work; **no undergraduate program at all** | umaryland.edu | `ror.org/04rq5mt64` |
+| University of Maryland, Baltimore County (UMBC) | Separate comprehensive research university with its own undergraduate admissions, in Baltimore's suburbs, not downtown | umbc.edu | `ror.org/02qskvh78` |
+| University of Baltimore | A fourth, differently-named but easily-confused institution in the same city, part of the same University System of Maryland | ubalt.edu | `ror.org/024gw2733` |
+
+Four distinct ROR ids, confirmed live. All four are separate members of the University System
+of Maryland (a state governing umbrella, not itself a degree-granting institution) — genuinely
+comparable in shape to `08`'s note that a governing/operating relationship is not the same as
+identity, though this session did not find a live `entity_relationships` need here the way it
+did for Berlin/Amsterdam (case 5/10), since none of ORYN's live data currently references any
+of these four.
+
+**Confidence:** high — ROR-verified live, same standard as cases 1-15. Narrower evidentiary
+basis than most other cases in one respect worth flagging explicitly: the *characterization* of
+UMB as graduate/professional-only and UMBC as a separate undergraduate research university
+rests on well-established public knowledge of the University System of Maryland's structure,
+not a fresh reading of each institution's own official page this session performed (unlike,
+for example, case 12's İstanbul University split, which was corroborated against dated news
+sources) — the ROR-id distinctness itself is independently and directly verified either way.
+
+**Recommendation:** no relationship row between the four (each is genuinely independent, not a
+campus-of or system-of relationship the current schema should model) — keep fully separate,
+same as case 14/15's "no institutional connection" pattern. Useful specifically as a caution for
+whoever reviews `entities:audit`'s POSSIBLE_DUPLICATE output (`17` §6): a `"..., City"` vs.
+`"..., City County"` shape reads exactly like the formatting-only variants this package's own
+`09` Finding 2 documents as genuine duplicates elsewhere — this is the one live case found so
+far where that shape is a trap, not a signal, and it is worth checking city-suffix variants
+against an official source before assuming either pattern.
+
+---
+
 ## Checked and found clean (or softer than expected)
 
 Matching this package's own standard of recording a clean negative result rather than omitting it
@@ -623,7 +665,11 @@ silently (`09` does the same for the parts of the registry it found correctly mo
 | 12 | İstanbul University split | TR | Yes | High / Medium | No relationship; exposes a genuine `split_from` vocabulary gap |
 | 13 | Fatih-prefix collision | TR | Yes | High / Medium | No relationship; closed side is an `inactive`-status candidate, not a merge target |
 | 14/15 | US name-order inversions | US | Yes (no connection at all) | High | No relationship; algorithmic caution for fuzzy matching only |
+| 16 | University of Maryland system | US | Yes (4-way) | High | No relationship; a `"..., City" vs "..., City County"` shape that is a trap, not a duplicate signal — added late, via `17`'s unrelated spot-check |
 
-Fifteen cases, all independently verified this session against official sites and/or ROR — none
+Sixteen cases, all independently verified this session against official sites and/or ROR — none
 asserted on the strength of a seed-list description alone, and one seeded pair (Boğaziçi/ODTÜ)
-explicitly ruled out rather than force-fit into the list.
+explicitly ruled out rather than force-fit into the list. Case 16 was added after the other
+fifteen, found incidentally while spot-checking an unrelated tool's output (`17`) rather than
+from the original seed list — recorded here as a reminder that this document's case list is not
+necessarily exhaustive even after a careful session.

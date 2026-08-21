@@ -9,6 +9,20 @@ below turned out to be **wrong on first principles and corrected by testing** �
 deliberately, because the correction process is itself the guidance: verify normalization claims,
 never reason about Unicode case-folding from memory alone.
 
+**Important scope correction, added after `17`**: everything below is about
+`lib/acquisition/normalize.ts` (`dbNormalizedName()`/`nameKey()`), which powers only the
+university/ROR acquisition pipeline's identity matching. It is a **different function** from
+`lib/entities/normalize.ts`'s `normalizeEntitySearchText()`, which powers the live, production,
+student-facing search/backfill/audit/dedup path every school/employer/organization field goes
+through. The two do not share the same bugs — tested directly, not assumed, in `17` §2: the `ı`
+finding below is **already fixed** in `lib/entities/normalize.ts` (an explicit pre-NFKD
+`ı`→`i` step), so it affects only the acquisition pipeline, not live student search. The `ß`
+finding below is **also broken** in `lib/entities/normalize.ts` — confirmed by a fresh test,
+`normalizeEntitySearchText("Universität Straße 5")` → `"universitat straße 5"`, ß untouched —
+so it is more urgent than this document alone suggests, since it sits on the production path.
+Read `17` §2 alongside this document rather than treating the fix below as covering both
+functions.
+
 ## Tested and confirmed safe: the dotted-İ / plain-ASCII-I question
 
 Hypothesis going in: JavaScript's locale-independent `.toLowerCase()` maps U+0130 (İ, Turkish
@@ -144,6 +158,10 @@ single highest-severity concrete finding — see `09`/`11`.
    `ç, ğ, ı, ö, ş, ü` plus their capitals) as a permanent unit-test fixture for both functions once
    fixed, so this regressing again is caught mechanically rather than requiring another manual
    per-language audit.
+6. Fix `ß` in `lib/entities/normalize.ts`'s `normalizeEntitySearchText()` too (`17` §2) — a
+   one-line addition alongside its existing `ı`→`i` pre-NFKD step. Higher priority than items
+   1-5 above in practice, since this function sits on the live student-facing search/backfill/
+   audit/dedup path today, not only the acquisition pipeline.
 
 ## Verified, live, and the same bug in a second language: German `ß` (eszett)
 

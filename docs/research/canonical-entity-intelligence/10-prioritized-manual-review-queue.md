@@ -12,7 +12,12 @@ Turkish- or German-script entity created from today forward inherits this gap un
 and because `canonical_entities_identity_uq` is not actually protecting against duplicate
 Turkish-school/university inserts right now. Audit-then-fix the ~26+ already-affected stored rows
 as a follow-up once the function itself is corrected (regenerate-and-diff, not a blind bulk
-update, per `07`'s recommendation).
+update, per `07`'s recommendation). **Scope correction from `17`: this item is about
+`lib/acquisition/normalize.ts` only (the ROR-enrichment pipeline). The Turkish `ı` half is
+already fixed in the separate, live, student-facing `lib/entities/normalize.ts` — no action
+needed there. The German `ß` half is NOT fixed there either (confirmed live) and sits on the
+production search path today, making it more urgent in practice than this item's ranking
+implies — see `17` §2 for the one-line fix location.**
 
 **1b. Bulk-populate `entity_type='country'` from ISO 3166-1.**
 `15`. Different in kind from every other item here: this is the one entity type where a full
@@ -51,6 +56,15 @@ all — ROR models all of Rutgers as one record (`ror.org/05vt9qd57`), which wil
 are flagged `WARNING_verified_live_against_ror_api` in their respective JSON entries — check for
 this "ORYN splits finer than the registry does" shape on any other multi-campus US public
 university system before running the pass unattended.**
+
+**Sequencing note added by `17`**: nine of these 41 pairs — UCLA, UC Berkeley, UC San Diego, UC
+Santa Barbara, NYU, Caltech, City University of Hong Kong, National Cheng Kung University,
+National Yang Ming Chiao Tung University — were independently rediscovered via a second,
+unrelated method (`lib/entities/audit.ts`'s alias-collision rule, run live against the
+registry), which is useful confirmation but not new scope. Worth merging this specific nine
+first if the full 41-pair pass is done incrementally rather than in one batch: several are
+exactly the high-application-volume US institutions ORYN's own students are most likely to
+search for. Full external-id detail for these nine: `entities-lib-live-findings.json`.
 
 **3. Decide the disposition of the ~45 "orphan" canonical_entities rows with no `universities` row.**
 Overlaps heavily with #2 but is a distinct question: even after ROR-enrichment resolves the
