@@ -657,3 +657,28 @@ unchanged count (in-place upgrade, same pattern as this branch's batch).
 explicit mission-brief deliverables have real coverage; remaining time being spent on genuine
 deepening — primary-source verification, cross-framework stress-testing, and following up gaps
 this package finds in itself — rather than new breadth for its own sake.
+
+## Timebox reached — closing status, 10:29 Europe/Istanbul
+
+Between the last checkpoint above and now, both sessions independently converged on the same
+read (confirmed to each other directly): the mission's original deliverables and the "AFTER CORE
+PACKAGE" continuation list are comprehensively covered, cross-verified, and internally consistent.
+Neither session found further high-value threads worth chasing beyond what's recorded above, so
+both settled into an "available, not manufacturing activity" posture for the remainder of the
+window rather than padding the package artificially. A founder-relayed status check came in around
+10:27 (via a peer session on a different socket) and was answered directly — see that exchange in
+this session's own transcript if the exact wording matters.
+
+**Final state, this branch, as of this entry:**
+
+- **123 `RULE-COUNSEL-###` rules, 64 registered sources** — `data/research/counseling-intelligence/{rules,sources}.json`, both schema-valid, no duplicate IDs, every rule's `sources` array resolves to a real source entry.
+- **Self-consistency**: every `[[RULE-COUNSEL-###]]` citation across all markdown docs resolves to a real `rules.json` entry; every entry is mentioned in the docs (no orphans); every entry's `doc` field points to a file that exists. Re-checked after every batch tonight, clean every time, most recently confirmed at this entry.
+- **Character hygiene**: all 29 files in `docs/research/counseling-intelligence/**`, `docs/handoffs/*.md`, and `docs/ORYN_WORKSTREAMS.md` scanned for stray zero-width/soft-hyphen/BOM characters (a real, recurring issue caught and fixed several times tonight) — clean as of the last full scan.
+- **Git state**: nothing uncommitted, nothing unpushed. Latest commit `1d3633c`, pushed to `origin/oryn/counseling-intelligence-research-013956`.
+- **Documents this branch owns**: 12 top-level docs (`00`, `01`, `02`, `04`, `05`, `09`, `10`, `11`, `12`, `13`, `15`, `17`) plus 9 family docs (`06/10`-`17`+`19`) — **21 files total**, verified by direct `ls` count at this entry, not estimated. Top-level `17` and family `17` are different files in different directories (documented numbering-namespace note in `00-overview.md`), which is why the two counts don't collapse into one simpler number.
+- **Read first if resuming cold**: `15-executive-summary.md` (5 minutes, both branches' highest-impact findings) → this handoff (full operational history) → `10-open-questions.md` (what's genuinely unresolved) → `13-implementation-readiness.md` (prioritized build order) → whichever specific document the task at hand needs.
+- **The one thing that must not be skipped**: final cross-branch integration (renumbering one side's colliding `RULE-COUNSEL-###` range before merging `rules.json` files — full collision map above) requires a human or a fresh session with authority to make final calls. Neither research session should attempt it unilaterally, and neither has.
+
+Nothing further planned unless the peer session or the founder surfaces something concrete. This
+entry closes out the mission's own "leave an exact handoff, never lose verified research"
+instruction — everything above is true as written, not aspirational.
