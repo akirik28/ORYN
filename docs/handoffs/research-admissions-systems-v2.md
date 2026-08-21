@@ -1,15 +1,20 @@
 # Handoff: Country-level admissions system intelligence — v2 expansion
 
 STATUS:
-**Research complete and committed for 8 new countries; NOT yet folded into
-`README.md`'s cross-country matrix/ruleset or into a rewritten summary.** That
-integration is the single clearest next action for whoever picks this up.
+**Research complete for 8 new countries AND folded into `README.md`'s
+cross-country matrix and ruleset (14 countries, RULE-ADMISSIONS-013 through
+016 added).** Originally left as the "next action" when this doc was first
+written at the 11:00 deadline; completed in a follow-up pass per an explicit
+assignment from the founder-authorized coordination session after the
+deadline, once new project advancement was re-authorized for that one
+bounded task (integration of already-completed research, not new country
+research — batch 3 stayed explicitly out of scope).
 
 Session context: overnight research mission, timeboxed to 2026-08-21 11:00
 Europe/Istanbul, same deadline as the concurrent COUNSEL-RESEARCH lane. This
-doc is being written in the final ~15 minutes before that deadline, so it
-prioritizes capturing synthesis (findings, new-rule candidates) over polish —
-the raw per-country research itself is complete and validated, not rushed.
+doc was originally written in the final ~15 minutes before that deadline,
+prioritizing synthesis over polish; the integration section below was
+completed and this status block updated afterward, in the same sitting.
 
 COUNTRIES ADDED THIS PASS:
 Switzerland, France, Spain, Ireland, Australia, New Zealand, Hong Kong,
@@ -29,18 +34,27 @@ carries a `scope` label (national/platform/university/programme) and a
 `sources` array; a `matrix_row` object per country for table-building;
 honest "Unresolved questions" rather than invented equivalencies.
 
-NOT YET DONE (explicitly, not silently skipped):
-- README.md's cross-country matrix and 12-rule ruleset were NOT edited —
-  they still describe only the original 6 countries. **Do not assume the
-  README reflects current coverage.** The 8 new countries' `matrix_row`
-  objects are all sitting in their respective JSON fragments/entries, ready
-  to fold in mechanically.
-- The 4 candidate new rules below (working numbers RULE-ADMISSIONS-013
-  through ~016) are proposed, evidence-backed, but **not yet added to
-  README.md** — numbering/wording should be finalized by whoever does that
-  integration pass, not treated as final here.
+NOW DONE (updated after the initial write of this doc):
+- README.md's cross-country matrix now covers all 14 countries (the
+  original 6 columns preserved byte-for-byte, 8 new columns appended per
+  dimension row, parsed-and-spliced programmatically rather than
+  hand-transcribed, to guarantee the original text wasn't silently altered).
+- RULE-ADMISSIONS-013 through 016 added to README.md, claiming that ID
+  range (001-012 unmodified). 013 (platform-access ≠ platform-existence)
+  and 014 (two fully parallel admissions architectures within one country)
+  were deliberately kept as two separate rules rather than merged — see
+  README.md's own text for the reasoning (they fail differently: 013 is an
+  eligibility gate, 014 is an evidence-model switch) so a future session can
+  overturn that split with evidence rather than re-litigating it from
+  scratch. 015 = Singapore's nationality-quota capacity axis. 016 = the
+  NZ-Rank-Score/US-class-rank terminology-false-cognate finding.
+- Countries-covered table (the 4-column summary) also extended with all 8
+  new rows.
+
+STILL NOT DONE (explicitly, not silently skipped):
 - Batch 3 (Sweden, Belgium, Austria, Poland, Czech Republic) was planned but
-  never started — no research exists for these yet.
+  never started — no research exists for these yet, and per the founder's
+  explicit instruction this session is not starting it.
 - Turkey's own domestic system (YKS/ÖSYM) was deliberately out of scope for
   this package (it's the source-country lens throughout, not a destination
   studied here) — flagged as a real, separate gap if it becomes relevant.
@@ -197,22 +211,29 @@ written and was valid, so it was resumed via the same agent (not restarted
 from scratch) and completed cleanly with 4 more tool calls. No data was
 lost; flagged here in case the same failure mode recurs for a future batch.
 
-NEXT ACTIONS IN PRIORITY ORDER:
-1. Fold the 8 `matrix_row` objects (already sitting in the JSON, see each
-   country's fragment or the merged main JSON) into README.md's
-   cross-country matrix. Given 14 columns is already at the edge of
-   markdown-table readability, consider restructuring — e.g. a compact
-   "extended coverage" table with fewer, highest-signal dimensions for
-   countries beyond the original 6, rather than repeating all 15
-   `matrix_row` fields at full width.
-2. Finalize and add the 4 candidate rules above to README.md's ruleset
-   (resolve the 013/015 overlap question noted above first).
+NEXT ACTIONS IN PRIORITY ORDER (updated — items 1, 2 and 4 below are now done;
+kept here as a record of what was decided rather than deleted):
+1. DONE — the 8 `matrix_row` objects folded into README.md's cross-country
+   matrix. The "restructure for readability" option considered here was
+   deliberately not taken: the coordinating session's explicit instruction
+   was to fold the new countries into *the* matrix (singular), so the table
+   was extended to 14 columns as literally requested rather than split into
+   a separate lesser-detail addendum — a genuinely wide table, but GitHub
+   renders it with horizontal scroll and this is a reference document, not
+   a dashboard. Revisit if it proves unusable in practice.
+2. DONE — RULE-ADMISSIONS-013 through 016 added to README.md's ruleset,
+   013/014 kept as two separate rules per explicit direction (see README.md
+   itself for the reasoning).
 3. Batch 3 (Sweden, Belgium, Austria, Poland, Czech Republic) is fully
    scoped and ready to launch with the same agent-prompt template used this
    pass — see this branch's own commit history for the exact prompt
-   structure if useful as a starting point.
-4. Update `docs/ORYN_WORKSTREAMS.md`'s ADMISSIONS-INTEL row to reflect this
-   checkpoint (done as part of this same commit/pass).
+   structure if useful as a starting point. **Explicitly not started, and
+   not to be started without new authorization** — the founder's own
+   instruction, relayed via the coordination session, was to pause all
+   project advancement; the integration work above was a separately
+   authorized, bounded exception, not a reopening of scope.
+4. DONE — `docs/ORYN_WORKSTREAMS.md`'s ADMISSIONS-INTEL row reflects this
+   checkpoint.
 
 INTENDED CONSUMER: same as v1 — primarily Claude B (counselor/eligibility/
 application-strategy logic), secondarily Claude A (admissions data
