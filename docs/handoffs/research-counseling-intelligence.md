@@ -524,3 +524,28 @@ different per-dimension guidance from two different documents (`17`'s UK table v
 carve-out heterogeneity) and is a real test of whether the frameworks compose without
 contradiction, consistent with `09`'s existing pattern of using personas to find composition bugs
 (e.g. the original redundancy/timing contradiction, `RULE-COUNSEL-056`).
+
+## Persona J lands (`27ceaef`, `RULE-COUNSEL-118-119`) — no contradiction, but a genuine new gap
+
+Mixed UK + Queen's Commerce target, chosen specifically because the two now have
+*mechanism*-different guidance from `17` (direct scored evidence for UK vs. reflective-response-
+only scoring for Queen's), not just different framing language. **Result: `11`'s per-target-
+explanation principle and `17`'s per-dimension tables compose correctly — no contradiction.** But
+the persona surfaces something sharper sitting on top of both: per-target explanations must name
+the *mechanism* by which each target values a recommended action (direct evidence vs. indirect raw
+material for a differently-scored response), not just the framing register `RULE-COUNSEL-066`
+already covers — a mechanism-silent explanation risks a student over-investing in the wrong kind of
+prep for one target even when the underlying action is correctly identical for both.
+
+**More structurally**: this package's entire recommendation vocabulary (the achievement-tier
+ladder, `01`/`02`) is built around logged achievements. Queen's/McMaster-style assessment requires
+a preparation activity — rehearsing a structured reflective response — that isn't really an
+achievement-tier evidence item at all, closer to interview/personal-statement practice. **ORYN's
+recommendation model has no clean category for this today**, and no document in this package named
+the gap before this persona surfaced it. Cross-referenced into `10`'s data-gaps table (§2).
+**119 rules / 59 sources.**
+
+**Runway status, ~05:35 Europe/Istanbul**: about 5.5 hours left. Both sessions' explicit
+mission-brief deliverables have real coverage; remaining time being spent on genuine deepening —
+primary-source verification, cross-framework stress-testing, and following up gaps this package
+finds in itself — rather than new breadth for its own sake.
