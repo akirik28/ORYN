@@ -16,11 +16,13 @@ it, not from gathering more.
 |---|---:|---:|
 | Programmes live | 664 | **9,423** |
 | Universities with at least one programme | 41 | **127** |
-| Requirements corpus (researched) | ~180 | **1,296** |
+| Countries with programme coverage | — | **13** |
+| Requirements corpus (researched) | ~180 | **2,018** |
 | Requirements live | 84 | **84** |
 | Deadlines live | 26 | **26** |
+| Turkish placement cycles live | 0 | **29** |
 | Opportunities live | 391 | 391 |
-| Tests passing | 1,155 | **1,297** |
+| Tests passing | 1,155 | **1,430** |
 
 The two rows that did **not** move are the most important thing in this report. See
 "The one gap I deliberately did not close."
@@ -156,6 +158,47 @@ than decided, because they are product policy.
 
 ---
 
+## The evening: eight lanes, and what they found
+
+The corpus went from ~180 requirement records to **2,018** — the US (522), Germany and the
+Netherlands (991), Spain and Switzerland (139), France and Italy (61), plus the UK/Turkey set.
+Thirteen countries now have programme coverage.
+
+**The evaluator was rebuilt to refuse rather than guess**, and two branches that fixed it
+independently had to be reconciled: both had claimed the same function parameter with
+incompatible types. That turned out not to be two competing designs but the same discovery from
+two directions — the evaluator must see more of the requirement row than just its rule. It now
+handles directional recency (METU's rule runs backwards and is no longer inverted), unqualified
+test scales, percentile ranks that are never compared against scores, per-institution score
+provenance, and binding US Early Decision rounds. Tests went 1,155 → **1,430**.
+
+**Three findings changed what the product must model**, each verified against an institution's
+own page:
+
+Italy's OFA mechanism means the *same* CISIA test is a hard gate for restricted-access
+programmes and only a diagnostic for open-access ones. Not a different threshold — a different
+kind of thing. Every model we have treats a test requirement as test-plus-threshold. Logged,
+not fixed.
+
+Financial-aid subdomains label by **enrollment** year while admissions subdomains label by
+**cycle** year — the same string meaning different years. Four independent hits across four US
+universities, so it's now a standing check rather than an anomaly.
+
+A PDF's embedded `CreationDate` is an independent freshness signal. One Spanish document
+extracted perfectly and was still worthless: created 2022, four years stale for a 2026-27 cycle.
+We have a whole data-freshness phase in the spec and nothing in it reads document metadata.
+
+**Turkey now has real per-programme admission data.** YÖK Atlas turned out to expose a keyless
+JSON API, and 29 Ankara placement records are live — quota, score type, cut-off score and
+national rank, per programme, per cycle. No other country in the corpus has an equivalent. It
+scales to the other eleven Turkish universities next.
+
+**A live product defect was closed**: ten opportunities were telling every student with a
+country set that they were ineligible, because prose had been written into the structured
+country field. The sharpest case was a Türkiye-specific award appearing closed to the only
+Turkish profile in the database. All ten came from today's own ingestion and all carried high
+confidence, which is precisely why it failed silently.
+
 ## Method — what worked, and where I was wrong
 
 **Seven near-misses of one kind**, all caught by comparing a returned name against the query
@@ -187,7 +230,14 @@ live state, not against what the lane said it had done.
 
 ## State
 
-`main` = `bff5e13`, gate green: lint, typecheck, 1,297 tests across 102 files.
+`main` = `6080b24`, gate green: lint, typecheck, **1,430 tests across 106 files**.
+
+Three lanes caught defects in their own instructions mid-run and corrected them rather than
+propagating. One went back to you directly rather than acting on my relayed report of your
+approval — which is right, and I'd rather have that instinct than a faster lane. One caught an
+identifier collision *in itself* before committing, the same failure that cost two lanes 33
+colliding IDs overnight. One stalled and lost nothing, because its work was recoverable from
+its worktree.
 
 Waiting on you, and only on you:
 
