@@ -26,15 +26,22 @@ deliberately rather than letting the bulk import default silently.
 
 ## P1 — Large, mechanical, already-scoped
 
-**2. Re-run ROR enrichment targeted at the 41 "incomplete" university rows, plus the 70 entities
-in `09` Finding 7 (a different, complementary gap).**
+**2. Run existing ROR enrichment (`npm run acquire:universities -- --from-db` +
+`npm run import:universities`, per `scripts/acquire-university-facts.ts`'s own usage docs) targeted
+at the 41 "incomplete" university rows, plus the 70 entities in `09` Finding 7 (a different,
+complementary gap) — and separately, apply 8 already-known ROR ids directly.**
 `data/research/canonical-entities/duplicate-candidates-university.json` has the exact 41 ids
 ready. This is expected to resolve the majority of the Phase 6 duplicate-audit backlog (open since
 migration 0039) with zero new classification logic — see `05`, `09`. One row (Purdue University)
-needs both sides checked, since neither currently has a ROR id. Separately,
-`university-ror-gaps.json` has 8 already-known duplicate-supersession entities (MIT, UCL, LSE,
-Warwick, KFUPM, HKUST, UTS, Newcastle-Australia) and 16 genuine single-row gaps (several in
-France/Germany) that also need ROR — worth running in the same pass since it's the same pipeline.
+needs both sides checked, since neither currently has a ROR id. **For 8 of `university-ror-gaps
+.json`'s "already-known duplicate-supersession" entities (MIT, UCL, LSE, Warwick, KFUPM, HKUST,
+UTS, Newcastle-Australia), no research is needed at all — `scripts/university-duplicates-audit.ts`
+already identified and hand-verified the correct ROR id for every one of them on 2026-08-17
+(cross-confirmed by this session's own independent ROR queries for 4 of the 8); the id just needs
+to be written to `entity_external_ids`, which `merge_canonical_entities()` alone does not do. See
+`05`'s dedicated section on this discovery and each entity's `ror_id_already_known` field.** The
+remaining 16 genuine single-row gaps (several in France/Germany) still need real enrichment —
+worth running in the same pass since it's the same pipeline.
 **Not purely mechanical, though — verified directly against ROR's live API (`05`'s "Verifying the
 recommendation itself" section): Purdue needs the campus-specific child id
 (`ror.org/02dqehb95`), not the system-level one a naive search returns first

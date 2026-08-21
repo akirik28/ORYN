@@ -104,7 +104,13 @@ row is already `verification_state='merged'` (tombstoned, zero `universities` ro
 ids) and the un-folded row is the live, fully-enriched one (full ROR/GRID/ISNI/Wikidata/CrossRef
 coverage). **This is `isPureEncodingVariant()` working exactly as designed** — its own code
 comment claims "26 of 28 name-variant pairs in one pass turned out to be exactly this," and these
-four are consistent with that cleanup having already run and correctly resolved them.
+four are consistent with that cleanup having already run and correctly resolved them. **Confirmed,
+not just consistent-with, later this same session**: `scripts/university-duplicates-audit.ts`'s
+hardcoded `MANUALLY_VERIFIED` list (found while researching `05`'s recommendation, not at the
+start of this investigation — worth naming as a process gap) names these exact four institutions
+by exact `canonical_entities` id, run via `npm run audit:university-duplicates -- --merge-verified`
+on 2026-08-18. Not a mystery after all; see `05`'s dedicated section on this discovery for the
+fuller picture, including what it means for this document's own P1 recommendation.
 
 Broadening the check to every entity type, active rows only
 (`group by entity_type, display_name having count(distinct normalized_name) > 1`): **zero

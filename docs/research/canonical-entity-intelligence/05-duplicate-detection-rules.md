@@ -148,6 +148,60 @@ session happened to try). Full detail per entity in `university-ror-gaps.json`'s
 `genuine_single_row_gap_final_tally` field — this is a complete accounting of that specific list,
 not a partial one, and should not need re-verifying from scratch by whoever acts on it.
 
+## A late, important discovery: `scripts/university-duplicates-audit.ts` already exists and already
+solved part of this
+
+Reading `package.json`'s scripts (something this session should have done at the very start of the
+duplicate-detection work, not partway through) found `npm run audit:university-duplicates`
+(`scripts/university-duplicates-audit.ts`) — a real, already-built, already-run tool that this
+document's own recommendations should be read against, not written as if no such tool existed.
+Its own docblock, verbatim in relevant part: two detectors run every time ("EXACT normalized_name
+collision" — reproduces migration 0039's self-join, **43 pairs as of 2026-08-17, every one an
+orphan duplicate**, i.e. the identical pattern this document's "one-sided-enrichment" finding
+independently rediscovered; "NAME-VARIANT collision" — catches `nameKey(nameVariants(...))`
+matches the bare `normalized_name` self-join misses, **8 pairs as of 2026-08-17: MIT, UCL, HKUST,
+LSE, University of Warwick, UTS, Al-Farabi Kazakh National University, University of Newcastle
+Australia**), plus a hand-cited `MANUALLY_VERIFIED` array (38 entries as of this session) each
+carrying its own live-ROR-verified reasoning, applicable via `--merge-verified`
+(`merge_canonical_entities()`) and `--supersede` (needs migration 0043, not yet live).
+
+**What this changes, precisely:**
+
+1. **This document's main 41-pair finding is confirmed still genuinely unaddressed.** None of the
+   41 orphan-pair institutions (Boston University, Yale, the UC campuses, etc. —
+   `duplicate-candidates-university.json`) appear anywhere in the 38-entry `MANUALLY_VERIFIED`
+   list, which is entirely different institutions (mostly non-English-named European/global
+   universities resolved via the name-*variant* detector or hand research, not the exact-name
+   detector this document's 41 come from). The P1 recommendation stands, unduplicated.
+2. **The "8 already-known duplicate-supersession, also missing ROR" sub-finding (`09` Finding 7)
+   is not what it first looked like.** All 8 of those institutions (MIT/UCL/LSE/Warwick/KFUPM/
+   HKUST/UTS/Newcastle-Australia) are *also* 7 of the 8 name-variant-detector pairs above (KFUPM
+   was found separately, via a rankings-audit cross-check documented in the same file) — meaning
+   `merge_canonical_entities()` has *already run* for these (consistent with this session's own
+   finding that each has one `canonical_entities` row and two `universities` rows), **and the
+   correct ROR id was already independently identified and hand-verified on 2026-08-17** for
+   every one of them. This session's own fresh ROR queries tonight (KFUPM, HKUST, UTS,
+   Newcastle-Australia) landed on the *identical* ids as the script's 2026-08-17 research —
+   real, independent cross-confirmation. **The actual remaining gap for these 8 is narrower than
+   "needs ROR research": `merge_canonical_entities()` merges identity/aliases but does not itself
+   write new `entity_external_ids` rows, so the already-known, already-verified ROR id was
+   apparently never separately applied.** `university-ror-gaps.json` now carries the exact id for
+   each of these 8, sourced from the script, not re-derived.
+3. **This explains several "how was this already resolved?" moments from earlier in this
+   session.** The German-university and EPFL "already merged, mechanism not identified" cases in
+   `09` Finding 6 are `--merge-verified` output — the exact entity ids in that script's
+   2026-08-18 batch (Tübingen, Erlangen-Nürnberg, Humboldt, LMU Munich, EPFL, and ~20 more pure
+   Unicode-encoding-variant pairs) match this session's own independently-found examples exactly.
+   Not a mystery after all; recorded here rather than left as an open question.
+
+**The honest framing going forward:** this session's own rediscovery of the orphan-pair pattern
+(independently, before finding this script) is still valuable — it re-verified the finding is
+still live and current, added the Purdue/Rutgers/French-merger nuances this script's simpler
+detectors would not catch, and cross-confirmed several ROR ids independently. But `11`'s handoff
+should point directly at this existing script and its exact commands, not describe the work as if
+new tooling were needed — check for existing automation before recommending a fresh approach,
+earlier in the process than this session managed to.
+
 ## Restating the four-tier taxonomy the mission brief asks for
 
 The mission brief asks for `AUTO-SAFE MATCH` / `HIGH-CONFIDENCE REVIEW` / `AMBIGUOUS` /
