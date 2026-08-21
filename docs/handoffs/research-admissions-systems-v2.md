@@ -350,3 +350,90 @@ schooled.
 **Commit:** see this branch's git log for the exact SHA (reported to the
 coordination session at commit time — check there or `git log` rather than
 this doc, which isn't updated per-commit).
+
+---
+
+## PROGRAM-FAMILY REQUIREMENTS ADDENDUM (third follow-up pass, same session)
+
+**Assignment.** The coordination session assigned the "PROGRAM-LEVEL REQUIREMENTS"
+section of this mission's own original brief — the one part never addressed while
+country-level research was underway: how requirements differ by program family
+(Medicine, Engineering, Computer Science, Economics/Business, Law, Architecture,
+Arts/Design), and whether each is country-wide, institution-level, or
+programme-specific. This was a continuation of already-authorized scope, not a
+new conflict requiring a stop-and-confirm exchange like Turkey's assignment was.
+
+**What was produced.** All 7 families, each covering all 15 countries: 7 markdown
+docs + 7 JSON fragments in `docs/research/admissions-systems/program-requirements/`
+and `data/research/admissions-systems/program-requirements/`, dispatched as two
+batches of parallel research agents (Medicine/Law/Architecture/Arts-Design, then
+Engineering/Computer-Science/Economics-Business) grounded in the already-completed
+15 country docs rather than re-deriving admissions architecture from scratch. A new
+`## Program-family requirements (cross-country)` section in README.md summarizes
+each family's mechanism-type distribution across all 15 countries with a compact
+table and links to the full per-family docs — not a repeat of the giant
+15-column-per-dimension matrix pattern, since 7 families × 15 countries at that
+density would be unreadable; the real depth lives in each family's own doc.
+
+**Quality issue found and fixed, not shipped silently.** Law's JSON fragment used
+hyphenated `country_key` values (`hong-kong`, `united-states`, etc.) instead of this
+package's established underscore convention — would have silently broken any
+downstream code cross-referencing country keys between the family-level and
+country-level JSON. Caught in a validation pass before commit, fixed directly (a
+mechanical string substitution, re-validated after).
+
+**Quality issue found in Turkey's own doc, fixed via a targeted amendment, not a
+rewrite.** The Arts/Design agent's cross-check of Turkey's conservatory exception
+(already flagged as partially uncertain in `turkey.md`'s own Unresolved Questions)
+found it's more fragmented than a single number: two unreconciled TYT-threshold
+split logics, one named institution (Giresun) with no floor at all for specific
+departments, and unconfirmed reports of talent-only selection at some vakıf
+conservatories. Folded into `turkey.md`'s existing hedge (which already avoided
+overclaiming a single fixed number) rather than rewritten, and mirrored into both
+the JSON fragment and the merged main JSON so all three stay consistent.
+
+**Operational note.** The Economics/Business agent hit the same transport-level
+"connection lost" failure mode as Spain did in the country-research pass — this
+time with zero files written yet (unlike Spain, whose JSON had already landed).
+Resumed via the same agent rather than restarted from scratch; completed cleanly
+with no apparent loss of research quality. Two occurrences of the identical failure
+mode across ~19 total agent dispatches this session — noted here in case a pattern
+becomes visible to whoever operates this infrastructure.
+
+**Four new rules added, RULE-ADMISSIONS-018 through 021** (full text and evidence
+in README.md, not duplicated here):
+- **018** — a "school-within-university" admissions layer recurs independently
+  across evidence models (found separately by the Engineering and Computer Science
+  agents — genuine cross-agent convergence, the same evidentiary bar the original
+  12 rules used) and correlates with a country's internal admissions-authority
+  devolution, not its general philosophy.
+- **019** — a country's general admissions shape does not predict any given
+  field's mechanism; the same country can be maximally open for one field and
+  maximally gated for another. Includes a corollary: a "field-dominant
+  institution" (St. Gallen, SMU) showing a distinctive mechanism may just be how
+  it admits everyone, not evidence the field itself is special.
+- **020** — a specific evidence type (talent/portfolio/audition score) can
+  substitute for the general academic qualification entirely, not merely
+  supplement it (Germany's Kunsthochschule sector) — distinct from
+  RULE-ADMISSIONS-004's narrower claim about numeric-scale conversion.
+- **021** — some fields are not undergraduate-admission objects at all in some
+  countries (Medicine and Law both graduate-entry-only in the US; Law similarly
+  in Canada outside a narrow Quebec route) — categorically different from being
+  merely harder to get into.
+
+Deliberately NOT minted as separate rules, to avoid over-fragmenting an already
+evidence-dense ruleset: the qualification-sector-governance finding (Arts/Design),
+the institution-can-exceed-country variation finding (Architecture: TU Dublin vs.
+UCD under the identical CAO "Restricted" flag), and the `mechanism_type` schema
+observation that "fully open" and "numerically stricter" are different facts
+(Computer Science) — all folded into 018/019's text or the JSON's
+`data_model_implications`-equivalent framing rather than each getting its own
+number. If a future session disagrees with that consolidation, the individual
+agent reports (their full text is in each family's own `.md`/`.json`, not just
+this summary) have enough detail to re-derive the decision.
+
+**Not attempted this pass:** batch 3 country expansion (Sweden/Belgium/Austria/
+Poland/Czech Republic) — still not assigned; deeper program-family coverage
+beyond the 7 named families (e.g. Psychology, Nursing, Data Science as their own
+families rather than folded into Medicine/CS) was not requested and wasn't
+added speculatively.

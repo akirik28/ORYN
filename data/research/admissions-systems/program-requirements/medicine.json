@@ -1,0 +1,260 @@
+{
+  "family_key": "medicine",
+  "family_name": "Medicine",
+  "overview": "Medicine is the sharpest test case in this research package for the difference between \"numerically stricter\" (same admissions mechanism as the rest of the country, just a higher bar) and \"structurally different\" (a genuinely different decision architecture, evidence stack, or applicant category that general admission never uses at all). Across the 15 countries already documented, Medicine is structurally different from that country's own general admissions model in 13 of 15 cases -- via a dedicated national quota system (Germany), a mandatory aptitude test plus interview stack absent from general admission (UK, Ireland, Switzerland, Australia, New Zealand, Singapore, Hong Kong's non-JUPAS track), a two-stage entry-then-competitive-filter model (France, New Zealand), a mechanism that itself bifurcates by instruction language or linguistic region within one country (Italy, Switzerland), or, most sharply, a total category mismatch where Medicine is not even an undergraduate admissions object to begin with (United States, Canada). Only Turkey and Spain's public track show Medicine running through literally the same mechanism as general admission with an extreme emergent cutoff -- the \"numerically stricter only\" pattern this research anticipated finding as common, but which turned out to be the minority case, not the default. A second, compounding finding: in countries whose GENERAL admissions model is already competitive/ranking-based rather than threshold-based (Australia, Singapore, New Zealand), \"Medicine is structurally different\" cannot simply mean \"more competitive\" -- it has to be evaluated against what specific ADDED mechanism (a dedicated test, an interview, a fixed government place-count, a gateway year) Medicine introduces beyond an already-competitive baseline.",
+  "countries": [
+    {
+      "country_key": "germany",
+      "country_name": "Germany",
+      "mechanism_type": "structurally_different",
+      "scope": "national (hochschulstart NC allocation, exactly 4 subjects) + university (AdH criteria selection within that allocation)",
+      "description": "Direct-entry German programmes run on a largely automatic Abiturnote/HZB-equivalence threshold. Medicine is one of exactly four subjects (with Dentistry, Veterinary Medicine, Pharmacy) pulled entirely out of that model into hochschulstart's national NC allocation system. After a Vorabquote (~20%) is set aside for special applicant groups, remaining seats split three ways: Abiturbestenquote (~30% of the remainder, grade-only ranking), AdH/Auswahlverfahren der Hochschulen -- confirmed directly via hochschulstart.de as 60% of the remainder -- and Zusatzliche Eignungsquote/ZEQ (~10%, a non-grade path for weaker-Abitur applicants). Within AdH, hochschulstart's own rules require universities to use at least two school-grade-independent criteria for Medicine (at least one for Vet/Dental): subject-aptitude test results (TMS/HAM-Nat), \"practical activities,\" or other relevant achievements -- each university chooses its own combination and weighting. This is a categorically different decision architecture (a national quota system) layered onto Germany's otherwise threshold-based model, not a higher version of the same mechanism.",
+      "eligibility_determinants": "Abiturnote (or KMK/Anabin-recognized equivalent) directly in Abiturbestenquote and as one AdH component; TMS/HAM-Nat scores where the specific university weights them within AdH; at least two (Medicine) or one (Vet/Dental) school-grade-independent AdH criteria are legally required, university-chosen.",
+      "strengthens_application": "A strong TMS or HAM-Nat score at universities that weight it heavily (reportedly Bochum/Bonn/Koln). At a subset of universities that choose to score it within their AdH criteria list, documented health-related vocational training, a completed medical/nursing apprenticeship, or FSJ/Bundesfreiwilligendienst service can add points -- but this is one optional criterion among several a university may or may not select, not a guaranteed or universal lever.",
+      "largely_irrelevant": "General leadership, non-health extracurriculars, essays, and recommendation letters -- absent from the German Medicine pipeline as they are from German admission generally.",
+      "never_infer": "Never assume health-related service experience is a guaranteed or nationally uniform credit for German Medicine -- it is confined to AdH (one of three quotas, ~60% of the post-Vorabquote seat pool, so roughly half of total seats), it is one optional criterion among several a university may or may not select, and it does not exist at all within Abiturbestenquote or ZEQ. Never assume one university's AdH weighting generalizes to another's.",
+      "sources": [
+        "https://www.hochschulstart.de/informieren-planen/verfahrensdetails",
+        "https://www.hochschulstart.de/fileadmin/media/leitfaden_adh_zeq/AdH_WiSe_26_27_QS.pdf",
+        "https://www.hochschulstart.de/faq"
+      ]
+    },
+    {
+      "country_key": "united_kingdom",
+      "country_name": "United Kingdom",
+      "mechanism_type": "structurally_different",
+      "scope": "national (government-set place caps, Medical and Dental Maximum Fundable Limits) + university (UCAT cutoff, interview format)",
+      "description": "General UK admission runs on predicted-then-confirmed A-Level/IB grades against a UCAS conditional offer, one shared personal statement, one shared school reference, and rarely an interview outside Oxbridge. Medicine (with Dentistry/Vet Med/Vet Science) adds three things general admission has none of: a mandatory national aptitude test (UCAT, sat in a fixed summer window, e.g. 13 Jul-24 Sep 2026 for 2027 entry, well before the October UCAS deadline; BMAT was discontinued after its final October 2023 sitting, and its former users -- Oxford, Cambridge, Imperial, UCL and others -- now all use UCAT instead); a structured interview, commonly Multiple Mini Interview (MMI) format at most schools; and a hard, centrally state-funded national place cap (Maximum Fundable Limits, set by the Office for Students) that no amount of applicant quality can exceed.",
+      "eligibility_determinants": "A-Level/IB/equivalent grades meeting the specific school's threshold, a qualifying UCAT score/band (school-specific cutoff), and, at most schools, a passed interview stage.",
+      "strengthens_application": "A strong UCAT score, especially on any situational-judgement component a given school weights; demonstrated \"super-curricular\" engagement with medicine/healthcare specifically (work experience, shadowing, subject reading) referenced in the personal statement; strong MMI/interview performance.",
+      "largely_irrelevant": "General breadth of extracurriculars unconnected to healthcare; multiple personal recommendation letters -- the UK uses one shared school reference for every choice, Medicine included.",
+      "never_infer": "Never assume BMAT is still current for 2026-27 entry -- it is discontinued. Never assume UCAT cutoff or interview format is identical across schools -- weighting and format (MMI vs. panel) are set per school. Never assume the national place cap is a fixed number year to year -- it is adjusted by government policy (announced plans to roughly double places by 2031/32).",
+      "sources": [
+        "https://www.ucat.ac.uk/about-ucat/eligibility/",
+        "https://www.medschools.ac.uk/for-students/applying-to-medical-school/interviews/",
+        "https://www.officeforstudents.org.uk/for-providers/finance-and-funding/medicine-and-dentistry-funding/medical-and-dental-maximum-fundable-limits/"
+      ]
+    },
+    {
+      "country_key": "netherlands",
+      "country_name": "Netherlands",
+      "mechanism_type": "structurally_different",
+      "scope": "national legal framework (2023 numerus fixus law, 1-registration cap, 15 Jan deadline) + university (selection method genuinely differs by institution, confirmed for the same 2026-27 cycle)",
+      "description": "General Dutch Bachelor's admission is eligibility-threshold-based: VWO-equivalence plus subject prerequisites equals admission, no ranking. Medicine falls under the 2023 numerus fixus law, and -- confirmed freshly for the 2026-27 cycle -- the specific selection method genuinely varies by university even within this one field: Groningen, University of Amsterdam (UvA), and Radboud select ALL Medicine places by unweighted lottery; VU Amsterdam (portfolio plus test) and Leiden use decentralized qualitative selection; Utrecht runs a hybrid, roughly 20% decentralized selection and 80% unweighted lottery for its 297 places in 2026-27. Registration is also capped at just 1 numerus fixus programme for Medicine specifically (vs. 2 for other numerus fixus fields) with an earlier 15 January deadline rather than the general 1 May date.",
+      "eligibility_determinants": "VWO-equivalence (or a recognized foreign equivalent) plus Natuur & Gezondheid-aligned subject prerequisites establishes eligibility to be RANKED; whether ranking happens at all, and how, depends entirely on which university's currently-chosen selection method applies.",
+      "strengthens_application": "At lottery-only schools (Groningen/UvA/Radboud), nothing beyond eligibility improves odds -- it is a lottery among eligible registrants. At decentralized-selection schools (VU, Leiden), portfolio and motivation quality plus test performance matter directly. At Utrecht's hybrid, both dynamics coexist depending on which sub-track a registrant falls into.",
+      "largely_irrelevant": "General extracurricular breadth unconnected to a specific university's stated selection criteria; recommendation letters, which are not a Dutch feature at any level, Medicine included.",
+      "never_infer": "Never describe \"the Dutch Medicine selection method\" as one national mechanism -- it is genuinely different by university within the same cycle. Never assume this year's method at a given university persists next cycle -- the national framework has changed three times since the 1970s and individual universities can and do switch between the law's permitted options.",
+      "sources": [
+        "https://www.rug.nl/umcg/education/geneeskunde/selectie/",
+        "https://vu.nl/nl/onderwijs/meer-over/selectie-geneeskunde",
+        "https://www.uu.nl/bachelors/geneeskunde/inschrijven-en-toelating/selectie-en-loting",
+        "https://www.uva.nl/programmas/bachelors/geneeskunde/toelatingseisen/toelating-en-inschrijving.html"
+      ]
+    },
+    {
+      "country_key": "italy",
+      "country_name": "Italy",
+      "mechanism_type": "structurally_different",
+      "scope": "national, but the mechanism itself bifurcates by instruction language (Italian-taught vs. English-taught)",
+      "description": "Italian-taught Medicine and Surgery (with Dentistry, Veterinary Medicine) was reformed starting a.y. 2025/26: applicants get free, open, no-test enrollment into a first \"semestre filtro\" (filter semester) -- the secondary diploma is the only requirement -- and selection instead happens via rank order on three propaedeutic exams (Chemistry & Biochemical Propaedeutics, Physics, Biology; 6 CFU each) sat during that semester itself (current governing rule for a.y. 2026/27: MUR Decreto Ministeriale n. 941 of 10 July 2026). English-taught Medicine and Surgery is explicitly NOT covered by this reform and continues to use IMAT, an up-front, competitive, MUR-owned/CINECA-administered national entrance test sat before enrollment. This is a genuine within-country, within-field bifurcation by instruction language -- both tracks are already \"restricted\"; they resolve selectivity at different points in time using different instruments.",
+      "eligibility_determinants": "Italian-taught: secondary diploma meeting the 12-year threshold is sufficient to ENROLL; the three propaedeutic-exam results then determine who keeps the place. English-taught: the up-front IMAT score determines enrollment itself.",
+      "strengthens_application": "Italian-taught: strong preparation for and performance in the three propaedeutic exams during the filter semester. English-taught: strong IMAT preparation and score.",
+      "largely_irrelevant": "Personal statements, recommendation letters, general extracurricular review -- absent from Italy's admission architecture generally, Medicine included, in both tracks.",
+      "never_infer": "Never treat \"TOLC-MED\" as current terminology for the Italian-taught track -- it is obsolete since a.y. 2025/26 even though some university pages still reference it (e.g. Sapienza's own page title). Never assume the semestre filtro applies to English-taught Medicine -- it explicitly does not. Never treat semestre filtro open enrollment as equivalent to being admitted -- the actual selection happens in the exams that follow.",
+      "sources": [
+        "https://www.mur.gov.it/sites/default/files/2026-07/Decreto%20Ministeriale%20n.%20941%20del%2010-7-2026.pdf",
+        "https://www.cisiaonline.it/en/cent/all-about-CEnT/all-about-CEnT",
+        "https://www.uniroma1.it/en/pagina/tolc-med-admission-tests-medicine-and-surgery-dentistry-and-dental-prosthodontics-degree"
+      ]
+    },
+    {
+      "country_key": "canada",
+      "country_name": "Canada",
+      "mechanism_type": "structurally_different",
+      "scope": "national -- true at every Canadian medical school reviewed; a categorical mismatch, not a variant of Canada's undergraduate admissions model",
+      "description": "Canadian undergraduate admission is generally a grades-threshold/admission-average model evaluated per faculty. Medicine sits entirely outside that model: every Canadian MD programme reviewed requires a prior, substantially completed undergraduate degree before a candidate can even apply. University of Toronto's own admissions page states directly that a candidate \"cannot enter a program directly from high school\" and must complete at least 3 years (15 full course equivalents) of a bachelor's degree first; McMaster requires 3 years of prior full-time undergraduate study in any discipline. Applications route through OMSAS (Ontario) or each school's own graduate-entry process, evaluated on undergraduate GPA, MCAT (required at most schools, though not at Quebec's medical schools, University of Ottawa, or Northern Ontario School of Medicine), references, and commonly a CASPer-style situational test -- an entirely different evidence stack from any undergraduate Canadian admissions model in this package. No BS/MD-style direct-from-high-school combined pathway was found in sources reviewed for Canada, unlike the roughly 40 that exist in the United States -- a genuine gap, not a confirmed absence.",
+      "eligibility_determinants": "A completed, or (at most schools) at-least-3-year-completed, undergraduate degree; undergraduate GPA; MCAT score at most schools; CASPer/situational-judgement test at many schools; references.",
+      "strengthens_application": "Strong undergraduate GPA trajectory, strong MCAT score, clinical/research/volunteering experience accumulated during the undergraduate years, strong references -- all post-secondary-school evidence.",
+      "largely_irrelevant": "High school grades, activities, and awards -- none factor into Canadian MD admission at all, since the decision happens years later, evaluated on undergraduate-stage evidence only.",
+      "never_infer": "Never treat Canadian Medicine as an undergraduate/secondary-school-leaving admissions target for a 14-18-year-old ORYN user the way UK/Netherlands/Ireland/Germany Medicine is -- the correct product guidance for a Canada-track student with a Medicine interest is which undergraduate major and GPA trajectory sets up a strong post-bachelor's MD application, not which Medicine numerus-fixus programme to target now. Never assume a BS/MD-equivalent direct pathway exists in Canada by analogy to the US -- not confirmed in sources reviewed.",
+      "sources": [
+        "https://applymd.utoronto.ca/academic-requirements",
+        "https://www.afmc.ca/wp-content/uploads/2025/05/Admission_Requirements_of_Canadian_Faculties_of_Medicine_2026_v3.pdf"
+      ]
+    },
+    {
+      "country_key": "switzerland",
+      "country_name": "Switzerland",
+      "mechanism_type": "structurally_different",
+      "scope": "institution/regional -- genuinely two different mechanisms by linguistic region for the identical field",
+      "description": "Swiss Bachelor's admission for Matura holders is otherwise essentially automatic and threshold-based. Medicine (with Dentistry, Veterinary Medicine, Chiropractic) breaks that pattern, and breaks it two different ways by linguistic region: Basel, Bern, Fribourg, Zurich (plus its Lucerne/St. Gallen joint-Medicine tracks), USI, and ETH Zurich all use EMS (Eignungstest fur das Medizinstudium), a full-day pre-entry aptitude test that swissuniversities' own admissions page confirms activates once applications exceed 120% of available places (i.e. demand exceeds supply by more than 20%); Geneva, Lausanne, and Neuchatel -- the French-speaking universities -- do not use EMS at all, instead admitting broadly into first-year Medicine and applying a competitive first-year/propaedeutic exam to determine who progresses into year two. Same restricted field, same country, two genuinely different gate mechanisms -- pre-entry test vs. post-entry first-year filter -- split by linguistic region rather than by individual university choice.",
+      "eligibility_determinants": "Matura (or a recognized-equivalent foreign diploma clearing the direct-admission threshold); then, EMS score (German/Italian-speaking region universities) OR first-year exam performance (French-speaking region universities).",
+      "strengthens_application": "EMS preparation and score at EMS-consortium universities; strong first-year academic performance at Geneva/Lausanne/Neuchatel, since progression there is graded competitively.",
+      "largely_irrelevant": "Personal statements, recommendation letters, general extracurricular review -- not a standard feature of Swiss Medicine, or Swiss Bachelor's admission generally, at either set of universities.",
+      "never_infer": "Never describe Swiss Medicine selection as one national mechanism -- treating EMS as universal would misdirect a Geneva/Lausanne/Neuchatel-track applicant entirely, since those three do not use it at all. Never assume EMS score alone determines rank at every EMS-consortium university without checking that specific university's own weighting.",
+      "sources": [
+        "https://www.swissuniversities.ch/service/anmeldung-zum-medizinstudium/zulassungsverfahren-mit-numerus-clausus",
+        "https://ethz.ch/en/studies/bachelor/application/non-swiss-matriculation-certificate/eth-entrance-examination.html"
+      ]
+    },
+    {
+      "country_key": "france",
+      "country_name": "France",
+      "mechanism_type": "structurally_different",
+      "scope": "national framework (post-2020 MMOPK reform) + university (per-university second-year capacity set jointly with the Regional Health Agency)",
+      "description": "Ordinary non-selective Licence entry in France is a largely threshold/right-based model once the Bac is held; \"licences en tension\" add only a soft attendus-fit ranking layer when demand exceeds capacity. Medicine (grouped with Pharmacy, Dentistry, Midwifery, Physiotherapy as \"MMOPK\") runs an entirely different two-stage model: first-year PASS or LAS entry happens through ordinary Parcoursup registration, open to any Bac holder; the actual restriction bites only at SECOND-year progression, a separate, internal, competitive process run by each university (two \"groupes d'epreuves\" -- continuous assessment plus written exams, then oral exams for the mid-ranking band), with final progression determined by rank order against a per-university capacity figure set jointly with the Regional Health Agency (ARS) -- reflecting local clinical/training capacity, not a national quota. A further reform is reportedly planned for 2027; mechanics were not available in sources reviewed.",
+      "eligibility_determinants": "Holding the Bac (or a DAP-track equivalent) is sufficient for first-year PASS/LAS entry; actual progression into Medicine itself depends entirely on rank order in the second-year competitive exams.",
+      "strengthens_application": "Strong first-year continuous-assessment and written-exam performance; for the mid-ranking band specifically, oral-exam performance in the second groupe d'epreuves.",
+      "largely_irrelevant": "The Parcoursup \"projet de formation motivé\" motivation text and general extracurricular evidence -- essentially no role once a student is inside PASS/LAS, since the entire second-year filter is exam-score-based.",
+      "never_infer": "Never treat PASS/LAS first-year entry (via ordinary Parcoursup) as equivalent to admission to Medicine -- it only grants entry into the pool competing for second-year progression. Never assume the per-university MMOPK capacity figure is a fixed national number -- it is set locally with the regional health authority and varies by university.",
+      "sources": [
+        "https://www.enseignementsup-recherche.gouv.fr/fr/classes-preparatoires-aux-grandes-ecoles-cpge-46496",
+        "https://diploma-sante.fr/parcoursup-2026-pass-las-chances-admission/"
+      ]
+    },
+    {
+      "country_key": "spain",
+      "country_name": "Spain",
+      "mechanism_type": "numerically_stricter_only",
+      "scope": "national formula, uniform for the public track; a separate, structurally different private-sector pathway exists alongside it",
+      "description": "Spain's public Medicine admission runs through literally the same uniform nota de acceso/nota de admision formula and regional Distrito Unico ranked-allocation mechanism as every other public Grado programme -- there is no separate national test, quota system, or interview layer for public Medicine. What makes it \"restricted\" is purely that its nota de corte (the self-adjusting, demand-driven cutoff -- the lowest admitted student's score that cycle) lands extremely high, illustratively around 11.4-13.4 out of a possible 14 at several public universities in one recent cycle -- the same mechanism, just an extreme emergent cutoff. This is the clearest genuinely \"numerically stricter only\" case in this package alongside Turkey. Caveat: private Spanish universities commonly run Medicine through an entirely separate admissions process (own written science tests, aptitude test, personal interview) completely outside the nota de corte/Distrito Unico system -- a structurally different pathway, but one reflecting Spain's general public/private admissions split rather than something Medicine-specific.",
+      "eligibility_determinants": "Public: the same EBAU/Bachillerato-based nota de acceso/nota de admision (plus ponderacion subject bonuses) as any other Grado programme, ranked via Distrito Unico. Private: each institution's own separately designed formula.",
+      "strengthens_application": "Public: the same levers as any competitive Grado programme -- maximizing EBAU voluntary-phase weighted-subject scores (ponderacion) and Bachillerato average, since the ranking mechanism is identical to every other programme, just with a much higher bar. Private: institution-specific test and interview preparation.",
+      "largely_irrelevant": "Personal statements, recommendation letters, extracurricular activities -- absent from the public formula entirely; not confirmed as a factor in the one private example reviewed beyond its own interview component.",
+      "never_infer": "Never assume Spanish public Medicine has any hidden interview, portfolio, or aptitude-test gate beyond the EBAU/nota-de-corte mechanism -- sources reviewed found none. Never assume a private university's separate test-and-interview process is representative of Spanish Medicine admission generally -- it is a private-sector exception, not the dominant public pathway most students use.",
+      "sources": [
+        "https://www.boe.es/buscar/act.php?id=BOE-A-2024-11858",
+        "https://notasdecorte.es/medicina",
+        "https://www.redaccionmedica.com/secciones/privada/tres-pruebas-para-entrar-a-medicina-sin-nota-de-corte-ni-de-pau-en-espana-3936"
+      ]
+    },
+    {
+      "country_key": "ireland",
+      "country_name": "Ireland",
+      "mechanism_type": "structurally_different",
+      "scope": "national -- uniform across all 6 Irish medical schools, the most centrally standardized Medicine mechanism in this package outside Germany/Turkey",
+      "description": "Virtually every other CAO/points route course in Ireland is decided by Leaving Certificate points alone, computed purely from the best 6 subject grades plus any Maths bonus, with no other instrument involved. Medicine is the one field nationally where a second, entirely separate instrument -- HPAT-Ireland (Health Professions Admission Test: logical reasoning, interpersonal understanding, non-verbal reasoning; sat around February/March, before Leaving Cert results) -- is combined with LC points into a moderated total, uniformly at all 6 medical schools (University of Galway, University of Limerick, TCD, UCC, UCD, RCSI). This combined-instrument model is itself undergoing a confirmed, dated rebalancing: through 2026 entry, the maximum combined score is 865 (LC moderated to a 565 cap above 550 points, HPAT scored to 300); from 2027 entry, LC points above 550 are no longer moderated (full points to a 625 maximum apply) and HPAT is capped at 150 -- a new combined maximum of 775, an officially announced shift toward LC results and away from HPAT, driven by the Irish Universities Association's own finding that LC performance predicts course completion better than HPAT. Separately, non-EU-route Medicine (e.g. UCD's non-EU Medicine table) runs an entirely different, HPAT-free, interview-based mechanism for the identical named degree.",
+      "eligibility_determinants": "Leaving Certificate points (best 6 subjects plus Maths bonus) plus a sat-in-the-admission-year HPAT score, combined via the moderation formula current to that entry year.",
+      "strengthens_application": "HPAT preparation (logical reasoning, interpersonal understanding, non-verbal reasoning practice) and maximizing LC points in the highest-weighted subjects -- the relative value of each is shifting toward LC specifically for 2027 entry.",
+      "largely_irrelevant": "Essays, recommendation letters, general extracurricular review -- structurally absent from CAO's points route, Medicine included, for the domestic pathway.",
+      "never_infer": "Never cite the HPAT/LC weighting without stating which entry year it applies to -- the maximum combined score and the relative weight of each component changed materially between pre-2027 and 2027-entry cycles. Never assume UCD's (or any university's) non-EU Medicine pathway uses HPAT -- it explicitly does not, for that separate route.",
+      "sources": [
+        "https://www.iua.ie/press-releases/changes-to-cao-entry-to-undergraduate-medicine-programmes-in-2027/",
+        "https://www.iua.ie/for-students/entry-to-medicine/",
+        "https://www.citizensinformation.ie/en/education/third-level-education/applying-to-college/applying-for-college-and-the-cao/"
+      ]
+    },
+    {
+      "country_key": "australia",
+      "country_name": "Australia",
+      "mechanism_type": "structurally_different",
+      "scope": "national (Commonwealth government funding rule) + institution (UCAT ANZ/ISAT consortium plus interview)",
+      "description": "Australia's general undergraduate model is already a capacity-constrained, ranked-allocation system for virtually all programmes -- published ATAR/selection-rank cutoffs are retrospective outcomes of that cycle's demand, not fixed thresholds -- so \"Medicine is more competitive\" alone understates what's different. What's genuinely structurally distinct: (1) Commonwealth Supported Place funding for the large majority of Australian degrees is allocated to each university in dollars, with the university deciding its own course-level place mix -- Medicine is the government's own confirmed, explicit exception, where a set number of CSPs is allocated directly per university, a categorically different funding mechanism, not merely a smaller number; (2) on top of that fixed place ceiling, entry requires UCAT ANZ (most universities) or ISAT (a separate test for defined international-applicant categories at a subset of the same universities) plus a structured interview (e.g. Monash's MMI format) -- neither of which exists in Australia's general ATAR-only pathway.",
+      "eligibility_determinants": "ATAR/selection rank meeting the subject-prerequisite bar, a qualifying UCAT ANZ or ISAT score/band, and a passed interview.",
+      "strengthens_application": "A strong UCAT ANZ score (reported pattern: interview-invite averages above roughly 3000 of the test's point structure), strong interview/MMI performance.",
+      "largely_irrelevant": "General extracurricular breadth outside named bonus-point schemes (e.g. UNSW's Elite Athletes/Performers/Leaders scheme), which is not Medicine-specific.",
+      "never_infer": "Never assume Medicine's ATAR/selection-rank cutoff functions the same way as an ordinary programme's -- Medicine adds a fixed government place-count plus test-and-interview layer that ordinary programmes don't have at all, not just a numerically higher cutoff on the same mechanism. Never assume UCAT ANZ and ISAT are interchangeable, or apply to the same applicant type at a given university, without checking that university's specific rule.",
+      "sources": [
+        "https://www.studyassist.gov.au/financial-and-study-support/commonwealth-supported-places-csps",
+        "https://www.ucat.edu.au/about-ucat-anz/universities/",
+        "https://isat.acer.org/"
+      ]
+    },
+    {
+      "country_key": "new_zealand",
+      "country_name": "New Zealand",
+      "mechanism_type": "structurally_different",
+      "scope": "institution -- confirmed independently at both Otago and Auckland, the only two NZ Medicine providers researched in depth",
+      "description": "Most named NZ Bachelor's programmes use a single-stage, graduated Rank Score threshold (a continuous NCEA-credit-based score) directly at the point of school-leaver admission. Medicine breaks this into two structurally separate stages: entry into Health Sciences First Year (Otago) or an equivalent first-year gateway (Auckland) via the ordinary University Entrance/Rank Score pathway, followed by a SEPARATE, competitive progression decision into second-year Medicine itself, based on a best-seven-papers grade average plus UCAT ANZ (sat once yearly, 1 July-5 August) -- and, at Auckland specifically, a Multiple Mini Interview for shortlisted candidates. The two universities also weight UCAT differently: Auckland treats it as roughly 15% of final selection, Otago applies it more as a minimum threshold than a heavily-ranked factor.",
+      "eligibility_determinants": "University Entrance plus HSFY/gateway-year entry requirements first; then, separately, best-seven-papers GPA and UCAT ANZ score for progression into Medicine itself.",
+      "strengthens_application": "Strong first-year (HSFY/gateway) grade performance across the best seven papers, and a strong UCAT ANZ score; at Auckland specifically, MMI performance.",
+      "largely_irrelevant": "A school-leaver's Year 13/NCEA activities beyond meeting UE -- the decisive evidence is generated during the gateway year itself, not before it.",
+      "never_infer": "Never treat gateway-year (HSFY) entry as equivalent to admission into Medicine -- it is a separate, earlier, easier step than the actual second-year progression decision. Never assume Otago and Auckland weight UCAT identically -- Auckland scores it as part of a ranked formula plus MMI, Otago applies it more as a pass/fail-style threshold.",
+      "sources": [
+        "https://www.otago.ac.nz/healthsciences/students/professional/medicine",
+        "https://www.otago.ac.nz/courses/qualifications/apply-for-a-programme/health-sciences-first-year-hsfy",
+        "https://www.auckland.ac.nz/en/study/study-options/find-a-study-option/bachelor-of-medicine-and-bachelor-of-surgery-mbchb.html"
+      ]
+    },
+    {
+      "country_key": "hong_kong",
+      "country_name": "Hong Kong",
+      "mechanism_type": "structurally_different",
+      "scope": "bifurcated by applicant type first (JUPAS/local vs. non-JUPAS/international -- true of the whole HK system before Medicine even enters), then programme-specific within non-JUPAS, where virtually all Turkish/international applicants sit",
+      "description": "JUPAS is categorically closed to non-local applicants regardless of field, so a Turkish or other internationally-educated student targeting HK Medicine is, by definition, in the non-JUPAS pathway -- the same pathway used for every other non-JUPAS programme. Within non-JUPAS, most programmes are evaluated by transcript/qualification review against a published minimum, without an interview. Medicine specifically adds a structured interview that most other non-JUPAS programmes don't require: HKU uses a Multiple Mini Interview (MMI) format (interviewers may switch to Chinese to test proficiency); CUHK uses a panel format. CUHK Medicine also carries an explicit hard place ceiling (300 HKDSE-track plus 25 advanced-standing places from 2025 entry) and describes non-JUPAS Medicine applicants as evaluated against roughly a \"top 1-2% HKDSE-equivalent\" standard -- a categorically higher bar than most other non-JUPAS programmes' published minimums.",
+      "eligibility_determinants": "Meeting the specific university's published minimum average/grade profile for the applicant's qualification type, PLUS passing the interview stage (MMI at HKU, panel at CUHK) -- the interview is a pass-gate on top of, not instead of, the academic minimum.",
+      "strengthens_application": "Strong interview/MMI performance specifically; academic results meaningfully above the published minimum, given the \"top 1-2%\" framing at CUHK.",
+      "largely_irrelevant": "A CV or personal statement's general breadth beyond what's relevant to the interview itself -- HKU Business School's own optional-CV pattern suggests these remain supporting, not primary, evidence even where present.",
+      "never_infer": "Never assume JUPAS is a viable route for a Turkish/internationally-educated Medicine applicant -- it is categorically unavailable regardless of qualification. Never assume meeting the published minimum guarantees an interview invitation or admission -- both HKU and HKUST state explicitly that meeting the minimum does not guarantee admission.",
+      "sources": [
+        "https://www.med.cuhk.edu.hk/study/prospective-students/undergraduate-study/programme-and-admission/mbchb-and-gps/admissions/faq",
+        "https://hkumed-ugadmissions.hku.hk/admissions-non-jupas-scheme/",
+        "https://admissions.hku.hk/apply/international-qualifications"
+      ]
+    },
+    {
+      "country_key": "singapore",
+      "country_name": "Singapore",
+      "mechanism_type": "structurally_different",
+      "scope": "institution-specific -- documented in depth at NUS; broadly analogous restrictions exist at NTU/SMU but not confirmed to the same depth",
+      "description": "Singapore's general AU admission model is already competitive/ranking-based for virtually every programme (NUS's own language: \"open competition among all eligible applicants\") -- not threshold-based the way the Netherlands'/Italy's non-selective majority is. So Medicine's marginal structural difference isn't \"competitive vs. eligible-equals-admitted\" -- it is two specific additions the general model doesn't have: (1) a ranking-position gate -- Medicine (and Dentistry, Law) must be ranked within a candidate's first one or two choices on the application form to even be considered for shortlisting, a rule most programmes don't carry; (2) a mandatory standardized-test layer most NUS programmes don't require at all -- IB-track Medicine/Dentistry applicants submit predicted results plus EITHER UCAT (UK or ANZ) OR [SAT/ACT-with-Writing AND AP Exams], on top of the university's general interview/test process for restricted programmes.",
+      "eligibility_determinants": "Ranking Medicine within the required top choice-position band; predicted or final academic results; a qualifying UCAT or SAT/ACT+AP score; performance in whatever additional interview/test the university runs for the programme.",
+      "strengthens_application": "A strong UCAT or SAT/ACT+AP result specifically, since ordinary NUS applicants to non-restricted programmes never need to clear this bar at all; strong performance on the mandatory achievements/CCA list every NUS applicant already submits.",
+      "largely_irrelevant": "Breadth of achievements unrelated to healthcare/science, beyond what NUS's standard structured achievements-list mechanism already captures for every applicant regardless of programme.",
+      "never_infer": "Never assume a strong general NUS application (grades plus achievements list) alone qualifies for Medicine shortlisting without the ranking-position rule and the mandatory test being separately satisfied. Never assume NTU/SMU apply an identical Medicine mechanism to NUS's -- only NUS's Medicine/Dentistry mechanism was confirmed to this depth this pass.",
+      "sources": [
+        "https://www.nus.edu.sg/oam/admissions/ib-diploma/admission-requirements",
+        "https://www.nus.edu.sg/oam/admissions/aptitude-based-admissions"
+      ]
+    },
+    {
+      "country_key": "turkey",
+      "country_name": "Turkey",
+      "mechanism_type": "numerically_stricter_only",
+      "scope": "national -- identical mechanism as every other lisans programme",
+      "description": "Confirmed directly: Turkish Medicine carries NO special admission mechanism beyond YKS. Placement is determined completely by the same (TYT x 0.40) + (AYT x 0.60) + (OBP x 0.12 or 0.06) formula, compared in strict national rank order against other candidates who listed the same programme code, using the SAY score type -- identical in kind to every other lisans programme nationally. What makes Medicine \"restricted\" is purely that it requires a score close to the maximum attainable, alongside Law and top-university Engineering -- explicitly confirmed in sources reviewed within this package: \"Medicine, Law, top Engineering programmes remain pure score-ranked placement with no interview or portfolio step at all.\" This is the cleanest \"numerically stricter only\" case in the entire package.",
+      "eligibility_determinants": "TYT and AYT (SAY score type) results and the resulting national placement score/rank -- nothing else.",
+      "strengthens_application": "Nothing beyond maximizing TYT/AYT performance -- there is no other lever.",
+      "largely_irrelevant": "Everything else -- extracurriculars, leadership, projects, research, essays, interviews, recommendations -- zero channel exists for any of it to reach the placement decision.",
+      "never_infer": "Never imply that strengthening a domestic-YKS-track student's activity profile will move their Medicine placement outcome -- no mechanism exists through which it could. Never assume any interview, portfolio, or aptitude-test layer exists for Turkish domestic Medicine -- sources reviewed confirm none does, unlike Germany/Ireland/UK/Netherlands/Switzerland/France/Australia/NZ/Singapore/Hong Kong.",
+      "sources": [
+        "https://www.yok.gov.tr/tr/news/yuksekogretimde-yeni-donem-kontenjanlar-artik-istihdama-ve-gelecegin-mesleklerine-gore-belirleniyor-EJAzg",
+        "https://osym.gov.tr/"
+      ]
+    },
+    {
+      "country_key": "united_states",
+      "country_name": "United States",
+      "mechanism_type": "structurally_different",
+      "scope": "national, with a small, named exception (~40 combined programmes) at the university level",
+      "description": "There is no \"undergraduate Medicine admissions mechanism\" to compare against the rest of the US system the way there is for the Netherlands, Germany, UK, or Ireland. Medicine (MD/DO) in the US is, in the overwhelming standard pattern, a purely post-baccalaureate graduate programme: applicants apply via AMCAS (or AACOMAS for DO) after completing, or nearly completing, a bachelor's degree, submitting undergraduate GPA, MCAT score, letters of evaluation, and clinical/research/service experience accumulated during college -- an entirely separate, later application event from undergraduate admission, evaluated by medical schools rather than by the undergraduate institution at all. \"Pre-med\" describes prerequisite coursework and experience completed during any undergraduate major, not a distinct admissions category or major itself -- confirmed via AAMC's own materials, which state the only universal requirement across every US medical school is a completed bachelor's degree, no major required. The one real, named exception: AAMC itself documents roughly 40 combined BS/MD (or BA/MD) programmes nationally (examples include Brown's PLME, Northwestern's HPME, UMKC's 6-year BA/MD, Rice/Baylor, Case Western, Boston University) that admit a small number of students directly from high school into a linked undergraduate-then-MD pathway -- a genuine direct-entry route, but a minority, individually-designed, highly selective exception to the dominant graduate-entry pattern, not the standard route.",
+      "eligibility_determinants": "Dominant pattern: a completed or near-completed bachelor's degree (any major), undergraduate GPA, MCAT score, clinical/research/volunteering experience, letters of evaluation -- none of which a 14-18-year-old applicant has yet. Minority BS/MD exception: each programme's own, independently set, direct-from-high-school criteria (commonly exceptionally high grades/test scores plus an essay/interview at that specific combined programme).",
+      "strengthens_application": "For a high-school-stage ORYN user with a genuine Medicine interest under the dominant pattern: choosing and executing strong pre-med-relevant coursework and experience during whatever undergraduate major they choose is the actual next lever, not anything achievable directly in high school -- with the narrow exception of applying to one of the ~40 named BS/MD programmes as a high-school senior.",
+      "largely_irrelevant": "A US high schooler's activities and grades are not irrelevant to undergraduate admission generally, but they have zero direct bearing on \"Medicine admission\" as a category under the dominant pattern, since that decision doesn't happen until years later, post-bachelor's -- except on the narrow BS/MD track, where high-school-stage evidence is exactly what's evaluated.",
+      "never_infer": "Never treat \"US Medicine\" as parallel in kind to Netherlands/Germany/UK/Ireland/Switzerland/France/Australia/NZ/Singapore/Hong Kong Medicine for a 14-18-year-old ORYN user -- there is no undergraduate admissions decision to characterize under the dominant pattern. Never default a US-track student with a stated Medicine interest into \"which Medicine numerus-fixus programme\" framing; the correct framing is which undergraduate path sets up a strong post-bachelor's MD application, with the BS/MD track flagged separately as a narrow, named, high-school-stage alternative worth checking early if relevant.",
+      "sources": [
+        "https://www.aamc.org/news/combined-bachelor-s-and-md-programs-offer-direct-path-high-school-medical-school",
+        "https://students-residents.aamc.org/medical-school-admission-requirements/medical-school-admission-requirements-msar-applicants"
+      ]
+    }
+  ],
+  "cross_cutting_patterns": [
+    "Where a country's general admissions model is ALREADY competitive/selection-based (Australia, Singapore, New Zealand), 'Medicine is structurally different' cannot just mean 'more competitive' -- the marginal difference must be evaluated against a specific ADDED mechanism (a dedicated aptitude test, an interview, a fixed government place-count untied from the general funding model, a two-stage gateway year) that general admission does not have, not a shift from threshold-based to competitive the way it is in the Netherlands/Germany/Italy/France/Turkey.",
+    "Medicine is not universally an undergraduate-level admissions object -- in the United States and Canada it is categorically a post-baccalaureate graduate programme (MCAT plus AMCAS/OMSAS after a completed or near-completed bachelor's), with the US carrying a small, named exception (~40 BS/MD combined programmes enabling direct-from-high-school entry into a linked pathway) that sources reviewed did not surface an equivalent for in Canada.",
+    "The same field can run two genuinely different mechanisms within one country, split by a non-obvious axis: Italy splits by INSTRUCTION LANGUAGE (Italian-taught Medicine = semestre filtro open-entry-then-ranked-exams since 2025/26; English-taught Medicine = still IMAT, an up-front competitive test); Switzerland splits by LINGUISTIC REGION (EMS pre-entry test in German/Italian-speaking regions; a French-region post-entry first-year exam for the identical restricted field).",
+    "A 'narrow, named exception' is easy to overstate into a general rule if the quota/criterion layer it lives inside isn't also stated. Germany's AdH health-related-experience criterion is a real, sourced finding, but it is: one optional criterion among several, that a university may choose to weight, within one of three national quotas (AdH, confirmed at 60% of the post-Vorabquote Medicine seat pool) -- never guaranteed, never uniform across universities, and never present in the other two quotas (Abiturbestenquote, ZEQ) at all.",
+    "Even within one numerus-fixus-style cohort, in the same admissions cycle, the selection method can genuinely differ by university for the identical restricted field. For Netherlands Medicine 2026-27 specifically: Groningen/UvA/Radboud use unweighted lottery for all seats; VU Amsterdam/Leiden use decentralized qualitative selection; Utrecht runs a hybrid (~20% selection/~80% lottery) -- making both 'the Netherlands uses lottery for Medicine' and 'the Netherlands uses selection for Medicine' wrong as country-level claims, even restricted to this one field and this one cycle."
+  ],
+  "unresolved_questions": [
+    "Germany: the exact current AdH point-weighting for health-related-experience criteria specifically -- which of the roughly 40 medical faculties actually select it as one of their required school-grade-independent criteria -- was not exhaustively confirmed university-by-university this pass; the 60% AdH quota size and the >=2-criteria rule are confirmed at hochschulstart's own national level, the per-university criterion choice is not exhaustively mapped.",
+    "Netherlands: the full national distribution of which selection method every one of the roughly 8 Medicine faculties uses for 2026-27 was sampled (6 of ~8 -- Groningen, UvA, Radboud, VU Amsterdam, Leiden, Utrecht), not exhaustively confirmed for every faculty (e.g. Erasmus MC's and Maastricht's exact current split were not conclusively pinned down this pass).",
+    "Canada: whether any BS/MD-equivalent direct-from-high-school combined pathway exists anywhere in Canada (the US has roughly 40) was not found in sources reviewed this pass -- read as a gap, not a confirmed absence.",
+    "France: exact mechanics of the reportedly planned 2027 PASS/LAS reform were not available in sources reviewed this pass.",
+    "Switzerland: whether Geneva/Lausanne/Neuchatel's post-entry first-year Medicine exam has changed in structure or difficulty following EPFL's new 2025-2029 capacity-cap era was not checked this pass -- the two are administratively unrelated but both are live, recent Swiss capacity-management changes worth periodic re-verification.",
+    "Hong Kong: whether HKUST Medicine (a newer, still-developing programme) follows the same MMI/panel-interview pattern confirmed at HKU/CUHK was not independently confirmed this pass.",
+    "Ireland: precise 2027-cycle implementation detail beyond the headline 775-point maximum (e.g. the exact HPAT-to-150-point conversion formula) was reported consistently by the Irish Universities Association and secondary press but not cross-checked against CAO's or HPAT-Ireland's own primary points-conversion table this pass.",
+    "Spain: whether any additional private-Medicine-style test-and-interview layer exists at any Spanish public university beyond the uniform EBAU/nota-de-corte mechanism was not found in sources reviewed -- read as a confirmed-absent finding for the public sector broadly, not exhaustively re-verified against every individual Spanish public university offering Medicine.",
+    "Singapore: NTU's and SMU's specific Medicine/health-sciences-adjacent selection mechanisms were not independently researched to the same depth as NUS's this pass -- NUS's ranking-position-gate-plus-mandatory-test pattern should not be assumed to generalize to the other two AUs without separate confirmation."
+  ]
+}

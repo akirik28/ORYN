@@ -684,6 +684,17 @@ being modified for this population.
   Composition/Theatre/Opera/Musicology) or is set per-institution by senate decision within
   a 150–200 range — sources reviewed described both framings and this session did not
   resolve which is more accurate for the current cycle against a single primary source.
+  **Update from a later cross-check pass** (this package's dedicated Arts/Design
+  program-family research, `docs/research/admissions-systems/program-requirements/
+  arts-design.md`): confirmed genuinely more fragmented than a single number either
+  way — sourced material shows at least two unreconciled split logics (threshold varying
+  by *programme type* vs. by the *applicant's own school background*), at least one named
+  institution (Giresun) applying **no TYT floor at all** for specific conservatory
+  departments, and unconfirmed (medium-confidence, not primary-verified) reports that some
+  vakıf/foundation conservatories use pure talent-only selection with zero TYT floor — a
+  more extreme departure from the state-conservatory hybrid this section documents. Treat
+  any single cited TYT threshold for conservatory admission as an example, not a national
+  constant, until a primary ÖSYM/YÖK source resolves it.
 - Whether additional named non-exam-score exceptions exist beyond conservatory/fine-arts/
   sports-sciences/education-performance (e.g. disability-based alternative assessment,
   martyr/veteran-family placement provisions beyond simple quota reservation) — this session

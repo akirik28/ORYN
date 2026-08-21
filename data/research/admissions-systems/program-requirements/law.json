@@ -1,0 +1,248 @@
+{
+  "family_key": "law",
+  "family_name": "Law",
+  "overview": "The single most important structural fact for Law is not a matter of degree but of kind: in 12 of the 15 countries in this package, Law is a standard undergraduate degree entered directly from secondary school, using that country's ordinary undergraduate admissions mechanism as a starting point. In the United States, Law is not an undergraduate degree at all -- the Juris Doctor (JD) is graduate-entry-only, requiring an already-completed bachelor's degree in any field, confirmed via LSAC's own program pages. Canada complicates rather than confirms a simple US-vs-everyone-else split: outside Quebec, Canadian legal education mirrors the US JD model (prior degree, commonly LSAT); Quebec's civil-law tradition allows direct entry from a CEGEP diploma, but McGill's own eligibility rules confirm this route is available in practice mainly to students schooled within Quebec's own CEGEP system -- a foreign IB/A-Level applicant still needs a minimum of 60 prior university credits, making Canada graduate-or-near-graduate-entry for essentially all of ORYN's actual international users. Australia adds a third variant: University of Melbourne unilaterally eliminated its undergraduate LLB in 2008 (the 'Melbourne Model'), making Law JD-only there specifically, while every other Group of Eight university keeps a standard direct-entry ATAR-scored LLB -- a single-institution structural exception inside an otherwise uniformly undergraduate-entry country. Among the countries where undergraduate Law is the norm, a second-order split matters: some layer a bespoke supplementary selection instrument the country's general admissions process does not otherwise use (the UK's LNAT plus Oxbridge interview; Hong Kong's HKU/CUHK Law interview, confirmed required even on the local JUPAS pathway where interviews are not generally used; Singapore's NUS Law ranking-priority-plus-test-and-interview layer; New Zealand's Auckland/Otago post-first-year competitive-progression gate into the professional stage), while others simply run the country's general mechanism at a tougher competitive setting with no Law-specific instrument at all (France's Droit, formally non-selective yet producing single-digit acceptance rates through sheer demand; Ireland's CAO-points-only Law at Trinity/UCD; Turkey's Hukuk, EA-scored like several other fields and requiring a near-maximum YKS score) or found not to be particularly distinctive at all (Netherlands, Italy, Germany, Switzerland, Spain).",
+  "countries": [
+    {
+      "country_key": "united_states",
+      "mechanism_type": "not_available_at_undergraduate_level",
+      "scope": "national -- a structural feature of the entire US legal-education system; no institution offers an accredited undergraduate route to legal practice",
+      "description": "The Juris Doctor (JD) is a graduate-entry-only professional degree. LSAC's own JD program pages confirm every applicant must already hold a completed bachelor's degree, in any field, before applying -- there is no ABA-accredited path to US legal practice beginning directly from high school. 'Pre-law' describes an informal undergraduate advising track, not a credential, a major requirement, or an admissions gate. A US-bound law-interested 16-18-year-old's actual near-term admissions problem is a general Bachelor's application (Common App, holistic review, no predicted grades -- already documented in united-states.md), not a Law-specific one.",
+      "eligibility_determinants": "Completion of a bachelor's degree in any field; LSAT score is commonly required (not independently re-verified this pass whether GRE alternatives are now widely accepted); no specific undergraduate major is required or preferred, per LSAC's own statement.",
+      "strengthens_application": "Undergraduate GPA broadly, LSAT performance, and the general rigor of the completed prior degree -- not the choice of undergraduate major, which LSAC explicitly states is not required or preferred to be any particular field.",
+      "largely_irrelevant": "Which undergraduate major was chosen; any secondary-school-level 'law' coursework or activity, since none of it factors into an admissions process that only begins after a bachelor's degree is already complete.",
+      "never_infer": "Never treat a US 'pre-law' track as a Law-specific admissions pathway with its own gates at the undergraduate stage -- it is an ordinary Bachelor's admission, full stop, until the JD application after graduation. Never assume a specific undergraduate major is required or advantageous for JD admission.",
+      "sources": [
+        "https://www.lsac.org/discover-law/types-law-programs/jd-degree-programs"
+      ]
+    },
+    {
+      "country_key": "united_kingdom",
+      "mechanism_type": "structurally_different",
+      "scope": "university -- LNAT is a voluntary consortium adopted independently by a defined, changing subset of law schools, not a national or UCAS-level mandate",
+      "description": "LNAT (Law National Aptitude Test), a Pearson-administered 2h15m computer-based reasoning test, is required for 2026-27/2027-entry by Oxford, Cambridge, UCL, LSE, Durham, King's College London, Bristol, Glasgow and SOAS (9 UK institutions), cross-verified across LNAT's own site, university admissions pages, and multiple independent secondary sources. Cambridge newly requires it starting with 2027 entry, replacing the discontinued Cambridge Law Test. Nottingham dropped the requirement starting with 2023 entry and remains LNAT-free for 2026-27 -- a concrete, sourced correction to older material (including this package's own united-kingdom.md) that still lists Nottingham as an LNAT university. Warwick, Manchester and Edinburgh were also identified as non-LNAT law schools this pass. At Oxford and Cambridge, LNAT sits in addition to, not instead of, the general Oxbridge subject interview -- feeding shortlisting and, at Oxford, the final decision too.",
+      "eligibility_determinants": "The general UK qualification-eligibility gate already documented in united-kingdom.md (Tariff/native-grade offer, UK ENIC comparability for non-Tariff qualifications), plus, at the 9 named universities, a required LNAT sitting within its own registration window, plus, at Oxbridge specifically, an interview.",
+      "strengthens_application": "LNAT performance where required (explicitly a verbal/inductive/deductive reasoning and argument-comprehension measure per the test's own materials, not legal-knowledge content); strong subject-focused personal-statement content and, per general UK-admissions convention, 'super-curricular' engagement (debate, Model UN, relevant reading) -- the latter is consulting-tier discovery material, not a confirmed formal criterion.",
+      "largely_irrelevant": "Existing legal knowledge or work experience -- LNAT and the Oxbridge interview are explicitly reasoning-focused, not law-content assessments a 17-year-old could be expected to have mastered.",
+      "never_infer": "Never assume the current LNAT-requiring university list is stable -- it has changed within the last several cycles in both directions (Nottingham dropped it; Cambridge added it). Never assume LNAT is a national/UCAS requirement -- it is a university-layer, consortium-based choice.",
+      "sources": [
+        "https://lnat.ac.uk/",
+        "https://en.wikipedia.org/wiki/National_Admissions_Test_for_Law",
+        "https://www.ox.ac.uk/admissions/undergraduate/applying/guide-for-applicants/admissions-tests",
+        "https://www.ba.law.cam.ac.uk/applying/law-national-aptitude-test-lnat",
+        "https://www.undergraduate.study.cam.ac.uk/apply/how/law-admission-test",
+        "https://lawmint.uk/news-updates/top-uk-law-schools-that-do-not-require-the-lnat-in-2026/",
+        "https://www.lse.ac.uk/study-at-lse/undergraduate/llb-bachelor-of-laws"
+      ]
+    },
+    {
+      "country_key": "netherlands",
+      "mechanism_type": "same_as_general_admission",
+      "scope": "university -- whether Rechtsgeleerdheid is open or numerus fixus is decided independently per institution, using the Netherlands' two already-documented general mechanisms, not a Law-specific one",
+      "description": "Rechtsgeleerdheid (Rechten) was placed under several universities' numerus fixus frameworks in the early 2010s, but demand consistently fell short of or barely exceeded the caps, and the confirmed trend since has run toward openness: Utrecht dropped numerus fixus for Rechten, and both UvA's and Leiden's current admissions pages (researched this pass) describe Rechtsgeleerdheid as open/non-capped, using the same VWO-equivalence and language-requirement mechanism as any other open Dutch Bachelor's. Maastricht is a confirmed exception, using its own 100%-decentral-selection process rather than open admission (secondary-sourced). No Rechten-specific test, interview or motivation-letter requirement was found at the now-majority-open universities.",
+      "eligibility_determinants": "The general Dutch VWO-equivalence baseline (or foreign-diploma equivalent) plus, at Maastricht specifically, whatever decentral-selection criteria that university currently applies -- not a Law-specific eligibility bar.",
+      "strengthens_application": "Where open (the majority case researched): nothing beyond meeting the VWO-equivalence and subject-prerequisite threshold, since eligible functionally equals admitted for open Dutch programmes generally. Where selective (Maastricht): whatever the university's own decentral-selection criteria weight that cycle -- not independently detailed this pass.",
+      "largely_irrelevant": "Extracurricular activity and motivation letters, at the open-admission majority of universities researched -- these are only a lever at the numerus-fixus minority, and Rechten specifically was not confirmed as numerus fixus at any major university researched this pass except Maastricht.",
+      "never_infer": "Never assume Rechten is numerus fixus at a given Dutch university without checking that specific university's current cycle -- the trend has moved toward open admission at several major universities that historically capped it.",
+      "sources": [
+        "https://www.uva.nl/programmas/bachelors/rechtsgeleerdheid/toelating-en-inschrijven/toelating-en-inschrijven.html",
+        "https://dub.uu.nl/nl/nieuws/ook-geen-numerus-fixus-meer-voor-rechten-utrecht",
+        "https://www.advocatie.nl/nieuws/numerus-fixus-rechtenstudies-vaak-niet-gehaald/",
+        "https://www.organisatiegids.universiteitleiden.nl/reglementen/algemeen/numerus-fixus/reglementen-selectie"
+      ]
+    },
+    {
+      "country_key": "italy",
+      "mechanism_type": "same_as_general_admission",
+      "scope": "national/university -- Giurisprudenza is not a nationally-restricted numero chiuso field, and was not named among locally-capped examples either; it follows Italy's standard open-access-plus-orientation-test model",
+      "description": "Giurisprudenza is not among Italy's nationally restricted numero chiuso fields (Medicine, Dentistry, Veterinary Medicine), and was not named among italy.md's own examples of locally-capped programmes. Confirmed via Bologna's and Padova's own admissions pages this pass: open access, gated only by the standard non-binding TOLC-SU orientation test (the CISIA TOLC family's humanities/social-science variant) -- useful for self-assessment and able to trigger the OFA remedial module, but never grounds for denying admission on its own.",
+      "eligibility_determinants": "The general Italian 12-year-schooling-equivalence threshold and language requirement already documented in italy.md; sitting the non-binding TOLC-SU test is required procedurally but does not gate admission by score.",
+      "strengthens_application": "A stronger TOLC-SU score avoids being assigned the OFA remedial catch-up module, but does not affect the admission decision itself, since Giurisprudenza is open-access.",
+      "largely_irrelevant": "Personal statements, recommendation letters, extracurricular activities -- absent from Italy's qualification/test-threshold model generally, and Giurisprudenza does not create an exception.",
+      "never_infer": "Never treat TOLC-SU as a competitive/selective instrument for Giurisprudenza -- it is procedurally mandatory but non-binding for admission, structurally different from a numero-chiuso-ranking TOLC use elsewhere in the Italian system.",
+      "sources": [
+        "https://corsi.unibo.it/magistralecu/Giurisprudenza-Ravenna/tolc",
+        "https://corsi.unibo.it/magistralecu/Giurisprudenza-Bologna/tolc",
+        "https://www.unipd.it/ammissioni-giurisprudenza"
+      ]
+    },
+    {
+      "country_key": "germany",
+      "mechanism_type": "same_as_general_admission",
+      "scope": "university -- Jura is not one of the 4 national NC subjects; it follows the ordinary local/örtlicher-NC-or-zulassungsfrei mechanism, set independently per university per semester",
+      "description": "Jura/Rechtswissenschaft is not one of the four hochschulstart-coordinated national NC subjects (Humanmedizin, Zahnmedizin, Tiermedizin, Pharmazie). It commonly is subject to local/örtlicher NC at high-demand universities -- confirmed via Frankfurt's own admissions/NC page for Rechtswissenschaft, and cross-referenced against multiple German legal-education admissions aggregators -- using the same decentralized, semester-reset, self-set-cutoff mechanism germany.md already documents for Psychology/BWL. A meaningful number of German universities admit Jura admission-free (zulassungsfrei) where demand does not exceed capacity that semester. No Jura-specific test, interview or portfolio was found.",
+      "eligibility_determinants": "HZB/Abitur-equivalence (or the Anabin/Studienkolleg pathway already documented in germany.md), plus, where local NC currently applies at a given university, that semester's self-adjusting cutoff grade or waiting-time figure -- not a Law-specific criterion.",
+      "strengthens_application": "Abiturnote/equivalent strength, exactly as for any local-NC-or-open German programme -- no Law-specific lever was found.",
+      "largely_irrelevant": "Personal statements, recommendation letters, extracurricular activities, interviews -- absent from Germany's qualification-threshold model generally; Jura was not found to be an exception.",
+      "never_infer": "Never assume Jura is uniformly NC-restricted or uniformly zulassungsfrei across German universities -- both exist, set independently per institution per semester, exactly like Germany's other local-NC subjects.",
+      "sources": [
+        "https://www.jura.uni-frankfurt.de/55476524/Bewerbung_und_Numerus_Clausus__NC____Rechtswissenschaft___FB_01",
+        "https://iqb.de/karrieremagazin/jura/nc-jura-wo-gilt-welcher-numerus-clausus/"
+      ]
+    },
+    {
+      "country_key": "canada",
+      "mechanism_type": "structurally_different",
+      "scope": "national/provincial -- common-law-province JD (graduate-entry) vs. Quebec civil-law LLB/BCL (a narrower, jurisdiction-specific, CEGEP-linked exception) is a split by legal tradition/province, not by applicant nationality",
+      "description": "Outside Quebec, Canadian legal education is graduate-entry only, mirroring the US JD model: LSAC's own Canadian law-school directory confirms a completed prior degree is the norm and most English-language schools require the LSAT. Quebec's civil-law tradition genuinely allows direct entry from a CEGEP Diploma of Collegial Studies (McGill's combined BCL/JD: no prior degree, no LSAT, for CEGEP-track applicants) -- but McGill's own published eligibility rules, directly confirmed this pass, require an applicant presenting a foreign Baccalauréat, A-Levels or an IB Diploma (i.e. essentially any student who did not attend a Quebec CEGEP) to have already completed a minimum of 60 university credits before applying. The CEGEP-direct pathway is available in practice mainly to Quebec-CEGEP-schooled students, not to ORYN's actual international applicant population, making Canadian Law graduate-or-near-graduate-entry everywhere in the country for that population -- the live variable is how much prior post-secondary study is required and whether the LSAT applies, not whether a bachelor's-first structure applies at all.",
+      "eligibility_determinants": "Outside Quebec: a completed bachelor's degree (any field) plus, commonly, an LSAT score. Within Quebec's civil-law schools: either a Quebec CEGEP Diploma of Collegial Studies (or Quebec French Baccalauréat), or, for a foreign-schooled applicant, a minimum of 60 university credits (~2 years full-time study) -- no LSAT required either way in Quebec.",
+      "strengthens_application": "Outside Quebec: undergraduate GPA and LSAT score, per the general JD model. Within Quebec: CEGEP/prior-university-study record and, for McGill's BCL/JD specifically, demonstrated bilingual (English/French) proficiency.",
+      "largely_irrelevant": "LSAT performance within Quebec's civil-law schools, where it is not required at all -- a genuine structural difference from the rest of Canada and from the US.",
+      "never_infer": "Never assume Quebec's CEGEP-direct civil-law pathway is available to a non-Quebec-schooled international applicant on the same terms as a Quebec-educated one -- directly confirmed against McGill's own eligibility rules, it is not; a foreign IB/A-Level applicant still needs a minimum of 60 prior university credits. Never assume 'Canada has an undergraduate-entry Law option' without immediately specifying which province/legal tradition and which applicant population.",
+      "sources": [
+        "https://www.lsac.org/choosing-law-school/find-law-school/canadian-law-schools",
+        "https://www.mcgill.ca/law/bcl-jd/admissions-guide/eligibility",
+        "https://www.canadianlawyermag.com/resources/legal-education/law-schools-in-quebec-admission-requirements-tuition-fees-and-legal-education/392913"
+      ]
+    },
+    {
+      "country_key": "switzerland",
+      "mechanism_type": "same_as_general_admission",
+      "scope": "university -- Law is not covered by EMS (Switzerland's Medicine/Dentistry/Vet-Med/Chiropractic aptitude test) and follows each university's general Bachelor's admission mechanism",
+      "description": "Law is not one of the four EMS-covered fields, and no Law-specific entrance exam analogous to ETHZ's or EPFL's own bespoke tests was found at any Swiss law faculty reviewed. UZH's Rechtswissenschaft Bachelor's uses the same federally-recognized-Matura-or-equivalent-foreign-diploma threshold as most other UZH Bachelor's programmes (with a narrow eligibility-only rule: a student finally rejected from Law at UZH or another Swiss law faculty cannot reapply to study Law there). HSG names both a combined 'Law and Economics' Assessment Year track (deliverable in English or German) and a standalone 'Law' track (German-only), but the admission mechanism feeding either is HSG's general one, including its 25%-by-law foreign-student quota that applies across all HSG fields, not something Law activates uniquely.",
+      "eligibility_determinants": "The general Swiss Bachelor's threshold already documented in switzerland.md (Swiss Matura, or the foreign-qualification direct-admission threshold / entrance-exam fallback) -- no Law-specific eligibility test found.",
+      "strengthens_application": "Meeting the general foreign-diploma direct-admission threshold (e.g. the mathematics-plus-science-plus-language-of-instruction subject template already documented) to avoid the entrance-exam fallback -- not a Law-specific lever.",
+      "largely_irrelevant": "Personal statements, recommendation letters, extracurricular activities -- absent from Switzerland's general Bachelor's admission model, and Law was not found to be an exception.",
+      "never_infer": "Never assume Law is covered by EMS or subject to a Medicine-style Swiss numerus-clausus mechanism -- it is not; do not extend EMS's scope to Law by analogy.",
+      "sources": [
+        "https://www.uzh.ch/de/studies/application/bachelor.html",
+        "https://www.degrees.uzh.ch/de/bachelor/50000002/51045870/51045871"
+      ]
+    },
+    {
+      "country_key": "france",
+      "mechanism_type": "numerically_stricter_only",
+      "scope": "university/programme -- Droit is a 'licence en tension' under the 2018 loi ORE: nominally non-selective nationally, but individual universities/parcours can rank by attendus-fit when demand exceeds capacity, using the same Parcoursup mechanism as any other Licence",
+      "description": "france.md's existing research already names Droit as one of the Licences commonly described as 'en tension' -- nominally non-selective, no separate test or interview, yet rankable by attendus-fit under loi ORE when demand exceeds capacity, without ever being formally reclassified 'sélective'. 2026-cycle reporting sharpens how tense this gets in practice: Université Paris-Panthéon-Assas and Paris 1 Panthéon-Sorbonne each reportedly receive roughly 15,000 vœux for under 1,000 places, and one Bordeaux 'Parcours International Droit international et européen' is reported at a 2% access rate with an admitted-average baccalauréat score near 17/20 -- producing US/UK-grade selectivity through a formally non-selective mechanism. The mechanism itself stays identical to any other Parcoursup Licence vœu throughout.",
+      "eligibility_determinants": "The general French Baccalauréat-holder Parcoursup eligibility already documented in france.md (or the DAP dossier for foreign-diploma holders, with no confirmed Droit-specific DAP variant); attendus-nationaux alignment (notably which spécialités were retained through terminale for Bac-track applicants) as one ranking input when a specific Droit vœu is 'en tension'.",
+      "strengthens_application": "Strong terminale/livret scolaire results and the projet de formation motivé (when requested) for the 'en tension' ranking process; for DAP-track applicants, the general TCF/dossier strength already documented, since no Droit-specific DAP layer was found.",
+      "largely_irrelevant": "A separate admissions test or interview -- none exists for Droit specifically; selectivity operates entirely through dossier-ranking under the general attendus/loi-ORE mechanism.",
+      "never_infer": "Never assume Droit's formally 'non-selective' legal status means it is easy to obtain at any given university -- Assas- and Sorbonne-level demand produces outcomes as selective as any formally selective system elsewhere in this package, through ranking rather than a named admissions test.",
+      "sources": [
+        "https://www.letudiant.fr/etudes/parcoursup/parcoursup-les-licences-de-droit-les-plus-selectives.html"
+      ]
+    },
+    {
+      "country_key": "spain",
+      "mechanism_type": "same_as_general_admission",
+      "scope": "national/university -- Derecho is a standard Grado, reached through the ordinary nota de admisión and regional Distrito Único mechanism with no Derecho-specific test found",
+      "description": "No Derecho-specific test, interview or portfolio was found. Derecho is a standard Grado, reached through the ordinary nota de admisión (EBAU, or UNEDasiss homologación/PCE for the international track) plus the weighted-subject bonus mechanism and regional Distrito Único allocation already documented in spain.md, resulting in its own self-adjusting nota de corte per university per cycle -- illustratively as high as roughly 13.2/14 for one combined Derecho-plus-International-Relations programme in 2025-26, reflecting demand rather than a different mechanism.",
+      "eligibility_determinants": "The general Spanish nota de acceso (EBAU-based, or UNEDasiss-homologación-based for foreign qualifications) clearing the baseline threshold, exactly as for any other Grado.",
+      "strengthens_application": "A higher nota de admisión, including whichever Bachillerato subjects a given university weights (ponderación) for Derecho -- the specific subjects were not confirmed for a representative sample of universities this pass.",
+      "largely_irrelevant": "Personal statements, recommendation letters, extracurricular activities -- absent from Spain's nota-de-admisión-driven public Grado system generally, and Derecho was not found to be an exception.",
+      "never_infer": "Never assume a SAT/ACT-style test or a Law-specific instrument plays any role in Spanish Derecho admission -- none was found; the mechanism is purely the general nota-de-admisión formula.",
+      "sources": [
+        "https://notasdecorte.es/derecho"
+      ]
+    },
+    {
+      "country_key": "ireland",
+      "mechanism_type": "numerically_stricter_only",
+      "scope": "national/platform -- Law at Trinity and UCD runs through the ordinary CAO Level 8 points mechanism, with no HPAT-style supplementary test found, extending ireland.md's general CAO-route finding",
+      "description": "No HPAT-style supplementary test, interview or portfolio was found for Law at either Trinity or UCD -- both rely on the ordinary CAO Level 8 points mechanism already documented as ireland.md's national default. UCD's own general admissions guidance explicitly confirms no personal statement or interview is required of any CAO applicant outside Veterinary Medicine, and no source reviewed named Law as a CAO 'Restricted'-flagged course. Law is nonetheless consistently reported as one of the more points-competitive Level 8 courses at both universities in secondary admissions-consulting material; a specific current-cycle points figure was not independently confirmed this pass.",
+      "eligibility_determinants": "CAO points computed from the applicant's best 6 Leaving Certificate subject grades (plus any Higher Level Mathematics bonus), exactly as for any other standard Level 8 CAO course.",
+      "strengthens_application": "A higher CAO points total, since Law is reported as sitting toward the more competitive end of the Level 8 points range at Trinity and UCD -- no Law-specific lever beyond the general points score was found.",
+      "largely_irrelevant": "Personal statements, references, interviews, extracurricular activities -- structurally absent from the CAO/points route for Law exactly as for any other standard course, per ireland.md's own general finding.",
+      "never_infer": "Never assume an HPAT-style supplementary test applies to Law the way it does to Medicine in Ireland -- none was found. Never assume the non-EU/direct route (which most Turkish/international applicants actually use) mirrors the CAO route's evidentiary model -- it presumably follows that route's general essay/reference/predicted-grade pattern instead, though this was not independently re-verified for Law specifically.",
+      "sources": [
+        "https://www.tcd.ie/law/programmes/undergraduate/undergraduate-law-faqs/",
+        "https://www.ucd.ie/registry/prospectivestudents/admissions/policiesandgeneralregulations/generalrequirements/generalrequirementsundergraduate/",
+        "https://www.ucd.ie/courses/bcl-law"
+      ]
+    },
+    {
+      "country_key": "australia",
+      "mechanism_type": "numerically_stricter_only",
+      "scope": "university -- the dominant pattern (direct-entry ATAR-scored LLB) is numerically stricter only, but the University of Melbourne is a confirmed, structurally_different single-institution exception (JD-only, graduate-entry) inside the same country",
+      "description": "Every Group of Eight university except the University of Melbourne offers a standard, direct-entry undergraduate LLB (commonly combined, e.g. LLB/Arts), admitted purely on ATAR/selection rank with no admissions test or interview -- reported 2026 combined-LLB ATAR figures run roughly 97.7 at UNSW and approximately 99.5 at Sydney, using the identical ATAR mechanism as any other competitive course, just at a very high bar. The University of Melbourne is the sharp, directly confirmed exception: as part of the 2008 'Melbourne Model' restructuring, it eliminated undergraduate Law entirely -- Melbourne Law School's own page states its Juris Doctor is now the only degree leading to admission to legal practice there, open only to holders of an already-completed non-law bachelor's or an overseas law degree.",
+      "eligibility_determinants": "Everywhere except Melbourne: the general Australian ATAR/selection-rank (or overseas-qualification equivalent) already documented in australia.md, with Law commonly among the highest-ATAR courses a university publishes but using the same mechanism as any other. At Melbourne specifically: a completed non-law bachelor's degree (any field) or an overseas law degree, mirroring the US/graduate-entry model.",
+      "strengthens_application": "A higher ATAR/selection rank at the standard direct-entry universities -- no Law-specific test or interview lever was found anywhere except Melbourne's separate graduate-entry JD, where the strength of the completed prior degree is the operative signal instead.",
+      "largely_irrelevant": "A Law-specific admissions test (no LSAT-equivalent is used for direct-entry Australian undergraduate LLB admission); extracurricular activity, outside a small number of named non-ATAR schemes not specific to Law.",
+      "never_infer": "Never apply a single 'Australian Law admission' model across every Australian university a student might list -- the University of Melbourne requires a fundamentally different, longer-horizon graduate-entry plan than every other researched Go8 university's direct-entry LLB.",
+      "sources": [
+        "https://law.unimelb.edu.au/centres/celrl/study-options/melbourne-jd",
+        "https://en.wikipedia.org/wiki/Melbourne_Model",
+        "https://www.unsw.edu.au/study/undergraduate/bachelor-of-arts-law",
+        "https://www.unsw.edu.au/study/how-to-apply/undergraduate/entry-requirements"
+      ]
+    },
+    {
+      "country_key": "new_zealand",
+      "mechanism_type": "structurally_different",
+      "scope": "university/programme -- confirmed independently at both Auckland and Otago: broad first-year entry followed by a separate, competitive progression gate into the professional second year, a materially different shape from a single entry-point decision",
+      "description": "Both Auckland (already documented in new-zealand.md) and Otago (confirmed this pass) admit into first-year Law through the ordinary New Zealand mechanism -- Auckland via its general Rank Score system, Otago via a standard University Entrance qualification with, Otago's own page states, 'no specific subjects that you need to study at school' for first-year entry. Progression into the second, professional year of the LLB is a separate, competitive step at both: Auckland's LLB Part II is competitive based on Part I plus non-law grades; Otago caps second-year Law at roughly 250 places, selected predominantly on the mark achieved in the compulsory first-year paper LAWS 101.",
+      "eligibility_determinants": "For first-year entry: the general NZ University Entrance/Rank Score threshold already documented in new-zealand.md, no Law-specific subject requirement. For continuation into second year: the mark achieved in first-year Law papers (LAWS 101 at Otago; Part I results plus non-law grades at Auckland), a genuinely separate, later eligibility gate.",
+      "strengthens_application": "Strong first-year Law-paper performance is what actually determines continuation into the professional stage -- entry-time credentials alone do not secure a place past year one.",
+      "largely_irrelevant": "Entry-time extracurricular activity or a personal statement for the first-year admission step, consistent with New Zealand's general pattern; not applicable to the separate, later progression step either, which runs purely on first-year academic performance.",
+      "never_infer": "Never treat admission to a New Zealand university's Law programme as equivalent to being on an uninterrupted path to qualifying -- genuine competitive attrition/re-selection happens after first year at both universities researched, not only at the initial admissions gate.",
+      "sources": [
+        "https://www.otago.ac.nz/apply/laws",
+        "https://www.otago.ac.nz/law/study/undergraduate"
+      ]
+    },
+    {
+      "country_key": "hong_kong",
+      "mechanism_type": "structurally_different",
+      "scope": "programme -- HKU and CUHK both require a Law-specific interview reaching even the local JUPAS pathway, where interviews are not generally used for other programmes",
+      "description": "Both HKU and CUHK require a Law-specific interview layered on top of their general admission processes, for both of Hong Kong's structurally separate applicant tracks. Directly confirmed against HKU's own Faculty of Law FAQ page this pass: for JUPAS/local applicants, 'the Faculty invites selected Band A applicants to attend interviews after the release of HKDSE results'; for non-JUPAS/international applicants, 'selected applicants are invited to a panel interview.' CUHK's Faculty of Law page similarly confirms interviews are required for LLB admission, for shortlisted applicants in both JUPAS and Non-JUPAS categories. This departs from Hong Kong's general pattern, where hong-kong.md's own research found interviews 'not documented as a primary factor in JUPAS's core merit-order mechanism' for the ordinary local applicant.",
+      "eligibility_determinants": "For JUPAS/local applicants: Band A placement (top preference band) plus HKDSE results, then a required interview for selected Band A applicants. For non-JUPAS/international applicants: the general qualification-and-minimum-average threshold already documented in hong-kong.md, plus a required panel interview for selected applicants.",
+      "strengthens_application": "Strong interview performance, alongside the general academic threshold -- Law is one of the few HK fields (with Medicine, and at some institutions Business) where interview performance is confirmed to matter even for local JUPAS applicants.",
+      "largely_irrelevant": "Not independently confirmed this pass; no specific factor was found to be a documented non-issue beyond the general Hong Kong findings already in hong-kong.md.",
+      "never_infer": "Never assume Law follows JUPAS's ordinary interview-free merit-order mechanism just because most other JUPAS programmes do -- Law (along with Medicine, and Business at some institutions) is a confirmed exception where an interview reaches even local applicants.",
+      "sources": [
+        "https://www.law.hku.hk/prospective-students/ug-faq/",
+        "https://www.law.cuhk.edu.hk/app/study-with-us/bachelor-of-laws-llb/",
+        "https://admission.cuhk.edu.hk/application/non-jupas/general-requirements/"
+      ]
+    },
+    {
+      "country_key": "singapore",
+      "mechanism_type": "structurally_different",
+      "scope": "programme -- NUS Law layers a ranking-priority gate and a (secondary-sourced) written-test-plus-interview stage onto NUS's general holistic default; separately, NTU does not offer an undergraduate Law degree at all, a structural non-participation rather than an under-researched gap",
+      "description": "NUS Law requires Law to be placed as an applicant's first, second, or (only if Medicine and Dentistry occupy the first two slots) third programme choice to be considered for shortlisting at all (already established in singapore.md). Resolving what singapore.md flagged as an open question, secondary reporting found this pass (medium confidence -- direct fetches of NUS's own domain returned empty content this session) describes NUS reserving direct shortlisting for the top 5% of each junior college/Millennia Institute cohort by A-Level or IB result, with shortlisted candidates then sitting a written test and interview. SMU's LLB was not found to carry an equivalent bespoke layer, reading closer to SMU's general holistic default. NTU does not appear to operate a Faculty of Law or offer an undergraduate LLB at all -- its only law-adjacent teaching found this pass is a Business Law division within Nanyang Business School. Singapore's three Institute-recognized qualifying law degree providers are NUS, SMU, and the Singapore University of Social Sciences (SUSS), not NTU.",
+      "eligibility_determinants": "At NUS: the general qualification-group requirement plus the ranking-priority-choice-order rule (Law must be ranked within the first 1-3 choices), plus, for the shortlisted top-cohort route, a written test and interview. At SMU: the general SMU holistic-admission criteria (academic record, co-curricular record). At SUSS: GCE A-Level, IB, or equivalent, per SUSS's own eligibility page (age/experience conditions also apply per SUSS's programme design). NTU: not applicable -- no undergraduate Law programme exists.",
+      "strengthens_application": "At NUS: top-of-cohort academic standing (to reach shortlisting eligibility) plus written-test and interview performance. At SMU: strong academic record combined with co-curricular achievement, per SMU's general holistic criteria.",
+      "largely_irrelevant": "Assuming NTU as a third undergraduate Law option alongside NUS/SMU is a category error, not merely a weaker option -- no NTU Law programme was found to exist.",
+      "never_infer": "Never frame Singapore's undergraduate Law landscape as 'NUS/NTU/SMU' -- NTU does not offer an undergraduate LLB; the accurate set of local qualifying providers is NUS, SMU, and SUSS. Never assume NUS's ranking-priority-plus-test-and-interview layer applies uniformly to SMU or SUSS, which were not found to share it.",
+      "sources": [
+        "https://www.moe.gov.sg/coursefinder/coursedetail?course=smu-law-bachelor-of-laws",
+        "https://www.suss.edu.sg/programmes/detail/bachelor-of-laws-lawllb",
+        "https://en.wikipedia.org/wiki/Singapore_University_of_Social_Sciences_School_of_Law"
+      ]
+    },
+    {
+      "country_key": "turkey",
+      "mechanism_type": "numerically_stricter_only",
+      "scope": "national/platform -- Hukuk uses the identical, nationally uniform EA-scored YKS placement algorithm as every other EA programme, sitting at the near-maximum-score end of that mechanism's range rather than using any different mechanism",
+      "description": "Hukuk (Law) is placed under the EA (Esit Agirlik/Equal-Weight) YKS score type, alongside Economics, Business, Psychology and Social Work -- not the SOZ (Verbal) score type an assumption of 'Law is a humanities field' might suggest, a direct sourced correction confirmed against turkey.md's own ÖSYM-derived research. Beyond that uniform, nationally-set score-type routing, turkey.md's existing research already names Law explicitly, alongside Medicine and top-university Engineering, as one of the fields that 'require close to the maximum attainable score' -- the identical centralized-algorithmic-placement mechanism as every other lisans programme, simply at its most competitive end.",
+      "eligibility_determinants": "Placement score computed as (TYT x 0.40) + (AYT x 0.60) + (OBP x 0.12 or 0.06), using the EA-weighted AYT subject cluster (Mathematics plus Turkish Language-Literature/History), ranked against every other candidate who listed the same Hukuk programme code -- identical mechanism to any other EA-scored lisans programme.",
+      "strengthens_application": "A higher EA-weighted YKS score -- no other lever exists or is structurally possible within the domestic pathway.",
+      "largely_irrelevant": "Extracurricular activities, leadership, research, essays, interviews, recommendation letters -- zero channel exists for any of these to reach a Hukuk placement decision, exactly as for every other domestic-pathway lisans programme in Turkey.",
+      "never_infer": "Never assume Hukuk uses the SOZ (Verbal) score type by pattern-matching 'Law is a humanities subject' -- it is EA-scored. Never imply that strengthening a domestic-YKS-track student's activity profile could improve Hukuk placement odds -- the mechanism has no channel for that evidence to matter.",
+      "sources": [
+        "https://halic.edu.tr/tr/blog/yks-puan-turleri-nelerdir-say-ea-soz-ve-dil-ne-anlama-gelir",
+        "https://www.hurriyet.com.tr/gundem/yks-sonuclarinda-yer-alan-y-soz-y-ea-ve-y-say-puani-nedir-41276139",
+        "https://www.turkiyegazetesi.com.tr/egitim/vakif-universitelerinde-sasirtan-sonuc-populer-bolumlerde-bile-kontenjanlar-bos-kaldi-1810326",
+        "https://www.yok.gov.tr/tr/news/yuksekogretimde-yeni-donem-kontenjanlar-artik-istihdama-ve-gelecegin-mesleklerine-gore-belirleniyor-EJAzg"
+      ]
+    }
+  ],
+  "cross_cutting_patterns": [
+    "Even in countries where Law is a standard undergraduate degree entered directly from secondary school, a subset attach a bespoke supplementary selection layer -- a dedicated aptitude test, a mandatory interview, a ranking-priority/choice-order rule, or a post-first-year competitive-progression gate -- that most OTHER subjects in that same country do not carry. This recurred independently across the UK (LNAT plus Oxbridge interview), Hong Kong (HKU/CUHK Law interview, confirmed reaching even the normally interview-free local JUPAS pathway), Singapore (NUS Law's ranking-priority-plus-test-and-interview layer), and New Zealand (Auckland's and Otago's post-first-year competitive progression into the professional stage) -- found independently in four separate countries during this program-family research pass, the same 'found repeated, not asserted in the abstract' bar this package's existing ruleset already applies. This is genuinely distinct from a country simply running its general mechanism at a higher competitive bar (France's Droit, Ireland's CAO-points Law, Turkey's near-maximum-score Hukuk, all confirmed to use no bespoke Law-specific instrument at all).",
+    "A country's Law admission structure can be genuinely bifurcated by sub-national legal/educational jurisdiction, independent of applicant nationality or type -- Canada's common-law-province JD (graduate-entry, LSAT-based) versus Quebec's civil-law LLB/BCL (CEGEP-linked, no LSAT) is not gated by which applicant type someone is (the way Ireland's CAO/non-EU-direct split or Hong Kong's JUPAS/non-JUPAS split are, per RULE-ADMISSIONS-013/014), but by which institution/province's own legal tradition an identical applicant targets. The same Turkish IB-diploma student would face a fully graduate-entry structure applying to University of Toronto and a partially-undergraduate-entry-adjacent structure (still requiring 60 prior credits, confirmed against McGill's own rules) applying to McGill's BCL/JD -- a third variant of 'two systems within one country,' keyed to program-family-and-jurisdiction rather than to applicant category.",
+    "A single university can unilaterally adopt a structurally different admissions shape for one field than every other university in its own country and its own prestige tier uses -- the University of Melbourne's 2008 elimination of undergraduate Law (JD-only since) inside a country (Australia) where every other Group of Eight university retained a standard direct-entry ATAR-scored LLB. This is a sharper, single-institution version of RULE-ADMISSIONS-002's university-overrides-national-baseline pattern: here the override does not just adjust a threshold, it changes which KIND of admissions system applies, and no other researched country in this package showed one university making this specific move while immediate prestige-tier peers did not."
+  ],
+  "unresolved_questions": [
+    "The exact current-cycle (2026-27) admission mechanism at Maastricht's Rechtsgeleerdheid -- found only via a secondary source describing '100% decentral selection,' not independently confirmed against Maastricht's own current admissions page this pass.",
+    "Whether any Australian university besides the University of Melbourne has moved, or is actively considering moving, toward a JD-only model -- checked only across the Group of Eight this pass, not exhaustively across all Australian law schools.",
+    "The precise, current, primary-sourced format of NUS Law's written-test-plus-interview stage for shortlisted top-5%-cohort applicants -- described only via secondary reporting this pass; direct fetches of NUS's own domain returned empty content this session and should be retried.",
+    "Whether SMU Law or SUSS Law carry any interview or supplementary-test layer comparable to NUS's -- not found in sources reviewed, but not checked to the same depth as NUS.",
+    "The admission mechanism for Rechtswissenschaft/Droit at Swiss cantonal law faculties beyond UZH and HSG (Geneva, Fribourg, Basel, Bern, Lausanne, Neuchatel) -- inferred by extension from the country-level EMS-exclusion finding, not independently re-verified per law faculty this pass.",
+    "A specific, current-cycle, primary-sourced CAO points figure for Law at Trinity and UCD, and whether Ireland's non-EU/direct Law admission route applies any Law-specific evidentiary requirement beyond that route's already-documented general essay/reference/predicted-grade model.",
+    "Whether Universite de Montreal's, Laval's, and Sherbrooke's civil-law LLB/LLL programmes share an identical CEGEP-direct-entry-plus-60-credits-for-outsiders structure to McGill's BCL/JD, or each sets its own variant -- only McGill was independently verified in detail this pass.",
+    "Which specific Bachillerato subjects a representative sample of Spanish universities weight for Derecho under the Real Decreto 534/2024 ponderacion system.",
+    "Whether HKUST offers any undergraduate Law programme at all -- no evidence of one was found in this pass or in this package's existing hong-kong.md research, a gap rather than a confirmed absence.",
+    "Whether Australian graduate-entry Law programmes (Melbourne's JD, and others some universities offer as an optional career-change route alongside their standard undergraduate LLB) commonly use GAMSAT, an LSAT-equivalent, or another instrument -- mentioned only in passing this pass, not independently verified.",
+    "Whether US law schools' increasing acceptance of the GRE as an LSAT alternative changes the eligibility-determinants picture for the United States entry -- not independently re-verified this pass."
+  ]
+}

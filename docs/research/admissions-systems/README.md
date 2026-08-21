@@ -1,11 +1,16 @@
 # Country-level university admissions system intelligence (R3.1)
 
-**Status:** 15 systems researched (v1's original 6 destination systems, unmodified, plus 8
-more destinations added in a v2 expansion pass, plus Turkey's own domestic system added in
-a v2 follow-up pass — Turkey is the source country this package's other 14 "applicant
-educated in Türkiye" sections are about, not a 9th destination). **Consumer:** primarily
-Claude B (counselor / eligibility / application-strategy logic), secondarily Claude A
-(admissions data normalization / provenance). Short operational summaries:
+**Status:** 15 country systems researched (v1's original 6 destination systems,
+unmodified, plus 8 more destinations added in a v2 expansion pass, plus Turkey's own
+domestic system added in a v2 follow-up pass — Turkey is the source country this
+package's other 14 "applicant educated in Türkiye" sections are about, not a 9th
+destination) — see the cross-country matrix below. **Plus** 7 program-family
+requirements docs (Medicine, Law, Architecture, Arts/Design, Engineering, Computer
+Science, Economics/Business) layered on top, covering all 15 countries each — see
+[Program-family requirements](#program-family-requirements-cross-country) further down.
+**Consumer:** primarily Claude B (counselor / eligibility / application-strategy logic),
+secondarily Claude A (admissions data normalization / provenance). Short operational
+summaries:
 [`docs/handoffs/research-admissions-systems.md`](../../handoffs/research-admissions-systems.md)
 (original 6) and
 [`docs/handoffs/research-admissions-systems-v2.md`](../../handoffs/research-admissions-systems-v2.md)
@@ -268,6 +273,110 @@ doesn't imply the platform even covers a given applicant type — this rule adds
 roles at once, split by which population it's serving. Never infer a body's decision-making
 authority from one applicant population and apply it uniformly to another population that
 same body also touches.
+
+**RULE-ADMISSIONS-018 — A "school-within-university" admissions layer — a named
+college/school inside one university running its own separate admission, distinct from
+that university's general track — recurs independently across countries and evidence
+models, and correlates with how a country's universities devolve admissions authority
+internally, not with the country's general admissions philosophy.**
+Found independently by two separate program-family research passes (Engineering and
+Computer Science), in both a holistic-review system (US: Berkeley EECS admits separately
+from Berkeley's own CS major, with the university's own site stating the two processes
+"vary significantly"; CMU's School of Computer Science is one of seven colleges CMU admits
+directly into) and a transcript/points-driven system (Canada: Waterloo's Admission
+Information Form, University of Toronto's supplementary process). Two distinct sub-shapes
+exist and must not be conflated: (a) separate evaluation at first application (Berkeley,
+CMU, Waterloo) versus (b) admission to the university followed by a wholly separate,
+competitive post-enrollment gate into the intended major (University of Washington's Allen
+School: a "Direct to Major" pathway alongside a much lower-acceptance "Current UW Student"
+pathway for students already enrolled who didn't get direct admission). A student "admitted
+to the university" has not necessarily been admitted to their intended field.
+
+**RULE-ADMISSIONS-019 — A country's general admissions philosophy does not predict any
+given field's mechanism; the same country can be maximally open for one field and
+maximally gated for another, with no correlation.**
+Confirmed repeatedly across the program-family research: Singapore is same-as-general for
+Computer Science but structurally different (ranking-position gating plus a mandatory
+test) for Medicine; Switzerland is fully open (no numerus clausus at all) for Computer
+Science, Architecture, and Engineering, but EMS-gated for Medicine — the sole Swiss
+exception; NUS's own admission table shows zero test/interview for all ten core
+Engineering majors while Architecture, Landscape Architecture, and Industrial Design in the
+*same college* all require one. Never infer a field's admission mechanism from a country's
+documented general shape (or from another field in the same country) — check per field.
+**Corollary, from the same research pass**: when an institution is itself dominated by one
+field (University of St. Gallen for Economics/Business, SMU for the same in Singapore), a
+"distinctive" mechanism found there may simply be how that institution admits everyone,
+not evidence that the *field* is special — verify against that institution's other fields,
+where it has any, before generalizing a finding from a field-dominant institution to the
+field as a whole.
+
+**RULE-ADMISSIONS-020 — A specific evidence type can substitute for the general academic
+qualification entirely, not merely supplement or override it as an added layer.**
+Germany's Kunsthochschule (art academy) sector: an applicant without the Abitur can enroll
+if they score above a stated threshold on the artistic-aptitude exam alone — confirmed as
+the sole qualifying pathway for non-Abitur applicants, not an exception layered on top of
+an otherwise-required academic credential. Distinct from RULE-ADMISSIONS-004 (native
+academic evidence must remain native, never force-converted) — that rule is about how one
+type of academic evidence is read; this rule is about one evidence *category* (talent/
+portfolio/audition score) functionally replacing another category's gatekeeping role
+outright, which is a different and rarer claim that needs its own explicit confirmation
+before ORYN ever tells a student a non-academic score can substitute for a missing
+qualification.
+
+**RULE-ADMISSIONS-021 — Some fields are not undergraduate-admission objects at all in some
+countries, categorically rather than by degree of difficulty — confirm the field is
+offered as an undergraduate credential before researching or advising on "undergraduate
+admission to X" there.**
+Medicine: graduate-entry-only (post-baccalaureate) in the US and Canada — a structural
+category difference from all 13 other countries in this package, not a harder version of
+the same undergraduate process. Law: the same pattern, independently confirmed — graduate-
+entry-only (JD) in the US, and effectively so in Canada outside Quebec's CEGEP-linked
+civil-law route (which itself is realistically available only to Quebec-CEGEP-schooled
+students, not a genuine alternative for an international applicant). Two independent
+program-family research passes converging on the identical structural shape, for two
+different fields, is the same evidentiary bar the original 12 rules used.
+
+## Program-family requirements (cross-country)
+
+Layered on top of the 15 country systems above: for **Medicine, Law, Architecture, Arts/
+Design, Engineering, Computer Science, and Economics/Business**, how do requirements
+differ — and where is the difference *structural* (a fundamentally different admissions
+mechanism for that field) versus merely *numerically stricter* (the same country-level
+mechanism, just a higher bar)? That distinction, not raw selectivity, is what a counselor
+actually needs: a "structurally different" field requires researching a wholly separate
+process; a "numerically stricter" field needs the same process, prepared to a higher
+standard.
+
+Full detail, country-by-country, lives in each family's own document — this table is a
+navigation aid, not a replacement for reading the source doc before advising a specific
+student:
+
+| Family | Doc | Structurally different | Numerically stricter only | Same as general / not available at UG level |
+|---|---|---|---|---|
+| Medicine | [`medicine.md`](./program-requirements/medicine.md) | 13 of 15 (all but Spain, Turkey) | Spain, Turkey | — |
+| Law | [`law.md`](./program-requirements/law.md) | UK, Canada, NZ, Hong Kong, Singapore | France, Ireland, Australia, Turkey | Same-as-general: Netherlands, Italy, Germany, Switzerland, Spain. Not available at UG level: US |
+| Architecture | [`architecture.md`](./program-requirements/architecture.md) | US, UK, Canada, France, Ireland, Australia, NZ, Hong Kong, Singapore | Netherlands, Italy, Germany, Spain | Switzerland, Turkey |
+| Arts / Design | [`arts-design.md`](./program-requirements/arts-design.md) | All 15 | — | — |
+| Engineering | [`engineering.md`](./program-requirements/engineering.md) | France, UK, Germany, US, Canada | Italy, Spain, Ireland, Australia, NZ, Hong Kong, Turkey | Netherlands, Switzerland, Singapore |
+| Computer Science | [`computer-science.md`](./program-requirements/computer-science.md) | US, UK, Netherlands, Germany | Italy, Canada, France, Spain, Ireland, Australia, NZ, Hong Kong, Singapore, Turkey | Switzerland |
+| Economics / Business | [`economics-business.md`](./program-requirements/economics-business.md) | US, UK, Netherlands, Canada, France | Italy, Germany, Spain, Turkey | Ireland, Australia, NZ, Switzerland, Singapore, Hong Kong |
+
+Two immediate patterns worth stating plainly, both evidence for RULE-ADMISSIONS-019 above:
+Medicine and Arts/Design sit at one extreme (structurally different almost everywhere —
+Arts/Design in literally all 15 countries, via some form of portfolio/audition/talent
+evidence that general admission doesn't use); Engineering and Computer Science sit closer
+to the other extreme (mostly the general mechanism run harder, with only a handful of
+genuinely separate gates, concentrated in the US/UK/Germany/France/Canada — the countries
+whose *general* admission model already has room for a field-specific layer to attach to).
+Law and Economics/Business fall in between, and — unlike Medicine — do not cluster by
+country: whether either is structurally distinct in a given country depends more on that
+specific field's local prestige/capacity dynamics than on the country's general admissions
+shape.
+
+Same source-priority standard, same per-claim `source_url` requirement, same honest
+"unresolved" labeling as the country docs — see
+`data/research/admissions-systems/program-requirements/*.json` for the fully structured
+version (one file per family, same repo location pattern as the country fragments).
 
 ## Full source list
 
