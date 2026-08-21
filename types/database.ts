@@ -878,6 +878,14 @@ export interface UniversityProgram {
   updated_at: string;
   /** YOK Atlas's own per-programme identifier. Not backfilled for existing rows -- see migration 0056. */
   kilavuz_kodu: string | null;
+  /** Migration 0059 (unapplied) — UCAS's own course code, stored verbatim for traceability.
+   * Same posture as kilavuz_kodu: plain column, nullable, NOT backed by a uniqueness
+   * constraint, NOT part of university_programs_dedup_idx. Confirmed NOT a safe dedup-key
+   * candidate as-is — Southampton shows one code (F303) shared identically across three
+   * genuinely distinct MPhys Physics titles, and QMUL shows a single row can carry a
+   * space-separated list of several codes (full-time/foundation-year/study-abroad variants),
+   * not always one code per row. See docs/handoffs/schema-gaps-design-2026-08-22.md §B3. */
+  ucas_code: string | null;
 }
 export type UniversityProgramInsert = Insertable<
   UniversityProgram,
@@ -907,6 +915,7 @@ export type UniversityProgramInsert = Insertable<
   | "source_url"
   | "notes"
   | "kilavuz_kodu"
+  | "ucas_code"
 >;
 export type UniversityProgramUpdate = Updatable<UniversityProgram, "id" | "university_id" | "created_at" | "updated_at">;
 
@@ -970,8 +979,15 @@ export interface UniversityRequirement {
    * migration 0042. Null means it applies to all applicants. */
   scope: string | null;
   /** Same vocabulary as Opportunity.verification_state (migration 0042's own comment: "one
-   * vocabulary covers both"). */
-  verification_state: "verified_current" | "verified_historical" | "verified_derived" | "unverified" | "conflicting";
+   * vocabulary covers both"), plus one value Opportunity does not carry. `staleness_suspected`
+   * (migration 0059, unapplied) is a ONE-source state — a single live reading whose own
+   * currency is in doubt (an undated page whose silence is the only evidence, alongside a
+   * decades-old PDF found elsewhere presented as current) — distinct from `conflicting`, which
+   * requires two or more competing readings linked via requirement_source_conflicts. Not added
+   * to Opportunity's vocabulary: the motivating case (Heidelberg's uni-assist question) is
+   * specific to the single-authoritative-page shape requirements/deadlines research keeps
+   * finding, not yet observed on the opportunities side. */
+  verification_state: "verified_current" | "verified_historical" | "verified_derived" | "unverified" | "conflicting" | "staleness_suspected";
   verified_at: string | null;
   /** Set only when this row must be evaluated together with sibling rows in the same
    * requirement_groups row rather than independently (migration 0052) — see that table's
@@ -1020,6 +1036,15 @@ export interface UniversityRequirement {
    * (`requirement_research_queue.research_requirement_id`). Without it a live requirement can
    * be traced back only by matching text against raw_payload. */
   research_record_id: string | null;
+  /** Migration 0059 (unapplied) — what actually happens if this requirement evaluates
+   * `not_met`, independent of the threshold comparison itself. Null means `blocks_admission`
+   * (the universal implicit assumption every existing row already makes) — NEVER treat null as
+   * "unknown, don't warn the student," it is the safe default this product has always used.
+   * `triggers_remediation`: not meeting this does not block admission, it creates a downstream
+   * obligation (Italy's OFA — the same CISIA test is a hard gate at one programme and a
+   * remediation trigger at another, at the same university). `advisory_only`: informational,
+   * no admission consequence either way. See docs/handoffs/schema-gaps-design-2026-08-22.md §C2. */
+  unmet_consequence: "blocks_admission" | "triggers_remediation" | "advisory_only" | null;
   source_url: string | null;
   retrieved_at: string | null;
   last_checked_at: string | null;
@@ -1051,6 +1076,7 @@ export type UniversityRequirementInsert = Insertable<
   | "evaluation_gate"
   | "conflict_group_id"
   | "research_record_id"
+  | "unmet_consequence"
 >;
 
 export interface UniversityStatistic {
@@ -1148,6 +1174,12 @@ export interface UniversityDeadline {
   binding_policy: string | null;
   conflict_group_id: string | null;
   research_record_id: string | null;
+  /** Migration 0059 (unapplied) — applicant group this DEADLINE applies to (e.g. "EU/EEA
+   * citizens", "non-EU citizens"), mirroring university_requirements.scope (migration 0042)
+   * exactly. Null means it applies to all applicants, NOT "unknown". Two deadline rows for the
+   * same university_id+program_id with different, non-null scopes are two real dates for two
+   * real populations — not a conflict (see conflict_group_id for that shape). */
+  scope: string | null;
 }
 export type UniversityDeadlineInsert = Insertable<UniversityDeadline, "id" | "created_at" | "updated_at" | "recurrence" | "verification_state">;
 
@@ -1352,6 +1384,16 @@ export interface Opportunity {
    * separate from the denormalized `organization`/`country` text columns above. */
   organization_entity_id: string | null;
   country_entity_id: string | null;
+  /** Migration 0059 (unapplied) — how a student actually applies. `direct`: the student
+   * applies themselves. `institution_mediated`: the application channel runs through the
+   * student's own school/institution independently choosing to participate (e.g. THIMUN
+   * registers through a school's own MUN programme — "Only students from participating
+   * schools can apply for an individual student position," `data/research/opportunities/
+   * leadership_batch4_2026-08-21.jsonl`). A student can be personally eligible on every other
+   * column and still have no path to apply if their institution does not participate. Null =
+   * not researched — NEVER assume `direct`, that's an unverified claim, not an absence of a
+   * restriction. See docs/handoffs/schema-gaps-design-2026-08-22.md §A5. */
+  access_channel: "direct" | "institution_mediated" | null;
   created_at: string;
   updated_at: string;
 }
@@ -1381,6 +1423,7 @@ export type OpportunityInsert = Insertable<
   | "verified_at"
   | "organization_entity_id"
   | "country_entity_id"
+  | "access_channel"
 >;
 export type OpportunityUpdate = Updatable<Opportunity, "id" | "created_at" | "updated_at">;
 
