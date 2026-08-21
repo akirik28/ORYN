@@ -75,6 +75,154 @@ describe("buildUniversityCounselingView — outlook (never a fake acceptance cha
   });
 });
 
+/**
+ * Regression for docs/research/admissions-systems/implementation-gap/README.md's top-line
+ * finding: this adapter was one of the two production callers that never passed an
+ * admissions-system input, so it gave every student in every country the same US-style
+ * reach/competitive/likely framing. Each test below produced a holistic label before the
+ * Gate-1 wiring landed.
+ */
+describe("buildUniversityCounselingView — Gate 1 (geography-conditional outlook)", () => {
+  const targeted = { id: "t1", programId: null, status: "target" } as const;
+
+  test("a Turkish student targeting a Turkish university is told the scale doesn't apply", () => {
+    const view = buildUniversityCounselingView(
+      baseInput({
+        universityName: "Boğaziçi Üniversitesi",
+        universityCountry: "Türkiye",
+        studentCountry: "Türkiye",
+        target: targeted,
+        admissionRate: 0.08,
+        profileStrength: 92,
+        profileDataConfidence: "high",
+      })
+    );
+    expect(view.outlook!.outlook).toBe("not_applicable");
+    expect(view.outlook!.notApplicableKind).toBe("no_evidence_review_rank_competitive");
+    expect(view.outlook!.estimateRangeLow).toBeNull();
+    // Unlike the persisted path, this view carries the explanation with it.
+    expect(view.outlook!.notApplicableReason).toContain("ÖSYM");
+    expect(view.outlook!.sources.length).toBeGreaterThan(0);
+  });
+
+  test("the same student targeting a US university still gets a normal holistic outlook", () => {
+    const view = buildUniversityCounselingView(
+      baseInput({
+        universityName: "Yale University",
+        universityCountry: "United States",
+        studentCountry: "Türkiye",
+        target: targeted,
+        admissionRate: 0.05,
+        profileStrength: 92,
+      })
+    );
+    expect(view.outlook!.outlook).not.toBe("not_applicable");
+    expect(view.outlook!.admissionSystemShape).toBe("holistic_review");
+  });
+
+  test("omitting the country fields leaves the outlook exactly as it was before Gate 1 existed", () => {
+    const withoutCountry = buildUniversityCounselingView(baseInput({ target: targeted, admissionRate: 0.3, profileStrength: 70 }));
+    const expected = computeAdmissionOutlook({ profileStrength: 70, admissionRate: 0.3, dataConfidence: "medium" });
+    expect(withoutCountry.outlook!.outlook).toBe(expected.outlook);
+    expect(withoutCountry.outlook!.estimateRangeLow).toBe(expected.estimateRangeLow);
+    expect(withoutCountry.outlook!.notApplicableReason).toBeNull();
+  });
+
+  test("the same Irish university resolves differently for an Irish and a Turkish student", () => {
+    const forTurkish = buildUniversityCounselingView(
+      baseInput({ universityName: "Trinity College Dublin", universityCountry: "Ireland", studentCountry: "Türkiye", target: targeted, admissionRate: 0.3, profileStrength: 70 })
+    );
+    const forIrish = buildUniversityCounselingView(
+      baseInput({ universityName: "Trinity College Dublin", universityCountry: "Ireland", studentCountry: "Ireland", target: targeted, admissionRate: 0.3, profileStrength: 70 })
+    );
+    expect(forTurkish.outlook!.outlook).not.toBe("not_applicable");
+    expect(forIrish.outlook!.outlook).toBe("not_applicable");
+  });
+
+  test("an explicitly targeted German Medicine programme uses the NC field override, not Germany's general shape", () => {
+    const medicine = program({ id: "p-med", name: "Humanmedizin", subjectTaxonomy: "medicine" });
+    const view = buildUniversityCounselingView(
+      baseInput({
+        universityName: "Universität Heidelberg",
+        universityCountry: "Germany",
+        studentCountry: "Türkiye",
+        verifiedPrograms: [medicine],
+        target: { id: "t1", programId: "p-med", status: "target" },
+        admissionRate: 0.1,
+        profileStrength: 70,
+      })
+    );
+    expect(view.outlook!.notApplicableKind).toBe("no_evidence_review_rank_competitive");
+    expect(view.outlook!.notApplicableReason).toContain("hochschulstart");
+  });
+
+  test("outlook stays null when the university isn't a target, whatever the country", () => {
+    const view = buildUniversityCounselingView(
+      baseInput({ universityCountry: "Türkiye", studentCountry: "Türkiye", target: null, admissionRate: 0.2, profileStrength: 80 })
+    );
+    expect(view.outlook).toBeNull();
+  });
+});
+
+/**
+ * RULE-ADMISSIONS-021 at both signal strengths. The split matters: an explicitly targeted
+ * programme is a claim about the degree path, while an interest label is not — suppressing a
+ * real, holistically-reviewed US undergraduate application because a student typed
+ * "Medicine" into their interests would swap one wrong answer for another.
+ */
+describe("buildUniversityCounselingView — undergraduate field existence", () => {
+  test("an explicitly targeted undergraduate Medicine programme in the US is not rated", () => {
+    const med = program({ id: "p-med", name: "Medicine", subjectTaxonomy: "medicine" });
+    const view = buildUniversityCounselingView(
+      baseInput({
+        universityName: "Harvard University",
+        universityCountry: "United States",
+        studentCountry: "Türkiye",
+        verifiedPrograms: [med],
+        target: { id: "t1", programId: "p-med", status: "target" },
+        admissionRate: 0.04,
+        profileStrength: 88,
+      })
+    );
+    expect(view.outlook!.outlook).toBe("not_applicable");
+    expect(view.outlook!.notApplicableKind).toBe("field_not_offered_at_undergraduate");
+    expect(view.outlook!.notApplicableReason).toContain("medical school");
+  });
+
+  test("a merely stated interest in Medicine surfaces the fact as an action and leaves the outlook intact", () => {
+    const view = buildUniversityCounselingView(
+      baseInput({
+        universityName: "Harvard University",
+        universityCountry: "United States",
+        studentCountry: "Türkiye",
+        studentInterestLabels: ["Medicine"],
+        target: { id: "t1", programId: null, status: "target" },
+        admissionRate: 0.04,
+        profileStrength: 88,
+      })
+    );
+    expect(view.outlook!.outlook).not.toBe("not_applicable");
+    const advisory = view.recommendedActions.find((a) => a.label.includes("medical school"));
+    expect(advisory).toBeDefined();
+    expect(advisory!.detail).toContain("Medicine");
+  });
+
+  test("a stated interest in Medicine raises no advisory where Medicine IS an undergraduate degree", () => {
+    const view = buildUniversityCounselingView(
+      baseInput({
+        universityName: "University of Oxford",
+        universityCountry: "United Kingdom",
+        studentCountry: "Türkiye",
+        studentInterestLabels: ["Medicine"],
+        target: { id: "t1", programId: null, status: "target" },
+        admissionRate: 0.15,
+        profileStrength: 88,
+      })
+    );
+    expect(view.recommendedActions.some((a) => a.label.includes("medical school"))).toBe(false);
+  });
+});
+
 describe("buildUniversityCounselingView — programFocus (target major, not an opaque score)", () => {
   test("an explicit targeted program wins outright over any stated interest", () => {
     const cs = program({ id: "p1", name: "BSc Computer Science", subjectTaxonomy: "computer_science" });

@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { computeAdmissionOutlook } from "@/lib/admissions/outlook";
+import { checkUndergraduateFieldAvailability } from "@/lib/admissions/field-availability";
+import { resolveAdmissionSystem } from "@/lib/admissions/system-shape";
 
 describe("computeAdmissionOutlook", () => {
   test("classifies a strong profile against a non-selective school as likely", () => {
@@ -93,6 +95,186 @@ describe("computeAdmissionOutlook", () => {
 
     test("outlook is never 'not_applicable' for a holistic (or omitted) admissionSystemType", () => {
       const result = computeAdmissionOutlook({ profileStrength: 5, admissionRate: 0.02, dataConfidence: "low" });
+      expect(result.outlook).not.toBe("not_applicable");
+    });
+
+    test("the deprecated flag still works but cannot say which non-holistic mechanism applies", () => {
+      const result = computeAdmissionOutlook({ profileStrength: 60, admissionRate: 0.3, dataConfidence: "high", admissionSystemType: "credential_gate" });
+      expect(result.notApplicableKind).toBe("credential_gate_unspecified");
+      expect(result.admissionSystemShape).toBeNull();
+    });
+  });
+
+  /**
+   * The defect docs/research/admissions-systems/implementation-gap/README.md ranked first:
+   * `admissionSystemType` shipped and was unit-tested, but no production caller ever passed
+   * it, so this function's credential-gate branch had zero live effect. These exercise the
+   * resolved Gate-1 input that both callers now supply.
+   */
+  describe("admissionSystem: resolved Gate 1 (the wiring the audit found missing)", () => {
+    const base = { profileStrength: 72, admissionRate: 0.3, dataConfidence: "high" } as const;
+
+    test("a holistic target leaves every field identical to omitting Gate 1 entirely", () => {
+      const withoutGate = computeAdmissionOutlook({ ...base });
+      const withGate = computeAdmissionOutlook({
+        ...base,
+        admissionSystem: resolveAdmissionSystem({ targetCountry: "United States", studentCountry: "Turkey" }),
+      });
+      expect(withGate.outlook).toBe(withoutGate.outlook);
+      expect(withGate.estimateRangeLow).toBe(withoutGate.estimateRangeLow);
+      expect(withGate.estimateRangeHigh).toBe(withoutGate.estimateRangeHigh);
+      expect(withGate.notApplicableReason).toBeNull();
+    });
+
+    test("an unresearched country changes nothing — Oryn never acts on a guessed mechanism", () => {
+      const withoutGate = computeAdmissionOutlook({ ...base });
+      const unknown = computeAdmissionOutlook({
+        ...base,
+        admissionSystem: resolveAdmissionSystem({ targetCountry: "Japan", studentCountry: "Turkey" }),
+      });
+      expect(unknown.outlook).toBe(withoutGate.outlook);
+      expect(unknown.notApplicableKind).toBeNull();
+      expect(unknown.admissionSystemShape).toBe("unknown");
+    });
+
+    // The exact persona the QA report reproduced: a strong Turkish student targeting a
+    // Turkish university. Before this wiring existed, every real caller produced a
+    // reach/competitive/likely label here.
+    test("a Turkey/YKS target is not_applicable regardless of how strong the profile is", () => {
+      const admissionSystem = resolveAdmissionSystem({ targetCountry: "Türkiye", studentCountry: "Türkiye" });
+      for (const profileStrength of [10, 55, 92]) {
+        const result = computeAdmissionOutlook({ profileStrength, admissionRate: 0.15, dataConfidence: "high", admissionSystem });
+        expect(result.outlook).toBe("not_applicable");
+        expect(result.notApplicableKind).toBe("no_evidence_review_rank_competitive");
+        expect(result.estimateRangeLow).toBeNull();
+        expect(result.estimateRangeHigh).toBeNull();
+        expect(result.estimateConfidence).toBeNull();
+      }
+    });
+
+    // implementation-gap Gap 1: the shipped binary enum's single `notApplicableReason` was
+    // worded around exam-gating, which reads as nonsense for a Dutch open programme. Both
+    // suppress the label; they must not share a message.
+    test("a Dutch open programme and a Turkish target suppress for visibly different reasons", () => {
+      const dutch = computeAdmissionOutlook({
+        ...base,
+        admissionSystem: resolveAdmissionSystem({ targetCountry: "Netherlands", studentCountry: "Turkey" }),
+      });
+      const turkish = computeAdmissionOutlook({
+        ...base,
+        admissionSystem: resolveAdmissionSystem({ targetCountry: "Turkey", studentCountry: "Turkey" }),
+      });
+      expect(dutch.outlook).toBe("not_applicable");
+      expect(turkish.outlook).toBe("not_applicable");
+      expect(dutch.notApplicableKind).toBe("no_evidence_review_threshold");
+      expect(turkish.notApplicableKind).toBe("no_evidence_review_rank_competitive");
+      expect(dutch.notApplicableReason).not.toEqual(turkish.notApplicableReason);
+      expect(dutch.notApplicableReason).not.toContain("exam-gated");
+    });
+
+    test("the reason leads with the target's own sourced mechanism, not a generic disclaimer", () => {
+      const result = computeAdmissionOutlook({
+        ...base,
+        admissionSystem: resolveAdmissionSystem({ targetCountry: "Turkey", studentCountry: "Turkey" }),
+      });
+      expect(result.notApplicableReason).toContain("ÖSYM");
+      expect(result.admissionSystemMechanism).not.toBeNull();
+      expect(result.sources.length).toBeGreaterThan(0);
+    });
+
+    test("the same Irish university is rated for one student and not for another, by pathway", () => {
+      const turkish = computeAdmissionOutlook({
+        ...base,
+        admissionSystem: resolveAdmissionSystem({ targetCountry: "Ireland", studentCountry: "Turkey" }),
+      });
+      const irish = computeAdmissionOutlook({
+        ...base,
+        admissionSystem: resolveAdmissionSystem({ targetCountry: "Ireland", studentCountry: "Ireland" }),
+      });
+      expect(turkish.outlook).not.toBe("not_applicable");
+      expect(irish.outlook).toBe("not_applicable");
+    });
+
+    test("Gate 1 takes precedence over the deprecated flag when both are supplied", () => {
+      const result = computeAdmissionOutlook({
+        ...base,
+        admissionSystemType: "credential_gate",
+        admissionSystem: resolveAdmissionSystem({ targetCountry: "United States", studentCountry: "Turkey" }),
+      });
+      expect(result.outlook).not.toBe("not_applicable");
+      expect(result.notApplicableKind).toBeNull();
+    });
+  });
+
+  /**
+   * RULE-ADMISSIONS-021 / implementation-gap Gap 4. Before this, `computeAdmissionOutlook`
+   * took no field parameter at all, so an undergraduate Medicine target in the US produced a
+   * normal, confident classification for a degree path that does not exist there.
+   */
+  describe("fieldAvailability: the target has to exist before it can be rated", () => {
+    const base = { profileStrength: 88, admissionRate: 0.05, dataConfidence: "high" } as const;
+
+    test("undergraduate Medicine in the US is not_applicable, not a reach", () => {
+      const result = computeAdmissionOutlook({
+        ...base,
+        admissionSystem: resolveAdmissionSystem({ targetCountry: "United States", studentCountry: "Turkey" }),
+        fieldAvailability: checkUndergraduateFieldAvailability({ country: "United States", field: "medicine" }),
+      });
+      expect(result.outlook).toBe("not_applicable");
+      expect(result.notApplicableKind).toBe("field_not_offered_at_undergraduate");
+      expect(result.estimateRangeLow).toBeNull();
+      expect(result.estimateRangeHigh).toBeNull();
+    });
+
+    test("the student is told the real route, and the named exception, rather than a disclaimer", () => {
+      const result = computeAdmissionOutlook({
+        ...base,
+        fieldAvailability: checkUndergraduateFieldAvailability({ country: "Canada", field: "law" }),
+      });
+      expect(result.notApplicableReason).toContain("postgraduate");
+      expect(result.notApplicableReason).toContain("Quebec");
+    });
+
+    // The audit warned that folding this into the Gate-1 value would recreate the same
+    // over-coarse-enum problem the three shapes exist to avoid.
+    test("its reason is distinct from every Gate-1 suppression reason", () => {
+      const field = computeAdmissionOutlook({
+        ...base,
+        fieldAvailability: checkUndergraduateFieldAvailability({ country: "United States", field: "medicine" }),
+      });
+      const gate = computeAdmissionOutlook({
+        ...base,
+        admissionSystem: resolveAdmissionSystem({ targetCountry: "Turkey", studentCountry: "Turkey" }),
+      });
+      expect(field.notApplicableKind).not.toBe(gate.notApplicableKind);
+      expect(field.notApplicableReason).not.toEqual(gate.notApplicableReason);
+    });
+
+    test("field non-existence outranks Gate 1 — a nonexistent path has no mechanism worth describing", () => {
+      const result = computeAdmissionOutlook({
+        ...base,
+        admissionSystem: resolveAdmissionSystem({ targetCountry: "Canada", studentCountry: "Turkey", targetUniversityName: "University of British Columbia" }),
+        fieldAvailability: checkUndergraduateFieldAvailability({ country: "Canada", field: "medicine" }),
+      });
+      expect(result.notApplicableKind).toBe("field_not_offered_at_undergraduate");
+      expect(result.admissionSystemMechanism).toBeNull();
+    });
+
+    test("Medicine in the UK, where it IS an undergraduate degree, is rated normally", () => {
+      const result = computeAdmissionOutlook({
+        ...base,
+        admissionSystem: resolveAdmissionSystem({ targetCountry: "United Kingdom", studentCountry: "Turkey" }),
+        fieldAvailability: checkUndergraduateFieldAvailability({ country: "United Kingdom", field: "medicine" }),
+      });
+      expect(result.outlook).not.toBe("not_applicable");
+      expect(result.notApplicableKind).toBeNull();
+    });
+
+    test("an unknown availability suppresses nothing", () => {
+      const result = computeAdmissionOutlook({
+        ...base,
+        fieldAvailability: checkUndergraduateFieldAvailability({ country: "Japan", field: "medicine" }),
+      });
       expect(result.outlook).not.toBe("not_applicable");
     });
   });
