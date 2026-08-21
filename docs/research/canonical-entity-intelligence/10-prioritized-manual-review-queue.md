@@ -144,8 +144,13 @@ entity_id`'s trigger rejects those three types on this specific column).
 **6. Add a `campus_of` example.** Zero live rows of this type exist. Not urgent (nothing is
 currently modeled incorrectly), but worth watching for — the first genuine branch-campus case
 ORYN's registry encounters (a university with a distinct-address, no-independent-admissions
-overseas campus) is the natural first candidate; this session did not find one in the data
-audited.
+overseas campus) is the natural first candidate. **A ROR-sourced candidate found late in this
+session, not yet in ORYN's registry**: University of Nottingham Malaysia Campus
+(`ror.org/04mz9mt17`) and University of Nottingham Ningbo China (`ror.org/03y4dt428`), both
+ROR-`parent`-linked to the already-live University of Nottingham (`ror.org/01ee9ar58`) — see
+`03`'s dedicated note for why this is a candidate for `campus_of` *or* `member_of`, genuinely
+undetermined pending an admissions-independence check this session could not complete via two
+failed web-fetch attempts.
 
 **7. Add a `successor_of`/`predecessor_of` example.** Same status as #6 — zero live rows, nothing
 wrong, just unexercised. `04` names the most plausible future source (a European business-school

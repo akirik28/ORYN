@@ -62,6 +62,29 @@ to keep it visible as the canonical example of "ambiguous, and that's fine."
 | `part_of` | A component with its own legal/operational identity | A larger organization/system that owns or federates it | Would the subject still be recognizable/nameable if the object disappeared? If yes, `part_of`, not the same row. |
 | `campus_of` | A physical location of an institution | The institution | Same legal entity, different address — reserved for true single-institution multi-site cases (a branch campus with no independent admissions/degree-granting identity). **Zero live rows** — but this now reads as a correct, explained zero rather than an unexplained gap: `entity_locations` (a separate table, `03` addendum below) is what the live data actually uses for "same entity, multiple physical sites" — e.g. British International School Istanbul (BISI) has two `entity_locations` rows (Etiler STEAM Campus, Zekeriyaköy Forest Campus) under one `canonical_entities` row, not two entities linked by `campus_of`. A `campus_of` *relationship* row would only be the right tool if a specific campus were significant enough to arguably deserve its own entity row while still being legally the same institution — genuinely rare, and not encountered in live data yet. |
 | `school_of` | A K-12 or preparatory school | A university that operates/sponsors it | Direction matters (see Bilkent above) — subject is always the smaller/dependent entity. |
+
+**A first `campus_of`-or-`member_of` candidate, found late in this session — genuinely
+undetermined, not resolved here.** `10`/`11`'s "P2 — add a `campus_of` example" item flagged
+this as unencountered in live data; ROR has a real, concrete case ORYN's registry doesn't
+contain yet: **University of Nottingham Malaysia Campus** (`ror.org/04mz9mt17`, Semenyih) and
+**University of Nottingham Ningbo China** (`ror.org/03y4dt428`, Ningbo) both carry an explicit
+ROR `parent` relationship to **University of Nottingham** (`ror.org/01ee9ar58`, the UK
+institution already live in ORYN's registry) — confirmed live against `api.ror.org` this
+session. This is genuinely a candidate for either `campus_of` or `member_of`, not cleanly one or
+the other, because the deciding fact — whether the Malaysia/China campuses have their own
+independent admissions process (this table's own `campus_of` bar) or share the UK institution's
+— was not confirmed this session; two live web-fetch attempts against the university's own site
+did not return usable content (one 404, one returned only page chrome), and this package's own
+standard is to record an unresolved verification honestly rather than assume either answer.
+ROR's own `parent`/`child` relationship type is not itself decisive either way — the same field
+also links University of Nottingham to clearly-different-shape things (a spin-off company, a
+research institute), so "ROR calls it a child" is a signal worth having, not proof of `campus_of`
+specifically. **Recommendation**: if/when ORYN's registry acquires either campus (plausible —
+both are real, ranked, English-medium institutions a student researching UK-adjacent options
+might target), check the campus's own admissions page directly before choosing between
+`campus_of` and `member_of` — both ROR ids above are ready to use as `entity_external_ids`
+either way, so this note saves the identity-research step, not the relationship-classification
+one.
 | `operated_by` | Any entity | The organization that runs it day-to-day, which may not be its namesake | The general-purpose "who actually runs this" relationship — see `08` for its central role in opportunity-organizer modeling, including operators that change by edition/cycle. |
 | `provider_for` | An organization | A program/competition/scholarship it provides | Distinguishes the provider (an `organization`/`university`/`opportunity_provider` entity) from the specific offering (a `program`/`competition`/`scholarship` entity) — see `08`. |
 | `member_of` | An institution with independent identity | A federation/consortium/system it belongs to | The École Polytechnique case; a looser bond than `part_of` (a federation is usually opt-in and post-hoc, an org chart is usually not). |
