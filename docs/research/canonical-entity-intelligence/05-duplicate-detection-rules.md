@@ -119,6 +119,22 @@ resolved by this document — both are flagged for the same human/researcher jud
 everything else in `10`, now with the specific pitfall named instead of left to be discovered
 mid-enrichment-run.
 
+**The rest of the sample checks out cleanly — this is a real risk profile, not a reason to distrust
+the whole recommendation.** Extending the same live-API check to five more `genuine_single_row_gap`
+candidates (Al-Quds University, Eastern Mediterranean University, European University of Lefke,
+Near East University, Lingnan University) found clean, unambiguous, exact top-result matches for
+all five — the P1 recommendation remains sound for most of the list; Purdue/Rutgers/Franche-Comté/
+Paul Sabatier are the exceptions found so far, not the rule. One reusable methodology lesson from
+this batch: **query the bare institution name, never the name with a location qualifier appended**
+— `"Lingnan University Hong Kong"` as one search string ranks "University of Hong Kong" first (an
+unrelated, much larger institution whose name happens to contain the same location words), while
+`"Lingnan University"` alone correctly ranks the right institution first. Verify location as a
+separate check against the result, not as part of the query. Two minor, lower-stakes near-name
+pairs surfaced in the same batch and are recorded for awareness rather than escalated to `12`'s
+depth of treatment: Al-Quds University vs. Al-Quds Open University (both real, both Palestinian,
+genuinely distinct), and Lingnan University (Hong Kong) vs. Lingnan Normal University (Zhanjiang,
+mainland China) — unrelated institutions that happen to share the "Lingnan" name.
+
 ## Restating the four-tier taxonomy the mission brief asks for
 
 The mission brief asks for `AUTO-SAFE MATCH` / `HIGH-CONFIDENCE REVIEW` / `AMBIGUOUS` /
