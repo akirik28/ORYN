@@ -90,6 +90,7 @@ mission's own request for a "consolidated registry," not a duplicate of the sour
 | Treating an older (Phase 2) student's legitimate, recent interest-shift-driven breadth as if it were unexplained | RULE-COUNSEL-202 | `03-recommendation-timing.md` §5 |
 | Letting a tight time budget silently substitute a breadth-type recommendation for a depth-type one | RULE-COUNSEL-201 | `03-recommendation-timing.md` §4 |
 | Defaulting a student with `curriculum: "other"`/no reliable stage mapping to one specific country's grade system | RULE-COUNSEL-200 (final clause) | `03-recommendation-timing.md` §1, §5 |
+| Collapsing a gap year, actual progression to undergraduate, and stale unupdated profile data into one generic "graduated" treatment | RULE-COUNSEL-239 (found on this session's own re-read of its own document) | `03-recommendation-timing.md` §5 |
 
 ## 8. Professional/licensure overgeneralization
 

@@ -122,6 +122,23 @@ Concrete cases:
 - A student with `education_stage = "other"` or a `curriculum = "other"` has no reliable
   `yearsUntilGraduation` mapping at all — this must degrade to "insufficient data for timing
   context," never a silent default to one specific country's grade system.
+- **The `yearsUntilGraduation <= 0` case (§1's table row, left undiscussed until this addition —
+  a real gap this document had, found on its own re-read rather than by an external report).**
+  `RULE-COUNSEL-239 (new):` a non-positive value is not one situation — distinguish at least three
+  before recommending anything: (a) a genuine **gap year** before starting a already-secured or
+  still-pending university place (common and structurally normal in UK-track and some European
+  systems specifically) — Phase 2's deepening/application-readiness framing still applies, often
+  *more* urgently if applications are still open or a reapplication is planned, not less; (b) the
+  student has actually **progressed to `education_stage = "undergraduate"`** — at which point this
+  entire pre-university timing framework, and arguably most of this research package's admissions-
+  adjacent reasoning, stops being the relevant frame entirely (a genuinely different product
+  surface, out of scope for what this package was asked to research, per the founder spec's own
+  future-architecture note on a possible future "university student Oryn"); (c) **stale profile
+  data** — a `graduation_year` that was accurate when entered but is now in the past simply because
+  time passed and the student never updated it, which should not be silently reinterpreted as
+  either (a) or (b) without a genuine signal (e.g. `education_stage` still showing `high_school`)
+  distinguishing it from a real transition. **Never collapse these three into one generic "graduated"
+  treatment** — each implies a different, sometimes entirely different-surface, response.
 
 ## 6. A bigger caveat than timing alone: not every target geography evaluates a "developed profile" the same way
 
