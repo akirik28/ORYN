@@ -1,5 +1,5 @@
 import type { ResearchRequirementRecord } from "./ingest";
-import type { EvaluationGate } from "./types";
+import type { EvaluationGate, RecencyAnchor, RecencyRule, ScoreProvenance } from "./types";
 import type { ResearchDeadlineRecord } from "@/lib/deadlines/ingest";
 
 /**
@@ -150,6 +150,29 @@ function textOf(record: ResearchRequirementRecord): string {
   // limitations/researcher_notes are included because the research contract puts recency and
   // provenance caveats there when the requirement_text itself is a bare threshold.
   return [record.requirement_text, record.limitations, record.researcher_notes, record.scope].filter(Boolean).join(" — ");
+}
+
+/**
+ * The institution's OWN words, and nothing else.
+ *
+ * `textOf` above deliberately folds in `limitations` and `researcher_notes`, and for
+ * DETECTION that is right: a caveat noted by the researcher is still a reason to refuse
+ * automatic evaluation, and over-gating costs nothing but a "check this yourself".
+ *
+ * It is exactly wrong for ASSERTION. Southampton's record (REQ-2026-08-21-9211) accepts IELTS
+ * One Skill Retake — "(IELTS) Academic UKVI SELT (including One Skill Retake)" — and its
+ * researcher_notes quote Edinburgh's opposite policy verbatim in order to document the
+ * contrast: "Edinburgh states 'We do not accept IELTS One Skill Retake'". Read that as this
+ * row's policy and Southampton is recorded as refusing the variant it explicitly accepts,
+ * from a sentence about a different university. The first version of this code did precisely
+ * that.
+ *
+ * So the rule is: GATE from everything, ASSERT only from what the source page says. Because
+ * this text is a subset of `textOf`, anything asserted here is also detected there — the
+ * qualifier can never appear on a row that was left automatically evaluable.
+ */
+function policyTextOf(record: ResearchRequirementRecord): string {
+  return [record.requirement_text, record.scope].filter(Boolean).join(" — ");
 }
 
 /**
@@ -305,6 +328,209 @@ export function deriveEvaluationGate(record: ResearchRequirementRecord): Evaluat
   if (BINDING_COMMITMENT_RE.test(textOf(record))) return "binding_commitment";
   const shapes = new Set(classifyRequirementShapes(record).map((f) => f.shape));
   return SHAPE_TO_GATE.find((entry) => shapes.has(entry.shape))?.gate ?? null;
+}
+
+// ---------------------------------------------------------------------------------------
+// Qualifier derivation — what migration 0056's columns actually get filled with
+// ---------------------------------------------------------------------------------------
+//
+// `deriveEvaluationGate` above answers "may this row be evaluated automatically?". The two
+// functions below answer the companion question the same corpus text carries: "what is the
+// qualifier that makes the row unevaluable, in a form a later reviewer can read?" Both live
+// here, beside the detectors, for the reason migration 0056 §4 gives for the gate itself: a
+// second derivation elsewhere is how two vocabularies drift apart, and the `is_exclusion` gap
+// (0052 promised the evaluator would read the flag; nothing did, for weeks) is what that
+// costs.
+//
+// Both are DELIBERATELY subordinate to the gate. Ingestion sets `evaluation_gate` in the same
+// breath as these columns, and `lib/requirements/evaluate.ts` checks the gate before it
+// reaches either of them, so nothing written here can produce a verdict on its own. What they
+// produce is EVIDENCE for whoever authors `structured_rule` later — the direction, the
+// boundary date, the named-and-refused variant — carried on the row instead of surviving only
+// in `requirement_research_queue.raw_payload`, which is precisely the reviewer's blind spot
+// that this whole migration exists to close.
+
+/** Written months, in the two orders the corpus actually uses. */
+const MONTHS: Record<string, number> = {
+  january: 1,
+  february: 2,
+  march: 3,
+  april: 4,
+  may: 5,
+  june: 6,
+  july: 7,
+  august: 8,
+  september: 9,
+  october: 10,
+  november: 11,
+  december: 12,
+};
+
+const MONTH_ALTERNATION = Object.keys(MONTHS).join("|");
+/** "the 24th of December 2022", "24 December 2022", "21st January 2026". */
+const DAY_FIRST_DATE_RE = new RegExp(String.raw`\b(\d{1,2})(?:st|nd|rd|th)?\s+(?:of\s+)?(${MONTH_ALTERNATION})\s+(\d{4})\b`, "i");
+/** "January 21, 2026", "December 24 2022". */
+const MONTH_FIRST_DATE_RE = new RegExp(String.raw`\b(${MONTH_ALTERNATION})\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(\d{4})\b`, "i");
+const ISO_DATE_RE = /\b(\d{4})-(\d{2})-(\d{2})\b/;
+
+function iso(year: number, month: number, day: number): string | null {
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+/**
+ * The one full calendar date in a span, or null. A bare year is deliberately NOT a date: "the
+ * 2026 entry cycle" states no boundary, and inventing 1 January for it would put a fabricated
+ * day-precision cut-off on a row whose whole purpose is to stop a fabricated comparison.
+ */
+export function parseBoundaryDate(text: string): string | null {
+  const isoMatch = ISO_DATE_RE.exec(text);
+  if (isoMatch) return iso(Number(isoMatch[1]), Number(isoMatch[2]), Number(isoMatch[3]));
+  const dayFirst = DAY_FIRST_DATE_RE.exec(text);
+  if (dayFirst) return iso(Number(dayFirst[3]), MONTHS[dayFirst[2].toLowerCase()], Number(dayFirst[1]));
+  const monthFirst = MONTH_FIRST_DATE_RE.exec(text);
+  if (monthFirst) return iso(Number(monthFirst[3]), MONTHS[monthFirst[1].toLowerCase()], Number(monthFirst[2]));
+  return null;
+}
+
+const SPELLED_NUMBERS: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
+const WINDOW_LENGTH_RE = new RegExp(String.raw`\b(\d{1,2}|${Object.keys(SPELLED_NUMBERS).join("|")})\s+(?:academic\s+|calendar\s+)?(year|month)s?\b`, "i");
+
+/** The date the window is measured from, in most-specific-first order. `entry` is last and
+ * deliberately narrow: "entry requirements" is on nearly every page in the corpus, so a bare
+ * `\bentry\b` would anchor half the rows to a date the source never named. */
+const ANCHOR_PATTERNS: { anchor: RecencyAnchor; pattern: RegExp }[] = [
+  { anchor: "exam_date", pattern: /\b(?:the\s+)?(?:exam|test|examination)\s+date\b|\bdate\s+of\s+(?:the\s+)?(?:exam|test|examination)\b|\bfrom\s+the\s+date\s+(?:it\s+was\s+)?(?:taken|sat|issued)\b/i },
+  { anchor: "programme_start", pattern: /\bstart\s+of\s+(?:your|the|this)\s+(?:course|programme|program|degree|studies)\b|\bprogramme\s+start\b|\bstart\s+date\s+of\s+(?:this|the)\s+(?:programme|program|course)\b|\bcommencement\s+of\s+(?:the\s+)?(?:course|programme|program)\b/i },
+  { anchor: "application_date", pattern: /\b(?:date|time)\s+of\s+application\b|\bapplication\s+(?:date|deadline)\b|\bwhen\s+you\s+apply\b|\bat\s+the\s+point\s+of\s+application\b/i },
+  { anchor: "entry", pattern: /\b(?:prior\s+to|before|preceding|of|to)\s+(?:the\s+)?entry\b|\bentry\s+date\b|\bdate\s+of\s+entry\b|\bstart\s+of\s+(?:your|the)\s+studies\b/i },
+];
+
+/**
+ * The validity window a record states, INCLUDING its direction (migration 0056 §2).
+ *
+ * Direction is taken from the same two regexes `classifyRequirementShapes` uses, and only
+ * those. That is the whole safety argument: a direction this function could assert but the
+ * shape classifier could not see would be a direction written onto a row that carries no
+ * `evaluation_gate` to hold it — a qualifier with nothing enforcing it, which is the exact
+ * shape of the `is_exclusion` gap. So `not_valid_before` is never emitted here, even though
+ * the type admits it and the corpus contains the shape (Tilburg's 1-6 TOEFL threshold applies
+ * only to reports obtained from 21 January 2026): the corpus expresses it as a SCOPE on the
+ * threshold rather than as a refusal, and no detector in this file can tell that apart from an
+ * ordinary "this row is about X" sentence. Asserting it anyway is the confidently-wrong
+ * direction §2 was written to prevent.
+ *
+ * Everything past `direction` is emitted only when the text states it outright. A `max_age`
+ * with no `value` is not a defective rule, it is an honest one: the source said there is a
+ * window and did not say how long, and the row's `recency_window` gate already refuses the
+ * comparison either way.
+ */
+export function deriveRecencyRule(record: ResearchRequirementRecord): RecencyRule | null {
+  // The source's own words only — see `policyTextOf`. A researcher's note comparing this
+  // institution to another one is not this institution's validity window.
+  const text = policyTextOf(record);
+
+  // Both the boundary date and the window length are read out of the MATCHED SPAN, never out
+  // of the whole record: a boundary date lifted from elsewhere in the prose is a fabricated
+  // cut-off wearing the source's authority.
+  if (INVERTED_RECENCY_RE.test(text)) {
+    const rule: RecencyRule = { direction: "not_valid_on_or_after" };
+    const boundaryDate = parseBoundaryDate(firstMatch(INVERTED_RECENCY_RE, text));
+    if (boundaryDate) rule.boundaryDate = boundaryDate;
+    return rule;
+  }
+
+  if (!RECENCY_WINDOW_RE.test(text)) return null;
+
+  const rule: RecencyRule = { direction: "max_age" };
+  const span = firstMatch(RECENCY_WINDOW_RE, text);
+  const length = WINDOW_LENGTH_RE.exec(span);
+  if (length) {
+    const raw = length[1].toLowerCase();
+    const value = SPELLED_NUMBERS[raw] ?? Number(raw);
+    if (Number.isFinite(value) && value > 0) {
+      rule.value = value;
+      rule.unit = length[2].toLowerCase() === "month" ? "months" : "years";
+    }
+  }
+  const anchor = ANCHOR_PATTERNS.find((entry) => entry.pattern.test(span))?.anchor;
+  if (anchor) rule.anchor = anchor;
+  return rule;
+}
+
+/**
+ * How a score was obtained, by name — and only where the source REFUSES it.
+ *
+ * Polarity is the entire job. Southampton lists "(IELTS) Academic UKVI SELT (including One
+ * Skill Retake)" and Edinburgh writes "We do not accept IELTS One Skill Retake"; the same
+ * three words appear in both, and reading the mention rather than the refusal would record
+ * Southampton as rejecting a variant it explicitly accepts. TU Delft states both polarities in
+ * ONE record (One Skill Retake accepted, IELTS Online and IELTS Indicator refused), so this
+ * cannot be decided per record either — it is decided per clause.
+ *
+ * Kept separate from `PROVENANCE_RE`/`PROVENANCE_VARIANT_RE` above, which answer a different
+ * question ("does provenance matter on this row at all?" — the `named_exclusion` gate) and are
+ * tuned against documented false positives that must not be re-litigated here. The invariant
+ * that stops the two drifting is asserted in the tests: a non-empty return from this function
+ * always coincides with a non-null `deriveEvaluationGate`, so a provenance can never be
+ * recorded as refused on a row that is left automatically evaluable.
+ */
+const PROVENANCE_PATTERNS: { provenance: ScoreProvenance; pattern: RegExp }[] = [
+  // "IELTS 1 skill retake" is Tilburg's spelling of Edinburgh's "IELTS One Skill Retake".
+  { provenance: "one_skill_retake", pattern: /\b(?:one|1)[-\s]?skill[-\s]?retake\b/i },
+  { provenance: "mybest", pattern: /\bmybest\b|\bmy\s?best\s+scores?\b|\bmybestscores?\b/i },
+  { provenance: "superscore", pattern: /\bsuperscor/i },
+  { provenance: "home_edition", pattern: /\bhome\s+edition\b/i },
+  { provenance: "indicator", pattern: /\b(?:ielts\s+)?indicator\s+test\b|\bielts\s+indicator\b/i },
+  { provenance: "online_edition", pattern: /\b(?:ielts|toefl|pte|duolingo|trinity)\s+online\b|\bonline\s+(?:version|edition)s?\b|\bonline\s+(?:academic\s+)?tests?\b|\btests?\s+taken\s+online\b/i },
+  {
+    provenance: "multi_sitting_combination",
+    pattern: /\bcombination\s+of\s+test\s+results\b|\bcombining\s+(?:scores|results)\b|\bdifferent\s+test\s+dates\b|\bcombination\s+of\s+tests?\b|\bfrom\s+different\s+tests\b/i,
+  },
+];
+
+/** A clause that REFUSES. Deliberately requires the refusal to be attached to an
+ * acceptance/consideration verb — the corpus is full of unrelated negations ("scores are not
+ * capped", "the deadline is not published centrally") that say nothing about provenance. */
+const REFUSAL_RE =
+  /\b(?:do(?:es)?\s+not|will\s+not|would\s+not|cannot|can\s+not|won'?t|are\s+not|is\s+not|not|no\s+longer|never)\s+(?:be\s+|anymore\s+|any\s+more\s+|currently\s+)*(?:accept|taken\s+into\s+consideration|permitted|allowed|considered|recognised|recognized|valid)/i;
+const EXPLICIT_EXCLUSION_RE = /\bexclud(?:ing|ed|es)\b|\bwe\s+refuse\b|\bnot\s+acceptable\b|\bunacceptable\b/i;
+/** A clause that ACCEPTS. Checked only to stop the record-level `is_exclusion` flag from
+ * painting an explicitly-accepted variant as refused (TU Delft's One Skill Retake). */
+const ACCEPTANCE_RE = /\b(?:will\s+be\s+accepted|is\s+accepted|are\s+accepted|we\s+(?:do\s+)?accept|only\s+accept|including|includes?)\b/i;
+
+/** Sentence/clause split. Breaks after `.` or `;` only when a space or a capital follows, so
+ * "6.5" and "7.0" stay intact while Edinburgh's unspaced "…each component.We do not accept…"
+ * still separates the threshold from the refusal. */
+function clausesOf(text: string): string[] {
+  return text
+    .split(/(?<=[.;])(?=\s|[A-Z])|\n+/)
+    .map((c) => c.trim())
+    .filter(Boolean);
+}
+
+export function deriveExcludedProvenances(record: ResearchRequirementRecord): ScoreProvenance[] | null {
+  const refused = new Set<ScoreProvenance>();
+  // A record the research lane flagged `is_exclusion` states a carve-out as its whole content
+  // — QMUL's requirement_text is the bare words "TOEFL's MyBest scores", with the "not
+  // accepted" framing carried by the flag rather than spliced into the quotation. That is a
+  // structured field, so it outranks the absence of a refusal phrase; an explicit acceptance
+  // inside a clause still wins for that clause.
+  const recordIsRefusal = record.is_exclusion === true;
+
+  for (const clause of clausesOf(policyTextOf(record))) {
+    const accepts = ACCEPTANCE_RE.test(clause);
+    const refuses = REFUSAL_RE.test(clause) || EXPLICIT_EXCLUSION_RE.test(clause) || (recordIsRefusal && !accepts);
+    if (!refuses) continue;
+    for (const { provenance, pattern } of PROVENANCE_PATTERNS) {
+      if (pattern.test(clause)) refused.add(provenance);
+    }
+  }
+
+  if (refused.size === 0) return null;
+  // Column order is the vocabulary's own order, so two runs over the same record produce the
+  // same array and a diff of the live table is readable.
+  return PROVENANCE_PATTERNS.map((p) => p.provenance).filter((p) => refused.has(p));
 }
 
 /** Every shape one deadline record carries that the live schema cannot hold. */

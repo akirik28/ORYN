@@ -1,6 +1,8 @@
 import { resolveIdentity, type LocalUniversity } from "@/lib/acquisition/identity";
 import { sourceAuthority, domainOf } from "@/lib/acquisition/source-authority";
 import { statesTheSameFact } from "@/lib/requirements/dedup";
+import { deriveEvaluationGate, deriveExcludedProvenances, deriveRecencyRule } from "@/lib/requirements/shape-audit";
+import type { EvaluationGate, RecencyRule, ScoreProvenance } from "@/lib/requirements/types";
 import type { RequirementCategory, RequirementGroupRole } from "@/types/database";
 
 /** One record from data/research/university-requirements/requirements_batch*.jsonl — see
@@ -68,6 +70,27 @@ export interface AcceptedRequirementRow {
   clause_ref: string | null;
   requirement_group_id: string | null;
   group_role: RequirementGroupRole | null;
+  /** Migration 0056's columns. The first ingestion run after 0056 was applied wrote 1,254 rows
+   * without them — decided `accepted`, inserted successfully, and stripped of the qualifier
+   * that made each one true, because this interface had nowhere to put them and nobody could
+   * see the loss in an outcome count that said `accepted`. Those rows were rolled back rather
+   * than left, because a corrected re-run would have matched them as duplicates and skipped
+   * them: they would have looked complete forever while the facts stayed in `raw_payload`.
+   *
+   * Every one of them is derived in `lib/requirements/shape-audit.ts`, beside the detectors
+   * that produce the gate, so the qualifier and the refusal to evaluate can never disagree. */
+  test_scale: string | null;
+  scale_ambiguity: string | null;
+  /** jsonb. Written in the camelCase shape `lib/validation/requirements.ts`'s
+   * `RecencyRuleSchema` parses — see the note on `buildQualifierColumns`. */
+  recency_rule: RecencyRule | null;
+  excluded_provenances: ScoreProvenance[] | null;
+  evaluation_gate: EvaluationGate | null;
+  /** 0056 §9. Null on every live row today, which is why a requirement cannot be traced back
+   * to the research record it came from except by matching text against
+   * `requirement_research_queue.raw_payload` — a full-text scan over jsonb, and exactly the
+   * lookup a reviewer needs in order to recover a dropped qualifier. */
+  research_record_id: string;
 }
 
 export interface RequirementIngestDecision {
@@ -104,6 +127,64 @@ export function requirementDedupKey(universityId: string, requirementType: strin
   return `${universityId}|${requirementType}|${scope ?? ""}`;
 }
 
+/**
+ * The APPLIED unique index's key, byte for byte:
+ * `university_requirements_university_type_scope_title_idx` on
+ * `(university_id, requirement_type, coalesce(scope,''), md5(coalesce(title,'')))`
+ * where `program_id is null`. `md5(title)` collides exactly when `title` does, so the title
+ * itself stands in for the hash.
+ *
+ * Separate from `requirementDedupKey` on purpose, and the pair is not redundant. That one is
+ * the COARSE bucket the fuzzy title check runs inside; this one is what the database will
+ * actually reject on. Modelling the index with the coarse key — which is what the dry run did
+ * before 0056 was applied, correctly at the time — now overstates destroyed rows by counting
+ * every genuine alternative as a collision, which is the precise loss 0056 removed.
+ */
+export function requirementUniqueIndexKey(universityId: string, requirementType: string, scope: string | null, title: string | null): string {
+  return `${universityId}|${requirementType}|${scope ?? ""}|${title ?? ""}`;
+}
+
+/**
+ * The record's own identifier, and what shape of record it actually is — never `undefined`.
+ *
+ * The last run reported eleven audit-insert failures as `null value in column
+ * "research_requirement_id"` against a record id of literally `undefined`, which is what
+ * reading `record.research_requirement_id` off an object that has no such key produces. The
+ * cause: 107 records across 19 files named `*_requirements_*.jsonl` are DEADLINE records
+ * carrying `research_deadline_id`, and `lib/requirements/corpus-files.ts` routed them here on
+ * the strength of the filename. That routing is fixed at source (records are now partitioned
+ * by their own shape), and this function is the second lock: even if a record with no
+ * requirement id reaches this module again, it is identified, refused with a reason that names
+ * the real problem, and still gets an audit row.
+ *
+ * A misfiled deadline keeps its own `DL-…` id rather than being given a manufactured one. The
+ * prefix makes it self-describing in the queue, and it is the identifier that actually finds
+ * the record in the corpus — which is the only thing an audit trail is for.
+ */
+export function requirementRecordIdentity(record: ResearchRequirementRecord): { id: string; shape: "requirement" | "misfiled_deadline" | "unidentified" } {
+  const requirementId = record.research_requirement_id?.trim();
+  if (requirementId) return { id: requirementId, shape: "requirement" };
+  const deadlineId = (record as { research_deadline_id?: string | null }).research_deadline_id?.trim();
+  if (deadlineId) return { id: deadlineId, shape: "misfiled_deadline" };
+  // Nothing in the 2026-08-21 corpus reaches this branch; it exists so that a future record
+  // with no identifier at all still produces a writable audit row instead of a hole in the
+  // trail. The marker is deterministic (same record, same id across re-runs) and is prefixed
+  // so it can never be mistaken for a research-lane identifier — the full record is in
+  // raw_payload either way.
+  return { id: `UNIDENTIFIED-${fnv1a(JSON.stringify(record))}`, shape: "unidentified" };
+}
+
+/** Small, dependency-free, stable string hash. Not cryptographic and not used for anything
+ * that needs to be — it only has to be the same value for the same record on every run. */
+function fnv1a(input: string): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return hash.toString(16).padStart(8, "0");
+}
+
 export function resolveRequirementUniversity(record: ResearchRequirementRecord, universities: readonly UniversityLookupRow[]): { universityId: string | null; reason: string | null } {
   if (!record.university_name?.trim()) {
     return { universityId: null, reason: "No university_name — a national-level or context/reference record, not attached to one institution." };
@@ -138,6 +219,23 @@ export function decideRequirementIngestion(
   supersededIds: ReadonlySet<string>,
   existingTitlesByKey: ReadonlyMap<string, readonly string[]>
 ): RequirementIngestDecision {
+  const identity = requirementRecordIdentity(record);
+  if (identity.shape !== "requirement") {
+    // Refused before university resolution, because this is not a requirement that failed a
+    // check — it is not a requirement record. Saying so is the point: the old path let these
+    // fall through to `not_ingestible: requirement_text is null/empty`, which reads as "a
+    // requirement with no text" and hides a routing bug behind a plausible data complaint.
+    return {
+      outcome: "malformed_source",
+      detail:
+        identity.shape === "misfiled_deadline"
+          ? `Not a requirement record: it carries research_deadline_id=${identity.id} and no research_requirement_id, so it is a DEADLINE record filed in a requirements-named file. Route it by record shape (lib/requirements/corpus-files.ts), not by filename.`
+          : "Not a requirement record: it carries neither research_requirement_id nor research_deadline_id, so nothing identifies it. Recorded under a deterministic UNIDENTIFIED- marker with the full payload.",
+      universityId: null,
+      row: null,
+    };
+  }
+
   const { universityId, reason } = resolveRequirementUniversity(record, universities);
   if (!universityId) {
     return { outcome: "unresolved_university", detail: reason, universityId: null, row: null };
@@ -218,7 +316,54 @@ export function decideRequirementIngestion(
       // other is.
       requirement_group_id: null,
       group_role: null,
+      ...buildQualifierColumns(record),
+      research_record_id: identity.id,
     },
+  };
+}
+
+/**
+ * Migration 0056's qualifier columns for one accepted record.
+ *
+ * Split out from the row literal so the derivation has somewhere to state its own contract,
+ * and so the columns are produced in ONE place — the failure this replaces was six columns
+ * that no code path set at all, and the failure after that would be six columns set in two
+ * places that disagree.
+ *
+ * `test_scale` and `scale_ambiguity` are carried through verbatim: the research lane resolved
+ * them against the source page and there is nothing for ingestion to add. The other three are
+ * derived, all from `lib/requirements/shape-audit.ts`:
+ *
+ *   - `evaluation_gate` from `deriveEvaluationGate`, which migration 0056 §4's own comment
+ *     names as the function that populates this column. Not re-derived here. Two derivations
+ *     drifting apart is how the `is_exclusion` gap happened: 0052 promised the evaluator would
+ *     read the flag and nothing ever did.
+ *   - `recency_rule` from `deriveRecencyRule`, carrying its DIRECTION, which is the whole
+ *     point of §2. METU refuses IELTS taken ON OR AFTER 24 December 2022; a max-age-only model
+ *     tells that student their fresh certificate qualifies.
+ *   - `excluded_provenances` from `deriveExcludedProvenances`, which reads refusals rather
+ *     than mentions — Southampton accepts One Skill Retake in the same words Edinburgh uses to
+ *     refuse it.
+ *
+ * ONE SHAPE DECISION WORTH STATING, because the two sources disagree in writing. Migration
+ * 0056 §2's header sketches the jsonb as `{"direction": …, "boundary_date": "2022-12-24"}`,
+ * snake_case. The code that READS the column — `RequirementQualifiersSchema` in
+ * lib/validation/requirements.ts, via `RecencyRuleSchema` — expects `boundaryDate`, and Zod
+ * object parsing STRIPS unknown keys rather than failing on them. So writing the migration's
+ * literal shape would parse cleanly and silently drop the boundary date: the same
+ * qualifier-stripping failure one level down, and invisible for exactly the same reason. The
+ * reader wins. The migration's example needs correcting in a follow-up; it is an applied
+ * migration and this lane does not edit those.
+ */
+function buildQualifierColumns(
+  record: ResearchRequirementRecord
+): Pick<AcceptedRequirementRow, "test_scale" | "scale_ambiguity" | "recency_rule" | "excluded_provenances" | "evaluation_gate"> {
+  return {
+    test_scale: record.test_scale?.trim() || null,
+    scale_ambiguity: record.scale_ambiguity?.trim() || null,
+    recency_rule: deriveRecencyRule(record),
+    excluded_provenances: deriveExcludedProvenances(record),
+    evaluation_gate: deriveEvaluationGate(record),
   };
 }
 
@@ -279,17 +424,28 @@ export async function applyRequirementDecision(
 
   const queueRow: RequirementQueueRowInput = {
     batch_id: batchId,
-    research_requirement_id: record.research_requirement_id,
+    // Via requirementRecordIdentity, never read off the record directly.
+    // requirement_research_queue.research_requirement_id is NOT NULL, and a record that does
+    // not carry the field yields `undefined`, which supabase-js drops from the payload
+    // entirely — so the column falls back to its default null and the insert fails. That is a
+    // hole in the audit trail produced by reading a field that does not exist, and the failure
+    // lands on exactly the records whose routing was already wrong.
+    research_requirement_id: requirementRecordIdentity(record).id,
     university_id: decision.universityId,
-    university_name_input: record.university_name,
-    university_country_input: record.university_country,
-    program_name_input: record.program_name,
-    requirement_type_input: record.requirement_category_db,
+    // `?? null` on EVERY input field, for the same reason as the id above: an absent key reads
+    // as `undefined`, supabase-js omits it from the payload, and the column silently takes its
+    // default instead of recording what the record actually had, which was nothing. Applied
+    // uniformly rather than to the fields that happen to be optional today — the corpus grows,
+    // and the next missing field should not be another silent default.
+    university_name_input: record.university_name ?? null,
+    university_country_input: record.university_country ?? null,
+    program_name_input: record.program_name ?? null,
+    requirement_type_input: record.requirement_category_db ?? null,
     scope_input: record.scope ?? null,
-    requirement_text_input: record.requirement_text,
-    source_url_input: record.source_url,
-    source_type_input: record.source_type,
-    verification_state_input: record.verification_state,
+    requirement_text_input: record.requirement_text ?? null,
+    source_url_input: record.source_url ?? null,
+    source_type_input: record.source_type ?? null,
+    verification_state_input: record.verification_state ?? null,
     raw_payload: record,
     outcome: effectiveOutcome,
     outcome_detail: effectiveDetail,

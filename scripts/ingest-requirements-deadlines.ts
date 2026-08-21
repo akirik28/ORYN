@@ -11,6 +11,14 @@
  * `startsWith("requirements_batch")` / `startsWith("deadlines_batch")` filter that matched 12
  * of 53 files and skipped the other 41 — 1,165 records — without a word of output.
  *
+ * ROUTING IS BY RECORD SHAPE, not by filename. The filename says which files to read; each
+ * record's own identifier (`research_requirement_id` vs `research_deadline_id`) says which
+ * pipeline it belongs to. 19 requirements-named files in this corpus hold 107 deadline
+ * records, and routing those on the filename fed them to the requirement decision path, which
+ * read an id they do not carry. Consequence worth stating plainly: the deadline path now
+ * receives those 107 records, so its own outcome counts move even though nothing in
+ * lib/deadlines/ingest.ts changed.
+ *
  * `structured_rule` is always left null on every inserted requirement — per migration 0020's
  * own documented intent, it is populated later by an admin reviewing
  * lib/ai/interpret-requirement.ts's suggestion, never by unreviewed ingestion. This also means
@@ -38,7 +46,7 @@
  * constraint as scripts/ingest-university-programs.ts).
  */
 import { readFileSync } from "node:fs";
-import { classifyCorpusFiles } from "../lib/requirements/corpus-files";
+import { classifyCorpusFiles, partitionCorpusRecords, type CorpusRecordInput } from "../lib/requirements/corpus-files";
 import {
   applyRequirementDecision,
   decideRequirementIngestion,
@@ -136,19 +144,34 @@ async function main() {
   const dir = "data/research/university-requirements";
   const { requirementFiles, deadlineFiles } = classifyCorpusFiles(dir);
 
-  const reqRecords: ResearchRequirementRecord[] = [];
-  const dlRecords: ResearchDeadlineRecord[] = [];
+  // Read on the filename, route on the record's own shape. 19 requirements-named files in this
+  // corpus contain deadline records; routing those on the filename handed them to
+  // decideRequirementIngestion, which read a `research_requirement_id` they do not have.
+  const parsed: CorpusRecordInput[] = [];
   for (const f of requirementFiles) {
-    const records = parseJsonl<ResearchRequirementRecord>(`${dir}/${f}`);
-    console.log(`  ${f}: ${records.length} requirement record(s)`);
-    reqRecords.push(...records);
+    const records = parseJsonl<unknown>(`${dir}/${f}`);
+    console.log(`  ${f}: ${records.length} record(s)`);
+    records.forEach((record, i) => parsed.push({ file: f, index: i + 1, nameSaysShape: "requirement", record }));
   }
   for (const f of deadlineFiles) {
-    const records = parseJsonl<ResearchDeadlineRecord>(`${dir}/${f}`);
-    console.log(`  ${f}: ${records.length} deadline record(s)`);
-    dlRecords.push(...records);
+    const records = parseJsonl<unknown>(`${dir}/${f}`);
+    console.log(`  ${f}: ${records.length} record(s)`);
+    records.forEach((record, i) => parsed.push({ file: f, index: i + 1, nameSaysShape: "deadline", record }));
   }
+
+  const partition = partitionCorpusRecords(parsed);
+  const reqRecords = partition.requirementRecords.map((r) => r.record as ResearchRequirementRecord);
+  const dlRecords = partition.deadlineRecords.map((r) => r.record as ResearchDeadlineRecord);
   console.log(`Loaded ${reqRecords.length} requirement record(s), ${dlRecords.length} deadline record(s) from ${requirementFiles.length + deadlineFiles.length} file(s).`);
+  if (partition.misroutedByFilename.length > 0) {
+    // Loud every run, deliberately. This is a research-handoff problem to fix upstream, and it
+    // stops being visible the moment the routing silently absorbs it.
+    const byFile = new Map<string, number>();
+    for (const m of partition.misroutedByFilename) byFile.set(m.file, (byFile.get(m.file) ?? 0) + 1);
+    console.warn(`\n${partition.misroutedByFilename.length} record(s) in ${byFile.size} file(s) have a shape their filename contradicts. Routed by shape, not by name:`);
+    for (const [file, count] of [...byFile.entries()].sort()) console.warn(`  ${file}: ${count} record(s)`);
+    console.warn("");
+  }
 
   const [universities, { rows: existingReqs }, { rows: existingDls }] = await Promise.all([
     loadUniversityCandidates(target),
