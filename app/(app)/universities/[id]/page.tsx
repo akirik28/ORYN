@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import type { Metadata } from "next";
 import { MapPin, Users, DollarSign, GraduationCap, ExternalLink, Trophy, Target, TrendingUp } from "lucide-react";
 import { SUBJECT_LABELS } from "@/lib/programs/subject-labels";
 import { requireUser, getCurrentProfile } from "@/lib/security/dal";
@@ -57,6 +58,22 @@ const MONTH_NAMES = [
   "December",
 ];
 
+
+// Without this, every university detail page shared the layout's generic default title —
+// the browser tab and history both just said "Oryn" regardless of which of 1,000+
+// universities was open. Deliberately a second, lighter query (name only) rather than
+// hoisting the page's own full select("*") into a shared cached fetcher — that's a larger
+// refactor than this fix calls for.
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: university } = await supabase
+    .from("universities")
+    .select("name")
+    .eq("id", canonicalUniversityId(id))
+    .single();
+  return { title: university?.name ?? "University" };
+}
 
 export default async function UniversityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

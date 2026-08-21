@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { JobTriggerButton } from "@/features/admin/job-trigger-button";
 import { ReportReviewControl } from "@/features/admin/report-review-control";
 import { PostRemovalControl } from "@/features/admin/post-removal-control";
+import { PageHeader } from "@/components/oryn/page-header";
 import { resolveReportedContentPreview } from "@/lib/moderation/content-preview";
 import { REPORTED_POST_MISSING_LABEL } from "@/lib/social/posts-moderation";
 import { triggerOpportunityDiscovery, triggerUniversitySync, triggerDeadlineScan, triggerRequirementDiscovery } from "./actions";
@@ -86,10 +87,7 @@ export default async function AdminPage() {
 
   return (
     <div className="space-y-10">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Admin</h1>
-        <p className="mt-1 text-muted-foreground">Provider health, background jobs, and AI usage. Not linked from navigation.</p>
-      </div>
+      <PageHeader title="Admin" description="Provider health, background jobs, and AI usage. Not linked from navigation." />
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">

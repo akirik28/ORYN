@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { Lock, Sparkles, MessageCircle } from "lucide-react";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
@@ -66,6 +67,26 @@ function SkillList({
       </div>
     </div>
   );
+}
+
+// Mirrors the page body's own visibility gating exactly (public row, or self viewing their
+// own private profile) rather than a lighter/wider query — this page is privacy-sensitive
+// (Phase 12), so a non-owner requesting a private profile must see the same generic title
+// the notFound() page below would give them, never the real name leaking through the tab
+// or browser history.
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  if (!isUuidLike(id)) return {};
+  const session = await requireUser();
+  const supabase = await createClient();
+  const isSelf = session.userId === id;
+  const publicRow = await getPublicProfile(supabase, id);
+  let displayName = publicRow?.display_name ?? null;
+  if (!displayName && isSelf) {
+    const { data } = await supabase.from("profiles").select("display_name").eq("id", id).single();
+    displayName = data?.display_name ?? null;
+  }
+  return { title: displayName ?? "Profile" };
 }
 
 export default async function PublicProfilePage({ params }: { params: Promise<{ id: string }> }) {
