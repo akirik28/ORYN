@@ -3841,3 +3841,59 @@ be represented given the DB constraint above — either a migration to widen the
 index, or a naming convention (e.g. this session's own `(Lehramt)`-style disambiguation
 suffix, applied consistently) — rather than one session quietly picking a convention that
 the ingestion pipeline and every other lane would need to independently discover and match.
+
+**Batch 42 — Yıldız Technical University** (5 new, `independent_batch42_2026-08-21.jsonl`):
+continuing the state-university pivot past Boğaziçi. 63 raw YÖK Atlas results across 44
+unique subjects (63 includes funding-tier/language/KKTC variants) against 43 existing ORYN
+records. Ran the full three-way comparison discipline before writing anything: matched
+subjects excluded (confirmed by name-mapping, not assumed — including two the same way
+METU's English/Turkish-name trap works: Sınıf Öğretmenliği = existing "Primary Education",
+Bilgisayar ve Öğretim Teknolojileri Öğretmenliği = existing "Computer and Instructional
+Technologies Education"), 5 genuinely new subjects included, and — this is the notable part
+— **the exact same teacher-training ambiguity pattern found at Boğaziçi shows up again
+here, confirming it's systemic rather than one university's quirk**: İngilizce
+Öğretmenliği, Türkçe Öğretmenliği, Sosyal Bilgiler Öğretmenliği, İlköğretim Matematik
+Öğretmenliği, and Fen Bilgisi Öğretmenliği each have a plausible broader existing umbrella
+match (Foreign Languages Education; Turkish and Social Sciences Education ×2; Mathematics
+and Science Education ×2) that may or may not already be meant to cover them. Deliberately
+excluded from this batch and left unresolved, same as Boğaziçi — not guessed either
+direction. One difference from Boğaziçi worth recording: YTÜ's existing 43 records contain
+no generic "Educational Sciences" catch-all, so YTÜ's Rehberlik ve Psikolojik Danışmanlık
+(Guidance and Psychological Counseling) has no plausible existing match at all and was
+included as clearly new — at Boğaziçi the equivalent programme was the ambiguous one,
+specifically because Boğaziçi's list does have that catch-all category. Same underlying
+question, different answer per university depending on what else that university's existing
+records already contain — reinforcing that this needs a genuine subject-taxonomy
+reconciliation pass, not a single global rule. The 5 new records: Okul Öncesi Öğretmenliği
+(Pre-School Teaching), Fransızca Mütercim ve Tercümanlık (French Translation and
+Interpreting), Fotoğraf ve Video (Photography and Video), Sanat ve Kültür Yönetimi (Art and
+Culture Management), Rehberlik ve Psikolojik Danışmanlık (Guidance and Psychological
+Counseling). All 5 re-verified against a fresh direct API re-query by programme code
+immediately before commit (exceeds the usual 2-spot-check minimum — checked all 5 since the
+batch itself is small) — quota/score/rank/language/faculty all matched exactly. Also
+confirmed via live DB query that none of the 5 new program names collide with any existing
+YTÜ record under any plausible English or Turkish keyword (pre-school, french, photograph,
+art and culture, guidance, counseling, okul öncesi, fransızca, fotoğraf, rehberlik) — zero
+rows returned.
+
+**Boğaziçi + Yıldız Technical teacher-training ambiguity — now flagged as one systemic
+open item, not two separate ones**: whoever reconciles this should treat it as a single
+subject-taxonomy question ("does ORYN's broad umbrella education-category granularity match
+YÖK Atlas's subject-specific teacher-training granularity, university by university, or
+should broad categories be split to match YÖK Atlas everywhere") rather than resolving each
+university's instance independently.
+
+**Running total, coordinator-redirected "go wide on YÖK Atlas" push (batches 37-42)**: 396
+new records across 6 Turkish universities (GTU 23, Ankara Üniversitesi 153, Istanbul
+University 127, METU/ODTÜ 79, Sabancı 9, Yıldız Technical 5). Combined with the UK push
+earlier in this continuation (batches 30-36, 919 records / 7 universities across DE/UK),
+this continuation's running total is now **1,467 new records across 13 universities**.
+
+**Next thinnest Turkish targets, in order** (per live query, all confirmed accurate as of
+batch 42 — Yıldız Technical now removed from this list, effectively deepened as far as
+this session will take it pending the taxonomy reconciliation above): Istanbul Technical
+University (45), Hacettepe University (99) — then any Turkish university not yet in ORYN's
+spine at all, per the coordinator's instruction to collect those as candidates (YÖK Atlas
+`universiteId` + domain) rather than create university rows directly, flagged for a separate
+canonical-entity resolution pass. Continuing to İTÜ next per the coordinator's approved
+pivot ("Yıldız, İTÜ, Hacettepe — carry on without checking in per university").
