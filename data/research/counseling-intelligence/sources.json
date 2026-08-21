@@ -577,6 +577,30 @@
       "claim_supported": "Spain's EBAU admission grade is computed as 60% Bachillerato average + 40% mandatory-phase exam score, confirmed independently by both La Moncloa and the Ministry of Education's own official pages.",
       "used_in_rules": ["RULE-COUNSEL-074"],
       "limitations": "Confirms the weighting mechanism officially; does not itself make an explicit statement about the absence of extracurricular weighting, which remains sourced from admissions-guidance secondary description (SRC-CS-036)."
+    },
+    {
+      "id": "SRC-CS-049",
+      "title": "German medical-licensure (Approbation/Staatsexamen) guidance (multiple sources, converging)",
+      "publisher": "Various German-medical-licensure guidance sources (e.g. AMBOSS medical-education platform, Anerkennung in Deutschland — Germany's official foreign-qualification-recognition information portal)",
+      "url": "https://www.anerkennung-in-deutschland.de/html/en/2688.php",
+      "type": "mixed_official_and_secondary",
+      "retrieved_at": "2026-08-21",
+      "confidence": "medium-high",
+      "claim_supported": "German medical study (~6 years) culminates in a Staatsexamen; passing it plus health/conduct certification grants Approbation, the license required for the protected title Arzt/Ärztin and independent practice; foreign-trained doctors take a Kenntnisprüfung instead if not deemed equivalent.",
+      "used_in_rules": ["RULE-COUNSEL-103"],
+      "limitations": "Anerkennung in Deutschland is an official German government information portal (run by the Federal Institute for Vocational Education and Training, BIBB), giving this medium-high rather than pure-secondary confidence; not independently cross-checked against a state medical board's own page."
+    },
+    {
+      "id": "SRC-CS-050",
+      "title": "German legal-training (Staatsexamen/Referendariat) guidance, including Bundesrechtsanwaltskammer (Federal Bar) description",
+      "publisher": "Various German legal-training guidance sources, including the Bundesrechtsanwaltskammer (Federal Bar, official body)",
+      "url": "https://www.brak.de/anwaltschaft/beruf-anwalt/juristenausbildung/",
+      "type": "mixed_official_and_secondary",
+      "retrieved_at": "2026-08-21",
+      "confidence": "medium-high",
+      "claim_supported": "German legal training requires the Erste Staatsexamen, a 2-year Referendariat (rotating across civil court, criminal court/prosecution, an administrative authority, and a law firm), then the Zweite Staatsexamen before qualifying as a Volljurist eligible for Rechtsanwalt/judge/prosecutor roles; total pathway commonly cited as 7-11 years.",
+      "used_in_rules": ["RULE-COUNSEL-104"],
+      "limitations": "The Bundesrechtsanwaltskammer (BRAK) is Germany's official federal bar association, giving this medium-high confidence; the specific 7-11-year figure is a commonly-cited range across sources, not a single official fixed number."
     }
   ]
 }

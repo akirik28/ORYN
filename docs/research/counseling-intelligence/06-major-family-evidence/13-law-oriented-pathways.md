@@ -51,7 +51,7 @@ should be read from the student's own goals, not inferred from activity type alo
   jurisdictions) is a comparatively accessible alternative worth surfacing specifically because it
   doesn't share the same access constraint. [[RULE-COUNSEL-043]]
 
-## Country notes (UK / EU / Turkey)
+## Country notes (UK / Germany / EU / Turkey)
 
 Career-outlook context throughout, not admissions-evidence guidance — see
 `10-medicine-clinical-pathways.md` for the full method/bounding statement.
@@ -64,9 +64,27 @@ applies to equally, but worth naming explicitly for a UK-facing student since th
 pathway* differs by which branch they're aiming for. (Source: `nationalcareers.service.gov.uk/
 job-profiles/solicitor` and `/barrister` — official, high confidence.) [[RULE-COUNSEL-089]]
 
+**Germany, added on a further pass**: the most exam-intensive model this package has found for any
+family. Law study culminates in the **Erste Staatsexamen** (First State Examination), followed by
+a mandatory **2-year Referendariat** (legal traineeship rotating across civil court, criminal
+court/prosecution, an administrative authority, and a law firm), then a **Zweite Staatsexamen**
+(Second State Examination) — only after both exams is a graduate a fully qualified **Volljurist**,
+eligible to practice as **Rechtsanwalt** (attorney), judge, prosecutor, or in senior civil service.
+Total time from starting law study to bar admission is commonly cited as **7-11 years** — notably
+longer than the UK's or US's pathways. (Source: German legal-training guidance sources, including
+the Bundesrechtsanwaltskammer/Federal Bar's own published training-structure description — medium-
+high confidence for the two-exam/Referendariat structure, which is consistently and specifically
+described across sources.) [[RULE-COUNSEL-104]] **This directly sharpens `RULE-COUNSEL-041`'s "no
+required pre-law major" finding for a German-track student specifically**: while true that no
+single *undergraduate* major is mandated the way, say, medicine requires pre-med coursework, German
+legal training itself *is* a single, unified, state-examined pathway with no real equivalent to
+the US's flexible "major now, law school later" structure — a German-track student's actual
+decision point is different in kind from a US-track one's, not just longer.
+
 **EU:** ESCO covers legal occupations across EU languages (see `10`'s EU note for ESCO's full
 description). Legal practice rights are a per-country regulatory/bar-admission matter, not
-harmonized EU-wide.
+harmonized EU-wide — Germany's Referendariat-based model and the UK's solicitor/barrister model are
+both real, both official, and not interchangeable.
 
 **Turkey:** İŞKUR's official "Geleceğin Meslekleri" list includes **Avukat** (Lawyer) among its 93
 designated future occupations. [[RULE-COUNSEL-085]]
@@ -88,3 +106,8 @@ designated future occupations. [[RULE-COUNSEL-085]]
 - `RULE-COUNSEL-089` — For a UK-facing law-interested student, name the solicitor/barrister split
   explicitly since qualification pathways differ by branch, sourced from NCS official profiles.
   Confidence: high (official source).
+- `RULE-COUNSEL-104` — For a German-track law student, the "no required pre-law major" finding
+  needs sharpening: German legal training itself is a single, unified, two-Staatsexamen-plus-
+  Referendariat pathway with no real equivalent to the US's flexible major-then-law-school
+  structure. Confidence: medium-high (consistently described across sources, not fetched from a
+  single primary German-government page).

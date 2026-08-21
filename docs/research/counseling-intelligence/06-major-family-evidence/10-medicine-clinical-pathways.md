@@ -60,7 +60,7 @@ lab-bench science** — directly consistent with `01-development-taxonomy.md`'s 
   research is common but not universal among successful applicants even at the *undergraduate*
   admissions stage, let alone required evidence for a high schooler still exploring the field.
 
-## Country notes (UK / EU / Turkey)
+## Country notes (UK / Germany / EU / Turkey)
 
 Added on a later pass, mirroring the peer session's UK/EU/Turkey country-note pattern for
 consistency across the full 17-family set. **All of this is career-outlook context, not
@@ -76,6 +76,19 @@ job-profiles/gp` — official, high confidence.) [[RULE-COUNSEL-087]] Consistent
 `06/01`'s finding for computing, prefer NCS job profiles over BLS/O*NET for a UK-facing student —
 occupation structure and entry requirements do not transfer across countries even where the
 occupation name is identical.
+
+**Germany, added on a further pass**: a genuinely distinct, longer, more exam-heavy model than the
+UK's. Medical study (**Medizinstudium**) runs roughly 6 years, culminating in a **Staatsexamen**
+(state examination); passing it, alongside health/conduct certification, grants **Approbation** —
+the license required to use the legally protected title **"Arzt"/"Ärztin"** and practice
+independently. Foreign-trained doctors whose qualification isn't recognized as equivalent take a
+separate **Kenntnisprüfung** (clinical-practical knowledge exam) instead of repeating the German
+Staatsexamen. (Source: German medical-licensure guidance sources describing the Approbation system
+— medium-high confidence, describing an official state-run licensure process; not independently
+fetched from a German federal ministry page directly.) [[RULE-COUNSEL-103]] **Same underlying
+two-part pattern this package keeps finding** (degree + separate state-controlled licensure step,
+per `06/18`'s and `06/19`'s own §6 findings for teaching and social work) — Germany's version is
+simply longer and more exam-intensive than the UK's or Turkey's.
 
 **EU:** ESCO (European Skills, Competences, Qualifications and Occupations,
 `esco.ec.europa.eu`, European Commission) covers medicine/clinical occupations across EU languages
@@ -116,3 +129,8 @@ weighting, and must never be cited as if it did.
 - `RULE-COUNSEL-087` — Prefer UK National Careers Service job profiles over BLS/O*NET for a
   UK-facing medicine-track student; entry requirements and structure do not transfer across
   countries. Confidence: high (official source).
+- `RULE-COUNSEL-103` — Germany's medical-licensure model (Medizinstudium + Staatsexamen +
+  Approbation, protected "Arzt/Ärztin" title) is a genuinely distinct, longer, more exam-heavy
+  model than the UK's — same underlying degree-plus-licensure pattern this package keeps finding,
+  different specific mechanics. Confidence: medium-high (describes an official state-run process,
+  not independently fetched from a German federal ministry page directly).
