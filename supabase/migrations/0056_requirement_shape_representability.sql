@@ -1,6 +1,6 @@
 -- 0056 — Requirement/deadline shape representability
 --
--- STATUS: VALIDATED, NOT YET APPLIED TO PRODUCTION. Written by the requirements-ingestion
+-- STATUS: APPLIED TO PRODUCTION 2026-08-21 (see the addendum at the end of this header). Written by the requirements-ingestion
 -- design pass, which never executed it. It has now been run end-to-end against a Postgres 17
 -- database carrying a reconstruction of the live schema subset it touches — every table,
 -- column, enum, CHECK and index in that reconstruction read out of production's own
@@ -67,6 +67,30 @@
 -- "we do not accept this variant" clause survive only in requirement_research_queue.raw_payload,
 -- which that reviewer is not looking at. The wrong "met" gets authored later, from a row this
 -- schema made look complete.
+--
+-- ADDENDUM, 2026-08-21, written after this file was applied.
+--
+-- APPLIED to the production project on the founder's explicit authorisation, verbatim from this
+-- file. Verified immediately after: every column present, both replacement indexes created, the
+-- two old indexes dropped, requirement_source_conflicts created, and row counts unchanged at
+-- 84/26 — nothing existing was touched.
+--
+-- THE PARAGRAPH ABOVE THEN CAME TRUE IMMEDIATELY, AND IT IS WORTH RECORDING WHY. The ingestion
+-- was run against this schema before either row builder had been taught the new columns. It
+-- wrote 1,254 rows in the old shape: test_scale, scale_ambiguity, recency_rule,
+-- excluded_provenances, evaluation_gate and research_record_id were null on every single one.
+-- Adding a column does not populate it, and an ingestion outcome of `accepted` proves a row
+-- landed, not that it landed complete. The whole run was rolled back to the pre-ingestion
+-- backup rather than left in place — because a corrected re-run would have matched those rows
+-- as duplicates and skipped them, so the qualifiers would never have arrived and the rows would
+-- have looked complete forever.
+--
+-- ONE ERROR IN THIS FILE'S OWN TEXT, found by exercising it and left uncorrected because the
+-- migration is already applied. Section 2's example shape writes the boundary key in
+-- snake_case; RecencyRuleSchema in lib/validation/requirements.ts expects camelCase, and Zod
+-- STRIPS unknown keys rather than rejecting them. Writing this file's literal example would
+-- therefore parse cleanly and silently drop the boundary date — the exact failure mode section 2
+-- exists to prevent, one level down. Follow the reader's shape, not this header's sketch.
 
 begin;
 
