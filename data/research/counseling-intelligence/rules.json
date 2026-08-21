@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "package": "oryn/counseling-intelligence-research",
   "last_updated": "2026-08-21",
-  "rule_count": 75,
+  "rule_count": 76,
   "numbering_note": "RULE-COUNSEL-### is minted once per rule at first definition, in document order, and never renumbered thereafter -- except for the 200-230 block below, which IS a deliberate one-time renumbering (originally minted as 034-064) to resolve a confirmed cross-branch collision with the peer session's own independent 034-086+ sequence on oryn/counseling-intelligence-research-013956 -- see docs/handoffs/research-counseling-intelligence.md for the full account. 001-033 and 901-902 are this branch's original foundational rules (unchanged, still authoritative). 200-230 are this session's later contribution (docs 03, 06-major-family-evidence/00+01-09, 07, 08, 14), merged into this file from what was a separate rules-session2.json shard. This file is NOT yet merged with the peer branch's own separate, larger rules.json (their 034-086+ sequence) -- that cross-branch merge remains the final integration step. CRITICAL CAVEAT added after direct verification (2026-08-21): the RULE-COUNSEL-001-014/023-031 entries in this file were written by a fourth session that claimed to have 'pulled them in by reading the peer branch directly via git show' -- verified directly against the peer branch's CURRENT 01-development-taxonomy.md 'Rules established in this document' section and found SUBSTANTIALLY DIFFERENT wording/content for at least 001-009 (e.g. this file's 001 is about organization_scope free text as an unverified proxy; the peer's current 001 is about using the Common Data Set's 19-factor split as a reference vocabulary -- not a wording variant, a different rule). Do NOT treat this file's 001-014/023-031 entries as faithful copies of the peer branch's authoritative content -- either the 4th session paraphrased/re-derived rather than copied, or the peer's docs evolved after that session read them (or both). Per the peer session's own stated preference, THEIR branch's current 01-development-taxonomy.md and 02-opportunity-development-mapping.md 'Rules established' sections are authoritative for these IDs -- this file's versions should be REPLACED with those at final integration, not merged as-is. This session's own 200-230 entries are unaffected (verified directly against this session's own live documents, not copied secondhand).",
   "type_legend": {
     "unsafe_inference": "A specific inference the counselor/scoring logic must never make",
@@ -774,6 +774,16 @@
       "statement": "yearsUntilGraduation <= 0 is not one situation -- distinguish a genuine gap year (Phase 2 framing still applies, often more urgently), actual progression to undergraduate stage (a different product surface entirely, out of this package's scope), and stale profile data (a past-due graduation_year the student never updated) before recommending anything. Never collapse these into one generic 'graduated' treatment.",
       "confidence": "medium",
       "note": "Found on this session's own re-read of its own document, not from an external report -- the yearsUntilGraduation<=0 table row existed from the start but was never actually discussed."
+    },
+    {
+      "id": "RULE-COUNSEL-240",
+      "source_doc": "20-performing-arts-music.md",
+      "source_section": "§2",
+      "type": "unsafe_inference",
+      "dimensions": [],
+      "statement": "Never assume performing-arts performance-track pathways (dance specifically, per BLS's own 'highest rates of injuries and illnesses' statement) are equally accessible to every student without a stated need -- and never assume the reverse, that a disability precludes this family (adaptive dance, wheelchair-inclusive performance, disability arts are real practice areas).",
+      "confidence": "medium",
+      "note": "Found on this session's own re-read, prompted by awareness of the peer's health/disability-access work in their gap-framework -- this document's own first draft said nothing about it despite a directly relevant, sourced BLS data point."
     }
   ]
 }

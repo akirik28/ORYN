@@ -32,6 +32,22 @@ cross-referencing against `03-recommendation-timing.md`'s stage model (early, su
 specialization is normal and expected here, not a sign of premature narrowing the way it might be
 read for other families at the same age).
 
+**A gap in this document's own first draft, found on re-reading against the peer's health/
+disability-access work rather than caught the first time:** BLS states plainly that "dancers have
+one of the highest rates of injuries and illnesses of all occupations" [S-BLS-PERFORM] — this
+family has a genuine, documented physical-demand dimension that a student with a physical
+disability, chronic illness, or injury history intersects with directly, and this document said
+nothing about it in its first version. **RULE-COUNSEL-240 (new):** never assume this family's
+performance-track pathways (dance specifically, but physically-demanding instrumental practice too)
+are equally accessible to every student without a stated need — and, just as importantly, **never
+assume the reverse**, that a disability precludes this family: adaptive dance, wheelchair-inclusive
+performance, and disability arts more broadly are real, growing practice areas this document did
+not research in depth (out of scope to do justice to in this pass) but must not be inferred as
+nonexistent by omission. This is the same general "access/context" caution the peer session's
+`04-profile-gap-framework.md` establishes generally — this document's contribution is naming the
+one concrete, sourced, family-specific data point (BLS's own injury-rate statement) that makes the
+general caution non-abstract for this particular family.
+
 ## 3. Career families
 
 Beyond performing itself: composition/music direction (per BLS's dedicated Music Directors and
