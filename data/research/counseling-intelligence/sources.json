@@ -505,6 +505,18 @@
       "claim_supported": "Official UK job-profile pages (qualification pathway, entry requirements, typical hours/salary) for GP, Clinical Psychologist, Forensic Psychologist, Solicitor, Barrister, and Architect — used to add UK country-notes to this session's medicine, psychology, law, and architecture family docs, mirroring the peer session's own use of NCS for its 9 families.",
       "used_in_rules": ["RULE-COUNSEL-087", "RULE-COUNSEL-088", "RULE-COUNSEL-089", "RULE-COUNSEL-090"],
       "limitations": "No NCS profile was found this pass for poli-sci/IR, sociology/history/philosophy, literature/journalism, or visual/media-arts specifically — noted honestly as 'not independently reviewed' in each of those docs' country notes rather than a claim no such profile exists."
+    },
+    {
+      "id": "SRC-CS-043",
+      "title": "Creativity, activity, service (CAS) — official DP core component page",
+      "publisher": "International Baccalaureate Organization (IBO, official)",
+      "url": "https://ibo.org/programmes/diploma-programme/curriculum/dp-core/creativity-activity-and-service/",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "CAS is a real, current, officially-documented IB Diploma Programme core requirement — roughly 3-4 hours/week sustained across 18 months (the fixed 150-hour rule was removed c. 2017), spanning Creativity/Activity/Service strands, not formally graded but required for the diploma.",
+      "used_in_rules": ["RULE-COUNSEL-091"],
+      "limitations": "IB sets no single universal hour target; individual schools set their own CAS expectations, so the 3-4 hrs/week figure is IB's own general description, not a hard per-student number."
     }
   ]
 }

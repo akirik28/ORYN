@@ -145,6 +145,63 @@ the other's work uncritically — consistent with this whole package's "verify, 
 prior session's claim" discipline (mirrors `feedback-parallel-session-reconciliation` project
 memory, applied here to peer research output rather than peer code).
 
+## Persona H — Full-integration test: mixed-target geography, IB curriculum, thin visible profile
+
+Added on a later pass, after `11-geography-admissions-systems.md` and
+`12-activity-progression-pathways.md` existed to test — this is the maximally realistic case this
+package can construct, deliberately combining as many of this package's own frameworks as possible
+rather than isolating one at a time as Personas A-G mostly did.
+
+**Profile:** 16 years old, `yearsUntilGraduation = 2` (peer's Phase 2), `curriculum: "ib"`,
+attending a private school in Istanbul, `country: "Turkey"`. Stated goal: **"study Computer Science,
+ideally in the UK or possibly Germany"** — a genuine mixed-target case. Visible profile: `academics`
+82, `intellectual_curiosity` 58 (broad IB subject engagement), every other dimension 15-25, one
+logged activity (a 2-month unpaid internship, not IT-related, at a family connection's business).
+
+**Full walkthrough, frameworks composed in the order a real pipeline run would hit them:**
+
+1. **Gap framework (`04`) §4, check 1 (confidence):** likely medium given the one detailed activity
+   entry — not `insufficient_data`.
+2. **Gap framework §4, check 3 (access) — now with all four categories from `04` §3/§7/§8
+   available:** economic access (§3) doesn't obviously apply (private-school IB is not a low-
+   income signal); no voluntarily-disclosed health/caregiving context exists to read (§7, correctly
+   not inferred from absence); **§8's IB/CAS finding is the one that actually fires here** — before
+   reading this profile as "thin," check whether CAS-fulfilling engagement (curriculum-mandated,
+   ~3-4 hrs/week per `RULE-COUNSEL-091`) is filling time the profile's *other* dimensions don't
+   show. **This is exactly the kind of case §8 was written for** — a superficially thin profile
+   from a curriculum this package now knows has its own structured-engagement expectation.
+3. **Country notes / geography (`11`) — the mixed-target case §"what this means" point 5 flagged
+   as a real, common scenario, now concretely instantiated:** UK is Tier 2 (subject-relevant
+   "super-curricular" evidence rewarded); Germany is Tier 3 (Abitur-grade/NC-driven, `RULE-COUNSEL-
+   062`). **These do not require contradictory recommendations** — a CS-relevant project (per
+   `12`'s STEM/research pathway, Phase-2-appropriate escalation) is genuinely useful *evidence* for
+   the UK application and genuine *development* regardless of target — but the **explanation must
+   differ by target**, per `RULE-COUNSEL-066`: "this strengthens your UK application" (super-
+   curricular framing) is honest for the UK target; the identical recommendation for the German
+   target must be framed as "this supports your development and the small aptitude-quota pathway
+   (`Zusätzliche Eignungsquote`), not your primary Abitur/NC-based admission route" — same action,
+   differently-honest explanations, presented together per point 5 rather than picking one target
+   to optimize for. **This is a genuinely new, concrete finding**: this package's explainability
+   guidance (peer-owned `07`) needs to support *one recommendation, multiple target-conditioned
+   explanations* as a first-class case, not just single-target framing — flagged here for
+   cross-reference, not implemented (07 is peer's document).
+4. **Progression pathway (`12`), Pathway 1 (STEM/research):** `yearsUntilGraduation = 2` places
+   this persona at the Year-3/Year-4 boundary of the worked pathway — behind where the pathway's
+   own timeline would put a student who started exploring in Phase 1, but **not a "late start" in
+   `12`'s §"late-start handling" sense** (that section is for a genuinely new interest; this
+   persona has plausibly been doing real IB coursework/CAS engagement the whole time, just not in
+   a form this package's dimension-scoring currently sees clearly). The honest recommendation:
+   compressed but not panicked — a focused, real CS project *now*, sized to IB's own heavy existing
+   workload (a `TimeBudget` check, `AGENTS.md` Phase 64, would matter a great deal here in practice
+   — this persona is a strong candidate for genuinely low available hours, not low motivation).
+
+**No contradiction found between frameworks** — this is the persona this package most wanted to
+find one in, given how many frameworks it stresses simultaneously, and instead it confirms they
+compose correctly when applied in the right order (gap-check before geography-framing before
+pathway-timing). The one genuinely new finding (mixed-target recommendations need multiple
+target-conditioned explanations for the same action, point 3 above) is a real gap worth flagging,
+not a contradiction in what's already built.
+
 ## Contradiction found: redundancy decay and timing phase interact incorrectly if composed naively
 
 **This is the most important finding in this document.** `05-redundancy-saturation.md`'s

@@ -241,6 +241,38 @@ column needed), the counselor should treat that disclosure with the same care th
 "fact / inference / unknown" discipline already demands elsewhere: read and respected, never
 demanded, never inferred from its absence. [[RULE-COUNSEL-081]]
 
+## 8. A fourth access category, unlike the first three: curriculum-mandated structured commitment (IB's CAS)
+
+Added on a later pass, surfaced while stress-testing this package's frameworks together against a
+maximally realistic combined persona (`09-persona-testing.md` Persona I). Distinct from §3
+(economic/geographic access), §7's health/disability, and §7's caregiving: **some curricula
+themselves formally mandate structured extracurricular-style engagement**, which changes what a
+"thin" activity profile even means for a student in that curriculum.
+
+The **IB Diploma Programme's CAS (Creativity, Activity, Service) core component** is the clearest
+case: IB's own current official framework (the fixed 150-hour requirement was deliberately removed
+around 2017, partly to discourage exactly the kind of hour-padding this package's redundancy
+framework warns against) describes the expected commitment as roughly **3-4 hours per week,
+sustained across the 18 months of the Diploma Programme**, spanning three strands (Creativity,
+Activity, Service) with reflection against seven learning outcomes — not formally graded, but a
+genuine diploma requirement. (Source: `ibo.org/programmes/diploma-programme/curriculum/dp-core/
+creativity-activity-and-service/`, official IBO page — high confidence.) [[RULE-COUNSEL-091]]
+
+**What this means for ORYN, precisely**: an IB student's CAS-fulfilling activities are already a
+real, structured, curriculum-mandated engagement record — not equivalent to a US-curriculum
+student's voluntary activity list, but not nothing either. A counselor reading an IB student's
+thin-looking non-CAS activity list should first check whether CAS-related engagement is what's
+actually filling that time (per school-set CAS targets, which vary by school — IB itself sets no
+single number) before treating the profile as thin at all. **This generalizes beyond IB
+specifically**: A-Level's own demanding subject depth, a heavy AP course load, or any curriculum
+with its own significant structured/co-curricular expectation could plausibly play the same role —
+IB is simply the clearest, most explicitly documented case this package found, not a claim that
+only IB has this property. [[RULE-COUNSEL-092]] Consistent with §7's privacy posture: this does
+**not** mean ORYN should collect CAS-hour data specifically — it means a "thin activity profile"
+read for a known-IB student (curriculum is already collected, `EducationRecord.curriculum`)
+should be hedged for this reason specifically, the same hedge discipline already established for
+the other three access categories.
+
 ## Rules established in this document
 
 - `RULE-COUNSEL-015` — Evaluate course rigor relative to what was actually offered to the student,
@@ -289,3 +321,11 @@ demanded, never inferred from its absence. [[RULE-COUNSEL-081]]
   infer health or caregiving circumstances from their absence, and never demand disclosure as a
   condition of fair treatment. Confidence:
   high (direct, binding consequence of `AGENTS.md` Phase 12's existing privacy commitments).
+- `RULE-COUNSEL-091` — IB's CAS core component is a real, officially-documented, curriculum-
+  mandated structured-engagement requirement (~3-4 hrs/week over 18 months); check for it before
+  treating an IB student's non-CAS activity list as thin. Confidence: high (official IBO source).
+- `RULE-COUNSEL-092` — Generalize the curriculum-mandated-structure caution beyond IB to any
+  curriculum with significant known structured/co-curricular expectations (heavy A-Level/AP
+  loads, etc.) — IB is the clearest documented case, not the only plausible one. Confidence:
+  medium (reasoned generalization from one well-documented case, not independently verified for
+  other curricula).

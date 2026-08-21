@@ -72,6 +72,17 @@ are flagged by counselors as adding no value to an application. This is not a we
 is a claim about how the evidence is *read* — which is squarely in-scope for a product that exists
 to help students build a legible profile. [[RULE-COUNSEL-026]]
 
+**This justification's own scope limit, found by stress-testing it against `11-geography-
+admissions-systems.md`'s later findings (cross-branch verification, peer session):** this
+justification depends on there being an evaluator who actually reads a holistic activity file at
+all. For a Tier-3-track target (Turkey/YKS being the extreme case — per `11`, **no application
+file exists** in that pathway), there is no evaluator for "checklist-style activities" to read
+poorly, so this justification simply does not apply — only §3's opportunity-cost justification
+survives for that target. **This means redundancy/saturation guidance itself needs the same
+geography-tier conditioning `11` proposes for the rest of this package**: for a Tier-3-track
+student, "don't add another activity here" should be argued on time-cost grounds alone, never on
+"it won't read well," since nothing reads it in that pathway. [[RULE-COUNSEL-093]]
+
 ## 3. Justification 2 (well-evidenced, logical rather than empirical): opportunity cost under a real time constraint
 
 `AGENTS.md` Phase 64 already commits ORYN to collecting a student's realistic weekly time budget
@@ -165,6 +176,12 @@ basis it didn't originally cite. [[RULE-COUNSEL-031]]
 - `RULE-COUNSEL-026` — Ground "don't add another activity in an already-strong area" in
   signal-quality-to-evaluators evidence (§2), which is well-supported, rather than in wellbeing
   claims, which are not. Confidence: high.
+- `RULE-COUNSEL-093` — The signal-quality-to-evaluators justification (§2) does not apply for
+  Tier-3-track targets with no application file (Turkey/YKS being the extreme case) — only the
+  opportunity-cost justification (§3) survives there; condition redundancy guidance on target-tier
+  the same way `11-geography-admissions-systems.md` conditions the rest of this package.
+  Confidence: high (found via cross-branch stress-testing, peer session — logical consequence of
+  `11`'s own findings applied to this document specifically).
 - `RULE-COUNSEL-027` — Ground the same recommendation in opportunity cost against the student's
   actual stated time budget wherever that data exists; this is the primary, most defensible
   justification available. Confidence: high (logical necessity given a finite time budget, not an
