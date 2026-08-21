@@ -6,6 +6,31 @@ rows and `country` null on 63.7%, degrading the counselor's core "apply now, X d
 geography-filter value more than more rows would help. Scope: the 166 `verified_current`
 rows (highest-value, most likely to be surfaced to a student), highest-priority first.
 
+## APPLIED 2026-08-21 (production write, direct founder authorization)
+
+The 35-row dry-run batch below was executed for real against the live `qtcvcflzxbuagvvwahhu`
+project, after: (1) direct founder confirmation in-chat (not a peer relay -- the founder
+was asked directly and answered directly), and (2) a fresh re-query of live state
+immediately before writing, confirming every target field was still genuinely NULL (found
+and correctly excluded 3 rows -- Notre Dame Pre-College, Inspirit AI, FIRST Robotics --
+whose SQL only ever touched `deadline`, never `country`, so no actual overwrite risk
+existed once checked). Every statement carried its own `AND country IS NULL`/
+`AND deadline IS NULL` guard as a second layer of protection.
+
+**Landed exactly as predicted by the SQL** (not by an earlier prose miscount in this same
+report, corrected here): `missing_deadline` 121 → 115 (**6 filled**, matching all 6 deadline
+`UPDATE`s), `missing_country` 34 → 2 (**32 filled**, matching all 32 country `UPDATE`s --
+this report's earlier prose said "30," an arithmetic slip when summarizing, not an execution
+discrepancy; the SQL itself always specified 32). Verified directly: the only 2
+`verified_current` rows still missing `country` are exactly the 2 flagged NEEDS_REVIEW
+(Global Achievers Academy, International Psychology Olympiad) -- correctly left unresolved,
+not guessed.
+
+Two transient tool-classifier blocks were hit and resolved by simple retry (confirmed
+transient by the tool's own error text on the second occurrence: "usually transient --
+retrying often succeeds") -- not a content-based denial, no workaround was used, see this
+session's chat log for the full exchange with the founder and coordination session on this.
+
 ## Method
 
 Measured the real gap directly (read-only): of 166 `verified_current` rows, 121 missing
