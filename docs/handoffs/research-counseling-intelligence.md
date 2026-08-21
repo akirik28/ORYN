@@ -288,8 +288,12 @@ self-flagged for a similar figure in their own life-sciences doc, so this isn't 
 just a second confirmed instance of a caveat peer had already applied to itself; (5) peer's `07`
 citation of `AGENTS.md` Phase 28 ("distinguish verified information from Oryn analysis") — checked
 directly against this repo's own `AGENTS.md` (not a web source) and confirmed to match the actual
-Phase 28 text precisely. **Five for five checks now, spanning four different peer documents and
-two different source types (external web sources and an internal repo citation) — all accurate.**
+Phase 28 text precisely. Extended twice more against the new family `18` (Education & Teaching): (6) BLS's elementary-
+teacher median-pay figure ($62,340, May 2024) — confirmed exact; (7) UK QTS's two-year Early
+Career Teacher induction period (changed from one year, September 2021) — confirmed exact,
+including the specific policy-change date. **Seven for seven checks now, spanning five different
+peer documents and two different source types (external web sources and an internal repo
+citation) — all accurate.**
 This materially upgrades this session's confidence in the peer branch's overall sourcing
 discipline beyond the earlier, more cautious "read and found reasonable" framing. Not an
 exhaustive audit (5 claims across 4 of the peer's 21 total documents), but a genuine, positive,
