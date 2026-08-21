@@ -187,18 +187,71 @@ export function programDedupKey(
  * set — decideIngestion checks both a record's name-based key and its URL-based key, so a
  * same-URL/different-name duplicate is caught even though a name/degree-level/language match
  * alone would have missed it. */
+/**
+ * The evidence verdict for a record, judged on the record ALONE.
+ *
+ * Nothing here consults the universities pool, the existing-keys set, or anything else about
+ * the state of our tables: whether a research record carries usable evidence is a property of
+ * the record, and it is true or false before we know which institution the record belongs to.
+ * Separated out so decideIngestion can establish it independently of resolution (see the
+ * ordering note there) and so it is unit-testable on its own.
+ */
+export function judgeEvidence(record: ResearchProgramRecord): { ok: boolean; detail: string } {
+  if (!record.official_program_url?.trim() || !record.source_url?.trim()) {
+    return { ok: false, detail: "Missing official_program_url or source_url." };
+  }
+  if (!looksPageConfirmed(record.verification_status ?? "")) {
+    return {
+      ok: false,
+      detail: `verification_status "${record.verification_status}" reads as a search result, not a confirmed fetched page.`,
+    };
+  }
+  return { ok: true, detail: "official_program_url, source_url and a page-confirmed verification_status are all present." };
+}
+
 export function decideIngestion(record: ResearchProgramRecord, universities: readonly UniversityLookupRow[], existingKeys: ReadonlySet<string>): IngestDecision {
   if (!record.university_name?.trim() || !record.program_name?.trim()) {
     return { outcome: "rejected", detail: "Missing university_name or program_name.", universityId: null, programRow: null };
   }
 
-  const { universityId, reason } = resolveUniversity(record, universities);
-  if (!universityId) {
-    return { outcome: "unresolved_university", detail: reason, universityId: null, programRow: null };
+  // Both verdicts are established BEFORE either is allowed to decide the outcome, and both are
+  // reported in `detail` whichever one wins.
+  //
+  // This ordering is a fix, not a preference. Evidence used to be judged only after a record
+  // had already resolved to a university, so a record with BOTH problems was audited as
+  // `unresolved_university` and its evidence was never examined. When somebody later added an
+  // alias row and re-ran the batch, those records flipped straight to `insufficient_evidence`
+  // — looking like the alias fix had caused a new problem, when in truth the evidence had been
+  // inadequate the whole time and the first audit row had simply never said so. The queue is
+  // the only record of why a programme is not in the product; it must not report a masking
+  // symptom as the finding.
+  //
+  // Evidence therefore goes first: it is intrinsic to the record, so it is the finding that
+  // survives any amount of spine repair, and it is the one that tells a researcher their
+  // sourcing needs redoing rather than sending them to fix an alias that was never the real
+  // problem. Resolution still runs first in code (not in precedence) purely so `universityId`
+  // is populated on the audit row even when evidence is what failed — losing the resolution we
+  // did manage to make would be its own kind of missing fact.
+  const { universityId, reason: unresolvedReason } = resolveUniversity(record, universities);
+  const evidence = judgeEvidence(record);
+  const resolutionNote = universityId ? `university resolved (${universityId})` : `university unresolved — ${unresolvedReason}`;
+
+  if (!evidence.ok) {
+    return {
+      outcome: "insufficient_evidence",
+      detail: `${evidence.detail} [Also recorded: ${resolutionNote}.]`,
+      universityId,
+      programRow: null,
+    };
   }
 
-  if (!record.official_program_url?.trim() || !record.source_url?.trim()) {
-    return { outcome: "insufficient_evidence", detail: "Missing official_program_url or source_url.", universityId, programRow: null };
+  if (!universityId) {
+    return {
+      outcome: "unresolved_university",
+      detail: `${unresolvedReason} [Also recorded: evidence gates passed — ${evidence.detail}]`,
+      universityId: null,
+      programRow: null,
+    };
   }
 
   // Source authority is resolved per fact class (lib/acquisition/source-authority.ts),
@@ -239,14 +292,10 @@ export function decideIngestion(record: ResearchProgramRecord, universities: rea
     };
   }
 
-  if (!looksPageConfirmed(record.verification_status)) {
-    return {
-      outcome: "insufficient_evidence",
-      detail: `verification_status "${record.verification_status}" reads as a search result, not a confirmed fetched page.`,
-      universityId,
-      programRow: null,
-    };
-  }
+  // The verification_status check that used to sit here now runs in judgeEvidence, above the
+  // resolution gate. It was previously below BOTH resolution and dedup, so a record could be
+  // audited as `duplicate` while its evidence was never looked at either — the same masking
+  // shape, one gate over.
 
   const { primary, secondary } = classifySubjects(record.program_name);
   const delivery = record.delivery_mode;
