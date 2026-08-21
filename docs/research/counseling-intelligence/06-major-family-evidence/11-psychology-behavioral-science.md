@@ -59,14 +59,18 @@ official source rather than only this document's general reasoning. (Source:
 `nationalcareers.service.gov.uk/job-profiles/clinical-psychologist` and `/forensic-psychologist` —
 official, high confidence.) [[RULE-COUNSEL-088]]
 
-**Germany, added on a further pass**: clinical/therapeutic psychology practice requires its own
-**Approbation** (the same licensure mechanism `10`'s Germany note describes for medicine),
-governed by the **Psychotherapeutengesetz** (Psychotherapists' Law) and its 2020
-**Approbationsordnung** (licensing regulation) — a psychology degree (Diplom or MSc) plus
-specialized postgraduate psychotherapy training (theoretical and practical) plus the state
-examination. (Source: German licensure-guidance sources, including official municipal
-administrative-service portals — `verwaltungsportal.hessen.de`, `service.berlin.de` — describing
-the Approbation application process directly — medium-high confidence.) [[RULE-COUNSEL-105]]
+**Germany, added on a further pass, upgraded to a direct federal-ministry quote on a later pass**:
+clinical/therapeutic psychology practice requires its own **Approbation** (the same licensure
+mechanism `10`'s Germany note describes for medicine), governed by the **Psychotherapeutengesetz**
+(Psychotherapists' Law) and its 2020 **Approbationsordnung** (licensing regulation) — a psychology
+degree (Diplom or MSc; education/Pädagogik for child-and-adolescent specialists) plus specialized
+postgraduate psychotherapy training (theoretical and practical) plus the state examination. **The
+Bundesministerium für Gesundheit** (BMG, the Federal Ministry of Health) confirms this directly, in
+its own words: *"Approbation nach Abschluss der Ausbildung"* (Approbation granted after completing
+training) following *"Studium der Psychologie ... mit anschließender Ausbildung zum
+Psychotherapeuten"* (a psychology degree followed by psychotherapist training). (Source:
+`bundesgesundheitsministerium.de`, official federal ministry — high confidence, directly fetched
+and quoted; upgraded from medium-high municipal-portal sourcing.) [[RULE-COUNSEL-105]]
 **Sharpens this document's own §1 finding for Germany specifically**: the sub-field distinction
 this document establishes generally (clinical/assessment vs. research vs. non-clinical) maps onto
 a genuine *legal* distinction in Germany — only the clinical/therapeutic track requires Approbation
@@ -109,7 +113,8 @@ this family too rather than only inferred by analogy to medicine/social work/tea
 - `RULE-COUNSEL-105` — Germany requires Approbation (the same licensure mechanism as medicine) for
   clinical/therapeutic psychology practice specifically, under the Psychotherapeutengesetz — a
   legal, not just practical, distinction between clinical and non-clinical psychology tracks.
-  Confidence: medium-high (official municipal administrative-portal sources).
+  Confidence: high (upgraded from medium-high — directly fetched and quoted the Federal Ministry
+  of Health's own page).
 - `RULE-COUNSEL-108` — Turkey's MEB Rehberlik Hizmetleri Yönetmeliği, Article 3(i), formally
   defines "Psikolog" as requiring a bachelor's-level psychology education — primary-sourced via
   the peer session's direct regulation fetch. Confidence: high (primary official source).

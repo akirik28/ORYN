@@ -604,15 +604,15 @@
     },
     {
       "id": "SRC-CS-051",
-      "title": "German clinical-psychology licensure (Approbation/Psychotherapeutengesetz) guidance, including official municipal administrative-service portals",
-      "publisher": "Various German licensure-guidance sources, including service.berlin.de and verwaltungsportal.hessen.de (official German municipal/state administrative-service portals)",
-      "url": "https://www.anerkennung-in-deutschland.de/html/en/2724.php",
-      "type": "mixed_official_and_secondary",
+      "title": "German clinical-psychology licensure (Approbation/Psychotherapeutengesetz) guidance — upgraded to a direct Federal Ministry of Health (BMG) quote on a follow-up pass",
+      "publisher": "Bundesministerium für Gesundheit (BMG, German Federal Ministry of Health, official) for the direct confirmation; service.berlin.de / verwaltungsportal.hessen.de (official municipal/state portals) for the original application-process description",
+      "url": "https://www.bundesgesundheitsministerium.de/psychotherapeutenausbildung/faqs-psychthgausbrefg ; https://www.anerkennung-in-deutschland.de/html/en/2724.php",
+      "type": "official_source",
       "retrieved_at": "2026-08-21",
-      "confidence": "medium-high",
-      "claim_supported": "Clinical/therapeutic psychology practice in Germany requires Approbation under the Psychotherapeutengesetz (Psychotherapists' Law) and its 2020 Approbationsordnung — a psychology degree plus specialized postgraduate psychotherapy training plus a state exam; only the clinical track requires this, not psychology generally.",
+      "confidence": "high",
+      "claim_supported": "BMG's own page states directly: the (pre-reform) pathway is \"Studium der Psychologie oder – bei den Kinder- und Jugendlichenpsychotherapeuten der Pädagogik – mit anschließender Ausbildung zum Psychotherapeuten\" (a psychology degree, or education/pedagogy for child-and-adolescent specialists, followed by psychotherapist training), with \"Approbation nach Abschluss der Ausbildung\" (Approbation granted after completing training) -- confirming the core requirement directly from the responsible federal ministry, resolving this source's own previously-flagged limitation (no single consolidated federal ministry statement).",
       "used_in_rules": ["RULE-COUNSEL-105"],
-      "limitations": "Sourced from official administrative-service portals describing the application process, not a single consolidated federal ministry statement."
+      "limitations": "Directly fetched and quoted on a follow-up pass. BMG's page primarily describes this as the *previous* (pre-reform) framework while explaining why it was reformed (bachelor/master degree structures had eroded the old system's standardization) -- the newer post-reform training structure (broader competency training across multiple evidence-based approaches, ~2,500 expected annual graduates) was described by the same page but not independently cross-checked against the current 2020 Approbationsordnung's exact current requirements."
     },
     {
       "id": "SRC-CS-052",
