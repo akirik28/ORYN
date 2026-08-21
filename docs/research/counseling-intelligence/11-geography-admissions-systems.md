@@ -161,19 +161,69 @@ countries this package cannot research individually.
   weighting, revising this document's own earlier "Tier 2, closer to UK" framing now that more
   precise sourcing is available. [[RULE-COUNSEL-082]]
 
-  Below, this document's *original* first-pass framing is preserved rather than deleted, since it
-  remains accurate as a *description of top/competitive Canadian universities specifically* (where
-  much of ORYN's actual Canada-track user interest likely concentrates) even though it overstated
-  how broadly that pattern holds across the *general* Canadian system: grades remain "the primary
-  admissions factor" at most institutions, but competitive programs and top universities (the
-  University of Toronto named specifically, using an explicitly holistic process weighing
-  "leadership, community involvement, and extracurricular activities" alongside academics)
-  increasingly layer holistic review on top of a grades-first baseline. (Source: university-
-  admissions-guidance sources describing Canadian practice — medium confidence, general pattern;
-  not verified against every Canadian institution's own published criteria.)
-  **Provisional tier: 2, closer to the UK than to the US** — grades-first with holistic elements
-  concentrated in competitive programs, rather than holistic review as a universal, independently-
-  weighted input the way US practice treats it.
+  **Primary-source check of all four named programs, done on a follow-up pass — found the
+  "supplementary application" layer is not one uniform mechanism, and corrected the U of T
+  characterization below accordingly.** Direct fetches of each program's own official page found
+  real heterogeneity in *what* the holistic layer actually assesses:
+  - **Waterloo Engineering's Admission Information Form (AIF)** explicitly asks applicants to
+    describe extracurricular involvement (its own question 5: "Please share what you were involved
+    with outside of your studies — in school, the community, and/or at home") and states reviewers
+    look for "strong time management, interpersonal, and leadership skills, along with a variety of
+    interests" — genuinely activity/accomplishment-referencing, close in kind to this package's
+    general evidence model. Notably, Waterloo's own page adds "we're not looking for specific
+    extracurricular activities and do not expect you to have engineering-related experience" — a
+    direct, official-source echo of this package's own repeated "don't force a specific
+    activity-type match" caution. (Source: `uwaterloo.ca/future-students/admissions/admission-
+    information-form`, official, high confidence.)
+  - **Queen's Commerce's supplementary application**, by contrast, is scored on a rubric that
+    contains **no mention of extracurricular activities, leadership positions, or community
+    involvement** — it evaluates a written response and a video response against five-point
+    rubrics for "initiative, adaptability, and persistence," "problem-solving approach," and
+    "self-reflection and personal growth." This is a structured assessment of *reflective
+    articulation in response to specific prompts*, not a review of an activities list. (Source:
+    `queensu.ca/admission/applying/supplementary-application-rubric`, official, high confidence.)
+  - **McMaster's Honours Health Sciences Program supplementary application** reads the same way as
+    Queen's — described as an opportunity to "showcase critical thinking skills, methods of
+    self-examination," scored by faculty/staff/senior-student reviewers — again reflective-response
+    assessment, not an activities-list review, though this session could not directly fetch
+    McMaster's own page (403 error) and relied on a search-engine-mediated summary of it, one step
+    less direct than the other three checks. (Source: `hhsp.healthsci.mcmaster.ca/future-students/
+    supplementary-application/`, official domain, medium-high confidence — content read via search
+    summary, not a direct page fetch, unlike the Waterloo/Queen's/UofT checks below.)
+
+  **This heterogeneity matters directly for how ORYN should phrase Canada-track advice**: telling a
+  Waterloo-Engineering-track student "the AIF is a chance to describe your extracurricular record"
+  is accurate; telling a Queen's-Commerce- or McMaster-HHSP-track student "strengthen your
+  supplementary application by adding more activities to your profile" would be a mechanism-level
+  error — by these programs' own published rubrics, the lever is reflective-response quality on
+  specific prompts, not activity-list breadth (genuine activities plausibly give a student better
+  raw material to reflect on, but that is an indirect relationship, not the thing being scored).
+  [[RULE-COUNSEL-110]] [[RULE-COUNSEL-111]]
+
+  **This same primary-source pass corrects, rather than confirms, this document's own earlier
+  characterization of the University of Toronto specifically** — preserved immediately below with
+  the correction inline rather than silently deleted, per this package's own discipline. The
+  original claim was: grades remain "the primary admissions factor" at most institutions, but
+  competitive programs and top universities (**UofT named specifically, using "an explicitly
+  holistic process weighing leadership, community involvement, and extracurricular activities"
+  alongside academics**) increasingly layer holistic review on top of a grades-first baseline,
+  sourced then only from general university-admissions-guidance secondary description at medium
+  confidence, with a **provisional tier of 2, closer to the UK**. A direct fetch of UofT's own
+  official "How Your Application is Considered" page **does not confirm this** for UofT's general
+  process: UofT's own language states "the emphasis of our final assessment will be placed on the
+  results of your most recent two years of study, including your marks in prerequisite courses and
+  on the strength of your supplemental information **where required**" — supplemental applications
+  (UofT's own examples: "personal statements, profiles or auditions") are explicitly program-
+  specific, not a universal holistic weighing of leadership/community involvement/extracurricular
+  activities the way the original claim characterized it. (Source: `future.utoronto.ca/how-your-
+  application-considered`, official, high confidence for the quoted mechanism language.)
+  **Corrected finding: UofT's general case matches the same Ontario-general pattern already
+  established (`RULE-COUNSEL-073`/`082`) — grade/prerequisite-driven, with holistic elements real
+  only for the specific UofT programs that require their own "profiles" (parallel to UofT
+  Engineering Science, already named in the list above), not evidence that UofT as an institution
+  runs meaningfully different, broader holistic review than the rest of the Ontario system.** The
+  original "Tier 2, closer to the UK" characterization for UofT is withdrawn as unconfirmed by
+  UofT's own primary source, rather than left standing alongside the correction. [[RULE-COUNSEL-112]]
 - **Generic Europe fallback** — rather than leave "any other European country" completely
   unaddressed, this document spot-checked one additional representative case: **Spain**, whose
   EBAU/Selectividad system computes admission as **60% high-school grades + 40% national exam
@@ -307,9 +357,12 @@ conditioning would produce technically-accurate-but-strategically-misleading gui
   must never be used as a proxy for which admissions system's rules apply to their goals.
   Confidence: high (direct application of the existing demographic-inference prohibition,
   peer-owned `RULE-COUNSEL-057`, to a new context).
-- `RULE-COUNSEL-073` — Treat Canada as Tier 2, closer to the UK than the US: grades-first baseline
-  with holistic elements concentrated in competitive programs, not a universal independently-
-  weighted input. Confidence: medium (general pattern, not verified per-institution).
+- `RULE-COUNSEL-073` — Ontario's general-case admission is a computed grade average against a
+  published threshold; holistic supplementary applications are real but concentrated in a
+  specifically-named subset of competitive programs, not universal. Confidence: high (upgraded on
+  a follow-up pass; corrects this list's own earlier "Tier 2, closer to the UK" phrasing, which
+  understated how grade-formula-driven the general case is — see `RULE-COUNSEL-082` for the tier
+  revision and `RULE-COUNSEL-112` for the UofT-specific correction this same pass required).
 - `RULE-COUNSEL-074` — Spain's EBAU/Selectividad system is Tier 3 (60% grades + 40% national exam,
   explicitly no extracurricular weight) — a representative additional European Tier-3 data point.
   Confidence: high for the 60/40 weighting mechanism (upgraded via official `.gob.es` sources on a
@@ -332,6 +385,32 @@ conditioning would produce technically-accurate-but-strategically-misleading gui
   audition/aptitude exception, structurally the same pattern as Switzerland's medicine EMS or
   Germany's small aptitude quota. Confidence: high (peer-session-verified against official
   conservatory-admission guidance, cross-branch finding folded in directly).
+- `RULE-COUNSEL-110` — Canada's named "holistic supplementary application" competitive programs are
+  not one uniform mechanism: Waterloo Engineering's AIF explicitly invites activity/accomplishment
+  description, while Queen's Commerce and McMaster Health Sciences score written/video responses to
+  structured reflective prompts (initiative, self-examination) with no activities-list criterion at
+  all in their own published rubrics. Never assume "holistic supplementary application" means the
+  same evaluation mechanism across different named programs without checking each program's own
+  rubric. Confidence: high (direct primary-source fetch of each program's own page, three of four
+  directly fetched, one via search-engine-mediated summary).
+- `RULE-COUNSEL-111` — For a Queen's-Commerce- or McMaster-HHSP-track student specifically, never
+  phrase supplementary-application advice as "add more activities to your profile" — by these
+  programs' own published rubrics, the scored lever is reflective-response quality on specific
+  prompts, not activity-list breadth. Genuine activity substance may improve what a student has to
+  reflect on, but that is an indirect relationship, not the thing being scored, and ORYN's counselor
+  should not conflate the two. Confidence: high (direct consequence of `RULE-COUNSEL-110`'s
+  primary-source finding).
+- `RULE-COUNSEL-112` — This document's earlier characterization of the University of Toronto as
+  running "an explicitly holistic process weighing leadership, community involvement, and
+  extracurricular activities" for its general admissions process is **not confirmed** by a direct
+  fetch of UofT's own official assessment page, which instead describes a grade/prerequisite-
+  driven general process with program-specific (not universal) supplemental requirements — the same
+  pattern as the rest of the Ontario general case. The original claim is withdrawn for UofT's
+  general process specifically, not merely qualified, since the primary source directly checked
+  does not support it. Confidence: high (official UofT source directly fetched, contradicting the
+  earlier medium-confidence secondary characterization it replaces — a case where a primary-source
+  check corrected rather than merely sharpened a prior claim, per this package's own discipline of
+  never letting an unconfirmed claim stand once specifically checked).
 
 ## Sources referenced in this document
 

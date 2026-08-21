@@ -649,6 +649,54 @@
       "claim_supported": "ÖSYM publishes exact numeric coefficient tables for YKS placement-score calculation as standing practice (confirmed structurally on its own domain). Independent Turkish YKS-calculator sites converge on the same formula: Placement Score = (TYT raw × 0.40) + (AYT raw × 0.60) + (OBP × 0.12), where OBP (Ortaöğretim Başarı Puanı / diploma-grade-derived score) runs roughly 250-500 and the 0.12 coefficient halves to 0.06 for a candidate placed before. This confirms a real but purely grades-based (academics-dimension), small-in-scale (~60 points max on a score running into the hundreds) non-exam channel into YKS placement — zero channel for leadership/community_impact/entrepreneurship/research/awards_distinction.",
       "used_in_rules": ["RULE-COUNSEL-057", "RULE-COUNSEL-109"],
       "limitations": "The peer session's direct ÖSYM fetch corroborated the existence and general structure of coefficient-based placement scoring but did not itself retrieve the current-year table's exact values; those exact coefficient values (0.40/0.60/0.12/0.06) come from cross-checking several independent Turkish YKS-calculator sites that converge on the same numbers, not from a single primary ÖSYM publication re-derived by either session. This session did not independently verify any of this directly; relied on the peer session's report."
+    },
+    {
+      "id": "SRC-CS-055",
+      "title": "\"How Your Application is Considered\" — official UofT admissions-assessment page",
+      "publisher": "University of Toronto (official, Future Students)",
+      "url": "https://future.utoronto.ca/how-your-application-considered",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "UofT's general assessment emphasizes the most recent two years of academic results, prerequisite-course marks, and supplemental information 'where required' (program-specific, examples given: personal statements, profiles, auditions) — does not describe a general weighing of leadership/community involvement/extracurricular activities across all programs.",
+      "used_in_rules": ["RULE-COUNSEL-112"],
+      "limitations": "Directly fetched and quoted. Describes UofT's general process; does not itself characterize what any single UofT program's specific supplemental requirement ('profile') assesses, which could still include activity description for specific programs, parallel to Waterloo's AIF — not confirmed either way by this source."
+    },
+    {
+      "id": "SRC-CS-056",
+      "title": "Supplementary Application Rubric — official Queen's Commerce (Smith School of Business) page",
+      "publisher": "Queen's University (official, Undergraduate Admission & Recruitment)",
+      "url": "https://www.queensu.ca/admission/applying/supplementary-application-rubric",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Queen's Commerce supplementary application is scored via a five-point rubric on 'initiative, adaptability, and persistence,' 'problem-solving approach,' and 'self-reflection and personal growth,' assessed through a written response and a video response — contains no extracurricular-activities, leadership-position, or community-involvement scoring criterion.",
+      "used_in_rules": ["RULE-COUNSEL-110", "RULE-COUNSEL-111"],
+      "limitations": "Directly fetched and quoted. Describes Commerce's specific rubric; other Queen's programs with their own supplementary applications were not checked and may differ."
+    },
+    {
+      "id": "SRC-CS-057",
+      "title": "Admission Information Form (AIF) — official University of Waterloo page",
+      "publisher": "University of Waterloo (official, Future Students / Undergraduate Admissions)",
+      "url": "https://uwaterloo.ca/future-students/admissions/admission-information-form",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Waterloo's AIF explicitly asks applicants to describe involvement 'outside of your studies — in school, the community, and/or at home,' with reviewers stated to look for time management, interpersonal, and leadership skills and 'a variety of interests' — genuinely activity/accomplishment-referencing. Engineering-specific guidance adds 'we're not looking for specific extracurricular activities and do not expect you to have engineering-related experience.'",
+      "used_in_rules": ["RULE-COUNSEL-110", "RULE-COUNSEL-111"],
+      "limitations": "Directly fetched and quoted. None material beyond the general caveat that admissions guidance can change year to year."
+    },
+    {
+      "id": "SRC-CS-058",
+      "title": "Supplementary Application — official McMaster Honours Health Sciences Program (HHSP) page",
+      "publisher": "McMaster University (official, Honours Health Sciences Program)",
+      "url": "https://hhsp.healthsci.mcmaster.ca/future-students/supplementary-application/",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "medium-high",
+      "claim_supported": "McMaster HHSP's supplementary application is described as an opportunity to showcase critical thinking skills and methods of self-examination, scored by faculty/staff/senior-student reviewers with multiple reviewers per application — reflective-response assessment, consistent with Queen's Commerce's pattern and distinct from Waterloo's activity-description pattern.",
+      "used_in_rules": ["RULE-COUNSEL-110", "RULE-COUNSEL-111"],
+      "limitations": "This session could not directly fetch this page (HTTP 403); content is a search-engine-mediated summary of the official page, one step less direct than the UofT/Queen's/Waterloo checks in this same batch, hence medium-high rather than high confidence. McMaster's other Health Sciences streams (e.g. Nursing, which uses CASPer testing instead) were not checked and may differ."
     }
   ]
 }
