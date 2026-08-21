@@ -45,7 +45,7 @@ export type AuthorityTier = "HIGH" | "MEDIUM";
 export interface SourceAuthority {
   tier: AuthorityTier;
   /** Written to `source_type` columns so provenance survives in the database, not just here. */
-  sourceType: "official_primary" | "open_registry" | "third_party_structured" | "wikimedia_commons";
+  sourceType: "official_primary" | "open_registry" | "third_party_structured" | "wikimedia_commons" | "official_application_system" | "official_test_operator";
 }
 
 /**
@@ -54,6 +54,54 @@ export interface SourceAuthority {
  * Never a source for cost, policy, or programme facts.
  */
 const OPEN_REGISTRY_DOMAINS = new Set(["ror.org", "api.ror.org", "openalex.org", "api.openalex.org"]);
+
+/**
+ * Application/admissions systems a student actually applies through. Curated and hand-
+ * reviewed, the same shape as OPEN_REGISTRY_DOMAINS — never a suffix rule, because `.org`/
+ * `.com`/`.nl`/`.de`/`.fr` is exactly where content farms and university restatements also
+ * live.
+ *
+ * HIGH for `policy` only (see sourceAuthority()) — RESOLVED, coordination session DECISION 1,
+ * 2026-08-21 (docs/research/university-requirements/source-authority-gap.md on
+ * oryn/university-requirements-research, not yet merged): these systems are authoritative
+ * about the platform-wide facts they themselves operate (deadlines, equal-consideration
+ * dates, eligibility/access rules, fee structures they set) — not about an individual
+ * institution's own programme-specific requirements, where a university's own page is still
+ * the source. Vindicated by a live conflict found in that same research pass: Glasgow's own
+ * page listed the UCAS equal-consideration date as "14 January" (last cycle's date, stale);
+ * UCAS's own page, dated to the 2027 cycle, gives 13 January 2027 — the operator's original
+ * was correct, the institution's copy was not.
+ *
+ * ÖSYM (osym.gov.tr) is deliberately not listed here — it already resolves via `looksOfficial`
+ * (`.gov.tr`), which is a strictly *broader* grant (HIGH for every fact class, not just
+ * `policy`) than this tier would give it, so adding it here would be dead code.
+ *
+ * Named in migration 0042's `universities.application_system` column comment (UCAS, Common
+ * App, Studielink, Parcoursup, ÖSYM/YKS, uni-assist, direct) plus CAO and Hochschulstart,
+ * both named directly in the source doc above. Every domain in this set was live-fetched by
+ * that research pass, not guessed.
+ */
+const APPLICATION_SYSTEM_DOMAINS = new Set(["ucas.com", "cao.ie", "studielink.nl", "hochschulstart.de", "uni-assist.de", "commonapp.org", "parcoursup.fr"]);
+
+/**
+ * Standardised-test operators. HIGH for `policy` only, same reasoning and same restriction as
+ * APPLICATION_SYSTEM_DOMAINS immediately above: an operator is authoritative about its own
+ * instrument (a score's validity window, how the test is administered, its own scoring scale)
+ * but never about a specific institution's score requirement, which is the institution's own
+ * fact to publish.
+ *
+ * Unlike the application-system tier above, this is NOT itself part of the 2026-08-21
+ * coordination-session decision — no dedicated research pass measured these specific domains
+ * against `looksOfficial()` the way the requirements lane did for institutions and application
+ * systems. This is this session's own extension of that decision by direct structural analogy
+ * (an "operator" is an "operator" regardless of whether it operates an application platform or
+ * a test), flagged here so it reads as a documented assumption open to review, not as an
+ * equally-sourced fact. Each domain below was independently confirmed live before being added
+ * (ets.org — ETS's own TOEFL page; cambridgeenglish.org — footer-confirmed Cambridge University
+ * Press & Assessment; collegeboard.org — already directly fetched by the requirements lane's
+ * own AP research, data/research/academic-systems/secondary-systems-v1.json).
+ */
+const TEST_OPERATOR_DOMAINS = new Set(["ets.org", "cambridgeenglish.org", "collegeboard.org"]);
 
 /**
  * Reputable structured third parties. Acceptable as a *secondary* source for population
@@ -142,6 +190,16 @@ function domainMatches(domain: string, list: ReadonlySet<string>): boolean {
 /**
  * True for domains that look like an institution's or a government's own site. Kept as the
  * same test the student-count pipeline has been using: academic and government suffixes.
+ *
+ * `.go.jp` added 2026-08-21 alongside the application-system/test-operator tiers, on the same
+ * basis as `.gov`/`.gov.tr` above it — JPRS (Japan's registry) restricts second-level `.go.jp`
+ * registration to government bodies and government-affiliated corporations, confirmed live
+ * before adding it, not assumed. This is a suffix addition rather than a curated single-domain
+ * entry (contrast `europa.eu` below) specifically because eligibility is registrar-enforced for
+ * the whole namespace, the same property that makes `.gov`/`.ac.` safe as suffix rules where
+ * `.org`/`.nl`/`.de` are not (see APPLICATION_SYSTEM_DOMAINS' doc comment) — no attempt was made
+ * to audit every country's restricted government TLD convention beyond this one verified,
+ * specifically-reported case; a systematic pass is a separate, larger research task.
  */
 export function looksOfficial(domain: string): boolean {
   if (!domain) return false;
@@ -150,7 +208,8 @@ export function looksOfficial(domain: string): boolean {
     domain.includes(".edu.") ||
     domain.includes(".ac.") ||
     domain.includes(".gov.") ||
-    domain.endsWith(".gov")
+    domain.endsWith(".gov") ||
+    domain.endsWith(".go.jp")
   );
 }
 
@@ -166,13 +225,17 @@ export function looksOfficial(domain: string): boolean {
  * official domain (`phys.ethz.ch` under `ethz.ch`) is exactly the shape most program/course
  * pages actually live on.
  *
- * Overloaded so a caller restricted to a non-`image` factClass (the AcquiredFact fixture
- * pipeline's `sourceType`, a Zod enum that deliberately doesn't know about `wikimedia_commons`
- * — see lib/acquisition/fixture.ts) gets that guarantee back at compile time, rather than every
- * caller seeing the full four-way union whether or not "image" was ever a possibility for them.
+ * Overloaded so a caller restricted to a non-`image`, non-`policy` factClass (the AcquiredFact
+ * fixture pipeline's `sourceType`, a Zod enum that deliberately doesn't know about
+ * `wikimedia_commons`/`official_application_system`/`official_test_operator` — see
+ * lib/acquisition/fixture.ts) gets that guarantee back at compile time, rather than every
+ * caller seeing the full six-way union whether or not "image"/"policy" were ever a possibility
+ * for them. `policy` joined the exclusion list alongside the application-system/test-operator
+ * tiers, since those are the two sourceTypes that can only ever come from `factClass ===
+ * "policy"` — every other fact class was already excluded from producing them by construction.
  */
 export function sourceAuthority(
-  factClass: Exclude<FactClass, "image">,
+  factClass: Exclude<FactClass, "image" | "policy">,
   url: string,
   officialDomains?: ReadonlySet<string>
 ): { tier: AuthorityTier; sourceType: "official_primary" | "open_registry" | "third_party_structured" } | null;
@@ -189,6 +252,21 @@ export function sourceAuthority(
   const isOfficial = looksOfficial(domain) || domainMatches(domain, officialDomains);
   // An institution's own site is authoritative for everything it publishes about itself.
   if (isOfficial) return { tier: "HIGH", sourceType: "official_primary" };
+
+  // An application system or test operator is authoritative about the platform-wide facts it
+  // itself operates (see the constants' own doc comments for the sourcing and the reasoning),
+  // but never about an individual institution's own requirement — that stays the institution's
+  // own page. Checked ahead of OPEN_REGISTRY/THIRD_PARTY_STRUCTURED only because these sets are
+  // mutually exclusive by construction (no domain appears in more than one curated list); order
+  // between them has no behavioral effect.
+  if (domainMatches(domain, APPLICATION_SYSTEM_DOMAINS)) {
+    if (factClass === "policy") return { tier: "HIGH", sourceType: "official_application_system" };
+    return null;
+  }
+  if (domainMatches(domain, TEST_OPERATOR_DOMAINS)) {
+    if (factClass === "policy") return { tier: "HIGH", sourceType: "official_test_operator" };
+    return null;
+  }
 
   if (domainMatches(domain, OPEN_REGISTRY_DOMAINS)) {
     // Registries curate identity and bibliometrics; they publish neither fees nor policy.
@@ -215,6 +293,8 @@ export function sourceAuthority(
 /** Exposed for tests and for the report script's domain breakdowns. */
 export const SOURCE_DOMAIN_POLICY = {
   OPEN_REGISTRY_DOMAINS,
+  APPLICATION_SYSTEM_DOMAINS,
+  TEST_OPERATOR_DOMAINS,
   THIRD_PARTY_STRUCTURED_DOMAINS,
   EXCLUDED_DOMAINS,
 } as const;
