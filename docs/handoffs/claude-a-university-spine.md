@@ -3696,6 +3696,56 @@ the schema-level dual-language finding now resolved by the coordinator's migrati
 (confirmed working end-to-end on a fresh Sapienza Italian/English "Classics" pair per their
 report).
 
+**Batches 37-39 — Turkey, redirected priority (coordinator: "Turkey over the other gaps... for
+a domestic YKS-track student, ÖSYM's placement algorithm IS the admission decision")**:
+
+**Batch 37 — Gebze Technical University** (23 new, `independent_batch37_2026-08-21.jsonl`,
+committed `1a9565a`): genuinely untried gap. Small single-campus technical university, 5
+faculties / 23 departments total on one official page, simplest retrieval of any university
+this session. Only Computer Engineering carries an explicit "(İngilizce)" self-description
+(found in its own MÜDEK accreditation notice); the other 22 departments have no language
+marker either way, recorded as null rather than assumed Turkish.
+
+**Batches 38-39 — a much bigger finding than either batch alone: YÖK Atlas.** Ankara
+Üniversitesi's own website had no usable faculty/department directory (the "Fakülteler" page
+is an About-page with no actual list, confirmed by checking, not assumed). Pivoted to **YÖK
+Atlas** (`yokatlas.yok.gov.tr`), Turkey's official national higher-education program
+directory operated by the Council of Higher Education itself -- its "Tercih Sihirbazı"
+(Preference Wizard) tool covers **every programme at every Turkish university** with real
+2026-YKS placement statistics attached (quota, minimum score, success rank, accreditation),
+via a clean public JSON API (`api/tercih-kilavuz/search`, no auth, found via network-request
+inspection, paginated at `size=50`). This is university-agnostic -- filter by `universiteId`
+and it works identically for any Turkish institution.
+
+- **Batch 38 — Ankara Üniversitesi** (153 new, `independent_batch38_2026-08-21.jsonl`,
+  committed `c1f98ff`).
+- **Batch 39 — Istanbul University** (127 new, `independent_batch39_2026-08-21.jsonl`,
+  committed `25d14e7`) -- this is the exact gap this session's earlier SESSION CLOSE summary
+  named as dropped ("no single master department list... would need an ~18-page per-faculty
+  crawl"). YÖK Atlas solved it in the same handful of API calls as Ankara, no per-faculty
+  crawl needed at all.
+
+**This is worth treating as infrastructure, not just two batches.** Every remaining Turkish
+gap on this session's list (and likely every Turkish university not yet in ORYN's spine at
+all) can plausibly go through this exact same method instead of fighting each institution's
+own inconsistent website. Richer than any UK catalogue this session too:
+`language_of_instruction` is explicit per programme from the source (including genuine
+partial-English "İngilizce (%30)" hybrid categories, kept verbatim rather than collapsed to
+binary Turkish/English), and real placement statistics (2026 success rank, minimum score,
+quota, accreditation body) are available per record, folded into `researcher_notes` since the
+schema has no dedicated field for them.
+
+**A new collision pattern surfaced in batch 39, distinct from the Radboud/Sapienza
+dual-language one**: 4 programme names at Istanbul University (İşletme; Siyaset Bilimi ve
+Uluslararası İlişkiler, both plain and İngilizce-suffixed) are each offered by **two or three
+different faculties** at the same university with identical `language_of_instruction` and
+`degree_level` -- e.g. "İşletme" (İngilizce %30) exists as a genuinely separate,
+separately-admitted programme via both İktisat Fakültesi and Siyasal Bilgiler Fakültesi
+(different quotas, different cutoffs, confirmed in the raw placement data). The current
+4-column dedup index (`university_id, normalized_name, degree_level, language_of_instruction`)
+does not include faculty, so these would collide if ingested. Not disambiguated in the data
+here -- kept faithful to the source and flagged, same discipline as the dual-language finding.
+
 Of the 5 outstanding Radboud/Exeter gaps, 2 are now confirmed fully resolved (the Exeter
 "BA Classical Studies and Philosophy" insert, id `4a715f86-3f0e-4b3d-97ff-e6fb12c2c5bb`, and
 the orphaned "BA Classical Studies and Modern Languages" queue-audit row, id
