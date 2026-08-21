@@ -134,6 +134,29 @@ this session's *own* earlier work rather than only against the codebase.
   `RULE-ENTITY-###` referenced anywhere in the package now has exactly one definition in
   `rules.json` and vice versa — clean.
 
+## Update (2026-08-21 ~04:45): a mechanical fix to the package's own top recommendation
+
+Continuing to read `claude-a-university-spine.md` past its Phase 2 section (Phases 5/7/8/9)
+found one more correction worth its own note: `05`/`10`/`11`'s top P1 recommendation ("run
+existing ROR enrichment targeted at the 43 orphan rows") was not actually executable as literally
+stated. Reading `scripts/acquire-university-facts.ts` directly: `--from-db` builds its roster
+from the `universities` table, and every orphan side of the 43 pairs has zero `universities` rows
+by construction — the pipeline structurally cannot reach them. `claude-a-university-spine.md`
+Phase 7 independently confirms this (an already-completed full-spine `--from-db` pass left 203
+rows unresolved, a population that doesn't include these 43 orphans, since they were never in its
+input). Corrected: no new ROR research is needed for these 43 pairs at all — each orphan's
+sibling already carries a verified ROR id, which is the confirmation; the actual unlock is a
+direct `merge_canonical_entities()` call per pair. `05`/`10`/`11` all updated. Also upgraded a
+"presumably" hedge in `17` to a confirmed citation (Phase 8 documents the `official_verified`
+downgrade directly) and cross-validated `17`'s live `entities-audit.ts` run against Phase 8's own
+independent fix of the same script's pagination bug (231→296 POSSIBLE_DUPLICATE findings once
+fixed — this session's own 301, against a larger current registry, is consistent, not a new gap).
+
+Remaining unread: `claude-a-university-spine.md`'s Phases 10-11 (University Explorer P0/UX
+package) and whatever follows past line ~1022 of 2763 — skimmed the table of contents, these
+read as UI/product work outside this package's canonical-entity-identity scope, not queued for a
+full read unless a specific reason to expect identity-relevant content emerges.
+
 ## What's next
 
 ~6h40m remain until the 11:00 cutoff as of this update. The package comprehensively covers every
