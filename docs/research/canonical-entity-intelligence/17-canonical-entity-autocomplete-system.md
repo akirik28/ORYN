@@ -168,7 +168,7 @@ pairs — UCLA, UC Berkeley, UC San Diego, UC Santa Barbara, NYU, Caltech, City 
 Hong Kong, National Cheng Kung University, National Yang Ming Chiao Tung University — as a new
 discovery. Checking their entity ids against `duplicate-candidates-university.json` before
 finalizing this document found **all 18 ids already present there** — every one of these nine
-pairs is already part of `09` Finding 2's 41/43-pair set, discovered by re-running the Phase 6
+pairs is already part of `09` Finding 2's 43-pair set, discovered by re-running the Phase 6
 `entity_verification_queue` audit query, written earlier in this same session, before this
 document existed. Finding 2 already documents the identical two-timestamp mechanism (one side
 created `2026-08-16 21:42:51.3+00` with a ROR id and a `universities` row, the other
@@ -179,7 +179,7 @@ examples `02` and `06`'s RULE-ENTITY-006 already cite. None of this is new-dupli
 
 What this section actually adds to `09` Finding 2, having corrected the framing:
 
-1. **Independent cross-validation by a completely different method.** Finding 2 found its 41/43
+1. **Independent cross-validation by a completely different method.** Finding 2 found its 43
    pairs via an exact-normalized-name query against `entity_verification_queue`. This session
    found the same nine (among the twelve) via `lib/entities/audit.ts`'s alias-collision rule —
    a different table (`entity_aliases`), different logic (shared alias string, not matching
@@ -204,7 +204,7 @@ What this section actually adds to `09` Finding 2, having corrected the framing:
    entity ids, silently undercounting either in a future aggregate/benchmarking query. Low
    severity today only because every `DENORMALIZED_LINKS` table is still empty (`09`, confirmed
    again this session) — worth fixing before those tables have real rows in them, not after.
-4. **Which specific pairs, named**, which Finding 2's own prose (reasonably, at 41-pair scale)
+4. **Which specific pairs, named**, which Finding 2's own prose (reasonably, at 43-pair scale)
    does not spell out — useful for prioritization given several of these are exactly the
    high-application-volume US institutions ORYN's own student users are most likely to search
    for (UCLA, Berkeley, NYU, Caltech), not obscure ones.
@@ -223,7 +223,7 @@ different real institutions: Northeastern University vs. Northwestern University
 of Toronto vs. University of Trento, University of Mumbai vs. University of Dubai, University
 of Warsaw vs. University of Kansas, Nanjing University vs. Nanjing University of Aeronautics
 and Astronautics. 274 of 275 are `entity_type=university` (one `school`). Only 73 of 275
-(26.5%) involve an id already present in this package's own targeted 41-pair research
+(26.5%) involve an id already present in this package's own targeted 43-pair research
 (`duplicate-candidates-university.json`) — the tool's lower, more permissive bar (tokenMatch
 tier or ≥0.6 fuzzy similarity, deliberately generous because "surfaced for review, never
 merged") is casting a much wider net than targeted research, which is the intended design for
