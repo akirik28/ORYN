@@ -283,3 +283,39 @@ describe("evaluateRequirementGroup — exclusion and qualifier roles never auto-
     expect(result.status).toBe("needs_manual_review");
   });
 });
+
+describe("evaluateRequirement — is_exclusion is never auto-resolved", () => {
+  // Migration 0052's column comment states this contract; nothing implemented it, because
+  // ingestion discarded exclusion records so none could reach the evaluator. They land now
+  // (lib/requirements/ingest.ts), so the flag has to be honoured here.
+  test("an exclusion row needs manual review even when its structured rule would evaluate met", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, gpas: [{ value: 90, scale: 100 }] };
+    // Ankara University REQ-2026-08-21-9326: an 80/100 GPA bar that EXCLUDES diplomas from
+    // schools in Türkiye. Read as an ordinary threshold, a 90 clears it and the student is
+    // told they qualify — the exact inversion.
+    const asThreshold = evaluateRequirement("minimum_grade", { kind: "minimum_grade", minGpa: 80, scale: 100 }, facts, false);
+    expect(asThreshold.status).toBe("met");
+    const asExclusion = evaluateRequirement("minimum_grade", { kind: "minimum_grade", minGpa: 80, scale: 100 }, facts, true);
+    expect(asExclusion.status).toBe("needs_manual_review");
+  });
+
+  test("an exclusion row needs manual review even when its rule would evaluate not_met", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "SAT", score: "900" }] };
+    expect(evaluateRequirement("standardized_test", { kind: "test_score", testName: "SAT", minScore: 1100 }, facts, true).status).toBe("needs_manual_review");
+  });
+
+  test("the flag defaults to false, so every existing caller keeps its current behaviour", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "7.0" }] };
+    expect(evaluateRequirement("english_proficiency", { kind: "test_score", testName: "IELTS", minScore: 6.5 }, facts).status).toBe("met");
+  });
+
+  test("a member flagged is_exclusion cannot satisfy a group even if it sits in the inclusion list", () => {
+    // The DB enforces group_role='exclusion' => is_exclusion, but not the reverse, so this
+    // row shape is representable and must not count as a qualifying alternative.
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "7.0" }] };
+    const mislabelled: RequirementGroupMember = { ...IELTS, id: "mislabelled", isExclusion: true };
+    const result = evaluateRequirementGroup([mislabelled], facts);
+    expect(result.status).toBe("needs_manual_review");
+    expect(result.memberResults.get("mislabelled")!.status).toBe("needs_manual_review");
+  });
+});

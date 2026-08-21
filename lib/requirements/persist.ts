@@ -28,7 +28,7 @@ export async function refreshRequirementEvaluations(universityId: string, userId
   const now = new Date().toISOString();
 
   const rows = evaluable.map((requirement) => {
-    const result = evaluateRequirement(requirement.requirement_type, requirement.structured_rule, facts);
+    const result = evaluateRequirement(requirement.requirement_type, requirement.structured_rule, facts, requirement.is_exclusion);
     return {
       user_id: userId,
       requirement_id: requirement.id,
