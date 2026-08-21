@@ -3627,6 +3627,32 @@ BVM BVS with BVMedSci) both matched. This is the strongest version yet of "disco
 shape first" -- worth checking every remaining JS-course-finder target's network tab for a
 plain JSON endpoint before assuming pagination or an auth-gated API is needed.
 
+**Batch 34 — Queen Mary University of London** (110 new, `data/research/university-programs/
+independent_batch34_2026-08-21.jsonl`, committed `15b1433`): same SearchStax backend as
+Durham (confirmed via identical `searchcloud-1-eu-west-2.searchstax.com` host), but a
+different integration -- URL query parameters do not drive pagination here, only real
+button clicks do (confirmed: navigating directly to a `?start=10`-style URL always
+re-rendered page 1). Retrieved by installing a `window.fetch` response interceptor,
+clicking the page's own Next/Previous controls across all 12 pages, and reading the full
+parsed Solr response after each click rather than the truncated rendered card text. A
+direct cross-origin call to the same SearchStax endpoint (mirroring Durham's) also 401'd --
+consistent finding now across two SearchStax deployments: the auth header is attached by
+the page's own JS and isn't replicable from outside it, so the click-and-intercept method
+is the reliable one for this vendor, not direct API replay. 119 raw results narrowed to
+110 by excluding 7 "Intercalated" degrees (mid-programme add-on year for students already
+enrolled in Medicine/Dentistry, not a fresh-entry route) and 2 Graduate Diplomas (require
+an existing bachelor's degree) -- both grouped under "Undergraduate" by QMUL's own finder,
+neither is genuinely Bachelor/first-cycle entry, and this session's first pass at this
+batch would have misclassified them if not caught. Each course's UCAS-code field is often
+a space-separated list of several codes (full-time / foundation-year / study-abroad
+variants) rather than one code per row -- kept as one record per distinct course, full
+code list preserved in notes rather than exploded into near-duplicate rows.
+
+**Running total this continuation (batches 30-34, post-SESSION-CLOSE)**: 679 new records
+across 5 universities (FU Berlin 75, RWTH Aachen 77, Durham 162, Nottingham 215, QMUL 110),
+plus the 2 confirmed Radboud/Exeter historical-data fixes and the schema-level dual-language
+finding now in the coordinator's queue.
+
 Of the 5 outstanding Radboud/Exeter gaps, 2 are now confirmed fully resolved (the Exeter
 "BA Classical Studies and Philosophy" insert, id `4a715f86-3f0e-4b3d-97ff-e6fb12c2c5bb`, and
 the orphaned "BA Classical Studies and Modern Languages" queue-audit row, id
