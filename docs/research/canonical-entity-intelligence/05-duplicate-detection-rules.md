@@ -135,6 +135,19 @@ depth of treatment: Al-Quds University vs. Al-Quds Open University (both real, b
 genuinely distinct), and Lingnan University (Hong Kong) vs. Lingnan Normal University (Zhanjiang,
 mainland China) — unrelated institutions that happen to share the "Lingnan" name.
 
+**Verification of `university-ror-gaps.json`'s 16-entity "genuine single-row gap" list is now
+complete** (all 16 checked, not a sample): 10 clean/straightforward, 4 with a real succession/
+granularity issue (both Rutgers rows, Franche-Comté, Paul Sabatier — above), 1 with the same
+system-vs-campus granularity question as Purdue (**University of the Philippines** — ROR's top
+match is the Diliman-campus-specific entity, itself a child of a separate "University of the
+Philippines System" parent; ORYN's row has no campus qualifier, so which one it should map to is
+a real decision, not a default), and 1 with **no ROR record found at all** (Khoja Akhmet Yassawi
+International Kazakh-Turkish University — a direct query for "Yassawi" returned zero results;
+flagged as needing independent confirmation rather than treated as simply missing a fetch this
+session happened to try). Full detail per entity in `university-ror-gaps.json`'s own
+`genuine_single_row_gap_final_tally` field — this is a complete accounting of that specific list,
+not a partial one, and should not need re-verifying from scratch by whoever acts on it.
+
 ## Restating the four-tier taxonomy the mission brief asks for
 
 The mission brief asks for `AUTO-SAFE MATCH` / `HIGH-CONFIDENCE REVIEW` / `AMBIGUOUS` /

@@ -103,6 +103,16 @@
       "claim_supported": "Université de Franche-Comté's ROR record is status='inactive' with a direct successor relationship to Université Marie et Louis Pasteur (est. 2024), itself one of two successors to the 2015-2024 Université Bourgogne Franche-Comté federation. Université Toulouse III - Paul Sabatier is a direct predecessor of Université de Toulouse (est. 2025). Both are real, current, recent French university mergers/renames -- see 04-rename-history-framework.md.",
       "confidence": "high",
       "limitations": "Confirms current ROR state as of the retrieval date only. This session did not independently verify these mergers against each institution's own official French-language announcement/decree -- ROR's own status/relationship fields are treated as sufficient evidence for an open registry per this package's source standard (00), but a fully primary-source confirmation (e.g. the French ministerial decree) was not separately fetched."
+    },
+    {
+      "id": "SRC-011",
+      "source_title": "ROR API direct records completing verification of all 16 university-ror-gaps.json 'genuine_single_row_gap' entries",
+      "source_url": "api.ror.org queries for Al-Quds/Eastern Mediterranean/Lefke/Near East/Lingnan/Duesseldorf (clean), Khoja Akhmet Yassawi (zero results), Northwest Agriculture and Forestry University (ror.org/0051rme32, needed 'A&F' abbreviated form), Moscow Institute of Physics and Technology (ror.org/00v0z9322), National Chung Hsing University (ror.org/05vn3ca78), The New School (ror.org/02tvcev59), University of the Philippines (ror.org/03tbh6y23 Diliman-specific, parent ror.org/02hqkr514 System)",
+      "source_type": "open_registry",
+      "retrieved_at": "2026-08-21T01:20:00Z approx (session window)",
+      "claim_supported": "Completes a full (not sampled) verification of all 16 entries in university-ror-gaps.json's genuine_single_row_gap array: 10 clean, 4 succession/granularity issues (already sourced in SRC-009/SRC-010), 1 additional granularity issue (University of the Philippines, same Mode A shape as Purdue), 1 with no ROR record found at all (Khoja Akhmet Yassawi).",
+      "confidence": "high",
+      "limitations": "The 'no ROR record found' conclusion for Khoja Akhmet Yassawi reflects this session's own query only -- ROR's search API could in principle have a coverage or indexing gap distinct from the institution genuinely lacking a record; flagged for independent re-confirmation rather than asserted as certain."
     }
   ]
 }
