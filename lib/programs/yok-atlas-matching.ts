@@ -102,6 +102,14 @@ function buildInsertRow(
 /**
  * @param universityIdByYokId maps the source's own `universiteId` to this project's
  *   `universities.id` for the universities being processed.
+ * @param kilavuzBridge maps a live YOK Atlas `kilavuzKodu` to this project's
+ *   `university_programs.id`, sourced from a university's own bilingual pages -- never from
+ *   translating the English name (see lib/programs/tr-bilingual-name-bridge.ts and
+ *   docs/handoffs/tr-bilingual-programme-names.md). An exact identifier match is checked
+ *   before name-based matching and is the *only* path that can ever resolve a university whose
+ *   `university_programs.name` and YOK's `birimAdi` are recorded in different languages --
+ *   name-equality can never match those. Defaults to empty, which reproduces this function's
+ *   prior behaviour exactly.
  */
 export function matchYokPlacements(
   apiRecords: YokPlacementRecord[],
@@ -110,7 +118,8 @@ export function matchYokPlacements(
   cycleYear: number,
   cycleLabel: string,
   sourceUrl: string,
-  retrievedAt: string
+  retrievedAt: string,
+  kilavuzBridge: Map<number, string> = new Map()
 ): MatchResult {
   // LISANS only: this project's Turkish programme population is Bachelor's-level, and mixing
   // in ÖNLISANS/associate-level source records risks exactly the same-name, different-level
@@ -121,6 +130,7 @@ export function matchYokPlacements(
   const matched: PlacementInsertRow[] = [];
   const unmatchedApi: UnmatchedApiRecord[] = [];
   const ambiguous: AmbiguousGroup[] = [];
+  const dbById = new Map(dbPrograms.map((p) => [p.id, p]));
 
   const apiByUniAndName = new Map<string, YokPlacementRecord[]>();
   const skippedUniversityIds = new Set<number>();
@@ -130,6 +140,32 @@ export function matchYokPlacements(
       skippedUniversityIds.add(r.universiteId);
       continue;
     }
+
+    // Resolved by the sourced bilingual-name bridge -- an exact identifier, checked before any
+    // name-based heuristic. Still defended against a bad bridge entry: the program must exist
+    // in dbPrograms and belong to this same university, or it's reported unmatched rather than
+    // trusted blindly.
+    const bridgedProgramId = kilavuzBridge.get(r.kilavuzKodu);
+    if (bridgedProgramId) {
+      const bridgedProgram = dbById.get(bridgedProgramId);
+      if (!bridgedProgram) {
+        unmatchedApi.push({
+          record: r,
+          universityId,
+          reason: `bilingual-name bridge points to program_id ${bridgedProgramId}, which is not in the provided dbPrograms`,
+        });
+      } else if (bridgedProgram.university_id !== universityId) {
+        unmatchedApi.push({
+          record: r,
+          universityId,
+          reason: `bilingual-name bridge program_id ${bridgedProgramId} belongs to a different university than this record's universiteId`,
+        });
+      } else {
+        matched.push(buildInsertRow(r, bridgedProgramId, cycleYear, cycleLabel, sourceUrl, retrievedAt));
+      }
+      continue;
+    }
+
     const key = `${universityId}::${r.birimAdi}`;
     apiByUniAndName.set(key, [...(apiByUniAndName.get(key) ?? []), r]);
   }

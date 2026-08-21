@@ -112,6 +112,53 @@ when its cycle closes, so a student is shown things that closed months ago. Bein
 
 ---
 
+## Later in the night
+
+**Programmes reached 9,912 across 128 universities**, up from 664 yesterday morning. UvA went
+4 → 330 and VU Amsterdam 0 → 163 — and the lane that did it took neither path the decision
+document offered. It noticed all 489 records already carried their own programme URL, re-fetched
+every one, and re-attested from the results: 489 of 489 returned 200 and self-identified both
+programme and institution in their own page title; 366 language values were cross-checked
+against each page's facts panel and all 366 agreed. **The original research was accurate all
+along — only unreadable to a prose-matching gate.** Nothing was reworded and the gate was not
+touched.
+
+**1,043 misleading source URLs were repaired** across St Andrews, Manchester, Southampton,
+Wisconsin-Madison and TU Dublin, with zero fabricated. Manchester looked like the worst case —
+294 rows on one URL — and turned out among the easiest, because the university publishes a
+machine-readable course feed nobody had looked for. **Volume of defect says nothing about
+difficulty of repair.**
+
+**Eleven counselor-knowledge documents** now distil what a good human counselor knows per
+country, every claim tagged either verified against a corpus record or marked as background
+researched to a different standard — so when the advisor comes alive it can tell what it knows
+from what it believes.
+
+## What the night was actually about
+
+Reading the reports back, the same thing happened over and over in different clothes: **a
+measurement that was correct and a conclusion that was wrong.**
+
+Fourteen recorded source conflicts turned out to be six. Nine were two true statements about
+different things — two cycles, two applicant populations, two levels of a national system, two
+scales — filed as competing answers to one question. CMU publishes three different deadline
+dates and all three are right, because it shifts deadlines off weekends and the Common Data Set
+reports the unshifted one.
+
+**And our own standing rule was citing the wrong case.** "Trust the newer page" is unsafe — true
+— but Groningen was never the counterexample. Its two pages agree exactly; the original record
+flattened a 2×2 table into a list and set two cells of the *same row* against each other. A
+sixteen-month gap between two deadlines for one programme was never plausible, and that
+implausibility was read as evidence of how bad the conflict was rather than as evidence the
+comparison was malformed. The real counterexample is Heidelberg. Corrected, with the reasoning
+recorded.
+
+Twice, a lane disproved its own finding. One cleared 258 rows it had itself flagged as
+defective, after loading them in a real browser and discovering the defect was an artifact of
+its own query. Another traced a reported accessibility bug through a library's source and
+concluded it was its own tooling — then recommended changing nothing. **A swarm that only
+confirms its own findings is not verifying anything.**
+
 ## Still waiting on you
 
 **`ANTHROPIC_API_KEY`.** The data layer had two very good days. `weekly_plans` and
@@ -119,10 +166,21 @@ when its cycle closes, so a student is shown things that closed months ago. Bein
 
 **Three decisions**, each with evidence attached rather than a hypothesis:
 
-The **source-authority gate** rejects `teknofest.org`, `eyp.org.tr`, `thehague.thimun.org` and
-`teensinai.com` — four of four organisers checked tonight, including Turkey's flagship
-state-affiliated youth technology competition. It accepts an American university's summer camp.
-The fix is an organiser-domain provenance field, not a lower evidence bar.
+The **source-authority gate**, and the evidence is now overwhelming rather than illustrative.
+It rejects TEKNOFEST, TEMA, Habitat Derneği, TEGV, EYP Türkiye, THIMUN, Teens in AI, EUNICE —
+**the European Commission's own youth programme, and TÜBİTAK**, Turkey's national scientific
+research council. TEMA's domain is vouched for by a Turkish ministry's own `.gov.tr` portal and
+the gate rejects it anyway. Across one research batch the rejection rate was 88%; the University
+of Vienna passes and TU Wien in the same city fails, purely on a `.ac.` infix.
+
+A gate that rejects the European Commission and TÜBİTAK while accepting an American university's
+summer camp is not implementing an evidence standard. It is implementing a domain-suffix
+heuristic that happens to correlate with one in a single country.
+
+**Nothing was hand-inserted past it.** Roughly 40 verified opportunity records are staged and
+waiting. One decision lands all of them through the normal path. The fix is an organiser-domain
+provenance field feeding the check that already accepts a caller-supplied domain list — not a
+lower bar.
 
 **Onboarding has three screens** where the spec sketches five. No Interests screen, and no CV
 upload — which is the only entry point to the whole CV extraction pipeline.
