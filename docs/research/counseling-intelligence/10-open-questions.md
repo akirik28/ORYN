@@ -17,7 +17,21 @@ MIT, Harvard GSE) describe.**
   playing a minimal role," especially pronounced for the most competitive faculties (medicine,
   engineering, law). (Source: multiple Turkey-education-system overview sources — medium-high
   confidence for the general structure; this package did not verify current-year exact weighting
-  percentages against a single official ÖSYM page.) [[RULE-COUNSEL-057]]
+  percentages against a single official ÖSYM page.)
+  **Upgraded and sharpened on a follow-up pass**: the peer session directly fetched ÖSYM's own
+  domain (`osym.gov.tr`) and confirmed, structurally, that ÖSYM publishes exact numeric coefficient
+  tables for placement-score calculation as standing practice, then cross-checked several
+  independent Turkish YKS-calculator sites that converge on one formula: Placement Score =
+  (TYT raw × 0.40) + (AYT raw × 0.60) + (OBP × 0.12), where OBP (diploma-grade-derived, roughly
+  250-500 raw) halves to a 0.06 coefficient for a previously-placed candidate. **This does not
+  weaken the finding — it sharpens it**: there is exactly one non-exam channel into placement
+  (OBP), and it is itself purely grades-based (`academics` dimension), capped small (around 60
+  points on a score running into the hundreds) — still zero channel for
+  `leadership`/`community_impact`/`entrepreneurship`/`research`/`awards_distinction`. (Source:
+  `osym.gov.tr` domain structure, official — high confidence for channel existence/rough size,
+  directly fetched by the peer session; exact current coefficient values — medium confidence,
+  convergent independent secondary calculators, not a single primary ÖSYM table re-derived by
+  either session.) [[RULE-COUNSEL-057]] [[RULE-COUNSEL-109]]
 - **UK (UCAS):** not exam-only like Turkey, but structured very differently from US holistic
   review. The operative concept is **"super-curricular"** (subject-extending activity — wider
   reading, subject olympiads, relevant online coursework, subject-relevant projects) as distinct
@@ -25,9 +39,15 @@ MIT, Harvard GSE) describe.**
   guidance for competitive courses recommends personal statements be 80-90% subject/academic
   content, with general extracurricular activity earning space "only when you can articulate the
   transferable skill." Predicted grades carry substantial, separate weight. Medicine is named as a
-  partial exception where clinical work experience/volunteering is specifically expected. (Source:
-  UK admissions-consulting sources describing UCAS practice — medium-high confidence; UCAS's own
-  official guidance was not independently re-fetched this pass.) [[RULE-COUNSEL-058]]
+  partial exception where clinical work experience/volunteering is specifically expected.
+  **Upgraded to official-source confidence on a follow-up pass**: the peer session directly fetched
+  UCAS's own advice pages (`ucas.com/advisers/help-and-training/toolkits/personal-statement-
+  toolkit` and UCAS's 2026-entry personal-statement-format guidance) and confirmed the super-
+  curricular/extracurricular distinction, and the current three-subject-focused-question personal-
+  statement format, verbatim from UCAS's own advice — not secondary paraphrase. (Source:
+  `ucas.com`, official — high confidence, upgraded from medium-high once directly fetched by a
+  peer session and reported with exact URLs rather than left as an admissions-consulting summary.)
+  [[RULE-COUNSEL-058]]
 
 **What this means concretely: this package's 9-dimension development taxonomy, its redundancy/
 saturation model, and most of its major-family evidence docs are built almost entirely from
@@ -131,12 +151,13 @@ branches' numbering is compatible as-is.
 
 - `RULE-COUNSEL-057` — Turkish YKS-track admission is exam-score-dominated; extracurricular/
   development-dimension counseling should not be presented as admissions-strategically important
-  for this pathway the way it would be for US holistic review. Confidence: medium-high (consistent
-  secondary sourcing, not independently verified against ÖSYM's own official current-year
-  publication).
+  for this pathway the way it would be for US holistic review. Confidence: high (upgraded from
+  medium-high — the peer session's direct `osym.gov.tr` fetch plus convergent YKS-calculator
+  cross-check corroborates and sharpens the claim; see `RULE-COUNSEL-109`).
 - `RULE-COUNSEL-058` — UK UCAS applications reward subject-relevant ("super-curricular") evidence
   far more heavily than generic extracurricular breadth for competitive courses; this package's
-  taxonomy does not yet operationalize that distinction. Confidence: medium-high.
+  taxonomy does not yet operationalize that distinction. Confidence: high (upgraded from
+  medium-high — directly fetched from ucas.com by the peer session).
 - `RULE-COUNSEL-059` — This package's 9-dimension taxonomy and redundancy/quality-over-quantity
   findings should be treated as general student-development guidance, not assumed to transfer
   directly as admissions-strategy guidance outside US-style holistic-review systems. Confidence:
@@ -144,3 +165,11 @@ branches' numbering is compatible as-is.
 - `RULE-COUNSEL-060` — Building a geography/admissions-system-conditional weighting layer above the
   development taxonomy is the single highest-leverage next research task arising from this
   package. Confidence: high (this is a recommendation, not an empirical claim).
+- `RULE-COUNSEL-109` — YKS placement score has exactly one non-exam channel (OBP, diploma-grade-
+  derived, roughly 250-500 raw, weighted 0.12×, halved to 0.06× for a previously-placed candidate)
+  — itself purely `academics`-dimension and small relative to the total score (capped around 60
+  points on a score running into the hundreds), so it provides zero channel for
+  `leadership`/`community_impact`/`entrepreneurship`/`research`/`awards_distinction`. Sharpens
+  `RULE-COUNSEL-057` rather than qualifying it. Confidence: high for channel existence/rough size
+  (direct ÖSYM domain fetch by the peer session), medium for exact current coefficient values
+  (convergent independent secondary calculators).

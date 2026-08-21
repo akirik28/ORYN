@@ -625,6 +625,30 @@
       "claim_supported": "The title 'Architekt' (and related titles) is legally protected in Germany; registration requires a recognized architecture degree plus 2-3 years of practice, administered by one of 16 state-level Architektenkammer under the federal Bundesarchitektenkammer, with rules varying by Bundesland.",
       "used_in_rules": ["RULE-COUNSEL-106"],
       "limitations": "None material — official federal body source."
+    },
+    {
+      "id": "SRC-CS-053",
+      "title": "UCAS official personal-statement guidance — Personal Statement Toolkit and 2026-entry personal-statement-format page",
+      "publisher": "UCAS (official UK universities/colleges admissions service) — primary pages fetched directly by the peer session, reported to and incorporated by this session",
+      "url": "https://www.ucas.com/advisers/help-and-training/toolkits/personal-statement-toolkit ; https://www.ucas.com/applying/applying-to-university/writing-your-personal-statement/how-to-write-your-personal-statement-for-2026-entry-onwards",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Confirms, verbatim from UCAS's own advice rather than secondary paraphrase, the super-curricular/extracurricular distinction and the current three-subject-focused-question personal-statement format for 2026-entry applications.",
+      "used_in_rules": ["RULE-COUNSEL-058"],
+      "limitations": "This session did not independently re-fetch ucas.com itself; relied on the peer session's direct report with exact URLs, consistent with this package's discipline of treating a peer's specific, checkable primary-source quotation as upgradeable even when not independently re-verified by this session."
+    },
+    {
+      "id": "SRC-CS-054",
+      "title": "ÖSYM official domain structure (osym.gov.tr SinavGrubu/Index/2 and programs/quotas kılavuzu index) plus convergent independent Turkish YKS placement-score calculators",
+      "publisher": "ÖSYM (Ölçme, Seçme ve Yerleştirme Merkezi — Turkey's official student-selection/placement authority) for domain structure, fetched directly by the peer session; multiple independent Turkish YKS-calculator sites for the convergent formula, cross-checked by the peer session",
+      "url": "https://www.osym.gov.tr/",
+      "type": "mixed_official_and_secondary",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high_for_channel_existence_and_rough_size_medium_for_exact_current_coefficients",
+      "claim_supported": "ÖSYM publishes exact numeric coefficient tables for YKS placement-score calculation as standing practice (confirmed structurally on its own domain). Independent Turkish YKS-calculator sites converge on the same formula: Placement Score = (TYT raw × 0.40) + (AYT raw × 0.60) + (OBP × 0.12), where OBP (Ortaöğretim Başarı Puanı / diploma-grade-derived score) runs roughly 250-500 and the 0.12 coefficient halves to 0.06 for a candidate placed before. This confirms a real but purely grades-based (academics-dimension), small-in-scale (~60 points max on a score running into the hundreds) non-exam channel into YKS placement — zero channel for leadership/community_impact/entrepreneurship/research/awards_distinction.",
+      "used_in_rules": ["RULE-COUNSEL-057", "RULE-COUNSEL-109"],
+      "limitations": "The peer session's direct ÖSYM fetch corroborated the existence and general structure of coefficient-based placement scoring but did not itself retrieve the current-year table's exact values; those exact coefficient values (0.40/0.60/0.12/0.06) come from cross-checking several independent Turkish YKS-calculator sites that converge on the same numbers, not from a single primary ÖSYM publication re-derived by either session. This session did not independently verify any of this directly; relied on the peer session's report."
     }
   ]
 }
