@@ -3249,6 +3249,29 @@ blocker (not a vague "JS-heavy site" catch-all) so a future session with differe
 knows exactly what to try. **Netherlands remaining**: Maastricht, Twente, VU Amsterdam
 (blocked, see above), Wageningen still zero-coverage.
 
+**Program catalogue batch 27 — University of Twente + Wageningen University & Research, 39
+new, running session total 3,992 across 45 universities.** Full method in that commit's own
+message (`77f1923`). Fourth and fifth Netherlands batches, closing out all 6 of this
+session's originally-identified zero-coverage Dutch universities that turned out tractable
+(Utrecht, Leiden, Radboud, Maastricht, Twente, Wageningen — VU Amsterdam remains separately
+blocked, see batch 25). Wageningen's page gives an explicit per-program language tag for all
+20 (same reliable Radboud/Maastricht shape); UT's page gives none, so this batch applied the
+Leiden-batch-24 lesson properly: only claimed a language for the 4 programs with independent
+confirming evidence, left the other 15 explicitly hedged rather than guessed. One good
+example of a spot-check actively improving data quality rather than just verifying it: UT's
+'Creative Technology' was hedged going in, but its spot-check turned up clear independent
+confirmation of full English-medium teaching — upgraded from hedge to confirmed English
+before commit, rather than leaving stale uncertainty once better evidence existed. Second
+spot-check (Wageningen's Bos- en Natuurbeheer) confirmed real and Dutch-taught, matching the
+source page's own tag exactly. **Netherlands status, end of this stretch**: 6 of 7
+originally zero-coverage universities now have real Layer-2 depth; VU Amsterdam remains the
+one specific, documented blocker (virtualized program list). A reasonable next Netherlands
+step would be deepening the 5 four/fifteen-program thin-seed universities noted at the start
+of this Netherlands stretch (Eindhoven, Erasmus, Tilburg, UvA, Groningen, Delft) — unlike
+Turkey's identical-template pattern, these looked like genuine distinct per-institution
+research, so each would need its own real fetch rather than a single reusable exclude-list,
+more like the Netherlands zero-coverage work just completed than the Turkey deepening arc.
+
 **Program catalogue batch 26 — Maastricht University, 27 new, running session total 3,953
 across 43 universities.** Full method in that commit's own message (`8b44ec7`). Third
 Netherlands batch. Same Browser-pane-with-working-pagination pattern as most of this
