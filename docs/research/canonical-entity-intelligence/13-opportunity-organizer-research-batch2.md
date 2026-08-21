@@ -204,3 +204,14 @@ strings this session was assigned research effort on real-world entities that, o
 genuinely thin or contested enough (`Stanley Prep`, `American Regions Mathematics League`'s exact
 canonical domain, `YTB`'s government-structure placement) that this document recommends a second
 independent look before treating them as `source_verified`, not that they be trusted as-is.
+
+**Independent spot-check, run by the lead session after reviewing this document (not by the agent
+that wrote it):** three of this batch's claims were re-verified from scratch via separate web
+searches — `Journal of Research`→`journalresearchhs.org` (confirmed: JRHS, the exact high-school
+research journal described), `120 Hours`→`120hours.no` (confirmed: the real Norwegian
+student-organized architecture competition, matching the description exactly, not the unrelated
+hackathon), and the flagged-low-confidence `Stanley Prep`/WFUNA claim (confirmed, and more directly
+than this batch's own citation — WFUNA's own site has a page titled "Training Programs at the UN:
+Stanley Prep," `wfuna.org/program/training-programs-at-the-un-stanley-prep/`, an even more direct
+primary source than what this document originally cited). All three checked accurate — recorded
+here as evidence this batch's methodology produced trustworthy results, not merely as a formality.
