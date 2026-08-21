@@ -1,0 +1,137 @@
+====================================================================================================
+
+####################################################################################################
+PERSONA: A — Turkey/YKS-track, strong academics, thin extracurriculars
+16yo, target Turkey, Turkish national curriculum, high GPA, no APs/IBs (not offered on this track), a couple of standardized-test-style entries, one unremarkable club membership, nothing else. The counseling-intelligence research's own #1 finding this month: YKS placement is exam-score-dominated (RULE-COUNSEL-228/242) with a small grades-linked OBP component, and near-zero admissions weight on the other 8 dimensions this engine scores. This persona exists to see whether the engine's OUTPUT (not just prose elsewhere) already reflects that, or actively works against it.
+####################################################################################################
+
+-- computeCareerProfile --  overall=7
+   academics                score= 53  confidence=medium  reasons=[gpa,testing_presence]
+   intellectual_curiosity   score=  9  confidence=medium  reasons=[subject_breadth,self_directed_learning]
+   leadership               score=  0  confidence=low     reasons=[]
+   research                 score=  0  confidence=low     reasons=[]
+   entrepreneurship         score=  0  confidence=low     reasons=[]
+   community_impact         score=  0  confidence=low     reasons=[]
+   awards_distinction       score=  0  confidence=low     reasons=[]
+   career_exploration       score=  4  confidence=low     reasons=[activity_breadth]
+   execution_project_depth  score=  0  confidence=low     reasons=[]
+   BIGGEST GAP per this run: leadership (0)
+
+-- computeCompleteness -- 40%
+
+-- computeAdmissionOutlook -- (profileStrength=7)
+   vs Highly selective (8%)    -> outlook=extreme_reach  composite=0  range=1-11 (low)
+   vs Selective (35%)          -> outlook=extreme_reach  composite=0  range=5-25 (low)
+   vs Unknown selectivity      -> outlook=extreme_reach  composite=0  range=--- (n/a)
+
+-- computeOpportunityMatch -- (against 4 synthetic opportunities)
+   US Chemistry Olympiad (competition)            eligible=true  relevance=100 need= 45 match= 67  
+   Summer research program, Turkey-eligible (research) eligible=true  relevance=  0 need= 85 match= 51  
+   Local tech internship (internship)             eligible=false relevance=100 need= 45 match=  0  Not currently open to students from Turkey.
+   Turkey-only national volunteering program (volunteering) eligible=true  relevance= 55 need= 45 match= 49  
+
+-- evaluateRequirement (sample: minimum_grade rule, 3.5/4.0 GPA) --
+   status=needs_manual_review  reasoning="Your GPA is recorded on a different scale than this requirement's 4-point scale — compare it yourself rather than trust an automatic conversion."
+
+####################################################################################################
+PERSONA: B — Strong entrepreneurship & leadership, weak research (AGENTS.md's own worked example)
+US-target, solid-not-exceptional academics, a real 18-month-founded venture with modest revenue/users, a substantive elected leadership role (people led, org scope), zero research. This is literally the product spec's Phase 8.3/39 worked example — testing whether the raw scores this engine produces would actually support the founder's own 'don't start another club, do research instead' example output.
+####################################################################################################
+
+-- computeCareerProfile --  overall=21
+   academics                score= 66  confidence=high    reasons=[gpa,course_rigor,testing_presence]
+   intellectual_curiosity   score=  9  confidence=medium  reasons=[subject_breadth,self_directed_learning]
+   leadership               score= 29  confidence=medium  reasons=[leadership_role]
+   research                 score=  0  confidence=low     reasons=[]
+   entrepreneurship         score= 30  confidence=medium  reasons=[venture]
+   community_impact         score= 14  confidence=medium  reasons=[volunteering]
+   awards_distinction       score=  0  confidence=low     reasons=[]
+   career_exploration       score=  4  confidence=low     reasons=[activity_breadth]
+   execution_project_depth  score= 35  confidence=medium  reasons=[project]
+   BIGGEST GAP per this run: research (0)
+
+-- computeCompleteness -- 93%
+
+-- computeAdmissionOutlook -- (profileStrength=21)
+   vs Highly selective (8%)    -> outlook=extreme_reach  composite=0  range=1-11 (medium)
+   vs Selective (35%)          -> outlook=extreme_reach  composite=9  range=9-29 (medium)
+   vs Unknown selectivity      -> outlook=extreme_reach  composite=6  range=--- (n/a)
+
+-- computeOpportunityMatch -- (against 4 synthetic opportunities)
+   US Chemistry Olympiad (competition)            eligible=true  relevance=  0 need= 85 match= 51  
+   Summer research program, Turkey-eligible (research) eligible=false relevance=  0 need= 85 match=  0  Not currently open to students from USA.
+   Local tech internship (internship)             eligible=true  relevance= 50 need= 85 match= 71  
+   Turkey-only national volunteering program (volunteering) eligible=false relevance= 40 need= 45 match=  0  Not currently open to students from USA.
+
+-- evaluateRequirement (sample: minimum_grade rule, 3.5/4.0 GPA) --
+   status=met  reasoning="Your GPA (3.7 on a 4 scale) meets the required 3.5."
+
+####################################################################################################
+PERSONA: C — Research-heavy student aiming for STEM
+UK-target, strong rigor (A-levels), a real 10-month mentored research experience with methodology and a poster presentation (not peer-reviewed), an international-tier science olympiad award, weak leadership and community_impact by design (single dimension of intended weakness, to check whether the engine still reads it as a real gap rather than 'the research overwhelms everything').
+####################################################################################################
+
+-- computeCareerProfile --  overall=8
+   academics                score= 15  confidence=low     reasons=[course_rigor]
+   intellectual_curiosity   score= 14  confidence=medium  reasons=[subject_breadth,self_directed_learning]
+   leadership               score=  0  confidence=low     reasons=[]
+   research                 score= 30  confidence=medium  reasons=[research_experience]
+   entrepreneurship         score=  0  confidence=low     reasons=[]
+   community_impact         score=  0  confidence=low     reasons=[]
+   awards_distinction       score= 15  confidence=medium  reasons=[award]
+   career_exploration       score=  0  confidence=low     reasons=[]
+   execution_project_depth  score=  0  confidence=low     reasons=[]
+   BIGGEST GAP per this run: leadership (0)
+
+-- computeCompleteness -- 73%
+
+-- computeAdmissionOutlook -- (profileStrength=8)
+   vs Highly selective (8%)    -> outlook=extreme_reach  composite=0  range=1-11 (medium)
+   vs Selective (35%)          -> outlook=extreme_reach  composite=0  range=5-25 (medium)
+   vs Unknown selectivity      -> outlook=extreme_reach  composite=0  range=--- (n/a)
+
+-- computeOpportunityMatch -- (against 4 synthetic opportunities)
+   US Chemistry Olympiad (competition)            eligible=true  relevance= 50 need= 45 match= 47  
+   Summer research program, Turkey-eligible (research) eligible=true  relevance=100 need= 45 match= 67  
+   Local tech internship (internship)             eligible=false relevance=  0 need= 45 match=  0  Not currently open to students from United Kingdom.
+   Turkey-only national volunteering program (volunteering) eligible=false relevance= 40 need= 85 match=  0  Not currently open to students from United Kingdom.
+
+-- evaluateRequirement (sample: minimum_grade rule, 3.5/4.0 GPA) --
+   status=unknown  reasoning="No GPA is on file yet — add your education record."
+
+####################################################################################################
+PERSONA: D — Early-stage 14yo, sparse profile
+Freshly onboarded, one club activity, one course, nothing else. Tests graceful degradation, not crashes/nonsense.
+####################################################################################################
+
+-- computeCareerProfile --  overall=1
+   academics                score=  0  confidence=low     reasons=[]
+   intellectual_curiosity   score=  3  confidence=low     reasons=[subject_breadth,self_directed_learning]
+   leadership               score=  0  confidence=low     reasons=[]
+   research                 score=  0  confidence=low     reasons=[]
+   entrepreneurship         score=  0  confidence=low     reasons=[]
+   community_impact         score=  0  confidence=low     reasons=[]
+   awards_distinction       score=  0  confidence=low     reasons=[]
+   career_exploration       score=  4  confidence=low     reasons=[activity_breadth]
+   execution_project_depth  score=  0  confidence=low     reasons=[]
+   BIGGEST GAP per this run: academics (0)
+
+-- computeCompleteness -- 20%
+
+-- computeAdmissionOutlook -- (profileStrength=1)
+   vs Highly selective (8%)    -> outlook=extreme_reach  composite=0  range=1-11 (low)
+   vs Selective (35%)          -> outlook=extreme_reach  composite=0  range=5-25 (low)
+   vs Unknown selectivity      -> outlook=extreme_reach  composite=0  range=--- (n/a)
+
+-- computeOpportunityMatch -- (against 4 synthetic opportunities)
+   US Chemistry Olympiad (competition)            eligible=true  relevance=  0 need= 85 match= 51  
+   Summer research program, Turkey-eligible (research) eligible=false relevance=  0 need= 85 match=  0  Requires minimum age 16.
+   Local tech internship (internship)             eligible=false relevance=  0 need= 45 match=  0  Requires minimum age 16.
+   Turkey-only national volunteering program (volunteering) eligible=true  relevance= 40 need= 45 match= 43  
+
+-- evaluateRequirement (sample: minimum_grade rule, 3.5/4.0 GPA) --
+   status=unknown  reasoning="No GPA is on file yet — add your education record."
+
+====================================================================================================
+DONE
+
