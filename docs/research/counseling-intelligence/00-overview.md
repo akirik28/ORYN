@@ -61,7 +61,7 @@ the mission's own non-negotiables: no production code changes).
 | 03 | `03-recommendation-timing.md` | When does a given recommendation type make sense, by grade/age, conditionally rather than universally? |
 | 04 | `04-profile-gap-framework.md` | How do we tell a real developmental gap from a harmless, context-explained absence? |
 | 05 | `05-redundancy-saturation.md` | When should ORYN *not* recommend more of an already-strong area? |
-| 06 | `06-major-family-evidence/` | For each of 17 major families (grown from an initial 14-family estimate once actual research began — see `06-major-family-evidence/00-family-taxonomy.md` §1-§3 for the consolidation rationale), what experiences legitimately demonstrate genuine interest/ability? |
+| 06 | `06-major-family-evidence/` | For each of 18 major families (grown from an initial 14-family estimate once actual research began, then to 17 once both sessions' original assignments were complete, then to 18 once a genuine coverage gap — Education & Teaching — was found on review; see `06-major-family-evidence/00-family-taxonomy.md` §1-§3 for the consolidation rationale), what experiences legitimately demonstrate genuine interest/ability? |
 | 07 | `07-explainability-framework.md` | How should a recommendation's "why" be constructed so it is honest, specific, and never a fake probability? |
 | 08 | `08-unsafe-inference-rules.md` | Consolidated registry of inference patterns ORYN must never make, pulled from every other document |
 | 09 | `09-persona-testing.md` | Do the frameworks above hold up against concrete hypothetical student profiles, including edge cases? |

@@ -54,8 +54,12 @@ confirm, and should not be trusted without independent re-verification.
   plan: `11-geography-admissions-systems.md` and `12-activity-progression-pathways.md` (the latter
   two live **only on their branch**, not this one — see `00-overview.md`'s own note on this).
 - **Family taxonomy** (`06-major-family-evidence/00-family-taxonomy.md`, this session's file):
-  the shared 17-family list and exact filenames both sides use, agreed before either side started
-  writing family docs, so neither side invented an incompatible grouping independently.
+  the shared family list and exact filenames both sides use, agreed before either side started
+  writing family docs, so neither side invented an incompatible grouping independently. Grew from
+  17 to **18** after both sides finished their original assignments — this session found Education
+  & Teaching missing entirely (only glancing mentions in two of the peer's docs, no dedicated
+  treatment anywhere), added it as family `18` with its own filename
+  (`18-education-teaching.md`), confirmed with the peer before writing it (no conflict).
 
 ## What actually happened (chronological, for anyone reconstructing this cold)
 
@@ -131,9 +135,10 @@ branches before trusting any table, including this one, past this checkpoint's t
 | `03-recommendation-timing.md` | Done, including the YKS/UCAS geography caveat (§6) | this branch |
 | `04-profile-gap-framework.md` | Done | peer branch |
 | `05-redundancy-saturation.md` | Done, tier-aware redundancy model | peer branch |
-| `06-major-family-evidence/00-family-taxonomy.md` | Done, 17-family shared taxonomy | this branch |
+| `06-major-family-evidence/00-family-taxonomy.md` | Done, 18-family shared taxonomy (grew from 17) | this branch |
 | `06-major-family-evidence/01`-`09` | Done (computing, math/stats, physical sciences, life sciences, engineering, biomedical eng, econ/finance, business/entrepreneurship, environmental science) — all with UK/EU/Turkey country notes | this branch |
 | `06-major-family-evidence/10`-`17` | Done (medicine, psychology, poli-sci/IR/policy, law, sociology/history/philosophy, literature/journalism/comms, architecture/design, visual/media arts) | peer branch |
+| `06-major-family-evidence/18-education-teaching.md` | Done — added after both sides finished their original 17; genuinely missing from both, three-country (US/UK/Turkey) licensure comparison | this branch |
 | `07-explainability-framework.md` | Done | this branch |
 | `08-unsafe-inference-rules.md` | Done, consolidated across both branches (this session's rules now renumbered 200-230, originally 034-064; cross-references to peer's 001-031) | this branch |
 | `09-persona-testing.md` | Done | peer branch |
