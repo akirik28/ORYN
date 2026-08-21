@@ -30,7 +30,7 @@ against official government sources for 10 countries:
 | Tier | What it means | Countries verified |
 |---|---|---|
 | 1 — Full holistic | Activity profile is a real, independently-weighted input | USA |
-| 2 — Partial/subject-focused | Some activity evidence matters, narrowly | UK (subject-relevant "super-curricular" evidence specifically), France (dossier, program-dependent), Canada (grades-first, holistic layer only in named competitive programs) |
+| 2 — Partial/subject-focused | Some activity evidence matters, narrowly | UK (subject-relevant "super-curricular" evidence specifically), France (5 officially-defined, formation-weighted evaluation fields — grades, academic competencies, soft skills, motivation, activities/engagement), Canada (grades-first, holistic layer only in named competitive programs) |
 | 3 — Credential/exam-gated | Activity profile carries little-to-no formal weight | Germany, Netherlands, Switzerland, Italy (public), Spain, **Turkey** (no application file exists at all) |
 
 **Product implication**: a counselor that gives the same "build a well-rounded activity profile"
@@ -41,10 +41,28 @@ their own exception (Turkish state conservatories require both a score threshold
 audition — verified against official guidance). Full detail:
 `11-geography-admissions-systems.md` (this branch).
 
+**Sharper still, found on a follow-up pass**: "holistic layer" is not one mechanism even within a
+single country's named exceptions. Direct-fetching each of Canada's four named competitive
+programs' own pages found real heterogeneity — Waterloo's AIF explicitly rewards documented
+activities, while Queen's Commerce and McMaster's Honours Health Sciences Program score a written/
+video response to specific prompts with **no activities-list criterion in their own rubric at
+all**. Checking whether this generalized turned up a genuine structural pattern spanning both
+branches: **standardized third-party situational-judgment testing (CASPer in the US/Canada, the
+UK's UCAT) is now confirmed across 5 fields and 2 continents** — medicine, health sciences, nursing,
+teacher education, and undergraduate engineering (Western University, ~7,500 applicants/year) —
+each requiring not "more evidence" but a different, currently-unmodeled kind of preparation
+(rehearsing timed situational judgment, not activity accumulation). Full detail:
+`17-dimension-weighting-by-target.md` (this branch, includes the cross-branch tracker) and
+`09-persona-testing.md` Persona J (where the gap was first surfaced).
+
 **Highest-leverage next engineering step, already scoped**: a geography-conditional recommendation
 -framing layer, keyed off data ORYN already collects (`target_universities` → university country,
-falling back to `profiles.target_geographies`) — no new data collection required. Full prioritized
-build order: `13-implementation-readiness.md` (this branch).
+falling back to `profiles.target_geographies`) — no new data collection required. **Now available
+in two layers**: tier-level framing language (`11`) and, new this pass, a qualitative per-dimension
+weighting proposal for what to emphasize *within* that framing (`17` — e.g. subject-relevant vs.
+generic evidence for a UK target), staying strictly qualitative (no invented numeric weights) per
+`AGENTS.md`'s own prohibition on LLM-guessed scoring parameters. Full prioritized build order:
+`13-implementation-readiness.md` (this branch).
 
 ## What else is validated and safe to build on
 
@@ -88,6 +106,20 @@ seven were accurate**, including one exact quote match. The peer branch reciproc
 testing this branch's own redundancy framework against the Turkey finding and catching a real
 scope limit in it. Neither branch trusted the other's self-report without checking.
 
+**A second, distinct kind of verification ran through the rest of the night**: upgrading this
+branch's own weaker-sourced claims to direct official-source fetches rather than leaving them at
+their original secondary-source confidence — UCAS's own guidance pages (peer-fetched), ÖSYM's own
+domain (peer-fetched), Waterloo/Queen's/UofT's own admissions pages (this branch, one 403'd),
+France's DGESIP CGEV framework document (this branch, required a `pypdf` workaround after
+WebFetch's extractor failed on the PDF), and Germany's Bundesärztekammer (this branch) — several of
+which **corrected**, not just confirmed, a prior claim (UofT's general process was found not to
+match its own earlier "explicitly holistic" characterization; a chronic-illness prevalence figure
+was found understated; a social-work sub-claim was found unconfirmed by the specific regulation
+checked). The pattern held across both kinds of checking: primary-source verification found real
+things to fix roughly as often as it confirmed what was already there — worth knowing when
+deciding how much to trust any single `medium`-or-below-confidence claim that hasn't been
+specifically re-checked yet.
+
 ## What's genuinely unresolved (don't skip this)
 
 1. **Cross-branch rule-ID numbering.** Both branches independently minted rules 034-059 for
@@ -101,12 +133,25 @@ scope limit in it. Neither branch trusted the other's self-report without checki
 2. **The mixed-target-geography explanation question** (a student applying to both a Tier-1 and
    Tier-3 system needs the same recommendation explained differently per target) is a genuine
    product/UX decision neither branch could resolve — flagged on both sides, not answered.
+   **Sharpened, not resolved, by a follow-up persona test**: `09`'s Persona J found that even a
+   fully separate, per-target explanation isn't automatically sufficient — it must also name the
+   *mechanism* (direct evidence vs. indirect raw material for a differently-scored response), not
+   only the tier-appropriate framing register, or a student can reasonably draw the wrong
+   conclusion about how to prepare for one of their targets even when the recommended action is
+   correctly identical for both.
 3. **Neither branch independently re-verified every claim in every document** — spot-verification
    (this branch checked 7 of the peer's claims) is not the same as exhaustive audit. Treat
    `confidence: medium` and lower as exactly that.
 4. Data ORYN doesn't yet have to fully execute several of these rules (school-level curriculum
    availability, a structured achievement-tier field, opportunity selectivity) — full list with
    what each would take to add: `10-open-questions.md` and `13-implementation-readiness.md`.
+5. **A new recommendation-type gap, found late in the night and not yet resolved**: ORYN's entire
+   recommendation vocabulary is built around logged achievements. The situational-judgment-test
+   category above (CASPer/UCAT and similar) needs a genuinely different recommendation type —
+   "rehearse a structured response" — that doesn't fit the existing achievement-tier model at all.
+   Checked against the actual shipped types (`RecommendationClass` governs strength, not kind;
+   `CandidateAction.category` is an unstructured string) — confirmed as a real gap, not
+   pre-decided how to close it. A founder/engineering scoping question, same category as item 2.
 
 ## If you read nothing else
 
