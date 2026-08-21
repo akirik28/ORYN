@@ -2949,3 +2949,35 @@ Courses" page turned out to be a Northern-Ireland-wide further-education clearin
 ~7 *other* institutions' HNC/HND/apprenticeship programs, not QUB's own catalogue --
 recognized from the content itself (course rows tagged BMC/NWRC/SERC/etc., not QUB) before
 any row was extracted, so nothing was misattributed to QUB. QUB remains unresearched.
+
+**Program catalogue batch 15 — Loughborough + City St George's, 221 new, running session
+total 3,023 across 32 universities.** Full method in that commit's own message (`0004933`).
+Both confirmed zero-coverage in the live `university_programs` spine (checked live via
+Supabase MCP read-only query before researching, not assumed). One real entity-resolution
+catch worth flagging: the live `universities.name` row is `City St George's, University of
+London` with a **curly right-quote (U+2019)**, not a straight apostrophe -- my first-draft
+batch used the straight-apostrophe ASCII form throughout (matching the source page's own
+HTML, which itself uses straight quotes inconsistently). Caught by querying the live table
+for the exact string before writing the batch, not after -- this codebase's entity linker
+(`lib/acquisition/identity.ts`) is deliberately strict/never-fuzzy, so a byte-mismatched
+apostrophe would have left all 97 City St George's records unlinkable rather than silently
+mis-linking to something else. Fixed with a small script pass over the JSONL before commit,
+not a partial hand-edit. City St George's course-finder page (unlike a flat A-Z list) is a
+faceted search widget, but one that accepts a `num_ranks=100` query param returning all 97
+undergraduate results on a single page with unusually rich structured fields per course
+(UCAS code(s), duration including placement-year variants, school, campus) -- worth trying
+`num_ranks`/`page_size`-style params on other Squiz/Funnelback-powered UK course-finder
+sites before writing one off as JS-only, since this one initially looked like the same
+paginated-search dead end as USC/Newcastle/Queen Mary/Bath/Southampton (batch 10-11 note
+above) until that param was found. **Two new dead ends this round, same UK-course-finder
+failure family as Durham/Nottingham/Kent**: Royal Holloway's A-Z course page renders
+exactly 3 placeholder example courses no matter what (cookie-accepted, scrolled, or not) --
+inspected the DOM directly and found the A-Z letter links themselves are present but
+zero-size/off-canvas (uninteractable), meaning the real course list never actually mounts
+under this tooling, not just a pagination/lazy-load issue. University of Reading has no
+static undergraduate list at all, only a "choose a subject" dropdown-driven course finder
+(`/ready-to-study/study/undergraduate-study`) -- the site's own `/A-Z/az.aspx` is a general
+site-map A-Z (departments/services), not a course catalogue, despite the name suggesting
+otherwise. Kent was not attempted this round (already flagged low-confidence pre-fetch: its
+best candidate URL is a dated-2019 `/search` path, matching the known stale-search-tool
+shape rather than a real listing).
