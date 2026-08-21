@@ -532,8 +532,9 @@
         "entrepreneurship",
         "execution_project_depth"
       ],
-      "statement": "DECA/FBLA-style competitive-simulation participation demonstrates applied business-scenario reasoning and communication skill, but is NOT entrepreneurship evidence in the 'originate and test a real venture' sense -- it is a simulation, not the operation of a real business. Do not conflate the two evidence types.",
-      "confidence": "high"
+      "statement": "DECA competitive events split into three genuinely different types: role-play/case-study and online simulations (applied business-scenario reasoning under simulated conditions -- not entrepreneurship evidence, since no real venture is originated/tested) vs. Business Operations Research Events (original research on an annually-changing topic, individually or in teams of up to three -- structurally closer to the research dimension than to a business simulation). Evaluate DECA involvement by which event type a student actually did.",
+      "confidence": "high",
+      "note": "Refined after locating DECA's own official event-type breakdown (deca.org/compete) -- the original version treated DECA as one undifferentiated event type."
     },
     {
       "id": "RULE-COUNSEL-215",

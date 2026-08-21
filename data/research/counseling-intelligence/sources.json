@@ -737,15 +737,15 @@
     {
       "id": "S-DECA-FBLA",
       "title": "DECA and FBLA program structures (secondary corroboration across multiple sources)",
-      "url": null,
+      "url": "https://www.deca.org/compete",
       "additional_urls": [],
       "publisher": "DECA and FBLA program structures (secondary corroboration across multiple sources)",
-      "source_type": "secondary_description",
+      "source_type": "official_institutional_guidance",
       "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
       "retrieved_at": "2026-08-21",
-      "claim_supported": "DECA/FBLA run competitive events simulating real business scenarios across finance/marketing/management/entrepreneurship categories.",
-      "confidence": "medium",
-      "limitations": "This pass did not fetch deca.org/fbla.org directly — a student should be pointed to those sites directly for current event lists/deadlines.",
+      "claim_supported": "DECA's own official page confirms three event types: role-play/case-study, online simulations, and Business Operations Research Events (original research, individually or in teams of up to three, on an annually-changing topic) -- across career clusters marketing, business management/administration, finance, hospitality/tourism, plus entrepreneurship and personal financial literacy. FBLA's parallel structure (accounting, business law, technology-adjacent categories) remains secondary-sourced.",
+      "confidence": "high_for_deca_medium_for_fbla",
+      "limitations": "DECA's own page directly located and cited; FBLA's structure (fbla.org) was not independently re-located this pass.",
       "used_in": [
         "docs/research/counseling-intelligence/06-major-family-evidence/08-business-management-entrepreneurship.md §4"
       ]

@@ -57,11 +57,21 @@ the domain.
 running competitive events simulating real business scenarios — DECA organized around finance,
 hospitality/tourism, business management/administration, and marketing; FBLA additionally covering
 entrepreneurship, accounting, business law, and several technology-adjacent categories
-[S-DECA-FBLA]. **RULE-COUNSEL-214:** participation and placement in a DECA/FBLA-style competitive
-event demonstrates applied business-scenario reasoning and presentation/communication skill under a
-structured simulation — genuinely valuable evidence for the "business/management" side of this
-family, but it is **not** entrepreneurship evidence in the sense `01-development-taxonomy.md`'s
-`entrepreneurship` section defines it (originating and testing a real venture), since it is a
+[S-DECA-FBLA]. **RULE-COUNSEL-214 (refined after locating DECA's own official event-type
+breakdown):** DECA's competitive events split into three genuinely different types, not one — role-
+play/case-study events and online business simulations demonstrate applied business-scenario
+reasoning under simulated conditions (the pattern this rule originally described), but DECA's
+**Business Operations Research Events** (individually or in teams of up to three, designing and
+conducting original research on an annually-changing topic) [S-DECA-FBLA] are structurally closer
+to this package's `research` dimension evidence than to a business simulation — a student's DECA
+involvement should be evaluated by *which event type* they actually did, not treated as one
+undifferentiated "did DECA" signal, the same sub-type-heterogeneity caution this package raises
+for the `competition` opportunity category generally (`02-opportunity-development-mapping.md` §1).
+Participation and placement in the role-play/simulation event types specifically demonstrates
+applied business-scenario reasoning and presentation/communication skill — genuinely valuable
+evidence for the "business/management" side of this family, but it is **not** entrepreneurship
+evidence in the sense `01-development-taxonomy.md`'s `entrepreneurship` section defines it
+(originating and testing a real venture), since it is a
 simulation of a business
 scenario, not the operation of a real one — the same evidence-type discipline
 `02-opportunity-development-mapping.md` establishes generally, applied concretely here. For
@@ -124,7 +134,7 @@ No Turkey-specific equivalent to DECA/FBLA/Young Enterprise was identified in th
 | ID | Source | Type | Confidence | Used for |
 |---|---|---|---|---|
 | S-BLS-BUSINESS | [BLS OOH — Management Occupations overview](https://www.bls.gov/ooh/management/), [BLS Career Outlook — Business career options: Outlook, wages, and entry requirements](https://www.bls.gov/careeroutlook/2025/article/business-career-options.htm) | Official (US BLS) | High (US-specific) | §2, §3 |
-| S-DECA-FBLA | Secondary corroboration across multiple independent sources describing DECA's and FBLA's official program structures; this pass did not fetch deca.org/fbla.org directly | Secondary description of well-known, real official student organizations | Medium — the organizations and their general structure are real and well-established; a student should be pointed to deca.org/fbla.org directly for current event lists/deadlines rather than this document's paraphrase | §4 |
+| S-DECA-FBLA | [DECA — Competitive Events (deca.org/compete)](https://www.deca.org/compete), corroborated by secondary sources for FBLA's parallel structure (fbla.org itself not directly located this pass) | Official for DECA's own page; secondary for FBLA specifically | High for DECA (direct official URL located, confirming three event types — role-play/case-study, online simulations, and a **Business Operations Research Events** category, individually or in teams of up to three, designing and conducting original research on an annually-changing topic — closer to this package's `research` construct than to a role-play simulation); medium for FBLA (not independently re-located at fbla.org this pass) | §4 |
 | S-YE-UK | [Young Enterprise — Company Programme](https://www.young-enterprise.org.uk/what-we-do/programmes/company-programme), corroborated by [GOV.UK's own business-support listing](https://www.gov.uk/business-finance-support/young-enterprise) | Official (UK-registered charity; independently corroborated by a GOV.UK listing) | High | §7 |
 | S-ISKUR-FUTURE | İŞKUR Geleceğin Meslekleri (see `01-computing-information-sciences.md` §7) | Official (Turkey) | High for the document; names 5 business-adjacent occupations | §7 |
 
