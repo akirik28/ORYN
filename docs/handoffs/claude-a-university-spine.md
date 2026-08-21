@@ -3227,3 +3227,24 @@ program *name* on a university's own English-facing international site is not ev
 English medium of instruction -- that requires either an explicit per-program language
 marker on the source page itself, or an independent citation, neither of which this batch's
 Leiden source page provided.
+
+**Program catalogue batch 25 — Radboud University, 52 new, running session total 3,926
+across 42 universities.** Full method in that commit's own message (`9d3f66e`). Second
+Netherlands batch. Directly applies the batch-24 lesson: Radboud's own page states language
+of instruction explicitly per program, so this batch used that directly rather than
+inferring from program-name language — the reliable version of what Leiden's page couldn't
+provide. Two spot-checks (Human Neuroscience, Islam Politics and Society) both independently
+confirmed real AND confirmed Dutch-taught, exactly matching the source page's own markers —
+good validation that this page's per-program language field is trustworthy, unlike Leiden's.
+**VU Amsterdam attempted and dropped this round**: a new failure shape, distinct from every
+prior UK/Ireland/Turkey blocker — its programme list is a virtualized/lazy-rendered
+component that only ever mounts 10 of its stated 29 cards in the DOM (confirmed via direct
+`innerText.length` inspection before and after scrolling, clicking, and waiting — none
+triggered more cards to render under this session's Browser-pane tooling), with no working
+pagination query param, load-more button, or embedded JSON data island found to retrieve the
+rest. Publishing a knowingly-partial 10-of-29 catalogue was rejected as inconsistent with
+this session's data-quality bar; dropped entirely and documented here as a specific, named
+blocker (not a vague "JS-heavy site" catch-all) so a future session with different tooling
+(a true headless browser capable of firing real intermediate scroll/intersection events)
+knows exactly what to try. **Netherlands remaining**: Maastricht, Twente, VU Amsterdam
+(blocked, see above), Wageningen still zero-coverage.
