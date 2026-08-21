@@ -944,6 +944,33 @@ export interface UniversityStatistic {
 }
 export type UniversityStatisticInsert = Insertable<UniversityStatistic, "id" | "created_at" | "updated_at" | "data_confidence">;
 
+/** One row per (programme, admission cycle) — migration 0055. Never overwritten by the next
+ * cycle's ingestion, so year-over-year trend stays queryable — see that migration's comment
+ * for why this isn't columns on UniversityProgram. `placement_status` is only "filled" |
+ * "unfilled"; a cycle Oryn hasn't researched yet is the absence of a row, not a third status
+ * value. */
+export interface UniversityProgramPlacementCycle {
+  id: string;
+  program_id: string;
+  cycle_year: number;
+  cycle_label: string;
+  yok_programme_code: string | null;
+  score_type: string | null;
+  quota: number | null;
+  placement_status: "filled" | "unfilled";
+  success_rank: number | null;
+  success_score: number | null;
+  source_url: string | null;
+  data_confidence: DataConfidence;
+  retrieved_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+export type UniversityProgramPlacementCycleInsert = Insertable<
+  UniversityProgramPlacementCycle,
+  "id" | "created_at" | "updated_at" | "yok_programme_code" | "score_type" | "quota" | "success_rank" | "success_score" | "source_url" | "data_confidence" | "retrieved_at"
+>;
+
 export interface UniversityDeadline {
   id: string;
   university_id: string;
@@ -1479,6 +1506,7 @@ export interface Database {
       requirement_groups: Table<RequirementGroup, RequirementGroupInsert, Partial<RequirementGroupInsert>>;
       university_requirements: Table<UniversityRequirement, UniversityRequirementInsert, Partial<UniversityRequirementInsert>>;
       university_statistics: Table<UniversityStatistic, UniversityStatisticInsert, Partial<UniversityStatisticInsert>>;
+      university_program_placement_cycles: Table<UniversityProgramPlacementCycle, UniversityProgramPlacementCycleInsert, Partial<UniversityProgramPlacementCycleInsert>>;
       university_deadlines: Table<UniversityDeadline, UniversityDeadlineInsert, Partial<UniversityDeadlineInsert>>;
       university_sources: Table<UniversitySource, UniversitySourceInsert, Partial<UniversitySourceInsert>>;
       target_universities: Table<TargetUniversity, TargetUniversityInsert, TargetUniversityUpdate>;
