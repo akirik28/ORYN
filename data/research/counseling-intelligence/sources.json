@@ -517,6 +517,42 @@
       "claim_supported": "CAS is a real, current, officially-documented IB Diploma Programme core requirement — roughly 3-4 hours/week sustained across 18 months (the fixed 150-hour rule was removed c. 2017), spanning Creativity/Activity/Service strands, not formally graded but required for the diploma.",
       "used_in_rules": ["RULE-COUNSEL-091"],
       "limitations": "IB sets no single universal hour target; individual schools set their own CAS expectations, so the 3-4 hrs/week figure is IB's own general description, not a hard per-student number."
+    },
+    {
+      "id": "SRC-CS-044",
+      "title": "Social Workers — Occupational Outlook Handbook",
+      "publisher": "U.S. Bureau of Labor Statistics (official)",
+      "url": "https://www.bls.gov/ooh/community-and-social-service/social-workers.htm",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "US clinical social work requires a CSWE-accredited MSW plus supervised post-graduate clinical experience and state licensure; core skills (interpersonal, organizational, emotional resilience) as BLS describes them.",
+      "used_in_rules": ["RULE-COUNSEL-095", "RULE-COUNSEL-097"],
+      "limitations": "US-specific; the ~3,000-hour supervised-experience figure is commonly cited by secondary licensing-guide sources, not independently verified against BLS's own page as a fixed federal number (it varies by state)."
+    },
+    {
+      "id": "SRC-CS-045",
+      "title": "UK social work registration/qualification guidance (NHS Health Careers and professional/licensing-guide sources)",
+      "publisher": "Various UK sources describing Social Work England's registration requirement",
+      "url": "https://www.healthcareers.nhs.uk/explore-roles/wider-healthcare-team/roles-wider-healthcare-team/clinical-support-staff/social-worker",
+      "type": "secondary_describing_official_system",
+      "retrieved_at": "2026-08-21",
+      "confidence": "medium-high",
+      "claim_supported": "UK social work practice requires registration with Social Work England (or the devolved-nation equivalent) after an approved 3-4 year undergraduate or postgraduate qualification.",
+      "used_in_rules": ["RULE-COUNSEL-098"],
+      "limitations": "Social Work England's own official registration page was not independently fetched this pass; sourced via NHS/professional-guidance pages describing the system."
+    },
+    {
+      "id": "SRC-CS-046",
+      "title": "MEB 'Rehberlik Hizmetleri Yönetmeliği' official definition of 'sosyal çalışmacı,' cross-referenced via university program and professional-association pages",
+      "publisher": "Ministry of National Education (MEB, official) definition, accessed via secondary citation",
+      "url": "https://socialwork.health.ankara.edu.tr/sosyal-hizmet-uzmani-gorev-ve-yetkileri/",
+      "type": "official_regulation_secondary_cited",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high_for_distinction_medium_for_direct_sourcing_rigor",
+      "claim_supported": "Turkey's 'sosyal çalışmacı' (social worker) title is officially defined by MEB regulation as requiring a bachelor's-level Sosyal Hizmet degree specifically; associate-degree graduates receive a different, narrower title and may not be appointed to sosyal çalışmacı positions.",
+      "used_in_rules": ["RULE-COUNSEL-099"],
+      "limitations": "MEB's own regulation text was accessed via secondary/university citation in this pass, not fetched directly from MEB's own site the way the peer session directly fetched MEB material for its 18-education-teaching.md — a real, self-flagged sourcing-rigor gap relative to that document."
     }
   ]
 }
