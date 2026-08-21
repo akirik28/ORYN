@@ -32,11 +32,17 @@ describe("classifyCorpusEntries — the files the old prefix filter could not se
     expect(requirementFiles.length + deadlineFiles.length).toBe(REAL_CORPUS_SAMPLE.length);
   });
 
-  it("reads the whole real corpus directory as 53 classified files", () => {
+  /** The load-bearing assertion is the first one: every entry in the real directory gets
+   * classified, so no file is silently skipped the way the old prefix filter skipped 41 of
+   * them. The count is a floor, not an equality — it guards against the directory being empty
+   * or the classifier quietly narrowing, without breaking every time a research lane lands new
+   * files. It was written as `toBe(53)` and broke within the hour when the US lane added 24
+   * more; pinning a growing corpus to an exact number tests the calendar, not the code. */
+  it("classifies every file in the real corpus directory, skipping none", () => {
     const entries = readdirSync("data/research/university-requirements");
     const { requirementFiles, deadlineFiles } = classifyCorpusEntries(entries, "data/research/university-requirements");
     expect(requirementFiles.length + deadlineFiles.length).toBe(entries.length);
-    expect(entries.length).toBe(53);
+    expect(entries.length).toBeGreaterThanOrEqual(53);
   });
 });
 
