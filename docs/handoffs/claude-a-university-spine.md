@@ -3189,3 +3189,41 @@ Technical University, Istanbul University (all still zero-coverage; Istanbul Uni
 specifically needs an ~18-page per-faculty crawl, see batch 19 note above) — a reasonable
 next Turkey round, or a pivot to a new geography given Turkey has now had a sustained,
 productive stretch this session.
+
+**Program catalogue batch 24 — Utrecht University + Leiden University, 83 new, running
+session total 3,874 across 41 universities. First Netherlands batch this session.** Full
+method in that commit's own message (`3222f34`). Netherlands is a named AGENTS.md priority
+country untouched until now. Checked the live spine first: 7 Dutch universities at 0
+programs, 5 more at exactly 4 -- but unlike Turkey, each of those 5 universities' existing 4
+programs are genuinely distinct per-institution (Delft's 15, Eindhoven's 4, Erasmus's 4,
+Tilburg's 4, UvA's 4, Groningen's 4 are all different, real-looking sets, not one template
+copy-pasted 6 times) -- this looks like real-but-thin prior research, not the Turkey-style
+placeholder fixture, so the zero-coverage universities were the cleaner, simpler target this
+round rather than another deepen-and-exclude pass. Utrecht's official page is deliberately
+scoped to its English-taught programmes only (13, matching an independent web-search
+citation of "12 English-taught") -- a genuine, disclosed scope match to ORYN's international-
+student audience, not an incomplete fetch. Leiden needed the by-now-familiar landing-page-to-
+real-list trail (its 'Bachelors' page is pure marketing copy; the real list lives at
+`/en/education/study-programmes?type=bachelor`, paginated 20/20/20/10 across 4 pages, via
+Browser pane after a plain WebFetch on the landing page surfaced only 2 program names in
+passing text).
+
+**A real, important correction made before this batch was committed, not discovered after**:
+this batch's working assumption was that an English program name on Leiden's own
+English-language international site implies English-medium teaching. A spot-check of
+'Cybersecurity & Cybercrime (BSc)' -- chosen for being a newer, distinctive program worth
+confirming isn't fabricated -- surfaced independent reporting that it is in fact a
+**Dutch-taught** programme, launched Dutch-medium in September 2025, despite its fully
+English name and its normal-looking listing on the English-facing site. This falsified the
+batch's blanket assumption: the site evidently lists Dutch- and English-taught programmes
+alike under English names for prospective-international-student browsing purposes, and an
+English name alone is not a reliable teaching-language signal on this specific page. Rather
+than let the one caught case stand as an isolated fix, `language_of_instruction` was
+corrected to an explicit hedged/unknown value across **all 69 affected Leiden records**
+(everything except the one program that was already hedged for an unrelated reason -- its
+Dutch-language name), via a small patch script over the already-generated JSONL, before the
+commit. **General lesson for any future non-English-speaking-country batch**: an English
+program *name* on a university's own English-facing international site is not evidence of
+English medium of instruction -- that requires either an explicit per-program language
+marker on the source page itself, or an independent citation, neither of which this batch's
+Leiden source page provided.
