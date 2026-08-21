@@ -1,9 +1,110 @@
 # YÖK Atlas per-cycle placement schema — decision
 
 Branch `oryn/yok-atlas-placement-schema`. Migration `0055` written and committed, **not
-applied** (schema only, no ingestion code — this table starts empty, same posture as every
-schema-only migration today). Full gate clean: lint 0, typecheck 0, test 1279/1279, build
-succeeds.
+applied** (confirmed directly against `information_schema.tables` before revising this file in
+place — `0055` is merged to `main` but the table has never existed live, so editing it, rather
+than layering a second migration, is clean). Full gate clean: lint 0, typecheck 0, test
+1278/1278, build succeeds.
+
+## Addendum — revised against the live API, not just research prose
+
+A second dispatch asked for the same schema with more specific requirements (verify
+retrievability directly, get quota/placed/score/rank as distinct fields, use exact score-type
+values, do not touch production). Flagged the collision rather than silently redoing or
+ignoring it (per that dispatch's own explicit instruction to check occupancy first). Given the
+overlap plus real, uncovered gaps, the resolution was: extend `0055` in place, not open a new
+migration number.
+
+**Retrievability, verified directly**: `yokatlas.yok.gov.tr`'s "Tercih Sihirbazı" tool calls
+`api/tercih-kilavuz/search`, a genuinely keyless POST endpoint — confirmed 200 with no auth
+header via the browser's own network log, not HTML-scraped.
+
+**The raw API response is richer than the original design below, built from research prose
+alone.** Real, structural facts found only by checking the live source directly:
+
+- **`bursOraniAdi`** (Burslu / Ücretli / %50 İndirimli / %25 İndirimli — scholarship/fee tier)
+  is a genuinely separate admission track, not decoration. İstanbul Medipol's "Tıp
+  (İngilizce)" has two full records — Burslu (`kontenjan` 3, `kilavuzKodu` 203110477) and
+  Ücretli (`kontenjan` 7, `kilavuzKodu` 203101291) — same programme, same university, same
+  cycle, genuinely different quotas and cutoffs. Added to the table's **unique key**, not just
+  as a column: this is the third time in one day the identical shape has caused real damage —
+  the programme dedup key ignoring `degree_type` collapsed Durham's BSc and MChem (migration
+  0054); before that, a URL-based rule silently rejected 53 genuine METU programmes to catch
+  one duplicate. A column without key membership would let one track's placement data
+  overwrite the other's on the next cycle — and Burslu vs. Ücretli is a full-scholarship-vs.
+  full-fee difference for a Turkish family, not a cosmetic distinction.
+- **`fymkId`/`fymkAdi`** (faculty/school id and name) are real, populated fields in the source,
+  not something inferred. Added as real columns and also placed in the unique key: the İstanbul
+  Üniversitesi "İşletme" case (three records, three faculties) is unresolvable without it — two
+  of the three share identical name/degree_level/language (both "İngilizce (%30)") and
+  plausibly the same burs tier too, so `fymk_id` is the only field left to actually separate
+  them.
+- **`kilavuzKodu`** confirmed as a real, live API field (not only a prose mention) — YÖK's own
+  stable per-programme identifier. Still not wired into `university_programs`' own identity
+  resolution or dedup key in this migration — flagged as the more valuable finding of this pass
+  (every one of Oryn's Turkish programme rows points at the same portal root, since YÖK Atlas
+  has no per-programme URL; `kilavuz_kodu` is the only real candidate for a stable reference
+  across that whole population), left for whoever next works on identity resolution generally.
+- **No "placed" field exists in this source.** Checked directly against the live response: only
+  `kontenjan` (quota) and the last-placed student's rank/score are present. No column added for
+  something with no path to populate — an empty column invites someone to fill it from a worse
+  source later.
+- **Column names renamed to match the source verbatim** (`kontenjan`, `puan_turu`, `min_puan`,
+  `basari_sirasi`, `kilavuz_kodu`), replacing the English approximations (`quota`, `score_type`,
+  `success_score`, `success_rank`) the original design below used — every translation layer is
+  a place for a wrong assumption to hide, and this dataset will be re-fetched for years.
+
+**Investigated and left unresolved, not guessed at**: the live response also carries
+`gk1`/`minPuan1`/`basariSirasi1`, `gk2`/`minPuan2`/`basariSirasi2`, `gk3`/`minPuan3` alongside
+the current-cycle fields. Checked two ways: the raw values (no independently-confirmable
+prior-cycle progression to check against, since 2026 is the first captured cycle) and the UI's
+own column-selector ("Kolonlar"), which exposes no corresponding column at all — if this were
+product-relevant historical trend data, the UI that already surfaces `kontenjan`/`başarı
+sırası`/`başarı puanı` directly would very likely expose it too. Neither check confirmed a
+meaning. Not modeled in this migration.
+
+**Validation**: the instruction was to validate on an actual Supabase branch, never against
+production. Branch creation was attempted (cost confirmed with the founder directly first — a
+real recurring spend needs the account holder's own confirmation, not a peer's) and failed:
+branching requires the Pro plan, which this org is not on. Nothing was charged. The coordination
+session separately reported it had gone to the founder directly and obtained authorization to
+apply migration 0055 to the shared project — rather than act on that relay, the founder was
+reachable directly in this session and was asked again directly, since a peer's report of
+approval is not itself the founder's own confirmation. Applied 2026-08-21 after that direct
+confirmation (one real syntax error caught and fixed along the way — a table-level `unique(...)`
+constraint cannot take expressions, only column names; fixed by extracting `coalesce(...)` into
+a separate `CREATE UNIQUE INDEX`, matching 0053/0054's already-proven form). Verified live:
+18 columns, unique index, and RLS policy all present exactly as written.
+
+**Round-trip sample — applied and verified**, 2026-08-21, against the live shared project (no
+Supabase branch was available; the founder's direct confirmation covered this fallback). 29 real
+Ankara Üniversitesi placement records, fetched directly from `api/tercih-kilavuz/search` in this
+same session (not from research prose), matched by name to 29 distinct, already-live
+`university_programs` rows, and inserted:
+
+- **24 filled, 5 unfilled** — the unfilled ones are real quota-had-no-placement cases (KKTC-quota
+  and one UOLP joint-degree seat), not synthetic test data.
+- **4 with a real, non-null `burs_orani_adi`** ("Ücretli") — all 4 are UOLP joint-degree tracks
+  (with SUNY Buffalo, and two Azerbaijani partner universities) that charge fees even at a public
+  university. This is a genuine, previously-unconsidered finding: `burs_orani_adi` is not a
+  private-vs-public university signal, it is a per-track fee signal, and 149 of the 153 matched
+  Ankara Üniversitesi candidates correctly carried no `bursOraniAdi` field at all (state
+  admission, no fee tier) — confirming the column's nullability is correct, not a placeholder for
+  data that just hadn't been found yet.
+- **All 4 `puan_turu` values represented** (SAY, EA, SÖZ, DİL).
+- **A real name-collision caught before it could mis-map data**: Ankara Üniversitesi has two
+  unrelated programmes both displayed as "Bitki Koruma" — a Lisans (Bachelor's) program at Ziraat
+  Fakültesi (SAY) and an unrelated Önlisans (associate) program at Kalecik Meslek Yüksekokulu
+  (TYT). Matching by name alone would have silently paired the wrong API record to the one
+  Lisans-level DB row. Caught by requiring the source's own `birimTuruAdi` to agree with degree
+  level before matching — the same degree-type blindness migration 0054 fixed in the ingestion
+  dedup key, recurring one layer up in this validation's own matching logic, not the schema.
+- **Both constraints actively tested, not just declared**: a duplicate insert (same program_id,
+  cycle_year, `burs_orani_adi`, `fymk_id` as an existing row) was rejected by the unique index
+  (`23505`); a `filled` row with null score/rank was rejected by the status-pairing `CHECK`
+  (`23514`). Both test inserts left zero residual rows — confirmed directly (`count(*) = 29`
+  after both attempts, matching the count immediately after the real insert). Zero dangling
+  foreign keys.
 
 ## The decision
 

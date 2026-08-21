@@ -38,6 +38,8 @@
     "ingest:university-programs": "tsx scripts/ingest-university-programs.ts",
     "report:programs": "tsx scripts/university-programs-report.ts",
     "acquire:programs": "tsx scripts/acquire-programs.ts",
+    "fetch:yok-atlas-placements": "tsx scripts/fetch-yok-atlas-placements.ts",
+    "ingest:yok-atlas-placements": "tsx scripts/ingest-yok-atlas-placements.ts",
     "ingest:opportunities": "tsx scripts/ingest-opportunities.ts",
     "acquire:universities": "tsx scripts/acquire-university-facts.ts",
     "import:universities": "tsx scripts/import-university-facts.ts",
