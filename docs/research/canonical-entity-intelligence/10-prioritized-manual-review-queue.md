@@ -3,6 +3,28 @@
 What a human or a future automated pass should look at first, and why — synthesizing `05`–`09`
 into one ordered list rather than leaving the priority implicit across five documents.
 
+## Checked against the founder's own acceptance criteria, found late in this session
+
+`docs/MASTER-EXECUTION-STRATEGY.md` names a "P1 — Canonical identity and data correctness"
+priority with explicit, checkable bullets — the founder's own definition of done for exactly
+this package's subject. Worth mapping this package's findings onto it directly rather than
+leaving the connection implicit:
+
+| Founder's P1 criterion | Status per this package's own verified research |
+|---|---|
+| "no product-visible duplicate universities" | **Met.** `claude-a-university-spine.md` Phase D patched 16 files' worth of read/write surfaces against the 9 known pairs; migration 0043 is now applied *and* backfilled (verified live, `09`'s update note) — resolved at the identity, schema, and data layers. |
+| "aliases resolve to one canonical entity" | **Met by design** where genuinely unambiguous; the 3 real exceptions ("UP"/"UM"/"UPM", `02`/`06` RULE-ENTITY-006) are legitimate collisions between different real institutions, correctly *not* auto-resolved — the criterion's intent (never silently pick one) holds. |
+| "audit every university read/search/select path" | **Met.** Same Phase D account — 27 call sites audited, 16 files fixed. |
+| "extend the same architecture to schools, companies/employers, ... opportunity organizers, programs, competitions, sports clubs/teams, countries and cities" | **Partially met — this is where this package's own findings add the most value.** `lib/entities/*` (`17`) already covers school/organization/employer/ngo/research_institution/sports_team (6 of the named categories, student-creatable). **Not yet met**: opportunity organizers (`opportunities.organization_entity_id` still 0/369, `08`), programs/competitions/scholarships (no custom-fallback path exists for any of the three, `17` §1), countries/cities (no `EntityScope` reaches either, `15`/`17` §1). These three gaps are precisely and only the ones this founder criterion names that remain open. |
+| "AP/IB/A-Level/SAT/ACT/IELTS/TOEFL/Duolingo... must use canonical searchable options" | **Met via a different, deliberately-chosen mechanism** — `SuggestInput`/`lib/vocabularies/tests.ts` (`17` §1's "third mechanism"), not the full `canonical_entities` registry. `claude-a-university-spine.md` documents the reasoning (closed, small, mostly-static vocabularies don't need alias/dedup/verification-state machinery built for open-ended real-world organizations) — a legitimate architectural choice, not a gap, though worth flagging so a future reader comparing against this checklist doesn't expect to find test names in the entity registry. |
+| "manual fallback is allowed only as explicitly marked custom/unmapped data feeding a reconciliation queue" | **Met.** `verification_state='user_submitted'` + `entity_verification_queue`, exactly this shape. |
+| "regression tests cover known duplicate/alias cases and ambiguous institutions" | **Met.** `__tests__/universities/duplicate-regression.test.ts`, 34 tests covering all 9 named pairs individually and combined, plus a "genuinely different institutions stay separate" case. |
+
+Net effect: **the founder's own P1 checklist is fully met except for one bullet**, and this
+package's own findings (opportunity organizers, programs/competitions/scholarships,
+countries/cities) are precisely the sub-parts of that one remaining bullet still open — which is
+exactly the P1/P2 items below, not a new discovery this table adds beyond what's already there.
+
 ## P0 — Structural, affects the whole registry or an entire language/script
 
 **1. Fix Turkish `ı`/German `ß` handling in `dbNormalizedName()` and decide `nameKey()`'s behavior
