@@ -51,6 +51,25 @@ preparation is general situational-judgment practice, not activity-accumulation,
 recommending "get more shadowing hours" to a CASPer-requiring-program-track student who is
 specifically weak on CASPer readiness would be solving the wrong problem. [[RULE-COUNSEL-120]]
 
+**The same category shows up UK-specifically too, checked directly on this same pass**: the
+**UCAT** (University Clinical Aptitude Test, `ucat.ac.uk`) — required by **57 UK universities**
+for medicine/dentistry entry for 2026, per the UCAT Consortium's own official page, including
+Oxford, Cambridge, Imperial, UCL, Manchester, Edinburgh, and Bristol — includes a **Situational
+Judgement Test (SJT)** subtest, officially described as measuring "your capacity to understand
+real world situations and to identify critical factors and appropriate behaviour in dealing with
+them," scored separately (Bands 1-4) from the test's cognitive subtests. (Source: `ucat.ac.uk`
+official pages — high confidence, directly fetched.) **This sharpens, not contradicts, this
+document's and `11`'s existing UK finding**: "medicine is a partial exception where clinical work
+experience/volunteering is specifically expected" (`RULE-COUNSEL-058`'s own text) describes the
+*holistic-evidence* side of UK medicine admission accurately, but is incomplete on its own — UK
+medicine is a **compound case**: predicted grades, *plus* a required standardized aptitude test
+with its own situational-judgment component (UCAT/SJT, not activity-based at all), *plus* the
+clinical-exposure evidence this document otherwise describes. **Confirms `RULE-COUNSEL-120`'s
+typology generalizes beyond CASPer/North America specifically** — "standardized third-party
+situational-judgment testing" is a real, recurring *category* of non-academic assessment (CASPer in
+the US/Canada, UCAT's SJT in the UK — different specific instruments, same structural type), not a
+single tool this package happened to find once. [[RULE-COUNSEL-121]]
+
 ## Mapping onto the shipped taxonomy
 
 - `career_exploration` — shadowing, hospital volunteering, health-focused pre-college programs (the
@@ -151,3 +170,10 @@ weighting, and must never be cited as if it did.
   model than the UK's — same underlying degree-plus-licensure pattern this package keeps finding,
   different specific mechanics. Confidence: medium-high (describes an official state-run process,
   not independently fetched from a German federal ministry page directly).
+- `RULE-COUNSEL-121` — UK medicine/dentistry admission is a compound case, not just grades plus
+  holistic clinical-exposure evidence: 57 UK universities also require the UCAT, which includes a
+  separately-banded Situational Judgement Test subtest — not activity-based at all. Confirms
+  `RULE-COUNSEL-120`'s "standardized third-party situational-judgment testing" category
+  generalizes beyond CASPer/North America — it's a recurring structural type (different specific
+  instruments per region), not a single tool. Confidence: high (official `ucat.ac.uk` pages,
+  directly fetched).

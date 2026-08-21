@@ -181,7 +181,13 @@ correction:
   (`RULE-COUNSEL-032/033`) — consistent with the Tier-1 baseline, no special conditioning needed.
 - **UK (Tier 2a)**: medicine is a **named partial exception in the activity-rewarding
   direction** — clinical work experience/volunteering specifically expected, closer to the Tier-1
-  pattern than the rest of UK admissions is (per `RULE-COUNSEL-058`'s own text).
+  pattern than the rest of UK admissions is (per `RULE-COUNSEL-058`'s own text). **Refined on a
+  further pass**: this is incomplete on its own — UK medicine is a genuine *compound* case, not
+  purely activity-rewarding. 57 UK universities also require the UCAT, which includes a
+  standardized, separately-scored Situational Judgement Test — structurally the *same category* as
+  Switzerland's aptitude-test gate below, just layered on top of (not instead of) holistic
+  clinical-exposure evidence, where Switzerland uses its aptitude test *instead of* any activity
+  review (`RULE-COUNSEL-121`).
 - **Switzerland (Tier 3-with-carveout)**: medicine is a **named exception in the opposite
   direction** — gated by the EMS aptitude test specifically, `RULE-COUNSEL-065` is explicit this is
   "not an activity portfolio." A counselor that generalized "medicine tends to be holistic" from

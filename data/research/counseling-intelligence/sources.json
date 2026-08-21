@@ -721,6 +721,18 @@
       "claim_supported": "CASPer is a standardized, timed, third-party-administered situational-judgment test (video and typed responses to real-world hypothetical scenarios, no single correct answer, scored by independent human raters, reported as a z-score/percentile) -- structurally distinct from both achievement-evidence review and institution-authored reflective-response scoring (e.g. Queen's Commerce/McMaster HHSP). Used across 500+ partner programs in medicine, health sciences, PA, nursing, and dental hygiene currently, with the vendor's own page describing expansion into education, business, and engineering.",
       "used_in_rules": ["RULE-COUNSEL-120"],
       "limitations": "Vendor's own marketing/product page, not an independent third-party audit -- treated as high confidence for factual claims about assessment mechanics (verifiable, unlikely to be misrepresented) but the specific list of programs/fields currently requiring it changes by admissions cycle per the page's own caveat, so that part is medium confidence and will go stale."
+    },
+    {
+      "id": "SRC-CS-061",
+      "title": "UCAT official pages -- homepage, Test Format and Scoring (Situational Judgement Test), UK and Partner Universities list",
+      "publisher": "UCAT Consortium (official, established by a consortium of UK universities) -- ucat.ac.uk",
+      "url": "https://www.ucat.ac.uk/ ; https://www.ucat.ac.uk/about-ucat/test-format-and-scoring/ ; https://www.ucat.ac.uk/about-ucat/universities/",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "57 UK universities require the UCAT for 2026-entry medicine/dentistry applications (including Oxford, Cambridge, Imperial, UCL, Manchester, Edinburgh, Bristol). UCAT includes a Situational Judgement Test subtest (69 questions, 26 minutes) measuring 'capacity to understand real world situations and to identify critical factors and appropriate behaviour,' scored separately (Bands 1-4) from the cognitive subtests -- a standardized, non-activity-based admissions component distinct from holistic clinical-exposure evidence.",
+      "used_in_rules": ["RULE-COUNSEL-121"],
+      "limitations": "Directly fetched and quoted across three official pages. University-by-university usage nuances (e.g. some courses have alternative requirements, marked with an asterisk on the source page) were not individually verified per institution."
     }
   ]
 }

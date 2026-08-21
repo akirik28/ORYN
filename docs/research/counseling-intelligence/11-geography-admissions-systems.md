@@ -34,7 +34,12 @@ it remains directly applicable here without modification.
   sports, unrelated clubs), weighted lightly and "only when you can articulate the transferable
   skill." Predicted grades and the exam-based system (A-levels/IB) still carry substantial,
   separately-reported weight. Medicine is a named partial exception where structured work
-  experience/volunteering is specifically expected, closer to a Tier-1 pattern for that one field.
+  experience/volunteering is specifically expected, closer to a Tier-1 pattern for that one field —
+  **though incomplete on its own**: UK medicine also requires the UCAT (57 universities, including
+  a standardized Situational Judgement Test subtest), a non-activity-based compound layer on top of
+  this holistic-evidence exception — see `06-major-family-evidence/10-medicine-clinical-pathways.md`
+  and `17-dimension-weighting-by-target.md`'s medicine cross-cutting section (`RULE-COUNSEL-121`)
+  for the full finding, not repeated here.
 - **France (Parcoursup)** — official government and Campus France sources describe the dossier
   each program receives: school report cards (bulletin), baccalauréat-track grades, a
   teacher/school-completed **"Fiche Avenir"** evaluation, and — for programs that request it — a
