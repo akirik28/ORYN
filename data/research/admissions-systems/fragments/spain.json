@@ -1,0 +1,295 @@
+{
+  "country_key": "spain",
+  "country_name": "Spain",
+  "A_admissions_architecture": {
+    "primary_application_route": "No single national application platform exists. Undergraduate ('Grado') admission runs on three stacked layers: (1) a NATIONAL legal/formula layer — Real Decreto 534/2024 (amended by Real Decreto 482/2025) sets the structure of the university-access test (EBAU) and the exact formula for the 'nota de acceso' (access grade) and 'nota de admisión' (admission grade) nationally, binding every public university; (2) a REGIONAL layer — each of Spain's 17 Comunidades Autónomas (CAs) drafts and administers its own EBAU exam content through its own 'comisión organizadora,' and runs its own 'Distrito Único' preinscripción/allocation portal (e.g. Madrid's public universities function as a single district; Andalusia's is the 'Distrito Único Andaluz'/DUA; Catalonia has its own equivalent) that both collects applications AND mechanically executes the ranked allocation using the national formula; (3) a UNIVERSITY layer — each university chooses which specific Bachillerato subjects to weight ('ponderar') for its own degree programmes and sets its own capacity ('plazas') per programme per cycle. A student applies through the Distrito Único of whichever region(s) they are targeting, not through a single national portal.",
+    "centralized_or_decentralized": "Hybrid, but structured differently from every other system in this package: the ADMISSION FORMULA itself (nota de acceso, nota de admisión) is set nationally and applies uniformly; the EXAM CONTENT and the actual ALLOCATION MECHANISM are regional (one portal per Comunidad Autónoma, mechanically ranking applicants by the national formula); the WEIGHTING PARAMETERS fed into that formula (which subjects count, reserved-quota specifics beyond the national floor, programme capacity) are set at university/programme level. Unlike Studielink (Netherlands) or UCAS (UK), which register but do not decide, Spain's regional Distrito Único platforms are genuine decision-making engines — they mechanically execute the ranked allocation themselves, using nationally-defined inputs.",
+    "major_application_platforms": [
+      "No national platform. Region-specific 'Distrito Único' portals, one per Comunidad Autónoma (examples found: Madrid's public-university single district; Distrito Único Andaluz/DUA covering Andalusian public universities; Catalonia's equivalent portal under the Generalitat)",
+      "UNEDasiss (run by UNED, the national distance-learning university) — the exclusive national body for students coming from foreign/non-Spanish education systems; separate from the domestic Distrito Único portals but feeds the same admission-grade pool"
+    ],
+    "direct_university_application_possible": "For standard public Grado programmes, no — the regional Distrito Único portal is both the application and the decision mechanism; a student cannot bypass it to apply 'directly' the way a US or Canadian applicant can. PRIVATE universities are the genuine exception: they commonly run a fully separate, direct, own-criteria admission process (own tests, interviews, academic-record weighting) outside the Distrito Único/nota de admisión system entirely, though the underlying qualification (a passed EBAU/equivalent, needed for the degree to carry official 'título oficial' status) is still generally required — see restricted_selective_programmes and the título propio/título oficial distinction noted in application_strategy_constraints.",
+    "application_limit_if_any": "No official cap was found on the number of degree preferences a student may rank within a single region's Distrito Único application (unlike UCAS's 5-choice cap) — this was not resolved either way in sources reviewed and should be treated as a gap, not assumed unlimited. The real, confirmed constraint is structural rather than numeric: applying to public universities in more than one Comunidad Autónoma requires submitting a SEPARATE Distrito Único application to each region, since no single application reaches every Spanish public university.",
+    "parallel_application_rules": "A student may submit separate Distrito Único applications to as many Comunidades Autónomas as they choose in the same cycle — there is no cross-region exclusivity rule. Within one region's Distrito Único, the single application ranks multiple degree preferences, and the regional platform allocates automatically by nota de admisión rank across rounds (see application_timing).",
+    "scope": "national (formula/legal framework) + regional (exam content, portal, allocation execution) + university (weighting parameters, capacity)",
+    "sources": [
+      "https://www.boe.es/buscar/act.php?id=BOE-A-2024-11858",
+      "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-12311",
+      "https://www.lamoncloa.gob.es/serviciosdeprensa/notasprensa/educacion-fp-deportes/paginas/2024/ebau-evau-evaluacion-acceso-universidad.aspx",
+      "https://academico.unizar.es/acceso-admision-grado/admision/cupos",
+      "https://cat.us.es/distrito-unico-andaluz/que-es-el-distrito-unico-andaluz-o-dua",
+      "https://universitats.gencat.cat/es/acces-universitat/acces-segons-perfils-estudiants/estudiant-sistema-educatiu-estranger/index.html"
+    ]
+  },
+  "B_qualification_eligibility": {
+    "recognition_mechanism": "Two distinct national bodies handle different populations. (1) For students with a Spanish Bachillerato (or an EU/reciprocal-agreement qualification, or an IB Diploma/European Baccalaureate): eligibility flows directly from Real Decreto 534/2024 — a passed 'nota de acceso' (≥5.0) via EBAU, or (for IB/European Baccalaureate/EU-system holders) via UNEDasiss accreditation without needing to sit EBAU. (2) For non-EU/non-agreement foreign secondary qualifications (a standard Turkish MEB Lise Diploması falls here): TWO sequential steps are required — first 'homologación' (official equivalence to the Título de Bachiller), issued by the Ministerio de Educación, Formación Profesional y Deportes (Dirección General de Evaluación y Cooperación Territorial) for most of Spain, or by the regional education department in Catalonia, Galicia and the Basque Country, and processed via the Spanish Embassy's Consejería de Educación for applicants located abroad; then, only once homologación is 'definitiva' (final), 'acreditación UNEDasiss,' which computes an actual numeric admission grade. UNEDasiss's own FAQ states explicitly it 'does not homologate or validate titles' — the two processes are run by different bodies and are not interchangeable.",
+    "baseline_qualification_expectation": "Título de Bachiller (or recognized equivalent) plus a nota de acceso of at least 5.0 out of 10. For the international/UNEDasiss pathway this 5.0 floor is structurally identical — UNEDasiss's own formula produces a grade between 5 and 10.",
+    "subject_prerequisites_general": "Spain does not use hard subject-gate prerequisites the way the Netherlands' vakkeneisen or Germany's Leistungskurs-linked lists do. Instead, universities publish which Bachillerato subjects they will WEIGHT (ponderar) for a given degree's nota de admisión (at 0.1 or 0.2 each), which functions as a scoring bonus for relevant coursework rather than an eligibility gate — a student who never took the 'right' subject can generally still apply and be admitted if their nota de acceso alone clears that cycle's nota de corte. Whether any Spanish public degree programme also imposes a genuine hard subject-gate (not just a scoring bonus) was not confirmed or ruled out in sources reviewed this pass — flagged as a gap.",
+    "equivalency_process": "For homologación, the Ministry maintains country-specific equivalency frameworks ('sistemas educativos con regulación específica') for some countries; whether Turkey has its own specifically codified sub-regulation (the way sources indicated Germany and France do) was not confirmed in sources reviewed this pass — genuine gap, not a confirmed absence. Processing time for a complete homologación file is stated as up to three months from receipt of complete documentation.",
+    "university_discretion": "Narrower than in the Netherlands or Germany at the eligibility-gate level (Spain's baseline threshold and formula structure are nationally fixed), but real at the ranking-parameter level: which subjects each university chooses to weight (and at 0.1 vs 0.2) for a given degree, exact percentages for reserved quotas above the national floor, and each degree's admitted-capacity ('plazas') per cycle are all set independently per university/programme, and directly determine that cycle's competitive cutoff.",
+    "credentials_covered": {
+      "turkiye_meb": "Standard Turkish 'Lise Diploması' — not covered by any EU/reciprocal-agreement fast track; requires homologación then UNEDasiss acreditación. See dedicated Türkiye section below.",
+      "ib_diploma": "The full IB Diploma is explicitly named in Real Decreto 534/2024 (Article 6) as exempt from sitting EBAU; IB holders (including those educated in Türkiye) go directly to UNEDasiss acreditación without the homologación step required for a plain MEB diploma.",
+      "a_levels": "Not independently confirmed this pass whether A-Levels are named alongside IB/European Baccalaureate in Article 6's exam-exemption list, or whether A-Level holders route through the same homologación-first pathway as a plain non-EU diploma — flagged as a gap.",
+      "ap_plus_us_diploma": "Not independently confirmed this pass — no official page reviewed addressed AP-exam-supplemented US diplomas specifically.",
+      "french_bac": "Not independently confirmed this pass for the standard French Baccalauréat; the European Baccalaureate (the Schola Europaea qualification, a different credential) is explicitly named as exam-exempt in Article 6.",
+      "german_abitur": "Not independently confirmed this pass."
+    },
+    "sources": [
+      "https://www.boe.es/buscar/act.php?id=BOE-A-2024-11858",
+      "https://unedasiss.uned.es/faqs",
+      "https://www.educacionfpydeportes.gob.es/servicios-al-ciudadano/catalogo/general/05/051270/ficha/051270.html",
+      "https://www.uam.es/uam/en/admision-sistemas-educativos-extranjeros"
+    ]
+  },
+  "turkiye_applicant_view": {
+    "standard_diploma_sufficient_for_direct_entry": "Not sufficient on its own — a standard MEB Lise Diploması requires homologación (Spanish Ministry of Education, processed for Türkiye-based applicants through the Consejería de Educación at the Spanish Embassy) BEFORE UNEDasiss will compute an admission grade. Spain and Türkiye do have a bilateral educational cooperation agreement (BOE-A-2014-6393, signed Istanbul 3 October 2013), but its own Article 6 only commits both countries to 'facilitate' future mutual recognition through information exchange — it does NOT establish automatic diploma equivalence. This is a genuine, sourced negative finding: the existence of a bilateral cooperation agreement should not be read as easing the homologación requirement.",
+    "additional_qualifications_commonly_required": "Once homologación is granted, the UNEDasiss 'acreditación' pathway computes a full numeric admission grade — NOT a binary eligibility determination. Formula (confirmed on UNEDasiss's own FAQ, corroborated by multiple independent calculators): nota de acceso = (0.2 × NMB + 4) + 0.1×M1 + 0.1×M2 + 0.1×M3 + 0.1×M4, where NMB is the homologated Bachillerato-equivalent average and M1–M4 are the best scores (minimum 5/10 each, same calendar year) from up to four optional 'Pruebas de Competencias Específicas' (PCE) — UNEDasiss's own subject-specific exams, functionally parallel to EBAU's voluntary-phase subject exams. Result: a grade between 5 and 10 without PCE, extendable toward 14 with weighted PCE for competitive programmes, exactly mirroring the domestic nota de admisión ceiling. At the University of Zaragoza, UNEDasiss-accredited students are explicitly folded into the SAME general admission quota as domestic EBAU-takers, ranked purely by admission grade — not a segregated or lesser 'international' track.",
+    "ap_ib_a_level_impact": "Materially simplifies the pathway. Real Decreto 534/2024's Article 6 names the IB Diploma (and European Baccalaureate) as exempt from sitting EBAU; per UAM's own admissions page, IB holders go straight to UNEDasiss acreditación without the homologación step a plain MEB diploma requires. This mirrors the equivalent Netherlands and Germany findings (IB materially simplifies access) — a consistent cross-country pattern, not something unique to Spain.",
+    "national_entrance_exam_relevance": "Whether Türkiye's YKS national university-entrance exam score plays any role in the homologación or UNEDasiss acreditación process for a Lise Diploması holder was not addressed, pro or con, in any official source reviewed this pass — a genuine gap, identical in kind to the same unresolved question already flagged in the Netherlands research.",
+    "foundation_year_common": "No Spain-specific bridge/foundation-year mechanism (comparable to the Netherlands' 'one year of Turkish Lisans credits' or Germany's Studienkolleg) was identified in sources reviewed this pass. This should be treated as a genuine gap, not as confirmation that no such route exists — third-party preparatory-year programmes may exist without appearing in the official sources checked.",
+    "recognition_centralized_or_university_specific": "More centralized than the Netherlands or Germany at the eligibility-determination step: homologación and UNEDasiss acreditación are both single national (or, for homologación, national-or-designated-regional-authority) processes, not a university-by-university judgment call — a Turkish applicant does not face the Tilburg-vs-VU-style problem of different universities setting different acceptance bars for the same diploma. Where university-specific variation re-enters is downstream, in which subjects each university chooses to weight for a given degree and that degree's capacity that cycle — i.e., in how COMPETITIVE a given programme is, not in whether the underlying qualification is recognized at all.",
+    "sources": [
+      "https://www.boe.es/buscar/act.php?id=BOE-A-2024-11858",
+      "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2014-6393",
+      "https://unedasiss.uned.es/faqs",
+      "https://www.educacionfpydeportes.gob.es/servicios-al-ciudadano/catalogo/general/05/051270/ficha/051270.html",
+      "https://www.uam.es/uam/en/admision-sistemas-educativos-extranjeros",
+      "https://academico.unizar.es/acceso-admision-grado/admision/cupos"
+    ]
+  },
+  "academic_evidence_used": {
+    "transcript_role": "The Bachillerato average (Nota Media de Bachillerato, NMB) is a direct, load-bearing numeric input into both the domestic nota de acceso (60% weight) and the UNEDasiss foreign-student formula (the '0.2×NMB+4' component) — not merely supporting context.",
+    "native_grades_handling": "For domestic students, Bachillerato grades are already on the same 0–10 national scale used throughout the formula, so no conversion is needed. For foreign students, the homologación process is what translates a foreign secondary record into an accepted Bachillerato-equivalent standing before UNEDasiss computes NMB into the formula; the exact methodology used to derive a numeric NMB-equivalent figure from a foreign transcript's original grading scale was not confirmed in sources reviewed this pass — flagged as a gap (in contrast to Germany's explicitly named 'Bavarian formula').",
+    "predicted_grades_role": "None found — see dedicated predicted_grades section.",
+    "final_grades_role": "Required throughout. Domestic EBAU is sat only after Bachillerato is fully complete (final grades already known at application time), and Catalonia's own guidance states homologación must be 'definitiva' (final, not provisional) before a foreign applicant can enter the June preinscripción cycle.",
+    "external_exams_role": "EBAU is Spain's own external, standardized exam layer for domestic students (obligatory phase: 4–5 subjects; voluntary phase: up to 4 more, for the admission-grade bonus). For UNEDasiss-track students, PCE plays the structurally equivalent role.",
+    "course_rigor_signal": "Read through the ponderación (subject-weighting) mechanism — see subject_prerequisites — a scoring bonus for relevant coursework, not a separate 'rigor' narrative judgment.",
+    "subject_prerequisites": "See dedicated subject_prerequisites section.",
+    "standardized_tests": "See dedicated standardized_tests section.",
+    "sources": [
+      "https://www.boe.es/buscar/act.php?id=BOE-A-2024-11858",
+      "https://unedasiss.uned.es/faqs",
+      "https://universitats.gencat.cat/es/acces-universitat/acces-segons-perfils-estudiants/estudiant-sistema-educatiu-estranger/index.html"
+    ]
+  },
+  "predicted_grades": {
+    "are_used": "Not found anywhere in the Spanish system, for domestic or international applicants — a genuine, confirmed structural difference from the Netherlands, UK and Canada (which all use foreign or native predicted grades operationally to some degree), and consistent instead with the Germany/Italy 'not used' pattern.",
+    "where": "Not applicable.",
+    "by_whom": "Not applicable.",
+    "for_what": "Not applicable — Spain's timing structure removes the need: domestic students sit EBAU only after Bachillerato is complete (final results already exist), and the international UNEDasiss pathway explicitly requires a 'definitiva' (final) homologación before an admission grade can be computed at all, meaning an in-progress or forecast foreign record cannot enter the formula.",
+    "conditional_offer_relationship": "None found — see conditional_vs_unconditional_admission.",
+    "final_result_requirement": "Yes, unconditionally, for both tracks.",
+    "sources": [
+      "https://www.boe.es/buscar/act.php?id=BOE-A-2024-11858",
+      "https://universitats.gencat.cat/es/acces-universitat/acces-segons-perfils-estudiants/estudiant-sistema-educatiu-estranger/index.html"
+    ]
+  },
+  "conditional_vs_unconditional_admission": {
+    "concept_exists": "Not in the UK/Netherlands grade-prediction sense. A narrower, procedural analogue may exist: Catalonia's guidance distinguishes a 'homologación definitiva' (final) requirement from an implied provisional processing state, but this reads as document-completeness conditionality (has the paperwork been fully resolved) rather than academic-conditionality (admitted now, pending a specific future grade) — structurally closer to the narrow procedural sense found in Italy than to the UK's predicted-grade-conditional-offer model.",
+    "explanation": "Because EBAU is sat post-Bachillerato-completion and UNEDasiss requires a final (not provisional) homologación before scoring, the entire Spanish system appears to be built around already-final academic results at the point an admission grade is generated — removing much of the structural need for a UK-style conditional offer. This was not exhaustively tested against every university's own procedural language this pass and should be treated as a well-supported but not fully exhaustive finding.",
+    "sources": [
+      "https://universitats.gencat.cat/es/acces-universitat/acces-segons-perfils-estudiants/estudiant-sistema-educatiu-estranger/index.html",
+      "https://www.boe.es/buscar/act.php?id=BOE-A-2024-11858"
+    ]
+  },
+  "subject_prerequisites": {
+    "pattern": "Real but structurally different from every other system in this package: Spanish universities do not gate eligibility on having studied a specific Bachillerato subject. Instead, each university publishes, per degree, which subjects it will weight ('ponderar') in the nota de admisión formula — Real Decreto 534/2024 Article 22.3 requires each university to select at least two such subjects per degree, weighted at 0.1 or 0.2 each, with the student's own best-scoring eligible subjects applied automatically. This is a scoring BONUS mechanism (raises competitive ranking) rather than a hard GATE (a student who never took the 'ideal' subject can still apply and, if the programme is undersubscribed that cycle, still be admitted).",
+    "scope": "national formula structure (Article 22.3's 'at least two weighted subjects' rule) + university (which specific subjects, and at what weight, for each of its own degrees)",
+    "illustrative_examples": [
+      "A quantitative/STEM degree might weight Mathematics II and Physics at 0.2 each; a Biology-heavy degree (Medicine, Biology, Veterinary) might weight Biology and Chemistry.",
+      "Because the weighting is a bonus rather than a gate, a student targeting a STEM degree without having taken the 'ideal' weighted subject is not excluded from applying — their competitive ranking is simply lower relative to students whose profile includes weighted-subject bonus points."
+    ],
+    "vwo_profielen_detail": "Not applicable — Spain's LOMLOE Bachillerato does not use a Dutch-VWO-style small set of fixed named 'profiles'; students choose a broader Bachillerato modality (e.g. Ciencias, Humanidades y Ciencias Sociales, Artes) and then individual subjects within it, and it is those individual subjects (not the modality as a named category) that universities weight per degree.",
+    "sources": [
+      "https://www.boe.es/buscar/act.php?id=BOE-A-2024-11858"
+    ]
+  },
+  "standardized_tests": {
+    "mandatory_optional_status": "EBAU (for domestic-track and EU/agreement-track applicants who choose to sit it) and UNEDasiss's PCE (for the international/homologación-track pathway) are Spain's own national standardized instruments — not SAT/ACT-style tests, and not optional in the sense of being skippable if a student wants their nota de admisión to include weighted-subject bonus points (the underlying nota de acceso alone, without any voluntary-phase/PCE component, is sufficient only to clear the ≥5.0 baseline, not to compete for capacity-limited programmes). No evidence was found that SAT/ACT/AP scores play any role in the standard Spanish admission formula for either domestic or international applicants — a genuine structural difference from the Netherlands, where SAT/AP can help establish diploma-equivalence for some diploma types.",
+    "current_cycle_note": "Real Decreto 534/2024 (in force for EBAU sittings from the 2024-2025 cycle, and for admission procedures from 2025-2026 onward) is the current governing framework; Real Decreto 482/2025 subsequently amended it. Treat any pre-2024 description of the exam ('Selectividad'/'PAU' under the older LOE/LOMCE-era rules) as potentially superseded.",
+    "academic_cycle": "2025-2026 / 2026-2027",
+    "programme_specific_tests": [
+      "Private universities, especially for Medicine, commonly run their own bespoke entrance tests entirely separate from EBAU/PCE — one illustrative example found (secondary-sourced, a single named private university, not verified as representative): a science-knowledge test (40%), Bachillerato average (25%), an aptitude test (10%), and a personal interview (25%). Treat as illustrative of the private-pathway PATTERN, not as a representative or stable formula across all private institutions."
+    ],
+    "sources": [
+      "https://www.boe.es/buscar/act.php?id=BOE-A-2024-11858",
+      "https://unedasiss.uned.es/faqs",
+      "https://www.redaccionmedica.com/secciones/privada/tres-pruebas-para-entrar-a-medicina-sin-nota-de-corte-ni-de-pau-en-espana-3936"
+    ]
+  },
+  "language_requirements": {
+    "framework": "For Spanish-taught programmes, non-native applicants whose prior education was not conducted in Spanish generally need Spanish proficiency at a minimum of B2 (CEFR), evidenced via DELE, SIELE, an official language-school (Escuela Oficial de Idiomas) certificate, or recognition already embedded within the UNEDasiss accreditation itself — confirmed explicitly on UAM's own admissions page.",
+    "exemption_pattern": "Not exhaustively confirmed this pass; UAM's page implies exemption for applicants whose prior education occurred in Spanish-speaking contexts, consistent with the general pattern seen in every other country in this package, but the exact rule set was not independently verified against a primary Ministry-level source.",
+    "where_variation_begins": "For Spanish-taught programmes, the B2 threshold appears to be applied fairly uniformly at the university level (only one university's page was checked in depth on this point — a genuine limitation). Precise English-language-proficiency thresholds (IELTS/TOEFL equivalents) for Spain's smaller but growing English-taught programme segment were NOT independently confirmed this pass — flagged as a gap, not as evidence that no such requirement exists.",
+    "sources": [
+      "https://www.uam.es/uam/en/admision-sistemas-educativos-extranjeros"
+    ]
+  },
+  "application_timing": {
+    "cycle": "2025-2026 / 2026-2027 academic cycle, under Real Decreto 534/2024 as currently in force. Specific calendar dates cited below are illustrative of the pattern seen in the 2025-2026 cycle and should be reconfirmed per Comunidad Autónoma for any specific target cycle, since exact dates are set regionally within the national framework.",
+    "major_deadline_pattern": "Real Decreto 534/2024 Article 16.1 establishes exactly two EBAU convocatorias (sittings) per year nationally — an 'ordinaria' (ordinary, commonly held in early-to-mid June) and an 'extraordinaria' (extraordinary, commonly July) — with each Comunidad Autónoma setting its own exact dates within government-set maximum windows. Within a single convocatoria, Article 19.4 mandates a 'llamamiento único' (single call) per exam sitting — a student is not called to sit the same exercise across multiple staggered sub-sessions.",
+    "numerus_fixus_deadline": "Not a separate deadline track the way the Netherlands' numerus fixus is — Spain's capacity-limited ('plazas limitadas') programmes use the SAME EBAU calendar and the SAME regional Distrito Único preinscripción window as every other programme; what differs for a competitive programme is not an earlier deadline but the number and duration of subsequent ranked-allocation rounds (see below).",
+    "academic_cycle": "2025-2026",
+    "retrieved_at": "2026-08-21",
+    "adjudicacion_rounds": "After the June/July preinscripción window, the regional Distrito Único platform runs an iterative, multi-round ranked-allocation process — NOT a single-decision or continuously rolling system. Confirmed pattern across two universities checked in different regions: an initial 'primera adjudicación' (first allocation) is followed by further allocation rounds and 'listas de espera'/'listas de resultas' (waiting-list/leftover-place rounds) that can continue for months — one Andalusian public university's published 2025-2026 calendar showed a second allocation in mid-July followed by up to six successive 'listas de resultas' rounds running through 10 October. This structurally resembles a waterfall/round-based allocation mechanism, genuinely distinct from a single-deadline system and from a continuously rolling one.",
+    "sources": [
+      "https://www.boe.es/buscar/act.php?id=BOE-A-2024-11858",
+      "https://www.lamoncloa.gob.es/serviciosdeprensa/notasprensa/educacion-fp-deportes/paginas/2024/ebau-evau-evaluacion-acceso-universidad.aspx",
+      "https://www.edificacion.upm.es/acceso-para-extranjeros"
+    ]
+  },
+  "application_strategy_constraints": {
+    "constraints": [
+      "No confirmed national cap on the number of degree preferences ranked within a single region's Distrito Único application (unlike UCAS's 5-choice cap) — genuine gap, not confirmed either way this pass.",
+      "Applying to public universities in more than one Comunidad Autónoma requires a separate Distrito Único application per region — an administrative/logistical constraint, not a legal quota, arising from 'distrito abierto' (no legal preference by home region — see eligibility_competitiveness_fit) coexisting with fully region-fragmented application portals.",
+      "For the international/UNEDasiss pathway: a homologación file takes up to three months to resolve once complete, and per Catalonia's guidance must be 'definitiva' before the June preinscripción window — meaning a Turkish applicant's realistic planning horizon is materially longer than three months once translation, apostille/legalization, and embassy-submission logistics are added.",
+      "UNEDasiss accreditation validity: 2 years for non-EU/non-agreement systems from issuance; for EU-system students the accreditation itself does not expire (2025 onward) but PCE results and subject recognition remain valid for 3 academic years.",
+      "PCE scores must be from the same calendar year as the target admission cycle to count toward that cycle's nota de acceso, per UNEDasiss's own FAQ.",
+      "Official Grado-track ('título oficial') admission at any institution — public or private — requires the nota de acceso/UNEDasiss pathway; a private university's own 'título propio' (institution-specific, non-state-recognized degree) does not require it, but also carries materially less external recognition (not automatically recognized across the EU/EHEA the way a título oficial is) — a distinction families should verify per specific private-university programme, not assume."
+    ],
+    "explanation": "Spain's application-strategy constraints are structurally different from every other system studied: rather than a numeric choice-cap (US Common App's 20, UCAS's 5), the operative constraint is regional-portal fragmentation (distrito abierto legally permits applying anywhere, but there is no single mechanism to do so) plus, for international applicants specifically, a multi-body sequential-processing timeline (homologación, then acreditación) that has its own real lead time.",
+    "sources": [
+      "https://unedasiss.uned.es/faqs",
+      "https://www.educacionfpydeportes.gob.es/servicios-al-ciudadano/catalogo/general/05/051270/ficha/051270.html",
+      "https://universitats.gencat.cat/es/acces-universitat/acces-segons-perfils-estudiants/estudiant-sistema-educatiu-estranger/index.html"
+    ]
+  },
+  "personal_statement_essays": {
+    "role": "Not required nationally for standard public Grado admission — absent from Real Decreto 534/2024 and from every official government/university page reviewed. May appear as one input within a PRIVATE university's own separate, institution-specific selection process (see standardized_tests' private-Medicine example, which included a weighted personal-interview component) — a programme/institution-level exception, not a national feature.",
+    "explanation": "Consistent with the broader continental-European pattern already confirmed in the Netherlands and Germany research: essays/personal statements are not a baseline feature of a formula-driven, threshold-and-ranking admission system.",
+    "sources": [
+      "https://www.boe.es/buscar/act.php?id=BOE-A-2024-11858",
+      "https://www.redaccionmedica.com/secciones/privada/tres-pruebas-para-entrar-a-medicina-sin-nota-de-corte-ni-de-pau-en-espana-3936"
+    ]
+  },
+  "recommendation_letters": {
+    "role": "Not found as a requirement anywhere in the sources reviewed — absent from Real Decreto 534/2024 and every official page checked, for both public and (in the one private example reviewed) private-university pathways.",
+    "explanation": "Read as 'not found in sources reviewed,' consistent with, not a confirmed universal absence across every private institution nationally — the private sector was sampled narrowly (one illustrative example) this pass.",
+    "sources": [
+      "https://www.boe.es/buscar/act.php?id=BOE-A-2024-11858"
+    ]
+  },
+  "extracurricular_activities": {
+    "role": "Not a factor anywhere in the nota de acceso/nota de admisión formula — the entire public system is grades-plus-weighted-subject-exams based, with no structural place for activities review. Not found in Real Decreto 534/2024 or any official page reviewed.",
+    "nuance": "May enter indirectly within a private university's own separate interview/profile-review process (as one unweighted or lightly-weighted input, per the illustrative private-Medicine example under standardized_tests) — institution-specific, not a system-wide feature, and not independently confirmed as a general pattern across private universities this pass.",
+    "sources": [
+      "https://www.boe.es/buscar/act.php?id=BOE-A-2024-11858",
+      "https://www.redaccionmedica.com/secciones/privada/tres-pruebas-para-entrar-a-medicina-sin-nota-de-corte-ni-de-pau-en-espana-3936"
+    ]
+  },
+  "interviews_tests_portfolios": {
+    "pattern": "For standard public Grado admission: none — the process is exam-and-formula based throughout. For PRIVATE universities (illustrated by one named Medicine programme found): own written science tests, an aptitude test, and a personal interview are commonly combined with the Bachillerato average in the university's own weighted formula, entirely outside the nota de admisión/Distrito Único mechanism. Whether Spanish PUBLIC universities require a portfolio or aptitude test for inherently practice-based programmes (Fine Arts/Bellas Artes, Conservatorio-style music and performing-arts programmes) — a pattern confirmed in both the Netherlands and Germany research — was NOT independently confirmed or ruled out in sources reviewed this pass. This is flagged explicitly as a genuine gap rather than assumed true by analogy to those other countries.",
+    "when_applicable": "Confirmed only for private-university programmes reviewed (illustrative, not exhaustive). Public-university arts/performing-arts admission mechanics are an open question — see unresolved_questions.",
+    "sources": [
+      "https://www.redaccionmedica.com/secciones/privada/tres-pruebas-para-entrar-a-medicina-sin-nota-de-corte-ni-de-pau-en-espana-3936"
+    ]
+  },
+  "restricted_selective_programmes": {
+    "numerus_fixus_explanation": "Spain uses capacity limits ('plazas limitadas,' colloquially still often called 'numerus clausus') per degree per university per cycle, driven by teaching-capacity constraints (clinical placements for Medicine, lab space, staff-student ratios) — conceptually the same driver as the Netherlands' numerus fixus and Germany's NC. The resulting cutoff is called the 'nota de corte': confirmed, precisely, as the LOWEST admitted student's nota de admisión in that cycle's FINAL completed allocation round — a self-adjusting, demand-driven number, never a fixed threshold set in advance.",
+    "current_mechanism": "Unlike Germany's hochschulstart (a single national body centrally coordinating seat allocation for exactly 4 named subjects across all participating universities), no evidence was found of any equivalent NATIONAL seat-coordinating body for Spain's competitive programmes. Real Decreto 534/2024 Article 24 gives the central government power to set maximum national admission limits via the Conferencia General de Política Universitaria, but this reads as an exceptional/general-interest override power, not the primary mechanism setting Medicine's (or any other degree's) actual yearly capacity — capacity appears to be set and administered per-university, with the REGIONAL Distrito Único platform then executing the ranked allocation using the nationally-defined formula. This is a materially different shape from Germany's national-vs-local-NC split (which divides by SUBJECT: 4 subjects go one way, everything else another) — Spain instead applies the SAME allocation mechanism uniformly to every programme, with 'how competitive' emerging purely from that specific programme's supply-vs-demand that cycle, not from a categorically different admission MECHANISM being switched on for named subjects.",
+    "example_fields": [
+      "Medicine (Medicina) — the clearest example; illustrative secondary-sourced cutoff figures for one recent cycle ranged roughly 11.4–13.4 out of a possible 14 at several public universities (treat as illustrative and year-specific only, not authoritative or predictive of any future cycle)",
+      "Other clinical/high-demand fields (Dentistry, Physiotherapy, Nursing, Veterinary Medicine, Psychology) — pattern expected by structural analogy to Medicine but not individually verified this pass",
+      "Private universities commonly offer parallel Medicine (and other) programmes admitted through their own separate process, entirely outside the nota de corte/Distrito Único mechanism — a materially different pathway, not merely a lower-bar version of the same one"
+    ],
+    "sources": [
+      "https://www.boe.es/buscar/act.php?id=BOE-A-2024-11858",
+      "https://www.edificacion.upm.es/acceso-para-extranjeros",
+      "https://notasdecorte.es/medicina",
+      "https://www.redaccionmedica.com/secciones/privada/tres-pruebas-para-entrar-a-medicina-sin-nota-de-corte-ni-de-pau-en-espana-3936"
+    ]
+  },
+  "admissions_decision_model": {
+    "dominant_model": "A single, uniform, formula-and-ranking mechanism applied to every public Grado programme — genuinely different in SHAPE from the Netherlands' bifurcated model (two categorically different admission mechanisms depending on programme type) and from Germany's national-vs-local-NC split (different mechanisms for different named subjects).",
+    "explanation": "Every applicant's standing is expressed as the same nota de acceso/nota de admisión number, computed the same way nationally, and every public programme allocates places by ranking applicants on that number through the same regional Distrito Único mechanism. What varies is not the MECHANISM but a single emergent property: whether that cycle's demand for a specific programme exceeds its set capacity. An undersubscribed programme effectively admits everyone who clears the 5.0 floor (eligibility functionally equals admission, as in the Netherlands' non-numerus-fixus majority); an oversubscribed one (Medicine being the extreme case) produces a high 'nota de corte' through the exact same ranking mechanism, not a different one. ORYN should represent Spanish competitiveness as a continuous, per-programme-per-cycle property of one uniform ranking system, not as a categorical 'this type of programme is selection-based, that type is threshold-based' split.",
+    "sources": [
+      "https://www.boe.es/buscar/act.php?id=BOE-A-2024-11858",
+      "https://www.edificacion.upm.es/acceso-para-extranjeros",
+      "https://academico.unizar.es/acceso-admision-grado/admision/cupos"
+    ]
+  },
+  "safe_inferences": [
+    "It is safe to infer that a UNEDasiss-accredited international applicant (once homologación, where required, is complete) competes in the SAME general admission pool as domestic EBAU-takers, ranked purely by the same nota de admisión number — not a segregated or capped 'international' quota (confirmed at the University of Zaragoza).",
+    "It is safe to infer that for a plain, non-IB, non-EU-agreement Turkish MEB Lise Diploması, homologación (Spanish Ministry of Education, via the Spain Embassy's education office for applicants in Türkiye) must be completed and made 'definitiva' BEFORE UNEDasiss will compute any admission grade — these are two sequential processes run by different bodies, not one.",
+    "It is safe to infer that a full IB Diploma materially simplifies the pathway for a Türkiye-educated applicant by routing directly to UNEDasiss acreditación, skipping the homologación step a plain MEB diploma requires.",
+    "It is safe to infer that Spain's subject-weighting mechanism (ponderación) functions as a competitive-ranking BONUS, not a hard eligibility gate — a student can generally still apply to (and, if the programme is undersubscribed, be admitted to) a programme even without having taken its 'ideal' weighted subjects.",
+    "It is safe to infer that any specific year's published 'nota de corte' for a given degree/university is a historical, demand-driven artifact of that cycle's applicant pool and capacity — never a fixed, guaranteed threshold for a future cycle.",
+    "It is safe to infer that personal statements, recommendation letters, and general extracurricular-activity review are NOT primary levers in standard Spanish public Grado admission, unlike the US/UK systems.",
+    "It is safe to infer that predicted/forecast grades play no role anywhere in the Spanish system, domestic or international — both tracks are structurally built around final, completed results."
+  ],
+  "unsafe_inferences": [
+    "It is unsafe to assume 'distrito abierto' (the national legal principle of no preference by home-region residence) means a single national application exists — in practice a student must submit a separate Distrito Único application to each Comunidad Autónoma whose public universities they are targeting.",
+    "It is unsafe to assume homologación and UNEDasiss acreditación are the same process, interchangeable, or that completing one automatically triggers the other — they are sequential, run by different bodies (Ministry/regional education department vs. UNED), and treating them as one step risks materially derailing an applicant's timeline.",
+    "It is unsafe to assume the Spain-Türkiye bilateral educational cooperation agreement (2013/2014) eases or fast-tracks diploma recognition — its own text commits only to 'facilitating' future cooperation, not to automatic equivalence.",
+    "It is unsafe to assume a specific illustrative nota de corte figure (e.g., a particular university's recent Medicine cutoff) will hold, or even approximately hold, for any future admission cycle — these are self-adjusting, demand-driven outputs, not published targets.",
+    "It is unsafe to assume all Spanish private universities follow one uniform admission process — the single illustrative private-Medicine example found in this research (test/interview/GPA weighting) should not be generalized to every private institution or programme without independent verification.",
+    "It is unsafe to assume a Spanish public university's admission process includes a portfolio, aptitude test, or interview for Fine Arts/performing-arts-type programmes just because the Netherlands and Germany both confirmed that pattern — this was not independently verified for Spain this pass.",
+    "It is unsafe to assume the ponderación (subject-weighting) mechanism is a hard prerequisite gate rather than a scoring bonus — conflating the two would incorrectly exclude students from applying to programmes they remain formally eligible for."
+  ],
+  "eligibility_competitiveness_fit": {
+    "eligibility": "An objective, nationally-formula-defined threshold: nota de acceso ≥5.0 (domestic EBAU, or UNEDasiss acreditación for international applicants once any required homologación is complete). Binary and checkable, consistent with the continental-European pattern already confirmed in the Netherlands, Germany and Italy research.",
+    "competitiveness": "Not a categorically separate admission MECHANISM the way it is in the Netherlands (numerus fixus) or Germany (national/local NC) — it is a continuous, emergent property of the SAME ranking mechanism applied to every programme: how far a specific degree's cycle-specific 'nota de corte' sits above the 5.0 floor, driven purely by that cycle's applicant demand against that university's set capacity. This is a genuinely distinct 'shape' from every other system in this package and should be modeled as such — not as a binary threshold-vs-selection split.",
+    "fit": "Expressed almost entirely through the ponderación (weighted-subject) mechanism — a pure numeric scoring bonus for having taken and scored well in programme-relevant Bachillerato subjects — with no narrative, holistic, or interview-based 'fit' component anywhere in the standard public pathway. This makes Spain's public-university 'fit' signal more purely quantitative than any other system in this package, including the Netherlands' profiel-mapped subject match (which is at least a qualifying gate, not purely a scoring bonus). Narrative/interview-based fit assessment reappears only in the separate private-university pathway."
+  },
+  "counselor_actions": [
+    "For a plain MEB Lise Diploması holder with no IB/A-Level overlay: start homologación immediately and treat it as a multi-month critical-path item — official processing alone is stated at up to three months once documentation is complete, and translation, apostille/legalization, and Spanish-Embassy-Ankara submission logistics add meaningfully more lead time in practice; do not assume this can be compressed into the same timeline as a domestic EBAU applicant.",
+    "Never let a family conflate homologación (Ministry-level diploma recognition) with UNEDasiss acreditación (the actual admission-grade-generating step) — confirm homologación is 'definitiva' before assuming any progress has been made toward an actual admission grade.",
+    "If the student holds or is completing a full IB Diploma, confirm this explicitly — it routes directly to UNEDasiss acreditación, skipping the homologación step, and is a materially faster and simpler pathway than the plain-MEB route.",
+    "Confirm the Spanish B2 language-proficiency requirement (DELE/SIELE/official language school, or built into the UNEDasiss accreditation) SEPARATELY from academic-qualification recognition for any Spanish-taught target programme — do not assume clearing homologación/acreditación also satisfies the language requirement.",
+    "For competitive programmes (Medicine above all), help the student maximize their nota de admisión via PCE (or EBAU voluntary phase for domestic-track students) in subjects the target university actually weights for that specific degree — check the university's own published ponderación list per degree, since this is set per-university, not nationally.",
+    "Never treat a prior-year published 'nota de corte' as a guaranteed or even reliably approximate threshold for the target cycle — present it explicitly as historical/illustrative only.",
+    "If the student is targeting universities in more than one Comunidad Autónoma, plan for MULTIPLE separate Distrito Único applications (one per region) — there is no single national portal that reaches every Spanish public university.",
+    "For a student unlikely to clear a competitive public nota de corte, distinguish clearly between a private university's own 'título oficial' Grado (still requires the access credential, but admits via the university's own separate process) and a 'título propio' (does not require it, but carries materially less external recognition) — confirm which type any specific private programme actually is before assuming it is a straightforward lower-bar public-Medicine-equivalent alternative.",
+    "Do not assume extracurricular activities, essays, or recommendation letters will meaningfully affect a standard public-university application — redirect that preparation time toward the subjects the target programme actually weights.",
+    "Where the student is targeting an arts/performing-arts-type public programme, independently verify whether a portfolio or aptitude test applies — this was not confirmed in this research pass and should not be assumed either way."
+  ],
+  "data_model_implications": {
+    "notes": "Spain requires ORYN's data model to represent admission facts across at least five distinct scope layers for a single qualification pathway: (1) national/legal (Real Decreto 534/2024's formula structure, the 5.0 floor, the 2-convocatoria calendar framework, the 'distrito abierto' no-regional-preference principle), (2) regional/Comunidad Autónoma (actual EBAU exam content and administration, the region-specific Distrito Único portal and its own calendar/round specifics, and — for Catalonia/Galicia/Basque Country — regional handling of homologación itself), (3) university (which subjects are weighted and at what value for each degree, exact reserved-quota percentages above the national floor, each degree's admitted capacity that cycle), (4) programme/cycle (the resulting self-adjusting nota de corte, which is a pure OUTPUT of supply-vs-demand, never an input), and (5) — uniquely for non-EU/non-agreement international applicants — a separate two-body recognition pipeline (Ministry/regional-authority homologación, then UNEDasiss acreditación) that must be modeled as sequential dependent steps, not parallel or interchangeable ones. A model that stores a single 'Spain requirement' record per qualification type, or that merges homologación and acreditación into one status field, would misrepresent how this system actually operates.",
+    "gaps": [
+      "Whether Spanish public universities require a portfolio/aptitude test for Fine Arts/performing-arts-type programmes (confirmed in both the Netherlands and Germany research, not independently verified for Spain this pass).",
+      "Whether any Spanish public degree imposes a hard subject-prerequisite GATE (as opposed to the confirmed scoring-bonus ponderación mechanism).",
+      "The exact methodology for converting a foreign transcript's original grading scale into a numeric NMB-equivalent figure feeding the UNEDasiss formula.",
+      "Whether Türkiye's YKS national exam plays any role in homologación or UNEDasiss acreditación for a Lise Diploması holder.",
+      "Whether a Spain-specific bridge/foundation-year mechanism exists for under-qualified foreign diplomas, comparable to the Netherlands' Lisans-credit route or Germany's Studienkolleg.",
+      "Precise English-language-proficiency thresholds for Spain's English-taught programme segment.",
+      "Whether A-Levels, AP-supplemented US diplomas, the standard French Baccalauréat, and the German Abitur are named in Real Decreto 534/2024 Article 6's exam-exemption list alongside IB and the European Baccalaureate, or route through the homologación-first pathway.",
+      "The precise governance process by which a university's per-degree capacity ('plazas') is approved each cycle (regional government sign-off, Consejo de Gobierno, or another mechanism)."
+    ]
+  },
+  "system_university_programme_override_model": {
+    "explanation": "Layer 1 (national/legal): Real Decreto 534/2024 (amended by Real Decreto 482/2025) fixes the nota de acceso formula (60% Bachillerato + 40% EBAU obligatory phase, ≥5.0 floor), the nota de admisión structure (access grade + at least two university-chosen weighted subjects), the two-convocatoria annual calendar framework, minimum national reserved-quota floors, and the 'distrito abierto' no-regional-preference principle — no university or region can override these. Layer 2 (regional/Comunidad Autónoma): each CA drafts and administers its own EBAU exam content within the national format, runs its own Distrito Único preinscripción/allocation portal with its own exact calendar and round structure, and (for Catalonia, Galicia, the Basque Country) handles homologación processing itself rather than routing through the central Ministry. Layer 3 (university): sets which specific subjects are weighted and at what value for each of its own degrees, sets exact reserved-quota percentages above the national floor, and sets each degree's admitted capacity per cycle — this is where the system's real discretionary variation lives, expressed entirely through formula PARAMETERS rather than holistic case-by-case review. Layer 4 (programme/cycle): the resulting nota de corte is a pure emergent OUTPUT of Layer 3's capacity choice against that cycle's actual demand, not an independent input any actor sets in advance. A separate parallel track exists entirely outside this four-layer national/regional/university/programme model: private universities' own admission processes, and the two-body homologación-then-acreditación pipeline for non-EU/non-agreement international applicants, both of which operate under different governing logic from the domestic public-Grado stack described above.",
+    "sources": [
+      "https://www.boe.es/buscar/act.php?id=BOE-A-2024-11858"
+    ]
+  },
+  "matrix_row": {
+    "main_application_architecture": "National formula/legal framework (Real Decreto 534/2024) + regionally-drafted exam content + regionally-run ranked-allocation platform (Distrito Único, one per Comunidad Autónoma) + university-set weighting parameters — no single national application platform or decision body",
+    "central_platform": "None nationally — one 'Distrito Único' portal per Comunidad Autónoma; a student targeting multiple regions must apply separately to each",
+    "direct_applications_possible": "Not for standard public Grado programmes (the regional Distrito Único portal is both the application and the allocation mechanism); private universities run a fully separate direct process outside it entirely",
+    "application_choice_limits": "No confirmed cap on preferences ranked within one region's Distrito Único application; applying across multiple Comunidades Autónomas requires multiple separate regional applications — an administrative constraint, not a legal quota",
+    "predicted_grades_role": "None found, domestic or international — EBAU is sat post-Bachillerato-completion, and UNEDasiss requires a final ('definitiva'), not provisional, homologación before scoring",
+    "subject_prerequisites": "A competitive scoring bonus (ponderación, 0.1 or 0.2 per university-chosen subject, up to +4 points), not a hard eligibility gate — structurally different from Dutch/German subject-prerequisite gates",
+    "standardized_tests": "EBAU (domestic) and UNEDasiss's PCE (international) are Spain's own bespoke instruments; SAT/ACT play no found role; private universities (notably Medicine) commonly run their own separate entrance tests",
+    "language_proof": "Spanish B2 (DELE/SIELE/official language school, or embedded in UNEDasiss accreditation) for Spanish-taught programmes; independent from academic-qualification recognition — never conflate the two",
+    "essays_motivation": "Not required nationally for standard public Grado admission; may appear as one input in a private university's own separate selection process",
+    "recommendations": "Not found as a requirement anywhere in sources reviewed, public or private",
+    "extracurricular_role": "Not a factor in the nota de acceso/nota de admisión formula; may enter a private university's own interview process on an institution-specific basis",
+    "conditional_offers": "No UK-style grade-predicted conditional offer found; homologación has a provisional-vs-definitiva processing distinction, but this is document-completeness conditionality, not grade-prediction conditionality",
+    "restricted_programmes": "'Plazas limitadas' (numerus-clausus-style) capacity set per university per degree per cycle; the resulting 'nota de corte' is simply that cycle's lowest admitted score — self-adjusting, never pre-set; no national seat-coordinating body equivalent to Germany's hochschulstart was found",
+    "turkiye_meb_direct_entry_complexity": "High procedural complexity (sequential homologación then UNEDasiss acreditación, different bodies, ~3-month minimum official processing) but NOT a restricted or lesser outcome once complete — the resulting grade competes in the same general pool as domestic EBAU-takers, not a segregated international track; a full IB Diploma bypasses homologación entirely",
+    "dominant_counselor_risk": "Conflating homologación (Ministry-level diploma recognition) with UNEDasiss acreditación (the actual admission-grade-generating step) as one process, when they are sequential and run by different bodies — and separately, assuming 'distrito abierto' (no legal regional-residence preference) means a single national application exists, when each region requires its own separate Distrito Único application"
+  },
+  "unresolved_questions": [
+    "Whether Spanish PUBLIC universities require a portfolio/aptitude test for Fine Arts (Bellas Artes) or Conservatorio-style performing-arts programmes, as confirmed in both the Netherlands and Germany research — not independently verified for Spain this pass.",
+    "Whether any Spanish public degree programme imposes a hard subject-prerequisite GATE (as opposed to the confirmed ponderación scoring-bonus mechanism).",
+    "What role, if any, Türkiye's YKS national university-entrance exam plays in homologación or UNEDasiss acreditación for a Lise Diploması holder — a gap identical in kind to the same unresolved question already flagged in the Netherlands research.",
+    "Whether a Spain-specific bridge/foundation-year mechanism exists for a foreign secondary qualification judged short of Bachillerato-equivalent, comparable to the Netherlands' Lisans-credit route or Germany's Studienkolleg.",
+    "The exact methodology for converting a foreign transcript's native grading scale into the numeric NMB figure used in the UNEDasiss formula.",
+    "Whether Turkey has its own specifically codified homologación equivalency sub-regulation (as sources indicated Germany and France do) or is handled under a generic, non-tabled review process.",
+    "Precise English-language-proficiency thresholds (IELTS/TOEFL-equivalent) for Spain's English-taught undergraduate programme segment.",
+    "Whether A-Levels, AP-supplemented US diplomas, the standard French Baccalauréat, and the German Abitur are named in Real Decreto 534/2024 Article 6's exam-exemption list alongside the IB Diploma and European Baccalaureate, or instead route through the homologación-first pathway used for a plain non-EU diploma.",
+    "The precise governance process by which each university's per-degree admitted capacity ('plazas') is approved each cycle.",
+    "Whether any reserved quota specifically labeled for 'foreign education systems' exists at any Distrito Único beyond the general quotas (disability, elite athletes, over-25/40/45 access, existing degree-holders) confirmed at the University of Zaragoza — one secondary/aggregated search result suggested a Madrid-specific 1% figure that could not be corroborated against the primary Comunidad de Madrid page fetched directly, and should be treated as unconfirmed."
+  ]
+}
