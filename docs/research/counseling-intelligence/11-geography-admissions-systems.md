@@ -242,13 +242,36 @@ countries this package cannot research individually.
   extracurricular" characterization specifically remains sourced from admissions-guidance
   secondary description, not a direct government statement of that absence, so that narrower claim
   stays medium — the same mechanism/specific-claim split already applied to Germany, Netherlands,
-  and Italy above.) [[RULE-COUNSEL-074]] **Combined with the five countries researched in depth above,
-  this gives a 7-country European sample where 5 (Germany, Netherlands, Italy-public, Switzerland,
-  Spain) are Tier 3 (formula/credential-driven, no meaningful activity weight) and only 2 (UK,
-  France) show real holistic elements.** The reasoned, honestly-labeled fallback this document
+  and Italy above.) [[RULE-COUNSEL-074]]
+
+  **A second spot-check, added on a later pass**: **Ireland**, whose CAO (Central Applications
+  Office) system computes admission from **Leaving Certificate points** — best six subjects,
+  Higher/Ordinary-level grade bands converted to a common points scale (up to 625 with the Higher
+  Maths bonus). Directly confirmed via CAO's own official page: general admission is purely
+  points-based, with **no mention of extracurricular activities, personal statements, or
+  interviews** in the standard process. (Source: `cao.ie/index.php?page=scoring&s=lce`, official —
+  high confidence, directly fetched and quoted.) **Medicine is a named partial exception, but in
+  the aptitude-test direction, not the activity-evidence direction** — Irish medicine (and allied
+  health) admission also requires the **HPAT** (Health Professions Admission Test, administered by
+  ACER), a 2.5-hour, 117-question multiple-choice test explicitly *not* assessing academic
+  knowledge: Section 1 (Logical Reasoning, 40%), Section 2 (**Understanding People**, 40% —
+  interpersonal/situational understanding), Section 3 (Non-Verbal Reasoning, 20%). **This is the
+  same structural pattern as the UK's UCAT** (a standardized aptitude test containing a specific
+  interpersonal/situational-judgment component, layered on top of, not instead of, the grade-based
+  general system) rather than CASPer's open-response format — a second country confirming
+  `RULE-COUNSEL-121`'s finding generalizes beyond the UK specifically. [[RULE-COUNSEL-122]]
+
+  **Combined with the five countries researched in depth plus Spain above, this gives an 8-country
+  European sample where 6 (Germany, Netherlands, Italy-public, Switzerland, Spain, Ireland) are
+  Tier 3 (formula/credential-driven, no meaningful general activity weight) and only 2 (UK, France)
+  show real holistic elements** — a slightly stronger version of the same pattern, now with two
+  data points (Ireland, UK) both showing the "grades-driven generally, but a standardized aptitude/
+  situational-judgment test for medicine specifically" shape, suggesting this may be a recurring
+  medicine-specific pattern worth checking for explicitly whenever a new country is researched, not
+  just an isolated UK/Ireland coincidence. The reasoned, honestly-labeled fallback this document
   proposes: **for a European country not specifically researched, default to treating it as Tier 3
   (grades/exam-formula-driven) unless and until specifically verified otherwise** — this is a
-  probabilistic default based on a 7-country sample, not a verified fact about any unresearched
+  probabilistic default based on an 8-country sample, not a verified fact about any unresearched
   country, and must be presented to a student as exactly that level of uncertainty if ORYN's
   counselor ever needs to say anything about an unresearched European system.
   [[RULE-COUNSEL-075]]
@@ -268,6 +291,7 @@ countries this package cannot research individually.
 | Italy | 3 (public) / 2 (private, uneven) | National test (restricted fields) or diploma | Minimal (public/IMAT); moderate (some private) |
 | Switzerland | 3 (near-absolute) | Matura pass/fail | None (medicine: separate aptitude test, still not activity-based) |
 | Turkey | 3 (most exam-only) | Centralized exam score (YKS) | None — no application file exists |
+| Ireland | 3 | Leaving Certificate points (CAO) | None (medicine: separate HPAT aptitude test, same UCAT-shaped pattern as UK, still not activity-based) |
 
 ## What this means for ORYN's counselor — a proposed conditional layer (research only, not implemented)
 
@@ -375,10 +399,11 @@ conditioning would produce technically-accurate-but-strategically-misleading gui
   Confidence: medium.
 - `RULE-COUNSEL-075` — For a European country not specifically researched by this package, default
   to a Tier-3 (formula/credential-driven) assumption until specifically verified otherwise, based
-  on a 7-country sample where 5 of 7 researched countries were Tier 3 — present this to a student
-  as a probabilistic default, not a verified fact about the specific unresearched country.
-  Confidence: high that this is the right *default posture*; explicitly low/unknown confidence
-  about any single unresearched country's actual system, which is the entire point of the rule.
+  on an 8-country sample (updated from 7 after adding Ireland) where 6 of 8 researched countries
+  were Tier 3 — present this to a student as a probabilistic default, not a verified fact about the
+  specific unresearched country. Confidence: high that this is the right *default posture*;
+  explicitly low/unknown confidence about any single unresearched country's actual system, which is
+  the entire point of the rule.
 - `RULE-COUNSEL-082` — Canada's general case is Tier 3 (grade-formula-driven), with a genuinely
   holistic layer only for a specifically-named subset of competitive programs — structurally
   closer to Turkey/Germany's narrow aptitude-quota carve-outs than to the UK's broader
@@ -390,6 +415,12 @@ conditioning would produce technically-accurate-but-strategically-misleading gui
   audition/aptitude exception, structurally the same pattern as Switzerland's medicine EMS or
   Germany's small aptitude quota. Confidence: high (peer-session-verified against official
   conservatory-admission guidance, cross-branch finding folded in directly).
+- `RULE-COUNSEL-122` — Ireland's CAO system is Tier 3 (Leaving Certificate points, no general
+  activity weight, confirmed via CAO's own official page) with medicine as a named exception in the
+  aptitude-test direction (HPAT, a 117-question multiple-choice test including a 40%-weighted
+  "Understanding People" interpersonal-judgment section) — the same structural pattern as the UK's
+  UCAT, a second country confirming `RULE-COUNSEL-121` generalizes. Confidence: high (official
+  `cao.ie` source for the general system; ACER/HPAT-guidance sources for the test structure).
 - `RULE-COUNSEL-110` — Canada's named "holistic supplementary application" competitive programs are
   not one uniform mechanism: Waterloo Engineering's AIF explicitly invites activity/accomplishment
   description, while Queen's Commerce and McMaster Health Sciences score written/video responses to

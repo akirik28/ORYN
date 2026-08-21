@@ -178,10 +178,15 @@ category, both branches, kept in one place since this now spans multiple documen
 | CASPer | Teacher education (admission, not post-degree licensure) | Canada/Australia (Vancouver Island University, Monash, Brock) | Medium — confirmed but narrower footprint than medicine | `RULE-COUNSEL-243` (peer branch) |
 | CASPer | Undergraduate engineering | Canada (Western University, ~7,500 annual applicants, since Fall 2024) | High — directly relevant to ORYN's population | `RULE-COUNSEL-244` (peer branch) |
 | CASPer | Business (MBA) | Only named adopter is Dalhousie's MBA | Low — graduate-level, past ORYN's population | `RULE-COUNSEL-245` (peer branch, honestly scoped as a near-negative finding rather than forced) |
+| HPAT (ACER-administered, includes an "Understanding People" interpersonal section) | Medicine/allied health | Ireland | High — the general national admissions pathway for the field | `RULE-COUNSEL-122` (this branch) |
 
-**Six confirmed instances across two continents and five fields (as of this update) is enough to
-treat this as a genuine, recurring structural category ORYN's recommendation model should
-recognize generically** — not a peculiarity of any one program, tool, or country. Whoever
+**Seven confirmed instances across three continents and five fields (as of this update) is enough
+to treat this as a genuine, recurring structural category ORYN's recommendation model should
+recognize generically** — not a peculiarity of any one program, tool, or country. Two of the seven
+(UCAT, HPAT) are specifically medicine-admission aptitude tests with an interpersonal/situational-
+judgment component layered on top of a grades-driven general system — worth checking for
+explicitly as its own recurring sub-pattern whenever a new country's medicine admission is
+researched, not just filed as a coincidence between two English-speaking neighbors. Whoever
 eventually resolves item 13 in `13-implementation-readiness.md` (the founder-level scoping
 question this category raises) should treat this table, not any single instance, as the scope of
 what needs to be handled — and should expect more instances to surface as either branch's family
