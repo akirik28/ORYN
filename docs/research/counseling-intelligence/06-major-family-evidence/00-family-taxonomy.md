@@ -42,7 +42,7 @@ suggestions still needs a family to map to** — the "Nearest family" column exi
 matching problem, to be read heuristically by a future feature, never as a hardcoded exact-match
 requirement.
 
-## 3. The 17 families
+## 3. The 18 families (grown from 17 once research surfaced one more genuine gap)
 
 | # | Family | Onboarding suggestion(s) it answers to | Mission raw fields covered | Owner |
 |---|---|---|---|---|
@@ -63,6 +63,7 @@ requirement.
 | 15 | Literature, Journalism & Communication | Literature | literature, journalism/communications | Peer session |
 | 16 | Architecture & Design | Design | architecture, product/industrial design | Peer session |
 | 17 | Visual & Media Arts | (no direct onboarding suggestion — nearest is Design or a custom interest) | visual arts, film/media | Peer session |
+| 18 | Education & Teaching | (no direct onboarding suggestion — a real, separate gap, see §4) | *(not in the mission's original raw-field list at all — added because teaching/education as a career path was found completely absent across all 17 original families during a post-completion coverage check, not because the mission named it explicitly)* | This session |
 
 **Filenames** (both sessions use this exact list — do not deviate): `01-computing-information-
 sciences.md`, `02-mathematics-statistics.md`, `03-physical-sciences.md`, `04-life-sciences.md`,
@@ -71,7 +72,7 @@ sciences.md`, `02-mathematics-statistics.md`, `03-physical-sciences.md`, `04-lif
 `10-medicine-clinical-pathways.md`, `11-psychology-behavioral-science.md`,
 `12-political-science-ir-public-policy.md`, `13-law-oriented-pathways.md`,
 `14-sociology-history-philosophy.md`, `15-literature-journalism-communication.md`,
-`16-architecture-design.md`, `17-visual-media-arts.md`.
+`16-architecture-design.md`, `17-visual-media-arts.md`, `18-education-teaching.md`.
 
 ## 4. Gaps in the onboarding vocabulary this mapping surfaces
 
@@ -131,6 +132,11 @@ Named up front so neither session accidentally treats families as silos:
 | Environment + engineering (sustainable/environmental engineering) | 05, 09 | Both family docs |
 | Business + technology (product management, tech entrepreneurship) | 01, 08 | Both family docs |
 | Law + technology (tech policy, IP law) | 01, 13 | Both family docs |
+
+**Family 18 (Education & Teaching) is a structural exception to this table's one-pair-per-row
+shape**, not an omission — it connects to *every* other family at once (a student's "what to teach"
+question routes to whichever subject-matter family matches their interest), so it is documented
+in its own §5 rather than forcing an arbitrary single-pair row here.
 
 ## Sources referenced in this document
 

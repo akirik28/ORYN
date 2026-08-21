@@ -858,6 +858,75 @@
       "used_in": [
         "docs/research/counseling-intelligence/06-major-family-evidence/09-environmental-science-sustainability.md §7"
       ]
+    },
+    {
+      "id": "S-BLS-TEACH",
+      "title": "BLS OOH -- Kindergarten and Elementary School Teachers; High School Teachers; Middle School Teachers",
+      "url": "https://www.bls.gov/ooh/education-training-and-library/kindergarten-and-elementary-school-teachers.htm",
+      "additional_urls": [
+        "https://www.bls.gov/ooh/education-training-and-library/high-school-teachers.htm",
+        "https://www.bls.gov/ooh/education-training-and-library/middle-school-teachers.htm"
+      ],
+      "publisher": "US Bureau of Labor Statistics",
+      "source_type": "official_institutional_guidance",
+      "retrieval_method": "WebSearch",
+      "retrieved_at": "2026-08-21",
+      "claim_supported": "Elementary/high school teacher core skills, education requirements (bachelor's + state certification), median pay ($62,340 elementary, May 2024), ~1% projected growth / ~109,000 annual openings for elementary teachers through 2032.",
+      "confidence": "high",
+      "limitations": "US-specific.",
+      "used_in": [
+        "docs/research/counseling-intelligence/06-major-family-evidence/18-education-teaching.md §2, §3, §6"
+      ]
+    },
+    {
+      "id": "S-TEACH-CERT-US",
+      "title": "US state teacher certification/licensure structures (cross-referenced secondary sources)",
+      "url": null,
+      "additional_urls": [],
+      "publisher": "Multiple secondary education-careers sources",
+      "source_type": "secondary_aggregation",
+      "retrieval_method": "WebSearch",
+      "retrieved_at": "2026-08-21",
+      "claim_supported": "US teacher licensure is issued by state boards of education, typically requiring a bachelor's degree, a teacher-prep program, and a certification exam (e.g. Praxis); requirements vary meaningfully by state.",
+      "confidence": "medium-high",
+      "limitations": "General structure well-corroborated across multiple sources; state-by-state specifics not individually verified.",
+      "used_in": [
+        "docs/research/counseling-intelligence/06-major-family-evidence/18-education-teaching.md §6"
+      ]
+    },
+    {
+      "id": "S-QTS-UK",
+      "title": "GOV.UK -- Qualified Teacher Status (QTS); Department for Education QTS application portal",
+      "url": "https://www.gov.uk/guidance/qualified-teacher-status-qts",
+      "additional_urls": [
+        "https://apply-for-qts-in-england.education.gov.uk/eligibility/start"
+      ],
+      "publisher": "UK Department for Education / GOV.UK",
+      "source_type": "official_institutional_guidance",
+      "retrieval_method": "WebSearch",
+      "retrieved_at": "2026-08-21",
+      "claim_supported": "QTS is required to teach in most state-maintained schools in England; awarded via undergraduate or postgraduate initial teacher training (PGCE, School Direct); requires GCSE Maths/English; followed by a 2-year Early Career Teacher induction period.",
+      "confidence": "high",
+      "limitations": "England-specific; Scotland/Wales/Northern Ireland have separate systems not verified this pass.",
+      "used_in": [
+        "docs/research/counseling-intelligence/06-major-family-evidence/18-education-teaching.md §6"
+      ]
+    },
+    {
+      "id": "S-MEB-TEACH",
+      "title": "Turkish Ministry of National Education (MEB) -- teacher appointment regulation (ogretmen atama ve yer degistirme yonetmeligi)",
+      "url": "https://oygm.meb.gov.tr/meb_iys_dosyalar/2017_11/08144242_mevzuat.pdf",
+      "additional_urls": [],
+      "publisher": "Turkiye Cumhuriyeti Milli Egitim Bakanligi (Turkish Ministry of National Education)",
+      "source_type": "official_government_regulation",
+      "retrieval_method": "WebSearch",
+      "retrieved_at": "2026-08-21",
+      "claim_supported": "Turkish teaching appointment requires a relevant higher-education degree, pedagogical formation training, and a minimum KPSS score for the specific field; a new Milli Egitim Akademisi training requirement is reportedly being introduced beyond KPSS.",
+      "confidence": "high_for_existing_structure_medium_for_academy_transition",
+      "limitations": "The existing KPSS/pedagogical-formation structure is sourced from the actual MEB regulation; the National Education Academy transition is secondary-reported, not yet independently fetched from MEB's own final rule text.",
+      "used_in": [
+        "docs/research/counseling-intelligence/06-major-family-evidence/18-education-teaching.md §6"
+      ]
     }
   ]
 }
