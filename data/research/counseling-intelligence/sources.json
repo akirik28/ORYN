@@ -586,15 +586,15 @@
     {
       "id": "S-BLS-BME-REG",
       "title": "Regulatory-affairs/FDA-compliance career framing (secondary corroboration)",
-      "url": null,
+      "url": "https://www.fda.gov/media/173576/download",
       "additional_urls": [],
       "publisher": "Regulatory-affairs/FDA-compliance career framing (secondary corroboration)",
-      "source_type": "secondary_description",
+      "source_type": "official_government_document",
       "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
       "retrieved_at": "2026-08-21",
-      "claim_supported": "Regulatory affairs specialists prepare documentation/testing to demonstrate FDA safety/efficacy compliance for medical devices — a real, named career family within this dimension.",
-      "confidence": "medium",
-      "limitations": "The underlying FDA process is official and real; the secondary sources describing it as a career path were not each independently cross-checked against FDA's own site this pass.",
+      "claim_supported": "FDA's own Title 21 Regulatory Specialist position description confirms this as a real government/regulatory role; RAC (Regulatory Affairs Certification, from RAPS) is the field's most recognized credential; common entry pathways include QA, clinical affairs, and technical writing roles.",
+      "confidence": "high_for_fda_document_medium_high_for_career_pathway_detail",
+      "limitations": "FDA document itself directly located and cited; RAC/RAPS credential detail not independently fetched from raps.org this pass.",
       "used_in": [
         "docs/research/counseling-intelligence/06-major-family-evidence/06-biomedical-engineering.md §3, §6"
       ]
