@@ -1,0 +1,250 @@
+{
+  "schema_note": "Machine-readable companion to docs/research/requirements-audit/01-founder-requirements-audit.md. One entry per requirement checked against two Drive product documents (ORYN — Product & MVP Decision Register; ORYN Programlama). depth='full' items were agent- or multi-file-verified with cross-checked citations; depth='spot_check' items got one direct real-code check. Status values: implemented | partially_implemented | not_implemented | contradicted | stale_documentation | ambiguous_scope | not_code_verifiable. This is an audit artifact, not a RULE-COUNSEL rule — intentionally a separate namespace/id scheme (AUDIT-### rather than RULE-COUNSEL-###) since it characterizes implementation status, not counseling logic.",
+  "branch": "oryn/requirements-audit",
+  "base_commit": "daf59ab",
+  "date": "2026-08-21",
+  "sources": [
+    {
+      "name": "ORYN — Product & MVP Decision Register",
+      "drive_file_id": "1t0zA_E9pVjvs-kDobYMWUh2F8RN3r3dsE1fNuhmsT6U",
+      "folder": "Product & Strategy",
+      "last_consolidated": "2026-08-18"
+    },
+    {
+      "name": "ORYN Programlama",
+      "drive_file_id": "1Vb6atNsDiH_jiKm8T_js4-CwqW_sWeIPqmtAre713Wc",
+      "folder": "Programlama",
+      "dated": "2026-08-15",
+      "note": "Contains a §37 addendum dated 2026-08-18 that explicitly supersedes earlier conflicting items within the same document (notably §33, §34)."
+    }
+  ],
+  "findings": [
+    {
+      "id": "AUDIT-001",
+      "requirement": "Canonical autocomplete (entity search with alias/dedup handling)",
+      "source": "Decision Register §5",
+      "depth": "full",
+      "status": "partially_implemented",
+      "evidence": [
+        "supabase/migrations/0038_canonical_entity_registry.sql:621-674",
+        "lib/entities/search.ts:184-203",
+        "lib/entities/field-policy.ts:79-151",
+        "__tests__/universities/alias-search.test.ts:28-56",
+        "lib/vocabularies/subjects.ts:21-145 (AP coursework uses a weaker, unlinked substring list)",
+        "entity-combobox.tsx:14, university-search-box.tsx:11, lib/entities/search.ts:13,190 (MIN_QUERY_LENGTH=2 contradicts spec's single-character examples)",
+        "docs/founder-blocked-backlog.md:268-282 (~63 unresolved duplicate pairs; migration 0043 never applied)"
+      ],
+      "summary": "Real canonical-entity architecture for universities/orgs, tested and working; AP coursework and other vocab fields use a separate, unlinked mechanism with no verification state."
+    },
+    {
+      "id": "AUDIT-002",
+      "requirement": "Search interaction standard (typeahead + Enter-submit, reused everywhere search exists)",
+      "source": "Decision Register §6",
+      "depth": "full",
+      "status": "partially_implemented",
+      "evidence": [
+        "app/(app)/universities/page.tsx:361-368",
+        "features/search/command-palette.tsx:101-113",
+        "lib/search/index.ts:31-40",
+        "features/opportunities/opportunity-filter-bar.tsx:85-93 (bare input, zero typeahead)"
+      ],
+      "summary": "Implemented well on Universities and global Cmd+K search; Opportunities search has no typeahead; Connections has no search at all (see AUDIT-011)."
+    },
+    {
+      "id": "AUDIT-003",
+      "requirement": "Visual identity: light theme default, ORYN-logo-blue accent, not dark/gloomy",
+      "source": "Decision Register §11; ORYN Programlama §34/§37",
+      "depth": "full",
+      "status": "implemented",
+      "evidence": [
+        "app/layout.tsx:38-55 (dated comment + actual className, no dark class applied)",
+        "app/globals.css:62-123 (:root carries light tokens), :135-172 (.dark block present but inert)",
+        "commit 401a894 (2026-08-15, shipped dark) superseded by commit 3192962 (2026-08-18, 'fix: default to light theme, not dark (Founder Requirement 3 / P1)')",
+        "app/globals.css:69 vs :142 (--brand identical in both modes, hue 272)"
+      ],
+      "summary": "Root theme correctly resolved to light on 2026-08-18, same date as the Drive doc's own supersession point. docs/known-issues.md's conflict entry describing this as open is now stale.",
+      "related": ["AUDIT-004"]
+    },
+    {
+      "id": "AUDIT-004",
+      "requirement": "(derived, not a named Drive-doc section) Toaster component theme consistency",
+      "source": "code-internal contradiction, surfaced while verifying AUDIT-003",
+      "depth": "full",
+      "status": "contradicted",
+      "evidence": [
+        "components/ui/sonner.tsx:9-12 (theme=\"dark\" hardcoded, comment claims app/layout.tsx sets dark statically — false as of commit 3192962)"
+      ],
+      "summary": "Live bug: toast notifications render in sonner's dark visual mode while the rest of the product is light, due to a stale, false comment/hardcoded value never updated during the 2026-08-18 light-theme migration."
+    },
+    {
+      "id": "AUDIT-005",
+      "requirement": "Post-signup CV import with NEW/UPDATE/DUPLICATE/CONFLICT review-diff",
+      "source": "ORYN Programlama",
+      "depth": "full",
+      "status": "not_implemented",
+      "evidence": [
+        "app/(onboarding)/onboarding/actions.ts:8-13,32 (import exists only in onboarding, zero hits under app/(app)/profile/**)",
+        "features/onboarding/steps/import-step.tsx:205-262,222 (review UI is include/edit/remove + low-confidence flag, not the 4-state diff)",
+        "docs/MASTER-EXECUTION-STRATEGY.md:307-315 (this exact flow already named as planned future work — tracked gap, not a surprise)",
+        "actions.ts:151-193 (raw .insert, no idempotency/upsert key)"
+      ],
+      "summary": "No post-signup CV import entry point exists at all (onboarding-only, one-time). The specific 4-state review-diff does not exist anywhere; those terms are used by an unrelated canonical-entity subsystem."
+    },
+    {
+      "id": "AUDIT-006",
+      "requirement": "Opportunity filtering with type-specific facets, structurally supported not keyword-faked",
+      "source": "ORYN Programlama",
+      "depth": "full",
+      "status": "partially_implemented",
+      "evidence": [
+        "lib/opportunities/browse.ts:42-64 (category/country/remote/free/cycle/free-text-on-title-org-only)",
+        "features/opportunities/opportunity-filter-bar.tsx:52-56 (code's own comment: 'columns don't exist yet')",
+        "types/database.ts:1040-1094 (age/grade/eligibility/deadline-range/financial-aid columns exist but unfiltered)",
+        "lib/opportunities/matching.ts:62-86 (computeEligibility correctly treats unknown as unknown — honest about what it doesn't check)"
+      ],
+      "summary": "Six core filters work and are honestly scoped (no keyword-faking). Type-specific facets (team_size, wet_lab, housing_included, etc.) do not exist at the data-model level at all — single flat Opportunity type for every category."
+    },
+    {
+      "id": "AUDIT-007",
+      "requirement": "AI provider abstraction (model-agnostic interface)",
+      "source": "Decision Register §10; AGENTS.md",
+      "depth": "spot_check",
+      "status": "implemented",
+      "evidence": [
+        "lib/ai/provider.ts:54-56 (AIProvider interface)",
+        "lib/ai/anthropic-provider.ts:81 (concrete implementation)",
+        "six call sites across lib/ai/*.ts"
+      ]
+    },
+    {
+      "id": "AUDIT-008",
+      "requirement": "Opportunities must be excellent (verification/quality bar)",
+      "source": "Decision Register §9",
+      "depth": "spot_check",
+      "status": "implemented",
+      "evidence": [
+        "types/database.ts:1077 (5-state verification_state enum)",
+        "live query, prior branch oryn/opportunity-dimension-tagging: 166 verified_current / 202 unverified / 1 conflicting of 369 total"
+      ]
+    },
+    {
+      "id": "AUDIT-009",
+      "requirement": "Periodic freshness/refresh system",
+      "source": "Decision Register §4; AGENTS.md Phase 30",
+      "depth": "spot_check",
+      "status": "partially_implemented",
+      "evidence": [
+        "app/api/jobs/{deadline-reminders,discover-opportunities,discover-requirements,sync-university-data}/route.ts (built, CRON_SECRET-guarded, fail-closed)",
+        "docs/environment-variables.md:25 ('Required if the four background jobs are ever scheduled' — not yet true)",
+        "no vercel.json or any cron config found in the repo"
+      ],
+      "summary": "Job logic and secure invocation exist; nothing schedules them automatically yet."
+    },
+    {
+      "id": "AUDIT-010",
+      "requirement": "Internationalization-ready",
+      "source": "Decision Register §12",
+      "depth": "spot_check",
+      "status": "partially_implemented",
+      "evidence": [
+        "lib/i18n/format.ts (single DEFAULT_LOCALE='en-US' constant, deliberate single-point-of-change design)",
+        "no app/[locale] routing segment found; no next-intl/react-i18next present"
+      ],
+      "summary": "'Ready for' i18n is fair (deliberate constant-based design); actual multi-language capability does not exist yet."
+    },
+    {
+      "id": "AUDIT-011",
+      "requirement": "Location personalization",
+      "source": "Decision Register §13",
+      "depth": "spot_check",
+      "status": "not_implemented",
+      "evidence": [
+        "no location-based filtering/proximity logic found in lib/opportunities/ or lib/universities/",
+        "Opportunity has country only, no city/region column used anywhere"
+      ]
+    },
+    {
+      "id": "AUDIT-012",
+      "requirement": "Location + minor privacy guardrails",
+      "source": "Decision Register §14; Legal & Privacy Working Register; AGENTS.md",
+      "depth": "spot_check",
+      "status": "partially_implemented",
+      "evidence": [
+        "types/database.ts:91 (birth_year only, no birth_date field — matches AGENTS.md's minor-safe instruction exactly)",
+        "no explicit age-gating/parental-consent fields found; all 'consent' hits are about connection-request mutual consent, a different concept",
+        "Legal & Privacy register explicitly frames itself as 'not legal advice' and lists formal legal review as still-required — possibly a deliberate deferral, not an oversight"
+      ]
+    },
+    {
+      "id": "AUDIT-013",
+      "requirement": "Connections MVP social discovery (LinkedIn-style)",
+      "source": "Decision Register §7",
+      "depth": "spot_check",
+      "status": "partially_implemented",
+      "evidence": [
+        "features/connections (real, built feature)",
+        "docs/product-decisions.md:113-114, 'Chat 2 pass — V1 social/network scope (founder-approved, 2026-08-15)': deliberate 'no people-search/student directory... discovery is link-only' decision"
+      ],
+      "related": ["AUDIT-014"]
+    },
+    {
+      "id": "AUDIT-014",
+      "requirement": "(scope ambiguity) Does the general search standard (§6) reach Connections search, given §7's link-only decision predates it by 3 days?",
+      "source": "Decision Register §6 vs. docs/product-decisions.md:113-114",
+      "depth": "full",
+      "status": "ambiguous_scope",
+      "evidence": [
+        "docs/product-decisions.md:113-114 dated 2026-08-15, founder-approved, with stated minor-safety reasoning",
+        "Decision Register consolidated 2026-08-18, §6 is a general UI pattern standard with no explicit text found addressing Connections specifically"
+      ],
+      "summary": "Both sides are real, dated, and reasoned. Not adjudicated by this audit — recorded for the coordination session / founder to resolve."
+    },
+    {
+      "id": "AUDIT-015",
+      "requirement": "Matching logic as three separate concepts: Match Score, Selectivity, ORYN Confidence",
+      "source": "ORYN Programlama",
+      "depth": "spot_check",
+      "status": "implemented",
+      "evidence": [
+        "lib/opportunities/matching.ts:144,161 (matchScore = clampScore(relevanceScore*0.4 + profileNeedScore*0.6))",
+        "selectivity: lib/admissions/outlook.ts, lib/universities/sync-us-universities.ts, lib/opportunities/ingest.ts",
+        "confidence: lib/opportunities/discover.ts, persist-matches.ts, ingest.ts"
+      ],
+      "summary": "Three distinct fields confirmed, not one conflated score. Underlying formula correctness not audited — lib/admissions/outlook.ts reported as actively being revised by another session lane, deliberately not duplicated here."
+    },
+    {
+      "id": "AUDIT-016",
+      "requirement": "docs/known-issues.md visual-identity conflict entry",
+      "source": "docs/known-issues.md",
+      "depth": "full",
+      "status": "stale_documentation",
+      "evidence": ["see AUDIT-003"],
+      "summary": "Not a live contradiction — accurate for 2026-08-15 through 2026-08-17, resolved by commit 3192962 on 2026-08-18. The tracking doc itself needs an update; this audit did not make that edit (out of assigned scope)."
+    }
+  ],
+  "not_code_verifiable": [
+    "Decision Register §1 Product Positioning",
+    "Decision Register §2 MVP Principle",
+    "Decision Register §8 10-Person MVP Pilot",
+    "Decision Register §15 Product Governance/No-Surprise Rule",
+    "Decision Register §16 Current Priority Order",
+    "ORYN Programlama 'current status' / 'build order' sections (time-bound by construction)"
+  ],
+  "not_verified_this_pass": [
+    "ORYN Programlama: onboarding-flow specifics, interest-category taxonomy, location/format/budget capture, 9-section LinkedIn-style profile layout, Activity data model, Discover-page filters as distinct from Opportunity filtering, Opportunity Database schema wishlist, Application Tracker, Essay Helper full flow, Quick Capture (explicitly future/not-yet in source), ORYN for Schools, Sponsored Opportunities, revenue model, investment principle, technical architecture section, Student/Opportunity/Social/Outcome Graph product-data principle, §36 university detail-page IA / Oryn Outlook labels (skipped deliberately — overlaps lib/admissions/outlook.ts, reported as actively owned by another session lane)"
+  ],
+  "already_corroborated_by_known_issues_md_not_rechecked": [
+    "Essay Story Bank 7-part Hook→Context→Conflict→Action→Turning Point→Reflection→Connection-to-Future structure",
+    "CV Generator existence (5 named type variants not individually itemized against code)",
+    "Messaging/DMs built despite ORYN Programlama §33's original exclusion — already logged as an intentional, later-superseded decision"
+  ],
+  "status_counts": {
+    "implemented": 4,
+    "partially_implemented": 7,
+    "not_implemented": 2,
+    "contradicted": 1,
+    "stale_documentation": 1,
+    "ambiguous_scope": 1,
+    "not_code_verifiable": 6
+  }
+}

@@ -1,0 +1,2573 @@
+{
+  "methodology_version": "v1",
+  "tagged_at": "2026-08-21",
+  "source_table": "public.opportunities",
+  "filter": "verification_state=verified_current",
+  "total_rows_tagged": 166,
+  "entries": [
+    {
+      "id": "00aaf965-016f-42ef-a4a1-3a825f104a6d",
+      "title": "The Earth Prize Competition",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "category-implied (judged competition); description does not itself detail judging/placement structure",
+      "insufficient_description": false,
+      "notes": "Subject (environmental_science) not clearly research-based per Part C, so no research reinforcement added"
+    },
+    {
+      "id": "01f020d2-e7c5-4a7d-8154-d9ac9329d8de",
+      "title": "NYU Precollege Program",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "academics"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "credit-bearing real NYU courses graded alongside undergrads = a completed academic product, not just attendance",
+      "insufficient_description": false,
+      "notes": "academics reinforcement justified by real transcripted college credit, not typical non-credit summer-program pattern"
+    },
+    {
+      "id": "0412d94f-8b28-4f37-933c-cf6198914c12",
+      "title": "Breakthrough Junior Challenge",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "intellectual_curiosity",
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "winner",
+      "tier_ceiling_basis": "video-submission judged competition with named subject depth (life sciences/physics/math)",
+      "insufficient_description": false,
+      "notes": "execution_project_depth reinforcement from producing an original explanatory video artifact"
+    },
+    {
+      "id": "0804bd36-b882-46fa-a76c-e1aee944a685",
+      "title": "DECA Competitive Events Program (ICDC)",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "entrepreneurship"
+      ],
+      "tier_ceiling": "winner",
+      "tier_ceiling_basis": "explicit chapter-to-regional-to-state-to-ICDC advancement structure = real placement tiers",
+      "insufficient_description": false,
+      "notes": "entrepreneurship reinforcement only if student's specific event is entrepreneurship-track; description names 6 pathways, entrepreneurship is one -- flagged as event-level nuance this row-level tag can't fully resolve"
+    },
+    {
+      "id": "0a316853-6d11-4270-826a-1f8fbf896114",
+      "title": "University of St Andrews Summer Academic Experience",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "residential coursework, no stated output/project or selective placement beyond academic-reference admission",
+      "insufficient_description": false,
+      "notes": "admission itself requires reference+transcript+statement (a real access bar) but that's a selectivity/Part-B property, not an achievement-tier upgrade"
+    },
+    {
+      "id": "0c8e00c1-b2b7-4039-8021-10a310de62e4",
+      "title": "ODTU (METU) Engineering Summer School",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "academics"
+      ],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "faculty-led lectures and lab work, no stated individual output/competition",
+      "insufficient_description": false,
+      "notes": "DATA QUALITY FLAG: description itself states the organizer's own site shows a banner saying the 2026 edition will be run by a different organizer (a student radio society) with no 2026 dates/fees published -- this listing may not be bookable as described for the current cycle; recommend re-verification before surfacing to a student, not just a tagging note"
+    },
+    {
+      "id": "0cbe26c6-c073-4ce5-9b9d-b928a3c0a7bc",
+      "title": "Bocconi Summer School for High School Students",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "one/two-week labs, no stated project output or competitive placement",
+      "insufficient_description": false,
+      "notes": "DATA QUALITY FLAG: description states 2026 main intake is already 'sold out' -- a live-availability fact that will go stale fast and should not be treated as evergreen"
+    },
+    {
+      "id": "0f466b31-5fc2-4722-8e61-1fd74187909e",
+      "title": "LSE Summer School",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "academics"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "taught to LSE's own degree-module standard with possible credit transfer",
+      "insufficient_description": false,
+      "notes": "description explicitly says non-selective (paid access), so no award/winner ceiling despite academic rigor"
+    },
+    {
+      "id": "104c940f-f3fa-46c9-9e52-2abf69e360d4",
+      "title": "JLI Global Essay Competition",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "intellectual_curiosity"
+      ],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "awards ceremony mentioned, judged essay competition across named academic categories",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "10b69474-db59-4b4d-8a48-11526e7220a7",
+      "title": "Congressional App Challenge",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "winner",
+      "tier_ceiling_basis": "district winners named/displayed = explicit placement tier",
+      "insufficient_description": false,
+      "notes": "execution_project_depth reinforcement from building a real original app, per Part C hackathon-style logic applied to a build-based competition"
+    },
+    {
+      "id": "1259aa77-0b5e-4c55-a384-51dbd47de3ec",
+      "title": "AI Summer Week @ ETH Zurich",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "entrepreneurship",
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "founder_role",
+      "tier_ceiling_basis": "students 'design, build, and market their own online product/business' culminating in a pitch to judges -- explicit founding/building structure, not passive coursework",
+      "insufficient_description": false,
+      "notes": "strongest founder_role case in this batch; description is unusually explicit about the build-your-own-venture structure"
+    },
+    {
+      "id": "13d9416e-d2a7-4f55-b851-7d76acab2cb3",
+      "title": "World Wildlife Day International Youth Art Contest",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "named art competition, category-implied judging",
+      "insufficient_description": true,
+      "notes": "description is thin (2 sentences, no eligibility/prize/judging detail) -- flagged insufficient_description despite tagging category defaults, since nothing beyond the bare category is actually supported"
+    },
+    {
+      "id": "15237eb0-9ca5-4512-959d-584ec28e7e45",
+      "title": "Johns Hopkins CTY Summer Residential Program",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "academics"
+      ],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "above-grade-level qualifying test required for entry (a real access bar, Part B selectivity) but no stated project/competitive output within the program",
+      "insufficient_description": false,
+      "notes": "the CTY Talent Search qualifying-test requirement is itself a strong signal for academics reinforcement -- entry alone demonstrates above-grade academic standing"
+    },
+    {
+      "id": "152b3822-17ba-43a8-b6f8-5bae7da4be3e",
+      "title": "Koc University Summer Academy (High School Programs)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "academics"
+      ],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "undergrad-adapted coursework, no stated output/competition",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "19a535a4-7c1e-44bb-9a3b-2faeaa6e4c9e",
+      "title": "KU Leuven Summer of Science",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "generic camp, no stated project/output",
+      "insufficient_description": true,
+      "notes": "description is almost entirely logistics (fee, dates, applications closed) with no substantive content about what the program actually does day to day"
+    },
+    {
+      "id": "19ebc71c-1997-41aa-aeb1-728ec5be176c",
+      "title": "American Journal of Student Research (AJSR)",
+      "category": "research",
+      "base_dimensions": [
+        "research",
+        "intellectual_curiosity"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "publication",
+      "tier_ceiling_basis": "this listing IS a publication venue itself -- the entire point of the opportunity is a published article, unlike a mentored-research program where publication is a minority outcome (RULE-COUNSEL-011)",
+      "insufficient_description": false,
+      "notes": "important distinct case: this is a publication *venue*, not a research *program* -- publication ceiling is directly and structurally supported here, not an optimistic default"
+    },
+    {
+      "id": "1d28dd20-3433-407a-a83e-7b71e59c207e",
+      "title": "BRI Student Fellowship",
+      "category": "fellowship",
+      "base_dimensions": [
+        "leadership",
+        "research"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "leadership_role",
+      "tier_ceiling_basis": "explicit 'leadership and civil-society-skills program', 20 selected fellows = real selectivity, sustained 6-month cohort structure",
+      "insufficient_description": false,
+      "notes": "research base dimension from CATEGORY_DIMENSIONS is not well supported by this specific description (no research-methodology content described) -- flagging that fellowship's base-dimension mapping may not fit every fellowship uniformly, a category-level finding not just a row-level one"
+    },
+    {
+      "id": "1d4f5e60-8fe3-4b1a-a7d6-acb29b124e3c",
+      "title": "Sabanci University Summer School (Lise Yaz Okulu)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "category default only",
+      "insufficient_description": true,
+      "notes": "description explicitly states current-cycle date evidence was not found -- genuinely thin record, honestly flagged by the source data itself"
+    },
+    {
+      "id": "1f7b2e52-1900-4953-8271-63224c9e1fc0",
+      "title": "Conrad Challenge (Space Center Houston)",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "entrepreneurship",
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "winner",
+      "tier_ceiling_basis": "multi-stage (Activation to Innovation Stage to Summit) named innovation competition",
+      "insufficient_description": false,
+      "notes": "entrepreneurship/execution_project_depth reinforcement per Part C's 'pitch/business competition' and 'build-style' logic combined -- this is an innovation-product competition, not pure academic"
+    },
+    {
+      "id": "1fe1537e-87e1-46bd-93ef-e15705a83a87",
+      "title": "Hampshire College Summer Studies in Mathematics (HCSSiM)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "academics"
+      ],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "discovery-based proof/modeling coursework, no stated individual output beyond coursework",
+      "insufficient_description": false,
+      "notes": "a strong academics-reinforcement case (advanced college-level math content, described selection as 'talented, highly motivated') though not an explicit selectivity number"
+    },
+    {
+      "id": "2080d194-88e9-4585-9a81-c99e9a19840b",
+      "title": "Oxford Scholastica Academy Summer School",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "paid, non-selective-sounding residential coursework across many tracks, no stated output/competition",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "22fb607f-3aab-4320-a737-3531d0b96702",
+      "title": "Worldwide Youth in Science and Engineering (WYSE)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "research"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "the Young Scholars track is an explicit mentored research placement culminating in a poster symposium -- a real output, though this is one of two named tracks bundled in one listing",
+      "insufficient_description": false,
+      "notes": "DATA QUALITY FLAG: this single row bundles two structurally different sub-programs (a 1-week exploration camp EYO, and a 6-week mentored-research track) with different tier ceilings -- a genuine framework-breakdown case, see findings doc"
+    },
+    {
+      "id": "24495501-f909-493f-a6ba-06633b184fcf",
+      "title": "Stanford Pre-Collegiate Summer Institutes",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "description explicitly says courses are ungraded, no transcript, only a Certificate of Completion -- an explicit downgrade signal, not just absence of an upgrade signal",
+      "insufficient_description": false,
+      "notes": "good example of a description explicitly capping the tier rather than just failing to support a higher one"
+    },
+    {
+      "id": "2541b2e7-0782-4c88-be4a-d7be73c9e7c8",
+      "title": "Northwestern NHSI (\"The Cherubs\")",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "academics"
+      ],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "committee-review admission on 'ability and merit', top ~30% academic band -- a real selectivity signal (Part B), but no stated in-program competitive output",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "27213610-1b19-4e85-b52a-50e165607159",
+      "title": "Sutton Trust UK Summer Schools",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "community_impact"
+      ],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "undergrad-taster coursework, no stated project output",
+      "insufficient_description": false,
+      "notes": "community_impact reinforcement is unusual for this category but directly supported: eligibility explicitly prioritizes widening-participation/access criteria (first-gen, free school meals, care experience) -- this is itself relevant access-equity context per this package's own 04-profile-gap-framework.md, not a standard subject-reinforcement case"
+    },
+    {
+      "id": "27274e04-50f4-4e82-9b7e-c5dbaace4bbe",
+      "title": "GENIUS Olympiad",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "research",
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "international competition across named research-adjacent tracks, awardees explicitly announced",
+      "insufficient_description": false,
+      "notes": "research reinforcement per Part C 'research-based competition' since AI/Coding/Robotics/Science tracks are project-based"
+    },
+    {
+      "id": "2e2f995a-2ac3-4138-a3df-ca4e4033aa36",
+      "title": "Wharton Global HS Investment Competition",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "research",
+        "entrepreneurship"
+      ],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "explicit judged submission (Investment Policy Statement + Final Report) scored on strategy/research/communication",
+      "insufficient_description": false,
+      "notes": "research reinforcement explicit ('judged on... research depth'); entrepreneurship/finance-adjacent per subject"
+    },
+    {
+      "id": "2f0e0301-5dd4-4d25-91a4-8f73bf5584e9",
+      "title": "Ozyegin University Summer Research Program",
+      "category": "research",
+      "base_dimensions": [
+        "research",
+        "intellectual_curiosity"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "mentored on-campus research placement, no stated publication/output expectation",
+      "insufficient_description": false,
+      "notes": "correctly NOT tagged publication-ceiling despite being a 'research program' -- per RULE-COUNSEL-011, mentored research programs should not default to a publication ceiling absent a stated output track"
+    },
+    {
+      "id": "2f3ba478-aa17-4090-bdd3-117ab2185e08",
+      "title": "Copenhagen Business School Summer University",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "category-based non-competitive access, no stated output",
+      "insufficient_description": false,
+      "notes": "DATA QUALITY / ELIGIBILITY FLAG: description itself states entry-level categories are 'realistic mainly for a student who has already finished secondary school, not a current 14-18-year-old' -- this listing may be a poor match for ORYN's actual population despite being in the catalog; flagged as an eligibility-mismatch case, not a tagging failure"
+    },
+    {
+      "id": "2f49c47a-2b28-48ca-af58-65948f4f234e",
+      "title": "Cornell Precollege Studies Summer Residential Program",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "academics"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "real Cornell undergraduate courses that 'appear on an official Cornell transcript' -- a genuine academic-credit output, same pattern as NYU/LSE above",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "2f842782-c122-48cf-a7ba-d5a34525c57c",
+      "title": "Stanford Anesthesia Summer Institute (SASI)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "category default only",
+      "insufficient_description": true,
+      "notes": "single-sentence description, no detail on activities/structure/selectivity beyond dates -- cannot support anything beyond bare category default"
+    },
+    {
+      "id": "309451b7-6985-449d-8546-d314a85d20fe",
+      "title": "Barrett Summer Scholars",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "track-based residential program, no stated output/competition",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "30a605ab-8c51-4f06-9e66-60cc7347c5df",
+      "title": "The Diamond Challenge",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "entrepreneurship",
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "winner",
+      "tier_ceiling_basis": "explicit prize structure up to $12,000, named final summit event",
+      "insufficient_description": false,
+      "notes": "named-example match for Part C's 'pitch/business competition' entrepreneurship reinforcement"
+    },
+    {
+      "id": "310c976c-1a0f-4566-8df2-2e186c898804",
+      "title": "Tufts Pre-College Programs",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "explicit mention of 'portfolio-building work' and 'projects' as program components",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "31856863-be50-440d-8ccc-229812277425",
+      "title": "UNO - United Nations Online",
+      "category": "online_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "career_exploration"
+      ],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "10-week coursework program, no stated project output",
+      "insufficient_description": false,
+      "notes": "DATA QUALITY FLAG worth surfacing to a student directly, not just internally: description itself warns this is NOT an official UN program despite branding suggesting otherwise -- this kind of naming-clarity flag is exactly what a counselor should proactively surface, not just note for tagging purposes"
+    },
+    {
+      "id": "32b43654-2a63-4135-a91a-b492d1f8b3dc",
+      "title": "Sciences Po Summer School - Pre-College Programme",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "category default, no stated output/competition",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "3318dba7-e099-4de2-83db-f27d6697f1be",
+      "title": "NYC Commuter Summer - Columbia Pre-College Programs",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "'Certification of Participation' explicitly named, not a credit/grade outcome",
+      "insufficient_description": true,
+      "notes": "description is almost entirely logistics; genuinely thin on program content"
+    },
+    {
+      "id": "34033f8a-51e1-4c73-9b7e-2e3819a348dc",
+      "title": "Turkiye Scholarships - Bachelor's Degree Programme",
+      "category": "scholarship",
+      "base_dimensions": [
+        "academics"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "a scholarship award is itself the achievement-tier outcome; merit-threshold-gated (70%/90% academic thresholds)",
+      "insufficient_description": false,
+      "notes": "this is a full-degree scholarship, not a summer-program-adjacent one -- relevant mainly for career_goals/university-planning context rather than activity-evidence for a still-in-school applicant; flagged as a possible category-fit question, not a tagging error"
+    },
+    {
+      "id": "345f64dd-f6f4-4f29-9341-75743c39a7d1",
+      "title": "120 Hours",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "named architecture-design competition, category-implied judging",
+      "insufficient_description": true,
+      "notes": "description is very thin (self-description + 'dates not confirmed'), flagged despite category-default tagging"
+    },
+    {
+      "id": "35ddfc5e-1bed-4f28-9655-a1aa3422e554",
+      "title": "Technovation Girls",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "entrepreneurship",
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "winner",
+      "tier_ceiling_basis": "explicit Quarterfinal/Semifinal/World-Summit-finals judged progression",
+      "insufficient_description": false,
+      "notes": "strong entrepreneurship+execution_project_depth case: teams build a real mobile app addressing a community problem, then pitch"
+    },
+    {
+      "id": "36fb08db-6f39-4d38-8094-1e37ac102917",
+      "title": "USA Computing Olympiad (USACO)",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "winner",
+      "tier_ceiling_basis": "tiered divisions with performance-based promotion, invitation-only elite training camp and national-team selection",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "40c69cc2-0567-4ac7-bcb0-553dc63770f7",
+      "title": "European Union Contest for Young Scientists (EUCYS)",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "research"
+      ],
+      "tier_ceiling": "winner",
+      "tier_ceiling_basis": "named cash prizes at multiple placement levels; entry itself requires already being a national-contest winner",
+      "insufficient_description": false,
+      "notes": "second-order competition: entrants are pre-selected winners of their own national contest, so a student reaching even the entry threshold already independently supports a winner tier from a different (unlisted) opportunity"
+    },
+    {
+      "id": "416cc004-5687-4e9f-913e-7be55e697b93",
+      "title": "Terp Young Scholars",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "academics"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "transferable UMD college credit earned",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "418217ec-65af-494a-bf4f-370c0b6f070c",
+      "title": "Secondary Student Training Program (SSTP)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "research",
+        "academics"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "explicit 'highly selective' admission, original mentored research producing a research brief and academic poster",
+      "insufficient_description": false,
+      "notes": "strong research-program case with genuine output (poster) but no stated publication track, correctly capped below publication per RULE-COUNSEL-011"
+    },
+    {
+      "id": "41db7ecc-df55-4335-a85d-11eb2d3b3dc6",
+      "title": "Colorado School of Mines Engineering Design Summer Camp",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "optional industry-recognized Certified SolidWorks Associate credential = a real external credentialed output",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "41db8ceb-16ea-4215-adc0-7fb7b152649d",
+      "title": "IE University Pre-University Summer Program",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "explicit customer-discovery hackathon and pitch-training modules within the curriculum",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "437963fb-9002-4481-bd67-f40e9fc953f1",
+      "title": "Interlochen Arts Camp",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "audition/portfolio-gated placement for 2+ week sessions, culminating in performances/exhibitions/screenings",
+      "insufficient_description": false,
+      "notes": "a real access-selectivity signal (Part B) via the audition requirement, distinct from the achievement-tier tag itself"
+    },
+    {
+      "id": "43c0c707-3447-4863-8d0d-64c7354c113f",
+      "title": "Aggie STEM Overnight Camp",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "project-based-learning camp, no stated individual output beyond attendance",
+      "insufficient_description": false,
+      "notes": "DATA QUALITY FLAG: pricing explicitly not retrieved for the actual high-school-eligible (overnight) track -- the only price given is for a separate K-8 day-camp track, a real gap for a cost-sensitive student"
+    },
+    {
+      "id": "445f2003-1b9c-4cc9-bc63-22e65e7d8f85",
+      "title": "University of Notre Dame Pre-College: Summer Scholars",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "category default only",
+      "insufficient_description": true,
+      "notes": "description contains no program-content detail at all, only an application-timing note"
+    },
+    {
+      "id": "45770aad-075c-4411-8ee7-c86d21236276",
+      "title": "Carnegie Mellon Informatics and Mathematics Competition (CMIMC)",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "category-implied judged competition; description does not itself name a placement/prize structure",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "49fcb739-274c-416d-82d7-40b6a7797fdb",
+      "title": "Georgetown University Summer Programs for High School Students",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "category default only",
+      "insufficient_description": true,
+      "notes": "description is a single generic sentence, no program-specific content"
+    },
+    {
+      "id": "4a1ef2dd-ab26-44e0-b6a5-2e49aca13dc0",
+      "title": "Genesys Works",
+      "category": "internship",
+      "base_dimensions": [
+        "career_exploration",
+        "execution_project_depth"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "paid, multi-phase (training then year-long corporate internship) program with explicit eligibility gate for underserved communities",
+      "insufficient_description": false,
+      "notes": "no explicit leadership-scope language despite year-long internship duration, so leadership reinforcement withheld rather than assumed"
+    },
+    {
+      "id": "4a6c3f9a-bb11-4eb2-b304-f832aeb3799a",
+      "title": "Science Olympiad (Division C)",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "winner",
+      "tier_ceiling_basis": "explicit regional-to-state-to-national tournament progression, 7,000+ teams, named national venue",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "4b4881e4-1444-4363-a668-62d00a09759c",
+      "title": "American Legion Boys State",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "leadership"
+      ],
+      "tier_ceiling": "leadership_role",
+      "tier_ceiling_basis": "explicit mock-government structure (legislative sessions, campaigning for office), nomination-and-interview selection, escalation path to Boys Nation",
+      "insufficient_description": false,
+      "notes": "strong, explicit leadership-simulation structure justifies leadership_role ceiling despite summer_program category default not including leadership as a base dimension"
+    },
+    {
+      "id": "4b9e2c29-c38d-479b-9987-c31501601950",
+      "title": "CyberPatriot",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "winner",
+      "tier_ceiling_basis": "explicit qualifying-to-National-Finals progression, hands-on network-defense task",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "4b9f3125-d8a7-4623-8c61-f4714063d152",
+      "title": "Boston University Summer Term - High School Programs",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "category default only",
+      "insufficient_description": true,
+      "notes": "single generic sentence, no program-specific content"
+    },
+    {
+      "id": "4fe18f68-5aac-46a1-b8a0-65a82ca4248d",
+      "title": "Anson L. Clark Scholars Program",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "research",
+        "academics"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "12 selected nationally, one-on-one original faculty-mentored research, formal written research report required for stipend",
+      "insufficient_description": false,
+      "notes": "unusually explicit cross-disciplinary scope (not STEM-only) worth surfacing for humanities/fine-arts-track students specifically, an access point that category defaults alone would not signal"
+    },
+    {
+      "id": "50392e5e-a7ab-4de4-9ad7-fc7b51a742dc",
+      "title": "LaunchX",
+      "category": "entrepreneurship",
+      "base_dimensions": [
+        "entrepreneurship",
+        "execution_project_depth"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "founder_role",
+      "tier_ceiling_basis": "explicit 'selective... build and pitch real startups' -- direct founding-structure language",
+      "insufficient_description": false,
+      "notes": "description is brief (2 sentences) but the specific language present is unambiguous enough not to flag insufficient"
+    },
+    {
+      "id": "511a9497-145a-4725-a77e-31f50a4f920d",
+      "title": "Penn Medicine Summer Program for High School Students",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "simulations/demonstrations/observation described, no stated individually-produced output",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "51701db6-f571-4ee9-9387-045eed7bb7d4",
+      "title": "Georgia Tech Summer PEAKS (High School Programs)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "explicitly 'general-enrollment', distinct from GT's own separate selective/nomination-only Summer Institute",
+      "insufficient_description": false,
+      "notes": "description itself explicitly distinguishes this general-enrollment offering from a more selective sibling program at the same institution -- a good example of a description actively preventing an over-tag"
+    },
+    {
+      "id": "51c4b57b-7ea1-4503-b9e6-f1468dc9f3f8",
+      "title": "Waterloo Mathematics and Computing Contests",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "category default; this row is an umbrella record for 9 distinct contests with their own dates/deadlines",
+      "insufficient_description": false,
+      "notes": "DATA QUALITY / FRAMEWORK FLAG: this is one row representing 9 structurally distinct contests (grades 5-12, differing selectivity/format per CEMC's own naming) collapsed into a single tag -- the framework can only tag the row as stored, not the underlying variation, see findings doc"
+    },
+    {
+      "id": "51ea0b34-7396-4a4b-89e7-fd4b776b79fa",
+      "title": "Journal of Research High School (JRHS)",
+      "category": "research",
+      "base_dimensions": [
+        "research",
+        "intellectual_curiosity"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "publication",
+      "tier_ceiling_basis": "this listing is itself a publication venue, not a research program",
+      "insufficient_description": false,
+      "notes": "same publication-venue pattern as AJSR above"
+    },
+    {
+      "id": "5321ed43-ac5b-4a66-841c-c84a598a67cc",
+      "title": "SUMaC (Stanford University Mathematics Camp)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "academics"
+      ],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "stated prerequisite (strong proof-writing/algebra/geometry background) is a real selectivity signal",
+      "insufficient_description": true,
+      "notes": "beyond the prerequisite line, no structural/output detail is given -- flagged despite the prerequisite being informative on its own axis"
+    },
+    {
+      "id": "54e6953d-6bda-4e0d-a2f0-6c279cbe3a8a",
+      "title": "Stanford Pre-Collegiate ULO (Online Math & Physics)",
+      "category": "online_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "academics"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "for-credit courses aligned to Stanford's own undergraduate curriculum",
+      "insufficient_description": false,
+      "notes": "DATA QUALITY FLAG: the specific term cited (2026-2027 Fall) already has a passed application deadline per the description's own text -- a live-currency issue, not a tagging issue"
+    },
+    {
+      "id": "5589e4c8-181a-4a2e-bf16-edd13b274846",
+      "title": "Davidson Fellows Scholarship",
+      "category": "scholarship",
+      "base_dimensions": [
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth",
+        "awards_distinction"
+      ],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "requires submission of 'a significant completed project'; three named cash tiers up to $100,000",
+      "insufficient_description": false,
+      "notes": "IMPORTANT FRAMEWORK-BREAKDOWN CASE: category='scholarship' base dimension (academics only, per CATEGORY_DIMENSIONS) badly undersells this listing -- it functions structurally like a major national competition/award requiring a completed project, not a typical merit-aid scholarship. See findings doc."
+    },
+    {
+      "id": "56ca6900-4a53-4fb3-9158-90b1bdce7a80",
+      "title": "Wharton Management & Technology Summer Institute (M&TSI)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "category default only",
+      "insufficient_description": true,
+      "notes": "description is almost entirely logistics (dates, name), no structural/output content"
+    },
+    {
+      "id": "574ab33a-abc7-420e-893a-0b3b6f9d341e",
+      "title": "Wall Street 101 - Virtual Wall Street Classes",
+      "category": "online_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "academics"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "live classes, an optional bundled investing competition exists but is not the base listing itself",
+      "insufficient_description": false,
+      "notes": "the bundled 8-week investing competition, if a student actually opts into it, would separately support a competition-shaped tag not captured by tagging this row alone -- another bundling case"
+    },
+    {
+      "id": "59998106-2a2c-4e35-ba9b-0bdcd5ca586d",
+      "title": "We the People: The Citizen and the Constitution",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "winner",
+      "tier_ceiling_basis": "explicit state-to-National-Finals competitive structure",
+      "insufficient_description": false,
+      "notes": "relevant cross-reference to this package's own 12-political-science-ir-public-policy.md family doc"
+    },
+    {
+      "id": "59f1e29b-e6dc-4de6-9aa2-5a9d26a4f822",
+      "title": "Scholastic Art & Writing Awards",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "explicit 'National Medalists' tier with named scholarship amounts",
+      "insufficient_description": false,
+      "notes": "already directly sourced in this package's own 15-literature-journalism-communication.md (RULE-COUNSEL-047) -- consistent cross-reference, not a new claim"
+    },
+    {
+      "id": "5a2f76ab-36ad-49ac-92a9-73ba1a09fb8d",
+      "title": "Duke Pre-College Program",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "explicit capstone assignment as a program component",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "5a583dbf-eca9-4219-b306-463f9704cf04",
+      "title": "RISD Pre-College (On-Campus)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "studio classes, critiques, projects modeled on RISD's own college curriculum",
+      "insufficient_description": false,
+      "notes": "description explicitly states admission is non-competitive ('any applicant who demonstrates readiness and fit is admitted') -- a genuine, stated downgrade signal for selectivity (Part B), contrasted directly with Interlochen's audition-gated model above in the same batch"
+    },
+    {
+      "id": "6005b354-84d0-486f-b9bf-9bc7dcc2ea6c",
+      "title": "Partners for the Future",
+      "category": "internship",
+      "base_dimensions": [
+        "career_exploration",
+        "execution_project_depth"
+      ],
+      "reinforced_dimensions": [
+        "research",
+        "academics"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "nomination-and-interview selection, sustained original mentored research (minimum 10 hrs/week, Sept-March), concluding oral presentation",
+      "insufficient_description": false,
+      "notes": "one of the strongest access-bar cases in this batch (nomination-only, semi-finalist interviews) -- a real, stated selectivity signal"
+    },
+    {
+      "id": "60184ec3-449b-40ec-bd94-365c115ce612",
+      "title": "NSLC Business & Entrepreneurship",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "entrepreneurship",
+        "leadership",
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "explicit business-pitch exercise judged by real entrepreneurs, plus a shared leadership curriculum across the program",
+      "insufficient_description": false,
+      "notes": "one of the clearest cases where a summer_program-category listing's actual content is much closer to entrepreneurship-category evidence than the base category dimensions alone would suggest"
+    },
+    {
+      "id": "61558e02-0b11-4221-bbbb-fc98bc765da8",
+      "title": "International Journal of High School Research (IJHSR)",
+      "category": "research",
+      "base_dimensions": [
+        "research",
+        "intellectual_curiosity"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "publication",
+      "tier_ceiling_basis": "publication venue, described explicitly as an open (non-competitive-slot) peer-review gate rather than a limited-admission program",
+      "insufficient_description": false,
+      "notes": "third publication-venue case (with AJSR, JRHS) -- worth naming as its own recurring sub-pattern within the 'research' category, see findings doc"
+    },
+    {
+      "id": "690eba7f-0de9-4298-b746-c3456391b9b5",
+      "title": "Coca-Cola Scholars Program",
+      "category": "scholarship",
+      "base_dimensions": [
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "leadership",
+        "community_impact"
+      ],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "explicit 'recognizing leadership and service', 150 selected nationally, $20,000 awards",
+      "insufficient_description": false,
+      "notes": "second scholarship-category framework-breakdown case in this batch (with Davidson Fellows) -- this one reinforces leadership/community_impact specifically, not project-depth, showing scholarship-category breakdowns aren't uniform in shape either"
+    },
+    {
+      "id": "692aaffc-b50c-4b9d-a91d-8769a7a46e5c",
+      "title": "Parsons Summer Intensive Studies",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "studio-based project work with faculty critiques",
+      "insufficient_description": false,
+      "notes": "explicitly 'open to all students regardless of skill level' -- another stated non-selective signal, same pattern as RISD above"
+    },
+    {
+      "id": "69b63aaa-2a5d-40d8-940c-b2dcbd2fbf1c",
+      "title": "Telluride Association Summer Seminar (TASS)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "category default only",
+      "insufficient_description": true,
+      "notes": "description covers eligibility/cost/dates only -- no description of actual seminar content or academic structure, despite this being a program with a real, substantive academic reputation this listing's stored text does not itself convey"
+    },
+    {
+      "id": "6a56a106-64c3-40c3-a58c-563cc9b6ec69",
+      "title": "PROMYS (Program in Mathematics for Young Scientists)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "academics"
+      ],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "explicit 'rigorous proof-based problem solving' content, though brief",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "6c9d8973-1e81-45e5-b71b-fc6ad35fb274",
+      "title": "Coursera",
+      "category": "online_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "academics"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "category default only",
+      "insufficient_description": true,
+      "notes": "MODEL-MISMATCH FLAG, distinct from an ordinary thin-description case: this row is a general course PLATFORM, not a single, specific opportunity the way every other row in this batch is -- forcing it into the same one-row-per-opportunity schema as a named program is itself a data-modeling question, not just a description-thinness one. See findings doc."
+    },
+    {
+      "id": "6f0daac1-7f07-45da-a330-dc900be73ab9",
+      "title": "BrUMO (Brown University Math Olympiad)",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "category default; inaugural 2025 competition, next cycle unconfirmed",
+      "insufficient_description": false,
+      "notes": "a genuinely new/unproven competition (first held 2025) -- worth noting lower institutional track record than most other named competitions in this batch, though this is a currency observation, not a tagging one"
+    },
+    {
+      "id": "7081b03a-3e04-4843-8bc5-0078cfd040f2",
+      "title": "TechGirls",
+      "category": "fellowship",
+      "base_dimensions": [
+        "leadership",
+        "research"
+      ],
+      "reinforced_dimensions": [
+        "career_exploration"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "3-week exchange plus ~7-month structured mentoring, but no stated individual output/leadership-scope beyond program completion",
+      "insufficient_description": false,
+      "notes": "CATEGORY-FIT FLAG: 'fellowship' base dimensions (leadership, research) are not well supported by this specific description -- it's an exchange+mentoring program, not clearly a leadership or research vehicle. Same fellowship-mismatch pattern as BRI Student Fellowship in batch 1. Explicitly names Turkiye as an eligible country -- directly relevant to ORYN's stated geography scope."
+    },
+    {
+      "id": "718cc3c4-2165-49c2-9716-e1be2a0be482",
+      "title": "NFTE Youth Entrepreneurship Showcase Series",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "entrepreneurship",
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "winner",
+      "tier_ceiling_basis": "explicit local-to-regional-to-national-to-global advancement, cash prizes",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "724a375c-fa54-439c-b8d2-c86869fed88d",
+      "title": "UPenn Wharton Hack-AI-thon",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "named finalist stage, category-implied judging",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "79117533-f7d0-4319-8636-16cbe9864673",
+      "title": "Columbia University Pre-College Online Summer",
+      "category": "online_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "academics"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "category default only",
+      "insufficient_description": true,
+      "notes": "logistics-only description, no course-content or output detail"
+    },
+    {
+      "id": "7997f38c-0d5d-47fb-9288-839621268ec6",
+      "title": "Battle Code MIT",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "dedicated High School Tournament track, online qualifiers to in-person MIT Final Tournament",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "7a0b2b4e-189d-4e7b-b4a1-ef8886e3a23d",
+      "title": "Aspiring Scientists Summer Internship Program (ASSIP)",
+      "category": "internship",
+      "base_dimensions": [
+        "career_exploration",
+        "execution_project_depth"
+      ],
+      "reinforced_dimensions": [
+        "research"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "8-week STEM lab placement, optional college credit, no stated publication track",
+      "insufficient_description": false,
+      "notes": "unusually precise, need-based fee-waiver detail (free/reduced lunch, Pell) -- relevant access-equity context per this package's own 04-profile-gap-framework.md"
+    },
+    {
+      "id": "7a422fba-db1a-42a1-b96f-d3bcdf6afa56",
+      "title": "The Gates Scholarship",
+      "category": "scholarship",
+      "base_dimensions": [
+        "academics"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "Pell-eligible + 3.3 GPA gate plus national review process",
+      "insufficient_description": false,
+      "notes": "DATA QUALITY FLAG: the stored description text itself contains research-process meta-commentary ('tier is set to competitive_award... rather than a specific selectivity band') that reads like an internal annotation note bleeding into what should be pure factual description -- worth a pass to separate annotation notes from student-facing description text, a genuine data-hygiene finding distinct from thinness or inaccuracy"
+    },
+    {
+      "id": "7aa518f8-3ba5-4de9-b61c-7538fc41957b",
+      "title": "SIP (Science Internship Program)",
+      "category": "research",
+      "base_dimensions": [
+        "research",
+        "intellectual_curiosity"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "mentored project design/data collection/analysis described, no stated output format",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "7bc45aeb-e1fa-429e-a1ba-05959ec3fc6c",
+      "title": "MathILy-Er",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "category default only",
+      "insufficient_description": true,
+      "notes": "single generic sentence, no program-content detail"
+    },
+    {
+      "id": "7d573141-bca6-459d-a206-43aebae178c4",
+      "title": "Baltic Sea Philosophy Essay Event (BSPEE)",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "intellectual_curiosity"
+      ],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "category-implied judged writing event; description does not itself detail a placement/prize tier",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "7f90019e-05c7-4059-ae13-8e285ab3ea38",
+      "title": "Immerse Education Summer School",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth",
+        "academics"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "explicit 'personal project with tutor feedback', BAC-accredited with UCAS points and US college credit",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "838a79c1-151c-4aef-9622-42db328debb4",
+      "title": "International Philosophy Olympiad (IPO)",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "intellectual_curiosity"
+      ],
+      "tier_ceiling": "winner",
+      "tier_ceiling_basis": "second-order competition: national-delegation-only entry means reaching this level already required winning a prior national selection",
+      "insufficient_description": false,
+      "notes": "same second-order pattern as EUCYS in batch 2"
+    },
+    {
+      "id": "89fa66fc-c7cf-4fa6-8b28-1a016e860484",
+      "title": "World Scholar's Cup",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "intellectual_curiosity"
+      ],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "explicit Regional-to-Global-to-Tournament-of-Champions (Yale) escalation",
+      "insufficient_description": false,
+      "notes": "description explicitly notes Regional Rounds are 'open-enrollment' -- a real, stated low-barrier entry point worth surfacing for access-constrained students (Part B selectivity varies sharply by stage within this one opportunity)"
+    },
+    {
+      "id": "8a7c89e4-e63a-4f64-a76d-4bae1b31e889",
+      "title": "InvestIN - Immersive Career Experiences",
+      "category": "internship",
+      "base_dimensions": [
+        "career_exploration",
+        "execution_project_depth"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "category default only",
+      "insufficient_description": true,
+      "notes": "CATEGORY-FIT QUESTION: description reads as short paid career-exposure workshops (named examples only, e.g. 'Young Doctor'), not an internship in the sustained-placement sense the internship base dimensions (career_exploration, execution_project_depth) assume -- flagged as a possible category mismatch, not just thin content"
+    },
+    {
+      "id": "8bb401fa-d53f-45ae-8968-241ef641ccf4",
+      "title": "Zero Robotics",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "remote qualifiers to in-person MIT finals",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "8ff9158a-476a-4f7a-ac5a-de4553dd4d28",
+      "title": "Case Western Reserve University Online Pre-College Program",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "final project required for a Certificate of Completion at 70% threshold",
+      "insufficient_description": false,
+      "notes": "explicitly non-credit, no CWRU admissions preference -- a stated downgrade signal, same pattern as Stanford Pre-Collegiate's explicit non-credit framing"
+    },
+    {
+      "id": "93d45f34-4078-4d15-be6f-d6e157a21943",
+      "title": "The Concord Review - Emerson Prize",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "research"
+      ],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "publication (journal accepts ~5% of long-form historical-research submissions) is itself a prerequisite for prize eligibility, with named cash prizes ($1,000/$5,000) layered on top",
+      "insufficient_description": false,
+      "notes": "hybrid research+publication+competition case -- publication is the base outcome, award is the further, rarer upgrade on top of it; both should be visible to a counselor, not collapsed into one tag"
+    },
+    {
+      "id": "95b59593-14ce-4d3d-94d9-9b16b5d25675",
+      "title": "National Economics Challenge",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "winner",
+      "tier_ceiling_basis": "explicit state-to-National-Finals structure, named cash prizes by placement",
+      "insufficient_description": false,
+      "notes": "exam-format competition, not project-based, so no execution_project_depth reinforcement despite being a strong competition"
+    },
+    {
+      "id": "96557dbb-7c60-4097-9925-35cbd5ad9a57",
+      "title": "Bilkent University Summer Camp (Yaz Kampi)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "category default, no stated project/output",
+      "insufficient_description": false,
+      "notes": "CURRENCY FLAG (not a tagging issue): description states 2026 registration is confirmed closed ('Kayitlarimiz kapandi')"
+    },
+    {
+      "id": "96a437a7-781b-4046-b7ad-baf0069be8e5",
+      "title": "UK Chemistry Olympiad",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "intellectual_curiosity"
+      ],
+      "tier_ceiling": "winner",
+      "tier_ceiling_basis": "Round One to Round Two to potential IChO national-team selection -- explicit escalating structure",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "973b3bdd-59c2-4e99-a76b-2006b365d63a",
+      "title": "ITU Lise Yaz Okulu 2026",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "category default only",
+      "insufficient_description": true,
+      "notes": "single generic sentence, topic list only"
+    },
+    {
+      "id": "97da3310-d517-4fea-bdec-2adeb92d3515",
+      "title": "Penn Apps",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "category-implied hackathon judging",
+      "insufficient_description": false,
+      "notes": "IMPORTANT ELIGIBILITY FLAG, distinct from a tagging note: the stored description itself reports a direct contradiction between the organizer's own official age-of-majority rule and a secondary source's 15+ claim -- if the official rule holds, this opportunity may not actually be eligible for most of ORYN's 14-18 target population at all, which is a bigger problem than any dimension tag"
+    },
+    {
+      "id": "995daf25-80ab-4e9a-bcd7-2cd2b2d9d18a",
+      "title": "CU Boulder Precollegiate Development Program (PCDP)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "category default only",
+      "insufficient_description": false,
+      "notes": "STRUCTURAL CATEGORY-FIT FLAG: the description itself states this is 'a pipeline benefit for already-enrolled participants rather than a single-summer program most students could apply to directly' -- this may not belong in a general single-summer opportunity catalog at all the way the rest of this table's rows do; a data-modeling question, not a tagging one"
+    },
+    {
+      "id": "99acaf0b-1b1f-4fc1-bb34-69a729a01d0f",
+      "title": "Wharton Global Youth Program: Future of the Business World (FBW)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "entrepreneurship",
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "explicit capstone project plus real-time business simulations",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "9b6aefb3-a33e-45a1-af06-5a770a92c45a",
+      "title": "Caltech Summer Research Connection (SRC)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "research",
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "hands-on lab research culminating in a seminar presentation of findings",
+      "insufficient_description": false,
+      "notes": "ELIGIBILITY FLAG: restricted specifically to Pasadena Unified School District students -- an unusually narrow geographic gate worth surfacing explicitly, not just noting generally"
+    },
+    {
+      "id": "a0571b4a-8d05-4fe1-bb6b-790b1fed786f",
+      "title": "Canada/USA Mathcamp",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "academics",
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "rigorous Qualifying-Quiz admission requiring original mathematical thinking; individual projects named as a program component",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "a073efce-71aa-43a7-b218-3251973e5d0c",
+      "title": "UWC Short Courses",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "community_impact",
+        "leadership"
+      ],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "named themes include leadership/social entrepreneurship/peace-conflict work, but this row is a directory of dozens of distinct courses, not one program",
+      "insufficient_description": false,
+      "notes": "MODEL-MISMATCH FLAG (second instance, with Coursera): this row represents a directory of dozens of independently-run short courses with their own eligibility/timeline/cost, collapsed into one tag -- see findings doc"
+    },
+    {
+      "id": "a22bb8af-8c3d-49a3-948b-714a68aed263",
+      "title": "Freie Universitat Berlin SommerUNI",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "academics"
+      ],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "hands-on experiment courses plus lecture series, no stated individual output",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "a2c63505-1481-4a1f-94cc-6ab86dc35405",
+      "title": "QuestBridge National College Match",
+      "category": "scholarship",
+      "base_dimensions": [
+        "academics"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "being matched is itself a competitive selection outcome (low-income high-achieving applicant pool, 55 partner colleges)",
+      "insufficient_description": false,
+      "notes": "CATEGORY-BREAKDOWN NOTE: this is structurally an admissions-matching service bundled with a scholarship, not evidence of a demonstrated skill the way Davidson/Coca-Cola/Ron Brown are -- a third distinct sub-shape within 'scholarship', alongside pure-need-based (Gates) and leadership-recognition (Coca-Cola/Ron Brown) types, see findings doc"
+    },
+    {
+      "id": "a37fa810-d142-4c07-b272-b3d58a6e6ea5",
+      "title": "Garcia Summer Research Program",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "research",
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "publication",
+      "tier_ceiling_basis": "description explicitly states successful participants 'may go on to publish in a research journal or present at a professional conference'",
+      "insufficient_description": false,
+      "notes": "per RULE-COUNSEL-011, 'may go on to' should be framed to a student as a possible, not expected, outcome even though the pathway is explicitly real here -- ceiling is structurally supportable but should not be presented as the typical result"
+    },
+    {
+      "id": "a4a24425-2a6f-4902-99a4-4fb43dc110dd",
+      "title": "Harvard Pre-Collegiate Economics Challenge (HPEC)",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "category default; registration/cost/eligibility not yet published",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "a4c5a08a-f623-4c77-a55f-5782f395c6ec",
+      "title": "Nuffield Research Placements",
+      "category": "internship",
+      "base_dimensions": [
+        "career_exploration",
+        "execution_project_depth"
+      ],
+      "reinforced_dimensions": [
+        "research"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "genuine research contribution to a host organisation's work, independent-evaluation-backed outcomes",
+      "insufficient_description": false,
+      "notes": "explicit downstream path to a Gold CREST Award or Big Bang Competition entry is a separate, connected opportunity, not this placement's own achievement tier -- kept as completed_project rather than inheriting that further opportunity's award ceiling"
+    },
+    {
+      "id": "a71a7c76-1635-4fff-8027-f9b4fd865549",
+      "title": "Emory Pre-College Program",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "academics"
+      ],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "satisfactory/unsatisfactory grading (not letter-graded), no stated individual output",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "aa64db8b-6251-4981-9386-ef50fc4ca3ec",
+      "title": "HOSA Future Health Professionals - Competitive Events",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "leadership",
+        "career_exploration"
+      ],
+      "tier_ceiling": "winner",
+      "tier_ceiling_basis": "explicit local-to-regional-to-state-to-International-Leadership-Conference structure, named leadership/teamwork event categories",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "abe62a46-56f4-449a-b008-d072b1be5dc4",
+      "title": "Ron Brown Scholar Program",
+      "category": "scholarship",
+      "base_dimensions": [
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "leadership",
+        "community_impact"
+      ],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "explicit 'leadership potential, and community-service commitment' criteria",
+      "insufficient_description": false,
+      "notes": "third scholarship-category case reinforcing leadership/community_impact, same pattern as Coca-Cola Scholars"
+    },
+    {
+      "id": "ad0ef06f-4205-4300-a994-800b80c40a8c",
+      "title": "STEM Enhancement in Earth Science (SEES) Summer Intern Program",
+      "category": "research",
+      "base_dimensions": [
+        "research",
+        "intellectual_curiosity"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "explicit 'nationally competitive', NASA-affiliated, remote+onsite research plus a science symposium, no stated publication track",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "adce9d5e-c138-49ed-b7ff-370c3828f80e",
+      "title": "Emerging Engineers @ UVA",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "lab tours, guest speakers, panels -- exposure-shaped, no stated individual project output",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "ae174625-5ad8-41b7-9c9a-7f00710c168a",
+      "title": "Summer Science Program (SSP)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "research"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "sustained team-based mentored STEM research, though no explicit final-output/presentation format is named in this specific description",
+      "insufficient_description": false,
+      "notes": "borderline case: completed_project assigned on the strength of the sustained mentored-research structure itself, even though (unlike SSTP/Garcia/Clark above) no specific output artifact is explicitly named here"
+    },
+    {
+      "id": "b0432a47-ba80-4de6-a121-11ab10495bcb",
+      "title": "NYLF Medicine & Health Care",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "academics"
+      ],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "skills practice/simulations described, no produced research/project output; optional GMU college credit supports academics reinforcement",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "b0ba4e37-5665-4ed2-b20c-997d3b09cb6e",
+      "title": "Cooke College Scholarship Program",
+      "category": "scholarship",
+      "base_dimensions": [
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "leadership",
+        "community_impact"
+      ],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "explicit 'academic achievement, leadership, service, and persistence' selection criteria",
+      "insufficient_description": false,
+      "notes": "fourth scholarship-category case in this leadership/community_impact-reinforcing sub-pattern (with Coca-Cola, Ron Brown) -- this sub-pattern is now well-established across the sample, see findings doc"
+    },
+    {
+      "id": "b1e010e6-3bef-4742-8b09-ceaf7801f104",
+      "title": "Summer High School Internship Program (SHIP)",
+      "category": "internship",
+      "base_dimensions": [
+        "career_exploration",
+        "execution_project_depth"
+      ],
+      "reinforced_dimensions": [
+        "research"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "competitive, full-time embedded lab placement at a named cancer research center",
+      "insufficient_description": false,
+      "notes": "tightly geo-restricted (Greater Seattle only, no international) -- eligibility flag"
+    },
+    {
+      "id": "b23c2cf0-3c44-40f8-8b0b-67315a066c9f",
+      "title": "Vanderbilt Programs for Talented Youth (PTY)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "academics"
+      ],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "accelerated college-level coursework, no stated individual output",
+      "insufficient_description": false,
+      "notes": "explicitly states no international financial aid -- relevant access flag for ORYN's international users"
+    },
+    {
+      "id": "b32fd331-055e-4a12-968e-0e369d1234af",
+      "title": "Carnegie Mellon SAMS",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "research",
+        "academics"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "faculty-advised STEM research projects, credit-bearing course, presentation at a final symposium",
+      "insufficient_description": false,
+      "notes": "fully funded, need-documentation-based -- an access-positive program worth surfacing to lower-income students specifically"
+    },
+    {
+      "id": "b41bf5f5-d2cb-4f5d-84e5-8d9e8630af07",
+      "title": "International Young Physicists' Tournament (IYPT)",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "research",
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "winner",
+      "tier_ceiling_basis": "second-order competition (national-team registration only), combined research+debate format",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "b80369c3-76bd-47c4-9f9a-25f6503a3ff4",
+      "title": "MITES Summer",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "academics"
+      ],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "full college-level course load, but explicitly 'holistic' admission (interest+performance, no output/competition described)",
+      "insufficient_description": false,
+      "notes": "fully funded specifically for underrepresented/underserved STEM students -- directly relevant access-equity signal"
+    },
+    {
+      "id": "b87aba0b-755d-4802-a294-369db2acccd0",
+      "title": "MIT PRIMES",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "research",
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "year-long, highly selective ('extraordinary mathematical ability'), 10+ hrs/week original research culminating in a written project and presentation; no explicit publication claim in the stored text so kept conservative",
+      "insufficient_description": false,
+      "notes": "STRONG CATEGORY-MISMATCH CASE: category is summer_program (base dims intellectual_curiosity/career_exploration) but the actual program is a year-long mentored original-research fellowship, functionally indistinguishable from a top-tier 'research' category listing -- one of the clearest framework-breakdown examples in the whole sample"
+    },
+    {
+      "id": "bc303473-ba94-41e4-9b3d-038804858a8c",
+      "title": "International Public Policy Forum (IPPF)",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "intellectual_curiosity"
+      ],
+      "tier_ceiling": "winner",
+      "tier_ceiling_basis": "explicit written-elimination-round (64-to-32-to-16-to-8) structure to live Finals",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "bc729c68-0511-40bb-a590-e2fbaa277a56",
+      "title": "Coolidge Scholarship",
+      "category": "scholarship",
+      "base_dimensions": [
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "awards_distinction"
+      ],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "explicit 'national essay-based competition' with finalist interview weekend",
+      "insufficient_description": false,
+      "notes": "another essay/interview-based scholarship-category case supporting awards_distinction reinforcement, distinct in shape from the leadership/service-recognition cluster (Coca-Cola/Ron Brown/Cooke)"
+    },
+    {
+      "id": "bdc4bdb5-5893-4e05-bf9c-e520d7da2817",
+      "title": "Pioneer Research Institute",
+      "category": "research",
+      "base_dimensions": [
+        "research",
+        "intellectual_curiosity"
+      ],
+      "reinforced_dimensions": [
+        "academics"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "one-on-one original paper with a professor, 4 college credits via Oberlin, no stated publication/competitive outcome",
+      "insufficient_description": false,
+      "notes": "appears to be a paid-enrollment research program rather than a merit-selective one (no selectivity language, unlike SSTP/PRIMES/Clark) -- a real sub-shape distinction within the 'research' category worth naming in findings"
+    },
+    {
+      "id": "be12bb93-9943-4cec-9e15-d0d36afff2ea",
+      "title": "University of Bath: Step into Bath",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "admissions-guidance taster sessions, no academic output",
+      "insufficient_description": false,
+      "notes": "explicitly redirects widening-participation-eligible students to a separate subsidised programme -- same access-equity pattern as Sutton Trust in batch 1"
+    },
+    {
+      "id": "bfd946b6-8cfb-4b2b-91b3-fd5523c7551b",
+      "title": "Inspirit AI Scholars Live Online",
+      "category": "online_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "explicit culminating socially-impactful AI project",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "c00e6c34-e5a7-4013-be39-882cff33ca7a",
+      "title": "American Regions Mathematics League (ARML)",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "regional-team qualification structure; no explicit prize/placement language in the stored description",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "c033f1e9-4642-4a5a-94da-739efadff477",
+      "title": "Wharton Global Youth Program: Leadership in the Business World (LBW)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth",
+        "leadership"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "team-based capstone case competition, internal to the program (not an external placement/prize)",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "c0343703-0b64-48c1-91ce-1907c08a1909",
+      "title": "Northwestern CTD 3-Week Academic Summer Camps",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "academics"
+      ],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "Accelerated (AP/credit) track available, tiered eligibility gate from test scores/transcript = real selectivity signal, but no stated individual output",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "c0a4433d-2d13-450c-a568-67f2e5aa84a2",
+      "title": "UT Austin Women in STEM (WiSTEM) High School Camps & Academies",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "1-2 day camps and short virtual academies, exposure/skills-workshop shaped",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "c12ce265-c6c4-454b-97f5-680d366813ec",
+      "title": "STEM Racing",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "explicit design/build/race structure; category-implied judging, no specific prize tier stated",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "c2c3e0e3-9c9a-4d8f-ae67-54b37e4cdd85",
+      "title": "National History Day (NHD)",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "research",
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "winner",
+      "tier_ceiling_basis": "explicit school-to-affiliate-to-National-Contest advancement, top-2-per-category rule stated",
+      "insufficient_description": false,
+      "notes": "already directly sourced in this package's own 14-sociology-history-philosophy.md (RULE-COUNSEL-044) -- consistent cross-reference"
+    },
+    {
+      "id": "c2fc9e38-bd26-4b88-bc86-f8d0f4eb4076",
+      "title": "Future Makers: An NYU Stern Pre-College Institute",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth",
+        "leadership"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "sustained team business simulation with explicit leadership-communication component and final recommendations presentation",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "c3a98c43-dcfb-42cc-a23f-02a8a8154358",
+      "title": "Yale Young Global Scholars",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "non-credit academic coursework, no stated output/competition",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "c64b7050-75f9-45f8-b2ab-5b6ff14953dc",
+      "title": "Science and Engineering Apprenticeship Program (SEAP)",
+      "category": "internship",
+      "base_dimensions": [
+        "career_exploration",
+        "execution_project_depth"
+      ],
+      "reinforced_dimensions": [
+        "research"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "paid, embedded DoD/Navy research-lab placement",
+      "insufficient_description": false,
+      "notes": "US-citizens-only, some sites require security clearance -- excludes most international ORYN users, a real eligibility flag"
+    },
+    {
+      "id": "c7c21f3f-fb33-4c6c-be76-66da4df0535d",
+      "title": "Boston University Tanglewood Institute (BUTI)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "multiple public performances as a stated program outcome",
+      "insufficient_description": false,
+      "notes": "description frames the program as prestigious/conservatory-level but, unlike Interlochen/Idyllwild in this same sample, does not explicitly state an audition or selective-entry mechanism in this specific stored text -- a real gap between reputational framing and what the description itself supports"
+    },
+    {
+      "id": "c94e9b5e-41ad-4af6-844b-d780d9f2f9f4",
+      "title": "Sorbonne Universite Summer University",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "lecture-based language/humanities program, no stated output",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "cb1ae3e2-d55e-47a5-bdee-cedc7469d512",
+      "title": "Diamond Challenge",
+      "category": "entrepreneurship",
+      "base_dimensions": [
+        "entrepreneurship",
+        "execution_project_depth"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "winner",
+      "tier_ceiling_basis": "live pitch summit, category-implied placement",
+      "insufficient_description": false,
+      "notes": "LIKELY DUPLICATE FLAG: this appears to be the same underlying program as \"The Diamond Challenge\" (id 30a605ab, tagged category=competition) in batch 1 -- same name, same subject, different category tag and possibly a near-duplicate database row. Worth a direct id-level duplicate check outside this tagging exercise."
+    },
+    {
+      "id": "cb4a1030-d035-4c1f-8579-37c458a88b0e",
+      "title": "Blue Ocean Competition",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "entrepreneurship"
+      ],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "category default; no explicit prize/placement structure stated",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "ce587c91-a21f-4359-a535-70a9736494f0",
+      "title": "National High School Ethics Bowl (NHSEB)",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "intellectual_curiosity"
+      ],
+      "tier_ceiling": "winner",
+      "tier_ceiling_basis": "explicit Regional-to-Divisional-to-National-Championship structure",
+      "insufficient_description": false,
+      "notes": "already directly sourced in this package's own 14-sociology-history-philosophy.md (RULE-COUNSEL-045) -- consistent cross-reference"
+    },
+    {
+      "id": "cfb32772-6259-4e3a-9ead-bc289b463d08",
+      "title": "Wharton Data Science Competition",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "research",
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "data-science/analytics project competition, category-implied judging",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "d38255f3-6ce2-440c-b302-c39ee6b17cde",
+      "title": "Washington University in St. Louis College Prep Program (CPP)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "category default only",
+      "insufficient_description": false,
+      "notes": "THIRD PIPELINE/ACCESS-PROGRAM CATEGORY-FIT CASE (with CU Boulder PCDP, and a similar shape to Sutton Trust/Bath's widening-participation redirect) -- a sustained, multi-year first-generation college-access program bundled into the single-summer-opportunity schema, not a one-off application a typical student browsing the catalog could act on directly"
+    },
+    {
+      "id": "d3d5fc29-9bde-4c6e-9bc4-fb0e25593198",
+      "title": "Harvard Secondary School Program (SSP)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "academics"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "real, credit-bearing Harvard Summer School courses alongside adult/college students",
+      "insufficient_description": false,
+      "notes": "same real-college-credit pattern as NYU/Cornell/LSE/Harvard-branded programs elsewhere in this sample"
+    },
+    {
+      "id": "d3dc512f-ed1e-43f6-a85b-294a599df0da",
+      "title": "DNA Day Essay Contest",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "intellectual_curiosity"
+      ],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "category default only",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "d49e827f-c66b-4112-8161-92209a6545ae",
+      "title": "Oxbridge Academic Programs",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "category default only",
+      "insufficient_description": true,
+      "notes": "description itself notes the fetched page returned only marketing/SMS-consent boilerplate -- genuinely no substantive content retrieved"
+    },
+    {
+      "id": "d50285d3-87ea-4f9e-a557-92b2af314c9a",
+      "title": "Tisch Summer High School",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "final presentations/showings, real NYU college credit awarded",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "d780bc55-41e0-444b-8bcc-3f927b28c4b7",
+      "title": "Istanbul Bilgi University High School Summer School",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "exposure-shaped coursework across 3 faculties, no stated individual output",
+      "insufficient_description": false,
+      "notes": "POSITIVE VERIFICATION EXAMPLE: the stored description documents that a false 'closed by decree' rumor about the host institution was checked directly against the official homepage and found untrue -- exactly the kind of active fact-checking this whole tagging exercise values, worth noting as a good practice example, not a flaw"
+    },
+    {
+      "id": "d9b1f04e-5be4-44c1-9d34-c5979ad57689",
+      "title": "YIS Stock Pitch Competition",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "research"
+      ],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "top-100-teams-present structure; no single-winner language given so kept at award rather than winner",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "d9b30fb9-aa85-48ca-ae1b-6c04c5ece736",
+      "title": "Barcelona International Youth Science Challenge (BIYSC)",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "research"
+      ],
+      "tier_ceiling": "award",
+      "tier_ceiling_basis": "category default; research-challenge framing supports research reinforcement",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "db25d327-ee37-4414-9003-f5654f64d3aa",
+      "title": "FIRST Robotics Competition",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth",
+        "leadership"
+      ],
+      "tier_ceiling": "winner",
+      "tier_ceiling_basis": "explicit regional-to-championship alliance-based competition structure",
+      "insufficient_description": false,
+      "notes": "leadership reinforcement justified by explicit team fundraising/community-outreach/brand-building responsibilities beyond the robot build itself"
+    },
+    {
+      "id": "de238902-ec8c-469b-921f-5aab113df647",
+      "title": "Rutgers Young Scholars Program in Discrete Mathematics",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "academics"
+      ],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "problem-set-based selective admission (~30 students/year), problem-solving-focused coursework, no stated individual output",
+      "insufficient_description": false,
+      "notes": "explicit encouragement of applications from females and underrepresented groups in mathematical sciences -- an access-equity-relevant detail"
+    },
+    {
+      "id": "df90d914-6d20-44f2-ae29-d195f629540a",
+      "title": "Global Achievers Academy",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "category default only",
+      "insufficient_description": true,
+      "notes": "generic 'young learners' ESL camp framing suggests a possible age/audience mismatch with ORYN's 14-18 population, on top of thin program-content detail"
+    },
+    {
+      "id": "e0d9379f-294b-40cd-a406-e0cb08c92567",
+      "title": "Ross Mathematics Program",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "academics"
+      ],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "in-depth number-theory curriculum described, no stated individual output beyond coursework",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "e8f15ab0-0c65-4c33-8512-936dc76c2ac8",
+      "title": "Idyllwild Arts Summer Program (High School Intensives)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "audition-based entry (stated explicitly for the Dance Intensive example) culminating in a public recital",
+      "insufficient_description": false,
+      "notes": "description explicitly frames the Dance Intensive as 'a verified representative example' -- other tracks' specific audition/portfolio requirements were not individually confirmed in this stored text"
+    },
+    {
+      "id": "eb956520-51c2-43d1-a57b-ec29dd664315",
+      "title": "JAX Summer Student Program",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "research"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "fully-funded, stipended, 10-week mentored genetics/genomics lab research with structured co-curricular training, no stated publication track",
+      "insufficient_description": false,
+      "notes": "another category-mismatch case (with MIT PRIMES): functionally a research fellowship, tagged summer_program"
+    },
+    {
+      "id": "ee767c59-fee1-4c7a-8db4-ac1bcc5e9660",
+      "title": "International Psychology Olympiad (IPsyO)",
+      "category": "competition",
+      "base_dimensions": [
+        "awards_distinction",
+        "academics"
+      ],
+      "reinforced_dimensions": [
+        "intellectual_curiosity"
+      ],
+      "tier_ceiling": "winner",
+      "tier_ceiling_basis": "explicit Qualification-to-Final-Round structure, top 6 per country/region advance",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "f2e23349-5a79-4cb2-9bbd-ccefe334dbd7",
+      "title": "MIT Beaver Works Summer Institute (BWSI)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth",
+        "academics"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "project-based course with a culminating challenge/final event; mandatory prerequisite-course completion used as an explicit admissions signal",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "f3487103-c08f-4d56-8ec1-01f93a7eac94",
+      "title": "Iowa Young Writers' Studio (Summer Residential Program)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "admission is 'based almost entirely on a submitted writing sample' -- the entrance requirement itself is evidence of a completed creative work, independent of anything produced during the program",
+      "insufficient_description": false,
+      "notes": "a genuinely different evidentiary shape from most other rows: the achievement-relevant evidence here is largely pre-existing (the admission writing sample) rather than produced during the program itself"
+    },
+    {
+      "id": "f43ddfc3-a800-4a81-9e11-c3dba79b9d73",
+      "title": "King's College London Pre-University Summer School",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [],
+      "tier_ceiling": "participated",
+      "tier_ceiling_basis": "lecture/seminar/simulation format, no stated individual output",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "f70c6987-d11c-4f0c-87f2-1c11e5dee491",
+      "title": "Penn Pre-College Program (Residential)",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "academics"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "real credit-bearing Penn undergraduate courses, same pattern as other Ivy-credit programs in this sample",
+      "insufficient_description": false,
+      "notes": null
+    },
+    {
+      "id": "fd6c9cf1-b112-478a-8b4f-57989368abaa",
+      "title": "Simons Summer Research Program",
+      "category": "summer_program",
+      "base_dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "reinforced_dimensions": [
+        "research",
+        "execution_project_depth"
+      ],
+      "tier_ceiling": "completed_project",
+      "tier_ceiling_basis": "individually faculty-mentored research producing a written abstract and a presented research poster; no stated publication track",
+      "insufficient_description": false,
+      "notes": "this session's own already primary-source-verified flagship program (RULE-COUNSEL-069, 12-activity-progression-pathways.md) -- the 'current 11th-grade junior, no exceptions' eligibility rule verified there directly corroborates this row's own real-world selectivity"
+    }
+  ]
+}
