@@ -3120,3 +3120,24 @@ Binghamton dual-diploma program; Cyprus's Guidance and Psychological Counseling,
 own department site confirms is *the only* METU program in that field anywhere --
 independently validating that the Cyprus-campus disambiguation was substantively correct,
 not just a defensive precaution) both confirmed accurate.
+
+**Program catalogue batch 21 — Boğaziçi University, deepened, 26 new, running session total
+3,716 across 39 universities.** Full method in that commit's own message (`ad57989`). Second
+application of the batch-20 fix, same 4-name-overlap check-then-exclude method (confirmed
+live first: Boğaziçi's existing 4 seed rows are Computer Engineering/Economics/Industrial
+Engineering/Management, same generic template, excluded here too). 100% English-medium
+institutional fact, same as METU. **Faculty of Communication left as an explicit gap this
+round** -- the source page names the faculty but gives no sub-department list, and targeted
+follow-up search didn't surface one either (unlike Hacettepe/batch 19's single-program law/
+medicine/pharmacy faculties, which are a well-established norm safe to infer, guessing at how
+a communication faculty subdivides carries real risk of inventing wrong department names) --
+'Law' was still included as a single program under Faculty of Law, matching that safer,
+well-established single-program-faculty pattern. One real, disclosed provenance finding from
+a spot-check: Boğaziçi's own site names the Tourism Administration department's faculty
+inconsistently across pages ("Faculty of Managerial Sciences" on its own dedicated page vs.
+"Faculty of Economics and Administrative Sciences" on the general listing page this batch
+was sourced from) -- almost certainly an unreflected internal rename, patched into that one
+record's notes as a caveat rather than silently reconciled one way or the other. **Remaining
+same-pattern deepening targets**: Bilkent, Koç, Özyeğin, Sabancı (the other 4 of the original
+6 four-program-seeded Turkish universities) are still open — same method should transfer
+directly.
