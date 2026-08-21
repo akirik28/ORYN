@@ -96,6 +96,12 @@ Machine-readable companions live in `data/research/counseling-intelligence/`:
   section and its evidence.
 - `sources.json` — the source registry (`source_url`, `source_title`, `source_type`, `retrieved_at`,
   `claim_supported`, `confidence`, `limitations`) referenced by rules.
+- `major-family-taxonomy.json` — answers the mission brief's deliverable #11 directly: a structured
+  index over all 20 `06-major-family-evidence/` documents (both branches) capturing the actual
+  interest → skills → career-families → licensure/country-coverage → interdisciplinary-links graph
+  in one queryable form, rather than requiring a future engineering session to re-parse 20 prose
+  documents by hand. It is an index, not a replacement — every entry's `source_doc` field points to
+  the authoritative detail, and no new research was performed to build it.
 
 ## Method and source standard
 

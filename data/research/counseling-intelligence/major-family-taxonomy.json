@@ -1,0 +1,1757 @@
+{
+  "schema_version": "1.0",
+  "package": "counseling-intelligence",
+  "last_updated": "2026-08-21T04:35:00+03:00",
+  "method_note": "Structured index over docs/research/counseling-intelligence/06-major-family-evidence/*.md (both branches -- this branch's 11 families and the peer branch's 9, read directly from its worktree at .claude/worktrees/counseling-intelligence-research-013956/). This file answers the mission brief's deliverable #11 (a machine-readable structured artifact for the interest -> major/field -> skills -> experiences -> career-family -> next-action chain) in a way rules.json (rule registry) and sources.json (citation registry) do not, since neither encodes the taxonomy graph itself. This is an INDEX, not a replacement for the prose docs -- every family's source_doc field points to the authoritative detail; resolve any specific factual claim there, not here. No new research was performed to build this file; every field traces to content already established in the corresponding family document. Per-family sourcing/confidence/limitations live in that document's own Sources table and in sources.json, not duplicated here. family_id '*' in interdisciplinary_connections denotes a structural one-to-many exception (currently only family 18, Education), not a normal pairwise link.",
+  "onboarding_vocabulary_gaps": {
+    "note": "lib/validation/onboarding.ts's INTEREST_SUGGESTIONS has 16 free-text-suggest values (never a closed enum). Families 17, 18, 19, 20 and chemistry/journalism/film/sociology/philosophy/IR/product-design/sustainability-specifically have NO dedicated onboarding suggestion -- reachable only via an approximate-neighbor suggestion or free text.",
+    "families_with_no_onboarding_anchor": [
+      "17",
+      "18",
+      "19",
+      "20"
+    ],
+    "raw_fields_with_no_onboarding_suggestion": [
+      "chemistry",
+      "journalism/communications",
+      "film/media",
+      "sociology",
+      "philosophy",
+      "international relations",
+      "product/industrial design",
+      "sustainability (as distinct from Environmental Science)"
+    ]
+  },
+  "interdisciplinary_combinations": [
+    {
+      "combination": "CS + biology (computational biology, bioinformatics)",
+      "families": [
+        "01",
+        "04"
+      ]
+    },
+    {
+      "combination": "CS + economics (algorithmic markets, computational social science)",
+      "families": [
+        "01",
+        "07"
+      ]
+    },
+    {
+      "combination": "AI + medicine (clinical ML, diagnostic tools)",
+      "families": [
+        "01",
+        "10"
+      ]
+    },
+    {
+      "combination": "Math + economics (quantitative finance, econometrics)",
+      "families": [
+        "02",
+        "07"
+      ]
+    },
+    {
+      "combination": "Design + engineering (industrial design, human factors)",
+      "families": [
+        "05",
+        "06",
+        "16"
+      ]
+    },
+    {
+      "combination": "Politics + economics (political economy, public policy analysis)",
+      "families": [
+        "07",
+        "12"
+      ]
+    },
+    {
+      "combination": "Psychology + neuroscience (cognitive science)",
+      "families": [
+        "04",
+        "11"
+      ]
+    },
+    {
+      "combination": "Environment + engineering (sustainable/environmental engineering)",
+      "families": [
+        "05",
+        "09"
+      ]
+    },
+    {
+      "combination": "Business + technology (product management, tech entrepreneurship)",
+      "families": [
+        "01",
+        "08"
+      ]
+    },
+    {
+      "combination": "Law + technology (tech policy, IP law)",
+      "families": [
+        "01",
+        "13"
+      ]
+    },
+    {
+      "combination": "CS + law (tech policy, IP/patent law -- found missing, added during audit)",
+      "families": [
+        "01",
+        "13"
+      ]
+    },
+    {
+      "combination": "CS + business (product management, tech entrepreneurship)",
+      "families": [
+        "01",
+        "08"
+      ]
+    },
+    {
+      "combination": "Education + every subject-matter family (structural exception, not a single pair)",
+      "families": [
+        "18"
+      ]
+    }
+  ],
+  "families": [
+    {
+      "family_id": "01",
+      "name": "Computing & Information Sciences",
+      "owner_branch": "this session",
+      "source_doc": "06-major-family-evidence/01-computing-information-sciences.md",
+      "onboarding_interests": [
+        "Computer Science"
+      ],
+      "mission_raw_fields": [
+        "computer science",
+        "software engineering",
+        "data science",
+        "artificial intelligence"
+      ],
+      "core_skills": [
+        "quantitative reasoning",
+        "inductive/deductive reasoning",
+        "written and oral communication (often underweighted by students)",
+        "programming language breadth + depth",
+        "systems thinking",
+        "linear algebra and statistics (ML/AI subfield specifically)"
+      ],
+      "career_families": [
+        {
+          "name": "software engineering (product/platform/infrastructure)",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "data science and analytics",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "machine learning/AI research and applied ML engineering",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "cybersecurity/information security",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "quantitative finance/trading (algorithmic trading)",
+          "counter_stereotypical": true
+        },
+        {
+          "name": "technical product management",
+          "counter_stereotypical": true
+        }
+      ],
+      "credential_gated_career": null,
+      "interdisciplinary_connections": [
+        {
+          "family_id": "04",
+          "combination": "CS + biology (computational biology/bioinformatics)"
+        },
+        {
+          "family_id": "07",
+          "combination": "CS + economics (computational social science, algorithmic markets)"
+        },
+        {
+          "family_id": "10",
+          "combination": "AI + medicine (clinical ML)"
+        },
+        {
+          "family_id": "13",
+          "combination": "CS + law (tech policy, IP/patent law)"
+        },
+        {
+          "family_id": "08",
+          "combination": "CS + business (product management, tech entrepreneurship)"
+        }
+      ],
+      "licensure": {
+        "has_licensure_or_title_protection": false,
+        "summary": "No general licensure requirement in US/UK/EU/Turkey; narrow exceptions for safety-critical embedded systems or PE-titled 'software engineer' roles in a small number of US jurisdictions.",
+        "countries_verified": [
+          "us",
+          "uk",
+          "eu",
+          "turkey"
+        ]
+      },
+      "exploration_pathways": {
+        "phase_1": "Introductory personal project (script/website/small game); beginner-friendly online course; sampling more than one subfield lightly.",
+        "phase_2": "Sustained project with real scope; open-source contribution; competitive programming (algorithmic evidence, distinct from build evidence); hackathon (distinct rapid-build/teamwork evidence)."
+      },
+      "key_rules": [
+        "RULE-COUNSEL-203",
+        "RULE-COUNSEL-204",
+        "RULE-COUNSEL-226"
+      ],
+      "distinctive_findings": [
+        "CS is an umbrella term spanning at least 3 evidence-distinct subfields (software eng, data/ML, theory) that should not be treated as one signal.",
+        "Sustained build, algorithmic competition, and hackathon are three distinct, non-interchangeable evidence types within this one family."
+      ],
+      "country_coverage": {
+        "us": "high (O*NET, BLS)",
+        "uk": "high (National Careers Service)",
+        "eu": "high (ESCO, classification-only)",
+        "turkey": "high (İŞKUR official future-occupations list, direct fetch)",
+        "germany": "not separately covered"
+      }
+    },
+    {
+      "family_id": "02",
+      "name": "Mathematics & Statistics",
+      "owner_branch": "this session",
+      "source_doc": "06-major-family-evidence/02-mathematics-statistics.md",
+      "onboarding_interests": [
+        "Mathematics"
+      ],
+      "mission_raw_fields": [
+        "mathematics",
+        "statistics"
+      ],
+      "core_skills": [
+        "proof-writing and abstract reasoning (pure track)",
+        "numerical computation and modeling (applied track)",
+        "statistical software and experimental design (statistics track)",
+        "computer programming (BLS-named as remaining important)",
+        "communication skill to interpret/present findings"
+      ],
+      "career_families": [
+        {
+          "name": "academia/research mathematician",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "actuarial science",
+          "counter_stereotypical": true
+        },
+        {
+          "name": "quantitative finance/trading",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "data science",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "operations research",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "cryptography/security",
+          "counter_stereotypical": false
+        }
+      ],
+      "credential_gated_career": {
+        "name": "Actuarial science",
+        "mechanism": "Passing a defined multi-year SOA/CAS (US/Canada) or IFoA (UK) exam sequence, not a specific university major -- university coursework earns exam-credit (VEE) rather than being a mandatory prerequisite."
+      },
+      "interdisciplinary_connections": [
+        {
+          "family_id": "07",
+          "combination": "Math + economics (quantitative finance, econometrics)"
+        },
+        {
+          "family_id": "01",
+          "combination": "Math + CS (theoretical CS, cryptography, algorithms)"
+        },
+        {
+          "family_id": "03",
+          "combination": "Math + physics (mathematical/theoretical physics)"
+        }
+      ],
+      "licensure": {
+        "has_licensure_or_title_protection": false,
+        "summary": "No licensure for mathematician/statistician roles generally. Actuarial credentialing (ASA/FSA or IFoA) is a voluntary professional-recognition exam sequence, not government-issued licensure.",
+        "countries_verified": [
+          "us",
+          "uk"
+        ]
+      },
+      "exploration_pathways": {
+        "phase_1": "Accessible math competitions (school/regional AMC-style); an accessible applied modeling project; general statistics exposure via a real-data school project.",
+        "phase_2": "National/international olympiad tracks (pure-math evidence, not equivalent to applied/stats fit); a modeling or data-analysis project with a real dataset; the first preliminary SOA/CAS actuarial exam (open pre-degree)."
+      },
+      "key_rules": [
+        "RULE-COUNSEL-205"
+      ],
+      "distinctive_findings": [
+        "Actuarial science is a clean, well-documented major≠career example: credentialed by exams, not a mandated major.",
+        "The first actuarial exam is one of the few pre-university opportunities in this whole taxonomy with an unambiguous, third-party-administered outcome."
+      ],
+      "country_coverage": {
+        "us": "high (BLS)",
+        "uk": "high (IFoA official)",
+        "eu": "medium (ESCO + Actuarial Association of Europe, not per-country)",
+        "turkey": "none (not independently verified)",
+        "germany": "not separately covered"
+      }
+    },
+    {
+      "family_id": "03",
+      "name": "Physical Sciences",
+      "owner_branch": "this session",
+      "source_doc": "06-major-family-evidence/03-physical-sciences.md",
+      "onboarding_interests": [
+        "Physics"
+      ],
+      "mission_raw_fields": [
+        "physics",
+        "chemistry"
+      ],
+      "core_skills": [
+        "mathematical modeling (physics)",
+        "laboratory technique and safety practice (chemistry)",
+        "experimental design and error/uncertainty analysis",
+        "teamwork (BLS-named for chemists/materials scientists specifically)"
+      ],
+      "career_families": [
+        {
+          "name": "academic/industry research",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "engineering-adjacent industry roles",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "quantitative finance (\"quant\")",
+          "counter_stereotypical": true
+        },
+        {
+          "name": "medical physics",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "pharmaceutical/biotech industry (chemistry)",
+          "counter_stereotypical": false
+        }
+      ],
+      "credential_gated_career": null,
+      "interdisciplinary_connections": [
+        {
+          "family_id": "05",
+          "combination": "Physics/chemistry + engineering (materials science, applied physics)"
+        },
+        {
+          "family_id": "04",
+          "combination": "Chemistry + biology (biochemistry)"
+        },
+        {
+          "family_id": "01",
+          "combination": "Physics + computing (computational physics, quantum computing)"
+        },
+        {
+          "family_id": "09",
+          "combination": "Chemistry/physics + environmental science"
+        }
+      ],
+      "licensure": {
+        "has_licensure_or_title_protection": false,
+        "summary": "No general licensure for physicist/chemist roles. UK offers a voluntary Chartered Chemist/Chartered Scientist career-long recognition track, not an entry gate.",
+        "countries_verified": [
+          "us",
+          "uk"
+        ]
+      },
+      "exploration_pathways": {
+        "phase_1": "Accessible hands-on experiment or small build; science-fair participation at an accessible level.",
+        "phase_2": "US National Chemistry Olympiad (multi-tier, ACS-run); ACS Project SEED (paid summer research for economically disadvantaged students); physics olympiad track; a sustained bench or computational research project."
+      },
+      "key_rules": [
+        "RULE-COUNSEL-206"
+      ],
+      "distinctive_findings": [
+        "A substantial share of quantitative-finance hires come from physics/math degrees specifically, not finance/economics -- a well-documented major≠career pattern.",
+        "ACS Project SEED is a specifically cost-accessible paid research pathway, directly relevant to minor-safe/accessible-by-default product philosophy."
+      ],
+      "country_coverage": {
+        "us": "high (BLS, ACS)",
+        "uk": "high (National Careers Service)",
+        "eu": "medium (ESCO, classification-only)",
+        "turkey": "low (İŞKUR names Kimyager only, no physics entry)",
+        "germany": "not separately covered"
+      }
+    },
+    {
+      "family_id": "04",
+      "name": "Life Sciences",
+      "owner_branch": "this session",
+      "source_doc": "06-major-family-evidence/04-life-sciences.md",
+      "onboarding_interests": [
+        "Biology"
+      ],
+      "mission_raw_fields": [
+        "biology",
+        "neuroscience (research-science reading only; behavioral/clinical reading is family 11)"
+      ],
+      "core_skills": [
+        "analytical skill for experiments/results evaluation",
+        "lab instrumentation technique",
+        "communication and teamwork (BLS-named as essential)"
+      ],
+      "career_families": [
+        {
+          "name": "academic/industry research (pharma, biotech, agricultural science)",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "science communication/education",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "environmental/conservation work",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "regulatory/policy roles",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "pre-clinical pathway toward medicine (not a guarantee)",
+          "counter_stereotypical": false
+        }
+      ],
+      "credential_gated_career": null,
+      "interdisciplinary_connections": [
+        {
+          "family_id": "01",
+          "combination": "Biology + CS (computational biology/bioinformatics)"
+        },
+        {
+          "family_id": "03",
+          "combination": "Biology + chemistry (biochemistry)"
+        },
+        {
+          "family_id": "11",
+          "combination": "Biology + neuroscience-as-behavior (cognitive science)"
+        },
+        {
+          "family_id": "09",
+          "combination": "Biology + environmental science (ecology, conservation biology)"
+        }
+      ],
+      "licensure": {
+        "has_licensure_or_title_protection": false,
+        "summary": "No general licensure for biological-science research roles. The licensure-heavy adjacent destination is clinical practice (family 10), explicitly out of this family's scope.",
+        "countries_verified": [
+          "us"
+        ]
+      },
+      "exploration_pathways": {
+        "phase_1": "Accessible hands-on project (school-supervised experiment, citizen-science contribution, nature-observation/field project).",
+        "phase_2": "International Biology Olympiad (theoretical + hands-on practical exams, 70+ countries); sustained lab-based or field-based research project with a named mentor; structured pre-college research/lab-exposure program."
+      },
+      "key_rules": [
+        "RULE-COUNSEL-207",
+        "RULE-COUNSEL-208"
+      ],
+      "distinctive_findings": [
+        "A biology major is necessary for essentially no clinical health profession in most systems -- pre-med 'requirements' are courses, not a mandated major, a common real misconception worth actively countering."
+      ],
+      "country_coverage": {
+        "us": "high (BLS/CareerOneStop)",
+        "uk": "medium-high (Biologist profile via aggregator, not NCS domain directly)",
+        "eu": "medium (ESCO, classification-only)",
+        "turkey": "none (not independently verified)",
+        "germany": "not separately covered"
+      }
+    },
+    {
+      "family_id": "05",
+      "name": "Engineering — Mechanical, Civil, Aerospace, Electrical",
+      "owner_branch": "this session",
+      "source_doc": "06-major-family-evidence/05-engineering-me-ce-ae-ee.md",
+      "onboarding_interests": [
+        "Engineering"
+      ],
+      "mission_raw_fields": [
+        "mechanical engineering",
+        "civil engineering",
+        "aerospace engineering",
+        "electrical engineering"
+      ],
+      "core_skills": [
+        "applied mathematics and physics",
+        "iterative design-build-test practice",
+        "CAD/simulation tooling",
+        "public-safety/regulatory orientation (civil specifically)",
+        "troubleshooting design intent → working system (aerospace)"
+      ],
+      "career_families": [
+        {
+          "name": "named engineering-title roles (ME/CE/AE/EE)",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "technical project/program management",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "technical sales/consulting",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "patent law (technical background feeding IP law)",
+          "counter_stereotypical": true
+        },
+        {
+          "name": "software/computing careers (from electrical engineering)",
+          "counter_stereotypical": true
+        },
+        {
+          "name": "hardware/deep-tech entrepreneurship",
+          "counter_stereotypical": false
+        }
+      ],
+      "credential_gated_career": {
+        "name": "Professional Engineer (US) / Chartered Engineer (UK) / chamber registration (Turkey) / Ingenieur title (Germany)",
+        "mechanism": "Four genuinely distinct national models -- see licensure field. Not one global 'engineers need a license' claim."
+      },
+      "interdisciplinary_connections": [
+        {
+          "family_id": "01",
+          "combination": "Electrical engineering + CS (computer engineering, embedded systems, signal processing for ML)"
+        },
+        {
+          "family_id": "16",
+          "combination": "Mechanical/electrical engineering + design (product/industrial design, human factors)"
+        },
+        {
+          "family_id": "09",
+          "combination": "Any of the four + environmental science (sustainable/environmental engineering)"
+        },
+        {
+          "family_id": "03",
+          "combination": "Mechanical/aerospace + physics (applied/theoretical mechanics)"
+        }
+      ],
+      "licensure": {
+        "has_licensure_or_title_protection": true,
+        "summary": "Four distinct national models, the package's canonical licensure comparison: US PE licensure gates specific PRACTICE (stamping public infrastructure), triggered by activity not job title; UK Chartered Engineer (CEng) is competence-based professional recognition layered on an unrestricted right to practice; Turkey's TMMOB chamber registration is required to PRACTICE the profession at all (title + practice gate); Germany's Ingenieurgesetz protects only the TITLE 'Ingenieur', leaving practice itself unregulated.",
+        "countries_verified": [
+          "us",
+          "uk",
+          "turkey",
+          "germany"
+        ]
+      },
+      "exploration_pathways": {
+        "phase_1": "Accessible build project (simple mechanical/electronic build, introductory robotics/CAD), general physics/math coursework engagement.",
+        "phase_2": "Sustained build project with a working, tested result (single strongest evidence type in this family); robotics competitions; structured pre-college engineering program; for civil-leaning students, a project engaging a real local infrastructure problem."
+      },
+      "key_rules": [
+        "RULE-COUNSEL-209",
+        "RULE-COUNSEL-210",
+        "RULE-COUNSEL-227",
+        "RULE-COUNSEL-241"
+      ],
+      "distinctive_findings": [
+        "The four-country licensure comparison (US/UK/Turkey/Germany) is the canonical illustration, across this whole package, of why licensure framing must always be country-specific.",
+        "Many mechanical/electrical/aerospace engineers in large private companies practice a full career without a PE license -- licensure necessity depends on role/industry, not subfield alone."
+      ],
+      "country_coverage": {
+        "us": "high (NSPE, NCEES, BLS)",
+        "uk": "high (Engineering Council, IET/ICE/IMechE/RAeS)",
+        "eu": "medium (ESCO; licensure is member-state-specific, not mapped per-country)",
+        "turkey": "high (TMMOB official, Law No. 3458/6235)",
+        "germany": "medium-high (Ingenieurgesetz + VDI, secondary-sourced)"
+      }
+    },
+    {
+      "family_id": "06",
+      "name": "Biomedical Engineering",
+      "owner_branch": "this session",
+      "source_doc": "06-major-family-evidence/06-biomedical-engineering.md",
+      "onboarding_interests": [
+        "Engineering (secondary: Medicine)"
+      ],
+      "mission_raw_fields": [
+        "biomedical engineering"
+      ],
+      "core_skills": [
+        "analyzing information / solving complex problems in biological systems",
+        "continually updating technical knowledge",
+        "communicating with others",
+        "translating a clinical/biological need into an engineering specification (the field's defining cross-disciplinary skill)"
+      ],
+      "career_families": [
+        {
+          "name": "medical-device design engineering",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "regulatory affairs (FDA-adjacent documentation/testing)",
+          "counter_stereotypical": true
+        },
+        {
+          "name": "clinical engineering (within hospital systems)",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "biomaterials/tissue-engineering research",
+          "counter_stereotypical": false
+        }
+      ],
+      "credential_gated_career": null,
+      "interdisciplinary_connections": [
+        {
+          "family_id": "04",
+          "combination": "Parent family: life sciences"
+        },
+        {
+          "family_id": "05",
+          "combination": "Parent family: engineering"
+        },
+        {
+          "family_id": "10",
+          "combination": "Boundary with clinical practice (not a pre-med substitute)"
+        }
+      ],
+      "licensure": {
+        "has_licensure_or_title_protection": false,
+        "summary": "No personal clinical licensure for biomedical engineers themselves. What applies instead is PRODUCT/device regulation (FDA in the US, UKCA/CE marking in UK/EU) -- constrains what the product must demonstrate, not what credential the engineer must personally hold.",
+        "countries_verified": [
+          "us",
+          "uk"
+        ]
+      },
+      "exploration_pathways": {
+        "phase_1": "Combine an engineering-building activity with a biology-adjacent one -- this field rewards comfort with both sides even at an introductory level.",
+        "phase_2": "A project genuinely combining both (assistive-device build, biomechanics measurement, health-data analysis) is stronger evidence than either alone; a dedicated biomedical/bioengineering research program is the most direct single exploration opportunity."
+      },
+      "key_rules": [
+        "RULE-COUNSEL-211"
+      ],
+      "distinctive_findings": [
+        "Biomedical engineering is NOT a subset of pre-med -- graduates mostly go into engineering/industry/research roles, not clinical practice; a student wanting to become a physician does not need this degree.",
+        "UK 'Biomedical Scientist' (lab-diagnostics role) and this family's 'biomedical engineering' are a real, easily-confused naming overlap that must not be silently conflated."
+      ],
+      "country_coverage": {
+        "us": "high (BLS, FDA official document)",
+        "uk": "high (National Careers Service, Clinical Engineer profile)",
+        "eu": "low (CE-marking existence only, common-knowledge confidence)",
+        "turkey": "none (genuinely unresolved, not merely unfetched)",
+        "germany": "not separately covered"
+      }
+    },
+    {
+      "family_id": "07",
+      "name": "Economics & Finance",
+      "owner_branch": "this session",
+      "source_doc": "06-major-family-evidence/07-economics-finance.md",
+      "onboarding_interests": [
+        "Economics"
+      ],
+      "mission_raw_fields": [
+        "economics",
+        "finance"
+      ],
+      "core_skills": [
+        "research and report preparation",
+        "statistical/econometric methods",
+        "data analysis",
+        "analytical writing",
+        "critical thinking (per the Fed Challenge's own framing)"
+      ],
+      "career_families": [
+        {
+          "name": "economist (research/policy/central bank/academia)",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "financial analysis / investment banking / asset management",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "policy analysis (government, IOs, think tanks)",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "data science and technology roles",
+          "counter_stereotypical": true
+        },
+        {
+          "name": "CFA-credentialed finance roles",
+          "counter_stereotypical": true
+        }
+      ],
+      "credential_gated_career": {
+        "name": "Chartered Financial Analyst (CFA)",
+        "mechanism": "Postgraduate professional credential via a structured exam program, not a specific undergraduate major -- economics, finance, math, engineering and other quantitative majors all commonly feed into it."
+      },
+      "interdisciplinary_connections": [
+        {
+          "family_id": "02",
+          "combination": "Economics + math/statistics (econometrics, quantitative finance)"
+        },
+        {
+          "family_id": "01",
+          "combination": "Economics + CS (computational economics, algorithmic trading)"
+        },
+        {
+          "family_id": "12",
+          "combination": "Economics + politics (political economy, public policy)"
+        },
+        {
+          "family_id": "08",
+          "combination": "Economics + business/entrepreneurship (related but distinct: theory/data vs. operational)"
+        }
+      ],
+      "licensure": {
+        "has_licensure_or_title_protection": false,
+        "summary": "No general licensure for economist/financial-analyst job titles. Specific finance sub-roles (e.g. US securities roles) require firm-sponsored FINRA exams, structurally different from CFA's voluntary credential or PE/medical/legal licensure.",
+        "countries_verified": [
+          "us"
+        ]
+      },
+      "exploration_pathways": {
+        "phase_1": "General coursework engagement; accessible personal-finance or basic-economics project; following real economic events with growing sophistication.",
+        "phase_2": "Federal Reserve's High School Fed Challenge (grades 9-12, no prior economics required); National Economics Challenge; independent research project on real economic data; sustained portfolio-tracking project with genuine analytical reflection."
+      },
+      "key_rules": [
+        "RULE-COUNSEL-212"
+      ],
+      "distinctive_findings": [
+        "A student drawn to economics only for its news/policy relevance, with no appetite for the statistics/econometrics underneath, is a real, worth-surfacing mismatch signal -- milder than an unsafe inference, but a real counselor conversation.",
+        "The UK's Government Economic Service is a single, named, 3,500+-economist cross-government career community with no precise US analogue -- and its Fast Stream route has a concrete, checkable 50%-economics-content threshold for combined degrees."
+      ],
+      "country_coverage": {
+        "us": "high (BLS, Federal Reserve)",
+        "uk": "high (National Careers Service, GOV.UK/GES)",
+        "eu": "medium (ESCO, classification-only)",
+        "turkey": "none (not independently verified)",
+        "germany": "not separately covered"
+      }
+    },
+    {
+      "family_id": "08",
+      "name": "Business, Management & Entrepreneurship",
+      "owner_branch": "this session",
+      "source_doc": "06-major-family-evidence/08-business-management-entrepreneurship.md",
+      "onboarding_interests": [
+        "Business",
+        "Entrepreneurship"
+      ],
+      "mission_raw_fields": [
+        "business",
+        "entrepreneurship"
+      ],
+      "core_skills": [
+        "leadership",
+        "adaptability",
+        "problem-solving/decision-making",
+        "detail-orientation",
+        "information-technology fluency (even entry-level)"
+      ],
+      "career_families": [
+        {
+          "name": "management/operations",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "consulting",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "product management",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "marketing/brand",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "founding/joining an early-stage venture",
+          "counter_stereotypical": false
+        }
+      ],
+      "credential_gated_career": null,
+      "interdisciplinary_connections": [
+        {
+          "family_id": "01",
+          "combination": "Business + technology (product management, tech entrepreneurship)"
+        },
+        {
+          "family_id": "07",
+          "combination": "Business/entrepreneurship + economics (strategy, market analysis)"
+        },
+        {
+          "family_id": "16",
+          "combination": "Business + design (product design, human-centered experiences)"
+        },
+        {
+          "family_id": "13",
+          "combination": "Business + law (corporate law, IP strategy for a venture)"
+        }
+      ],
+      "licensure": {
+        "has_licensure_or_title_protection": false,
+        "summary": "No general licensure for management, business, or entrepreneurship roles. Accounting's CPA credential is a narrow, real exception not elaborated in depth (flagged as a possible future addition).",
+        "countries_verified": [
+          "us"
+        ]
+      },
+      "exploration_pathways": {
+        "phase_1": "General exposure to how organizations operate (a small managed project, an accessible business-simulation activity), joining a business-oriented club.",
+        "phase_2": "DECA/FBLA (US) -- but split by event type: role-play/simulation events demonstrate applied business reasoning, NOT entrepreneurship evidence; DECA's Business Operations Research Events are closer to `research` dimension evidence. Young Enterprise Company Programme (UK) genuinely clears the real-venture bar (real bank account, real sales) unlike DECA/FBLA simulations."
+      },
+      "key_rules": [
+        "RULE-COUNSEL-213",
+        "RULE-COUNSEL-214",
+        "RULE-COUNSEL-229"
+      ],
+      "distinctive_findings": [
+        "Entrepreneurship (originating/testing a new venture) and general business/management study (operating/improving an existing one) are distinct constructs -- a strong management profile is not automatically entrepreneurship evidence.",
+        "A large fraction of successful venture founders/operators hold degrees entirely outside business -- this family has one of the loosest major↔career relationships in the whole taxonomy.",
+        "DECA/FBLA (simulated scenarios) and UK's Young Enterprise (real venture, real money, real customers) are evidence-quality-distinct, not interchangeable, despite surface similarity."
+      ],
+      "country_coverage": {
+        "us": "high (BLS, DECA official)",
+        "uk": "high (Young Enterprise official + GOV.UK corroboration)",
+        "eu": "low (Junior Achievement Europe named as a discovery lead only, not verified)",
+        "turkey": "medium (İŞKUR names 5 business-adjacent occupations, no DECA-equivalent found)",
+        "germany": "not separately covered"
+      }
+    },
+    {
+      "family_id": "09",
+      "name": "Environmental Science & Sustainability",
+      "owner_branch": "this session",
+      "source_doc": "06-major-family-evidence/09-environmental-science-sustainability.md",
+      "onboarding_interests": [
+        "Environmental Science"
+      ],
+      "mission_raw_fields": [
+        "environmental science",
+        "sustainability"
+      ],
+      "core_skills": [
+        "interpersonal/coordination skill",
+        "applied mathematics (calculus/trigonometry in analysis/design)",
+        "analytical/data-analysis skill",
+        "communication to varied audiences",
+        "physical stamina (conservation-track specifically, distinctive among every family surveyed)"
+      ],
+      "career_families": [
+        {
+          "name": "environmental engineering",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "conservation science",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "corporate sustainability roles",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "environmental policy/regulatory roles",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "environmental law",
+          "counter_stereotypical": true
+        }
+      ],
+      "credential_gated_career": null,
+      "interdisciplinary_connections": [
+        {
+          "family_id": "05",
+          "combination": "Environmental science + engineering (sustainable/environmental engineering, renewable energy)"
+        },
+        {
+          "family_id": "03",
+          "combination": "Environmental science + chemistry/physics (environmental chemistry, atmospheric science)"
+        },
+        {
+          "family_id": "04",
+          "combination": "Environmental science + biology (ecology, conservation biology)"
+        },
+        {
+          "family_id": "12",
+          "combination": "Sustainability + economics/policy (environmental economics, climate policy)"
+        }
+      ],
+      "licensure": {
+        "has_licensure_or_title_protection": false,
+        "summary": "No general personal licensure for environmental scientist/conservation-scientist roles. Environmental engineering inherits family 05's PE-licensure structure where public infrastructure/safety is involved -- not a separate system.",
+        "countries_verified": [
+          "us"
+        ]
+      },
+      "exploration_pathways": {
+        "phase_1": "Accessible citizen-science contribution (biodiversity count, air/water quality monitoring) -- peer-reviewed research supports this as a genuine entry point, not busywork.",
+        "phase_2": "Sustained fieldwork or research placement (habitat restoration, invasive-species removal, ecosystem monitoring); mentor-paired applied environmental question projects (named example programs are discovery leads only, not independently verified this pass)."
+      },
+      "key_rules": [
+        "RULE-COUNSEL-215"
+      ],
+      "distinctive_findings": [
+        "This family is unusually receptive to students from OTHER science/engineering majors who specialize into an environmental application later -- often a specialization layered onto another core major, not its own dedicated major.",
+        "\"Environmental science\" and \"sustainability\" are not the same activity profile (fieldwork/conservation vs. policy/business practice) despite sharing one onboarding anchor."
+      ],
+      "country_coverage": {
+        "us": "high (BLS)",
+        "uk": "high (National Careers Service, Environmental Consultant)",
+        "eu": "low (ESCO + EU environmental law noted as existing, not characterized)",
+        "turkey": "medium (İŞKUR names 2 relevant occupations)",
+        "germany": "not separately covered"
+      }
+    },
+    {
+      "family_id": "10",
+      "name": "Medicine & Clinical Health Pathways",
+      "owner_branch": "peer session",
+      "source_doc": "06-major-family-evidence/10-medicine-clinical-pathways.md",
+      "onboarding_interests": [
+        "Medicine"
+      ],
+      "mission_raw_fields": [
+        "medicine",
+        "allied-health/nursing (brief mention only)"
+      ],
+      "core_skills": [
+        "sustained patient/clinical exposure with reflection (not raw hours)",
+        "research process/methodology (publication not required)",
+        "community involvement"
+      ],
+      "career_families": [
+        {
+          "name": "physician/clinical practice",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "allied health / nursing",
+          "counter_stereotypical": false
+        }
+      ],
+      "credential_gated_career": null,
+      "interdisciplinary_connections": [
+        {
+          "family_id": "06",
+          "combination": "Biomedical engineering boundary (not a substitute for clinical practice)"
+        },
+        {
+          "family_id": "04",
+          "combination": "Life sciences as common pre-clinical (not required) coursework base"
+        }
+      ],
+      "licensure": {
+        "has_licensure_or_title_protection": true,
+        "summary": "US: MD + residency (not detailed in this doc's HS-stage focus). UK: GMC-recognized degree + foundation + specialist training. Germany: ~6-year Medizinstudium + Staatsexamen -> Approbation (protects 'Arzt/Ärztin' title); Kenntnisprüfung alternate route for foreign-trained doctors.",
+        "countries_verified": [
+          "uk",
+          "germany"
+        ]
+      },
+      "exploration_pathways": {
+        "phase_1": "Shadowing (where a school/family connection or pre-college program can arrange it) and age-appropriate (14-16+) hospital/clinic volunteering -- NOT the adult-clinical-role list (CNA/EMT/scribe), which is realistically 18+.",
+        "phase_2": "Sustained shadowing/volunteering with reflection; structured pre-college health programs; self-directed or structured health/bio-science research (process over output)."
+      },
+      "key_rules": [
+        "RULE-COUNSEL-032",
+        "RULE-COUNSEL-033",
+        "RULE-COUNSEL-034",
+        "RULE-COUNSEL-083",
+        "RULE-COUNSEL-087",
+        "RULE-COUNSEL-103"
+      ],
+      "distinctive_findings": [
+        "Undergraduate-stage pre-med guidance (MCAT/GPA benchmarks, adult clinical roles) does not map 1:1 onto ORYN's actual 14-18 population -- this document deliberately re-scopes it rather than repeating it uncritically.",
+        "Absence of clinical hours for a grade 9-10 student is often an access-gating artifact (many hospital volunteer programs set a minimum age 14-16), not a motivation gap."
+      ],
+      "country_coverage": {
+        "us": "medium (consensus advising sources, no single official AAMC checklist)",
+        "uk": "high (National Careers Service, GP profile)",
+        "eu": "low (ESCO, classification-only)",
+        "turkey": "high (İŞKUR names 5 medicine/allied-health occupations)",
+        "germany": "medium-high (Approbation system, secondary-sourced)"
+      }
+    },
+    {
+      "family_id": "11",
+      "name": "Psychology & Behavioral/Cognitive Science",
+      "owner_branch": "peer session",
+      "source_doc": "06-major-family-evidence/11-psychology-behavioral-science.md",
+      "onboarding_interests": [
+        "Psychology"
+      ],
+      "mission_raw_fields": [
+        "psychology",
+        "neuroscience (behavioral/clinical reading; research reading is family 04)"
+      ],
+      "core_skills": [
+        "research design across sub-fields (survey, observational, literature synthesis -- genuinely lower access barrier than lab/bench science)",
+        "differentiating sub-field interest (clinical/social/cognitive/developmental)"
+      ],
+      "career_families": [
+        {
+          "name": "clinical psychology",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "forensic psychology",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "research/academic psychology",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "non-clinical applied psychology roles",
+          "counter_stereotypical": true
+        }
+      ],
+      "credential_gated_career": {
+        "name": "Clinical/therapeutic psychology practice",
+        "mechanism": "UK: postgraduate doctorate (DClinPsych) after an undergraduate psychology degree. Germany: Approbation under the Psychotherapeutengesetz -- a LEGAL distinction that applies only to the clinical/therapeutic track, not research or non-clinical psychology roles."
+      },
+      "interdisciplinary_connections": [
+        {
+          "family_id": "04",
+          "combination": "Psychology + neuroscience-as-biology (cognitive science)"
+        }
+      ],
+      "licensure": {
+        "has_licensure_or_title_protection": true,
+        "summary": "Clinical/therapeutic track specifically is licensure-gated (UK DClinPsych; Germany Approbation under Psychotherapeutengesetz). Research and non-clinical psychology roles are not. Turkey: MEB regulation Art. 3(i) defines 'Psikolog' as requiring a bachelor's-level psychology education (primary-sourced).",
+        "countries_verified": [
+          "uk",
+          "germany",
+          "turkey"
+        ]
+      },
+      "exploration_pathways": {
+        "phase_1": "Sampling sub-fields (clinical/social/cognitive/developmental) before committing to one.",
+        "phase_2": "APA High School Summer Internship Program (hands-on research placement); self-directed survey/observational research (genuinely lower access barrier than bench science); peer-support/mental-health-awareness initiatives for the clinical-adjacent track."
+      },
+      "key_rules": [
+        "RULE-COUNSEL-035",
+        "RULE-COUNSEL-036",
+        "RULE-COUNSEL-037",
+        "RULE-COUNSEL-084",
+        "RULE-COUNSEL-088",
+        "RULE-COUNSEL-105",
+        "RULE-COUNSEL-108"
+      ],
+      "distinctive_findings": [
+        "Psychology is one of the most popular intended majors among selective applicants -- stated interest alone is close to the LEAST differentiating evidence ORYN could recommend around.",
+        "A 'no research' gap in psychology specifically has a lower legitimate access excuse than the same gap in bench-science fields, since much of the field's research is genuinely low-access-barrier."
+      ],
+      "country_coverage": {
+        "us": "high (APA official)",
+        "uk": "high (National Careers Service, Clinical/Forensic Psychologist)",
+        "eu": "low (ESCO, classification-only)",
+        "turkey": "high (İŞKUR + MEB regulation Art. 3(i), primary source)",
+        "germany": "medium-high (Approbation/Psychotherapeutengesetz, secondary-sourced)"
+      }
+    },
+    {
+      "family_id": "12",
+      "name": "Political Science, IR & Public Policy",
+      "owner_branch": "peer session",
+      "source_doc": "06-major-family-evidence/12-political-science-ir-public-policy.md",
+      "onboarding_interests": [
+        "Politics"
+      ],
+      "mission_raw_fields": [
+        "political science",
+        "international relations"
+      ],
+      "core_skills": [
+        "evidence-based argumentation (data, historical precedent, treaties, statistics)",
+        "policy research and writing",
+        "real-world civic/policy engagement (distinct from simulation skill)"
+      ],
+      "career_families": [
+        {
+          "name": "government/civil-service policy roles",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "diplomacy",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "NGO/think-tank work",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "elected politics",
+          "counter_stereotypical": false
+        }
+      ],
+      "credential_gated_career": null,
+      "interdisciplinary_connections": [
+        {
+          "family_id": "07",
+          "combination": "Politics + economics (political economy, public policy analysis)"
+        },
+        {
+          "family_id": "13",
+          "combination": "Heavy evidence-type overlap with law-oriented pathways (MUN/debate)"
+        },
+        {
+          "family_id": "18",
+          "combination": "Education + policy (education policy, school administration)"
+        }
+      ],
+      "licensure": {
+        "has_licensure_or_title_protection": false,
+        "summary": "No licensure for this family. No single NCS profile represents it cleanly (maps to many roles); no İŞKUR match found (list skews technical/vocational).",
+        "countries_verified": []
+      },
+      "exploration_pathways": {
+        "phase_1": "Model UN participation; school politics/civics club.",
+        "phase_2": "MUN committee chair/officer roles PAIRED with real-world engagement (campaign/government internship, public-comment participation, published policy writing, civic-organization volunteering) -- MUN alone is simulated argumentation, not equivalent to real policy engagement."
+      },
+      "key_rules": [
+        "RULE-COUNSEL-038",
+        "RULE-COUNSEL-039",
+        "RULE-COUNSEL-040"
+      ],
+      "distinctive_findings": [
+        "MUN is the dominant evidence channel in this family but is explicitly a SIMULATION -- a strong MUN record should never be treated as sufficient on its own without real-world-engagement evidence alongside it.",
+        "Campaign/government/NGO internships are frequently geography-gated (proximity to a capital/office) -- absence should not be read as weak interest without considering access."
+      ],
+      "country_coverage": {
+        "us": "medium (UN official guidance for MUN specifically, not a labor-market source)",
+        "uk": "low (no single NCS profile, category-browse only)",
+        "eu": "low (ESCO, classification-only)",
+        "turkey": "none (no İŞKUR match found, honestly reported as a gap)",
+        "germany": "not separately covered"
+      }
+    },
+    {
+      "family_id": "13",
+      "name": "Law-Oriented Pathways",
+      "owner_branch": "peer session",
+      "source_doc": "06-major-family-evidence/13-law-oriented-pathways.md",
+      "onboarding_interests": [
+        "Law"
+      ],
+      "mission_raw_fields": [
+        "law-oriented pathways"
+      ],
+      "core_skills": [
+        "analytical writing",
+        "critical reasoning",
+        "oral communication/argumentation"
+      ],
+      "career_families": [
+        {
+          "name": "solicitor (UK)",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "barrister (UK)",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "attorney/Rechtsanwalt (Germany, Volljurist)",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "judge, prosecutor, senior civil service (Germany, via Volljurist status)",
+          "counter_stereotypical": true
+        }
+      ],
+      "credential_gated_career": null,
+      "interdisciplinary_connections": [
+        {
+          "family_id": "01",
+          "combination": "CS + law (tech policy, IP/patent law)"
+        },
+        {
+          "family_id": "05",
+          "combination": "Engineering + law (technical background into patent law)"
+        },
+        {
+          "family_id": "12",
+          "combination": "Heavy evidence-type overlap with political science (MUN/debate)"
+        },
+        {
+          "family_id": "08",
+          "combination": "Business + law (corporate law, IP strategy for a venture)"
+        }
+      ],
+      "licensure": {
+        "has_licensure_or_title_protection": true,
+        "summary": "US: no required pre-law major (the family's central finding) -- but law school/bar admission itself is credential-gated. UK: split solicitor/barrister qualification pathways (NCS official). Germany: the package's most exam-intensive model -- Erste Staatsexamen -> 2-year Referendariat -> Zweite Staatsexamen -> Volljurist status (7-11 years total), a single unified state-examined pathway with no US-style 'major now, law school later' flexibility.",
+        "countries_verified": [
+          "uk",
+          "germany"
+        ]
+      },
+      "exploration_pathways": {
+        "phase_1": "Broad humanities/social-science coursework engagement (deliberately not narrowed to one 'correct' major).",
+        "phase_2": "Mock trial, moot court, speech and debate, school law journal (builds the same transferable argumentation/writing skills tested on the LSAT); court observation (public, low-cost access point, unlike most legal internships which are effectively college/law-student-gated)."
+      },
+      "key_rules": [
+        "RULE-COUNSEL-041",
+        "RULE-COUNSEL-042",
+        "RULE-COUNSEL-043",
+        "RULE-COUNSEL-085",
+        "RULE-COUNSEL-089",
+        "RULE-COUNSEL-104"
+      ],
+      "distinctive_findings": [
+        "There is no 'pre-law major' in the US/UK sense -- this is the single most important unsafe-inference guard for this family: never imply a student needs to pick a narrow law-track major.",
+        "Germany sharpens this finding rather than contradicting it: no mandated undergraduate major, but legal training ITSELF is a single unified state-examined pathway -- a German-track student's decision point differs in kind, not just length, from a US-track one's."
+      ],
+      "country_coverage": {
+        "us": "medium-high (consensus pre-law advising sources)",
+        "uk": "high (National Careers Service, Solicitor/Barrister)",
+        "eu": "low (ESCO, classification-only)",
+        "turkey": "medium (İŞKUR names Avukat only)",
+        "germany": "medium-high (Bundesrechtsanwaltskammer-adjacent sourcing)"
+      }
+    },
+    {
+      "family_id": "14",
+      "name": "Sociology, History & Philosophy",
+      "owner_branch": "peer session",
+      "source_doc": "06-major-family-evidence/14-sociology-history-philosophy.md",
+      "onboarding_interests": [
+        "History"
+      ],
+      "mission_raw_fields": [
+        "sociology",
+        "history",
+        "philosophy"
+      ],
+      "core_skills": [
+        "original argument/research from primary sources or structured reasoning",
+        "independent reading beyond assigned coursework",
+        "written analytical craft"
+      ],
+      "career_families": [
+        {
+          "name": "research/academia",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "teaching",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "civil service",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "journalism",
+          "counter_stereotypical": true
+        },
+        {
+          "name": "law-adjacent roles",
+          "counter_stereotypical": true
+        }
+      ],
+      "credential_gated_career": null,
+      "interdisciplinary_connections": [
+        {
+          "family_id": "18",
+          "combination": "History/philosophy/sociology as common teaching subject-matter majors"
+        }
+      ],
+      "licensure": {
+        "has_licensure_or_title_protection": false,
+        "summary": "No licensure for this family. No single NCS profile represents it cleanly; no İŞKUR match found (vocational/technical skew).",
+        "countries_verified": []
+      },
+      "exploration_pathways": {
+        "phase_1": "Independent reading beyond assignments; a well-developed personal essay/argument.",
+        "phase_2": "National History Day (official, tiered achievement structure: participated -> advanced -> placed); National High School Ethics Bowl (collaborative depth-of-reasoning, distinct from adversarial debate) for philosophy specifically; self-directed research project (sociology, drawing on psychology-family access-aware research framing)."
+      },
+      "key_rules": [
+        "RULE-COUNSEL-044",
+        "RULE-COUNSEL-045"
+      ],
+      "distinctive_findings": [
+        "National History Day is a rare case where one single activity cleanly demonstrates a full 3-tier achievement ladder (participated/advanced/placed) with official tracking at each level.",
+        "Ethics Bowl and debate test meaningfully different things (collaborative reasoning depth vs. adversarial argument) despite surface similarity -- must not be conflated in an explanation."
+      ],
+      "country_coverage": {
+        "us": "high (NHD, NHSEB official sites)",
+        "uk": "low (no single NCS profile, category-browse only)",
+        "eu": "low (ESCO, classification-only)",
+        "turkey": "none (no İŞKUR match found, honestly reported as a gap)",
+        "germany": "not separately covered"
+      }
+    },
+    {
+      "family_id": "15",
+      "name": "Literature, Journalism & Communication",
+      "owner_branch": "peer session",
+      "source_doc": "06-major-family-evidence/15-literature-journalism-communication.md",
+      "onboarding_interests": [
+        "Literature"
+      ],
+      "mission_raw_fields": [
+        "literature/creative writing",
+        "journalism/communications"
+      ],
+      "core_skills": [
+        "reported, edited, substantive writing (quality over unedited volume)",
+        "wide reading and craft engagement beyond assignments",
+        "selection/editing judgment"
+      ],
+      "career_families": [
+        {
+          "name": "journalism (reporting)",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "creative writing/authorship",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "media/communications roles",
+          "counter_stereotypical": false
+        }
+      ],
+      "credential_gated_career": null,
+      "interdisciplinary_connections": [],
+      "licensure": {
+        "has_licensure_or_title_protection": false,
+        "summary": "No licensure for this family. No single NCS profile found for journalist/author specifically.",
+        "countries_verified": []
+      },
+      "exploration_pathways": {
+        "phase_1": "Student/school newspaper involvement; a personal blog with substantive reporting or analysis (not journaling).",
+        "phase_2": "School-paper reporter -> editor progression (a clean escalation pathway); Scholastic Art & Writing Awards (tiered: Gold Key/Silver Key/Honorable Mention, ~330,000 annual submissions -- non-medaling is still real evidence given the pool size); a small number of substantive edited pieces over a large volume of unpublished writing."
+      },
+      "key_rules": [
+        "RULE-COUNSEL-046",
+        "RULE-COUNSEL-047"
+      ],
+      "distinctive_findings": [
+        "One of the cleanest real-world confirmations in this whole package of 'quality over quantity': journalism programs explicitly prefer 3-5 strong clips over a longer mediocre list, calling careful selection itself a skill.",
+        "The undergraduate-level 'published in an established outlet' bar should be adapted DOWN for high-school stage (school/local outlet), not applied at its literal undergraduate strength."
+      ],
+      "country_coverage": {
+        "us": "high (university journalism-program guidance, Scholastic official)",
+        "uk": "low (no single NCS profile, category-browse only)",
+        "eu": "low (ESCO, classification-only)",
+        "turkey": "low (only tangential Dijital Pazarlama/Sosyal Medya Uzmanı matches)",
+        "germany": "not separately covered"
+      }
+    },
+    {
+      "family_id": "16",
+      "name": "Architecture & Design",
+      "owner_branch": "peer session",
+      "source_doc": "06-major-family-evidence/16-architecture-design.md",
+      "onboarding_interests": [
+        "Design"
+      ],
+      "mission_raw_fields": [
+        "architecture",
+        "product/industrial design"
+      ],
+      "core_skills": [
+        "portfolio-documented design thinking and process (not only polished final output)",
+        "cross-media exploration (sketches, photography, models, digital -- breadth of medium is valued, not penalized)",
+        "math/physics coursework (secondary to portfolio strength)"
+      ],
+      "career_families": [
+        {
+          "name": "licensed architect",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "industrial/product designer",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "interior architect / landscape architect / urban planner (Germany-named variants)",
+          "counter_stereotypical": false
+        }
+      ],
+      "credential_gated_career": null,
+      "interdisciplinary_connections": [
+        {
+          "family_id": "05",
+          "combination": "Design + engineering (industrial design, human factors)"
+        },
+        {
+          "family_id": "08",
+          "combination": "Business + design (product design, human-centered experiences)"
+        }
+      ],
+      "licensure": {
+        "has_licensure_or_title_protection": true,
+        "summary": "UK: ARB/RIBA-regulated 'architect' title (single national regulator). Germany: 'Architekt' (and Innenarchitekt/Landschaftsarchitekt/Stadtplaner) protected by law via 16 regional state-level Architektenkammer under a federal Bundesarchitektenkammer -- same protection concept, more fragmented administration than the UK.",
+        "countries_verified": [
+          "uk",
+          "germany"
+        ]
+      },
+      "exploration_pathways": {
+        "phase_1": "Sketching, low-cost self-directed design work -- explicitly NOT gated behind expensive materials or professional software.",
+        "phase_2": "A 10-15-page (or 15-25-project) portfolio spanning assignment-based and self-directed work, explicitly including works-in-progress, not only finished pieces."
+      },
+      "key_rules": [
+        "RULE-COUNSEL-048",
+        "RULE-COUNSEL-049",
+        "RULE-COUNSEL-086",
+        "RULE-COUNSEL-090",
+        "RULE-COUNSEL-106"
+      ],
+      "distinctive_findings": [
+        "A thin design portfolio is LESS likely to be a pure access-explained gap than in costlier evidence types elsewhere in this package -- the core low-cost evidence channel (sketching) is broadly accessible.",
+        "'Architect' is a legally regulated title in UK/Germany/most EU states -- a real structural exception to this family's otherwise portfolio-driven, credential-light framing."
+      ],
+      "country_coverage": {
+        "us": "medium (NAAB as accreditation authority marker; portfolio guidance not country-specific)",
+        "uk": "high (National Careers Service, ARB/RIBA)",
+        "eu": "medium (member states generally regulate similarly to UK, not individually verified)",
+        "turkey": "high (İŞKUR names 4 relevant occupations, strongest match of any family)",
+        "germany": "high (Bundesarchitektenkammer official)"
+      }
+    },
+    {
+      "family_id": "17",
+      "name": "Visual & Media Arts",
+      "owner_branch": "peer session",
+      "source_doc": "06-major-family-evidence/17-visual-media-arts.md",
+      "onboarding_interests": [],
+      "mission_raw_fields": [
+        "visual arts",
+        "film/media"
+      ],
+      "core_skills": [
+        "storytelling clarity, visual composition, editing choices (film -- explicitly NOT equipment/production value)",
+        "cross-medium experimentation",
+        "process articulation (discussing creative process alongside the work)"
+      ],
+      "career_families": [
+        {
+          "name": "fine artist",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "filmmaker",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "digital media artist",
+          "counter_stereotypical": false
+        }
+      ],
+      "credential_gated_career": null,
+      "interdisciplinary_connections": [
+        {
+          "family_id": "16",
+          "combination": "Distinct from architecture/design (spatial/functional) though evidence practices overlap"
+        },
+        {
+          "family_id": "15",
+          "combination": "Scholastic Art & Writing Awards is the shared tiered-competition channel for visual-art categories"
+        }
+      ],
+      "licensure": {
+        "has_licensure_or_title_protection": false,
+        "summary": "No licensure for this family. No single NCS profile found for fine artist/filmmaker specifically.",
+        "countries_verified": []
+      },
+      "exploration_pathways": {
+        "phase_1": "Sketchbook and in-progress work, explicitly welcomed as evidence, not lesser than 'finished' pieces.",
+        "phase_2": "National Portfolio Day (official, nationwide, feedback-oriented not competitive: 10-12 best/recent pieces); a phone-shot, well-edited short film is legitimate strong evidence -- equipment access is explicitly NOT the differentiator reviewers name."
+      },
+      "key_rules": [
+        "RULE-COUNSEL-050",
+        "RULE-COUNSEL-051"
+      ],
+      "distinctive_findings": [
+        "A genuinely important equity finding: film reviewers explicitly name storytelling/composition/editing as differentiating, NOT expensive equipment or production value -- ORYN should never recommend 'get better equipment' ahead of 'tighten the story/edit.'"
+      ],
+      "country_coverage": {
+        "us": "high (National Portfolio Day official)",
+        "uk": "low (no single NCS profile, category-browse only)",
+        "eu": "low (ESCO, classification-only)",
+        "turkey": "low (only moderate Grafiker/Teknik Ressam matches)",
+        "germany": "not separately covered"
+      }
+    },
+    {
+      "family_id": "18",
+      "name": "Education & Teaching",
+      "owner_branch": "this session",
+      "source_doc": "06-major-family-evidence/18-education-teaching.md",
+      "onboarding_interests": [],
+      "mission_raw_fields": [
+        "not in the mission's original list -- added after both sessions' original families were complete"
+      ],
+      "core_skills": [
+        "instructional communication (the field's entire core competency, not a secondary skill as in other families)",
+        "subject-matter competence (secondary level especially)",
+        "classroom management, assessment design",
+        "social-emotional awareness (special education particularly)"
+      ],
+      "career_families": [
+        {
+          "name": "classroom teaching (level/subject-specialized)",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "instructional design/curriculum development",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "school counseling (distinct credential)",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "educational administration",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "education policy/research",
+          "counter_stereotypical": true
+        }
+      ],
+      "credential_gated_career": null,
+      "interdisciplinary_connections": [
+        {
+          "family_id": "*",
+          "combination": "Education connects to EVERY other family at once (structural exception -- a student's 'what to teach' question routes to whichever subject family matches their interest)"
+        },
+        {
+          "family_id": "11",
+          "combination": "Education + psychology (educational psychology, learning science)"
+        },
+        {
+          "family_id": "12",
+          "combination": "Education + policy (education policy, school administration)"
+        }
+      ],
+      "licensure": {
+        "has_licensure_or_title_protection": true,
+        "summary": "Unusually clean 3-country comparison, all converging on a 2-part 'degree + separate pedagogical credentialing step' pattern: US state-issued certification/license (Praxis-style exam); UK Qualified Teacher Status (QTS) + 2-year Early Career Teacher induction; Turkey pedagogical formation + KPSS exam, ACTIVELY TRANSITIONING toward a new Milli Eğitim Akademisi requirement (must not be described as static).",
+        "countries_verified": [
+          "us",
+          "uk",
+          "turkey"
+        ]
+      },
+      "exploration_pathways": {
+        "phase_1": "Informal teaching/tutoring of younger students or peers -- a uniquely accessible entry point almost every student has some access to.",
+        "phase_2": "Sustained, structured tutoring or teaching-assistant roles -- tests whether a student enjoys the actual instructional act, not just the subject matter (subject-matter achievement alone is NOT teaching-fit evidence)."
+      },
+      "key_rules": [
+        "RULE-COUNSEL-232",
+        "RULE-COUNSEL-233",
+        "RULE-COUNSEL-234",
+        "RULE-COUNSEL-235"
+      ],
+      "distinctive_findings": [
+        "A meaningful share of teachers, especially at university/adult-education level, hold subject-matter degrees (physics, literature) rather than an education-specific degree -- 'the major' is often the taught subject plus a separate pedagogical credential, not one unified 'education major' pipeline.",
+        "Turkey's teaching-credential system is actively changing (KPSS alone becoming insufficient, moving toward a National Education Academy requirement) -- must be re-verified against current MEB guidance, not treated as fixed."
+      ],
+      "country_coverage": {
+        "us": "high (BLS official)",
+        "uk": "high (GOV.UK/DfE, QTS official)",
+        "eu": "low (ESCO, member-state-by-member-state)",
+        "turkey": "high (MEB regulation, primary source)",
+        "germany": "not separately covered"
+      }
+    },
+    {
+      "family_id": "19",
+      "name": "Social Work",
+      "owner_branch": "peer session",
+      "source_doc": "06-major-family-evidence/19-social-work.md",
+      "onboarding_interests": [],
+      "mission_raw_fields": [
+        "not in the mission's original list -- peer session found it missing, distinct from psychology's clinical/assessment focus and generic community_impact volunteering"
+      ],
+      "core_skills": [
+        "interpersonal/communication skill",
+        "organizational skill (caseload management)",
+        "emotional resilience (load-bearing, not secondary, per BLS)",
+        "case documentation/writing",
+        "cross-agency coordination",
+        "cultural competence"
+      ],
+      "career_families": [
+        {
+          "name": "clinical/direct-practice casework (child/family, healthcare, mental health)",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "community/macro practice (program design, policy, community organizing)",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "school social work",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "social work administration/program management",
+          "counter_stereotypical": true
+        }
+      ],
+      "credential_gated_career": {
+        "name": "Licensed clinical social work (US)",
+        "mechanism": "CSWE-accredited MSW plus supervised post-graduate clinical hours (commonly ~3,000 hours/2+ years, state-dependent) and a licensing exam. Broader 'social services' work (case management, program coordination) is more permeable to adjacent degrees (psychology, sociology, public health)."
+      },
+      "interdisciplinary_connections": [
+        {
+          "family_id": "11",
+          "combination": "Social work + psychology (overlapping undergrad prep, diverging professional tracks: assessment/therapy vs. case-management/advocacy)"
+        },
+        {
+          "family_id": "12",
+          "combination": "Social work + public policy (macro-practice overlap)"
+        },
+        {
+          "family_id": "18",
+          "combination": "Social work + education (school social work sits between the two)"
+        }
+      ],
+      "licensure": {
+        "has_licensure_or_title_protection": true,
+        "summary": "Third clean 3-country comparison in this package, same 2-part pattern as teaching: US (CSWE-accredited MSW + supervised hours + state license); UK (Social Work England registration after an approved qualification); Turkey (MEB regulation Art. 3(p) defines 'Sosyal Çalışmacı' as requiring a bachelor's specifically in social services -- primary-sourced, though the separate associate-degree-titling claim is NOT confirmed by this regulation and remains secondary-only).",
+        "countries_verified": [
+          "us",
+          "uk",
+          "turkey"
+        ]
+      },
+      "exploration_pathways": {
+        "phase_1": "Volunteering with a service organization serving a population the student is drawn to (youth, elderly, homelessness, disability) -- this family's exploration pathway gives that volunteering a specific professional-direction reading rather than a generic community_impact reading.",
+        "phase_2": "Sustained (not one-off) volunteering or structured youth-facing programs oriented toward direct service/casework-adjacent work (peer support, hotline/crisis-line volunteering where age-appropriate)."
+      },
+      "key_rules": [
+        "RULE-COUNSEL-094",
+        "RULE-COUNSEL-095",
+        "RULE-COUNSEL-096",
+        "RULE-COUNSEL-097",
+        "RULE-COUNSEL-098",
+        "RULE-COUNSEL-099",
+        "RULE-COUNSEL-100",
+        "RULE-COUNSEL-107"
+      ],
+      "distinctive_findings": [
+        "A concrete example of the package correcting itself: a primary-source fetch (MEB regulation) confirmed one part of an original claim (bachelor's requirement) while explicitly failing to confirm an adjacent part (associate-degree titling) -- the correct response was to narrow the claim, not treat the partial confirmation as blanket validation.",
+        "Sustained, casework-adjacent volunteering is meaningfully stronger evidence for this family than generic episodic volunteering, which only tests general service orientation."
+      ],
+      "country_coverage": {
+        "us": "high (BLS official)",
+        "uk": "medium-high (NHS Health Careers + licensing-guide sources, not Social Work England's own page directly)",
+        "eu": "low (not separately mapped)",
+        "turkey": "high (MEB regulation Art. 3(p), primary source)",
+        "germany": "not separately covered"
+      }
+    },
+    {
+      "family_id": "20",
+      "name": "Performing Arts & Music",
+      "owner_branch": "this session",
+      "source_doc": "06-major-family-evidence/20-performing-arts-music.md",
+      "onboarding_interests": [],
+      "mission_raw_fields": [
+        "not in the mission's original list -- found missing after confirming family 17 covers only visual arts and film, no music/theater/dance"
+      ],
+      "core_skills": [
+        "extensive training and regular practice (starts earlier relative to graduation than almost any other family)",
+        "performance technique specific to discipline/genre",
+        "physical resilience (dance specifically -- BLS names one of the highest occupational injury/illness rates of any field surveyed)"
+      ],
+      "career_families": [
+        {
+          "name": "performer (music/theater/dance)",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "composition/music direction",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "choreography/dance direction (common post-performing-career continuation)",
+          "counter_stereotypical": true
+        },
+        {
+          "name": "teaching/private instruction",
+          "counter_stereotypical": false
+        },
+        {
+          "name": "arts administration",
+          "counter_stereotypical": true
+        },
+        {
+          "name": "music therapy (licensed clinical field in some countries)",
+          "counter_stereotypical": true
+        }
+      ],
+      "credential_gated_career": null,
+      "interdisciplinary_connections": [
+        {
+          "family_id": "01",
+          "combination": "Music + technology (music production, audio engineering)"
+        },
+        {
+          "family_id": "18",
+          "combination": "Performing arts + education (teaching an instrument/performance skill)"
+        },
+        {
+          "family_id": "08",
+          "combination": "Music/theater + business (arts administration, entertainment management)"
+        }
+      ],
+      "licensure": {
+        "has_licensure_or_title_protection": false,
+        "summary": "No general personal licensure in any of the 3 countries checked. Closest analogue is professional-body membership (UK Equity for actors) -- a chicken-and-egg structure requiring paid work to join the body that helps find paid work, distinct from every licensure system elsewhere in this package.",
+        "countries_verified": [
+          "uk",
+          "turkey"
+        ]
+      },
+      "exploration_pathways": {
+        "phase_1": "General lessons/instruction (already common at this age for this family specifically); school ensemble/theater participation.",
+        "phase_2": "Kennedy Center NSO Young Soloists Competition; Carnegie Hall NYO-USA; a sustained portfolio of recorded/performed work; a formal audition itself, since many conservatory programs weight audition above/alongside academic credentials."
+      },
+      "key_rules": [
+        "RULE-COUNSEL-237",
+        "RULE-COUNSEL-238",
+        "RULE-COUNSEL-240"
+      ],
+      "distinctive_findings": [
+        "This family's core-skill development timeline starts earlier, relative to graduation, than almost any other family -- early sustained specialization is normal and expected here, not a sign of premature narrowing.",
+        "Turkey's state conservatories admit via a HYBRID mechanism (a lower TYT score threshold PLUS a talent audition) -- a real, important refinement to the package's general YKS caveat, since this family's admission is not purely exam-score-driven the way most of the rest of Turkey's system is.",
+        "Never assume this family's physically-demanding pathways are equally accessible without a stated need, AND never assume a disability precludes this family -- adaptive/disability arts are real, growing practice areas this document did not research in depth but must not be inferred as nonexistent by omission."
+      ],
+      "country_coverage": {
+        "us": "high (BLS official, Kennedy Center official)",
+        "uk": "high (National Careers Service, Dancer/Actor/Musicians)",
+        "eu": "none (not mapped)",
+        "turkey": "high (state conservatory admission guidance, cross-referenced across multiple official university pages)",
+        "germany": "not separately covered"
+      }
+    }
+  ]
+}
