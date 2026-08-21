@@ -37,6 +37,69 @@ describe("nameKey", () => {
     expect(nameKey("King's College London")).toBe("kings college london");
     expect(nameKey("A&M University")).toBe("a and m university");
   });
+
+  // Every name below is a real string from the live universities spine or from
+  // data/research/university-programs, not an invented example. Before this fix each of these
+  // letters was DELETED by the [^a-z0-9] sweep (NFD leaves them intact because they are base
+  // letters, not letter+combining-mark), producing a key that could never match the same
+  // institution's ASCII spelling.
+  describe("letters NFD cannot decompose are romanised, not deleted", () => {
+    test("Turkish dotless ı — the live defect: 5 programme records failed identity resolution on this", () => {
+      // Spine row is "Yildiz Technical University"; the research corpus spells it "Yıldız".
+      // Old key was "y ld z technical university" — both ı characters dropped to spaces.
+      expect(nameKey("Yıldız Technical University")).toBe("yildiz technical university");
+      expect(nameKey("Yıldız Technical University")).toBe(nameKey("Yildiz Technical University"));
+      // Spine row, previously keyed "sabanc university".
+      expect(nameKey("Sabancı University")).toBe("sabanci university");
+    });
+
+    test("dotted İ and dotless ı both land on i, and case folding stays locale-independent", () => {
+      // İ decomposes under NFD (I + combining dot above) so it already worked; ı did not.
+      // Asserting them together pins the invariant that Turkish's two distinct i letters are
+      // unified for MATCHING purposes even though they are different letters in the language.
+      expect(nameKey("İstanbul Üniversitesi")).toBe("istanbul universitesi");
+      expect(nameKey("İSTANBUL ÜNİVERSİTESİ")).toBe("istanbul universitesi");
+      // The guard that matters if anyone ever swaps in toLocaleLowerCase(): under a Turkish
+      // locale that would fold ASCII "I" to "ı", keying this name differently per machine.
+      expect(nameKey("ISTANBUL TECHNICAL UNIVERSITY")).toBe("istanbul technical university");
+      expect(nameKey("Istanbul Technical University")).toBe(nameKey("İstanbul Technical University"));
+    });
+
+    test("Nordic ø and Polish ł", () => {
+      // Spine row, previously keyed "university of troms".
+      expect(nameKey("University of Tromsø The Arctic University of Norway")).toBe(
+        "university of tromso the arctic university of norway"
+      );
+      // Spine row, previously keyed "... wroc aw tech".
+      expect(nameKey("Wroclaw University of Science and Technology (Wrocław Tech)")).toBe(
+        "wroclaw university of science and technology wroclaw tech"
+      );
+    });
+
+    test("ß romanises to ss, its only ASCII form", () => {
+      expect(nameKey("Weißensee Kunsthochschule Berlin")).toBe(nameKey("Weissensee Kunsthochschule Berlin"));
+      expect(nameKey("Große Universität")).toBe("grosse universitat");
+    });
+  });
+
+  test("does NOT collapse ae/oe/ue onto bare vowels — that mangles unrelated names", () => {
+    // A blanket digraph fold was measured against the live spine and rewrote 43 institution
+    // names, these among them. The umlaut equivalence is handled in nameVariants instead.
+    expect(nameKey("Czech Technical University in Prague")).toBe("czech technical university in prague");
+    expect(nameKey("Queen Mary University of London")).toBe("queen mary university of london");
+    expect(nameKey("Purdue University")).toBe("purdue university");
+    expect(nameKey("Technion - Israel Institute of Technology")).toBe("technion israel institute of technology");
+    expect(nameKey("Goethe-University Frankfurt am Main")).toBe("goethe university frankfurt am main");
+  });
+
+  test("Turkish ASCII convention drops the diaeresis rather than expanding it", () => {
+    // Turkish romanises Ö as "O", never "Oe" — the opposite of German. This is why the umlaut
+    // expansion cannot live in nameKey: expanding here would break every Turkish name.
+    expect(nameKey("Özyeğin University")).toBe("ozyegin university");
+    expect(nameKey("Boğaziçi University")).toBe(nameKey("Bogazici University"));
+    expect(nameKey("Koç University")).toBe("koc university");
+    expect(nameKey("Ankara Üniversitesi")).toBe("ankara universitesi");
+  });
 });
 
 describe("nameVariants", () => {
@@ -70,6 +133,39 @@ describe("nameVariants", () => {
 
   test("always includes the original", () => {
     expect(nameVariants("ETH Zurich")).toContain("ETH Zurich");
+  });
+
+  describe("German/Nordic umlaut ↔ digraph spellings", () => {
+    // The worked example from the live spine: the universities row is filed under the
+    // "Universitaet" spelling while all 228 of its programme records in
+    // data/research/university-programs spell it "Universität". Before this, the two only
+    // met because somebody had hand-written an entity_aliases row.
+    test("expands umlauts to the digraph spelling the spine actually uses", () => {
+      expect(nameVariants("Albert-Ludwigs-Universität Freiburg").map(nameKey)).toContain(
+        nameKey("Albert-Ludwigs-Universitaet Freiburg")
+      );
+      expect(nameVariants("Freie Universität Berlin").map(nameKey)).toContain(nameKey("Freie Universitaet Berlin"));
+    });
+
+    test("contracts the digraph too, so the match works from either spelling", () => {
+      expect(nameVariants("Freie Universitaet Berlin").map(nameKey)).toContain(nameKey("Freie Universität Berlin"));
+      expect(nameVariants("University Duesseldorf").map(nameKey)).toContain(nameKey("University Düsseldorf"));
+    });
+
+    test("covers Nordic ø, whose ASCII form is written both ways", () => {
+      expect(nameVariants("Universitetet i Tromsø").map(nameKey)).toContain(nameKey("Universitetet i Tromsoe"));
+      expect(nameKey("Universitetet i Tromsø")).toBe(nameKey("Universitetet i Tromso"));
+    });
+
+    test("is a no-op for names with none of those letters — no gratuitous extra candidates", () => {
+      expect(nameVariants("New York University")).toEqual(["New York University"]);
+      expect(nameVariants("Istanbul Technical University")).toEqual(["Istanbul Technical University"]);
+    });
+
+    test("composes with the other variant shapes rather than only seeing the raw name", () => {
+      // Acronym prefix stripped AND transliterated.
+      expect(nameVariants("KIT, Universität Karlsruhe").map(nameKey)).toContain(nameKey("Universitaet Karlsruhe"));
+    });
   });
 });
 
