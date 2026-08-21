@@ -1,10 +1,19 @@
 # 08 — Opportunity Organizer Canonicalization
 
 `opportunities.organization_entity_id` exists (migration 0038) but is **0/369 populated** — every
-opportunity's organizer is still exactly the raw text a researcher typed into `organization`. This
-document works the problem directly from that live text (171 non-null distinct values across 369
-rows; 198 rows have no organizer text at all) rather than from theory, because the real strings
-already contain nearly every hard case this package's framework needs to handle. `13
+opportunity's organizer is still exactly the raw text a researcher typed into `organization`.
+Confirmed unchanged and unwired late in this session: no file under `lib/opportunities/` or any
+`scripts/*opportunit*` script references this column at all (checked directly), consistent with
+0% still meaning "genuinely never written," not "written but this session missed it." Separately,
+`docs/research-handoff-opportunities.md` (not previously read) describes an *intended* future
+resolution path for this exact field — "resolves through the same `search_canonical_entities`
+path... no separate opportunity-provider resolution logic needed" — for a not-yet-built JSONL
+ingestion script. Worth citing as forward-looking design intent this package's own recommendations
+(`10`/`11`) are already compatible with, not a contradiction of the 0% finding — that ingestion
+path doesn't exist in code yet either. This document works the problem directly from the live
+text (171 non-null distinct values across 369 rows; 198 rows have no organizer text at all)
+rather than from theory, because the real strings already contain nearly every hard case this
+package's framework needs to handle. `13
 -opportunity-organizer-research-batch2.md` (a background research agent's follow-on pass, reviewed
 and integrated) covers the ~147 remaining organizer strings this document's own worked clusters
 below don't — **all 147 resolved to a sourced official URL and proposed `entity_type`**, along
