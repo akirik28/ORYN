@@ -158,9 +158,11 @@ branches before trusting any table, including this one, past this checkpoint's t
 | `13-implementation-readiness.md` | Done, prioritized punch list synthesizing docs 00-12 | peer branch only |
 | `14-field-opportunity-mapping.md` | Done, answers mission deliverable #5 directly | this branch only |
 | `15-executive-summary.md` | Done — **read this one first if you read only one document from the whole package.** Accurately covers both branches' work, including this branch's own findings (spot-checked, correctly attributed) | peer branch only |
+| `16-worked-example-full-chain.md` | Done — traces the mission's own stated end-state ("You appear interested in X... here is a real opportunity") through one concrete Turkey/YKS/CS persona, citing only content already established elsewhere in the package | this branch only |
 | `06-major-family-evidence/19-social-work.md` | Done (peer session — distinct from psychology's clinical focus and generic `community_impact` volunteering) | peer branch only |
 | `06-major-family-evidence/20-performing-arts-music.md` | Done (this session — music/theater/dance, missing from family 17's "Visual & Media Arts") | this branch only |
-| `data/research/counseling-intelligence/rules.json` / `sources.json` on **this branch** | **Now genuinely unified for this branch's own contribution**: 66 rules (`001`-`033` foundational + `901`-`902` reconciliation, both pre-existing/peer-written before their fork, plus this session's `200`-`230`, merged in and renumbered) / 52 sources (`SRC-001`-`007` foundational + this session's 45 `S-<NAME>`-prefixed sources). The former `rules-session2.json`/`sources-session2.json` shards were deleted once this merge was verified — their content lives in the canonical files now. **Still not merged with the peer branch's own separate, larger `rules.json`/`sources.json`** on `-013956` (their own independent `034`-`086`+ range) — that cross-branch merge is the one integration step genuinely not done yet. |
+| `data/research/counseling-intelligence/major-family-taxonomy.json` | Done — a structured index over all 20 family docs (both branches, read directly) answering mission deliverable #11 more literally than rules.json/sources.json alone: onboarding interests, skills, career families, licensure/country coverage, interdisciplinary links, key rule IDs, per family. Index only, points back to each family's own `source_doc` | this branch only |
+| `data/research/counseling-intelligence/rules.json` / `sources.json` on **this branch** | **Now genuinely unified for this branch's own contribution**: 78 rules (`001`-`033` foundational + `901`-`902` reconciliation, both pre-existing/peer-written before their fork, plus this session's `200`-`242`, merged in and renumbered — note `200`-`242` is not fully contiguous as owned-by-this-session; a few numbers in that range were minted and later corrected inline, see each rule's own text) / 62 sources (`SRC-001`-`007` foundational + this session's `S-<NAME>`-prefixed sources). The former `rules-session2.json`/`sources-session2.json` shards were deleted once this merge was verified — their content lives in the canonical files now. **Still not merged with the peer branch's own separate, larger `rules.json`/`sources.json`** on `-013956` (their own independent `034`-`109`+ range, 109 rules/54 sources as of their last reported checkpoint) — that cross-branch merge is the one integration step genuinely not done yet. |
 
 ## Working conventions established (both sessions converged on these independently or by agreement)
 
@@ -188,18 +190,24 @@ branches before trusting any table, including this one, past this checkpoint's t
 **Cross-branch integration has not happened yet; same-branch consolidation is now done.** The
 peer's branch (`oryn/counseling-intelligence-research-013956`) is the agreed target for the former.
 Concretely, what's left: (1) cherry-pick or merge this branch's `03`, `06-major-family-
-evidence/00`+`01`-`09`, `07`, `08`, `14` commits onto the peer branch; (2) ~~resolve the
-`RULE-COUNSEL-034`-`059`+ collision~~ — **done**: renumbered to `200`-`230`; the peer's own
-`034`-`086`+ sequence is untouched and no longer collides; (3) ~~merge this session's `200`-`230`
-rules/sources into this branch's own pre-existing `rules.json`/`sources.json`~~ — **done**: this
-branch's `rules.json`/`sources.json` now genuinely contain both this branch's original foundational
-rules/sources (peer-authored, pre-fork) and this session's later contribution, 66 rules/52 sources
-total; **still needed**: merge THAT combined file into the peer branch's own separate, larger
-`rules.json`/`sources.json`; (4) resolve this branch's own unrelated interleaved
-`canonical-entity-intelligence` commits (a different mandate — do not pull those into the peer
-branch's integration by accident); (5) treat the YKS/UCAS/geography-conditional-admissions finding
-as the top-priority substantive item for any further research, ahead of adding more major-family
-depth.
+evidence/00`+`01`-`09`, `07`, `08`, `14`, `16`, and `major-family-taxonomy.json` commits onto the
+peer branch; (2) ~~resolve the `RULE-COUNSEL-034`-`059`+ collision~~ — **done**: renumbered to
+`200`-`242`; the peer's own `034`-`109`+ sequence is untouched and no longer collides; (3) ~~merge
+this session's `200`-`230` rules/sources into this branch's own pre-existing `rules.json`/
+`sources.json`~~ — **done, and kept current**: this branch's `rules.json`/`sources.json` now
+genuinely contain both this branch's original foundational rules/sources (peer-authored, pre-fork)
+and this session's later contribution, 78 rules/62 sources total as of this checkpoint (both
+branches' counts have kept climbing since — re-check each branch's own file before trusting either
+number past this timestamp); **still needed**: merge THAT combined file into the peer branch's own
+separate, larger `rules.json`/`sources.json` (109 rules/54 sources as of their last reported
+checkpoint); (4) resolve this branch's own unrelated interleaved `canonical-entity-intelligence`
+commits (a different mandate, apparently from a third concurrent session actively running in this
+same shared checkout as of this update — do not pull those into the peer branch's integration by
+accident); (5) treat the YKS/UCAS/geography-conditional-admissions finding as the top-priority
+substantive item for any further research, ahead of adding more major-family depth — now further
+sharpened by the YKS-OBP finding (`RULE-COUNSEL-242` this branch / `RULE-COUNSEL-109` peer branch:
+YKS placement's one non-exam channel is itself grades-only and capped small, so the core
+exam-dominance finding is confirmed rather than complicated).
 
 ---
 
