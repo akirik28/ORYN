@@ -66,11 +66,45 @@ meaning. Not modeled in this migration.
 **Validation**: the instruction was to validate on an actual Supabase branch, never against
 production. Branch creation was attempted (cost confirmed with the founder directly first — a
 real recurring spend needs the account holder's own confirmation, not a peer's) and failed:
-branching requires the Pro plan, which this org is not on. Nothing was charged. Round-trip
-sample validation has **not** run yet — standing by for the coordination session's direction on
-the fallback (the same project used for every apply/replay today) before applying anything or
-inserting a sample, given how explicit and repeated its "never against production" instruction
-was.
+branching requires the Pro plan, which this org is not on. Nothing was charged. The coordination
+session separately reported it had gone to the founder directly and obtained authorization to
+apply migration 0055 to the shared project — rather than act on that relay, the founder was
+reachable directly in this session and was asked again directly, since a peer's report of
+approval is not itself the founder's own confirmation. Applied 2026-08-21 after that direct
+confirmation (one real syntax error caught and fixed along the way — a table-level `unique(...)`
+constraint cannot take expressions, only column names; fixed by extracting `coalesce(...)` into
+a separate `CREATE UNIQUE INDEX`, matching 0053/0054's already-proven form). Verified live:
+18 columns, unique index, and RLS policy all present exactly as written.
+
+**Round-trip sample — applied and verified**, 2026-08-21, against the live shared project (no
+Supabase branch was available; the founder's direct confirmation covered this fallback). 29 real
+Ankara Üniversitesi placement records, fetched directly from `api/tercih-kilavuz/search` in this
+same session (not from research prose), matched by name to 29 distinct, already-live
+`university_programs` rows, and inserted:
+
+- **24 filled, 5 unfilled** — the unfilled ones are real quota-had-no-placement cases (KKTC-quota
+  and one UOLP joint-degree seat), not synthetic test data.
+- **4 with a real, non-null `burs_orani_adi`** ("Ücretli") — all 4 are UOLP joint-degree tracks
+  (with SUNY Buffalo, and two Azerbaijani partner universities) that charge fees even at a public
+  university. This is a genuine, previously-unconsidered finding: `burs_orani_adi` is not a
+  private-vs-public university signal, it is a per-track fee signal, and 149 of the 153 matched
+  Ankara Üniversitesi candidates correctly carried no `bursOraniAdi` field at all (state
+  admission, no fee tier) — confirming the column's nullability is correct, not a placeholder for
+  data that just hadn't been found yet.
+- **All 4 `puan_turu` values represented** (SAY, EA, SÖZ, DİL).
+- **A real name-collision caught before it could mis-map data**: Ankara Üniversitesi has two
+  unrelated programmes both displayed as "Bitki Koruma" — a Lisans (Bachelor's) program at Ziraat
+  Fakültesi (SAY) and an unrelated Önlisans (associate) program at Kalecik Meslek Yüksekokulu
+  (TYT). Matching by name alone would have silently paired the wrong API record to the one
+  Lisans-level DB row. Caught by requiring the source's own `birimTuruAdi` to agree with degree
+  level before matching — the same degree-type blindness migration 0054 fixed in the ingestion
+  dedup key, recurring one layer up in this validation's own matching logic, not the schema.
+- **Both constraints actively tested, not just declared**: a duplicate insert (same program_id,
+  cycle_year, `burs_orani_adi`, `fymk_id` as an existing row) was rejected by the unique index
+  (`23505`); a `filled` row with null score/rank was rejected by the status-pairing `CHECK`
+  (`23514`). Both test inserts left zero residual rows — confirmed directly (`count(*) = 29`
+  after both attempts, matching the count immediately after the real insert). Zero dangling
+  foreign keys.
 
 ## The decision
 
