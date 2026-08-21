@@ -44,7 +44,7 @@ directly (NAAB accredits degree programs, not individual student portfolios).
 - **Do not treat unfinished/in-progress work as invalid evidence** — explicitly named as acceptable
   portfolio content by the sourced guidance ("works in progress" alongside finished pieces).
 
-## Country notes (UK / EU / Turkey)
+## Country notes (UK / Germany / EU / Turkey)
 
 Career-outlook context throughout, not admissions-evidence guidance — see
 `10-medicine-clinical-pathways.md` for the full method/bounding statement.
@@ -57,6 +57,19 @@ this document's §1 US-leaning portfolio framing, has a formally regulated title
 Registration Board controls who may legally call themselves "architect") — worth naming as a real
 structural difference for a UK-facing student, distinct from the portfolio-evidence question this
 document otherwise focuses on.
+
+**Germany, added on a further pass**: strict title protection, structurally similar to the UK's
+but administered differently. The title **"Architekt"** (and "Innenarchitekt"/interior architect,
+"Landschaftsarchitekt"/landscape architect, "Stadtplaner"/urban planner) is protected by law;
+registration requires a recognized architecture degree (bachelor's plus master's, minimum 4 years
+total) plus 2-3 years of professional practice, administered by a state-level **Architektenkammer**
+(Chamber of Architects) — one of 16 regional chambers under the federal **Bundesarchitektenkammer**,
+with registration rules varying by Bundesland (federal state). (Source: Bundesarchitektenkammer
+official pages (`en.bak.de`) plus corroborating chamber-registration guidance — official/high
+confidence for the title-protection mechanism.) [[RULE-COUNSEL-106]] **Same pattern as UK, notably
+different administering structure**: both countries legally protect the title, but Germany's is
+chamber-based and state-by-state (16 separate regional bodies) rather than the UK's single national
+regulator (ARB) — a genuinely more fragmented system for a Germany-target student to navigate.
 
 **EU:** ESCO covers architecture/design occupations across EU languages (see `10`'s EU note for
 ESCO's full description). EU member states generally regulate the "architect" title similarly to
@@ -88,3 +101,7 @@ checked against this source. [[RULE-COUNSEL-086]]
   regulated title (unlike most of this document's other portfolio-evidence framing), sourced from
   NCS's official profile. Confidence: high (official source for UK; reasoned generalization to EU
   member states, not individually verified per country).
+- `RULE-COUNSEL-106` — Germany title-protects "Architekt" via a chamber-based, state-by-state
+  system (16 regional Architektenkammer under the federal Bundesarchitektenkammer) — same
+  protection concept as the UK's ARB, structurally more fragmented in administration. Confidence:
+  high (official Bundesarchitektenkammer source).

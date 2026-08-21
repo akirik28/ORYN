@@ -45,7 +45,7 @@ original thinking"** — an unusually direct restatement of this package's evide
   lower legitimate access excuse than the same gap in, say, biomedical research requiring wet-lab
   equipment. [[RULE-COUNSEL-037]]
 
-## Country notes (UK / EU / Turkey)
+## Country notes (UK / Germany / EU / Turkey)
 
 Career-outlook context throughout, not admissions-evidence guidance — see
 `10-medicine-clinical-pathways.md`'s identically-framed note for the full method/bounding
@@ -58,6 +58,19 @@ psychology spans clearly distinct sub-fields with different training pathways, f
 official source rather than only this document's general reasoning. (Source:
 `nationalcareers.service.gov.uk/job-profiles/clinical-psychologist` and `/forensic-psychologist` —
 official, high confidence.) [[RULE-COUNSEL-088]]
+
+**Germany, added on a further pass**: clinical/therapeutic psychology practice requires its own
+**Approbation** (the same licensure mechanism `10`'s Germany note describes for medicine),
+governed by the **Psychotherapeutengesetz** (Psychotherapists' Law) and its 2020
+**Approbationsordnung** (licensing regulation) — a psychology degree (Diplom or MSc) plus
+specialized postgraduate psychotherapy training (theoretical and practical) plus the state
+examination. (Source: German licensure-guidance sources, including official municipal
+administrative-service portals — `verwaltungsportal.hessen.de`, `service.berlin.de` — describing
+the Approbation application process directly — medium-high confidence.) [[RULE-COUNSEL-105]]
+**Sharpens this document's own §1 finding for Germany specifically**: the sub-field distinction
+this document establishes generally (clinical/assessment vs. research vs. non-clinical) maps onto
+a genuine *legal* distinction in Germany — only the clinical/therapeutic track requires Approbation
+at all; research or non-clinical psychology roles do not.
 
 **EU:** ESCO covers psychology occupations across EU languages (see `10`'s EU note for ESCO's full
 description). No EU-wide licensure gate; clinical psychology practice rights remain a per-country
@@ -87,3 +100,7 @@ designated future occupations. [[RULE-COUNSEL-084]]
 - `RULE-COUNSEL-088` — Prefer UK National Careers Service job profiles (Clinical/Forensic
   Psychologist) over BLS/O*NET for a UK-facing psychology-track student. Confidence: high
   (official source).
+- `RULE-COUNSEL-105` — Germany requires Approbation (the same licensure mechanism as medicine) for
+  clinical/therapeutic psychology practice specifically, under the Psychotherapeutengesetz — a
+  legal, not just practical, distinction between clinical and non-clinical psychology tracks.
+  Confidence: medium-high (official municipal administrative-portal sources).

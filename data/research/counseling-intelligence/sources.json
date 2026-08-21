@@ -601,6 +601,30 @@
       "claim_supported": "German legal training requires the Erste Staatsexamen, a 2-year Referendariat (rotating across civil court, criminal court/prosecution, an administrative authority, and a law firm), then the Zweite Staatsexamen before qualifying as a Volljurist eligible for Rechtsanwalt/judge/prosecutor roles; total pathway commonly cited as 7-11 years.",
       "used_in_rules": ["RULE-COUNSEL-104"],
       "limitations": "The Bundesrechtsanwaltskammer (BRAK) is Germany's official federal bar association, giving this medium-high confidence; the specific 7-11-year figure is a commonly-cited range across sources, not a single official fixed number."
+    },
+    {
+      "id": "SRC-CS-051",
+      "title": "German clinical-psychology licensure (Approbation/Psychotherapeutengesetz) guidance, including official municipal administrative-service portals",
+      "publisher": "Various German licensure-guidance sources, including service.berlin.de and verwaltungsportal.hessen.de (official German municipal/state administrative-service portals)",
+      "url": "https://www.anerkennung-in-deutschland.de/html/en/2724.php",
+      "type": "mixed_official_and_secondary",
+      "retrieved_at": "2026-08-21",
+      "confidence": "medium-high",
+      "claim_supported": "Clinical/therapeutic psychology practice in Germany requires Approbation under the Psychotherapeutengesetz (Psychotherapists' Law) and its 2020 Approbationsordnung — a psychology degree plus specialized postgraduate psychotherapy training plus a state exam; only the clinical track requires this, not psychology generally.",
+      "used_in_rules": ["RULE-COUNSEL-105"],
+      "limitations": "Sourced from official administrative-service portals describing the application process, not a single consolidated federal ministry statement."
+    },
+    {
+      "id": "SRC-CS-052",
+      "title": "Bundesarchitektenkammer (Federal Chamber of German Architects) official regulation pages",
+      "publisher": "Bundesarchitektenkammer (official federal body)",
+      "url": "https://en.bak.de/regulation/",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "The title 'Architekt' (and related titles) is legally protected in Germany; registration requires a recognized architecture degree plus 2-3 years of practice, administered by one of 16 state-level Architektenkammer under the federal Bundesarchitektenkammer, with rules varying by Bundesland.",
+      "used_in_rules": ["RULE-COUNSEL-106"],
+      "limitations": "None material — official federal body source."
     }
   ]
 }
