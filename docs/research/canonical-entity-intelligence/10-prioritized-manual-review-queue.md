@@ -31,10 +31,20 @@ deliberately rather than letting the bulk import default silently.
 
 ## P1 — Large, mechanical, already-scoped
 
-**2. Run existing ROR enrichment (`npm run acquire:universities -- --from-db` +
-`npm run import:universities`, per `scripts/acquire-university-facts.ts`'s own usage docs) targeted
-at the 43 "incomplete" university rows, plus the 70 entities in `09` Finding 7 (a different,
-complementary gap) — and separately, apply 9 already-known ROR ids directly.**
+**2. Merge the 43 orphan pairs directly (`merge_canonical_entities(orphan, enriched_sibling,
+reason)`) — no ROR re-research needed for these specifically, corrected from an earlier version
+of this recommendation.** `05`'s "mechanical precision correction" section: `--from-db` builds
+its roster from the `universities` table, which every orphan side has zero rows in by
+construction — the enrichment pipeline structurally cannot reach them, confirmed by reading
+`scripts/acquire-university-facts.ts` directly, and `claude-a-university-spine.md`'s own account
+of an already-completed full-spine `--from-db` pass (203 unresolved) confirms its unresolved set
+doesn't overlap these 43. Each orphan's paired sibling already carries a verified ROR id, which
+is the confirmation — the task is confirming the pair via the evidence already assembled here
+(identical name, compatible city, the two-timestamp pattern) and merging directly, not running an
+acquisition script. Separately, run `npm run acquire:universities -- --from-db` +
+`npm run import:universities` (per `scripts/acquire-university-facts.ts`'s own usage docs) for
+the 70 entities in `09` Finding 7 (a genuinely different, complementary gap — real single-row
+enrichment targets, not orphan-pair duplicates) — and apply 9 already-known ROR ids directly.
 `data/research/canonical-entities/duplicate-candidates-university.json` has the exact 43 ids
 ready. This is expected to resolve the majority of the Phase 6 duplicate-audit backlog (open since
 migration 0039) with zero new classification logic — see `05`, `09`. One row (Purdue University)

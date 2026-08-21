@@ -257,13 +257,25 @@ zero entity_evidence rows" — as of whenever that script was last run. Checked 
 session, directly, registry-wide (not scoped to the script's own `university`-only default):
 that state no longer exists. Every `entity_type='university'` row is now `source_verified`
 (1055) or `merged` (37) — **zero** currently claim `official_verified` at all, meaning the
-prior gap the script's docblock describes has already been fully corrected, presumably by an
-earlier `--fix-downgrade` run. The only entity type currently holding `official_verified`
-anywhere in the registry is `school` (54 rows) — and all 54 have ≥1 supporting
-`entity_evidence` row. This is a clean, complete (not sampled) result across the entire
-registry: **every `official_verified` claim in ORYN's canonical entity registry today is
-backed by real evidence.** Worth stating plainly since most of this package's findings are
-gaps — this one is a working safeguard, already exercised, currently holding.
+prior gap the script's docblock describes has already been fully corrected. **Confirmed, not
+just inferred**: `docs/handoffs/claude-a-university-spine.md` Phase 8 (read later this same
+session) documents exactly this — "73/73 `official_verified` university entities had zero
+`entity_evidence` rows... Applied: all 73 downgraded" via `--fix-downgrade`, matching
+`founder-blocked-backlog.md` item 20's "RESOLVED 2026-08-17" note. The only entity type
+currently holding `official_verified` anywhere in the registry is `school` (54 rows) — and all
+54 have ≥1 supporting `entity_evidence` row. This is a clean, complete (not sampled) result
+across the entire registry: **every `official_verified` claim in ORYN's canonical entity
+registry today is backed by real evidence.** Worth stating plainly since most of this package's
+findings are gaps — this one is a working safeguard, already exercised, currently holding.
+
+**§4's tool-gap finding is also independently cross-validated by the same prior session**:
+`claude-a-university-spine.md` Phase 8 separately found and fixed a real bug in
+`entities-audit.ts` itself — an unpaginated `canonical_entities` read silently truncating at
+PostgREST's 1000-row cap once the registry passed that size, causing POSSIBLE_DUPLICATE
+findings to undercount (231 → 296 once fixed). That fix is why this session's own fresh run
+(§4, 301 raw findings against today's larger 1172-entity registry) reflects the *current*,
+correctly-paginated code — the number is different from their 296 simply because the registry
+has grown further since their pass, not because of any remaining pagination gap.
 
 ## 8. What this document adds to the priority queue and handoff
 

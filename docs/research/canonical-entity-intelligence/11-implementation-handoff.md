@@ -42,17 +42,26 @@ not a blind bulk `UPDATE`.
 
 ## Data operations (existing tooling, new target set)
 
-**4. Run `npm run acquire:universities -- --from-db` + `npm run import:universities`
+**4. For the 43 `duplicate-candidates-university.json` orphan pairs: merge directly
+(`merge_canonical_entities(orphan, enriched_sibling, reason)`), no acquisition script run needed
+— corrected late in this session, see `05`'s "mechanical precision correction" section.**
+`--from-db` builds its roster from the `universities` table (confirmed by reading
+`scripts/acquire-university-facts.ts` directly); every orphan side has zero `universities` rows
+by construction, so the pipeline cannot reach them no matter how it's invoked — this is not a
+targeting problem the `--limit`/roster flags can fix. Each orphan's sibling already carries a
+verified ROR id; that is the confirmation. The evidence already assembled in this package
+(identical normalized name, compatible city, the two-bulk-import-timestamp pattern) is what
+justifies each specific merge call — no new research step.
+
+Separately, run `npm run acquire:universities -- --from-db` + `npm run import:universities`
 (`scripts/acquire-university-facts.ts`/`scripts/import-university-facts.ts` — the actual, already-
 built ROR-enrichment pipeline, found by reading `package.json` partway through this session, not
-at the start — check for existing tooling before assuming a gap needs new automation) against the
-43 IDs in `duplicate-candidates-university.json`'s `incomplete` side, plus the 70 entities in
-`university-ror-gaps.json`.**
-This is the same pipeline already responsible for 93.4% ROR coverage elsewhere — no new code
-expected, just a targeted run. Once both sides of a pair carry a ROR id,
-`classifyDuplicateCandidate()` requires no changes to correctly resolve most of these to
-`SAFE_TO_CANONICALIZE` (`05`). Purdue University needs both sides checked (neither currently has
-ROR). **If running this incrementally, `17` independently cross-validated 9 of the 43 pairs via
+at the start) against the 70 entities in `university-ror-gaps.json`'s genuine single-row gap list
+— a real, different, complementary enrichment target this pipeline *can* reach, since those are
+ordinary `universities` rows lacking ROR, not orphans. This is the same pipeline already
+responsible for 93.4% ROR coverage elsewhere. Purdue University needs both sides checked (neither
+currently has ROR). **If sequencing the merge batch above, `17` independently cross-validated 9
+of the 43 pairs via
 a second method (UCLA, UC Berkeley, UC San Diego, UC Santa Barbara, NYU, Caltech, City
 University of Hong Kong, National Cheng Kung University, National Yang Ming Chiao Tung
 University) — reasonable to merge first given several are high-application-volume US

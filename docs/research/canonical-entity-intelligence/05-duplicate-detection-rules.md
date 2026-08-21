@@ -73,6 +73,34 @@ The full 43-pair table, with both sides' ids, is in
 `data/research/canonical-entities/duplicate-candidates-university.json` — ready for whoever runs
 the enrichment pass to verify against, without re-deriving the query.
 
+### A mechanical precision correction, found late by reading `scripts/acquire-university-facts.ts` directly
+
+The recommendation above says "run the existing ROR-enrichment pipeline... targeted at these 43
+un-enriched rows," which reads as if `npm run acquire:universities -- --from-db` can simply be
+pointed at them. It cannot, as written: `--from-db` builds its roster from `select("name,
+country") from "universities"` (confirmed by reading the script directly) — it iterates the
+`universities` table, and every orphan side of these 43 pairs has **zero** `universities` rows by
+definition (that is the whole shape of the finding). The script would never see them; this is
+not a hypothetical, `docs/handoffs/claude-a-university-spine.md`'s own Phase 7 account confirms
+a full `--from-db` pass already ran this repo's history (3,950 external ids upserted, 203 left
+unresolved) and, consistent with this mechanism, its "203 unresolved" set is a different
+population from these 43 orphans, not an overlapping one — the orphans were never in its input.
+
+The actually-correct action is narrower and, properly understood, *easier* than "run ROR
+enrichment": **no new ROR research is needed for these 43 pairs at all.** Each orphan's paired
+sibling already carries a verified ROR id (that is precisely why the pair was findable — same
+name, one side enriched, one side not). The real task is: for each pair, confirm the orphan and
+its enriched sibling are the same institution (the evidence already assembled here — identical
+normalized name, compatible city, the two-bulk-import-timestamp pattern — is exactly that
+confirmation) and call `merge_canonical_entities(source=orphan, target=enriched_sibling, reason)`
+directly. No `acquire`/`import` script run is actually required. If a stricter, independently-
+machine-checked bar is wanted before merging (matching this package's own conservative stance),
+the check is a **name-based ROR search seeded from the orphan's own `canonical_entities.
+display_name`** (which `searchRorByName()` — already a function in `acquire-university-facts.ts`
+— can do; it just needs a roster built from orphan `canonical_entities` rows directly, not from
+`--from-db`'s `universities`-table roster) confirming the returned id matches the sibling's
+already-known one, not a fresh open-ended enrichment pass. `10`/`11` are updated to reflect this.
+
 ## Verifying the recommendation itself: two real failure modes a naive ROR-enrichment pass would hit
 
 This document's own top recommendation (re-run ROR enrichment on the 43-orphan set and on `09`
