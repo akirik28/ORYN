@@ -11,7 +11,27 @@ verification used ROR's public API (`api.ror.org`) via read-only `curl`/`WebSear
 This file is updated as work lands, not chronologically archived — read top-to-bottom for current
 state, matching the convention `docs/handoffs/claude-a-university-spine.md` already established.
 
-## Current state (updated 2026-08-21 ~04:50 Europe/Istanbul)
+## Current state (updated 2026-08-21 ~05:15 Europe/Istanbul)
+
+**Latest work**: forward-looking relationship research (a ROR-verified `campus_of`/`member_of`
+candidate — University of Nottingham's Malaysia/Ningbo China campuses, genuinely undetermined
+between the two pending an admissions-independence check; live verification that 3 of the 5
+previously-proposed `entity_relationships` candidates in `10` need a *new* entity created first,
+not just an id lookup — Charité, Amsterdam University College, and "University of London" itself
+none exist as rows yet, though all parent/subject-side ids are ready), then a dedicated
+consistency-audit background agent (independently re-reading all 18 docs + 12 JSON companions for
+cross-reference drift, after this session caught one such drift by hand — a stale `successor_of`
+reference in `10`). The agent found seven more confirmed issues, all independently verified
+before fixing, none taken on trust: the 41→43 correction hadn't propagated to three JSON files;
+`university-ror-gaps.json`'s single-row-gap list had 18 entries for 16 real institutions (two
+duplicated); `institution-collision-traps.json`'s raw entry count (17) didn't match the doc's
+"Sixteen cases" without a note explaining why; `09` Finding 8 said "9 institutions" against its
+own 10-name list (confirmed live against `program_research_queue` directly — genuinely 10, not a
+typo); `14` said "19 candidate pairs" against 18 actual, and while fixing it a real editorial gap
+came with it (a second already-resolved non-duplicate pair, MEF Izmir/Istanbul, present in the
+JSON but never discussed in the doc's prose); plus two smaller arithmetic slips (`05`: 43+70=113,
+not 111; `08`: seven Penn/Wharton organizer strings, not six) and a duplicate item number in `11`.
+All fixed and verified, not just reported.
 
 **Package: 18 documents (00–17, including 12–13 from two background research agents) + 12 JSON
 data files.** Every mission-brief deliverable (entity identity framework, alias taxonomy,
