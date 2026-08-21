@@ -3648,10 +3648,27 @@ a space-separated list of several codes (full-time / foundation-year / study-abr
 variants) rather than one code per row -- kept as one record per distinct course, full
 code list preserved in notes rather than exploded into near-duplicate rows.
 
-**Running total this continuation (batches 30-34, post-SESSION-CLOSE)**: 679 new records
-across 5 universities (FU Berlin 75, RWTH Aachen 77, Durham 162, Nottingham 215, QMUL 110),
-plus the 2 confirmed Radboud/Exeter historical-data fixes and the schema-level dual-language
-finding now in the coordinator's queue.
+**Batch 35 — University of Bath** (184 new, `data/research/university-programs/
+independent_batch35_2026-08-21.jsonl`, committed `2bdc168`): a third distinct search vendor
+this pass -- Squiz Funnelback (`search.bath.ac.uk/s/search.html`), not SearchStax. Its
+standard `num_ranks` URL parameter worked directly, server-side, on first try -- all 184
+results in one page load, the fastest retrieval of any UK batch this session (no pagination,
+no click-through, no interceptor needed). Title/qualification/duration parsed from the
+source's consistent `"{Title} {Qualification} – {duration}"` result-line text; official
+course-page URLs recovered by decoding the `url=` parameter Funnelback embeds in each
+result's own click-tracking redirect link (`/s/redirect?...&url=<encoded target>`), matched
+1:1 to titles by DOM order. Duration is kept as the full qualifier string ("with
+professional placement or study abroad", "at the University of Plymouth" for a genuine
+joint-delivery Pharmacy variant) rather than trimmed to a bare year count, since the
+qualifier changes what a student is actually applying to. Verified zero (name, degree_type,
+duration) collisions across the 119 same-named-different-route entries, and all 184 UCAS
+codes distinct. Two spot-checks against live course pages matched exactly.
+
+**Running total this continuation (batches 30-35, post-SESSION-CLOSE)**: 863 new records
+across 6 universities (FU Berlin 75, RWTH Aachen 77, Durham 162, Nottingham 215, QMUL 110,
+Bath 184), plus the 2 confirmed Radboud/Exeter historical-data fixes and the schema-level
+dual-language finding now resolved by the coordinator's migration (confirmed working
+end-to-end on a fresh Sapienza Italian/English "Classics" pair per their report).
 
 Of the 5 outstanding Radboud/Exeter gaps, 2 are now confirmed fully resolved (the Exeter
 "BA Classical Studies and Philosophy" insert, id `4a715f86-3f0e-4b3d-97ff-e6fb12c2c5bb`, and
