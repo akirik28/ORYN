@@ -709,6 +709,18 @@
       "claim_supported": "Parcoursup applications are evaluated against exactly 5 nationally-defined evaluation fields (résultats académiques; compétences académiques/méthodologiques; savoir-être; motivation/connaissance de la formation; engagements/activités et centres d'intérêt), each mandatorily assigned a formation-specific percentage weight summing to 100%, with individual criteria rated on a 4-level importance scale. The document's own worked example gives résultats académiques = 30% and compétences académiques = 20%.",
       "used_in_rules": ["RULE-COUNSEL-114", "RULE-COUNSEL-117"],
       "limitations": "Directly downloaded and extracted via pypdf after WebFetch's built-in extractor returned only binary/unreadable content for this specific file. Document is dated \"Session 2023\"; this session did not independently confirm the identical 5-field structure and worked-example percentages still apply unchanged for the current 2026 cycle, though the structure is described in the document itself as continuous practice since at least 2019/2022. Page 9's worked-example percentages for the remaining 3 of 5 fields (savoir-être, motivation, engagements/activités) appear to be presented as a graphic rather than extractable text — not obtained, left unresolved rather than guessed. Any single formation's actual published percentage for any field is formation-specific and was not checked for any specific named program."
+    },
+    {
+      "id": "SRC-CS-060",
+      "title": "Casper Assessment Overview — official Acuity Insights product page",
+      "publisher": "Acuity Insights (official vendor)",
+      "url": "https://acuityinsights.com/products/admissions/casper/",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high_for_assessment_description_medium_for_current_program_coverage",
+      "claim_supported": "CASPer is a standardized, timed, third-party-administered situational-judgment test (video and typed responses to real-world hypothetical scenarios, no single correct answer, scored by independent human raters, reported as a z-score/percentile) -- structurally distinct from both achievement-evidence review and institution-authored reflective-response scoring (e.g. Queen's Commerce/McMaster HHSP). Used across 500+ partner programs in medicine, health sciences, PA, nursing, and dental hygiene currently, with the vendor's own page describing expansion into education, business, and engineering.",
+      "used_in_rules": ["RULE-COUNSEL-120"],
+      "limitations": "Vendor's own marketing/product page, not an independent third-party audit -- treated as high confidence for factual claims about assessment mechanics (verifiable, unlikely to be misrepresented) but the specific list of programs/fields currently requiring it changes by admissions cycle per the page's own caveat, so that part is medium confidence and will go stale."
     }
   ]
 }

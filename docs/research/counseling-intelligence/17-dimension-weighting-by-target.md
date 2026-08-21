@@ -127,8 +127,9 @@ false — the carve-out mechanism itself varies by program** (`RULE-COUNSEL-110`
 | Named carve-out | What it actually rewards | Nearest analogue |
 |---|---|---|
 | Waterloo Engineering (AIF) | Explicit activity/accomplishment description — "share what you were involved with," reviewers look for leadership/time-management/breadth of interests | Closest to a mini US-style holistic read, scoped to one form |
-| Queen's Commerce | Written + video response scored on initiative/problem-solving/self-reflection *as demonstrated in the response itself* — **no activities-list criterion at all** | Structurally closer to a scored personal essay / structured interview than to a resume review |
-| McMaster HHSP | Same pattern as Queen's — critical thinking/self-examination in the response, not an activities list | Same as Queen's |
+| Queen's Commerce | Written + video response, self-paced within a window, scored by the *institution's own* rubric on initiative/problem-solving/self-reflection *as demonstrated in the response itself* — **no activities-list criterion at all** | Structurally closer to a scored personal essay / structured interview than to a resume review |
+| McMaster HHSP (Honours Health Sciences Program specifically) | Same pattern as Queen's — critical thinking/self-examination in the response, not an activities list | Same as Queen's |
+| McMaster **Nursing** (a *different* McMaster program from HHSP, found on a further check) | **CASPer** — a standardized, timed, third-party-administered situational-judgment test, not the program's own custom rubric | A third, genuinely different mechanism, see below |
 | Turkish state conservatory (`RULE-COUNSEL-101`) | Audition/portfolio performance in the specific discipline | A skills-demonstration gate, not an activity-breadth review at all |
 | Switzerland medicine (EMS) | A standardized aptitude test | Not activity-based in any form — closer in kind to Turkey's YKS than to UK/US medicine |
 
@@ -140,6 +141,32 @@ a Queen's-Commerce-track student to add activities when the actual lever is refl
 quality). This is a materially higher data/specificity bar than the tier-level conditioning `11`
 already proposes — tier alone is not enough for these carve-out cases; the specific named program
 is the smallest unit this package can responsibly generalize about. [[RULE-COUNSEL-115]]
+
+**A follow-up check, prompted by `09`'s Persona J finding that ORYN's recommendation vocabulary
+has no category for "rehearsed structured response" (`RULE-COUNSEL-118`), found this is not a
+Queen's/McMaster idiosyncrasy — there is a third, standardized, cross-program version of it.**
+**CASPer** (Acuity Insights) is an official, branded, timed situational-judgment test — video and
+typed responses to "real-world" hypothetical scenarios, scored by independent human raters,
+reported to institutions as a z-score/percentile — explicitly *not* a review of the student's own
+past activities or achievements, and structurally different even from Queen's/McMaster's own
+custom reflective prompts (which are institution-authored and ask about the *student's own*
+experience; CASPer's scenarios are standardized and largely hypothetical). (Source:
+`acuityinsights.com/products/admissions/casper/`, official vendor page — high confidence for what
+the assessment is and how it's administered.) **This means ORYN's evidence/recommendation model
+needs to distinguish (at least) three structurally different assessment types, not two:**
+
+| Assessment type | Example | What preparation actually helps |
+|---|---|---|
+| Achievement-evidence-based | US/UK holistic review, Waterloo AIF | Accumulate and document genuine activities/achievements — this package's existing achievement-tier model |
+| Institution-authored reflective response | Queen's Commerce, McMaster HHSP | Rehearse articulating the student's *own* experience against the *specific* prompts that program uses — `RULE-COUNSEL-118`'s named gap |
+| Standardized third-party situational-judgment test | CASPer (medicine, health sciences, PA, nursing, dental hygiene currently; expanding into education, business, engineering per the vendor's own page) | Practice timed, hypothetical-scenario situational judgment generally — closer to standardized-test preparation than to either of the other two, and *not* well served by rehearsing responses about the student's own specific past experiences |
+
+**CASPer's own reach (500+ partner programs globally per the vendor's page, and explicitly
+expanding beyond health fields) makes this a materially bigger population than "two named Canadian
+programs"** — any ORYN user targeting a CASPer-requiring program anywhere (a real possibility for
+this package's own medicine family, `06-major-family-evidence/10-medicine-clinical-pathways.md`,
+which did not previously mention it at all) needs this third category recognized, not folded into
+either of the other two. [[RULE-COUNSEL-120]]
 
 ## Cross-cutting: medicine is not uniformly holistic, and this package's own family doc materials already show why
 
@@ -235,3 +262,13 @@ neither alone is sufficient. [[RULE-COUNSEL-116]]
   in Turkey), so neither level of conditioning is sufficient alone. Confidence: high for the
   medicine cases specifically (each individually sourced elsewhere in this package); medium for how
   broadly this generalizes to other fields, which this document did not check beyond medicine.
+- `RULE-COUNSEL-120` — ORYN's evidence/recommendation model needs to distinguish at least three
+  structurally different non-academic assessment types, not two: achievement-evidence-based
+  (US/UK/Waterloo), institution-authored reflective response (Queen's Commerce/McMaster HHSP,
+  `RULE-COUNSEL-118`'s gap), and standardized third-party situational-judgment testing (CASPer —
+  used across 500+ programs in medicine, health sciences, PA, nursing, and dental hygiene
+  currently, expanding into education/business/engineering per the vendor's own page). The third
+  type needs its own preparation guidance (general timed situational-judgment practice), distinct
+  from rehearsing responses about the student's own specific experience. Confidence: high for what
+  CASPer is and how it's administered (official vendor source); medium for exactly how far its
+  program/field reach extends, which changes by admissions cycle per the vendor's own caveat.

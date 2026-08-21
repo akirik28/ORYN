@@ -34,6 +34,23 @@ repeating undergraduate-stage guidance uncritically. [[RULE-COUNSEL-033]]
 lab-bench science** — directly consistent with `01-development-taxonomy.md`'s finding that
 `research.ts` correctly rewards process over output.
 
+**Added on a follow-up pass, found via `09-persona-testing.md`'s Persona J and
+`17-dimension-weighting-by-target.md`'s Canada carve-out research**: a meaningful share of medicine/
+health-sciences-track admissions (in the US and Canada specifically) use **CASPer** (Acuity
+Insights) — a standardized, timed, third-party-administered situational-judgment test (video and
+typed responses to hypothetical scenarios, scored by independent raters) — as part of the
+application, distinct from both the clinical-exposure/research/community-involvement evidence this
+document otherwise describes *and* from a general personal-statement/interview. About 50 US medical
+schools use it, alongside health sciences, PA, nursing, and dental hygiene programs, with the
+vendor's own page describing active expansion into other fields. (Source:
+`acuityinsights.com/products/admissions/casper/`, official vendor page — high confidence for what
+it is; medium confidence for exactly which programs currently require it, since that changes by
+admissions cycle per the vendor's own caveat.) **This is not evidence this document's existing
+framework (clinical exposure / research / community involvement) captures at all** — CASPer
+preparation is general situational-judgment practice, not activity-accumulation, and a counselor
+recommending "get more shadowing hours" to a CASPer-requiring-program-track student who is
+specifically weak on CASPer readiness would be solving the wrong problem. [[RULE-COUNSEL-120]]
+
 ## Mapping onto the shipped taxonomy
 
 - `career_exploration` — shadowing, hospital volunteering, health-focused pre-college programs (the
