@@ -3775,6 +3775,31 @@ year's, not a permanent fact), so a future migration should key them on
 `(program_id, cycle_year)` in a separate table, not as columns on `university_programs`
 that would silently overwrite year over year.
 
+**Batch 41 — Sabancı University** (9 new, `independent_batch41_2026-08-21.jsonl`, committed
+`3d26411`): a genuinely different admission structure from every other Turkish university
+this session. YÖK Atlas shows only 3 broad faculty-level "program groups" (Management
+Sciences / Arts and Social Sciences / Engineering and Natural Sciences), each at 3 funding
+tiers (full scholarship / 50% discount / full fee) -- 9 admission tracks, not 9 distinct
+majors, matching Sabancı's real documented differentiated-entry model where a YKS applicant
+is admitted into one of the 3 broad faculties and declares a specific major later. This sits
+alongside, not instead of, the 12 specific-major records already in ORYN for this
+university -- both layers are genuinely useful (a domestic applicant's actual admission
+decision is which of these 9 rows their rank reaches; the major comes after).
+
+**Running total, coordinator-redirected "go wide on YÖK Atlas" push (batches 37-41)**: 391
+new records across 5 Turkish universities (GTU 23, Ankara Üniversitesi 153, Istanbul
+University 127, METU/ODTÜ 79, Sabancı 9). Combined with the UK push earlier in this
+continuation (batches 30-36, 919 records / 7 universities across DE/UK), this continuation's
+running total is now **1,462 new records across 12 universities**.
+
+**Next thinnest Turkish targets, in order** (per live query, all confirmed still accurate as
+of batch 41): Koç University (22), Özyeğin University (24), Boğaziçi University (30),
+Bilkent University (33), Yıldız Technical University (43), Istanbul Technical University
+(45), Hacettepe University (99) -- then any Turkish university not yet in ORYN's spine at
+all, per the coordinator's instruction to collect those as candidates (YÖK Atlas
+`universiteId` + domain) rather than create university rows directly, flagged for a separate
+canonical-entity resolution pass.
+
 Of the 5 outstanding Radboud/Exeter gaps, 2 are now confirmed fully resolved (the Exeter
 "BA Classical Studies and Philosophy" insert, id `4a715f86-3f0e-4b3d-97ff-e6fb12c2c5bb`, and
 the orphaned "BA Classical Studies and Modern Languages" queue-audit row, id
