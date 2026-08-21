@@ -28,7 +28,17 @@ Before writing anything, this session read `supabase/migrations/0038_canonical_e
 and `0039_canonical_registry_reconciliation.sql` in full, plus `lib/acquisition/identity.ts`,
 `duplicates.ts`, `normalize.ts`, `source-authority.ts`, `precedence.ts`, `verification.ts`, and
 `lib/universities/canonical.ts`/`alias-search.ts`. It also queried the live `oryn-qa-scratch`
-database directly rather than trusting any prior session's report.
+database directly rather than trusting any prior session's report. **Found much later in this
+session, and worth citing here as the authoritative original source for the paragraph below**:
+`docs/live-db-reconciliation.md` (2026-08-17) is the actual founding account of this
+architecture — the live registry was built directly against the project (via MCP/Studio, never
+committed) before an earlier competing design, `0038_canonical_institutions.sql`
+(`institutions` + `category` enum + `aliases text[]`), was formally rejected in favor of it; that
+document's own requirement-by-requirement comparison table is more complete than this package's
+independent re-derivation of the same conclusion below. Read it directly for the full account,
+including the original discovery of the 43 duplicate pairs (`09` Finding 2's subject, first
+found there, not by this package) and the original "UCLA search returned University College
+London" bug (fixed the same session, before this package's research began).
 
 **What already exists is substantial and should not be re-derived or contradicted:**
 

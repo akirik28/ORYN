@@ -25,13 +25,15 @@ language's worth of entities, not a bounded backlog.
 
 **Correction, found late in this session and important enough to state before anything else in
 this finding**: this is not new-to-ORYN research this package discovered independently — it is a
-rediscovery, by a different method, of `docs/founder-blocked-backlog.md` item 19 and
-`docs/handoffs/claude-a-university-spine.md`'s Phase 2, both written by a prior session (the
-"University Intelligence Spine" / "Claude A" workstream) before this package existed. Found only
-by finally reading `founder-blocked-backlog.md` in full late in this session — a document this
-package should have read at the very start, the same lesson as the `scripts/university-
-duplicates-audit.ts` and `lib/entities/*` discoveries elsewhere in this package, now recurring a
-third time. The count below was originally **41**, re-confirmed directly against live data
+rediscovery, by a different method, of work already done by two, and actually three, prior
+sessions. The earliest: `docs/live-db-reconciliation.md`'s Phase 6 (2026-08-17), the actual
+original discovery of this exact 43-pair finding, with the exact "Boston"/"Boston, MA" diagnosis
+already stated there. Carried forward and acted on by `docs/founder-blocked-backlog.md` item 19
+and `docs/handoffs/claude-a-university-spine.md`'s Phase 2 (the "University Intelligence Spine" /
+"Claude A" workstream), all written before this package existed. Found only by finally reading
+these documents in full late in this session — documents this package should have read at the
+very start, the same lesson as the `scripts/university-duplicates-audit.ts` and `lib/entities/*`
+discoveries elsewhere in this package, now recurring a fourth time. The count below was originally **41**, re-confirmed directly against live data
 (`select normalized_name, count(*) from canonical_entities where entity_type='university' and
 verification_state<>'merged' group by normalized_name having count(*)>1` → **43**, exactly
 matching both prior documents' own count) — the true, current, three-ways-confirmed figure is
