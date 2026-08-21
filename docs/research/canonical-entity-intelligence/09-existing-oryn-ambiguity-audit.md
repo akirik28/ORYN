@@ -201,16 +201,20 @@ registry's own pattern (`02`'s 27 live `translation` rows, e.g. Boğaziçi Üniv
 University both captured) — the Dutch-language forms are not merely thin, they are entirely
 absent, and critically **`nameKey()`/normalization would not bridge this gap even if tested**: a
 Dutch-language source citing "Universiteit van Amsterdam" shares almost no tokens with "University
-of Amsterdam" (different word order, different language), unlike an accent-only variant. Together
-with Italy's 3/38, this looks like a real pattern worth stating generally rather than treating each
-country as an isolated spot-check: **alias coverage in this registry currently correlates with how
-much direct research attention an entity has received, not with how commonly a non-English form is
-actually used** — Turkish schools/universities (the most actively-researched non-English corpus
-this session found) have rich `translation` coverage; Italy and the Netherlands (checked but not
-independently researched by any lane this session is aware of) have almost none. Worth flagging as
-a general expectation for whoever prioritizes future alias research: assume near-zero non-English-
-name coverage for any country/institution set that hasn't had dedicated research attention yet,
-rather than assuming partial coverage exists somewhere in between.
+of Amsterdam" (different word order, different language), unlike an accent-only variant. A third
+data point, checked the same way: **Germany, 5/49 (10.2%)** — thin, in the same range as Italy,
+despite Germany otherwise getting real attention this session (`07`'s `ß` finding, the
+resolved encoding-variant pairs in `09` Finding 6) — that attention was on normalization
+mechanics, not alias research, and the two turn out not to correlate. Three countries now checked
+this way (Italy 7.9%, Germany 10.2%, Netherlands 0%), all far below Turkey's near-universal
+`translation` coverage — this looks like a real pattern worth stating generally rather than
+treating each country as an isolated spot-check: **alias coverage in this registry currently
+correlates with how much *dedicated alias-research* attention an entity has received, not with
+normalization/identity attention generally, and not with how commonly a non-English form is
+actually used.** Worth flagging as a general expectation for whoever prioritizes future alias
+research: assume near-zero non-English-name coverage for any country/institution set that hasn't
+had dedicated *alias* research specifically, regardless of how much other kinds of attention
+(ROR enrichment, normalization fixes) that set has already received.
 
 **Context for interpreting every finding in this document:** `activities`, `work_experiences`,
 `volunteering_experiences`, `research_experiences`, `projects`, `awards`, `certifications`,
