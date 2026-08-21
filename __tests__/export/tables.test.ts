@@ -9,6 +9,9 @@ import {
   recommendationsExportFilter,
   BLOCKED_USERS_EXPORT_OWN_BLOCKS_COLUMN,
   SKILL_ENDORSEMENTS_EXPORT_OWN_COLUMN,
+  SOCIAL_POSTS_EXPORT_TABLES,
+  POSTS_EXPORT_OWN_COLUMN,
+  POST_LIKES_EXPORT_OWN_COLUMN,
 } from "@/lib/export/tables";
 
 describe("data export table coverage", () => {
@@ -94,6 +97,42 @@ describe("participant-pair export filters — scoped to the current user only", 
 
   test("skill_endorsements export uses the endorser (authorship) column", () => {
     expect(SKILL_ENDORSEMENTS_EXPORT_OWN_COLUMN).toBe("endorser_id");
+  });
+});
+
+describe("social layer export surface — defined now, wired at switch-on", () => {
+  // AGENTS.md Phase 12 requires data export, so the export shape for posts is decided
+  // here rather than left to whoever switches the feature on. It is deliberately NOT in
+  // the two live lists yet: those drive real queries on a route every student can reach,
+  // and migration 0058's tables do not exist in any applied migration. This asserts the
+  // decision in BOTH directions, so neither half can drift silently.
+  test("the social tables are named and ordered for switch-on", () => {
+    expect(SOCIAL_POSTS_EXPORT_TABLES).toEqual(["posts", "post_likes"]);
+  });
+
+  test("posts is keyed by author_id — it has no plain user_id column", () => {
+    expect(POSTS_EXPORT_OWN_COLUMN).toBe("author_id");
+  });
+
+  test("post_likes has a plain user_id and fits the generic export path", () => {
+    expect(POST_LIKES_EXPORT_OWN_COLUMN).toBe("user_id");
+  });
+
+  test.each(SOCIAL_POSTS_EXPORT_TABLES)("%s is NOT live in the export route yet", (table) => {
+    const live = new Set<string>([...EXPORT_TABLES, ...EXPORT_PARTICIPANT_TABLES]);
+    expect(live.has(table)).toBe(false);
+  });
+
+  test("post_revisions is deliberately absent from the export surface entirely", () => {
+    // Superseded versions of the student's own content, retained so an edit cannot
+    // silently rewrite what others already saw. Whether portability or erasure has to
+    // include them is a legal question, recorded in docs/founder-blocked-backlog.md.
+    expect((SOCIAL_POSTS_EXPORT_TABLES as readonly string[]).includes("post_revisions")).toBe(false);
+  });
+
+  test("a reporter's own report about a post exports which post it was about", () => {
+    // Omitting recommendation_id was a real gap once; this is the same gap for posts.
+    expect((MESSAGE_REPORTS_EXPORT_COLUMNS as readonly string[]).includes("post_id")).toBe(true);
   });
 });
 
