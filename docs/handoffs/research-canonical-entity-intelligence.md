@@ -11,7 +11,7 @@ verification used ROR's public API (`api.ror.org`) via read-only `curl`/`WebSear
 This file is updated as work lands, not chronologically archived — read top-to-bottom for current
 state, matching the convention `docs/handoffs/claude-a-university-spine.md` already established.
 
-## Current state (updated 2026-08-21 ~04:20 Europe/Istanbul)
+## Current state (updated 2026-08-21 ~04:50 Europe/Istanbul)
 
 **Package: 18 documents (00–17, including 12–13 from two background research agents) + 12 JSON
 data files.** Every mission-brief deliverable (entity identity framework, alias taxonomy,
@@ -111,6 +111,30 @@ this session's *own* earlier work rather than only against the codebase.
    the full account. Same lesson as findings 7 and 8, now landed a third time: **read the
    founder-blocked-backlog and any directly-referenced prior-session handoff before trusting a
    research package's own from-scratch count of anything the repo has already investigated.**
+10. **Migration `0043_university_duplicate_supersession.sql` is no longer blocked — it is applied
+    and correctly backfilled, verified live at the end of this session.** `docs/
+    ORYN_WORKSTREAMS.md` (a live cross-session coordination file, also not read until very late)
+    recorded a concurrent session's 2026-08-20 finding that the DDL had been applied (data
+    backfill still pending at that check). This session verified directly, not trusted: both
+    `universities.duplicate_status`/`superseded_by_id` exist, and the backfill has since run too
+    — exactly the 9 known pairs, every id matching what this package already had, checked row by
+    row. The "identity resolved, row layer still blocked" framing this package repeated
+    throughout (from `founder-blocked-backlog.md` item 25, accurate as of 2026-08-17) is now
+    stale — all three layers (identity/schema/data) are resolved for these 9. `09` carries the
+    full, clearly-dated update note. Also read late: `docs/entity-canonicalization-audit.md` (the
+    original design/build document for the entire `lib/entities/*` system `17` is about — cited
+    there for provenance) and `docs/live-db-reconciliation.md` (the actual founding account of
+    why `canonical_entities` was chosen over an earlier competing `institutions` design — traces
+    the 43-pair finding back one hop further than `founder-blocked-backlog.md`, to its true
+    original discovery). **Six documents this package should have read at the very start, found
+    only by finally listing `docs/*.md` in full this late in the session**: `founder-blocked-
+    backlog.md`, `claude-a-university-spine.md`, `live-db-reconciliation.md`, `entity-
+    canonicalization-audit.md`, `ORYN_WORKSTREAMS.md`, and `research-handoff-opportunities.md`
+    (confirmed non-contradictory — describes a not-yet-built future ingestion path for
+    `opportunities.organization_entity_id`, still genuinely 0% wired in current code, checked
+    directly). This is the single clearest process lesson of the entire session, recurring across
+    six independent instances: **before researching what a codebase's registry contains, list and
+    read what the codebase's own prior sessions already wrote down about it.**
 
 ## Coordination notes
 
@@ -159,17 +183,30 @@ full read unless a specific reason to expect identity-relevant content emerges.
 
 ## What's next
 
-~6h40m remain until the 11:00 cutoff as of this update. The package comprehensively covers every
+~6h10m remain until the 11:00 cutoff as of this update. The package comprehensively covers every
 mission-brief category with real, externally-verified evidence, well past the "first package"
-threshold, and now also covers a second production system this session did not know existed
-until partway through. Not yet checked live this session: `scripts/entities-backfill-report.ts`
-(read in full, not run — low expected yield since all 9 of its source tables are confirmed
-empty) and whether `lib/entities/audit.ts`'s near-duplicate logic surfaces anything genuinely
-new for non-university entity types (`school`/`organization`/`employer`/etc.) given `17`'s
-275-finding POSSIBLE_DUPLICATE run was 274/275 university-type — worth a direct look, since this
-package's empirical duplicate-checking has been university-heavy throughout and school/employer/
-ngo coverage is comparatively thin. Continuing per the mission's "continue until 11:00"
-instruction, favoring genuinely new verified threads over restating what already exists.
+threshold, now also covers a second production system this session did not know existed until
+partway through, and has been checked against every founder/prior-session document this session
+could find (`docs/*.md` listed and triaged in full) rather than only against the codebase.
+
+**Resolved since the last update**: the non-university POSSIBLE_DUPLICATE question — ran
+`lib/entities/audit.ts`'s full logic against all 80 non-university entities (complete, not
+sampled): one correctly-not-merged same-name-different-city school pair, 21 cosmetic
+`INVALID` redundant-alias rows, zero real duplicate-identity findings. `09`'s "checked and found
+clean" bullet carries the detail. `scripts/entities-backfill-report.ts` remains read-but-not-run
+(still correct to skip — its 9 source tables are still confirmed empty, checked again this
+session via the same live queries used throughout).
+
+**Not yet done, lowest-remaining-priority candidates if continuing**: a full sequential read of
+`claude-a-university-spine.md`'s Phases 10-11 (University Explorer P0/UX package, ~1700 lines) —
+skimmed as UI/product work outside this package's scope, not expected to contain identity
+findings, but not verified by reading; and whichever of `docs/current-state.md`/`docs/
+MASTER-EXECUTION-STRATEGY.md`/`docs/product-decisions.md` this session has still not opened (only
+`ORYN_WORKSTREAMS.md` was read in full, per its own pointer to those three as the other
+canonical status documents) — worth a quick check for any further entity-identity-relevant status
+this package hasn't yet surfaced, though diminishing-returns territory after six independent
+document-discovery corrections already landed this session. Favor genuinely new verified threads
+over restating what already exists, per the mission's own "continue until 11:00" instruction.
 
 ## Coordination and self-correction notes
 
