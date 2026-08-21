@@ -3800,6 +3800,33 @@ all, per the coordinator's instruction to collect those as candidates (YÖK Atla
 `universiteId` + domain) rather than create university rows directly, flagged for a separate
 canonical-entity resolution pass.
 
+**Checked and skipped (no batch, on purpose) -- Koç University and Özyeğin University**:
+a real, useful negative finding, not a gap. Both showed a pattern distinct from every
+YÖK Atlas target so far: Koç's 53 raw results and Özyeğin's 62 raw results each reduce to
+exactly the same 22-23 distinct subjects already fully covered in ORYN under clean English
+names (e.g. Koç's "Tıp (İngilizce) (Burslu)" / "(%50 İndirimli)" / "(Ücretli)" are 3
+funding-tier admission codes for the one existing "Medicine" record, not 3 programmes).
+Confirmed by direct comparison, not assumed. Generating 53+62 new rows here would have been
+near-total content duplication for genuinely valuable but structurally different information
+(funding-tier-specific quota/cutoff data) that the current schema has no field for anyway.
+**This suggests private English-medium foundation universities already in ORYN's spine were
+researched at the correct major-level granularity in an earlier pass**, and their "thin"
+existing-count numbers (22, 24) are not actually thin -- they're just represented as one
+clean row per subject rather than YÖK Atlas's 2-3 funding-tier variants per subject.
+
+**Boğaziçi University checked, deferred rather than guessed**: less clean than Koç/Özyeğin.
+34 unique YÖK Atlas subjects vs. 30 existing ORYN records -- most map cleanly (Tarih/History,
+İşletme/Management, etc.) but several teacher-training-specific YÖK Atlas entries (Okul
+Öncesi Öğretmenliği/Pre-School Teaching, Rehberlik ve Psikolojik Danışmanlık/Guidance and
+Psychological Counseling, and subject-specific ...Öğretmenliği variants for Chemistry/
+Physics/Science) don't obviously correspond 1:1 to the existing broader entries
+("Mathematics and Science Education", "Educational Sciences", "Elementary Education") --
+they could be genuinely distinct granular programmes YÖK Atlas splits out, or the same
+umbrella categories represented differently. Not resolved here rather than guessed wrong in
+either direction (silently duplicating, or silently dropping real new programmes) --
+flagged for whoever picks this up next to reconcile deliberately rather than pattern-match
+from Koç/Özyeğin. Bilkent not yet checked.
+
 Of the 5 outstanding Radboud/Exeter gaps, 2 are now confirmed fully resolved (the Exeter
 "BA Classical Studies and Philosophy" insert, id `4a715f86-3f0e-4b3d-97ff-e6fb12c2c5bb`, and
 the orphaned "BA Classical Studies and Modern Languages" queue-audit row, id
