@@ -3327,11 +3327,12 @@ brief-mandated closing summary: exact verified counts and remaining gaps.
 
 **Exact counts (independently recomputed from the actual JSONL files on disk, not carried
 forward from memory)**:
-- **4,037 program records** across **24 batch files** (`independent_batch5_2026-08-21.jsonl`
-  through `independent_batch28_2026-08-21.jsonl`), covering **52 distinct universities**
+- **4,048 program records** across **25 batch files** (`independent_batch5_2026-08-21.jsonl`
+  through `independent_batch29_2026-08-21.jsonl`), covering **53 distinct universities**
   in **6 countries**: United Kingdom (1,366 records / 11 universities), United States (1,339
   / 17 — all from before this file's own mid-session compaction boundary, batches 5-9),
-  Ireland (745 / 8), Turkey (341 / 9), Netherlands (201 / 6), Germany (45 / 1).
+  Ireland (745 / 8), Turkey (341 / 9), Netherlands (212 / 7 — batch 29, Eindhoven University
+  of Technology deepened, landed after this summary was first drafted), Germany (45 / 1).
 - Plus **16 records** in 4 earlier files (`independent_batch1` through `batch4`,
   2026-08-18) from a prior session — not part of tonight's count but present in the same
   `data/research/university-programs/` directory.
@@ -3413,12 +3414,14 @@ blind**:
 - **Turkey**: Ankara Üniversitesi, Gebze Technical University genuinely untried; Istanbul
   University tried and dropped (no single master department list, would need an ~18-page
   per-faculty crawl).
-- **Netherlands**: VU Amsterdam blocked (virtualized list, see above). Delft (15 real
-  existing programs), Eindhoven, Erasmus, Tilburg, University of Amsterdam, and Groningen
-  each still carry only their original small, real-but-thin program sets (4-15 each,
+- **Netherlands**: VU Amsterdam blocked (virtualized list, see above). Eindhoven was
+  deepened in the closing minutes of this run (batch 29, 11 new — but with only 1
+  spot-check and a blanket language-of-instruction hedge rather than this session's usual
+  bar, both disclosed in that batch's own commit/notes; worth a follow-up spot-check pass).
+  Delft (15 real existing programs), Erasmus, Tilburg, University of Amsterdam, and
+  Groningen still carry only their original small, real-but-thin program sets (4-15 each,
   genuinely distinct per-institution research, NOT the Turkey-style copy-paste problem) —
-  a reasonable deepening target using the zero-coverage-university method rather than the
-  Turkey exclude-list method.
+  a reasonable deepening target using the same method just applied to Eindhoven.
 - **Germany**: only KIT done. Freie Universität Berlin (87-119 bachelor's programs with a
   complex mono-/combination-bachelor structure) and RWTH Aachen (190 total programs across
   all degree levels, English official page exists at `rwth-aachen.de/.../liste-aktuelle-
