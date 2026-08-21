@@ -4148,3 +4148,47 @@ is recorded per-record rather than smoothed over.
 
 Vakıf (70) and KKTC (16) domains remain unresolved, explicitly deferred per the
 coordinator's instruction ("not all 206 — the vakıf and KKTC sets can follow later").
+
+**Coordinator follow-up: finish the set — vakıf then KKTC.** Done. **203 of 206 candidates
+now have a verified domain; only 3 remain null and flagged.** Same JSON file, same
+per-record fields, same standard throughout: every ROR match verified by comparing the
+returned display name against the query, never accepted on rank.
+
+**Vakıf produced exactly the collision families the coordinator predicted.** A real
+four-way "Bilim" cluster — Ankara Bilim, Antalya Bilim, İstanbul Bilim, and Demiroğlu
+Bilim — all correctly disambiguated by full-name matching, plus a real "Medipol" pair
+(İstanbul Medipol / Ankara Medipol) that cross-confirmed each other from both directions.
+Also caught: Fatih Sultan Mehmet Vakıf Üniversitesi correctly separated from the
+similarly-named but unrelated (and now-defunct, closed 2016) "Fatih University"; İstanbul
+Galata Üniversitesi correctly separated from Galatasaray University despite sharing the
+"Galata" stem.
+
+**One genuine vakıf miss, handled the same way as the Harita/Geomatik case earlier**:
+Demiroğlu Bilim Üniversitesi (id 384591) has no exact ROR match. The closest candidate,
+`istanbulbilim.edu.tr` ("Istanbul Bilim University"), is very likely this same
+institution's pre-rename former name — real-world, it renamed circa 2020-2021 — but that
+domain was not independently confirmed still live under the new identity, so it stays
+null and flagged rather than accepted on pattern confidence alone.
+
+**KKTC mostly resolved cleanly, contrary to the expectation that these might be largely
+absent from ROR — but produced two more near-misses of the exact same shape as the
+mainland ones.** Querying "Girne Üniversitesi" ranked the real but different "Girne
+American University" first; the actual match ("University of Kyrenia" — Kyrenia is the
+English name for Girne) was rank 1. Querying "Kıbrıs Amerikan Üniversitesi" ranked the
+real but different "American University of Cyprus" first; the actual match was rank 1, at
+`auc.edu.tr`. **That's seven near-misses caught today from the same underlying pattern** —
+rank, substring, and name similarity are discovery signals, never evidence on their own.
+
+One KKTC institution (Kıbrıs Aydın Üniversitesi, id 464048) has no ROR match at all — the
+top result was mainland "Istanbul Aydın University", a different institution — left null
+and flagged. Two KKTC institutions matched exactly by name and domain but carry an odd ROR
+`country` field reading "Türkiye" instead of "Cyprus" (Kıbrıs Sağlık ve Toplum Bilimleri
+Üniversitesi, Lefke Avrupa Üniversitesi) — accepted on the strength of the exact name and
+domain match, quirk disclosed in the record rather than silently smoothed over.
+
+**Final state: 203/206 candidates have a verified official domain (119/120 devlet,
+69/70 vakıf, 15/16 KKTC). The 3 that don't are each explicitly null and flagged, not
+guessed**: Türk-Japon Bilim ve Teknoloji Üniversitesi (no ROR record — one of Turkey's
+newest state universities), Demiroğlu Bilim Üniversitesi (likely pre-rename domain,
+unconfirmed), Kıbrıs Aydın Üniversitesi (no ROR record). This closes out the
+coordinator's domain-resolution assignment in full.
