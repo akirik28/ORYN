@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { computeOpportunityMatch, isNearStudent } from "./matching";
 import type { StudentMatchProfile, OpportunityForMatching } from "./matching";
 import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
+import { filterActionableOpportunities } from "./lifecycle";
 
 /**
  * Recomputes and upserts opportunity_matches for one student against every active
@@ -35,7 +36,12 @@ export async function refreshOpportunityMatches(userId: string): Promise<void> {
 
   const savedStatusByOpportunityId = new Map((savedRes.data ?? []).map((s) => [s.opportunity_id, s.status]));
 
-  const opportunities = opportunitiesRes.data ?? [];
+  // A cycle that has closed (or a deadline that has simply passed with no newer one on
+  // file — see lifecycle.ts) must stop producing fresh matches, even though `status` stays
+  // `active` for these rows (a real, correctly-sourced record, not a bad one). This does not
+  // clean up matches computed before a cycle closed; see the defensive re-filter in every
+  // surface that reads opportunity_matches back (ForYouView, dashboard preview).
+  const opportunities = filterActionableOpportunities(opportunitiesRes.data ?? []);
   if (opportunities.length === 0) return;
 
   const currentYear = new Date().getFullYear();

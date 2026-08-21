@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { refreshOpportunityMatches } from "@/lib/opportunities/persist-matches";
 import { browseOpportunities, getOpportunityFacets } from "@/lib/opportunities/browse";
+import { isOpportunityActionable } from "@/lib/opportunities/lifecycle";
 import { OpportunityCard } from "@/features/opportunities/opportunity-card";
 import { OpportunityFilterBar } from "@/features/opportunities/opportunity-filter-bar";
 import { integrationStatus } from "@/lib/env";
@@ -109,9 +110,15 @@ async function ForYouView({
   const opportunityById = new Map((opportunities ?? []).map((o) => [o.id, o]));
   const statusById = new Map((savedRes.data ?? []).map((s) => [s.opportunity_id, s.status]));
 
+  // Defense in depth (lib/opportunities/lifecycle.ts): a match row upserted before its
+  // opportunity's cycle closed persists in opportunity_matches until refreshOpportunityMatches
+  // runs again, so "For you" must not trust match freshness alone — re-check the opportunity
+  // itself, not just whether a match row exists for it.
   const cards = matches
     .map((match) => ({ match, opportunity: opportunityById.get(match.opportunity_id) }))
-    .filter((c) => c.opportunity);
+    .filter((c): c is { match: (typeof matches)[number]; opportunity: NonNullable<typeof c.opportunity> } =>
+      Boolean(c.opportunity && isOpportunityActionable(c.opportunity))
+    );
 
   if (cards.length === 0) {
     return (

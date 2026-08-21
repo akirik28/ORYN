@@ -4,6 +4,7 @@ import { getCurrentWeeklyPlan, getOrCreateWeeklyPlan } from "@/lib/plan/persist"
 import { getTargetUniversitiesWithDetails } from "@/lib/universities/queries";
 import { getUpcomingDeadlines } from "@/lib/deadlines/upcoming";
 import { refreshOpportunityMatches } from "@/lib/opportunities/persist-matches";
+import { isOpportunityActionable } from "@/lib/opportunities/lifecycle";
 import { AIProviderNotConfiguredError } from "@/lib/ai";
 import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
 import { getCounselorState } from "@/lib/counselor/state";
@@ -117,11 +118,16 @@ export default async function DashboardPage() {
   const opportunityMatches = matchesRes.data ?? [];
   const opportunityIds = opportunityMatches.map((m) => m.opportunity_id);
   const { data: matchedOpportunities } = opportunityIds.length
-    ? await supabase.from("opportunities").select("id, title").in("id", opportunityIds)
+    ? await supabase.from("opportunities").select("id, title, cycle_status, deadline").in("id", opportunityIds)
     : { data: [] };
-  const titleById = new Map((matchedOpportunities ?? []).map((o) => [o.id, o.title]));
+  // Defense in depth (lib/opportunities/lifecycle.ts): same stale-match-row risk as the
+  // opportunities page's "For you" view — a match upserted before its cycle closed must not
+  // keep surfacing on the homepage just because refreshOpportunityMatches hasn't re-run.
+  const opportunityById = new Map(
+    (matchedOpportunities ?? []).filter((o) => isOpportunityActionable(o)).map((o) => [o.id, o])
+  );
   const opportunityPreview = opportunityMatches
-    .map((m) => ({ title: titleById.get(m.opportunity_id), matchScore: m.match_score }))
+    .map((m) => ({ title: opportunityById.get(m.opportunity_id)?.title, matchScore: m.match_score }))
     .filter((o): o is { title: string; matchScore: number } => Boolean(o.title));
 
   const displayName = profile?.display_name || profile?.first_name || "there";
