@@ -138,4 +138,10 @@ values
   ('a24caa73-0ddd-4beb-899b-ba9d81c6622e', 'Ethics Politics and Economics', 'ethics politics and economics', 'Bachelor / first-cycle', 'economics', 'economics', '{"political_science"}', NULL, NULL, 'https://catalog.yale.edu/ycps/subjects-of-instruction/ethics-politics-economics/', 'https://catalog.yale.edu/ycps/subjects-of-instruction/ethics-politics-economics/', 'official_primary', 'verified_current', now(), 'Drive corpus batch drive_programs_batch1_2026-08-17, program_id ORYN-PRG-0024, last_verified 2026-08-15.', 'high'),
   ('a24caa73-0ddd-4beb-899b-ba9d81c6622e', 'Global Affairs', 'global affairs', 'Bachelor / first-cycle', NULL, 'other', '{}', NULL, NULL, 'https://jackson.yale.edu/academics/the-global-affairs-major/', 'https://jackson.yale.edu/academics/the-global-affairs-major/', 'official_primary', 'verified_current', now(), 'Drive corpus batch drive_programs_batch1_2026-08-17, program_id ORYN-PRG-0023, last_verified 2026-08-15.', 'high')
 
-on conflict (university_id, normalized_name, coalesce(degree_level, '')) do nothing;
+-- Column list must match university_programs_dedup_idx exactly (migration 0050 widened it to
+-- include language_of_instruction) -- Postgres requires an ON CONFLICT target to match a live
+-- unique index verbatim, so this seed file would otherwise error outright if ever re-run
+-- against a fresh database. All rows above predate language_of_instruction data entirely
+-- (every row's language_of_instruction is NULL), so this change is a no-op for what actually
+-- gets inserted here.
+on conflict (university_id, normalized_name, coalesce(degree_level, ''), coalesce(language_of_instruction, '')) do nothing;
