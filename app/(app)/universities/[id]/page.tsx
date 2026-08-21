@@ -7,6 +7,7 @@ import { refreshAdmissionOutlook } from "@/lib/admissions/persist";
 import { explainOutlook } from "@/lib/admissions/explain";
 import { refreshRequirementEvaluations } from "@/lib/requirements/persist";
 import { REQUIREMENT_CATEGORY_LABELS } from "@/lib/requirements/types";
+import { NON_ACTIONABLE_VERIFICATION_STATES } from "@/lib/deadlines/ingest";
 import { OutlookBadge } from "@/features/universities/outlook-badge";
 import { SourceBadge } from "@/components/oryn/source-badge";
 import { PageHeader } from "@/components/oryn/page-header";
@@ -15,10 +16,12 @@ import { SaveUniversityButton } from "@/features/universities/save-university-bu
 import { DetailHeroImage } from "@/features/universities/detail-hero-image";
 import { RequirementEvaluationBadge } from "@/features/universities/requirement-evaluation-badge";
 import { AdminRequirementForm } from "@/features/universities/admin-requirement-form";
+import { DeadlineBadge } from "@/components/oryn/deadline-badge";
+import { StatusBadge } from "@/components/oryn/status-badge";
 import { canonicalUniversityId, isSupersededUniversityId } from "@/lib/universities/canonical";
 import { formatTuition, tuitionQualifier } from "@/lib/universities/tuition-format";
 import { formatNumber, formatCurrency } from "@/lib/i18n/format";
-import type { ProfileDimension, RequirementEvaluationStatus, UniversityRequirement, UniversityProgram } from "@/types/database";
+import type { ProfileDimension, RequirementEvaluationStatus, UniversityRequirement, UniversityProgram, UniversityDeadline } from "@/types/database";
 
 /** QS's own official Size classification (S/M/L/XL) — a coarse FTE-based band, not an exact
  * headcount; QS doesn't publish the numeric thresholds between them. Used only as a fallback
@@ -30,6 +33,29 @@ const QS_SIZE_LABELS: Record<string, string> = {
   L: "Large",
   XL: "Extra large",
 };
+
+/** Null means unknown, not non_binding — see the column comment on
+ * university_deadlines.binding_policy. Only rendered when a value is actually present. */
+const BINDING_POLICY_LABELS: Record<string, string> = {
+  binding: "Binding",
+  restrictive_single_choice: "Restrictive / single-choice",
+  non_binding: "Non-binding",
+};
+
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
 
 export default async function UniversityDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -49,9 +75,15 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   const { data: university } = await supabase.from("universities").select("*").eq("id", id).single();
   if (!university) notFound();
 
-  const [programsRes, requirementsRes, statsRes, sourcesRes, targetRes, scoresRes, rankingsRes, metricsRes] = await Promise.all([
+  const [programsRes, requirementsRes, deadlinesRes, statsRes, sourcesRes, targetRes, scoresRes, rankingsRes, metricsRes] = await Promise.all([
     supabase.from("university_programs").select("*").eq("university_id", id).eq("verification_state", "verified_current"),
     supabase.from("university_requirements").select("*").eq("university_id", id),
+    supabase
+      .from("university_deadlines")
+      .select(
+        "id, program_id, deadline_type, deadline_date, recurrence, recurrence_month, recurrence_day, cycle_label, verification_state, deadline_text_verbatim, source_url, binding_policy"
+      )
+      .eq("university_id", id),
     supabase.from("university_statistics").select("*").eq("university_id", id).order("stat_year", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("university_sources").select("*").eq("university_id", id).order("retrieved_at", { ascending: false }),
     supabase.from("target_universities").select("*").eq("university_id", id).eq("user_id", session.userId!).maybeSingle(),
@@ -110,6 +142,22 @@ export default async function UniversityDetailPage({ params }: { params: Promise
     if (!r.program_id) continue;
     requirementsByProgram.set(r.program_id, [...(requirementsByProgram.get(r.program_id) ?? []), r]);
   }
+
+  // VERIFIED_HISTORICAL (and the other non-actionable states) are real, correctly-sourced
+  // rows for a cycle that has already closed — the shared read-path rule from
+  // lib/deadlines/upcoming.ts, reused rather than re-derived so this page can't quietly
+  // drift from what "Due soon" already treats as actionable.
+  const actionableDeadlines = (deadlinesRes.data ?? []).filter((d) => !NON_ACTIONABLE_VERIFICATION_STATES.has(d.verification_state));
+  const datedDeadlines = actionableDeadlines
+    .filter((d) => d.recurrence === "dated_specific" && d.deadline_date)
+    .sort((a, b) => a.deadline_date!.localeCompare(b.deadline_date!));
+  // "recurring_annual_undated" rows carry a month/day, never a year — migration 0056's own
+  // shape constraint guarantees deadline_date is null here. recurrence_month/day flow straight
+  // into formatRecurringDate below, which never touches a Date object, so there is no path for
+  // a missing year to turn into 1970 or today's year.
+  const recurringDeadlines = actionableDeadlines
+    .filter((d) => d.recurrence === "recurring_annual_undated" && d.recurrence_month != null && d.recurrence_day != null)
+    .sort((a, b) => a.recurrence_month! - b.recurrence_month! || a.recurrence_day! - b.recurrence_day!);
 
   const scoreMap = Object.fromEntries((scoresRes.data ?? []).map((s) => [s.dimension, s.score])) as Partial<Record<ProfileDimension, number>>;
   const explanation = explainOutlook(scoreMap);
@@ -365,6 +413,18 @@ export default async function UniversityDetailPage({ params }: { params: Promise
         </section>
       ) : null}
 
+      {datedDeadlines.length > 0 || recurringDeadlines.length > 0 ? (
+        <section className="space-y-4">
+          <SectionHeader title="Important dates" description="Deadlines Oryn has verified against this university's own official pages." />
+          {datedDeadlines.length > 0 ? (
+            <DeadlineGroup title="Upcoming" kind="dated" items={datedDeadlines} programNameById={programNameById} />
+          ) : null}
+          {recurringDeadlines.length > 0 ? (
+            <DeadlineGroup title="Recurring — exact year not published" kind="recurring" items={recurringDeadlines} programNameById={programNameById} />
+          ) : null}
+        </section>
+      ) : null}
+
       {profile?.is_admin ? <AdminRequirementForm universityId={university.id} programs={programsRes.data ?? []} /> : null}
 
       {university.website_url || university.admissions_url ? (
@@ -443,6 +503,28 @@ function StatCard({ icon: Icon, label, value, caption }: { icon: typeof Users; l
   );
 }
 
+/** "15 January" — never a year. Pure array lookup and string concatenation, so there is no
+ * Date object for a missing year to be silently coerced into (1970, the current year, etc). */
+function formatRecurringDate(month: number, day: number): string {
+  return `${MONTH_NAMES[month - 1]} ${day}, annually`;
+}
+
+/** deadline_date is a real, cycle-specific date here — appending a local midnight time avoids
+ * new Date("YYYY-MM-DD") parsing as UTC and displaying a day early in negative-UTC timezones. */
+function formatDeadlineDate(dateString: string): string {
+  return new Date(`${dateString}T00:00:00`).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" });
+}
+
+function humanizeDeadlineType(type: string): string {
+  const spaced = type.replace(/_/g, " ");
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
+type DeadlineRow = Pick<
+  UniversityDeadline,
+  "id" | "program_id" | "deadline_type" | "deadline_date" | "recurrence" | "recurrence_month" | "recurrence_day" | "cycle_label" | "deadline_text_verbatim" | "source_url" | "binding_policy"
+>;
+
 function RequirementGroup({
   title,
   items,
@@ -481,6 +563,50 @@ function RequirementGroup({
             </li>
           );
         })}
+      </ul>
+    </div>
+  );
+}
+
+function DeadlineGroup({
+  title,
+  kind,
+  items,
+  programNameById,
+}: {
+  title: string;
+  kind: "dated" | "recurring";
+  items: DeadlineRow[];
+  programNameById: Map<string, string>;
+}) {
+  return (
+    <div className="space-y-2">
+      <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
+      <ul className="divide-y rounded-lg border">
+        {items.map((d) => (
+          <li key={d.id} className="space-y-1 px-4 py-2.5 text-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <span className="font-medium">{humanizeDeadlineType(d.deadline_type)}</span>
+                {d.program_id ? <span className="ml-2 text-xs text-muted-foreground">{programNameById.get(d.program_id) ?? "Program-specific"}</span> : null}
+                {d.cycle_label ? <span className="ml-2 text-xs text-muted-foreground">· {d.cycle_label}</span> : null}
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                {d.binding_policy ? <StatusBadge label={BINDING_POLICY_LABELS[d.binding_policy] ?? d.binding_policy} tone="neutral" /> : null}
+                {kind === "dated" ? <DeadlineBadge date={d.deadline_date!} /> : <StatusBadge label="Recurring" tone="neutral" />}
+              </div>
+            </div>
+            <p className="text-muted-foreground">
+              {kind === "dated" ? formatDeadlineDate(d.deadline_date!) : formatRecurringDate(d.recurrence_month!, d.recurrence_day!)}
+            </p>
+            {d.deadline_text_verbatim ? <p className="text-xs text-muted-foreground italic">&ldquo;{d.deadline_text_verbatim}&rdquo;</p> : null}
+            {d.source_url ? (
+              <a href={d.source_url} target="_blank" rel="noopener noreferrer" className="inline-block text-xs text-primary hover:underline">
+                Source ↗
+              </a>
+            ) : null}
+          </li>
+        ))}
       </ul>
     </div>
   );
