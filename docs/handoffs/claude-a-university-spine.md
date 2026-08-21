@@ -3570,6 +3570,50 @@ case at the DB layer**, only at the application decision layer — worth the coo
 confirming, since this is a recurring pattern (seen so far at Radboud, and structurally
 likely at Twente, Utrecht, and any Turkish university with parallel Turkish/English tracks).
 
+**Batch 32 — Durham University** (162 new, `data/research/university-programs/
+independent_batch32_2026-08-21.jsonl`, committed `f855056`): the coordinator's Bologna/
+Padova lesson ("diagnose the shape in a browser, then script the retrieval") applied
+directly to this session's own UK JS-course-finder blocklist. Durham's `/study/courses/`
+landing page has a "View all courses" link exposing a `searchstax[...]` URL-parameter
+search (SearchStax/Solr-backed, 313 raw hits across all content types). Clicking the site's
+own "Undergraduate" level-facet checkbox (174 of 313) revealed the second facet parameter
+needed (`searchstax[facets][1]=and:DegreeCourseLevel_ss:Undergraduate`) -- guessed facet
+values for this same parameter name (`Filter/any(...)`, `Scopes/any(...)`, `ItemType/
+any(...)`) were all silently ignored by the backend and returned unfiltered/broader
+results instead of erroring, a failure mode worth naming since it looks like success
+(status 200, real-looking data) unless the actual filter facet counts are checked. The
+underlying SearchStax REST endpoint was also identified directly from a `window.fetch`
+interception, but calling it directly cross-origin 401'd (needs an auth header the site's
+own JS attaches that a bare `fetch(url)` replay does not capture) -- unlike VU Amsterdam
+below, this dead-end didn't block the batch because the *page-level* URL parameter worked
+fine on its own, just without a bulk page-size option (10/page, 18 pages, paginated via 6
+parallel browser tabs per round). 174 raw hits deduplicated to 162 by UCAS code (12 exact-
+repeat rows, exact-same title+degree+UCAS, consistent with a per-entry-year index row for
+a subset of courses). Confirmed a Leiden-shaped false alarm before it became a real one:
+the DB's stored `website_url` for Durham is `dur.ac.uk`, sourced batch uses `durham.ac.uk`
+-- checked live (not assumed) that these are the same site with `dur.ac.uk` declaring
+`durham.ac.uk` as its own `<link rel=canonical>`, and confirmed directly against
+`lib/acquisition/source-authority.ts` that both independently satisfy the `.ac.` suffix
+rule regardless of which is used, so unlike Leiden this needed no `website_url` fix.
+
+**VU Amsterdam re-attempted, not resolved this pass**: same Bologna-style diagnosis applied
+first. The visible DOM issue from the earlier attempt (only 10 of 29 cards mounted) is
+confirmed still real -- but the page's `/api/search` POST endpoint itself returns the full
+result set with `@odata.count: 29` and rich structured per-program data (including explicit
+`opleidingstaal--nl` / `opleidingstaal--en` filter tags -- directly useful against the
+"group in English != degree in English" risk the coordinator flagged from the Spanish
+catalogues, since these are the site's own filterable language facets, not free-text
+extraction). The blocker is different in kind from Durham/Bologna: this is a session-scoped
+POST API (not a GET with URL parameters), and neither guessing the request body's `filter`
+field syntax (tried `Filter/any(...)`, `Scopes/any(...)`, `ItemType/any(...)`, all
+silently ignored -- same false-success shape as Durham's) nor replaying the real captured
+request verbatim via `fetch()` worked (both return unfiltered global-site results or,
+for a raw SearchStax-style direct endpoint, 401 Unauthorized). This needs either a
+properly-scoped fetch interceptor installed *before* the page's own first load (not
+achievable with a post-load `javascript_exec` call) or accepting the 3-tab/29-card manual
+click-through -- deprioritized this pass in favour of Durham, which the same technique
+resolved cleanly. Worth another pass with fresh tooling rather than written off again.
+
 Of the 5 outstanding Radboud/Exeter gaps, 2 are now confirmed fully resolved (the Exeter
 "BA Classical Studies and Philosophy" insert, id `4a715f86-3f0e-4b3d-97ff-e6fb12c2c5bb`, and
 the orphaned "BA Classical Studies and Modern Languages" queue-audit row, id
