@@ -102,15 +102,22 @@ This is the same shape as this morning's programme problem, and I could have run
 and reported a fifteen-fold increase tonight. I did not, and I want to be explicit that this
 was a decision rather than something left undone.
 
+The pipeline is not missing. `lib/requirements/ingest.ts` and
+`scripts/ingest-requirements-deadlines.ts` exist and have run — on **131 records**, of which 43
+were accepted. The other 1,165 corpus records have never been near it. And the yield on the
+131 it did see is itself worth reading: 36 rejected and 17 not-ingestible against 43 accepted
+is low, and the likely reason is not bad research but the shapes below — records the pipeline
+correctly refused to guess at.
+
 Every finding in the section above describes a requirement shape the current schema cannot
 represent. Ingesting 1,296 records into it would not produce an empty result — it would produce
 a full table that answers eligibility questions wrongly, in the specific direction of telling
 students they qualify when they do not. That is the most damaging output this product has.
 
-A design pass is running now: it inventories every broken shape, proposes the migration, and
-produces a **dry-run-only** script whose single most important output is the count of records
-the schema cannot hold. That number decides when ingestion is safe. It cannot write to the
-database — there is no apply path in it.
+A design pass is running now against the **existing** pipeline: it inventories every broken
+shape, proposes the migration, and dry-runs the whole corpus. Its single most important output
+is the count of records the schema cannot hold. That number decides when ingestion is safe.
+There is no apply path in it — it cannot write to the database.
 
 An empty table is honest. A wrong "met" is not.
 
