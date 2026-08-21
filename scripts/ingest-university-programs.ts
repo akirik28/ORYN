@@ -9,7 +9,19 @@
  *
  * Idempotent and restartable: re-running the same batch produces `duplicate` outcomes for
  * anything already accepted, never a second insert (belt-and-suspenders with the DB's own
- * unique index on university_programs).
+ * unique index on university_programs). Dedup key includes language_of_instruction (ingest-
+ * fixes defect 6) — a same-subject, different-language-track pair (common at Dutch/German
+ * universities) is two distinct programs, not a duplicate.
+ *
+ * Invariant (ingest-fixes defect 6): every decided record gets a program_research_queue audit
+ * row, even if its university_programs insert failed the DB's own unique index — the queue
+ * row's own `outcome` is downgraded to "rejected" with the DB error in `outcome_detail` rather
+ * than keeping the stale "accepted" decision, so nothing vanishes with zero trace. The queue
+ * insert itself retries a few times (defect 7) — if it STILL fails after a program row already
+ * landed, that program row is an orphan (inserted, no audit trail) and is NOT self-healing on a
+ * re-run (its key already satisfies existingKeys, so the re-run reads it as "duplicate" and
+ * never retries the missing queue row) — logged loudly as ORPHANED PROGRAM ROW, needs manual
+ * reconciliation.
  *
  * Reads universities/aliases/external-ids via lib/acquisition/paginate.ts rather than a
  * plain supabase-js `.select()` — PostgREST's default 1000-row cap silently truncates an
@@ -26,7 +38,7 @@
  * constraint as scripts/enrich-student-counts.ts).
  */
 import { readFileSync } from "node:fs";
-import { decideIngestion, programUrlKey, type ResearchProgramRecord, type UniversityLookupRow } from "../lib/programs/ingest";
+import { applyDecision, decideIngestion, programDedupKey, programUrlKey, type ProgramWriteClient, type ResearchProgramRecord, type UniversityLookupRow } from "../lib/programs/ingest";
 import { fetchAllRowsVerified, type PostgrestTarget } from "../lib/acquisition/paginate";
 
 try {
@@ -70,6 +82,7 @@ interface ExistingProgramRow {
   university_id: string;
   normalized_name: string;
   degree_level: string | null;
+  language_of_instruction: string | null;
   official_program_url: string;
 }
 
@@ -127,12 +140,12 @@ async function main() {
 
   const [universities, { rows: existing }] = await Promise.all([
     loadUniversityCandidates(target),
-    fetchAllRowsVerified<ExistingProgramRow>(target, "university_programs", "university_id,normalized_name,degree_level,official_program_url", "order=id"),
+    fetchAllRowsVerified<ExistingProgramRow>(target, "university_programs", "university_id,normalized_name,degree_level,language_of_instruction,official_program_url", "order=id"),
   ]);
   console.log(`Candidate pool: ${universities.length} universities (paginated + exact-count verified).`);
 
   const existingKeys = new Set([
-    ...existing.map((r) => `${r.university_id}|${r.normalized_name}|${r.degree_level ?? ""}`),
+    ...existing.map((r) => programDedupKey(r.university_id, r.normalized_name, r.degree_level, r.language_of_instruction)),
     ...existing.map((r) => programUrlKey(r.university_id, r.official_program_url)),
   ]);
 
@@ -151,47 +164,47 @@ async function main() {
     return;
   }
 
+  const writeClient: ProgramWriteClient = {
+    async insertProgram(row) {
+      const { data, error } = await admin.from("university_programs").insert(row).select("id").single();
+      return { id: data?.id ?? null, error };
+    },
+    async insertQueueRow(row) {
+      const { error } = await admin.from("program_research_queue").insert(row);
+      return { error };
+    },
+  };
+
   let accepted = 0;
+  let orphaned = 0;
   for (const { record, decision } of decisions) {
     // Claim the key immediately so two accepted records in the same batch for the same
     // program don't both pass the pre-computed existingKeys check.
     if (decision.outcome === "accepted" && decision.programRow) {
-      const key = `${decision.programRow.university_id}|${decision.programRow.normalized_name}|${decision.programRow.degree_level ?? ""}`;
+      const key = programDedupKey(decision.programRow.university_id, decision.programRow.normalized_name, decision.programRow.degree_level, decision.programRow.language_of_instruction);
       existingKeys.add(key);
       existingKeys.add(programUrlKey(decision.programRow.university_id, decision.programRow.official_program_url));
     }
 
-    const { data: inserted, error: programError } =
-      decision.outcome === "accepted" && decision.programRow
-        ? await admin.from("university_programs").insert(decision.programRow).select("id").single()
-        : { data: null, error: null };
-    if (programError) {
-      console.error(`  failed to insert program for ${record.university_name} / ${record.program_name}: ${programError.message}`);
-      continue;
+    const result = await applyDecision(record, decision, batchId, writeClient);
+    if (result.accepted) accepted += 1;
+    if (result.programInsertError) {
+      console.error(`  failed to insert program for ${record.university_name} / ${record.program_name}: ${result.programInsertError}`);
     }
-    if (decision.outcome === "accepted") accepted += 1;
-
-    const { error: queueError } = await admin.from("program_research_queue").insert({
-      batch_id: batchId,
-      research_program_id: record.research_program_id,
-      university_id: decision.universityId,
-      university_name_input: record.university_name,
-      university_country_input: record.university_country,
-      program_name_input: record.program_name,
-      degree_level_input: record.degree_level ?? null,
-      official_program_url_input: record.official_program_url ?? null,
-      source_url_input: record.source_url ?? null,
-      source_type_input: record.source_type ?? null,
-      verification_status_input: record.verification_status ?? null,
-      raw_payload: record,
-      outcome: decision.outcome,
-      outcome_detail: decision.detail,
-      promoted_program_id: inserted?.id ?? null,
-    });
-    if (queueError) console.error(`  program written but queue audit row failed for ${record.research_program_id}: ${queueError.message}`);
+    if (result.orphaned) {
+      orphaned += 1;
+      console.error(
+        `  ORPHANED PROGRAM ROW — (${record.university_name} / ${record.program_name}) inserted successfully but its program_research_queue audit row failed after retries: ${result.queueInsertError}. This will NOT self-heal on a batch re-run (the program row already satisfies existingKeys). Needs manual reconciliation.`
+      );
+    } else if (result.queueInsertError) {
+      console.error(`  program_research_queue insert failed after retries for ${record.research_program_id}: ${result.queueInsertError}`);
+    }
   }
 
   console.log(`\nInserted ${accepted}/${records.length} row(s) into university_programs. Full audit trail in program_research_queue (batch_id='${batchId}').`);
+  if (orphaned > 0) {
+    console.error(`\n${orphaned} program row(s) are ORPHANED (inserted, but their audit row failed even after retries) — see the ORPHANED PROGRAM ROW lines above. These need manual reconciliation, not a batch re-run.`);
+  }
 }
 
 main();
