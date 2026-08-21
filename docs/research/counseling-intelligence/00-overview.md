@@ -58,8 +58,10 @@ intelligence.md`: this table lists the full 14-document conceptual plan, but row
 families `00`-`09`, `07`, and `08` are authored by a peer session on a *different* branch
 (`oryn/counseling-intelligence-research`) and are not present as files in this worktree/branch
 (`oryn/counseling-intelligence-research-013956`).** Only `00`, `01`, `02`, `04`, `05`, `06`'s
-families `10`-`17`, `09`, `10`, `11`, `12`, `13` physically exist here. Read the handoff doc for
-the full branch topology before assuming this directory alone is the complete package.
+families `10`-`17`+`19`, `09`, `10`, `11`, `12`, `13`, `15`, `17` (top-level — a different
+document from family `17`, see the table's own note on this numbering below) physically exist
+here. Read the handoff doc for the full branch topology before assuming this directory alone is
+the complete package.
 
 | # | Document | Answers | On this branch? |
 |---|---|---|---|
@@ -76,9 +78,11 @@ the full branch topology before assuming this directory alone is the complete pa
 | 10 | `10-open-questions.md` | What remains genuinely unresolved, and what data does ORYN not yet have to execute these rules? | Yes |
 | 11 | `11-geography-admissions-systems.md` | Added after `10` identified it as the highest-leverage gap: how much does holistic profile-building actually matter across USA/Canada/UK/France/Germany/Netherlands/Italy/Switzerland/Spain/Turkey, and what should that mean for how the counselor weights recommendations by target geography? | Yes |
 | 12 | `12-activity-progression-pathways.md` | Added per the mission's own "AFTER CORE PACKAGE" list: what does a realistic multi-year progression look like in a given area, and how should a late or non-standard start be handled without penalty? | Yes |
-| 13 | `13-implementation-readiness.md` | Synthesis: of everything `00`-`12` propose, what should an engineering session build first, ranked by what each item actually requires (buildable today vs. needs new data vs. needs a founder-level scoping decision)? |
-| — | `14-field-opportunity-mapping.md` | Peer-branch only — opportunity-category × relevant-fields index, a different axis from `02`'s category→dimension mapping. |
+| 13 | `13-implementation-readiness.md` | Synthesis: of everything `00`-`12` propose, what should an engineering session build first, ranked by what each item actually requires (buildable today vs. needs new data vs. needs a founder-level scoping decision)? | Yes |
+| — | `14-field-opportunity-mapping.md` | Peer-branch only — opportunity-category × relevant-fields index, a different axis from `02`'s category→dimension mapping. | **No — peer branch** |
 | 15 | `15-executive-summary.md` | **Read this one if you read exactly one.** A 5-minute consolidation of the night's highest-impact findings across both branches, for anyone who doesn't want to read 20+ documents. | Yes |
+| — | `16-worked-example-full-chain.md` | Peer-branch only — a single student profile traced end-to-end through every framework, as a concrete worked illustration rather than a new claim. | **No — peer branch** |
+| 17 | `17-dimension-weighting-by-target.md` | Operationalizes the gap `RULE-COUNSEL-059`/`060` named: not just tier-level framing language (`11`), but which of the 9 profile dimensions to weight up/down for a given target system, at a qualitative (not numeric) level. **Numbering note**: this is a top-level document, distinct from `06-major-family-evidence/17-visual-media-arts.md` — the two numbering sequences are independent (family docs vs. top-level docs) and this collision is cosmetic only, confirmed by checking both branches' actual file trees before claiming the number. | Yes |
 
 Machine-readable companions live in `data/research/counseling-intelligence/`:
 
