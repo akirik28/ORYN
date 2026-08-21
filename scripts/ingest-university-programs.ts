@@ -38,7 +38,7 @@
  * constraint as scripts/enrich-student-counts.ts).
  */
 import { readFileSync } from "node:fs";
-import { applyDecision, decideIngestion, programDedupKey, type ProgramWriteClient, type ResearchProgramRecord, type UniversityLookupRow } from "../lib/programs/ingest";
+import { applyDecision, decideIngestion, programDedupKey, type IngestDecision, type ProgramWriteClient, type ResearchProgramRecord, type UniversityLookupRow } from "../lib/programs/ingest";
 import { fetchAllRowsVerified, type PostgrestTarget } from "../lib/acquisition/paginate";
 
 try {
@@ -84,6 +84,7 @@ interface ExistingProgramRow {
   degree_level: string | null;
   language_of_instruction: string | null;
   official_program_url: string;
+  degree_type: string | null;
 }
 
 /** Full candidate pool for identity resolution — every university, alias-enriched, read
@@ -140,19 +141,45 @@ async function main() {
 
   const [universities, { rows: existing }] = await Promise.all([
     loadUniversityCandidates(target),
-    fetchAllRowsVerified<ExistingProgramRow>(target, "university_programs", "university_id,normalized_name,degree_level,language_of_instruction,official_program_url", "order=id"),
+    fetchAllRowsVerified<ExistingProgramRow>(target, "university_programs", "university_id,normalized_name,degree_level,language_of_instruction,official_program_url,degree_type", "order=id"),
   ]);
   console.log(`Candidate pool: ${universities.length} universities (paginated + exact-count verified).`);
 
   const existingKeys = new Set(
-    existing.map((r) => programDedupKey(r.university_id, r.normalized_name, r.degree_level, r.language_of_instruction, r.official_program_url))
+    existing.map((r) => programDedupKey(r.university_id, r.normalized_name, r.degree_level, r.language_of_instruction, r.official_program_url, r.degree_type))
   );
 
   const { createClient } = await import("@supabase/supabase-js");
   const admin = createClient(url, secretKey, { auth: { autoRefreshToken: false, persistSession: false } });
 
   const batchId = `${path.split("/").pop()}_${new Date().toISOString().slice(0, 10)}`;
-  const decisions = records.map((record) => ({ record, decision: decideIngestion(record, universities, existingKeys) }));
+
+  // Sequential, not records.map(...) over a static existingKeys snapshot — two records in the
+  // SAME file can collide with each other, not just with already-live data (found live,
+  // migration 0054: Durham/Southampton BSc-vs-integrated-Masters pairs, Istanbul University's
+  // "İşletme" listings). A static snapshot decides both independently and neither sees the
+  // other; university_programs' own unique index still catches the real collision at insert
+  // time, so nothing is silently duplicated, but a DRY RUN's predicted counts would undercount
+  // real collisions. This is the same defect-6 shape (a decision pass that can't see its own
+  // batch's own effects) fixed for a different reason this morning — if you're copying this
+  // script's shape elsewhere, keep it sequential, not `.map()`.
+  const decisions: { record: ResearchProgramRecord; decision: IngestDecision }[] = [];
+  for (const record of records) {
+    const decision = decideIngestion(record, universities, existingKeys);
+    decisions.push({ record, decision });
+    if (decision.outcome === "accepted" && decision.programRow) {
+      existingKeys.add(
+        programDedupKey(
+          decision.programRow.university_id,
+          decision.programRow.normalized_name,
+          decision.programRow.degree_level,
+          decision.programRow.language_of_instruction,
+          decision.programRow.official_program_url,
+          decision.programRow.degree_type
+        )
+      );
+    }
+  }
 
   const counts: Record<string, number> = {};
   for (const { decision } of decisions) counts[decision.outcome] = (counts[decision.outcome] ?? 0) + 1;
@@ -177,18 +204,6 @@ async function main() {
   let accepted = 0;
   let orphaned = 0;
   for (const { record, decision } of decisions) {
-    // Claim the key immediately so two accepted records in the same batch for the same
-    // program don't both pass the pre-computed existingKeys check.
-    if (decision.outcome === "accepted" && decision.programRow) {
-      const key = programDedupKey(
-        decision.programRow.university_id,
-        decision.programRow.normalized_name,
-        decision.programRow.degree_level,
-        decision.programRow.language_of_instruction,
-        decision.programRow.official_program_url
-      );
-      existingKeys.add(key);
-    }
 
     const result = await applyDecision(record, decision, batchId, writeClient);
     if (result.accepted) accepted += 1;

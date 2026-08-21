@@ -134,7 +134,7 @@ describe("decideIngestion", () => {
   });
 
   test("flags a duplicate against an existing key without inserting again", () => {
-    const existing = new Set([programDedupKey("uni-mit", "computer science", null, null, "https://cs.mit.edu")]);
+    const existing = new Set([programDedupKey("uni-mit", "computer science", null, null, "https://cs.mit.edu", null)]);
     const decision = decideIngestion(record(), UNIVERSITIES, existing);
     expect(decision.outcome).toBe("duplicate");
     expect(decision.programRow).toBeNull();
@@ -144,7 +144,7 @@ describe("decideIngestion", () => {
     const first = decideIngestion(record(), UNIVERSITIES, new Set());
     expect(first.outcome).toBe("accepted");
     const row = first.programRow!;
-    const keyAfterFirst = new Set([programDedupKey(row.university_id, row.normalized_name, row.degree_level, row.language_of_instruction, row.official_program_url)]);
+    const keyAfterFirst = new Set([programDedupKey(row.university_id, row.normalized_name, row.degree_level, row.language_of_instruction, row.official_program_url, row.degree_type)]);
     const second = decideIngestion(record(), UNIVERSITIES, keyAfterFirst);
     expect(second.outcome).toBe("duplicate");
   });
@@ -184,7 +184,8 @@ describe("decideIngestion", () => {
         first.programRow!.normalized_name,
         first.programRow!.degree_level,
         first.programRow!.language_of_instruction,
-        first.programRow!.official_program_url
+        first.programRow!.official_program_url,
+        first.programRow!.degree_type
       )
     );
 
@@ -196,13 +197,31 @@ describe("decideIngestion", () => {
   // A genuine re-run of the SAME language track, same URL, though, must still read as a
   // duplicate — the widened key must not accidentally stop deduplicating the case it always
   // correctly caught.
-  test("a same-name, same-degree-level, same-language, SAME-url repeat is still a duplicate", () => {
+  test("a same-name, same-degree-level, same-language, same-url, SAME-degree_type repeat is still a duplicate", () => {
     const first = decideIngestion(record({ language_of_instruction: "English" }), UNIVERSITIES, new Set());
     expect(first.outcome).toBe("accepted");
     const row = first.programRow!;
-    const existingKeys = new Set([programDedupKey(row.university_id, row.normalized_name, row.degree_level, row.language_of_instruction, row.official_program_url)]);
+    const existingKeys = new Set([programDedupKey(row.university_id, row.normalized_name, row.degree_level, row.language_of_instruction, row.official_program_url, row.degree_type)]);
     const second = decideIngestion(record({ language_of_instruction: "English" }), UNIVERSITIES, existingKeys);
     expect(second.outcome).toBe("duplicate");
+  });
+
+  // Migration 0054 (docs/handoffs/program-degree-type-key-decision.md): degree_type joined the
+  // composite key because Durham/Southampton each publish the standard UK three-year Bachelor's
+  // and four-year integrated Master's as separate, separately-admitted programmes sharing the
+  // same name, degree level, language, AND official_program_url — real cases pulled directly
+  // from a 20-file ingestion dry run, all 58 checked (not sampled) and confirmed genuinely
+  // distinct, none a re-submission.
+  test("a same-name/degree_level/language/url pair with a DIFFERENT degree_type is accepted as a distinct program (Durham-shaped)", () => {
+    const bsc = record({ program_name: "Chemistry", degree_type: "BSc (Hons)" });
+    const first = decideIngestion(bsc, UNIVERSITIES, new Set());
+    expect(first.outcome).toBe("accepted");
+    const row = first.programRow!;
+    const existingKeys = new Set([programDedupKey(row.university_id, row.normalized_name, row.degree_level, row.language_of_instruction, row.official_program_url, row.degree_type)]);
+
+    const mchem = record({ program_name: "Chemistry", degree_type: "MChem (Hons)" });
+    const second = decideIngestion(mchem, UNIVERSITIES, existingKeys);
+    expect(second.outcome).toBe("accepted");
   });
 
   // Migration 0053 (docs/handoffs/program-dedup-key-decision.md): official_program_url joined
@@ -217,7 +236,7 @@ describe("decideIngestion", () => {
     const first = decideIngestion(bologna, UNIVERSITIES, new Set());
     expect(first.outcome).toBe("accepted");
     const row = first.programRow!;
-    const existingKeys = new Set([programDedupKey(row.university_id, row.normalized_name, row.degree_level, row.language_of_instruction, row.official_program_url)]);
+    const existingKeys = new Set([programDedupKey(row.university_id, row.normalized_name, row.degree_level, row.language_of_instruction, row.official_program_url, row.degree_type)]);
 
     const rimini = record({ program_name: "Nursing", degree_level: "Bachelor / first-cycle", official_program_url: "https://www.unibo.it/en/study/first-and-single-cycle-degree/programme/2026/8475" });
     const second = decideIngestion(rimini, UNIVERSITIES, existingKeys);
@@ -243,7 +262,8 @@ describe("decideIngestion", () => {
         computerEngineering.programRow!.normalized_name,
         computerEngineering.programRow!.degree_level,
         computerEngineering.programRow!.language_of_instruction,
-        computerEngineering.programRow!.official_program_url
+        computerEngineering.programRow!.official_program_url,
+        computerEngineering.programRow!.degree_type
       )
     );
 
@@ -256,7 +276,7 @@ describe("decideIngestion", () => {
   // as two rows rather than being auto-merged. Recorded here as documentation, not a defect:
   // occasional and human-visible beats systemic and silent (see migration 0053's design doc).
   test("a same-programme rename at the same URL (TU-Delft-shaped) now inserts as two rows — accepted, documented cost", () => {
-    const existingKeys = new Set([programDedupKey("uni-mit", "computer science and engineering", null, null, "https://cs.mit.edu")]);
+    const existingKeys = new Set([programDedupKey("uni-mit", "computer science and engineering", null, null, "https://cs.mit.edu", null)]);
     const r = record({ program_name: "Computer Science & Engineering - English" });
     const decision = decideIngestion(r, UNIVERSITIES, existingKeys);
     expect(decision.outcome).toBe("accepted");
