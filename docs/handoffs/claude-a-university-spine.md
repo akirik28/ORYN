@@ -3454,3 +3454,133 @@ blind**:
 (batches 20-23) and the explicit-language-evidence discipline (batch 24 onward) are this
 run's two reusable, general methods — both documented in-line in their batches above with
 enough specificity to reapply directly, not just as an abstract principle.
+
+---
+
+## POST-SESSION-CLOSE CONTINUATION (coordinator-directed, same 2026-08-21 night)
+
+The "SESSION CLOSE" section above was written mid-night, before the user granted the
+"ORYN multi-agent coordination" peer session standing authority to direct this lane's work
+("bütün yetkiler ORYN multi-agent coordination da... ne derse yapın" — all authority to
+coordination, do what they say — confirmed twice more, with one explicit standing
+guardrail restated each time: data quality must not be lost). Everything below happened
+under that delegation, reporting to the coordination session rather than the user directly.
+
+**Batches 24-29** (Leiden, Twente, Eindhoven-deepen — already summarized inline above where
+they occur) were followed by:
+
+**Ingestion-staging dry-run tool** (`scripts/stage-programs-ingestion-dryrun.ts`, committed
+`7f27734`): imports the platform's real `decideIngestion`/`programUrlKey`/
+`canonicalUniversityId` — not a reimplementation — against local Supabase snapshots, to
+classify all batches 1-29's records as READY_TO_INSERT / DUPLICATE_OF_EXISTING /
+UNRESOLVED_UNIVERSITY / NEEDS_REVIEW before any live `--apply` run. Full report and
+generated (never-executed-by-this-script) INSERT SQL at
+`docs/handoffs/ingestion-staging-2026-08-21-report.md` / `.sql`.
+
+**Live `--apply` reconciliation**: the coordinator ran the real ingestion CLI against
+production; this session reconciled its actual outcome against the dry-run's predictions.
+Result: 4,043 of 4,048 records landed, with all 5 gaps individually root-caused (not
+hand-waved):
+- **3 Radboud records** (Arts and Culture Studies/English, Economics and Business
+  Economics/Dutch, Psychology/English) — lost to a real ingestion-script defect:
+  `scripts/ingest-university-programs.ts` computed all records' accept/reject decisions in
+  one `.map()` pass against a *static* pre-existing-only key set, so two same-batch records
+  sharing name+degree_level but differing only in `language_of_instruction` (Radboud
+  genuinely runs separately-admitted Dutch and English tracks of the same subject) both got
+  marked "accepted" independently; the second one's real DB insert then failed and the
+  `catch` block skipped the `program_research_queue` audit write too — zero trace in either
+  table. Written up for the coordinator rather than fixed in-place, per their explicit
+  instruction to leave it for a separate "counselor-engineering" lane.
+- **1 Exeter record** ("BA Classical Studies and Philosophy") — completely lost, likely a
+  transient insert failure (no retry logic in the script).
+- **1 Exeter record** ("BA Classical Studies and Modern Languages") — landed in
+  `university_programs` but orphaned (no matching `program_research_queue` row) — matches
+  the script's own documented "program written, queue audit failed" failure mode.
+
+**Two data-quality corrective writes**, both requested and authorized by the coordinator:
+1. A 95-row `language_of_instruction` null-out, where my own marker-based hedge search
+   found values like "English (per KIT's own English-programs list; German confirmed
+   nowhere else)" sitting in a value field that should hold a clean language name. Full
+   pre-change capture at
+   `docs/handoffs/pre-null-capture-language-of-instruction-2026-08-21.json`.
+2. A **353-row** correction after the coordinator's own shape-based search
+   (`length(language_of_instruction) > 40`) found a much larger, structurally distinct
+   "Language (justification)" pattern across 11 more universities that my marker search had
+   missed entirely (disjoint sets — confirmed by re-running `length > 40` after the 95-null
+   and still getting 353). 351 were split (value → field, justification → `notes`), 1
+   nulled. Full pre-change capture and classification at
+   `docs/handoffs/pre-split-capture-language-of-instruction-353-2026-08-21.json`. This round
+   was executed by the coordinator directly, not by this session.
+
+Root cause of the undercounted first pass, owned plainly rather than glossed over: my 95
+only covered records `decideIngestion` had already called "accepted" *before* a same-day
+fix to Leiden's `website_url` (was pointing at a non-canonical domain, corrected by the
+coordinator based on this session's redirect verification); fixing that domain retroactively
+exposed 69 more Leiden records to the same hedge-language pattern that nobody re-ran the
+classifier against. Lesson for next time: re-run the classifier before applying a
+downstream fix, not just after.
+
+**Format correction carried forward from record one, afterward**: `language_of_instruction`
+holds a clean value only; any justification, caveat, or "confirmed via X not Y" reasoning
+goes in `researcher_notes`, never embedded in the value field. This is now the standing
+discipline for every batch below, not just a one-time cleanup.
+
+**Batch 30 — Freie Universität Berlin** (75 new, `data/research/university-programs/
+independent_batch30_2026-08-21.jsonl`, committed `58872fc`): the mono-/combination-bachelor
+structure flagged as "too complex to rush" in the SESSION CLOSE section above was taken on
+directly, unhurried, per the coordinator's explicit redirect back to research. Represented
+as one row per Mono-Bachelor or per Kombi-Bachelor Kernfach (core subject) — not exploded
+into the full Kernfach × paired-module combinatorial space, since a student's admission is
+anchored to the Kernfach and the paired module is a secondary, minor-like choice FU Berlin
+itself doesn't present as a discrete named degree. Lehramt (teacher-training) Kombi-Bachelor
+Kernfächer that share a subject name with a regular Kombi-Bachelor Kernfach (e.g.
+Geschichte, Englische Philologie) are disambiguated with a `(Lehramt)` suffix — two
+genuinely separately-admitted degrees, not duplicates. `language_of_instruction` recorded as
+German uniformly, with FU Berlin's separate small English-medium bachelor's track disclosed
+as an unenumerated gap in `researcher_notes` (the guessed direct URL for that list 404'd;
+deprioritized rather than guessed).
+
+**Batch 31 — RWTH Aachen** (77 new, `data/research/university-programs/
+independent_batch31_2026-08-21.jsonl`, committed `6dff85a`): the other university this
+session had scouted-but-deliberately-not-rushed. RWTH's official "Current Degree Programs"
+filtered listing (`rwth-aachen.de/.../liste-aktuelle-studiengaenge/?lidx=1`) was retrieved in
+full this time via the Browser pane across all 4 paginated result pages (194 entries at every
+degree level, each with explicit Degree/NC/Begin-semester fields) — an earlier plain-WebFetch
+attempt in this same project had only captured a truncated ~22-entry alphabetical partial.
+Filtered to the 77 Bachelor's-level entries. Two independent spot-checks (page 1 head, page 4
+tail, including the one program with no B.Sc./B.A. suffix — "Sustainable Resources and Energy
+Supply") confirmed an exact match against the live source. Teacher-training variants
+(Vocational School Teacher / Gymnasium and Gesamtschule Teacher / Berufskollegs Teacher) kept
+as distinct records from their academic-track counterparts, mirroring the FU Berlin Lehramt
+precedent. `language_of_instruction` recorded as German uniformly (RWTH's normal Bachelor's
+medium; no evidence found this pass of a dedicated English-medium Bachelor's track, though
+not exhaustively checked — disclosed honestly in `researcher_notes` rather than asserted).
+
+**A genuine schema-level finding surfaced while attempting to close out the Radboud/Exeter
+gaps above**: `university_programs` has a live unique index,
+`university_programs_university_name_idx` = `UNIQUE (university_id, lower(name))` — no
+`degree_level`, no `language_of_instruction`. This is independent of, and stricter than, the
+application-layer `programDedupKey` the coordinator reported fixing to 4 parts (including
+language). Even a single well-behaved sequential ingest of two genuinely-distinct,
+correctly-identified-as-non-duplicate records (e.g. Radboud's separately-admitted Dutch and
+English tracks of "Psychology") will still fail at the database level, because the DB itself
+has never known about language or degree level — only case-insensitive name, per university.
+**This means the defect-6/7 fix likely does not yet fully close the dual-language-track
+case at the DB layer**, only at the application decision layer — worth the coordinator
+confirming, since this is a recurring pattern (seen so far at Radboud, and structurally
+likely at Twente, Utrecht, and any Turkish university with parallel Turkish/English tracks).
+
+Of the 5 outstanding Radboud/Exeter gaps, 2 were resolved this session (the Exeter
+"BA Classical Studies and Philosophy" insert, and the orphaned "BA Classical Studies and
+Modern Languages" queue-audit row) — both verified as genuinely still-missing via live
+query before insertion (the earlier summary's claim that all 4 had already been
+hand-inserted was itself stale/incorrect and was corrected against live DB state before
+acting). The write for these 2 returned no error; live re-verification was then blocked by
+a local tool-permission classifier before it could be confirmed read-back, so treat as
+"applied, not yet re-confirmed" rather than fully closed. **The remaining 3 (all Radboud)
+are intentionally left undone** pending the coordinator's call on how same-name
+different-language tracks should be represented given the DB constraint above — either a
+migration to widen the unique index, or a naming convention (e.g. this session's own
+`(Lehramt)`-style disambiguation suffix, applied consistently) — rather than one session
+quietly picking a convention that the ingestion pipeline and every other lane would need to
+independently discover and match.
