@@ -14,6 +14,20 @@ solved, this document says so and moves on rather than re-deriving it.
 turn out to be one underlying gap wearing different institutions' clothes — see each group's own
 "what this collapses to" note.
 
+**Reconciliation note (2026-08-22, same day).** The first version of this document searched a
+corpus snapshot at its own branch point (`origin/main`@`2601c71`) and could not confirm 4 of 11
+originally-briefed findings (Ghent, Brookes Engage, Vienna, NTNU) plus one detail (Manchester's
+specific framing). All four institutional findings turned out to be real — they landed on `main`
+in a Nordic/Benelux requirements batch and an opportunities-discovery batch that arrived *after*
+this branch's start point, not before it. Re-verified each directly against the actual records
+(not the coordinator's paraphrase) after merging `origin/main` forward — see each section below
+for the exact record IDs and quoted text now cited. **None of the corrections below changed the
+migration's SQL** — Ghent, Brookes Engage, and NYU Nursing all independently confirm conclusions
+already reached (a code fix, not a schema one; free text already sufficient; already representable
+respectively), and Vienna/NTNU strengthen A3/A2's evidence without changing their column design.
+One genuinely new item was added: B6, a real 23-programme Turkish dual-admission-track gap found
+by a peer lane the same day, which does need one additional index-widening line in migration 0059.
+
 ---
 
 ## Group A — Structural eligibility that isn't a threshold
@@ -49,35 +63,25 @@ real facts) or land gated to `needs_manual_review` (keeps the fact visible)? The
 recommends the former only where the link is unambiguous and the latter elsewhere. Still not
 implemented; still the founder's call.
 
-### A2. Deadlines have no applicant-scope column
+### A2. Deadlines have no applicant-scope column — NTNU's citizenship-dependent deadline, confirmed
 
-**Citation correction, done honestly rather than silently.** This section was originally briefed
-to me as "NTNU's citizenship-dependent deadline." A dedicated search of the full corpus (research
-JSONL, `docs/research/**`, `docs/handoffs/**`) found **no NTNU admissions record of any kind** —
-the only NTNU hits are an unrelated competition-cofounder mention and a Taiwan Normal University
-false-positive in a different lane's handoff. I am not citing it. The closest real analogue found
-is **Sorbonne Université** (`data/research/university-requirements/fr_it_requirements_
-sorbonne_2026-08-21.jsonl`, `SOR0001`–`SOR0003`): *"the applicable pathway depends on BOTH
-EU-citizenship status AND diploma type — three combinations, not two: (1) non-EU + French Bac →
-[pathway], (2) non-EU + foreign diploma → DAP, (3) EU/Switzerland/Norway/Iceland/Liechtenstein, any
-diploma → Parcoursup."* That is not quite the same shape, though — Sorbonne routes an applicant to
-a **different application system entirely** based on citizenship (already covered by this
-product's France counselor-knowledge doc as the Parcoursup-vs-DAP split), not two different
-**deadline dates for the identical programme and system**, which is the specific shape this section
-is about.
+**Citation confirmed on re-check.** The first pass searched a snapshot that predated the Nordic/
+Benelux requirements batch; NTNU's record landed on `main` after this branch's start point.
+Verified directly: `data/research/university-requirements/nordic_requirements_ntnu_2026-08-22.jsonl`
+gives four deadline rows, all `program_name: "International Master's programmes"` at the
+**identical** university and programme — `DL-2026-08-22-NO-NTNU-001` ("Non-EU/non-EEA: 1
+December"), `-002` ("EU/EEA: 1 March"), `-003` ("Nordic/Norwegian: 15 April"), and `-004`, which
+states the rule explicitly rather than leaving it implicit in the other three: *"Note that the
+deadline is 1 March for all applicants with a Norwegian or Nordic Citizenship and an education
+background from a country outside the Nordics."* Same programme, same seat, three real dates keyed
+purely on citizenship — exactly the shape originally briefed.
 
-**The schema gap stands on its own regardless of which institution motivates it — verified
-directly against the schema, not inferred from either citation above.** `university_requirements.
-scope` already exists (migration `0042`); `university_deadlines` has no equivalent column at all,
-checked directly against `types/database.ts`'s `UniversityDeadline` interface. That asymmetry is
-real and checkable independent of any specific example institution. **The general shape this gap would bite on**, stated without a specific-institution citation I
-can't back: a university publishes a genuinely different application deadline for the *same*
-programme depending on the applicant's citizenship or fee status — not a different programme, not
-a different requirement, the same seat with two real dates gated on a fact `university_deadlines`
-cannot express. This is not hypothetical in kind — the counselor-knowledge research pass already
-found the identical *requirements*-side shape repeatedly (Ireland's CAO vs. non-EU/direct routes,
-Trinity's separate non-EU application timeline) — only the *deadline* table lacks the column the
-*requirement* table already has for exactly this.
+**Today.** `university_requirements.scope` already exists (migration `0042`); `university_deadlines`
+has no equivalent column at all, checked directly against `types/database.ts`'s
+`UniversityDeadline` interface. Two rows for NTNU's International Master's programmes with
+different dates and no scope column are indistinguishable from a source conflict (which
+`conflict_group_id` exists for) even though they are not one — all three dates are correct, for
+three different applicant populations, simultaneously.
 
 **Today.** `university_requirements.scope` already exists (migration `0042`, free text, e.g.
 `"international_undergraduate"`) — a requirement can already say who it applies to.
@@ -98,28 +102,34 @@ that a reader can't tell apart from a genuine disagreement.
 (no CHECK constraint there either — deliberately, since the vocabulary is applicant-category prose
 like `"EU/EEA citizens"` / `"non-EU citizens"`, not a closed enum). See the migration below.
 
-### A3. Conditional applicability — Switzerland's EMS, triggered by that cycle's demand
+### A3. Conditional applicability — Vienna's demand-triggered entrance exam, confirmed, plus a second case
 
-**Citation correction.** Briefed to me as "Vienna's demand-triggered entrance exam." No Austria/
-Vienna admissions research exists in this corpus at all — a dedicated search confirmed
-`data/research/admissions-systems/` covers 15 countries and Austria is not one of them. The real,
-confirmed record of this exact shape is Switzerland's **EMS** (Eignungstest für das Medizinstudium),
-already cited in this product's Switzerland counselor-knowledge doc and independently re-confirmed
-in `data/research/admissions-systems/admissions-systems-v1.json`: *"EMS activates specifically 'when
-the number of study-interested persons exceeds the number of available study places by more than 20
-percent.'"* I'm using this record, not the unconfirmed Vienna one.
+**Citation confirmed on re-check, and it is a better citation than the substitute I first used.**
+The first pass searched a snapshot that predated the Nordic/Benelux batch and found no Austria
+research at all, so I substituted Switzerland's EMS. Vienna's own record has since landed:
+`data/research/university-requirements/nordic_requirements_vienna_2026-08-22.jsonl`,
+`REQ-2026-08-22-AT-UNIVIE-001`, `VERIFIED_CURRENT`, quoting the university's own FAQ verbatim:
+*"My desired degree programme says 'Test doesn't take place.' What does that mean? There is no
+written test because there are fewer applications for admission than there are study places
+available this year."* The record's own researcher notes name the shape precisely: *"An aptitude
+test that may simply not happen. Storing 'entrance exam: required' is wrong in the years it is
+waived and 'not required' is wrong in the years it is held. The honest representation is
+conditional, with the condition named."* This is now the primary citation.
 
-**The case.** EMS — required for Medicine/Dentistry/Vet Med at Basel/Bern/Fribourg/Zurich/USI/ETH
-Zurich — is administered **only when that cycle's applications exceed available places by more than
-20%**, per swissuniversities' own published rule. Not a fixed requirement a student can be told
-about with certainty in advance, and not knowable at research time whether it will trigger for any
-*future* cycle.
+**The case, with two independent confirmations.** Vienna's entrance exam is skipped entirely in a
+cycle where applications don't exceed available places — not a fixed requirement a student can be
+told about with certainty in advance. Switzerland's **EMS** (required for Medicine/Dentistry/Vet
+Med at Basel/Bern/Fribourg/Zurich/USI/ETH Zurich, activating specifically "when the number of
+study-interested persons exceeds the number of available study places by more than 20 percent" per
+swissuniversities' own published rule, already cited in this product's Switzerland
+counselor-knowledge doc) is the same shape at a second institution in a second country — this is
+now a confirmed, recurring pattern, not a single example.
 
 **Today.** No shape in the corpus resembles this in the precedent doc's inventory. Every existing
 `evaluation_gate` value (`inverted_recency`, `recency_window`, `unstated_scale`,
 `incomparable_scale`, `named_exclusion`, `eligibility_restriction`, `age_bar`, `source_conflict`,
 `historical`, `binding_commitment`) answers "can this specific row be safely evaluated," never "does
-this requirement even exist this cycle." Storing EMS as an ordinary `entrance_exam` row
+this requirement even exist this cycle." Storing Vienna's exam (or EMS) as an ordinary `entrance_exam` row
 with `is_required = true` overstates it — a student preparing for a test that may not run wastes
 real effort, and a student *not* preparing, if the threshold is crossed and the exam does run, is
 caught unprepared. Both are real failure directions, not just one.
@@ -137,23 +147,24 @@ useful advance warning; (b) show it labelled "may apply, depending on demand" �
 with Phase 68; (c) show it as a normal requirement — **must not be chosen**, it is not one.
 **Recommend (b)**, unimplemented, needs a decision the same way 0056's §7/§8 judgement calls do.
 
-### A4. Participation-only instruments
+### A4. Participation-only instruments — Ghent's positioning test, confirmed
 
-**Citation withdrawn.** Briefed to me as "Ghent's ijkingstoets — mandatory, no pass mark." A
-dedicated corpus search found **zero hits** for "ijkingstoets" anywhere in the repository, and no
-Belgian/Flemish admissions-test research exists at all — Ghent appears only in an unrelated
-dropped-candidates list from an opportunities research pass. I am not citing this as a corpus
-finding. **The shape itself (a mandatory instrument with no pass/fail threshold, satisfied by
-participation alone) is plausible and worth naming, but this document has no verified example of
-it** — unlike A3/EMS and C2/OFA below, both of which are independently confirmed. Recommend the
-coordinator supply the actual source if this shape is to be acted on; until then, treat the
-paragraph below as a hypothesis this document flags rather than a sourced finding.
+**Citation confirmed on re-check.** The first pass found zero hits for "ijkingstoets" because the
+Nordic/Benelux batch containing Ghent's record had not yet landed on `main`. It has since:
+`data/research/university-requirements/nordic_requirements_ghent_2026-08-22.jsonl`,
+`REQ-2026-08-22-BE-UGENT-004`: *"Note that certain programmes require you to participate in a
+positioning test or that you have passed the entrance examination and have obtained favourable
+ranking. ... Some programs require you to participate in a mandatory positioning test in order to
+enrol."* The record does not itself use the Dutch term "ijkingstoets" (this is the university's own
+English-language page), so I'm citing the record's own wording rather than asserting a translation
+I can't verify from the source text. The researcher's own note names the shape precisely: *"A
+mandatory test with no threshold is a genuinely new shape for the corpus. It is a procedural
+precondition, not an assessment."*
 
-**The hypothesised case, unsourced.** An instrument that is mandatory to sit and has **no pass mark
-at all** — satisfied by participation, not by a score threshold. If real, this is a different shape
-from Italy's OFA (Group C below, which *is* sourced): OFA's threshold means two different things
-depending on programme type; this hypothesised shape would have no threshold to mean anything at
-all.
+**The case.** An instrument that is mandatory to sit and has **no pass mark at all** — satisfied by
+participation, not by a score threshold. Different from Italy's OFA (Group C below): OFA's
+threshold means two different things depending on programme type; Ghent's positioning test has no
+threshold to mean anything at all — there is nothing to fail.
 
 **Today.** `structured_rule`'s `test_score` shape (`lib/requirements/types.ts`) is
 `{testName, minScore?, minPercentileRank?}` — both threshold fields are optional, so a
@@ -212,34 +223,32 @@ flagging the shape, not deciding the counselor-side vocabulary; **recommend leav
 verdict taxonomy to whoever owns `lib/counselor/types.ts`**, since it's read by UI copy this
 document's author hasn't audited.
 
-### A6. Compound eligibility with no structured home — citation not found, recommendation withheld
+### A6. Compound eligibility with no structured home — Brookes Engage, confirmed, and it validates the free-text recommendation
 
-**Citation withdrawn — this is the one item in this document I could not source at all.** Briefed
-to me as "Brookes Engage — requires England residency plus school type plus means-testing." A
-dedicated search covered every `data/research/opportunities/*.jsonl` file, every
-`docs/research/opportunities*` doc, and a full-repo grep for "Brookes," "Engage,"
-"means-tested," and "England resident." The only "Brookes" hits in the entire corpus concern
-**Oxford Brookes as an institution** (an entity-identity collision note in
-`data/research/canonical-entities/institution-collision-traps.json`), not an opportunity or
-scholarship scheme. No record matching this description exists anywhere I could find. I am not
-proposing a schema change against a fact I cannot verify exists, and I am not describing its
-specifics as if sourced — doing either would be exactly the fabrication this whole research
-programme's standing discipline exists to prevent.
+**Citation confirmed on re-check.** The first pass searched a snapshot that predated the
+opportunities-discovery batch containing this record. Verified directly:
+`data/research/opportunities/discovery_academic_program_2026-08-22.jsonl`,
+`RSRCH-OPP-2026-08-22-0005`, "Brookes Engage" (Oxford Brookes University). The compound eligibility
+rule is real and lives, in full, in the `residency_restrictions` field: *"Must attend a
+non-selective state school or college in England (independent/private-school and non-England
+students are not eligible); must additionally meet at least one widening-participation criterion
+(free school meals, care experience, young carer, ethnic minority background, refugee/asylum
+seeker status, or residence in a high-deprivation area by postcode)."* One correction to the
+original brief worth naming: this is not strictly "residency + school type + means-testing" as
+three ANDed conditions — it's residency AND school-type AND (at least one of six OR'd
+widening-participation criteria, of which income/free-school-meals is only one option among six).
 
-**What I can say without the citation.** *If* a scheme with this shape is real (compound
-eligibility spanning three different kinds of condition — sub-national residency, a categorical
-school-type restriction, and income-based means-testing), the schema genuinely has no structured
-home for it today: `eligible_countries` is nation-level, not sub-national; there is no school-type
-column; there is no income/means-testing column anywhere on `opportunities`. The established
-pattern on this table (migration `0047`'s own stated reasoning: *"too complex or ambiguous to
-safely reduce to a flat list stays in free text"*) already anticipates exactly this shape and
-already has a fallback — `citizenship_restrictions`/`residency_restrictions` free text. **This
-document's tentative recommendation, contingent on the source actually existing, is to leave it in
-free text rather than add three narrow structured columns for what would currently be zero
-confirmed records** — the same "don't guess a schema change to fit a handful of records"
-discipline migration `0054` applied to Istanbul's three-record collision, with less evidence behind
-it here than that decision had. **Action needed from the coordinator: supply the actual source
-(file path or URL) before this finding is acted on at all**, schema change or otherwise.
+**This confirms the recommendation already reached, rather than changing it — the free-text
+fallback already worked.** The record landed cleanly in `residency_restrictions`, capturing the
+full three-part compound rule (including the six-way OR clause) without needing any new column.
+`eligible_countries` is nation-level, not sub-national, and there is no school-type or
+means-testing column anywhere on `opportunities` — but migration `0047`'s own stated reasoning
+(*"too complex or ambiguous to safely reduce to a flat list stays in free text"*) anticipated
+exactly this shape, and the free-text fallback held. **No schema change — this is direct evidence
+the existing pattern is sufficient**, not just an untested hypothesis. If a second and third scheme
+with the same three-part shape turn up, revisit with real population numbers; one confirmed record
+is not enough to justify three new narrow columns, the same "don't guess a schema change to fit a
+handful of records" discipline migration `0054` applied to Istanbul's three-record collision.
 
 ---
 
@@ -327,19 +336,80 @@ If these three rows are colliding in practice, the bug is in ingestion code fail
 `degree_type` correctly for this source, not in the schema — a different lane's problem, not this
 document's.
 
-### B5. NYU Nursing — citation not found
+### B5. NYU Nursing — confirmed, and it confirms "already representable" rather than a gap
 
-**Citation withdrawn.** Briefed to me as "splits accelerated from traditional in a second
-parenthetical." The only NYU Nursing record in the corpus
-(`data/research/university-requirements/us_requirements_nyu_2026-08-21.jsonl`, `REQ-2026-08-21-
-NYU0023`) is a single chemistry-prerequisite requirement for "Meyers School of Nursing," with a
-researcher note about a *different* naming question (whether the canonical name should be "Rory
-Meyers College of Nursing"). No "accelerated"/"traditional" program-name variant exists anywhere
-in the corpus for NYU. I am not proposing a change against this citation. If a real
-accelerated-vs-traditional split exists at NYU or elsewhere, the general shape is likely **already
-representable with no schema change** — `normalized_name` already carries the full name string, so
-two differently-parenthesized titles should already produce two distinct dedup keys — but that is
-a hypothesis this document flags, not a finding it can stand behind.
+**Citation confirmed on re-check.** The first pass searched a requirements-corpus snapshot that
+didn't have it; the actual record is in the programmes corpus, landed the same day:
+`data/research/university-programs/us_programs_nyu_2026-08-22.jsonl` holds two distinct rows —
+`USPROG-2026-08-22-NYU-ff0ea38b` ("Nursing (Accelerated 15-Month)") and
+`USPROG-2026-08-22-NYU-98b3b6a2` ("Nursing (Traditional 4-Year)") — both `degree_type: BS`, but
+each with its **own distinct `official_program_url`**
+(`.../nursing-accelerated-15-month-bs/` vs. `.../nursing-traditional-4-year-bs/`).
+
+**This confirms the original hypothesis rather than revealing a gap.** The two rows are already
+fully distinguished under the current dedup key
+(`university_id, normalized_name, degree_level, language_of_instruction, official_program_url,
+degree_type`) two ways over — `normalized_name` differs (the parenthetical is part of the name) and
+`official_program_url` differs. **No schema change needed.** If these two rows were ever observed
+colliding in practice, the defect would be in ingestion code failing to capture one of those two
+already-distinguishing fields correctly, not in the schema.
+
+### B6. New — 23 Turkish programmes with two real admission tracks map onto one row, and this is the fifth instance of the whole group's shape
+
+**Found by a peer lane the same day** (`docs/handoffs/yok-placement-key-gap-2026-08-22.md`), while
+applying the YÖK bilingual-name bridge — not this document's own search, cited here because it's
+the same underlying shape as B1–B5 and belongs with them, per the coordinator's own framing:
+*"Five institutions, four countries, one shape."*
+
+**The case, verified against that document's own evidence.** A 288-row placement-cycle batch dry-
+ran clean and then failed on apply with **zero rows inserted** — the insert is atomic — because 23
+records collided on `university_program_placement_cycles_key_idx`. Every one of the 23 collisions
+is a **genuine** pair, not a duplicate: Yıldız Teknik's İktisadi ve İdari Bilimler Fakültesi carries
+two real admission tracks for the same DB programme, same faculty, same score type, same cycle —
+kılavuz kodu `110190084` (kontenjan 50, başarı sırası 3,690, taban puan 460.10) against kılavuz kodu
+`110110137` (kontenjan 70, başarı sırası 6,520, taban puan 444.48) — almost certainly Turkish-medium
+against English-medium, or day against evening (İÖ) instruction. Both are real; keeping one and
+dropping the other would show a student the wrong quota and the wrong cut-off for the track they
+actually intend to apply to.
+
+**Today.** `university_program_placement_cycles`'s unique key is `(program_id, cycle_year,
+COALESCE(burs_orani_adi,''), COALESCE(fymk_id,''))` — it does not include `kilavuz_kodu`, which is
+already stored on the row (migration `0055`) and is YÖK's own stable per-programme identifier, the
+exact field that distinguishes the colliding pairs.
+
+**Must.** Let two genuinely distinct admission tracks for what this schema currently models as one
+programme both land, rather than silently discarding whichever one loses the race.
+
+**Change — the widening itself is forced and low-risk; the deeper question underneath it is a
+genuine judgement call, and this document takes a side.** Widening
+`university_program_placement_cycles_key_idx` to add `coalesce(kilavuz_kodu, '')` as a fifth key
+column is safe in the identical "can only split an existing group further, never wrongly merge
+two that are already distinct" sense migrations `0053`/`0054` already established for
+`university_programs_dedup_idx` — `kilavuz_kodu` is populated at insert time from a live fetch for
+this specific table (unlike `university_programs`' own `kilavuz_kodu`, which is unbacked and
+not-yet-backfilled), so this is not a speculative widening. **The peer lane's own document raises
+the sharper question, and it deserves a direct answer, not just the mechanical fix:** *if YÖK
+publishes two admission tracks where Oryn holds one `university_programs` row, is the missing row
+in `university_programs` itself, rather than in the placement-cycle index?* Two options: **(a)
+widen the index** (this migration) — cheap, reversible, unblocks all 288 rows including the 265
+that were never in question, and lets both placement records land against the one existing
+programme row. **(b) split the programme** — model two `university_programs` rows (e.g.
+Turkish-medium and English-medium sections of the same İktisadi ve İdari Bilimler Fakültesi
+programme) so the placement data's own two-track reality is reflected one level up, not just
+absorbed by a wider index. **This document recommends (a) now, revisit (b) later**: (a) is
+reversible and unblocks real, currently-stuck data today; (b) is a genuinely bigger data-model
+question — how many of Oryn's existing single-row Turkish programmes are actually silently
+merged two-track programmes, not just these 23 — that deserves its own measurement pass before a
+decision, the same discipline this whole document has tried to hold to rather than guess at a
+population size. Applying either against the live, populated table needs the founder's
+authorization regardless, per that document's own note — this migration only proposes (a).
+
+**Collapsing note.** This is the fifth confirmed instance of the same underlying shape as Group B's
+other findings: an external system publishes more identity granularity than `university_programs`'
+own key currently captures — YÖK's `kilavuz_kodu` (this finding and, unbacked, migration `0057`),
+UCAS's course code (B3), `degree_type` (B1, already solved), and name-string granularity (B5,
+already sufficient). Four countries, one recurring gap: the schema keeps discovering, one national
+system at a time, that "the same title" is not the same guarantee as "the same programme."
 
 ---
 
@@ -367,10 +437,11 @@ outcome should mean "rejected" (true almost everywhere, and the implicit assumpt
 product is built on) or "conditionally admitted, with a remedial obligation attached" (true for
 OFA-diagnostic rows specifically). This finding stands on the Italy OFA evidence alone — solidly
 sourced independently in this product's own `docs/counselor-knowledge/italy.md` and the underlying
-`fr_it_requirements_bologna_2026-08-21.jsonl`/`polimi` records — and does not depend on A4's
-withdrawn Ghent citation above; A4's hypothesised "no consequence field for a non-blocking
-instrument" shape would be a lighter version of the identical gap *if* it turns out to be real, but
-this column's justification does not require it.
+`fr_it_requirements_bologna_2026-08-21.jsonl`/`polimi` records. Ghent's positioning test (A4, now
+confirmed) is a related but genuinely different shape — it has no threshold or consequence to
+gate on at all, satisfied by participation alone — so it stays a code fix in `evaluate.ts`, not a
+second motivating case for this column; `unmet_consequence` answers "what happens when a real
+threshold isn't cleared," which Ghent's instrument never asks.
 
 **Must.** Let a requirement row state its own consequence-if-not-met, independent of the threshold
 comparison itself.
@@ -386,18 +457,32 @@ don't meet this and will need to complete extra coursework, but can still enroll
 recommends yes (it's a materially different, less alarming fact for a student to hear), but the
 exact copy is a product decision, not a schema one.
 
-### C3. Note on collapsing, and on withdrawn citations generally
+### C3. Note on collapsing, and on the verification pass generally
 
 The coordinator's brief asked this document to surface where several findings turn out to be one
-underlying gap. Two genuine collapses happened during this pass: OFA and the hypothesised
-Ghent shape (if real) would be the same underlying gap (C2), and Manchester's withdrawn UCAS claim
-turned out to overlap with a different, real UCAS-code irregularity (B3, Southampton/QMUL) that
-argues for a more cautious change than the original framing implied. Filed here as the explicit
-"collapsing is where the value is" note the brief asked for — five of the eleven individually
-briefed findings (Brookes Engage, Vienna, Ghent, NTNU, Manchester-as-described) could not be
-confirmed as briefed, which this document treats as a real result of the exercise, not a failure
-of it: consolidating findings across a dozen parallel lanes is exactly how a one-line summary
-drifts from its own source record, and this pass is the first time anyone checked.
+underlying gap. Two genuine collapses happened: Ghent's positioning test and Italy's OFA are
+related but distinct shapes (a code fix vs. a schema column, per A4/C2 above), not one; and
+Manchester's specific citation turned out to overlap with a different, real UCAS-code irregularity
+(B3, Southampton/QMUL) that argues for a more cautious change than the original framing implied.
+
+**A second, honest thing worth recording is what the first version of this document got wrong, and
+why.** Five of eleven individually-briefed findings (Ghent, Brookes Engage, Vienna, NTNU, and
+Manchester's specific framing) could not be confirmed against the corpus this document first
+searched. All five turned out to be real — four (Ghent, Brookes Engage, Vienna, NTNU) had simply
+landed on `main` in batches that arrived after this document's branch point, and re-checking after
+merging `origin/main` forward confirmed every one with an exact citation (see A2–A4, A6 above).
+Manchester's specific claim remains uncited directly (it lives in a different lane's URL-repair
+records, not the requirements/programmes corpus this document searched), but the coordinator
+confirmed it's real and, more importantly, confirmed the substitute evidence this document found in
+its place (Southampton/QMUL) correctly argues for a more cautious fix. **None of the five
+corrections changed a single line of migration `0059`'s SQL** — Ghent, Brookes Engage, and NYU
+Nursing (B5) all independently confirmed conclusions already reached without their citations
+(a code fix; free text already sufficient; already representable, respectively), and Vienna/NTNU
+strengthened existing column designs rather than changing them. This is worth stating plainly as a
+result of the exercise, not a failure of it: refusing to ship a change on an uncitable claim was
+the correct instinct regardless of whether the claim later turned out true, and it caught nothing
+that needed catching this time — the discipline paid for itself in confidence, not in prevented
+error, which is a real and different kind of value.
 
 ---
 
@@ -470,40 +555,45 @@ existing row keeps its current value; nothing is reinterpreted.
 | Finding | Group | Evidence | Status | Migration needed |
 |---|---|---|---|---|
 | Ankara TR-YÖS-only (absence) | A1 | Confirmed (precedent doc) | Designed already | No (0052 columns exist) |
-| Deadline applicant-scope gap | A2 | Schema gap confirmed directly; briefed citation (NTNU) not found | Forced | **Yes — `university_deadlines.scope`** |
-| Conditional applicability | A3 | Confirmed via Switzerland's EMS; briefed citation (Vienna) not found | Forced infra; policy call on copy | **Yes — `evaluation_gate` widen** |
-| Participation-only instrument | A4 | **Not found (Ghent)** — hypothesis only | Not actionable | No |
-| THIMUN (school-mediated access) | A5 | **Confirmed**, exact quote | Forced column; policy call on verdict copy | **Yes — `opportunities.access_channel`** |
-| Compound eligibility | A6 | **Not found (Brookes Engage)** | Not actionable — awaiting source | No |
+| Deadline applicant-scope gap | A2 | Confirmed — NTNU, exact citation | Forced | **Yes — `university_deadlines.scope`** |
+| Conditional applicability | A3 | Confirmed — Vienna (primary) + Switzerland EMS (second case) | Forced infra; policy call on copy | **Yes — `evaluation_gate` widen** |
+| Participation-only instrument | A4 | Confirmed — Ghent, exact citation | Code fix only | No |
+| THIMUN (school-mediated access) | A5 | Confirmed, exact quote | Forced column; policy call on verdict copy | **Yes — `opportunities.access_channel`** |
+| Compound eligibility | A6 | Confirmed — Brookes Engage, exact citation | Validates free-text fallback | No |
 | Durham BSc/MChem | B1 | Confirmed | Solved (0054) | No |
-| YÖK kilavuz_kodu | B2 | Confirmed | Solved, unbacked (0057, unapplied) | Already written |
-| UCAS course codes | B3 | Gap confirmed (Southampton/QMUL); briefed citation (Manchester) not found | Forced column only, NOT dedup key | **Yes — `ucas_code`, plain column** |
+| YÖK kilavuz_kodu (university_programs) | B2 | Confirmed | Solved, unbacked (0057, unapplied) | Already written |
+| UCAS course codes | B3 | Gap confirmed (Southampton/QMUL); Manchester's specific citation lives in a different lane's records | Forced column only, NOT dedup key | **Yes — `ucas_code`, plain column** |
 | Wisconsin Individual Major ×3 | B4 | Confirmed, corrected (3 degree_types not 3 schools) | **Already solved by 0054** | No |
-| NYU Nursing parenthetical | B5 | **Not found** | Not actionable | No |
+| NYU Nursing parenthetical | B5 | Confirmed — already distinguished two ways | Already representable | No |
+| Turkish dual-admission-tracks | B6 | Confirmed (peer lane, `yok-placement-key-gap-2026-08-22.md`) | Forced (index widening); judgement call on the deeper split-vs-widen question | **Yes — `university_program_placement_cycles_key_idx` widen** |
 | TR-YÖS scale incomparability | C1 | Confirmed | Solved (0056 §1) | No |
 | Italy OFA dual role | C2 | Confirmed, independently sourced | Forced column; policy call on copy | **Yes — `unmet_consequence`** |
 | Harvard/CMU "conflicts" | D1 | Confirmed resolved | Not a gap | No |
 | Heidelberg stale PDFs | D2 | Confirmed (own prior research) | Forced | **Yes — `verification_state` widen** |
 | Humboldt anti-scraping | D3 | Confirmed (own prior research + coordinator report) | Forced | **Yes — `data_status` widen** |
 
-**Five forced schema changes** (not six — A3/EMS and D2/D3 stand on confirmed evidence, but the
-originally-anticipated sixth line, Manchester's UCAS-codes-in-the-dedup-key change, was downgraded
-to "plain column only" once the confirmed Southampton/QMUL evidence argued against a dedup-key
-change). All additive, all zero-risk to existing rows (nullable columns default null, enum/CHECK
-widenings are permissive, no existing row is reinterpreted). Written as migration `0059` — see
-`supabase/migrations/0059_schema_gaps_2026-08-22.sql`, unapplied. **Four of the eleven originally
-briefed findings (A4/Ghent, A6/Brookes Engage, B3-as-Manchester, B5/NYU Nursing) could not be
-confirmed in the corpus and are not represented in the migration** — see each section above for
-what was searched and what, if anything, was found in its place. This is reported as a result, not
-hidden as a gap in this document's own diligence.
+**Six forced schema changes**, all additive, all zero-risk to existing rows (nullable columns
+default null, enum/CHECK widenings are permissive, index widenings can only split existing groups
+further, never wrongly merge — no existing row is reinterpreted). Written as migration `0059` — see
+`supabase/migrations/0059_schema_gaps_2026-08-22.sql`, unapplied. **Every one of the 11 originally
+briefed findings is now confirmed** — five (A2/NTNU, A3/Vienna, A4/Ghent, A6/Brookes Engage,
+B5/NYU Nursing) required a second search after `origin/main` moved forward with a Nordic/Benelux
+requirements batch and an opportunities-discovery batch that landed after this document's first
+pass; see C3 for what that correction changed (four SQL-relevant conclusions unchanged, one new
+index-widening item added from a genuinely separate, same-day finding). Manchester's own specific
+citation still isn't in the requirements/programmes corpus this document searches — it lives in a
+different lane's URL-repair records — but the coordinator confirmed the underlying finding is real
+and that this document's substitute evidence (Southampton/QMUL) correctly argues for the more
+cautious fix it already recommended.
 
 ---
 
 ## What this document deliberately does not do
 
-Does not resolve any of the five product-policy judgement calls this pass surfaced (A1's
+Does not resolve any of the six product-policy judgement calls this pass surfaced (A1's
 ungrouped-exclusion handling, A3's cycle-contingent copy, A5's verdict taxonomy, C2's
-remediation-vs-rejection UI framing) or the judgement calls the precedent doc already left open
-(0056 §2/§7/§8's own three). Does not touch `lib/requirements/evaluate.ts`, `shape-audit.ts`, or
-any ingestion code — every code-only item above (A1, A4) is flagged as such precisely so it isn't
-bundled into "needs a migration" and left waiting on one unnecessarily. Does not apply anything.
+remediation-vs-rejection UI framing, B6's split-vs-widen data-model question) or the judgement
+calls the precedent doc already left open (0056 §2/§7/§8's own three). Does not touch
+`lib/requirements/evaluate.ts`, `shape-audit.ts`, or any ingestion code — every code-only item
+above (A1, A4) is flagged as such precisely so it isn't bundled into "needs a migration" and left
+waiting on one unnecessarily. Does not apply anything.
