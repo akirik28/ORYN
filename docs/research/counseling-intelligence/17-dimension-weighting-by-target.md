@@ -168,6 +168,26 @@ this package's own medicine family, `06-major-family-evidence/10-medicine-clinic
 which did not previously mention it at all) needs this third category recognized, not folded into
 either of the other two. [[RULE-COUNSEL-120]]
 
+**Running tracker — confirmed instances of the standardized-third-party-situational-judgment-test
+category, both branches, kept in one place since this now spans multiple documents on both sides**:
+
+| Instance | Field | Region | Population relevance | Rule ID (branch) |
+|---|---|---|---|---|
+| CASPer | Medicine, health sciences, PA, nursing, dental hygiene | US/Canada | High — ~50 US med schools alone | `RULE-COUNSEL-120` (this branch) |
+| UCAT (Situational Judgement Test subtest) | Medicine/dentistry | UK | High — 57 UK universities | `RULE-COUNSEL-121` (this branch) |
+| CASPer | Teacher education (admission, not post-degree licensure) | Canada/Australia (Vancouver Island University, Monash, Brock) | Medium — confirmed but narrower footprint than medicine | `RULE-COUNSEL-243` (peer branch) |
+| CASPer | Undergraduate engineering | Canada (Western University, ~7,500 annual applicants, since Fall 2024) | High — directly relevant to ORYN's population | `RULE-COUNSEL-244` (peer branch) |
+| CASPer | Business (MBA) | Only named adopter is Dalhousie's MBA | Low — graduate-level, past ORYN's population | `RULE-COUNSEL-245` (peer branch, honestly scoped as a near-negative finding rather than forced) |
+
+**Six confirmed instances across two continents and five fields (as of this update) is enough to
+treat this as a genuine, recurring structural category ORYN's recommendation model should
+recognize generically** — not a peculiarity of any one program, tool, or country. Whoever
+eventually resolves item 13 in `13-implementation-readiness.md` (the founder-level scoping
+question this category raises) should treat this table, not any single instance, as the scope of
+what needs to be handled — and should expect more instances to surface as either branch's family
+docs get further attention, given the pattern of finding a new one almost every time someone
+checked a specific named program's own page rather than assuming the pattern from one example.
+
 ## Cross-cutting: medicine is not uniformly holistic, and this package's own family doc materials already show why
 
 Pulling together findings that were previously scattered across `10-medicine-clinical-pathways.md`
