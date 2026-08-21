@@ -1,0 +1,554 @@
+{
+  "$schema_version": "1.0",
+  "dataset": "turkish-exams",
+  "rule_id_range": "RULE-TR-EXAM-001 .. RULE-TR-EXAM-025",
+  "researched_at": "2026-08-21",
+  "researcher_note": "Every claim below is sourced to a primary official document (OSYM, MEB, mevzuat.meb.gov.tr, or a national credential-recognition body). Search-engine snippets, prep-company pages, news outlets and blogs were used ONLY as discovery leads and are never recorded as evidence. Claims that could not be verified against primary text are recorded with status NEEDS_REVIEW or UNVERIFIED rather than omitted or guessed.",
+  "confidence_definitions": {
+    "high": "Exact claim stated verbatim in a primary official document that was retrieved and read in full.",
+    "medium": "Stated in an official source but indirectly, or read via an official summary page rather than the governing document.",
+    "low": "Only secondary sources available, or primary source identified but not retrievable."
+  },
+  "status_definitions": {
+    "VERIFIED_CURRENT": "Verified against current-cycle primary evidence and still in force.",
+    "VERIFIED_HISTORICAL": "Verified for a completed cycle. Must NOT be projected forward.",
+    "CURRENT_CYCLE_NOT_PUBLISHED": "Next-cycle details not published at research date.",
+    "CONFLICTING_EVIDENCE": "Two credible sources disagree; conflict recorded, not resolved.",
+    "NEEDS_REVIEW": "Claim plausible and partly supported but primary text not obtained.",
+    "UNVERIFIED": "Asserted by secondary sources only; no primary support found.",
+    "DISCONTINUED_CONFIRMED": "Officially confirmed as no longer administered."
+  },
+
+  "sources": {
+    "S1": {
+      "source_url": "https://www.meb.gov.tr/meb_iys_dosyalar/2026_06/12144226_UDSP_Basvuru_ve_Uygulama_Kilavuzu_2026_Guncel.pdf",
+      "source_title": "Uluslararasi Diploma ve Sertifika Programi (UDSP) Yabanci Dil Yeterlilik Sinavi Basvuru ve Uygulama Kilavuzu 2026",
+      "source_type": "official_government_primary",
+      "publisher": "T.C. Milli Egitim Bakanligi (MEB) / ODSGM",
+      "retrieved_at": "2026-08-21",
+      "pages": 16,
+      "sha256": "c56242de63d213112cb374e49018118e605dc6f97cde74fa690649b0b2f4a9ca",
+      "note": "Byte-identical to the earlier ODSGM-hosted copy despite the 'Guncel' filename; both hashed and compared."
+    },
+    "S2": {
+      "source_url": "https://mevzuat.meb.gov.tr/dosyalar/2257.pdf",
+      "source_title": "Milli Egitim Bakanligi Uluslararasi Diploma ve Sertifika Programlari Uygulama Yonergesi (consolidated, incl. amendments 10/02/2025 no.125470808 and 07/08/2025 no.137181115)",
+      "source_type": "official_government_primary_legislation",
+      "publisher": "MEB Mevzuat",
+      "retrieved_at": "2026-08-21",
+      "pages": 20
+    },
+    "S3": {
+      "source_url": "https://dakar.meb.gov.tr/www/2026-yili-uluslararasi-diploma-ve-sertifika-programlari-udsp-yabanci-dil-yeterlilik-sinavi-tarihi-degisti/icerik/73/tr",
+      "source_title": "2026 Yili UDSP Yabanci Dil Yeterlilik Sinavi Tarihi Degisti",
+      "source_type": "official_government_announcement",
+      "publisher": "MEB",
+      "retrieved_at": "2026-08-21"
+    },
+    "S4": {
+      "source_url": "https://dokuman.osym.gov.tr/pdfdokuman/2026/YKS/basvuru_kilavuz06022026.pdf",
+      "source_title": "2026 Yuksekogretim Kurumlari Sinavi (YKS) Kilavuzu",
+      "source_type": "official_government_primary",
+      "publisher": "OSYM",
+      "retrieved_at": "2026-08-21",
+      "pages": 146
+    },
+    "S5": {
+      "source_url": "https://cdn.osym.gov.tr/pdfdokuman/2026/YKS/SB/sayisal_ykdd21072026.pdf",
+      "source_title": "2026 YKS Sayisal Bilgiler",
+      "source_type": "official_government_statistics",
+      "publisher": "OSYM",
+      "retrieved_at": "2026-08-21",
+      "pages": 13
+    },
+    "S6": {
+      "source_url": "https://cdn.osym.gov.tr/pdfdokuman/2026/YKS/TERCIH/kontkilavuz_yktd21072026.pdf",
+      "source_title": "2026 YKS Yuksekogretim Programlari ve Kontenjanlari Kilavuzu",
+      "source_type": "official_government_primary",
+      "publisher": "OSYM",
+      "retrieved_at": "2026-08-21",
+      "pages": 793
+    },
+    "S7": {
+      "source_url": "https://www.meb.gov.tr/meb_iys_dosyalar/2026_04/06110219_LGS_Basvuru_ve_Uygulama_Kilavuzu_2026.pdf",
+      "source_title": "Sinavla Ogrenci Alacak Ortaogretim Kurumlarina Iliskin Merkezi Sinav Basvuru ve Uygulama Kilavuzu - 2026",
+      "source_type": "official_government_primary",
+      "publisher": "MEB",
+      "retrieved_at": "2026-08-21",
+      "pages": 22
+    },
+    "S8": {
+      "source_url": "https://cdn.eba.gov.tr/yardimcikaynaklar/genel/2026-yili-ortaogretime-gecis-tercih-ve-yerlestirme-kilavuzu.pdf",
+      "source_title": "2026 Yili Ortaogretime Gecis Tercih ve Yerlestirme Kilavuzu",
+      "source_type": "official_government_primary",
+      "publisher": "MEB",
+      "retrieved_at": "2026-08-21",
+      "pages": 15
+    },
+    "S9": {
+      "source_url": "https://dokuman.osym.gov.tr/pdfdokuman/2025/GENEL/esdegerlikdokuman_14032025.pdf",
+      "source_title": "Uluslararasi Yabanci Dil Sinavlari Esdegerlikleri Dokumani (update date 11.03.2025)",
+      "source_type": "official_government_primary",
+      "publisher": "OSYM",
+      "retrieved_at": "2026-08-21",
+      "pages": 6
+    },
+    "S10": {
+      "source_url": "https://dokuman.osym.gov.tr/pdfdokuman/2026/YOKDIL-1/kilavuz_ykdl1d21012026.pdf",
+      "source_title": "2026 Yuksekogretim Kurumlari Yabanci Dil Sinavi (YOKDIL/1) Kilavuzu",
+      "source_type": "official_government_primary",
+      "publisher": "OSYM",
+      "retrieved_at": "2026-08-21",
+      "pages": 32
+    },
+    "S11": {
+      "source_url": "https://dokuman.osym.gov.tr/pdfdokuman/2026/TR-YOS-1/ingilizce_kilavuz14012026.pdf",
+      "source_title": "2026 Exam for Foreign Students for Higher Education in Turkiye (TR-YOS/1) Guide",
+      "source_type": "official_government_primary",
+      "publisher": "OSYM",
+      "retrieved_at": "2026-08-21",
+      "pages": 35
+    },
+    "S12": {
+      "source_url": "https://www.nuffic.nl/en/education-systems/turkey/level-of-diplomas",
+      "source_title": "Nuffic - Turkiye - Level of diplomas",
+      "source_type": "official_credential_recognition_body",
+      "publisher": "Nuffic (Dutch ENIC-NARIC)",
+      "retrieved_at": "2026-08-21"
+    },
+    "S13": {
+      "source_url": "https://www.osym.gov.tr/SinavGrubu/Index/5",
+      "source_title": "OSYM - ALES exam group page",
+      "source_type": "official_government_page",
+      "publisher": "OSYM",
+      "retrieved_at": "2026-08-21"
+    },
+    "S14": {
+      "source_url": "https://www.osym.gov.tr/2026-turkiye-yurt-disindan-ogrenci-kabul-sinavi-2026tryos2-basvurularinin-alinmasiapplications-for-2026-exam-for-foreign-students-for-higher-education-in-turkiye-2026tryos2",
+      "source_title": "2026-TR-YOS/2 application announcement",
+      "source_type": "official_government_announcement",
+      "publisher": "OSYM",
+      "retrieved_at": "2026-08-21"
+    }
+  },
+
+  "exams": [
+    {
+      "id": "UDSP",
+      "name_tr": "Uluslararasi Diploma ve Sertifika Programi (UDSP) Yabanci Dil Yeterlilik Sinavi",
+      "name_en": "International Diploma and Certificate Programs Foreign Language Proficiency Exam",
+      "administrator": "MEB / ODSGM",
+      "relevance_to_oryn_user": "DIRECT_AND_DECISIVE",
+      "audience": "Students in grade 8, prep class, grade 9, grade 10",
+      "claims": [
+        {
+          "rule_id": "RULE-TR-EXAM-001",
+          "claim_supported": "The UDSP directive's annexes provide school-accreditation checklists for exactly three named program families: EK-4/a IBDP, EK-4/b AP, EK-4/c IGCSE-AS/A LEVEL. Other programs may be added if accepted by the Talim ve Terbiye Kurulu Baskanligi.",
+          "source": "S2",
+          "source_locator": "EK-4/a, EK-4/b, EK-4/c; MADDE 6(2)(b)",
+          "confidence": "high",
+          "status": "VERIFIED_CURRENT",
+          "limitations": "The 'AS/A LEVEL' wording was added by the 07/08/2025 amendment. Abitur is NOT named in any MEB primary source despite appearing in secondary sources - see RULE-TR-EXAM-001-B."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-001-B",
+          "claim_supported": "Claim that UDSP gates Abitur programs.",
+          "source": null,
+          "source_locator": null,
+          "confidence": "low",
+          "status": "UNVERIFIED",
+          "limitations": "Asserted by prep-company and agency pages only. No MEB primary source examined names Abitur. The exam being offered in German is not evidence for this, since a German-medium IB or IGCSE stream would equally explain it. ORYN must not assert this."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-002",
+          "claim_supported": "Admission to a UDSP requires all of: (a) being at the grade level where the program starts; (b) scoring at least 70 on the ministry-run foreign language level-determination exam; (c) where the school requires it, passing a school-run readiness exam (hazirbulunusluk sinavi) in the other subjects taught in the foreign language.",
+          "source": "S2",
+          "source_locator": "MADDE 8(1)(a),(b),(c)",
+          "confidence": "high",
+          "status": "VERIFIED_CURRENT",
+          "limitations": "Condition (c) is at school discretion, so clearing 70 does not by itself guarantee a place."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-003",
+          "claim_supported": "Where UDSP applicants exceed the program quota, ranking is by the foreign language exam score first, then by the readiness exam score if held, then by the previous year's yilsonu basari puani; the higher-scoring student is given priority.",
+          "source": "S2",
+          "source_locator": "MADDE 8(3)",
+          "confidence": "high",
+          "status": "VERIFIED_CURRENT",
+          "limitations": "Means 70 is a floor, not a target. Quota sizes are set per school and are not published centrally."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-004",
+          "claim_supported": "Students applying to a UDSP from outside the school must additionally meet the school's taban puan derived from the central (LGS) exam score, and those admitted this way are not counted against the school's vacant quota.",
+          "source": "S2",
+          "source_locator": "MADDE 8(4)",
+          "confidence": "high",
+          "status": "VERIFIED_CURRENT",
+          "limitations": "Per-school taban puan values are not in this source and must be obtained per school."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-005",
+          "claim_supported": "The central-exam requirement in MADDE 8(1)(b) applies from the 2026-2027 academic year. In 2025-2026 the language level-determination exam was run by school administrations.",
+          "source": "S2",
+          "source_locator": "GECICI MADDE 3 (added 07/08/2025)",
+          "confidence": "high",
+          "status": "VERIFIED_CURRENT",
+          "limitations": "The June 2026 sitting is the first cycle governed by a single central score; older guidance describes the superseded school-by-school model."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-006",
+          "claim_supported": "UDSP is evaluated out of 100 counting ONLY correct answers; students scoring 70 or above are deemed successful. Formula: Puan = (Dogru Sayisi / Soru Sayisi) x 100. Scores are not rounded up regardless of decimal.",
+          "source": "S1",
+          "source_locator": "Section 12.1",
+          "confidence": "high",
+          "status": "VERIFIED_HISTORICAL",
+          "cycle": "2026",
+          "limitations": "No negative marking, so with 50 questions each is worth 2 points and 70 equals exactly 35 correct. Contrast YKS (RULE-TR-EXAM-009) and LGS (RULE-TR-EXAM-018)."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-006-B",
+          "claim_supported": "The skills breakdown (reading/grammar/vocabulary/listening weighting) and CEFR alignment of UDSP.",
+          "source": null,
+          "source_locator": null,
+          "confidence": "low",
+          "status": "NEEDS_REVIEW",
+          "limitations": "The kilavuz specifies only question count, option count and duration. MEB published post-exam question booklets and answer keys which would settle this empirically, but they were not obtained and analysed. ORYN must not state a CEFR level or skills split."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-007",
+          "claim_supported": "UDSP eligibility is defined by grade level and enrolment status via four routes: grade 8 of formal public/private middle schools or prep/grade 9/grade 10 of secondary institutions (incl. KUDEP exchange students); private international schools (MOBIS-based); MEB-affiliated schools abroad; and students abroad not in the MIS applying via Turkish embassies/consulates under the MEB Denklik Yonetmeligi. Age is never referenced.",
+          "source": "S1",
+          "source_locator": "Section 4.1-4.4",
+          "confidence": "high",
+          "status": "VERIFIED_HISTORICAL",
+          "cycle": "2026",
+          "limitations": "ORYN must not infer age from grade: repetition, early enrolment and the denklik route break that mapping."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-007-B",
+          "claim_supported": "2026 cycle operational facts: applications 11-22 May 2026 via basvuru.meb.gov.tr; entrance documents from 22 June 2026; exam 27 June 2026 at 10:00 Turkiye time in a single session; results from 20 July 2026; 50 questions with 5 options in 110 minutes; offered in English or German at student choice; fee 2,000 TL incl. VAT; objection fee 75 TL incl. VAT within 5 calendar days; held in 81 provincial centres with 5 province preferences of which at least one must be a metropolitan, and no exam in provinces with fewer than 50 applicants; score valid 2 years from the exam date; sitting the exam is voluntary (istege bagli).",
+          "source": "S1",
+          "source_locator": "Sections 3.2-3.5, 4, 5.1-5.3, 9.1, 11.1-11.2, 13.1, 15.1-15.2",
+          "confidence": "high",
+          "status": "VERIFIED_HISTORICAL",
+          "cycle": "2026",
+          "limitations": "Must NOT be projected to 2027. The 2026 date itself moved after publication and the fee is a nominal TRY amount in a high-inflation economy."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-007-C",
+          "claim_supported": "The 2026 UDSP exam was moved from its originally planned date of 4 July 2026 to 27 June 2026, announced 14 May 2026.",
+          "source": "S3",
+          "source_locator": "announcement body",
+          "confidence": "high",
+          "status": "VERIFIED_HISTORICAL",
+          "cycle": "2026",
+          "limitations": "Recorded as a resolved supersession, not CONFLICTING_EVIDENCE: the final published guide carries 27 June throughout. Sources still quoting 4 July are stale."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-007-D",
+          "claim_supported": "2027 UDSP cycle dates, fee and application window.",
+          "source": null,
+          "source_locator": null,
+          "confidence": "low",
+          "status": "CURRENT_CYCLE_NOT_PUBLISHED",
+          "limitations": "No 2027 guide, date, fee or window found as of 2026-08-21. An annual sitting is a reasonable expectation given the directive is permanent, but it is an expectation, not a fact."
+        }
+      ]
+    },
+    {
+      "id": "YKS",
+      "name_tr": "Yuksekogretim Kurumlari Sinavi",
+      "name_en": "Higher Education Institutions Exam",
+      "administrator": "OSYM",
+      "relevance_to_oryn_user": "DIRECT_AND_DECISIVE",
+      "components": ["TYT", "AYT", "YDT"],
+      "claims": [
+        {
+          "rule_id": "RULE-TR-EXAM-008",
+          "claim_supported": "Students not required to take Din Kulturu ve Ahlak Bilgisi, or on a different curriculum (excluding Imam Hatip students/graduates), answer extra Philosophy questions instead, declared on the application form field 25. TYT Sosyal Bilimler has 25 answer slots (all answer Q1-15); AYT Sosyal Bilimler-2 has 46 slots (all answer Q1-34). Marks made in the wrong block are discarded.",
+          "source": "S4",
+          "source_locator": "Section 3.10.1",
+          "confidence": "high",
+          "status": "VERIFIED_HISTORICAL",
+          "cycle": "2026",
+          "limitations": "The declaration is made in February at application, not on exam day, and is irreversible afterwards. Frequently relevant to international-curriculum students."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-009",
+          "claim_supported": "YKS raw score = number of correct answers minus one quarter of the number of wrong answers. Raw scores are converted to standard scores with mean 50 and standard deviation 10, computed using the mean and SD of FINAL-YEAR students, then weighted and rescaled to a 100-500 range.",
+          "source": "S4",
+          "source_locator": "Section 3.10.1",
+          "confidence": "high",
+          "status": "VERIFIED_HISTORICAL",
+          "cycle": "2026",
+          "limitations": "Because standardisation is against each year's final-year cohort, any net-to-score or net-to-rank mapping is year-specific and must never be presented as a forecast."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-010",
+          "claim_supported": "TYT composite weights are Turkce 33%, Sosyal Bilimler 17%, Temel Matematik 33%, Fen Bilimleri 17%. TYT contributes 40% to EVERY score type: SAY (AYT Matematik 30, Fizik 10, Kimya 10, Biyoloji 10), EA (Matematik 30, TDE 18, Tarih-1 7, Cografya-1 5), SOZ (TDE 18, Tarih-1 7, Cografya-1 5, Tarih-2 8, Cografya-2 8, Felsefe Grubu 9, DKAB/Ilave 5), DIL (YDT 60).",
+          "source": "S4",
+          "source_locator": "Tablo 1C, Tablo 1E",
+          "confidence": "high",
+          "status": "VERIFIED_HISTORICAL",
+          "cycle": "2026",
+          "limitations": "Implies TYT Turkce alone is 13.2% of a SAY score, more than Physics, Chemistry or Biology individually. Weights have changed between cycles historically."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-011",
+          "claim_supported": "A weighted score is computed only if the candidate obtains a raw score of at least 0.5 in the qualifying tests per Tablo 1D. Candidates with no TYT score have no SAY, SOZ, EA or DIL score calculated even if they sat AYT and/or YDT.",
+          "source": "S4",
+          "source_locator": "Section 3.10.1, Tablo 1D",
+          "confidence": "high",
+          "status": "VERIFIED_HISTORICAL",
+          "cycle": "2026",
+          "limitations": "The floor is very low but absolute: failing to produce a TYT score voids the whole cycle."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-012",
+          "claim_supported": "The 2026 YKS kilavuz contains no numeric point threshold ('baraj'); the word does not appear. Tablo 1F requires only that the relevant score has been calculated. Field gating is by basari sirasi per Tablo 1G: Tip 50,000; Dis Hekimligi 80,000; Eczacilik 100,000; Hukuk 100,000 (EA); Mimarlik 250,000; Muhendislik 300,000; Ogretmenlik incl. PDR 300,000; teaching programs via OZYES 800,000 (on Y-TYT rank without extra points).",
+          "source": "S4",
+          "source_locator": "Tablo 1F, Tablo 1G",
+          "confidence": "high",
+          "status": "VERIFIED_HISTORICAL",
+          "cycle": "2026",
+          "limitations": "Foundation (vakif) universities may set a STRICTER rank by senate decision, so these are national floors and never sufficient for a specific program. Engineering list excludes Forestry/Agriculture/Fisheries-faculty programs and several named ones, and includes Food Engineering in Agriculture faculties."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-013",
+          "claim_supported": "OBP = high school diploma grade (out of 100) x 5, giving a 250-500 range. Diploma grades below 50 and unreported grades are treated as 50. OBP is calculated Turkey-wide with explicitly no school-level adjustment ('Turkiye geneli dikkate alinacak, okul bazinda islem yapilmayacaktir'). Diploma grades are transferred from MEB e-Okul in June; corrections go via the school on e-Okul, not OSYM.",
+          "source": "S4",
+          "source_locator": "Section 4.1",
+          "confidence": "high",
+          "status": "VERIFIED_HISTORICAL",
+          "cycle": "2026",
+          "limitations": "ORYN must not model any school-quality correction; the regulation forbids one. Candidates must verify their education record in AIS 23-30 June 2026 by 16:00; OSYM disclaims responsibility afterwards."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-014",
+          "claim_supported": "OBP is multiplied by 0.12 and added to exam scores to form the placement score, contributing 30 points (OBP 250) to 60 points (OBP 500). Vocational-track graduates receive an additional OBP x 0.06 ek puan for programs in Tablo 3A/3B.1/3C/3D. International science olympiad medallists receive an additional OBP coefficient of 0.06 (1st), 0.05 (2nd) or 0.04 (3rd) for relevant programs.",
+          "source": "S4",
+          "source_locator": "Section 4.2, Tablo 3A",
+          "confidence": "high",
+          "status": "VERIFIED_HISTORICAL",
+          "cycle": "2026",
+          "limitations": "For Tablo 3A and 3B.1 the ek puan applies only to students enrolled at such a school on or before 30.03.2012, so it is a legacy provision no current 14-18 student can qualify for."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-015",
+          "claim_supported": "Candidates centrally placed by OSYM (including OZYES) using 2025-YKS scores - explicitly 'whether or not they registered' (kayit olsun veya olmasin) - or who registered to a program via a university-run talent exam, have their OBP coefficients HALVED (0.12 to 0.06) when placed using 2026-YKS scores. Exception: candidates who were final-year students, were placed, but could not register because they had not graduated in time are NOT penalised, determined automatically from MEB e-Okul records.",
+          "source": "S4",
+          "source_locator": "Section 4.2",
+          "confidence": "high",
+          "status": "VERIFIED_HISTORICAL",
+          "cycle": "2026",
+          "limitations": "Highest-stakes rule for repeat candidates. The trigger for central placement is being PLACED, not registering - declining the seat does not protect the student. The decision point is at tercih (preference submission), and it is irreversible afterwards. Up to a 30-point loss."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-015-B",
+          "claim_supported": "2026 YKS operational facts: applications 6 Feb - 2 Mar 2026 (payment by 3 Mar), late window 10-12 Mar at +50%, fee 700 TL per session. TYT Sat 20 June 2026 10:15, 165 min. AYT Sun 21 June 2026 10:15, 180 min. YDT Sun 21 June 2026 15:45, 120 min. TYT is compulsory for all candidates. Question counts: TYT 120 (Turkce 40, Sosyal 20, Temel Matematik 40, Fen 20); AYT TDE 24, Tarih-1 10, Cografya-1 6, Tarih-2 11, Cografya-2 11, Felsefe Grubu 12, DKAB 6, Matematik 40, Fizik 14, Kimya 13, Biyoloji 13; YDT 80 in German, Arabic, French, English or Russian.",
+          "source": "S4",
+          "source_locator": "Cover calendar, Section 3.1, Tablo 1B",
+          "confidence": "high",
+          "status": "VERIFIED_HISTORICAL",
+          "cycle": "2026",
+          "limitations": "2027 details not published. Do not carry the 700 TL fee forward."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-015-C",
+          "claim_supported": "2026-YKS official participation and performance statistics. TYT: 2,425,627 applied / 2,255,076 sat / 2,254,830 valid. AYT: 1,627,970 / 1,473,113 / 1,473,064. YDT: 203,640 / 143,270 / 143,264. All-candidate mean raw scores: TYT Turkce 20.1 (SD 8.3), Sosyal Bilimler 10.0 (4.0), Temel Matematik 6.4 (7.5), Fen Bilimleri 3.9 (5.0); AYT Matematik 7.1 (8.9), TDE 6.5 (5.4), Fizik 2.6 (3.6), Kimya 2.1 (3.6), Biyoloji 3.0 (3.6); YDT English 37.6/80 (21.4) over 136,745 candidates.",
+          "source": "S5",
+          "source_locator": "pp.2-3",
+          "confidence": "high",
+          "status": "VERIFIED_HISTORICAL",
+          "cycle": "2026",
+          "limitations": "Descriptive of the 2026 cohort only. Must never be presented as a prediction or as 'the score you need'. Note the valid question counts differ from Tablo 1B (AYT Matematik scored over 39 of 40, TDE over 23 of 24) because questions were cancelled - so ORYN must not assume a fixed denominator."
+        }
+      ]
+    },
+    {
+      "id": "LGS",
+      "name_tr": "Liselere Gecis Sistemi kapsamindaki Merkezi Sinav",
+      "name_en": "Central Exam within the High School Transition System",
+      "administrator": "MEB / ODSGM",
+      "relevance_to_oryn_user": "CONTEXT_ONLY",
+      "claims": [
+        {
+          "rule_id": "RULE-TR-EXAM-016",
+          "claim_supported": "'OBP' denotes two different quantities. In YKS it is Ortaogretim Basari Puani (diploma grade x 5, range 250-500) which is ADDED to the score. In LGS it is Okul Basari Puani, the arithmetic mean of year-end success scores for grades 6, 7 and 8 carried to four decimal places, which is used ONLY as a tie-break.",
+          "source": "S8",
+          "source_locator": "Definitions section; cross-referenced with S4 Section 4.1",
+          "confidence": "high",
+          "status": "VERIFIED_HISTORICAL",
+          "cycle": "2026",
+          "limitations": "Acronym collision with incompatible semantics. ORYN must not carry logic from one system to the other."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-017",
+          "claim_supported": "2026 LGS: applications 23 March - 10 April 2026; entrance documents 3 June; exam 14 June 2026; results 10 July 2026; preferences 13-27 July; placement results 5 August 2026. Two sessions on one day: session 1 at 09:30, 50 verbal-area questions in 75 minutes (Turkce, T.C. Inkilap Tarihi ve Ataturkculuk, Din Kulturu ve Ahlak Bilgisi, Yabanci Dil); session 2 at 11:30, 40 numerical-area questions in 80 minutes (Matematik, Fen Bilimleri). Based on the grade 8 curriculum. Each question has 4 options.",
+          "source": "S7",
+          "source_locator": "Sections on exam application and conduct",
+          "confidence": "high",
+          "status": "VERIFIED_HISTORICAL",
+          "cycle": "2026",
+          "limitations": "Four options, unlike YKS and UDSP which have five. 2027 details not published."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-018",
+          "claim_supported": "LGS raw score = correct answers minus ONE THIRD of wrong answers. Sub-tests are standardised to mean 50 / SD 10, multiplied by Tablo-2 weights (Turkce 4, Matematik 4, Fen Bilimleri 4, T.C. Inkilap Tarihi 1, Din Kulturu 1, Yabanci Dil 1), summed to a Toplam Agirlikli Standart Puan and rescaled to 100-500. Students missing either session have no score calculated. Students exempt from Yabanci Dil and/or Din Kulturu have those weighted scores imputed proportionally from their other tests.",
+          "source": "S7",
+          "source_locator": "Section 11, Tablo-2",
+          "confidence": "high",
+          "status": "VERIFIED_HISTORICAL",
+          "cycle": "2026",
+          "limitations": "One-third penalty differs from YKS's one-quarter and from UDSP's none. Turkce/Matematik/Fen carry 12 of 15 weight units (80% of the score) despite being only 60 of 90 questions."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-019",
+          "claim_supported": "LGS placement runs through three routes with up to 20 preferences total: merkezi (up to 10, by exam score into quota), yerel (up to 5, first 3 within the registration area, by residence address/school success score/absence record), and pansiyonlu boarding (up to 5). Central-placement ties break in order: exam score, OBP, year-end score in grade 8 then 7 then 6, fewer unexcused absence days in grade 8, preference order, younger candidate. Students completing definitive registration at a private secondary institution cannot make preferences, and preferences submitted before registering are cancelled by the Ministry.",
+          "source": "S8",
+          "source_locator": "Placement sections; tie-break clause (b)",
+          "confidence": "high",
+          "status": "VERIFIED_HISTORICAL",
+          "cycle": "2026",
+          "limitations": "Local placement is the universal fallback so no student is left unplaced. Placement into a central-exam school voids that student's local and boarding preferences."
+        }
+      ]
+    },
+    {
+      "id": "FOREIGN_LANGUAGE_EXAMS",
+      "name_tr": "YDS / e-YDS / YOKDIL / (UDS, KPDS - historical)",
+      "administrator": "OSYM (YOKDIL under protocol with YOK)",
+      "relevance_to_oryn_user": "NOT_RELEVANT_TO_SECONDARY_STUDENT",
+      "claims": [
+        {
+          "rule_id": "RULE-TR-EXAM-020",
+          "claim_supported": "OSYM declares KPDS (Kamu Personeli Yabanci Dil Bilgisi Seviye Tespit Sinavi), UDS (Universitelerarasi Kurul Yabanci Dil Sinavi), YDS (Yabanci Dil Bilgisi Seviye Tespit Sinavi) and e-YDS (Elektronik YDS) to be mutually and bidirectionally equivalent ('birbirlerine cift yonlu olarak denktir/esdegerdir'). OSYM's current foreign-language catalogue comprises YDS, e-YDS, YOKDIL and e-YOKDIL; UDS and KPDS appear only in the equivalence table.",
+          "source": "S9",
+          "source_locator": "'KPDS/UDS/YDS/e-YDS Esdegerligi' section, p.1",
+          "confidence": "high",
+          "status": "VERIFIED_CURRENT",
+          "limitations": "Establishes that UDS was real and that its scores still convert. Does NOT by itself establish the mechanism or date of its discontinuation - see RULE-TR-EXAM-020-B."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-020-B",
+          "claim_supported": "Claim that UDS and KPDS were formally abolished and merged into YDS in 2013 by the Yabanci Dil Bilgisi Seviye Belirleme Usul ve Esaslari Hakkinda Yonetmelik (Resmi Gazete 4/1/2013, No. 28518).",
+          "source": null,
+          "source_locator": "Yonetmelik identified but text not retrieved",
+          "confidence": "low",
+          "status": "NEEDS_REVIEW",
+          "limitations": "The regulation's existence, date and gazette number were confirmed via a search restricted to resmigazete.gov.tr and mevzuat.gov.tr, but BOTH domains failed TLS certificate verification from this environment on repeated attempts, so the repeal article was never read. ORYN should say 'OSYM no longer administers UDS; its scores remain equivalent to YDS' (fully supported) rather than 'UDS was abolished in 2013'."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-021",
+          "claim_supported": "YOKDIL is administered by OSYM under a protocol with YOK, in discipline streams (Fen Bilimleri, Saglik Bilimleri, Sosyal Bilimler), twice yearly, 180 minutes. 2026 dates: YOKDIL/1 on 8 March 2026 and YOKDIL/2 on 2 August 2026, both starting 10:15. One language and field per session. Results are valid 5 years for postgraduate education and language prep exemption, and PERMANENTLY for academic staff posts and docentlik applications.",
+          "source": "S10",
+          "source_locator": "Sections 1.1-1.7",
+          "confidence": "high",
+          "status": "VERIFIED_HISTORICAL",
+          "cycle": "2026",
+          "limitations": "Every documented use case is postgraduate or professional. There is no secondary-school application. Spring offers English in all three fields plus Arabic in Social Sciences only; autumn adds German, Arabic and French in Social Sciences only."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-022",
+          "claim_supported": "OSYM's accepted English exams for KPDS/UDS/YDS/e-YDS equivalence are a closed list: Cambridge C2 Proficiency, Cambridge C1 Advanced, Cambridge Linguaskill General, TOEFL iBT, PTE Academic, Oxford Test of English Advanced, and Oxford Test of English. The document states that exams outside it cannot be evaluated under it. IELTS does not appear anywhere in the document. TOEFL iBT converts: 120=100, 114=95, 108=90, 102=85, 96=80, 90=75, 84=70, 78=65, 72=60, 66=55, 60=50, 54=45, 48=40. Equivalence is ONE-WAY (international to YDS, never the reverse). Scores without a stated expiry are usable for 5 years from the exam date. Exams sat in Turkiye must be held in state university buildings and result documents must show place and date. Equivalence is assessed against the document version in force on the EXAM DATE. OSYM issues no equivalence certificate.",
+          "source": "S9",
+          "source_locator": "pp.1-4, Tablo 1-7",
+          "confidence": "high",
+          "status": "VERIFIED_CURRENT",
+          "limitations": "Scope is OSYM equivalence (postgraduate admission, academic posts, civil-service allowance) ONLY. It does NOT establish that Turkish universities reject IELTS - individual institutions set their own proficiency and prep-exemption rules under their own senate regulations, which were not verified. Document update date is 11.03.2025, roughly 17 months old at retrieval; OSYM updates it irregularly and has removed exams before, so re-verify before production use."
+        }
+      ]
+    },
+    {
+      "id": "TR-YOS",
+      "name_tr": "Turkiye Yurt Disindan Ogrenci Kabul Sinavi",
+      "name_en": "Exam for Foreign Students for Higher Education in Turkiye",
+      "administrator": "OSYM",
+      "relevance_to_oryn_user": "ONLY_IF_EDUCATED_ENTIRELY_ABROAD",
+      "claims": [
+        {
+          "rule_id": "RULE-TR-EXAM-023",
+          "claim_supported": "TR-YOS applicants must be in their final year of high school or graduated, and are EXCLUDED if enrolled in or graduated from a high school in Turkiye. Eligible categories: foreign nationals; former Turkish citizens who renounced citizenship or hold a Blue Card; those who acquired Turkish citizenship later or hold dual nationality in that status; TRNC citizens who completed all high school abroad; and Turkish citizens who completed their ENTIRE high school education abroad (excluding TRNC, including MEB schools abroad) and can certify presence in that country during those years. Carve-outs from the Turkiye-schooling exclusion: embassy schools, MOBIS-listed international private institutions, and foreign nationals in Turkiye under MEB/YOK projects. As of 2026 YOK decided that TRNC citizens, Blue Card holders and foreign nationals who studied at secondary institutions in Turkiye may be admitted to Turkish and TRNC higher education SOLELY through YKS. Exam offered in Turkish, German, English, French, Russian and Arabic. Format: Numerical Aptitude Test (40 questions) and Basic Mathematics Test (40 questions), 100 minutes; raw = correct minus one quarter of wrong; standardised mean 50 / SD 10; weighted 0.45 Numerical Aptitude + 0.55 Basic Mathematics; requires at least 0.5 raw in one test; rescaled to 100-500; valid 2 years.",
+          "source": "S11",
+          "source_locator": "Sections 1.4, 1.5, 1.6, 1.8, 4",
+          "confidence": "high",
+          "status": "VERIFIED_CURRENT",
+          "limitations": "TR-YOS contains NO Turkish-language test and no verbal component at all. It is also not the only route in: per Section 1.7 universities may accept national exams, international exams or their own entrance exams and publish their own minimum scores, with students applying directly. ORYN must not present TR-YOS as required for international admission. 2026-TR-YOS/2 exam is 11 October 2026 (source S14), application window 9 July - 3 August 2026 extended to 11 August 2026."
+        }
+      ]
+    },
+    {
+      "id": "ALES_DGS",
+      "name_tr": "ALES / DGS",
+      "administrator": "OSYM",
+      "relevance_to_oryn_user": "NOT_APPLICABLE_STRUCTURALLY",
+      "claims": [
+        {
+          "rule_id": "RULE-TR-EXAM-024",
+          "claim_supported": "ALES (Akademik Personel ve Lisansustu Egitimi Giris Sinavi) is for entry to postgraduate education and academic staff posts and requires holding or being about to complete a bachelor's (lisans) degree. DGS (Dikey Gecis Sinavi) is for graduates of vocational higher schools (meslek yuksekokulu) and open-education associate (on lisans) programs to transfer vertically into bachelor's programs; the 2026 DGS was held 19 July 2026 and comprises a numerical and verbal aptitude test.",
+          "source": "S13",
+          "source_locator": " ALES exam group page; DGS details from OSYM DGS announcement pages",
+          "confidence": "medium",
+          "status": "VERIFIED_CURRENT",
+          "limitations": "ALES eligibility read from the official exam-group page and the exam's own full name rather than extracted from the ALES kilavuz PDF; DGS date and test structure taken from OSYM announcement pages rather than the DGS kilavuz PDF. Both are structurally impossible for a 14-18 secondary student, which is the operative point for ORYN and is not in doubt."
+        }
+      ]
+    },
+    {
+      "id": "MEB_DIPLOMA_ABROAD",
+      "name_tr": "Lise Diplomasi - yurt disinda taninmasi",
+      "name_en": "Turkish high school diploma - recognition abroad",
+      "relevance_to_oryn_user": "DIRECT_IF_APPLYING_ABROAD",
+      "claims": [
+        {
+          "rule_id": "RULE-TR-EXAM-025",
+          "claim_supported": "Nuffic, the Dutch national credential-evaluation body (Dutch ENIC-NARIC), states the Turkish Lise Diplomasi is comparable to 'at least a HAVO diploma'. It further states: Meslek Lisesi Diplomasi to 'an MBO diploma, level 2 or 3'; Teknik Lisesi Diplomasi to 'a HAVO diploma for the general education part'; On Lisans Diplomasi to 'an associate degree or 2 years of HBO' (NQF-HETR/EQF 5); Lisans Diplomasi to 'an HBO bachelor's degree or a WO bachelor's degree' (6); Yuksek Lisans Diplomasi to 'an HBO master's degree or a WO master's degree' (7). Comparisons are made under the Lisbon Recognition Convention, whose principle is that a foreign diploma is treated as the same level as the domestic one unless there are substantial differences.",
+          "source": "S12",
+          "source_locator": "Level of diplomas table",
+          "confidence": "high",
+          "status": "VERIFIED_CURRENT",
+          "jurisdiction": "Netherlands",
+          "limitations": "'At least a HAVO diploma' is a FLOOR, not an equation. Nuffic does not state equivalence to VWO and ORYN must not upgrade the phrasing."
+        },
+        {
+          "rule_id": "RULE-TR-EXAM-025-B",
+          "claim_supported": "Treatment of the Turkish Lise Diplomasi by credential-recognition authorities outside the Netherlands (UK ENIC, ANABIN/KMK for Germany, France, Italy, Switzerland, Canada, and US practice).",
+          "source": null,
+          "source_locator": null,
+          "confidence": "low",
+          "status": "UNVERIFIED",
+          "limitations": "Not researched. UK ENIC comparability material is subscription-gated. Germany is known to be more complex (historically involving Studienkolleg or a qualifying university-entrance result rather than direct admission) and the US has no national recognition authority at all - evaluation is by private agencies and individual admissions offices. ORYN must NOT generalise the Netherlands finding to any other jurisdiction, and should display 'not yet researched' instead."
+        }
+      ]
+    }
+  ],
+
+  "discovery_leads_not_used_as_evidence": [
+    "udsp.org.tr", "pergaegitim.com", "iienstitu.com", "endlessabroad.com.tr",
+    "cnnturk.com", "hurriyet.com.tr", "memurlar.net", "donanimhaber.com forum",
+    "x.com post by a member of parliament", "hesaplama.net and other OBP calculator sites",
+    "urfanatik.com", "gzt.com", "unikazan.com", "kariyer.net", "lexpera.com.tr"
+  ],
+  "retrieval_failures": [
+    {
+      "url": "https://www.resmigazete.gov.tr/eskiler/2013/01/20130104-4.htm",
+      "reason": "TLS certificate verification failed from this environment",
+      "affects": "RULE-TR-EXAM-020-B"
+    },
+    {
+      "url": "https://mevzuat.gov.tr/File/GeneratePdf?mevzuatNo=16997&mevzuatTur=KurumVeKurulusYonetmeligi&mevzuatTertip=5",
+      "reason": "TLS certificate verification failed from this environment",
+      "affects": "RULE-TR-EXAM-020-B"
+    },
+    {
+      "url": "https://odsgm.meb.gov.tr/meb_iys_dosyalar/2026_04/69cfb9daaf8f2557696260_LGS_Basvuru_ve_Uygulama_KIlavuzu_2026.pdf",
+      "reason": "HTTP 404 / WAF challenge; substituted the meb.gov.tr copy of the same document (S7)",
+      "affects": "none - resolved"
+    },
+    {
+      "url": "https://www.udsp.org.tr/",
+      "reason": "Domain safety verification blocked; not needed - MEB primary sources used instead",
+      "affects": "none - resolved"
+    }
+  ]
+}
