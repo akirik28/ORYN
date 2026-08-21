@@ -76,7 +76,9 @@ the full branch topology before assuming this directory alone is the complete pa
 | 10 | `10-open-questions.md` | What remains genuinely unresolved, and what data does ORYN not yet have to execute these rules? | Yes |
 | 11 | `11-geography-admissions-systems.md` | Added after `10` identified it as the highest-leverage gap: how much does holistic profile-building actually matter across USA/Canada/UK/France/Germany/Netherlands/Italy/Switzerland/Spain/Turkey, and what should that mean for how the counselor weights recommendations by target geography? | Yes |
 | 12 | `12-activity-progression-pathways.md` | Added per the mission's own "AFTER CORE PACKAGE" list: what does a realistic multi-year progression look like in a given area, and how should a late or non-standard start be handled without penalty? | Yes |
-| 13 | `13-implementation-readiness.md` | Synthesis: of everything `00`-`12` propose, what should an engineering session build first, ranked by what each item actually requires (buildable today vs. needs new data vs. needs a founder-level scoping decision)? | Yes |
+| 13 | `13-implementation-readiness.md` | Synthesis: of everything `00`-`12` propose, what should an engineering session build first, ranked by what each item actually requires (buildable today vs. needs new data vs. needs a founder-level scoping decision)? |
+| — | `14-field-opportunity-mapping.md` | Peer-branch only — opportunity-category × relevant-fields index, a different axis from `02`'s category→dimension mapping. |
+| 15 | `15-executive-summary.md` | **Read this one if you read exactly one.** A 5-minute consolidation of the night's highest-impact findings across both branches, for anyone who doesn't want to read 20+ documents. | Yes |
 
 Machine-readable companions live in `data/research/counseling-intelligence/`:
 
