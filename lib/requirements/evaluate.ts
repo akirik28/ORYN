@@ -238,7 +238,6 @@ export function evaluateRequirement(
   const gate = qualifiers.evaluationGate ?? (qualifiers.isExclusion ? "eligibility_restriction" : null);
   if (gate) return gateResult(gate);
 
-
   if (MANUAL_REVIEW_CATEGORIES.includes(category)) {
     return review(
       "This requirement depends on submitted material Oryn doesn't evaluate automatically — review it yourself.",
