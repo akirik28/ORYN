@@ -7,7 +7,7 @@ import {
   type UniversityCounselingViewInput,
 } from "@/lib/universities/counseling-adapter";
 import { computeAdmissionOutlook } from "@/lib/admissions/outlook";
-import { explainOutlook } from "@/lib/admissions/explain";
+import { explainOutlook, type DimensionScoreInput } from "@/lib/admissions/explain";
 import { formatTuition } from "@/lib/universities/tuition-format";
 import { formatCurrency } from "@/lib/i18n/format";
 import { REQUIREMENT_CATEGORY_LABELS } from "@/lib/requirements/types";
@@ -26,7 +26,7 @@ function baseInput(overrides: Partial<UniversityCounselingViewInput> = {}): Univ
     admissionRate: null,
     profileStrength: 50,
     profileDataConfidence: "medium",
-    profileDimensionScores: {},
+    profileDimensionScores: [],
     ...overrides,
   };
 }
@@ -48,7 +48,10 @@ describe("buildUniversityCounselingView — outlook (never a fake acceptance cha
   });
 
   test("outlook, when computed, is exactly computeAdmissionOutlook/explainOutlook's own output — no re-derivation", () => {
-    const scores = { research: 40, leadership: 90 } as const;
+    const scores: DimensionScoreInput[] = [
+      { dimension: "research", score: 40, confidence: "high" },
+      { dimension: "leadership", score: 90, confidence: "high" },
+    ];
     const view = buildUniversityCounselingView(
       baseInput({
         target: { id: "t1", programId: null, status: "target" },
