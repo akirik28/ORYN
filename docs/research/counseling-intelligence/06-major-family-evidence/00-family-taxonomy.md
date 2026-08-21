@@ -156,9 +156,11 @@ in its own §5 rather than forcing an arbitrary single-pair row here.
 
 `data/research/counseling-intelligence/major-family-taxonomy.json` structurally indexes every
 family document listed in §3's table (onboarding interests, core skills, career families,
-credential-gated destinations, interdisciplinary links, licensure/country coverage, key rule IDs) —
-built by directly reading all 20 documents (this session's 11 and the peer session's 9, the latter
-read from its own worktree) rather than duplicating research. It is an index over this document set,
+credential-gated destinations, interdisciplinary links, licensure/country coverage, key rule IDs,
+and a per-family `unsafe_inferences` list — directly serving the peer branch's own
+`13-implementation-readiness.md` item 11/12, a ready-made "what a family-aware explanation template
+must not say" list) — built by directly reading all 20 documents (this session's 11 and the peer
+session's 9, the latter read from its own worktree) rather than duplicating research. It is an index over this document set,
 not a replacement for it: resolve any specific factual claim against the named family document, not
 the JSON alone.
 

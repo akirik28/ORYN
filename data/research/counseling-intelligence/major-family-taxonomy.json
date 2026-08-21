@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
   "package": "counseling-intelligence",
-  "last_updated": "2026-08-21T04:35:00+03:00",
-  "method_note": "Structured index over docs/research/counseling-intelligence/06-major-family-evidence/*.md (both branches -- this branch's 11 families and the peer branch's 9, read directly from its worktree at .claude/worktrees/counseling-intelligence-research-013956/). This file answers the mission brief's deliverable #11 (a machine-readable structured artifact for the interest -> major/field -> skills -> experiences -> career-family -> next-action chain) in a way rules.json (rule registry) and sources.json (citation registry) do not, since neither encodes the taxonomy graph itself. This is an INDEX, not a replacement for the prose docs -- every family's source_doc field points to the authoritative detail; resolve any specific factual claim there, not here. No new research was performed to build this file; every field traces to content already established in the corresponding family document. Per-family sourcing/confidence/limitations live in that document's own Sources table and in sources.json, not duplicated here. family_id '*' in interdisciplinary_connections denotes a structural one-to-many exception (currently only family 18, Education), not a normal pairwise link.",
+  "last_updated": "2026-08-21T04:45:00+03:00",
+  "method_note": "Structured index over docs/research/counseling-intelligence/06-major-family-evidence/*.md (both branches -- this branch's 11 families and the peer branch's 9, read directly from its worktree at .claude/worktrees/counseling-intelligence-research-013956/). This file answers the mission brief's deliverable #11 (a machine-readable structured artifact for the interest -> major/field -> skills -> experiences -> career-family -> next-action chain) in a way rules.json (rule registry) and sources.json (citation registry) do not, since neither encodes the taxonomy graph itself. This is an INDEX, not a replacement for the prose docs -- every family's source_doc field points to the authoritative detail; resolve any specific factual claim there, not here. No new research was performed to build this file; every field traces to content already established in the corresponding family document. Per-family sourcing/confidence/limitations live in that document's own Sources table and in sources.json, not duplicated here. family_id '*' in interdisciplinary_connections denotes a structural one-to-many exception (currently only family 18, Education), not a normal pairwise link. Each family's `unsafe_inferences` field extracts that document's own \"unsafe inferences\" guidance (peer branch's explicit section heading) or equivalent RULE-COUNSEL-tagged cautions (this branch's inline convention) -- directly serves the peer branch's own 13-implementation-readiness.md item 11/12: a ready-made list of things a family-aware explanation template should actively avoid saying.",
   "onboarding_vocabulary_gaps": {
     "note": "lib/validation/onboarding.ts's INTEREST_SUGGESTIONS has 16 free-text-suggest values (never a closed enum). Families 17, 18, 19, 20 and chemistry/journalism/film/sociology/philosophy/IR/product-design/sustainability-specifically have NO dedicated onboarding suggestion -- reachable only via an approximate-neighbor suggestion or free text.",
     "families_with_no_onboarding_anchor": [
@@ -216,7 +216,11 @@
         "eu": "high (ESCO, classification-only)",
         "turkey": "high (İŞKUR official future-occupations list, direct fetch)",
         "germany": "not separately covered"
-      }
+      },
+      "unsafe_inferences": [
+        "Treat 'Computer Science' as one skill, not an umbrella -- a competitive-programming-inclined student and a product-building-inclined student are developing measurably different things (RULE-COUNSEL-203).",
+        "Treat sustained build, algorithmic competition, and hackathon participation as one undifferentiated 'did something CS-related' signal -- they demonstrate three distinct, non-interchangeable skills (RULE-COUNSEL-204)."
+      ]
     },
     {
       "family_id": "02",
@@ -306,7 +310,11 @@
         "eu": "medium (ESCO + Actuarial Association of Europe, not per-country)",
         "turkey": "none (not independently verified)",
         "germany": "not separately covered"
-      }
+      },
+      "unsafe_inferences": [
+        "Treat a stated 'I like math' interest as one signal -- it may mean pure/abstract, applied/modeling, or data-analysis, which predict different downstream fits (RULE-COUNSEL-205).",
+        "Treat olympiad/competition success as equivalent evidence for applied-math or statistics fit -- it specifically evidences pure-math/proof-based problem-solving, not the other tracks."
+      ]
     },
     {
       "family_id": "03",
@@ -392,7 +400,10 @@
         "eu": "medium (ESCO, classification-only)",
         "turkey": "low (İŞKUR names Kimyager only, no physics entry)",
         "germany": "not separately covered"
-      }
+      },
+      "unsafe_inferences": [
+        "Treat a stated physics/chemistry interest as one thing without probing whether the student means theoretical/mathematical or hands-on/experimental work -- these reward different exploration experiences (RULE-COUNSEL-206)."
+      ]
     },
     {
       "family_id": "04",
@@ -476,7 +487,11 @@
         "eu": "medium (ESCO, classification-only)",
         "turkey": "none (not independently verified)",
         "germany": "not separately covered"
-      }
+      },
+      "unsafe_inferences": [
+        "Treat 'biology' as one activity profile -- it spans wet-lab, field/ecological, and computational work with genuinely different day-to-day activity (RULE-COUNSEL-207).",
+        "Imply a biology major is required for medicine or another clinical health profession -- pre-med 'requirements' are specific courses, not a mandated major, a common real misconception (RULE-COUNSEL-208)."
+      ]
     },
     {
       "family_id": "05",
@@ -577,7 +592,12 @@
         "eu": "medium (ESCO; licensure is member-state-specific, not mapped per-country)",
         "turkey": "high (TMMOB official, Law No. 3458/6235)",
         "germany": "medium-high (Ingenieurgesetz + VDI, secondary-sourced)"
-      }
+      },
+      "unsafe_inferences": [
+        "Encourage a student to commit to one of the four engineering subfields (ME/CE/AE/EE) before sampling more than one's actual design/build activity -- 'Engineering' is as broad as 'Computer Science' or 'Biology' (RULE-COUNSEL-209).",
+        "Infer PE-licensure necessity from subfield alone -- it depends on role/industry (public-safety-facing practice vs. large-private-employer roles), and many engineers practice a full career without one (RULE-COUNSEL-210).",
+        "Apply one country's engineering-licensure framing to a student targeting a different country -- US/UK/Turkey/Germany are four genuinely distinct models (practice-gated / competence-based / practice-gated-at-the-title-level / title-only) (RULE-COUNSEL-227, RULE-COUNSEL-241)."
+      ]
     },
     {
       "family_id": "06",
@@ -654,7 +674,11 @@
         "eu": "low (CE-marking existence only, common-knowledge confidence)",
         "turkey": "none (genuinely unresolved, not merely unfetched)",
         "germany": "not separately covered"
-      }
+      },
+      "unsafe_inferences": [
+        "Counsel biomedical engineering as a 'pre-med' pathway or a subset of one -- it is an engineering discipline whose graduates mostly go into engineering/industry/research, not clinical practice (RULE-COUNSEL-211).",
+        "Conflate the UK's 'Biomedical Scientist' (a lab-diagnostics/clinical-science role) with 'biomedical engineering' -- a real, easily-confused naming overlap."
+      ]
     },
     {
       "family_id": "07",
@@ -743,7 +767,10 @@
         "eu": "medium (ESCO, classification-only)",
         "turkey": "none (not independently verified)",
         "germany": "not separately covered"
-      }
+      },
+      "unsafe_inferences": [
+        "Treat a student drawn to economics purely for its news/policy relevance, with no appetite for the underlying statistics/econometrics, as a good fit without surfacing the mismatch -- real, worth a counselor conversation, though milder than a disqualification (RULE-COUNSEL-212)."
+      ]
     },
     {
       "family_id": "08",
@@ -833,7 +860,11 @@
         "eu": "low (Junior Achievement Europe named as a discovery lead only, not verified)",
         "turkey": "medium (İŞKUR names 5 business-adjacent occupations, no DECA-equivalent found)",
         "germany": "not separately covered"
-      }
+      },
+      "unsafe_inferences": [
+        "Treat a strong management/operational profile as automatic evidence of entrepreneurial capability, or vice versa -- these are distinct constructs (RULE-COUNSEL-213).",
+        "Treat DECA/FBLA-style simulated business-scenario competition placement as entrepreneurship evidence -- it is a simulation of a business scenario, not the operation of a real one, unlike the UK's Young Enterprise Company Programme which genuinely clears that bar (RULE-COUNSEL-214, RULE-COUNSEL-229)."
+      ]
     },
     {
       "family_id": "09",
@@ -919,7 +950,11 @@
         "eu": "low (ESCO + EU environmental law noted as existing, not characterized)",
         "turkey": "medium (İŞKUR names 2 relevant occupations)",
         "germany": "not separately covered"
-      }
+      },
+      "unsafe_inferences": [
+        "Treat 'environmental science' and 'sustainability' as the same activity profile -- fieldwork/conservation and policy/business practice are both legitimately in this family but reward different exploration experiences (RULE-COUNSEL-215).",
+        "Present named teen environmental research/mentorship programs surfaced in this research as confirmed, current opportunities -- they are discovery leads for the separate opportunity-acquisition pipeline to verify, not pre-verified."
+      ]
     },
     {
       "family_id": "10",
@@ -989,7 +1024,12 @@
         "eu": "low (ESCO, classification-only)",
         "turkey": "high (İŞKUR names 5 medicine/allied-health occupations)",
         "germany": "medium-high (Approbation system, secondary-sourced)"
-      }
+      },
+      "unsafe_inferences": [
+        "Treat 'no clinical hours' as a weakness for a grade 9-10 student -- the realistic HS pathway (shadowing/volunteering) is itself often age-gated (minimum age ~14-16 at many institutions).",
+        "Cite a specific MCAT score or pre-med GPA threshold to a high-school-stage student -- these are an undergraduate/professional-school concern entirely outside this population (RULE-COUNSEL-034).",
+        "Require research to 'prove' medical interest -- research is common but not universal even among successful undergraduate applicants, let alone required for a high schooler still exploring."
+      ]
     },
     {
       "family_id": "11",
@@ -1067,7 +1107,11 @@
         "eu": "low (ESCO, classification-only)",
         "turkey": "high (İŞKUR + MEB regulation Art. 3(i), primary source)",
         "germany": "medium-high (Approbation/Psychotherapeutengesetz, secondary-sourced)"
-      }
+      },
+      "unsafe_inferences": [
+        "Treat 'interest in psychology' alone as meaningful signal -- given the field's popularity, stated interest is close to the least differentiating evidence available; push toward which sub-field and what specific engagement.",
+        "Require lab access for legitimate psychology-track research evidence -- much of the field's research (survey design, observational studies, literature synthesis) is genuinely accessible without institutional lab access, a lower access barrier than bench-science fields (RULE-COUNSEL-037)."
+      ]
     },
     {
       "family_id": "12",
@@ -1143,7 +1187,11 @@
         "eu": "low (ESCO, classification-only)",
         "turkey": "none (no İŞKUR match found, honestly reported as a gap)",
         "germany": "not separately covered"
-      }
+      },
+      "unsafe_inferences": [
+        "Treat a MUN 'Best Delegate' award as equivalent evidence to real policy engagement -- it demonstrates simulated argumentation skill, real but narrower than the field itself.",
+        "Assume access to campaign/government/NGO internships is universal -- these are frequently geography- and age-gated; absence of this evidence type should not be read as weak interest without considering access (RULE-COUNSEL-040)."
+      ]
     },
     {
       "family_id": "13",
@@ -1228,7 +1276,12 @@
         "eu": "low (ESCO, classification-only)",
         "turkey": "medium (İŞKUR names Avukat only)",
         "germany": "medium-high (Bundesrechtsanwaltskammer-adjacent sourcing)"
-      }
+      },
+      "unsafe_inferences": [
+        "Recommend a specific major as 'the law path' -- there is no required or specifically-rewarded pre-law major in the US/UK sense; this is the single most important unsafe-inference guard for this family (RULE-COUNSEL-041, RULE-COUNSEL-042).",
+        "Treat a debate/mock-trial trophy as proof of legal aptitude -- evidence of argumentation skill under a specific competitive format, real but narrower than 'being good at law'.",
+        "Assume legal internships are broadly accessible -- most are effectively gated to college-age/law-student applicants; court observation (public, free in most jurisdictions) is a comparatively low-barrier alternative (RULE-COUNSEL-043)."
+      ]
     },
     {
       "family_id": "14",
@@ -1300,7 +1353,11 @@
         "eu": "low (ESCO, classification-only)",
         "turkey": "none (no İŞKUR match found, honestly reported as a gap)",
         "germany": "not separately covered"
-      }
+      },
+      "unsafe_inferences": [
+        "Assume history/philosophy interest requires a competition result to be legitimate evidence -- sustained independent reading or a self-directed research project are real evidence even with zero competitive validation.",
+        "Conflate debate-format skill (adversarial) with Ethics-Bowl-format skill (collaborative, depth-of-reasoning judged) -- these test meaningfully different things despite surface similarity."
+      ]
     },
     {
       "family_id": "15",
@@ -1358,7 +1415,11 @@
         "eu": "low (ESCO, classification-only)",
         "turkey": "low (only tangential Dijital Pazarlama/Sosyal Medya Uzmanı matches)",
         "germany": "not separately covered"
-      }
+      },
+      "unsafe_inferences": [
+        "Treat a large volume of unpublished personal writing as equivalent evidence to a smaller set of edited, shared/published work -- careful selection is itself named as a skill by the field's own gatekeepers (RULE-COUNSEL-046).",
+        "Require professional/paid publication as a bar for high-school-stage evidence -- the undergraduate-level 'published in an established outlet' bar should be adapted down to school/local-outlet-appropriate evidence."
+      ]
     },
     {
       "family_id": "16",
@@ -1431,7 +1492,11 @@
         "eu": "medium (member states generally regulate similarly to UK, not individually verified)",
         "turkey": "high (İŞKUR names 4 relevant occupations, strongest match of any family)",
         "germany": "high (Bundesarchitektenkammer official)"
-      }
+      },
+      "unsafe_inferences": [
+        "Assume architecture/design evidence requires access to specialized studio space, professional software, or expensive materials -- sketches, collages, and low-cost media are explicitly welcomed alongside professional work (RULE-COUNSEL-049).",
+        "Treat unfinished/in-progress work as invalid evidence -- 'works in progress' are explicitly named as acceptable portfolio content."
+      ]
     },
     {
       "family_id": "17",
@@ -1495,7 +1560,11 @@
         "eu": "low (ESCO, classification-only)",
         "turkey": "low (only moderate Grafiker/Teknik Ressam matches)",
         "germany": "not separately covered"
-      }
+      },
+      "unsafe_inferences": [
+        "Suggest production value or equipment quality is a priority evidence gap for film/media work -- storytelling, composition, and editing are what reviewers name as differentiating, not expensive equipment (RULE-COUNSEL-051).",
+        "Treat a sketchbook or in-progress work as lesser evidence than a 'finished' piece -- explicitly welcomed by the official portfolio-review standard itself."
+      ]
     },
     {
       "family_id": "18",
@@ -1578,7 +1647,12 @@
         "eu": "low (ESCO, member-state-by-member-state)",
         "turkey": "high (MEB regulation, primary source)",
         "germany": "not separately covered"
-      }
+      },
+      "unsafe_inferences": [
+        "Treat 'wanting to teach' as one undifferentiated interest -- elementary generalist, secondary subject-specialist, and special education are substantially different day-to-day work and, in most systems, different credentialing tracks (RULE-COUNSEL-232).",
+        "Treat subject-matter achievement (e.g. being good at math) as equivalent evidence to enjoying and being effective at teaching that subject -- a real, family-specific instance of 'subject enthusiasm != the professional activity' (RULE-COUNSEL-233).",
+        "Describe Turkey's teaching-credential system as fixed -- it is actively transitioning toward a new Milli Eğitim Akademisi requirement and should be re-verified against current MEB guidance, not treated as static (RULE-COUNSEL-234)."
+      ]
     },
     {
       "family_id": "19",
@@ -1666,7 +1740,11 @@
         "eu": "low (not separately mapped)",
         "turkey": "high (MEB regulation Art. 3(p), primary source)",
         "germany": "not separately covered"
-      }
+      },
+      "unsafe_inferences": [
+        "Treat generic episodic volunteering as equivalent evidence to sustained, casework-adjacent volunteering -- the former only tests general service orientation, the latter tests fit with the actual professional activity (RULE-COUNSEL-096).",
+        "Claim primary-source confirmation for the associate-degree-titling distinction in Turkey -- only the bachelor's-requirement half of the original claim was confirmed by the one regulation checked; the rest remains secondary-sourced only, a real example of narrowing a claim rather than treating partial confirmation as blanket validation (RULE-COUNSEL-107)."
+      ]
     },
     {
       "family_id": "20",
@@ -1751,7 +1829,13 @@
         "eu": "none (not mapped)",
         "turkey": "high (state conservatory admission guidance, cross-referenced across multiple official university pages)",
         "germany": "not separately covered"
-      }
+      },
+      "unsafe_inferences": [
+        "Treat 'music' or 'performing arts' as one interest without probing discipline (music/theater/dance) and genre/tradition (classical vs. contemporary) -- these are meaningfully different day-to-day activities and sometimes different admission mechanisms (RULE-COUNSEL-237).",
+        "Apply the blanket YKS exam-only caveat to a Turkey-target student interested in this family specifically -- Turkish state conservatories use a hybrid score-threshold-plus-audition mechanism, not pure-score placement (RULE-COUNSEL-238).",
+        "Assume this family's physically-demanding pathways (dance especially) are equally accessible to every student without a stated need, OR assume a disability precludes this family -- adaptive/disability arts are real, growing practice areas that must not be inferred as nonexistent by omission (RULE-COUNSEL-240).",
+        "Equate this family's aggregate labor-market popularity or wage data with a specific student's individual prospects (RULE-COUNSEL-225)."
+      ]
     }
   ]
 }
