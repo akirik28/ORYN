@@ -769,6 +769,30 @@
       "claim_supported": "DECA names specific, distinct high-school entrepreneurship competitive events -- Business Growth Plan, Franchise Business Plan, Independent Business Plan, Innovation Plan, International Business Plan, Start-Up Business Plan, Principles of Entrepreneurship, Entrepreneurship Series, Entrepreneurship Team Decision Making, Virtual Business Challenge-Entrepreneurship -- alongside role-play/case-study, prepared, and online-simulation event categories generally.",
       "used_in_rules": ["RULE-COUNSEL-123"],
       "limitations": "Directly fetched and quoted for the specific event names. This specific page did not itself detail the district/state/international competition-tier structure (found instead via converging secondary DECA-guidance sources, medium-high confidence for that narrower claim)."
+    },
+    {
+      "id": "SRC-CS-065",
+      "title": "germany.md -- independently-researched country admissions file, admissions-intelligence lane",
+      "publisher": "oryn/admissions-intelligence-research branch (a separate ORYN research session), citing DAAD, hochschulstart.de/DoSV, Anabin (KMK), uni-assist e.V. as its own primary sources",
+      "url": "docs/research/admissions-systems/germany.md on oryn/admissions-intelligence-research, commit 931bcc0 (verified to exist via git cat-file/git ls-tree before use)",
+      "type": "cross_branch_independent_research",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Independently confirms RULE-COUNSEL-062 (Germany is credential-gate-based, not holistic; extracurricular activities explicitly 'not a primary factor' for the great majority of programmes) and adds new precision: the sole exception is NC Medicine's AdH quota specifically, health-related professional/vocational experience specifically, weighted at some universities only (reportedly Hannover), not a national policy.",
+      "used_in_rules": ["RULE-COUNSEL-124", "RULE-COUNSEL-127", "RULE-COUNSEL-128"],
+      "limitations": "This session did not independently re-fetch DAAD/hochschulstart/Anabin/uni-assist itself -- relying on the admissions-intelligence lane's own research, which this session spot-checked for internal rigor (explicit confidence flags, noted source limitations, consistent with this package's own discipline) but did not re-derive from primary sources. That lane's own document flags some sub-claims (e.g. exact Anabin H+/H- terminology, uni-assist's member-institution count) as medium confidence itself."
+    },
+    {
+      "id": "SRC-CS-066",
+      "title": "united-states.md -- independently-researched country admissions file, admissions-intelligence lane",
+      "publisher": "oryn/admissions-intelligence-research branch, citing College Board's own 'Understanding Holistic Review' material as its primary source for the holistic-review claim",
+      "url": "docs/research/admissions-systems/united-states.md on oryn/admissions-intelligence-research, commit 931bcc0",
+      "type": "cross_branch_independent_research",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Independently confirms this package's own Common-Data-Set/NACAC/MIT-sourced finding that grades/rigor rank above test scores, which rank above extracurriculars, in US holistic review -- a second, differently-sourced confirmation of RULE-COUNSEL-001-009's underlying claim.",
+      "used_in_rules": ["RULE-COUNSEL-124"],
+      "limitations": "That document's own text flags the College Board 'Understanding Holistic Review' PDF as 'could not be fully' verified/accessed this session on the admissions-intelligence lane's side -- so this specific claim carries an upstream limitation this session did not resolve, only observed and passed through honestly."
     }
   ]
 }
