@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "package": "oryn/counseling-intelligence-research",
-  "last_updated": "2026-08-21T05:25:00+03:00",
+  "last_updated": "2026-08-21T05:40:00+03:00",
   "method_note": "Priority order and discipline documented in full in docs/research/counseling-intelligence/00-overview.md's \"Method and source standard\" section. Blogs/aggregators appear here only where no higher-tier source was fetchable, and are always source_type discovery_or_secondary with confidence capped at medium. [Updated 2026-08-21] Merged with this session's own source shard (originally sources-session2.json, 45 sources, prefix S-<NAME> not SRC-### so no ID collision existed): docs 03, 06-major-family-evidence/00+01-09, 07, 08, 14. This file is still not yet merged with the peer branch's own separate, larger sources.json on oryn/counseling-intelligence-research-013956 -- that cross-branch merge remains the final integration step.",
   "sources": [
     {
@@ -1008,15 +1008,18 @@
     {
       "id": "S-DE-INGENIEUR",
       "title": "Germany's Ingenieurgesetz title-protection law and VDI (Verein Deutscher Ingenieure)",
-      "url": "https://en.wikipedia.org/wiki/Verein_Deutscher_Ingenieure",
-      "additional_urls": [],
-      "publisher": "Cross-referenced secondary sources describing German engineering-title legislation and the VDI professional association",
-      "source_type": "secondary_description_of_official_legislation",
-      "retrieval_method": "WebSearch",
+      "url": "https://www.vdi.de/news/detail/wer-darf-sich-ingenieur-oder-ingenieurin-nennen",
+      "additional_urls": [
+        "https://bingk.de/beratende-ingenieure-2/empfehlung-der-bingk-zur-berufsbezeichnung-ingenieur-und-beratender-ingenieur/",
+        "https://www.gesetze-bayern.de/Content/Document/BayIngG2016"
+      ],
+      "publisher": "VDI (Verein Deutscher Ingenieure) / Bundesingenieurkammer / Bavarian state government legal portal",
+      "source_type": "official_professional_body_page_plus_official_state_statutory_text",
+      "retrieval_method": "WebSearch + direct WebFetch of vdi.de",
       "retrieved_at": "2026-08-21",
       "claim_supported": "The 'Ingenieur' title is legally protected in Germany (Ingenieurgesetz, 3-year engineering bachelor's minimum) but engineering practice itself is unregulated; VDI (~135,000 members, Western Europe's largest engineering association) is the field's central professional body, not a licensing authority.",
-      "confidence": "medium_high",
-      "limitations": "Ingenieurgesetz is state-level (Land) legislation in Germany's federal system, not one single federal law -- the specific statutory text was not independently fetched this pass, sourced from consistent secondary description instead.",
+      "confidence": "high",
+      "limitations": "Bavaria's BayIngG was the one specific state law checked directly; the other 15 states' individual Ingenieurgesetze were not each independently fetched, though VDI's own page describes the cross-state-recognition principle generally, not state-by-state.",
       "used_in": [
         "docs/research/counseling-intelligence/06-major-family-evidence/05-engineering-me-ce-ae-ee.md §6"
       ]

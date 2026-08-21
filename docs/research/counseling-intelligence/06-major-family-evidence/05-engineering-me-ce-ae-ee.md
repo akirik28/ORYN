@@ -131,10 +131,16 @@ specifically does not appear by name (plausibly reflecting Turkey's much smaller
 base relative to the US, though this document does not have direct evidence for that inference —
 flagged as an inference, not a sourced fact).
 
-**Germany (a fourth, genuinely distinct model, verified directly rather than assumed equivalent to
-any of the three above):** the professional title **"Ingenieur"** is protected by state-level
-**Ingenieurgesetz** (Engineering Law) legislation, restricting use of the title to those who have
-completed at least a three-year engineering bachelor's degree [S-DE-INGENIEUR]. **RULE-COUNSEL-241
+**Germany (a fourth, genuinely distinct model — upgraded on a follow-up pass from secondary sourcing
+to a direct fetch of VDI's own official page, mirroring the peer session's same-pattern upgrade for
+its own German law/psychology citations):** the professional title **"Ingenieur"** is protected by
+state-level **Ingenieurgesetz** (Engineering Law) legislation. Per VDI's own page directly: the
+requirement is completion of a foundational technical-engineering-scientific degree (bachelor's or
+master's) at a recognized state or private German institution — **no separate recognition or
+registration by an engineering chamber is required** for German degrees (a real, useful contrast
+with architecture's Architektenkammer registration requirement, family 16, and with Turkey's TMMOB
+below), and **the right to use the title, once earned in one state, applies across all 16 German
+states** despite the law itself being state-level legislation [S-DE-INGENIEUR]. **RULE-COUNSEL-241
 (new):** this is title protection *without* practice regulation — unlike the US (where PE
 licensure gates specific *practice*, e.g. stamping public infrastructure plans) and structurally
 different from Turkey's TMMOB (where chamber registration is required to practice the profession at
@@ -183,7 +189,7 @@ applies to a US- or UK-target engineering student without checking the specific 
 | S-TMMOB | [TMMOB official site](https://www.tmmob.org.tr/), [Law No. 6235 (TMMOB's founding law)](http://www.tmmob.org.tr/hukuk/yasal-cerceve/6235-sayili-turk-muhendis-ve-mimar-odalari-birligi-kanunu) | Official (Turkish state-recognized professional body, constitutionally referenced) | High (Turkey-specific) | §6 |
 | S-ESCO | ESCO classification (see `01-computing-information-sciences.md` §7) | Official (EU) | High for classification structure | §6 |
 | S-ISKUR-FUTURE | İŞKUR Geleceğin Meslekleri (see `01-computing-information-sciences.md` §7) | Official (Turkey) | High for the document; names 7 of this family's subfields, not aerospace | §6 |
-| S-DE-INGENIEUR | Cross-referenced sources describing Germany's Ingenieurgesetz title-protection law and the VDI (Verein Deutscher Ingenieure) professional association | Secondary description of official German legislation and a real, verifiable professional body | Medium-high — the title-protection mechanism and VDI's role are consistently described across sources; the specific Ingenieurgesetz statutory text itself (state-level legislation, not a single federal law) was not independently fetched this pass | §6 |
+| S-DE-INGENIEUR | [VDI — Wer darf sich Ingenieur oder Ingenieurin nennen? Rechtslage](https://www.vdi.de/news/detail/wer-darf-sich-ingenieur-oder-ingenieurin-nennen) (directly fetched, upgraded from secondary sourcing on a follow-up pass), corroborated by [Bundesingenieurkammer's own recommendation on the "Ingenieur"/"Beratender Ingenieur" title](https://bingk.de/beratende-ingenieure-2/empfehlung-der-bingk-zur-berufsbezeichnung-ingenieur-und-beratender-ingenieur/) and, for one concrete state law, [Bavaria's own BayIngG statutory text](https://www.gesetze-bayern.de/Content/Document/BayIngG2016) | Official (VDI's own page; Bundesingenieurkammer, the federal chamber; Bavaria's own government legal-text portal for the one state law checked) | High — a genuine primary-source upgrade; the specific requirement (no chamber registration needed, cross-state validity once earned) is now confirmed directly rather than inferred from secondary description | §6 |
 | S-CASPER-ENG | [Acuity Insights — Western University's Faculty of Engineering embraces holistic admissions with Casper](https://acuityinsights.com/news/western-university-embraces-holistic-admissions/) (directly fetched) | Official (vendor press release, quoting the institution's own Assistant Dean of First Year Studies) | High for this one named adopter (Western University, undergraduate, Fall 2024); not evidence of broader adoption across other engineering programs | §6 |
 
 US, UK, and Turkey engineering-licensure structures now verified and sourced above (a correction
