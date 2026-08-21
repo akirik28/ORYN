@@ -64,8 +64,11 @@ build order: `13-implementation-readiness.md` (this branch).
 - **A profile-gap framework distinguishes real gaps from harmless, explainable absences**: economic/
   geographic access (empirically real, large peer-reviewed study), health/disability and caregiving
   context (with real precedent — Common App's own "Challenges and Circumstances" section exists for
-  exactly this), and curriculum-mandated structure (IB's CAS component is an official, ~3-4hr/week
-  requirement that can make a "thin" activity list not actually thin). None of this requires
+  exactly this), and curriculum-mandated structure (IB's CAS component is a real diploma
+  requirement — IBO removed its old fixed 150-hour rule around 2017 and doesn't mandate a specific
+  number now, but still describes the expected engagement as roughly 3-4 hrs/week over 18 months,
+  with individual schools setting their own targets — enough that a "thin" non-CAS activity list
+  from an IB student may not be thin at all). None of this requires
   collecting new sensitive data — only reading what's voluntarily disclosed and never inferring
   from its absence. (`04-profile-gap-framework.md`)
 - **20 major-field evidence docs** now exist (grown from an initial ~14-field estimate as both
