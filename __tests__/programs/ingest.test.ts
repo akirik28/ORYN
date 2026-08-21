@@ -10,6 +10,7 @@ import {
   type ResearchProgramRecord,
   type UniversityLookupRow,
 } from "@/lib/programs/ingest";
+import { excludeSupersededUniversities } from "@/lib/universities/canonical";
 
 const MIT: UniversityLookupRow = { id: "uni-mit", name: "Massachusetts Institute of Technology", country: "United States" };
 const EDINBURGH: UniversityLookupRow = { id: "uni-edi", name: "The University of Edinburgh", country: "United Kingdom", aliases: ["University of Edinburgh"] };
@@ -76,6 +77,52 @@ describe("resolveUniversity (via lib/acquisition/identity.resolveIdentity)", () 
     const turkish: UniversityLookupRow = { id: "uni-tr", name: "Boğaziçi University", country: "Turkey" };
     const r = record({ university_name: "Boğaziçi University", university_country: "Türkiye" });
     expect(resolveUniversity(r, [turkish]).universityId).toBe("uni-tr");
+  });
+});
+
+describe("candidate pool must exclude superseded universities (regression: live MIT ingestion ambiguity)", () => {
+  // Real ids from lib/universities/duplicate-supersessions.json — MIT has two live `universities`
+  // rows, already resolved as duplicates elsewhere in the system (migration 0043 / canonical.ts).
+  // scripts/ingest-university-programs.ts (and 3 sibling scripts) built their identity-resolution
+  // candidate pool straight from the raw `universities` table with no supersession filter, so
+  // resolveIdentity() saw both rows, judged the match genuinely ambiguous, and correctly refused
+  // — but a research lane still had to hand-pick which row to target, because the ambiguity was
+  // spurious: these two rows are a confirmed duplicate, not two real candidates.
+  const MIT_WINNER_ID = "03167d0c-2315-49e3-a37e-f9c9c7d2d27c"; // "Massachusetts Institute of Technology"
+  const MIT_LOSER_ID = "ba3a30b2-c6e2-4a0f-ba32-6da028175d35"; // "Massachusetts Institute of Technology (MIT)"
+
+  const rawCandidatePool: UniversityLookupRow[] = [
+    { id: MIT_WINNER_ID, name: "Massachusetts Institute of Technology", country: "United States" },
+    { id: MIT_LOSER_ID, name: "Massachusetts Institute of Technology (MIT)", country: "United States" },
+  ];
+
+  // A record naming the institution as "... (MIT)" is what actually triggers the ambiguity:
+  // nameVariants() strips the parenthetical to produce a second candidate key ("Massachusetts
+  // Institute of Technology"), which exact-matches the WINNER's raw name, while the record's own
+  // unstripped form exact-matches the LOSER's raw name — so step 3 finds two equally-valid exact
+  // matches and (correctly, given an unfiltered pool) refuses rather than guessing.
+  function mitRecord(): ResearchProgramRecord {
+    return record({ university_name: "Massachusetts Institute of Technology (MIT)", university_country: "United States" });
+  }
+
+  test("an unfiltered candidate pool reproduces the live bug: MIT resolves as ambiguous, not accepted", () => {
+    const decision = decideIngestion(mitRecord(), rawCandidatePool, new Set());
+    expect(decision.outcome).toBe("unresolved_university");
+    expect(decision.universityId).toBeNull();
+  });
+
+  test("excludeSupersededUniversities() on the candidate pool fixes it: MIT resolves cleanly to the winner", () => {
+    const filteredPool = excludeSupersededUniversities(rawCandidatePool);
+    expect(filteredPool.map((u) => u.id)).toEqual([MIT_WINNER_ID]);
+
+    const decision = decideIngestion(mitRecord(), filteredPool, new Set());
+    expect(decision.outcome).toBe("accepted");
+    expect(decision.universityId).toBe(MIT_WINNER_ID);
+  });
+
+  test("no superseded id can appear in a filtered candidate pool, generally", () => {
+    const filtered = excludeSupersededUniversities(rawCandidatePool);
+    expect(filtered.some((u) => u.id === MIT_LOSER_ID)).toBe(false);
   });
 });
 
