@@ -1,0 +1,663 @@
+{
+  "_meta": {
+    "title": "Live university duplicate-pair candidates, entity_type='university'",
+    "generated_by": "canonical-entity-intelligence research session, direct read-only query",
+    "source": "oryn-qa-scratch (project qtcvcflzxbuagvvwahhu), canonical_entities self-join on exact normalized_name within entity_type, cross-joined with entity_external_ids (ROR) and universities",
+    "snapshot_time_utc": "2026-08-20T22:54:10.320608+00:00",
+    "pair_count": 43,
+    "diagnosis": "Every pair is one row created 2026-08-16T21:42:51.3Z (has ROR, has a matching universities row) paired against a row created 2026-08-16T23:29:46.9Z (no external ids at all, zero matching universities rows) -- one exception (Victoria University of Wellington) has its complete side at 2026-08-16T22:09:19.8Z instead, same pattern otherwise. See docs/research/canonical-entity-intelligence/09-existing-oryn-ambiguity-audit.md Finding 2 and 05-duplicate-detection-rules.md.",
+    "recommended_action": "Re-run the existing ROR enrichment pipeline (the one that reached 93.4% coverage on the rest of the registry) targeted at the 'incomplete' id in each pair below. Once both sides carry a ROR id, classifyDuplicateCandidate() will resolve nearly all of these to SAFE_TO_CANONICALIZE without any new logic. Do not merge on this JSON's evidence alone -- it lacks external-id confirmation by design.",
+    "classification_per_existing_classifier": "AMBIGUOUS (no shared id_system between the two sides of any pair) -- see 05 for why this is the correct, conservative behavior of lib/acquisition/duplicates.ts today, and for the proposed NEEDS_ENRICHMENT refinement this finding motivates.",
+    "pair_count_correction_note": "Was incorrectly 41 in this field while the pairs array itself already had 43 entries -- fixed during a consistency audit late in this session; see 09 Finding 2 for the full count-correction history."
+  },
+  "pairs": [
+    {
+      "name": "Arizona State University",
+      "complete": {
+        "id": "6ee1301b-3825-4dc2-a22d-23b75d740d17",
+        "city": "Phoenix, AZ",
+        "ror": "03efmqc40",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "4300649b-e971-455f-a05d-7b5cf3bf4e34",
+        "city": "Phoenix",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "Boston University",
+      "complete": {
+        "id": "cce9ae44-10f0-47d2-b6bb-d1c3938b7f62",
+        "city": "Boston, MA",
+        "ror": "05qwgg493",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "29d20286-5882-4a88-a5f9-41d9ff854fc5",
+        "city": "Boston",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "Brown University",
+      "complete": {
+        "id": "c44d0a62-3071-4700-b7ff-fd90fbeb697b",
+        "city": "Providence, RI",
+        "ror": "05gq02987",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "3cae5455-565d-4f92-9a58-85c8b6dcc58a",
+        "city": "Providence",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "California Institute of Technology (Caltech)",
+      "complete": {
+        "id": "faeeb7ad-65fc-4755-b0b9-9dce2216e215",
+        "city": "Pasadena, CA",
+        "ror": "05dxps055",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "cbce2022-f56b-40a6-91a7-c77630c0e472",
+        "city": "Pasadena",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "Carnegie Mellon University",
+      "complete": {
+        "id": "ce71e41a-8118-424c-a615-af2ef87952fd",
+        "city": "Pittsburgh, PA",
+        "ror": "05x2bcf33",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "e5b53582-071c-4c15-a225-a567b28b5006",
+        "city": "Pittsburgh",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "City University of Hong Kong (CityUHK)",
+      "complete": {
+        "id": "7e3e2b72-6c81-4763-b2ba-77b8afc112bf",
+        "city": "Hong Kong",
+        "ror": "03q8dnn23",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "be7e9d9e-318c-498f-abd1-b3a3aaa752b8",
+        "city": "Kowloon",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "Columbia University",
+      "complete": {
+        "id": "f71122a7-3b67-4dff-830d-444154e73db8",
+        "city": "New York, NY",
+        "ror": "00hj8s172",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "4454d8ab-3c85-4fe0-b2f4-cca1e6fc455c",
+        "city": "New York City",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "Cornell University",
+      "complete": {
+        "id": "c5a2eff1-89a4-45db-a81d-1f507c9e7091",
+        "city": "Ithaca, NY",
+        "ror": "05bnh6r87",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "12b21114-5ebd-4aae-a219-3cbfac5a64cd",
+        "city": "Ithaca",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "Emory University",
+      "complete": {
+        "id": "c39d5bfb-b22c-41d7-b51c-cb595368e8fc",
+        "city": "Atlanta, GA",
+        "ror": "03czfpz43",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "5c0b879b-a480-4346-aa8e-7b5162b1d907",
+        "city": "Atlanta",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "Georgia Institute of Technology",
+      "complete": {
+        "id": "eba33db8-d5bf-457a-a91c-5c17ff131c0b",
+        "city": "Atlanta, GA",
+        "ror": "01zkghx44",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "4f2a7208-923c-4747-9a8a-38ef41202876",
+        "city": "Atlanta",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "Johns Hopkins University",
+      "complete": {
+        "id": "f6f2c79a-3655-47be-a095-695e01e06278",
+        "city": "Baltimore, MD",
+        "ror": "00za53h95",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "4bd7e1c3-7c09-434a-bcf9-f327798e6759",
+        "city": "Baltimore",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "Kyushu University",
+      "complete": {
+        "id": "3e761794-0ab8-4742-88d0-8059b8a46e6e",
+        "city": "Fukuoka",
+        "ror": "00p4k0j84",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "ce47fa0c-9fdd-43d4-bd14-713691261c32",
+        "city": "Fukuoka City",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "Michigan State University",
+      "complete": {
+        "id": "dad7af05-a917-4659-8d19-80bc67d82e4f",
+        "city": "East Lansing, MI",
+        "ror": "05hs6h993",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "6d19a2ec-6de4-4be3-8f60-0dc542b461d3",
+        "city": "East Lansing",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "National Cheng Kung University (NCKU)",
+      "complete": {
+        "id": "56f80e8f-999d-40d1-a01a-0a5e71fd80ce",
+        "city": "Tainan",
+        "ror": "01b8kcc49",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "977d1f7d-c3fd-4c13-8d64-5179b2edc236",
+        "city": "Tainan City",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "National Tsing Hua University - NTHU",
+      "complete": {
+        "id": "0bbedf3e-624a-49fb-94a3-e7572a8a5aa5",
+        "city": "Hsinchu",
+        "ror": "00zdnkx70",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "b4387aeb-a339-4f83-879c-ad93c98fa998",
+        "city": "Hsinchu City",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "National Yang Ming Chiao Tung University (NYCU Taiwan)",
+      "complete": {
+        "id": "670937ce-2e0b-46e1-92e8-1e918f4aa374",
+        "city": "Hsinchu",
+        "ror": "00se2k293",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "e9bc1320-f3af-4197-ba95-90dacb5d882a",
+        "city": "Hsinchu City",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "New York University (NYU)",
+      "complete": {
+        "id": "38aa53bd-2ea4-475e-a8e5-7593714a7fc9",
+        "city": "New York, NY",
+        "ror": "0190ak572",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "f63ea9a1-5e2d-4663-b865-e615247511cd",
+        "city": "New York City",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "Northwestern University",
+      "complete": {
+        "id": "dfaa9fae-b441-44b4-bbb2-1664349e6c6c",
+        "city": "Evanston, IL",
+        "ror": "000e0be47",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "0841bc75-67f6-4b0b-8e31-2ed2db7f83bc",
+        "city": "Evanston",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "Pennsylvania State University",
+      "complete": {
+        "id": "f5b27bb2-b36d-4584-b2d7-6f285e25edb3",
+        "city": "University Park, PA",
+        "ror": "04p491231",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "317a0dca-806c-4632-bfea-6d48ec18b498",
+        "city": "University Park",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "Princeton University",
+      "complete": {
+        "id": "11176e8e-2bec-4af1-996e-64890c02e0f2",
+        "city": "Princeton, NJ",
+        "ror": "00hx57361",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "dd0cbfcd-aaf2-42a4-9a55-183967c3afd1",
+        "city": "Princeton",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "Purdue University",
+      "complete": {
+        "id": "a1763f42-465f-448c-a40a-02cf1f717669",
+        "city": "West Lafayette, IN",
+        "ror": null,
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "1f9f7bab-a7a8-44e0-905f-a74580787a7a",
+        "city": "West Lafayette",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      },
+      "note": "Neither side has ROR -- only pair in this set where the 'complete' side (has a universities row) is itself not yet ROR-enriched. Enrichment pass needs to cover this one on both sides.",
+      "WARNING_verified_live_against_ror_api": "The correct ROR id is the CAMPUS-specific one, ror.org/02dqehb95 ('Purdue University West Lafayette') -- NOT ror.org/05p8z3f47 ('Purdue University System', the multi-campus parent that a plain search surfaces first, covering Purdue Fort Wayne/Northwest/Global as separate children). Verified by fetching both ROR records directly. See 05-duplicate-detection-rules.md 'Mode A' before enriching either row."
+    },
+    {
+      "name": "Rice University",
+      "complete": {
+        "id": "143d4194-eb7a-4bb5-bcf4-81357e34795d",
+        "city": "Houston, TX",
+        "ror": "008zs3103",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "ea24c971-601e-4a1a-a5fd-47f77b421d05",
+        "city": "Houston",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "Texas A&M University",
+      "complete": {
+        "id": "e4ebc1e3-f403-438a-bdcf-83bb27b2fa5f",
+        "city": "College Station, TX",
+        "ror": "01f5ytq51",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "73138a7c-9ec2-44e0-b60b-4d96237ca6df",
+        "city": "College Station",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "The University of Osaka",
+      "complete": {
+        "id": "43f0ae44-411b-4710-85bf-1fcbb915d7c4",
+        "city": "Osaka",
+        "ror": "035t8zc32",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "8b720929-bd95-4aec-af2b-4da8b3e6152e",
+        "city": "Osaka City",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "Tohoku University",
+      "complete": {
+        "id": "f2be0250-2728-41a6-96d9-3e13fa784369",
+        "city": "Sendai",
+        "ror": "01dq60k83",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "4fc396a6-22e9-4285-b05c-c614f77df946",
+        "city": "Sendai City",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "University of California, Berkeley (UCB)",
+      "complete": {
+        "id": "29400958-853a-4a9d-8049-16b1159f54f1",
+        "city": "Berkeley, CA",
+        "ror": "01an7q238",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "8336e88c-a2c2-4ffc-aeb0-3683eae33043",
+        "city": "Berkeley",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "University of California, Davis",
+      "complete": {
+        "id": "bca2a6d2-1980-4993-b200-e48eb1a788b7",
+        "city": "Davis, CA",
+        "ror": "05rrcem69",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "c0ee043b-31d6-4cbd-846f-97914a823815",
+        "city": "Davis",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "University of California, Los Angeles (UCLA)",
+      "complete": {
+        "id": "a2ae60c2-8164-463d-9c06-55e1e6635ba3",
+        "city": "Los Angeles, CA",
+        "ror": "046rm7j60",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "1b9b4829-e444-445f-a336-7d207a0fab90",
+        "city": "Los Angeles",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "University of California, San Diego (UCSD)",
+      "complete": {
+        "id": "71f67523-ab76-45fd-83a2-54f7308e67b9",
+        "city": "San Diego, CA",
+        "ror": "0168r3w48",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "90c7f040-d7c0-4778-bf79-463267ddef1e",
+        "city": "San Diego",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "University of California, Santa Barbara (UCSB)",
+      "complete": {
+        "id": "0dac2a4f-1a04-4a44-af35-135632233ae5",
+        "city": "Santa Barbara, CA",
+        "ror": "02t274463",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "4a356ad1-6d93-40bb-97cc-dc37cd68a5a7",
+        "city": "Santa Barbara",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "University of Chicago",
+      "complete": {
+        "id": "0d74fab1-c813-4bad-b70b-fead9a2d567d",
+        "city": "Chicago, IL",
+        "ror": "024mw5h28",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "b3497c91-650f-45ed-bf55-7aea1d3c5f15",
+        "city": "Chicago",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "University of Illinois Urbana-Champaign",
+      "complete": {
+        "id": "35d75b2b-505a-4401-aa74-05b6b04db84d",
+        "city": "Champaign, IL",
+        "ror": "047426m28",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "e2907983-9568-463e-afce-569f81c74685",
+        "city": "Champaign",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "University of Michigan-Ann Arbor",
+      "complete": {
+        "id": "ef94475a-932d-4fc3-a1a3-53de72196bad",
+        "city": "Ann Arbor, MI",
+        "ror": "00jmfr291",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "0b9caaed-e569-4413-94f1-544ba4761a9c",
+        "city": "Ann Arbor",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "University of North Carolina at Chapel Hill",
+      "complete": {
+        "id": "cf317095-2bc4-458a-a057-c791ccb2d636",
+        "city": "Chapel Hill, NC",
+        "ror": "0130frc33",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "dee15a28-d21c-4cb0-baee-b618f60bf4fd",
+        "city": "Chapel Hill",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "University of Pennsylvania",
+      "complete": {
+        "id": "e398a1d1-7fd2-46c0-af61-c7f7457d4321",
+        "city": "Philadelphia, PA",
+        "ror": "00b30xv10",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "cb993a9d-e679-4acb-938c-6faef0115e48",
+        "city": "Philadelphia",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "University of Southern California",
+      "complete": {
+        "id": "898498e1-c02b-4333-9101-36038375318d",
+        "city": "Los Angeles, CA",
+        "ror": "03taz7m60",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "07327fe6-9b47-48c7-9d10-8e0208f91936",
+        "city": "Los Angeles",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "University of St Andrews",
+      "complete": {
+        "id": "07d0fe94-aff1-4a20-abe9-a73b4792ad55",
+        "city": "St Andrews",
+        "ror": "02wn5qz54",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "2e1f552b-ed6b-418a-b0b1-2403ad02923c",
+        "city": "St. Andrews",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "University of Washington",
+      "complete": {
+        "id": "29727961-ca81-4a44-8905-2529b419ac11",
+        "city": "Seattle, WA",
+        "ror": "00cvxb145",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "e047fd55-16cc-4625-ade2-7e7e5fef9d27",
+        "city": "Seattle",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "University of Wisconsin-Madison",
+      "complete": {
+        "id": "52ad3743-9363-43e9-8620-dfa6382d07db",
+        "city": "Madison, WI",
+        "ror": "01y2jtd41",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "709f389c-e37f-447c-8ec3-3e546ae004ca",
+        "city": "Madison",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "Victoria University of Wellington",
+      "complete": {
+        "id": "94a61351-794d-4fdd-9d68-367721949850",
+        "city": "Wellington",
+        "ror": "0040r6f76",
+        "created_at": "2026-08-16T22:09:19.796658+00:00"
+      },
+      "incomplete": {
+        "id": "e4a66f9b-6f85-4141-a4ad-654c0edb5d47",
+        "city": "Kelburn",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      },
+      "note": "The one pair whose 'complete' side was not created at the 21:42:51 batch timestamp -- created at 22:09:19 instead. Pattern (ROR + universities row present) otherwise identical."
+    },
+    {
+      "name": "Washington University in St. Louis",
+      "complete": {
+        "id": "1cac95b2-d89d-48bf-82ec-0970c80679b2",
+        "city": "St. Louis, MO",
+        "ror": "01yc7t268",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "06c67122-5c1a-49f5-babe-80fb83dcda30",
+        "city": "St. Louis",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "Western University",
+      "complete": {
+        "id": "0d566efa-e401-48de-963b-6b7d9ee5a58b",
+        "city": "London, Ontario",
+        "ror": "02grkyz14",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "dff5e491-1e91-45f9-9813-a3035de8c32a",
+        "city": "London",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    },
+    {
+      "name": "Yale University",
+      "complete": {
+        "id": "a11d85c2-92d9-4af2-b4ba-934cd0cc620b",
+        "city": "New Haven, CT",
+        "ror": "03v76x132",
+        "created_at": "2026-08-16T21:42:51.300461+00:00"
+      },
+      "incomplete": {
+        "id": "41d2c07a-bcad-4eef-b799-5cf01a98b217",
+        "city": "New Haven",
+        "ror": null,
+        "created_at": "2026-08-16T23:29:46.90496+00:00"
+      }
+    }
+  ]
+}

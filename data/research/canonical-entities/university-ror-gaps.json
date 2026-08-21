@@ -1,0 +1,211 @@
+{
+  "_meta": {
+    "title": "Active entity_type='university' canonical entities with no ROR external id",
+    "source_document": "docs/research/canonical-entity-intelligence/09-existing-oryn-ambiguity-audit.md Finding 7",
+    "snapshot_time_utc": "2026-08-21T00:40:00Z approx",
+    "total_no_ror": 70,
+    "total_active_university_entities": 1055,
+    "note": "Distinct from duplicate-candidates-university.json (Finding 2's 43 pairs, found via exact-normalized_name self-join between two SEPARATE canonical_entities rows). This file's 'already_known_duplicate_supersession' group is a THIRD, different shape: ONE canonical_entities row with TWO universities rows pointing at it (already identity-consolidated, per lib/universities/canonical.ts's duplicate-supersessions.json workaround) that also happens to lack ROR. This file's 'genuine_single_row_gap' group was originally described as straightforward enrichment targets -- 4 of the 16 (both Rutgers rows, Universite de Franche-Comte, Universite Paul Sabatier Toulouse III -- see each row's own WARNING field) turned out NOT to be, on direct verification against ROR's live API. Check every row for a WARNING field before treating any of these as mechanical."
+  },
+  "verification_status_note": "Live ROR API spot-check (session of 2026-08-21, see 05-duplicate-detection-rules.md 'Verifying the recommendation itself' and its follow-up paragraph): KFUPM, HKUST, UTS, and University of Newcastle Australia (all 4 checked from this array) return clean, exact, unambiguous top matches -- safe to enrich as-is. In the genuine_single_row_gap array below: Al-Quds, Eastern Mediterranean, European University of Lefke, Near East, and Lingnan all checked clean; Rutgers (both rows) and the two French universities did not -- see their individual WARNING fields.",
+  "MAJOR_UPDATE_existing_tooling_found": "scripts/university-duplicates-audit.ts (npm run audit:university-duplicates) already exists, was already run 2026-08-17/18, and its hardcoded MANUALLY_VERIFIED list already carries a live-ROR-verified id for every one of the 9 entities below (Al-Farabi Kazakh National University added late in this session -- was always in MANUALLY_VERIFIED but not originally extracted here, see its own correction_note) -- this session's own fresh ROR checks (KFUPM, HKUST, UTS, Newcastle-Australia) independently arrived at the IDENTICAL ids, cross-confirming the script's 2026-08-17 research is still correct. The gap for these 9 specifically is NOT 'needs ROR research' -- it is narrower: merge_canonical_entities() (run via --merge-verified) merges identity/aliases but does not itself write new entity_external_ids rows, so the already-known ROR id was apparently never separately applied via the acquisition pipeline for 8 of these 9 (Al-Farabi's ROR id IS already written -- see its entry). See each row's 'ror_id_already_known' field below -- sourced from the script's own MANUALLY_VERIFIED reason text, not re-derived. This does NOT apply to the 43 orphan pairs in duplicate-candidates-university.json, which do not appear anywhere in that script's 38-entry MANUALLY_VERIFIED list and remain a genuinely separate, unaddressed gap.",
+  "already_known_duplicate_supersession_also_missing_ror": [
+    {
+      "display_name": "Massachusetts Institute of Technology",
+      "id": "9d9cb092-1276-4e47-9a6d-765a97ba757b",
+      "city": "Cambridge",
+      "country": "United States",
+      "other_external_ids": [
+        "WIKIDATA"
+      ],
+      "created_at": "2026-08-16T14:06:40.41734+00:00",
+      "ror_id_already_known": "ror.org/042nb2s44 (per scripts/university-duplicates-audit.ts MANUALLY_VERIFIED, 2026-08-17)"
+    },
+    {
+      "display_name": "University College London",
+      "id": "92569827-8dd1-46bc-98df-095c6c84b189",
+      "city": "London",
+      "country": "United Kingdom",
+      "other_external_ids": [],
+      "created_at": "2026-08-16T14:06:40.41734+00:00",
+      "ror_id_already_known": "ror.org/02jx3x895 (per scripts/university-duplicates-audit.ts MANUALLY_VERIFIED, 2026-08-17)"
+    },
+    {
+      "display_name": "London School of Economics and Political Science",
+      "id": "ba53a102-ed66-4e51-a1ce-4854275b1b42",
+      "city": "London",
+      "country": "United Kingdom",
+      "other_external_ids": [],
+      "created_at": "2026-08-16T14:06:40.41734+00:00",
+      "ror_id_already_known": "ror.org/0090zs177 (per scripts/university-duplicates-audit.ts MANUALLY_VERIFIED, 2026-08-17)"
+    },
+    {
+      "display_name": "University of Warwick",
+      "id": "f1d72d7c-98ae-43a1-908f-9b8cc209cd3a",
+      "city": "Coventry",
+      "country": "United Kingdom",
+      "other_external_ids": [],
+      "created_at": "2026-08-16T14:06:40.41734+00:00",
+      "ror_id_already_known": "ror.org/01a77tt86 (per scripts/university-duplicates-audit.ts MANUALLY_VERIFIED, 2026-08-17; script notes loser's city was literally 'England')"
+    },
+    {
+      "display_name": "King Fahd University of Petroleum and Minerals (KFUPM)",
+      "id": "46257b9f-eeb1-4833-9cf6-cd19107197d5",
+      "city": "Dhahran",
+      "country": "Saudi Arabia",
+      "other_external_ids": [],
+      "created_at": "2026-08-16T14:06:40.41734+00:00",
+      "ror_id_already_known": "ror.org/03yez3163 -- independently confirmed twice: scripts/university-duplicates-audit.ts MANUALLY_VERIFIED (2026-08-17) AND this session's own fresh live ROR query (2026-08-21), same id both times"
+    },
+    {
+      "display_name": "The Hong Kong University of Science and Technology",
+      "id": "181c3e9c-812e-4312-ac61-681a1a5935a4",
+      "city": "Hong Kong",
+      "country": "Hong Kong SAR",
+      "other_external_ids": [],
+      "created_at": "2026-08-16T14:06:40.41734+00:00",
+      "ror_id_already_known": "ror.org/00q4vv597 -- independently confirmed twice (script 2026-08-17 + this session 2026-08-21, same id); script also notes the separate HKUST-Guangzhou campus entity ror.org/050h0vm43 is NOT this one"
+    },
+    {
+      "display_name": "University of Technology Sydney",
+      "id": "0b13f9c6-533d-4869-89c8-20e7c6e4cd98",
+      "city": "Sydney",
+      "country": "Australia",
+      "other_external_ids": [],
+      "created_at": "2026-08-16T14:06:40.41734+00:00",
+      "ror_id_already_known": "ror.org/03f0f6041 -- independently confirmed twice (script 2026-08-17 + this session 2026-08-21, same id); distinct from the unrelated University of Sydney, ror.org/0384j8v12"
+    },
+    {
+      "display_name": "The University of Newcastle, Australia",
+      "id": "6997f14d-c8ea-47bb-921e-962b75d9bf8c",
+      "city": "Newcastle",
+      "country": "Australia",
+      "other_external_ids": [],
+      "created_at": "2026-08-16T14:06:40.41734+00:00",
+      "ror_id_already_known": "ror.org/00eae9z71 -- independently confirmed twice (script 2026-08-17 + this session 2026-08-21, same id); distinct from UK Newcastle University, ror.org/01kj2bm70"
+    },
+    {
+      "display_name": "Al-Farabi Kazakh National University",
+      "id": "07c13be2-3ce3-4ad0-8326-9f7f458a07ef",
+      "city": "Almaty",
+      "country": "Kazakhstan",
+      "other_external_ids": [
+        "GRID",
+        "ISNI",
+        "WIKIDATA",
+        "CROSSREF_FUNDER"
+      ],
+      "created_at": "2026-08-16T23:29:46.90496+00:00",
+      "ror_id_already_known": "ror.org/03q0vrn42 (per scripts/university-duplicates-audit.ts MANUALLY_VERIFIED, confirmed live via entity_external_ids; already written -- unlike the other 8 in this list, this pair's identity_id already carries its ROR row)",
+      "correction_note": "Added late in this session (09 Finding 2's correction) -- this package said '8 already-known duplicate-supersession entities' throughout until this addition; Al-Farabi was always in scripts/university-duplicates-audit.ts's MANUALLY_VERIFIED list (line 187) but was not extracted into this file originally. Unlike the other 8, the ROR id is ALREADY present in entity_external_ids for this pair (verified live) -- so this entity needs no further write action at all, unlike the other 8 which still need their known id written."
+    }
+  ],
+  "genuine_single_row_gap": [
+    {
+      "display_name": "Al-Quds University",
+      "id": "c8038954-2cc9-4335-ae31-584a18ea546c",
+      "city": "East Jerusalem",
+      "country": "Palestine"
+    },
+    {
+      "display_name": "Eastern Mediterranean University",
+      "id": "02fa0e5d-9ed5-4fad-bd74-1827da399f49",
+      "city": "Famagusta",
+      "country": "Northern Cyprus"
+    },
+    {
+      "display_name": "European University of Lefke",
+      "id": "3ac581b3-3bbf-4a1a-9f4b-d413b1fb7806",
+      "city": "Lefke",
+      "country": "Northern Cyprus"
+    },
+    {
+      "display_name": "Khoja Akhmet Yassawi International Kazakh-Turkish University",
+      "id": "dc0f8463-2fc5-4a4a-acd6-28d85d3109a0",
+      "city": "Turkestan",
+      "country": "Kazakhstan",
+      "WARNING_verified_live_against_ror_api": "ROR appears to have NO record for this institution at all -- a direct query for 'Yassawi' returned zero results. Not an enrichment target until independently confirmed absent (vs. this session's query missing it) -- do not force a near-name match onto an unrelated institution just to fill the field."
+    },
+    {
+      "display_name": "Lingnan University, Hong Kong",
+      "id": "2e2eb06f-a7a6-40ac-b447-73b008520b46",
+      "city": "Hong Kong",
+      "country": "Hong Kong SAR"
+    },
+    {
+      "display_name": "Moscow Institute of Physics and Technology (MIPT / Moscow Phystech)",
+      "id": "31e57b01-3a8b-47ff-b337-f169d44d9961",
+      "city": "Dolgoprudny",
+      "country": "Russia",
+      "verified_clean": "ror.org/00v0z9322, exact match, active"
+    },
+    {
+      "display_name": "National Chung Hsing University",
+      "id": "7e9d7dd4-b981-4955-b30d-26584fdd669e",
+      "city": "Taichung City",
+      "country": "Taiwan",
+      "verified_clean": "ror.org/05vn3ca78, exact match, active"
+    },
+    {
+      "display_name": "Near East University",
+      "id": "2e94833a-f2a2-4c78-9e1c-1fb915d056e7",
+      "city": "Lefkosa",
+      "country": "Northern Cyprus"
+    },
+    {
+      "display_name": "Northwest Agriculture and Forestry University",
+      "id": "ba4b5c76-737a-4f2e-9b30-d43a26f9b28d",
+      "city": "Yangling",
+      "country": "China"
+    },
+    {
+      "display_name": "Rutgers University–New Brunswick",
+      "id": "34013f10-c77a-482b-bb30-09b8d4e939c0",
+      "city": "New Brunswick",
+      "country": "United States",
+      "WARNING_verified_live_against_ror_api": "ROR has only ONE entity for all of Rutgers (ror.org/05vt9qd57, 'Rutgers, The State University of New Jersey') -- no New-Brunswick-specific child exists. Enriching this row AND the Newark row below with the same ROR id will hit entity_external_ids' unique(id_system, external_id) constraint on the second insert. See 05-duplicate-detection-rules.md 'Mode B' before enriching either row."
+    },
+    {
+      "display_name": "Rutgers University–Newark",
+      "id": "074396b3-95c7-46f5-b5fc-41e5afc9bb28",
+      "city": "Newark",
+      "country": "United States",
+      "WARNING_verified_live_against_ror_api": "Same ROR entity as the New Brunswick row above (ror.org/05vt9qd57) -- see that row's note. Do not enrich both rows with this id without first deciding how to handle the constraint conflict."
+    },
+    {
+      "display_name": "The New School, New York City and Paris",
+      "id": "38dcd4f8-b168-47a3-91f9-76663a61aa0b",
+      "city": "New York City",
+      "country": "United States"
+    },
+    {
+      "display_name": "Université de Franche-Comté",
+      "id": "0fa8ff22-10b1-4b97-a5d5-83f0eb8348ad",
+      "city": "Besancon",
+      "country": "France",
+      "WARNING_verified_live_against_ror_api": "NOT a simple enrichment target. ROR's own record for this exact institution (ror.org/03pcc9z86) is status='inactive' with a direct successor relationship to Universite Marie et Louis Pasteur (ror.org/04asdee31, est. 2024, umlp.fr) -- a real, recent (2024) succession via an intermediate 2015-2024 federation (Universite Bourgogne Franche-Comte). This is a rename/succession decision (04-rename-history-framework.md), not a mechanical ROR-attach. See 04's updated live-succession-examples section before touching this row."
+    },
+    {
+      "display_name": "Université Paul Sabatier Toulouse III",
+      "id": "37d16668-d014-45db-8dfa-2162159544fe",
+      "city": "Toulouse",
+      "country": "France",
+      "WARNING_verified_live_against_ror_api": "NOT a simple enrichment target. ROR's 'Universite de Toulouse' (ror.org/01ahyrz84, est. 2025) lists 'Universite Toulouse III - Paul Sabatier' (ror.org/02v6kpv12) as a direct predecessor -- a real, very recent (2025) succession. Same treatment as the Franche-Comte row above: a rename/succession decision, not a mechanical ROR-attach. See 04."
+    },
+    {
+      "display_name": "University Duesseldorf",
+      "id": "97205776-c0f9-48d9-975b-0895a146a0bc",
+      "city": "Dusseldorf",
+      "country": "Germany"
+    },
+    {
+      "display_name": "University of the Philippines",
+      "id": "65333076-3965-4977-8346-4507b1161dc5",
+      "city": "Quezon City",
+      "country": "Philippines",
+      "WARNING_verified_live_against_ror_api": "Same Mode A shape as Purdue (05-duplicate-detection-rules.md): ROR's top match for 'University of the Philippines' is the DILIMAN-campus-specific entity (ror.org/03tbh6y23, city Quezon City -- matching ORYN's own city value), which itself has a PARENT relationship to 'University of the Philippines System' (ror.org/02hqkr514). ORYN's row has no campus qualifier in its name, so a researcher must decide deliberately whether it means the system or specifically Diliman (the flagship, most likely candidate given the matching city) -- do not attach either id without that decision."
+    }
+  ],
+  "coverage_note": "70 total minus 8 (duplicate-supersession group) minus 16 (genuine-single-row group listed above) leaves ~46 unenumerated -- these are almost entirely the same 'orphan' canonical_entities rows already fully enumerated in duplicate-candidates-university.json's 'incomplete' side (confirmed by cross-checking display names live: Boston University, Yale, Princeton, the UC campuses, etc. all reappear here with univ_row_count=0, consistent with that file). Not re-listed here to avoid duplicating that file -- see duplicate-candidates-university.json for those.",
+  "genuine_single_row_gap_final_tally": "All 16 entries in this array now individually checked against ROR's live API (session of 2026-08-21). Final split: 10 clean/straightforward (Al-Quds, Eastern Mediterranean, European University of Lefke, Near East, Lingnan, University Duesseldorf, Northwest Agriculture and Forestry University -- needed its standard 'A&F' abbreviated form, not a mismatch -- Moscow Institute of Physics and Technology, National Chung Hsing University, The New School), 4 with a real succession/granularity issue requiring a human decision before enrichment (both Rutgers rows, Universite de Franche-Comte, Universite Paul Sabatier Toulouse III), 1 with the same system-vs-campus granularity question as Purdue (University of the Philippines), and 1 with apparently no ROR record at all (Khoja Akhmet Yassawi International Kazakh-Turkish University). This is a complete accounting, not a sample."
+}

@@ -1,0 +1,118 @@
+{
+  "_meta": {
+    "title": "Source registry for canonical-entity-intelligence research claims",
+    "note": "Only non-obvious/load-bearing claims are listed here. Claims directly readable from repo source files (e.g. 'migration 0038 defines X table') are cited inline in the prose docs by file path instead of duplicated here."
+  },
+  "sources": [
+    {
+      "id": "SRC-001",
+      "source_title": "oryn-qa-scratch live Postgres database, canonical_entities/entity_aliases/entity_external_ids/entity_relationships/entity_verification_queue/opportunities tables",
+      "source_url": "supabase project qtcvcflzxbuagvvwahhu (internal, not a public URL)",
+      "source_type": "primary_live_database",
+      "retrieved_at": "2026-08-20T21:00:00Z through 2026-08-20T23:00:00Z (session window)",
+      "claim_supported": "All row counts, duplicate-pair evidence, relationship examples, opportunity-organizer text, and the Turkish-normalization drift finding in docs 05/07/08/09",
+      "confidence": "high",
+      "limitations": "Live, concurrently-written database -- exact counts are snapshots as of the query timestamp, not permanent facts. Every count in doc 09 is explicitly timestamped for this reason."
+    },
+    {
+      "id": "SRC-002",
+      "source_title": "ROR (Research Organization Registry) relationships field for École Polytechnique / Institut Polytechnique de Paris",
+      "source_url": "https://ror.org/05hy3tk52 (École Polytechnique), https://ror.org/042tfbd02 (Institut Polytechnique de Paris)",
+      "source_type": "open_registry",
+      "retrieved_at": "cited from docs/handoffs/claude-b-to-claude-a.md, originally researched by a prior session; re-confirmed live in canonical_entities/entity_relationships this session (2026-08-20)",
+      "claim_supported": "The member_of relationship modeled in the live registry between these two entities; used as the worked example in 03",
+      "confidence": "high",
+      "limitations": "This session did not re-fetch ROR's API directly -- it verified the *resolution already recorded in the live database* matches the prior session's cited ROR evidence, not the ROR API itself firsthand."
+    },
+    {
+      "id": "SRC-003",
+      "source_title": "Constructor University official identity (formerly Jacobs University Bremen / International University Bremen)",
+      "source_url": "https://constructor.university ; ROR https://ror.org/02yrs2n53",
+      "source_type": "official_primary / open_registry",
+      "retrieved_at": "cited from docs/handoffs/claude-b-to-claude-a.md (prior session); external-id presence re-confirmed live this session (2026-08-20)",
+      "claim_supported": "The rename history (International University Bremen -> Jacobs University Bremen 2007 -> Constructor University 2023) and the finding that no legacy alias exists for either former name",
+      "confidence": "medium",
+      "limitations": "The specific rename-year claims (2007, 2023) are general knowledge about this well-documented institutional rename, not independently re-verified against Constructor University's own official history page by this session -- flagged medium rather than high for that reason. The *absence of alias rows* in the live database, by contrast, is a directly queried, high-confidence fact."
+    },
+    {
+      "id": "SRC-004",
+      "source_title": "PostgreSQL unaccent extension behavior on Turkish dotless-ı and dotted-İ",
+      "source_url": "internal: direct SQL query against oryn-qa-scratch, `select unaccent('...')`",
+      "source_type": "primary_live_database",
+      "retrieved_at": "2026-08-20T22:40:00Z (session window)",
+      "claim_supported": "unaccent('Kırıkkale') = 'Kirikkale', unaccent('İSTEK Okulları') = 'ISTEK Okullari' -- the database-side convention that lib/acquisition/normalize.ts's dbNormalizedName() is documented to match and, per this session's testing, does not",
+      "confidence": "high",
+      "limitations": "Reflects this specific Postgres instance's unaccent extension version/rules file as installed on oryn-qa-scratch; not independently verified against a second Postgres instance, though unaccent's default rules file is standard/stable across installs."
+    },
+    {
+      "id": "SRC-005",
+      "source_title": "Node.js (v24.19.0) String.prototype.normalize/toLowerCase Unicode case-folding behavior",
+      "source_url": "internal: throwaway Node scripts run this session, replicating lib/acquisition/normalize.ts's nameKey()/dbNormalizedName() verbatim",
+      "source_type": "primary_computational_test",
+      "retrieved_at": "2026-08-20T22:20:00Z (session window)",
+      "claim_supported": "U+0130 (İ) has a canonical NFD decomposition to U+0049+U+0307 (confirmed, correcting this session's own initial wrong hypothesis); U+0131 (ı) has no decomposition and is deleted/splits words under nameKey()'s ASCII-only alnum-fold step",
+      "confidence": "high",
+      "limitations": "Verified against this session's exact copy of the two functions' current source; if either function is edited after this research lands, results should be re-verified against the new version rather than assumed to still hold."
+    },
+    {
+      "id": "SRC-006",
+      "source_title": "opportunities.organization raw text, live table",
+      "source_url": "internal: oryn-qa-scratch, `select organization, count(*) from opportunities group by organization`",
+      "source_type": "primary_live_database",
+      "retrieved_at": "2026-08-20T22:10:00Z (session window)",
+      "claim_supported": "Every organizer-granularity example in doc 08, including the University of Pennsylvania/Wharton six-way cluster and the METU/Arber-Kongre-A.Ş./Radyo-ODTÜ cycle-operator string",
+      "confidence": "high",
+      "limitations": "Text as entered by whichever research pass sourced each opportunity -- this session did not re-verify each organizer string against the opportunity's own official source page; the *canonicalization problem* these strings illustrate is the claim, not each individual opportunity's factual accuracy."
+    },
+    {
+      "id": "SRC-007",
+      "source_title": "PostgreSQL unaccent extension behavior on German ß (eszett) and apostrophe characters",
+      "source_url": "internal: direct SQL query against oryn-qa-scratch, `select unaccent('Weißensee')`",
+      "source_type": "primary_live_database",
+      "retrieved_at": "2026-08-21T00:00:00Z approx (session window, second normalization-testing pass)",
+      "claim_supported": "unaccent('Weißensee') = 'Weissensee' (confirms ß->ss folding, the same mechanism gap as Turkish ı, in dbNormalizedName()); unaccent() does not touch apostrophe characters at all (confirms the apostrophe-style finding is not a JS/DB disagreement, unlike ı/ß)",
+      "confidence": "high",
+      "limitations": "No live canonical_entities row containing ß was found to test end-to-end (checked, zero matches) -- this finding is mechanism-verified and defensive, not evidence of a currently-manifested duplicate the way the Turkish ı finding is."
+    },
+    {
+      "id": "SRC-008",
+      "source_title": "Live canonical_entities rows for four major German universities, re-verified after an initial mis-read",
+      "source_url": "internal: oryn-qa-scratch, direct id-level query on Eberhard Karls Universität Tübingen / Friedrich-Alexander-Universität Erlangen-Nürnberg / Humboldt-Universität zu Berlin / Ludwig-Maximilians-Universität München",
+      "source_type": "primary_live_database",
+      "retrieved_at": "2026-08-20T23:50:00Z approx (session window)",
+      "claim_supported": "All four institutions' ASCII-folded-normalized_name duplicate row is already verification_state='merged' (zero universities rows, zero external ids) while the un-folded row is the live, fully-ROR/GRID/ISNI/Wikidata/CrossRef-enriched one -- confirming isPureEncodingVariant()-driven cleanup already correctly resolved this pattern, and that doc 09 Finding 6's broader zero-result query (no active row shares a display_name with a disagreeing normalized_name, for any entity type) is accurate",
+      "confidence": "high",
+      "limitations": "This session's own first read of the aggregate count (before checking verification_state per row) briefly mis-read this as an unresolved duplicate -- corrected within the same session before anything was published; recorded in doc 09 Finding 6 as a deliberate example of the verify-before-claiming discipline this package tries to model throughout."
+    },
+    {
+      "id": "SRC-009",
+      "source_title": "ROR API direct records for Purdue University (system and West Lafayette campus) and Rutgers, The State University of New Jersey",
+      "source_url": "https://api.ror.org/v2/organizations/05p8z3f47, https://api.ror.org/v2/organizations/02dqehb95, https://api.ror.org/v2/organizations/05vt9qd57 (fetched via curl, not WebFetch -- WebFetch returned a socket error against this API in this session)",
+      "source_type": "open_registry",
+      "retrieved_at": "2026-08-21T01:00:00Z approx (session window)",
+      "claim_supported": "Purdue: ror.org/05p8z3f47 is the multi-campus 'Purdue University System' parent; ror.org/02dqehb95 ('Purdue University West Lafayette') is the correct, more specific child entity ORYN's rows should map to. Rutgers: only one ROR entity exists (ror.org/05vt9qd57) for the entire university -- no separate New Brunswick/Newark child, unlike ORYN's own two-row split.",
+      "confidence": "high",
+      "limitations": "Confirms current ROR state as of the retrieval date only -- ROR records can change (new child entities added, relationships revised)."
+    },
+    {
+      "id": "SRC-010",
+      "source_title": "ROR API direct records for Université de Franche-Comté / Université Marie et Louis Pasteur / Université Bourgogne Franche-Comté / Université Bourgogne Europe, and Université Toulouse III - Paul Sabatier / Université de Toulouse",
+      "source_url": "https://api.ror.org/v2/organizations/03pcc9z86, https://api.ror.org/v2/organizations/04asdee31, https://api.ror.org/v2/organizations/02dn7x778, https://api.ror.org/v2/organizations/00g700j37, https://api.ror.org/v2/organizations/02v6kpv12, https://api.ror.org/v2/organizations/01ahyrz84 (fetched via curl)",
+      "source_type": "open_registry",
+      "retrieved_at": "2026-08-21T01:10:00Z approx (session window)",
+      "claim_supported": "Université de Franche-Comté's ROR record is status='inactive' with a direct successor relationship to Université Marie et Louis Pasteur (est. 2024), itself one of two successors to the 2015-2024 Université Bourgogne Franche-Comté federation. Université Toulouse III - Paul Sabatier is a direct predecessor of Université de Toulouse (est. 2025). Both are real, current, recent French university mergers/renames -- see 04-rename-history-framework.md.",
+      "confidence": "high",
+      "limitations": "Confirms current ROR state as of the retrieval date only. This session did not independently verify these mergers against each institution's own official French-language announcement/decree -- ROR's own status/relationship fields are treated as sufficient evidence for an open registry per this package's source standard (00), but a fully primary-source confirmation (e.g. the French ministerial decree) was not separately fetched."
+    },
+    {
+      "id": "SRC-011",
+      "source_title": "ROR API direct records completing verification of all 16 university-ror-gaps.json 'genuine_single_row_gap' entries",
+      "source_url": "api.ror.org queries for Al-Quds/Eastern Mediterranean/Lefke/Near East/Lingnan/Duesseldorf (clean), Khoja Akhmet Yassawi (zero results), Northwest Agriculture and Forestry University (ror.org/0051rme32, needed 'A&F' abbreviated form), Moscow Institute of Physics and Technology (ror.org/00v0z9322), National Chung Hsing University (ror.org/05vn3ca78), The New School (ror.org/02tvcev59), University of the Philippines (ror.org/03tbh6y23 Diliman-specific, parent ror.org/02hqkr514 System)",
+      "source_type": "open_registry",
+      "retrieved_at": "2026-08-21T01:20:00Z approx (session window)",
+      "claim_supported": "Completes a full (not sampled) verification of all 16 entries in university-ror-gaps.json's genuine_single_row_gap array: 10 clean, 4 succession/granularity issues (already sourced in SRC-009/SRC-010), 1 additional granularity issue (University of the Philippines, same Mode A shape as Purdue), 1 with no ROR record found at all (Khoja Akhmet Yassawi).",
+      "confidence": "high",
+      "limitations": "The 'no ROR record found' conclusion for Khoja Akhmet Yassawi reflects this session's own query only -- ROR's search API could in principle have a coverage or indexing gap distinct from the institution genuinely lacking a record; flagged for independent re-confirmation rather than asserted as certain."
+    }
+  ]
+}

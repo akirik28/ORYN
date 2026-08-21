@@ -1,0 +1,50 @@
+{
+  "_meta": {
+    "title": "Proposed canonical-entity/relationship candidates for the highest-value opportunity-organizer clusters",
+    "source_document": "docs/research/canonical-entity-intelligence/08-opportunity-organizer-canonicalization.md",
+    "scope_note": "Covers only organizers appearing >=2 times in opportunities.organization, plus the University of Pennsylvania/Wharton cluster (high internal complexity despite each individual string appearing once). The remaining ~160 single-occurrence organizer strings are NOT covered here -- see doc 10 for how they're prioritized for future research.",
+    "status": "RESEARCH CANDIDATE ONLY -- not written to canonical_entities. For Claude A / whoever owns write access to review and research each proposed official_url/entity_type before creating.",
+    "correction_from_batch2_research": "docs/research/canonical-entity-intelligence/13-opportunity-organizer-research-batch2.md found that opportunities.organization_entity_id's own trigger (trg_opportunities_org_entity_type, migration 0038) only permits entity_type in ('opportunity_provider','organization','university','school','employer','research_institution','lab','ngo','club') -- 'competition'/'program'/'scholarship' are NOT valid for THIS column, even though they are valid canonical_entities.entity_type values generally. This means PennApps and MIT Battlecode below should still be created as their own entity_type='competition' rows (for aliasing/search/provider_for purposes), but the actual opportunities.organization_entity_id value for a PennApps- or Battlecode-organized opportunity row must point at University of Pennsylvania / MIT (the organizing body), never at the competition entity itself. Corrected here rather than silently -- this file's original relationship notes below did not carry this distinction when first written."
+  },
+  "clusters": [
+    {
+      "cluster_name": "University of Pennsylvania / Wharton",
+      "live_organizer_strings": [
+        "University of Pennsylvania",
+        "University of Pennsylvania - Wharton School",
+        "The Wharton School, University of Pennsylvania (Wharton Global Youth Program)",
+        "Perelman School of Medicine, University of Pennsylvania (Penn Medicine)",
+        "Wharton Sports Analytics and Business Initiative / Wharton Global Youth Program",
+        "Wharton AI & Analytics Initiative, University of Pennsylvania",
+        "PennApps, University of Pennsylvania"
+      ],
+      "proposed_structure": [
+        {"proposed_entity": "University of Pennsylvania", "entity_type": "university", "note": "Already very likely exists as a canonical_entities row given 1055+ university coverage -- verify/reuse, do not recreate."},
+        {"proposed_entity": "The Wharton School", "entity_type": "organization", "relationship": "school_of -> University of Pennsylvania", "note": "Own admissions brand/subdomain (wharton.upenn.edu) -- justifies its own row per RULE-ENTITY-019"},
+        {"proposed_entity": "Perelman School of Medicine", "entity_type": "organization", "relationship": "school_of -> University of Pennsylvania", "note": "Same justification as Wharton -- own brand (Penn Medicine), own admissions process"},
+        {"proposed_entity": "Wharton Global Youth Program", "entity_type": "program", "relationship": "provider_for <- The Wharton School", "note": "A specific named pre-college program, not an alias of Wharton itself"},
+        {"proposed_entity": "PennApps", "entity_type": "competition", "relationship": "provider_for <- University of Pennsylvania (or a more specific CS-department entity if one is researched)", "note": "Long-running named hackathon; own brand"},
+        {"proposed_entity": "Wharton AI & Analytics Initiative / Wharton Sports Analytics and Business Initiative", "entity_type": "not_yet_decided", "note": "Per RULE-ENTITY-013/019: default to NOT creating separate rows for these narrower initiatives until each recurs across more than one opportunity -- currently one live mention each."}
+      ]
+    },
+    {
+      "cluster_name": "MIT",
+      "live_organizer_strings": ["Massachusetts Institute of Technology", "MIT", "MIT Battlecode", "Center for Excellence in Education, in partnership with MIT"],
+      "proposed_structure": [
+        {"proposed_entity": "Massachusetts Institute of Technology", "entity_type": "university", "note": "Already exists (confirmed live, entity_aliases has both 'Massachusetts Institute of Technology' and 'MIT' as aliases of the same row) -- the 'MIT'/'Massachusetts Institute of Technology' organizer-string split in opportunities.organization is exactly the alias-resolution problem 01/02 already solve; populating organization_entity_id for these rows needs no new research, just running the existing alias-aware resolver against opportunities.organization."},
+        {"proposed_entity": "MIT Battlecode", "entity_type": "competition", "relationship": "provider_for <- Massachusetts Institute of Technology", "note": "Named competition, own identity"},
+        {"proposed_entity": "Center for Excellence in Education", "entity_type": "organization", "relationship": "partner_of <-> Massachusetts Institute of Technology (schema gap -- see relationship-taxonomy-mapping.json)", "note": "Independent nonprofit, NOT part of MIT -- 'in partnership with MIT' is joint-organizer credit, not ownership either direction"}
+      ]
+    },
+    {
+      "cluster_name": "Single-string organizers appearing exactly twice (next-highest research priority after the two clusters above)",
+      "live_organizer_strings": [
+        "Stanford University", "Carnegie Mellon University", "Northwestern University",
+        "Columbia University", "Boston University", "Horn Entrepreneurship, University of Delaware"
+      ],
+      "proposed_structure": [
+        {"note": "Each of these is very likely already a plain university-level match against the existing 1055+ entity_type='university' registry (Stanford/CMU/Northwestern/Columbia/Boston University are all large, prominent US universities near-certain to already exist as rows) -- populating organization_entity_id for their opportunities rows is expected to be a straightforward alias-resolver run, not new entity research, EXCEPT 'Horn Entrepreneurship, University of Delaware' which names a specific center (same granularity question as the Wharton cluster) and needs its own per-case decision."}
+      ]
+    }
+  ]
+}

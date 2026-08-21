@@ -1,0 +1,128 @@
+{
+  "_meta": {
+    "source_document": "docs/research/canonical-entity-intelligence/17-canonical-entity-autocomplete-system.md",
+    "generated_by": "Running the actual production lib/entities/audit.ts logic (auditEntities, findDenormalizedNameDrift-adjacent checks skipped) against a live snapshot of canonical_entities (1172 rows) + entity_aliases (445 rows), fetched read-only via Supabase MCP execute_sql on the oryn-qa-scratch project (qtcvcflzxbuagvvwahhu) on 2026-08-21. No writes were made — see the parent doc for the harness.",
+    "snapshot_row_counts": { "canonical_entities": 1172, "entity_aliases": 445 },
+    "important_caveat": "entities-audit.ts's findExactDuplicates/findNearDuplicates/findDuplicateAliases/findAliasCollisions do not filter out verification_state IN ('merged','inactive') before comparing. This contaminates SAFE_EXACT_LINK 24/24 and 3 of the 24 AMBIGUOUS findings with harmless already-merged-tombstone noise (a tombstone correctly retains its original identity/aliases per lib/entities/resolve.ts's own stated design -- that is not a data bug). The genuine_confirmed_duplicate_pairs and abbreviation_collision_pairs sections below are NOT tombstone noise -- both sides of every pair listed are verification_state='source_verified', confirmed by direct query, not by trusting the tool's raw bucket label."
+  },
+  "bucket_summary_raw_tool_output": {
+    "SAFE_EXACT_LINK": { "count": 24, "note": "100% (24/24) are a live row plus its own already-merged tombstone predecessor sharing the same identity tuple by design. Zero require action." },
+    "POSSIBLE_DUPLICATE": { "count": 301, "live_vs_live": 275, "involves_merged_tombstone": 26 },
+    "AMBIGUOUS": { "count": 24, "alias_equals_other_canonical_name": 3, "alias_shared_by_multiple_entities": 21, "note": "The 3 alias_equals_other_canonical_name findings are the same merged-tombstone artifact as SAFE_EXACT_LINK (KFUPM, UCL, University of Warwick -- the already-known, already-merged 2026-08-17 supersession set). The 21 alias_shared_by_multiple_entities findings collapse to 12 distinct entity-id pairs and are NOT tombstone noise -- see below." },
+    "UNRESOLVED": { "count": 0 },
+    "INVALID": { "count": 24, "note": "All alias_equals_own_canonical_name. ~18 of 24 are Turkish-diacritic canonical names carrying a redundant plain-ASCII-transliteration alias that normalizeEntitySearchText already folds to the same value without needing the alias -- e.g. \"Beşiktaş Sakıp Sabancı Anadolu Lisesi\" carrying alias \"Besiktas Sakip Sabanci Anadolu Lisesi\". Low-effort registry hygiene, not a duplicate-identity risk." }
+  },
+  "genuine_confirmed_duplicate_pairs": {
+    "description": "IMPORTANT: these 9 pairs are NOT new duplicate discoveries. Checked directly before this file was finalized: all 18 entity ids below already appear in duplicate-candidates-university.json, i.e. they are 9 of the 43 pairs docs/research/canonical-entity-intelligence/09's Finding 2 already documents in full, including the identical two-timestamp mechanism. This file's contribution is (a) independent cross-validation -- these 9 were separately rediscovered here via lib/entities/audit.ts's alias_shared_by_multiple_entities rule (entity_aliases-based: both rows independently carry the identical alias string, e.g. both carry 'UCLA'), a completely different code path than Finding 2's exact-normalized-name query against entity_verification_queue -- (b) a fuller external-id breakdown (4-5 of ROR/GRID/ISNI/WIKIDATA/CROSSREF_FUNDER on the enriched side, not just ROR), and (c) naming which specific famous institutions are affected, useful for prioritization since several are high-application-volume US institutions. See 17-canonical-entity-autocomplete-system.md section 5 for the full correction narrative -- a first draft of this document briefly and incorrectly presented these as new. Every pair: one row created 2026-08-16T21:42:51.300461Z with full external-id coverage and a linked universities row; the other created 2026-08-16T23:29:46.90496Z with ZERO entity_external_ids rows and no linked universities row. Both sides verification_state='source_verified' (neither is a tombstone). The only difference between the two rows' city field is US-state-suffix or city-vs-city-with-'City' formatting (e.g. 'Berkeley' vs 'Berkeley, CA', 'Tainan' vs 'Tainan City') -- exactly why canonical_entities_identity_uq's exact-tuple constraint did not block the second insert. HIGH-CONFIDENCE REVIEW, not AUTO-SAFE MATCH, by this package's own tiering -- the orphan side carries no external id of its own to agree with the enriched side's, so the safe tier's external-id-agreement bar is not literally met. Recommended remediation (same as Finding 2 already recommends): merge_canonical_entities() with the ROR-enriched row as target and the orphan as source. Working hypothesis, not confirmed against process logs this session has no access to: two enrichment passes ran ~1h47m apart on 2026-08-16; the second pass's identity-resolution missed these because they already existed under a different city-string formatting, while it correctly recognized other institutions as new and enriched them cleanly (see abbreviation_collision_pairs below, all created in that same later pass with full enrichment) -- the exact timestamps are included so whoever owns the acquisition pipeline can check this against their own run logs.",
+    "already_documented_in": ["docs/research/canonical-entity-intelligence/09-existing-oryn-ambiguity-audit.md#Finding-2", "data/research/canonical-entities/duplicate-candidates-university.json"],
+    "enriched_side_created_at": "2026-08-16T21:42:51.300461+00",
+    "orphan_side_created_at": "2026-08-16T23:29:46.90496+00",
+    "pairs": [
+      {
+        "name": "University of California, Los Angeles (UCLA)",
+        "enriched_id": "a2ae60c2-8164-463d-9c06-55e1e6635ba3",
+        "enriched_city": "Los Angeles, CA",
+        "enriched_ror": "046rm7j60",
+        "orphan_id": "1b9b4829-e444-445f-a336-7d207a0fab90",
+        "orphan_city": "Los Angeles"
+      },
+      {
+        "name": "University of California, Berkeley (UCB)",
+        "enriched_id": "29400958-853a-4a9d-8049-16b1159f54f1",
+        "enriched_city": "Berkeley, CA",
+        "enriched_ror": "01an7q238",
+        "orphan_id": "8336e88c-a2c2-4ffc-aeb0-3683eae33043",
+        "orphan_city": "Berkeley"
+      },
+      {
+        "name": "University of California, San Diego (UCSD)",
+        "enriched_id": "71f67523-ab76-45fd-83a2-54f7308e67b9",
+        "enriched_city": "San Diego, CA",
+        "enriched_ror": "0168r3w48",
+        "orphan_id": "90c7f040-d7c0-4778-bf79-463267ddef1e",
+        "orphan_city": "San Diego"
+      },
+      {
+        "name": "University of California, Santa Barbara (UCSB)",
+        "enriched_id": "0dac2a4f-1a04-4a44-af35-135632233ae5",
+        "enriched_city": "Santa Barbara, CA",
+        "enriched_ror": "02t274463",
+        "orphan_id": "4a356ad1-6d93-40bb-97cc-dc37cd68a5a7",
+        "orphan_city": "Santa Barbara"
+      },
+      {
+        "name": "New York University (NYU)",
+        "enriched_id": "38aa53bd-2ea4-475e-a8e5-7593714a7fc9",
+        "enriched_city": "New York, NY",
+        "enriched_ror": "0190ak572",
+        "orphan_id": "f63ea9a1-5e2d-4663-b865-e615247511cd",
+        "orphan_city": "New York City"
+      },
+      {
+        "name": "California Institute of Technology (Caltech)",
+        "enriched_id": "faeeb7ad-65fc-4755-b0b9-9dce2216e215",
+        "enriched_city": "Pasadena, CA",
+        "enriched_ror": "05dxps055",
+        "orphan_id": "cbce2022-f56b-40a6-91a7-c77630c0e472",
+        "orphan_city": "Pasadena"
+      },
+      {
+        "name": "City University of Hong Kong (CityUHK)",
+        "enriched_id": "7e3e2b72-6c81-4763-b2ba-77b8afc112bf",
+        "enriched_city": "Hong Kong",
+        "enriched_ror": "03q8dnn23",
+        "orphan_id": "be7e9d9e-318c-498f-abd1-b3a3aaa752b8",
+        "orphan_city": "Kowloon",
+        "note": "City difference is region-vs-district (CityU's real campus is in Kowloon Tong), slightly wider than the pure US-state-suffix pattern of the other 8, but same alias-identity signal."
+      },
+      {
+        "name": "National Cheng Kung University (NCKU)",
+        "enriched_id": "56f80e8f-999d-40d1-a01a-0a5e71fd80ce",
+        "enriched_city": "Tainan",
+        "enriched_ror": "01b8kcc49",
+        "orphan_id": "977d1f7d-c3fd-4c13-8d64-5179b2edc236",
+        "orphan_city": "Tainan City"
+      },
+      {
+        "name": "National Yang Ming Chiao Tung University (NYCU Taiwan)",
+        "enriched_id": "670937ce-2e0b-46e1-92e8-1e918f4aa374",
+        "enriched_city": "Hsinchu",
+        "enriched_ror": "00se2k293",
+        "orphan_id": "e9bc1320-f3af-4197-ba95-90dacb5d882a",
+        "orphan_city": "Hsinchu City"
+      }
+    ]
+  },
+  "abbreviation_collision_pairs": {
+    "description": "Also not new: these exact 3 pairs are already doc 02's alias-taxonomy worked examples and RULE-ENTITY-006 in doc 06 (source: alias-taxonomy-examples.json). Independently rediscovered here via lib/entities/audit.ts, same cross-validation value as genuine_confirmed_duplicate_pairs above. The SAME short alias string is legitimately shared by two different, real, independently-enriched institutions in different countries -- not a duplicate-identity case at all, but exactly the 'safe-abbreviation-collision handling' scenario the alias taxonomy needs to get right: never let a short alias resolve unambiguously to just one of these. All 6 entities carry full external-id coverage (4-5 each) and their own universities row -- confirms these are two genuinely separate, properly-enriched entities, not an enrichment gap.",
+    "already_documented_in": ["docs/research/canonical-entity-intelligence/02-alias-taxonomy.md", "docs/research/canonical-entity-intelligence/06-unsafe-auto-merge-rules.md#RULE-ENTITY-006", "data/research/canonical-entities/alias-taxonomy-examples.json"],
+    "pairs": [
+      { "alias": "UP", "a": "Universidad Panamericana (Mexico City, Mexico)", "b": "Universidad de Palermo (Buenos Aires, Argentina)" },
+      { "alias": "UM", "a": "Universiti Malaya (Kuala Lumpur, Malaysia)", "b": "Universidad de Montevideo (Montevideo, Uruguay)" },
+      { "alias": "UPM", "a": "Universidad Politécnica de Madrid (Madrid, Spain)", "b": "Universiti Putra Malaysia (Serdang, Malaysia)" }
+    ]
+  },
+  "possible_duplicate_bucket_calibration": {
+    "description": "A 30-pair spot-check (every 9th finding across the 275 live-vs-live near_duplicate_name results, not a full manual review of all 275) found the overwhelming majority are structurally-similar-but-substantively-different real institutions, not previously-undetected duplicates -- e.g. Northeastern University vs Northwestern University, University of Toronto vs University of Trento, University of Mumbai vs University of Dubai, University of Warsaw vs University of Kansas. 274 of 275 are entity_type=university (1 school). Only 73 of 275 (26.5%) involve an id already present in this package's own targeted 43-pair research (duplicate-candidates-university.json), meaning the tool's low-precision review-queue design is surfacing a materially different, much larger, much noisier candidate set than targeted research would produce -- expected and fine for a human-triage queue, but the raw count (301, or 275 live-vs-live) should not be read as '275 likely duplicates needing resolution'. One genuinely interesting spot-check hit: 'University of Maryland, Baltimore' vs 'University of Maryland, Baltimore County' -- these are two separately-accredited institutions within the University System of Maryland (UMB is graduate/professional-only: medicine, law, pharmacy, dentistry, nursing, social work, with no undergraduate program; UMBC is a separate comprehensive research university with its own undergraduate admissions), not a duplicate or a campus_of relationship -- added to doc 12 as a new US-based collision-trap example. This claim rests on well-established public knowledge of the University System of Maryland's structure, not a fresh live source check, unlike the ROR-verified claims elsewhere in this package -- flagged so the confidence basis is explicit."
+  },
+  "invalid_bucket_turkish_alias_redundancy_sample": {
+    "description": "Representative subset of the ~18 Turkish-diacritic entries in the 24 alias_equals_own_canonical_name findings -- each pair is ALREADY correctly treated as equivalent by normalizeEntitySearchText (confirmed live, not synthetic), so the alias is redundant, not a normalization gap. Also independently reconfirms normalizeEntitySearchText's ı/İ/ş/ç/ö/ğ handling against real production data, consistent with the synthetic test in doc 07.",
+    "examples": [
+      { "canonical": "Beşiktaş Sakıp Sabancı Anadolu Lisesi", "redundant_alias": "Besiktas Sakip Sabanci Anadolu Lisesi" },
+      { "canonical": "Yeşilköy Anadolu Lisesi", "redundant_alias": "YESILKOY ANADOLU LISESI" },
+      { "canonical": "Arı Anadolu Lisesi", "redundant_alias": "ARI ANADOLU LİSESİ" },
+      { "canonical": "Çemberlitaş Anadolu Lisesi", "redundant_alias": "Cemberlitas Anadolu Lisesi" },
+      { "canonical": "Kültür2000", "redundant_alias": "Kultur2000" }
+    ]
+  },
+  "verification_state_evidence_audit": {
+    "description": "Replicated scripts/verification-state-audit.ts's rule (an official_verified verification_state is only defensible when >=1 entity_evidence row exists) directly via SQL against the live registry, complete across the entire registry (not scoped to one entity_type the way the script's own default CLI invocation is). The script's own docblock states a PAST finding ('EVERY university-type entity marked official_verified has zero entity_evidence rows') that this live check shows has since been fully resolved.",
+    "university_official_verified_count_now": 0,
+    "university_source_verified_count": 1055,
+    "university_merged_tombstones": 37,
+    "school_official_verified_count": 54,
+    "school_official_verified_with_evidence": 54,
+    "other_entity_types_at_official_verified": 0,
+    "conclusion": "Every official_verified row in the entire live registry (54 of 54, all schools; zero universities currently hold that state) has >=1 supporting entity_evidence row. The registry's strictest verification_state is currently fully defensible, registry-wide, not sampled."
+  }
+}
