@@ -4100,3 +4100,51 @@ institutions cross-verified via ROR (the 4 from the prior pass + the 5 newly clo
 above). Resolving domains for the remaining ~197 would mean a per-institution ROR-or-site
 lookup each — out of scope for one collection pass, left as explicit follow-up work in the
 JSON file's own readme rather than guessed or silently skipped.
+
+**Coordinator follow-up: resolve domains for all 120 devlet candidates, in descending
+program-count order.** Done — 119 of 120. Same JSON file, per-record `official_domain` +
+`domain_source` + `domain_verification_note` (or, where unresolved, `domain_resolution_note`
+explaining why). Method held to the exact-identifier standard the coordinator set: every ROR
+match verified by comparing the returned display name against the query, never accepted on
+search rank alone.
+
+**That discipline caught two more near-misses in this pass alone** (on top of the Anadolu
+University one from the collection pass) — both the same shape, both from the same ROR
+record: **"Usak University" (a real, different, unrelated institution) ranked first** for
+both "Afyon Kocatepe University" (correct match was rank 1) and would have for "Anadolu
+University" earlier — three false-rank-0s from one ROR record across this session's two
+domain-resolution passes. Also caught: **"Turgut Özal University"** (a separate private
+university in Ankara) almost took the slot for **"Malatya Turgut Özal Üniversitesi"** (a
+different, public institution) — avoided because the exact institution name, not just the
+person's name, was checked.
+
+**One institution has no ROR record at all**: Türk-Japon Bilim ve Teknoloji Üniversitesi
+(id 337118) — one of Turkey's newest state universities (~2021). Left `null` and flagged
+rather than guessed, exactly per the coordinator's "a domain you cannot verify stays null
+and flagged" instruction.
+
+**A self-caught mistake worth recording**: partway through, one record (Çankırı Karatekin
+University) was given a domain I had silently "cleaned up" — trimming ROR's returned
+`english.karatekin.edu.tr` down to a guessed `karatekin.edu.tr` root domain I had not
+actually verified resolves. Caught on review and corrected back to the exact
+ROR-verified value before moving on — the same discipline this whole pass is built around
+applies to my own edits, not just to source lookups.
+
+**Nice side effect**: this pass also fully resolves the three-way "Sağlık Bilimleri
+Üniversitesi" ambiguity flagged in the collection pass — İstanbul (`uhs.edu.tr`),
+Afyonkarahisar (`afsu.edu.tr`), and Kütahya (`ksbu.edu.tr`) now each have a distinct,
+verified domain, and each ROR lookup cross-confirmed the other two as separate. Same for
+İstanbul Üniversitesi-Cerrahpaşa, which now has a confirmed domain (`iuc.edu.tr`) while
+staying flagged as legally distinct from Istanbul University.
+
+A handful of accepted domains carry a disclosed caveat rather than a clean exact match:
+ROR's own canonical display name is shorter than the institution's current official name
+for a few of these (e.g. "Muğla University" for the institution now officially "Muğla
+Sıtkı Koçman Üniversitesi", "Adnan Menderes University" for "Aydın Adnan Menderes
+Üniversitesi", "Ahi Evran University" for "Kırşehir Ahi Evran Üniversitesi", "Adana
+Science and Technology University" for "...Alparslan Türkeş..."). Accepted on
+domain-pattern confidence with no competing candidate in the results, but the discrepancy
+is recorded per-record rather than smoothed over.
+
+Vakıf (70) and KKTC (16) domains remain unresolved, explicitly deferred per the
+coordinator's instruction ("not all 206 — the vakıf and KKTC sets can follow later").
