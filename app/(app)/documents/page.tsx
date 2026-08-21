@@ -5,6 +5,7 @@ import { listLinkableItems } from "@/lib/profile/list-linkable-items";
 import { UploadEvidenceDialog } from "@/features/documents/upload-evidence-dialog";
 import { EvidenceRow } from "@/features/documents/evidence-row";
 import { EmptyState } from "@/components/oryn/empty-state";
+import { PageHeader } from "@/components/oryn/page-header";
 import { EVIDENCE_LINKABLE_LABELS, type EvidenceLinkableTable } from "@/lib/validation/evidence";
 
 export const metadata = { title: "Documents" };
@@ -30,15 +31,11 @@ export default async function DocumentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Documents</h1>
-          <p className="mt-1 text-muted-foreground">
-            Evidence you&apos;ve attached to your achievements. Private to you unless you choose to share it.
-          </p>
-        </div>
-        <UploadEvidenceDialog items={linkableItems} />
-      </div>
+      <PageHeader
+        title="Documents"
+        description="Evidence you've attached to your achievements. Private to you unless you choose to share it."
+        action={<UploadEvidenceDialog items={linkableItems} />}
+      />
 
       {evidenceWithUrls.length > 0 ? (
         <ul className="space-y-2">

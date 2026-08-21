@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { ExternalLink, MapPin, DollarSign, Calendar, Users2 } from "lucide-react";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
@@ -11,7 +12,16 @@ import { OpportunityActions } from "@/features/opportunities/opportunity-actions
 import { formatCurrency } from "@/lib/i18n/format";
 import type { ConfidenceLevel } from "@/components/oryn/confidence-indicator";
 
-export const metadata = { title: "Opportunity" };
+// Was a static "Opportunity" title on every one of these pages — technically present, but
+// no more useful than a missing one for telling tabs/history apart. Public/global data
+// (opportunities aren't user-owned), so a plain lightweight query is fine here, same as
+// the university detail page.
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: opportunity } = await supabase.from("opportunities").select("title").eq("id", id).single();
+  return { title: opportunity?.title ?? "Opportunity" };
+}
 
 function humanize(value: string): string {
   return value.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());

@@ -2,6 +2,7 @@ import { Download, LogOut } from "lucide-react";
 import { getCurrentProfile, requireUser } from "@/lib/security/dal";
 import { signOut } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/oryn/page-header";
 import { DisplayNameForm } from "@/features/settings/display-name-form";
 import { LocationForm } from "@/features/settings/location-form";
 import { CitizenshipForm } from "@/features/settings/citizenship-form";
@@ -22,9 +23,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="max-w-xl space-y-10">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Settings</h1>
-      </div>
+      <PageHeader title="Settings" />
 
       <section className="space-y-4">
         <h2 className="font-semibold">Account</h2>

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { getConversation, getBlockState } from "@/lib/messaging/messages";
@@ -10,7 +11,15 @@ import { EmptyState } from "@/components/oryn/empty-state";
 import { ConversationThread } from "@/features/messaging/conversation-thread";
 import { ShieldOff } from "lucide-react";
 
-export const metadata = { title: "Conversation" };
+// Same public_profiles.display_name lookup the page body already does unconditionally
+// (not gated by `access`, which only governs the message thread itself) — no new exposure.
+export async function generateMetadata({ params }: { params: Promise<{ userId: string }> }): Promise<Metadata> {
+  const { userId: otherUserId } = await params;
+  if (!isUuidLike(otherUserId)) return {};
+  const supabase = await createClient();
+  const { data } = await supabase.from("public_profiles").select("display_name").eq("id", otherUserId).maybeSingle();
+  return { title: data?.display_name ?? "Conversation" };
+}
 
 export default async function ConversationPage({ params }: { params: Promise<{ userId: string }> }) {
   const { userId: otherUserId } = await params;

@@ -61,3 +61,51 @@ export function PageSkeleton({
     </div>
   );
 }
+
+// Dashboard-specific loading fallback. Unlike PageSkeleton above, this mirrors
+// DashboardView's actual block structure (score-ring hero, "this week" list, a two-column
+// outlook/opportunities pair) rather than a generic shape — justified here specifically
+// because the dashboard is the one page the spec gives an exact reference layout for
+// (AGENTS.md "Example homepage"), it's the landing page after every login, and its
+// Server Component does several sequential/parallel queries plus a possible weekly-plan
+// generation call, so it's slow enough and distinctive enough to earn its own skeleton.
+export function DashboardSkeleton() {
+  return (
+    <div className="space-y-10" role="status" aria-label="Loading">
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-72 max-w-full" />
+        <Skeleton className="h-4 w-56 max-w-full" />
+      </div>
+
+      <div className="rounded-3xl border p-6 md:p-8">
+        <div className="grid gap-8 md:grid-cols-[auto_1fr] md:items-center">
+          <Skeleton className="size-44 shrink-0 rounded-full" />
+          <div className="space-y-3">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-6 w-64 max-w-full" />
+            <Skeleton className="h-4 w-full max-w-sm" />
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <Skeleton className="h-5 w-40" />
+        <div className="space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-16 w-full rounded-xl" />
+          ))}
+        </div>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div key={i} className="space-y-3 rounded-xl border p-5">
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
