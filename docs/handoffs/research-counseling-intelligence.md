@@ -495,3 +495,32 @@ docs). Spot-checked 3 of this session's 9 entries (11-psychology, 19-social-work
 downgrade split, Germany's clinical-only Approbation scope). All accurate; one cosmetic gap found
 (family 16's `credential_gated_career` field was `null` despite the adjacent `licensure` field
 correctly describing UK/Germany architect title-protection) and already fixed by peer (`5ac811e`).
+Peer separately read and integrated doc 17 into its own docs (`08-unsafe-inference-rules.md` §9,
+`16-worked-example-full-chain.md` Step 5, commit `2eb2efc`).
+
+## France's Parcoursup gap resolved (`7f74f63`, `RULE-COUNSEL-114` updated + `117` new)
+
+Doc 17's France row originally, honestly, said "unresolved — insufficient sourcing to assign
+per-dimension ordinals." A follow-up pass found the actual official mechanism: DGESIP (French
+Ministry of Higher Education) publishes a "Critères Généraux d'Examen des Vœux (CGEV)" framework
+document naming exactly 5 nationally-defined evaluation fields every Parcoursup formation must use
+and percentage-weight (summing to 100%) — académiques, compétences académiques/méthodologiques,
+savoir-être, motivation/projet, and **engagements/activités et centres d'intérêt** (explicitly
+naming school-council leadership and civic service as example criteria). WebFetch's built-in
+extractor returned only binary noise for this PDF; worked around with a direct `curl` download +
+`pypdf` extraction, the same technique used earlier tonight for the CDC chronic-illness PDF. This
+substantially resolves the gap — activities are confirmed as one of exactly 5 structurally-
+guaranteed evaluation categories, not a vague or optional consideration — while still honestly
+leaving the *exact* percentage any one named formation assigns unresolved (formation-specific, not
+general knowledge; the worked example's own remaining-3-of-5 percentages were in a graphic on the
+source PDF's page 9, not extractable text, so left unextracted rather than guessed). **117 rules /
+59 sources.**
+
+**Runway status, ~05:10 Europe/Istanbul**: about 6 hours left before the 11:00 timebox. Both
+sessions' explicit mission-brief deliverables have real coverage now (confirmed with peer). Next
+planned: a persona stress-test of doc 17 against a mixed-target case (peer's suggestion, agreed) —
+likely a UK+Canada-Queen's-Commerce mixed target, since that combination now has genuinely
+different per-dimension guidance from two different documents (`17`'s UK table vs. the Canada
+carve-out heterogeneity) and is a real test of whether the frameworks compose without
+contradiction, consistent with `09`'s existing pattern of using personas to find composition bugs
+(e.g. the original redundancy/timing contradiction, `RULE-COUNSEL-056`).
