@@ -3141,3 +3141,22 @@ record's notes as a caveat rather than silently reconciled one way or the other.
 same-pattern deepening targets**: Bilkent, Koç, Özyeğin, Sabancı (the other 4 of the original
 6 four-program-seeded Turkish universities) are still open — same method should transfer
 directly.
+
+**Program catalogue batch 22 — Bilkent University + Koç University, deepened, 47 new,
+running session total 3,763 across 39 universities.** Full method in that commit's own
+message (`1537194`). Third and fourth applications of the batch-20 fix; only Özyeğin and
+Sabancı remain of the original 6 thin-seeded Turkish universities. Both 100% English-medium.
+A concrete methodology reminder surfaced this round: an initial WebSearch summary of
+Bilkent's own official faculties page silently omitted 3 real items (Educational Sciences,
+the entire Faculty of Law, the entire Faculty of Music and Performing Arts) that the direct
+WebFetch of the same URL caught -- would have under-counted a real institution's catalogue
+by 9 programs (Law, Music, Performing Arts, Educational Sciences) had the search summary
+been trusted instead of fetching the primary page directly, which is what this session has
+consistently done anyway but worth a concrete example in the record. Koç's own official
+page gave degree_type inline (BA/BSc/LLB/MD) directly rather than needing inference, richer
+than any other Turkey batch so far. Two spot-checks (Bilkent's Urban Design and Landscape
+Architecture -- confirmed as literally Turkey's first program of its kind, established 1991;
+Koç's Archaeology and History of Art) both confirmed accurate. **Turkey status**: 5 of the
+original 6 thin-seeded universities now deepened (METU, Boğaziçi, Bilkent, Koç; Özyeğin and
+Sabancı remain); Layer-2 zero-coverage-to-researched: ITU, YTU, Hacettepe (Ankara
+Üniversitesi, Gebze Technical University, Istanbul University still zero-coverage).
