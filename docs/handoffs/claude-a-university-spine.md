@@ -3061,3 +3061,31 @@ Boğaziçi, Koç, METU, Özyeğin, Sabancı -- likely all have official catalogu
 medium being much more standard at these particular institutions) and the other 4
 zero-coverage ones (Ankara Üniversitesi, Gebze Technical University, Hacettepe University,
 Istanbul University) are a reasonable next Turkey round.
+
+**Program catalogue batch 19 — Hacettepe University, 99 new, running session total 3,637
+across 39 universities.** Full method in that commit's own message (`914de4a`). Third Turkey
+batch, same round. Hacettepe's own official lisans/onlisans page turned out to be by far the
+richest single-fetch yield of the three Turkey universities done so far (99 bachelor's-level
+programs in one clean fetch, vs. 45/43 for ITU/YTU's department-only pages) -- it lists full
+program names directly rather than just department/faculty names, and cleanly separates
+bachelor's (lisans) from associate/vocational (onlisans) sections. The onlisans section
+(Meslek Yuksekokulu 2-year vocational programs across 4 schools) was deliberately excluded
+from this batch -- a real, structurally different degree_level from what a competitive-
+university-bound high-school audience needs, matching this session's "don't force a
+different-shaped thing into today's record schema" discipline rather than silently
+mislabeling it bachelor's-level. Two genuine English-medium-vs-Turkish-medium program pairs
+found (Iktisat/Iktisat (Ingilizce), Tip/Tip (Ingilizce)) -- kept as 4 separate records per
+the source's own distinction, not merged with a language note, since these are separately
+YOK-Atlas-listed admission programs with different score cutoffs. Spot-check: Tip (Ingilizce)
+verified via YOK Atlas (Turkey's official national admissions database) as real and in fact
+the single highest-scoring program at the entire university in the 2025 cycle. **Istanbul
+University attempted and dropped this round**: unlike ITU/YTU/Hacettepe, it has no single
+master department-list page found -- its own `tercihim.istanbul.edu.tr` "choose your
+program" portal only surfaces faculty names with no program-level detail, and each faculty
+(literature, economics, political science, etc.) publishes its own separate departments page
+under a different subdomain, meaning a full catalogue would need an ~18-page per-faculty
+crawl. Not attempted at that cost this round -- documented as a real, specific gap (not
+silently skipped) for a future pass that wants to invest the per-faculty crawl time. Turkey
+now: 3 of 6 previously-zero-coverage universities done (ITU, YTU, Hacettepe); Ankara
+Üniversitesi, Gebze Technical University, and Istanbul University (crawl-cost gap, see
+above) remain, plus the 6 four-program-seeded ones noted above.
