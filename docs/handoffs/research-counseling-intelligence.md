@@ -634,7 +634,26 @@ psychology, architecture all upgraded to `high` confidence. **121 rules / 61 sou
 in-place upgrades, counts unchanged from the previous checkpoint). Self-consistency re-checked
 after each, still clean throughout.
 
-**Runway status, 05:07 Europe/Istanbul (checked directly)**: about 5h52m left. Both sessions'
+## Ireland added as 8th generic-Europe-fallback data point (`ff592ad`, `RULE-COUNSEL-122`)
+
+Direct-fetched CAO's own official page: Ireland is Tier 3 (Leaving Certificate points, no
+extracurricular/interview mention in the general process), extending the fallback sample from 7 to
+8 countries (`RULE-COUNSEL-075` updated). Medicine is a named exception in the same direction as
+the UK — **HPAT** (ACER-administered, includes a 40%-weighted "Understanding People" interpersonal
+section) is structurally the same pattern as UCAT, a second country confirming
+`RULE-COUNSEL-121` generalizes rather than being a UK-specific quirk. Added to doc `17`'s
+cross-branch SJT tracker (now 7 confirmed instances, 3 continents, 5 fields) and doc `11`'s
+synthesis table. **122 rules / 63 sources.**
+
+**Peer independently applied the same "check for the last secondary-sourced entry" discipline** my
+German-sourcing cleanup modeled, found one analogous gap in their own `06/05` (engineering,
+Germany) — direct-fetched VDI's own page, upgrading `RULE-COUNSEL-241` and finding a genuinely new
+detail in the process (no chamber registration needed for the "Ingenieur" title, unlike
+architecture's Architektenkammer; once earned in one state it's valid across all 16 despite the
+underlying law being state-level). Committed `ed8f720`, 81 rules/65 sources on their side,
+unchanged count (in-place upgrade, same pattern as this branch's batch).
+
+**Runway status, 05:12 Europe/Istanbul (checked directly)**: about 5h48m left. Both sessions'
 explicit mission-brief deliverables have real coverage; remaining time being spent on genuine
 deepening — primary-source verification, cross-framework stress-testing, and following up gaps
 this package finds in itself — rather than new breadth for its own sake.
