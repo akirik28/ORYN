@@ -20,7 +20,7 @@ it, not from gathering more.
 | Requirements live | 84 | **84** |
 | Deadlines live | 26 | **26** |
 | Opportunities live | 391 | 391 |
-| Tests passing | 1,155 | **1,279** |
+| Tests passing | 1,155 | **1,297** |
 
 The two rows that did **not** move are the most important thing in this report. See
 "The one gap I deliberately did not close."
@@ -114,12 +114,45 @@ represent. Ingesting 1,296 records into it would not produce an empty result —
 a full table that answers eligibility questions wrongly, in the specific direction of telling
 students they qualify when they do not. That is the most damaging output this product has.
 
-A design pass is running now against the **existing** pipeline: it inventories every broken
-shape, proposes the migration, and dry-runs the whole corpus. Its single most important output
-is the count of records the schema cannot hold. That number decides when ingestion is safe.
-There is no apply path in it — it cannot write to the database.
+**The design pass has since finished, and the answer is: do not ingest yet.** Running the
+existing apply path tonight would have produced **230 clean landings out of 1,296 records —
+17.7%**. Around 290 rows written, qualifiers stripped from 160 of them, and 341 correctly
+researched rows destroyed at the database.
 
 An empty table is honest. A wrong "met" is not.
+
+### The real cause was not any of the shapes above
+
+It is one unique index. `university_requirements` permits **one row per university per
+requirement type**. Edinburgh cannot hold four accepted English-proficiency alternatives —
+three are destroyed on insert.
+
+Migration 0052 already built `requirement_groups` for exactly this case, and the evaluator
+already handles it correctly. `requirement_groups` holds **zero rows**, because the
+alternatives can never land. The feature exists at both ends and is severed in the middle.
+
+This also answers a question I had raised as evidence *for* the shape problems: the previous
+run's low yield. All **36 of the 36** rejected records were this one index — not data quality,
+not research quality. I checked that against the database myself rather than taking it on
+report.
+
+A second silent loss, and the same disease as this morning: the runner only reads files whose
+names begin with `requirements_batch`. Every file the UK, Turkey, Germany and Netherlands lanes
+produced today is invisible to it — **41 of 53 files, 1,165 records, never read**, with no
+error and no warning.
+
+### Why no student is currently at risk
+
+Ingestion writes no machine-readable rule, so every requirement returns "review this yourself."
+Nobody can be shown a wrong "met" today. The harm is deferred rather than absent: a
+qualifier-stripped row is what a later reviewer reads when authoring the rule, by which point
+the scale version and the exclusion clause survive only in the raw payload. That deferred wrong
+answer is what the 160 measures.
+
+Migration `0056` is written and **deliberately not applied**. It was checked against existing
+data — nothing currently violates it — but it has never run anywhere, so it belongs on a branch
+first. Its three genuine judgement calls are laid out as options with recommendations rather
+than decided, because they are product policy.
 
 ---
 
@@ -154,7 +187,7 @@ live state, not against what the lane said it had done.
 
 ## State
 
-`main` = `b81b098`, gate green: lint, typecheck, 1,279 tests.
+`main` = `bff5e13`, gate green: lint, typecheck, 1,297 tests across 102 files.
 
 Waiting on you, and only on you:
 
@@ -165,6 +198,7 @@ Waiting on you, and only on you:
 - Migrations **0047** and **0048** were blocked by the tool classifier and have never been
   applied.
 
-Recommended next phase: land the requirements schema changes, then ingest. That converts
-1,296 records of verified research — the work of four lanes today — into the requirement checks
-students actually see.
+Recommended next phase, now with a concrete first step rather than a direction: **validate
+migration 0056 on a branch, fix the runner's file glob, then ingest.** Those two changes are
+what stand between 1,296 records of verified research — the work of four lanes today — and the
+requirement checks students actually see. Everything needed to do it is written and measured.
