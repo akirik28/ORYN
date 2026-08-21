@@ -1,15 +1,26 @@
 "use client"
 
+import { useState } from "react"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
 
 const Toaster = ({ ...props }: ToasterProps) => {
+  // Reads the `.dark` ancestor class directly — the same thing globals.css keys off via
+  // `@custom-variant dark` — instead of asserting a literal theme name. A hardcoded value
+  // here is exactly how this went wrong before: it said "dark" for three days after
+  // app/layout.tsx switched the app's actual default to light, because nothing kept the
+  // two in sync. No next-themes provider is mounted (see that file's comment for why —
+  // there's no toggle yet, so nothing to subscribe to); once one exists and sets `.dark`
+  // during SSR too, this keeps working with no further change here.
+  const [theme] = useState<ToasterProps["theme"]>(() =>
+    typeof document !== "undefined" && document.documentElement.classList.contains("dark")
+      ? "dark"
+      : "light",
+  )
+
   return (
     <Sonner
-      // Matches the app's one locked theme (app/layout.tsx sets `dark` statically on
-      // <html>). Was `useTheme()` from next-themes, which is no longer mounted — see
-      // that file's comment for why the provider was removed.
-      theme="dark"
+      theme={theme}
       className="toaster group"
       icons={{
         success: (
