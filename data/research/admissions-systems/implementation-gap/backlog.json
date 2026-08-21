@@ -1,0 +1,133 @@
+{
+  "version": "admissions-implementation-gap-v1",
+  "analyzed_at": "2026-08-21",
+  "analyzed_against_commit": "0756b3e",
+  "scope_note": "Checked against lib/admissions/outlook.ts, lib/opportunities/matching.ts, lib/requirements/evaluate.ts, lib/scoring/dimensions/academics.ts, and docs/research/counseling-intelligence/18-geography-conditional-scoring-design-spec.md, plus every real call site of computeAdmissionOutlook found via git grep. Not a full-codebase audit.",
+  "backlog": [
+    {
+      "id": "GAP-000",
+      "tier": 0,
+      "title": "admissionSystemType is never populated by either real production caller of computeAdmissionOutlook",
+      "current_behavior": "lib/admissions/persist.ts:36-39 and lib/universities/counseling-adapter.ts:342-346 both call computeAdmissionOutlook with only {profileStrength, admissionRate, dataConfidence} -- admissionSystemType is never passed. Per outlook.ts's own contract this defaults to holistic-style classification for every call.",
+      "evidence": [
+        "lib/admissions/outlook.ts:42,51-53,85,90,113-115 (feature definition and default-to-holistic contract)",
+        "lib/admissions/persist.ts:36-39 (production caller #1, field omitted)",
+        "lib/universities/counseling-adapter.ts:342-346 (production caller #2, field omitted)",
+        "git grep across origin/main for admissionSystemType/credential_gate: only outlook.ts, its test file, and these two callers match -- no Gate-1 lookup exists anywhere"
+      ],
+      "correct_behavior": "A target whose admissions system is credential/exam-gated (per RULE-ADMISSIONS country research) should surface outlook: 'not_applicable', not a reach/competitive/likely classification with a numeric estimate range.",
+      "why_it_matters": "Every student targeting every university in every country currently gets holistic framing regardless of actual target-system type. This is not a partial or approximate effect -- the built, tested feature has zero live impact today. Directly the kind of 'confidently wrong answer' the assignment asked to prioritize.",
+      "related_rules": ["RULE-ADMISSIONS-001", "RULE-ADMISSIONS-003"],
+      "proposed_fix_shape": "Build the Gate-1 lookup design spec section 7 item 1 already calls for (currently unbuilt anywhere), then thread its result into both call sites as admissionSystemType. universities.application_system (already a live column: UCAS/Common App/Studielink/Parcoursup/OSYM-YKS/uni-assist/direct) is a plausible existing input signal, though see GAP-002 on why country/platform alone is insufficient.",
+      "confidence": "high -- confirmed by direct code read and exhaustive grep, not inferred"
+    },
+    {
+      "id": "GAP-004",
+      "tier": 0,
+      "title": "No field-existence check -- RULE-ADMISSIONS-021 (Medicine/Law not undergraduate objects in US/Canada) is unrepresented anywhere checked",
+      "current_behavior": "outlook.ts takes no field/programme parameter at all. A student who sets an undergraduate target university with intended field Medicine or Law in the US (or Law in Canada outside the narrow Quebec CEGEP route) would receive a full outlook computation as if the target were real.",
+      "evidence": [
+        "lib/admissions/outlook.ts:44-53 (AdmissionOutlookInputs has no field/programme-level input at all)",
+        "docs/research/admissions-systems/program-requirements/medicine.json, country_key=united_states/canada, mechanism_type='not_available_at_undergraduate_level' (medicine.md's own term)",
+        "docs/research/admissions-systems/program-requirements/law.json, country_key=united_states, mechanism_type='not_available_at_undergraduate_level'"
+      ],
+      "correct_behavior": "A field-existence check upstream of outlook computation should produce a distinct message ('this isn't offered as an undergraduate degree in this country at all') rather than any reach/competitive/likely-shaped answer, including not_applicable (which currently means 'no activity review', a different claim).",
+      "why_it_matters": "The clearest case in this analysis of the product answering a question that has no valid answer as posed, rather than surfacing an honest unknown -- directly contradicts this package's own product mandate (never present a nonexistent target as evaluable).",
+      "related_rules": ["RULE-ADMISSIONS-021"],
+      "proposed_fix_shape": "A field-existence table keyed on (country, field) at minimum (Medicine, Law for now; extensible), consulted before or alongside outlook computation. Needs its own outlook/message state distinct from not_applicable per GAP-001.",
+      "confidence": "high for the finding that no such check exists in the 4 checked files; not verified whether target-university/field capture elsewhere in the app has any validation of this (out of this pass's scope)"
+    },
+    {
+      "id": "GAP-001",
+      "tier": 1,
+      "title": "Gate-1 as specified is binary; real country data shows at least three shapes",
+      "current_behavior": "outlook.ts's admissionSystemType is a 2-value enum (holistic | credential_gate); the design spec's Gate-1 is likewise framed as yes/no.",
+      "evidence": [
+        "lib/admissions/outlook.ts:42 (2-value AdmissionSystemType)",
+        "docs/research/counseling-intelligence/18-geography-conditional-scoring-design-spec.md section 2",
+        "docs/research/admissions-systems/README.md RULE-ADMISSIONS-001 (Netherlands/Italy non-selective: eligible functionally equals admitted, no ranking/competition at all -- distinct from Turkey/Ireland's real-but-opaque-to-ORYN ranking)"
+      ],
+      "correct_behavior": "Distinguish at minimum: (a) holistic review happens, (b) centralized algorithmic score-rank placement (real competition exists, ORYN can't see the cutoff), (c) threshold/qualification-eligibility with no competition once met.",
+      "why_it_matters": "outlook.ts's single static notApplicableReason string is worded around 'credential/exam-gated' -- accurate for Turkey/Ireland-shape systems, actively misleading for Dutch/Italian open-programme admission, which isn't exam-gated in any sense a student would recognize.",
+      "related_rules": ["RULE-ADMISSIONS-001"],
+      "proposed_fix_shape": "Widen AdmissionSystemType to at least 3 values before the Gate-1 lookup (GAP-000) is built, not patched afterward. Each value needs its own message template.",
+      "confidence": "high"
+    },
+    {
+      "id": "GAP-002",
+      "tier": 1,
+      "title": "Gate-1 keyed by target country alone cannot represent applicant-pathway bifurcation",
+      "current_behavior": "Design spec section 1's signal table keys geography off target_universities -> university_id -> universities.country -- one value per target, no applicant-type/pathway dimension.",
+      "evidence": [
+        "docs/research/counseling-intelligence/18-geography-conditional-scoring-design-spec.md section 1 (signal table)",
+        "RULE-ADMISSIONS-013 (Hong Kong JUPAS/non-JUPAS; France Parcoursup/DAP)",
+        "RULE-ADMISSIONS-014 (Ireland CAO vs. non-EU-direct -- structurally opposite evidence models in one country)",
+        "RULE-ADMISSIONS-017 (Turkey's own domestic-vs-foreign-national split, by schooling location not nationality)"
+      ],
+      "correct_behavior": "Gate-1 lookup keyed on (target country, applicant pathway) where pathway is derived from the student's own citizenship/schooling-location relative to the target country -- not the target country alone, and not the student's own country alone either (the design spec's existing section 6 warning covers the latter, not this).",
+      "why_it_matters": "A Turkish student targeting France needs DAP framing (no essay field, 3-choice cap, TCF gate); a French Bac holder targeting the same country needs Parcoursup framing (essay sometimes present, 10-choice cap, no language test). Country-only keying gives both students the same answer.",
+      "related_rules": ["RULE-ADMISSIONS-013", "RULE-ADMISSIONS-014", "RULE-ADMISSIONS-017"],
+      "proposed_fix_shape": "Add a pathway dimension to the Gate-1 key, derived from profiles.citizenship_countries / schooling-location fields already in schema (per counseling lane's own migration 0047 note) crossed against target country.",
+      "confidence": "high for the country-only-key limitation as specified; the exact pathway-derivation logic is a design task not attempted here"
+    },
+    {
+      "id": "GAP-003",
+      "tier": 1,
+      "title": "Field-override layer needs an institution dimension, not just (country, field)",
+      "current_behavior": "Design spec section 7 item 3 proposes a field-specific override layer keyed on (target country, target field).",
+      "evidence": [
+        "docs/research/counseling-intelligence/18-geography-conditional-scoring-design-spec.md section 7 item 3",
+        "RULE-ADMISSIONS-018/019 (NUS: zero test/interview across all 10 core Engineering majors, test required for Architecture in the same college)",
+        "docs/research/admissions-systems/program-requirements/architecture.json, country_key=ireland finding: TU Dublin bakes portfolio into initial CAO points, UCD does not -- same country, same CAO 'Restricted' flag",
+        "docs/research/admissions-systems/program-requirements/architecture.json, country_key=switzerland finding: ETH Zurich Architecture requires zero architecture-specific evidence"
+      ],
+      "correct_behavior": "Override table keyed on (country, institution, field), or an explicit institution-overrides-field-default layer.",
+      "why_it_matters": "A (country, field) key gets country-level and most field-level distinctions right but cannot represent same-country-same-field institution variance, which this pass found to be real and sometimes larger than the country-level or field-level signal alone.",
+      "related_rules": ["RULE-ADMISSIONS-018", "RULE-ADMISSIONS-019"],
+      "proposed_fix_shape": "Widen the design spec's proposed key by one dimension before implementation begins.",
+      "confidence": "high"
+    },
+    {
+      "id": "GAP-006",
+      "tier": 2,
+      "title": "CourseLevel enum has no value for non-AP/IB/A-Level rigor",
+      "current_behavior": "RIGOR_WEIGHT in both lib/requirements/evaluate.ts and lib/scoring/dimensions/academics.ts covers only ap/ib_hl/a_level/dual_enrollment (weight 1), ib_sl (0.75), honors (0.5), regular/other (0). No value represents e.g. a Turkish Fen Lisesi advanced track, or Turkey's OBP diploma-grade mechanic.",
+      "evidence": [
+        "lib/scoring/dimensions/academics.ts:5-13 (comment explicitly names this as a known gap, cites docs/handoffs/counselor-fixes-report.md, says fixing it needs a new CourseLevel enum value + schema migration, out of that pass's scope)",
+        "lib/requirements/evaluate.ts:8-17 (same enum reused)",
+        "RULE-ADMISSIONS-020 (Germany's Kunsthochschule: a specific evidence type can substitute for the academic qualification entirely -- current schema has no concept of a non-grade, non-test evidence type at all)",
+        "Turkey's OBP formula (docs/research/admissions-systems/turkey.md) has no representation in either file"
+      ],
+      "correct_behavior": "Not specified here (schema design, out of this pass's scope) -- flagged as higher-priority now given new corroborating evidence, not as a new discovery.",
+      "why_it_matters": "Already honestly flagged in-code rather than hidden -- lower urgency than Tier 0/1, but this pass adds concrete cross-country evidence (Turkey OBP, RULE-ADMISSIONS-020) that strengthens the case for finally scheduling the fix.",
+      "related_rules": ["RULE-ADMISSIONS-020"],
+      "proposed_fix_shape": "Not attempted here -- the existing in-code comment already names the fix shape (new CourseLevel enum value + migration).",
+      "confidence": "high -- this is a pre-existing, already-documented gap (also found independently by this package's own R2.1 secondary-education research), not new"
+    },
+    {
+      "id": "GAP-005",
+      "tier": 3,
+      "title": "Opportunity profile-need scoring doesn't condition on the student's target system's Gate-1 status",
+      "current_behavior": "computeProfileNeedScore in lib/opportunities/matching.ts:191-195 scores an opportunity as high-need (85) whenever it addresses a student's weakest profile dimension, with no awareness of whether that dimension has any channel into the student's actual target admissions system.",
+      "evidence": [
+        "lib/opportunities/matching.ts:191-195",
+        "RULE-ADMISSIONS-021 sibling finding: leadership/community_impact/entrepreneurship/research/awards_distinction have zero channel into YKS placement (confirmed independently by this package's Turkey research and the counseling lane's RULE-COUNSEL-057/109)"
+      ],
+      "correct_behavior": "Not necessarily a hard suppression -- the opportunity may still be worthwhile for general development or a different target -- but the 'profile need' framing implicitly suggests admissions relevance that may not hold for a Gate-1-no target.",
+      "why_it_matters": "Secondary and not a wrong answer today (opportunities remain genuinely useful for development regardless), but the same Gate-1 concept recurring unaddressed in a second subsystem is worth tracking alongside the primary outlook gaps.",
+      "related_rules": ["RULE-ADMISSIONS-021"],
+      "proposed_fix_shape": "Once Gate-1 exists (GAP-000), consider whether computeProfileNeedScore's messaging (not necessarily its numeric score) should distinguish 'closes an admissions-relevant gap' from 'good for development, not admissions-relevant for your current target'.",
+      "confidence": "medium -- the underlying Gate-1 concept and its absence here are both confirmed; whether this rises to product-worthy priority is a judgment call, not a fact"
+    }
+  ],
+  "not_flagged_as_gaps": [
+    {
+      "item": "lib/scoring/dimensions/academics.ts has no Gate-1 awareness",
+      "reason": "Very likely correct by design -- the design spec's own section 5 and this product's own non-negotiable #11 (career profile score is different from admissions probability) both argue development scoring should stay geography-independent while admissions outlook is a separate, geography-conditional layer. Recorded so a future pass doesn't mistake this for an oversight."
+    },
+    {
+      "item": "lib/opportunities/matching.ts's eligibility logic (age/country/citizenship/grade)",
+      "reason": "Different domain from university-admissions evaluation -- none of the 21 RULE-ADMISSIONS-* rules govern opportunity eligibility directly. Confirmed as mostly orthogonal, not silently broken."
+    }
+  ]
+}
