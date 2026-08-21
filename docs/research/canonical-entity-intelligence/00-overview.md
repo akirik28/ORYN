@@ -127,6 +127,8 @@ Machine-readable companions live in `data/research/canonical-entities/`:
   live `entity_relationships.relationship_type` constraint, with gaps called out explicitly.
 - `institution-collision-traps.json`, `opportunity-organizer-candidates-batch2.json`,
   `trigram-similarity-candidates.json` — companions to docs 12–14 respectively.
+- `live-country-values.json` — every distinct live `country` value (90), checked against ISO
+  3166-1, ready to use for the `15` country-entity bootstrap.
 
 ## Method and source standard
 

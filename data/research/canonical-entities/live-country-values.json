@@ -1,0 +1,47 @@
+{
+  "_meta": {
+    "title": "Every distinct value of universities.country / opportunities.country in live ORYN data, checked against ISO 3166-1",
+    "source_document": "docs/research/canonical-entity-intelligence/15-country-city-entity-gap.md",
+    "snapshot_time_utc": "2026-08-21T00:05:00Z approx",
+    "method": "SELECT DISTINCT country FROM universities UNION SELECT DISTINCT country FROM opportunities, both WHERE country IS NOT NULL, checked value-by-value against ISO 3166-1 and against lib/acquisition/normalize.ts's existing COUNTRY_ALIASES map.",
+    "total_distinct_values": 90,
+    "clean_iso_matches": 88,
+    "non_standard_count": 2,
+    "purpose": "Ready-to-use reference for backfilling country_entity_id once entity_type='country' is bootstrapped (15-country-city-entity-gap.md, RULE-ENTITY-020). Not exhaustive of every country ORYN might ever need -- only the 90 currently in live use.",
+    "arithmetic_note": "An earlier draft of this file and of 15-country-city-entity-gap.md's prose stated the total as 88 (with 86 clean) -- a manual-counting error caught and corrected by re-deriving the count programmatically before publishing. Recorded here, not silently fixed, per this package's own verify-before-claiming discipline (see 09 Finding 6 for another example of the same discipline applied to a different miscount)."
+  },
+  "clean_values": [
+    "Argentina", "Australia", "Austria", "Azerbaijan", "Bahrain", "Bangladesh", "Belarus", "Belgium",
+    "Brazil", "Brunei Darussalam", "Bulgaria", "Canada", "Chile", "China", "Colombia", "Costa Rica",
+    "Croatia", "Cuba", "Cyprus", "Czechia", "Denmark", "Ecuador", "Egypt", "Estonia", "Ethiopia",
+    "Finland", "France", "Germany", "Ghana", "Greece", "Hong Kong SAR", "Hungary", "Iceland", "India",
+    "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Japan", "Jordan", "Kazakhstan",
+    "Kuwait", "Kyrgyzstan", "Latvia", "Lebanon", "Lithuania", "Luxembourg", "Macao SAR", "Malaysia",
+    "Malta", "Mexico", "Netherlands", "New Zealand", "Norway", "Oman", "Pakistan", "Palestine",
+    "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Saudi Arabia",
+    "Serbia", "Singapore", "Slovakia", "Slovenia", "South Africa", "South Korea", "Spain", "Sweden",
+    "Switzerland", "Taiwan", "Thailand", "Tunisia", "Turkey", "Ukraine", "United Arab Emirates",
+    "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Venezuela", "Vietnam"
+  ],
+  "clean_but_needs_normalization_note": [
+    {"value": "Hong Kong SAR", "iso_alpha2": "HK", "note": "ISO short name is 'Hong Kong' -- 'SAR' suffix needs stripping or aliasing, already handled in COUNTRY_ALIASES"},
+    {"value": "Macao SAR", "iso_alpha2": "MO", "note": "Same shape as Hong Kong SAR"},
+    {"value": "Taiwan", "iso_alpha2": "TW", "note": "ISO's own short name is 'Taiwan, Province of China' -- politically sensitive naming; COUNTRY_ALIASES already accepts both forms as equivalent, a decision this package recommends keeping"},
+    {"value": "South Korea", "iso_alpha2": "KR", "note": "ISO short name is 'Korea, Republic of' -- already reconciled in COUNTRY_ALIASES"},
+    {"value": "Palestine", "iso_alpha2": "PS", "note": "ISO short name is 'Palestine, State of'"}
+  ],
+  "non_standard_values": [
+    {
+      "value": "International",
+      "found_in": "opportunities.country only",
+      "issue": "Not a country at all -- a deliberate ORYN modeling choice for opportunities open worldwide (08-opportunity-organizer-canonicalization.md)",
+      "recommendation": "Must never receive a country_entity_id. Either leave country_entity_id null for these rows, or (better, longer-term) add a separate is_global/not_country_scoped flag rather than overloading the country text column with a non-country sentinel value."
+    },
+    {
+      "value": "Northern Cyprus",
+      "found_in": "universities.country (3 rows: Eastern Mediterranean University, European University of Lefke, Near East University)",
+      "issue": "ISO 3166-1 has no code for Northern Cyprus at all -- only Turkey recognizes it as a sovereign state; ISO and the UN both treat the territory as part of Cyprus.",
+      "recommendation": "Needs an explicit decision before bulk-bootstrapping entity_type='country', not a silent default: (a) create a non-ISO country entity for it anyway, matching what ORYN's own live data already does, or (b) map these 3 universities' country_entity_id to Cyprus's ISO entity and preserve the Northern-Cyprus distinction elsewhere (city/notes field). This package does not choose for whoever implements it."
+    }
+  ]
+}

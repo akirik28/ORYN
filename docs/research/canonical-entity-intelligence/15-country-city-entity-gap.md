@@ -52,17 +52,32 @@ real and distinct from Country Y" the way there genuinely is for a university or
 entire list can be sourced once, from one place, and is correct. **This is the one place in
 ORYN's entity graph where a full, upfront bulk population is the right call, not a shortcut.**
 
-The obvious edge cases (worth resolving deliberately, not silently, when this is built) are
-disputed/partial-recognition territories already visible in ORYN's own live data:
-`Northern Cyprus` (three universities already use this as their `country` text value — Eastern
-Mediterranean University, European University of Lefke, Near East University — a jurisdiction ISO
-3166-1 does not list as a country in its own right), `Hong Kong SAR` and `Macao SAR` (already
-correctly distinguished from mainland China in ORYN's own `COUNTRY_ALIASES`, but ISO 3166-1 codes
-them as `HK`/`MO`, not full ISO country entries in the ordinary sense), and `Taiwan` (politically
-contested; ISO 3166-1 lists it, OpenAlex/ROR generally treat it as a distinct entity, and ORYN's
-own `COUNTRY_ALIASES` already accepts "Taiwan, Province of China" as an alias form — a real
-example of a decision this package recommends ORYN keep, not silently drop, when the country
-entity table is finally built). **Cities are not the same kind of problem** — no small bounded
+**Exact accounting, not a vague gesture at "some edge cases":** the full, distinct set of
+`country` values actually in live use — `select distinct country from universities` unioned with
+the same from `opportunities`, 90 distinct values — was checked one by one against ISO 3166-1
+(re-derived programmatically after an initial manual count came out wrong, per this package's own
+verify-before-claiming discipline — see `09` Finding 6 for the same pattern elsewhere).
+**88 of 90 map cleanly** (standard ISO short names, or forms `COUNTRY_ALIASES` already reconciles:
+`Hong Kong SAR`→`HK`, `Macao SAR`→`MO`, `Taiwan`→`TW` as "Taiwan, Province of China," `South
+Korea`→`KR` as "Korea, Republic of," `Palestine`→`PS` as "Palestine, State of," `Czechia` already
+matching ISO's current short name exactly). **Exactly two do not:**
+
+- **`International`** (`opportunities.country` only) — not a country at all, a deliberate
+  ORYN modeling choice for globally-open opportunities (`08`). Must never receive a
+  `country_entity_id` — needs to stay unset, or the product needs a separate boolean/flag for
+  "not country-scoped" rather than overloading the country field with a non-country value.
+- **`Northern Cyprus`** — the one genuine disputed-territory gap. Three live universities use it
+  (Eastern Mediterranean University, European University of Lefke, Near East University) and **ISO
+  3166-1 has no code for it at all** (only Turkey recognises it as a sovereign state; the UN and
+  ISO both treat the area as part of Cyprus). A naive ISO-only bootstrap would leave these three
+  universities with no country entity to link to. This needs an explicit decision before
+  bootstrapping, not a silent default: create a non-ISO `country` entity for it anyway (matching
+  what ORYN's own live data already does), or map it to Cyprus's ISO code with a note preserving
+  the distinction elsewhere (e.g. in `city`/notes) — this package does not pick for whoever
+  implements it, per `01`'s standing rule that a genuine source conflict is recorded, not resolved
+  by guessing.
+
+**Cities are not the same kind of problem** — no small bounded
 authoritative source enumerates "every city a university or school might be in," multiple cities
 share names across countries (a real live example already in ORYN's data: this package's own `03`
 noted "Boston"/"Boston, MA" as one *university's* city field, but ORYN's live data separately has
@@ -95,12 +110,15 @@ fallback). Two concrete downstream consequences of the current gap:
 ## Recommendation
 
 1. Bulk-populate `entity_type='country'` from ISO 3166-1 in one pass (a single authoritative
-   source, per this document's own reasoning above) — decide the small number of disputed-territory
-   edge cases (Northern Cyprus, Taiwan, Hong Kong/Macao SAR) deliberately and document the decision,
-   rather than let the bulk import silently pick a default.
-2. Backfill `universities.country_entity_id` against the newly-created country entities — this
-   should be a nearly-mechanical exact-string match given how clean the existing `country` text
-   column already is (confirmed above), unlike every other backfill this package has recommended.
+   source, per this document's own reasoning above) — decide `Northern Cyprus` deliberately (the
+   one real disputed-territory gap found; see the exact accounting above) and document the
+   decision, rather than let the bulk import silently drop it or pick a default.
+2. Backfill `universities.country_entity_id`/`opportunities.country_entity_id` against the
+   newly-created country entities — this should be a nearly-mechanical exact-string match for 88
+   of 90 live distinct values (confirmed above, full list in
+   `data/research/canonical-entities/live-country-values.json`), unlike every other backfill this
+   package has recommended. `International` must never receive a `country_entity_id` (it isn't a
+   country); `Northern Cyprus` depends on the decision in step 1.
 3. Treat `city` as a normal entity type needing the same case-by-case research discipline as
    `school`/`organization` — no bulk shortcut recommended here.
 4. Not this package's decision, but worth flagging: whether `country`/`city` should ever become
