@@ -580,15 +580,15 @@
     },
     {
       "id": "SRC-CS-049",
-      "title": "German medical-licensure (Approbation/Staatsexamen) guidance (multiple sources, converging)",
-      "publisher": "Various German-medical-licensure guidance sources (e.g. AMBOSS medical-education platform, Anerkennung in Deutschland — Germany's official foreign-qualification-recognition information portal)",
-      "url": "https://www.anerkennung-in-deutschland.de/html/en/2688.php",
-      "type": "mixed_official_and_secondary",
+      "title": "German medical-licensure (Approbation/Staatsexamen) guidance — upgraded to official Bundesärztekammer source on a follow-up pass",
+      "publisher": "Anerkennung in Deutschland (official BIBB portal) for the original structure; Bundesärztekammer (German Medical Association, the official professional body) for the direct confirmation",
+      "url": "https://www.anerkennung-in-deutschland.de/html/en/2688.php ; https://www.bundesaerztekammer.de/themen/aerzte/internationales/aerztliche-taetigkeit-in-deutschland",
+      "type": "official_source",
       "retrieved_at": "2026-08-21",
-      "confidence": "medium-high",
-      "claim_supported": "German medical study (~6 years) culminates in a Staatsexamen; passing it plus health/conduct certification grants Approbation, the license required for the protected title Arzt/Ärztin and independent practice; foreign-trained doctors take a Kenntnisprüfung instead if not deemed equivalent.",
+      "confidence": "high",
+      "claim_supported": "Bundesärztekammer's own page states directly: \"Die Ausübung der ärztlichen Tätigkeit in Deutschland ist nur mit einer gültigen Approbation oder Berufserlaubnis möglich\" (practicing medicine in Germany is only possible with a valid Approbation or professional permit), unlimited in duration and valid nationwide, obtainable regardless of nationality, with mandatory membership in one of 17 regional Landesärztekammern (State Medical Chambers) once practicing. Confirms the core Approbation requirement directly from the licensing body itself.",
       "used_in_rules": ["RULE-COUNSEL-103"],
-      "limitations": "Anerkennung in Deutschland is an official German government information portal (run by the Federal Institute for Vocational Education and Training, BIBB), giving this medium-high rather than pure-secondary confidence; not independently cross-checked against a state medical board's own page."
+      "limitations": "A genuine terminology nuance found on this pass: the Bundesärztekammer page and the underlying Approbationsordnung regulation do not actually use the word \"Staatsexamen\" -- the formal document received after the medical exams is the \"Zeugnis über die Ärztliche Prüfung\" (Certificate of the Medical Examination). \"Staatsexamen\" remains extremely common colloquial/reference usage (including this package's own prior phrasing) but is not the regulation's own term. The 17-vs-16 Landesärztekammern/Bundesländer count was not independently reconciled (plausibly North Rhine-Westphalia having two separate chambers, not verified this pass)."
     },
     {
       "id": "SRC-CS-050",

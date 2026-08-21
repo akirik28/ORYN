@@ -113,18 +113,27 @@ job-profiles/gp` — official, high confidence.) [[RULE-COUNSEL-087]] Consistent
 occupation structure and entry requirements do not transfer across countries even where the
 occupation name is identical.
 
-**Germany, added on a further pass**: a genuinely distinct, longer, more exam-heavy model than the
-UK's. Medical study (**Medizinstudium**) runs roughly 6 years, culminating in a **Staatsexamen**
-(state examination); passing it, alongside health/conduct certification, grants **Approbation** —
-the license required to use the legally protected title **"Arzt"/"Ärztin"** and practice
-independently. Foreign-trained doctors whose qualification isn't recognized as equivalent take a
-separate **Kenntnisprüfung** (clinical-practical knowledge exam) instead of repeating the German
-Staatsexamen. (Source: German medical-licensure guidance sources describing the Approbation system
-— medium-high confidence, describing an official state-run licensure process; not independently
-fetched from a German federal ministry page directly.) [[RULE-COUNSEL-103]] **Same underlying
-two-part pattern this package keeps finding** (degree + separate state-controlled licensure step,
-per `06/18`'s and `06/19`'s own §6 findings for teaching and social work) — Germany's version is
-simply longer and more exam-intensive than the UK's or Turkey's.
+**Germany, added on a further pass, upgraded to an official-source direct confirmation on a
+later pass**: a genuinely distinct, longer, more exam-heavy model than the UK's. Medical study
+(**Medizinstudium**) runs roughly 6 years, culminating in a state medical examination (commonly
+called the **Staatsexamen**, though — a precision found on the follow-up pass — the
+Approbationsordnung's own term is actually **Ärztliche Prüfung**, and the certificate received is
+the **"Zeugnis über die Ärztliche Prüfung,"** not a document labeled "Staatsexamen"); passing it,
+alongside health/conduct certification, grants **Approbation** — the license required to use the
+legally protected title **"Arzt"/"Ärztin"** and practice independently. Foreign-trained doctors
+whose qualification isn't recognized as equivalent take a separate **Kenntnisprüfung**
+(clinical-practical knowledge exam) instead. **Bundesärztekammer** (the German Medical Association,
+the official professional body) confirms the core requirement directly, in its own words: *"Die
+Ausübung der ärztlichen Tätigkeit in Deutschland ist nur mit einer gültigen Approbation oder
+Berufserlaubnis möglich"* (practicing medicine in Germany is only possible with a valid Approbation
+or professional permit) — unlimited in duration, valid nationwide, obtainable regardless of
+nationality, with mandatory membership in one of **17 regional Landesärztekammern** (State Medical
+Chambers) once practicing. (Source: `bundesaerztekammer.de`, official professional body — high
+confidence, directly fetched and quoted; upgraded from medium-high secondary-guidance sourcing.)
+[[RULE-COUNSEL-103]] **Same underlying two-part pattern this package keeps finding** (degree +
+separate state-controlled licensure step, per `06/18`'s and `06/19`'s own §6 findings for teaching
+and social work) — Germany's version is simply longer and more exam-intensive than the UK's or
+Turkey's.
 
 **EU:** ESCO (European Skills, Competences, Qualifications and Occupations,
 `esco.ec.europa.eu`, European Commission) covers medicine/clinical occupations across EU languages
