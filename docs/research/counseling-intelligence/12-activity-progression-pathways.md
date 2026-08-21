@@ -66,6 +66,21 @@ grade 11 using skills DECA helped build — this is the `05` §4 **escalation** 
 activity, but a genuine capability progression) and should not be redundancy-discounted the way the
 first student's grade 12 repeat presidency should be. [[RULE-COUNSEL-070]]
 
+**Added on a follow-up pass, giving this pathway the same named-program grounding Pathways 1 and 3
+already had**: DECA's own official competitive-events page names specific entrepreneurship events
+directly relevant to this pathway — **Start-Up Business Plan, Independent Business Plan, Franchise
+Business Plan, International Business Plan, Innovation Plan**, and **Entrepreneurship Series** —
+distinct competitive categories, not one generic "business competition." (Source:
+`deca.org/compete`, official — high confidence, directly fetched and quoted for the specific event
+names.) Competition runs through **chartered-association/district, state, and international
+(ICDC — International Career Development Conference)** levels (Source: DECA-guidance sources
+describing this tier structure — medium-high confidence, not independently re-confirmed by this
+session's own direct fetch of a tier-specific page). This gives the redundancy worked-example above
+a concrete evidence-tier hook: a grade-11 escalation into a *specific named event* (e.g.
+progressing from chapter-level "Principles of Entrepreneurship" to district/state qualification in
+"Start-Up Business Plan") is directly analogous to Pathway 1's finalist/semifinalist tier
+distinctions, not merely "did more DECA." [[RULE-COUNSEL-123]]
+
 ## Pathway 3 — Creative/visual arts interest
 
 | Year | Stage | Concrete example | Evidence-tier | Timing phase |
@@ -122,6 +137,13 @@ supplies the worked mechanism.
   recommend retroactively demonstrating skipped early-pathway stages. Confidence: high (direct,
   concrete specification of an existing architectural principle from
   `docs/counselor-core-plan.md` §5).
+- `RULE-COUNSEL-123` — DECA's own official competitive-events page names specific, distinct
+  entrepreneurship events (Start-Up Business Plan, Independent Business Plan, Franchise Business
+  Plan, International Business Plan, Innovation Plan, Entrepreneurship Series) rather than one
+  generic "business competition" — gives Pathway 2 the same named-program evidence-tier hook
+  Pathways 1 and 3 already had. Confidence: high for the specific event names (official source,
+  directly fetched); medium-high for the district/state/international tier structure (not
+  independently re-confirmed by this session's own direct fetch of a tier-specific page).
 
 ## Sources referenced in this document
 
@@ -131,6 +153,9 @@ New source beyond the existing registry (to be added as `SRC-CS-034` in the next
 - Simons Summer Research Program official eligibility page (`stonybrook.edu/commcms/simons`) —
   official program source, high confidence, verifies the "current 11th-grade junior, no
   exceptions" application requirement cited in Pathway 1.
+- DECA official competitive-events page (`deca.org/compete`, added on a follow-up pass) —
+  official source, high confidence, verifies the specific named entrepreneurship events cited in
+  Pathway 2 (registered as `SRC-CS-064`).
 
 All other claims in this document are syntheses of sources already registered in
 `data/research/counseling-intelligence/sources.json` (this session's registry) — cross-referenced

@@ -757,6 +757,18 @@
       "claim_supported": "HPAT is a 2.5-hour, 117-question multiple-choice test required for Irish medicine/allied-health admission alongside Leaving Certificate points, explicitly not assessing academic knowledge: Section 1 (Logical Reasoning and Problem-Solving, 40%), Section 2 (Understanding People -- interpersonal/situational understanding, 40%), Section 3 (Non-Verbal Reasoning, 20%).",
       "used_in_rules": ["RULE-COUNSEL-122"],
       "limitations": "The administering body's own site (hpat-ireland.acer.org) was found via search but not itself directly WebFetched for a verbatim quote this pass -- the specific percentage breakdown and section names come from converging secondary guidance sources describing ACER's own published test structure, not a direct fetch of ACER's page. Medium-high rather than high for this reason."
+    },
+    {
+      "id": "SRC-CS-064",
+      "title": "Competitive Events (High School) -- official DECA Inc. page",
+      "publisher": "DECA Inc. (official, the organization itself)",
+      "url": "https://www.deca.org/compete",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "DECA names specific, distinct high-school entrepreneurship competitive events -- Business Growth Plan, Franchise Business Plan, Independent Business Plan, Innovation Plan, International Business Plan, Start-Up Business Plan, Principles of Entrepreneurship, Entrepreneurship Series, Entrepreneurship Team Decision Making, Virtual Business Challenge-Entrepreneurship -- alongside role-play/case-study, prepared, and online-simulation event categories generally.",
+      "used_in_rules": ["RULE-COUNSEL-123"],
+      "limitations": "Directly fetched and quoted for the specific event names. This specific page did not itself detail the district/state/international competition-tier structure (found instead via converging secondary DECA-guidance sources, medium-high confidence for that narrower claim)."
     }
   ]
 }
