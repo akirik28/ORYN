@@ -1,7 +1,17 @@
 # Handoff — Counseling Intelligence Research
 
-**Read this first if resuming this session cold.** This file is the live resumption state for
-the `oryn/counseling-intelligence-research` branch/mandate. Update it at every checkpoint.
+**If you want the substantive findings, not session mechanics: read the peer branch's
+`15-executive-summary.md` first** (`oryn/counseling-intelligence-research-013956` —
+`git show oryn/counseling-intelligence-research-013956:docs/research/counseling-intelligence/15-executive-summary.md`
+if you're on this branch and haven't checked that one out). It accurately covers **both** branches'
+work in one page — what's validated, the single highest-leverage finding (admissions systems vary
+by country, and this whole package's reasoning skews US-centric by default), and what's genuinely
+unresolved. This file below is the session-mechanics/resumption-state complement to that, not a
+replacement for it.
+
+**Read this first if resuming this session cold** for the mechanics specifically. This file is the
+live resumption state for the `oryn/counseling-intelligence-research` branch/mandate. Update it at
+every checkpoint.
 
 ## Corrected topology (this update supersedes the "session 7" narrative below — kept, not deleted, for the record)
 
@@ -147,6 +157,9 @@ branches before trusting any table, including this one, past this checkpoint's t
 | `12-activity-progression-pathways.md` | Done | peer branch only |
 | `13-implementation-readiness.md` | Done, prioritized punch list synthesizing docs 00-12 | peer branch only |
 | `14-field-opportunity-mapping.md` | Done, answers mission deliverable #5 directly | this branch only |
+| `15-executive-summary.md` | Done — **read this one first if you read only one document from the whole package.** Accurately covers both branches' work, including this branch's own findings (spot-checked, correctly attributed) | peer branch only |
+| `06-major-family-evidence/19-social-work.md` | Done (peer session — distinct from psychology's clinical focus and generic `community_impact` volunteering) | peer branch only |
+| `06-major-family-evidence/20-performing-arts-music.md` | Done (this session — music/theater/dance, missing from family 17's "Visual & Media Arts") | this branch only |
 | `data/research/counseling-intelligence/rules.json` / `sources.json` on **this branch** | **Now genuinely unified for this branch's own contribution**: 66 rules (`001`-`033` foundational + `901`-`902` reconciliation, both pre-existing/peer-written before their fork, plus this session's `200`-`230`, merged in and renumbered) / 52 sources (`SRC-001`-`007` foundational + this session's 45 `S-<NAME>`-prefixed sources). The former `rules-session2.json`/`sources-session2.json` shards were deleted once this merge was verified — their content lives in the canonical files now. **Still not merged with the peer branch's own separate, larger `rules.json`/`sources.json`** on `-013956` (their own independent `034`-`086`+ range) — that cross-branch merge is the one integration step genuinely not done yet. |
 
 ## Working conventions established (both sessions converged on these independently or by agreement)
