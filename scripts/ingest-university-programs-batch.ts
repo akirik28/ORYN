@@ -65,6 +65,7 @@ interface ExistingProgramRow {
   degree_level: string | null;
   language_of_instruction: string | null;
   official_program_url: string;
+  degree_type: string | null;
 }
 
 async function loadUniversityCandidates(target: PostgrestTarget): Promise<UniversityLookupRow[]> {
@@ -115,12 +116,12 @@ async function main() {
 
   const [universities, { rows: existing }] = await Promise.all([
     loadUniversityCandidates(target),
-    fetchAllRowsVerified<ExistingProgramRow>(target, "university_programs", "university_id,normalized_name,degree_level,language_of_instruction,official_program_url", "order=id"),
+    fetchAllRowsVerified<ExistingProgramRow>(target, "university_programs", "university_id,normalized_name,degree_level,language_of_instruction,official_program_url,degree_type", "order=id"),
   ]);
   console.log(`Candidate pool: ${universities.length} universities, ${existing.length} existing programs (both re-verified live).`);
 
   const existingKeys = new Set(
-    existing.map((r) => programDedupKey(r.university_id, r.normalized_name, r.degree_level, r.language_of_instruction, r.official_program_url))
+    existing.map((r) => programDedupKey(r.university_id, r.normalized_name, r.degree_level, r.language_of_instruction, r.official_program_url, r.degree_type))
   );
 
   const { createClient } = await import("@supabase/supabase-js");
@@ -176,7 +177,8 @@ async function main() {
             decision.programRow.normalized_name,
             decision.programRow.degree_level,
             decision.programRow.language_of_instruction,
-            decision.programRow.official_program_url
+            decision.programRow.official_program_url,
+            decision.programRow.degree_type
           )
         );
       }

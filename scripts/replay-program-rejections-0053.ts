@@ -61,6 +61,7 @@ interface ExistingProgramRow {
   degree_level: string | null;
   language_of_instruction: string | null;
   official_program_url: string;
+  degree_type: string | null;
 }
 interface QueueRow {
   id: string;
@@ -151,14 +152,14 @@ async function main() {
   // Everything below is re-queried fresh on every invocation — no cached/prior-session state.
   const [universities, { rows: existing }, candidates] = await Promise.all([
     loadUniversityCandidates(target),
-    fetchAllRowsVerified<ExistingProgramRow>(target, "university_programs", "university_id,normalized_name,degree_level,language_of_instruction,official_program_url", "order=id"),
+    fetchAllRowsVerified<ExistingProgramRow>(target, "university_programs", "university_id,normalized_name,degree_level,language_of_instruction,official_program_url,degree_type", "order=id"),
     loadReplayCandidates(target),
   ]);
   console.log(`Candidate pool: ${universities.length} universities, ${existing.length} existing programs (both re-verified live).`);
   console.log(`Replay set: ${candidates.length} record(s).`);
 
   const existingKeys = new Set(
-    existing.map((r) => programDedupKey(r.university_id, r.normalized_name, r.degree_level, r.language_of_instruction, r.official_program_url))
+    existing.map((r) => programDedupKey(r.university_id, r.normalized_name, r.degree_level, r.language_of_instruction, r.official_program_url, r.degree_type))
   );
 
   const batchId = `replay-program-rejections-0053_${new Date().toISOString().slice(0, 10)}`;
@@ -178,7 +179,8 @@ async function main() {
           decision.programRow.normalized_name,
           decision.programRow.degree_level,
           decision.programRow.language_of_instruction,
-          decision.programRow.official_program_url
+          decision.programRow.official_program_url,
+          decision.programRow.degree_type
         )
       );
     }
