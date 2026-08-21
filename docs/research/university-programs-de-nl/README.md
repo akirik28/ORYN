@@ -124,26 +124,36 @@ university programmes routinely run English-medium despite German titles, and vi
 
 ---
 
-## Live-data discrepancy found in the task brief — reported, not silently absorbed
+## Live-data gap found in the task brief — corrected after peer and coordinator verification
 
 The coordination session's brief for this task described RWTH Aachen and FU Berlin as
-"already covered," grouped with KIT as the three exceptions to "effectively nothing" in
-German coverage, and described VU Amsterdam as having "10 of 29" programmes live.
+"already covered" (grouped with KIT), and VU Amsterdam as having "10 of 29" programmes
+live. A live query taken before dispatch showed all three at 0 live rows, which an earlier
+version of this document reported as a straightforward brief/reality mismatch. That framing
+was incomplete — corrected here after a peer session and the coordinator both weighed in:
 
-A live query taken before dispatch (repeated again just now to confirm, same result) shows:
+- **RWTH Aachen and FU Berlin: an ingestion gap, not a research gap.** Both are already
+  fully researched, committed and pushed on `oryn/programs-pipeline-reconciled` — FU Berlin
+  (75 records, `58872fc`) and RWTH Aachen (77 records, `6dff85a`). Both commits are verified
+  ancestors of this branch's own history (`git merge-base --is-ancestor`, confirmed directly,
+  not taken on trust). The records were simply never loaded into the live table. Not
+  re-researched here — would have been wasted, duplicate work.
+- **VU Amsterdam: a known, previously-diagnosed technical blocker, not an untouched gap.**
+  The same `oryn/programs-pipeline-reconciled` session attempted it twice before this lane
+  started (`2338865`, `638f0f5`, both confirmed reachable from this branch). Its programme
+  list is virtualized/lazy-rendered, mounting only 10 of 29 cards in the DOM regardless of
+  scroll/click/wait — that is where the brief's "10 of 29" actually comes from: a
+  DOM-visible count from a blocked scrape, not a claim about ingested rows. The site's own
+  `/api/search` POST endpoint does return the full 29-record set with useful per-programme
+  language facets, but its request-body filter syntax could not be reverse-engineered in
+  either attempt (guessed filters were silently ignored; replaying the captured request
+  401'd). Needs either a fetch-interceptor installed before first page load, or manual
+  click-through — not attempted again in this pass, to avoid repeating already-ruled-out
+  approaches.
 
-| University | Brief said | Live query shows |
-|---|---|---:|
-| RWTH Aachen | already covered (grouped with KIT) | **0** |
-| FU Berlin | already covered (grouped with KIT) | **0** |
-| VU Amsterdam | 10 of 29 | **0** |
-| KIT (for contrast) | already covered | 45 — this one genuinely is |
-
-KIT is real. RWTH Aachen, FU Berlin and VU Amsterdam are not covered at all — the brief's
-premise for excluding them from this batch does not match the live database. None of the
-three were assigned to this lane, so none were researched here; this is reported as a
-finding about the brief, not a gap in this lane's own deliverable. They are reasonable
-next targets given the same "deepen, don't duplicate" logic this lane used.
+Both corrections came from a peer session's and the coordinator's independent verification,
+not from this lane's own research — credited here rather than presented as this lane's own
+finding. KIT (45 live programmes) was the one part of the original brief that was accurate.
 
 ---
 
