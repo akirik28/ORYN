@@ -1,0 +1,212 @@
+{
+  "_meta": {
+    "title": "Sourced alias candidates for the two thinnest-coverage countries in the live registry -- companion to docs/research/canonical-entity-intelligence/09-existing-oryn-ambiguity-audit.md Finding 9",
+    "generated": "2026-08-21",
+    "method": "Every alias below is confirmed directly against ROR's live API (api.ror.org/v2/organizations) this session, using ROR's own 'names' field (types: ror_display, label, alias, acronym) as the evidence, not recalled from memory or guessed. Deliberately curated, not a raw ROR dump: ROR lists label variants in many languages (French, German, Catalan, Slovenian, etc.) that are unlikely to be what an ORYN student actually searches with -- only the native-language official name, well-known English form (where different from ORYN's current display_name), and unambiguous abbreviations are included below. Ambiguous or ROR-unconfirmed abbreviations were deliberately left out rather than guessed (e.g. 'RUG' for University of Groningen and 'UT' for University of Twente are both in common informal use but neither appears in ROR's own acronym field for that institution, so neither is included here).",
+    "alias_type_mapping": "ORYN's entity_aliases.alias_type enum (02-alias-taxonomy.md): a native-language official name not currently stored is 'translation'; a ROR-confirmed acronym is 'abbreviation'; a well-known short/common English form that differs from the stored display_name (e.g. 'La Sapienza') is 'common'. Every row below states which.",
+    "scope_note": "This is a candidate list for whoever has entity_aliases write access -- this research session has none. Every id below is the live canonical_entities.id, confirmed against the current registry, not assumed from a prior snapshot.",
+    "netherlands_coverage": "13/13 Dutch university entities researched -- full coverage of Finding 9's '0/13' gap.",
+    "italy_coverage": "12 of 38 Italian university entities researched (the highest-search-likelihood subset: the most internationally well-known institutions) -- not full coverage of the 38, a prioritized first batch."
+  },
+  "netherlands": [
+    {
+      "display_name": "Delft University of Technology",
+      "id": "4ed01ff7-9332-4e7c-8550-b0b8e8f11c7b",
+      "proposed_aliases": [
+        { "alias": "Technische Universiteit Delft", "alias_type": "translation" },
+        { "alias": "TU Delft", "alias_type": "abbreviation" }
+      ]
+    },
+    {
+      "display_name": "Eindhoven University of Technology",
+      "id": "c5d6e799-6586-4bcd-9f5f-234cdc1a1ff7",
+      "proposed_aliases": [
+        { "alias": "Technische Universiteit Eindhoven", "alias_type": "translation" },
+        { "alias": "TU/e", "alias_type": "abbreviation" }
+      ]
+    },
+    {
+      "display_name": "Erasmus University Rotterdam",
+      "id": "a833fc51-2730-4f87-ab6a-5d164ca7c3c3",
+      "proposed_aliases": [
+        { "alias": "Erasmus Universiteit Rotterdam", "alias_type": "translation" },
+        { "alias": "EUR", "alias_type": "abbreviation", "caution": "EUR is also the currency-code abbreviation for the Euro -- consider whether this creates a search/UX ambiguity before adding, even though ROR itself lists it as this university's acronym." }
+      ]
+    },
+    {
+      "display_name": "Leiden University",
+      "id": "6bc92b3d-9162-4584-b71f-d9ae0c6263ef",
+      "proposed_aliases": [
+        { "alias": "Universiteit Leiden", "alias_type": "translation" },
+        { "alias": "Rijksuniversiteit Leiden", "alias_type": "translation", "note": "ROR lists this as a second, more formal Dutch alias alongside the shorter 'Universiteit Leiden' label." }
+      ]
+    },
+    {
+      "display_name": "Maastricht University",
+      "id": "22f7577b-bc57-4431-b6ce-6c139640a409",
+      "proposed_aliases": [
+        { "alias": "Universiteit Maastricht", "alias_type": "translation" },
+        { "alias": "UM", "alias_type": "abbreviation", "caution": "RULE-ENTITY-006-shaped risk: 'UM' already collides live in ORYN's registry between Universiti Malaya and Universidad de Montevideo (06). A third live claimant on the same short alias -- country-scoping already handles this per that rule, but worth being aware of before adding." }
+      ]
+    },
+    {
+      "display_name": "Radboud University",
+      "id": "168b2f8e-0d61-4265-85af-dd5a5576b220",
+      "proposed_aliases": [
+        { "alias": "Radboud Universiteit Nijmegen", "alias_type": "translation" },
+        { "alias": "Radboud University Nijmegen", "alias_type": "common", "note": "ROR's own display name includes 'Nijmegen'; ORYN's stored display_name is the shorter 'Radboud University' -- not a data error, but worth knowing ROR's canonical form is more specific." }
+      ]
+    },
+    {
+      "display_name": "Tilburg University",
+      "id": "50b359be-bcfc-4177-aa7b-b532de1d2f9f",
+      "proposed_aliases": [
+        { "alias": "Universiteit van Tilburg", "alias_type": "translation" },
+        { "alias": "TiU", "alias_type": "abbreviation" }
+      ]
+    },
+    {
+      "display_name": "University of Amsterdam",
+      "id": "31a839fe-63d6-4983-a93f-4803110119dc",
+      "proposed_aliases": [
+        { "alias": "Universiteit van Amsterdam", "alias_type": "translation" },
+        { "alias": "UvA", "alias_type": "abbreviation" }
+      ]
+    },
+    {
+      "display_name": "University of Groningen",
+      "id": "604ef0c2-da94-48ca-9757-7eeb5a9706a8",
+      "proposed_aliases": [
+        { "alias": "Rijksuniversiteit Groningen", "alias_type": "translation" }
+      ]
+    },
+    {
+      "display_name": "University of Twente",
+      "id": "d5f7bbb1-3def-431f-baf6-0976f3f5a025",
+      "proposed_aliases": [
+        { "alias": "Universiteit Twente", "alias_type": "translation" }
+      ]
+    },
+    {
+      "display_name": "Utrecht University",
+      "id": "98cb12e9-dc21-42fe-a0fe-8ad00b73cb47",
+      "proposed_aliases": [
+        { "alias": "Universiteit Utrecht", "alias_type": "translation" },
+        { "alias": "Rijksuniversiteit Utrecht", "alias_type": "translation" }
+      ]
+    },
+    {
+      "display_name": "Vrije Universiteit Amsterdam",
+      "id": "bdb167a1-1d50-4a18-9a22-7524f50b471c",
+      "proposed_aliases": [
+        { "alias": "VU Amsterdam", "alias_type": "common" },
+        { "alias": "VU", "alias_type": "abbreviation", "caution": "Very short, likely to collide with other institutions' informal 'VU' abbreviations if the registry grows -- ORYN's own alias-collision-handling (02) applies." }
+      ]
+    },
+    {
+      "display_name": "Wageningen University & Research",
+      "id": "3cfd782a-cfdb-4f7b-a888-1ffa7e7125dc",
+      "proposed_aliases": [
+        { "alias": "Wageningen Universiteit en Researchcentrum", "alias_type": "translation" },
+        { "alias": "WUR", "alias_type": "abbreviation" }
+      ]
+    }
+  ],
+  "italy_priority_batch": [
+    {
+      "display_name": "Bocconi University",
+      "id": "7894e676-5f6c-483e-a1ec-65d3cf6f41c1",
+      "proposed_aliases": [
+        { "alias": "Università Commerciale Luigi Bocconi", "alias_type": "translation" }
+      ]
+    },
+    {
+      "display_name": "Sapienza University of Rome",
+      "id": "dfa5da25-fea8-4b31-9856-6ea5ed924abd",
+      "proposed_aliases": [
+        { "alias": "La Sapienza", "alias_type": "common", "note": "The specific well-known short form 09 Finding 9 named as likely missing -- confirmed via ROR's own name variants ('Sapienza – Università di Roma', 'Università degli Studi di Roma \"La Sapienza\"')." },
+        { "alias": "Università degli Studi di Roma \"La Sapienza\"", "alias_type": "translation" }
+      ]
+    },
+    {
+      "display_name": "Politecnico di Milano",
+      "id": "deae7235-84c5-49d6-af9a-bbdc4a1a85d2",
+      "proposed_aliases": [
+        { "alias": "Milan Polytechnic", "alias_type": "common", "note": "The specific well-known form 09 Finding 9 named as likely missing." },
+        { "alias": "Polytechnic University of Milan", "alias_type": "translation" }
+      ]
+    },
+    {
+      "display_name": "Politecnico di Torino",
+      "id": "5f9070ba-1e9e-4356-906a-6996225e1427",
+      "proposed_aliases": [
+        { "alias": "Polytechnic University of Turin", "alias_type": "translation" }
+      ]
+    },
+    {
+      "display_name": "Alma Mater Studiorum - Università di Bologna",
+      "id": "408e2804-cee5-4608-9da4-7d12afa3ee5b",
+      "proposed_aliases": [
+        { "alias": "University of Bologna", "alias_type": "translation" },
+        { "alias": "UNIBO", "alias_type": "abbreviation" }
+      ]
+    },
+    {
+      "display_name": "Ca' Foscari University of Venice",
+      "id": "9f45c12e-5b92-4178-85ef-a407bacd29e6",
+      "proposed_aliases": [
+        { "alias": "Università Ca' Foscari Venezia", "alias_type": "translation" }
+      ]
+    },
+    {
+      "display_name": "University of Milan",
+      "id": "94533e06-7372-4e60-85eb-52a41acbd85a",
+      "proposed_aliases": [
+        { "alias": "Università degli Studi di Milano", "alias_type": "translation" },
+        { "alias": "UNIMI", "alias_type": "abbreviation" },
+        { "alias": "Statale", "alias_type": "common", "note": "Common colloquial short form per ROR's own alias listing -- a lower-confidence inclusion than the others in this file, worth a human sanity check before adding since 'Statale' (\"state [university]\") is a generic-sounding word outside context." }
+      ]
+    },
+    {
+      "display_name": "Università Cattolica del Sacro Cuore",
+      "id": "f785a910-7b76-4b3b-9515-cc21b57c3792",
+      "proposed_aliases": [
+        { "alias": "Catholic University of the Sacred Heart", "alias_type": "translation" },
+        { "alias": "UCSC", "alias_type": "abbreviation", "caution": "Short, generic-shaped abbreviation -- check for collisions against any other 'UCSC'-abbreviated institution before adding (none found live in ORYN's registry this session, but worth a fresh check at write time given the registry keeps growing)." },
+        { "alias": "UNICATT", "alias_type": "abbreviation" }
+      ]
+    },
+    {
+      "display_name": "University of Padova",
+      "id": "0117c4a8-6ca7-49ea-920f-16fd9ca7e07a",
+      "proposed_aliases": [
+        { "alias": "Università degli Studi di Padova", "alias_type": "translation" },
+        { "alias": "UNIPD", "alias_type": "abbreviation" },
+        { "alias": "University of Padua", "alias_type": "common", "note": "ROR's own ror_display form uses the English spelling 'Padua'; ORYN stores the Italian city-name spelling 'Padova' in its display_name. Both spellings are legitimate English usage -- worth having the other as a searchable alias regardless of which stays the canonical display form." }
+      ]
+    },
+    {
+      "display_name": "University of Turin",
+      "id": "6676161c-532a-460a-b155-7e7a85017986",
+      "proposed_aliases": [
+        { "alias": "Università degli Studi di Torino", "alias_type": "translation" },
+        { "alias": "UNITO", "alias_type": "abbreviation" }
+      ]
+    },
+    {
+      "display_name": "University of Naples - Federico II",
+      "id": "39b25a36-d5a6-437a-8468-eb3355cc1399",
+      "proposed_aliases": [
+        { "alias": "Università degli Studi di Napoli Federico II", "alias_type": "translation" }
+      ]
+    },
+    {
+      "display_name": "University of Pisa",
+      "id": "f00c7ffe-1c8c-47b4-8ab1-695195e0e6c4",
+      "proposed_aliases": [
+        { "alias": "Università di Pisa", "alias_type": "translation" },
+        { "alias": "UniPi", "alias_type": "abbreviation" }
+      ]
+    }
+  ]
+}

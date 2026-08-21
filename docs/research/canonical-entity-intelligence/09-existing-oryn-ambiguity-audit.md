@@ -308,6 +308,25 @@ research: assume near-zero non-English-name coverage for any country/institution
 had dedicated *alias* research specifically, regardless of how much other kinds of attention
 (ROR enrichment, normalization fixes) that set has already received.
 
+**Acted on, not just diagnosed — a first batch of real, sourced alias candidates, added late in
+this session.** `10` item 11 flagged this as "worth filling once higher-priority items are
+clear" — with several higher-priority items now resolved (§ this document's other late updates),
+this session did the actual research rather than leaving it queued: **all 13 Dutch universities**
+(full closure of the 0/13 gap) and **12 of the 38 Italian universities** (the highest
+search-likelihood subset — Bocconi, Sapienza, the two Politecnici, Bologna, Ca' Foscari, Milan,
+Università Cattolica, Padova, Turin, Naples Federico II, Pisa), each with real
+`translation`/`abbreviation`/`common`-type alias candidates confirmed directly against ROR's own
+`names` field (not recalled from memory, not guessed) — including the two specific forms this
+Finding named as likely missing, **"La Sapienza"** and **"Milan Polytechnic"**, both confirmed.
+Full candidate list, alias types, and a few explicit collision/ambiguity cautions (e.g. "UM" for
+Maastricht University would be a third live claimant on an already-collision-prone abbreviation,
+per `06`'s existing `RULE-ENTITY-006`): `data/research/canonical-entities/
+italy-netherlands-alias-research.json`. Deliberately curated, not a raw ROR dump — ROR lists
+label variants in languages (French, German, Catalan, Slovenian) an ORYN student is very unlikely
+to search with; only forms judged actually useful were kept. Not written to `entity_aliases`
+directly (no write access this session) — a candidate list for whoever does, per this package's
+standing rule against inferring aliases from name similarity alone.
+
 **Context for interpreting every finding in this document:** `activities`, `work_experiences`,
 `volunteering_experiences`, `research_experiences`, `projects`, `awards`, `certifications`,
 `sports_experiences`, and `education_records` are all currently **empty** (0 rows), and `profiles`

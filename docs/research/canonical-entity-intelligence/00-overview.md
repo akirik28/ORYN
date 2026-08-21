@@ -146,6 +146,10 @@ Machine-readable companions live in `data/research/canonical-entities/`:
   three real abbreviation-collision pairs, the POSSIBLE_DUPLICATE calibration sample, and the
   verification-state evidence audit, all from running `lib/entities/audit.ts`'s actual code
   against a live registry snapshot.
+- `italy-netherlands-alias-research.json` — companion to `09` Finding 9: ROR-sourced
+  `translation`/`abbreviation`/`common` alias candidates for all 13 Dutch and a priority 12 of 38
+  Italian universities, closing (Netherlands) or narrowing (Italy) the thin-alias-coverage gap
+  that Finding originally only diagnosed.
 
 ## Method and source standard
 

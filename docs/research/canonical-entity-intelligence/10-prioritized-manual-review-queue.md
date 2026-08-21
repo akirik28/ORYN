@@ -201,14 +201,17 @@ it's genuinely this small, not because it's unimportant to the one student who'd
 wrong.
 
 **11. Improve alias coverage for countries outside the actively-researched corpus — Italy (3/38)
-and the Netherlands (0/13) confirmed thin-to-absent, likely the norm elsewhere too.** `09` Finding
-9. Same shape as the opportunity-organizer/school alias work elsewhere in this package — research
-each institution's well-known English/common/original-language forms ("La Sapienza," "Milan
-Polytechnic," "Universiteit van Amsterdam") rather than bulk-guessing. The Dutch case specifically
-needs `translation`-type aliases for the original-language names, not just `common`-type English
-variants — normalization alone will never bridge "University of Amsterdam" to "Universiteit van
-Amsterdam" the way it bridges an accent-only variant. Not urgent, but a concrete, scoped, real gap
-once higher-priority items above are clear.
+and the Netherlands (0/13) confirmed thin-to-absent, likely the norm elsewhere too. Partially
+done, late in this session, not just recommended.** `09` Finding 9. The Netherlands gap is now
+fully closed (13/13 researched) and Italy has a first batch (12/38, the highest search-likelihood
+institutions) — real, ROR-sourced `translation`/`abbreviation`/`common` candidates, including the
+two specific forms this item named ("La Sapienza," "Milan Polytechnic"), both confirmed real:
+`data/research/canonical-entities/italy-netherlands-alias-research.json`. Same shape as the
+opportunity-organizer/school alias work elsewhere in this package — not written to
+`entity_aliases` (no write access this session), a candidate list for whoever does. The
+remaining 26 Italian universities, and any other country beyond these two, remain unresearched —
+this batch prioritized the institutions an ORYN student is most likely to actually search for,
+not exhaustive coverage.
 
 **12. Trivial: fix 3 malformed `country_code` values and one misspelled `display_name`.** `09`
 Finding 10 — `Sasmo` (`country_code='singapour'`), `EUROPE YOUTH PARLİMENT` and `Titan Akademi Spor
