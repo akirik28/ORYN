@@ -1,5 +1,7 @@
 import { classifySubjects, type SubjectTaxonomy } from "@/lib/programs/subject-taxonomy";
-import { computeAdmissionOutlook } from "@/lib/admissions/outlook";
+import { checkUndergraduateFieldAvailability } from "@/lib/admissions/field-availability";
+import { computeAdmissionOutlook, type NotApplicableKind } from "@/lib/admissions/outlook";
+import { resolveAdmissionSystem, type AdmissionSystemShape } from "@/lib/admissions/system-shape";
 import { explainOutlook } from "@/lib/admissions/explain";
 import { evaluateRequirement } from "@/lib/requirements/evaluate";
 import { INFORMATIONAL_CATEGORIES, MANUAL_REVIEW_CATEGORIES, REQUIREMENT_CATEGORY_LABELS } from "@/lib/requirements/types";
@@ -98,6 +100,19 @@ export interface UniversityCounselingViewInput {
   universityId: string;
   universityName: string;
 
+  /** `universities.country`. Feeds Gate 1 (`resolveAdmissionSystem`) and the
+   * undergraduate-field-existence check. Optional so existing callers keep compiling;
+   * omitting it resolves to an "unknown" admissions system, which leaves the outlook exactly
+   * as it was before Gate 1 existed rather than guessing at a mechanism. */
+  universityCountry?: string | null;
+
+  /** `profiles.country` — the student's residence/school location, never citizenship.
+   * Decides which of a country's parallel admissions pathways applies (Ireland's CAO vs.
+   * non-EU-direct, Hong Kong's JUPAS vs. non-JUPAS, France's Parcoursup vs. DAP, Turkey's
+   * domestic vs. foreign-national). See lib/admissions/system-shape.ts for why residence and
+   * not citizenship is the correct signal for every one of those splits. */
+  studentCountry?: string | null;
+
   /** Already filtered to `verification_state = 'verified_current'` by the caller — this
    * module doesn't re-derive that filter (see the fixed-this-session commit on the detail
    * page for why it must never widen to include unverified/discontinued rows). */
@@ -183,6 +198,19 @@ export interface AdmissionOutlookSummary {
   strengths: string[];
   gaps: string[];
   unknowns: string[];
+  /** Non-null exactly when `outlook === "not_applicable"`. Unlike the persisted path
+   * (`lib/admissions/persist.ts`, where `target_universities` has no column for it), this
+   * view carries the explanation to the caller, so the UI never has to render a bare
+   * "not applicable" badge with no reason attached. */
+  notApplicableReason: string | null;
+  notApplicableKind: NotApplicableKind | null;
+  /** Gate 1's resolved shape and its sourced one-sentence mechanism description, for a
+   * "how this university actually admits" line. Null when Oryn has not established it —
+   * which is a state the UI should show as unknown, never as "holistic". */
+  admissionSystemShape: AdmissionSystemShape | null;
+  admissionSystemMechanism: string | null;
+  /** Repo-relative research documents backing the two fields above. */
+  sources: string[];
 }
 
 export interface RequirementRollupItem {
@@ -338,13 +366,54 @@ function deriveTuitionContext(tuition: CounselingTuitionInput): TuitionContext {
   return { kind: "unavailable", displayValue: null, caption: null };
 }
 
-function deriveOutlook(input: UniversityCounselingViewInput): AdmissionOutlookSummary | null {
+/**
+ * The student's intended field at this university, split by how strongly they said it.
+ *
+ * The distinction is load-bearing, not fussiness. `stated` means they picked a specific
+ * programme here; `inferred` means Oryn matched a free-text interest label. Only `stated`
+ * is allowed to change the outlook — suppressing a genuinely holistic US undergraduate
+ * application because the student once typed "Medicine" into their interests would replace
+ * one wrong answer with another. The inferred case still gets told the structural fact
+ * (see `recommendedActions`), it just doesn't have its outlook rewritten.
+ */
+function deriveTargetField(input: UniversityCounselingViewInput, programFocus: ProgramFocus): {
+  stated: SubjectTaxonomy | null;
+  inferred: SubjectTaxonomy | null;
+} {
+  const targetedProgramId = input.target?.programId;
+  if (targetedProgramId) {
+    const targeted = input.verifiedPrograms.find((p) => p.id === targetedProgramId);
+    if (targeted?.subjectTaxonomy) return { stated: targeted.subjectTaxonomy, inferred: null };
+  }
+
+  if (programFocus.matchedSubjectLabel) {
+    const { primary } = classifySubjects(programFocus.matchedSubjectLabel);
+    if (primary !== "other") return { stated: null, inferred: primary };
+  }
+
+  return { stated: null, inferred: null };
+}
+
+function deriveOutlook(
+  input: UniversityCounselingViewInput,
+  statedField: SubjectTaxonomy | null
+): AdmissionOutlookSummary | null {
   if (!input.target) return null;
+
+  const targetCountry = input.universityCountry ?? null;
+  const admissionSystem = resolveAdmissionSystem({
+    targetCountry,
+    studentCountry: input.studentCountry ?? null,
+    targetUniversityName: input.universityName,
+    targetField: statedField,
+  });
 
   const outlook = computeAdmissionOutlook({
     profileStrength: input.profileStrength,
     admissionRate: input.admissionRate,
     dataConfidence: input.profileDataConfidence,
+    admissionSystem,
+    fieldAvailability: checkUndergraduateFieldAvailability({ country: targetCountry, field: statedField }),
   });
   const explanation = explainOutlook(input.profileDimensionScores);
 
@@ -358,6 +427,11 @@ function deriveOutlook(input: UniversityCounselingViewInput): AdmissionOutlookSu
     strengths: explanation.strengths,
     gaps: explanation.gaps,
     unknowns: explanation.unknowns,
+    notApplicableReason: outlook.notApplicableReason,
+    notApplicableKind: outlook.notApplicableKind,
+    admissionSystemShape: outlook.admissionSystemShape,
+    admissionSystemMechanism: outlook.admissionSystemMechanism,
+    sources: outlook.sources,
   };
 }
 
@@ -410,7 +484,8 @@ export function buildUniversityCounselingView(input: UniversityCounselingViewInp
 
   const programFocus = deriveProgramFocus(input);
   const tuition = deriveTuitionContext(input.tuition);
-  const outlook = deriveOutlook(input);
+  const targetField = deriveTargetField(input, programFocus);
+  const outlook = deriveOutlook(input, targetField.stated);
 
   const recommendedActions: RecommendedAction[] = [];
 
@@ -420,6 +495,29 @@ export function buildUniversityCounselingView(input: UniversityCounselingViewInp
       detail: "Oryn only computes an admission outlook and requirement check once you've added a university to My Universities.",
       requirementId: null,
     });
+  }
+
+  // RULE-ADMISSIONS-021 at the interest level. When the field is only *inferred* from a
+  // stated interest, the student's undergraduate application to this university is still a
+  // real thing with a real outlook — so this surfaces the structural fact as an action
+  // instead of suppressing the outlook, which `deriveOutlook` reserves for an explicitly
+  // targeted programme. Both branches use the same sourced check; only the consequence
+  // differs. Placed ahead of the requirement actions because "this isn't an undergraduate
+  // degree here" outranks any missing-evidence item.
+  if (targetField.inferred) {
+    const inferredAvailability = checkUndergraduateFieldAvailability({
+      country: input.universityCountry ?? null,
+      field: targetField.inferred,
+    });
+    if (inferredAvailability.availability === "not_offered_at_undergraduate" && inferredAvailability.explanation) {
+      recommendedActions.push({
+        label: inferredAvailability.caveat
+          ? `${inferredAvailability.explanation} ${inferredAvailability.caveat}`
+          : inferredAvailability.explanation,
+        detail: `Based on your stated interest in "${programFocus.matchedSubjectLabel}"`,
+        requirementId: null,
+      });
+    }
   }
 
   const seenMissingCategories = new Set<RequirementCategory>();
