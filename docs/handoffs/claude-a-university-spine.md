@@ -3089,3 +3089,34 @@ silently skipped) for a future pass that wants to invest the per-faculty crawl t
 now: 3 of 6 previously-zero-coverage universities done (ITU, YTU, Hacettepe); Ankara
 Üniversitesi, Gebze Technical University, and Istanbul University (crawl-cost gap, see
 above) remain, plus the 6 four-program-seeded ones noted above.
+
+**Program catalogue batch 20 — Middle East Technical University (METU), deepened, 53 new,
+running session total 3,690 across 39 universities (METU itself already counted, so the
+university total doesn't increment).** Full method in that commit's own message (`0e88b58`).
+**A real, worth-flagging discovery**: the 6 "four-program" Turkish universities noted above
+(Bilkent, Boğaziçi, Koç, METU, Özyeğin, Sabancı) turn out to carry the *identical* 4 program
+names (Business Administration/Economics/Computer Engineering/Industrial Engineering, or a
+close variant) applied uniformly across all 6 -- confirmed live via a direct query listing
+every program row for all 6 -- meaning this is very likely a placeholder/generic fixture
+from an earlier pass, not 6 independent rounds of real per-university research. Not
+something this session can fix retroactively (no visibility into how/when that seed was
+written), but worth surfacing clearly: **the other 5 (Bilkent, Boğaziçi, Koç, Özyeğin,
+Sabancı) likely have the exact same thin-seed situation and are strong candidates for the
+same deepen-don't-duplicate treatment** applied to METU here, probably the single highest-
+leverage next move in the Turkey lane (real per-university depth behind an already-plausible-
+looking but generic 4-row placeholder is a worse trap than a visibly-empty zero-coverage
+university, since it doesn't surface as an obvious gap in a coverage report).
+Method used for METU, reusable for the other 5: query live DB for that university's exact
+existing program names first, fetch the official catalogue, exclude any exact-name overlap
+rather than re-adding or overwriting, disambiguate any real same-name-different-campus
+pairs (METU's Northern Cyprus campus needed this -- 15 programs, several sharing a subject
+name with an Ankara-campus program but genuinely separately administered and admitted,
+disambiguated as "X (METU Northern Cyprus Campus)" in `program_name` itself rather than
+relying on the `campus` field alone to prevent an apparent-duplicate read). METU is 100%
+English-medium as an institutional fact (unlike ITU/YTU/Hacettepe, no per-program language
+hedging needed). Includes 3 real METU-SUNY (Binghamton/New Paltz) dual-diploma joint
+programs, confirmed real via Binghamton University's own site. Two spot-checks (the SUNY
+Binghamton dual-diploma program; Cyprus's Guidance and Psychological Counseling, which its
+own department site confirms is *the only* METU program in that field anywhere --
+independently validating that the Cyprus-campus disambiguation was substantively correct,
+not just a defensive precaution) both confirmed accurate.
