@@ -16,8 +16,9 @@ scoped-out items) are still current as of the dates on each entry.
 While working autonomously, this session found "ORYN Programlama" (a Google Doc in the
 founder's Drive, last edited 15:29 Turkey time on 2026-08-15 — the same day as everything
 else in this file) — the founder's own private product-strategy notes, in Turkish. Two of
-its "final, locked" decisions directly contradict instructions given to Claude Code in
-chat **later the same day**:
+its "final, locked" decisions directly contradicted instructions given to Claude Code in
+chat **later the same day**. Item 2 (visual identity) is now resolved — see the note under
+it, dated 2026-08-21. Item 1 (messaging) is still open.
 
 1. **Section 33, "V1 SOSYAL KATMAN — FİNAL SCOPE KARARI"**, lists "Direct messaging / DM"
    under what will explicitly **not** be in V1. The chat instruction that led to
@@ -35,16 +36,30 @@ chat **later the same day**:
    say "Keep ORYN's current black / blue-black / logo-blue high-contrast design system."
    The dark theme was kept as instructed, not reworked to match the doc.
 
-**Why this wasn't treated as blocking**: in both cases the chat instructions are more
-recent (by commit timestamp), more specific, and repeated more than once, including in
-the message driving this very pass — that's a strong, consistent signal of the founder's
+   **Resolved 2026-08-21.** Commit `3192962`, **"fix: default to light theme, not dark
+   (Founder Requirement 3 / P1)"** (2026-08-18T00:37:17+03:00), reverted the root layout
+   to light as the deliberate default — the same date the founder's own Drive doc ("ORYN
+   Programlama" §37, "18 AĞUSTOS 2026 — GÜNCEL FOUNDER KARARLARI") reaffirmed light theme,
+   explicitly superseding §34's dark framing. `app/layout.tsx:38-51` carries a dated
+   comment confirming this directly: light is the one deliberate default, `:root` (no
+   class) carries light tokens, and the `.dark` block in `app/globals.css` is kept but
+   intentionally unused pending an actual theme toggle. Independently verified (not just
+   trusted from the commit message) by a full requirements audit on 2026-08-21 — see
+   `docs/research/requirements-audit/01-founder-requirements-audit.md`. That audit also
+   found and this pass fixed one live regression the migration left behind:
+   `components/ui/sonner.tsx` still hardcoded the Toaster to dark theme, on a comment
+   asserting the (by-then-false) premise that `app/layout.tsx` set `dark` statically — see
+   `docs/handoffs/fix-toast-theme-known-issues.md`.
+
+**Why this wasn't treated as blocking at the time**: in both cases the chat instructions
+were more recent (by commit timestamp), more specific, and repeated more than once,
+including in the message driving that pass — a strong, consistent signal of the founder's
 actual current intent, stronger than a single planning document apparently not yet
-reconciled with it. But a full visual-system reversal and a safety-sensitive messaging
-feature are both too consequential to resolve by guessing silently either way, so this is
-logged here explicitly rather than being fixed or ignored. **If the doc actually reflects
-current intent, not the chat instructions**: the messaging feature would need to come out
-(schema, RLS, UI, nav) and the entire design system would need reworking toward light/
-white — both real, scoped efforts, not a quick toggle.
+reconciled with it. The visual-identity question is now settled (above, 2026-08-21).
+**Item 1 (messaging) is still open**: if the doc actually reflects current intent there,
+not the chat instructions that led to `bcfa64c`, the messaging feature would need to come
+out (schema, RLS, UI, nav) — a real, scoped effort, not a quick toggle. Not touched by
+this pass.
 
 ## Fixed this session (autonomous pass — Drive data import, CV Generator)
 
