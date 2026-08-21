@@ -56,6 +56,7 @@
     "import:opportunity-corpus": "tsx scripts/import-opportunity-corpus.ts",
     "audit:recommendation-readiness": "tsx scripts/audit-recommendation-readiness.ts",
     "audit:opportunity-duplicates": "tsx scripts/audit-opportunity-duplicates.ts",
+    "audit:opportunity-cycle-status": "tsx scripts/audit-opportunity-cycle-status.ts",
     "audit:requirement-program-linkage": "tsx scripts/audit-requirement-program-linkage.ts",
     "audit:program-corpus-duplicates": "tsx scripts/audit-program-corpus-duplicates.ts"
   },
