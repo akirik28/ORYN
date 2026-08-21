@@ -12,12 +12,12 @@ medicine) in a way worth naming explicitly. Onboarding anchor: **Engineering** (
 Biomedical engineering applies engineering principles (mechanical, electrical, materials,
 computational) to biological and medical problems: medical devices and instrumentation, prosthetics
 and biomechanics, biomaterials, medical imaging, tissue engineering, and — increasingly — clinical
-data/computational modeling. **RULE-COUNSEL-045:** biomedical engineering is not a subset of
+data/computational modeling. **RULE-COUNSEL-211:** biomedical engineering is not a subset of
 "pre-med" and should not be counseled as one — it is an engineering discipline whose graduates
 mostly go into engineering/industry/research roles building medical technology, not into clinical
 practice; a student wanting to become a physician does not need a biomedical engineering degree
 (see `01-development-taxonomy.md`-adjacent framing already established for biology in
-`04-life-sciences.md` §3's RULE-COUNSEL-042 — the same "X is not required for medicine" caution
+`04-life-sciences.md` §3's RULE-COUNSEL-208 — the same "X is not required for medicine" caution
 generalizes here).
 
 ## 2. Core skills

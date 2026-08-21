@@ -10,7 +10,7 @@ with `00-family-taxonomy.md`'s grouping rationale). Onboarding anchor: **Compute
 
 Computing spans a genuine range from theoretical (algorithms, computational complexity) to applied
 (software engineering, systems) to interdisciplinary (data science, AI/ML, computational biology,
-human-computer interaction, cybersecurity). **RULE-COUNSEL-037:** treat "Computer Science" as an
+human-computer interaction, cybersecurity). **RULE-COUNSEL-203:** treat "Computer Science" as an
 umbrella, not a single skill — a student drawn to competitive-programming-style algorithmic puzzle
 solving and a student drawn to building and shipping user-facing products are both legitimately
 "interested in CS" but are developing measurably different things, mirroring exactly the
@@ -80,7 +80,7 @@ skill from software-development capability and should not be treated as intercha
 for it**, directly the distinction the mission brief itself calls out ("this competition provides
 algorithmic problem-solving evidence rather than software-development evidence"). A hackathon
 demonstrates rapid-build/teamwork capability under time pressure — again a distinct skill from
-either of the above two. **RULE-COUNSEL-038:** when counseling a CS-interested student, distinguish
+either of the above two. **RULE-COUNSEL-204:** when counseling a CS-interested student, distinguish
 at least these three evidence types (sustained build, algorithmic competition, time-boxed
 hackathon/team build) rather than treating "did something CS-related" as one undifferentiated
 signal — this is the concrete, field-specific instance of the general principle
@@ -127,7 +127,7 @@ further given how small a fraction of the field this affects.
 run by the Department for Education) publishes official job profiles — including qualifications,
 typical salary bands, and progression — for this family's roles (app developer, web developer,
 computer games developer, and the broader "computing, technology and digital" job category)
-[S-NCS-UK]. **RULE-COUNSEL-060 (new):** where a UK-facing student needs career-outlook grounding,
+[S-NCS-UK]. **RULE-COUNSEL-226 (new):** where a UK-facing student needs career-outlook grounding,
 prefer National Careers Service job profiles over BLS/O*NET — they are the UK's own official
 equivalent, not a secondary source, and salary/qualification framing does not transfer across
 countries even when the occupation name is identical. No licensure gate applies to this family in

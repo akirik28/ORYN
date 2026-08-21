@@ -17,7 +17,7 @@ public-safety/infrastructure remit. **Aerospace**: aerodynamics, propulsion, str
 controls, specifically for aircraft/spacecraft — the most specialized-industry of the four.
 **Electrical**: power systems, electronics, signal processing, and (increasingly) overlap with
 computer engineering — the subfield with the most adjacent-family overlap (see §5). **RULE-COUNSEL-
-043:** "Engineering" as a stated interest is at least as broad as "Computer Science" or "Biology" —
+209:** "Engineering" as a stated interest is at least as broad as "Computer Science" or "Biology" —
 a student should be encouraged to sample more than one subfield's actual design/build activity
 before narrowing, since these four subfields involve meaningfully different day-to-day work despite
 sharing a common first-year curriculum in most university systems.
@@ -82,7 +82,7 @@ Engineering and Surveying) and requires, per NSPE (National Society of Professio
 four-year engineering degree from a state-board-approved program, passing the **Fundamentals of
 Engineering (FE)** exam (typically taken at or near graduation), four years of qualifying
 engineering experience under a licensed PE's supervision, and then passing the **Principles and
-Practice of Engineering (PE)** exam [S-NSPE-PE]. **RULE-COUNSEL-044:** licensure necessity varies
+Practice of Engineering (PE)** exam [S-NSPE-PE]. **RULE-COUNSEL-210:** licensure necessity varies
 substantially *by role and industry*, not just by subfield — civil engineers who stamp/seal plans
 for public infrastructure are the clearest case where PE licensure is a practical necessity to
 practice independently; many mechanical, electrical, and aerospace engineers working inside large
@@ -116,7 +116,7 @@ of Chambers of Turkish Engineers and Architects, established 1954, organized int
 specific chambers with over 700,000 members as of the most recent figures found), engineers and
 architects must register with their discipline's chamber to practice work requiring the
 profession and may not use a professional title other than the one they are legally entitled to
-[S-TMMOB]. **RULE-COUNSEL-061 (new):** this is structurally distinct from both the US (voluntary-
+[S-TMMOB]. **RULE-COUNSEL-227 (new):** this is structurally distinct from both the US (voluntary-
 until-triggered-by-specific-practice PE licensure) and UK (institution-administered chartered
 status layered on top of a base, unrestricted right to practice) systems — Turkey's chamber
 registration is a more general, title-level gate closer to (though not identical to) medicine/law-

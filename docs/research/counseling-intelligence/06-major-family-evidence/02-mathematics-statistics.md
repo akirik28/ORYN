@@ -11,7 +11,7 @@ applied mathematics (mathematics in service of a real-world modeling problem: di
 equations, mathematical physics, financial mathematics) are a real internal split, alongside
 statistics (data-focused: probability theory, inference, experimental design) which is
 increasingly taught as its own track distinct from a general math major, especially at the
-graduate level. **RULE-COUNSEL-039:** a student who says "I like math" may mean anything from
+graduate level. **RULE-COUNSEL-205:** a student who says "I like math" may mean anything from
 "I enjoy proof and abstraction" to "I like using formulas to solve applied problems" to "I like
 analyzing data" — these predict different downstream fits (pure research vs. engineering/
 quant-finance vs. data science) and should not be treated as one undifferentiated signal, the same

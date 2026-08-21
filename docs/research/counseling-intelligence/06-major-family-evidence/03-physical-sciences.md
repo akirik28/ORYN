@@ -8,7 +8,7 @@ dedicated onboarding suggestion for chemistry — see `00-family-taxonomy.md` §
 Physics ranges from experimental (building apparatus, running measurements) to theoretical
 (mathematical modeling of physical law) to applied (engineering-adjacent, e.g. materials/photonics).
 Chemistry ranges similarly: experimental/bench chemistry, computational/theoretical chemistry, and
-applied chemistry (materials science, chemical engineering-adjacent). **RULE-COUNSEL-040:** a
+applied chemistry (materials science, chemical engineering-adjacent). **RULE-COUNSEL-206:** a
 student's stated interest in "physics" or "chemistry" should be probed for which pole they actually
 enjoy — theoretical/mathematical problem-solving vs. hands-on experimental work are different
 day-to-day activities and reward different exploration experiences (a proof-heavy theoretical

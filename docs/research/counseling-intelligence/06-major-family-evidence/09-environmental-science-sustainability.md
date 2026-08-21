@@ -11,7 +11,7 @@ see §5), environmental *engineering* (applying engineering to pollution control
 sustainable infrastructure — closer to `05-engineering-me-ce-ae-ee.md`), conservation science
 (wildlife/habitat/land management — a more field-based, less lab-based profile), and
 sustainability/policy work (closer to `07-economics-finance.md` and the peer session's
-`12-political-science-ir-public-policy.md`). **RULE-COUNSEL-049:** "environmental science" and
+`12-political-science-ir-public-policy.md`). **RULE-COUNSEL-215:** "environmental science" and
 "sustainability" are not the same activity profile — a student drawn to fieldwork/conservation and
 one drawn to sustainability policy/business practice are both legitimately in this family but
 would benefit from different exploration experiences (§4), directly the same umbrella-field caution

@@ -17,7 +17,7 @@ family evidence) should feed future template text without becoming free-form gen
 
 ## 1. The four things an explanation must never do
 
-**RULE-COUNSEL-050 — never state a probability without a validated statistical basis.** This is
+**RULE-COUNSEL-216 — never state a probability without a validated statistical basis.** This is
 the founder spec's own non-negotiable (#5, "university admission percentages must never be
 presented with false precision"), restated here as it applies specifically to Counselor Core's
 `why[]`/`warnings[]` text: a recommendation's reasoning must never imply a percentage chance of
@@ -27,7 +27,7 @@ comply (they state scores, severities, and sourced requirement reasoning — nev
 this rule exists to bind *future* template additions, especially anything touching
 `RequirementEvaluationSummary` or an eventual admission-outlook integration.
 
-**RULE-COUNSEL-051 — never let a `ProfileGap` imply a university "requires" anything.**
+**RULE-COUNSEL-217 — never let a `ProfileGap` imply a university "requires" anything.**
 Already established in `docs/counselor-core-plan.md` §5's "Requirement/admissions boundary" and
 worth restating here as an explainability rule specifically: gap-derived `why` text
 (`whyForOpportunity`'s `"Addresses {dimension}, {severity} ({score}/100)"` pattern) describes
@@ -36,7 +36,7 @@ worth restating here as an explainability rule specifically: gap-derived `why` t
 allowed to make a requirement-style claim, and only because that string is independently sourced
 per-university (`university_requirements`), not derived from the student's profile score.
 
-**RULE-COUNSEL-052 — never hide low confidence behind confident-sounding language.** A
+**RULE-COUNSEL-218 — never hide low confidence behind confident-sounding language.** A
 `confidence: "low"` recommendation (or a gap with `severity: "insufficient_data"`, rendered today
 as `"an area Oryn doesn't have enough data on yet"` — already good, honest language) must never be
 paired with `why` text that reads as more certain than the confidence level warrants. Concretely:
@@ -44,7 +44,7 @@ if `confidence` is `"low"`, the recommendation's framing should lead with the da
 ("Oryn doesn't have enough information about X yet") before any suggested action, not bury it in a
 `warnings[]` entry a student might not read as carefully as the main `why`.
 
-**RULE-COUNSEL-053 — distinguish "verified information" from "Oryn analysis," per spec Phase 28,
+**RULE-COUNSEL-219 — distinguish "verified information" from "Oryn analysis," per spec Phase 28,
 in the actual rendered text, not just internally.** A `why` string built from a sourced
 `university_requirements.reasoning` field and a `why` string built from `ProfileGap` severity are
 epistemically different kinds of claims (one is externally verified, one is Oryn's own
@@ -66,7 +66,7 @@ completing a substantive research project."* Structurally, this example does thr
 `deprioritize`/`avoid_for_now` `why` should always do: (a) names the specific strength that makes
 the candidate lower-priority (not just "you don't need this"), (b) names what *would* be higher
 value instead (never leaves the student with only a "no"), and (c) frames it as a *time/opportunity-
-cost* observation, not a judgment about the activity's inherent worth. **RULE-COUNSEL-054:** a
+cost* observation, not a judgment about the activity's inherent worth. **RULE-COUNSEL-220:** a
 `deprioritize`/`avoid_for_now` recommendation's `why` must always include a redirect — either a
 reference to the specific higher-value gap it's implicitly weighed against, or (if none is
 computable) an honest statement that it's simply not currently a priority given time constraints —
@@ -92,7 +92,7 @@ table's own framing rather than inventing new stage-language ad hoc.
 
 ## 3. How this research package's content should feed future templates (without becoming free text)
 
-**RULE-COUNSEL-055:** every piece of reasoning this research package contributes (stage timing,
+**RULE-COUNSEL-221:** every piece of reasoning this research package contributes (stage timing,
 redundancy/saturation, major-family evidence-type distinctions, evidence-state ladders) must enter
 `why[]`/`warnings[]` the same way today's templates already work — as a **parameterized template
 string keyed to a real, structured fact** (a computed `yearsUntilGraduation`, a `REDUNDANCY_DECAY`-
@@ -116,15 +116,15 @@ Restated as a checklist so it's directly usable, not just prose:
 1. Does it cite a specific number/fact (score, severity, date, source) rather than a vague
    adjective ("weak," "great") with nothing behind it?
 2. If it references a gap, does it avoid implying a university "requires" addressing it (RULE-
-   COUNSEL-051)?
+   COUNSEL-217)?
 3. If it's a `deprioritize`/`avoid_for_now`, does it name what's strong *and* what would be higher
-   value instead (RULE-COUNSEL-054)?
+   value instead (RULE-COUNSEL-220)?
 4. Does it avoid any percentage/probability language not backed by a validated model (RULE-
-   COUNSEL-050)?
+   COUNSEL-216)?
 5. If confidence is low, does the *leading* sentence say so, not just a trailing warning (RULE-
-   COUNSEL-052)?
+   COUNSEL-218)?
 6. Is externally-sourced content (a requirement's own reasoning) kept visually/textually distinct
-   from Oryn's own developmental judgment (RULE-COUNSEL-053)?
+   from Oryn's own developmental judgment (RULE-COUNSEL-219)?
 7. Would a demanding-but-fair human counselor plausibly have said this, in this tone (per the
    founder spec's own §57 "AI Copy Style" — specific, concise, analytical, calm, never "Amazing!
    You're doing incredibly well!")?

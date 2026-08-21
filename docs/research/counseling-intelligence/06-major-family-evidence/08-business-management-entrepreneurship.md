@@ -12,7 +12,7 @@ research purposes, given how much exploration-pathway overlap they share).
 international business — most of which are applied/operational rather than theory-first (a real
 contrast with economics's more theoretical/data-analytic orientation, per that document's §5).
 Entrepreneurship is distinct from general business study in a specific way worth stating plainly:
-**RULE-COUNSEL-047:** entrepreneurship is about originating and testing a new venture; general
+**RULE-COUNSEL-213:** entrepreneurship is about originating and testing a new venture; general
 business/management study is about operating and improving an existing one. A student interested in
 "business" broadly may be drawn to either or both, and a strong management-track profile
 (operational, process-improvement-oriented) is not automatically evidence of entrepreneurial
@@ -57,7 +57,7 @@ the domain.
 running competitive events simulating real business scenarios — DECA organized around finance,
 hospitality/tourism, business management/administration, and marketing; FBLA additionally covering
 entrepreneurship, accounting, business law, and several technology-adjacent categories
-[S-DECA-FBLA]. **RULE-COUNSEL-048:** participation and placement in a DECA/FBLA-style competitive
+[S-DECA-FBLA]. **RULE-COUNSEL-214:** participation and placement in a DECA/FBLA-style competitive
 event demonstrates applied business-scenario reasoning and presentation/communication skill under a
 structured simulation — genuinely valuable evidence for the "business/management" side of this
 family, but it is **not** entrepreneurship evidence in the sense `01-development-taxonomy.md`'s
@@ -96,8 +96,8 @@ reporting) but is structurally a **stronger entrepreneurship evidence type**, no
 equivalent of the same simulation — students set up an actual student company (with a real business
 bank account) and genuinely sell to the public, in person and via the programme's own online
 trading platform, with school-to-national competition tiers (local/county/regional through a
-Company of the Year national final) [S-YE-UK]. **RULE-COUNSEL-063 (new):** unlike DECA/FBLA-style
-simulated-scenario competitions (RULE-COUNSEL-048), Young Enterprise's Company Programme genuinely
+Company of the Year national final) [S-YE-UK]. **RULE-COUNSEL-229 (new):** unlike DECA/FBLA-style
+simulated-scenario competitions (RULE-COUNSEL-214), Young Enterprise's Company Programme genuinely
 clears the "real, tested venture" bar this document's §4 sets for entrepreneurship evidence
 specifically — a UK-facing student's participation should be evaluated more like the founder-
 spec's "idea → built → tested" ladder than like a DECA/FBLA placement, since real money, a real

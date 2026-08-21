@@ -13,7 +13,7 @@ error to resolve by picking one family. Onboarding anchor: **Biology**.
 Life sciences range from molecular/cellular biology (biochemistry, genetics, cell biology) to
 organismal/ecological biology (physiology, ecology, evolutionary biology) to biomedical-adjacent
 research (the non-clinical research side of what eventually supports medicine — distinct from
-clinical practice itself, covered in the peer session's family 10). **RULE-COUNSEL-041:** "biology"
+clinical practice itself, covered in the peer session's family 10). **RULE-COUNSEL-207:** "biology"
 as a stated interest spans wet-lab bench work, field/ecological work (very different day-to-day
 activity, often outdoors and observational), and computational biology (see §5) — probing which of
 these a student actually means matters as much here as the analogous probes already established in
@@ -40,7 +40,7 @@ work (see `09-environmental-science-sustainability.md`), regulatory/policy roles
 environmental regulatory agencies), and — the most numerically significant single destination in
 many countries — as a pre-requisite pathway toward medicine or other clinical health professions
 (see the peer session's `10-medicine-clinical-pathways.md`) without itself being a guarantee of
-admission to those professional programs. **RULE-COUNSEL-042:** a biology major is necessary for
+admission to those professional programs. **RULE-COUNSEL-208:** a biology major is necessary for
 essentially no clinical health profession in most systems (pre-med "requirements" are typically a
 set of specific courses, not a mandated major — many successful medical-school applicants in the
 US, for instance, major in unrelated fields and complete pre-med coursework alongside) — this must

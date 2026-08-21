@@ -37,14 +37,14 @@ never map "competition" as one relevance signal without naming which kind:
 
 - **Mathematical/algorithmic olympiad** (proof-based or algorithmic problem-solving under contest
   conditions): families `01` (algorithmic-competition sub-type, distinct from software-dev
-  evidence — `01`'s own §4/RULE-COUNSEL-038) and `02` (pure-math-track fit specifically, `02` §4).
+  evidence — `01`'s own §4/RULE-COUNSEL-204) and `02` (pure-math-track fit specifically, `02` §4).
 - **Science fair / research-competition** (a project + judged presentation, closer to `research`
   category evidence than pure `competition` evidence): families `03` (chemistry olympiad
   specifically, `03` §4), `04` (biology olympiad, `04` §4), `06` (biomedical/bioengineering
   project fairs).
 - **Business-case/simulation competition** (DECA/FBLA-style): family `08` — explicitly *not*
   entrepreneurship evidence, only business/management-reasoning evidence (`08` §4, RULE-COUNSEL-
-  048).
+  214).
 - **Economics research-and-writing competition** (Fed Challenge-style — a hybrid of `competition`
   and `research`): family `07` (`07` §4).
 - **Debate/moot court/model UN**: relevant to peer families `12` (political science/IR) and `13`
@@ -117,7 +117,7 @@ Distinctively relevant to family `08` (definitionally) and, per this package's o
 notes, to `01` (tech entrepreneurship) and `05`/`06` (hardware/deep-tech, medtech ventures). The
 UK's Young Enterprise Company Programme (`08` §7) is this category's single strongest non-US
 evidence-quality example found in this research — a genuinely real venture, not a simulation.
-**RULE-COUNSEL-048 applies across every family**: a business-case-competition placement is never
+**RULE-COUNSEL-214 applies across every family**: a business-case-competition placement is never
 substitutable for entrepreneurship evidence, regardless of which field the venture idea touches.
 
 ## `hackathon`

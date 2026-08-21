@@ -8,7 +8,7 @@ family destination).
 
 Economics splits broadly into micro/macroeconomic theory, econometrics/applied empirical work, and
 policy-oriented economics; finance (often a separate major, especially in business-school contexts)
-focuses more specifically on corporate finance, investments, and markets. **RULE-COUNSEL-046:**
+focuses more specifically on corporate finance, investments, and markets. **RULE-COUNSEL-212:**
 economics is a genuinely quantitative social science — a student drawn to it purely for its
 real-world relevance (news, policy debates) without any appetite for the statistics/econometrics
 that underpin serious study of it is a real, worth-surfacing mismatch signal, distinct from (and

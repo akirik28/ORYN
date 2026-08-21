@@ -75,15 +75,25 @@ confirm, and should not be trusted without independent re-verification.
    package's admissions-signaling reasoning assumes US-style holistic review and does not transfer
    to Turkey's exam-score-dominated YKS placement system, or fully to the UK's super-curricular-
    weighted UCAS system. Written up in this session's `03-recommendation-timing.md` §6
-   (`RULE-COUNSEL-062`) and the peer's `11-geography-admissions-systems.md`/`10-open-questions.md`.
-   **Treat this as the single highest-priority open item for any future continuation of this
-   research** — both sessions independently converged on that assessment.
-6. A confirmed, unresolved **rule-ID collision**: both sessions independently minted
-   `RULE-COUNSEL-034` through roughly `059`+ for entirely different content (this session's docs
-   `03`/`06`-families/`07`/`08` vs. the peer's `04`/`05`/`09`/`10`+). Neither session has
-   renumbered — **this is real, non-trivial work explicitly deferred to a final-integration pass**,
-   not something either branch's `rules-session2.json`/equivalent silently resolves. `RULE-COUNSEL-
-   001`-`033` belong solely to the peer's original sequence (this session never minted below `034`).
+   (`RULE-COUNSEL-228`, originally minted as `062` — see item 6 below) and the peer's
+   `11-geography-admissions-systems.md`/`10-open-questions.md`. **Treat this as the single
+   highest-priority open item for any future continuation of this research** — both sessions
+   independently converged on that assessment.
+6. A confirmed **rule-ID collision, since resolved on this session's side**: both sessions
+   independently minted `RULE-COUNSEL-034` through roughly `059`+ for entirely different content
+   (this session's docs `03`/`06`-families/`07`/`08` vs. the peer's `04`/`05`/`09`/`10`+). **By
+   mutual agreement (direct cross-session messages)**, this session renumbered its entire
+   `034`-`064` range to `200`-`230` — a block with headroom the peer session committed not to
+   reach through normal sequential minting — leaving the peer's own `034`+ sequence untouched. Every
+   in-document cross-reference on this session's side was updated to match (verified via a
+   whitespace-tolerant regex sweep, since several references had been split across a markdown line
+   wrap in a way a naive find-replace missed on the first attempt — worth remembering if anyone
+   else attempts a similar renumbering). `RULE-COUNSEL-001`-`033` (plus a `901`-`902`
+   reconciliation pair) belong to this branch's own pre-existing `rules.json`, written by the peer
+   session before it forked away — those numbers never collided with anything. **Remaining work**:
+   merge this session's now-clean `200`-`230` range into that pre-existing `rules.json`/
+   `sources.json` (same branch, no cross-branch merge needed for this part), and separately merge
+   the result with the peer branch's own, larger, independently-numbered registry.
 7. Both sessions independently concluded the peer's branch (`-013956`) is the better final-
    integration target (clean history, no interleaved unrelated commits) — the peer offered to
    cherry-pick this session's scoped commits over. **Not yet done as of this checkpoint** — flagged
@@ -120,11 +130,13 @@ branches before trusting any table, including this one, past this checkpoint's t
 | `06-major-family-evidence/01`-`09` | Done (computing, math/stats, physical sciences, life sciences, engineering, biomedical eng, econ/finance, business/entrepreneurship, environmental science) — all with UK/EU/Turkey country notes | this branch |
 | `06-major-family-evidence/10`-`17` | Done (medicine, psychology, poli-sci/IR/policy, law, sociology/history/philosophy, literature/journalism/comms, architecture/design, visual/media arts) | peer branch |
 | `07-explainability-framework.md` | Done | this branch |
-| `08-unsafe-inference-rules.md` | Done, consolidated across both branches (034-063 range + cross-references to peer's 001-031) | this branch |
+| `08-unsafe-inference-rules.md` | Done, consolidated across both branches (this session's rules now renumbered 200-230, originally 034-064; cross-references to peer's 001-031) | this branch |
 | `09-persona-testing.md` | Done | peer branch |
 | `10-open-questions.md` | Done | peer branch |
-| `11-geography-admissions-systems.md` | Done, extends the YKS/UCAS finding to France/Germany/Netherlands/Italy/Switzerland | peer branch only |
+| `11-geography-admissions-systems.md` | Done, extends the YKS/UCAS finding to France/Germany/Netherlands/Italy/Switzerland/Canada | peer branch only |
 | `12-activity-progression-pathways.md` | Done | peer branch only |
+| `13-implementation-readiness.md` | Done, prioritized punch list synthesizing docs 00-12 | peer branch only |
+| `14-field-opportunity-mapping.md` | Done, answers mission deliverable #5 directly | this branch only |
 | `data/research/counseling-intelligence/rules.json` / `sources.json` (unified, canonical paths) | **Not yet built by either session** — deliberately deferred. Each session built its own shard instead (this branch: `rules-session2.json` / `sources-session2.json`, 30 rules / 44 sources; peer branch: its own `rules.json`/`sources.json` at the canonical path, per their own message — check their branch directly for current counts) |
 
 ## Working conventions established (both sessions converged on these independently or by agreement)
@@ -136,8 +148,10 @@ branches before trusting any table, including this one, past this checkpoint's t
   fact-checked its own O*NET/BLS/IBO citations against a peer re-verification pass (all held up
   precisely) — the discipline appears to be working as intended, not just self-reported.
 - **Rule numbering**: `RULE-COUNSEL-###`, minted once per rule, cross-referenced by number
-  thereafter. **Known to collide across branches in the 034-059+ range — do not treat either
-  branch's sequence as globally authoritative until integration.**
+  thereafter. **Originally collided across branches in the 034-059+ range — this session's side is
+  now renumbered to 200-230 (see item 6 above); the peer branch's own 034-086+ sequence is
+  untouched and does not collide with this session's numbers anymore. Still not one unified
+  registry** — do not treat either branch's `rules.json` as globally complete until integration.
 - **Binding design decision**: reuse the existing 9-value `ProfileDimension` as the only top-level
   taxonomy — no proposed 10th dimension anywhere in either branch's output. New distinctions become
   sub-facets within an existing dimension.
@@ -150,12 +164,17 @@ branches before trusting any table, including this one, past this checkpoint's t
 
 **Integration has not happened yet.** The peer's branch (`oryn/counseling-intelligence-research-013956`)
 is the agreed target. Concretely: (1) cherry-pick or merge this branch's `03`, `06-major-family-
-evidence/00`+`01`-`09`, `07`, `08` commits onto the peer branch; (2) resolve the `RULE-COUNSEL-034`-
-`059`+ collision by renumbering one side's sequence (recommend renumbering this branch's, since the
-peer branch is the integration target) and propagating the renumbering through every cross-reference
-and this session's `rules-session2.json`; (3) merge `rules-session2.json`/`sources-session2.json`
-into the peer branch's `rules.json`/`sources.json` at the canonical path; (4) resolve this branch's
-own unrelated interleaved `canonical-entity-intelligence` commits (a different mandate — do not pull
+evidence/00`+`01`-`09`, `07`, `08`, `14` commits onto the peer branch; (2) ~~resolve the
+`RULE-COUNSEL-034`-`059`+ collision~~ — **done on this session's side**: renumbered to `200`-`230`,
+propagated through every cross-reference (verify with a whitespace-tolerant regex sweep before
+trusting a plain string search, per this session's own experience finding 6 line-wrap-split
+references a naive first pass missed); the peer's own `034`-`086`+ sequence is untouched and no
+longer collides; (3) merge this session's `200`-`230` rules/sources first into this branch's own
+pre-existing `rules.json`/`sources.json` (`001`-`033`+`901`-`902`, already present here, written by
+the peer session before it forked — same-branch merge, no cross-branch step needed for this part),
+then merge THAT combined file into the peer branch's own `rules.json`/`sources.json`; (4) resolve
+this branch's own unrelated interleaved `canonical-entity-intelligence` commits (a different
+mandate — do not pull
 those into the peer branch's integration by accident); (5) treat the YKS/UCAS/geography-conditional-
 admissions finding as the top-priority substantive item for any further research, ahead of adding
 more major-family depth.

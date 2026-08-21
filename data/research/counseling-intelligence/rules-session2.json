@@ -1,11 +1,11 @@
 {
   "$schema_note": "Rule registry for THIS session's shard only (oryn/counseling-intelligence-research, main checkout). Named rules-session2.json, not rules.json, for the same reason as sources-session2.json.",
-  "$collision_warning": "CRITICAL for whoever integrates: this session independently minted RULE-COUNSEL-034 through 064. The peer branch (oryn/counseling-intelligence-research-013956) independently minted its OWN RULE-COUNSEL-034 through 059+ range for completely different content (confirmed by the peer session's own self-consistency audit, reported 2026-08-21). The two ranges are NOT the same rules under different descriptions -- they are genuinely different rules that happen to share ID numbers by coincidence of two sessions numbering independently without a synced counter. DO NOT merge this file with the peer's equivalent by ID -- every RULE-COUNSEL-### in the 034-063 range needs one side renumbered (recommend renumbering this session's range, since the peer branch is the agreed final-integration target and already has a documented collision map in its own docs/handoffs/research-counseling-intelligence.md). RULE-COUNSEL-001 through 033 belong solely to the peer branch (this session never minted below 034). This file's rules are internally self-consistent and correctly numbered WITHIN this session's own document set -- the problem is purely cross-branch.",
+  "$renumbering_note": "RESOLVED as of this update: this session originally minted RULE-COUNSEL-034 through 064, which collided numerically with the peer branch's (oryn/counseling-intelligence-research-013956) own independently-minted RULE-COUNSEL-034-through-086+ range (confirmed via the peer's own self-consistency audit, 2026-08-21 -- same numbers, unrelated content, pure coincidence of two sessions counting from the same start point without a synced counter). By mutual agreement between the two sessions (direct cross-session messages), this session renumbered its own 034-064 range to 200-230 (a block with headroom the peer session committed not to use), leaving the peer's 034-086+ range untouched. RULE-COUNSEL-001 through 033 (plus a 901-902 reconciliation pair) belong to this branch's OWN existing data/research/counseling-intelligence/rules.json, written by the peer session before it forked away -- those numbers do not collide with anything and this file's 200-230 range is being merged into that file directly (see rules.json's own updated numbering_note once merged). This file (rules-session2.json) is retained only as a pre-merge historical snapshot.",
   "branch": "oryn/counseling-intelligence-research",
   "generated_at": "2026-08-21",
   "rules": [
     {
-      "id": "RULE-COUNSEL-034",
+      "id": "RULE-COUNSEL-200",
       "statement": "Derive an approximate developmental stage (yearsUntilGraduation = graduation_year - currentYear) from data ORYN already collects; expose it as a non-binding display default a student can override, never as a hard eligibility gate or a claim of precision it doesn't have. Degrade to 'insufficient data for timing context' for education_stage='other' or curriculum='other' rather than silently defaulting to one country's grade system.",
       "source_document": "docs/research/counseling-intelligence/03-recommendation-timing.md",
       "source_section": "§1, §5",
@@ -13,7 +13,7 @@
       "evidence_source_ids": ["S-GRADE-CONV"]
     },
     {
-      "id": "RULE-COUNSEL-035",
+      "id": "RULE-COUNSEL-201",
       "statement": "Stage (years until graduation) determines WHAT KIND of recommendation is appropriate; the student's own time budget determines HOW MUCH/HOW BIG. Never let a tight time budget silently substitute a breadth-type recommendation for a depth-type one -- if nothing depth-appropriate fits, say so explicitly rather than swapping category.",
       "source_document": "docs/research/counseling-intelligence/03-recommendation-timing.md",
       "source_section": "§4",
@@ -21,7 +21,7 @@
       "evidence_source_ids": []
     },
     {
-      "id": "RULE-COUNSEL-036",
+      "id": "RULE-COUNSEL-202",
       "statement": "A student outside the typical phase pattern for their stage is not automatically a gap. Distinguish objective time-remaining from implied deficiency: a Phase-1 student with genuine early depth should not be pushed toward artificial breadth; a Phase-2 student who is broad due to a recent, legitimate interest shift should have that context surfaced, not be penalized as if the shift never happened.",
       "source_document": "docs/research/counseling-intelligence/03-recommendation-timing.md",
       "source_section": "§5",
@@ -29,7 +29,7 @@
       "evidence_source_ids": []
     },
     {
-      "id": "RULE-COUNSEL-037",
+      "id": "RULE-COUNSEL-203",
       "statement": "Treat 'Computer Science' as an umbrella, not a single skill -- competitive-programming-style algorithmic problem-solving and building/shipping user-facing products are both legitimately 'CS' but develop measurably different things.",
       "source_document": "docs/research/counseling-intelligence/06-major-family-evidence/01-computing-information-sciences.md",
       "source_section": "§1",
@@ -37,7 +37,7 @@
       "evidence_source_ids": []
     },
     {
-      "id": "RULE-COUNSEL-038",
+      "id": "RULE-COUNSEL-204",
       "statement": "When counseling a CS-interested student, distinguish at minimum three evidence types -- sustained independent build (execution_project_depth), algorithmic competition (quantitative/algorithmic reasoning under contest conditions), and time-boxed hackathon/team build (rapid-build + teamwork) -- rather than treating 'did something CS-related' as one undifferentiated signal.",
       "source_document": "docs/research/counseling-intelligence/06-major-family-evidence/01-computing-information-sciences.md",
       "source_section": "§4",
@@ -45,7 +45,7 @@
       "evidence_source_ids": []
     },
     {
-      "id": "RULE-COUNSEL-039",
+      "id": "RULE-COUNSEL-205",
       "statement": "'I like math' may mean enjoying proof/abstraction (pure track), applied problem-solving with formulas (applied track), or analyzing data (statistics track) -- these predict different downstream fits and should not be treated as one undifferentiated signal.",
       "source_document": "docs/research/counseling-intelligence/06-major-family-evidence/02-mathematics-statistics.md",
       "source_section": "§1",
@@ -53,7 +53,7 @@
       "evidence_source_ids": []
     },
     {
-      "id": "RULE-COUNSEL-040",
+      "id": "RULE-COUNSEL-206",
       "statement": "A stated interest in 'physics' or 'chemistry' should be probed for which pole a student actually enjoys -- theoretical/mathematical problem-solving vs. hands-on experimental work reward different exploration experiences.",
       "source_document": "docs/research/counseling-intelligence/06-major-family-evidence/03-physical-sciences.md",
       "source_section": "§1",
@@ -61,7 +61,7 @@
       "evidence_source_ids": []
     },
     {
-      "id": "RULE-COUNSEL-041",
+      "id": "RULE-COUNSEL-207",
       "statement": "'Biology' spans wet-lab/bench work, field/ecological work, and computational biology -- probing which a student means matters as much here as for computing/mathematics.",
       "source_document": "docs/research/counseling-intelligence/06-major-family-evidence/04-life-sciences.md",
       "source_section": "§1",
@@ -69,7 +69,7 @@
       "evidence_source_ids": []
     },
     {
-      "id": "RULE-COUNSEL-042",
+      "id": "RULE-COUNSEL-208",
       "statement": "A biology major is necessary for essentially no clinical health profession in most systems -- pre-med 'requirements' are typically specific courses, not a mandated major. Must be stated explicitly to counteract a common real-world misconception.",
       "source_document": "docs/research/counseling-intelligence/06-major-family-evidence/04-life-sciences.md",
       "source_section": "§3",
@@ -77,7 +77,7 @@
       "evidence_source_ids": []
     },
     {
-      "id": "RULE-COUNSEL-043",
+      "id": "RULE-COUNSEL-209",
       "statement": "'Engineering' as a stated interest is at least as broad as 'Computer Science' or 'Biology' -- a student should sample more than one of mechanical/civil/aerospace/electrical before narrowing, since they involve meaningfully different day-to-day work despite a shared first-year curriculum.",
       "source_document": "docs/research/counseling-intelligence/06-major-family-evidence/05-engineering-me-ce-ae-ee.md",
       "source_section": "§1",
@@ -85,7 +85,7 @@
       "evidence_source_ids": []
     },
     {
-      "id": "RULE-COUNSEL-044",
+      "id": "RULE-COUNSEL-210",
       "statement": "PE-equivalent licensure necessity varies substantially by role AND industry, not just by engineering subfield -- civil engineers stamping public infrastructure plans are the clearest necessity case; many ME/EE/AE industry roles (esp. aerospace/defense, tech-adjacent EE) practice career-long without one. A specific student's situation should be checked against target industry/employer expectations, not inferred from subfield alone.",
       "source_document": "docs/research/counseling-intelligence/06-major-family-evidence/05-engineering-me-ce-ae-ee.md",
       "source_section": "§6",
@@ -93,15 +93,15 @@
       "evidence_source_ids": ["S-NSPE-PE"]
     },
     {
-      "id": "RULE-COUNSEL-045",
-      "statement": "Biomedical engineering is not a subset of 'pre-med' and should not be counseled as one -- it is an engineering discipline whose graduates mostly go into engineering/industry/research roles, not clinical practice. A student wanting to become a physician does not need a biomedical engineering degree. (Generalizes RULE-COUNSEL-042 to this field.)",
+      "id": "RULE-COUNSEL-211",
+      "statement": "Biomedical engineering is not a subset of 'pre-med' and should not be counseled as one -- it is an engineering discipline whose graduates mostly go into engineering/industry/research roles, not clinical practice. A student wanting to become a physician does not need a biomedical engineering degree. (Generalizes RULE-COUNSEL-208 to this field.)",
       "source_document": "docs/research/counseling-intelligence/06-major-family-evidence/06-biomedical-engineering.md",
       "source_section": "§1",
       "category": "major_career_causality",
       "evidence_source_ids": []
     },
     {
-      "id": "RULE-COUNSEL-046",
+      "id": "RULE-COUNSEL-212",
       "statement": "Economics is a genuinely quantitative social science -- a student drawn to it purely for real-world relevance (news/policy) without appetite for the underlying statistics/econometrics is a real, worth-surfacing mismatch signal (a counseling conversation topic, not a disqualification).",
       "source_document": "docs/research/counseling-intelligence/06-major-family-evidence/07-economics-finance.md",
       "source_section": "§1",
@@ -109,7 +109,7 @@
       "evidence_source_ids": []
     },
     {
-      "id": "RULE-COUNSEL-047",
+      "id": "RULE-COUNSEL-213",
       "statement": "Entrepreneurship is about originating and testing a new venture; general business/management study is about operating and improving an existing one. A strong management-track profile is not automatically evidence of entrepreneurial capability, and vice versa.",
       "source_document": "docs/research/counseling-intelligence/06-major-family-evidence/08-business-management-entrepreneurship.md",
       "source_section": "§1",
@@ -117,7 +117,7 @@
       "evidence_source_ids": []
     },
     {
-      "id": "RULE-COUNSEL-048",
+      "id": "RULE-COUNSEL-214",
       "statement": "DECA/FBLA-style competitive-simulation participation demonstrates applied business-scenario reasoning and communication skill, but is NOT entrepreneurship evidence in the 'originate and test a real venture' sense -- it is a simulation, not the operation of a real business. Do not conflate the two evidence types.",
       "source_document": "docs/research/counseling-intelligence/06-major-family-evidence/08-business-management-entrepreneurship.md",
       "source_section": "§4",
@@ -125,7 +125,7 @@
       "evidence_source_ids": ["S-DECA-FBLA"]
     },
     {
-      "id": "RULE-COUNSEL-049",
+      "id": "RULE-COUNSEL-215",
       "statement": "'Environmental science' and 'sustainability' are not the same activity profile -- a student drawn to fieldwork/conservation and one drawn to sustainability policy/business practice are both legitimately in this family but benefit from different exploration experiences.",
       "source_document": "docs/research/counseling-intelligence/06-major-family-evidence/09-environmental-science-sustainability.md",
       "source_section": "§1",
@@ -133,7 +133,7 @@
       "evidence_source_ids": []
     },
     {
-      "id": "RULE-COUNSEL-050",
+      "id": "RULE-COUNSEL-216",
       "statement": "Never state a probability of admission/success/outcome without a validated statistical model backing it -- restates the founder spec's non-negotiable #5 as an explainability rule for why[]/warnings[] text specifically.",
       "source_document": "docs/research/counseling-intelligence/07-explainability-framework.md",
       "source_section": "§1",
@@ -141,7 +141,7 @@
       "evidence_source_ids": []
     },
     {
-      "id": "RULE-COUNSEL-051",
+      "id": "RULE-COUNSEL-217",
       "statement": "Never let a ProfileGap (Oryn's own developmental judgment) imply a university 'requires' addressing it -- only a sourced, per-university RequirementEvaluationSummary is allowed to make a requirement-style claim.",
       "source_document": "docs/research/counseling-intelligence/07-explainability-framework.md",
       "source_section": "§1",
@@ -149,7 +149,7 @@
       "evidence_source_ids": []
     },
     {
-      "id": "RULE-COUNSEL-052",
+      "id": "RULE-COUNSEL-218",
       "statement": "Never hide low confidence behind confident-sounding language -- a confidence:'low' recommendation must lead with the data gap itself, not bury it in a trailing warning the student might not read as carefully.",
       "source_document": "docs/research/counseling-intelligence/07-explainability-framework.md",
       "source_section": "§1",
@@ -157,7 +157,7 @@
       "evidence_source_ids": []
     },
     {
-      "id": "RULE-COUNSEL-053",
+      "id": "RULE-COUNSEL-219",
       "statement": "Distinguish 'verified information' from 'Oryn analysis' in the actual RENDERED text a student sees, not just internally in the data model -- externally-sourced content (a requirement's own reasoning) should be visually/textually distinguishable from Oryn's own developmental judgment.",
       "source_document": "docs/research/counseling-intelligence/07-explainability-framework.md",
       "source_section": "§1",
@@ -165,7 +165,7 @@
       "evidence_source_ids": []
     },
     {
-      "id": "RULE-COUNSEL-054",
+      "id": "RULE-COUNSEL-220",
       "statement": "A deprioritize/avoid_for_now recommendation's why[] must always include a redirect -- either the specific higher-value gap it's implicitly weighed against, or an honest statement that it's simply not currently a priority given time constraints -- never a bare 'this is low value' with no comparison point.",
       "source_document": "docs/research/counseling-intelligence/07-explainability-framework.md",
       "source_section": "§2",
@@ -173,7 +173,7 @@
       "evidence_source_ids": []
     },
     {
-      "id": "RULE-COUNSEL-055",
+      "id": "RULE-COUNSEL-221",
       "statement": "Every piece of reasoning this research package contributes must enter why[]/warnings[] as a parameterized template string keyed to a real structured fact -- never as a place where an LLM is asked to 'explain this in your own words' for the deterministic pipeline. Richer nuance that doesn't fit a short template belongs in the optional LLM narration layer's input context, still wrapped in the existing untrusted-data boundary -- never a relaxation of the deterministic pipeline's no-free-text rule.",
       "source_document": "docs/research/counseling-intelligence/07-explainability-framework.md",
       "source_section": "§3",
@@ -181,16 +181,16 @@
       "evidence_source_ids": []
     },
     {
-      "id": "RULE-COUNSEL-056",
+      "id": "RULE-COUNSEL-222",
       "statement": "Never present a specific named opportunity/program sourced only from secondary/aggregator discovery as a confirmed, current, verified offering to a student -- it must first pass through ORYN's actual opportunity-acquisition/verification pipeline. This research package documents pathway TYPES, not a verified directory.",
       "source_document": "docs/research/counseling-intelligence/08-unsafe-inference-rules.md",
       "source_section": "§1",
       "category": "fabrication_of_external_facts",
       "evidence_source_ids": [],
-      "known_collision": "The peer branch independently minted a DIFFERENT RULE-COUNSEL-056 (a redundancy/timing-composition fix, in their 09-persona-testing.md) -- flagged, not resolved. See docs/handoffs/research-counseling-intelligence.md."
+      "known_collision": "The peer branch independently minted a DIFFERENT RULE-COUNSEL-222 (a redundancy/timing-composition fix, in their 09-persona-testing.md) -- flagged, not resolved. See docs/handoffs/research-counseling-intelligence.md."
     },
     {
-      "id": "RULE-COUNSEL-057",
+      "id": "RULE-COUNSEL-223",
       "statement": "Never infer a student's aptitude, interest, or fit for any field from a demographic attribute (nationality, gender, school type, socioeconomic signal, or any similar proxy).",
       "source_document": "docs/research/counseling-intelligence/08-unsafe-inference-rules.md",
       "source_section": "§3",
@@ -199,7 +199,7 @@
       "note": "Directly restates the mission brief's own explicit 'what Oryn must not do' list verbatim; minted here because neither branch had numbered it explicitly yet, though both branches' actual document content is already consistent with it throughout."
     },
     {
-      "id": "RULE-COUNSEL-058",
+      "id": "RULE-COUNSEL-224",
       "statement": "Never present one career family as objectively 'better' than another (e.g., by salary or prestige) independent of the specific student's own stated interests/goals.",
       "source_document": "docs/research/counseling-intelligence/08-unsafe-inference-rules.md",
       "source_section": "§3",
@@ -207,7 +207,7 @@
       "evidence_source_ids": []
     },
     {
-      "id": "RULE-COUNSEL-059",
+      "id": "RULE-COUNSEL-225",
       "statement": "Never equate a career family's aggregate popularity or labor-market growth rate with a claim about a specific student's likely fit or success in it -- every BLS growth statistic cited across this package's family docs is an aggregate US labor-market data point, never a claim about an individual student's prospects.",
       "source_document": "docs/research/counseling-intelligence/08-unsafe-inference-rules.md",
       "source_section": "§3",
@@ -215,7 +215,7 @@
       "evidence_source_ids": []
     },
     {
-      "id": "RULE-COUNSEL-060",
+      "id": "RULE-COUNSEL-226",
       "statement": "Where a UK-facing student needs career-outlook grounding, prefer National Careers Service job profiles over BLS/O*NET -- they are the UK's own official equivalent, not a secondary source, and salary/qualification framing does not transfer across countries even when the occupation name is identical.",
       "source_document": "docs/research/counseling-intelligence/06-major-family-evidence/01-computing-information-sciences.md",
       "source_section": "§7",
@@ -223,7 +223,7 @@
       "evidence_source_ids": ["S-NCS-UK"]
     },
     {
-      "id": "RULE-COUNSEL-061",
+      "id": "RULE-COUNSEL-227",
       "statement": "Turkey's TMMOB chamber-registration/title-protection system is structurally distinct from BOTH the US PE system (voluntary-until-triggered-by-specific-practice) and the UK CEng system (institution-administered chartered status layered on top of an unrestricted base right to practice) -- a Turkey-target engineering student should not have US/UK licensure framing applied to them by default.",
       "source_document": "docs/research/counseling-intelligence/06-major-family-evidence/05-engineering-me-ce-ae-ee.md",
       "source_section": "§6",
@@ -231,7 +231,7 @@
       "evidence_source_ids": ["S-TMMOB"]
     },
     {
-      "id": "RULE-COUNSEL-062",
+      "id": "RULE-COUNSEL-228",
       "statement": "Never apply US-holistic-admissions-derived reasoning (depth-over-breadth, extracurricular signaling, redundancy/saturation logic) with the same directness to a student targeting an admissions system with a fundamentally different structure -- e.g. Turkey's exam-score-dominated YKS placement (where academics is doing nearly all the admissions work and the other 8 ProfileDimensions matter for real development but should not be framed as admissions-relevant), or the UK's UCAS system (which weights subject-relevant super-curricular engagement over general extracurricular breadth more heavily than US holistic review does). Oryn's developmental framing remains valid regardless of geography; its ADMISSIONS-RELEVANCE framing must be geography-conditional. Assessed as the single highest-leverage open item this whole research package surfaced (verified independently by both sessions).",
       "source_document": "docs/research/counseling-intelligence/03-recommendation-timing.md",
       "source_section": "§6",
@@ -240,21 +240,21 @@
       "note": "Originally surfaced by the peer session's persona-testing pass, independently verified by this session via direct ÖSYM/YKS and UCAS sourcing. Highest-priority item for any future continuation of this research."
     },
     {
-      "id": "RULE-COUNSEL-063",
-      "statement": "Unlike DECA/FBLA-style simulated-scenario competitions (RULE-COUNSEL-048), UK's Young Enterprise Company Programme genuinely clears the 'real, tested venture' bar for entrepreneurship evidence -- real company, real bank account, real customers, not a simulation. A UK student's participation should be evaluated against the founder spec's 'idea -> built -> tested' ladder, not treated as equivalent to a DECA/FBLA placement.",
+      "id": "RULE-COUNSEL-229",
+      "statement": "Unlike DECA/FBLA-style simulated-scenario competitions (RULE-COUNSEL-214), UK's Young Enterprise Company Programme genuinely clears the 'real, tested venture' bar for entrepreneurship evidence -- real company, real bank account, real customers, not a simulation. A UK student's participation should be evaluated against the founder spec's 'idea -> built -> tested' ladder, not treated as equivalent to a DECA/FBLA placement.",
       "source_document": "docs/research/counseling-intelligence/06-major-family-evidence/08-business-management-entrepreneurship.md",
       "source_section": "§7",
       "category": "country_specific_sourcing",
       "evidence_source_ids": ["S-YE-UK"]
     },
     {
-      "id": "RULE-COUNSEL-064",
-      "statement": "Absent a specific target-university signal, a target_geography='turkey' student should be treated as PROBABLY YKS-track by default for the purposes of RULE-COUNSEL-062 (not framing Oryn's developmental dimensions as admissions-relevant) -- not because every Turkey-targeting student is YKS-track (some target private/foundation universities with their own supplementary admissions criteria, or study abroad), but because YKS-track public-university placement is the larger, more common case, and wrongly suppressing US-holistic-style framing for a private/abroad-track student is a much less harmful failure mode than the reverse. Revisit the moment the student adds a specific target university whose actual admission model can be checked.",
+      "id": "RULE-COUNSEL-230",
+      "statement": "Absent a specific target-university signal, a target_geography='turkey' student should be treated as PROBABLY YKS-track by default for the purposes of RULE-COUNSEL-228 (not framing Oryn's developmental dimensions as admissions-relevant) -- not because every Turkey-targeting student is YKS-track (some target private/foundation universities with their own supplementary admissions criteria, or study abroad), but because YKS-track public-university placement is the larger, more common case, and wrongly suppressing US-holistic-style framing for a private/abroad-track student is a much less harmful failure mode than the reverse. Revisit the moment the student adds a specific target university whose actual admission model can be checked.",
       "source_document": "docs/research/counseling-intelligence/03-recommendation-timing.md",
       "source_section": "§6",
       "category": "admissions_system_overgeneralization",
       "evidence_source_ids": [],
-      "note": "Surfaced by this session's own persona-stress-test of RULE-COUNSEL-062 against a concrete hypothetical (14-year-old, Turkey, no target universities yet) -- found that the rule's own 'targeting Turkish public university placement specifically' condition has no way to be checked for a young student, and needed an explicit default."
+      "note": "Surfaced by this session's own persona-stress-test of RULE-COUNSEL-228 against a concrete hypothetical (14-year-old, Turkey, no target universities yet) -- found that the rule's own 'targeting Turkish public university placement specifically' condition has no way to be checked for a young student, and needed an explicit default."
     }
   ]
 }

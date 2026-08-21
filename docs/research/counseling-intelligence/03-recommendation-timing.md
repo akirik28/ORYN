@@ -22,7 +22,7 @@ label as the default, this document uses **years-until-expected-graduation** as 
 — a number, not a label — and separately gives the label-mapping per system where useful for
 human-readable copy.
 
-**RULE-COUNSEL-034 — derive an approximate stage from data already collected, never claim
+**RULE-COUNSEL-200 — derive an approximate stage from data already collected, never claim
 precision it doesn't have.** ORYN's `profiles` table already stores `graduation_year` (collected at
 onboarding, `PHASE 3` of the founder spec) and `curriculum`. `yearsUntilGraduation = graduation_year
 - currentYear` is a simple, always-available computation requiring no new data collection. Mapped
@@ -99,7 +99,7 @@ multiplicatively in effect, not be confused with each other: a Phase-2 student i
 low-time-budget period should still get depth-oriented (not breadth-oriented) recommendations, just
 fewer/smaller ones, or ones explicitly scoped to fit the available time (e.g., "spend the 90 minutes
 you have this week finishing the research conclusion," not "start a new project"). **RULE-COUNSEL-
-035:** stage determines *what kind* of recommendation is appropriate; time budget determines *how
+201:** stage determines *what kind* of recommendation is appropriate; time budget determines *how
 much and how big*. Never let a tight time budget silently change a recommendation's category (e.g.,
 substituting a breadth-exploration suggestion for a depth one merely because depth work would take
 longer) — if nothing depth-appropriate fits the available time, the honest answer is a smaller depth
@@ -107,7 +107,7 @@ task or an explicit "not much fits this week" statement, not a category swap.
 
 ## 5. Explicit exceptions — where the phase-typical pattern must not be applied mechanically
 
-**RULE-COUNSEL-036:** A student outside the typical phase pattern for their stage is not
+**RULE-COUNSEL-202:** A student outside the typical phase pattern for their stage is not
 automatically a gap — the "why" must distinguish *time remaining* (an objective fact) from
 *implied deficiency* (a judgment this research explicitly warns against making automatically).
 Concrete cases:
@@ -138,7 +138,7 @@ The Yükseköğretim Kurumları Sınavı (YKS), administered by ÖSYM, consists 
 sessions (the Basic Proficiency Test/TYT taken by all applicants, plus Field Qualification Tests/AYT
 and a Foreign Language Test/YDT as applicable); students are placed into programs by score-ranked
 preference matching, not by an application file containing essays, recommendations, or an
-activities list [S-YKS]. **RULE-COUNSEL-062:** for a student targeting Turkish public university
+activities list [S-YKS]. **RULE-COUNSEL-228:** for a student targeting Turkish public university
 placement specifically (as opposed to targeting a private Turkish university with its own
 supplementary admission criteria, or targeting abroad), this package's entire "build a developed,
 holistic profile across 9 dimensions" framing is **largely inapplicable to the admission decision
@@ -153,11 +153,11 @@ to anything career-family-specific.
 
 **A real gap this rule doesn't resolve on its own, surfaced by testing it against a concrete
 persona (a 14-year-old in Turkey, `yearsUntilGraduation` ≈ 4, interested in Computer Science, no
-`target_universities` added yet):** RULE-COUNSEL-062's Turkey clause is conditioned on the student
+`target_universities` added yet):** RULE-COUNSEL-228's Turkey clause is conditioned on the student
 "targeting Turkish public university placement specifically" — but ORYN has no direct signal for
 this until a student adds actual target universities, and a young Phase-1 student very plausibly
 hasn't yet. `TargetGeography` only has one `"turkey"` value, not a public/YKS-track vs. private/
-foundation-university vs. studying-abroad-from-Turkey split. **RULE-COUNSEL-064 (new):** absent a
+foundation-university vs. studying-abroad-from-Turkey split. **RULE-COUNSEL-230 (new):** absent a
 specific target-university signal, a `target_geography = "turkey"` student should be treated as
 *probably* YKS-track by default — not because every Turkey-targeting student is (some target
 foundation/private universities with supplementary criteria, or study abroad, per the clause
@@ -185,7 +185,7 @@ suggesting the large majority of statement content should be academic/subject-fo
 general extracurricular
 breadth across many `ProfileDimension`s is **a much weaker admissions signal for a UK-track
 student than the same breadth would be for a US-track student**, even though it may still be
-genuinely valuable for the student's own development. **RULE-COUNSEL-062 extends to this case**:
+genuinely valuable for the student's own development. **RULE-COUNSEL-228 extends to this case**:
 for a UK-track student, a recommendation drawing on this package's general depth-over-breadth
 reasoning should specifically favor subject-relevant (super-curricular) deepening over general
 extracurricular breadth, more sharply than for a US-track student.
@@ -195,7 +195,7 @@ constitutes genuine research depth, real leadership substance, etc. — `01-deve
 `06-major-family-evidence/`) remains valid regardless of target geography, since it describes real
 skill/experience development, not an admissions-signaling claim. What changes by geography is
 **whether, and how directly, that development is framed as mattering for admission** — the
-`RULE-COUNSEL-051`-style boundary (never let Oryn's own developmental framing imply a university
+`RULE-COUNSEL-217`-style boundary (never let Oryn's own developmental framing imply a university
 requirement) already established in `07-explainability-framework.md` becomes even more load-bearing
 for Turkey/UK-track students, where the gap between "genuinely useful for your development" and
 "moves the needle on this specific admission decision" is largest. This is flagged as the highest-
