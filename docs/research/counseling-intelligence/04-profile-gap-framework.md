@@ -207,11 +207,19 @@ encouraged to use this space. (Source: Common App-focused admissions-guidance so
 this official application feature — medium-high confidence for the mechanism's existence and
 purpose, not independently verified against Common App's own raw application-platform
 documentation this pass.) [[RULE-COUNSEL-079]] Separately, chronic health conditions are common
-enough in this population to not be an edge case: cited guidance describing this population puts
-the share of US young people with a chronic medical condition at roughly 15-20%. (Source:
-college-counselor-research sources — medium confidence, a population estimate cited by secondary
-sources rather than independently traced to a primary epidemiological study this pass.)
-[[RULE-COUNSEL-080]]
+enough in this population to not be an edge case — **corrected and strengthened on a follow-up
+pass** after this document's original "roughly 15-20%" figure (a vague, secondary-sourced
+estimate) turned out to understate it: a peer-reviewed longitudinal study of US children found the
+prevalence of a chronic condition or functional limitation among 5-17-year-olds rose from **22.57%
+in 1999/2000 to 30.21% in 2017/2018** — a rising trend, not a stable baseline, and meaningfully
+higher than this document's original figure. (Source: "Prevalence and Trends in Pediatric-Onset
+Chronic Conditions in the United States, 1999–2018," peer-reviewed — high confidence for this
+specific, precisely-defined figure, replacing the earlier medium-confidence estimate.) Some more
+recent, more broadly-defined estimates (including behavioral/learning conditions and obesity) push
+higher still, toward 40%+ — **presented as a range rather than a single cherry-picked number**,
+since different studies define "chronic condition" differently (physical-only vs. including
+behavioral/mental health) and this document should not manufacture false precision by picking
+whichever figure is most dramatic. [[RULE-COUNSEL-080]]
 
 **A closely related third category, surfaced incidentally by this session's own UK-admissions
 research for `11-geography-admissions-systems.md` rather than a separate search: caregiving
@@ -312,9 +320,11 @@ the other three access categories.
   context for exactly the kind of gap this framework addresses — treat this as direct precedent,
   not an invented consideration. Confidence: medium-high (mechanism well-described, not
   independently verified against Common App's own platform documentation).
-- `RULE-COUNSEL-080` — Chronic health conditions are common enough in this population (~15-20% by
-  cited estimate) to treat as a standing, not edge-case, possible explanation for a thin profile.
-  Confidence: medium (secondary-sourced population estimate).
+- `RULE-COUNSEL-080` — Chronic health conditions are common enough in this population (~23-30%
+  and rising per peer-reviewed longitudinal data, higher still under broader definitions) to
+  treat as a standing, not edge-case, possible explanation for a thin profile. Confidence: high
+  for the peer-reviewed 22.57%→30.21% (1999-2018) figure specifically; corrected upward from this
+  document's original, weaker "15-20%" secondary-sourced estimate on a follow-up pass.
 - `RULE-COUNSEL-081` — Never collect, prompt for, or store health/disability or caregiving-
   responsibility information — this would contradict ORYN's own minor-safe privacy commitments.
   Only ever read and respect voluntarily-disclosed context in existing free-text fields; never

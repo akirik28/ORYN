@@ -448,15 +448,27 @@
     },
     {
       "id": "SRC-CS-038",
-      "title": "College-counselor research on chronic illness prevalence and college transition (multiple sources, converging)",
+      "title": "College-counselor research on chronic illness prevalence and college transition (multiple sources, converging) — SUPERSEDED, see SRC-CS-048",
       "publisher": "Various college-counseling-research sources (including an ERIC-indexed study on counselor perceptions of chronic-illness transition needs)",
       "url": "https://files.eric.ed.gov/fulltext/EJ1483220.pdf",
       "type": "secondary_research_synthesis",
       "retrieved_at": "2026-08-21",
       "confidence": "medium",
-      "claim_supported": "Roughly 15-20% of US young people live with a chronic medical condition — cited as context for why chronic-illness-aware college counseling is a real, non-edge-case need.",
+      "claim_supported": "Originally used for a 'roughly 15-20%' prevalence estimate — corrected on a follow-up pass (see SRC-CS-048) after peer-reviewed data showed this understated actual prevalence. Retained in this registry for provenance/audit-trail purposes, not as the current basis for RULE-COUNSEL-080.",
+      "used_in_rules": [],
+      "limitations": "Population estimate cited by secondary sources, not independently traced to a primary epidemiological study — this exact limitation is why it was superseded."
+    },
+    {
+      "id": "SRC-CS-048",
+      "title": "Prevalence and Trends in Pediatric-Onset Chronic Conditions in the United States, 1999-2018",
+      "publisher": "Peer-reviewed journal article (ScienceDirect-indexed)",
+      "url": "https://www.sciencedirect.com/science/article/pii/S187628592500035X",
+      "type": "peer_reviewed_research",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Prevalence of a chronic condition or functional limitation among US children/adolescents aged 5-17 rose from 22.57% (1999/2000) to 30.21% (2017/2018) — a rising longitudinal trend, corrects and strengthens this document's original, weaker 'roughly 15-20%' estimate (SRC-CS-038).",
       "used_in_rules": ["RULE-COUNSEL-080"],
-      "limitations": "Population estimate cited by secondary sources; not independently traced to a primary epidemiological study by this package."
+      "limitations": "One study's specific definition and methodology; broader definitions (including behavioral/mental health conditions, obesity) found in other sources push estimates higher still (toward 40%+), presented as a range in the document rather than treating this single figure as the only true number."
     },
     {
       "id": "SRC-CS-039",
