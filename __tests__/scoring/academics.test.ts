@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { scoreAcademics } from "@/lib/scoring/dimensions/academics";
 import type { ScoringFacts } from "@/lib/scoring/types";
+import type { Course } from "@/types/database";
 
 function facts(overrides: Partial<ScoringFacts> = {}): ScoringFacts {
   return {
@@ -109,5 +110,55 @@ describe("scoreAcademics", () => {
       })
     );
     expect(honorsHeavy.score).toBeLessThan(apHeavy.score);
+  });
+
+  // Regression: counselor-loop QA defect #2 (docs/handoffs/counselor-loop-qa-report.md) — a
+  // UK A-level persona with real per-course grades but no overall_gpa scored gpaPoints=0/45
+  // because this function never read courses[].grade_value at all. Fails before this fix
+  // (course_grade_presence didn't exist as a signal), passes after.
+  describe("course-grade-presence fallback (no overall_gpa on file)", () => {
+    function gradedCourse(id: string, gradeValue: string | null): Course {
+      return {
+        id, user_id: "u1", education_record_id: null, course_name: `Course ${id}`, subject: "Maths",
+        level: "a_level", academic_year: "2026", grade_value: gradeValue, grade_scale: "A*-U",
+        credit_hours: null, created_at: "", updated_at: "",
+      };
+    }
+
+    test("scores academics above 0 for a student with real per-course grades but no overall_gpa", () => {
+      const result = scoreAcademics(
+        facts({ courses: [gradedCourse("1", "A*"), gradedCourse("2", "A"), gradedCourse("3", "A")] })
+      );
+      expect(result.score).toBeGreaterThan(0);
+      expect(result.reasonCodes.some((r) => r.code === "course_grade_presence")).toBe(true);
+    });
+
+    test("does not engage the fallback, and does not double-count, when overall_gpa is already present", () => {
+      const withGpaOnly = scoreAcademics(
+        facts({
+          educationRecords: [
+            { id: "e1", user_id: "u1", school_name: "S", school_entity_id: null, country: "US", stage: "high_school", curriculum: "ap", start_date: null, end_date: null, is_current: true, overall_gpa: 3.5, gpa_scale: 4.0, notes: null, created_at: "", updated_at: "" },
+          ],
+        })
+      );
+      const withGpaAndGradedCourses = scoreAcademics(
+        facts({
+          educationRecords: [
+            { id: "e1", user_id: "u1", school_name: "S", school_entity_id: null, country: "US", stage: "high_school", curriculum: "ap", start_date: null, end_date: null, is_current: true, overall_gpa: 3.5, gpa_scale: 4.0, notes: null, created_at: "", updated_at: "" },
+          ],
+          courses: [gradedCourse("1", "A*"), gradedCourse("2", "A")],
+        })
+      );
+      expect(withGpaAndGradedCourses.reasonCodes.some((r) => r.code === "course_grade_presence")).toBe(false);
+      // The second call's courses also contribute rigor points (a_level), so scores aren't
+      // expected to be equal — only the GPA-signal component must not double-count.
+      expect(withGpaOnly.reasonCodes.filter((r) => r.code === "gpa" || r.code === "course_grade_presence").length).toBe(1);
+      expect(withGpaAndGradedCourses.reasonCodes.filter((r) => r.code === "gpa" || r.code === "course_grade_presence").length).toBe(1);
+    });
+
+    test("does not treat empty-string grade_value as a real grade", () => {
+      const result = scoreAcademics(facts({ courses: [gradedCourse("1", ""), gradedCourse("2", null)] }));
+      expect(result.reasonCodes.some((r) => r.code === "course_grade_presence")).toBe(false);
+    });
   });
 });

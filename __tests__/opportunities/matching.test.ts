@@ -188,6 +188,25 @@ describe("computeOpportunityMatch", () => {
     expect(match.eligible).toBe(false);
     expect(match.matchScore).toBe(0);
   });
+
+  // Regression: counselor-loop QA defect #3 (docs/handoffs/counselor-loop-qa-report.md) —
+  // reproduced live: a Computer-Science-interested student got relevanceScore=100 against a
+  // Chemistry Olympiad tagged only ["chemistry", "science"], because "computer science"
+  // contains "science" as a substring. Fails before this fix, passes after.
+  test("does not treat 'Computer Science' as matching a field merely called 'Science' (substring false positive)", () => {
+    const match = computeOpportunityMatch(student({ interests: ["Computer Science"] }), opportunity({ fields: ["chemistry", "science"] }));
+    expect(match.relevanceScore).toBe(0);
+  });
+
+  test("still matches an exact field name after case/whitespace normalization", () => {
+    const match = computeOpportunityMatch(student({ interests: ["  Physics  "] }), opportunity({ fields: ["PHYSICS"] }));
+    expect(match.relevanceScore).toBeGreaterThan(0);
+  });
+
+  test("does not cross-match two different 'X Science' interests/fields via the shared word 'science'", () => {
+    const match = computeOpportunityMatch(student({ interests: ["Environmental Science"] }), opportunity({ fields: ["Political Science"] }));
+    expect(match.relevanceScore).toBe(0);
+  });
 });
 
 describe("isNearStudent", () => {

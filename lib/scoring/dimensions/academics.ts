@@ -2,6 +2,15 @@ import type { Course, EducationRecord } from "@/types/database";
 import type { DimensionResult, ReasonCode, ScoringFacts } from "../types";
 import { clampScore } from "../math";
 
+/**
+ * Known, NOT fixed by counselor-loop QA defect #2's remediation: `Course["level"]` (a
+ * Postgres enum, `supabase/migrations`) has no value representing rigor within a curriculum
+ * outside this AP/IB/A-level/dual-enrollment set — e.g. a Turkish Fen Lisesi's advanced
+ * track has no legal way to score above `regular`/`other` here no matter how rigorous the
+ * actual coursework is. Fixing that requires a new CourseLevel enum value, which is a schema
+ * migration and explicitly out of this fix's bounds (see docs/handoffs/counselor-fixes-
+ * report.md) — flagged here in code, not silently worked around.
+ */
 const RIGOR_WEIGHT: Record<Course["level"], number> = {
   ap: 1,
   ib_hl: 1,
@@ -27,6 +36,16 @@ function pickReferenceEducationRecord(records: EducationRecord[]): EducationReco
  * scored, not the test value itself: comparing an SAT score to an IB predicted grade
  * without a validated conversion table would be exactly the kind of false-precision
  * cross-system comparison the product spec prohibits.
+ *
+ * counselor-loop QA defect #2 (docs/handoffs/counselor-loop-qa-report.md): a UK A-level
+ * student who (realistically) has no single `overall_gpa` on file — only per-course
+ * `grade_value` entries, which this function used to never read at all — got gpaPoints=0
+ * out of 45 purely because the real academic signal lives in a field this scorer ignored.
+ * Same "presence, not value" discipline as testingPoints below: a per-course grade_value is
+ * free text on wildly different scales (A*-U, 1-9, 100-point, IB 1-7) with no validated
+ * cross-scale conversion, so this can only safely score that graded coursework EXISTS, never
+ * what the grade itself was worth. Only engaged as a fallback when no overall_gpa is on
+ * file, so a student with both never gets double-counted for the same underlying signal.
  */
 export function scoreAcademics(facts: ScoringFacts): DimensionResult {
   const reasonCodes: ReasonCode[] = [];
@@ -42,6 +61,16 @@ export function scoreAcademics(facts: ScoringFacts): DimensionResult {
       code: "gpa",
       detail: `GPA ${educationRecord.overall_gpa}/${educationRecord.gpa_scale}`,
     });
+  } else {
+    const distinctGradedCourses = facts.courses.filter((c) => c.grade_value != null && c.grade_value.trim() !== "").length;
+    if (distinctGradedCourses > 0) {
+      gpaPoints = Math.min(10 + (distinctGradedCourses - 1) * 3, 25);
+      signalsPresent += 1;
+      reasonCodes.push({
+        code: "course_grade_presence",
+        detail: `${distinctGradedCourses} course(s) with a recorded grade, no overall GPA on file`,
+      });
+    }
   }
 
   const rigorWeight = facts.courses.reduce((sum, course) => sum + (RIGOR_WEIGHT[course.level] ?? 0), 0);

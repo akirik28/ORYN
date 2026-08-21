@@ -68,18 +68,15 @@ function educationRecord(p: Partial<EducationRecord>): EducationRecord {
     start_date: null, end_date: null, is_current: true, overall_gpa: null, gpa_scale: null, notes: null,
     school_name: "Unknown School", stage: "high_school", ...stamp, ...p };
 }
-function studentInterest(label: string): StudentInterest {
-  return { id: id(), user_id: "qa", label, is_custom: false, created_at: stamp.created_at };
+function targetUniversity(p: Partial<TargetUniversity>): TargetUniversity {
+  return { id: id(), user_id: "qa", university_id: "qa-univ", program_id: null, status: "target", notes: null,
+    academic_fit_score: null, profile_fit_score: null, outlook: null, estimate_range_low: null,
+    estimate_range_high: null, outlook_confidence: null, outlook_model_version: null, outlook_calculated_at: null,
+    ...stamp, ...p };
 }
-function careerGoal(): CareerGoal {
-  return { id: id(), user_id: "qa", title: "Untitled", category: null, target_date: null,
-    priority: 0, status: "active", ...stamp };
-}
-function targetUniversity(): TargetUniversity {
-  return { id: id(), user_id: "qa", university_id: "qa-university", program_id: null, status: "target",
-    notes: null, academic_fit_score: null, profile_fit_score: null, outlook: null,
-    estimate_range_low: null, estimate_range_high: null, outlook_confidence: null,
-    outlook_model_version: null, outlook_calculated_at: null, ...stamp };
+function careerGoal(p: Partial<CareerGoal>): CareerGoal {
+  return { id: id(), user_id: "qa", category: null, target_date: null, priority: 1, status: "active",
+    title: "Untitled", ...stamp, ...p };
 }
 
 interface Persona {
@@ -95,9 +92,9 @@ interface Persona {
   researchExperiences: ResearchExperience[];
   volunteeringExperiences: VolunteeringExperience[];
   workExperiences: WorkExperience[];
-  targetUniversities: unknown[];
-  goals: unknown[];
-  interests: unknown[];
+  targetUniversities: TargetUniversity[];
+  goals: CareerGoal[];
+  interests: string[];
   skillCount: number;
   featuredCount: number;
   hasContactInfo: boolean;
@@ -167,7 +164,7 @@ const personaB: Persona = {
   researchExperiences: [],
   volunteeringExperiences: [volunteering({ title: "Food bank sorting", cause_area: "Food security", hours_per_week: 2, start_date: "2025-09-01", ongoing: true })],
   workExperiences: [],
-  targetUniversities: [{}], goals: [{}], interests: ["Entrepreneurship", "Business"],
+  targetUniversities: [targetUniversity({})], goals: [careerGoal({ title: "Get into a top business program" })], interests: ["Entrepreneurship", "Business"],
   skillCount: 4, featuredCount: 1, hasContactInfo: true, headline: "Founder & student council president", about: "Building things and running the school.",
 };
 
@@ -181,9 +178,9 @@ const personaC: Persona = {
     "reads it as a real gap rather than 'the research overwhelms everything').",
   educationRecords: [educationRecord({ country: "United Kingdom", curriculum: "a_level", overall_gpa: null, gpa_scale: null, start_date: "2024-09-01" })],
   courses: [
-    course({ course_name: "A-level Maths", subject: "Math", level: "a_level" }),
-    course({ course_name: "A-level Further Maths", subject: "Math", level: "a_level" }),
-    course({ course_name: "A-level Physics", subject: "Physics", level: "a_level" }),
+    course({ course_name: "A-level Maths", subject: "Math", level: "a_level", grade_value: "A*", grade_scale: "A*-U" }),
+    course({ course_name: "A-level Further Maths", subject: "Math", level: "a_level", grade_value: "A", grade_scale: "A*-U" }),
+    course({ course_name: "A-level Physics", subject: "Physics", level: "a_level", grade_value: "A", grade_scale: "A*-U" }),
   ],
   testScores: [],
   activities: [],
@@ -200,7 +197,7 @@ const personaC: Persona = {
   ],
   volunteeringExperiences: [],
   workExperiences: [],
-  targetUniversities: [{}], goals: [{}], interests: ["Physics", "Environmental Science"],
+  targetUniversities: [targetUniversity({})], goals: [careerGoal({ title: "Study physics at a research university" })], interests: ["Physics", "Environmental Science"],
   skillCount: 3, featuredCount: 1, hasContactInfo: true, headline: null, about: null,
 };
 
@@ -264,9 +261,8 @@ for (const p of personas) {
     educationRecords: p.educationRecords, courses: p.courses, testScores: p.testScores, activities: p.activities,
     awards: p.awards, certifications: p.certifications, projects: p.projects, researchExperiences: p.researchExperiences,
     volunteeringExperiences: p.volunteeringExperiences, workExperiences: p.workExperiences,
-    interests: (p.interests as string[]).map((label) => studentInterest(label)),
-    goals: p.goals.map(() => careerGoal()),
-    targetUniversities: p.targetUniversities.map(() => targetUniversity()),
+    interests: p.interests.map((label): StudentInterest => ({ id: id(), user_id: "qa", label, is_custom: false, created_at: stamp.created_at })),
+    goals: p.goals, targetUniversities: p.targetUniversities,
     skillCount: p.skillCount, featuredCount: p.featuredCount, hasContactInfo: p.hasContactInfo,
   });
   console.log(`\n-- computeCompleteness -- ${completeness}%`);
