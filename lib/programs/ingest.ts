@@ -152,15 +152,32 @@ export function programUrlKey(universityId: string, officialProgramUrl: string):
  * look "new" (an unrelated correctness bug) or every record would look "duplicate" (this bug,
  * again). `officialProgramUrl` is required, not optional: decideIngestion already rejects any
  * record missing it (as `insufficient_evidence`) before a dedup key is ever computed, so every
- * real call site has one — live data confirms 100% of today's rows do too. */
+ * real call site has one — live data confirms 100% of today's rows do too.
+ *
+ * `degreeType` joined the key in the dedup-key-shape pass's second round (migration 0054),
+ * found dry-running a 20-file, 2,383-record backlog against the post-0053 key: Durham and
+ * Southampton each publish the standard UK three-year Bachelor's and four-year integrated
+ * Master's as separate, separately-admitted programmes sharing the same name, degree_level,
+ * language_of_instruction, AND official_program_url (e.g. Durham's "Chemistry" as both
+ * "MChem (Hons)" and "BSc (Hons)") — degree_type is the only field distinguishing them.
+ * Checked every one of the 58 collisions this produced directly, not sampled: 100% have
+ * distinct degree_type within the group, 0% repeat a value (which would mean a genuine
+ * duplicate rather than a missing discriminator). Unlike degree_level/language_of_instruction,
+ * `degreeType` is nullable here (not every research source populates it — 98.3% on this
+ * backlog, 43.9% across the live table as a whole), so the caller passes `null` rather than
+ * omitting the argument, matching how degreeLevel/languageOfInstruction are already handled.
+ * See docs/handoffs/program-degree-type-key-decision.md for the full evidence, including the
+ * one collision shape this deliberately does NOT fix (YOK Atlas's Turkish records have no
+ * stable per-programme URL at all, so no key shape can separate them). */
 export function programDedupKey(
   universityId: string,
   normalizedName: string,
   degreeLevel: string | null,
   languageOfInstruction: string | null,
-  officialProgramUrl: string
+  officialProgramUrl: string,
+  degreeType: string | null
 ): string {
-  return `${universityId}|${normalizedName}|${degreeLevel ?? ""}|${languageOfInstruction ?? ""}|${officialProgramUrl}`;
+  return `${universityId}|${normalizedName}|${degreeLevel ?? ""}|${languageOfInstruction ?? ""}|${officialProgramUrl}|${degreeType ?? ""}`;
 }
 
 /** Pure decision function — no I/O, fully unit-testable. `existingKeys` is the set of
@@ -205,11 +222,18 @@ export function decideIngestion(record: ResearchProgramRecord, universities: rea
   }
 
   const normalizedName = normalizeProgramName(record.program_name);
-  const dedupKey = programDedupKey(universityId, normalizedName, record.degree_level ?? null, record.language_of_instruction ?? null, record.official_program_url);
+  const dedupKey = programDedupKey(
+    universityId,
+    normalizedName,
+    record.degree_level ?? null,
+    record.language_of_instruction ?? null,
+    record.official_program_url,
+    record.degree_type ?? null
+  );
   if (existingKeys.has(dedupKey)) {
     return {
       outcome: "duplicate",
-      detail: "Same university + program identity + degree level + language of instruction + official_program_url already exists.",
+      detail: "Same university + program identity + degree level + language of instruction + official_program_url + degree_type already exists.",
       universityId,
       programRow: null,
     };
