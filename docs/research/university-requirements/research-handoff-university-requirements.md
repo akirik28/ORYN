@@ -175,6 +175,133 @@ mistaking it for the live date.
 5. **Conflicts are recorded, never silently resolved.**
 6. **Unknown is a valid result.**
 
+## Techniques and rules earned since this contract was written (digested 2026-08-22)
+
+The contract above was written 2026-08-21, before the eight-lane push that took the requirements/
+deadlines corpus from ~180 records to 2,018. Everything in this section was learned during that
+push and exists only in commit messages and handoff docs until now. Each item names where it
+happened so it stays checkable rather than becoming folklore.
+
+### Extraction techniques
+
+**A PDF that `WebFetch` reports as unparseable is not lost — it saved the binary.** `WebFetch`
+returns "compressed/encoded PDF, cannot extract" for many university PDFs (confirmed on Turkish
+and Swiss sources), but the binary lands on disk regardless, and `pypdf` extracts it cleanly.
+Recovered 24 records across three Turkish PDFs in one pass — Hacettepe's admission directive (10),
+Ankara's valid-exams table (7), METU's minimum application requirements (7) — and again for a
+Swiss (UNIGE) admission-conditions PDF. `Read` cannot open these PDFs in this environment
+(`pdftoppm` not installed); go straight to `pypdf`. Source:
+`docs/research/university-requirements-uk-tr/blocked-and-partial-sources.md` ("Recovered: PDF,
+after WebFetch could not parse it"); the UNIGE record in
+`data/research/university-requirements/es_ch_requirements_unige_2026-08-21.jsonl` cites the same
+technique independently.
+
+**A PDF's own embedded `CreationDate` is an independent freshness signal `retrieved_at` does not
+capture.** A Spanish admissions document extracted perfectly and read as current — but its
+metadata showed `CreationDate: 2022`, four years stale against a 2026-27 cycle. `retrieved_at`
+records when *we* fetched the page, not when the source last meant it; for a PDF, the document's
+own metadata is a second, independent check worth reading before trusting the content as current.
+Source: `docs/ORYN-DAY-REPORT-2026-08-21.md` ("Method" section).
+
+**A JS-accordion page returns only section headings to a plain fetch — the real text does not
+exist in the DOM until the control is clicked.** Confirmed at Bocconi and Politecnico di Torino.
+Fix: run browser-tool JS that finds the button by its heading text, clicks it, waits ~800ms for
+the panel to render, then reads `document.body.innerText`. Two rough edges, unsolved: exact
+`===` string matching on button labels is fragile against embedded whitespace (fall back to
+`.includes()` or a shorter distinctive substring), and some accordions are single-open — a second
+click can collapse the first panel back down, so read and record one section fully before opening
+the next rather than batching clicks. This is a third, distinct extraction failure mode alongside
+the PDF case above and the case below — content that is genuinely client-rendered on interaction,
+not just differently packaged. Source: `docs/handoffs/fr-it-requirements-handoff.md` ("A third
+extraction technique this repo now has").
+
+**A page whose real data lives behind a keyless JSON API can be found by reading the page's own
+network calls, not by scraping its rendered HTML.** YÖK Atlas's "Tercih Sihirbazı" tool exposes a
+public, unauthenticated JSON endpoint (`api/tercih-kilavuz/search`) discovered this way — 29
+per-programme Ankara placement records (quota, score type, cut-off score, national rank) were
+captured directly from it, the first per-programme admissions data of its kind anywhere in the
+corpus, with a clear path to the other eleven Turkish universities. Source:
+`docs/handoffs/yok-atlas-placement-schema-decision.md`,
+`docs/handoffs/yok-atlas-placements-scale-12-universities.md`; corpus totals in
+`docs/ORYN-DAY-REPORT-2026-08-21.md`.
+
+### Identity and evidence discipline
+
+**An exact identifier is evidence; rank, substring, and name similarity are leads, never
+verification.** Seven near-misses in one day, every one caught by comparing the *returned entity's
+own name* against the query rather than trusting a search rank or a substring match:
+`ILIKE '%ITU%'` matched Georgia Tech for İTÜ; a ranked ROR search returned Uşak University first
+for both "Anadolu" and "Afyon Kocatepe"; Sorbonne Université was returned for a Paris 1
+Panthéon-Sorbonne query; Girne Üniversitesi was returned for Girne American University; Turgut
+Özal was returned for Malatya Turgut Özal; and two unrelated programmes at two different
+universities (Ankara Üniversitesi and a Ziraat Fakültesi programme) both display only as "Bitki
+Koruma" with no distinguishing text beyond degree level and institution — a same-name collision a
+naive dedup pass would silently merge. Source: `docs/ORYN-DAY-REPORT-2026-08-21.md` ("Method");
+Bitki Koruma detail in `docs/handoffs/yok-atlas-placement-schema-decision.md` and
+`docs/handoffs/yok-atlas-placements-scale-12-universities.md`. See also
+[[feedback-verify-identity-not-pattern-match]] in project memory, which this generalizes.
+
+**Assert a structured field only from the subject institution's own words — a contrastive quote
+sitting in the same record is not a claim about the subject.** Southampton's own page names IELTS
+"One Skill Retake" as an accepted test variant (`requirement_text`, verbatim, source:
+`southampton.ac.uk/.../language.page`) — but the record's `researcher_notes` also quotes Edinburgh
+verbatim ("We do not accept IELTS One Skill Retake...") for contrast, because the two UK
+universities give opposite answers on the identical test variant. The contrast is genuinely useful
+— it's the strongest evidence in the corpus that score provenance has to be stored per institution,
+not treated as a global property of a test — but it means the record's own free text contains a
+refusal sentence that belongs to a different university than the one the record is about. Nothing
+in `requirement_text` or any structured field was ever wrong here; the risk is a downstream reader
+or process treating text inside `researcher_notes` as if it describes the record's own subject.
+The rule this earns: only the structured fields (`requirement_text`, `verification_state`, etc.)
+carry the subject's asserted fact; a contrastive quote belongs in `researcher_notes` prose only,
+never promoted into a structured field without re-attributing it to whichever institution actually
+said it. Source: `data/research/university-requirements/uk_tr_requirements_batch3_2026-08-21.jsonl`,
+record `REQ-2026-08-21-9211`.
+
+### Coordination discipline
+
+**Identifier and migration-number ranges must be explicitly claimed, never taken by incrementing
+past the last number you happen to see — two lanes working from a stale view will independently
+pick the same next number.** Three real collisions in about a day, all the same root cause:
+- `RULE-COUNSEL-034` through `064` were independently minted by two branches with unrelated
+  content at the same numbers; resolved by renumbering one side's range to `200-230` by mutual
+  agreement rather than a unilateral edit (commit `9db459e`, with the full range correction in
+  `b3cf993` after an initial fix under-scoped it to just one rule).
+- Migration `0056` was independently claimed by both `kilavuz_kodu` (this requirements lane's
+  ingestion work) and `0056_requirement_shape_representability`, already on `main`; the
+  `kilavuz_kodu` migration was renumbered to `0057` (commit `c710acc`, whose own message names
+  this "the same class as the RULE-COUNSEL-001 collision two lanes produced overnight").
+- The requirements/deadlines record contract in this file was written with the same risk in mind
+  from the start — `research_requirement_id`/`research_deadline_id` are date-plus-sequence, and
+  every lane's closing summary explicitly re-checks its own IDs against the *entire* existing
+  corpus (not just its own files) before calling a batch complete, which is the same "verify
+  against the full live range, don't trust your last-seen number" discipline stated as a rule
+  above, applied prophylactically. See `docs/research/university-requirements/us-requirements-deadlines-summary.md`
+  and `de-nl-requirements-deadlines-summary.md`, "Validation performed."
+
+### Deadline modeling
+
+**Deadline dating is a per-institution property, not a per-country one — do not infer a whole
+country's pattern from one university.** Within the UK alone, the University of Glasgow states
+undated recurring deadlines ("15 October", "14 January", "30 June") while TU Berlin, in the same
+DE/NL batch this rule was drawn from, dates every single deadline. The `recurring_annual_undated`
+rate measured across the DE/NL lane's 16 universities ranged from 0% (TU Berlin) to 92%
+(Heidelberg) — inside two countries usually treated as a single "continental Europe" pattern. This
+is the reason `recurrence` (§ above) exists as a per-record field rather than a per-country
+default. Source: `docs/research/university-requirements/de-nl-requirements-deadlines-summary.md`.
+
+**A financial-aid subdomain frequently labels a cohort by *enrollment* year while the admissions
+subdomain on the same site labels by *admissions cycle* year — the identical-looking label string
+can mean two different years for the same entry class.** First flagged by the Columbia agent in
+the DE/NL→US handoff, then independently confirmed live four separate times: Columbia itself,
+Georgia Tech (financial aid's "2026-27" meant Fall 2026 entry; admissions' "2026-27 cycle" meant
+Fall 2027 entry — a full year apart under the identical string), and UC Berkeley and UCLA
+independently on the same UC-systemwide stale page (`ca-dream-act.html`). Four independent hits
+across four institutions makes this a standing check for any future pass touching financial-aid
+dates, not a one-off quirk. Source:
+`docs/research/university-requirements/us-requirements-deadlines-summary.md`, "The
+cross-institutional year-offset trap."
+
 ## Known gap in the ingestion path
 
 27 of the 73 records in batches 1-2 cite official sources that
