@@ -788,6 +788,8 @@ export interface UniversityProgram {
   data_confidence: DataConfidence;
   created_at: string;
   updated_at: string;
+  /** YOK Atlas's own per-programme identifier. Not backfilled for existing rows -- see migration 0056. */
+  kilavuz_kodu: string | null;
 }
 export type UniversityProgramInsert = Insertable<
   UniversityProgram,
@@ -816,6 +818,7 @@ export type UniversityProgramInsert = Insertable<
   | "admissions_url"
   | "source_url"
   | "notes"
+  | "kilavuz_kodu"
 >;
 export type UniversityProgramUpdate = Updatable<UniversityProgram, "id" | "university_id" | "created_at" | "updated_at">;
 
