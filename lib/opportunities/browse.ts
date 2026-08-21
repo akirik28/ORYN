@@ -2,6 +2,7 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Opportunity, OpportunityCategory } from "@/types/database";
+import { canonicalCountryKey, isSameCountry } from "./matching";
 
 export interface OpportunityBrowseFilters {
   q?: string;
@@ -42,13 +43,23 @@ export async function browseOpportunities(
   let query = supabase.from("opportunities").select("*").eq("status", "active");
 
   if (filters.category) query = query.eq("category", filters.category);
-  if (filters.country) query = query.eq("country", filters.country);
   if (filters.remoteOnly) query = query.eq("remote_allowed", true);
   if (filters.freeOnly) query = query.or("cost.is.null,cost.eq.0");
   if (filters.cycleStatus) query = query.eq("cycle_status", filters.cycleStatus);
 
   const { data } = await query;
   let opportunities = data ?? [];
+
+  // Country also runs as an application-code filter rather than `.eq("country", ...)`:
+  // opportunities.country is free text, and the same real country can be spelled multiple
+  // ways ("Turkey" / "Türkiye" — confirmed live). isSameCountry is the one equivalence rule
+  // the "For you" matching path already uses for eligibility (lib/opportunities/matching.ts);
+  // reusing it here means a student filtering Browse-all sees the same country boundary
+  // "For you" already drew, instead of a second rule that could silently disagree with it.
+  if (filters.country) {
+    const selected = filters.country;
+    opportunities = opportunities.filter((o) => o.country && isSameCountry(o.country, selected));
+  }
 
   // Free text runs as an application-code filter, not a DB `.or()` clause: PostgREST's
   // `.or()` filter string is a comma-delimited DSL, and a student's own search text can
@@ -133,13 +144,27 @@ export async function getOpportunityFacets(supabase: SupabaseClient<Database>): 
     count: rows.filter((r) => r.category === category).length,
   }));
 
-  const countryTally = new Map<string, number>();
+  // Grouped by canonical country key (the same equivalence rule the "For you" matching path
+  // uses), not the raw string — otherwise one real country spelled two ways in the data
+  // ("Turkey" / "Türkiye") shows as two options, and picking either one only ever surfaces
+  // half the real matches. Each bucket still needs a single display string; rather than
+  // hardcoding a preferred spelling per country, this picks whichever raw spelling is most
+  // common within that bucket (ties broken alphabetically, for determinism), so the label
+  // reflects the data rather than an assumption baked into this function.
+  const countryBuckets = new Map<string, { count: number; labelCounts: Map<string, number> }>();
   for (const row of rows) {
     if (!row.country) continue;
-    countryTally.set(row.country, (countryTally.get(row.country) ?? 0) + 1);
+    const key = canonicalCountryKey(row.country);
+    const bucket = countryBuckets.get(key) ?? { count: 0, labelCounts: new Map<string, number>() };
+    bucket.count += 1;
+    bucket.labelCounts.set(row.country, (bucket.labelCounts.get(row.country) ?? 0) + 1);
+    countryBuckets.set(key, bucket);
   }
-  const countries = [...countryTally.entries()]
-    .map(([country, count]) => ({ country, count }))
+  const countries = [...countryBuckets.values()]
+    .map(({ count, labelCounts }) => {
+      const [label] = [...labelCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0];
+      return { country: label, count };
+    })
     .sort((a, b) => b.count - a.count || a.country.localeCompare(b.country));
 
   return { categoryCounts, countries };

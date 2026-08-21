@@ -148,6 +148,24 @@ export async function completeOnboarding(input: CompleteOnboardingInput): Promis
         .from("student_interests")
         .insert(data.interests.map((label) => ({ user_id: userId, label, is_custom: !KNOWN_INTERESTS.has(label) })));
     }
+    // profiles above stores this same school/curriculum/country for quick reads, but
+    // education_records is what completeness checks and the Advisor's nudges actually
+    // query — without this insert, a student was told "Add an education record" about
+    // the school they'd just entered two steps earlier. schoolName/schoolId are already
+    // server-verified above; graduationYear isn't a real date, so it isn't forced into
+    // start_date/end_date rather than guessed.
+    await supabase.from("education_records").insert({
+      user_id: userId,
+      school_name: schoolName,
+      school_entity_id: schoolId,
+      country: data.country,
+      curriculum: data.curriculum,
+      start_date: null,
+      end_date: null,
+      overall_gpa: null,
+      gpa_scale: null,
+      notes: null,
+    });
     if (data.extractedItems && data.extractedItems.length > 0) {
       const byCategory = new Map<string, typeof data.extractedItems>();
       for (const item of data.extractedItems) {
