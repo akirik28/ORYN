@@ -147,9 +147,10 @@ Machine-readable companions live in `data/research/canonical-entities/`:
   verification-state evidence audit, all from running `lib/entities/audit.ts`'s actual code
   against a live registry snapshot.
 - `italy-netherlands-alias-research.json` — companion to `09` Finding 9: ROR-sourced
-  `translation`/`abbreviation`/`common` alias candidates for all 13 Dutch and a priority 12 of 38
-  Italian universities, closing (Netherlands) or narrowing (Italy) the thin-alias-coverage gap
-  that Finding originally only diagnosed.
+  `translation`/`abbreviation`/`common` alias candidates for all 13 Dutch and 22 of 38
+  Italian universities, closing (Netherlands) or substantially narrowing (Italy) the
+  thin-alias-coverage gap that Finding originally only diagnosed. Also surfaces two small
+  display-name candidates (Roma Tre, University of Bari).
 
 ## Method and source standard
 

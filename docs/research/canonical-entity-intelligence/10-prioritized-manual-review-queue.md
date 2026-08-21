@@ -203,13 +203,13 @@ wrong.
 **11. Improve alias coverage for countries outside the actively-researched corpus — Italy (3/38)
 and the Netherlands (0/13) confirmed thin-to-absent, likely the norm elsewhere too. Partially
 done, late in this session, not just recommended.** `09` Finding 9. The Netherlands gap is now
-fully closed (13/13 researched) and Italy has a first batch (12/38, the highest search-likelihood
+fully closed (13/13 researched) and Italy has a growing batch (22/38, the highest search-likelihood
 institutions) — real, ROR-sourced `translation`/`abbreviation`/`common` candidates, including the
 two specific forms this item named ("La Sapienza," "Milan Polytechnic"), both confirmed real:
 `data/research/canonical-entities/italy-netherlands-alias-research.json`. Same shape as the
 opportunity-organizer/school alias work elsewhere in this package — not written to
 `entity_aliases` (no write access this session), a candidate list for whoever does. The
-remaining 26 Italian universities, and any other country beyond these two, remain unresearched —
+remaining 16 Italian universities, and any other country beyond these two, remain unresearched —
 this batch prioritized the institutions an ORYN student is most likely to actually search for,
 not exhaustive coverage.
 

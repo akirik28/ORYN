@@ -312,12 +312,19 @@ had dedicated *alias* research specifically, regardless of how much other kinds 
 this session.** `10` item 11 flagged this as "worth filling once higher-priority items are
 clear" — with several higher-priority items now resolved (§ this document's other late updates),
 this session did the actual research rather than leaving it queued: **all 13 Dutch universities**
-(full closure of the 0/13 gap) and **12 of the 38 Italian universities** (the highest
-search-likelihood subset — Bocconi, Sapienza, the two Politecnici, Bologna, Ca' Foscari, Milan,
-Università Cattolica, Padova, Turin, Naples Federico II, Pisa), each with real
+(full closure of the 0/13 gap) and **22 of the 38 Italian universities**, extended across two
+batches in this same session (the highest search-likelihood subset first — Bocconi, Sapienza, the
+two Politecnici, Bologna, Ca' Foscari, Milan, Università Cattolica, Padova, Turin, Naples
+Federico II, Pisa — then a second batch of ten more), each with real
 `translation`/`abbreviation`/`common`-type alias candidates confirmed directly against ROR's own
 `names` field (not recalled from memory, not guessed) — including the two specific forms this
 Finding named as likely missing, **"La Sapienza"** and **"Milan Polytechnic"**, both confirmed.
+The second batch also surfaced two small, real display-name findings, not just aliases: **"Roma
+Tre"'s stored `display_name` is missing the word "Studi"** compared to its own official Italian
+name (`"Università degli Studi Roma Tre"`, confirmed via ROR — a plausible companion to the
+already-known "Universit degli Studi della Campania" missing-à defect), and **"University of Bari"
+predates the institution's current full official name, "University of Bari Aldo Moro"** (ROR's
+own canonical form) — both flagged as candidates, not fixed, this session having no write access.
 Full candidate list, alias types, and a few explicit collision/ambiguity cautions (e.g. "UM" for
 Maastricht University would be a third live claimant on an already-collision-prone abbreviation,
 per `06`'s existing `RULE-ENTITY-006`): `data/research/canonical-entities/
