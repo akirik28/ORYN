@@ -7,7 +7,8 @@
       "high": "Distinctness confirmed by independent ROR record(s) and/or independent official domains, checked directly this session.",
       "medium": "Core distinctness confirmed at high confidence, but a specific supporting detail (a date, a legal mechanism, a historical narrative) rests on secondary/news sourcing not independently confirmed against a primary document this session.",
       "low": "Not used in this file — every case here reached at least medium confidence on its core claim; lower-confidence sub-details are noted in trap_description/recommendation text instead of lowering the whole case."
-    }
+    },
+    "case_count_note": "This cases array has 17 entries, not 16: 15 numbered collision-trap cases from the original research pass, one negative-result entry (Boğaziçi Üniversitesi / ODTÜ, deliberately included so the checked-and-clean result is recorded, not a numbered case), and one 16th numbered case (University of Maryland system) added late in the same session after a POSSIBLE_DUPLICATE spot-check in 17-canonical-entity-autocomplete-system.md surfaced it. The parent document's own closing line says 'Sixteen cases' -- referring to the 16 numbered cases, not this array's raw length. Added during a consistency audit late in this session so a naive cases.length read isn't surprised by 17."
   },
   "cases": [
     {

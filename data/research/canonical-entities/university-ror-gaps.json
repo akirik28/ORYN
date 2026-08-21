@@ -136,13 +136,15 @@
       "display_name": "Moscow Institute of Physics and Technology (MIPT / Moscow Phystech)",
       "id": "31e57b01-3a8b-47ff-b337-f169d44d9961",
       "city": "Dolgoprudny",
-      "country": "Russia"
+      "country": "Russia",
+      "verified_clean": "ror.org/00v0z9322, exact match, active"
     },
     {
       "display_name": "National Chung Hsing University",
       "id": "7e9d7dd4-b981-4955-b30d-26584fdd669e",
       "city": "Taichung City",
-      "country": "Taiwan"
+      "country": "Taiwan",
+      "verified_clean": "ror.org/05vn3ca78, exact match, active"
     },
     {
       "display_name": "Near East University",
@@ -202,20 +204,6 @@
       "city": "Quezon City",
       "country": "Philippines",
       "WARNING_verified_live_against_ror_api": "Same Mode A shape as Purdue (05-duplicate-detection-rules.md): ROR's top match for 'University of the Philippines' is the DILIMAN-campus-specific entity (ror.org/03tbh6y23, city Quezon City -- matching ORYN's own city value), which itself has a PARENT relationship to 'University of the Philippines System' (ror.org/02hqkr514). ORYN's row has no campus qualifier in its name, so a researcher must decide deliberately whether it means the system or specifically Diliman (the flagship, most likely candidate given the matching city) -- do not attach either id without that decision."
-    },
-    {
-      "display_name": "Moscow Institute of Physics and Technology (MIPT / Moscow Phystech)",
-      "id": "31e57b01-3a8b-47ff-b337-f169d44d9961",
-      "city": "Dolgoprudny",
-      "country": "Russia",
-      "verified_clean": "ror.org/00v0z9322, exact match, active"
-    },
-    {
-      "display_name": "National Chung Hsing University",
-      "id": "7e9d7dd4-b981-4955-b30d-26584fdd669e",
-      "city": "Taichung City",
-      "country": "Taiwan",
-      "verified_clean": "ror.org/05vn3ca78, exact match, active"
     }
   ],
   "coverage_note": "70 total minus 8 (duplicate-supersession group) minus 16 (genuine-single-row group listed above) leaves ~46 unenumerated -- these are almost entirely the same 'orphan' canonical_entities rows already fully enumerated in duplicate-candidates-university.json's 'incomplete' side (confirmed by cross-checking display names live: Boston University, Yale, Princeton, the UC campuses, etc. all reappear here with univ_row_count=0, consistent with that file). Not re-listed here to avoid duplicating that file -- see duplicate-candidates-university.json for those.",

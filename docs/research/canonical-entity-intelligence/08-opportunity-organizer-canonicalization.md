@@ -46,7 +46,7 @@ collapsing to one canonical entity would erase:
 | Named center/initiative within a school | `Horn Entrepreneurship, University of Delaware`, `Center for Education in Mathematics and Computing (CEMC), University of Waterloo`, `Parr Center for Ethics, University of North Carolina at Chapel Hill`, `Wharton AI & Analytics Initiative, University of Pennsylvania`, `Wharton Sports Analytics and Business Initiative / Wharton Global Youth Program` |
 | Named program/competition run by that center | `PennApps, University of Pennsylvania`, `MIT Battlecode`, `Wharton Global Youth Program` |
 
-**Six distinct organizer strings trace back to the University of Pennsylvania alone** in this
+**Seven distinct organizer strings trace back to the University of Pennsylvania alone** in this
 369-row table: the university itself (×2 rows), "- Wharton School", "The Wharton School... (Wharton
 Global Youth Program)", "Perelman School of Medicine... (Penn Medicine)", "Wharton Sports Analytics
 and Business Initiative / Wharton Global Youth Program", "Wharton AI & Analytics Initiative", and

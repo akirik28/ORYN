@@ -147,7 +147,7 @@ as the source that already knows about it. Full detail and the exact successor c
 updated live-succession-examples section.
 
 **What this means for the enrichment recommendation, restated correctly:** it is not a purely
-mechanical, risk-free run for every one of the 111 combined candidates (43 + 70) — of the 16
+mechanical, risk-free run for every one of the 113 combined candidates (43 + 70) — of the 16
 France/Germany-heavy "genuine single-row gap" candidates specifically, 2 of them (not counting
 Rutgers' 2 rows in the same list) turned out to be live succession cases, not simple gaps. For any
 candidate where ORYN's own entity granularity might be finer than the source registry's (a

@@ -25,8 +25,10 @@ Query: pairwise `similarity(a.search_key, b.search_key)` within `entity_type` fo
 `university`, which already has the exact-match method well-covering it at that type's scale),
 threshold `>0.5`, excluding pairs that already share a `normalized_name` (already covered by other
 methods). Full candidate table: `data/research/canonical-entities/trigram-similarity-candidates.json`.
-19 candidate pairs surfaced, entirely within `entity_type='school'` (the other four types had no
+18 candidate pairs surfaced, entirely within `entity_type='school'` (the other four types had no
 pair above the threshold — consistent with `09`'s earlier finding that these types are small).
+(Corrected during a consistency audit late in this session — this said "19" against the JSON
+file's actual 18 entries.)
 
 ### Flagship worked example, researched to a sourced conclusion: NOT a duplicate
 
@@ -82,9 +84,17 @@ chased down this session.
 
 1. Do not build an automated trigram-similarity-to-review-queue pipeline without first
    implementing the generic-suffix-stripping refinement above — an unfiltered version would flood
-   a review queue with noise (18 of 19 candidates here) for every one genuinely valuable hit.
+   a review queue with noise (14 of 18 candidates here are clearly suffix-driven, 2 more only
+   `"likely"`/`"partially"` so per each entry's own `suffix_driven` field) for every one genuinely
+   valuable hit.
 2. The Saint-Joseph finding is a clean, resolved research result — no further action needed,
-   recorded here so it is never re-flagged as a false "possible duplicate" by a future pass.
+   recorded here so it is never re-flagged as a false "possible duplicate" by a future pass. **A
+   second pair in the same file is the identical shape and equally resolved, not previously
+   called out in this document's prose**: "MEF International School Izmir" vs. "MEF International
+   School Istanbul" (`suffix_driven: false`) — two real, separate MEF-network campuses, already
+   correctly modeled as distinct entities both `part_of` MEF Okulları per live
+   `entity_relationships` (`03`). Exactly 2 of the 18 candidates are genuinely resolved
+   non-duplicates, not 1.
 3. `data/research/canonical-entities/trigram-similarity-candidates.json` preserves the full
-   19-pair list (including the 18 suffix-driven low-signal ones) for anyone who later builds the
-   suffix-stripping filter and wants a labeled test set to validate it against.
+   18-pair list (including the 16 suffix-driven-or-partially-so low-signal ones) for anyone who
+   later builds the suffix-stripping filter and wants a labeled test set to validate it against.

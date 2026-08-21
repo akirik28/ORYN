@@ -232,7 +232,7 @@ duplicate at all. This splits cleanly into two distinct, differently-actionable 
   already-consolidated identity that the run's write path may not have revisited); it just means
   the claimed coverage figure and this session's direct, entity-level query diverge for exactly
   these 8, worth Claude A's own look rather than this session guessing at the mechanism further.
-- **18 single-row universities with no duplicate involved at all** — genuine, uncomplicated
+- **16 single-row universities with no duplicate involved at all** — genuine, uncomplicated
   enrichment gaps, spanning several of ORYN's explicit target countries: Université de
   Franche-Comté and Université Paul Sabatier Toulouse III (France), University Duesseldorf
   (Germany), plus Al-Quds University, Eastern Mediterranean University, European University of
@@ -243,21 +243,24 @@ duplicate at all. This splits cleanly into two distinct, differently-actionable 
   `data/research/canonical-entities/university-ror-gaps.json`.
 
 ## Finding 8 (cross-lane observation, not this package's table to act on): `program_research_queue`
-carries 32 stale `unresolved_university` rows for 9 institutions that now fully exist
+carries 32 stale `unresolved_university` rows for 10 institutions that now fully exist
 
 `program_research_queue` (530 accepted / 32 `unresolved_university` / 29 `insufficient_evidence`
 / 1 rejected / 1 duplicate) is owned by the programs/opportunities lane, not this package — noted
 here only because verifying it touches this package's exact subject matter and the finding is
-concrete. All 32 `unresolved_university` rows (`university_id` is `null` on every one) name
-exactly the same 9 institutions this exact package independently confirmed already exist as
-fully-enriched `canonical_entities`/`universities` rows: Constructor University, École
-Polytechnique, ESCP Business School, ESSEC Business School, Frankfurt School of Finance and
-Management, LMU Munich, LUISS Guido Carli, Özyeğin University, Université Paris Dauphine - PSL,
-University of St. Gallen — the identical 9 (plus the École Polytechnique identity question) a
-prior handoff (`docs/handoffs/claude-b-to-claude-a.md`) already recorded as resolved on
-2026-08-17. Direct check confirms all 9 now carry ROR (`University of St. Gallen` has ROR only;
-the rest have ROR+GRID+ISNI+Wikidata, several also CrossRef Funder) — this is not a genuine
-identity gap. These 32 rows were created `2026-08-17T12:56:49Z`, timed close to when the fix
+concrete. **Corrected during a consistency audit late in this session** — this originally said
+"9 institutions," miscounting its own enumerated list, which has always had 10: direct query
+against the live `program_research_queue` table (`group by university_name_input`) confirms 10
+distinct names, summing to exactly 32 rows (3+3+1+2+3+4+4+4+4+4). All 32 `unresolved_university`
+rows (`university_id` is `null` on every one) name exactly these 10 institutions, every one of
+which this exact package independently confirmed already exists as a fully-enriched
+`canonical_entities`/`universities` row: Constructor University, École Polytechnique, ESCP
+Business School, ESSEC Business School, Frankfurt School of Finance and Management, LMU Munich,
+LUISS Guido Carli, Özyeğin University, Université Paris Dauphine - PSL, University of St.
+Gallen — the identical 10 a prior handoff (`docs/handoffs/claude-b-to-claude-a.md`) already
+recorded as resolved on 2026-08-17. Direct check confirms all 10 now carry ROR (`University of
+St. Gallen` has ROR only; the rest have ROR+GRID+ISNI+Wikidata, several also CrossRef Funder) —
+this is not a genuine identity gap. These 32 rows were created `2026-08-17T12:56:49Z`, timed close to when the fix
 landed, and appear to be a second wave of program candidates citing the same universities that
 was never re-run through the resolver after the fix. **This package makes no recommendation about
 `program_research_queue` itself** (not its table, not its lane) beyond surfacing the exact

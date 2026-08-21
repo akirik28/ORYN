@@ -90,8 +90,10 @@ schema-required, DB-enforced, and 0% populated. Not this session's to build (wou
 access and a real decision on the disputed-territory edge cases), but it's a self-contained,
 one-time bulk operation unlike everything else in this handoff.
 
-**6. Populate `opportunities.organization_entity_id` — every one of the 171 distinct organizer
-strings now has a researched candidate**, not just the high-value clusters:
+**6b. Populate `opportunities.organization_entity_id` — every one of the 171 distinct organizer
+strings now has a researched candidate**, not just the high-value clusters (renumbered from a
+duplicate "6" during a consistency audit late in this session, matching this package's own
+`1b`/`3b` convention elsewhere rather than renumbering every item after it):
 `opportunity-organizer-candidates.json` (Penn/Wharton, MIT, next-tier) plus
 `opportunity-organizer-candidates-batch2.json` (the remaining 147: 118 high confidence, 28
 medium, 1 low, `13`). Most of the ≥2-occurrence organizers (Stanford, CMU, Northwestern, Columbia,
