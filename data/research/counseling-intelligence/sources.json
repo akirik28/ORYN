@@ -553,6 +553,18 @@
       "claim_supported": "Turkey's 'sosyal çalışmacı' (social worker) title is officially defined by MEB regulation as requiring a bachelor's-level Sosyal Hizmet degree specifically; associate-degree graduates receive a different, narrower title and may not be appointed to sosyal çalışmacı positions.",
       "used_in_rules": ["RULE-COUNSEL-099"],
       "limitations": "MEB's own regulation text was accessed via secondary/university citation in this pass, not fetched directly from MEB's own site the way the peer session directly fetched MEB material for its 18-education-teaching.md — a real, self-flagged sourcing-rigor gap relative to that document."
+    },
+    {
+      "id": "SRC-CS-047",
+      "title": "EBAU / prueba de acceso a la universidad — official weighting description",
+      "publisher": "La Moncloa (official Spanish government press office) and Ministerio de Educación, Formación Profesional y Deportes (Spain's Ministry of Education, official .gob.es domain)",
+      "url": "https://www.lamoncloa.gob.es/serviciosdeprensa/notasprensa/educacion-fp-deportes/paginas/2024/ebau-evau-evaluacion-acceso-universidad.aspx",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Spain's EBAU admission grade is computed as 60% Bachillerato average + 40% mandatory-phase exam score, confirmed independently by both La Moncloa and the Ministry of Education's own official pages.",
+      "used_in_rules": ["RULE-COUNSEL-074"],
+      "limitations": "Confirms the weighting mechanism officially; does not itself make an explicit statement about the absence of extracurricular weighting, which remains sourced from admissions-guidance secondary description (SRC-CS-036)."
     }
   ]
 }

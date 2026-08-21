@@ -178,8 +178,16 @@ countries this package cannot research individually.
   unaddressed, this document spot-checked one additional representative case: **Spain**, whose
   EBAU/Selectividad system computes admission as **60% high-school grades + 40% national exam
   score**, with sourced guidance stating plainly "there is no interview, no essay, no
-  extracurricular that tips the scale." (Source: Spain-admissions-guidance sources — medium
-  confidence.) [[RULE-COUNSEL-074]] **Combined with the five countries researched in depth above,
+  extracurricular that tips the scale." **Mechanism upgraded to official-source confidence on a
+  follow-up pass**: the exact 60/40 weighting is independently confirmed by Spain's own government
+  — both **La Moncloa** (the official Spanish government press office, `lamoncloa.gob.es`) and the
+  **Ministry of Education, Vocational Training and Sports** (`educacionfpydeportes.gob.es`, the
+  actual `.gob.es` ministry domain) state the identical formula. (Source: `lamoncloa.gob.es` and
+  `educacionfpydeportes.gob.es` — official, high confidence for the weighting mechanism; the "no
+  extracurricular" characterization specifically remains sourced from admissions-guidance
+  secondary description, not a direct government statement of that absence, so that narrower claim
+  stays medium — the same mechanism/specific-claim split already applied to Germany, Netherlands,
+  and Italy above.) [[RULE-COUNSEL-074]] **Combined with the five countries researched in depth above,
   this gives a 7-country European sample where 5 (Germany, Netherlands, Italy-public, Switzerland,
   Spain) are Tier 3 (formula/credential-driven, no meaningful activity weight) and only 2 (UK,
   France) show real holistic elements.** The reasoned, honestly-labeled fallback this document
@@ -304,6 +312,8 @@ conditioning would produce technically-accurate-but-strategically-misleading gui
   weighted input. Confidence: medium (general pattern, not verified per-institution).
 - `RULE-COUNSEL-074` — Spain's EBAU/Selectividad system is Tier 3 (60% grades + 40% national exam,
   explicitly no extracurricular weight) — a representative additional European Tier-3 data point.
+  Confidence: high for the 60/40 weighting mechanism (upgraded via official `.gob.es` sources on a
+  follow-up pass), medium for the specific "no extracurricular weight" characterization.
   Confidence: medium.
 - `RULE-COUNSEL-075` — For a European country not specifically researched by this package, default
   to a Tier-3 (formula/credential-driven) assumption until specifically verified otherwise, based
