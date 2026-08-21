@@ -618,7 +618,23 @@ next step," a new paragraph on tonight's direct-primary-source-verification patt
 to fix roughly as often as it confirmed), Persona J's mechanism-naming sharpening folded into the
 unresolved-items list, and a new unresolved item 5 for the recommendation-type gap.
 
-**Runway status, 05:02 Europe/Istanbul (checked directly)**: about 5h58m left. Both sessions'
+## German professional-body sourcing cluster completed (`3506aa6`, `d2e54a4`)
+
+Direct-fetched two more official German bodies, completing the set of four this branch's family
+docs cite: **BRAK** (Bundesrechtsanwaltskammer)'s own student-facing "Juristenausbildung" page for
+law (`RULE-COUNSEL-104`) — precise breakdown (5-year Jurastudium/10 semesters, First exam 70%
+state/30% coursework, 2-year Referendariat, Second Staatsexamen), BRAK's own page giving ~9 years
+total, sharper than this package's earlier "7-11 years" range. **BMG** (Bundesministerium für
+Gesundheit, the Federal Ministry of Health itself) for clinical psychology (`RULE-COUNSEL-105`) —
+directly quoted, resolving that source's own previously-flagged "no consolidated federal ministry
+statement" limitation. Combined with medicine (Bundesärztekammer) and architecture
+(Bundesarchitektenkammer) already done, **all four German professional-body citations this branch's
+family docs make are now direct official-source quotes, not secondary guidance** — medicine, law,
+psychology, architecture all upgraded to `high` confidence. **121 rules / 61 sources** (all
+in-place upgrades, counts unchanged from the previous checkpoint). Self-consistency re-checked
+after each, still clean throughout.
+
+**Runway status, 05:07 Europe/Istanbul (checked directly)**: about 5h52m left. Both sessions'
 explicit mission-brief deliverables have real coverage; remaining time being spent on genuine
 deepening — primary-source verification, cross-framework stress-testing, and following up gaps
 this package finds in itself — rather than new breadth for its own sake.
