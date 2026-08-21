@@ -129,6 +129,20 @@ because they're less occupation-specific than the listed roles, not evidence the
 No Turkey-specific equivalent to DECA/FBLA/Young Enterprise was identified in this pass — flagged in
 `10-open-questions.md`.
 
+**A distinct admissions-stage mechanism, following up the same cross-cutting situational-judgment-
+test lead as `05-engineering-me-ce-ae-ee.md`'s equivalent note (RULE-COUNSEL-244) and
+`18-education-teaching.md`'s (RULE-COUNSEL-243):** Casper is also marketed for business-education
+admissions generally, but the only specific adopter confirmed by direct fetch this pass —
+**Dalhousie University's Faculty of Management, MBA program** [S-CASPER-BUS] — is **graduate-level**,
+not the undergraduate/high-school-applicant stage ORYN's population actually sits at. **RULE-COUNSEL-
+245 (new):** unlike family 05's Western University engineering finding (confirmed undergraduate,
+directly relevant to ORYN's population), this family's one confirmed Casper adopter is an MBA
+program a current ORYN student would apply to a decade or more later, if at all — do not present this
+as evidence that a *current* business-interested high schooler will encounter Casper; it establishes
+the assessment-category pattern generalizes here too, not that it is imminently relevant to this
+family's actual undergraduate admissions stage. A genuine, honestly-scoped negative-ish finding
+rather than a forced parallel to family 05's stronger result.
+
 ## Sources referenced in this document
 
 | ID | Source | Type | Confidence | Used for |
@@ -137,6 +151,7 @@ No Turkey-specific equivalent to DECA/FBLA/Young Enterprise was identified in th
 | S-DECA-FBLA | [DECA — Competitive Events (deca.org/compete)](https://www.deca.org/compete), corroborated by secondary sources for FBLA's parallel structure (fbla.org itself not directly located this pass) | Official for DECA's own page; secondary for FBLA specifically | High for DECA (direct official URL located, confirming three event types — role-play/case-study, online simulations, and a **Business Operations Research Events** category, individually or in teams of up to three, designing and conducting original research on an annually-changing topic — closer to this package's `research` construct than to a role-play simulation); medium for FBLA (not independently re-located at fbla.org this pass) | §4 |
 | S-YE-UK | [Young Enterprise — Company Programme](https://www.young-enterprise.org.uk/what-we-do/programmes/company-programme), corroborated by [GOV.UK's own business-support listing](https://www.gov.uk/business-finance-support/young-enterprise) | Official (UK-registered charity; independently corroborated by a GOV.UK listing) | High | §7 |
 | S-ISKUR-FUTURE | İŞKUR Geleceğin Meslekleri (see `01-computing-information-sciences.md` §7) | Official (Turkey) | High for the document; names 5 business-adjacent occupations | §7 |
+| S-CASPER-BUS | [Acuity Insights — Business Education solutions page](https://acuityinsights.com/solutions/business-education/) (directly fetched) | Official (vendor page, naming one specific adopter) | High for the one confirmed adopter (Dalhousie University Faculty of Management, MBA); this is graduate-level, weak evidence of relevance to ORYN's actual undergraduate-applicant population | new paragraph after §7 |
 
 US-specific BLS data; UK Young Enterprise detail verified directly against its own site plus a
 GOV.UK corroboration. Turkey partially verified via the İŞKUR future-occupations list; EU-specific

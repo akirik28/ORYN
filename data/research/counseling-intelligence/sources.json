@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "package": "oryn/counseling-intelligence-research",
-  "last_updated": "2026-08-21T05:10:00+03:00",
+  "last_updated": "2026-08-21T05:25:00+03:00",
   "method_note": "Priority order and discipline documented in full in docs/research/counseling-intelligence/00-overview.md's \"Method and source standard\" section. Blogs/aggregators appear here only where no higher-tier source was fetchable, and are always source_type discovery_or_secondary with confidence capped at medium. [Updated 2026-08-21] Merged with this session's own source shard (originally sources-session2.json, 45 sources, prefix S-<NAME> not SRC-### so no ID collision existed): docs 03, 06-major-family-evidence/00+01-09, 07, 08, 14. This file is still not yet merged with the peer branch's own separate, larger sources.json on oryn/counseling-intelligence-research-013956 -- that cross-branch merge remains the final integration step.",
   "sources": [
     {
@@ -1058,6 +1058,38 @@
       "limitations": "Acuity Insights' own page does not name specific institutional adopters (found via separate institutional pages instead); the search/fetch performed this pass did not confirm or rule out any US teacher-education program's use of Casper, only medicine's separately-documented ~50-school US footprint (a different family, sourced elsewhere).",
       "used_in": [
         "docs/research/counseling-intelligence/06-major-family-evidence/18-education-teaching.md"
+      ]
+    },
+    {
+      "id": "S-CASPER-ENG",
+      "title": "Casper situational-judgment test used for undergraduate engineering admissions",
+      "url": "https://acuityinsights.com/news/western-university-embraces-holistic-admissions/",
+      "additional_urls": [],
+      "publisher": "Acuity Insights (vendor press release, quoting Western University's own Assistant Dean of First Year Studies)",
+      "source_type": "official_vendor_press_release_quoting_institution",
+      "retrieval_method": "WebSearch + direct WebFetch",
+      "retrieved_at": "2026-08-21",
+      "claim_supported": "Western University's Faculty of Engineering (Canada) undergraduate program adopted Casper starting Fall 2024, ~7,500 annual applicants, explicitly to assess non-academic skills alongside grades.",
+      "confidence": "high",
+      "limitations": "One named adopter only; not evidence of broader engineering-program adoption elsewhere.",
+      "used_in": [
+        "docs/research/counseling-intelligence/06-major-family-evidence/05-engineering-me-ce-ae-ee.md"
+      ]
+    },
+    {
+      "id": "S-CASPER-BUS",
+      "title": "Casper situational-judgment test marketed for business-education admissions",
+      "url": "https://acuityinsights.com/solutions/business-education/",
+      "additional_urls": [],
+      "publisher": "Acuity Insights",
+      "source_type": "official_vendor_page",
+      "retrieval_method": "WebSearch + direct WebFetch",
+      "retrieved_at": "2026-08-21",
+      "claim_supported": "Casper is marketed for business-education admissions; the one specific adopter named on the page is Dalhousie University's Faculty of Management MBA program -- graduate-level, not undergraduate.",
+      "confidence": "high for the one named adopter; low relevance to ORYN's actual undergraduate-applicant population given that adopter's graduate level",
+      "limitations": "Only one specific adopter named on the vendor's own page; no undergraduate business-program adopter was independently confirmed this pass.",
+      "used_in": [
+        "docs/research/counseling-intelligence/06-major-family-evidence/08-business-management-entrepreneurship.md"
       ]
     }
   ]

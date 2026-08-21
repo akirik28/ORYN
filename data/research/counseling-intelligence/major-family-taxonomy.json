@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "package": "counseling-intelligence",
-  "last_updated": "2026-08-21T05:12:00+03:00",
+  "last_updated": "2026-08-21T05:27:00+03:00",
   "method_note": "Structured index over docs/research/counseling-intelligence/06-major-family-evidence/*.md (both branches -- this branch's 11 families and the peer branch's 9, read directly from its worktree at .claude/worktrees/counseling-intelligence-research-013956/). This file answers the mission brief's deliverable #11 (a machine-readable structured artifact for the interest -> major/field -> skills -> experiences -> career-family -> next-action chain) in a way rules.json (rule registry) and sources.json (citation registry) do not, since neither encodes the taxonomy graph itself. This is an INDEX, not a replacement for the prose docs -- every family's source_doc field points to the authoritative detail; resolve any specific factual claim there, not here. No new research was performed to build this file; every field traces to content already established in the corresponding family document. Per-family sourcing/confidence/limitations live in that document's own Sources table and in sources.json, not duplicated here. family_id '*' in interdisciplinary_connections denotes a structural one-to-many exception (currently only family 18, Education), not a normal pairwise link. Each family's `unsafe_inferences` field extracts that document's own \"unsafe inferences\" guidance (peer branch's explicit section heading) or equivalent RULE-COUNSEL-tagged cautions (this branch's inline convention) -- directly serves the peer branch's own 13-implementation-readiness.md item 11/12: a ready-made list of things a family-aware explanation template should actively avoid saying.",
   "onboarding_vocabulary_gaps": {
     "note": "lib/validation/onboarding.ts's INTEREST_SUGGESTIONS has 16 free-text-suggest values (never a closed enum). Families 17, 18, 19, 20 and chemistry/journalism/film/sociology/philosophy/IR/product-design/sustainability-specifically have NO dedicated onboarding suggestion -- reachable only via an approximate-neighbor suggestion or free text.",
@@ -580,11 +580,13 @@
         "RULE-COUNSEL-209",
         "RULE-COUNSEL-210",
         "RULE-COUNSEL-227",
-        "RULE-COUNSEL-241"
+        "RULE-COUNSEL-241",
+        "RULE-COUNSEL-244"
       ],
       "distinctive_findings": [
         "The four-country licensure comparison (US/UK/Turkey/Germany) is the canonical illustration, across this whole package, of why licensure framing must always be country-specific.",
-        "Many mechanical/electrical/aerospace engineers in large private companies practice a full career without a PE license -- licensure necessity depends on role/industry, not subfield alone."
+        "Many mechanical/electrical/aerospace engineers in large private companies practice a full career without a PE license -- licensure necessity depends on role/industry, not subfield alone.",
+        "Casper (the same situational-judgment admissions test found reaching teacher-education, family 18) is confirmed for undergraduate engineering admissions too -- Western University (Canada), Fall 2024, ~7,500 annual applicants -- a fourth confirmed instance of the cross-family SJT pattern and directly relevant to ORYN's population."
       ],
       "country_coverage": {
         "us": "high (NSPE, NCEES, BLS)",
@@ -847,7 +849,8 @@
       "key_rules": [
         "RULE-COUNSEL-213",
         "RULE-COUNSEL-214",
-        "RULE-COUNSEL-229"
+        "RULE-COUNSEL-229",
+        "RULE-COUNSEL-245"
       ],
       "distinctive_findings": [
         "Entrepreneurship (originating/testing a new venture) and general business/management study (operating/improving an existing one) are distinct constructs -- a strong management profile is not automatically entrepreneurship evidence.",
@@ -863,7 +866,8 @@
       },
       "unsafe_inferences": [
         "Treat a strong management/operational profile as automatic evidence of entrepreneurial capability, or vice versa -- these are distinct constructs (RULE-COUNSEL-213).",
-        "Treat DECA/FBLA-style simulated business-scenario competition placement as entrepreneurship evidence -- it is a simulation of a business scenario, not the operation of a real one, unlike the UK's Young Enterprise Company Programme which genuinely clears that bar (RULE-COUNSEL-214, RULE-COUNSEL-229)."
+        "Treat DECA/FBLA-style simulated business-scenario competition placement as entrepreneurship evidence -- it is a simulation of a business scenario, not the operation of a real one, unlike the UK's Young Enterprise Company Programme which genuinely clears that bar (RULE-COUNSEL-214, RULE-COUNSEL-229).",
+        "Present Casper's business-education marketing as evidence a current business-interested high schooler will encounter it -- the one confirmed adopter (Dalhousie's MBA program) is graduate-level, a decade or more past ORYN's population's actual admissions stage (RULE-COUNSEL-245)."
       ]
     },
     {

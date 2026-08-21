@@ -157,6 +157,21 @@ system now sits outside the EU framework post-Brexit in any case). ESCO's occupa
 still covers engineering occupations for taxonomy/skills-matching purposes across EU languages
 [S-ESCO] independent of any national licensure question.
 
+**A distinct, admissions-stage (not post-degree) mechanism worth naming separately, following up a
+cross-cutting lead from the peer session's medicine-family research (RULE-COUNSEL-120/121: a
+standardized situational-judgment-test category expanding well beyond medicine):** the same
+**Casper** assessment discussed for teaching in `18-education-teaching.md` (RULE-COUNSEL-243) is
+also confirmed used for **undergraduate engineering admissions** specifically — verified directly:
+**Western University's Faculty of Engineering** (Canada) announced Casper starting Fall 2024 for
+its undergraduate program, which receives roughly 7,500 applicants annually, explicitly to identify
+candidates with "both strong academic and key human skills, such as problem-solving, collaboration,
+and resilience" alongside conventional academic credentials [S-CASPER-ENG]. **RULE-COUNSEL-244
+(new):** this is a fourth confirmed instance of the situational-judgment-test category (after
+Queen's Commerce/McMaster's own-rubric response-scoring, Casper-for-teaching, and UK's UCAT/SJT
+subtest for medicine) — directly undergraduate-stage and directly relevant to ORYN's population,
+unlike the business-education instance below. Confirmed adopter is Canadian; do not assume this
+applies to a US- or UK-target engineering student without checking the specific program.
+
 ## Sources referenced in this document
 
 | ID | Source | Type | Confidence | Used for |
@@ -169,6 +184,7 @@ still covers engineering occupations for taxonomy/skills-matching purposes acros
 | S-ESCO | ESCO classification (see `01-computing-information-sciences.md` §7) | Official (EU) | High for classification structure | §6 |
 | S-ISKUR-FUTURE | İŞKUR Geleceğin Meslekleri (see `01-computing-information-sciences.md` §7) | Official (Turkey) | High for the document; names 7 of this family's subfields, not aerospace | §6 |
 | S-DE-INGENIEUR | Cross-referenced sources describing Germany's Ingenieurgesetz title-protection law and the VDI (Verein Deutscher Ingenieure) professional association | Secondary description of official German legislation and a real, verifiable professional body | Medium-high — the title-protection mechanism and VDI's role are consistently described across sources; the specific Ingenieurgesetz statutory text itself (state-level legislation, not a single federal law) was not independently fetched this pass | §6 |
+| S-CASPER-ENG | [Acuity Insights — Western University's Faculty of Engineering embraces holistic admissions with Casper](https://acuityinsights.com/news/western-university-embraces-holistic-admissions/) (directly fetched) | Official (vendor press release, quoting the institution's own Assistant Dean of First Year Studies) | High for this one named adopter (Western University, undergraduate, Fall 2024); not evidence of broader adoption across other engineering programs | §6 |
 
 US, UK, and Turkey engineering-licensure structures now verified and sourced above (a correction
 from this document's earlier draft, which had flagged UK/Turkey as unverified). EU-wide licensure
