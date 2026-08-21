@@ -51,6 +51,26 @@ should be read from the student's own goals, not inferred from activity type alo
   jurisdictions) is a comparatively accessible alternative worth surfacing specifically because it
   doesn't share the same access constraint. [[RULE-COUNSEL-043]]
 
+## Country notes (UK / EU / Turkey)
+
+Career-outlook context throughout, not admissions-evidence guidance — see
+`10-medicine-clinical-pathways.md` for the full method/bounding statement.
+
+**United Kingdom:** National Careers Service publishes official profiles for both **Solicitor**
+and **Barrister** — the UK's own split legal profession (solicitors advise and act on clients'
+behalf; barristers represent clients in court and give specialist advice), a structural difference
+from the unified US "lawyer" framing this document's §1 finding (no required pre-law major) still
+applies to equally, but worth naming explicitly for a UK-facing student since the *qualification
+pathway* differs by which branch they're aiming for. (Source: `nationalcareers.service.gov.uk/
+job-profiles/solicitor` and `/barrister` — official, high confidence.) [[RULE-COUNSEL-089]]
+
+**EU:** ESCO covers legal occupations across EU languages (see `10`'s EU note for ESCO's full
+description). Legal practice rights are a per-country regulatory/bar-admission matter, not
+harmonized EU-wide.
+
+**Turkey:** İŞKUR's official "Geleceğin Meslekleri" list includes **Avukat** (Lawyer) among its 93
+designated future occupations. [[RULE-COUNSEL-085]]
+
 ## Rules established in this document
 
 - `RULE-COUNSEL-041` — There is no required or specifically-rewarded "pre-law" major; do not imply
@@ -65,9 +85,6 @@ should be read from the student's own goals, not inferred from activity type alo
 - `RULE-COUNSEL-085` — İŞKUR's official Future Occupations list includes Avukat (Lawyer),
   confirming domestic Turkish labor-market relevance for career-exploration framing only.
   Confidence: high (official source, for the list's content).
-
-## Turkey career-outlook note
-
-Career-outlook context, not admissions-evidence guidance — see `10-medicine-clinical-pathways.md`
-for the full method/bounding statement. İŞKUR's official "Geleceğin Meslekleri" list includes
-**Avukat** (Lawyer) among its 93 designated future occupations. [[RULE-COUNSEL-085]]
+- `RULE-COUNSEL-089` — For a UK-facing law-interested student, name the solicitor/barrister split
+  explicitly since qualification pathways differ by branch, sourced from NCS official profiles.
+  Confidence: high (official source).

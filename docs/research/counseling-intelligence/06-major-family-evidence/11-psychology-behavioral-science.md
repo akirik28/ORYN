@@ -45,6 +45,28 @@ original thinking"** — an unusually direct restatement of this package's evide
   lower legitimate access excuse than the same gap in, say, biomedical research requiring wet-lab
   equipment. [[RULE-COUNSEL-037]]
 
+## Country notes (UK / EU / Turkey)
+
+Career-outlook context throughout, not admissions-evidence guidance — see
+`10-medicine-clinical-pathways.md`'s identically-framed note for the full method/bounding
+statement, not repeated here.
+
+**United Kingdom:** National Careers Service publishes official profiles for **Clinical
+Psychologist** (requires a postgraduate doctorate, DClinPsych, after an undergraduate psychology
+degree) and **Forensic Psychologist** — directly confirming this session's own §1 finding that
+psychology spans clearly distinct sub-fields with different training pathways, from the UK's own
+official source rather than only this document's general reasoning. (Source:
+`nationalcareers.service.gov.uk/job-profiles/clinical-psychologist` and `/forensic-psychologist` —
+official, high confidence.) [[RULE-COUNSEL-088]]
+
+**EU:** ESCO covers psychology occupations across EU languages (see `10`'s EU note for ESCO's full
+description). No EU-wide licensure gate; clinical psychology practice rights remain a per-country
+regulatory matter.
+
+**Turkey:** İŞKUR's official "Geleceğin Meslekleri" list includes **Psikolog** (Psychologist) and
+**Özel Eğitim Öğretmeni** (Special Education Teacher — psychology-adjacent) among its 93
+designated future occupations. [[RULE-COUNSEL-084]]
+
 ## Rules established in this document
 
 - `RULE-COUNSEL-035` — Recognize APA's own structured high-school and undergraduate research
@@ -62,11 +84,6 @@ original thinking"** — an unusually direct restatement of this package's evide
   and Özel Eğitim Öğretmeni (Special Education Teacher, psychology-adjacent), confirming domestic
   Turkish labor-market relevance for career-exploration framing only. Confidence: high (official
   source, for the list's content).
-
-## Turkey career-outlook note
-
-Career-outlook context, not admissions-evidence guidance — see `10-medicine-clinical-pathways.md`'s
-identically-framed note for the full method/bounding statement, not repeated here. İŞKUR's official
-"Geleceğin Meslekleri" list includes **Psikolog** (Psychologist) and **Özel Eğitim Öğretmeni**
-(Special Education Teacher — psychology-adjacent) among its 93 designated future occupations.
-[[RULE-COUNSEL-084]]
+- `RULE-COUNSEL-088` — Prefer UK National Careers Service job profiles (Clinical/Forensic
+  Psychologist) over BLS/O*NET for a UK-facing psychology-track student. Confidence: high
+  (official source).

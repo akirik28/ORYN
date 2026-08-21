@@ -493,6 +493,18 @@
       "claim_supported": "93 occupations İŞKUR (Turkey's state employment agency) officially designates as growth/future-relevant to Turkey's domestic labor market — used exclusively as career-outlook context for this package's family docs, never as admissions-evidence guidance.",
       "used_in_rules": ["RULE-COUNSEL-083", "RULE-COUNSEL-084", "RULE-COUNSEL-085", "RULE-COUNSEL-086"],
       "limitations": "Shared with this session by the peer session (socket 71534/\"7\"), who found it first; this session independently downloaded and extracted it via pypdf (WebFetch and the Read tool's PDF renderer both failed in this environment — no poppler-utils installed) rather than trusting the peer's characterization of its contents. No date/methodology page beyond the list itself was reviewed. The list itself is vocational/technical-skewed — a real limitation for using it across non-technical families, noted explicitly per-family below rather than smoothed over."
+    },
+    {
+      "id": "SRC-CS-042",
+      "title": "National Careers Service official job profiles: GP, Clinical Psychologist, Forensic Psychologist, Solicitor, Barrister, Architect",
+      "publisher": "National Careers Service (UK Department for Education, official)",
+      "url": "https://nationalcareers.service.gov.uk/job-profiles/gp",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Official UK job-profile pages (qualification pathway, entry requirements, typical hours/salary) for GP, Clinical Psychologist, Forensic Psychologist, Solicitor, Barrister, and Architect — used to add UK country-notes to this session's medicine, psychology, law, and architecture family docs, mirroring the peer session's own use of NCS for its 9 families.",
+      "used_in_rules": ["RULE-COUNSEL-087", "RULE-COUNSEL-088", "RULE-COUNSEL-089", "RULE-COUNSEL-090"],
+      "limitations": "No NCS profile was found this pass for poli-sci/IR, sociology/history/philosophy, literature/journalism, or visual/media-arts specifically — noted honestly as 'not independently reviewed' in each of those docs' country notes rather than a claim no such profile exists."
     }
   ]
 }

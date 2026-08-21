@@ -56,6 +56,25 @@ sustained creative work even without a Key award.
 - **Do not require professional/paid publication as a bar for high-school-stage evidence** — per
   the high-school-stage adaptation above.
 
+## Country notes (UK / EU / Turkey)
+
+Career-outlook context throughout, not admissions-evidence guidance — see
+`10-medicine-clinical-pathways.md` for the full method/bounding statement.
+
+**United Kingdom:** no single NCS profile was found representing "journalist" or "author"
+specifically this pass (NCS's "media" job-sector category is the likely closer starting point, not
+individually reviewed); the same UK-vs-US publication-bar adaptation `RULE-COUNSEL-046` already
+makes for high-school stage applies regardless of country.
+
+**EU:** ESCO covers media/communications occupations across EU languages (see `10`'s EU note for
+ESCO's full description).
+
+**Turkey:** checked against İŞKUR's official "Geleceğin Meslekleri" list — **no direct match for
+literature or journalism specifically**; the closest entries are **Dijital Pazarlama** (Digital
+Marketing) and **Sosyal Medya Uzmanı** (Social Media Specialist), which are communications-
+*adjacent* but not literature/journalism in the sense this document means — noted explicitly as a
+weak, tangential match rather than cited as if it confirmed this family directly.
+
 ## Rules established in this document
 
 - `RULE-COUNSEL-046` — For journalism-track evidence, favor a small number of substantive,
@@ -67,13 +86,3 @@ sustained creative work even without a Key award.
   official evidence channel for creative writing specifically, calibrated against its own large
   applicant pool so non-medaling submission is still treated as real evidence of sustained craft.
   Confidence: high (official source).
-
-## Turkey career-outlook note
-
-Checked against İŞKUR's official "Geleceğin Meslekleri" list (see `10-medicine-clinical-
-pathways.md` for full sourcing/bounding statement) — **no direct match for literature or
-journalism specifically**; the closest entries are **Dijital Pazarlama** (Digital Marketing) and
-**Sosyal Medya Uzmanı** (Social Media Specialist), which are communications-*adjacent* but not
-literature/journalism in the sense this document means — noted here explicitly as a weak,
-tangential match rather than cited as if it confirmed this family directly, consistent with this
-package's discipline against overstating a source's actual support for a claim.

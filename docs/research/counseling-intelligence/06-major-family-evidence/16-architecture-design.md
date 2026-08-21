@@ -44,6 +44,30 @@ directly (NAAB accredits degree programs, not individual student portfolios).
 - **Do not treat unfinished/in-progress work as invalid evidence** — explicitly named as acceptable
   portfolio content by the sourced guidance ("works in progress" alongside finished pieces).
 
+## Country notes (UK / EU / Turkey)
+
+Career-outlook context throughout, not admissions-evidence guidance — see
+`10-medicine-clinical-pathways.md` for the full method/bounding statement.
+
+**United Kingdom:** National Careers Service publishes an official **Architect** profile —
+qualification pathway (a recognized degree, professional experience, and the final ARB/RIBA-
+regulated qualification), typical hours, and salary bands. (Source: `nationalcareers.service.gov.uk/
+job-profiles/architect` — official, high confidence.) [[RULE-COUNSEL-090]] UK architecture, unlike
+this document's §1 US-leaning portfolio framing, has a formally regulated title (the Architects
+Registration Board controls who may legally call themselves "architect") — worth naming as a real
+structural difference for a UK-facing student, distinct from the portfolio-evidence question this
+document otherwise focuses on.
+
+**EU:** ESCO covers architecture/design occupations across EU languages (see `10`'s EU note for
+ESCO's full description). EU member states generally regulate the "architect" title similarly to
+the UK (a licensure-gated profession), though the specific regulating body and requirements are
+per-country.
+
+**Turkey:** İŞKUR's official "Geleceğin Meslekleri" list includes **Mimar** (Architect), **İç
+Mimar** (Interior Architect), **Tasarım** (Design), and **Modelist** (Fashion/Pattern Designer)
+among its 93 designated future occupations — the strongest match of any family this package
+checked against this source. [[RULE-COUNSEL-086]]
+
 ## Rules established in this document
 
 - `RULE-COUNSEL-048` — Treat architecture/design evidence as portfolio-and-process-centered;
@@ -60,11 +84,7 @@ directly (NAAB accredits degree programs, not individual student portfolios).
   Mimar (Interior Architect), Tasarım (Design), and Modelist (Fashion/Pattern Designer),
   confirming domestic Turkish labor-market relevance for career-exploration framing only.
   Confidence: high (official source, for the list's content).
-
-## Turkey career-outlook note
-
-Career-outlook context, not admissions-evidence guidance — see `10-medicine-clinical-pathways.md`
-for the full method/bounding statement. İŞKUR's official "Geleceğin Meslekleri" list includes
-**Mimar** (Architect), **İç Mimar** (Interior Architect), **Tasarım** (Design), and **Modelist**
-(Fashion/Pattern Designer) among its 93 designated future occupations — the strongest match of any
-family this package checked against this source. [[RULE-COUNSEL-086]]
+- `RULE-COUNSEL-090` — For a UK/EU-facing architecture student, name that "architect" is a legally
+  regulated title (unlike most of this document's other portfolio-evidence framing), sourced from
+  NCS's official profile. Confidence: high (official source for UK; reasoned generalization to EU
+  member states, not individually verified per country).

@@ -52,6 +52,24 @@ Day"-equivalent means the student lacks options.
   surface similarity; an explanation citing Ethics Bowl participation should describe reasoning
   depth, not "won an argument."
 
+## Country notes (UK / EU / Turkey)
+
+Career-outlook context throughout, not admissions-evidence guidance — see
+`10-medicine-clinical-pathways.md` for the full method/bounding statement.
+
+**United Kingdom:** no single NCS job profile represents this family cleanly — history/sociology/
+philosophy degrees feed a wide range of careers (research, teaching, civil service, journalism,
+law-adjacent roles) rather than one named occupation; NCS's broader "teaching and childcare" and
+research-oriented categories are the closer starting point, not independently reviewed this pass.
+
+**EU:** ESCO covers social-science/humanities-adjacent occupations across EU languages (see `10`'s
+EU note for ESCO's full description).
+
+**Turkey:** checked against İŞKUR's official "Geleceğin Meslekleri" list — **no direct match
+found**, consistent with `12-political-science-ir-public-policy.md`'s same finding; the list's
+vocational/technical skew doesn't cover this family's white-collar humanities professions. Written
+down honestly rather than forced.
+
 ## Rules established in this document
 
 - `RULE-COUNSEL-044` — Treat National History Day as a strong, officially-structured evidence
@@ -61,11 +79,3 @@ Day"-equivalent means the student lacks options.
   philosophy/ethics specifically, distinct in format (collaborative reasoning depth, not
   adversarial debate) from other competitive-speech activities. Confidence: high (official source
   for existence/format).
-
-## Turkey career-outlook note
-
-Checked against İŞKUR's official "Geleceğin Meslekleri" list (see `10-medicine-clinical-
-pathways.md` for full sourcing/bounding statement) — **no direct match found**, consistent with
-`12-political-science-ir-public-policy.md`'s same finding; the list's vocational/technical skew
-doesn't cover this family's white-collar humanities professions. Written down honestly rather than
-forced.

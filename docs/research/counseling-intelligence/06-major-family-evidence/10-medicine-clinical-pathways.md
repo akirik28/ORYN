@@ -60,12 +60,32 @@ lab-bench science** — directly consistent with `01-development-taxonomy.md`'s 
   research is common but not universal among successful applicants even at the *undergraduate*
   admissions stage, let alone required evidence for a high schooler still exploring the field.
 
-## Turkey career-outlook note
+## Country notes (UK / EU / Turkey)
 
 Added on a later pass, mirroring the peer session's UK/EU/Turkey country-note pattern for
-consistency across the full 17-family set. **This is career-outlook context, not admissions-
-evidence guidance** — a different kind of claim from the rest of this document, and should not be
-conflated with it. İŞKUR (Türkiye İş Kurumu, Turkey's official state employment agency)'s
+consistency across the full 17-family set. **All of this is career-outlook context, not
+admissions-evidence guidance** — a different kind of claim from the rest of this document, and
+should not be conflated with it.
+
+**United Kingdom:** the UK government's official **National Careers Service**
+(`nationalcareers.service.gov.uk`, run by the Department for Education) publishes an official job
+profile for **GP** (General Practitioner) — entry requirements (5 GCSEs including sciences, 3
+A-levels including biology and chemistry, a GMC-recognized degree, foundation training, then
+specialist GP training), typical hours, and salary bands. (Source: `nationalcareers.service.gov.uk/
+job-profiles/gp` — official, high confidence.) [[RULE-COUNSEL-087]] Consistent with peer's own
+`06/01`'s finding for computing, prefer NCS job profiles over BLS/O*NET for a UK-facing student —
+occupation structure and entry requirements do not transfer across countries even where the
+occupation name is identical.
+
+**EU:** ESCO (European Skills, Competences, Qualifications and Occupations,
+`esco.ec.europa.eu`, European Commission) covers medicine/clinical occupations across EU languages
+as a structured classification — useful for cross-border terminology matching, not a narrative
+careers-guidance source the way NCS/BLS are (see peer's `06/01` §7 for ESCO's full description,
+not repeated here). No EU-wide licensure gate exists independent of each member state's own
+medical-licensing body — licensure for clinical practice remains a per-country regulatory matter
+even within the EU.
+
+İŞKUR (Türkiye İş Kurumu, Turkey's official state employment agency)'s
 **"Geleceğin Meslekleri" (Future Occupations)** list — 93 occupations the agency designates as
 growth-relevant to Turkey's labor market — includes **Doktor** (Doctor), **Hemşire** (Nurse),
 **Fizyoterapist** (Physiotherapist), **Ergoterapist** (Occupational/ergo-therapist), and **Dil ve
@@ -93,3 +113,6 @@ weighting, and must never be cited as if it did.
   roles, confirming real domestic Turkish labor-market relevance — usable for career-exploration
   framing only, never as admissions-evidence guidance. Confidence: high (official government
   source, for the list's content).
+- `RULE-COUNSEL-087` — Prefer UK National Careers Service job profiles over BLS/O*NET for a
+  UK-facing medicine-track student; entry requirements and structure do not transfer across
+  countries. Confidence: high (official source).

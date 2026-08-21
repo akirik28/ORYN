@@ -50,6 +50,24 @@ recommend "get better equipment" as a priority fix ahead of "tighten the story/e
 - **Do not treat a sketchbook or in-progress work as lesser evidence than a "finished" piece** —
   per §1, explicitly welcomed by the official portfolio-review standard itself.
 
+## Country notes (UK / EU / Turkey)
+
+Career-outlook context throughout, not admissions-evidence guidance — see
+`10-medicine-clinical-pathways.md` for the full method/bounding statement.
+
+**United Kingdom:** no single NCS profile represents "fine artist" or "filmmaker" cleanly this
+pass; NCS's "creative and media" job-sector category is the closer official starting point, not
+individually reviewed page-by-page.
+
+**EU:** ESCO covers creative-arts/media occupations across EU languages (see `10`'s EU note for
+ESCO's full description).
+
+**Turkey:** checked against İŞKUR's official "Geleceğin Meslekleri" list — the closest entries are
+**Grafiker** (Graphic Designer) and **Teknik Ressam** (Technical Draftsman), a moderate but not
+strong match: both are commercial/technical design roles rather than fine-art, film, or media-art
+specifically as this document means them. Noted as a partial, honestly-bounded match rather than
+either a full citation or a silent gap.
+
 ## Rules established in this document
 
 - `RULE-COUNSEL-050` — Treat National Portfolio Day's standard guidance (10-12 best/recent pieces,
@@ -59,12 +77,3 @@ recommend "get better equipment" as a priority fix ahead of "tighten the story/e
   for film/media work; storytelling, composition, and editing are what reviewers name as
   differentiating. Confidence: medium-high (consistent guidance across sourced material, not a
   single primary-authority citation).
-
-## Turkey career-outlook note
-
-Checked against İŞKUR's official "Geleceğin Meslekleri" list (see `10-medicine-clinical-
-pathways.md` for full sourcing/bounding statement) — the closest entries are **Grafiker** (Graphic
-Designer) and **Teknik Ressam** (Technical Draftsman), a moderate but not strong match: both are
-commercial/technical design roles rather than fine-art, film, or media-art specifically as this
-document means them. Noted as a partial, honestly-bounded match rather than either a full citation
-or a silent gap.
