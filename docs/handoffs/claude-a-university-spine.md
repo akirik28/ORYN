@@ -3614,6 +3614,19 @@ achievable with a post-load `javascript_exec` call) or accepting the 3-tab/29-ca
 click-through -- deprioritized this pass in favour of Durham, which the same technique
 resolved cleanly. Worth another pass with fresh tooling rather than written off again.
 
+**Batch 33 — University of Nottingham** (215 new, `data/research/university-programs/
+independent_batch33_2026-08-21.jsonl`, committed `bc7de0f`): an even cleaner instance of
+the same technique. The official "Browse all courses" page's network requests showed a
+plain public JSON endpoint, `bin/uon/coursepages.json` -- no auth, no session-scoping, a
+single GET returning all 416 raw rows (two entry-years x ~215 distinct UCAS codes) with
+already-structured `courseTitle`/`qualification`/`ucasCode`/`faculty`/`subject`/`duration`/
+`location`/`entryRequirementsCode` fields. Fetched, deduplicated by UCAS code (keeping the
+2027 row), and validated directly -- no HTML parsing needed at all. Two spot-checks against
+live course pages (Pharmacy MPharm, and the less common Veterinary Medicine
+BVM BVS with BVMedSci) both matched. This is the strongest version yet of "discover the
+shape first" -- worth checking every remaining JS-course-finder target's network tab for a
+plain JSON endpoint before assuming pagination or an auth-gated API is needed.
+
 Of the 5 outstanding Radboud/Exeter gaps, 2 are now confirmed fully resolved (the Exeter
 "BA Classical Studies and Philosophy" insert, id `4a715f86-3f0e-4b3d-97ff-e6fb12c2c5bb`, and
 the orphaned "BA Classical Studies and Modern Languages" queue-audit row, id
