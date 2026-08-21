@@ -58,18 +58,48 @@ and the existing "medicine is a partial exception" finding, but the specific per
 calls above are this document's own reasoned extension, not independently verified against UCAS
 guidance dimension-by-dimension. [[RULE-COUNSEL-113]]
 
-### Tier 2b (France, Parcoursup) — academic engagement and motivation, breadth not clearly rewarded
+### Tier 2b (France, Parcoursup) — resolved on a follow-up pass, via the official CGEV framework document
 
-`RULE-COUNSEL-061`'s sourcing (Campus France, education.gouv.fr) confirms the dossier's mechanism
-(grades, Fiche Avenir teacher evaluation of academic engagement/method, a program-dependent
-motivation element) but — honestly, per this document's own method — **does not give this package
-enough detail to responsibly assign per-dimension ordinals the way the UK table above does.** What
-is reasonably supported: `academics` and `intellectual_curiosity`-as-subject-engagement (the Fiche
-Avenir's own focus) are high; general-breadth dimensions (`leadership`/`community_impact` unrelated
-to the applied field) are not established as rewarded or unrewarded by this package's current
-sourcing. **Marked unresolved rather than guessed** — a genuine gap for a future pass, not
-something this document should paper over with an invented table to match the UK's format.
-[[RULE-COUNSEL-114]]
+This section originally marked France's per-dimension weighting unresolved, since `RULE-COUNSEL-061`'s
+sourcing confirmed Parcoursup's dossier *mechanism* but not enough detail to assign per-dimension
+ordinals responsibly. **A follow-up pass found and directly read the actual official framework
+document that resolves most of this gap**: DGESIP (Direction générale de l'enseignement supérieur
+et de l'insertion professionnelle, part of the French Ministry of Higher Education) publishes
+*"Les Critères Généraux d'Examen des Vœux (CGEV) — Définitions et modalités de saisie"* — the
+official national framework every Parcoursup formation's admissions committee must use. (Source:
+`services.dgesip.fr/fichiers/note_de_cadrage_cgev_definitions_et_saisie.pdf`, official government
+document — high confidence; PDF extracted via direct download + `pypdf` after WebFetch's built-in
+extractor returned only binary noise for this specific file. Document is dated "Session 2023";
+the underlying 5-field structure is described as continuous since at least 2019/2022, but this
+session did not independently confirm the exact same structure still governs the current 2026
+cycle unchanged.)
+
+**The document defines exactly 5 national evaluation fields ("champs d'évaluation"), and requires
+every formation to publish its own percentage weight for each (summing to 100%) plus a
+four-level importance rating — "essentiel," "très important," "important," "complémentaire" — for
+every individual criterion within each field:**
+
+| Official champ (French) | What it covers, per the document's own definition | Nearest ORYN dimension(s) |
+|---|---|---|
+| Résultats académiques | Purely quantitative: grades, bac exam results, class rank | `academics` |
+| Compétences académiques, acquis méthodologiques, savoir-faire | Qualitative academic skill: "méthode de travail," written/oral capability, teacher/class-council assessments, the Fiche Avenir's own "Méthode de travail" field | `academics` (qualitative complement) |
+| Savoir-être | Non-academic, transversal: autonomy, investment, "esprit d'équipe," and explicitly **"curiosité intellectuelle"** and **"ouverture au monde"** as named example criteria | Closest overlap is `intellectual_curiosity`; the rest (autonomy, teamwork spirit, organizational capacity) does not map cleanly onto any single ORYN dimension — a genuine mapping gap, not forced into one |
+| Motivation, connaissance de la formation, cohérence du projet | Subject/program-specific motivation, knowledge of the field's actual demands, coherence of the student's overall academic project | `career_exploration` (knowing what the field involves) + subject-relevant `intellectual_curiosity` |
+| **Engagements, activités et centres d'intérêt, réalisations péri ou extra-scolaires** | Civic engagement (in/outside school — student council, national civic service, community service), associative/sports/artistic activity, personal interests, non-academic certifications | `leadership` (school-council-type engagement named explicitly), `community_impact` (civic engagement named explicitly), general breadth |
+
+**This directly answers this document's own earlier question**: activities/interests are not a
+vague, program-dependent afterthought — they are one of exactly 5 formally, nationally-defined
+evaluation fields, structurally guaranteed a real (if formation-set) percentage weight, not
+optional or discretionary. The document's own worked example gives Résultats académiques = 30%
+and Compétences académiques/méthodologiques = 20% (the remaining 50% is split across the other
+three fields including Engagements/activités, but the specific split for those three was not
+extractable from this document's page 9, which appears to present it as a graphic rather than
+text — **left honestly unextracted rather than guessed**). **What remains genuinely unresolved,
+narrower than before**: the *exact* percentage any single named formation assigns to
+"Engagements, activités" specifically — this document confirms it is real, named, and
+percentage-weighted by mandate, but the actual number is formation-specific and would require
+checking each program's own published fiche, not something this package can responsibly
+generalize to one number. [[RULE-COUNSEL-114]] [[RULE-COUNSEL-117]]
 
 ### Tier 3, general case (Germany-NC/Netherlands/Italy-public/Switzerland/Turkey/Spain) — every dimension except `academics` is zero-weighted for the primary admission lever
 
@@ -171,11 +201,18 @@ neither alone is sufficient. [[RULE-COUNSEL-116]]
   not name it as a super-curricular category); weight `community_impact` low except for medicine.
   Confidence: medium (directionally sourced via `RULE-COUNSEL-058`, per-dimension ordinals are this
   document's own reasoned extension).
-- `RULE-COUNSEL-114` — For a France/Parcoursup-track target, `academics` and subject-engagement
-  (`intellectual_curiosity`) are supportably high-weighted; this package's current sourcing is not
-  sufficient to responsibly assign ordinals to the other 7 dimensions — left explicitly unresolved.
-  Confidence: high that this is genuinely unresolved (i.e., high confidence in the absence of
-  sufficient evidence, not a claim about the true weighting).
+- `RULE-COUNSEL-114` — For a France/Parcoursup-track target, `academics` (both the quantitative
+  "Résultats académiques" and qualitative "Compétences académiques" champs) is high-weighted;
+  `intellectual_curiosity` is explicitly named within "Savoir-être" (curiosité intellectuelle,
+  ouverture au monde) and within subject-specific "Motivation" evidence; `leadership` and
+  `community_impact` are explicitly named within the "Engagements, activités" champ (school-council
+  engagement, civic service). All five champs are mandatorily percentage-weighted per formation
+  (summing to 100%), but the exact percentage any specific formation assigns to any one champ is
+  not general knowledge — genuinely formation-specific, not this package's to guess. Confidence:
+  high for the mechanism and field definitions (official DGESIP source), medium for the ORYN-
+  dimension mapping (this document's own reasoned extension), unresolved (not guessed) for any
+  specific numeric weight. Originally marked fully unresolved; substantially resolved on a
+  follow-up pass — see `RULE-COUNSEL-117`.
 - `RULE-COUNSEL-115` — Tier alone is insufficient for Tier-3-with-named-carve-out targets; ORYN's
   counselor must know the specific named program and what that program's own rubric scores before
   recommending anything, since carve-out mechanisms range from activity-description (Waterloo) to
@@ -183,6 +220,15 @@ neither alone is sufficient. [[RULE-COUNSEL-116]]
   auditions (conservatory) to standardized aptitude tests (Swiss medicine) — genuinely different
   evidence types, not variations on one holistic-review theme. Confidence: high (direct consequence
   of `RULE-COUNSEL-110`'s primary-source finding).
+- `RULE-COUNSEL-117` — France's Parcoursup applications are evaluated against exactly 5 nationally-
+  defined evaluation fields ("champs d'évaluation": academic results, academic
+  competencies/methodology, soft skills, motivation/program-fit, and activities/engagement), each
+  mandatorily assigned a formation-specific percentage weight summing to 100%, per DGESIP's own
+  official CGEV framework document. Confirms activities/engagement is a real, structurally-
+  guaranteed evaluation category, not an optional or vague consideration — but the specific
+  percentage any one formation assigns to it remains formation-specific, not a single knowable
+  number. Confidence: high (official DGESIP document, directly extracted via `pypdf` after
+  WebFetch's own extractor failed on this file).
 - `RULE-COUNSEL-116` — Country/tier-level conditioning and field-level (major-family) conditioning
   must compose together; medicine alone demonstrates the "exception direction" flips by country
   (activity-rewarding in US/UK, aptitude-test-gated in Switzerland, more-exam-dominated-than-usual

@@ -697,6 +697,18 @@
       "claim_supported": "McMaster HHSP's supplementary application is described as an opportunity to showcase critical thinking skills and methods of self-examination, scored by faculty/staff/senior-student reviewers with multiple reviewers per application — reflective-response assessment, consistent with Queen's Commerce's pattern and distinct from Waterloo's activity-description pattern.",
       "used_in_rules": ["RULE-COUNSEL-110", "RULE-COUNSEL-111"],
       "limitations": "This session could not directly fetch this page (HTTP 403); content is a search-engine-mediated summary of the official page, one step less direct than the UofT/Queen's/Waterloo checks in this same batch, hence medium-high rather than high confidence. McMaster's other Health Sciences streams (e.g. Nursing, which uses CASPer testing instead) were not checked and may differ."
+    },
+    {
+      "id": "SRC-CS-059",
+      "title": "\"Les Critères Généraux d'Examen des Vœux (CGEV) — Définitions et modalités de saisie\" (Session 2023)",
+      "publisher": "DGESIP (Direction générale de l'enseignement supérieur et de l'insertion professionnelle), French Ministry of Higher Education — official",
+      "url": "https://services.dgesip.fr/fichiers/note_de_cadrage_cgev_definitions_et_saisie.pdf",
+      "type": "official_source",
+      "retrieved_at": "2026-08-21",
+      "confidence": "high",
+      "claim_supported": "Parcoursup applications are evaluated against exactly 5 nationally-defined evaluation fields (résultats académiques; compétences académiques/méthodologiques; savoir-être; motivation/connaissance de la formation; engagements/activités et centres d'intérêt), each mandatorily assigned a formation-specific percentage weight summing to 100%, with individual criteria rated on a 4-level importance scale. The document's own worked example gives résultats académiques = 30% and compétences académiques = 20%.",
+      "used_in_rules": ["RULE-COUNSEL-114", "RULE-COUNSEL-117"],
+      "limitations": "Directly downloaded and extracted via pypdf after WebFetch's built-in extractor returned only binary/unreadable content for this specific file. Document is dated \"Session 2023\"; this session did not independently confirm the identical 5-field structure and worked-example percentages still apply unchanged for the current 2026 cycle, though the structure is described in the document itself as continuous practice since at least 2019/2022. Page 9's worked-example percentages for the remaining 3 of 5 fields (savoir-être, motivation, engagements/activités) appear to be presented as a graphic rather than extractable text — not obtained, left unresolved rather than guessed. Any single formation's actual published percentage for any field is formation-specific and was not checked for any specific named program."
     }
   ]
 }
