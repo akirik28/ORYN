@@ -28,7 +28,10 @@ export async function refreshRequirementEvaluations(universityId: string, userId
   const now = new Date().toISOString();
 
   const rows = evaluable.map((requirement) => {
-    const result = evaluateRequirement(requirement.requirement_type, requirement.structured_rule, facts);
+    // The row itself is the qualifier source: RequirementQualifiersSchema reads migration
+    // 0056's columns off it by name and strips the rest, so this is correct both before that
+    // migration is applied (every qualifier absent, behaviour unchanged) and after.
+    const result = evaluateRequirement(requirement.requirement_type, requirement.structured_rule, facts, requirement);
     return {
       user_id: userId,
       requirement_id: requirement.id,

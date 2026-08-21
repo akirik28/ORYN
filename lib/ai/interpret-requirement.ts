@@ -3,7 +3,7 @@ import "server-only";
 import { z } from "zod";
 import { getAIProvider } from "./index";
 import { logAIUsage } from "./usage";
-import { RULE_FIELD_SCHEMAS_BY_KIND } from "@/lib/validation/requirements";
+import { RULE_FIELD_SCHEMAS_BY_KIND, ruleAuthoringRefusal } from "@/lib/validation/requirements";
 import { categoryToRuleKind } from "@/lib/requirements/types";
 import type { RequirementCategory } from "@/types/database";
 import type { StructuredRule } from "@/lib/requirements/types";
@@ -35,6 +35,12 @@ export async function interpretRequirementText(params: {
   if (!kind) {
     throw new Error(`"${params.category}" has no machine-evaluable rule shape — it needs manual review, not AI interpretation.`);
   }
+  // Refused before any AI call, not after: some requirements must never carry a structured
+  // rule regardless of how cleanly their text would structure (a binding Early Decision
+  // commitment structures perfectly and must still never become a checkbox). See
+  // ruleAuthoringRefusal.
+  const refusal = ruleAuthoringRefusal({ category: params.category, title: params.title, requirementDetail: params.requirementDetail });
+  if (refusal) throw new Error(refusal);
 
   const fieldSchema = RULE_FIELD_SCHEMAS_BY_KIND[kind];
   const provider = getAIProvider();

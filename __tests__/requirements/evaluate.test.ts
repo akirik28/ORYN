@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { evaluateRequirement, evaluateRequirementGroup } from "@/lib/requirements/evaluate";
+import { evaluateRequirement, evaluateRequirementGroup, inferStudentScale } from "@/lib/requirements/evaluate";
 import type { RequirementFacts, RequirementGroupMember } from "@/lib/requirements/types";
 
 const EMPTY_FACTS: RequirementFacts = { curricula: [], courses: [], gpas: [], testScores: [], languages: [] };
@@ -8,7 +8,19 @@ const EMPTY_FACTS: RequirementFacts = { curricula: [], courses: [], gpas: [], te
 // the defect-B motivating case (a valid IELTS score must not be reported as a failed TOEFL
 // requirement).
 const IELTS: RequirementGroupMember = { id: "ielts", category: "english_proficiency", rawStructuredRule: { kind: "test_score", testName: "IELTS", minScore: 6.5 }, groupRole: "inclusion", title: "IELTS 6.5" };
-const TOEFL: RequirementGroupMember = { id: "toefl", category: "english_proficiency", rawStructuredRule: { kind: "test_score", testName: "TOEFL", minScore: 90 }, groupRole: "inclusion", title: "TOEFL 90" };
+// The TOEFL alternative carries its scale, and has to: a bare "TOEFL 90" is not a comparable
+// number after ETS's January 2026 rescale, and the evaluator now refuses it rather than
+// picking a scale (see the "TOEFL rescale" describe below, which asserts that refusal
+// directly). Edinburgh's own page states the 0-120 threshold, so recording the scale here is
+// what the requirement actually says, not a workaround for the check.
+const TOEFL: RequirementGroupMember = {
+  id: "toefl",
+  category: "english_proficiency",
+  rawStructuredRule: { kind: "test_score", testName: "TOEFL", minScore: 90 },
+  rawQualifiers: { test_scale: "TOEFL_IBT_0_120_LEGACY" },
+  groupRole: "inclusion",
+  title: "TOEFL 90",
+};
 const PTE: RequirementGroupMember = { id: "pte", category: "english_proficiency", rawStructuredRule: { kind: "test_score", testName: "PTE", minScore: 62 }, groupRole: "inclusion", title: "PTE 62" };
 const DUOLINGO: RequirementGroupMember = { id: "duolingo", category: "english_proficiency", rawStructuredRule: { kind: "test_score", testName: "Duolingo", minScore: 120 }, groupRole: "inclusion", title: "Duolingo 120" };
 const ENGLISH_TEST_ALTERNATIVES = [IELTS, TOEFL, PTE, DUOLINGO];
@@ -281,5 +293,343 @@ describe("evaluateRequirementGroup — exclusion and qualifier roles never auto-
   test("a group with no recognized alternatives needs manual review rather than crashing", () => {
     const result = evaluateRequirementGroup([], EMPTY_FACTS);
     expect(result.status).toBe("needs_manual_review");
+  });
+});
+
+/**
+ * Every test below names the institution and the rule it protects, because these are not
+ * abstract shapes — each one is a page that was read on 2026-08-21 and is recorded in
+ * data/research/university-requirements/. A test called "handles inverted recency" cannot
+ * tell a later reader whether the behaviour still matches what METU publishes; one called
+ * "METU rejects certificates taken on or after 2022-12-24" can.
+ *
+ * The bias is uniform and deliberate. A wrong "met" shown to a student about their own
+ * eligibility is the most damaging output this system produces, so several of these assert
+ * `needs_manual_review` where a more confident answer looks available. That is the intended
+ * verdict, not a placeholder for one.
+ */
+
+const IELTS_RULE = { kind: "test_score" as const, testName: "IELTS", minScore: 6.5 };
+
+describe("Case 1 — recency rules that run backwards (METU)", () => {
+  // https://iso.metu.edu.tr/en/english-proficiency — "IELTS exams taken on or after the 24th
+  // of December 2022 will not be anymore accepted." REQ-2026-08-21-9102.
+  const METU_IELTS_CUTOFF = { recency_rule: { direction: "not_valid_on_or_after", boundaryDate: "2022-12-24" } };
+
+  test("METU rejects certificates taken on or after 2022-12-24, even at a qualifying IELTS band", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "8.0", testDate: "2025-06-01" }] };
+    expect(evaluateRequirement("english_proficiency", IELTS_RULE, facts, METU_IELTS_CUTOFF).status).toBe("not_met");
+  });
+
+  test("METU's cut-off fires exactly on 2022-12-24, not the day after", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "8.0", testDate: "2022-12-24" }] };
+    expect(evaluateRequirement("english_proficiency", IELTS_RULE, facts, METU_IELTS_CUTOFF).status).toBe("not_met");
+  });
+
+  test("METU: a max-age reading is unrepresentable — the fresh 2025 IELTS 8.0 is never `met`", () => {
+    // The defect this closes. Under "certificates must be at most N years old" a 2025 IELTS
+    // 8.0 is the freshest, strongest possible evidence and evaluates `met`. At METU it is
+    // precisely the freshness that disqualifies it.
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "8.0", testDate: "2025-06-01" }] };
+    expect(evaluateRequirement("english_proficiency", IELTS_RULE, facts, METU_IELTS_CUTOFF).status).not.toBe("met");
+  });
+
+  test("METU: an IELTS predating 2022-12-24 is still not `met` — clearing the stated window is not holding a usable certificate", () => {
+    // A 2021 certificate clears METU's exclusion and is, in 2026, years past IELTS's own
+    // two-year validity. Both are true and only the first is checkable here, so the honest
+    // answer is a review rather than a pass.
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "8.0", testDate: "2021-03-01" }] };
+    expect(evaluateRequirement("english_proficiency", IELTS_RULE, facts, METU_IELTS_CUTOFF).status).toBe("needs_manual_review");
+  });
+
+  test("METU: no test date on file means review, never a pass on the number alone", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "8.0" }] };
+    const result = evaluateRequirement("english_proficiency", IELTS_RULE, facts, METU_IELTS_CUTOFF);
+    expect(result.status).toBe("needs_manual_review");
+    expect(result.reviewReason).toBe("inverted_recency");
+  });
+
+  test("Tilburg's opposite direction: the TOEFL 4-of-6 threshold does not apply to a report predating 2026-01-21", () => {
+    // https://www.tilburguniversity.edu/.../english-proficiency-requirements — "TOEFL iBT -
+    // test reports obtained on or after January 21, 2026: minimum total score of 4."
+    // REQ-2026-08-21-TIL0013. Same field, other direction.
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "TOEFL", score: "5", maxScore: "6", testDate: "2025-11-02" }] };
+    const result = evaluateRequirement(
+      "english_proficiency",
+      { kind: "test_score", testName: "TOEFL", minScore: 4 },
+      facts,
+      { test_scale: "TOEFL_IBT_1_6", recency_rule: { direction: "not_valid_before", boundaryDate: "2026-01-21" } }
+    );
+    expect(result.status).toBe("not_met");
+  });
+
+  test("Ankara's TR-YÖS 'valid for 2 years from the exam date' is never resolved to `met`", () => {
+    // REQ-2026-08-21-9323. The window is measured at the point of application and Oryn does
+    // not know when the student will apply, so even a recorded exam date does not settle it.
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "TR-YÖS", score: "300", maxScore: "500", testDate: "2026-05-01" }] };
+    const result = evaluateRequirement(
+      "entrance_exam",
+      { kind: "test_score", testName: "TR-YÖS", minScore: 200 },
+      facts,
+      { test_scale: "TR_YOS_0_500", recency_rule: { direction: "max_age", value: 2, unit: "years", anchor: "exam_date" } }
+    );
+    expect(result.status).toBe("needs_manual_review");
+    expect(result.reviewReason).toBe("recency_window");
+  });
+
+  test("a recency rule with an unrecognised direction is refused, never defaulted to max-age", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "8.0" }] };
+    const result = evaluateRequirement("english_proficiency", IELTS_RULE, facts, { recency_rule: { direction: "within_two_years" } });
+    expect(result.status).toBe("needs_manual_review");
+    expect(result.reviewReason).toBe("unreadable_qualifiers");
+  });
+});
+
+describe("Case 2 — TOEFL scale ambiguity across the January 2026 rescale", () => {
+  test("a bare 'TOEFL 100' threshold with no scale recorded is reviewed, not guessed at", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "TOEFL", score: "105", maxScore: "120" }] };
+    const result = evaluateRequirement("english_proficiency", { kind: "test_score", testName: "TOEFL", minScore: 100 }, facts);
+    expect(result.status).toBe("needs_manual_review");
+    expect(result.reviewReason).toBe("unstated_scale");
+  });
+
+  test("Tilburg's TOEFL iBT 4 of 6 (reports from 2026-01-21) is met by a 1-6 score of 4.5", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "TOEFL", score: "4.5", maxScore: "6" }] };
+    expect(evaluateRequirement("english_proficiency", { kind: "test_score", testName: "TOEFL", minScore: 4 }, facts, { test_scale: "TOEFL_IBT_1_6" }).status).toBe("met");
+  });
+
+  test("Tilburg's 4-of-6 threshold is NOT met by a legacy 0-120 score of 100, which clears it as a bare number", () => {
+    // The whole hazard in one assertion: 100 >= 4 is true and means nothing.
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "TOEFL", score: "100", maxScore: "120" }] };
+    const result = evaluateRequirement("english_proficiency", { kind: "test_score", testName: "TOEFL", minScore: 4 }, facts, { test_scale: "TOEFL_IBT_1_6" });
+    expect(result.status).toBe("needs_manual_review");
+    expect(result.reviewReason).toBe("incomparable_student_scale");
+  });
+
+  test("Erasmus's TOEFL iBT 90 (0-120 comparable) is met by a 95 with no maximum recorded — the number itself places it", () => {
+    // REQ-2026-08-21-ERA0041, test_scale TOEFL_IBT_0_120_COMPARABLE. 95 cannot be a 1-6 score.
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "TOEFL", score: "95" }] };
+    expect(evaluateRequirement("english_proficiency", { kind: "test_score", testName: "TOEFL", minScore: 90 }, facts, { test_scale: "TOEFL_IBT_0_120_COMPARABLE" }).status).toBe("met");
+  });
+
+  test("a TOEFL score of 5 sits on the dual-reporting boundary and is reviewed rather than placed on a scale", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "TOEFL", score: "5" }] };
+    const result = evaluateRequirement("english_proficiency", { kind: "test_score", testName: "TOEFL", minScore: 90 }, facts, { test_scale: "TOEFL_IBT_0_120_LEGACY" });
+    expect(result.status).toBe("needs_manual_review");
+    expect(result.reviewReason).toBe("unstated_student_scale");
+    expect(inferStudentScale("TOEFL", "5", null)).toBeNull();
+  });
+
+  test("scale_ambiguity outside {none, resolved_unambiguous} blocks evaluation, possibly_discontinued_instrument included", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "8.0" }] };
+    for (const ambiguity of ["undated_scale_assumption", "partially_unsatisfiable", "possibly_discontinued_instrument"]) {
+      expect(evaluateRequirement("english_proficiency", IELTS_RULE, facts, { scale_ambiguity: ambiguity }).status, ambiguity).toBe("needs_manual_review");
+    }
+    expect(evaluateRequirement("english_proficiency", IELTS_RULE, facts, { scale_ambiguity: "resolved_unambiguous" }).status).toBe("met");
+  });
+
+  test("IELTS and SAT thresholds are deliberately NOT made to require a scale qualifier", () => {
+    // Only TOEFL and TR-YÖS have a scale boundary. Demanding one everywhere would turn the
+    // requirement check into manual review across the board for no truth gained.
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "SAT", score: "1480" }] };
+    expect(evaluateRequirement("standardized_test", { kind: "test_score", testName: "SAT", minScore: 1400 }, facts, {}).status).toBe("met");
+  });
+});
+
+describe("Case 3 — mutually incomparable scales inside one TR-YÖS cycle", () => {
+  // One exam, one cycle, three published forms of the same requirement.
+  const STUDENT_TR_YOS: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "TR-YÖS", score: "440", maxScore: "500" }] };
+
+  test("Hacettepe's 'TR-YÖS: 500 puan üzerinden en az 400 puan' is met by 440 of 500", () => {
+    // REQ-2026-08-21-9302 — a score on a stated denominator, the one form that IS comparable.
+    expect(evaluateRequirement("entrance_exam", { kind: "test_score", testName: "TR-YÖS", minScore: 400 }, STUDENT_TR_YOS, { test_scale: "TR_YOS_0_500" }).status).toBe("met");
+  });
+
+  test("Ankara's 'Minimum 440 points from TR-YÖS' publishes no denominator and is never compared", () => {
+    // REQ-2026-08-21-9320 — the table gives 440 with no "out of" anywhere on either page.
+    // Hacettepe's directive establishes TR-YÖS as a 500-point exam, but that is an inference
+    // from a different university's document, and importing it here is how a wrong "met" is
+    // born.
+    const result = evaluateRequirement("entrance_exam", { kind: "test_score", testName: "TR-YÖS", minScore: 440 }, STUDENT_TR_YOS, { test_scale: "TR_YOS_SCALE_UNSTATED" });
+    expect(result.status).toBe("needs_manual_review");
+    expect(result.reviewReason).toBe("unstated_scale");
+  });
+
+  test("METU's TR-YÖS 'first 5th percentile' is a rank, and a stored score is never compared to it", () => {
+    // REQ-2026-08-21-9330. Resolving it needs the cycle's national distribution, which Oryn
+    // does not hold and cannot derive; a student who knows their score cannot self-assess.
+    const result = evaluateRequirement("entrance_exam", { kind: "test_score", testName: "TR-YÖS", minPercentileRank: 5 }, STUDENT_TR_YOS);
+    expect(result.status).toBe("needs_manual_review");
+    expect(result.reviewReason).toBe("incomparable_scale");
+  });
+
+  test("METU's percentile is neither met nor not_met by a score of 440, though 440 > 5", () => {
+    const result = evaluateRequirement("entrance_exam", { kind: "test_score", testName: "TR-YÖS", minPercentileRank: 5 }, STUDENT_TR_YOS);
+    expect(result.status).not.toBe("met");
+    expect(result.status).not.toBe("not_met");
+  });
+
+  test("METU's percentile scale blocks even a rule mistakenly written with a plain minScore", () => {
+    const result = evaluateRequirement("entrance_exam", { kind: "test_score", testName: "TR-YÖS", minScore: 5 }, STUDENT_TR_YOS, { test_scale: "TR_YOS_PERCENTILE_RANK" });
+    expect(result.status).toBe("needs_manual_review");
+    expect(result.reviewReason).toBe("incomparable_scale");
+  });
+
+  test("Hacettepe's 400-of-500 is not compared against a TR-YÖS result whose denominator is unknown", () => {
+    const noDenominator: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "TR-YÖS", score: "440" }] };
+    const result = evaluateRequirement("entrance_exam", { kind: "test_score", testName: "TR-YÖS", minScore: 400 }, noDenominator, { test_scale: "TR_YOS_0_500" });
+    expect(result.status).toBe("needs_manual_review");
+    expect(result.reviewReason).toBe("unstated_student_scale");
+  });
+});
+
+describe("Case 4 — score provenance is per-institution, never a property of the test", () => {
+  // The same student, the same certificate, two official UK pages, opposite answers.
+  const OSR_SEVEN: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "7.0", provenance: "one_skill_retake" }] };
+
+  test("Southampton accepts IELTS One Skill Retake, so a 7.0 obtained that way is met", () => {
+    // REQ-2026-08-21-9211: "(IELTS) Academic UKVI SELT (including One Skill Retake)". No
+    // excluded list on the requirement, so provenance never enters the comparison.
+    expect(evaluateRequirement("english_proficiency", IELTS_RULE, OSR_SEVEN, {}).status).toBe("met");
+  });
+
+  test("Edinburgh refuses IELTS One Skill Retake, so the identical 7.0 is not met there", () => {
+    // REQ-2026-08-21-3020: "We do not accept IELTS One Skill Retake to meet our English
+    // language requirements."
+    expect(evaluateRequirement("english_proficiency", IELTS_RULE, OSR_SEVEN, { excluded_provenances: ["one_skill_retake"] }).status).toBe("not_met");
+  });
+
+  test("Edinburgh's refusal does not leak to Southampton: the list lives on the requirement, not the test", () => {
+    const atSouthampton = evaluateRequirement("english_proficiency", IELTS_RULE, OSR_SEVEN, {});
+    const atEdinburgh = evaluateRequirement("english_proficiency", IELTS_RULE, OSR_SEVEN, { excluded_provenances: ["one_skill_retake"] });
+    expect(atSouthampton.status).toBe("met");
+    expect(atEdinburgh.status).toBe("not_met");
+  });
+
+  test("Groningen refuses MyBest and One Skill Retake, so an unknown provenance is reviewed rather than passed", () => {
+    // REQ-2026-08-21-GRO0006. Nothing records provenance on a student's score today, so this
+    // is the branch production actually takes — and it is the outcome the research lane asked
+    // for by name: "must still evaluate to needs_manual_review, not met".
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "7.0" }] };
+    const result = evaluateRequirement("english_proficiency", IELTS_RULE, facts, { excluded_provenances: ["one_skill_retake", "mybest"] });
+    expect(result.status).toBe("needs_manual_review");
+    expect(result.reviewReason).toBe("named_exclusion");
+  });
+
+  test("TU Delft accepts One Skill Retake while refusing IELTS Online and Indicator — per-variant, not a blanket policy", () => {
+    // REQ-2026-08-21-DEL0027, which states both directions on one page.
+    const osr: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "7.5", provenance: "one_skill_retake" }] };
+    const online: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "7.5", provenance: "online_edition" }] };
+    const delft = { excluded_provenances: ["online_edition", "indicator"] };
+    const rule = { kind: "test_score" as const, testName: "IELTS", minScore: 7.0 };
+    expect(evaluateRequirement("english_proficiency", rule, osr, delft).status).toBe("met");
+    expect(evaluateRequirement("english_proficiency", rule, online, delft).status).toBe("not_met");
+  });
+
+  test("a provenance outside the known vocabulary is refused rather than ignored", () => {
+    // Fails closed: an unrecognised exclusion must never silently become no exclusion at all.
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "7.0" }] };
+    const result = evaluateRequirement("english_proficiency", IELTS_RULE, facts, { excluded_provenances: ["taken_on_a_tuesday"] });
+    expect(result.status).toBe("needs_manual_review");
+    expect(result.reviewReason).toBe("unreadable_qualifiers");
+  });
+
+  test("Edinburgh's exclusion never rescues a score that misses the number anyway", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "5.0" }] };
+    expect(evaluateRequirement("english_proficiency", IELTS_RULE, facts, { excluded_provenances: ["mybest"] }).status).toBe("not_met");
+  });
+});
+
+describe("Case 5 — TU Dublin's age bar is unevaluable from birth year alone", () => {
+  // REQ-2026-08-21-9415: "Applicants must be 18 before 31st December (September Start
+  // programmes) or 31st May (January Start programmes)."
+  const TU_DUBLIN_AGE_BAR = { evaluation_gate: "age_bar" };
+
+  test("TU Dublin's 'must be 18 before 31 December' is never met and never not_met", () => {
+    const result = evaluateRequirement("international_requirement", null, EMPTY_FACTS, TU_DUBLIN_AGE_BAR);
+    expect(result.status).toBe("needs_manual_review");
+    expect(result.reviewReason).toBe("age_bar");
+  });
+
+  test("TU Dublin's age bar survives a structured rule being attached to the row", () => {
+    // The gate is read before the rule, so nothing authored later can convert it.
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "8.0" }] };
+    expect(evaluateRequirement("english_proficiency", IELTS_RULE, facts, TU_DUBLIN_AGE_BAR).status).toBe("needs_manual_review");
+  });
+
+  test("TU Dublin's age bar explains the birth-year limitation instead of blaming the student's data", () => {
+    // Phase 68: Oryn should say when it does not know enough. The privacy commitment
+    // (AGENTS.md Phase 2, birth year only) is the reason, and the student is told so.
+    const result = evaluateRequirement("international_requirement", null, EMPTY_FACTS, TU_DUBLIN_AGE_BAR);
+    expect(result.reasoning).toMatch(/birth year/i);
+    expect(result.reasoning).not.toMatch(/review it yourself/i);
+  });
+});
+
+describe("Case 6 — binding round semantics are a commitment, not a checkbox", () => {
+  const EARLY_DECISION = { evaluation_gate: "binding_commitment" };
+
+  test("a US Early Decision companion requirement needs review even with a structured rule attached", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "SAT", score: "1550" }] };
+    const result = evaluateRequirement("standardized_test", { kind: "test_score", testName: "SAT", minScore: 1400 }, facts, EARLY_DECISION);
+    expect(result.status).toBe("needs_manual_review");
+    expect(result.reviewReason).toBe("binding_commitment");
+  });
+
+  test("Early Decision copy states the obligation to enrol and does not read like a missing essay", () => {
+    const binding = evaluateRequirement("supplemental_requirement", null, EMPTY_FACTS, EARLY_DECISION);
+    const essay = evaluateRequirement("essay", null, EMPTY_FACTS);
+    expect(binding.status).toBe(essay.status);
+    expect(binding.reasoning).not.toBe(essay.reasoning);
+    expect(binding.reasoning).toMatch(/enrol/i);
+    expect(binding.reasoning).toMatch(/withdraw your other applications/i);
+    expect(essay.reasoning).toMatch(/review it yourself/i);
+  });
+
+  test("Restrictive Early Action is gated even on a category the evaluator would otherwise score", () => {
+    // The gate is checked before the category, so filing the record under an evaluable
+    // category cannot route around it.
+    const facts: RequirementFacts = { ...EMPTY_FACTS, gpas: [{ value: 4.0, scale: 4 }] };
+    expect(evaluateRequirement("minimum_grade", { kind: "minimum_grade", minGpa: 3.5, scale: 4 }, facts, EARLY_DECISION).status).toBe("needs_manual_review");
+  });
+
+  test("an unrecognised evaluation gate blocks rather than being dropped", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "8.0" }] };
+    const result = evaluateRequirement("english_proficiency", IELTS_RULE, facts, { evaluation_gate: "some_future_reason" });
+    expect(result.status).toBe("needs_manual_review");
+    expect(result.reviewReason).toBe("unreadable_qualifiers");
+  });
+});
+
+describe("qualifiers only ever make a verdict more cautious", () => {
+  test("every gate turns an otherwise-met IELTS 8.0 into a review, and none turns anything into met", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "8.0" }] };
+    expect(evaluateRequirement("english_proficiency", IELTS_RULE, facts).status).toBe("met");
+    for (const gate of ["inverted_recency", "recency_window", "unstated_scale", "incomparable_scale", "named_exclusion", "eligibility_restriction", "age_bar", "source_conflict", "historical", "binding_commitment"]) {
+      const result = evaluateRequirement("english_proficiency", IELTS_RULE, facts, { evaluation_gate: gate });
+      expect(result.status, gate).toBe("needs_manual_review");
+      expect(result.reasoning.length, gate).toBeGreaterThan(0);
+    }
+  });
+
+  test("no qualifier upgrades `unknown` (nothing on file) into a verdict", () => {
+    const qualifierSets: unknown[] = [{ excluded_provenances: ["mybest"] }, { recency_rule: { direction: "not_valid_on_or_after", boundaryDate: "2022-12-24" } }];
+    for (const qualifiers of qualifierSets) {
+      expect(evaluateRequirement("english_proficiency", IELTS_RULE, EMPTY_FACTS, qualifiers).status).toBe("unknown");
+    }
+  });
+
+  test("omitting qualifiers entirely leaves every pre-existing verdict byte-identical", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "7.0" }] };
+    expect(evaluateRequirement("english_proficiency", IELTS_RULE, facts)).toEqual(evaluateRequirement("english_proficiency", IELTS_RULE, facts, {}));
+  });
+
+  test("a gated alternative inside a group does not block a different alternative that is cleanly met", () => {
+    // METU's IELTS route is gated; a student holding a qualifying TOEFL still passes the group.
+    const gatedIelts: RequirementGroupMember = { ...IELTS, rawQualifiers: { evaluation_gate: "inverted_recency" } };
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "TOEFL", score: "100", maxScore: "120" }, { testName: "IELTS", score: "8.0" }] };
+    const result = evaluateRequirementGroup([gatedIelts, TOEFL], facts);
+    expect(result.status).toBe("met");
+    expect(result.memberResults.get("ielts")!.status).toBe("needs_manual_review");
   });
 });
