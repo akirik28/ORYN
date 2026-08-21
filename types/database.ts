@@ -63,6 +63,9 @@ export type RequirementCategory =
   | "supplemental_requirement"
   | "international_requirement";
 export type RequirementEvaluationStatus = "met" | "likely_met" | "not_met" | "unknown" | "needs_manual_review";
+/** A row's contribution to its requirement_groups verdict (migration 0052) — see
+ * lib/requirements/evaluate.ts evaluateRequirementGroup(). */
+export type RequirementGroupRole = "inclusion" | "exclusion" | "qualifier";
 export type OpportunityCategory = "competition" | "research" | "internship" | "summer_program" | "fellowship" | "scholarship" | "volunteering" | "entrepreneurship" | "hackathon" | "academic_program" | "online_program" | "conference" | "student_program";
 export type OpportunityStatus = "active" | "expired" | "under_review" | "disabled";
 export type SavedOpportunityStatus = "saved" | "applied" | "not_interested";
@@ -845,6 +848,20 @@ export type ProgramResearchQueueInsert = Insertable<
   "id" | "created_at" | "research_program_id" | "university_id" | "university_country_input" | "official_program_url_input" | "source_url_input" | "source_type_input" | "verification_status_input" | "raw_payload" | "outcome_detail" | "promoted_program_id"
 >;
 
+/** A set of university_requirements rows evaluated together rather than independently
+ * (migration 0052) — see lib/requirements/evaluate.ts evaluateRequirementGroup(). Deliberately
+ * has no university_id/program_id/scope of its own; every member row already states those and
+ * is trusted at ingestion time to agree, the same trust boundary this schema already uses for
+ * program_id-vs-university_id consistency elsewhere. */
+export interface RequirementGroup {
+  id: string;
+  title: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+export type RequirementGroupInsert = Insertable<RequirementGroup, "id" | "notes" | "created_at" | "updated_at">;
+
 export interface UniversityRequirement {
   id: string;
   university_id: string;
@@ -858,6 +875,29 @@ export interface UniversityRequirement {
   structured_rule: Record<string, unknown> | null;
   data_confidence: DataConfidence;
   data_status: DataStatus;
+  /** Applicant group this requirement applies to (e.g. "international_undergraduate"),
+   * migration 0042. Null means it applies to all applicants. */
+  scope: string | null;
+  /** Same vocabulary as Opportunity.verification_state (migration 0042's own comment: "one
+   * vocabulary covers both"). */
+  verification_state: "verified_current" | "verified_historical" | "verified_derived" | "unverified" | "conflicting";
+  verified_at: string | null;
+  /** Set only when this row must be evaluated together with sibling rows in the same
+   * requirement_groups row rather than independently (migration 0052) — see that table's
+   * comment and lib/requirements/evaluate.ts evaluateRequirementGroup(). */
+  requirement_group_id: string | null;
+  /** This row's contribution to its group's combined verdict. Null iff requirement_group_id
+   * is null. */
+  group_role: RequirementGroupRole | null;
+  /** True for any row stating a negative/carve-out fact (who is NOT eligible), grouped or
+   * not. Never auto-resolved — lib/requirements/evaluate.ts always returns
+   * needs_manual_review for these, deliberately never derived from an inclusion set by
+   * negation. See migration 0052's comment for why this is kept separate from
+   * group_role = 'exclusion' rather than folded entirely into it. */
+  is_exclusion: boolean;
+  /** The source document's own clause numbering (e.g. "B-a-1"), stored verbatim and never
+   * parsed — see migration 0052's comment. */
+  clause_ref: string | null;
   source_url: string | null;
   retrieved_at: string | null;
   last_checked_at: string | null;
@@ -866,7 +906,22 @@ export interface UniversityRequirement {
 }
 export type UniversityRequirementInsert = Insertable<
   UniversityRequirement,
-  "id" | "created_at" | "updated_at" | "title" | "is_required" | "structured_rule" | "data_confidence" | "data_status" | "last_checked_at"
+  | "id"
+  | "created_at"
+  | "updated_at"
+  | "title"
+  | "is_required"
+  | "structured_rule"
+  | "data_confidence"
+  | "data_status"
+  | "last_checked_at"
+  | "scope"
+  | "verification_state"
+  | "verified_at"
+  | "requirement_group_id"
+  | "group_role"
+  | "is_exclusion"
+  | "clause_ref"
 >;
 
 export interface UniversityStatistic {
@@ -1421,6 +1476,7 @@ export interface Database {
       university_profile_metrics: Table<UniversityProfileMetric, UniversityProfileMetricInsert, Partial<UniversityProfileMetricInsert>>;
       university_programs: Table<UniversityProgram, UniversityProgramInsert, UniversityProgramUpdate>;
       program_research_queue: Table<ProgramResearchQueue, ProgramResearchQueueInsert, Partial<ProgramResearchQueueInsert>>;
+      requirement_groups: Table<RequirementGroup, RequirementGroupInsert, Partial<RequirementGroupInsert>>;
       university_requirements: Table<UniversityRequirement, UniversityRequirementInsert, Partial<UniversityRequirementInsert>>;
       university_statistics: Table<UniversityStatistic, UniversityStatisticInsert, Partial<UniversityStatisticInsert>>;
       university_deadlines: Table<UniversityDeadline, UniversityDeadlineInsert, Partial<UniversityDeadlineInsert>>;

@@ -1,8 +1,17 @@
 import { describe, expect, test } from "vitest";
-import { evaluateRequirement } from "@/lib/requirements/evaluate";
-import type { RequirementFacts } from "@/lib/requirements/types";
+import { evaluateRequirement, evaluateRequirementGroup } from "@/lib/requirements/evaluate";
+import type { RequirementFacts, RequirementGroupMember } from "@/lib/requirements/types";
 
 const EMPTY_FACTS: RequirementFacts = { curricula: [], courses: [], gpas: [], testScores: [], languages: [] };
+
+// Edinburgh-shaped: four English-proficiency test alternatives, any one of which suffices —
+// the defect-B motivating case (a valid IELTS score must not be reported as a failed TOEFL
+// requirement).
+const IELTS: RequirementGroupMember = { id: "ielts", category: "english_proficiency", rawStructuredRule: { kind: "test_score", testName: "IELTS", minScore: 6.5 }, groupRole: "inclusion", title: "IELTS 6.5" };
+const TOEFL: RequirementGroupMember = { id: "toefl", category: "english_proficiency", rawStructuredRule: { kind: "test_score", testName: "TOEFL", minScore: 90 }, groupRole: "inclusion", title: "TOEFL 90" };
+const PTE: RequirementGroupMember = { id: "pte", category: "english_proficiency", rawStructuredRule: { kind: "test_score", testName: "PTE", minScore: 62 }, groupRole: "inclusion", title: "PTE 62" };
+const DUOLINGO: RequirementGroupMember = { id: "duolingo", category: "english_proficiency", rawStructuredRule: { kind: "test_score", testName: "Duolingo", minScore: 120 }, groupRole: "inclusion", title: "Duolingo 120" };
+const ENGLISH_TEST_ALTERNATIVES = [IELTS, TOEFL, PTE, DUOLINGO];
 
 describe("evaluateRequirement — manual review and informational categories", () => {
   test("essay always needs manual review, even with a structured rule attached", () => {
@@ -198,5 +207,79 @@ describe("evaluateRequirement — language_proficiency", () => {
       facts
     );
     expect(result.status).toBe("met");
+  });
+});
+
+describe("evaluateRequirementGroup — inclusion alternatives (defect B)", () => {
+  test("a valid IELTS score makes the whole group met, even though TOEFL/PTE/Duolingo are individually unknown", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "7.0" }] };
+    const result = evaluateRequirementGroup(ENGLISH_TEST_ALTERNATIVES, facts);
+    expect(result.status).toBe("met");
+    expect(result.memberResults.get("ielts")!.status).toBe("met");
+    expect(result.memberResults.get("toefl")!.status).toBe("unknown");
+  });
+
+  test("met wins even when it's the last-ranked alternative evaluated, not the first", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "Duolingo", score: "130" }] };
+    const result = evaluateRequirementGroup(ENGLISH_TEST_ALTERNATIVES, facts);
+    expect(result.status).toBe("met");
+  });
+
+  test("not_met only when every alternative is confidently not_met", () => {
+    const facts: RequirementFacts = {
+      ...EMPTY_FACTS,
+      testScores: [
+        { testName: "IELTS", score: "5.0" },
+        { testName: "TOEFL", score: "70" },
+        { testName: "PTE", score: "40" },
+        { testName: "Duolingo", score: "90" },
+      ],
+    };
+    const result = evaluateRequirementGroup(ENGLISH_TEST_ALTERNATIVES, facts);
+    expect(result.status).toBe("not_met");
+  });
+
+  test("unknown (not not_met) when no test is on file at all — a missing fact might still satisfy one alternative", () => {
+    const result = evaluateRequirementGroup(ENGLISH_TEST_ALTERNATIVES, EMPTY_FACTS);
+    expect(result.status).toBe("unknown");
+  });
+
+  test("needs_manual_review outranks unknown: an unresolved alternative could still turn out met", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "not a number" }] };
+    const result = evaluateRequirementGroup([IELTS, TOEFL], facts);
+    expect(result.status).toBe("needs_manual_review");
+  });
+
+  test("every member gets its own individually-computed result in memberResults regardless of the combined verdict", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "7.0" }] };
+    const result = evaluateRequirementGroup(ENGLISH_TEST_ALTERNATIVES, facts);
+    expect(result.memberResults.size).toBe(4);
+  });
+});
+
+describe("evaluateRequirementGroup — exclusion and qualifier roles never auto-resolve", () => {
+  test("an exclusion role forces needs_manual_review even though an inclusion in the same group would otherwise be met", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "7.0" }] };
+    const exclusion: RequirementGroupMember = { id: "excl", category: "international_requirement", rawStructuredRule: null, groupRole: "exclusion", title: "Turkish high school graduates excluded" };
+    const result = evaluateRequirementGroup([IELTS, exclusion], facts);
+    expect(result.status).toBe("needs_manual_review");
+  });
+
+  test("a qualifier role forces needs_manual_review even though the inclusion would otherwise be met", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "7.0" }] };
+    const qualifier: RequirementGroupMember = { id: "qual", category: "english_proficiency", rawStructuredRule: null, groupRole: "qualifier", title: "Must be within 2 years" };
+    const result = evaluateRequirementGroup([IELTS, qualifier], facts);
+    expect(result.status).toBe("needs_manual_review");
+  });
+
+  test("exclusion and qualifier members still get an individually-computed entry in memberResults", () => {
+    const exclusion: RequirementGroupMember = { id: "excl", category: "international_requirement", rawStructuredRule: null, groupRole: "exclusion", title: null };
+    const result = evaluateRequirementGroup([IELTS, exclusion], EMPTY_FACTS);
+    expect(result.memberResults.has("excl")).toBe(true);
+  });
+
+  test("a group with no recognized alternatives needs manual review rather than crashing", () => {
+    const result = evaluateRequirementGroup([], EMPTY_FACTS);
+    expect(result.status).toBe("needs_manual_review");
   });
 });
