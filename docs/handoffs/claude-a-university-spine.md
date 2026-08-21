@@ -3248,3 +3248,18 @@ blocker (not a vague "JS-heavy site" catch-all) so a future session with differe
 (a true headless browser capable of firing real intermediate scroll/intersection events)
 knows exactly what to try. **Netherlands remaining**: Maastricht, Twente, VU Amsterdam
 (blocked, see above), Wageningen still zero-coverage.
+
+**Program catalogue batch 26 — Maastricht University, 27 new, running session total 3,953
+across 43 universities.** Full method in that commit's own message (`8b44ec7`). Third
+Netherlands batch. Same Browser-pane-with-working-pagination pattern as most of this
+session's JS-heavy listings (plain `?page=N`, not virtualized like VU Amsterdam turned out
+to be). Source page gives an explicit per-program language tag, same reliable shape as
+Radboud (batch 25) -- and this page usefully demonstrates the tag can be trusted even when
+Dutch- and English-medium programs are mixed together on one international-facing English
+listing (Fiscaal Recht/Health Sciences/Medicine/Rechtsgeleerdheid are Dutch-medium, sitting
+directly alongside 23 English-medium programs on the same page) -- the presence of an
+explicit tag is what matters, not whether the page is "an English page" in general (which is
+exactly the assumption that failed for Leiden in batch 24). Two spot-checks (Fiscaal Recht,
+Circular Engineering) both confirmed real. **Netherlands status**: 4 of 7 originally
+zero-coverage universities now researched (Utrecht, Leiden, Radboud, Maastricht); Twente and
+Wageningen remain straightforwardly open, VU Amsterdam remains blocked (see batch 25 note).
