@@ -545,7 +545,39 @@ recommendation model has no clean category for this today**, and no document in 
 the gap before this persona surfaced it. Cross-referenced into `10`'s data-gaps table (§2).
 **119 rules / 59 sources.**
 
-**Runway status, ~05:35 Europe/Istanbul**: about 5.5 hours left. Both sessions' explicit
-mission-brief deliverables have real coverage; remaining time being spent on genuine deepening —
-primary-source verification, cross-framework stress-testing, and following up gaps this package
-finds in itself — rather than new breadth for its own sake.
+## CASPer generalizes the Persona J gap into a 3-way typology (`ea39a20`, `RULE-COUNSEL-120`)
+
+Checked whether `RULE-COUNSEL-118`'s "no recommendation category for rehearsed structured
+response" finding was a Queen's/McMaster idiosyncrasy or something broader — it's broader.
+**CASPer** (Acuity Insights) is a standardized, timed, third-party situational-judgment test used
+across 500+ programs (medicine, health sciences, PA, nursing, dental hygiene currently; the
+vendor's own page describes expansion into education/business/engineering) — structurally
+different from *both* achievement-evidence review *and* Queen's/McMaster's own institution-authored
+reflective prompts (CASPer's scenarios are standardized/hypothetical, not about the student's own
+past experience). ORYN's model now needs to distinguish three assessment types, not two. Added
+directly to `06-major-family-evidence/10-medicine-clinical-pathways.md`, which previously didn't
+mention CASPer at all despite ~50 US medical schools using it. **120 rules / 60 sources.**
+
+## Implementation-readiness (`13`) synced with tonight's new findings (`2e7b8b3`, `eea357e`)
+
+Item 1 (geography-tier weighting) now points to `17`'s richer per-dimension version. New item 13
+places the `RULE-COUNSEL-118`/`120` recommendation-type gap precisely: checked against the actual
+shipped types (`types/database.ts`'s `RecommendationClass` is orthogonal — governs strength, not
+kind; `lib/counselor/types.ts`'s `CandidateAction.category` is an unstructured `string`, no
+existing room for this) — flagged as a founder-level scoping decision, not pre-decided by this
+research package. Also fixed two stale counts found in the same pass: item 12's "17 families" (now
+20) and `00-overview.md`'s "19+, performing-arts-music in progress" (now confirmed 20, cross-checked
+against both branches' file trees and peer's own `major-family-taxonomy.json`, which independently
+indexes exactly 20).
+
+## Self-consistency audit: clean
+
+Ran a full check of this branch's own `[[RULE-COUNSEL-###]]` citations against `rules.json`: every
+citation resolves to a real entry, every one of this session's 120 entries is mentioned somewhere
+in the docs (no orphans), and every entry's `doc` field points to a file that actually exists. No
+issues found — noted here as a completed QA pass, not a change.
+
+**Runway status, 04:49 Europe/Istanbul (checked directly, not estimated)**: about 6h10m left.
+Both sessions' explicit mission-brief deliverables have real coverage; remaining time being spent
+on genuine deepening — primary-source verification, cross-framework stress-testing, and following
+up gaps this package finds in itself — rather than new breadth for its own sake.
