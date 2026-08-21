@@ -2981,3 +2981,21 @@ site-map A-Z (departments/services), not a course catalogue, despite the name su
 otherwise. Kent was not attempted this round (already flagged low-confidence pre-fetch: its
 best candidate URL is a dated-2019 `/search` path, matching the known stale-search-tool
 shape rather than a real listing).
+
+**Program catalogue batch 16 — University of Galway + University College Cork, 126 new,
+running session total 3,149 across 34 universities.** Full method in that commit's own
+message (`1e06a65`). Third and fourth Irish universities this session (after TCD/UCD and
+Maynooth/DCU) — Ireland continues to be the highest-ROI geography found so far: both
+fetched cleanly via plain WebFetch on the first or second try, no Cloudflare/Browser-pane
+detour needed, and both listing pages carry official CAO codes inline (captured in
+parentheses in `program_name`, matching the Maynooth/TCD convention already established).
+One data anomaly caught and disclosed rather than silently normalized: UCC's own course
+page lists "Biomedical Science" under an `MT`-prefixed code (`MT871`) rather than UCC's own
+`CK` prefix — `MT` is Munster Technological University's CAO prefix, so this is very likely
+a jointly-delivered UCC/MTU program appearing on UCC's page; published exactly as shown on
+the source with a `researcher_notes` flag rather than guessed-and-corrected or dropped. Two
+spot-checks against independent third-party sources (Qualifax/CareersPortal for Galway's
+GY504 Podiatric Medicine, a direct UCC per-course page for CK411 Data Science and AI) both
+confirmed the batch's codes and titles exactly. Remaining untried major Irish institutions:
+University of Limerick, Technological University Dublin, Dublin Business School — a
+reasonable next Ireland round if this lane continues.
