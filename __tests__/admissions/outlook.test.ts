@@ -72,10 +72,28 @@ describe("computeAdmissionOutlook", () => {
       expect(result.estimateConfidence).toBeNull();
     });
 
-    test("still returns a valid OutlookLabel and numeric compositeScore for credential_gate (DB enum/type compatibility — see notApplicableReason for why callers must not display it as-is)", () => {
+    test("still returns a numeric compositeScore for credential_gate (a real, if not admissions-relevant, profile-strength-vs-selectivity read a caller may persist/display)", () => {
       const result = computeAdmissionOutlook({ profileStrength: 92, admissionRate: 0.2, dataConfidence: "high", admissionSystemType: "credential_gate" });
-      expect(["extreme_reach", "reach", "competitive", "strong", "likely"]).toContain(result.outlook);
       expect(typeof result.compositeScore).toBe("number");
+    });
+
+    // Regression: migration 0049 added outlook_label's not_applicable member specifically so
+    // this never contradicts notApplicableReason again (previously outlook still claimed a
+    // confident reach/likely-style classification here — see the QA report's original
+    // reproduction). A 92/100-GPA Turkey/YKS persona must get this exact label, not "any of
+    // the 5" holistic labels.
+    test("outlook is exactly 'not_applicable' for every credential_gate input, regardless of profile strength or selectivity", () => {
+      for (const profileStrength of [1, 40, 60, 92, 100]) {
+        for (const admissionRate of [null, 0.05, 0.3, 0.9]) {
+          const result = computeAdmissionOutlook({ profileStrength, admissionRate, dataConfidence: "high", admissionSystemType: "credential_gate" });
+          expect(result.outlook).toBe("not_applicable");
+        }
+      }
+    });
+
+    test("outlook is never 'not_applicable' for a holistic (or omitted) admissionSystemType", () => {
+      const result = computeAdmissionOutlook({ profileStrength: 5, admissionRate: 0.02, dataConfidence: "low" });
+      expect(result.outlook).not.toBe("not_applicable");
     });
   });
 });

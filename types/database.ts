@@ -38,7 +38,11 @@ export type GoalStatus = "active" | "achieved" | "abandoned";
 export type DataConfidence = "high" | "medium" | "low";
 export type DataStatus = "fresh" | "stale" | "needs_review" | "unavailable";
 export type TargetStatus = "exploring" | "target" | "applying" | "applied" | "accepted" | "waitlisted" | "rejected" | "withdrawn";
-export type OutlookLabel = "extreme_reach" | "reach" | "competitive" | "strong" | "likely";
+/** "not_applicable" (migration 0049): the target's admissions system is credential/exam-
+ * gated (lib/admissions/outlook.ts's admissionSystemType: "credential_gate") -- the reach/
+ * competitive/likely scale describes profile-strength-vs-selectivity, which doesn't apply to
+ * a system with no holistic review step at all. Distinct from `null` ("not yet assessed"). */
+export type OutlookLabel = "extreme_reach" | "reach" | "competitive" | "strong" | "likely" | "not_applicable";
 export type ApplicationType = "early_decision" | "early_action" | "regular_decision" | "rolling" | "other";
 export type ApplicationStatus = "not_started" | "in_progress" | "submitted" | "under_review" | "accepted" | "waitlisted" | "rejected" | "withdrawn";
 export type RequirementStatus = "not_started" | "in_progress" | "completed" | "not_applicable";

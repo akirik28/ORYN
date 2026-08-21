@@ -1,0 +1,16 @@
+-- Additive only: adds one member to the existing outlook_label enum (created in
+-- 0007_target_universities_and_applications.sql). No renames, no drops, no rewrite of that
+-- or any other migration.
+--
+-- Why: counselor-loop QA defect #1 (docs/handoffs/counselor-loop-qa-report.md) found
+-- computeAdmissionOutlook() has no way to represent "this target's admissions system is
+-- credential/exam-gated, the reach/competitive/likely scale doesn't describe it at all" --
+-- so a YKS-track student (per docs/research/turkish-exams/06-counseling-implications.md:
+-- "Turkish central university placement contains no holistic component whatsoever") still
+-- received a confident-looking extreme_reach/reach/etc. label computed from a 9-dimension
+-- profile-strength formula that has zero relationship to how they're actually admitted.
+--
+-- lib/admissions/outlook.ts's admissionSystemType: "credential_gate" path (already shipped,
+-- suppresses the numeric estimate range and sets notApplicableReason) now also sets this
+-- value, so the label and the reason agree instead of contradicting each other.
+alter type outlook_label add value if not exists 'not_applicable';
