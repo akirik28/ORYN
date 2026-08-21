@@ -21,6 +21,6 @@
   "live_types_not_in_mission_brief_vocabulary": [
     {"type": "school_of", "note": "K-12/preparatory school operated/sponsored by a university -- a real, populated, useful distinction (9 live rows total across all types; 2 are school_of, e.g. Bilkent University -> BELS/BLIS) the mission brief's generic parent_of/child_of would not have separated from part_of"},
     {"type": "provider_for", "note": "Organization -> specific program/competition/scholarship it provides. Central to doc 08's opportunity-organizer granularity ladder (provider vs. the specific offering)"},
-    {"type": "related_brand", "note": "Loosest tie -- shared branding without operational/legal integration. Zero live rows; plausible future use is a university's executive-education arm marketed under a distinct brand"}
+    {"type": "related_brand", "note": "Loosest tie -- shared branding without operational/legal integration. Zero live rows in ORYN (no entity_type='school' rows exist yet outside Turkey), but now has a real, sourced, forward-looking example: docs/research/canonical-entity-intelligence/16-school-brand-license-networks.md documents UK independent schools (Harrow, Dulwich) licensing their name/brand to financially and operationally independent international schools worldwide -- confirmed directly from the schools' own published 'relationship statement' pages. This is the correct relationship_type for that pattern, never part_of/campus_of/school_of."}
   ]
 }

@@ -66,7 +66,7 @@ to keep it visible as the canonical example of "ambiguous, and that's fine."
 | `provider_for` | An organization | A program/competition/scholarship it provides | Distinguishes the provider (an `organization`/`university`/`opportunity_provider` entity) from the specific offering (a `program`/`competition`/`scholarship` entity) — see `08`. |
 | `member_of` | An institution with independent identity | A federation/consortium/system it belongs to | The École Polytechnique case; a looser bond than `part_of` (a federation is usually opt-in and post-hoc, an org chart is usually not). |
 | `successor_of` / `predecessor_of` | The newer / older entity | The older / newer entity | See `04` — reserved for cases where a genuine institutional discontinuity happened (merger, split, refounding) and both identities remain independently referenceable, not for a simple rename of one continuously-existing institution. |
-| `related_brand` | Either | Either | The loosest tie — shared branding/naming without operational or legal integration. No live example; a plausible future candidate is a university's executive-education arm marketed under a distinct brand. |
+| `related_brand` | Either | Either | The loosest tie — shared branding/naming without operational or legal integration. No live *ORYN* example yet, but `16` now documents a real, sourced, forward-looking one: UK independent schools (Harrow, Dulwich) licensing their name/brand to financially and operationally independent international schools worldwide, confirmed directly from the schools' own published relationship-disclosure pages. |
 
 ## Where the mission brief's vocabulary and the schema diverge
 

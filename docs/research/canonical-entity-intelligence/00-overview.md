@@ -103,12 +103,13 @@ database directly rather than trusting any prior session's report.
 | 13 | `13-opportunity-organizer-research-batch2.md` | The remaining 147 opportunity organizer strings, all resolved to a sourced official URL and proposed `entity_type` — completes coverage of all 171 distinct strings in `opportunities.organization` across `08`+`13` combined |
 | 14 | `14-trigram-similarity-discovery-audit.md` | A new discovery-only candidate-finding method tried against live data, including one candidate researched to a sourced, resolved conclusion |
 | 15 | `15-country-city-entity-gap.md` | `entity_type='country'`/`'city'` have zero rows despite six schema-enforced FK columns requiring them — the largest, cleanest gap this session found, and the one case where bulk pre-population is actually the right call |
+| 16 | `16-school-brand-license-networks.md` | Forward-looking (no live ORYN data yet): UK independent-school international brand-licensing networks (Harrow, Dulwich), giving `related_brand` its first real, sourced example |
 
 Docs 12–13 were produced by two background research agents dispatched partway through this
 session with the same evidence standard and non-duplication discipline as 00–11 (see
-`docs/handoffs/research-canonical-entity-intelligence.md` for exactly when/how); 14–15 continue
-the lead session's own direct-query method. All are integrated here, not bolted on — read them
-in the same pass as the rest of the package.
+`docs/handoffs/research-canonical-entity-intelligence.md` for exactly when/how); 14–16 continue
+the lead session's own direct-query/direct-research method. All are integrated here, not bolted
+on — read them in the same pass as the rest of the package.
 
 Machine-readable companions live in `data/research/canonical-entities/`:
 
