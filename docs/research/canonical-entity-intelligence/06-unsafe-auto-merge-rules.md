@@ -126,3 +126,51 @@ Why: `precedence.ts`'s `decideWrite()` already returns `"conflict"` rather than 
 two equal-authority, equal-date, disagreeing sources; this framework extends the same discipline
 to identity/relationship evidence rather than treating facts and identity as governed by different
 standards. Source: `01`.
+
+**RULE-ENTITY-019 — A named school/faculty with its own admissions process and brand earns its
+own canonical entity related to its parent university; a narrower center/initiative defaults to
+no row until it recurs; a specific named program is a different `entity_type`
+(`program`/`competition`), never an alias of its provider.**
+Why: live evidence — the University of Pennsylvania/Wharton six-way organizer-string granularity
+cluster in `opportunities.organization` exercises every layer of this distinction at once. Source:
+`08`.
+
+**RULE-ENTITY-020 — Country is the one `entity_type` where bulk pre-population from a single
+authoritative source (ISO 3166-1) is correct, not a shortcut — a bounded, small, authoritatively
+enumerated set with no real case-by-case identity question. Every other `entity_type`, including
+city, still requires the normal one-at-a-time research discipline.**
+Why: `entity_type='country'` has zero rows despite six schema-enforced FK columns requiring it
+(`canonical_required`, the strictest policy tier); the underlying free-text `country` data is
+already clean, so the gap is purely that the bulk-safe bootstrap was never run. Source: `15`.
+
+**RULE-ENTITY-021 — `opportunities.organization_entity_id` must always point at the organizing
+body, never at the named program/competition/scholarship it runs — even when the organizer string
+*is* a competition's own name.** The competition still gets its own `entity_type='competition'`
+row (for aliasing/search/`provider_for`), just not as the value of this specific FK.
+Why: `trg_opportunities_org_entity_type` (migration 0038) only permits
+`entity_type in ('opportunity_provider','organization','university','school','employer',
+'research_institution','lab','ngo','club')` on this column — `program`/`competition`/`scholarship`
+are valid `canonical_entities.entity_type` values generally but rejected here specifically. Caught
+and corrected a real imprecision in this package's own earlier `opportunity-organizer-
+candidates.json` (PennApps/MIT Battlecode). Source: `13`.
+
+**RULE-ENTITY-022 — An organization whose entire public identity *is* the one named competition/
+journal/program it runs is `entity_type='opportunity_provider'`; a broader-mission institution for
+which running student programs is one activity among several is `entity_type='organization'`. A
+genuine judgment call at the margin, not a bright line — document the reasoning per case rather
+than applying a keyword rule.**
+Why: applied consistently across 147 real opportunity-organizer strings (43 resolved to
+`opportunity_provider`, 56 to `organization`), with explicit worked examples on both sides.
+Source: `13`.
+
+**RULE-ENTITY-023 — Before writing an external registry id (ROR, etc.) onto an ORYN entity, check
+whether the registry's own entity granularity actually matches ORYN's for that institution — a
+registry may model one system-level entity where ORYN (correctly, for product reasons) models
+separate per-campus entities, or vice versa. Verify by querying the registry directly, never by
+assuming the pattern that worked for other institutions holds.**
+Why: two distinct, live-API-verified failure modes found while testing this package's own top
+recommendation — Purdue (ROR has both a system entity and a more specific campus child; the naive
+search result is the wrong one) and Rutgers (ROR has only one entity for the whole university,
+while ORYN correctly models New Brunswick/Newark as separate rows — enriching both with the same
+ROR id would hit `entity_external_ids`' `unique(id_system, external_id)` constraint on the second
+write). Source: `05`.
