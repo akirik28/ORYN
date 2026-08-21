@@ -82,10 +82,16 @@ anything yet); **Genç UPSHIFT** explicitly does not (the right recommendation f
 student). Carried into the actual inserted rows, not just this document, so matching logic
 can use it once it exists.
 
-## Applied
+## Applied 2026-08-21 (production write, standing founder authorization)
 
-See commit log — applied following the same protocol as the earlier 35-row batch: fresh live
-re-query immediately before writing, `AND <col> IS NULL`-style safety where applicable (all
-22 are new rows, not updates, so the equivalent protection here is the dedup re-check against
-a freshly-pulled live table immediately before the INSERTs ran), landed-vs-predicted verified
-after.
+Fresh dedup re-check against a freshly-pulled live table immediately before writing (all 22
+official_urls confirmed absent from live at that moment). One real bug caught and fixed at
+execution time, not a classifier issue: `application_open_date` is a `date` column, but the
+Ashoka record's source value was the free-text "Nominations accepted year-round" (correct
+information, wrong field) — the whole transaction rolled back atomically on the first
+attempt (verified: 0 of 22 rows landed), fixed by nulling that field and folding the same
+information into `current_cycle_label` instead, then re-ran clean.
+
+**Landed exactly as predicted**: 22 of 22, category breakdown volunteering 6 / student_program
+7 / fellowship 3 / entrepreneurship 4 / conference 2 — matches the classification table above
+exactly, no divergence.
