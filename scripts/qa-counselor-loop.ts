@@ -16,8 +16,8 @@ import { computeOpportunityMatch, type OpportunityForMatching, type StudentMatch
 import { evaluateRequirement } from "../lib/requirements/evaluate";
 import type { RequirementFacts } from "../lib/requirements/types";
 import type {
-  Activity, Award, Certification, Course, EducationRecord, Project,
-  ResearchExperience, TestScore, VolunteeringExperience, WorkExperience,
+  Activity, Award, CareerGoal, Certification, Course, EducationRecord, Project,
+  ResearchExperience, StudentInterest, TargetUniversity, TestScore, VolunteeringExperience, WorkExperience,
 } from "../types/database";
 
 const NOW = new Date("2026-08-21T00:00:00Z");
@@ -56,11 +56,6 @@ function volunteering(p: Partial<VolunteeringExperience>): VolunteeringExperienc
     start_date: null, end_date: null, ongoing: false, hours_per_week: null, location: null, story_notes: null,
     cause_area: null, weeks_per_year: null, title: "Untitled", ...evidence, ...stamp, ...p };
 }
-function work(p: Partial<WorkExperience>): WorkExperience {
-  return { id: id(), user_id: "qa", organization: "Unknown", organization_entity_id: null, description: null,
-    start_date: null, end_date: null, ongoing: false, hours_per_week: null, paid: null, location: null,
-    employment_type: "internship", title: "Untitled", ...stamp, ...p } as WorkExperience;
-}
 function course(p: Partial<Course>): Course {
   return { id: id(), user_id: "qa", education_record_id: null, subject: null, academic_year: null,
     grade_value: null, grade_scale: null, credit_hours: null, course_name: "Untitled", level: "regular", ...stamp, ...p };
@@ -73,9 +68,18 @@ function educationRecord(p: Partial<EducationRecord>): EducationRecord {
     start_date: null, end_date: null, is_current: true, overall_gpa: null, gpa_scale: null, notes: null,
     school_name: "Unknown School", stage: "high_school", ...stamp, ...p };
 }
-function certification(p: Partial<Certification>): Certification {
-  return { id: id(), user_id: "qa", organization: null, organization_entity_id: null, description: null,
-    issue_date: null, expiry_date: null, credential_url: null, title: "Untitled", ...evidence, ...stamp, ...p };
+function studentInterest(label: string): StudentInterest {
+  return { id: id(), user_id: "qa", label, is_custom: false, created_at: stamp.created_at };
+}
+function careerGoal(): CareerGoal {
+  return { id: id(), user_id: "qa", title: "Untitled", category: null, target_date: null,
+    priority: 0, status: "active", ...stamp };
+}
+function targetUniversity(): TargetUniversity {
+  return { id: id(), user_id: "qa", university_id: "qa-university", program_id: null, status: "target",
+    notes: null, academic_fit_score: null, profile_fit_score: null, outlook: null,
+    estimate_range_low: null, estimate_range_high: null, outlook_confidence: null,
+    outlook_model_version: null, outlook_calculated_at: null, ...stamp };
 }
 
 interface Persona {
@@ -260,7 +264,9 @@ for (const p of personas) {
     educationRecords: p.educationRecords, courses: p.courses, testScores: p.testScores, activities: p.activities,
     awards: p.awards, certifications: p.certifications, projects: p.projects, researchExperiences: p.researchExperiences,
     volunteeringExperiences: p.volunteeringExperiences, workExperiences: p.workExperiences,
-    interests: p.interests as any[], goals: p.goals as any[], targetUniversities: p.targetUniversities as any[],
+    interests: (p.interests as string[]).map((label) => studentInterest(label)),
+    goals: p.goals.map(() => careerGoal()),
+    targetUniversities: p.targetUniversities.map(() => targetUniversity()),
     skillCount: p.skillCount, featuredCount: p.featuredCount, hasContactInfo: p.hasContactInfo,
   });
   console.log(`\n-- computeCompleteness -- ${completeness}%`);
