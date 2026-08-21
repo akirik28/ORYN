@@ -1,6 +1,6 @@
 # university_programs.kilavuz_kodu — proposal, written not applied
 
-Branch `oryn/yok-atlas-placement-schema`. Migration `0056` written and committed, **not
+Branch `oryn/yok-atlas-placement-schema`. Migration `0057` written and committed, **not
 applied to any live database** — per the coordination session's explicit instruction, 0055's
 authorization does not extend to this migration; applying it needs the founder's authorization
 again, separately, when someone is ready to actually run it (most usefully alongside a backfill
@@ -89,7 +89,7 @@ real coverage is measured.
 
 ## Files
 
-- `supabase/migrations/0056_university_program_kilavuz_kodu.sql` — new, **not applied**.
+- `supabase/migrations/0057_university_program_kilavuz_kodu.sql` — new, **not applied**.
 - `types/database.ts` — `UniversityProgram.kilavuz_kodu`, added to `UniversityProgramInsert`'s
   optional fields.
 - This file.
