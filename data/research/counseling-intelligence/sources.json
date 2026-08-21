@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "package": "oryn/counseling-intelligence-research",
-  "last_updated": "2026-08-21",
+  "last_updated": "2026-08-21T04:20:00+03:00",
   "method_note": "Priority order and discipline documented in full in docs/research/counseling-intelligence/00-overview.md's \"Method and source standard\" section. Blogs/aggregators appear here only where no higher-tier source was fetchable, and are always source_type discovery_or_secondary with confidence capped at medium. [Updated 2026-08-21] Merged with this session's own source shard (originally sources-session2.json, 45 sources, prefix S-<NAME> not SRC-### so no ID collision existed): docs 03, 06-major-family-evidence/00+01-09, 07, 08, 14. This file is still not yet merged with the peer branch's own separate, larger sources.json on oryn/counseling-intelligence-research-013956 -- that cross-branch merge remains the final integration step.",
   "sources": [
     {
@@ -184,11 +184,11 @@
       "additional_urls": [],
       "publisher": "Turkey's Student Selection and Placement System (YKS) — ÖSYM-administered",
       "source_type": "secondary_description_of_official_system",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
+      "retrieval_method": "WebSearch + direct WebFetch of osym.gov.tr pages (structure only; current-year coefficient tables not opened -- see S-YKS-OBP)",
       "retrieved_at": "2026-08-21",
       "claim_supported": "YKS is a centralized, standardized-exam-based placement system (TYT/AYT/YDT sessions), with placement by score-ranked preference matching rather than a holistic application file.",
       "confidence": "medium_high",
-      "limitations": "ÖSYM's own site (osym.gov.tr) not directly fetched this pass; exact current-year exam format should be re-verified there before citing as current to a student.",
+      "limitations": "osym.gov.tr's YKS exam-group index and programs/quotas guide index were directly fetched this pass to confirm structure; the specific current-year numeric coefficient tables were not opened (see S-YKS-OBP). System existence/structure: high confidence. Exact current-year exam-format minutiae should still be re-verified before being quoted as current to a student.",
       "used_in": [
         "docs/research/counseling-intelligence/03-recommendation-timing.md §6"
       ]
@@ -1019,6 +1019,25 @@
       "limitations": "Ingenieurgesetz is state-level (Land) legislation in Germany's federal system, not one single federal law -- the specific statutory text was not independently fetched this pass, sourced from consistent secondary description instead.",
       "used_in": [
         "docs/research/counseling-intelligence/06-major-family-evidence/05-engineering-me-ce-ae-ee.md §6"
+      ]
+    },
+    {
+      "id": "S-YKS-OBP",
+      "title": "YKS placement-score OBP (Ortaogretim Basari Puani) component and its coefficient",
+      "url": "https://www.osym.gov.tr/yuksekogretim-programlari-ve-kontejanlari-kilavuzu",
+      "additional_urls": [
+        "https://www.multibem.com.tr/obp-hesaplama-2026/",
+        "https://www.gridanismanlik.com/obp-nedir-nasil-hesaplanir/"
+      ],
+      "publisher": "OSYM (structure confirmation) / multiple Turkish student-facing YKS-calculator sites (specific coefficient values)",
+      "source_type": "official_site_structure_confirmation_plus_convergent_secondary_coefficients",
+      "retrieval_method": "WebFetch of osym.gov.tr directly (confirmed ÖSYM publishes exact coefficient tables for placement-score calculation as standing practice, e.g. a historical 'ağırlıklı ortaöğretim başarı puanının çarpılacağı katsayılar' table on its own domain) + WebSearch convergence across multiple independent secondary sources for the current ~0.12/~0.06 coefficient values",
+      "retrieved_at": "2026-08-21",
+      "claim_supported": "YKS placement score includes an OBP (diploma-grade-derived school achievement score) component at a small, capped coefficient (~0.12 of placement score, ~0.06 if previously placed), distinct from and much smaller in scope than the TYT/AYT exam components, and itself grades-based rather than activity-based.",
+      "confidence": "high for the existence/rough size of the OBP channel; medium for the exact current-year coefficient values",
+      "limitations": "The current year's official ÖSYM coefficient table PDF was not directly opened this pass -- the specific ~0.12/~0.06 figures rest on convergence across multiple independent Turkish secondary sources (student-facing score calculators), not a primary re-derivation. Confirmed instead, via direct fetch, that ÖSYM's own site structurally publishes this kind of precise coefficient table as standing practice, which corroborates but does not independently re-verify the specific current values.",
+      "used_in": [
+        "docs/research/counseling-intelligence/03-recommendation-timing.md §6"
       ]
     }
   ]
