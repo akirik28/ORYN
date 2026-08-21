@@ -450,3 +450,48 @@ This handoff wasn't updated after every single commit in this stretch (unlike mo
 
 Peer separately reported (not yet independently checked by this session) sharpening its own
 `03-recommendation-timing.md` §6 with the same ÖSYM/YKS finding as its `RULE-COUNSEL-242`.
+
+## Canada primary-source pass + new doc 17 (dimension weighting by target)
+
+Two more commits since the catch-up above:
+
+**Canada's 4 named "holistic" programs verified against their own official pages**
+(`379144b`, `RULE-COUNSEL-110-112`) — direct-fetched Waterloo's AIF, Queen's Commerce's rubric,
+and UofT's own assessment page (McMaster HHSP via search-summary, direct fetch 403'd). Found the
+four programs are not one mechanism: Waterloo's AIF explicitly invites activity/accomplishment
+description; Queen's Commerce and McMaster HHSP score written/video responses on reflective
+competencies with **no activities-list criterion at all** in their own rubrics. Also found UofT's
+own page does not support this document's earlier "UofT runs explicitly holistic review weighing
+leadership/EC" characterization of its general process — **withdrew** that claim rather than
+merely downgrading it, since the primary source directly contradicts it (same discipline as the
+social-work associate-degree correction, `RULE-COUNSEL-107`). Also fixed a doc/registry sync bug
+found in the process: `11`'s "Rules established" list still had `RULE-COUNSEL-073`'s
+pre-correction "Tier 2, closer to UK" text even though `rules.json` had already been updated to
+the corrected version — worth remembering this class of bug can happen (registry updated,
+prose list not) and re-checking for it elsewhere if anyone has time. **112 rules / 58 sources.**
+
+**New doc `17-dimension-weighting-by-target.md`** (`b57b611`, `RULE-COUNSEL-113-116`) —
+operationalizes the gap `10`/`11` explicitly flagged as unresolved (`RULE-COUNSEL-059`/`060`'s own
+text: "no document in this package explicitly operationalizes" which dimensions matter more for
+which target system). Stays strictly qualitative (high/medium/low/zero, never a numeric weight)
+per `AGENTS.md` Phase 6.1's prohibition on LLM-invented scoring parameters — this is a proposal for
+a future scoring-architecture session to consume, not a scoring implementation itself. Gives a
+per-dimension table for UK (subject-relevance cuts across all 9 dimensions), an honest
+"unresolved" for France (current sourcing insufficient to responsibly assign ordinals — said so
+rather than guessing), the Tier-3-general zero-weight case, and generalizes the Canada finding
+above into a standing principle (tier alone is insufficient for named carve-outs; the specific
+program's own rubric must be checked). A cross-cutting section pulls together medicine's
+scattered per-country findings for the first time in one place and shows the "exception direction"
+flips by country — activity-rewarding in US/UK, aptitude-test-gated in Switzerland, *more*
+exam-dominated than usual in Turkey — demonstrating that country-level and field-level
+conditioning must compose together, neither is sufficient alone. **116 rules / 58 sources —
+current count as of this commit.**
+
+**Peer taxonomy cross-check**: separately reviewed peer's new
+`data/research/counseling-intelligence/major-family-taxonomy.json` (a structured interest→skills→
+career-family index over all 20 family docs, built by reading — not modifying — this session's 9
+docs). Spot-checked 3 of this session's 9 entries (11-psychology, 19-social-work,
+16-architecture) for accuracy, including the hardest ones to get subtly wrong (the 099/107 upgrade/
+downgrade split, Germany's clinical-only Approbation scope). All accurate; one cosmetic gap found
+(family 16's `credential_gated_career` field was `null` despite the adjacent `licensure` field
+correctly describing UK/Germany architect title-protection) and already fixed by peer (`5ac811e`).
