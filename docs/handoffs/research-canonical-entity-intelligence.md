@@ -65,6 +65,12 @@ catching 6 concrete pitfalls a purely mechanical enrichment pass would have hit.
   a reader: an arithmetic miscount in the country-value accounting (88→90 total, corrected with an
   explicit note in both the doc and the JSON), and a premature reading of a German-university
   duplicate pattern that a second, more careful query showed was already resolved (`09` Finding 6).
+- A full end-to-end re-read of every document (not spot checks) found and fixed one more real
+  inconsistency: `rules.json` had grown to 23 rules through incremental edits, but `06`'s prose
+  registry (which `rules.json` itself claims as its source document) stopped at 18 — five rules
+  existed only as terse JSON with no prose "why." Backfilled. Cross-checked afterward that every
+  `RULE-ENTITY-###` referenced anywhere in the package now has exactly one definition in
+  `rules.json` and vice versa — clean.
 
 ## What's next
 
