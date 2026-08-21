@@ -944,22 +944,31 @@ export interface UniversityStatistic {
 }
 export type UniversityStatisticInsert = Insertable<UniversityStatistic, "id" | "created_at" | "updated_at" | "data_confidence">;
 
-/** One row per (programme, admission cycle) — migration 0055. Never overwritten by the next
- * cycle's ingestion, so year-over-year trend stays queryable — see that migration's comment
- * for why this isn't columns on UniversityProgram. `placement_status` is only "filled" |
- * "unfilled"; a cycle Oryn hasn't researched yet is the absence of a row, not a third status
- * value. */
+/** One row per (programme, admission cycle, scholarship/fee tier, faculty) — migration 0055,
+ * revised against the live YOK Atlas API before first application. Never overwritten by the
+ * next cycle's ingestion, so year-over-year trend stays queryable — see that migration's
+ * comment for why this isn't columns on UniversityProgram. Column names match the source's
+ * own field names verbatim (kontenjan, puanTuru, minPuan, basariSirasi, kilavuzKodu,
+ * bursOraniAdi, fymkId/fymkAdi — snake_cased, not translated), confirmed directly against the
+ * live API response rather than inferred from research prose. `placement_status` is only
+ * "filled" | "unfilled"; a cycle Oryn hasn't researched yet is the absence of a row, not a
+ * third status value. `burs_orani_adi` and `fymk_id` are part of the table's own unique key
+ * (see migration 0055's comment) — a scholarship-tier or faculty variant of the same
+ * programme is a genuinely distinct admission track, not a duplicate. */
 export interface UniversityProgramPlacementCycle {
   id: string;
   program_id: string;
   cycle_year: number;
   cycle_label: string;
-  yok_programme_code: string | null;
-  score_type: string | null;
-  quota: number | null;
+  kilavuz_kodu: string | null;
+  fymk_id: string | null;
+  fymk_adi: string | null;
+  puan_turu: string | null;
+  burs_orani_adi: string | null;
+  kontenjan: number | null;
   placement_status: "filled" | "unfilled";
-  success_rank: number | null;
-  success_score: number | null;
+  basari_sirasi: number | null;
+  min_puan: number | null;
   source_url: string | null;
   data_confidence: DataConfidence;
   retrieved_at: string | null;
@@ -968,7 +977,20 @@ export interface UniversityProgramPlacementCycle {
 }
 export type UniversityProgramPlacementCycleInsert = Insertable<
   UniversityProgramPlacementCycle,
-  "id" | "created_at" | "updated_at" | "yok_programme_code" | "score_type" | "quota" | "success_rank" | "success_score" | "source_url" | "data_confidence" | "retrieved_at"
+  | "id"
+  | "created_at"
+  | "updated_at"
+  | "kilavuz_kodu"
+  | "fymk_id"
+  | "fymk_adi"
+  | "puan_turu"
+  | "burs_orani_adi"
+  | "kontenjan"
+  | "basari_sirasi"
+  | "min_puan"
+  | "source_url"
+  | "data_confidence"
+  | "retrieved_at"
 >;
 
 export interface UniversityDeadline {
