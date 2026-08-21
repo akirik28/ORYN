@@ -109,18 +109,39 @@ previously-undocumented product-surface risk (`search_canonical_entities()` can 
 id with zero backing `universities` rows) worth a direct check against the live UI before deciding
 disposition.
 
-**3b. Populate five concrete, already-researched `entity_relationships` candidates.**
-`12-institution-collision-traps.md` cases 5, 8, and 10 name specific, sourced-not-guessed rows
-ready to create once whoever has write access confirms each institution's ORYN row id: `Charité
-– Universitätsmedizin Berlin part_of Humboldt-Universität zu Berlin` AND `part_of Freie
-Universität Berlin` (a genuine two-parent case, both legal per `03`'s `part_of` semantics);
-`Amsterdam University College part_of University of Amsterdam` AND `part_of Vrije Universiteit
-Amsterdam` (same two-parent shape, confirmed from AUC's own official page); `King's College
-London member_of University of London`, `University College London member_of University of
-London`, `London School of Economics member_of University of London` (mirrors the one existing
-`member_of` example, École Polytechnique / IP Paris — directly answers this document's earlier
-request in `03`/`09` for a second live example). None of these five are this session's or
-`12`'s to write — all five need each institution's actual ORYN row confirmed first.
+**3b. Populate five concrete, already-researched `entity_relationships` candidates — corrected
+late in this session: row ids were checked directly, and 3 of the 5 need a new entity created
+first, not merely an existing row looked up.** `12-institution-collision-traps.md` cases 5, 8,
+and 10 name specific, sourced-not-guessed relationships. Checked against the live registry this
+session (all `entity_type='university'`, non-merged, exhaustive spelling-variant search):
+
+- `Charité – Universitätsmedizin Berlin part_of Humboldt-Universität zu Berlin` AND `part_of
+  Freie Universität Berlin` — **Charité itself does not exist as a canonical_entities row yet**
+  (checked directly, zero matches across several spelling variants). Both parent ids are ready:
+  Humboldt-Universität zu Berlin `89bf2564-590f-4fb8-90f0-a2c5479103c4`, Freie Universität Berlin
+  `62e2a392-3940-4803-aeed-2206d6a07fd9` (stored as "Freie Universitaet Berlin," ASCII-spelled —
+  worth an alias if a diacritic search should also find it). Creating Charité's own row first
+  (with real sourcing, out of this session's read-only scope) is the actual next step, not a
+  relationship-row write.
+- `Amsterdam University College part_of University of Amsterdam` AND `part_of Vrije Universiteit
+  Amsterdam` — **same shape: AUC itself does not exist as a row yet**, checked directly. Both
+  parent ids are ready: University of Amsterdam `31a839fe-63d6-4983-a93f-4803110119dc`, Vrije
+  Universiteit Amsterdam `bdb167a1-1d50-4a18-9a22-7524f50b471c`.
+- `King's College London member_of University of London`, `University College London member_of
+  University of London`, `London School of Economics member_of University of London` — **"University
+  of London" itself, the federal body, does not exist as its own row either**, checked directly
+  (several of its member colleges do have their own rows carrying "University of London" as part
+  of their own name — Birkbeck, Brunel, City St George's, Goldsmiths, Queen Mary, Royal Holloway,
+  SOAS — but none of those is the federation itself). The three subject ids are ready: King's
+  College London `c64f4ae6-c482-4cd1-acdb-b9c503e5bf9d`, University College London
+  `92569827-8dd1-46bc-98df-095c6c84b189`, London School of Economics and Political Science
+  `ba53a102-ed66-4e51-a1ce-4854275b1b42` — but the object side needs a new "University of London"
+  row created first.
+
+None of this is this session's or `12`'s to write (still true — creating a new canonical entity
+needs real sourcing this read-only research pass didn't do for these three specifically). What
+changed: the actual blocker for 3 of the 5 relationships is a missing entity, not a missing id
+lookup — worth knowing before someone budgets this as "five quick relationship writes."
 
 ## P2 — Real gaps, smaller blast radius, need product/schema judgment (not this session's to decide)
 
