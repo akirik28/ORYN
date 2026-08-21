@@ -106,12 +106,15 @@ export interface IngestDecision {
   programRow: AcceptedProgramRow | null;
 }
 
-/** The URL-based half of `existingKeys` — same official_program_url at the same university is
- * the same real-world programme even when a later research pass or a catalogue re-scrape
- * captured a different display name for it (e.g. "Computer Science and Engineering" vs. a
- * catalogue's current link text "Computer Science & Engineering - English" — found live, same
- * TU Delft URL, name-only dedup would have inserted both). Exported so callers building
- * `existingKeys` can construct this half consistently with how decideIngestion checks it. */
+/** No longer consulted by decideIngestion's own automatic duplicate detection — see
+ * programDedupKey's comment for why (dedup-key-shape pass, migration 0053). Kept exported
+ * only because scripts/stage-programs-ingestion-dryrun.ts (a completed, historical batch's
+ * dry-run tool, not part of the live ingestion path) still imports it for its own
+ * supersession-redirect check; do not wire this back into decideIngestion's automatic
+ * duplicate detection without re-reading docs/handoffs/program-dedup-key-decision.md first —
+ * that was tried and found to cause severe data loss (53 of 54 real cases were false
+ * positives: distinct programmes sharing one institution's catalogue-listing page, not
+ * actual duplicates). */
 export function programUrlKey(universityId: string, officialProgramUrl: string): string {
   return `url:${universityId}|${officialProgramUrl}`;
 }
@@ -121,12 +124,43 @@ export function programUrlKey(universityId: string, officialProgramUrl: string):
  * Dutch and an English track of the same programme — a normal, common shape at Dutch/German
  * universities, not an edge case) as one duplicate identity, silently dropping the second one.
  * Language is a real, structural fact distinguishing two separately-enrollable programmes, not
- * cosmetic metadata, so it's now part of what makes two records "the same" or not. Exported so
- * the caller builds `existingKeys` (from live table rows) with the identical key shape this
- * function checks against — the two must never drift, or every existing row would look "new"
- * (an unrelated correctness bug) or every record would look "duplicate" (this bug, again). */
-export function programDedupKey(universityId: string, normalizedName: string, degreeLevel: string | null, languageOfInstruction: string | null): string {
-  return `${universityId}|${normalizedName}|${degreeLevel ?? ""}|${languageOfInstruction ?? ""}`;
+ * cosmetic metadata, so it's now part of what makes two records "the same" or not.
+ *
+ * `officialProgramUrl` joined the key in the dedup-key-shape pass (migration 0053), replacing
+ * the old separate `programUrlKey`-based "same URL anywhere at this university = duplicate,
+ * regardless of name" check. That check was added to catch one real case (TU Delft: a
+ * catalogue re-scrape produced "Computer Science & Engineering - English" for the same URL
+ * already holding "Computer Science and Engineering") but, measured directly against
+ * program_research_queue's full audit history, turned out to be wrong 53 times out of 54 real
+ * firings — every other case was a university (Manchester, Wisconsin, METU, ~45 others) that
+ * publishes one shared catalogue-listing URL for its entire, genuinely distinct programme
+ * list, so the very first accepted programme silently blocked every other one at that
+ * university sharing the same listing page. Folding the URL into the *composite* key instead
+ * (alongside name/degree/language, not replacing them) fixes the actually-evidenced problem
+ * this whole pass was assigned to solve — Bologna/Padua's campus-specific programmes, each
+ * with its own official_program_url, wrongly forced to share one row — without the standalone
+ * check's blind spot: two rows can now differ ONLY by URL and still correctly coexist, since a
+ * shared catalogue URL no longer says anything about identity on its own. The accepted cost:
+ * a same-programme, same-URL-would-have-caught-it rename like TU Delft's now inserts as two
+ * rows instead of being auto-merged — occasional and human-visible (both rows are factually
+ * true) rather than the old check's failure mode, which was systemic and silent. See
+ * docs/handoffs/program-dedup-key-decision.md for the full evidence and the campus/
+ * faculty_or_school widening this rejected in the same pass.
+ *
+ * Exported so the caller builds `existingKeys` (from live table rows) with the identical key
+ * shape this function checks against — the two must never drift, or every existing row would
+ * look "new" (an unrelated correctness bug) or every record would look "duplicate" (this bug,
+ * again). `officialProgramUrl` is required, not optional: decideIngestion already rejects any
+ * record missing it (as `insufficient_evidence`) before a dedup key is ever computed, so every
+ * real call site has one — live data confirms 100% of today's rows do too. */
+export function programDedupKey(
+  universityId: string,
+  normalizedName: string,
+  degreeLevel: string | null,
+  languageOfInstruction: string | null,
+  officialProgramUrl: string
+): string {
+  return `${universityId}|${normalizedName}|${degreeLevel ?? ""}|${languageOfInstruction ?? ""}|${officialProgramUrl}`;
 }
 
 /** Pure decision function — no I/O, fully unit-testable. `existingKeys` is the set of
@@ -171,12 +205,14 @@ export function decideIngestion(record: ResearchProgramRecord, universities: rea
   }
 
   const normalizedName = normalizeProgramName(record.program_name);
-  const dedupKey = programDedupKey(universityId, normalizedName, record.degree_level ?? null, record.language_of_instruction ?? null);
+  const dedupKey = programDedupKey(universityId, normalizedName, record.degree_level ?? null, record.language_of_instruction ?? null, record.official_program_url);
   if (existingKeys.has(dedupKey)) {
-    return { outcome: "duplicate", detail: "Same university + program identity + degree level + language of instruction already exists.", universityId, programRow: null };
-  }
-  if (existingKeys.has(programUrlKey(universityId, record.official_program_url))) {
-    return { outcome: "duplicate", detail: "Same official_program_url already exists at this university under a different name.", universityId, programRow: null };
+    return {
+      outcome: "duplicate",
+      detail: "Same university + program identity + degree level + language of instruction + official_program_url already exists.",
+      universityId,
+      programRow: null,
+    };
   }
 
   if (!looksPageConfirmed(record.verification_status)) {
