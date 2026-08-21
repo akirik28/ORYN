@@ -116,13 +116,26 @@ export function programUrlKey(universityId: string, officialProgramUrl: string):
   return `url:${universityId}|${officialProgramUrl}`;
 }
 
+/** ingest-fixes defect 6: `${university_id}|${normalized_program_name}|${degree_level ?? ""}`
+ * alone treats a legitimate same-subject, different-language-of-instruction pair (e.g. a
+ * Dutch and an English track of the same programme — a normal, common shape at Dutch/German
+ * universities, not an edge case) as one duplicate identity, silently dropping the second one.
+ * Language is a real, structural fact distinguishing two separately-enrollable programmes, not
+ * cosmetic metadata, so it's now part of what makes two records "the same" or not. Exported so
+ * the caller builds `existingKeys` (from live table rows) with the identical key shape this
+ * function checks against — the two must never drift, or every existing row would look "new"
+ * (an unrelated correctness bug) or every record would look "duplicate" (this bug, again). */
+export function programDedupKey(universityId: string, normalizedName: string, degreeLevel: string | null, languageOfInstruction: string | null): string {
+  return `${universityId}|${normalizedName}|${degreeLevel ?? ""}|${languageOfInstruction ?? ""}`;
+}
+
 /** Pure decision function — no I/O, fully unit-testable. `existingKeys` is the set of
- * `${university_id}|${normalized_program_name}|${degree_level ?? ""}` combinations already
- * present (live table rows + anything already accepted earlier in this same batch), so a
- * batch is idempotent against both re-runs and internal duplicates. Callers may additionally
- * populate `programUrlKey()` entries in the same set — decideIngestion checks both a record's
- * name-based key and its URL-based key, so a same-URL/different-name duplicate is caught even
- * though a name/degree-level match alone would have missed it. */
+ * `programDedupKey(...)` combinations already present (live table rows + anything already
+ * accepted earlier in this same batch), so a batch is idempotent against both re-runs and
+ * internal duplicates. Callers may additionally populate `programUrlKey()` entries in the same
+ * set — decideIngestion checks both a record's name-based key and its URL-based key, so a
+ * same-URL/different-name duplicate is caught even though a name/degree-level/language match
+ * alone would have missed it. */
 export function decideIngestion(record: ResearchProgramRecord, universities: readonly UniversityLookupRow[], existingKeys: ReadonlySet<string>): IngestDecision {
   if (!record.university_name?.trim() || !record.program_name?.trim()) {
     return { outcome: "rejected", detail: "Missing university_name or program_name.", universityId: null, programRow: null };
@@ -158,9 +171,9 @@ export function decideIngestion(record: ResearchProgramRecord, universities: rea
   }
 
   const normalizedName = normalizeProgramName(record.program_name);
-  const dedupKey = `${universityId}|${normalizedName}|${record.degree_level ?? ""}`;
+  const dedupKey = programDedupKey(universityId, normalizedName, record.degree_level ?? null, record.language_of_instruction ?? null);
   if (existingKeys.has(dedupKey)) {
-    return { outcome: "duplicate", detail: "Same university + program identity + degree level already exists.", universityId, programRow: null };
+    return { outcome: "duplicate", detail: "Same university + program identity + degree level + language of instruction already exists.", universityId, programRow: null };
   }
   if (existingKeys.has(programUrlKey(universityId, record.official_program_url))) {
     return { outcome: "duplicate", detail: "Same official_program_url already exists at this university under a different name.", universityId, programRow: null };
@@ -205,5 +218,107 @@ export function decideIngestion(record: ResearchProgramRecord, universities: rea
       notes: `Research handoff, program_id ${record.research_program_id}, researched_at ${record.researched_at}.`,
       data_confidence: "high",
     },
+  };
+}
+
+/** What scripts/ingest-university-programs.ts's `--apply` step actually needs from a DB
+ * client — narrow and mockable so applyDecision below is unit-testable without a real
+ * Supabase connection, the same "inject the dependency, test the logic" shape decideIngestion
+ * itself already uses for `universities`/`existingKeys`. */
+export interface ProgramWriteClient {
+  insertProgram(row: AcceptedProgramRow): Promise<{ id: string | null; error: { message: string } | null }>;
+  insertQueueRow(row: ProgramQueueRowInput): Promise<{ error: { message: string } | null }>;
+}
+
+export interface ProgramQueueRowInput {
+  batch_id: string;
+  research_program_id: string;
+  university_id: string | null;
+  university_name_input: string;
+  university_country_input: string;
+  program_name_input: string;
+  degree_level_input: string | null;
+  official_program_url_input: string | null;
+  source_url_input: string | null;
+  source_type_input: string | null;
+  verification_status_input: string | null;
+  raw_payload: unknown;
+  outcome: IngestOutcome;
+  outcome_detail: string | null;
+  promoted_program_id: string | null;
+}
+
+export interface ApplyDecisionResult {
+  accepted: boolean;
+  /** True only when the program insert succeeded but the queue audit row still failed after
+   * exhausting retries — a permanently-orphaned program row (ingest-fixes defect 7), distinct
+   * from a plain program-insert failure (which is now always fully audited, defect 6). */
+  orphaned: boolean;
+  programInsertError: string | null;
+  queueInsertError: string | null;
+}
+
+/**
+ * Applies one already-decided record: writes the program row if accepted, then ALWAYS writes
+ * a program_research_queue audit row (ingest-fixes defect 6's invariant) — even when the
+ * program insert failed the DB's own unique index despite decideIngestion saying "accepted"
+ * (a legitimate same-dedup-key collision decideIngestion's own pre-computed-snapshot decision
+ * couldn't see coming, or any other constraint violation). The queue row's own `outcome` is
+ * downgraded to "rejected" with the real DB error in that case, rather than keeping the stale
+ * "accepted" label — nothing is ever recorded as a success it didn't have.
+ *
+ * The queue insert itself retries (ingest-fixes defect 7) since losing ONLY the audit trail
+ * after a program row already landed is a worse, non-self-healing failure (a batch re-run
+ * reads the program back as "duplicate" and never retries the missing queue row) than losing
+ * the program row itself.
+ */
+export async function applyDecision(
+  record: ResearchProgramRecord,
+  decision: IngestDecision,
+  batchId: string,
+  client: ProgramWriteClient,
+  queueRetryAttempts = 3
+): Promise<ApplyDecisionResult> {
+  const { id: promotedId, error: programError } =
+    decision.outcome === "accepted" && decision.programRow
+      ? await client.insertProgram(decision.programRow)
+      : { id: null, error: null };
+
+  const effectiveOutcome: IngestOutcome = programError ? "rejected" : decision.outcome;
+  const effectiveDetail = programError
+    ? `Decided "${decision.outcome}" but the university_programs insert failed: ${programError.message}`
+    : decision.detail;
+
+  const queueRow: ProgramQueueRowInput = {
+    batch_id: batchId,
+    research_program_id: record.research_program_id,
+    university_id: decision.universityId,
+    university_name_input: record.university_name,
+    university_country_input: record.university_country,
+    program_name_input: record.program_name,
+    degree_level_input: record.degree_level ?? null,
+    official_program_url_input: record.official_program_url ?? null,
+    source_url_input: record.source_url ?? null,
+    source_type_input: record.source_type ?? null,
+    verification_status_input: record.verification_status ?? null,
+    raw_payload: record,
+    outcome: effectiveOutcome,
+    outcome_detail: effectiveDetail,
+    promoted_program_id: promotedId,
+  };
+
+  let queueError: { message: string } | null = null;
+  for (let attempt = 1; attempt <= queueRetryAttempts; attempt++) {
+    const result = await client.insertQueueRow(queueRow);
+    queueError = result.error;
+    if (!queueError) break;
+    if (attempt < queueRetryAttempts) await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
+  }
+
+  return {
+    accepted: !programError && decision.outcome === "accepted",
+    orphaned: Boolean(promotedId) && Boolean(queueError),
+    programInsertError: programError?.message ?? null,
+    queueInsertError: queueError?.message ?? null,
   };
 }

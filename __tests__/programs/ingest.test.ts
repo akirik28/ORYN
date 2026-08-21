@@ -1,5 +1,15 @@
-import { describe, expect, test } from "vitest";
-import { decideIngestion, resolveUniversity, looksPageConfirmed, programUrlKey, type ResearchProgramRecord, type UniversityLookupRow } from "@/lib/programs/ingest";
+import { describe, expect, test, vi } from "vitest";
+import {
+  applyDecision,
+  decideIngestion,
+  resolveUniversity,
+  looksPageConfirmed,
+  programDedupKey,
+  programUrlKey,
+  type ProgramWriteClient,
+  type ResearchProgramRecord,
+  type UniversityLookupRow,
+} from "@/lib/programs/ingest";
 
 const MIT: UniversityLookupRow = { id: "uni-mit", name: "Massachusetts Institute of Technology", country: "United States" };
 const EDINBURGH: UniversityLookupRow = { id: "uni-edi", name: "The University of Edinburgh", country: "United Kingdom", aliases: ["University of Edinburgh"] };
@@ -125,7 +135,7 @@ describe("decideIngestion", () => {
   });
 
   test("flags a duplicate against an existing key without inserting again", () => {
-    const existing = new Set(["uni-mit|computer science|"]);
+    const existing = new Set([programDedupKey("uni-mit", "computer science", null, null)]);
     const decision = decideIngestion(record(), UNIVERSITIES, existing);
     expect(decision.outcome).toBe("duplicate");
     expect(decision.programRow).toBeNull();
@@ -134,8 +144,57 @@ describe("decideIngestion", () => {
   test("is idempotent: ingesting the same record twice against its own first output never double-accepts", () => {
     const first = decideIngestion(record(), UNIVERSITIES, new Set());
     expect(first.outcome).toBe("accepted");
-    const keyAfterFirst = new Set([`${first.programRow!.university_id}|${first.programRow!.normalized_name}|${first.programRow!.degree_level ?? ""}`]);
+    const row = first.programRow!;
+    const keyAfterFirst = new Set([programDedupKey(row.university_id, row.normalized_name, row.degree_level, row.language_of_instruction)]);
     const second = decideIngestion(record(), UNIVERSITIES, keyAfterFirst);
+    expect(second.outcome).toBe("duplicate");
+  });
+
+  // Regression: ingest-fixes defect 6 root cause. A Dutch/English track pair at the same
+  // university, same program name and degree level, differing only by language_of_instruction,
+  // used to collide on the old 3-part key (university_id|normalized_name|degree_level) — the
+  // second record silently read as a "duplicate" of the first and was never inserted, with no
+  // trace in either university_programs or program_research_queue.
+  test("a same-name, same-degree-level, different-language pair are NOT duplicates of each other", () => {
+    // EPFL (not MIT) so official_program_url can sit on its own real, non-.edu domain via the
+    // websiteUrl-derived officialDomains hint — matches the "EPFL sits on .ch" acceptance tests
+    // above rather than relying on MIT's built-in .edu recognition.
+    const french = record({
+      university_name: "EPFL",
+      university_country: "Switzerland",
+      program_name: "Génie Mécanique",
+      official_program_url: "https://www.epfl.ch/education/bachelor/mechanical-fr",
+      source_url: "https://www.epfl.ch/education/bachelor/mechanical-fr",
+      language_of_instruction: "French",
+    });
+    const english = record({
+      university_name: "EPFL",
+      university_country: "Switzerland",
+      program_name: "Génie Mécanique",
+      official_program_url: "https://www.epfl.ch/education/bachelor/mechanical-en",
+      source_url: "https://www.epfl.ch/education/bachelor/mechanical-en",
+      language_of_instruction: "English",
+    });
+
+    const existingKeys = new Set<string>();
+    const first = decideIngestion(french, UNIVERSITIES, existingKeys);
+    expect(first.outcome).toBe("accepted");
+    existingKeys.add(programDedupKey(first.programRow!.university_id, first.programRow!.normalized_name, first.programRow!.degree_level, first.programRow!.language_of_instruction));
+    existingKeys.add(programUrlKey(first.programRow!.university_id, first.programRow!.official_program_url));
+
+    const second = decideIngestion(english, UNIVERSITIES, existingKeys);
+    expect(second.outcome).toBe("accepted");
+    expect(second.programRow?.language_of_instruction).toBe("English");
+  });
+
+  // A genuine re-run of the SAME language track, though, must still read as a duplicate — the
+  // widened key must not accidentally stop deduplicating the case it always correctly caught.
+  test("a same-name, same-degree-level, SAME-language repeat is still a duplicate", () => {
+    const first = decideIngestion(record({ language_of_instruction: "English" }), UNIVERSITIES, new Set());
+    expect(first.outcome).toBe("accepted");
+    const row = first.programRow!;
+    const existingKeys = new Set([programDedupKey(row.university_id, row.normalized_name, row.degree_level, row.language_of_instruction)]);
+    const second = decideIngestion(record({ language_of_instruction: "English", official_program_url: "https://cs.mit.edu/different-link" }), UNIVERSITIES, existingKeys);
     expect(second.outcome).toBe("duplicate");
   });
 
@@ -193,5 +252,108 @@ describe("decideIngestion", () => {
     });
     const decision = decideIngestion(r, UNIVERSITIES, new Set());
     expect(decision.outcome).toBe("malformed_source");
+  });
+});
+
+describe("applyDecision", () => {
+  function acceptedDecision(overrides: Partial<ResearchProgramRecord> = {}) {
+    const r = record(overrides);
+    const decision = decideIngestion(r, UNIVERSITIES, new Set());
+    if (decision.outcome !== "accepted") throw new Error("test setup expected an accepted decision");
+    return { record: r, decision };
+  }
+
+  test("a normal accepted decision writes both a program row and a queue audit row with outcome 'accepted'", async () => {
+    const { record: r, decision } = acceptedDecision();
+    const insertProgram = vi.fn().mockResolvedValue({ id: "prog-1", error: null });
+    const insertQueueRow = vi.fn().mockResolvedValue({ error: null });
+    const client: ProgramWriteClient = { insertProgram, insertQueueRow };
+
+    const result = await applyDecision(r, decision, "batch-1", client);
+
+    expect(result).toEqual({ accepted: true, orphaned: false, programInsertError: null, queueInsertError: null });
+    expect(insertProgram).toHaveBeenCalledTimes(1);
+    expect(insertQueueRow).toHaveBeenCalledTimes(1);
+    const queueRow = insertQueueRow.mock.calls[0][0];
+    expect(queueRow.outcome).toBe("accepted");
+    expect(queueRow.promoted_program_id).toBe("prog-1");
+  });
+
+  // Regression: ingest-fixes defect 6. decideIngestion decides "accepted" from a pre-computed
+  // existingKeys snapshot, but the database's own unique index can still reject the insert (a
+  // collision the snapshot couldn't see, or any other constraint). This must never vanish with
+  // zero trace — the queue row still gets written, carrying the real DB error, with the
+  // outcome downgraded to "rejected" rather than keeping the stale "accepted" label.
+  test("a program insert failure still writes a queue audit row, with outcome downgraded to 'rejected'", async () => {
+    const { record: r, decision } = acceptedDecision();
+    const insertProgram = vi.fn().mockResolvedValue({ id: null, error: { message: "duplicate key value violates unique constraint" } });
+    const insertQueueRow = vi.fn().mockResolvedValue({ error: null });
+    const client: ProgramWriteClient = { insertProgram, insertQueueRow };
+
+    const result = await applyDecision(r, decision, "batch-1", client);
+
+    expect(result.accepted).toBe(false);
+    expect(result.orphaned).toBe(false);
+    expect(result.programInsertError).toContain("duplicate key value");
+    expect(insertQueueRow).toHaveBeenCalledTimes(1);
+    const queueRow = insertQueueRow.mock.calls[0][0];
+    expect(queueRow.outcome).toBe("rejected");
+    expect(queueRow.outcome_detail).toContain("university_programs insert failed");
+    expect(queueRow.promoted_program_id).toBeNull();
+  });
+
+  test("a transient queue insert failure recovers on retry without being marked orphaned", async () => {
+    const { record: r, decision } = acceptedDecision();
+    const insertProgram = vi.fn().mockResolvedValue({ id: "prog-1", error: null });
+    const insertQueueRow = vi
+      .fn()
+      .mockResolvedValueOnce({ error: { message: "connection reset" } })
+      .mockResolvedValueOnce({ error: null });
+    const client: ProgramWriteClient = { insertProgram, insertQueueRow };
+
+    const result = await applyDecision(r, decision, "batch-1", client, 3);
+
+    expect(result.accepted).toBe(true);
+    expect(result.orphaned).toBe(false);
+    expect(result.queueInsertError).toBeNull();
+    expect(insertQueueRow).toHaveBeenCalledTimes(2);
+  });
+
+  // Regression: ingest-fixes defect 7. If the queue insert fails on every retry attempt AFTER
+  // the program row already landed, that program row has zero audit trail and does NOT
+  // self-heal on a batch re-run (its key already satisfies existingKeys, so a re-run reads it
+  // as "duplicate" and never retries the missing queue row) — this is the one case that must be
+  // surfaced as `orphaned`, distinct from a plain insert failure.
+  test("a queue insert that fails on every retry after a successful program insert is reported as orphaned", async () => {
+    const { record: r, decision } = acceptedDecision();
+    const insertProgram = vi.fn().mockResolvedValue({ id: "prog-1", error: null });
+    const insertQueueRow = vi.fn().mockResolvedValue({ error: { message: "connection reset" } });
+    const client: ProgramWriteClient = { insertProgram, insertQueueRow };
+
+    const result = await applyDecision(r, decision, "batch-1", client, 2);
+
+    expect(result.orphaned).toBe(true);
+    expect(result.accepted).toBe(true);
+    expect(result.queueInsertError).toContain("connection reset");
+    expect(insertQueueRow).toHaveBeenCalledTimes(2);
+  });
+
+  test("a non-accepted decision (e.g. unresolved_university) never calls insertProgram, but still writes a queue audit row", async () => {
+    const r = record({ university_name: "Totally Unknown University", university_country: "Nowhere" });
+    const decision = decideIngestion(r, UNIVERSITIES, new Set());
+    expect(decision.outcome).toBe("unresolved_university");
+
+    const insertProgram = vi.fn().mockResolvedValue({ id: "should-not-be-called", error: null });
+    const insertQueueRow = vi.fn().mockResolvedValue({ error: null });
+    const client: ProgramWriteClient = { insertProgram, insertQueueRow };
+
+    const result = await applyDecision(r, decision, "batch-1", client);
+
+    expect(insertProgram).not.toHaveBeenCalled();
+    expect(result.accepted).toBe(false);
+    expect(insertQueueRow).toHaveBeenCalledTimes(1);
+    const queueRow = insertQueueRow.mock.calls[0][0];
+    expect(queueRow.outcome).toBe("unresolved_university");
+    expect(queueRow.promoted_program_id).toBeNull();
   });
 });
