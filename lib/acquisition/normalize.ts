@@ -77,6 +77,47 @@ export function sameCountry(a: string, b: string): boolean {
 }
 
 /**
+ * Latin letters that are NOT a base letter plus a combining mark, so NFD leaves them intact
+ * and the `[^a-z0-9]` sweep below would otherwise DELETE them outright — silently corrupting
+ * the key rather than merely flattening it.
+ *
+ * That deletion was a live defect, not a hypothetical one. Turkish "Sabancı University" keyed
+ * as "sabanc university" and "Yıldız Technical University" as "y ld z technical university",
+ * so neither could ever match the ASCII spellings ("Sabanci", "Yildiz") the same institutions
+ * are filed under elsewhere; the 5 Yıldız records in the programs corpus were failing identity
+ * resolution outright because of it. Norwegian "Tromsø" keyed as "troms" and Polish "Wrocław"
+ * as "wroc aw" the same way.
+ *
+ * Each mapping is the letter's own standard ASCII romanisation, which makes it lossless in the
+ * sense that matters here: the key is the form a source writing without the special character
+ * would have used. ß→"ss" is exact — "ss" is the ONLY ASCII form of ß, never "s" — which is why
+ * it belongs here rather than in the ambiguous umlaut handling in nameVariants below.
+ *
+ * Turkish note: this map is why dotless ı and dotted İ both land on "i". İ needs no entry —
+ * NFD decomposes it to "I" + combining dot above, which the mark sweep already removes. The
+ * order below is load-bearing for that: NFD, then strip marks, then lowercase. And the
+ * lowercase step must stay `toLowerCase()`, never `toLocaleLowerCase()` — the latter is
+ * locale-sensitive and under a Turkish locale would fold ASCII "I" to "ı" (so "ISTANBUL"
+ * would key as "istanbul" here but "ıstanbul" there, i.e. the same name keying two ways
+ * depending on the machine's locale). `toLowerCase()` is locale-independent by spec.
+ */
+const NON_DECOMPOSABLE_LATIN: Record<string, string> = {
+  "ı": "i",
+  "ß": "ss",
+  "ø": "o",
+  "æ": "ae",
+  "œ": "oe",
+  "đ": "d",
+  "ð": "d",
+  "þ": "th",
+  "ł": "l",
+  "ħ": "h",
+  "ŧ": "t",
+  "ŋ": "n",
+  "ə": "e",
+};
+
+/**
  * Accent- and punctuation-insensitive comparison key for institution names.
  *
  * A leading definite article is dropped: ranking tables and registries disagree about it
@@ -84,12 +125,22 @@ export function sameCountry(a: string, b: string): boolean {
  * distinguishing information — no two institutions differ only by a leading "The". This is a
  * normalisation, not a relaxation: country agreement is still required separately before any
  * name match is accepted as the same institution.
+ *
+ * Deliberately does NOT collapse the German "ae"/"oe"/"ue" digraphs onto bare vowels. Doing so
+ * would make "Universität"/"Universitaet"/"Universitat" one key, but only by mangling every
+ * name where those two letters are a genuine sequence rather than a transliterated umlaut —
+ * measured against the live spine, a blanket fold rewrote "Prague"→"pragu", "Queen"→"quen",
+ * "polytechnique"→"polytechniqu", "Purdue"→"purdu", "Israel"→"isral" and 38 others. The
+ * umlaut/digraph equivalence is genuinely ambiguous from the ASCII side, so it is handled
+ * where ambiguity belongs — as an extra candidate spelling in nameVariants() — instead of by
+ * degrading the key everyone else compares on.
  */
 export function nameKey(name: string): string {
   return name
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
     .toLowerCase()
+    .replace(/[ıßøæœđðþłħŧŋə]/g, (c) => NON_DECOMPOSABLE_LATIN[c] ?? c)
     .replace(/[’'`]/g, "")
     .replace(/&/g, " and ")
     .replace(/[^a-z0-9]+/g, " ")
@@ -116,9 +167,55 @@ export function dbNormalizedName(name: string): string {
 }
 
 /**
+ * German/Nordic umlaut ↔ digraph spellings of one name.
+ *
+ * "Universität Freiburg", "Universitaet Freiburg" and "Universitat Freiburg" are the same
+ * institution, but no single comparison key can unify all three: expanding ä→"ae" breaks
+ * Turkish (whose own ASCII convention drops the diaeresis outright — "Özyeğin"→"Ozyegin",
+ * never "Oezyegin"), and contracting "ae"→"a" inside nameKey mangles every unrelated name
+ * containing that letter pair. So the equivalence is expressed as extra candidate spellings
+ * instead, which resolveIdentity() applies to BOTH sides of a comparison — and which, unlike
+ * a key change, can only ever add a match attempt, never silently alter an existing key.
+ *
+ * Measured on the live spine before shipping: this adds zero new ambiguous-match groups (the
+ * 6 that exist are pre-existing duplicate rows, identical before and after), and changes no
+ * record's resolved university — it only converts matches that previously needed a
+ * hand-written alias row into direct orthographic matches. Albert-Ludwigs-Universität
+ * Freiburg's 228 programme records are the worked example: the spine files it under the
+ * "Universitaet" spelling, so every record spelled "Universität" was resolving only because
+ * somebody had added an alias row by hand. That is a per-institution manual cost this pays
+ * off in one place.
+ *
+ * ß needs no entry here — it has exactly one ASCII form ("ss"), so nameKey handles it
+ * exactly. Scope is deliberately limited to the letters with corpus evidence behind them
+ * (ä/ö/ü and ø); this is not an attempt at a general romanisation table.
+ */
+function umlautDigraphVariants(base: string): string[] {
+  const out: string[] = [];
+  if (/[äöüÄÖÜøØ]/.test(base)) {
+    out.push(
+      base
+        .replace(/ä/g, "ae")
+        .replace(/ö/g, "oe")
+        .replace(/ü/g, "ue")
+        .replace(/ø/g, "oe")
+        .replace(/Ä/g, "Ae")
+        .replace(/Ö/g, "Oe")
+        .replace(/Ü/g, "Ue")
+        .replace(/Ø/g, "Oe")
+    );
+  }
+  if (/[aou]e/i.test(base)) {
+    out.push(base.replace(/([aou])e/gi, "$1"));
+  }
+  return out;
+}
+
+/**
  * Plausible alternative spellings of an institution name, used to widen a registry lookup.
  * Handles the shapes that actually recur in ranking-derived names: a parenthetical suffix, a
- * trailing dash-acronym, a leading acronym prefix, and the "X, University of" inversion.
+ * trailing dash-acronym, a leading acronym prefix, the "X, University of" inversion, and the
+ * German/Nordic umlaut ↔ digraph pair (see umlautDigraphVariants).
  */
 export function nameVariants(name: string): string[] {
   const variants = new Set<string>();
@@ -137,6 +234,10 @@ export function nameVariants(name: string): string[] {
   if (leadingAbbr && leadingAbbr[1].length > 3) variants.add(leadingAbbr[1].trim());
   const trailingOf = base.match(/^(.*?),\s*University of$/i);
   if (trailingOf) variants.add(`University of ${trailingOf[1].trim()}`);
+  // Applied to every shape produced above, not just the raw name, so a name carrying both an
+  // acronym prefix and an umlaut ("KIT, Universität Karlsruhe") yields the stripped-and-
+  // transliterated form too.
+  for (const v of [...variants]) for (const t of umlautDigraphVariants(v)) variants.add(t);
   return [...variants].filter(Boolean);
 }
 

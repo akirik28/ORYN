@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from "vitest";
 import {
   applyDecision,
   decideIngestion,
+  judgeEvidence,
   resolveUniversity,
   looksPageConfirmed,
   programDedupKey,
@@ -131,6 +132,70 @@ describe("decideIngestion", () => {
     const decision = decideIngestion(r, UNIVERSITIES, new Set());
     expect(decision.outcome).toBe("insufficient_evidence");
     expect(decision.programRow).toBeNull();
+  });
+
+  describe("evidence is judged independently of university resolution", () => {
+    // The defect this covers: evidence used to be checked only after a record had resolved to
+    // a university, so a record with both problems was audited as `unresolved_university` and
+    // its evidence was never examined. Adding an alias later flipped it straight to
+    // `insufficient_evidence`, making the alias fix look like the cause of a new problem when
+    // the evidence had been inadequate all along.
+    const BOTH_BROKEN = record({
+      university_name: "Totally Unknown University",
+      university_country: "Nowhere",
+      verification_status: "Verified - official programme result; page retrieval blocked",
+    });
+
+    test("a record that is both unresolvable AND unevidenced reports the evidence failure", () => {
+      const decision = decideIngestion(BOTH_BROKEN, UNIVERSITIES, new Set());
+      expect(decision.outcome).toBe("insufficient_evidence");
+      expect(decision.programRow).toBeNull();
+    });
+
+    test("...and its audit detail records the resolution failure too, not just the winning gate", () => {
+      const decision = decideIngestion(BOTH_BROKEN, UNIVERSITIES, new Set());
+      expect(decision.detail).toContain("page retrieval blocked");
+      expect(decision.detail).toContain("university unresolved");
+    });
+
+    test("resolving the university does NOT change the outcome — the evidence problem was always the real one", () => {
+      // Precisely the scenario that produced the misleading audit trail: same record, but now
+      // the spine knows the institution. Before the reorder this flipped from
+      // unresolved_university to insufficient_evidence; now it reads the same both times.
+      const nowKnown: UniversityLookupRow = { id: "uni-unknown", name: "Totally Unknown University", country: "Nowhere" };
+      const before = decideIngestion(BOTH_BROKEN, UNIVERSITIES, new Set());
+      const after = decideIngestion(BOTH_BROKEN, [...UNIVERSITIES, nowKnown], new Set());
+      expect(before.outcome).toBe("insufficient_evidence");
+      expect(after.outcome).toBe("insufficient_evidence");
+      // The resolution fact still moves, and the audit row still carries it.
+      expect(before.universityId).toBeNull();
+      expect(after.universityId).toBe("uni-unknown");
+      expect(after.detail).toContain("university resolved");
+    });
+
+    test("an unresolved record with good evidence says so, so the two cases stay distinguishable", () => {
+      const r = record({ university_name: "Totally Unknown University", university_country: "Nowhere" });
+      const decision = decideIngestion(r, UNIVERSITIES, new Set());
+      expect(decision.outcome).toBe("unresolved_university");
+      expect(decision.detail).toContain("evidence gates passed");
+    });
+
+    test("a duplicate no longer masks an evidence failure either", () => {
+      // The same masking shape one gate over: the dedup check used to run before the
+      // verification_status check, so a redundant record's evidence was never examined.
+      const existing = new Set([programDedupKey("uni-mit", "computer science", null, null, "https://cs.mit.edu", null)]);
+      const r = record({ verification_status: "Verified - official programme result; page retrieval blocked" });
+      expect(decideIngestion(r, UNIVERSITIES, existing).outcome).toBe("insufficient_evidence");
+    });
+
+    test("judgeEvidence consults nothing but the record", () => {
+      expect(judgeEvidence(record()).ok).toBe(true);
+      expect(judgeEvidence(record({ official_program_url: "" })).ok).toBe(false);
+      expect(judgeEvidence(record({ source_url: "" })).ok).toBe(false);
+      expect(judgeEvidence(record({ verification_status: "Review" })).ok).toBe(false);
+      // Identical verdict for a record naming an institution that does not exist anywhere.
+      expect(judgeEvidence(record({ university_name: "Nonexistent", university_country: "Nowhere" })).ok).toBe(true);
+    });
   });
 
   test("flags a duplicate against an existing key without inserting again", () => {
