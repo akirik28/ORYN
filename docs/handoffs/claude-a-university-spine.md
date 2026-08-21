@@ -3028,3 +3028,36 @@ both claiming to mirror the same A-Z course page -- this batch's own source was 
 the official `tudublin.ie` domain throughout, so this doesn't affect the data quality here,
 just flagging the existence of apparent unofficial mirror/aggregator domains for awareness
 if a future pass encounters them and needs to judge source authority.
+
+**Program catalogue batch 18 — Istanbul Technical University + Yildiz Technical University,
+88 new, running session total 3,538 across 38 universities.** Full method in that commit's
+own message (`6d9f520`). First Turkey Layer-2 (program-catalogue) work this session --
+Turkey is one of AGENTS.md's explicitly named v1-priority geographies, and until this batch
+the only Turkey-related output was a Layer-1 new-institution candidate list (4 ROR-verified
+universities not yet in the spine, see `data/research/universities/new-institution-
+candidates_2026-08-21.json`, still not ingested). Checked the live spine first (read-only
+query): 6 Turkish universities at 0 programs, 6 more at exactly 4 programs each (a thin
+pre-existing starter set, not a full catalogue) -- picked the two largest zero-coverage
+technical universities (ITU, YTU) as the highest-value target rather than the already-
+4-seeded ones. Both sourced from each university's own official "all
+departments"/"academic units" page rather than a program-search tool (neither seems to have
+one in the UK/Ireland A-Z sense) -- smaller yields (45/43 departments) than a UK-style A-Z
+catalogue but still official-primary and structurally complete for each institution's own
+department list. A real language-of-instruction judgment call, disclosed rather than
+guessed: Turkish top technical universities commonly run a partial English-medium track
+alongside the Turkish-medium default (confirmed live for ITU's AI/Data Engineering program
+specifically, via YOK Atlas -- Turkey's official national admissions database -- showing an
+"(İngilizce)" / English-medium listing distinct from the Turkish-medium one), but neither
+source page used for this batch marks language per-department, so `language_of_instruction`
+was deliberately written as a hedged, explicit-uncertainty string rather than asserting
+either "Turkish" or "English" outright for any record -- consistent with this session's
+"leave unknown rather than guess" rule. ITU's names were kept in Turkish (the university's
+own official department nomenclature); YTU's own English-language site section provided
+official English names directly, no translation needed. Two spot-checks (both universities'
+"Artificial Intelligence and Data Engineering" departments, chosen since both are newer
+additions worth confirming aren't fabricated) found active, real, dedicated department
+websites for both. Remaining Turkey gaps: the 6 four-program-seeded universities (Bilkent,
+Boğaziçi, Koç, METU, Özyeğin, Sabancı -- likely all have official catalogue pages, English-
+medium being much more standard at these particular institutions) and the other 4
+zero-coverage ones (Ankara Üniversitesi, Gebze Technical University, Hacettepe University,
+Istanbul University) are a reasonable next Turkey round.
