@@ -682,15 +682,15 @@
     {
       "id": "S-NCS-ECON",
       "title": "National Careers Service — Economist job profile",
-      "url": null,
+      "url": "https://nationalcareers.service.gov.uk/job-profiles/economist",
       "additional_urls": [],
       "publisher": "National Careers Service — Economist job profile",
       "source_type": "official_institutional_guidance",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
+      "retrieval_method": "WebFetch (direct fetch, upgraded from an earlier WebSearch-summary-only citation)",
       "retrieved_at": "2026-08-21",
-      "claim_supported": "UK economist salary range ~£28,000-£60,000, 37-39hr week, advises government/business/banks.",
-      "confidence": "medium_high",
-      "limitations": "Direct URL not captured this pass — re-fetch nationalcareers.service.gov.uk before citing to a student.",
+      "claim_supported": "UK economist salary range ~£28,000-£60,000, 37-39hr week, advises government/business/banks. Entry routes: university degree (economics/stats/maths/business/finance, A-levels incl. maths or economics) or Professional Economist Degree Apprenticeship (Level 6/7, requires GCSE+A-level maths).",
+      "confidence": "high",
+      "limitations": "UK-specific.",
       "used_in": [
         "docs/research/counseling-intelligence/06-major-family-evidence/07-economics-finance.md §7"
       ]
@@ -698,15 +698,17 @@
     {
       "id": "S-GES",
       "title": "UK Government Economic Service (general knowledge)",
-      "url": null,
-      "additional_urls": [],
+      "url": "https://www.gov.uk/government/organisations/civil-service-government-economic-service",
+      "additional_urls": [
+        "https://www.civil-service-careers.gov.uk/professions/ges-hub"
+      ],
       "publisher": "UK Government Economic Service (general knowledge)",
       "source_type": "official_institutional_description",
-      "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
+      "retrieval_method": "WebSearch, direct gov.uk official organisation page (upgraded from general knowledge)",
       "retrieved_at": "2026-08-21",
-      "claim_supported": "A real, named cross-government professional community of UK economists, with no precise US analogue at the same organizational scale.",
-      "confidence": "medium",
-      "limitations": "Not independently re-verified via gov.uk directly this pass.",
+      "claim_supported": "GES is the UK Civil Service's professional body for economists, founded 1964, 3,500+ members, largest recruiter of economists in the UK; Fast Stream entry requires a degree in economics or a combined degree with at least 50% economics content.",
+      "confidence": "high",
+      "limitations": "UK-specific.",
       "used_in": [
         "docs/research/counseling-intelligence/06-major-family-evidence/07-economics-finance.md §7"
       ]
