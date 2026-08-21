@@ -577,6 +577,26 @@ citation resolves to a real entry, every one of this session's 120 entries is me
 in the docs (no orphans), and every entry's `doc` field points to a file that actually exists. No
 issues found — noted here as a completed QA pass, not a change.
 
+## UCAT confirms the situational-judgment-test category is UK-real too (`cc53336`, `RULE-COUNSEL-121`)
+
+Checked whether `RULE-COUNSEL-120`'s typology was a CASPer/North-America quirk — it isn't. **UCAT**
+(required by 57 UK universities for medicine/dentistry, including Oxford/Cambridge/Imperial/UCL,
+per `ucat.ac.uk`'s own pages) includes a separately-banded **Situational Judgement Test** subtest —
+same structural category as CASPer, different specific instrument. This means UK medicine is
+actually a **compound** admissions case — predicted grades, *plus* UCAT/SJT, *plus* holistic
+clinical-exposure evidence — not just the "partial exception, closer to Tier-1" framing this
+package previously had. Refined in doc `10` (new content), doc `17`'s medicine cross-cutting
+section, and a one-line cross-reference in doc `11`'s UK note (no duplication). **121 rules /
+61 sources**, self-consistency re-checked, still clean.
+
+**Peer separately confirmed and extended the education angle** on `RULE-COUNSEL-120`'s cross-field
+reach: verified CASPer is genuinely used for teacher-education program *admission* (not just
+post-degree licensure) at 3 institutions (Vancouver Island University, Monash, Brock — Canada/
+Australia, no confirmed US teacher-ed adopter), written up as their own `RULE-COUNSEL-243` in
+family `18`, synced into their own registries (commit `cbf1d95`, 79 rules/63 sources on their
+side). A second independent data point for the `RULE-COUNSEL-118` recommendation-type gap, beyond
+this branch's own Queen's Commerce/McMaster/UCAT findings.
+
 **Runway status, 04:49 Europe/Istanbul (checked directly, not estimated)**: about 6h10m left.
 Both sessions' explicit mission-brief deliverables have real coverage; remaining time being spent
 on genuine deepening — primary-source verification, cross-framework stress-testing, and following
