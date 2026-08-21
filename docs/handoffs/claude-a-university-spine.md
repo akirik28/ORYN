@@ -3664,11 +3664,37 @@ qualifier changes what a student is actually applying to. Verified zero (name, d
 duration) collisions across the 119 same-named-different-route entries, and all 184 UCAS
 codes distinct. Two spot-checks against live course pages matched exactly.
 
-**Running total this continuation (batches 30-35, post-SESSION-CLOSE)**: 863 new records
-across 6 universities (FU Berlin 75, RWTH Aachen 77, Durham 162, Nottingham 215, QMUL 110,
-Bath 184), plus the 2 confirmed Radboud/Exeter historical-data fixes and the schema-level
-dual-language finding now resolved by the coordinator's migration (confirmed working
-end-to-end on a fresh Sapienza Italian/English "Classics" pair per their report).
+**Batch 36 — University of Southampton** (248 new, `data/research/university-programs/
+independent_batch36_2026-08-21.jsonl`, committed `c196481`): the simplest retrieval of the
+whole UK list -- CourseFinder renders all 250 undergraduate results directly in the DOM on
+load, no pagination/virtualization/click-through/API-hunting needed at all, closer to
+Bologna's eventual "was never actually blocked" reality than to Durham/QMUL/Bath's real
+vendor-specific workarounds. No individual per-course page links exist on this listing
+(verified: zero course-specific hrefs), so every record's official_program_url/source_url
+points to the shared CourseFinder page -- disclosed rather than fabricating per-course URLs.
+This all-248-share-one-URL shape was deliberately cross-checked against the real ingestion
+dedup logic (verified earlier this session: the live unique constraint keys on
+university_id+normalized_name+degree_level, not source URL, so this is safe). One
+source-level quirk kept faithfully: UCAS code F303 is listed identically for three distinct
+MPhys Physics titles ("Physics", "...with Industrial Placement", "...with Year of
+Experimental Research") -- kept as three separate records exactly as the source presents
+them.
+
+**UK JS-course-finder list: all 5 coordinator-prioritized targets complete.** Durham 162
+(SearchStax, URL `?page=N` works), Nottingham 215 (plain public JSON endpoint, no auth),
+Queen Mary 110 (SearchStax, but click-and-intercept only -- URL params don't paginate),
+Bath 184 (Funnelback, `num_ranks` param, fastest vendor-driven case), Southampton 248
+(fully server-rendered already, no vendor workaround needed at all) = **919 new records
+across 5 universities, all previously zero-coverage.** Four different retrieval shapes
+encountered for what looked like one problem category going in -- worth remembering that
+"JS course finder" is not one failure mode.
+
+**Running total this continuation (batches 30-36, post-SESSION-CLOSE)**: 1,071 new records
+across 7 universities (FU Berlin 75, RWTH Aachen 77, Durham 162, Nottingham 215, QMUL 110,
+Bath 184, Southampton 248), plus the 2 confirmed Radboud/Exeter historical-data fixes and
+the schema-level dual-language finding now resolved by the coordinator's migration
+(confirmed working end-to-end on a fresh Sapienza Italian/English "Classics" pair per their
+report).
 
 Of the 5 outstanding Radboud/Exeter gaps, 2 are now confirmed fully resolved (the Exeter
 "BA Classical Studies and Philosophy" insert, id `4a715f86-3f0e-4b3d-97ff-e6fb12c2c5bb`, and
