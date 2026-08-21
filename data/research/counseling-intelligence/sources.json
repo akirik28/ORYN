@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "package": "oryn/counseling-intelligence-research",
-  "last_updated": "2026-08-21T05:40:00+03:00",
+  "last_updated": "2026-08-21T05:20:00+03:00",
   "method_note": "Priority order and discipline documented in full in docs/research/counseling-intelligence/00-overview.md's \"Method and source standard\" section. Blogs/aggregators appear here only where no higher-tier source was fetchable, and are always source_type discovery_or_secondary with confidence capped at medium. [Updated 2026-08-21] Merged with this session's own source shard (originally sources-session2.json, 45 sources, prefix S-<NAME> not SRC-### so no ID collision existed): docs 03, 06-major-family-evidence/00+01-09, 07, 08, 14. This file is still not yet merged with the peer branch's own separate, larger sources.json on oryn/counseling-intelligence-research-013956 -- that cross-branch merge remains the final integration step.",
   "sources": [
     {
@@ -1093,6 +1093,22 @@
       "limitations": "Only one specific adopter named on the vendor's own page; no undergraduate business-program adopter was independently confirmed this pass.",
       "used_in": [
         "docs/research/counseling-intelligence/06-major-family-evidence/08-business-management-entrepreneurship.md"
+      ]
+    },
+    {
+      "id": "S-EMO-BME",
+      "title": "EMO (Chamber of Electrical Engineers of Turkey) confirms biomedical engineering as a dedicated internal professional branch",
+      "url": "https://www.emo.org.tr/genel/bizden_detay.php?kod=48491&tipi=46&sube=0",
+      "additional_urls": [],
+      "publisher": "EMO (Elektrik Mühendisleri Odası, a TMMOB-affiliated chamber)",
+      "source_type": "official_professional_body_page",
+      "retrieval_method": "WebSearch + direct WebFetch",
+      "retrieved_at": "2026-08-21",
+      "claim_supported": "Biomedical engineering in Turkey sits under EMO specifically, with its own named internal commission (Biyomedikal Mühendisligi Meslek Dali Ana Komisyonu), not an unaffiliated or separately-chambered field.",
+      "confidence": "high",
+      "limitations": "Confirms EMO's own claimed jurisdiction over this field; did not independently cross-check whether any other TMMOB chamber also claims any overlapping jurisdiction.",
+      "used_in": [
+        "docs/research/counseling-intelligence/06-major-family-evidence/06-biomedical-engineering.md"
       ]
     }
   ]

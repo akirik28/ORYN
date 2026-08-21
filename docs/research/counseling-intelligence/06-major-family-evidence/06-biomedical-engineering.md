@@ -100,10 +100,17 @@ ESCO covers the occupational/skills classification side (see `01-computing-infor
 §7). Neither independently verified in depth this pass beyond confirming the CE-marking regime's
 existence as common knowledge.
 
-**Turkey:** no field-specific official source independently verified this pass — including whether
-"biyomedikal mühendisliği" (biomedical engineering) sits under one of TMMOB's 24 existing chambers
-or is treated separately; genuinely unresolved, not merely unfetched. Flagged in
-`10-open-questions.md`.
+**Turkey (resolved on a follow-up pass — previously flagged genuinely unresolved):** verified
+directly against **EMO's own official page** (Elektrik Mühendisleri Odası / Chamber of Electrical
+Engineers of Turkey, one of TMMOB's 24 discipline-specific chambers, per `05-engineering-me-ce-ae-
+ee.md` §6): biomedical engineering sits **under EMO** specifically, with its own dedicated
+"Biyomedikal Mühendisliği Meslek Dalı Ana Komisyonu" (Biomedical Engineering Professional Branch
+Main Commission) — a real, named internal structure, not an informal or assumed affiliation
+[S-EMO-BME]. **RULE-COUNSEL-246 (new):** unlike this document's earlier framing (which left open
+whether biomedical engineering is treated separately or absorbed into an existing chamber),
+Turkey's TMMOB/chamber-registration model (family 05's RULE-COUNSEL-227) applies to this family too,
+specifically through EMO — a biomedical-engineering-interested Turkey-target student should be
+pointed to EMO, not treated as belonging to no chamber or an unspecified one.
 
 ## Sources referenced in this document
 
@@ -112,7 +119,7 @@ or is treated separately; genuinely unresolved, not merely unfetched. Flagged in
 | S-BLS-BME | [BLS OOH — Bioengineers and Biomedical Engineers](https://www.bls.gov/ooh/architecture-and-engineering/biomedical-engineers.htm) | Official (US BLS) | High (US-specific) | §2, §3 |
 | S-BLS-BME-REG | [FDA — Title 21 Regulatory Specialist position description](https://www.fda.gov/media/173576/download) (an actual official FDA government document, located directly), corroborated by secondary sources describing common entry pathways (quality assurance, clinical affairs, technical writing) and the **Regulatory Affairs Certification (RAC)** from the Regulatory Affairs Professionals Society (RAPS) as the field's most recognized credential | Official (FDA document) for the role's existence and government context; secondary for the career-pathway/credential framing | High for the FDA document itself (a genuine upgrade from pure secondary corroboration); medium-high for the RAC/RAPS credential detail (not independently fetched from raps.org this pass) | §3, §6 |
 | S-NCS-UK-BME | [National Careers Service — Clinical engineer](https://nationalcareers.service.gov.uk/job-profiles/clinical-engineer) | Official (UK) | High (UK-specific) | §7 |
+| S-EMO-BME | [EMO — Biyomedikal Mühendisliği](https://www.emo.org.tr/genel/bizden_detay.php?kod=48491&tipi=46&sube=0) (directly fetched) | Official (TMMOB-affiliated Chamber of Electrical Engineers of Turkey, one of TMMOB's 24 constitutionally-recognized chambers) | High — confirms a named, dedicated internal commission for this field, resolving what this document previously flagged as genuinely unresolved | §7 |
 
 US/UK data as tabled above; EU CE-marking noted at common-knowledge confidence only; Turkey's
-biomedical-engineering professional-body status genuinely unresolved (flagged in
-`10-open-questions.md`).
+biomedical-engineering professional-body status now resolved directly against EMO's own page.

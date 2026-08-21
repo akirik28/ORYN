@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "package": "counseling-intelligence",
-  "last_updated": "2026-08-21T05:27:00+03:00",
+  "last_updated": "2026-08-21T05:22:00+03:00",
   "method_note": "Structured index over docs/research/counseling-intelligence/06-major-family-evidence/*.md (both branches -- this branch's 11 families and the peer branch's 9, read directly from its worktree at .claude/worktrees/counseling-intelligence-research-013956/). This file answers the mission brief's deliverable #11 (a machine-readable structured artifact for the interest -> major/field -> skills -> experiences -> career-family -> next-action chain) in a way rules.json (rule registry) and sources.json (citation registry) do not, since neither encodes the taxonomy graph itself. This is an INDEX, not a replacement for the prose docs -- every family's source_doc field points to the authoritative detail; resolve any specific factual claim there, not here. No new research was performed to build this file; every field traces to content already established in the corresponding family document. Per-family sourcing/confidence/limitations live in that document's own Sources table and in sources.json, not duplicated here. family_id '*' in interdisciplinary_connections denotes a structural one-to-many exception (currently only family 18, Education), not a normal pairwise link. Each family's `unsafe_inferences` field extracts that document's own \"unsafe inferences\" guidance (peer branch's explicit section heading) or equivalent RULE-COUNSEL-tagged cautions (this branch's inline convention) -- directly serves the peer branch's own 13-implementation-readiness.md item 11/12: a ready-made list of things a family-aware explanation template should actively avoid saying.",
   "onboarding_vocabulary_gaps": {
     "note": "lib/validation/onboarding.ts's INTEREST_SUGGESTIONS has 16 free-text-suggest values (never a closed enum). Families 17, 18, 19, 20 and chemistry/journalism/film/sociology/philosophy/IR/product-design/sustainability-specifically have NO dedicated onboarding suggestion -- reachable only via an approximate-neighbor suggestion or free text.",
@@ -664,17 +664,19 @@
         "phase_2": "A project genuinely combining both (assistive-device build, biomechanics measurement, health-data analysis) is stronger evidence than either alone; a dedicated biomedical/bioengineering research program is the most direct single exploration opportunity."
       },
       "key_rules": [
-        "RULE-COUNSEL-211"
+        "RULE-COUNSEL-211",
+        "RULE-COUNSEL-246"
       ],
       "distinctive_findings": [
         "Biomedical engineering is NOT a subset of pre-med -- graduates mostly go into engineering/industry/research roles, not clinical practice; a student wanting to become a physician does not need this degree.",
-        "UK 'Biomedical Scientist' (lab-diagnostics role) and this family's 'biomedical engineering' are a real, easily-confused naming overlap that must not be silently conflated."
+        "UK 'Biomedical Scientist' (lab-diagnostics role) and this family's 'biomedical engineering' are a real, easily-confused naming overlap that must not be silently conflated.",
+        "Turkey's TMMOB chamber jurisdiction for this field, previously genuinely unresolved, is now confirmed: biomedical engineering sits under EMO (electrical engineering chamber) with its own dedicated internal commission."
       ],
       "country_coverage": {
         "us": "high (BLS, FDA official document)",
         "uk": "high (National Careers Service, Clinical Engineer profile)",
         "eu": "low (CE-marking existence only, common-knowledge confidence)",
-        "turkey": "none (genuinely unresolved, not merely unfetched)",
+        "turkey": "high (EMO's own official page confirms biomedical engineering as a dedicated branch of TMMOB's electrical-engineering chamber, resolving what was previously genuinely unresolved)",
         "germany": "not separately covered"
       },
       "unsafe_inferences": [
