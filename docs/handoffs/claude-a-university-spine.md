@@ -4192,3 +4192,143 @@ guessed**: Türk-Japon Bilim ve Teknoloji Üniversitesi (no ROR record — one o
 newest state universities), Demiroğlu Bilim Üniversitesi (likely pre-rename domain,
 unconfirmed), Kıbrıs Aydın Üniversitesi (no ROR record). This closes out the
 coordinator's domain-resolution assignment in full.
+
+---
+
+## Two closing verifications, per coordinator's final instruction
+
+**1. Harita Mühendisliği vs. Geomatik Mühendisliği — RESOLVED, and the direction was the
+opposite of what this session assumed.** Checked İTÜ's own department site
+(`geomatik.itu.edu.tr/hakkimizda`) directly rather than reasoning from pattern confidence.
+The department's own "Hakkımızda" text: *"İstanbul Teknik Üniversitesi, İnşaat
+Fakültesinin üç bölümünden biri olarak 1969 yılında kurulan Jeodezi ve Fotogrametri
+Mühendisliği Bölümü, 2009 yılında Geomatik Mühendisliği ismini almıştır. Geomatik
+Mühendisliği ismi, 22.11.2023 tarihli YÖK toplantısı kararı ile 'Harita Mühendisliği'
+olarak değiştirilmiştir."* (Founded 1969 as Jeodezi ve Fotogrametri Mühendisliği →
+renamed Geomatik Mühendisliği in 2009 → renamed **again**, back to Harita Mühendisliği,
+by a **national YÖK meeting decision dated 22 November 2023.**)
+
+This session had assumed "Harita Mühendisliği" was the historical name and "Geomatik
+Mühendisliği" the modern one — backwards. The actual sequence has three names, and
+"Harita Mühendisliği" is the **current** one as of a 2023 national-level rename, which is
+exactly why YÖK Atlas (reflecting the live 2026-YKS admission cycle) shows "Harita
+Mühendisliği" while ORYN's existing records — presumably researched before or without
+catching the November 2023 change — still say "Geomatik Mühendisliği". Because this was
+a **YÖK-level decision, not an İTÜ-specific rebrand**, it explains why the identical
+pairing turned up independently at both İTÜ and Hacettepe with zero counter-examples: it's
+one national fact, not two coincidences. **Action for whoever reconciles this: the correct
+current name is "Harita Mühendisliği"; existing "Geomatik Mühendisliği" records should be
+treated as the same programme under its pre-November-2023 name, not a different one.**
+
+**2. Boğaziçi's teacher-training entries — RESOLVED: they are separate degree
+programmes with their own admission, not tracks inside one broader programme.** Checked
+the Department of Mathematics and Science Education's own official page
+(`sced.bogazici.edu.tr`) directly. Its own English-language description: *"The Department
+of Mathematics and Science Education coordinates **several teacher education programs**,
+including Teaching Chemistry, Teaching Mathematics, Teaching Physics, and Teaching Science
+at the secondary and primary school levels. ... **All five programs** include courses
+offered by the departments of the Faculty of Arts and Sciences and the Faculty of
+Education."*
+
+The department (`Bölüm`) is the administrative umbrella; the programmes it explicitly
+calls out — Kimya Öğretmenliği, Matematik Öğretmenliği, Fizik Öğretmenliği, Fen Bilgisi
+Öğretmenliği, İlköğretim Matematik Öğretmenliği — are each independently admitted degree
+programmes ("all five programs"), not a single admission with internal tracks. Confirmed
+independently via Boğaziçi's own prospective-student transfer pages, which list "Fen
+Bilgisi Öğretmenliği" with its own separate internal-transfer quota alongside
+"Bilgisayar ve Öğretim Teknolojileri Eğitimi" and other named departments — administrative
+proof each has its own admission unit, not shared quota. **Action for whoever reconciles
+this: ORYN's existing single "Mathematics and Science Education" record names the
+department, not any programme a student is actually admitted into — it is under-granular
+relative to reality. The correct representation is closer to YÖK Atlas's programme-level
+split (one row per specific `...Öğretmenliği` subject), the same granularity already used
+for the batch 40/42/43/44 entries this session added elsewhere.** This same structural
+answer very likely holds at Yıldız Technical and Hacettepe too (same national programme
+architecture), though only Boğaziçi's own page was checked directly, per the coordinator's
+instruction that one verified fact should settle it everywhere rather than re-checking
+per-university.
+
+---
+
+## Closing handoff — programs-pipeline lane, this continuation
+
+**Scope of this handoff**: covers this continuation only (post-context-compaction), from
+the Radboud/Exeter reconciliation through the domain-resolution close-out. Earlier work in
+this same session (batches 1–29, the QS-ranked US/UK zero-coverage push) is documented in
+this file's earlier sections above and is not re-summarized here.
+
+**Totals, this continuation:**
+- **1,493 new programme records** across **15 universities** (batches 30–44):
+  UK deepening (batches 32–36, 919 records / Durham, Nottingham, QMUL, Bath, Southampton)
+  and German deepening (batches 30–31, 152 records / FU Berlin, RWTH Aachen — see
+  ingestion-gap note below) — 7 universities, DE/UK.
+  Turkey YÖK Atlas push (batches 37–44, 422 records / GTU, Ankara Üniversitesi, Istanbul
+  University, METU, Sabancı, Yıldız Technical, İTÜ, Hacettepe) — 8 universities.
+- **206 Turkish/KKTC university-spine candidates** collected (not created as rows, per
+  standing instruction) — 120 devlet, 70 vakıf, 16 KKTC — of which **203 now carry a
+  verified official domain**, 3 explicitly left null and flagged.
+- Every batch individually committed and pushed; every batch's method, spot-checks, and
+  any collision/ambiguity finding documented inline above at the point it happened, not
+  reconstructed after the fact.
+
+**Systemic findings that outlasted any single batch:**
+- **YÖK Atlas** (`yokatlas.yok.gov.tr`) is a national-scale, officially-authoritative,
+  keyless JSON API covering every Turkish university's actual admission data — the real
+  criterion Turkish domestic students are admitted under. Discovering it turned "deepen one
+  institution's site at a time" into "go wide across a whole country's spine" — the single
+  highest-leverage finding of this continuation.
+- **The teacher-training granularity question is systemic, not per-university**: Boğaziçi,
+  Yıldız Technical, and Hacettepe all show the same pattern (YÖK Atlas splits
+  subject-specific `...Öğretmenliği` entries that ORYN's existing records fold into a
+  broader category). Now resolved at the fact level (see above) — the specific programmes
+  are real, separately-admitted degrees, not tracks. **Remaining work**: apply this
+  resolution — a genuine schema/reconciliation task, not a research one — to the ~15
+  affected records already flagged inline in the Boğaziçi/Yıldız/Hacettepe sections above.
+- **Harita Mühendisliği / Geomatik Mühendisliği is a same-programme naming question, now
+  resolved** (see above) — apply "Harita Mühendisliği" as current, treat existing
+  "Geomatik Mühendisliği" records as the same programme under its 2009–2023 name.
+- **KKTC-Uyruklu admission-track sub-variants of already-covered subjects were not
+  exhaustively pulled into batches 39–44** — disclosed as a deliberate scope
+  simplification when found (Hacettepe batch), not fixed retroactively in the earlier
+  batches. Low-value, low-headcount (quota 1–2 seats in every case checked) placement-tier
+  granularity, not new subject-matter content.
+- **The DB unique-index / dual-language collision** (Radboud): 2 of 5 historical gaps
+  fixed this continuation; 3 remain intentionally unresolved pending a coordinator-level
+  call on either a migration or a naming convention — do not unilaterally pick one.
+- **Near-miss discipline**: substring/rank/name-similarity matching produced real,
+  concrete wrong-entity risks throughout this continuation (İTÜ `ILIKE '%ITU%'` matching
+  "Institute"; multiple ROR rank-0 misses — Usak University surfacing incorrectly for two
+  unrelated queries, Turgut Özal's Ankara/Malatya pair, Girne's American/Kyrenia pair,
+  Kıbrıs Amerikan's two "American University" namesakes). Every one caught by verifying
+  the returned identity against the query before accepting — never by trusting rank,
+  substring, or plausibility alone. This discipline should carry forward as a standing
+  rule for any future lane touching institution identity, not just this one.
+
+**Attempted and blocked, with reasons (the reusable part for whoever picks this up):**
+- **VU Amsterdam**: SearchStax-backed course finder; request-body filter syntax could not
+  be reverse-engineered server-side (silently returned unfiltered results rather than
+  erroring); direct calls to the underlying SearchStax endpoint 401'd. Not resolved this
+  continuation; flagged by a peer lane as "worth another pass with fresh tooling," not
+  attempted again here.
+- **FU Berlin / RWTH Aachen**: research already complete (batches 30–31, 152 records,
+  pushed) but **not yet ingested into the live `university_programs` table** — confirmed
+  live-DB 0 rows for both as of this handoff, discovered when a peer lane's live query
+  flagged what looked like a research gap but is actually an ingestion gap. Coordinator
+  confirmed ingestion is queued on their side. Do not re-research either university.
+- **3 Radboud dual-language records**: see above, blocked on a DB-constraint-level
+  decision, not a research one.
+- **Boğaziçi/Yıldız/Hacettepe teacher-training reconciliation**: fact now established
+  (see above), but applying it to existing records is a schema/data-correction task this
+  session did not do — flagged, not actioned, per the coordinator's explicit "don't
+  resolve the taxonomy" instruction.
+- **Demiroğlu Bilim Üniversitesi domain**: likely `istanbulbilim.edu.tr` as a pre-rename
+  domain, not independently confirmed current — left null.
+- **Türk-Japon Bilim ve Teknoloji Üniversitesi and Kıbrıs Aydın Üniversitesi domains**: no
+  ROR record found for either — left null.
+- Full per-record detail for all 206 spine candidates, including the 3 unresolved
+  domains, is in
+  `data/research/universities/turkey-spine-candidates-yokatlas_2026-08-21.json`.
+
+**Stopping here per the coordinator's call that this is the natural boundary for this
+lane.** All work is committed and pushed to `oryn/programs-pipeline-reconciled`
+(latest: domain-resolution completion, commit `3a387c7`, plus this handoff commit).
