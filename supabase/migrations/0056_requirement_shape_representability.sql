@@ -1,11 +1,33 @@
 -- 0056 — Requirement/deadline shape representability
 --
--- STATUS: PROPOSED, NOT APPLIED. Written by the requirements-ingestion design pass and left
--- unapplied deliberately. Nothing in this file has run against any database. Sections 2, 5 and
--- 7 encode product policy decisions that are the founder's to make, not this lane's — see
--- docs/handoffs/requirements-ingestion-design.md, which lays out the options for each and says
--- which one this file assumes. Read that first; if a different option is chosen, this file
--- changes before it is applied.
+-- STATUS: VALIDATED, NOT YET APPLIED TO PRODUCTION. Written by the requirements-ingestion
+-- design pass, which never executed it. It has now been run end-to-end against a Postgres 17
+-- database carrying a reconstruction of the live schema subset it touches — every table,
+-- column, enum, CHECK and index in that reconstruction read out of production's own
+-- pg_catalog on 2026-08-21, not transcribed from migration files. It applies cleanly in one
+-- transaction. Section 5 was exercised with real data (see below). Nothing in this file has
+-- been run against the production project.
+--
+-- Re-verified against production before validation, rather than trusted from the design pass:
+--   * 36 of 36 rows recorded `rejected` in requirement_research_queue are
+--     university_requirements_university_type_scope_idx firing — every one, no other cause.
+--   * 0 existing rows violate either replacement index.
+--   * 0 existing rows violate the new recurrence CHECK (all 26 university_deadlines rows have
+--     a non-null deadline_date, so all satisfy the 'dated_specific' default).
+--   * requirement_groups still holds 0 rows.
+--
+-- Section 5 exercised on the reconstruction with The University of Edinburgh's four real
+-- English-proficiency alternatives (REQ-2026-08-21-4004/4008/4009/4010,
+-- requirements_batch5_scale-audit_2026-08-21.jsonl): 1 of 4 lands under the old index, 4 of 4
+-- under the new one. Bound into one requirement_groups row and read back out,
+-- evaluateRequirementGroup() returns `met` for a student holding any single one of the four
+-- and `not_met` only when all four fall below threshold.
+--
+-- Sections 2, 5 and 7 encode product policy decisions that are the founder's to make, not
+-- this lane's — see docs/handoffs/requirements-ingestion-design.md, which lays out the options
+-- for each. Only section 5's choice was forced by validation, and it stands as written:
+-- option (b), a content discriminator folded into the key. Sections 2 and 7 add nullable
+-- columns that nothing populates yet, so neither was forced and both remain open.
 --
 -- WHAT THIS CHANGES AND WHY
 --
@@ -160,6 +182,16 @@ create index if not exists university_requirements_evaluation_gate_idx
 -- is still caught. The accepted cost, identical to the tradeoff migration 0053 took for
 -- programmes: a reworded title inserts a second row rather than being auto-merged — occasional
 -- and human-visible (both rows are factually true) rather than systemic and silent.
+--
+-- ONE THING THIS INDEX DOES NOT FIX ON ITS OWN, found by exercising it. The application-level
+-- dedup in lib/requirements/ingest.ts merges titles at >= 0.6 Jaccard similarity, and
+-- Edinburgh's two TOEFL alternatives — identical wording apart from "from"/"before" the ETS
+-- rescale date and the thresholds themselves (4.5/4.0 vs 92/20) — score about 0.68. So the
+-- fourth alternative was still being discarded as a `duplicate` before it ever reached this
+-- index, and because the two rows never collide the constraint could not catch the loss
+-- either. That check now additionally requires the two titles' NUMBERS to match
+-- (lib/requirements/dedup.ts `statesTheSameFact`): for a threshold fact the number is the
+-- fact. Without that companion change this index alone lands three of Edinburgh's four.
 drop index if exists university_requirements_university_type_scope_idx;
 
 create unique index if not exists university_requirements_university_type_scope_title_idx

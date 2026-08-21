@@ -1,7 +1,7 @@
 import { resolveIdentity, type LocalUniversity } from "@/lib/acquisition/identity";
 import { sourceAuthority, domainOf } from "@/lib/acquisition/source-authority";
-import { normalizeTitle, titleSimilarity } from "@/lib/opportunities/dedup";
-import type { RequirementCategory } from "@/types/database";
+import { statesTheSameFact } from "@/lib/requirements/dedup";
+import type { RequirementCategory, RequirementGroupRole } from "@/types/database";
 
 /** One record from data/research/university-requirements/requirements_batch*.jsonl — see
  * docs/research/university-requirements/research-handoff-university-requirements.md for the
@@ -29,6 +29,10 @@ export interface ResearchRequirementRecord {
   limitations?: string | null;
   researcher_notes?: string | null;
   is_exclusion?: boolean | null;
+  /** The source document's own clause numbering ("B-a-1", "B-b-5-a", "A-2-c-ii"), verbatim.
+   * Present on 17 records in the 2026-08-21 corpus, all from the YÖK esaslar batch. Stored
+   * as-is and never parsed — see migration 0052's comment on the column. */
+  clause_ref?: string | null;
   test_scale?: string | null;
   scale_ambiguity?: string | null;
   supersedes?: string | null;
@@ -53,6 +57,17 @@ export interface AcceptedRequirementRow {
   scope: string | null;
   source_url: string;
   retrieved_at: string;
+  /** Migration 0052's columns. They existed from 0052 but this builder never set them, which
+   * is why an exclusion record could only ever be dropped (`not_ingestible`) rather than
+   * stored with its meaning intact — the "eligibility encoded as absence" failure: Ankara
+   * University's SAT threshold (REQ-2026-08-21-9324) lands while the heading that governs it
+   * ("VALID EXAMINATIONS AND REQUIRED SCORES FOR PROGRAMMES EXCLUDING THE ABOVE-LISTED",
+   * REQ-2026-08-21-9321) is discarded, leaving a student who is not eligible under that
+   * heading looking like they qualify. */
+  is_exclusion: boolean;
+  clause_ref: string | null;
+  requirement_group_id: string | null;
+  group_role: RequirementGroupRole | null;
 }
 
 export interface RequirementIngestDecision {
@@ -70,9 +85,16 @@ export interface RequirementIngestDecision {
 const UNSAFE_VERIFICATION_STATES = new Set(["CONFLICTING_EVIDENCE", "NEEDS_REVIEW", "CURRENT_CYCLE_NOT_PUBLISHED"]);
 const UNSAFE_SCALE_AMBIGUITY = new Set(["undated_scale_assumption", "partially_unsatisfiable"]);
 
-/** Mirrors university_requirements_university_type_scope_idx's own key shape exactly
- * (`(university_id, requirement_type, COALESCE(scope,''))`) so the application-level dedup
- * check and the real DB constraint agree on what "the same requirement" means. */
+/** The bucket within which two requirements are compared for duplication. Migration 0056
+ * widened the DB index to `(university_id, requirement_type, COALESCE(scope,''),
+ * md5(COALESCE(title,'')))`, so this key is now deliberately COARSER than the constraint:
+ * it collects every row sharing university+type+scope, and `decideRequirementIngestion`
+ * then applies fuzzy title similarity within that bucket. The two no longer have identical
+ * shapes and must not — the index catches only byte-identical titles (a re-ingest of the
+ * same fact), while the application check also catches rewordings. Application dedup is the
+ * wider net; the index is the backstop underneath it. What changed in 0056 is that four
+ * genuinely different alternatives, which this key groups together, are no longer collapsed
+ * to one row by the database before the title check can distinguish them. */
 export function requirementDedupKey(universityId: string, requirementType: string, scope: string | null): string {
   return `${universityId}|${requirementType}|${scope ?? ""}`;
 }
@@ -90,19 +112,21 @@ export function resolveRequirementUniversity(record: ResearchRequirementRecord, 
  * present anywhere in the batch (a record another record explicitly supersedes is stale by the
  * research lane's own admission, even when nothing else about it looks wrong — see the
  * dry-run report's "Boğaziçi" case). `existingTitlesByKey` is what's already live, grouped by
- * `requirementDedupKey()`, checked via the same Jaccard title-similarity
- * lib/requirements/dedup.ts's isDuplicateRequirement already uses.
+ * `requirementDedupKey()`, checked via the same lib/requirements/dedup.ts `statesTheSameFact`
+ * that isDuplicateRequirement uses — Jaccard title similarity, but refusing to merge two
+ * titles whose NUMBERS differ, because for a threshold fact the number is the fact.
  *
- * university_requirements DOES have a DB-level unique index for program_id-null rows —
- * `(university_id, requirement_type, COALESCE(scope,''))` (migration 0042) — which every row
- * this ingestion writes falls under (program_id is always null here). It exists to keep
- * genuinely different per-applicant-group requirements distinct (an international-only English
- * requirement and a domestic one are two rows, not a conflict), not to guarantee one row per
- * type per university — two different `minimum_grade` facts sharing both type and scope (or
- * both null-scope) will still collide there. `scope` is threaded through from the record's own
- * field for exactly this reason, but this is a real, coarser-than-ideal constraint, not
- * something to work around here — a rejected insert surfaces honestly as `rejected` via
- * applyRequirementDecision, same as any other DB error. */
+ * university_requirements has a DB-level unique index for program_id-null rows. Migration
+ * 0042 keyed it on `(university_id, requirement_type, COALESCE(scope,''))`, which permitted
+ * exactly one requirement per university per type per scope and so destroyed every
+ * alternative after the first: all 36 rows recorded as `rejected` in
+ * requirement_research_queue are that index firing, Edinburgh losing three of its four
+ * English-proficiency routes among them. Migration 0056 folds `md5(COALESCE(title,''))` into
+ * the key, so genuinely different alternatives coexist while a byte-identical re-ingest is
+ * still caught. The residual cost, identical to the one migration 0053 accepted for
+ * programmes: a reworded title inserts a second row instead of being auto-merged — visible
+ * and both-rows-true, rather than silent loss. A rejected insert still surfaces honestly as
+ * `rejected` via applyRequirementDecision, same as any other DB error. */
 export function decideRequirementIngestion(
   record: ResearchRequirementRecord,
   universities: readonly UniversityLookupRow[],
@@ -118,9 +142,13 @@ export function decideRequirementIngestion(
     return { outcome: "superseded", detail: "A newer record in this same corpus explicitly supersedes this one.", universityId, row: null };
   }
 
-  if (record.is_exclusion === true) {
-    return { outcome: "not_ingestible", detail: "is_exclusion=true — university_requirements has no column to mark a row as an exclusion, so storing it as an ordinary requirement would invert its meaning.", universityId, row: null };
-  }
+  // is_exclusion is no longer a reason to drop the record. Migration 0052 added the column
+  // that makes an exclusion storable without inverting its meaning; this builder simply
+  // never set it, so every exclusion was discarded and the fact survived only in
+  // requirement_research_queue.raw_payload. Dropping them is the more dangerous option, not
+  // the safer one: the thresholds those headings restrict are ingested regardless, so the
+  // student sees the qualifying score and never the carve-out that disqualifies them.
+  // lib/requirements/evaluate.ts refuses to auto-resolve any row carrying the flag.
 
   if (UNSAFE_VERIFICATION_STATES.has(record.verification_state)) {
     return { outcome: "not_ingestible", detail: `verification_state=${record.verification_state}`, universityId, row: null };
@@ -149,7 +177,7 @@ export function decideRequirementIngestion(
   const dedupKey = requirementDedupKey(universityId, record.requirement_category_db, record.scope ?? null);
   const title = record.requirement_text.slice(0, 200);
   const existingForKey = existingTitlesByKey.get(dedupKey) ?? [];
-  const isDuplicate = existingForKey.some((existingTitle) => normalizeTitle(existingTitle) === normalizeTitle(title) || titleSimilarity(existingTitle, title) >= 0.6);
+  const isDuplicate = existingForKey.some((existingTitle) => statesTheSameFact(existingTitle, title));
   if (isDuplicate) {
     return { outcome: "duplicate", detail: "An existing (or earlier-in-this-batch) requirement for the same university, category, and scope has a highly similar title.", universityId, row: null };
   }
@@ -170,6 +198,21 @@ export function decideRequirementIngestion(
       data_confidence: (record.confidence as "high" | "medium" | "low") ?? "medium",
       source_url: record.source_url,
       retrieved_at: record.retrieved_at,
+      is_exclusion: record.is_exclusion === true,
+      clause_ref: record.clause_ref?.trim() || null,
+      // Grouping is deliberately NOT inferred here. requirement_groups models "any one of N
+      // alternatives satisfies this", and no record in this corpus states which rows form
+      // such a set — the only available signal would be "same university + type + scope +
+      // source page", which is precisely the inference migration 0052 forbids ("never
+      // populated by backfilling existing rows on inference"). Guessing it wrong is not a
+      // cosmetic error: a qualifier miscounted as a fifth alternative would let a student
+      // satisfy the group by meeting a condition that was never an alternative at all.
+      // These stay null until a record carries an explicit group, or an admin assigns one.
+      // Both columns move together — migration 0052's
+      // university_requirements_group_role_consistency requires each to be null iff the
+      // other is.
+      requirement_group_id: null,
+      group_role: null,
     },
   };
 }

@@ -1,10 +1,15 @@
 #!/usr/bin/env node
 /**
  * University-requirements/deadlines research handoff ingestion (spec Phase 69 / Phase 23).
- * Reads every data/research/university-requirements/{requirements,deadlines}_batch*.jsonl file,
- * resolves each record's university via lib/acquisition/identity.ts's shared, alias-aware
- * matching, and writes every outcome to requirement_research_queue/deadline_research_queue —
- * only `accepted` rows also land in university_requirements/university_deadlines.
+ * Reads EVERY file in data/research/university-requirements/, resolves each record's
+ * university via lib/acquisition/identity.ts's shared, alias-aware matching, and writes every
+ * outcome to requirement_research_queue/deadline_research_queue — only `accepted` rows also
+ * land in university_requirements/university_deadlines.
+ *
+ * File selection is lib/requirements/corpus-files.ts's job and is fail-loud: a file that
+ * cannot be classified as requirements or deadlines stops the run by name. This replaced a
+ * `startsWith("requirements_batch")` / `startsWith("deadlines_batch")` filter that matched 12
+ * of 53 files and skipped the other 41 — 1,165 records — without a word of output.
  *
  * `structured_rule` is always left null on every inserted requirement — per migration 0020's
  * own documented intent, it is populated later by an admin reviewing
@@ -32,7 +37,8 @@
  * Deliberately does NOT import anything under lib/ with `import "server-only"` (same
  * constraint as scripts/ingest-university-programs.ts).
  */
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
+import { classifyCorpusFiles } from "../lib/requirements/corpus-files";
 import {
   applyRequirementDecision,
   decideRequirementIngestion,
@@ -128,10 +134,21 @@ async function main() {
   const target: PostgrestTarget = { url, key: secretKey };
 
   const dir = "data/research/university-requirements";
-  const files = readdirSync(dir);
-  const reqRecords: ResearchRequirementRecord[] = files.filter((f) => f.startsWith("requirements_batch")).flatMap((f) => parseJsonl<ResearchRequirementRecord>(`${dir}/${f}`));
-  const dlRecords: ResearchDeadlineRecord[] = files.filter((f) => f.startsWith("deadlines_batch")).flatMap((f) => parseJsonl<ResearchDeadlineRecord>(`${dir}/${f}`));
-  console.log(`Loaded ${reqRecords.length} requirement record(s), ${dlRecords.length} deadline record(s).`);
+  const { requirementFiles, deadlineFiles } = classifyCorpusFiles(dir);
+
+  const reqRecords: ResearchRequirementRecord[] = [];
+  const dlRecords: ResearchDeadlineRecord[] = [];
+  for (const f of requirementFiles) {
+    const records = parseJsonl<ResearchRequirementRecord>(`${dir}/${f}`);
+    console.log(`  ${f}: ${records.length} requirement record(s)`);
+    reqRecords.push(...records);
+  }
+  for (const f of deadlineFiles) {
+    const records = parseJsonl<ResearchDeadlineRecord>(`${dir}/${f}`);
+    console.log(`  ${f}: ${records.length} deadline record(s)`);
+    dlRecords.push(...records);
+  }
+  console.log(`Loaded ${reqRecords.length} requirement record(s), ${dlRecords.length} deadline record(s) from ${requirementFiles.length + deadlineFiles.length} file(s).`);
 
   const [universities, { rows: existingReqs }, { rows: existingDls }] = await Promise.all([
     loadUniversityCandidates(target),
@@ -250,4 +267,10 @@ async function main() {
   }
 }
 
-main();
+main().catch((err: unknown) => {
+  // Loud, not a bare unhandled rejection: a corpus file that cannot be classified, or a
+  // directory that cannot be read, must end the process with a non-zero status and a
+  // readable message rather than a stack trace after a "success" summary.
+  console.error(`\nIngestion stopped: ${err instanceof Error ? err.message : String(err)}`);
+  process.exitCode = 1;
+});

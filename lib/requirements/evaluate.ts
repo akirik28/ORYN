@@ -48,8 +48,23 @@ function fuzzyIncludes(a: string, b: string): boolean {
 export function evaluateRequirement(
   category: RequirementCategory,
   rawStructuredRule: unknown,
-  facts: RequirementFacts
+  facts: RequirementFacts,
+  isExclusion = false
 ): RequirementEvaluationResult {
+  // Migration 0052's comment on university_requirements.is_exclusion already states the
+  // contract — "Never auto-resolved by evaluate.ts — always needs_manual_review" — but
+  // nothing here read the flag, because ingestion refused to store exclusion rows at all so
+  // none could reach this function. Now that they land (lib/requirements/ingest.ts), the
+  // check has to exist: an exclusion states who is NOT eligible, so evaluating its text as
+  // though it were a threshold to clear inverts it, and a student excluded by a carve-out is
+  // told they qualify. Checked before everything else, including structured_rule — a rule
+  // authored onto an exclusion row by a later reviewer must not override this.
+  if (isExclusion) {
+    return {
+      status: "needs_manual_review",
+      reasoning: "This is a restriction on who is eligible, not a requirement to meet — read the source directly rather than treating it as satisfied.",
+    };
+  }
   if (MANUAL_REVIEW_CATEGORIES.includes(category)) {
     return {
       status: "needs_manual_review",
@@ -180,10 +195,15 @@ const GROUP_STATUS_PRIORITY: readonly RequirementEvaluationStatus[] = ["met", "l
 export function evaluateRequirementGroup(members: RequirementGroupMember[], facts: RequirementFacts): RequirementGroupEvaluationResult {
   const memberResults = new Map<string, RequirementEvaluationResult>();
   for (const member of members) {
-    memberResults.set(member.id, evaluateRequirement(member.category, member.rawStructuredRule, facts));
+    memberResults.set(member.id, evaluateRequirement(member.category, member.rawStructuredRule, facts, member.isExclusion ?? false));
   }
 
-  if (members.some((m) => m.groupRole === "exclusion")) {
+  // groupRole 'exclusion' implies is_exclusion (migration 0052's
+  // university_requirements_exclusion_role_implies_flag), but the converse is not enforced:
+  // a row can carry is_exclusion with any groupRole. Both are checked, so a mislabelled
+  // exclusion sitting in the inclusion list still cannot be counted as an alternative that
+  // satisfies the group.
+  if (members.some((m) => m.groupRole === "exclusion" || m.isExclusion)) {
     return {
       status: "needs_manual_review",
       reasoning: "This requirement has an exclusion condition attached that Oryn doesn't evaluate automatically — review the source directly.",

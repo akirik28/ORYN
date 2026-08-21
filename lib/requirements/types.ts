@@ -121,6 +121,12 @@ export interface RequirementGroupMember {
   rawStructuredRule: unknown;
   groupRole: RequirementGroupRole;
   title: string | null;
+  /** The row's own `is_exclusion` column. Optional because groupRole already carries the
+   * same meaning for correctly-labelled rows; passed separately because the DB only
+   * enforces one direction (group_role='exclusion' implies the flag, not the reverse), so a
+   * row flagged as an exclusion while sitting in the inclusion list is representable and
+   * must not be counted as an alternative that satisfies the group. */
+  isExclusion?: boolean;
 }
 
 /** evaluateRequirementGroup's return shape — the combined verdict for the whole group, plus
