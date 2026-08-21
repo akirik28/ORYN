@@ -150,3 +150,129 @@ describe("matchYokPlacements", () => {
     expect(result).toThrow(/999999/);
   });
 });
+
+describe("matchYokPlacements with the sourced bilingual-name bridge", () => {
+  // Real shape from data/research/university-programs/tr_bilingual_names_bilkent_2026-08-22.jsonl:
+  // Bilkent's "Information Systems and Technologies" (english_name, our DB's actual value) has
+  // no name-equality match against YOK's Turkish birimAdi "Bilişim Sistemleri ve Teknolojileri
+  // (İngilizce) (Burslu)" -- this is exactly the gap the bridge exists to close.
+  const BILKENT = "uni-bilkent";
+  const CTIS_PROGRAM_ID = "f51a746f-9920-4d23-b2de-914d20731c11";
+  const YOK_ID_BY_UNI_WITH_BILKENT = new Map<number, string>([
+    [102738, ANKARA],
+    [115373, ISTANBUL],
+    [105118, BILKENT], // Bilkent's real YOK Atlas universiteId
+  ]);
+
+  function ctisApiRecord(overrides: Partial<YokPlacementRecord> = {}): YokPlacementRecord {
+    return apiRecord({
+      birimAdi: "Bilişim Sistemleri ve Teknolojileri (İngilizce) (Burslu)",
+      kilavuzKodu: 202190193,
+      fymkId: 116700,
+      fymkAdi: "UYGULAMALI BİLİMLER FAKÜLTESİ",
+      bursOraniAdi: "Burslu",
+      universiteId: 105118,
+      ...overrides,
+    });
+  }
+
+  function ctisDbRow(overrides: Partial<ExistingProgramRow> = {}): ExistingProgramRow {
+    return dbRow({
+      id: CTIS_PROGRAM_ID,
+      university_id: BILKENT,
+      name: "Information Systems and Technologies",
+      faculty_or_school: "Faculty of Applied Sciences",
+      ...overrides,
+    });
+  }
+
+  test("resolves via kilavuzKodu when the Turkish birimAdi has no name-equality match against the English DB name", () => {
+    const bridge = new Map<number, string>([[202190193, CTIS_PROGRAM_ID]]);
+    const result = matchYokPlacements(
+      [ctisApiRecord()],
+      [ctisDbRow()],
+      YOK_ID_BY_UNI_WITH_BILKENT,
+      CYCLE_YEAR,
+      CYCLE_LABEL,
+      SOURCE_URL,
+      RETRIEVED_AT,
+      bridge
+    );
+    expect(result.matched).toHaveLength(1);
+    expect(result.matched[0]).toMatchObject({
+      program_id: CTIS_PROGRAM_ID,
+      kilavuz_kodu: "202190193",
+      burs_orani_adi: "Burslu",
+      fymk_adi: "UYGULAMALI BİLİMLER FAKÜLTESİ",
+    });
+    expect(result.unmatchedApi).toHaveLength(0);
+    expect(result.ambiguous).toHaveLength(0);
+  });
+
+  test("without the bridge, the same record is unmatched (English DB name vs Turkish birimAdi never collide)", () => {
+    const result = matchYokPlacements(
+      [ctisApiRecord()],
+      [ctisDbRow()],
+      YOK_ID_BY_UNI_WITH_BILKENT,
+      CYCLE_YEAR,
+      CYCLE_LABEL,
+      SOURCE_URL,
+      RETRIEVED_AT
+      // no bridge passed -- defaults to empty
+    );
+    expect(result.matched).toHaveLength(0);
+    expect(result.unmatchedApi).toHaveLength(1);
+  });
+
+  test("a bridge entry pointing to a program_id outside dbPrograms is reported unmatched, never trusted blindly", () => {
+    const bridge = new Map<number, string>([[202190193, "program-id-not-in-db"]]);
+    const result = matchYokPlacements(
+      [ctisApiRecord()],
+      [ctisDbRow()],
+      YOK_ID_BY_UNI_WITH_BILKENT,
+      CYCLE_YEAR,
+      CYCLE_LABEL,
+      SOURCE_URL,
+      RETRIEVED_AT,
+      bridge
+    );
+    expect(result.matched).toHaveLength(0);
+    expect(result.unmatchedApi).toHaveLength(1);
+    expect(result.unmatchedApi[0].reason).toMatch(/not in the provided dbPrograms/);
+  });
+
+  test("a bridge entry pointing to a program at the wrong university is reported unmatched, never trusted blindly", () => {
+    const bridge = new Map<number, string>([[202190193, "program-tip"]]); // program-tip belongs to ANKARA in dbRow()'s default
+    const result = matchYokPlacements(
+      [ctisApiRecord()],
+      [ctisDbRow(), dbRow()], // dbRow() default is program-tip @ ANKARA
+      YOK_ID_BY_UNI_WITH_BILKENT,
+      CYCLE_YEAR,
+      CYCLE_LABEL,
+      SOURCE_URL,
+      RETRIEVED_AT,
+      bridge
+    );
+    expect(result.matched).toHaveLength(0);
+    expect(result.unmatchedApi).toHaveLength(1);
+    expect(result.unmatchedApi[0].reason).toMatch(/belongs to a different university/);
+  });
+
+  test("bridge resolution does not disturb existing name-based matches for other universities in the same run", () => {
+    const bridge = new Map<number, string>([[202190193, CTIS_PROGRAM_ID]]);
+    const result = matchYokPlacements(
+      [ctisApiRecord(), apiRecord()], // apiRecord() default is Ankara's "Tıp", name-matched as before
+      [ctisDbRow(), dbRow()],
+      YOK_ID_BY_UNI_WITH_BILKENT,
+      CYCLE_YEAR,
+      CYCLE_LABEL,
+      SOURCE_URL,
+      RETRIEVED_AT,
+      bridge
+    );
+    expect(result.matched).toHaveLength(2);
+    const byProgramId = Object.fromEntries(result.matched.map((m) => [m.program_id, m.kilavuz_kodu]));
+    expect(byProgramId[CTIS_PROGRAM_ID]).toBe("202190193");
+    expect(byProgramId["program-tip"]).toBe("101110775");
+  });
+});
