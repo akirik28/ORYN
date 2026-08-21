@@ -3746,6 +3746,35 @@ separately-admitted programme via both İktisat Fakültesi and Siyasal Bilgiler 
 does not include faculty, so these would collide if ingested. Not disambiguated in the data
 here -- kept faithful to the source and flagged, same discipline as the dual-language finding.
 
+**Batch 40 — METU/ODTÜ deepening** (79 new, `independent_batch40_2026-08-21.jsonl`,
+committed `900c18c`): coordinator redirected to "go wide on YOK Atlas... every Turkish
+university, not just the named gaps... deepening one institution's site at a time is now the
+expensive path." METU had only 4 programmes live for one of Turkey's largest technical
+universities -- worst coverage-to-importance ratio on the list. 83 raw YÖK Atlas results;
+excluded 4 confirmed-by-query (not assumed) to be the same real programmes already covered
+under English names (Business Administration/İşletme, Computer Engineering/Bilgisayar
+Mühendisliği, Economics/İktisat, Industrial Engineering/Endüstri Mühendisliği) -- worth
+naming as a real risk: an English name and a Turkish name never collide on
+`normalized_name` matching, so this class of duplicate has to be caught by hand, not by the
+dedup index. Two campuses in METU's own data (main Ankara campus + "ODTÜ Kuzey Kıbrıs
+Kampüsü", a genuinely separate physical campus in TRNC) kept distinct via the campus field.
+
+**Placement-data note format refined per coordinator guidance, effective this batch
+onward**: every record now states its placement cycle explicitly ("Placement cycle:
+2026-YKS") rather than leaving the year implicit, and unfilled quotas get a distinct
+`UNFILLED (...)` marker instead of a blank/absent line -- the coordinator's point: `null`
+success-rank here is not missing data, it is the fact that nobody qualified took an open
+seat, and a schema that can't tell that apart from "we didn't capture this" would destroy
+the signal. Batches 38-39 predate this refinement and use a slightly looser format; not
+worth reworking retroactively, but future placement-data batches should match batch 40's
+shape.
+
+**Coordinator's structural note on the future schema** (not actioned by this session, just
+recorded so it survives): placement stats are cycle-versioned (2026 quota/rank are this
+year's, not a permanent fact), so a future migration should key them on
+`(program_id, cycle_year)` in a separate table, not as columns on `university_programs`
+that would silently overwrite year over year.
+
 Of the 5 outstanding Radboud/Exeter gaps, 2 are now confirmed fully resolved (the Exeter
 "BA Classical Studies and Philosophy" insert, id `4a715f86-3f0e-4b3d-97ff-e6fb12c2c5bb`, and
 the orphaned "BA Classical Studies and Modern Languages" queue-audit row, id
