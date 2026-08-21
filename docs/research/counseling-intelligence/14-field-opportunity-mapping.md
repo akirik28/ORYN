@@ -28,7 +28,9 @@ Environmental Science/Sustainability (all authored on this branch); `10` Medicin
 `12` Political Science/IR/Policy, `13` Law, `14` Sociology/History/Philosophy, `15` Literature/
 Journalism/Communication, `16` Architecture/Design, `17` Visual/Media Arts (authored on the peer
 branch — referenced here by number/name only, their content not independently re-verified by this
-document beyond what this package's own family-taxonomy doc already establishes).
+document beyond what this package's own family-taxonomy doc already establishes); `18` Education &
+Teaching (added later, this branch — see the dedicated section below on the opportunity-category
+gap it surfaced).
 
 ## `competition`
 
@@ -156,9 +158,26 @@ specific program, not by the category. No family is distinctively over- or under
 this research's findings; treat per-program `fields` tags as authoritative, consistent with
 `02-opportunity-development-mapping.md`'s own conservative floor-mapping for this category.
 
+## A genuine missing category, surfaced by family 18 (Education & Teaching)
+
+Family 18's core exploration pathway — sustained, structured tutoring or teaching of others
+(`06-major-family-evidence/18-education-teaching.md` §4) — does not map cleanly onto any of the
+13 existing `OpportunityCategory` values. It is not quite `volunteering` (which this package's own
+`01-development-taxonomy.md` treats as service-to-others generally, not specifically instructional);
+not `internship` (usually unpaid/informal, not an employer relationship); not `student_program`
+(too specific a pattern to leave in the catch-all when it recurs across a whole family). **This is
+a genuine, concrete missing-opportunity-category finding**, not a stretch: tutoring/mentoring
+programs are common, real, structurally distinct activities (a student teaching younger students
+math, a peer-tutoring program, a structured mentorship role) that current `saved_opportunities`/
+`opportunities` data has no clean home for beyond a generic `volunteering` or `student_program` tag
+that would lose the instructional-specificity family 18 needs to reason about it well. **Proposed
+name if a future migration adds it: `tutoring_mentorship`** — not implemented here (schema changes
+are out of this research package's scope), flagged for `10-open-questions.md` (peer-owned) and
+noted here since it was found via this document's own category-by-category review.
+
 ## What this implies for a future implementation (not built here)
 
-1. A per-opportunity `fields`-tag refinement could reasonably draw on this document's 17-family
+1. A per-opportunity `fields`-tag refinement could reasonably draw on this document's 18-family
    vocabulary (already the shared taxonomy `06-major-family-evidence/00-family-taxonomy.md`
    establishes) rather than inventing a new one — but implementing that tagging, and deciding
    whether it's free-text, a controlled list, or AI-assisted classification, is out of this
