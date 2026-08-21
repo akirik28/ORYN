@@ -88,7 +88,12 @@ async function main() {
   console.log(`Loaded ${file.records.length} raw record(s) for ${file.universities.length} universities from ${INPUT_PATH} (fetched ${file.fetched_at}).`);
 
   const [{ rows: universities }, { rows: existingPrograms }, { rows: existingPlacements }] = await Promise.all([
-    fetchAllRowsVerified<UniversityRow>(target, "universities", "id,name,country", "country=eq.Turkey"),
+    // `order=id` is required, not cosmetic: fetchAllRows refuses to page without a stable sort,
+    // because PostgREST can otherwise skip or repeat rows across page boundaries. This call had
+    // only the country filter and had never actually run — the lane that wrote it hit a local
+    // 401 and verified through the MCP client instead, so the guard fired the first time the
+    // script was executed for real.
+    fetchAllRowsVerified<UniversityRow>(target, "universities", "id,name,country", "country=eq.Turkey&order=id"),
     fetchAllRowsVerified<ExistingProgramRow>(target, "university_programs", "id,university_id,name,faculty_or_school", "order=id"),
     fetchAllRowsVerified<{ program_id: string; cycle_year: number; burs_orani_adi: string | null; fymk_id: string | null }>(
       target,
@@ -139,10 +144,40 @@ async function main() {
   const existingKeySet = new Set(
     existingPlacements.map((p) => `${p.program_id}::${p.cycle_year}::${p.burs_orani_adi ?? ""}::${p.fymk_id ?? ""}`)
   );
-  const toInsert = result.matched.filter(
-    (m) => !existingKeySet.has(`${m.program_id}::${m.cycle_year}::${m.burs_orani_adi ?? ""}::${m.fymk_id ?? ""}`)
-  );
-  const alreadyLive = result.matched.length - toInsert.length;
+  // Two filters, not one. The set above catches collisions with rows already LIVE; this loop
+  // catches collisions WITHIN the batch, which the live check cannot see. Found the hard way:
+  // the first real run of this script died on
+  // university_program_placement_cycles_key_idx with 0 rows inserted, because two matched
+  // records resolved to the same (program_id, cycle, burs tier, faculty) key and both survived a
+  // filter that only knew about the database. Same shape as the `.map()`-over-a-static-snapshot
+  // bug the programmes pipeline hit: claim the key as you go, don't decide against a frozen view.
+  //
+  // A within-batch collision is reported rather than silently dropped. If the two records are
+  // genuinely identical the drop is harmless; if they differ, that is a real finding about the
+  // source and the operator needs to see it.
+  const seenInBatch = new Map<string, (typeof result.matched)[number]>();
+  const batchCollisions: { key: string; kept: unknown; dropped: unknown; identical: boolean }[] = [];
+  const toInsert: typeof result.matched = [];
+  for (const m of result.matched) {
+    const key = `${m.program_id}::${m.cycle_year}::${m.burs_orani_adi ?? ""}::${m.fymk_id ?? ""}`;
+    if (existingKeySet.has(key)) continue;
+    const prior = seenInBatch.get(key);
+    if (prior) {
+      batchCollisions.push({ key, kept: prior, dropped: m, identical: JSON.stringify(prior) === JSON.stringify(m) });
+      continue;
+    }
+    seenInBatch.set(key, m);
+    toInsert.push(m);
+  }
+  const alreadyLive = result.matched.length - toInsert.length - batchCollisions.length;
+
+  if (batchCollisions.length > 0) {
+    console.log(`\n${batchCollisions.length} within-batch key collision(s) — kept the first of each, dropped the rest:`);
+    for (const c of batchCollisions) {
+      console.log(`  ${c.key} — ${c.identical ? "records identical, drop is lossless" : "RECORDS DIFFER, review this one"}`);
+      if (!c.identical) console.log(`    kept:    ${JSON.stringify(c.kept)}\n    dropped: ${JSON.stringify(c.dropped)}`);
+    }
+  }
 
   const nameByUniId = new Map(universities.map((u) => [u.id, u.name]));
   const countsByUni: Record<string, { matched: number; unmatched: number; ambiguous: number }> = {};
