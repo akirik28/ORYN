@@ -323,6 +323,18 @@ wrote down honest "no direct match" notes for the 3 families (poli-sci, soc/hist
 lit/journ/comm — a weak/tangential match only) the vocational-skewed list doesn't actually cover,
 rather than forcing weak citations everywhere for consistency's sake.
 
+**Reciprocal cross-branch stress-testing, both directions**: peer independently tested this
+branch's own `05-redundancy-saturation.md` against `11`'s Turkey/YKS finding and found a real
+scope limit — the "signal quality to evaluators" justification (§2) doesn't apply where no
+application file exists to be read at all, leaving only the opportunity-cost justification (§3)
+for that target. Folded directly into `05` (`RULE-COUNSEL-093`) rather than left only on peer's
+branch. Also added a full-integration `Persona H` to `09` (IB curriculum + mixed UK/Germany
+targets + a newly-found IB-CAS access category, `RULE-COUNSEL-091/092` in `04` §8) — composed
+cleanly with no new contradiction, but surfaced that mixed-target students need *multiple
+target-conditioned explanations for the same recommendation*, a real input for peer's `07`. Package
+now **93 rules, 43 sources**. Peer separately found teaching/education entirely missing across all
+17 combined family docs and is adding it as family `18` on its own branch.
+
 **Full UK/EU/Turkey country-notes consistency achieved across all 8 family docs** (matching the
 peer's own established pattern for its 9): added official UK National Careers Service profiles
 (GP, Clinical/Forensic Psychologist, Solicitor, Barrister, Architect — direct hits for medicine/
