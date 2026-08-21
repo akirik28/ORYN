@@ -9,8 +9,8 @@ executed by two concurrent sessions after a working-directory collision early in
 `RULE-COUNSEL-001`–`014` and `023`–`031` from the peer session's branch
 (`oryn/counseling-intelligence-research-013956`, docs `00`–`02`, `04`–`06`(families 10-17), `09`,
 `10` — all now committed on that branch) and (originally minted as `034`–`064`, since renumbered
-to `200`–`230` to resolve a cross-branch collision — see the numbering-history section below)
-from this session's own branch (docs `03`, `06-major-family-evidence/`, `07`, `08`). Both sessions have now completed their originally-assigned
+to `200`–`242` to resolve a cross-branch collision — see the numbering-history section below)
+from this session's own branch (docs `03`, `06-major-family-evidence/`, `07`, `08`, `14`, `16`). Both sessions have now completed their originally-assigned
 document sets; remaining work is the country-notes pass (this session, in progress — see §9) and the
 final unified rules.json/sources.json integration (deferred by mutual agreement, see the "known open
 item" section below for one confirmed numbering collision already found). This is a living index —
@@ -99,6 +99,8 @@ mission's own request for a "consolidated registry," not a duplicate of the sour
 |---|---|---|
 | Assuming US professional-licensure structures (PE, actuarial exams) apply unchanged outside the US | Stated explicitly in every relevant family doc's §6 and sources table (`02`, `05`, `06`) rather than as one numbered rule — treated as a standing sourcing-discipline requirement, not a single discrete inference to number | `06-major-family-evidence/02-mathematics-statistics.md` §6, `05-engineering-me-ce-ae-ee.md` §6, `06-biomedical-engineering.md` §6 |
 | Treating a field with a genuine licensure gate (medicine, law, architecture, clinical psychology, engineering-PE) as equivalent in structure to one without any (CS, business, most of the humanities) | Cross-cutting requirement stated in `00-family-taxonomy.md` §5 point 3 | `06-major-family-evidence/00-family-taxonomy.md` |
+| Assuming one country's engineering-licensure model (practice-gated, competence-based, chamber-registration, or title-only) describes another country's system | RULE-COUNSEL-227, RULE-COUNSEL-241 — a genuine four-way comparison (US/UK/Turkey/Germany), each structurally distinct | `06-major-family-evidence/05-engineering-me-ce-ae-ee.md` §6 |
+| Describing a country's teaching-credential requirement as a single static fact, or assuming one country's two-part "degree + separate pedagogical credential" mechanics transfer to another | RULE-COUNSEL-232–235 (this session; Turkey's system specifically is mid-transition and must not be presented as fixed) | `06-major-family-evidence/18-education-teaching.md` §6 |
 
 ## 9. Admission-system-type overgeneralization (added post-cross-branch finding — see note below)
 
@@ -111,6 +113,7 @@ mission's own request for a "consolidated registry," not a duplicate of the sour
 | Including peer's `05-redundancy-saturation.md`'s "signal quality to evaluators" justification in a redundancy/`avoid_for_now` explanation shown to a YKS-track student, when no evaluator reads a holistic file in YKS placement | RULE-COUNSEL-231 (this session, checked RULE-COUNSEL-228's caveat directly against the peer's redundancy document rather than leaving it a general pointer) | `03-recommendation-timing.md` §6; peer's `05-redundancy-saturation.md` §2-§3 |
 | Silently picking one target geography's admissions-relevance framing for a student with multiple, materially-different active targets, and presenting it as universally true | RULE-COUNSEL-236 (surfaced by the peer's persona-testing pass, an open design question not fully resolved by either branch) | `07-explainability-framework.md` §2 |
 | Applying the blanket YKS caveat (RULE-COUNSEL-228) to a Turkey-target student interested in a field where admission is actually a hybrid academic-threshold-plus-audition mechanism, not pure exam-score placement | RULE-COUNSEL-238 (this session, verified directly against official Turkish conservatory talent-exam guidance) | `06-major-family-evidence/20-performing-arts-music.md` §6 |
+| Treating the discovery of a small grades-based component (OBP) inside YKS placement as evidence that the exam-dominance finding (RULE-COUNSEL-228) was overstated, rather than checking what it actually changes | RULE-COUNSEL-242 (this session, direct osym.gov.tr fetch plus convergent secondary sourcing) — the OBP channel is itself grades-only and capped small; there remains zero channel for leadership/community_impact/entrepreneurship/research/awards_distinction | `03-recommendation-timing.md` §6 |
 
 **This section was added after this document's initial version**, once the peer session's
 persona-testing pass (`09-persona-testing.md`) surfaced — and this session independently verified
