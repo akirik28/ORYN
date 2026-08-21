@@ -53,7 +53,9 @@
     "report:university-images": "tsx scripts/university-image-coverage-report.ts",
     "import:opportunity-corpus": "tsx scripts/import-opportunity-corpus.ts",
     "audit:recommendation-readiness": "tsx scripts/audit-recommendation-readiness.ts",
-    "audit:opportunity-duplicates": "tsx scripts/audit-opportunity-duplicates.ts"
+    "audit:opportunity-duplicates": "tsx scripts/audit-opportunity-duplicates.ts",
+    "audit:requirement-program-linkage": "tsx scripts/audit-requirement-program-linkage.ts",
+    "audit:program-corpus-duplicates": "tsx scripts/audit-program-corpus-duplicates.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",
