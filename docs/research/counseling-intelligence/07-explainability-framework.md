@@ -90,6 +90,28 @@ concrete contribution: the exact phase-appropriate language lives in
 `03-recommendation-timing.md` §3's table — a future template addition should pull from that
 table's own framing rather than inventing new stage-language ad hoc.
 
+**Mixed-target-geography students need more than one explanation variant for the same
+recommendation — surfaced by the peer session's persona-testing pass (their persona H: IB
+curriculum, mixed UK/Germany targets) and directly relevant to this framework.** Once a
+recommendation's admissions-relevance framing is geography-conditional
+(`03-recommendation-timing.md` §6, `RULE-COUNSEL-228`/`230`/`231`), a student targeting multiple
+countries with genuinely different admissions logic (e.g. UK's super-curricular weighting and a
+generic-Europe/Germany-style system with its own separate logic — see the peer's
+`11-geography-admissions-systems.md`) cannot be given one single admissions-relevance sentence that
+is honest for both targets at once. **RULE-COUNSEL-236 (new):** for a student with more than one
+active target geography carrying materially different admissions logic, either (a) present the
+same underlying recommendation once with a per-target breakdown of *why* it matters differently to
+each ("for your UK applications, this strengthens your subject-specific case; for Germany, this
+matters less for admission itself but remains genuinely useful preparation"), or (b) if the UI
+cannot support a multi-target breakdown, default to the framing for whichever target the student
+has marked as primary/most active (e.g. an added `target_universities` entry outranks a bare
+`target_geographies` value, consistent with the peer's own `RULE-COUNSEL-077` precedence rule) —
+but **never silently pick one target's framing and present it as universally true**, since that
+would misrepresent the recommendation's relevance for the student's other stated target. This is a
+genuine open design question this research package surfaces rather than resolves (which of (a)/(b)
+is better is a product/UI decision, not a research finding) — flagged for `10-open-questions.md`
+(peer-owned) as well as here.
+
 ## 3. How this research package's content should feed future templates (without becoming free text)
 
 **RULE-COUNSEL-221:** every piece of reasoning this research package contributes (stage timing,
