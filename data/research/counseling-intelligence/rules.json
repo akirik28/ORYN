@@ -2,8 +2,8 @@
   "schema_version": "1.0",
   "package": "oryn/counseling-intelligence-research",
   "last_updated": "2026-08-21",
-  "rule_count": 35,
-  "numbering_note": "RULE-COUNSEL-### is minted once per rule at first definition in a source document, in document order, and never renumbered. Later documents cross-reference by ID rather than restating. A second concurrent session collided with this one on the same mission (see docs/handoffs/research-counseling-intelligence.md) and moved to an isolated worktree, minting its own new rules forward from RULE-COUNSEL-034 in that worktree — not present in this file. This session reserved a 900-919 block for a reconciliation-pass addition (901-902) specifically to avoid colliding with that 034+ sequence; the gap between 033 and 901 is intentional, not missing data.",
+  "rule_count": 66,
+  "numbering_note": "RULE-COUNSEL-### is minted once per rule at first definition, in document order, and never renumbered thereafter -- except for the 200-230 block below, which IS a deliberate one-time renumbering (originally minted as 034-064) to resolve a confirmed cross-branch collision with the peer session's own independent 034-086+ sequence on oryn/counseling-intelligence-research-013956 -- see docs/handoffs/research-counseling-intelligence.md for the full account. 001-033 and 901-902 are this branch's original foundational rules (unchanged, still authoritative). 200-230 are this session's later contribution (docs 03, 06-major-family-evidence/00+01-09, 07, 08, 14), merged into this file from what was a separate rules-session2.json shard. This file is NOT yet merged with the peer branch's own separate, larger rules.json (their 034-086+ sequence) -- that cross-branch merge remains the final integration step.",
   "type_legend": {
     "unsafe_inference": "A specific inference the counselor/scoring logic must never make",
     "scoring_hint": "A directional suggestion for how existing or future scoring logic should weight something — not a specific formula",
@@ -11,40 +11,681 @@
     "interpretation": "How a fact should be read/presented to be honest about what it does and doesn't establish"
   },
   "rules": [
-    { "id": "RULE-COUNSEL-001", "source_doc": "01-development-taxonomy.md", "source_section": "§2 Role taxonomy", "type": "unsafe_inference", "dimensions": ["leadership", "entrepreneurship"], "statement": "Do not treat activities.organization_scope free text as a confirmed founder-vs-joined fact — it is an unverified proxy, and founding is evidence for both leadership and entrepreneurship at once.", "confidence": "high" },
-    { "id": "RULE-COUNSEL-002", "source_doc": "01-development-taxonomy.md", "source_section": "§2 Role taxonomy", "type": "scoring_hint", "dimensions": ["leadership", "entrepreneurship", "execution_project_depth"], "statement": "Titles ('captain', 'president', 'founder') are near-zero evidence alone, generalizing lib/scoring/dimensions/leadership.ts's existing title-discount pattern to every dimension a role touches.", "confidence": "high" },
-    { "id": "RULE-COUNSEL-003", "source_doc": "01-development-taxonomy.md", "source_section": "§3 Time/duration semantics", "type": "unsafe_inference", "dimensions": [], "statement": "hours_per_week × weeks_per_year is an unbounded self-reported estimate — treat as a coarse ordering signal, never display as a computed precise total-hours figure.", "confidence": "high" },
-    { "id": "RULE-COUNSEL-004", "source_doc": "01-development-taxonomy.md", "source_section": "§3 Time/duration semantics", "type": "data_gap", "dimensions": [], "statement": "No field captures grade level at time of activity; deriving it from start_date + graduation_year is an unsafe inference across curricula with different grade/age mappings (US/UK/Turkey differ) unless that mapping is explicitly encoded, which it is not today.", "confidence": "high" },
-    { "id": "RULE-COUNSEL-005", "source_doc": "01-development-taxonomy.md", "source_section": "§4 Output/artifact taxonomy", "type": "interpretation", "dimensions": ["execution_project_depth", "entrepreneurship"], "statement": "A populated URL field (repo_url/live_url/output_url) proves an artifact exists and is checkable, not that it is good, used, or well-received.", "confidence": "high" },
-    { "id": "RULE-COUNSEL-006", "source_doc": "01-development-taxonomy.md", "source_section": "§4 Output/artifact taxonomy", "type": "unsafe_inference", "dimensions": ["execution_project_depth", "entrepreneurship"], "statement": "Free-text outcome_summary impact claims ('reached thousands of users') are claims, not verified outcomes, regardless of evidence_status.", "confidence": "high" },
-    { "id": "RULE-COUNSEL-007", "source_doc": "01-development-taxonomy.md", "source_section": "§5 Evidence/provenance model", "type": "unsafe_inference", "dimensions": [], "statement": "verification_rejected must never be treated the same as self_reported downstream — a failed verification attempt is a negative signal, not an absence of one.", "confidence": "high" },
-    { "id": "RULE-COUNSEL-008", "source_doc": "01-development-taxonomy.md", "source_section": "§5 Evidence/provenance model", "type": "interpretation", "dimensions": [], "statement": "Never imply who confirmed an evidence_added record — the shipped schema does not capture verifier identity/type; a proposed additive verifier_type field is described but not implemented by this research.", "confidence": "high" },
-    { "id": "RULE-COUNSEL-009", "source_doc": "01-development-taxonomy.md", "source_section": "§6 Commitment/depth axis", "type": "unsafe_inference", "dimensions": [], "statement": "The six commitment-axis levels (exposure...creation) are not summable into one cross-profile score — reads must stay per-activity.", "confidence": "high" },
-    { "id": "RULE-COUNSEL-010", "source_doc": "01-development-taxonomy.md", "source_section": "§7.1 academics", "type": "unsafe_inference", "dimensions": ["academics"], "statement": "Never numerically compare/combine grades across different grading scales without an explicit normalization step; absent metadata, the comparison is unknown, not an average.", "confidence": "high" },
-    { "id": "RULE-COUNSEL-011", "source_doc": "01-development-taxonomy.md", "source_section": "§7.1 academics", "type": "unsafe_inference", "dimensions": ["academics"], "statement": "A course record with no grade is missing data, not a zero.", "confidence": "high" },
-    { "id": "RULE-COUNSEL-012", "source_doc": "01-development-taxonomy.md", "source_section": "§7.2 intellectual_curiosity", "type": "unsafe_inference", "dimensions": ["intellectual_curiosity"], "statement": "A student_interests row with no linked activity/project/research evidence must never by itself raise this dimension's score — it is a stated preference.", "confidence": "high" },
-    { "id": "RULE-COUNSEL-013", "source_doc": "01-development-taxonomy.md", "source_section": "§7.3 leadership", "type": "scoring_hint", "dimensions": ["leadership"], "statement": "Protects existing correct behavior: lib/scoring/dimensions/leadership.ts's small capped title-bonus should not be increased in future edits — that would regress the mission's 'no leadership from title alone' requirement.", "confidence": "high" },
-    { "id": "RULE-COUNSEL-014", "source_doc": "01-development-taxonomy.md", "source_section": "§7.3 leadership", "type": "data_gap", "dimensions": ["leadership", "entrepreneurship"], "statement": "Founding status cannot be reliably recovered from organization_scope free text today — infer at confidence no higher than low until a structured role field exists.", "confidence": "high" },
-    { "id": "RULE-COUNSEL-015", "source_doc": "01-development-taxonomy.md", "source_section": "§7.4 research", "type": "scoring_hint", "dimensions": ["research"], "statement": "Read independence_level as a genuine strength gate, not decorative text — 'shadowed' and 'designed and ran independently' are different tiers even with identical duration/hours.", "confidence": "medium" },
-    { "id": "RULE-COUNSEL-016", "source_doc": "01-development-taxonomy.md", "source_section": "§7.4 research", "type": "unsafe_inference", "dimensions": ["research"], "statement": "output_type = 'none' is not automatically weaker than a row with output — independence and methodology matter at least as much as output presence.", "confidence": "medium" },
-    { "id": "RULE-COUNSEL-017", "source_doc": "01-development-taxonomy.md", "source_section": "§7.5 entrepreneurship", "type": "unsafe_inference", "dimensions": ["entrepreneurship"], "statement": "A project with none of live_url/repo_url/users_reached/revenue_amount populated is a plan, not executed entrepreneurship, regardless of description language.", "confidence": "high" },
-    { "id": "RULE-COUNSEL-018", "source_doc": "01-development-taxonomy.md", "source_section": "§7.5 entrepreneurship", "type": "interpretation", "dimensions": ["entrepreneurship"], "statement": "revenue_amount and users_reached corroborate that execution happened; they are not magnitudes to rank profiles by.", "confidence": "high" },
-    { "id": "RULE-COUNSEL-019", "source_doc": "01-development-taxonomy.md", "source_section": "§7.6 community_impact", "type": "unsafe_inference", "dimensions": ["community_impact"], "statement": "Never rank students by raw summed volunteering hours alone — hours concentrated in one cause_area is a stronger signal than the same total spread across unrelated one-off events.", "confidence": "medium" },
-    { "id": "RULE-COUNSEL-020", "source_doc": "01-development-taxonomy.md", "source_section": "§7.6 community_impact", "type": "unsafe_inference", "dimensions": ["community_impact"], "statement": "Beneficiary/'people served' counts are self-reported estimates regardless of evidence_status; never present without that qualifier.", "confidence": "high" },
-    { "id": "RULE-COUNSEL-021", "source_doc": "01-development-taxonomy.md", "source_section": "§7.7 awards_distinction", "type": "interpretation", "dimensions": ["awards_distinction"], "statement": "An award's strength depends on selectivity/scope and result-tier as independent facts — 'national award' with unspecified scope reads at medium, not high, confidence.", "confidence": "high" },
-    { "id": "RULE-COUNSEL-022", "source_doc": "01-development-taxonomy.md", "source_section": "§7.7 awards_distinction", "type": "interpretation", "dimensions": ["awards_distinction"], "statement": "An awards row with no discoverable link to an originating activity is lower-context and should read one confidence tier below an equivalent linked award.", "confidence": "medium" },
-    { "id": "RULE-COUNSEL-023", "source_doc": "01-development-taxonomy.md", "source_section": "§7.8 career_exploration", "type": "unsafe_inference", "dimensions": ["career_exploration"], "statement": "A career_goals row with no plausibly-connected activity/project/work experience/opportunity is a stated intention, not demonstrated exploration — its age must never imply progress.", "confidence": "high" },
-    { "id": "RULE-COUNSEL-024", "source_doc": "01-development-taxonomy.md", "source_section": "§7.8 career_exploration", "type": "scoring_hint", "dimensions": ["career_exploration"], "statement": "Count distinct sustained explorations, not total career-exposure event attendance — several one-day events don't sum to one focused, sustained exploration.", "confidence": "medium" },
-    { "id": "RULE-COUNSEL-025", "source_doc": "01-development-taxonomy.md", "source_section": "§7.9 execution_project_depth", "type": "scoring_hint", "dimensions": ["execution_project_depth"], "statement": "ongoing=true with no end_date, no output, and no recent updated_at movement should be read as stale, not actively strong — no specific decay function computed by this research.", "confidence": "medium" },
-    { "id": "RULE-COUNSEL-026", "source_doc": "01-development-taxonomy.md", "source_section": "§7.9 execution_project_depth", "type": "interpretation", "dimensions": ["execution_project_depth"], "statement": "A complexity/impact claim in free-text description carries materially less weight than the same claim with a corroborating URL — description is a claim about evidence, not evidence.", "confidence": "high" },
-    { "id": "RULE-COUNSEL-027", "source_doc": "02-opportunity-development-mapping.md", "source_section": "Intro — three conflated axes", "type": "interpretation", "dimensions": [], "statement": "Never model recognition as one flat list mixing result-tier, output-type, and role together (the mission brief's own example list does this) — keep the three (plus scope) as independent axes.", "confidence": "high" },
-    { "id": "RULE-COUNSEL-028", "source_doc": "02-opportunity-development-mapping.md", "source_section": "Axis 1 — Result tier", "type": "unsafe_inference", "dimensions": [], "statement": "registered tier must never feed any ProfileDimension score above a negligible floor — it demonstrates intent, not development.", "confidence": "high" },
-    { "id": "RULE-COUNSEL-029", "source_doc": "02-opportunity-development-mapping.md", "source_section": "Axis 1 — Result tier", "type": "scoring_hint", "dimensions": ["awards_distinction"], "statement": "Core proposed fix: awards_distinction should only activate at advanced/qualified result tier or above; below that, credit only the category's participation-level dimensions. Directly closes the gap where entering and winning a competition produce identical CATEGORY_DIMENSIONS output today.", "confidence": "high" },
-    { "id": "RULE-COUNSEL-030", "source_doc": "02-opportunity-development-mapping.md", "source_section": "Axis 2 — Scope/selectivity", "type": "interpretation", "dimensions": ["awards_distinction"], "statement": "Do not assign a specific numeric scope multiplier in this research — scope is a qualitative modifier on result tier, never merged into one combined prestige score.", "confidence": "high" },
-    { "id": "RULE-COUNSEL-031", "source_doc": "02-opportunity-development-mapping.md", "source_section": "Axis 2 — Scope/selectivity", "type": "interpretation", "dimensions": ["awards_distinction"], "statement": "An award with scope=unknown should read one confidence tier below an otherwise-identical record with known scope.", "confidence": "medium" },
-    { "id": "RULE-COUNSEL-032", "source_doc": "02-opportunity-development-mapping.md", "source_section": "Worked example C", "type": "unsafe_inference", "dimensions": ["research", "intellectual_curiosity", "career_exploration"], "statement": "A summer program that culminates in a publication should not have its own attendance credit inflated by the publication — model as two linked facts (program participation + research output), not one merged one.", "confidence": "medium" },
-    { "id": "RULE-COUNSEL-033", "source_doc": "02-opportunity-development-mapping.md", "source_section": "Per-category result-tier gating", "type": "scoring_hint", "dimensions": [], "statement": "Selectivity-at-entry (most fellowships) and selectivity-at-result (most competitions) are different mechanisms and must not share one gating rule.", "confidence": "medium" },
-    { "id": "RULE-COUNSEL-901", "source_doc": "01-development-taxonomy.md", "source_section": "§8 External validation and two structural principles (reconciliation pass)", "type": "interpretation", "dimensions": ["intellectual_curiosity", "career_exploration"], "statement": "Breadth dimensions (intellectual_curiosity, career_exploration — code-verified to skip diminishing-returns aggregation) and depth dimensions (the other 7) serve different developmental purposes; a counselor must be able to recommend a breadth/exploratory action without treating it as inherently lower-value than a depth action.", "confidence": "high", "source_ids": ["SRC-007"] },
-    { "id": "RULE-COUNSEL-902", "source_doc": "01-development-taxonomy.md", "source_section": "§8 External validation and two structural principles (reconciliation pass)", "type": "interpretation", "dimensions": [], "statement": "Field/major alignment (already implemented as fieldAlignment/relevanceScore in lib/counselor/config.ts and lib/opportunities/matching.ts) is a relevance axis, not a development dimension — never conflate 'how strong is this evidence' with 'how well does it match stated interests.'", "confidence": "high" }
+    {
+      "id": "RULE-COUNSEL-001",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§2 Role taxonomy",
+      "type": "unsafe_inference",
+      "dimensions": [
+        "leadership",
+        "entrepreneurship"
+      ],
+      "statement": "Do not treat activities.organization_scope free text as a confirmed founder-vs-joined fact — it is an unverified proxy, and founding is evidence for both leadership and entrepreneurship at once.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-002",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§2 Role taxonomy",
+      "type": "scoring_hint",
+      "dimensions": [
+        "leadership",
+        "entrepreneurship",
+        "execution_project_depth"
+      ],
+      "statement": "Titles ('captain', 'president', 'founder') are near-zero evidence alone, generalizing lib/scoring/dimensions/leadership.ts's existing title-discount pattern to every dimension a role touches.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-003",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§3 Time/duration semantics",
+      "type": "unsafe_inference",
+      "dimensions": [],
+      "statement": "hours_per_week × weeks_per_year is an unbounded self-reported estimate — treat as a coarse ordering signal, never display as a computed precise total-hours figure.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-004",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§3 Time/duration semantics",
+      "type": "data_gap",
+      "dimensions": [],
+      "statement": "No field captures grade level at time of activity; deriving it from start_date + graduation_year is an unsafe inference across curricula with different grade/age mappings (US/UK/Turkey differ) unless that mapping is explicitly encoded, which it is not today.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-005",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§4 Output/artifact taxonomy",
+      "type": "interpretation",
+      "dimensions": [
+        "execution_project_depth",
+        "entrepreneurship"
+      ],
+      "statement": "A populated URL field (repo_url/live_url/output_url) proves an artifact exists and is checkable, not that it is good, used, or well-received.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-006",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§4 Output/artifact taxonomy",
+      "type": "unsafe_inference",
+      "dimensions": [
+        "execution_project_depth",
+        "entrepreneurship"
+      ],
+      "statement": "Free-text outcome_summary impact claims ('reached thousands of users') are claims, not verified outcomes, regardless of evidence_status.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-007",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§5 Evidence/provenance model",
+      "type": "unsafe_inference",
+      "dimensions": [],
+      "statement": "verification_rejected must never be treated the same as self_reported downstream — a failed verification attempt is a negative signal, not an absence of one.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-008",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§5 Evidence/provenance model",
+      "type": "interpretation",
+      "dimensions": [],
+      "statement": "Never imply who confirmed an evidence_added record — the shipped schema does not capture verifier identity/type; a proposed additive verifier_type field is described but not implemented by this research.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-009",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§6 Commitment/depth axis",
+      "type": "unsafe_inference",
+      "dimensions": [],
+      "statement": "The six commitment-axis levels (exposure...creation) are not summable into one cross-profile score — reads must stay per-activity.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-010",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§7.1 academics",
+      "type": "unsafe_inference",
+      "dimensions": [
+        "academics"
+      ],
+      "statement": "Never numerically compare/combine grades across different grading scales without an explicit normalization step; absent metadata, the comparison is unknown, not an average.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-011",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§7.1 academics",
+      "type": "unsafe_inference",
+      "dimensions": [
+        "academics"
+      ],
+      "statement": "A course record with no grade is missing data, not a zero.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-012",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§7.2 intellectual_curiosity",
+      "type": "unsafe_inference",
+      "dimensions": [
+        "intellectual_curiosity"
+      ],
+      "statement": "A student_interests row with no linked activity/project/research evidence must never by itself raise this dimension's score — it is a stated preference.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-013",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§7.3 leadership",
+      "type": "scoring_hint",
+      "dimensions": [
+        "leadership"
+      ],
+      "statement": "Protects existing correct behavior: lib/scoring/dimensions/leadership.ts's small capped title-bonus should not be increased in future edits — that would regress the mission's 'no leadership from title alone' requirement.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-014",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§7.3 leadership",
+      "type": "data_gap",
+      "dimensions": [
+        "leadership",
+        "entrepreneurship"
+      ],
+      "statement": "Founding status cannot be reliably recovered from organization_scope free text today — infer at confidence no higher than low until a structured role field exists.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-015",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§7.4 research",
+      "type": "scoring_hint",
+      "dimensions": [
+        "research"
+      ],
+      "statement": "Read independence_level as a genuine strength gate, not decorative text — 'shadowed' and 'designed and ran independently' are different tiers even with identical duration/hours.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-016",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§7.4 research",
+      "type": "unsafe_inference",
+      "dimensions": [
+        "research"
+      ],
+      "statement": "output_type = 'none' is not automatically weaker than a row with output — independence and methodology matter at least as much as output presence.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-017",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§7.5 entrepreneurship",
+      "type": "unsafe_inference",
+      "dimensions": [
+        "entrepreneurship"
+      ],
+      "statement": "A project with none of live_url/repo_url/users_reached/revenue_amount populated is a plan, not executed entrepreneurship, regardless of description language.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-018",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§7.5 entrepreneurship",
+      "type": "interpretation",
+      "dimensions": [
+        "entrepreneurship"
+      ],
+      "statement": "revenue_amount and users_reached corroborate that execution happened; they are not magnitudes to rank profiles by.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-019",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§7.6 community_impact",
+      "type": "unsafe_inference",
+      "dimensions": [
+        "community_impact"
+      ],
+      "statement": "Never rank students by raw summed volunteering hours alone — hours concentrated in one cause_area is a stronger signal than the same total spread across unrelated one-off events.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-020",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§7.6 community_impact",
+      "type": "unsafe_inference",
+      "dimensions": [
+        "community_impact"
+      ],
+      "statement": "Beneficiary/'people served' counts are self-reported estimates regardless of evidence_status; never present without that qualifier.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-021",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§7.7 awards_distinction",
+      "type": "interpretation",
+      "dimensions": [
+        "awards_distinction"
+      ],
+      "statement": "An award's strength depends on selectivity/scope and result-tier as independent facts — 'national award' with unspecified scope reads at medium, not high, confidence.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-022",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§7.7 awards_distinction",
+      "type": "interpretation",
+      "dimensions": [
+        "awards_distinction"
+      ],
+      "statement": "An awards row with no discoverable link to an originating activity is lower-context and should read one confidence tier below an equivalent linked award.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-023",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§7.8 career_exploration",
+      "type": "unsafe_inference",
+      "dimensions": [
+        "career_exploration"
+      ],
+      "statement": "A career_goals row with no plausibly-connected activity/project/work experience/opportunity is a stated intention, not demonstrated exploration — its age must never imply progress.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-024",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§7.8 career_exploration",
+      "type": "scoring_hint",
+      "dimensions": [
+        "career_exploration"
+      ],
+      "statement": "Count distinct sustained explorations, not total career-exposure event attendance — several one-day events don't sum to one focused, sustained exploration.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-025",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§7.9 execution_project_depth",
+      "type": "scoring_hint",
+      "dimensions": [
+        "execution_project_depth"
+      ],
+      "statement": "ongoing=true with no end_date, no output, and no recent updated_at movement should be read as stale, not actively strong — no specific decay function computed by this research.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-026",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§7.9 execution_project_depth",
+      "type": "interpretation",
+      "dimensions": [
+        "execution_project_depth"
+      ],
+      "statement": "A complexity/impact claim in free-text description carries materially less weight than the same claim with a corroborating URL — description is a claim about evidence, not evidence.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-027",
+      "source_doc": "02-opportunity-development-mapping.md",
+      "source_section": "Intro — three conflated axes",
+      "type": "interpretation",
+      "dimensions": [],
+      "statement": "Never model recognition as one flat list mixing result-tier, output-type, and role together (the mission brief's own example list does this) — keep the three (plus scope) as independent axes.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-028",
+      "source_doc": "02-opportunity-development-mapping.md",
+      "source_section": "Axis 1 — Result tier",
+      "type": "unsafe_inference",
+      "dimensions": [],
+      "statement": "registered tier must never feed any ProfileDimension score above a negligible floor — it demonstrates intent, not development.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-029",
+      "source_doc": "02-opportunity-development-mapping.md",
+      "source_section": "Axis 1 — Result tier",
+      "type": "scoring_hint",
+      "dimensions": [
+        "awards_distinction"
+      ],
+      "statement": "Core proposed fix: awards_distinction should only activate at advanced/qualified result tier or above; below that, credit only the category's participation-level dimensions. Directly closes the gap where entering and winning a competition produce identical CATEGORY_DIMENSIONS output today.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-030",
+      "source_doc": "02-opportunity-development-mapping.md",
+      "source_section": "Axis 2 — Scope/selectivity",
+      "type": "interpretation",
+      "dimensions": [
+        "awards_distinction"
+      ],
+      "statement": "Do not assign a specific numeric scope multiplier in this research — scope is a qualitative modifier on result tier, never merged into one combined prestige score.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-031",
+      "source_doc": "02-opportunity-development-mapping.md",
+      "source_section": "Axis 2 — Scope/selectivity",
+      "type": "interpretation",
+      "dimensions": [
+        "awards_distinction"
+      ],
+      "statement": "An award with scope=unknown should read one confidence tier below an otherwise-identical record with known scope.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-032",
+      "source_doc": "02-opportunity-development-mapping.md",
+      "source_section": "Worked example C",
+      "type": "unsafe_inference",
+      "dimensions": [
+        "research",
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "statement": "A summer program that culminates in a publication should not have its own attendance credit inflated by the publication — model as two linked facts (program participation + research output), not one merged one.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-033",
+      "source_doc": "02-opportunity-development-mapping.md",
+      "source_section": "Per-category result-tier gating",
+      "type": "scoring_hint",
+      "dimensions": [],
+      "statement": "Selectivity-at-entry (most fellowships) and selectivity-at-result (most competitions) are different mechanisms and must not share one gating rule.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-901",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§8 External validation and two structural principles (reconciliation pass)",
+      "type": "interpretation",
+      "dimensions": [
+        "intellectual_curiosity",
+        "career_exploration"
+      ],
+      "statement": "Breadth dimensions (intellectual_curiosity, career_exploration — code-verified to skip diminishing-returns aggregation) and depth dimensions (the other 7) serve different developmental purposes; a counselor must be able to recommend a breadth/exploratory action without treating it as inherently lower-value than a depth action.",
+      "confidence": "high",
+      "source_ids": [
+        "SRC-007"
+      ]
+    },
+    {
+      "id": "RULE-COUNSEL-902",
+      "source_doc": "01-development-taxonomy.md",
+      "source_section": "§8 External validation and two structural principles (reconciliation pass)",
+      "type": "interpretation",
+      "dimensions": [],
+      "statement": "Field/major alignment (already implemented as fieldAlignment/relevanceScore in lib/counselor/config.ts and lib/opportunities/matching.ts) is a relevance axis, not a development dimension — never conflate 'how strong is this evidence' with 'how well does it match stated interests.'",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-200",
+      "source_doc": "03-recommendation-timing.md",
+      "source_section": "§1, §5",
+      "type": "interpretation",
+      "dimensions": [],
+      "statement": "Derive an approximate developmental stage (yearsUntilGraduation = graduation_year - currentYear) from data ORYN already collects; expose it as a non-binding display default a student can override, never as a hard eligibility gate or a claim of precision it doesn't have. Degrade to 'insufficient data for timing context' for education_stage='other' or curriculum='other' rather than silently defaulting to one country's grade system.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-201",
+      "source_doc": "03-recommendation-timing.md",
+      "source_section": "§4",
+      "type": "scoring_hint",
+      "dimensions": [],
+      "statement": "Stage (years until graduation) determines WHAT KIND of recommendation is appropriate; the student's own time budget determines HOW MUCH/HOW BIG. Never let a tight time budget silently substitute a breadth-type recommendation for a depth-type one -- if nothing depth-appropriate fits, say so explicitly rather than swapping category.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-202",
+      "source_doc": "03-recommendation-timing.md",
+      "source_section": "§5",
+      "type": "unsafe_inference",
+      "dimensions": [],
+      "statement": "A student outside the typical phase pattern for their stage is not automatically a gap. Distinguish objective time-remaining from implied deficiency: a Phase-1 student with genuine early depth should not be pushed toward artificial breadth; a Phase-2 student who is broad due to a recent, legitimate interest shift should have that context surfaced, not be penalized as if the shift never happened.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-203",
+      "source_doc": "01-computing-information-sciences.md",
+      "source_section": "§1",
+      "type": "unsafe_inference",
+      "dimensions": [],
+      "statement": "Treat 'Computer Science' as an umbrella, not a single skill -- competitive-programming-style algorithmic problem-solving and building/shipping user-facing products are both legitimately 'CS' but develop measurably different things.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-204",
+      "source_doc": "01-computing-information-sciences.md",
+      "source_section": "§4",
+      "type": "unsafe_inference",
+      "dimensions": [
+        "execution_project_depth",
+        "awards_distinction"
+      ],
+      "statement": "When counseling a CS-interested student, distinguish at minimum three evidence types -- sustained independent build (execution_project_depth), algorithmic competition (quantitative/algorithmic reasoning under contest conditions), and time-boxed hackathon/team build (rapid-build + teamwork) -- rather than treating 'did something CS-related' as one undifferentiated signal.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-205",
+      "source_doc": "02-mathematics-statistics.md",
+      "source_section": "§1",
+      "type": "unsafe_inference",
+      "dimensions": [],
+      "statement": "'I like math' may mean enjoying proof/abstraction (pure track), applied problem-solving with formulas (applied track), or analyzing data (statistics track) -- these predict different downstream fits and should not be treated as one undifferentiated signal.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-206",
+      "source_doc": "03-physical-sciences.md",
+      "source_section": "§1",
+      "type": "unsafe_inference",
+      "dimensions": [],
+      "statement": "A stated interest in 'physics' or 'chemistry' should be probed for which pole a student actually enjoys -- theoretical/mathematical problem-solving vs. hands-on experimental work reward different exploration experiences.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-207",
+      "source_doc": "04-life-sciences.md",
+      "source_section": "§1",
+      "type": "unsafe_inference",
+      "dimensions": [],
+      "statement": "'Biology' spans wet-lab/bench work, field/ecological work, and computational biology -- probing which a student means matters as much here as for computing/mathematics.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-208",
+      "source_doc": "04-life-sciences.md",
+      "source_section": "§3",
+      "type": "unsafe_inference",
+      "dimensions": [
+        "academics"
+      ],
+      "statement": "A biology major is necessary for essentially no clinical health profession in most systems -- pre-med 'requirements' are typically specific courses, not a mandated major. Must be stated explicitly to counteract a common real-world misconception.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-209",
+      "source_doc": "05-engineering-me-ce-ae-ee.md",
+      "source_section": "§1",
+      "type": "unsafe_inference",
+      "dimensions": [],
+      "statement": "'Engineering' as a stated interest is at least as broad as 'Computer Science' or 'Biology' -- a student should sample more than one of mechanical/civil/aerospace/electrical before narrowing, since they involve meaningfully different day-to-day work despite a shared first-year curriculum.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-210",
+      "source_doc": "05-engineering-me-ce-ae-ee.md",
+      "source_section": "§6",
+      "type": "unsafe_inference",
+      "dimensions": [],
+      "statement": "PE-equivalent licensure necessity varies substantially by role AND industry, not just by engineering subfield -- civil engineers stamping public infrastructure plans are the clearest necessity case; many ME/EE/AE industry roles (esp. aerospace/defense, tech-adjacent EE) practice career-long without one. A specific student's situation should be checked against target industry/employer expectations, not inferred from subfield alone.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-211",
+      "source_doc": "06-biomedical-engineering.md",
+      "source_section": "§1",
+      "type": "unsafe_inference",
+      "dimensions": [
+        "academics"
+      ],
+      "statement": "Biomedical engineering is not a subset of 'pre-med' and should not be counseled as one -- it is an engineering discipline whose graduates mostly go into engineering/industry/research roles, not clinical practice. A student wanting to become a physician does not need a biomedical engineering degree. (Generalizes RULE-COUNSEL-208 to this field.)",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-212",
+      "source_doc": "07-economics-finance.md",
+      "source_section": "§1",
+      "type": "unsafe_inference",
+      "dimensions": [],
+      "statement": "Economics is a genuinely quantitative social science -- a student drawn to it purely for real-world relevance (news/policy) without appetite for the underlying statistics/econometrics is a real, worth-surfacing mismatch signal (a counseling conversation topic, not a disqualification).",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-213",
+      "source_doc": "08-business-management-entrepreneurship.md",
+      "source_section": "§1",
+      "type": "unsafe_inference",
+      "dimensions": [],
+      "statement": "Entrepreneurship is about originating and testing a new venture; general business/management study is about operating and improving an existing one. A strong management-track profile is not automatically evidence of entrepreneurial capability, and vice versa.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-214",
+      "source_doc": "08-business-management-entrepreneurship.md",
+      "source_section": "§4",
+      "type": "unsafe_inference",
+      "dimensions": [
+        "entrepreneurship",
+        "execution_project_depth"
+      ],
+      "statement": "DECA/FBLA-style competitive-simulation participation demonstrates applied business-scenario reasoning and communication skill, but is NOT entrepreneurship evidence in the 'originate and test a real venture' sense -- it is a simulation, not the operation of a real business. Do not conflate the two evidence types.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-215",
+      "source_doc": "09-environmental-science-sustainability.md",
+      "source_section": "§1",
+      "type": "unsafe_inference",
+      "dimensions": [],
+      "statement": "'Environmental science' and 'sustainability' are not the same activity profile -- a student drawn to fieldwork/conservation and one drawn to sustainability policy/business practice are both legitimately in this family but benefit from different exploration experiences.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-216",
+      "source_doc": "07-explainability-framework.md",
+      "source_section": "§1",
+      "type": "unsafe_inference",
+      "dimensions": [],
+      "statement": "Never state a probability of admission/success/outcome without a validated statistical model backing it -- restates the founder spec's non-negotiable #5 as an explainability rule for why[]/warnings[] text specifically.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-217",
+      "source_doc": "07-explainability-framework.md",
+      "source_section": "§1",
+      "type": "unsafe_inference",
+      "dimensions": [],
+      "statement": "Never let a ProfileGap (Oryn's own developmental judgment) imply a university 'requires' addressing it -- only a sourced, per-university RequirementEvaluationSummary is allowed to make a requirement-style claim.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-218",
+      "source_doc": "07-explainability-framework.md",
+      "source_section": "§1",
+      "type": "unsafe_inference",
+      "dimensions": [],
+      "statement": "Never hide low confidence behind confident-sounding language -- a confidence:'low' recommendation must lead with the data gap itself, not bury it in a trailing warning the student might not read as carefully.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-219",
+      "source_doc": "07-explainability-framework.md",
+      "source_section": "§1",
+      "type": "interpretation",
+      "dimensions": [],
+      "statement": "Distinguish 'verified information' from 'Oryn analysis' in the actual RENDERED text a student sees, not just internally in the data model -- externally-sourced content (a requirement's own reasoning) should be visually/textually distinguishable from Oryn's own developmental judgment.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-220",
+      "source_doc": "07-explainability-framework.md",
+      "source_section": "§2",
+      "type": "interpretation",
+      "dimensions": [],
+      "statement": "A deprioritize/avoid_for_now recommendation's why[] must always include a redirect -- either the specific higher-value gap it's implicitly weighed against, or an honest statement that it's simply not currently a priority given time constraints -- never a bare 'this is low value' with no comparison point.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-221",
+      "source_doc": "07-explainability-framework.md",
+      "source_section": "§3",
+      "type": "interpretation",
+      "dimensions": [],
+      "statement": "Every piece of reasoning this research package contributes must enter why[]/warnings[] as a parameterized template string keyed to a real structured fact -- never as a place where an LLM is asked to 'explain this in your own words' for the deterministic pipeline. Richer nuance that doesn't fit a short template belongs in the optional LLM narration layer's input context, still wrapped in the existing untrusted-data boundary -- never a relaxation of the deterministic pipeline's no-free-text rule.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-222",
+      "source_doc": "08-unsafe-inference-rules.md",
+      "source_section": "§1",
+      "type": "unsafe_inference",
+      "dimensions": [],
+      "statement": "Never present a specific named opportunity/program sourced only from secondary/aggregator discovery as a confirmed, current, verified offering to a student -- it must first pass through ORYN's actual opportunity-acquisition/verification pipeline. This research package documents pathway TYPES, not a verified directory.",
+      "confidence": "medium",
+      "note": "The peer branch independently minted a DIFFERENT RULE-COUNSEL-222 (a redundancy/timing-composition fix, in their 09-persona-testing.md) -- flagged, not resolved. See docs/handoffs/research-counseling-intelligence.md."
+    },
+    {
+      "id": "RULE-COUNSEL-223",
+      "source_doc": "08-unsafe-inference-rules.md",
+      "source_section": "§3",
+      "type": "unsafe_inference",
+      "dimensions": [],
+      "statement": "Never infer a student's aptitude, interest, or fit for any field from a demographic attribute (nationality, gender, school type, socioeconomic signal, or any similar proxy).",
+      "confidence": "medium",
+      "note": "Directly restates the mission brief's own explicit 'what Oryn must not do' list verbatim; minted here because neither branch had numbered it explicitly yet, though both branches' actual document content is already consistent with it throughout."
+    },
+    {
+      "id": "RULE-COUNSEL-224",
+      "source_doc": "08-unsafe-inference-rules.md",
+      "source_section": "§3",
+      "type": "unsafe_inference",
+      "dimensions": [
+        "career_exploration"
+      ],
+      "statement": "Never present one career family as objectively 'better' than another (e.g., by salary or prestige) independent of the specific student's own stated interests/goals.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-225",
+      "source_doc": "08-unsafe-inference-rules.md",
+      "source_section": "§3",
+      "type": "unsafe_inference",
+      "dimensions": [
+        "career_exploration"
+      ],
+      "statement": "Never equate a career family's aggregate popularity or labor-market growth rate with a claim about a specific student's likely fit or success in it -- every BLS growth statistic cited across this package's family docs is an aggregate US labor-market data point, never a claim about an individual student's prospects.",
+      "confidence": "medium"
+    },
+    {
+      "id": "RULE-COUNSEL-226",
+      "source_doc": "01-computing-information-sciences.md",
+      "source_section": "§7",
+      "type": "interpretation",
+      "dimensions": [],
+      "statement": "Where a UK-facing student needs career-outlook grounding, prefer National Careers Service job profiles over BLS/O*NET -- they are the UK's own official equivalent, not a secondary source, and salary/qualification framing does not transfer across countries even when the occupation name is identical.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-227",
+      "source_doc": "05-engineering-me-ce-ae-ee.md",
+      "source_section": "§6",
+      "type": "unsafe_inference",
+      "dimensions": [],
+      "statement": "Turkey's TMMOB chamber-registration/title-protection system is structurally distinct from BOTH the US PE system (voluntary-until-triggered-by-specific-practice) and the UK CEng system (institution-administered chartered status layered on top of an unrestricted base right to practice) -- a Turkey-target engineering student should not have US/UK licensure framing applied to them by default.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-228",
+      "source_doc": "03-recommendation-timing.md",
+      "source_section": "§6",
+      "type": "unsafe_inference",
+      "dimensions": [],
+      "statement": "Never apply US-holistic-admissions-derived reasoning (depth-over-breadth, extracurricular signaling, redundancy/saturation logic) with the same directness to a student targeting an admissions system with a fundamentally different structure -- e.g. Turkey's exam-score-dominated YKS placement (where academics is doing nearly all the admissions work and the other 8 ProfileDimensions matter for real development but should not be framed as admissions-relevant), or the UK's UCAS system (which weights subject-relevant super-curricular engagement over general extracurricular breadth more heavily than US holistic review does). Oryn's developmental framing remains valid regardless of geography; its ADMISSIONS-RELEVANCE framing must be geography-conditional. Assessed as the single highest-leverage open item this whole research package surfaced (verified independently by both sessions).",
+      "confidence": "high",
+      "note": "Originally surfaced by the peer session's persona-testing pass, independently verified by this session via direct ÖSYM/YKS and UCAS sourcing. Highest-priority item for any future continuation of this research."
+    },
+    {
+      "id": "RULE-COUNSEL-229",
+      "source_doc": "08-business-management-entrepreneurship.md",
+      "source_section": "§7",
+      "type": "interpretation",
+      "dimensions": [],
+      "statement": "Unlike DECA/FBLA-style simulated-scenario competitions (RULE-COUNSEL-214), UK's Young Enterprise Company Programme genuinely clears the 'real, tested venture' bar for entrepreneurship evidence -- real company, real bank account, real customers, not a simulation. A UK student's participation should be evaluated against the founder spec's 'idea -> built -> tested' ladder, not treated as equivalent to a DECA/FBLA placement.",
+      "confidence": "high"
+    },
+    {
+      "id": "RULE-COUNSEL-230",
+      "source_doc": "03-recommendation-timing.md",
+      "source_section": "§6",
+      "type": "unsafe_inference",
+      "dimensions": [],
+      "statement": "Absent a specific target-university signal, a target_geography='turkey' student should be treated as PROBABLY YKS-track by default for the purposes of RULE-COUNSEL-228 (not framing Oryn's developmental dimensions as admissions-relevant) -- not because every Turkey-targeting student is YKS-track (some target private/foundation universities with their own supplementary admissions criteria, or study abroad), but because YKS-track public-university placement is the larger, more common case, and wrongly suppressing US-holistic-style framing for a private/abroad-track student is a much less harmful failure mode than the reverse. Revisit the moment the student adds a specific target university whose actual admission model can be checked.",
+      "confidence": "medium",
+      "note": "Surfaced by this session's own persona-stress-test of RULE-COUNSEL-228 against a concrete hypothetical (14-year-old, Turkey, no target universities yet) -- found that the rule's own 'targeting Turkish public university placement specifically' condition has no way to be checked for a young student, and needed an explicit default."
+    }
   ]
 }

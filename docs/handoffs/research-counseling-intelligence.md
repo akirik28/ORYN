@@ -35,9 +35,14 @@ confirm, and should not be trusted without independent re-verification.
   ME/CE/AE/EE, biomedical engineering, economics/finance, business/entrepreneurship, environmental
   science/sustainability), `07-explainability-framework.md`, `08-unsafe-inference-rules.md`
   (consolidated across both branches by reading the peer's branch directly via `git show` —
-  read-only, never edited their branch). Also: this session's own `data/research/counseling-
-  intelligence/rules-session2.json` + `sources-session2.json` (deliberately not named
-  `rules.json`/`sources.json` — see below).
+  read-only, never edited their branch), `14-field-opportunity-mapping.md`. Machine-readable:
+  this branch's `data/research/counseling-intelligence/rules.json`/`sources.json` (this branch's
+  own pre-existing foundational files, `RULE-COUNSEL-001`-`033`+`901`-`902`/`SRC-001`-`007`,
+  written by the peer session before it forked away) now also contain this session's later
+  contribution merged in directly (`RULE-COUNSEL-200`-`230`, 66 rules total; `S-<NAME>`-prefixed
+  sources, 52 total) — originally built and renumbered in separate `rules-session2.json`/
+  `sources-session2.json` shards, merged into the canonical files and then deleted once the merge
+  was verified complete.
 - **Peer session** (socket `70081`, forked to its own worktree/branch
   `oryn/counseling-intelligence-research-013956` at commit `51b1978`, to escape the shared-checkout
   file-corruption problem both sessions hit early on — see "What actually happened" below):
@@ -137,7 +142,7 @@ branches before trusting any table, including this one, past this checkpoint's t
 | `12-activity-progression-pathways.md` | Done | peer branch only |
 | `13-implementation-readiness.md` | Done, prioritized punch list synthesizing docs 00-12 | peer branch only |
 | `14-field-opportunity-mapping.md` | Done, answers mission deliverable #5 directly | this branch only |
-| `data/research/counseling-intelligence/rules.json` / `sources.json` (unified, canonical paths) | **Not yet built by either session** — deliberately deferred. Each session built its own shard instead (this branch: `rules-session2.json` / `sources-session2.json`, 30 rules / 44 sources; peer branch: its own `rules.json`/`sources.json` at the canonical path, per their own message — check their branch directly for current counts) |
+| `data/research/counseling-intelligence/rules.json` / `sources.json` on **this branch** | **Now genuinely unified for this branch's own contribution**: 66 rules (`001`-`033` foundational + `901`-`902` reconciliation, both pre-existing/peer-written before their fork, plus this session's `200`-`230`, merged in and renumbered) / 52 sources (`SRC-001`-`007` foundational + this session's 45 `S-<NAME>`-prefixed sources). The former `rules-session2.json`/`sources-session2.json` shards were deleted once this merge was verified — their content lives in the canonical files now. **Still not merged with the peer branch's own separate, larger `rules.json`/`sources.json`** on `-013956` (their own independent `034`-`086`+ range) — that cross-branch merge is the one integration step genuinely not done yet. |
 
 ## Working conventions established (both sessions converged on these independently or by agreement)
 
@@ -162,22 +167,21 @@ branches before trusting any table, including this one, past this checkpoint's t
 
 ## Next action for whoever resumes either branch
 
-**Integration has not happened yet.** The peer's branch (`oryn/counseling-intelligence-research-013956`)
-is the agreed target. Concretely: (1) cherry-pick or merge this branch's `03`, `06-major-family-
+**Cross-branch integration has not happened yet; same-branch consolidation is now done.** The
+peer's branch (`oryn/counseling-intelligence-research-013956`) is the agreed target for the former.
+Concretely, what's left: (1) cherry-pick or merge this branch's `03`, `06-major-family-
 evidence/00`+`01`-`09`, `07`, `08`, `14` commits onto the peer branch; (2) ~~resolve the
-`RULE-COUNSEL-034`-`059`+ collision~~ — **done on this session's side**: renumbered to `200`-`230`,
-propagated through every cross-reference (verify with a whitespace-tolerant regex sweep before
-trusting a plain string search, per this session's own experience finding 6 line-wrap-split
-references a naive first pass missed); the peer's own `034`-`086`+ sequence is untouched and no
-longer collides; (3) merge this session's `200`-`230` rules/sources first into this branch's own
-pre-existing `rules.json`/`sources.json` (`001`-`033`+`901`-`902`, already present here, written by
-the peer session before it forked — same-branch merge, no cross-branch step needed for this part),
-then merge THAT combined file into the peer branch's own `rules.json`/`sources.json`; (4) resolve
-this branch's own unrelated interleaved `canonical-entity-intelligence` commits (a different
-mandate — do not pull
-those into the peer branch's integration by accident); (5) treat the YKS/UCAS/geography-conditional-
-admissions finding as the top-priority substantive item for any further research, ahead of adding
-more major-family depth.
+`RULE-COUNSEL-034`-`059`+ collision~~ — **done**: renumbered to `200`-`230`; the peer's own
+`034`-`086`+ sequence is untouched and no longer collides; (3) ~~merge this session's `200`-`230`
+rules/sources into this branch's own pre-existing `rules.json`/`sources.json`~~ — **done**: this
+branch's `rules.json`/`sources.json` now genuinely contain both this branch's original foundational
+rules/sources (peer-authored, pre-fork) and this session's later contribution, 66 rules/52 sources
+total; **still needed**: merge THAT combined file into the peer branch's own separate, larger
+`rules.json`/`sources.json`; (4) resolve this branch's own unrelated interleaved
+`canonical-entity-intelligence` commits (a different mandate — do not pull those into the peer
+branch's integration by accident); (5) treat the YKS/UCAS/geography-conditional-admissions finding
+as the top-priority substantive item for any further research, ahead of adding more major-family
+depth.
 
 ---
 
