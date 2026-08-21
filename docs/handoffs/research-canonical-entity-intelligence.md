@@ -11,7 +11,16 @@ verification used ROR's public API (`api.ror.org`) via read-only `curl`/`WebSear
 This file is updated as work lands, not chronologically archived — read top-to-bottom for current
 state, matching the convention `docs/handoffs/claude-a-university-spine.md` already established.
 
-## Current state (updated 2026-08-21 ~05:15 Europe/Istanbul)
+## Current state (updated 2026-08-21 ~05:25 Europe/Istanbul)
+
+**Latest work**: acted on `09` Finding 9 / `10` item 11 rather than leaving it diagnosed-only —
+real, ROR-sourced alias research for all 13 Dutch universities (full 0/13 gap closed) and a
+priority 12 of 38 Italian universities, confirming the two specific forms Finding 9 named as
+likely missing ("La Sapienza," "Milan Polytechnic") are real, plus a few explicit collision
+cautions for whoever eventually writes these (e.g. "UM" for Maastricht would be a third live
+claimant on an already-collision-prone abbreviation). `italy-netherlands-alias-research.json`.
+
+
 
 **Latest work**: forward-looking relationship research (a ROR-verified `campus_of`/`member_of`
 candidate — University of Nottingham's Malaysia/Ningbo China campuses, genuinely undetermined
