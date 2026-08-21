@@ -54,10 +54,15 @@ VERIFIED, per-institution (not a national pattern):
 
 ## Test-optional policy is not one national fact — it is per-institution and sometimes per-college
 
-- **Harvard has a live, unresolved conflict**: five current pages state SAT/ACT is required
-  (REQ-2026-08-21-HAR0001, VERIFIED_CURRENT), but a page dated 29 January 2021 — still live, no
-  superseding banner — states the opposite (REQ-2026-08-21-HAR0002, CONFLICTING_EVIDENCE). **Tell
-  the student this is disputed; do not pick a side.**
+- **Harvard's 2021 page looked like a live conflict but is closed**, once read to the end of its
+  own first sentence. Five current pages state SAT/ACT is required (REQ-2026-08-21-HAR0001,
+  VERIFIED_CURRENT). A page dated 29 January 2021 (REQ-2026-08-21-HAR0002) scopes itself to the
+  2021-22 cycle in its own opening sentence — it never claimed to govern now. Harvard announced
+  testing required again from the Class of 2029 on 11 April 2024. **The real finding is a
+  live-page hazard, not a conflict**: that 2021 page is still up on Harvard's primary admissions
+  domain with no superseding banner, unlike a sibling 2020 page that does carry one. Tell the
+  student Harvard is test-required; separately flag that Harvard's own site inconsistently marks
+  its retired pages, so an old URL can look current when it isn't.
 - **Princeton and Columbia are still test-optional for the current cycle** (Fall 2027 entry) —
   testing becomes required the cycle *after*. Do not assume "Ivy League has reinstated testing"
   as a blanket fact.
@@ -104,15 +109,30 @@ while admissions' "2026-27 cycle" = Fall 2027 entry). **When a US date carries a
 which subdomain it came from before repeating it to a student** — this is now a standing check,
 not a one-off quirk.
 
-## Deadline conflicts happen even between a university's own official sources
+## A "three-way conflict" that is actually one rule, applied three ways — the standing lesson
 
-CMU has a genuine **three-way conflict** across three official CMU sources for the same ED/RD
-dates — the live deadlines page, the course catalog, and the Common Data Set each give a different
-date (Nov 2/Jan 4 vs. Nov 3/Jan 5 vs. Nov 1/Jan 1: DL-2026-08-21-CMU0001, DL-2026-08-21-CMU0004,
-CONFLICTING_EVIDENCE). Other CMU dates (Dec 1 Drama/Music deadline, Dec 15 ED notification, May 1
-RD reply) are identical across all three sources, confirming this is a real, localized conflict —
-not a wholesale sourcing problem. **Present CMU's exact ED/RD date as disputed; point the student
-to confirm directly with admissions**, don't average or guess.
+CMU's ED/RD dates looked like a genuine three-way conflict across three official CMU sources —
+the Common Data Set gives Nov 1/Jan 1, the live page gives Nov 2/Jan 4, the course catalog gives
+Nov 3/Jan 5 (DL-2026-08-21-CMU0001, DL-2026-08-21-CMU0004, originally recorded
+`CONFLICTING_EVIDENCE`). **It is not a conflict.** CMU shifts deadlines off weekends and holidays
+to the next business day, and that single rule predicts all three: the CDS reports the nominal
+policy date (Nov 1/Jan 1) because that is what the CDS form asks for; the course catalog (fall
+2026 entry) shifts Nov 1 2025 (a Saturday) to Nov 3 and Jan 1 2026 (a holiday, with Jan 4 falling
+on a Sunday) to Jan 5; the live page (fall 2027 entry) shifts Nov 1 2026 (a Sunday) to Nov 2 and
+Jan 1 2027 (a holiday, weekend behind it) to Jan 4. Three sources, three cycles, one rule — nothing
+actually disagrees. Other CMU dates (Dec 1 Drama/Music deadline, Dec 15 ED notification, May 1 RD
+reply) are identical across all three sources, consistent with this being business-day arithmetic
+rather than a sourcing problem.
+
+**The counselor-relevant rule, generalized**: a US university's published deadline may be stated as
+the nominal policy date or as the business-day-shifted actual date, and different official
+documents (a Common Data Set entry vs. a live admissions page) can legitimately print different
+numbers for the *same* underlying deadline without disagreeing. Before recording two dates from the
+same university as conflicting, check whether a weekend/holiday shift explains the difference —
+"two different dates" is not automatically two different facts. Separately: Harvard's QuestBridge
+page states "end of September" where QuestBridge's own site states October 1 — the operator
+(QuestBridge) owns that date, and Harvard's phrasing is a loose paraphrase that errs safe, not a
+conflicting claim.
 
 ## SYSTEM-LEVEL BACKGROUND: how the US system works generally
 
@@ -143,8 +163,13 @@ to confirm directly with admissions**, don't average or guess.
 
 ## Open conflicts (unresolved, do not pick a side)
 
-11 total (2 requirement-level, 9 deadline-level) `CONFLICTING_EVIDENCE` records across this
-country, including Harvard's test-optional page (above) and CMU's three-way ED/RD date conflict
-(above). The advisor's honest answer on any of these is "the university's own sources disagree;
-confirm directly," never a silent pick of the newer-looking page — the DE/NL and US lanes both
-found no resolution heuristic that generalizes safely.
+The corpus originally recorded 11 `CONFLICTING_EVIDENCE` records for this country; a parallel
+verification pass has since resolved several of them against a real mechanism rather than a
+guessed preference — Harvard's testing page and CMU's ED/RD dates (both above) are two confirmed
+examples, closed rather than disputed. **Do not treat this document's remaining-conflict count as
+final** — check `us_requirements_*`/`us_deadlines_*.jsonl` `verification_state` directly, or ask
+the coordinator, before presenting any specific US date or policy as unresolved. The advisor's
+honest answer on a genuinely still-open conflict is "the university's own sources disagree;
+confirm directly," never a silent pick of the newer-looking page — but a "conflict" is worth one
+check for a resolving mechanism (a business-day-shift rule, a page's own self-scoping sentence)
+before it's presented to a student as disputed.
