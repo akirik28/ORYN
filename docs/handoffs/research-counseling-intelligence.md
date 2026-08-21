@@ -284,6 +284,16 @@ wrote down honest "no direct match" notes for the 3 families (poli-sci, soc/hist
 lit/journ/comm — a weak/tangential match only) the vocational-skewed list doesn't actually cover,
 rather than forcing weak citations everywhere for consistency's sake.
 
+**Full UK/EU/Turkey country-notes consistency achieved across all 8 family docs** (matching the
+peer's own established pattern for its 9): added official UK National Careers Service profiles
+(GP, Clinical/Forensic Psychologist, Solicitor, Barrister, Architect — direct hits for medicine/
+psychology/law/architecture; honest "no NCS profile reviewed this pass" notes for the other 4) and
+generic ESCO/EU notes, and fixed a real structural bug introduced while adding the Turkey notes
+earlier (the "Country notes" section had landed *after* "Rules established" in all 6 of the docs
+where it was appended rather than inserted — every doc's section ordering is now verified
+consistent: `grep`-checked across all 8 files, "Country notes" always immediately before "Rules
+established"). Package is now **90 rules, 42 sources**.
+
 **Second file-numbering collision caught and resolved quickly**: the peer session began a new
 `13-field-opportunity-mapping.md` on its own branch, not realizing this session's `13` was already
 taken (`13-implementation-readiness.md`). Caught and flagged before much was written; peer
