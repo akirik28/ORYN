@@ -50,13 +50,19 @@ export interface CountryFillStyle {
  * math (it was a third-party map library dropping the style attribute entirely on click; see
  * the component's own comment for that half of the story), but this is the half a unit test
  * actually can guard.
+ *
+ * Countries with no data use a warm sand tone (`--warning` heavily diluted into `--card`)
+ * rather than the neutral grey they used to: against the cool ocean wash the map now sits
+ * on, warm land is the standard cartographic contrast pair, and grey land read as "broken"
+ * rather than "no data here". It stays clearly outside the brand-blue ladder, so it can
+ * never be mistaken for a data signal — which the unit test above pins down.
  */
 export function resolveCountryFillStyle({ isSupported, isSelected, isHovered }: CountryFillState): CountryFillStyle {
   const fill = isSelected
     ? `color-mix(in oklch, var(--brand-primary), var(--background) ${isHovered ? 22 : 30}%)`
     : isSupported
       ? `color-mix(in oklch, var(--brand-primary), var(--background) ${isHovered ? 40 : 55}%)`
-      : "color-mix(in oklch, var(--muted), var(--foreground) 8%)";
+      : `color-mix(in oklch, var(--warning), var(--card) ${isHovered ? 66 : 76}%)`;
   return {
     fill,
     stroke: isSelected ? "var(--brand-primary)" : "var(--card)",

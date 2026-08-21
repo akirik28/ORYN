@@ -63,7 +63,7 @@ export function UniversityExplorerHero({
     <div className="space-y-4">
       {showMap ? (
         <div aria-hidden="true">
-          <WorldMapExplorer countryCounts={countryCounts} region={mapRegion} />
+          <WorldMapExplorer countryCounts={countryCounts} region={mapRegion} decorative />
         </div>
       ) : null}
       <RegionGridExplorer countryCounts={countryCounts} selected={selected} selectedRegion={selectedRegion} />

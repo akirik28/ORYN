@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import { ComposableMap, Geographies, Geography, Marker, createCoordinates } from "@vnedyalk0v/react19-simple-maps";
-import type { PreparedFeature, GeographyEventData } from "@vnedyalk0v/react19-simple-maps";
+import { ArrowLeft, Maximize2, Minus, Plus } from "lucide-react";
+import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup, createCoordinates, createZoomPanConfig } from "@vnedyalk0v/react19-simple-maps";
+import type { PreparedFeature, GeographyEventData, Coordinates } from "@vnedyalk0v/react19-simple-maps";
 import { feature } from "topojson-client";
 import type { Topology, GeometryCollection } from "topojson-specification";
 import worldTopology from "world-atlas/countries-110m.json";
@@ -34,6 +34,18 @@ export interface CountryCount {
 const WORLD_LABEL_CAP = 8;
 const REGION_LABEL_CAP = 15;
 
+// The library exposes two incompatible ZoomableGroup prop shapes. The bare
+// {zoom, minZoom, maxZoom} form typechecks but its zoom behaviour is not wired up: driving
+// `zoom` from outside a drag/wheel gesture throws "selection.interrupt is not a function"
+// out of its internal d3-zoom sync and takes the route down. This branded config is the
+// supported form. (The underlying duplicate-d3-selection bug is pinned separately by the
+// d3-selection/d3-transition npm overrides in package.json.) Module scope because it never
+// changes and the branded fields should stay referentially stable across renders.
+const ZOOM_PAN_CONFIG = createZoomPanConfig(1, 8, [createCoordinates(-179, -85), createCoordinates(179, 85)]);
+
+const ZOOM_BUTTON =
+  "flex size-8 items-center justify-center rounded-lg border bg-card text-foreground shadow-sm outline-none transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-40";
+
 interface HoverState {
   name: string;
   clientX: number;
@@ -47,12 +59,41 @@ interface HoverState {
  * zoom applied to the same world SVG. Country selection (`?country=`) works identically
  * in both modes and preserves whichever region is currently active.
  */
-export function WorldMapExplorer({ countryCounts, region = WORLD_REGION }: { countryCounts: CountryCount[]; region?: MapRegion }) {
+export function WorldMapExplorer({
+  countryCounts,
+  region = WORLD_REGION,
+  decorative = false,
+}: {
+  countryCounts: CountryCount[];
+  region?: MapRegion;
+  /** True when the caller wraps this map in `aria-hidden` because an equivalent accessible
+   * control exists alongside it. Focusable controls inside an aria-hidden subtree are a WCAG
+   * violation, so the zoom buttons leave the tab order in that mode; mouse and touch are
+   * unaffected. */
+  decorative?: boolean;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selected = searchParams.get("country");
   const isWorld = region.id === "world";
   const [hover, setHover] = useState<HoverState | null>(null);
+  // Pan/zoom is a transient view preference, not a filter — local state only, never
+  // URL-persisted (a shared link shouldn't have to reproduce a pan position).
+  const [zoom, setZoom] = useState(1);
+  const [center, setCenter] = useState<Coordinates>(createCoordinates(0, 0));
+  const MIN_ZOOM = ZOOM_PAN_CONFIG.minZoom;
+  const MAX_ZOOM = ZOOM_PAN_CONFIG.maxZoom;
+
+  // Drilling into a region reprojects the map entirely, so a pan/zoom carried over from the
+  // previous projection would land the student somewhere arbitrary in the new one. Adjusted
+  // during render rather than in an effect (React's documented "adjusting state when a prop
+  // changes" pattern) so the reprojected map never paints once at the stale position first.
+  const [lastRegionId, setLastRegionId] = useState(region.id);
+  if (lastRegionId !== region.id) {
+    setLastRegionId(region.id);
+    setZoom(1);
+    setCenter(createCoordinates(0, 0));
+  }
 
   const countByName = useMemo(() => new Map(countryCounts.map((c) => [c.country, c.count])), [countryCounts]);
   const maxCount = Math.max(1, ...countryCounts.map((c) => c.count));
@@ -116,12 +157,19 @@ export function WorldMapExplorer({ countryCounts, region = WORLD_REGION }: { cou
 
   return (
     // Founder-locked black-blue system: theme-aware tokens throughout, never a hardcoded
-    // literal. A very light brand-tinted radial wash (not flat `bg-card`) stands in for
-    // "ocean" — subtle enough to stay light/airy, but enough tonal separation from the
-    // page background that the map reads as its own surface rather than a flat cutout.
+    // literal. The radial wash is a real ocean rather than the near-white brand tint it used
+    // to be — matched to the opportunity map so the two discovery surfaces read as the same
+    // product, and giving the warm land tone (resolveCountryFillStyle) something to sit
+    // against. Two thin inset lines, not a heavy vignette: "recessed premium panel" without
+    // darkening the map itself.
     <div
       className="relative overflow-hidden rounded-2xl border bg-card"
-      style={{ backgroundImage: "radial-gradient(ellipse 100% 100% at 50% 20%, color-mix(in oklch, var(--brand-primary), var(--card) 94%), var(--card))" }}
+      style={{
+        backgroundImage:
+          "radial-gradient(ellipse 100% 100% at 50% 20%, color-mix(in oklch, var(--info), var(--background) 48%), color-mix(in oklch, var(--info), var(--background) 74%))",
+        boxShadow:
+          "inset 0 1px 3px color-mix(in oklch, var(--foreground), transparent 92%), inset 0 -1px 0 color-mix(in oklch, var(--foreground), transparent 94%)",
+      }}
     >
       {!isWorld ? (
         <button
@@ -140,6 +188,15 @@ export function WorldMapExplorer({ countryCounts, region = WORLD_REGION }: { cou
         style={{ width: "100%", height: "auto" }}
         className="relative"
       >
+        <ZoomableGroup
+          center={center}
+          zoom={zoom}
+          {...ZOOM_PAN_CONFIG}
+          onMoveEnd={(position) => {
+            setZoom(position.zoom);
+            setCenter(position.coordinates);
+          }}
+        >
         <Geographies geography={worldGeo}>
           {({ geographies }) =>
             // The library's own runtime type (GeographyData.geographies: PreparedFeature[])
@@ -229,7 +286,43 @@ export function WorldMapExplorer({ countryCounts, region = WORLD_REGION }: { cou
             </Marker>
           );
         })}
+        </ZoomableGroup>
       </ComposableMap>
+      <div className="absolute right-3 bottom-14 flex flex-col gap-1">
+        <button
+          type="button"
+          onClick={() => setZoom((z) => Math.min(MAX_ZOOM, z * 1.5))}
+          disabled={zoom >= MAX_ZOOM}
+          tabIndex={decorative ? -1 : undefined}
+          aria-label="Zoom in"
+          className={ZOOM_BUTTON}
+        >
+          <Plus className="size-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => setZoom((z) => Math.max(MIN_ZOOM, z / 1.5))}
+          disabled={zoom <= MIN_ZOOM}
+          tabIndex={decorative ? -1 : undefined}
+          aria-label="Zoom out"
+          className={ZOOM_BUTTON}
+        >
+          <Minus className="size-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setZoom(1);
+            setCenter(createCoordinates(0, 0));
+          }}
+          disabled={zoom === 1 && center[0] === 0 && center[1] === 0}
+          tabIndex={decorative ? -1 : undefined}
+          aria-label="Reset map view"
+          className={ZOOM_BUTTON}
+        >
+          <Maximize2 className="size-3.5" />
+        </button>
+      </div>
       {hover ? (
         // Positioned in viewport space (`fixed`, not `absolute`) so it's never clipped by
         // this container's own `overflow-hidden` — a card anchored `absolute` near the map's
