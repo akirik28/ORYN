@@ -60,7 +60,9 @@ async function getRequirementCandidateInputs(
     universityId: requirement.university_id,
     universityName: nameByUniversityId.get(requirement.university_id) ?? "University",
     requirement,
-    evaluation: evaluateRequirement(requirement.requirement_type, requirement.structured_rule, facts, requirement.is_exclusion),
+    // The row doubles as the qualifier source, `is_exclusion` included — see
+    // lib/requirements/persist.ts.
+    evaluation: evaluateRequirement(requirement.requirement_type, requirement.structured_rule, facts, requirement),
   }));
 }
 

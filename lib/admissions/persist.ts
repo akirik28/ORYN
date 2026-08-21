@@ -2,7 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import { checkUndergraduateFieldAvailability } from "./field-availability";
-import { computeAdmissionOutlook } from "./outlook";
+import { computeAdmissionOutlook, type AdmissionOutlookResult } from "./outlook";
 import { resolveAdmissionSystem } from "./system-shape";
 
 /**
@@ -16,7 +16,7 @@ import { resolveAdmissionSystem } from "./system-shape";
  * student targeting a Turkish or German university got the same US-style
  * reach/competitive/likely framing as one targeting Yale.
  */
-export async function refreshAdmissionOutlook(targetUniversityId: string, userId: string): Promise<void> {
+export async function refreshAdmissionOutlook(targetUniversityId: string, userId: string): Promise<AdmissionOutlookResult | null> {
   const supabase = await createClient();
 
   const { data: target } = await supabase
@@ -25,7 +25,7 @@ export async function refreshAdmissionOutlook(targetUniversityId: string, userId
     .eq("id", targetUniversityId)
     .eq("user_id", userId)
     .single();
-  if (!target) return;
+  if (!target) return null;
 
   const [profileRes, statsRes, universityRes, programRes] = await Promise.all([
     // `country` is residence/school location, which is the correct signal for every pathway
@@ -76,7 +76,11 @@ export async function refreshAdmissionOutlook(targetUniversityId: string, userId
   // already-flagged follow-up docs/handoffs/geography-migration-report.md named when
   // `notApplicableReason` first shipped. The label itself is what stops the false-precision
   // problem; the explanatory copy reaches the UI through
-  // lib/universities/counseling-adapter.ts, which returns it in memory rather than persisting.
+  // lib/universities/counseling-adapter.ts, which returns it in memory rather than persisting
+  // — and, for the caller that just triggered this refresh, through this function's own
+  // return value, which is why it returns the result rather than void: `not_applicable` is
+  // one enum member covering several unrelated reasons, and a badge that renders the label
+  // without the kind can only describe one of them correctly (see OutlookBadge).
   await supabase
     .from("target_universities")
     .update({
@@ -90,4 +94,6 @@ export async function refreshAdmissionOutlook(targetUniversityId: string, userId
       outlook_calculated_at: new Date().toISOString(),
     })
     .eq("id", targetUniversityId);
+
+  return outlook;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classifyDeadlineShapes, classifyRequirementShapes, findUniqueSlotCollisions } from "@/lib/requirements/shape-audit";
+import { classifyDeadlineShapes, classifyRequirementShapes, deriveEvaluationGate, findUniqueSlotCollisions } from "@/lib/requirements/shape-audit";
 import type { ResearchRequirementRecord } from "@/lib/requirements/ingest";
 import type { ResearchDeadlineRecord } from "@/lib/deadlines/ingest";
 
@@ -158,5 +158,99 @@ describe("findUniqueSlotCollisions", () => {
 
   it("reports nothing when every slot is claimed once", () => {
     expect(findUniqueSlotCollisions(["u1|a|", "u1|b|", "u2|a|"])).toEqual([]);
+  });
+});
+
+/**
+ * The join between this audit (which counts shapes) and lib/requirements/evaluate.ts (which
+ * refuses to produce a verdict for a gated row). Nothing populates the column until migration
+ * 0056 is applied, so the mapping is what stops the two vocabularies drifting apart in the
+ * meantime — a shape the audit reports and the evaluator has no gate for is a shape that
+ * lands as an ordinary, confidently-evaluated row the day ingestion is switched on.
+ */
+describe("deriveEvaluationGate", () => {
+  it("gates METU's 'IELTS taken on or after 24 December 2022 will not be accepted' as inverted_recency", () => {
+    const record = req({
+      university_name: "Middle East Technical University",
+      requirement_text: "IELTS exams taken on or after the 24th of December 2022 will not be anymore accepted.",
+    });
+    expect(deriveEvaluationGate(record)).toBe("inverted_recency");
+  });
+
+  it("gates METU's TR-YÖS 'first 5th percentile' as incomparable_scale — a rank, not a score", () => {
+    const record = req({
+      university_name: "Middle East Technical University",
+      requirement_category_db: "entrance_exam",
+      requirement_text: "TR-YÖS: Having ranked in the first 5th percentile in the TR-YÖS exam taken by the applicant.",
+      test_scale: "TR_YOS_PERCENTILE_RANK",
+    });
+    expect(deriveEvaluationGate(record)).toBe("incomparable_scale");
+  });
+
+  it("gates Ankara's undenominated 'Minimum 440 points from TR-YÖS' as incomparable_scale", () => {
+    const record = req({
+      university_name: "Ankara University",
+      requirement_category_db: "entrance_exam",
+      requirement_text: "Minimum 440 points from TR-YÖS",
+      test_scale: "TR_YOS_SCALE_UNSTATED",
+      scale_ambiguity: "undated_scale_assumption",
+    });
+    expect(deriveEvaluationGate(record)).toBe("incomparable_scale");
+  });
+
+  it("gates Edinburgh's IELTS One Skill Retake refusal as named_exclusion", () => {
+    const record = req({
+      university_name: "The University of Edinburgh",
+      requirement_text: "IELTS Academic: total 6.5 with at least 5.5 in each component. We do not accept IELTS One Skill Retake to meet our English language requirements.",
+    });
+    expect(deriveEvaluationGate(record)).toBe("named_exclusion");
+  });
+
+  it("gates TU Dublin's 'must be 18 before 31st December' as age_bar", () => {
+    const record = req({
+      university_name: "Technological University Dublin",
+      requirement_category_db: "international_requirement",
+      requirement_text: "Applicants must be 18 before 31st December (September Start programmes) or 31st May (January Start programmes)",
+      is_exclusion: false,
+    });
+    expect(deriveEvaluationGate(record)).toBe("age_bar");
+  });
+
+  it("gates a US Early Decision commitment as binding_commitment, ahead of every other shape", () => {
+    const record = req({
+      university_name: "Test University",
+      category: "other",
+      requirement_category_db: "supplemental_requirement",
+      requirement_text: "Early Decision is a binding agreement. If admitted, you must enroll and withdraw all other applications.",
+    });
+    expect(deriveEvaluationGate(record)).toBe("binding_commitment");
+  });
+
+  it("does not gate Tilburg's explicitly non-binding matching activity", () => {
+    const record = req({
+      university_name: "Tilburg University",
+      category: "other",
+      requirement_category_db: "supplemental_requirement",
+      requirement_text: "The matching activity helps you assess whether the program aligns with your interests. The advice is non-binding, so independent to your admission to the study program.",
+    });
+    expect(deriveEvaluationGate(record)).toBeNull();
+  });
+
+  it("leaves a clean, fully-resolved requirement ungated", () => {
+    expect(deriveEvaluationGate(req({ test_scale: "IELTS_0_9", scale_ambiguity: "none" }))).toBeNull();
+  });
+
+  it("does not gate a merely-dropped scale qualifier — 0056 gives that a column, not a refusal", () => {
+    // Tilburg's TOEFL_IBT_1_6 rows are correctly resolved research; gating them would block
+    // every threshold the research lane actually got right.
+    expect(deriveEvaluationGate(req({ test_scale: "TOEFL_IBT_1_6", scale_ambiguity: "resolved_unambiguous" }))).toBeNull();
+  });
+
+  it("returns exactly one gate for a record carrying several shapes — the column holds one", () => {
+    const record = req({
+      requirement_text: "IELTS exams taken on or after the 24th of December 2022 will not be accepted. We do not accept IELTS One Skill Retake.",
+      verification_state: "VERIFIED_HISTORICAL",
+    });
+    expect(deriveEvaluationGate(record)).toBe("inverted_recency");
   });
 });

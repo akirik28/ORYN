@@ -78,9 +78,11 @@ export default async function UniversityDetailPage({ params }: { params: Promise
       ]),
   ]);
 
-  if (targetRes.data) {
-    await refreshAdmissionOutlook(targetRes.data.id, session.userId!);
-  }
+  // The refresh returns what it computed, including WHY the reach/competitive/likely scale
+  // was withheld when it was. `target_universities` persists only the label, and
+  // "not_applicable" covers reasons that need opposite sentences — a credential-gated system
+  // versus a degree that doesn't exist at undergraduate level here. See OutlookBadge.
+  const outlook = targetRes.data ? await refreshAdmissionOutlook(targetRes.data.id, session.userId!) : null;
 
   const requirements = requirementsRes.data ?? [];
   if (requirements.length > 0) {
@@ -259,7 +261,11 @@ export default async function UniversityDetailPage({ params }: { params: Promise
         <section className="space-y-4 rounded-2xl border border-brand-primary-border bg-brand-primary-subtle p-6">
           <div className="flex items-center justify-between">
             <h2 className="font-heading text-lg font-medium">Your outlook</h2>
-            <OutlookBadge outlook={targetRes.data.outlook} />
+            {/* The freshly computed label, not the row's — `targetRes.data` was read before
+                the refresh above wrote to it, so the persisted value here is one render
+                stale, and pairing a stale label with a fresh reason could show the reason
+                for a classification that is no longer the one displayed. */}
+            <OutlookBadge outlook={outlook?.outlook ?? targetRes.data.outlook} notApplicableKind={outlook?.notApplicableKind} />
           </div>
           {targetRes.data.estimate_range_low != null && targetRes.data.estimate_range_high != null ? (
             <p className="text-sm text-muted-foreground">

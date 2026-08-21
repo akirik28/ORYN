@@ -15,7 +15,12 @@ export async function assembleRequirementFacts(supabase: SupabaseClient<Database
   const [educationRecords, courses, testScores, languages] = await Promise.all([
     supabase.from("education_records").select("curriculum, overall_gpa, gpa_scale").eq("user_id", userId),
     supabase.from("courses").select("subject, level, grade_value").eq("user_id", userId),
-    supabase.from("test_scores").select("test_name, score").eq("user_id", userId),
+    // `max_score`/`test_date` are the only signals `test_scores` carries that bear on whether
+    // a comparison is legitimate at all: max_score is what lets a TOEFL result be placed on
+    // the 0-120 or the 1-6 scale (see inferStudentScale), and test_date is what a validity
+    // window is measured against. Both absent means the evaluator is more cautious, never
+    // less — see lib/requirements/evaluate.ts.
+    supabase.from("test_scores").select("test_name, score, max_score, test_date").eq("user_id", userId),
     supabase.from("languages").select("name, proficiency").eq("user_id", userId),
   ]);
 
@@ -28,7 +33,7 @@ export async function assembleRequirementFacts(supabase: SupabaseClient<Database
     curricula,
     courses: (courses.data ?? []).map((c) => ({ subject: c.subject, level: c.level, gradeValue: c.grade_value })),
     gpas,
-    testScores: (testScores.data ?? []).map((t) => ({ testName: t.test_name, score: t.score })),
+    testScores: (testScores.data ?? []).map((t) => ({ testName: t.test_name, score: t.score, maxScore: t.max_score, testDate: t.test_date })),
     languages: (languages.data ?? []).map((l) => ({ name: l.name, proficiency: l.proficiency })),
   };
 }
