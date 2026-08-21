@@ -217,7 +217,7 @@ Effect: the coefficient drops **0.12 → 0.06** (and the vocational ek puan 0.06
 - **Tie-breaking**: where placement scores tie, the candidate with the higher OBP wins; if still tied, the **younger** candidate (birth date closer to the present).
 - **Özel yetenek (talent) placement formula**, where OBP appears twice:
   `YP = (0,55 × ÖYSP × 5) + (0,12 × OBP) + (0,45 × TYT-P) + (0,06 × OBP)` — the final `0,06 × OBP` term applies to candidates from the relevant vocational field; otherwise the formula ends at `(0,45 × TYT-P)`.
-- **International science olympiad medallists** get OBP multiplied by an extra coefficient — **0.06 for 1st place, 0.05 for 2nd, 0.04 for 3rd** — when the relevant programs are among their preferences. This is one of the very few routes by which an extracurricular achievement directly changes a YKS placement score. See `03-counseling-implications.md`.
+- **International science olympiad medallists** get OBP multiplied by an extra coefficient — **0.06 for 1st place, 0.05 for 2nd, 0.04 for 3rd** — when the relevant programs are among their preferences. This is one of the very few routes by which an extracurricular achievement directly changes a YKS placement score. See `06-counseling-implications.md`.
 
 ---
 
@@ -234,7 +234,7 @@ Effect: the coefficient drops **0.12 → 0.06** (and the vocational ek puan 0.06
 | Avoiding the halved coefficient | **Yes — at tercih time** | See `RULE-TR-EXAM-015` |
 | Cohort difficulty / standardisation | **No** | Rank is relative; nets→rank shifts yearly |
 | School quality adjustment | **No — forbidden by regulation** | OBP is Turkey-wide, not school-based |
-| Essays, references, interviews, portfolio | **Not part of the system at all** | See `03-counseling-implications.md` |
+| Essays, references, interviews, portfolio | **Not part of the system at all** | See `06-counseling-implications.md` |
 
 ---
 

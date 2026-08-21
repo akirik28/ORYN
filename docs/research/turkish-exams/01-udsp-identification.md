@@ -71,7 +71,7 @@ When applicants exceed the program quota, ranking is:
 2. readiness-exam score, if one was held (tiebreak)
 3. previous year's `yılsonu başarı puanı` — school year-end average (second tiebreak)
 
-So at an oversubscribed school, the difference between 72 and 94 is the difference between a place and no place. A student who treats 70 as "the number I need" is optimising for the wrong thing. See `03-counseling-implications.md`.
+So at an oversubscribed school, the difference between 72 and 94 is the difference between a place and no place. A student who treats 70 as "the number I need" is optimising for the wrong thing. See `06-counseling-implications.md`.
 
 ### Transfer students carry an extra condition — `RULE-TR-EXAM-004`
 
@@ -132,7 +132,7 @@ Kılavuz 12.1, quoted exactly:
 
 Three consequences, each independently actionable:
 
-1. **No negative marking.** Only correct answers count. Wrong answers cost nothing relative to blanks. This is the opposite of YKS, where wrong answers cancel correct ones (see `02-yks-and-university-entry.md`, `RULE-TR-EXAM-011`). **A student should never leave a UDSP question blank.** This single fact is worth real points and is routinely mis-transferred from YKS habits.
+1. **No negative marking.** Only correct answers count. Wrong answers cost nothing relative to blanks. This is the opposite of YKS, where wrong answers cancel correct ones (see `02-yks-and-obp.md`, `RULE-TR-EXAM-009`). **A student should never leave a UDSP question blank.** This single fact is worth real points and is routinely mis-transferred from YKS habits.
 2. **Each question is worth exactly 2 points** (100/50). The 70 threshold is therefore **exactly 35 correct answers out of 50** — a concrete, checkable target rather than an abstract percentage.
 3. **No rounding up**, whatever the decimal. With 50 questions every score is a whole multiple of 2, so this clause has no practical effect on a full-length paper; it bites only if questions are cancelled and the denominator changes (see 12.3).
 
