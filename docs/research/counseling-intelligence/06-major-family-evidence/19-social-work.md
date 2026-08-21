@@ -89,20 +89,29 @@ structure (the professional title itself is legally regulated) directly analogou
 adjacent sources — medium-high confidence; Social Work England's own registration page was not
 independently fetched this pass.) [[RULE-COUNSEL-098]]
 
-**Turkey**: verified against an official source — the Ministry of National Education's own
-"Rehberlik Hizmetleri Yönetmeliği" (Guidance Services Regulation) formally defines "sosyal
-çalışmacı" (social worker) as someone who has completed a **university-level Sosyal Hizmet
-(Social Work) bachelor's degree**. A structurally important, sourced nuance: **associate-degree
-("ön lisans") graduates from related social-services programs may not be appointed to
-"sosyal çalışmacı" positions** — only bachelor's-degree holders receive that professional title;
-associate-degree graduates receive different titles ("sosyal yardımcı," "sosyal tekniker," etc.)
-with a narrower scope. This is a genuine, official title-protection/degree-level distinction, not
-merely informal convention. (Source: MEB regulatory definition, cross-referenced via
-university-program and professional-association pages describing it — high confidence for the
-bachelor's-vs-associate distinction; MEB's own regulation text was accessed via secondary citation
-in this pass, not fetched directly the way peer's `18` fetched MEB material directly, flagged as a
-real difference in sourcing rigor between this note and peer's teaching-family equivalent.)
-[[RULE-COUNSEL-099]]
+**Turkey**: **upgraded to primary-source confirmation on a follow-up pass** — the peer session
+independently fetched the actual regulation text (MEB's "Rehberlik Hizmetleri Yönetmeliği," Resmî
+Gazete/Official Gazette, 10 Kasım 2017, Sayı 30236) via a direct PDF read (the same technique this
+document's own Turkey career-outlook note used for İŞKUR's list, after WebFetch failed on the
+official portal the same way it failed for this session on several occasions tonight). **Article
+3(p) of that regulation defines "Sosyal Çalışmacı" verbatim as requiring "sosyal hizmet alanında
+lisans eğitimi"** (bachelor's-level education specifically in the field of social work/social
+services) — confirming this document's core claim exactly, not as a paraphrase. [[RULE-COUNSEL-099]]
+
+**One part of the original claim could not be confirmed in this specific regulation, and is
+downgraded accordingly rather than left at its original confidence**: the claim that associate-
+degree ("ön lisans") graduates specifically receive different titles ("sosyal yardımcı," "sosyal
+tekniker") is **not addressed, positively or negatively, in this particular regulation** — this
+document (which governs guidance/counseling-center staff specifically, not all social-work
+employment generally) only positively defines what a bachelor's-degree holder is called; it is
+silent on associate-degree titling. That distinction may hold under a different regulation
+governing social-work employment more broadly, but this document should not claim primary-source
+confirmation for it — **treated as secondary-sourced only, not verified**, pending someone
+checking the right regulation. [[RULE-COUNSEL-107]] (Source: MEB Rehberlik Hizmetleri Yönetmeliği,
+official Turkish government regulation, fetched directly by the peer session and reported to this
+session — high confidence for Article 3(p)'s bachelor's-degree definition specifically; the
+associate-degree-titling claim remains at its original, weaker secondary-source confidence, now
+explicitly flagged as unconfirmed by the one primary source actually checked, per this correction.)
 
 **Cross-country pattern, matching `18-education-teaching.md`'s own §6 finding almost exactly**: all
 three systems converge on a **two-part structure** (a relevant degree at a specific level, plus a
@@ -133,10 +142,18 @@ student as the general pattern, while being explicit the exact mechanics are cou
   UK teaching and architecture. Confidence: medium-high (not independently fetched from Social
   Work England's own page this pass).
 - `RULE-COUNSEL-099` — Turkey's "sosyal çalışmacı" title is officially bachelor's-degree-specific
-  per MEB's own regulatory definition; associate-degree graduates receive a different, narrower
-  title. Confidence: high for the distinction itself; sourced via secondary citation of MEB's
-  regulation rather than a direct fetch, a real (flagged, not hidden) sourcing-rigor gap relative
-  to peer's `18`.
+  — confirmed via the primary regulation text itself (MEB Rehberlik Hizmetleri Yönetmeliği,
+  Art. 3(p), fetched directly by the peer session). Confidence: high, upgraded from secondary-
+  source on a follow-up pass.
+- `RULE-COUNSEL-107` — The claim that associate-degree graduates receive a different, narrower
+  title ("sosyal yardımcı"/"sosyal tekniker") is **not confirmed** by the one primary regulation
+  checked (which is silent on associate-degree titling, governing guidance-center staff
+  specifically) — downgraded to secondary-source-only confidence rather than left at its original
+  higher rating once the gap was found. A concrete example of this package's own discipline
+  applied to itself: a partial primary-source confirmation should sharpen *and* narrow a claim,
+  not be treated as blanket validation of everything originally asserted alongside it. Confidence:
+  low-medium (the underlying claim may still be true under a different regulation, simply not
+  verified by what was actually checked).
 - `RULE-COUNSEL-100` — State the general "degree + separate registration/title-control step"
   pattern to students while being explicit that exact mechanics are country-specific — directly
   mirrors `18-education-teaching.md`'s own §6 finding for a different profession, suggesting this
@@ -150,7 +167,7 @@ student as the general pattern, while being explicit the exact mechanics are cou
 |---|---|---|---|---|
 | S-BLS-SOCWORK | BLS Occupational Outlook Handbook — Social Workers (`bls.gov/ooh/community-and-social-service/social-workers.htm`) | Official (US BLS) | High | §2, §3, §6 |
 | S-UK-SOCWORK | UK social-work-careers guidance (NHS Health Careers, professional/licensing-guide sources describing Social Work England registration) | Secondary, describing an official registration system | Medium-high | §6 |
-| S-MEB-SOCWORK | MEB "Rehberlik Hizmetleri Yönetmeliği" official definition of "sosyal çalışmacı," accessed via university-program/professional citation rather than direct MEB fetch | Official regulation, secondary-cited | High for the definition/degree-level distinction | §6 |
+| S-MEB-SOCWORK | MEB "Rehberlik Hizmetleri Yönetmeliği" (10 Kasım 2017, Resmî Gazete Sayı 30236), Article 3(p) — primary regulation text, fetched directly by the peer session and reported to this session | Official regulation, **primary source** (upgraded from secondary citation on a follow-up pass) | High for Art. 3(p)'s bachelor's-degree definition specifically; the separate associate-degree-titling claim is NOT confirmed by this document and is downgraded (`RULE-COUNSEL-107`) | §6 |
 
 Full entries to be added to `data/research/counseling-intelligence/sources.json` in the same
 commit as this document.

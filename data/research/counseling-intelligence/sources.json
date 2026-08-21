@@ -556,15 +556,15 @@
     },
     {
       "id": "SRC-CS-046",
-      "title": "MEB 'Rehberlik Hizmetleri Yönetmeliği' official definition of 'sosyal çalışmacı,' cross-referenced via university program and professional-association pages",
-      "publisher": "Ministry of National Education (MEB, official) definition, accessed via secondary citation",
-      "url": "https://socialwork.health.ankara.edu.tr/sosyal-hizmet-uzmani-gorev-ve-yetkileri/",
-      "type": "official_regulation_secondary_cited",
+      "title": "MEB 'Rehberlik Hizmetleri Yönetmeliği' (10 Kasım 2017, Resmî Gazete Sayı 30236), Articles 3(p) and 3(i) — UPGRADED to primary source on a follow-up pass",
+      "publisher": "Ministry of National Education (MEB, official Turkish government regulation) — primary text fetched directly by the peer session, reported to and incorporated by this session",
+      "url": "https://orgm.meb.gov.tr/meb_iys_dosyalar/2017_11/10113305_yeni_rehbrlk_yon.pdf",
+      "type": "official_source",
       "retrieved_at": "2026-08-21",
-      "confidence": "high_for_distinction_medium_for_direct_sourcing_rigor",
-      "claim_supported": "Turkey's 'sosyal çalışmacı' (social worker) title is officially defined by MEB regulation as requiring a bachelor's-level Sosyal Hizmet degree specifically; associate-degree graduates receive a different, narrower title and may not be appointed to sosyal çalışmacı positions.",
-      "used_in_rules": ["RULE-COUNSEL-099"],
-      "limitations": "MEB's own regulation text was accessed via secondary/university citation in this pass, not fetched directly from MEB's own site the way the peer session directly fetched MEB material for its 18-education-teaching.md — a real, self-flagged sourcing-rigor gap relative to that document."
+      "confidence": "high_for_confirmed_articles_low_medium_for_unconfirmed_associate_degree_claim",
+      "claim_supported": "Article 3(p) formally defines 'Sosyal Çalışmacı' as requiring bachelor's-level (lisans) education specifically in social work/social services — confirmed verbatim, not paraphrased. Article 3(i) formally defines 'Psikolog' as requiring bachelor's-level psychology education. This specific regulation does NOT address associate-degree ('ön lisans') titling for social work — that narrower claim in 19-social-work.md remains secondary-sourced only (see RULE-COUNSEL-107), not confirmed by this primary text.",
+      "used_in_rules": ["RULE-COUNSEL-099", "RULE-COUNSEL-108"],
+      "limitations": "This regulation specifically governs guidance/counseling-center staff, not all social-work or psychology employment generally — its silence on associate-degree titling doesn't confirm or deny that claim, which may be governed by a different regulation not yet checked. This session did not independently re-fetch the PDF itself; relied on the peer session's direct report of Article 3(p)/3(i) content, consistent with this package's own 'verify, don't just trust a summary' discipline applied at one remove (peer verified the primary text; this session trusted peer's specific, checkable quotation of it rather than peer's earlier looser paraphrase)."
     },
     {
       "id": "SRC-CS-047",

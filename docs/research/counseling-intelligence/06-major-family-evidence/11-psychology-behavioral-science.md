@@ -78,7 +78,13 @@ regulatory matter.
 
 **Turkey:** İŞKUR's official "Geleceğin Meslekleri" list includes **Psikolog** (Psychologist) and
 **Özel Eğitim Öğretmeni** (Special Education Teacher — psychology-adjacent) among its 93
-designated future occupations. [[RULE-COUNSEL-084]]
+designated future occupations. [[RULE-COUNSEL-084]] **Added from a primary source, via the peer
+session's direct fetch of the same MEB regulation used for `19-social-work.md`'s Turkey note**
+(Rehberlik Hizmetleri Yönetmeliği, 10 Kasım 2017, Resmî Gazete Sayı 30236): **Article 3(i) formally
+defines "Psikolog" as requiring a bachelor's-level (lisans) education in psychology** — the same
+two-part degree-plus-title-definition pattern this package keeps finding, now primary-sourced for
+this family too rather than only inferred by analogy to medicine/social work/teaching.
+[[RULE-COUNSEL-108]]
 
 ## Rules established in this document
 
@@ -104,3 +110,6 @@ designated future occupations. [[RULE-COUNSEL-084]]
   clinical/therapeutic psychology practice specifically, under the Psychotherapeutengesetz — a
   legal, not just practical, distinction between clinical and non-clinical psychology tracks.
   Confidence: medium-high (official municipal administrative-portal sources).
+- `RULE-COUNSEL-108` — Turkey's MEB Rehberlik Hizmetleri Yönetmeliği, Article 3(i), formally
+  defines "Psikolog" as requiring a bachelor's-level psychology education — primary-sourced via
+  the peer session's direct regulation fetch. Confidence: high (primary official source).
