@@ -85,7 +85,26 @@ Note these 53 rows are almost certainly the same 53 METU programmes previously r
 validation rule and since re-landed — the count matches exactly. The rejection was fixed; the
 payload was not cleaned.
 
-**Recommended check before fixing:** confirm the intended value is simply `English`.
+**The correct value is unambiguously `English`, and the fix is safe.** The project already has an
+established convention for exactly this situation: put the clean value in
+`language_of_instruction` and the justification in `notes`. Every other institution that recorded
+the same institution-level language evidence followed it —
+
+| University | `language_of_instruction` | Rows | Evidence in `notes` |
+|---|---|---|---|
+| Bilkent University | `English` | 29 | 29 |
+| Boğaziçi University | `English` | 26 | 26 |
+| Özyeğin University | `English` | 20 | 20 |
+| Koç University | `English` | 18 | 18 |
+| Sabancı University | `English` | 8 | 8 |
+| Hacettepe University | `Turkish` / `English` | 96 / 3 | all |
+| Istanbul Technical University | `Turkish` | 45 | 45 |
+| KIT Karlsruhe | `German` / `English` | 44 / 1 | all |
+| Yildiz Technical University | `Turkish` | 43 | 43 |
+
+That is **333 rows across 11 universities** doing it correctly, with the evidence stored as
+`… | Language evidence: <justification>` in `notes`. METU's 53 rows are the **only** deviation in
+the table. This is an isolated slip against a working convention, not a systemic design gap.
 
 ### 3. 44% of rows have no usable source link · HIGH (trust, not correctness)
 
@@ -246,6 +265,14 @@ Recording these explicitly so a later cleanup pass does not churn good data.
 - **`PSYCHOLOGICAL SCIENCE` in all caps** (`900a8525-5def-412f-852f-b5af513ff4ad`) matches how
   Università di Padova renders it. Not a shouting bug.
 - **UK MEng rows marked `Bachelor / first-cycle`** are defensible — see Finding 4.
+- **Long `campus` values are real, not contamination.** The 266-character Tilburg value describing
+  an Erasmus Mundus consortium across Glasgow, Aarhus, Nantes/Wrocław, and the multi-city rotations
+  (`Marseille … then Turku … then Tilburg`) are accurate descriptions of genuinely multi-site
+  programmes. Padova's eight-city list is likewise real. Do not truncate these to a single city —
+  the multi-site fact is exactly what a student needs.
+- **Long `faculty_or_school` values are real.** All 13 rows over 150 characters are Universität
+  Hamburg *Lehramt* (teacher-training) degrees, which genuinely span six faculties. The
+  semicolon-delimited list is correct, not a dump of every faculty at the university.
 
 ---
 
@@ -346,11 +373,16 @@ Stating these plainly so the clean result above is not read as broader than it i
 - **`degree_level` for the ~347 plain-Bachelor UK MEng rows individually.** I verified the pattern
   via Exeter and reasoned about the class; I did not open all 347 pages.
 - **Fields outside the four named in the brief** — `duration_years`, `tuition_amount`,
-  `tuition_currency`, `field`, `subject_taxonomy`, `secondary_subject_tags`, `campus`,
-  `faculty_or_school`, `international_eligible`, `admissions_url`, `notes`. `campus` shows 6 values
-  over 60 chars (max 266) and `faculty_or_school` 31 over 80 chars (max 141), which *may* be the
-  same prose-contamination shape as Finding 2 — **unexamined, and the most likely place for the
-  next instance of this bug.** Recommend this as the next audit.
+  `tuition_currency`, `field`, `subject_taxonomy`, `secondary_subject_tags`,
+  `international_eligible`, `admissions_url`. Not examined.
+  - `campus`, `faculty_or_school` and `notes` **were** swept for the Finding 2 prose shape, since
+    they were the most likely place for a recurrence. **Clean** — every long value is legitimate
+    data (see "Things that are correct" above). The only editorial voice found anywhere outside the
+    METU rows is a single trailing clause, `… - explicit triple-degree rotation.`, on
+    `4b3ecaf7-84e6-4b3c-808f-b850966d063e` — accurate, mildly researcher-toned, harmless.
+  - Numeric and boolean fields were **not** range-checked. `duration_years` and `tuition_amount`
+    are the obvious next audit: a wrong tuition figure is high-impact and would not be caught by
+    any check in this pass.
 - **Whether every catalogue URL has a per-programme alternative.** Proven for Manchester and
   Hamburg by fetching. Assumed, not proven, for the other 41 universities in the
   `shared_catalogue_url` class. Some institutions genuinely publish no per-programme page —
@@ -372,12 +404,16 @@ Stating these plainly so the clean result above is not read as broader than it i
 
 ## Suggested order of action
 
-1. **Finding 2** (53 METU rows) — smallest, most clearly wrong, unambiguous fix.
+1. **Finding 2** (53 METU rows) — smallest, clearly wrong, and now provably safe: set
+   `language_of_instruction = 'English'` and move the justification to `notes`, matching the
+   convention 333 other rows already follow.
 2. **Finding 1** (language vocabulary) — decide a controlled vocabulary and a representation for
-   partial-language instruction before more rows land; the table is growing hourly.
-3. **Audit `campus` / `faculty_or_school`** for the Finding 2 shape before it becomes another 53.
-4. **Finding 4** (integrated master's) — pick one convention, apply to all ~412.
-5. **Finding 3 / 3b** (source URLs) — largest effort; per-university, start with Manchester,
+   partial-language instruction before more rows land; the table is growing hourly. Note the
+   `notes` convention above already solves the "where does the nuance go" half of this.
+3. **Finding 4** (integrated master's) — pick one convention, apply to all ~412.
+4. **Finding 3 / 3b** (source URLs) — largest effort; per-university, start with Manchester,
    Southampton, Hamburg and the `yokatlas` rows.
-6. **Finding 5** (69 unqueued rows) — identify the writing lane; backfill the 492 missing
+5. **Finding 5** (69 unqueued rows) — identify the writing lane; backfill the 492 missing
    back-pointers.
+6. **Next audit:** `duration_years` and `tuition_amount` range checks — the highest-impact fields
+   this pass did not touch.
