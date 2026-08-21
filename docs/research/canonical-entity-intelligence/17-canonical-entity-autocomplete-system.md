@@ -239,6 +239,14 @@ explicit. **Recommendation**: whoever triages `entities:audit`'s POSSIBLE_DUPLIC
 should expect roughly this signal-to-noise ratio and budget review time accordingly, rather
 than treating the raw count as a backlog size.
 
+The one `school` in the 275 (and the entire non-university slice of the registry, checked
+completely rather than sampled) turns out to be genuinely clean: see `09`'s strengthened
+"checked and found clean" bullet for the full detail — one correctly-not-merged same-name-
+different-city school pair, 21 cosmetic `INVALID` redundant-alias rows, zero real duplicate-
+identity findings. This package's empirical duplicate-checking has been university-heavy
+throughout; this is the first time the non-university slice was checked this thoroughly, and it
+held up.
+
 ## 7. The registry's trust ladder is currently honest, checked completely
 
 `scripts/verification-state-audit.ts` (not previously examined) checks a real, important

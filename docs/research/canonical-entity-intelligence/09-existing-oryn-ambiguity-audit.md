@@ -276,6 +276,19 @@ unrelated to the `country_code` issue but found in the same query.
   self-join (checked across all 14 entity types). Weakly powered (non-university types total
   under 80 active rows), but a real, reproducible negative result, not an assumption. `05`
   discusses why this method would still miss an alias-level (not canonical-name-level) collision.
+  **Strengthened by `17`, using a different and more thorough method**: running the actual
+  `lib/entities/audit.ts` production logic — fuzzy/token-based near-duplicate detection and
+  alias-collision detection, not just exact-name matching, so it would catch exactly the
+  alias-level collision this bullet's own caveat names — against all 80 non-university entities
+  (complete, not sampled) found one `POSSIBLE_DUPLICATE` (`"Saint-Joseph Fransız Lisesi"`,
+  İstanbul, vs. `"İzmir Saint-Joseph Fransız Lisesi"`, İzmir — correctly *not* an exact match,
+  since they are two real schools in two different cities, likely sharing a religious-order
+  naming convention rather than being the same institution) and zero `SAFE_EXACT_LINK`/
+  `AMBIGUOUS`. The only other findings in the entire non-university slice are 21 `INVALID`
+  redundant-self-alias rows (cosmetic hygiene, no identity risk — mostly Turkish-diacritic
+  schools, detailed in `17` §4-6). This is a meaningfully stronger confirmation of the same
+  conclusion, not a different one: the non-university slice of the registry has no live
+  duplicate-identity problem, checked by both a narrow method and a broad one.
 - **No incorrect existing `entity_relationships` row found.** Every one of the 9 live rows was
   read and checked against its own cited evidence (`03`); all 9 hold up.
 - **`citiesCompatible()` correctly classified all 41 live city pairs** as compatible (the "Boston"
