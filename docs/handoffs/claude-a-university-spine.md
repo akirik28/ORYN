@@ -3160,3 +3160,32 @@ Koç's Archaeology and History of Art) both confirmed accurate. **Turkey status*
 original 6 thin-seeded universities now deepened (METU, Boğaziçi, Bilkent, Koç; Özyeğin and
 Sabancı remain); Layer-2 zero-coverage-to-researched: ITU, YTU, Hacettepe (Ankara
 Üniversitesi, Gebze Technical University, Istanbul University still zero-coverage).
+
+**Program catalogue batch 23 — Özyeğin University + Sabancı University, deepened, 28 new,
+running session total 3,791 across 39 universities.** Full method in that commit's own
+message (`644b0d2`). Fifth and sixth (final) applications of the batch-20 fix — **all 6 of
+the originally-identified thin-generic-seed Turkish universities (METU, Boğaziçi, Bilkent,
+Koç, Özyeğin, Sabancı) are now deepened with real per-university catalogue data**, closing
+out the finding from batch 20. Two things worth flagging for the pattern's general lesson,
+not just this pair: (1) Özyeğin's pre-existing 4-seed set was genuinely *different* from the
+other 5 (Entrepreneurship/Economics/Business Administration/Computer Science, not the more
+common Business Administration/Economics/Computer Engineering/Industrial Engineering
+template) — checked live rather than assumed identical, a reminder that "looks like the same
+placeholder pattern" still needs a per-instance live check before writing an exclude-list;
+(2) Sabancı's real program list needed following two hops through gateway/FAQ pages before
+reaching the authoritative source (`iro.sabanciuniv.edu/en/all-bachelors-programs`) — the
+university's own "Explore Majors" marketing page and its IRO FAQ page both looked plausible
+but weren't the actual list, each just pointing further inward. One real discrepancy
+disclosed rather than silently resolved: an earlier, shallower Sabancı page's search summary
+claimed a "Cultural Studies" program exists, but the authoritative all-programs page doesn't
+list it — not included in this batch, flagged as an open question for a future pass with
+more time to resolve it directly (track-within-a-major? discontinued? summary error?) rather
+than guessed either way. Both spot-checks (Özyeğin's AABI-accredited Professional Flight
+program — first of its kind in Turkey/Europe; Sabancı's Materials Science and Nano
+Engineering) confirmed accurate. **Turkey status, end of this stretch**: 9 universities with
+real Layer-2 depth (ITU, YTU, Hacettepe zero-to-researched; METU, Boğaziçi, Bilkent, Koç,
+Özyeğin, Sabancı thin-seed-to-deepened). Remaining Turkey gaps: Ankara Üniversitesi, Gebze
+Technical University, Istanbul University (all still zero-coverage; Istanbul University
+specifically needs an ~18-page per-faculty crawl, see batch 19 note above) — a reasonable
+next Turkey round, or a pivot to a new geography given Turkey has now had a sustained,
+productive stretch this session.
