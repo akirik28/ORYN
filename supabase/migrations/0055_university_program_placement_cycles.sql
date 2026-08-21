@@ -121,9 +121,14 @@ create table public.university_program_placement_cycles (
   constraint university_program_placement_cycles_status_pairing check (
     (placement_status = 'unfilled' and basari_sirasi is null and min_puan is null)
     or (placement_status = 'filled' and basari_sirasi is not null and min_puan is not null)
-  ),
-  unique (program_id, cycle_year, coalesce(burs_orani_adi, ''), coalesce(fymk_id, ''))
+  )
 );
+-- A plain table-level unique(...) constraint cannot take expressions (coalesce), only column
+-- names — caught by apply_migration itself on the first attempt (syntax error at "("), not
+-- assumed correct by analogy with 0053/0054's own working CREATE UNIQUE INDEX statements.
+-- Fixed to the same expression-index form those migrations already use.
+create unique index university_program_placement_cycles_key_idx
+  on public.university_program_placement_cycles (program_id, cycle_year, coalesce(burs_orani_adi, ''), coalesce(fymk_id, ''));
 create trigger university_program_placement_cycles_set_updated_at before update on public.university_program_placement_cycles for each row execute function public.set_updated_at();
 
 alter table public.university_program_placement_cycles enable row level security;
