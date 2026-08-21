@@ -152,9 +152,14 @@ ROR-`parent`-linked to the already-live University of Nottingham (`ror.org/01ee9
 undetermined pending an admissions-independence check this session could not complete via two
 failed web-fetch attempts.
 
-**7. Add a `successor_of`/`predecessor_of` example.** Same status as #6 — zero live rows, nothing
-wrong, just unexercised. `04` names the most plausible future source (a European business-school
-merger) without asserting one has happened.
+**7. Add a `successor_of`/`predecessor_of` example — this package's own cross-reference here was
+stale, fixed late in this session.** Zero live rows, nothing wrong, just unexercised — but `04`
+has moved past the original "no confirmed case yet" framing this item still carried: it now
+documents two real, ROR-verified 2024/2025 French university mergers ready to use once ORYN's
+registry needs them — **Université de Franche-Comté → Université Marie et Louis Pasteur** and
+**Université Toulouse III - Paul Sabatier → Université de Toulouse** — both confirmed directly
+against ROR's live API (`04`'s dedicated section), not the hypothetical "European business-school
+merger" this item previously pointed to.
 
 ## P3 — Awareness items, no action needed from this package
 
