@@ -32,7 +32,7 @@
  */
 import { readFileSync, readdirSync } from "node:fs";
 import { decideRequirementIngestion, requirementDedupKey, type ResearchRequirementRecord, type UniversityLookupRow } from "../lib/requirements/ingest";
-import { decideDeadlineIngestion, deadlineDedupKey, type ResearchDeadlineRecord } from "../lib/deadlines/ingest";
+import { decideDeadlineIngestion, deadlineDedupKey, deadlineFactKeyFromRow, type ResearchDeadlineRecord } from "../lib/deadlines/ingest";
 import { classifyDeadlineShapes, classifyRequirementShapes, findUniqueSlotCollisions, withRetry, type DeadlineShape, type RequirementShape } from "../lib/requirements/shape-audit";
 import { getSupersededUniversityIds } from "../lib/universities/canonical";
 import { normalizeProgramName } from "../lib/programs/normalize";
@@ -166,7 +166,12 @@ async function main() {
     fetchAllRowsVerified<{ university_id: string; requirement_type: string; title: string | null; scope: string | null }>(target, "university_requirements", "university_id,requirement_type,title,scope", "order=id")
   );
   const { rows: existingDls } = await withRetry("read university_deadlines", () =>
-    fetchAllRowsVerified<{ university_id: string; deadline_type: string; deadline_date: string | null }>(target, "university_deadlines", "university_id,deadline_type,deadline_date", "order=id")
+    fetchAllRowsVerified<{ university_id: string; deadline_type: string; deadline_date: string | null; recurrence: string; recurrence_month: number | null; recurrence_day: number | null }>(
+      target,
+      "university_deadlines",
+      "university_id,deadline_type,deadline_date,recurrence,recurrence_month,recurrence_day",
+      "order=id"
+    )
   );
 
   const programsByUniversity = new Map<string, Map<string, string[]>>();
@@ -263,7 +268,14 @@ async function main() {
   const dlRecords: { file: string; record: ResearchDeadlineRecord }[] = [];
   for (const f of dlFiles) for (const record of parseJsonl<ResearchDeadlineRecord>(`${CORPUS_DIR}/${f}`)) dlRecords.push({ file: f, record });
 
-  const existingDeadlineKeys = new Set(existingDls.filter((d) => d.deadline_date).map((d) => deadlineDedupKey(d.university_id, d.deadline_type, d.deadline_date!)));
+  const existingDeadlineKeys = new Set(
+    existingDls
+      .map((d) => {
+        const factKey = deadlineFactKeyFromRow(d);
+        return factKey ? deadlineDedupKey(d.university_id, d.deadline_type, factKey) : null;
+      })
+      .filter((k): k is string => k !== null)
+  );
   const dlOutcomes = new Map<string, number>();
   const dlShapes = new Map<DeadlineShape, number>();
   const perFileDl = new Map<string, { total: number; accepted: number; blocked: number; unrepresentable: number; acceptedAndUnrepresentable: number }>();
@@ -279,7 +291,8 @@ async function main() {
   for (const { file, record } of dlRecords) {
     const decision = decideDeadlineIngestion(record, universities, existingDeadlineKeys);
     if (decision.outcome === "accepted" && decision.row) {
-      existingDeadlineKeys.add(deadlineDedupKey(decision.row.university_id, decision.row.deadline_type, decision.row.deadline_date));
+      const factKey = deadlineFactKeyFromRow(decision.row);
+      if (factKey) existingDeadlineKeys.add(deadlineDedupKey(decision.row.university_id, decision.row.deadline_type, factKey));
     }
     if (decision.universityId) dlUniResolved += 1;
     const { programId } = resolveProgramId(decision.universityId, record.program_name, programsByUniversity);

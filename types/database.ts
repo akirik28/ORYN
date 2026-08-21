@@ -1007,8 +1007,23 @@ export interface UniversityDeadline {
   retrieved_at: string | null;
   created_at: string;
   updated_at: string;
+  // Migration 0056 (requirement/deadline shape representability). recurrence/verification_state
+  // carry a DB default (`dated_specific` / `unverified`), same convention as id/created_at/
+  // updated_at below — everything else here is nullable-with-no-default, matching program_id/
+  // deadline_date/source_url/retrieved_at above rather than being made an optional key.
+  recurrence: string;
+  recurrence_month: number | null;
+  recurrence_day: number | null;
+  cycle_year: number | null;
+  cycle_label: string | null;
+  verification_state: string;
+  deadline_text_verbatim: string | null;
+  source_type: string | null;
+  binding_policy: string | null;
+  conflict_group_id: string | null;
+  research_record_id: string | null;
 }
-export type UniversityDeadlineInsert = Insertable<UniversityDeadline, "id" | "created_at" | "updated_at">;
+export type UniversityDeadlineInsert = Insertable<UniversityDeadline, "id" | "created_at" | "updated_at" | "recurrence" | "verification_state">;
 
 export interface UniversitySource {
   id: string;

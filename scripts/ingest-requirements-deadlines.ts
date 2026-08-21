@@ -52,6 +52,7 @@ import {
   applyDeadlineDecision,
   decideDeadlineIngestion,
   deadlineDedupKey,
+  deadlineFactKeyFromRow,
   type AcceptedDeadlineRow,
   type DeadlineWriteClient,
   type ResearchDeadlineRecord,
@@ -153,7 +154,12 @@ async function main() {
   const [universities, { rows: existingReqs }, { rows: existingDls }] = await Promise.all([
     loadUniversityCandidates(target),
     fetchAllRowsVerified<{ university_id: string; requirement_type: string; title: string | null; scope: string | null }>(target, "university_requirements", "university_id,requirement_type,title,scope", "order=id"),
-    fetchAllRowsVerified<{ university_id: string; deadline_type: string; deadline_date: string | null }>(target, "university_deadlines", "university_id,deadline_type,deadline_date", "order=id"),
+    fetchAllRowsVerified<{ university_id: string; deadline_type: string; deadline_date: string | null; recurrence: string; recurrence_month: number | null; recurrence_day: number | null }>(
+      target,
+      "university_deadlines",
+      "university_id,deadline_type,deadline_date,recurrence,recurrence_month,recurrence_day",
+      "order=id"
+    ),
   ]);
   console.log(`Candidate pool: ${universities.length} universities. Existing: ${existingReqs.length} requirements, ${existingDls.length} deadlines.`);
 
@@ -165,7 +171,14 @@ async function main() {
     const key = requirementDedupKey(r.university_id, r.requirement_type, r.scope);
     existingTitlesByKey.set(key, [...(existingTitlesByKey.get(key) ?? []), r.title]);
   }
-  const existingDeadlineKeys = new Set(existingDls.filter((d) => d.deadline_date).map((d) => deadlineDedupKey(d.university_id, d.deadline_type, d.deadline_date!)));
+  const existingDeadlineKeys = new Set(
+    existingDls
+      .map((d) => {
+        const factKey = deadlineFactKeyFromRow(d);
+        return factKey ? deadlineDedupKey(d.university_id, d.deadline_type, factKey) : null;
+      })
+      .filter((k): k is string => k !== null)
+  );
 
   // Sequential, not .map(): neither target table has a DB-level unique index (fuzzy
   // title-similarity dedup can't be expressed as a btree constraint anyway), so unlike
@@ -186,7 +199,8 @@ async function main() {
   for (const record of dlRecords) {
     const decision = decideDeadlineIngestion(record, universities, existingDeadlineKeys);
     if (decision.outcome === "accepted" && decision.row) {
-      existingDeadlineKeys.add(deadlineDedupKey(decision.row.university_id, decision.row.deadline_type, decision.row.deadline_date));
+      const factKey = deadlineFactKeyFromRow(decision.row);
+      if (factKey) existingDeadlineKeys.add(deadlineDedupKey(decision.row.university_id, decision.row.deadline_type, factKey));
     }
     dlDecisions.push({ record, decision });
   }
