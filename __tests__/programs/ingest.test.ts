@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { decideIngestion, resolveUniversity, looksPageConfirmed, type ResearchProgramRecord, type UniversityLookupRow } from "@/lib/programs/ingest";
+import { decideIngestion, resolveUniversity, looksPageConfirmed, programUrlKey, type ResearchProgramRecord, type UniversityLookupRow } from "@/lib/programs/ingest";
 
 const MIT: UniversityLookupRow = { id: "uni-mit", name: "Massachusetts Institute of Technology", country: "United States" };
 const EDINBURGH: UniversityLookupRow = { id: "uni-edi", name: "The University of Edinburgh", country: "United Kingdom", aliases: ["University of Edinburgh"] };
@@ -137,6 +137,19 @@ describe("decideIngestion", () => {
     const keyAfterFirst = new Set([`${first.programRow!.university_id}|${first.programRow!.normalized_name}|${first.programRow!.degree_level ?? ""}`]);
     const second = decideIngestion(record(), UNIVERSITIES, keyAfterFirst);
     expect(second.outcome).toBe("duplicate");
+  });
+
+  test("flags a duplicate by official_program_url even when the display name differs (found live: TU Delft)", () => {
+    // Real case: university_programs already had "Computer Science and Engineering" for TU
+    // Delft (research-handoff pass), and a later deterministic catalogue scrape produced
+    // "Computer Science & Engineering - English" for the exact same official_program_url —
+    // name-based dedup alone would have inserted both as if they were different programmes.
+    const existing = new Set([programUrlKey("uni-mit", "https://cs.mit.edu")]);
+    const r = record({ program_name: "Computer Science & Engineering - English" });
+    const decision = decideIngestion(r, UNIVERSITIES, existing);
+    expect(decision.outcome).toBe("duplicate");
+    expect(decision.detail).toContain("official_program_url");
+    expect(decision.programRow).toBeNull();
   });
 
   test("two different program names at the same university both accept independently", () => {

@@ -1,0 +1,47 @@
+{
+  "_readme": "Layer-1 university-spine expansion candidates (new canonical_entities/universities rows, not yet in the live spine). Shape mirrors scripts/expand-university-spine.ts's own NEW_INSTITUTIONS array so a future session with DB access can feed these in directly -- not added to that script this session per this session's own 'no production code' constraint. Every ROR id below was fetched live from api.ror.org (keyless, no guessing) on 2026-08-21 and is the top/exact-name hit for the institution, cross-checked against the institution's own domain in ROR's 'domains' field. None of these were written to the live database this session.",
+  "researched_at": "2026-08-21",
+  "researcher": "ORYN night-research session, oryn/programs-pipeline-reconciled",
+  "candidates": [
+    {
+      "label": "Kadir Has University",
+      "name": "Kadir Has University",
+      "country": "Turkey",
+      "city": "Istanbul",
+      "officialUrl": "https://www.khas.edu.tr",
+      "rorId": "03zzckc47",
+      "reason": "ROR live-verified 2026-08-21 (exact top hit for 'Kadir Has University', domain khas.edu.tr matches ROR's own registered domain, established 1997). Genuinely missing from the spine -- confirmed via live read-only query (universities where country='Turkey' returned 12 rows, none named Kadir Has) before proposing this candidate. Directly relevant this session: this same university's high-school AI summer program (Kadir Has University AI High School Summer Academy) was independently researched and added to the opportunities pipeline (wave4/wave5 batches) without realizing at the time that the parent institution itself was absent from the university spine -- the two gaps are connected."
+    },
+    {
+      "label": "MEF University",
+      "name": "MEF University",
+      "country": "Turkey",
+      "city": "Istanbul",
+      "officialUrl": "https://www.mef.edu.tr",
+      "rorId": "05jz51y94",
+      "reason": "ROR live-verified 2026-08-21 (exact top hit for 'MEF University', domain mef.edu.tr matches ROR's own registered domain, established 2012). Confirmed missing from the 12-row live Turkey spine before proposing. Same connection as Kadir Has: MEF's own high-school summer school (physics/engineering-focused, 20th year running, notable RSI-alumni track record) was independently researched this session for the opportunities pipeline before this spine gap was noticed."
+    },
+    {
+      "label": "Istanbul Bilgi University",
+      "name": "Istanbul Bilgi University",
+      "country": "Turkey",
+      "city": "Istanbul",
+      "officialUrl": "https://www.bilgi.edu.tr",
+      "rorId": "04pm4x478",
+      "reason": "ROR live-verified 2026-08-21 (exact top hit for 'Istanbul Bilgi University', domain bilgi.edu.tr matches ROR's own registered domain, established 1996). Not to be confused with the already-in-spine 'Istanbul University' (a distinct, much older institution, ROR 03a5qrr21, founded 1453) -- checked both ROR records individually to avoid conflating them. Bilgi's own high-school summer school was already referenced in this repo's SUMMER_PROGRAMS_350_TRACKER.md (Wave 3, 'Istanbul Bilgi HS Summer School') as an existing opportunities row, but the parent university itself was never added to the university spine -- another case of the opportunity being captured without its organizing institution."
+    },
+    {
+      "label": "Marmara University",
+      "name": "Marmara University",
+      "country": "Turkey",
+      "city": "Istanbul",
+      "officialUrl": "https://www.marmara.edu.tr",
+      "rorId": "02kswqa67",
+      "reason": "ROR live-verified 2026-08-21 (exact top hit for 'Marmara University', domain marmara.edu.tr matches ROR's own registered domain, established 1883). One of Turkey's largest public universities by enrollment (per ROR/Wikipedia cross-reference, not independently re-verified this session) -- a genuine, large-population gap in Turkey's spine coverage, not a small or marginal institution."
+    }
+  ],
+  "not_pursued_this_pass": {
+    "note": "Additional well-known Turkish universities identified as likely spine gaps (Gazi University, Bahçeşehir University, TED University, Galatasaray University, Anadolu University) but NOT individually ROR-verified this session -- flagged by name only, from general knowledge, not confirmed against api.ror.org or cross-checked against the live spine. Do not treat these as verified candidates; a future pass should run the same live-DB-check + ROR-lookup discipline used for the four candidates above before proposing them.",
+    "unverified_names": ["Gazi University", "Bahçeşehir University", "TED University", "Galatasaray University", "Anadolu University"]
+  }
+}

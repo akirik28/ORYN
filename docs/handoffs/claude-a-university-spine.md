@@ -2325,3 +2325,1132 @@ needed there), real programs showing real "Strong match" reasoning (Breakthrough
 Challenge, Boston University Summer Term, İTÜ Lise Yaz Okulu, etc.). Still no image/media
 column on `opportunities` — that gap (and the schema-choice question) is exactly as described
 above, unchanged by this import. Pure DML, no migration, no schema touched.
+
+## 2026-08-20: branch reconciliation, programme-catalog pipeline wired, admissions_url batch (24 top-ranked universities)
+
+Session start: `oryn/programs-pipeline-reconciled` was ~50 commits behind `origin/main`
+(missing the 2026-08-19 Counselor Core merge, two QS-ranking bugfixes, and a rescued
+programme-catalogue pipeline) but carried 4 unmerged commits of its own. Reconciled per
+`docs/MASTER-EXECUTION-STRATEGY.md` (reset same day, confirms this branch as the ongoing
+Computer A data lane): merged `origin/main` cleanly (git auto-detected the stale-numbered
+`0043_university_programs_enrichment.sql` as a rename to main's renumbered `0044`, no
+conflict), found and fixed a pre-existing eslint bug in the process (`.next/**` ignore
+didn't reach `.claude/worktrees/**`'s own build output, producing 50k false positives),
+full gate green after — commits `9e3d338`, `ec84e28`.
+
+**Wave 1 groups C/D/F applied** (`a3a7564`): re-fetched live `opportunities` (290 rows)
+immediately before dedup, per this doc's own established practice — caught all 7 of group
+C and 2 of group D as duplicates of the 2026-08-18 bulk import. 11 net-new rows.
+`opportunities`: 290 → 301.
+
+**Programme-catalogue pipeline wired** (`bf59310`): `lib/acquisition/programs.ts` +
+`scripts/acquire-programs.ts` (rescued, previously uncommitted-elsewhere, landed on `main`
+via the integration merge but never wired) got an `acquire:programs` package.json script
+and a JSONL-emission adapter so its deterministic extraction output flows through the
+existing, tested `npm run ingest:university-programs -- <path> --apply` path instead of
+becoming a second write path. Live-verifying it against TU Delft and Trinity College
+Dublin's real catalogue pages surfaced two real correctness bugs (fixed): a standalone
+"Diploma" (TCD's "Diploma in Acting and Theatre") was being asserted as bachelor's-level
+purely from page context, since `NON_BACHELOR_TOKENS` only excluded "Graduate Diploma";
+and TCD's rule matched two non-programme nav pages ("Your Trinity Pathways", "Your Trinity
+education") that happened to satisfy the URL pattern. Also found and fixed a real dedup
+gap in `lib/programs/ingest.ts`'s `decideIngestion()`: it deduped by normalized name only,
+so TU Delft's existing "Computer Science and Engineering" row and the catalogue's current
+link text "Computer Science & Engineering - English" — same `official_program_url`, same
+real programme — would have inserted as two rows. Added `programUrlKey()`-based dedup
+(checked alongside the existing name key), a regression test using this exact case, and
+updated `scripts/ingest-university-programs.ts` to populate both key types. 995/995 tests
+(994 + 1 new), lint/typecheck/build clean.
+
+Applied live via the real `decideIngestion()` logic (run against MCP-sourced university
+data, since this environment has no local `SUPABASE_SECRET_KEY`): 133 extracted, 130
+accepted / 3 duplicate (all 3 correctly caught by the new URL-based dedup — Delft's
+Aerospace Engineering, Computer Science & Engineering, and Earth/Climate/Technology all
+already existed under different display text). `university_programs`: 198 → 328 (Delft
+4→15, Trinity College Dublin 0→119). Full `program_research_queue` audit trail written.
+Committed as a follow-up once verified — see git log for the exact commit completing this
+(a background session finished the chunked application + JSONL commit after this note was
+written; check `git log -- data/research/university-programs/` for the exact SHA if it
+matters later).
+
+**Admissions URL batch — 24 top-QS-ranked universities missing `admissions_url`**: live
+audit (`university_profile_metrics`, `universities` columns) showed 407/1019 (40%) had
+`admissions_url`, with a long tail of top-60 QS-ranked institutions missing it entirely.
+Selected the 25 highest-ranked misses; each URL verified by direct `WebFetch` of that
+university's own domain (not guessed from a pattern) — Oxford, Cambridge, Caltech, UCL,
+NTU Singapore, UPenn, Yale, CUHK, UNSW, UC Berkeley, EPFL, U Chicago, ANU, U Toronto, PSL,
+Yonsei, UBC, UCLA, Michigan, CityU HK, Korea University, NTU Taiwan, Universiti Malaya,
+Bristol — 24 written. **Zhejiang University skipped, not guessed**: its undergraduate
+admissions process is genuinely fragmented across campus/institute (International Campus,
+International College, ZIBS each have their own separate international-admissions page,
+no single institution-wide undergraduate admissions URL found) — per this repo's
+conflicting-source rule, left `admissions_url` null rather than picking one arbitrarily.
+Two borderline picks used each institution's *international* applicants page rather than
+a domestic-only one (ANU, National Taiwan University) since that's the more relevant
+front door for ORYN's stated international-student audience — noted here in case a future
+pass wants the domestic page instead. Every row also got a `university_sources` entry
+(source_url, retrieved_at, confidence, raw_excerpt) — that table was previously very
+sparse (29 rows for 1019 universities). `admissions_url`: 407 → 431. Applied via Supabase
+MCP `execute_sql` (no local `SUPABASE_SECRET_KEY` in this environment); not yet run through
+`npm run check:integrations` in this session — see that command's own output earlier this
+session for the full current external-service status (Anthropic/Tavily/College Scorecard
+all unconfigured locally, Supabase MCP and OpenAlex both working).
+
+**Live coverage snapshot after this session's changes** (re-measured, not carried over from
+an earlier doc): `universities` 1019, `admissions_url` 431/1019 (42.3%), `application_system`
+77/1019 (7.6%, untouched this session — next candidate), `total_students` 383/1019 (37.6%),
+`tuition_domestic_annual` 157/1019, `tuition_international_annual` 135/1019,
+`primary_image_url` 721/1019 (70.8%), `university_programs` 328 rows. Program-catalogue
+coverage remains the starkest gap: entire large markets (China 64 universities, India 37,
+Australia 37, South Korea 31, Spain 29, Canada 27, Malaysia 25, Japan 22, Russia 21, Saudi
+Arabia 18, Taiwan 16) have **zero** `university_programs` rows — highest-leverage next
+target for that specific campaign.
+
+**Admissions URL batch 2 — next 29 ranked universities (same session, continuing the
+campaign)**: NYU, Amsterdam, Birmingham, UT Austin, UIUC, Paris-Saclay, Leeds, Glasgow,
+UC San Diego, Universidad de Buenos Aires, Heidelberg, Uppsala, Copenhagen, U Washington,
+U Alberta, Nottingham, FU Berlin, U Zurich, UCD, POSTECH, King Saud, KIT, Southampton,
+Waterloo, Utrecht, St Andrews, IIT Delhi, Leiden, Pontificia Universidad Católica de
+Chile — same rigor, each URL confirmed by direct fetch of that university's own domain.
+Two fetches that came back as unverified guesses ("would likely be at...") were rejected
+and re-verified via a second, real search+fetch pass rather than accepted on a first weak
+answer (Birmingham, NYU). `admissions_url`: 431 → 460/1019 (45.1%). `university_sources`
+provenance rows added for all 29.
+
+**Admissions URL batch 3 — next 29 ranked universities**: Helsinki, Bath, Macquarie,
+Universiti Sains Malaysia, Universiti Kebangsaan Malaysia, Oslo, Wisconsin-Madison, USP,
+IIT Bombay, USTC, Exeter, UC Davis, Universiti Putra Malaysia, Liverpool, Vienna, NTHU
+Taiwan, Western University, UNAM, Newcastle, Basel, USC, Wageningen, Groningen, TU Berlin,
+Universiti Teknologi Malaysia, UNC Chapel Hill, York, WashU St Louis, Universitat de
+Barcelona — same rigor. `admissions_url`: 460 → 489/1019 (48.0%), 82 universities total
+across the three batches this session.
+
+**Opportunities data-quality sweep (evidence-based, not fuzzy-matched)**: while cross-
+checking Wave 1 group B candidates against the live table, spotted and verified three
+junk/duplicate `opportunities` rows and removed them (0 `opportunity_matches`/
+`saved_opportunities` referenced any of them, confirmed before deleting): "Breathrough
+Challenge" (typo'd title, `unverified`, same `breakthroughjuniorchallenge.org` domain and
+underlying competition as the properly-researched, `verified_current` "Breakthrough
+Junior Challenge" — a raw-scrape duplicate, not a genuinely different opportunity);
+"Young Investors Society" (title/description was literally just the organization's own
+homepage URL restated — not a specific opportunity at all, and the real programme,
+"YIS Stock Pitch Competition", already exists as a proper `verified_current` record);
+"Immerse Education Competitions" (a hub/directory page whose own scraped description
+is explicitly about "The Immerse Education Essay Competition 2026" — the same essay
+competition already captured separately and correctly as "Immerse Education Essay
+Competition"). Left one lower-confidence case alone rather than merging on assumption:
+"iGEM High School Competition" vs "International Genetically Engineered Machine
+Competition (iGEM)" have genuinely different official URLs (a HS-specific track page vs.
+the general competition page) and could legitimately be parent/child rather than
+duplicates — flagged here for a future pass with deeper verification, not auto-merged.
+`opportunities`: 304 → 301 after the 3 deletions (net of the +3 from group B below).
+
+**Wave 1 group B applied**: of the 5 records this session's research agent wrote to
+`data/research/opportunities/wave1_2026-08-18_groupB.jsonl`, live-refetch-before-dedup
+caught 2 as duplicates of the 2026-08-18 bulk import (AwesomeMath, BU RISE — matched by
+`official_url`). 3 net-new: Rutgers Young Scholars Program in Discrete Mathematics,
+Carnegie Mellon SAMS, Secondary Student Training Program (SSTP, University of Iowa).
+
+**Admissions URL batch 4 — next 23 ranked universities**: Wuhan, Geneva, IIT Madras, UC
+Santa Barbara, NYCU, Queen's Kingston, Cape Town, TU Dresden, Al-Farabi Kazakh National,
+Wollongong, UCLouvain, Reading, Otago, Complutense Madrid, Waseda, Tel Aviv, Gadjah Mada,
+Hamad Bin Khalifa, FAU Erlangen-Nürnberg, King Abdulaziz, IIT Kharagpur, Hebrew University
+of Jerusalem, UCC — same rigor (IISc Bangalore dropped after repeated TLS/cert failures
+rather than guessed). `admissions_url`: 489 → 512/1019 (50.2%) — crossed the halfway mark,
+110 universities total across four batches this session.
+
+**Parallel background campaigns launched this session** (per the founder's explicit
+parallel-capacity directive): competitions dataset expansion landed clean (52 → 63,
+commit `0222441`); student-count coverage landed clean (383 → 403 universities, commit
+`7b2a548`); research/internship/scholarship opportunities still in progress as of this
+note; the programme-catalogue batch 2 agent stalled once (10 min no-progress), was
+resumed (found and fixed a real bug along the way — Waterloo's rule matched
+"Bachelor of Arts"/"Bachelor of Science" as if they were named programmes, when the
+official pages are purely descriptive hub pages with no "apply to X" language — contrast
+kept deliberately against genuine admission-plan pages like "Physical Sciences", whose
+own page says "Apply to Physical Sciences and choose one of these eight majors"), and a
+second agent is now finishing the remaining Waterloo chunks plus backfilling a genuine
+Edinburgh audit-trail gap found along the way (95 applied rows, only 5 had a matching
+`program_research_queue` entry). Still uncommitted as of this note: the Waterloo
+bachelor-of-arts/bachelor-of-science exclude fix in `scripts/acquire-programs.ts` — do
+not edit that file until the finishing agent commits it.
+
+**Admissions URL batch 5 — next 17 ranked universities**: Universidad de Chile, VU
+Amsterdam, Harbin Institute of Technology, University of Bern, IIT Kanpur, American
+University of Beirut, University of Twente, University of Gothenburg, Universidad
+Autónoma de Madrid, University of Florida, University of Ottawa, University of
+Strathclyde, University of Lausanne, ENS de Lyon, University of Lisbon, QUT, Victoria
+University of Wellington — same rigor (IISc Bangalore and National Cheng Kung University
+dropped after repeated fetch failures / insufficient evidence rather than guessed).
+One incidental finding: ENS de Lyon's stored `website_url` (`ens-lyon.eu`) appears to be
+wrong/outdated — the real official domain confirmed via search is `ens-lyon.fr`; the
+admissions_url written here uses the correct domain, but the `website_url` field itself
+was not corrected (out of scope for this campaign) — worth a future fix.
+`admissions_url`: 512 → 529/1019 (51.9%), 122 universities total across five batches
+this session.
+
+**Admissions URL batch 6 — next 17 ranked universities**: Albert-Ludwigs-Universität
+Freiburg, Université Paris 1 Panthéon-Sorbonne, University of Surrey, Université libre
+de Bruxelles, University of Calgary, TU Darmstadt, University of Rochester, UC Irvine,
+University of Maryland College Park, University of Minnesota Twin Cities, University of
+Porto, University of Canterbury, UMass Amherst, Universiti Teknologi PETRONAS, University
+of Göttingen, Universitat Pompeu Fabra, Vanderbilt University — same rigor. `admissions_url`:
+529 → 546/1019 (53.6%), 139 universities total across six batches this session — over
+half the corpus now has a verified admissions URL.
+
+**All background campaigns from this session's parallel-capacity dispatch are now
+complete and pushed**: competitions (`0222441`), student-counts (`7b2a548`), research/
+internship/scholarship (`4720b40`), and Waterloo application + Edinburgh audit-trail
+backfill (`d8ed48e` — Waterloo: 105 rows, 0 accidental duplicates confirmed; Edinburgh:
+90 missing audit-trail rows backfilled honestly from live data with an explicit
+reconstruction caveat, not fabricated as if they were the original research payloads).
+The `scripts/acquire-programs.ts` bachelor-of-arts/bachelor-of-science exclude fix (see
+above) is committed in this same checkpoint, since the finishing agent correctly left it
+for whoever actually owned it rather than guessing.
+
+**Migration 0043 data backfill — finished the one blocker Claude B flagged this
+session**: the `duplicate_status`/`superseded_by_id` DDL has been live since 2026-08-19
+evening (confirmed independently this session — DDL access clearly exists now, contrary
+to the "blocked" narrative in `docs/founder-blocked-backlog.md`), but the actual data
+backfill for the 9 known duplicate pairs had never run — all 9 loser rows still showed
+`duplicate_status='canonical'`. This was not a fresh identity decision: the 9 pairs were
+already ROR-verified and merged at the `canonical_entities` layer in an earlier session
+(`docs/handoffs/claude-a-university-spine.md`'s own 2026-08-17/18 entries), and
+`lib/universities/duplicate-supersessions.json` already encodes exactly this winner/loser
+mapping as the existing application-layer suppression source of truth — this backfill
+just applies that already-made decision at the schema level, per migration 0043's own
+stated purpose. Ran 9 `UPDATE` statements (KFUPM, HKUST, University of Newcastle
+Australia, Al-Farabi Kazakh National University, University of Warwick, MIT, LSE, UCL,
+University of Technology Sydney), verified live: all 9 loser rows now show
+`duplicate_status='superseded'` with the correct `superseded_by_id`, matching the JSON
+file exactly. The JSON-file application-layer suppression (`lib/universities/canonical.ts`)
+still works and was left untouched — this backfill makes the schema state consistent with
+what the app was already enforcing, it doesn't require an app-code change to take effect
+safely. `docs/founder-blocked-backlog.md` item about migration 0043 can now be marked
+resolved by whoever owns that file next.
+
+**Wave 1 group H applied** (summer programs — Europe/Turkey/international): of 8
+candidates dispatched, 7 came back researched (Central European University Summer School
+returned no record — presumed dropped by the researcher as unverifiable, consistent with
+this campaign's no-forced-candidates rule; no CEU record exists in the group H JSONL to
+investigate further). Live dedup re-check against `opportunities` before any write (per
+this session's standing practice) surfaced two real findings, not simple net-adds:
+- **Koç University** ("Summer Academy") — an existing row ("Koç Uni Yaz Okulu") already
+  covered this program, but as a stale, minimal 2023-dated capture (URL
+  `highschoolprograms.ku.edu.tr/2023-lise-yaz-okulu/...`, no organization/cost/dates,
+  `verification_state='unverified'`, description was literally just the URL). Same
+  real-world Koç HS summer program, not a distinct offering. Per this session's
+  accuracy-and-freshness-over-blind-volume standard, this was **updated in place** with
+  the freshly verified 2026 data (current URL, fees, dates, requirements,
+  `verification_state='verified_current'`) rather than left stale or duplicated — a new
+  `opportunity_sources` provenance row was added alongside. The separate "Koç University
+  Research Program KUSRP" row was confirmed genuinely different (a research program, not
+  the Summer Academy) and left untouched.
+- **Boğaziçi University BOUN101** — skipped entirely, no insert. Two existing rows already
+  cover it: one shares the exact same `official_url` as the new candidate
+  (`buyem.bogazici.edu.tr/`), and the other (`.../course/boun101-lise-yaz-okulu`) carries
+  a fuller 2025 course list (38 named courses) than this wave's own research could
+  re-confirm, since the specific course page had already been taken down by the time of
+  this research (the researcher correctly left cost/dates blank rather than reuse stale
+  figures — see the JSONL record's own honest caveat). Inserting would have created a
+  three-way duplicate with zero net new information. The separate winter-edition row
+  (`boun101-online-kis-okulu`) is a genuinely distinct seasonal offering and was left
+  alone, as was "UWC Türkiye" (a different-scope national-committee page, not a duplicate
+  of the new "UWC Short Courses" global directory entry).
+
+5 net-new rows inserted with `opportunity_sources` provenance (Copenhagen Business School
+Summer University, AI Summer Week @ ETH Zurich, Bilkent University Summer Camp, ODTÜ/METU
+Engineering Summer School, UWC Short Courses) + 1 existing row refreshed (Koç). Live count
+after group H: 335 total opportunities, 232 `summer_program`. Tracker updated:
+`data/research/opportunities/SUMMER_PROGRAMS_350_TRACKER.md`.
+
+This closes out Wave 1 (groups A–H) of the 350-target summer-program campaign: 227 → 232
+`summer_program` rows added/refreshed through this wave's own adds net of duplicates, atop
+the pre-existing base. Continuing per the standing long-run/parallel-capacity execution
+mode — next up: Wave 2 candidate pool (queued in the tracker's own "Wave 2+" section) and/or
+the sparser data packages (`application_system` at 77/1019, program catalogs for
+zero-coverage countries) as background campaigns while foreground work continues.
+
+**Admissions URL batch 7 — 24 next-tier (unranked-tail) universities**: Hyderabad, New
+Brunswick, Hawaiʻi at Mānoa, Nebraska-Lincoln, Tartu, Frankfurt School of Finance &
+Management, Paris Dauphine-PSL, Stavanger, St. Gallen, Delhi, ESSEC, UNEC (Azerbaijan
+State University of Economics), IIUM, Kaohsiung Medical, NSYSU, National Taipei
+University of Technology, NJIT, Taiwan Tech (NTUST), Delaware, Iowa, Kansas, UC Santa
+Cruz, UMBC, Ghana — same domain-restricted-search-then-verify rigor as prior batches.
+National Taiwan Normal University (NTNU) was queued but not reached this batch — genuinely
+not researched, not dropped for cause. Two `application_system` values added under the
+existing country-gated rule (Phase 4): Paris Dauphine → **Parcoursup** (France institution,
+its own page names Parcoursup as the primary route for baccalauréat/EU/prior-French-study
+applicants) and NJIT → **Common App** (US institution, its own page states NJIT is a Common
+App member). Deliberately left `application_system` null for several candidates whose own
+pages named a portal only as one of multiple valid routes (Nebraska-Lincoln, Iowa — both
+"our own application OR Common App") or a system outside the tracked/known list (Delhi's
+CUET, UC Santa Cruz's UC-systemwide application) — consistent with the DCU/SJTU lesson
+that a mentioned system isn't automatically *the* system.
+`admissions_url`: 546 → **570/1019 (55.9%)**, `application_system`: 77 → 79/1019.
+
+**Admissions URL batch 8 — 12 more unranked-tail universities**: Adam Mickiewicz
+University (Poznań), Ain Shams University (Cairo), Ankara Üniversitesi, Anna University,
+Auckland University of Technology, Bar-Ilan University, Ben-Gurion University of the
+Negev, Bina Nusantara University (BINUS), Brno University of Technology, Cairo
+University, Beihang University, Canadian University Dubai — this tier of the corpus (no
+QS rank, weaker web presence, several in non-English-primary domains) is genuinely harder
+to verify than the ranked tier batches 1-7 worked through; stopped at 12 rather than
+padding to a round 20-25, consistent with quality-over-count. `admissions_url`: 570 →
+**582/1019 (57.1%)**.
+
+**Admissions URL batch 9 — 12 more universities**: Dartmouth College (a real, notable
+gap in the earlier ranked batches — its QS-rank join must have missed it, worth a future
+look at why), University of Essex, Goethe-University Frankfurt, École Centrale de Lyon,
+Free University of Bozen-Bolzano, Federal University of Minas Gerais (UFMG), El Colegio
+de México, Hasselt University, Czech University of Life Sciences Prague, DGIST, GIST,
+IIT BHU Varanasi. Four new `application_system` tags under the country-gated rule:
+Dartmouth → Common App (US), Essex → UCAS (UK), Goethe Frankfurt → uni-assist (Germany,
+its own page names uni-assist as the preliminary admissions service for non-German-Abitur
+applicants), École Centrale de Lyon → Parcoursup (France, its BSc Data Science page names
+Parcoursup directly). `admissions_url`: 582 → **594/1019 (58.3%)**, `application_system`:
+79 → 83/1019.
+
+**Wave 2 groups I/J applied (summer programs)**: background agent research (16
+candidates from the tracker's queued pool) returned 7 verified programs; live dedup
+check immediately before insert caught one the agent's own JSONL-only dedup pass
+couldn't see — WPI Frontiers had an exact `official_url` match to an existing row from
+the 2026-08-18 bulk import — so 6 net-new landed: WYSE (UIUC Grainger), Case Western
+Reserve Online Pre-College Program, Wharton "Future of the Business World", Penn
+Medicine Summer Program for HS Students, Idyllwild Arts Summer Program, Boston
+University Tanglewood Institute. Full drop list (9, all with cause) in the tracker.
+Live: 340 total, 235 `summer_program`.
+
+**Admissions URL batch 10 — 12 more universities**: Kingston University London, Johannes
+Kepler University Linz, Julius-Maximilians-Universität Würzburg, Justus-Liebig-University
+Giessen, Karl-Franzens-Universität Graz, Leibniz University Hannover, Linköping
+University, LUMS (Lahore University of Management Sciences), Kyung Hee University,
+Manipal Academy of Higher Education, Martin-Luther-Universität Halle-Wittenberg, Jilin
+University. 4 new `application_system` tags: Kingston → UCAS (UK), and three German
+universities (Würzburg, Hannover, Halle-Wittenberg) → uni-assist, each confirmed by its
+own page explicitly naming uni-assist's VPD (preliminary examination documentation) as
+required for non-EU applicants. `admissions_url`: 594 → **606/1019 (59.5%)**,
+`application_system`: 83 → 87/1019.
+
+**Program catalogue batch 3 — Universiti Sains Malaysia (USM) and IE University, closing
+out two more zero-coverage countries (Malaysia, Spain)**: background agent extended the
+deterministic `extractPrograms()` pipeline with two real fixes to `lib/acquisition/
+programs.ts` — an href entity-decoding bug (USM's Joomla links render `&amp;amp;` in
+query strings, corrupting the `id` param) and a new opt-in `CatalogueRule.
+disableDefaultExcludes` (USM's `/index.php` front-controller URLs were being rejected by
+the pipeline's default `/index` exclude pattern) — both covered by new regression tests.
+61/62 USM programmes extracted (1 legitimately dropped for exceeding the name-length cap)
+and 15/15 IE University programmes extracted cleanly. Tried and dropped this batch (docs
+in `scripts/acquire-programs.ts`'s own header): ANU, University of Navarra (programme
+name lives in a sibling heading, not the anchor text), HSE University (Vue SPA), UKM,
+KFUPM, Yonsei GOSC, Zhejiang ICZU, NTU, IIT Delhi, Prince Sultan, Effat (nav-only or
+per-college, no unified index), UAM (client-rendered), Universitat de Barcelona (403),
+Alfaisal (404). Live dedup re-check before applying caught 9 USM rows the agent had
+already applied directly; the remaining 67 (52 USM + 15 IE) were run back through the
+real `decideIngestion()` logic (not reimplemented by hand) via a throwaway script feeding
+it the live university/existing-program lookup data, then inserted. `university_programs`:
+523 → **599 rows**. One judgment call flagged for visibility, not resolved further: USM's
+own undergraduate index lists "Doctor of Medicine (MD)" and "Doctor of Dental Surgery
+(DDS)" as first-entry-from-school degrees alongside its other bachelor's programmes —
+included under the same catalogue_section evidence as the existing MBBS/MBChB precedent.
+
+**Non-US tuition/cost acquisition — Taiwan and UAE, 9 verified rows**: background agent
+found real official per-institution fee pages for 3 Taiwan universities (National Taiwan
+University, Chang Gung University, National Taipei University of Technology) and 3 UAE
+universities (Khalifa University, Zayed University, United Arab Emirates University),
+writing to `university_profile_metrics` (`tuition_domestic_annual`/`_international_annual`/
+`_per_credit`, in each page's own stated currency — never converted or assumed USD) rather
+than `university_statistics.cost_of_attendance`, correctly following this session's own
+established precedent that column is IPEDS's US-specific all-in concept, not a fit for
+tuition-only non-US figures. Investigated and ruled out (not attempted-and-abandoned) two
+bulk-source candidates: Taiwan's MOE/data.gov.tw only publish national averages, no
+per-institution dataset; the UAE's Commission for Academic Accreditation regulates
+licensure only — tuition is fully institution-set, so there is structurally no government
+rate to find. Real negative results recorded for 8 further institutions whose official
+pages couldn't be fetched (403s, empty JS-rendered pages, PDF-gated), not guessed around.
+New `scripts/acquire-university-statistics-tw.ts`/`-ae.ts`, following the established
+per-country script pattern (skip-if-exists, never overwrite). Data verified live in the
+database (agent had direct Supabase MCP access in its sandbox, same as this session).
+
+**Competitions/research/internship/scholarship batch 2 — 12 net-new**: background agent
+researched 16 candidates; live dedup check before insert caught 4 exact duplicates the
+agent's file-only check couldn't see (Diamond Challenge, John Locke Institute Global Essay
+Prize, Journal of Emerging Investigators, and "Rise" — all matched on `official_url`;
+Boston University's separately-named "RISE (Research in Science and Engineering)" is a
+genuinely different program and was correctly left alone, not merged). 12 net-new landed:
+National Economics Challenge, Scholastic Art & Writing Awards, DECA Competitive Events,
+Science Olympiad (Division C), FIRST Robotics Competition, EUCYS, UK Chemistry Olympiad,
+HOSA Competitive Events, ARML, Nuffield Research Placements, Davidson Fellows Scholarship,
+Türkiye Scholarships. Several records honestly leave fields null with an explicit note
+rather than guess (Nuffield's STEM Learning application portal and Türkiye Scholarships'
+stipend/deadline pages both returned access errors on every fetch attempt). Regeneron STS
+was deliberately not pursued — the agent judged it overwhelmingly likely already covered
+and prioritized avoiding a probable duplicate over hitting a count, the right call given
+no live-DB access from its sandbox to check directly. `opportunities` by category:
+competition 63→**72**, internship 7→**8**, scholarship 7→**9**.
+
+**Admissions URL batch 11 — 12 more universities, crossing 60%**: Multimedia University
+(Malaysia), Northumbria University, O.P. Jindal Global University (India), NUST Islamabad,
+Pusan National University, Radboud University, National Technical University of Athens,
+Prince Sattam Bin Abdulaziz University, Princess Nourah bint Abdulrahman University,
+Pontificia Universidad Católica Argentina, PUC-Rio, Peter the Great St. Petersburg
+Polytechnic University. 2 new `application_system` tags: Northumbria → UCAS (UK),
+Radboud → Studielink (Netherlands, its own page names Studielink as the national
+enrolment system). NTUA's own admissions info for international candidates points
+off-domain to the Greek Ministry of Education's own announcements rather than an
+NTUA-owned application page — recorded its Undergraduate Studies overview page instead,
+the closest genuinely NTUA-owned page to admissions. `admissions_url`: 606 →
+**618/1019 (60.6%)**, `application_system`: 87 → 89/1019.
+
+**Program catalogue batch 4 — Nanyang Technological University, Singapore, 65 new
+programmes**: background agent's worktree turned out to be several commits stale
+(missing batch 2/3 entirely); confirmed via `git merge-base --is-ancestor` it was a
+clean ancestor with no unique commits of its own, fast-forwarded it losslessly before
+starting — a real instance of the worktree-staleness gotcha this campaign has hit
+before, handled correctly rather than risking a lossy merge. NTU's catalogue
+(`ntu.edu.sg/education/degree-programmes`) matched via URL-path evidence
+(`/education/undergraduate-programme/`) since the link text itself carries no degree
+token — the same technique already used for TU Delft and IE University. A real bug
+caught mid-verification: the agent ran a full liveness check on all 66 extracted URLs
+before writing anything and found one of NTU's own published catalogue links 404s live
+(`bachelor-of-accountancy-with-minor-in-strategic-communication`) — excluded from
+`university_programs`, recorded as `outcome='rejected'` with the 404 detail in
+`program_research_queue` rather than silently dropped or force-inserted. This agent had
+Supabase MCP access and used it correctly: pulled a live snapshot of
+`universities`/`entity_aliases`/`entity_external_ids`/`university_programs`, ran the
+real `extractPrograms()`/`decideIngestion()`/`programUrlKey()` logic against it (nothing
+reimplemented), and wrote both the accepted rows and the `program_research_queue` audit
+trail — the more complete provenance path this session's own batch 3 had to skip for
+budget reasons. 16 other candidates tried and dropped this round, grouped by failure
+class in `scripts/acquire-programs.ts`'s own header comment for future sessions: bot-
+protected (McMaster, Alberta, Monash, NUS — rechecked at a fresh URL, still blocked),
+JS-driven finders with no server-rendered links (UBC, Auckland, Adelaide), empty SPA
+shell (Peking University), catalogue is a PDF/Excel attachment not HTML (Shanghai Jiao
+Tong, Fudan), card-grid with no anchor tags (Seoul National University), department-
+subdomain directory not degree names (IIT Bombay), nav-only (KAIST, Korea University),
+genuinely broken 404/private-IP-redirect (University of Delhi). None of the originally-
+targeted zero-coverage countries (China, India, Australia, Japan, Korea, Russia, Saudi
+Arabia, Taiwan) actually resolved this round — every candidate failed cleanly for a
+documented reason; Singapore (NTU) is what landed instead. `university_programs`:
+599 → **664 rows**.
+
+**Admissions URL batch 12 — 12 more universities**: Rochester Institute of Technology,
+Stony Brook University, Ruhr-Universität Bochum, TU Braunschweig, TU Bergakademie
+Freiberg, Sofia University "St. Kliment Ohridski", Taipei Medical University, Symbiosis
+International, SUSTech, South China University of Technology, Saint Joseph University of
+Beirut, Taras Shevchenko National University of Kyiv. 1 new `application_system` tag:
+TU Bergakademie Freiberg → uni-assist (Germany, explicit — "applicants have to apply...
+via uni-assist"). RIT and Stony Brook both name Common App as one of two valid routes
+(RIT: "Common Application or RIT Application"; Stony Brook: "SUNY Application and the
+Common Application") — left `application_system` null for both, consistent with the
+established caution that a mentioned system isn't automatically *the* system unless a
+university's page names it as the sole or clearly primary route.
+`admissions_url`: 618 → **630/1019 (61.8%)**, `application_system`: 89 → 90/1019.
+
+**Wave 3 summer programs applied — 17 net-new**: background agent research (28 UK/Europe
++ US STEM candidates from the tracker's remaining queue) returned 20 verified; live
+dedup check before insert caught 3 exact `official_url` duplicates the agent's file-only
+dedup pass couldn't see (Durham Global Futures, TECHCAMP @ Politecnico di Milano, Warwick
+Pre-University — all already live from earlier waves/imports). 17 net-new landed: St
+Andrews, KCL, Bath "Step into Bath", Sorbonne, FU Berlin SommerUNI, Istanbul Bilgi HS
+Summer School, Terp Young Scholars, Aggie STEM, CU Boulder PCDP, CO School of Mines,
+NHSI Cherubs, Boys State, Vanderbilt PTY, WashU CPP, UVA Emerging Engineers, ASU Barrett
+Summer Scholars, UT Austin WiSTEM. Full 8-item drop list (all with cause) in the
+tracker. Notable research discipline: the agent caught a hallucinated WebSearch claim
+that Istanbul Bilgi University had been "closed by decree," checked it directly against
+the university's own homepage, found it false, and disclaimed it explicitly in that
+record rather than trusting the AI summary. Live: 369 total, 252 `summer_program`.
+
+## Night-research session, 2026-08-21 — program catalogue batch 5 + a live shared-checkout collision found and fixed
+
+**Mandate for this session**: an "ORYN NIGHT RESEARCH" brief (university/program intelligence,
+research-only, explicit "do not write directly to production Supabase" / "do not ingest
+production" constraints — stricter than this doc's own earlier sessions, which wrote straight to
+the live DB via Supabase MCP when it was available). Treated as continuing this exact DATA-A
+lane (same branch), just file-output-only for this stretch rather than apply-to-live. No
+Tavily/Anthropic/Supabase-secret-key credentials in this sandbox either (`check:integrations`:
+all three "Missing credential", only anon-key Supabase + OpenAlex OK) — research done via
+`WebSearch`/`WebFetch`/the Claude Browser pane, matching this doc's own established pattern for
+credential-less sessions.
+
+**Live coverage re-measured (read-only, via Supabase MCP `execute_sql` against
+`qtcvcflzxbuagvvwahhu`) before picking a target, specifically to avoid re-researching ground
+already covered**: `universities` 1019 rows; by country, `university_programs` coverage is
+strikingly low exactly where ORYN's population is largest — **United States 131 universities /
+only 9 with any programs**, **United Kingdom 79 / only 8**. Every other populous country (China
+64/0, India 37/0, Australia 37/0, South Korea 31/0, Japan 22/0, Russia 21/0) is at or near zero
+too, but those are the same countries the programme-catalogue batch 4 note above already
+documented as bot-protected/JS-broken/PDF-only dead ends for a fetch-based approach — re-attempting
+them blind was exactly what that note warned against. US/UK majors pages are comparatively
+fetch-friendly (English, mostly server-rendered or renderable via the Browser pane) and are
+ORYN's largest actual target market, so this session prioritized the highest-QS-ranked, zero-
+program US/UK universities instead: a real, previously-undocumented high-leverage gap, not a
+re-run of an already-explored dead end.
+
+**Program catalogue batch 5 — Caltech, Cornell, Johns Hopkins, University of Chicago, 241
+programs, all QS top-25 or top-100, all previously zero-coverage**:
+`data/research/university-programs/independent_batch5_2026-08-21.jsonl`. Per-university method,
+each fetched and read directly (not search-snippet-only):
+- **Caltech** (26 majors): official Admissions majors/minors listing page, WebFetch asked
+  specifically for anchor hrefs this time (first pass returned names only) — 24 of 26 majors
+  resolved to their own individual page this way (e.g. `.../majors-minors/business-economics-
+  and-management`, spot-verified live and real after a first cross-check against the wrong
+  divisional sub-page wrongly suggested it might not exist). Explicit degree-type letters (BS)
+  are NOT stated anywhere on the fetched page, so `degree_type` is left null rather than
+  asserting the widely-known-but-unconfirmed-on-this-page fact that Caltech awards only the B.S.
+- **Cornell** (81 majors): official Admissions majors listing page — WebFetch extracted a full
+  name + college + individual-URL table directly in one pass, the highest-efficiency source of
+  the batch.
+- **Johns Hopkins** (74: 58 Krieger/Whiting + 16 Peabody): `e-catalogue.jhu.edu`'s interactive
+  program explorer returned HTTP 403/empty to plain WebFetch (the exact "JS-driven, no server-
+  rendered links" failure shape programme-catalogue batch 4 catalogued for other universities) —
+  read successfully via the Claude Browser pane instead (real rendered session), full text
+  extracted (106KB, saved and processed with a small Python filter rather than by hand) and
+  narrowed programmatically to Bachelor's-level entries at Krieger/Whiting/Peabody only (JHU's
+  explorer lists ~400 programs across 10 schools and every degree level unfiltered; graduate/
+  certificate/other-school entries were excluded, not miscounted as majors). No stable individual
+  program URL was captured from the explorer, so `official_program_url` = the catalogue page for
+  every JHU record.
+- **University of Chicago** (60 majors): `collegecatalog.uchicago.edu` (the registrar's own
+  catalog domain) connection-reset on every attempt, plain WebFetch and Browser-pane navigation
+  both — a real, distinct failure shape from the batch-4 list (not bot-protection, not JS, a
+  transport-level failure on that specific host) worth recording so a future pass doesn't retry
+  the same host blind. `collegeadmissions.uchicago.edu/academics/areas-study` (still uchicago.edu,
+  still official_primary) has the same content and worked via the Browser pane. That page tags
+  every program Major/Minor/Specialization/Joint/Interdisciplinary/Careers-in explicitly; only
+  Major-tagged entries were kept — UChicago's own Biological Sciences sub-tracks (Cancer Biology,
+  Immunology, etc.) and Middle Eastern Studies language specializations are real content on the
+  page but are marked Specialization-only there, not independently declarable majors, so counting
+  them as separate programs would have overstated the catalogue relative to UChicago's own
+  classification.
+
+Spot-checked before treating the batch as done (this doc's own established discipline): Cornell's
+"Viticulture and Enology" (unusual-sounding, confirmed real and B.S.-conferring on its own page)
+and Caltech's "Business, Economics, and Management" (first check hit the wrong divisional
+sub-page and looked unconfirmed; a second, correctly-scoped search found the real page and
+resolved it). Not run through `ingest:university-programs` even as a dry run — this sandbox has
+no `SUPABASE_SECRET_KEY` either (confirmed: the script refuses to read or write anything without
+it), so entity-name matching against `universities.name` was instead confirmed directly from the
+same live read-only query above (all four `university_name` strings here are verbatim copies of
+that query's own output, not retyped from memory).
+
+### A live shared-working-directory collision, found and fixed this session
+
+Not a git-history/branch-divergence collision (the kind [[project-oryn-parallel-sessions]] and
+[[feedback-parallel-session-reconciliation]] already document) — a **literal shared filesystem
+working directory**, live, mid-session. This session started in the main checkout (not a
+worktree) on `oryn/programs-pipeline-reconciled` as instructed by its own git state, same as
+apparently every other session's own starting assumption. Mid-session, a cross-session message
+arrived from a `counseling-intelligence` session describing exactly this class of collision on
+its own branch (two sessions both writing `docs/research/counseling-intelligence/*.md` in the
+same directory, one overwriting the other's uncommitted work before either could commit — nothing
+lost, both preserved in separate commits, but actively corrupting each other's in-progress files
+going forward). Checking this session's own state in response found the main checkout's *current
+branch had silently changed* to `oryn/counseling-intelligence-research` mid-session — some other
+session had run `git checkout` in the same shared directory this session was about to commit
+into. `git worktree list` at that point showed **eight** concurrent worktrees/checkouts across
+this one repo (admissions-intelligence, counseling-intelligence-research ×2, integration-2026-08-
+20, night-opportunities-research-2026-08-21, product-ux, programs-opportunities-intel, research-
+turkey-schools) — a large coordinated multi-lane push, not an isolated incident, and this
+session's own branch (`oryn/programs-pipeline-reconciled`) had no dedicated worktree of its own
+yet, meaning it was the one still exposed to the shared main checkout.
+
+Fixed the same way the peer session fixed its own version of this problem: `git worktree add
+.claude/worktrees/programs-pipeline-night oryn/programs-pipeline-reconciled` (confirmed first via
+`git worktree list` that this branch wasn't already checked out anywhere else), then moved this
+session into it. No data was lost — the one file this session had generated before the branch
+switch was untracked and copied out to the session scratchpad as a precaution before touching git
+at all, then copied back into the new worktree. **How to apply, for any future session that lands
+on this branch expecting the main checkout to be safe: check `git worktree list` before trusting
+`git branch --show-current` in this repo right now — the main checkout is being actively
+repurposed by whichever session doesn't yet have its own worktree, so "on branch X" at session
+start is not a durable guarantee for the rest of the session.**
+
+**Program catalogue batch 6 — Manchester, Michigan, Northwestern, UCLA, CMU, Bristol, 591 new**
+(from the isolated worktree onward, `.claude/worktrees/programs-pipeline-night`): continues the
+same US/UK zero-coverage QS-rank list. Full per-university sourcing method and known gaps (partial
+UCLA, Michigan LSA-only) are in that commit's own message rather than duplicated here — see
+`ace81f4`/`12005d3` on this branch. Running total this session: 832 programs across 10 previously-
+zero-coverage universities (`data/research/university-programs/independent_batch5_2026-08-21.jsonl`,
+`independent_batch6_2026-08-21.jsonl`), all file-only per this session's own no-live-write mandate —
+none of it has been ingested or applied anywhere.
+
+**Program catalogue batches 7-9 — UIUC/Glasgow/UCSD (295), Sheffield/UW/Boston University (266),
+Rice/Wisconsin-Madison/St Andrews (379), 940 more, running session total 1,772 across 19
+universities.** Full per-university sourcing method, known gaps, and spot-checks are each in
+their own commit message (`2fed88f`, `e73db2b`, `b22441c`) rather than repeated here. One
+data-quality catch worth flagging beyond the individual commits: a Wisconsin spot-check
+(Dairy Science BS) found a real, catalogued major with admissions already suspended and
+scheduled for discontinuation in 2029 — caught before commit, not after, and the record's
+`researcher_notes` carries the caveat rather than the major being silently presented as open.
+**Universities attempted and dropped this session, with failure shape, so a future pass
+doesn't re-attempt blind**: Duke (`trinity.duke.edu` refused by the fetch tool — domain-
+verification block, not a content problem; try `duke.edu` directly or the Browser pane next
+time), UT Austin (catalog A-Z index mixed majors/minors/certificates without clean structure,
+extraction wasn't trustworthy enough to publish), Durham (course finder is search-only, no
+static A-Z page found even via the Browser pane), Nottingham (course finder paginates 32-of-416
+at a time via the Browser pane, no single-page A-Z view found), Penn State (every candidate URL
+either 404'd or hung), Queen Mary/Southampton/Bath (all three are JS course finders with no
+fetchable static list or A-Z fallback found this session).
+
+**Program catalogue batch 10-11 — Exeter/Georgia Tech/Liverpool (400), Duke/York/UT Austin
+(214), 614 more, running session total 2,386 across 25 universities.** UT Austin's earlier
+"dropped, too messy" verdict (batches 7-9 note above) was revisited with a more targeted
+fetch prompt (constrain to entries with an explicit degree abbreviation) and succeeded well
+enough to publish 119 programs, A-through-Nutrition only -- the earlier drop was the right
+call at the time (that extraction genuinely was untrustworthy), not a case that should have
+been pushed through anyway. Duke's `trinity.duke.edu` block also worked around, via
+`admissions.duke.edu` instead (same domain family, same official_primary tier). Two more
+spot-check catches, same pattern as the Wisconsin Dairy Science one: UT Austin's new "Great
+Books" BA is real and already in the live catalogue with a working URL, but a January 2026
+news article describes it as pending Texas Higher Education Coordinating Board approval for
+a Fall 2027 launch -- caveated, not silently presented as open now. **Newly attempted and
+dropped this round**: UC Davis (every catalog.ucdavis.edu majors URL tried 404'd), Newcastle
+and USC (both paginated JS course finders -- USC alone reports 53 pages with no A-Z static
+fallback), UNC (registrar domains refused/404'd), WashU (majors page is a pure navigation
+shell, no static list). This session's original ~40-university QS-rank target list is now
+25 done, 1 partial-and-dropped (UT Austin, O-Z remaining), and the rest genuinely blocked by
+one of the failure shapes documented across these notes -- diminishing returns on continuing
+to retry the same blocked set, so the next stretch of this session is moving to a different
+lane (opportunities/summer-programs, or new-country spine expansion) rather than a 12th
+programme-catalogue batch against the same handful of stubborn course finders.
+
+**Opportunities Wave 4-5 (this session) — 10 new candidates, research/fellowship/scholarship-
+focused plus regional diversity.** Full detail in `data/research/opportunities/
+wave4_2026-08-21_diverse.jsonl` / `wave5_2026-08-21_thin-categories.jsonl` commit messages
+and `SUMMER_PROGRAMS_350_TRACKER.md`'s own Progress table -- not repeated here since these are
+a different owner's territory (opportunities/`university_requirements`), just noted for
+cross-lane visibility. Same file-only, not-live-applied constraint as the programme-catalogue
+batches.
+
+**Program catalogue batch 12 — Trinity College Dublin + UCD, 181 new, first Ireland
+coverage, running session total 2,567 across 27 universities.** Genuine geographic-breadth
+win after Canada/Australia proved much harder to scrape than UK/US (see batch 10-11 note):
+Ireland uses the same UK-style A-Z-catalogue convention TCD/Liverpool/Sheffield/Manchester
+all had, so the same method transferred directly. Full detail in that commit's own message
+(`3b17eb1`). This confirms a useful heuristic for the rest of the night: try the actual
+academic-catalogue/A-Z-course-list URL pattern first (works well for UK-tradition
+institutions, including former-Commonwealth ones), and don't sink much time into a
+university's flashy marketing "study with us" portal if the catalogue equivalent isn't
+found quickly -- those are reliably JS-only navigation shells with no static list.
+
+**Session resumed 03:22 via scheduled dynamic-loop wakeup (paced ~30min cycles from here,
+per this session's own note above) — worktree/branch verified clean, no drift, before
+continuing.**
+
+**Program catalogue batch 14 — Maynooth + Leicester, 172 new, running session total 2,802
+across 30 universities.** Full method in that commit's own message (`ef7b86e`). Two things
+worth flagging beyond the commit: (1) Maynooth cross-lists the same program under every
+subject heading it touches on its one listing page -- deduped by the university's own
+CAO/MU-Apply code before writing, not by name (several programs share a near-identical
+name across different codes, e.g. multiple "BSC SCIENCE (WITH EDUCATION)" variants); (2) a
+real near-miss caught before it became a mistake: Queen's University Belfast's own "All
+Courses" page turned out to be a Northern-Ireland-wide further-education clearinghouse for
+~7 *other* institutions' HNC/HND/apprenticeship programs, not QUB's own catalogue --
+recognized from the content itself (course rows tagged BMC/NWRC/SERC/etc., not QUB) before
+any row was extracted, so nothing was misattributed to QUB. QUB remains unresearched.
+
+**Program catalogue batch 15 — Loughborough + City St George's, 221 new, running session
+total 3,023 across 32 universities.** Full method in that commit's own message (`0004933`).
+Both confirmed zero-coverage in the live `university_programs` spine (checked live via
+Supabase MCP read-only query before researching, not assumed). One real entity-resolution
+catch worth flagging: the live `universities.name` row is `City St George's, University of
+London` with a **curly right-quote (U+2019)**, not a straight apostrophe -- my first-draft
+batch used the straight-apostrophe ASCII form throughout (matching the source page's own
+HTML, which itself uses straight quotes inconsistently). Caught by querying the live table
+for the exact string before writing the batch, not after -- this codebase's entity linker
+(`lib/acquisition/identity.ts`) is deliberately strict/never-fuzzy, so a byte-mismatched
+apostrophe would have left all 97 City St George's records unlinkable rather than silently
+mis-linking to something else. Fixed with a small script pass over the JSONL before commit,
+not a partial hand-edit. City St George's course-finder page (unlike a flat A-Z list) is a
+faceted search widget, but one that accepts a `num_ranks=100` query param returning all 97
+undergraduate results on a single page with unusually rich structured fields per course
+(UCAS code(s), duration including placement-year variants, school, campus) -- worth trying
+`num_ranks`/`page_size`-style params on other Squiz/Funnelback-powered UK course-finder
+sites before writing one off as JS-only, since this one initially looked like the same
+paginated-search dead end as USC/Newcastle/Queen Mary/Bath/Southampton (batch 10-11 note
+above) until that param was found. **Two new dead ends this round, same UK-course-finder
+failure family as Durham/Nottingham/Kent**: Royal Holloway's A-Z course page renders
+exactly 3 placeholder example courses no matter what (cookie-accepted, scrolled, or not) --
+inspected the DOM directly and found the A-Z letter links themselves are present but
+zero-size/off-canvas (uninteractable), meaning the real course list never actually mounts
+under this tooling, not just a pagination/lazy-load issue. University of Reading has no
+static undergraduate list at all, only a "choose a subject" dropdown-driven course finder
+(`/ready-to-study/study/undergraduate-study`) -- the site's own `/A-Z/az.aspx` is a general
+site-map A-Z (departments/services), not a course catalogue, despite the name suggesting
+otherwise. Kent was not attempted this round (already flagged low-confidence pre-fetch: its
+best candidate URL is a dated-2019 `/search` path, matching the known stale-search-tool
+shape rather than a real listing).
+
+**Program catalogue batch 16 — University of Galway + University College Cork, 126 new,
+running session total 3,149 across 34 universities.** Full method in that commit's own
+message (`1e06a65`). Third and fourth Irish universities this session (after TCD/UCD and
+Maynooth/DCU) — Ireland continues to be the highest-ROI geography found so far: both
+fetched cleanly via plain WebFetch on the first or second try, no Cloudflare/Browser-pane
+detour needed, and both listing pages carry official CAO codes inline (captured in
+parentheses in `program_name`, matching the Maynooth/TCD convention already established).
+One data anomaly caught and disclosed rather than silently normalized: UCC's own course
+page lists "Biomedical Science" under an `MT`-prefixed code (`MT871`) rather than UCC's own
+`CK` prefix — `MT` is Munster Technological University's CAO prefix, so this is very likely
+a jointly-delivered UCC/MTU program appearing on UCC's page; published exactly as shown on
+the source with a `researcher_notes` flag rather than guessed-and-corrected or dropped. Two
+spot-checks against independent third-party sources (Qualifax/CareersPortal for Galway's
+GY504 Podiatric Medicine, a direct UCC per-course page for CK411 Data Science and AI) both
+confirmed the batch's codes and titles exactly. Remaining untried major Irish institutions:
+University of Limerick, Technological University Dublin, Dublin Business School — a
+reasonable next Ireland round if this lane continues.
+
+**Program catalogue batch 17 — University of Limerick + Technological University Dublin,
+301 new, running session total 3,450 across 36 universities.** Full method in that commit's
+own message (`30b008f`). Fifth and sixth Irish universities this session. UL's older
+`/courses/alphabetical-list-courses` URL (found via web search, looked like the obvious
+candidate) turned out to be a genuinely dead page -- confirmed via both a WebFetch 403 AND
+the same "Page not available" render in the Browser pane, so not a bot-block worth working
+around, just a stale/removed URL; the live course-search tool at `/study/search?type
+[undergraduate]=undergraduate` was used instead (101 results, paginated 10/page, plain
+`page=N` query param, no bulk page-size override found this time unlike City St George's
+`num_ranks` trick). One UL data nuance disclosed rather than silently resolved: 15 of the
+101 entries (Economics, English, French, Psychology, etc.) carry no degree-award suffix on
+the source page, unlike the other 86 which show "- BA"/"- BSc"/etc. -- these are UL's Arts/
+joint-honours subject options, and the source page lists "Psychology" (no suffix) as a
+separate card from "Psychology - BSc" (a distinctly named, separate standalone degree) --
+kept as two separate program_name values exactly as the university itself distinguishes
+them, not merged. TU Dublin's A-Z page fetched cleanly via plain WebFetch, 200 entries, all
+carrying TU-prefixed CAO codes -- many subjects (Business, Mechanical Engineering, etc.)
+repeat under multiple distinct codes, which is TU Dublin's real CAO structure (different
+campus/entry-route/honours-level options), not a scraping duplicate, so every code was kept
+as its own record per this session's established CAO-code-is-the-identity rule. Two
+spot-checks (UL's Undergraduate Entry Medicine BMBS against the university's own dedicated
+page, TU Dublin's TU850 Data Science and AI against a CareersPortal/CAO third-party listing)
+both confirmed accurate. Noted in passing, not acted on: search results surfaced two
+non-`tudublin.ie` domains (`universitytechnologydublin.ie`, `technologicaluniversityofdublin.ie`)
+both claiming to mirror the same A-Z course page -- this batch's own source was exclusively
+the official `tudublin.ie` domain throughout, so this doesn't affect the data quality here,
+just flagging the existence of apparent unofficial mirror/aggregator domains for awareness
+if a future pass encounters them and needs to judge source authority.
+
+**Program catalogue batch 18 — Istanbul Technical University + Yildiz Technical University,
+88 new, running session total 3,538 across 38 universities.** Full method in that commit's
+own message (`6d9f520`). First Turkey Layer-2 (program-catalogue) work this session --
+Turkey is one of AGENTS.md's explicitly named v1-priority geographies, and until this batch
+the only Turkey-related output was a Layer-1 new-institution candidate list (4 ROR-verified
+universities not yet in the spine, see `data/research/universities/new-institution-
+candidates_2026-08-21.json`, still not ingested). Checked the live spine first (read-only
+query): 6 Turkish universities at 0 programs, 6 more at exactly 4 programs each (a thin
+pre-existing starter set, not a full catalogue) -- picked the two largest zero-coverage
+technical universities (ITU, YTU) as the highest-value target rather than the already-
+4-seeded ones. Both sourced from each university's own official "all
+departments"/"academic units" page rather than a program-search tool (neither seems to have
+one in the UK/Ireland A-Z sense) -- smaller yields (45/43 departments) than a UK-style A-Z
+catalogue but still official-primary and structurally complete for each institution's own
+department list. A real language-of-instruction judgment call, disclosed rather than
+guessed: Turkish top technical universities commonly run a partial English-medium track
+alongside the Turkish-medium default (confirmed live for ITU's AI/Data Engineering program
+specifically, via YOK Atlas -- Turkey's official national admissions database -- showing an
+"(İngilizce)" / English-medium listing distinct from the Turkish-medium one), but neither
+source page used for this batch marks language per-department, so `language_of_instruction`
+was deliberately written as a hedged, explicit-uncertainty string rather than asserting
+either "Turkish" or "English" outright for any record -- consistent with this session's
+"leave unknown rather than guess" rule. ITU's names were kept in Turkish (the university's
+own official department nomenclature); YTU's own English-language site section provided
+official English names directly, no translation needed. Two spot-checks (both universities'
+"Artificial Intelligence and Data Engineering" departments, chosen since both are newer
+additions worth confirming aren't fabricated) found active, real, dedicated department
+websites for both. Remaining Turkey gaps: the 6 four-program-seeded universities (Bilkent,
+Boğaziçi, Koç, METU, Özyeğin, Sabancı -- likely all have official catalogue pages, English-
+medium being much more standard at these particular institutions) and the other 4
+zero-coverage ones (Ankara Üniversitesi, Gebze Technical University, Hacettepe University,
+Istanbul University) are a reasonable next Turkey round.
+
+**Program catalogue batch 19 — Hacettepe University, 99 new, running session total 3,637
+across 39 universities.** Full method in that commit's own message (`914de4a`). Third Turkey
+batch, same round. Hacettepe's own official lisans/onlisans page turned out to be by far the
+richest single-fetch yield of the three Turkey universities done so far (99 bachelor's-level
+programs in one clean fetch, vs. 45/43 for ITU/YTU's department-only pages) -- it lists full
+program names directly rather than just department/faculty names, and cleanly separates
+bachelor's (lisans) from associate/vocational (onlisans) sections. The onlisans section
+(Meslek Yuksekokulu 2-year vocational programs across 4 schools) was deliberately excluded
+from this batch -- a real, structurally different degree_level from what a competitive-
+university-bound high-school audience needs, matching this session's "don't force a
+different-shaped thing into today's record schema" discipline rather than silently
+mislabeling it bachelor's-level. Two genuine English-medium-vs-Turkish-medium program pairs
+found (Iktisat/Iktisat (Ingilizce), Tip/Tip (Ingilizce)) -- kept as 4 separate records per
+the source's own distinction, not merged with a language note, since these are separately
+YOK-Atlas-listed admission programs with different score cutoffs. Spot-check: Tip (Ingilizce)
+verified via YOK Atlas (Turkey's official national admissions database) as real and in fact
+the single highest-scoring program at the entire university in the 2025 cycle. **Istanbul
+University attempted and dropped this round**: unlike ITU/YTU/Hacettepe, it has no single
+master department-list page found -- its own `tercihim.istanbul.edu.tr` "choose your
+program" portal only surfaces faculty names with no program-level detail, and each faculty
+(literature, economics, political science, etc.) publishes its own separate departments page
+under a different subdomain, meaning a full catalogue would need an ~18-page per-faculty
+crawl. Not attempted at that cost this round -- documented as a real, specific gap (not
+silently skipped) for a future pass that wants to invest the per-faculty crawl time. Turkey
+now: 3 of 6 previously-zero-coverage universities done (ITU, YTU, Hacettepe); Ankara
+Üniversitesi, Gebze Technical University, and Istanbul University (crawl-cost gap, see
+above) remain, plus the 6 four-program-seeded ones noted above.
+
+**Program catalogue batch 20 — Middle East Technical University (METU), deepened, 53 new,
+running session total 3,690 across 39 universities (METU itself already counted, so the
+university total doesn't increment).** Full method in that commit's own message (`0e88b58`).
+**A real, worth-flagging discovery**: the 6 "four-program" Turkish universities noted above
+(Bilkent, Boğaziçi, Koç, METU, Özyeğin, Sabancı) turn out to carry the *identical* 4 program
+names (Business Administration/Economics/Computer Engineering/Industrial Engineering, or a
+close variant) applied uniformly across all 6 -- confirmed live via a direct query listing
+every program row for all 6 -- meaning this is very likely a placeholder/generic fixture
+from an earlier pass, not 6 independent rounds of real per-university research. Not
+something this session can fix retroactively (no visibility into how/when that seed was
+written), but worth surfacing clearly: **the other 5 (Bilkent, Boğaziçi, Koç, Özyeğin,
+Sabancı) likely have the exact same thin-seed situation and are strong candidates for the
+same deepen-don't-duplicate treatment** applied to METU here, probably the single highest-
+leverage next move in the Turkey lane (real per-university depth behind an already-plausible-
+looking but generic 4-row placeholder is a worse trap than a visibly-empty zero-coverage
+university, since it doesn't surface as an obvious gap in a coverage report).
+Method used for METU, reusable for the other 5: query live DB for that university's exact
+existing program names first, fetch the official catalogue, exclude any exact-name overlap
+rather than re-adding or overwriting, disambiguate any real same-name-different-campus
+pairs (METU's Northern Cyprus campus needed this -- 15 programs, several sharing a subject
+name with an Ankara-campus program but genuinely separately administered and admitted,
+disambiguated as "X (METU Northern Cyprus Campus)" in `program_name` itself rather than
+relying on the `campus` field alone to prevent an apparent-duplicate read). METU is 100%
+English-medium as an institutional fact (unlike ITU/YTU/Hacettepe, no per-program language
+hedging needed). Includes 3 real METU-SUNY (Binghamton/New Paltz) dual-diploma joint
+programs, confirmed real via Binghamton University's own site. Two spot-checks (the SUNY
+Binghamton dual-diploma program; Cyprus's Guidance and Psychological Counseling, which its
+own department site confirms is *the only* METU program in that field anywhere --
+independently validating that the Cyprus-campus disambiguation was substantively correct,
+not just a defensive precaution) both confirmed accurate.
+
+**Program catalogue batch 21 — Boğaziçi University, deepened, 26 new, running session total
+3,716 across 39 universities.** Full method in that commit's own message (`ad57989`). Second
+application of the batch-20 fix, same 4-name-overlap check-then-exclude method (confirmed
+live first: Boğaziçi's existing 4 seed rows are Computer Engineering/Economics/Industrial
+Engineering/Management, same generic template, excluded here too). 100% English-medium
+institutional fact, same as METU. **Faculty of Communication left as an explicit gap this
+round** -- the source page names the faculty but gives no sub-department list, and targeted
+follow-up search didn't surface one either (unlike Hacettepe/batch 19's single-program law/
+medicine/pharmacy faculties, which are a well-established norm safe to infer, guessing at how
+a communication faculty subdivides carries real risk of inventing wrong department names) --
+'Law' was still included as a single program under Faculty of Law, matching that safer,
+well-established single-program-faculty pattern. One real, disclosed provenance finding from
+a spot-check: Boğaziçi's own site names the Tourism Administration department's faculty
+inconsistently across pages ("Faculty of Managerial Sciences" on its own dedicated page vs.
+"Faculty of Economics and Administrative Sciences" on the general listing page this batch
+was sourced from) -- almost certainly an unreflected internal rename, patched into that one
+record's notes as a caveat rather than silently reconciled one way or the other. **Remaining
+same-pattern deepening targets**: Bilkent, Koç, Özyeğin, Sabancı (the other 4 of the original
+6 four-program-seeded Turkish universities) are still open — same method should transfer
+directly.
+
+**Program catalogue batch 22 — Bilkent University + Koç University, deepened, 47 new,
+running session total 3,763 across 39 universities.** Full method in that commit's own
+message (`1537194`). Third and fourth applications of the batch-20 fix; only Özyeğin and
+Sabancı remain of the original 6 thin-seeded Turkish universities. Both 100% English-medium.
+A concrete methodology reminder surfaced this round: an initial WebSearch summary of
+Bilkent's own official faculties page silently omitted 3 real items (Educational Sciences,
+the entire Faculty of Law, the entire Faculty of Music and Performing Arts) that the direct
+WebFetch of the same URL caught -- would have under-counted a real institution's catalogue
+by 9 programs (Law, Music, Performing Arts, Educational Sciences) had the search summary
+been trusted instead of fetching the primary page directly, which is what this session has
+consistently done anyway but worth a concrete example in the record. Koç's own official
+page gave degree_type inline (BA/BSc/LLB/MD) directly rather than needing inference, richer
+than any other Turkey batch so far. Two spot-checks (Bilkent's Urban Design and Landscape
+Architecture -- confirmed as literally Turkey's first program of its kind, established 1991;
+Koç's Archaeology and History of Art) both confirmed accurate. **Turkey status**: 5 of the
+original 6 thin-seeded universities now deepened (METU, Boğaziçi, Bilkent, Koç; Özyeğin and
+Sabancı remain); Layer-2 zero-coverage-to-researched: ITU, YTU, Hacettepe (Ankara
+Üniversitesi, Gebze Technical University, Istanbul University still zero-coverage).
+
+**Program catalogue batch 23 — Özyeğin University + Sabancı University, deepened, 28 new,
+running session total 3,791 across 39 universities.** Full method in that commit's own
+message (`644b0d2`). Fifth and sixth (final) applications of the batch-20 fix — **all 6 of
+the originally-identified thin-generic-seed Turkish universities (METU, Boğaziçi, Bilkent,
+Koç, Özyeğin, Sabancı) are now deepened with real per-university catalogue data**, closing
+out the finding from batch 20. Two things worth flagging for the pattern's general lesson,
+not just this pair: (1) Özyeğin's pre-existing 4-seed set was genuinely *different* from the
+other 5 (Entrepreneurship/Economics/Business Administration/Computer Science, not the more
+common Business Administration/Economics/Computer Engineering/Industrial Engineering
+template) — checked live rather than assumed identical, a reminder that "looks like the same
+placeholder pattern" still needs a per-instance live check before writing an exclude-list;
+(2) Sabancı's real program list needed following two hops through gateway/FAQ pages before
+reaching the authoritative source (`iro.sabanciuniv.edu/en/all-bachelors-programs`) — the
+university's own "Explore Majors" marketing page and its IRO FAQ page both looked plausible
+but weren't the actual list, each just pointing further inward. One real discrepancy
+disclosed rather than silently resolved: an earlier, shallower Sabancı page's search summary
+claimed a "Cultural Studies" program exists, but the authoritative all-programs page doesn't
+list it — not included in this batch, flagged as an open question for a future pass with
+more time to resolve it directly (track-within-a-major? discontinued? summary error?) rather
+than guessed either way. Both spot-checks (Özyeğin's AABI-accredited Professional Flight
+program — first of its kind in Turkey/Europe; Sabancı's Materials Science and Nano
+Engineering) confirmed accurate. **Turkey status, end of this stretch**: 9 universities with
+real Layer-2 depth (ITU, YTU, Hacettepe zero-to-researched; METU, Boğaziçi, Bilkent, Koç,
+Özyeğin, Sabancı thin-seed-to-deepened). Remaining Turkey gaps: Ankara Üniversitesi, Gebze
+Technical University, Istanbul University (all still zero-coverage; Istanbul University
+specifically needs an ~18-page per-faculty crawl, see batch 19 note above) — a reasonable
+next Turkey round, or a pivot to a new geography given Turkey has now had a sustained,
+productive stretch this session.
+
+**Program catalogue batch 24 — Utrecht University + Leiden University, 83 new, running
+session total 3,874 across 41 universities. First Netherlands batch this session.** Full
+method in that commit's own message (`3222f34`). Netherlands is a named AGENTS.md priority
+country untouched until now. Checked the live spine first: 7 Dutch universities at 0
+programs, 5 more at exactly 4 -- but unlike Turkey, each of those 5 universities' existing 4
+programs are genuinely distinct per-institution (Delft's 15, Eindhoven's 4, Erasmus's 4,
+Tilburg's 4, UvA's 4, Groningen's 4 are all different, real-looking sets, not one template
+copy-pasted 6 times) -- this looks like real-but-thin prior research, not the Turkey-style
+placeholder fixture, so the zero-coverage universities were the cleaner, simpler target this
+round rather than another deepen-and-exclude pass. Utrecht's official page is deliberately
+scoped to its English-taught programmes only (13, matching an independent web-search
+citation of "12 English-taught") -- a genuine, disclosed scope match to ORYN's international-
+student audience, not an incomplete fetch. Leiden needed the by-now-familiar landing-page-to-
+real-list trail (its 'Bachelors' page is pure marketing copy; the real list lives at
+`/en/education/study-programmes?type=bachelor`, paginated 20/20/20/10 across 4 pages, via
+Browser pane after a plain WebFetch on the landing page surfaced only 2 program names in
+passing text).
+
+**A real, important correction made before this batch was committed, not discovered after**:
+this batch's working assumption was that an English program name on Leiden's own
+English-language international site implies English-medium teaching. A spot-check of
+'Cybersecurity & Cybercrime (BSc)' -- chosen for being a newer, distinctive program worth
+confirming isn't fabricated -- surfaced independent reporting that it is in fact a
+**Dutch-taught** programme, launched Dutch-medium in September 2025, despite its fully
+English name and its normal-looking listing on the English-facing site. This falsified the
+batch's blanket assumption: the site evidently lists Dutch- and English-taught programmes
+alike under English names for prospective-international-student browsing purposes, and an
+English name alone is not a reliable teaching-language signal on this specific page. Rather
+than let the one caught case stand as an isolated fix, `language_of_instruction` was
+corrected to an explicit hedged/unknown value across **all 69 affected Leiden records**
+(everything except the one program that was already hedged for an unrelated reason -- its
+Dutch-language name), via a small patch script over the already-generated JSONL, before the
+commit. **General lesson for any future non-English-speaking-country batch**: an English
+program *name* on a university's own English-facing international site is not evidence of
+English medium of instruction -- that requires either an explicit per-program language
+marker on the source page itself, or an independent citation, neither of which this batch's
+Leiden source page provided.
+
+**Program catalogue batch 25 — Radboud University, 52 new, running session total 3,926
+across 42 universities.** Full method in that commit's own message (`9d3f66e`). Second
+Netherlands batch. Directly applies the batch-24 lesson: Radboud's own page states language
+of instruction explicitly per program, so this batch used that directly rather than
+inferring from program-name language — the reliable version of what Leiden's page couldn't
+provide. Two spot-checks (Human Neuroscience, Islam Politics and Society) both independently
+confirmed real AND confirmed Dutch-taught, exactly matching the source page's own markers —
+good validation that this page's per-program language field is trustworthy, unlike Leiden's.
+**VU Amsterdam attempted and dropped this round**: a new failure shape, distinct from every
+prior UK/Ireland/Turkey blocker — its programme list is a virtualized/lazy-rendered
+component that only ever mounts 10 of its stated 29 cards in the DOM (confirmed via direct
+`innerText.length` inspection before and after scrolling, clicking, and waiting — none
+triggered more cards to render under this session's Browser-pane tooling), with no working
+pagination query param, load-more button, or embedded JSON data island found to retrieve the
+rest. Publishing a knowingly-partial 10-of-29 catalogue was rejected as inconsistent with
+this session's data-quality bar; dropped entirely and documented here as a specific, named
+blocker (not a vague "JS-heavy site" catch-all) so a future session with different tooling
+(a true headless browser capable of firing real intermediate scroll/intersection events)
+knows exactly what to try. **Netherlands remaining**: Maastricht, Twente, VU Amsterdam
+(blocked, see above), Wageningen still zero-coverage.
+
+**Program catalogue batch 27 — University of Twente + Wageningen University & Research, 39
+new, running session total 3,992 across 45 universities.** Full method in that commit's own
+message (`77f1923`). Fourth and fifth Netherlands batches, closing out all 6 of this
+session's originally-identified zero-coverage Dutch universities that turned out tractable
+(Utrecht, Leiden, Radboud, Maastricht, Twente, Wageningen — VU Amsterdam remains separately
+blocked, see batch 25). Wageningen's page gives an explicit per-program language tag for all
+20 (same reliable Radboud/Maastricht shape); UT's page gives none, so this batch applied the
+Leiden-batch-24 lesson properly: only claimed a language for the 4 programs with independent
+confirming evidence, left the other 15 explicitly hedged rather than guessed. One good
+example of a spot-check actively improving data quality rather than just verifying it: UT's
+'Creative Technology' was hedged going in, but its spot-check turned up clear independent
+confirmation of full English-medium teaching — upgraded from hedge to confirmed English
+before commit, rather than leaving stale uncertainty once better evidence existed. Second
+spot-check (Wageningen's Bos- en Natuurbeheer) confirmed real and Dutch-taught, matching the
+source page's own tag exactly. **Netherlands status, end of this stretch**: 6 of 7
+originally zero-coverage universities now have real Layer-2 depth; VU Amsterdam remains the
+one specific, documented blocker (virtualized program list). A reasonable next Netherlands
+step would be deepening the 5 four/fifteen-program thin-seed universities noted at the start
+of this Netherlands stretch (Eindhoven, Erasmus, Tilburg, UvA, Groningen, Delft) — unlike
+Turkey's identical-template pattern, these looked like genuine distinct per-institution
+research, so each would need its own real fetch rather than a single reusable exclude-list,
+more like the Netherlands zero-coverage work just completed than the Turkey deepening arc.
+
+**Program catalogue batch 28 — KIT, Karlsruhe Institute of Technology, 45 new, running
+session total 4,037 across 46 universities. First Germany batch this session.** Full method
+in that commit's own message (`85947bb`). Germany is a named AGENTS.md priority country
+untouched until now. Strong, unusually well-evidenced language-of-instruction resolution:
+KIT's own official "Degree Programs Taught in English" page lists 23 English-medium
+programs, every one of them Master's-level -- zero Bachelor's programs appear on it at all.
+Rather than leave every record hedged (this session's default when no per-program tag
+exists, per the Leiden/UT precedent), this specific negative evidence supported a positive
+claim: KIT's bachelor's-level programs are German-medium by default, recorded as such for
+44 of 45 records. The 45th, 'Mechanical Engineering (International) B.Sc.', was one of this
+batch's own spot-checks and turned out to be the deliberate, named exception -- run by KIT's
+Carl Benz School specifically for non-German-speaking international students (SAT/TOEFL/
+IELTS admission) -- confirmed and recorded as English-medium. **General lesson**: absence
+from an official 'taught in English' list is itself usable evidence when that list is
+comprehensive and the absence is total (all 45 Bachelor's programs, not a handful), distinct
+from a page that simply doesn't address language at all (Leiden, UT) where no such inference
+is available. Second spot-check (Food Chemistry B.Sc.) confirmed real.
+
+**Program catalogue batch 26 — Maastricht University, 27 new, running session total 3,953
+across 43 universities.** Full method in that commit's own message (`8b44ec7`). Third
+Netherlands batch. Same Browser-pane-with-working-pagination pattern as most of this
+session's JS-heavy listings (plain `?page=N`, not virtualized like VU Amsterdam turned out
+to be). Source page gives an explicit per-program language tag, same reliable shape as
+Radboud (batch 25) -- and this page usefully demonstrates the tag can be trusted even when
+Dutch- and English-medium programs are mixed together on one international-facing English
+listing (Fiscaal Recht/Health Sciences/Medicine/Rechtsgeleerdheid are Dutch-medium, sitting
+directly alongside 23 English-medium programs on the same page) -- the presence of an
+explicit tag is what matters, not whether the page is "an English page" in general (which is
+exactly the assumption that failed for Leiden in batch 24). Two spot-checks (Fiscaal Recht,
+Circular Engineering) both confirmed real. **Netherlands status**: 4 of 7 originally
+zero-coverage universities now researched (Utrecht, Leiden, Radboud, Maastricht); Twente and
+Wageningen remain straightforwardly open, VU Amsterdam remains blocked (see batch 25 note).
+
+**Editorial note added at session close, 2026-08-21 ~09:59 Istanbul**: batches 27 and 28's
+entries (Twente/Wageningen and KIT respectively) landed earlier in this file than this batch
+26 paragraph, out of true chronological order -- an `Edit` old_string match landed on an
+earlier occurrence of similar closing text than intended while appending under real time
+pressure. Content in every entry is accurate and self-contained (each names its own batch
+number and running total), and this file's own header already states it should be read
+top-to-bottom for current state rather than treated as a strict chronological log -- so this
+is a real but cosmetic ordering imperfection, not a correctness problem. Flagging rather than
+silently leaving it for a future reader to puzzle over, and not risking a rushed reordering
+attempt with the session's remaining time better spent on the closing summary below.
+
+## SESSION CLOSE — 2026-08-21, ORYN Night Research (university-programs lane)
+
+Work began the prior evening and ran continuously via a self-paced `/loop` dynamic-wakeup
+cycle (~25-40min between rounds) until this stopping point approaching the 11:00 Istanbul
+deadline set by the standing research brief. Full batch-by-batch detail is in the dated
+entries above (batches 1-4 predate this run, from 2026-08-18; batches 5-28 are this run,
+all dated 2026-08-21) and in each batch's own commit message — this section is the
+brief-mandated closing summary: exact verified counts and remaining gaps.
+
+**Exact counts (independently recomputed from the actual JSONL files on disk, not carried
+forward from memory)**:
+- **4,048 program records** across **25 batch files** (`independent_batch5_2026-08-21.jsonl`
+  through `independent_batch29_2026-08-21.jsonl`), covering **53 distinct universities**
+  in **6 countries**: United Kingdom (1,366 records / 11 universities), United States (1,339
+  / 17 — all from before this file's own mid-session compaction boundary, batches 5-9),
+  Ireland (745 / 8), Turkey (341 / 9), Netherlands (212 / 7 — batch 29, Eindhoven University
+  of Technology deepened, landed after this summary was first drafted), Germany (45 / 1).
+- Plus **16 records** in 4 earlier files (`independent_batch1` through `batch4`,
+  2026-08-18) from a prior session — not part of tonight's count but present in the same
+  `data/research/university-programs/` directory.
+- **10 opportunity records** this session: `data/research/opportunities/
+  wave4_2026-08-21_diverse.jsonl` (7) and `wave5_2026-08-21_thin-categories.jsonl` (3).
+- **4 Layer-1 university-spine candidates** (new institutions, not yet in the live spine):
+  `data/research/universities/new-institution-candidates_2026-08-21.json` — Kadir Has
+  University, MEF University, Istanbul Bilgi University, Marmara University, all four
+  ROR-verified live against `api.ror.org` before proposing.
+- Every batch file individually validated before commit (no missing required fields, no
+  duplicate `research_program_id`s, no accidental duplicate `program_name`s within a
+  batch) and spot-checked (2 programs per batch minimum, against independent sources)
+  before being committed. Several spot-checks surfaced and fixed real issues before
+  publishing rather than after (see below) — this was a working discipline, not a
+  formality.
+- All work is research-data-only: no production code, no migrations, no direct writes to
+  production Supabase, matching the brief's explicit constraint throughout. Everything
+  landed as committed, pushed JSONL/JSON files on `oryn/programs-pipeline-reconciled`,
+  now at `a2dc598` (plus this closing doc commit).
+
+**Real corrections and findings this run** (the session's actual value-add beyond raw
+volume, in chronological order):
+1. Caught a fabricated CAO code before it was published (Maynooth, pre-batch-15 — see
+   earlier entries) and a UT Austin extraction that was too messy to trust (dropped, later
+   redone properly).
+2. Wisconsin's Dairy Science BS (suspended admissions) and UT Austin's Great Books BA
+   (pending regulatory approval) — both real, catalogued programs with a live status
+   caveat, patched into their records rather than presented as straightforwardly open.
+3. **The Turkey generic-seed discovery (batch 20)**: 6 prestigious Turkish universities
+   (Bilkent, Boğaziçi, Koç, METU, Özyeğin, Sabancı) all carried an identical-looking
+   4-program placeholder from an earlier pass, not real per-university research — found by
+   directly querying the live DB before starting, not assumed. Fixed all 6 with a
+   deepen-don't-duplicate method (check exact existing names live, exclude them, add
+   everything else) — 314 new, correctly non-duplicate records across batches 20-23.
+4. **Entity-resolution catch (batch 15)**: the live DB's own `City St George's, University
+   of London` uses a curly right-quote (U+2019), not the ASCII apostrophe this batch
+   initially used — caught by querying the exact live string before writing, fixed with a
+   script pass over the whole batch rather than a partial hand-edit. A byte-mismatched
+   apostrophe would have made all 97 records unlinkable under this codebase's deliberately
+   strict, never-fuzzy entity linker.
+5. **Leiden language-of-instruction correction (batch 24)**: this session's most important
+   methodology finding. Initially assumed an English program name on a university's own
+   English-language international site implies English-medium teaching. A spot-check of
+   'Cybersecurity & Cybercrime (BSc)' found it is actually Dutch-taught — the site lists
+   Dutch- and English-taught programmes alike under English names for browsing purposes.
+   Corrected `language_of_instruction` to an explicit hedge for all 69 affected records
+   before commit, and applied the lesson forward for the rest of the night: only assert a
+   language when the source page gives an explicit per-program marker (Radboud, Maastricht,
+   Wageningen, KIT's negative-evidence case) or independent per-program confirmation
+   (several individual spot-check upgrades, e.g. UT's Creative Technology, KIT's Mechanical
+   Engineering International) — otherwise leave it an honest, explicit unknown rather than
+   guess. This shows up as unusually verbose `language_of_instruction` strings throughout
+   the Netherlands/Germany batches by design, not by accident — each one carries its own
+   evidence trail rather than a bare "English"/"Dutch" value asserted on faith.
+6. Caught (before extraction) that Queen's University Belfast's "All Courses" page was
+   actually a Northern-Ireland-wide further-education clearinghouse for ~7 other
+   institutions, not QUB's own catalogue — nothing misattributed. QUB itself remains
+   unresearched.
+7. Royal Holloway's A-Z course list is a genuinely inert JS widget (letter links present in
+   the DOM but zero-size/off-canvas, page renders only 3 placeholder courses no matter
+   what) — a new, more specific failure shape than the already-known "paginated JS course
+   finder" pattern, worth distinguishing for a future session's tooling choices.
+8. VU Amsterdam's programme list is virtualized (only 10 of 29 cards ever mount in the DOM
+   under this session's Browser-pane tooling, no working pagination/load-more/data-island
+   found) — dropped rather than publishing a knowingly-partial 10-of-29 catalogue.
+
+**Geographic breadth achieved this run**: started the run already having exhausted an
+initial ~30-40 US/UK QS-ranked target list (batches 5-11, carried in from before this run's
+own start); this run's own new geographic ground was Ireland (8 universities, the most
+tractable geography found — official CAO-coded A-Z catalogues fetch cleanly via plain
+WebFetch almost every time), Turkey (9 universities, including fixing the 6-university
+generic-seed problem), Netherlands (6 of 7 originally-zero-coverage universities), and
+Germany (1 university, KIT — the last research act of the night, with an unusually strong
+language-of-instruction resolution via negative evidence from KIT's own English-programs
+list).
+
+**Remaining research gaps, named specifically so a future session doesn't re-attempt
+blind**:
+- **Turkey**: Ankara Üniversitesi, Gebze Technical University genuinely untried; Istanbul
+  University tried and dropped (no single master department list, would need an ~18-page
+  per-faculty crawl).
+- **Netherlands**: VU Amsterdam blocked (virtualized list, see above). Eindhoven was
+  deepened in the closing minutes of this run (batch 29, 11 new — but with only 1
+  spot-check and a blanket language-of-instruction hedge rather than this session's usual
+  bar, both disclosed in that batch's own commit/notes; worth a follow-up spot-check pass).
+  Delft (15 real existing programs), Erasmus, Tilburg, University of Amsterdam, and
+  Groningen still carry only their original small, real-but-thin program sets (4-15 each,
+  genuinely distinct per-institution research, NOT the Turkey-style copy-paste problem) —
+  a reasonable deepening target using the same method just applied to Eindhoven.
+- **Germany**: only KIT done. Freie Universität Berlin (87-119 bachelor's programs with a
+  complex mono-/combination-bachelor structure) and RWTH Aachen (190 total programs across
+  all degree levels, English official page exists at `rwth-aachen.de/.../liste-aktuelle-
+  studiengaenge/` but is large and mixes Bachelor's/Master's/teacher-training-state-exam
+  entries) were both scouted in the closing minutes of this run and deliberately not
+  attempted — genuinely too large to complete accurately in the remaining time rather than
+  rushed. Almost the entirety of Germany's ~400 universities remain untouched.
+- **UK**: Royal Holloway (inert JS widget, see above), University of Reading (dropdown-only
+  course finder, no static list), Kent (stale/search-tool URL, not attempted), Durham,
+  Nottingham, Queen Mary, Bath, Southampton (all paginated JS course finders with no A-Z
+  static fallback, from before this run's own start but still open), Queen's University
+  Belfast (near-miss caught, still unresearched).
+- **US**: UC Davis, Newcastle, USC, UNC, WashU, Penn State (various fetch/navigation
+  failures, from before this run's own start).
+- **Untouched entirely this session**: France, Italy, Spain, Switzerland (all named
+  AGENTS.md priority countries), Canada, Australia, South Africa (briefly explored much
+  earlier, found much harder to scrape than UK/US/Ireland, not reattempted), and
+  essentially all of Asia, Africa, and Latin America beyond the institutions already in the
+  pre-existing spine from before this run.
+- **Opportunities lane**: only 10 records this run (waves 4-5, early in the session);
+  largely set aside in favor of the programme-catalogue lane for the bulk of the run. A
+  legitimate, undone secondary track if a future session picks this back up.
+- **Layer-1 spine**: only 4 new-institution candidates identified (all Turkish, ROR-
+  verified, not yet ingested into the live spine by design — this run never writes to
+  production). Layer-1 breadth work (finding entirely new universities not yet in ORYN's
+  spine at all, as opposed to deepening existing ones' program catalogues) was not this
+  run's main focus after the first pass.
+
+**Handoff for whoever continues this lane next**: the deepen-don't-duplicate method
+(batches 20-23) and the explicit-language-evidence discipline (batch 24 onward) are this
+run's two reusable, general methods — both documented in-line in their batches above with
+enough specificity to reapply directly, not just as an abstract principle.

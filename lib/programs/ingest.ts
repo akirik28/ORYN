@@ -106,10 +106,23 @@ export interface IngestDecision {
   programRow: AcceptedProgramRow | null;
 }
 
+/** The URL-based half of `existingKeys` — same official_program_url at the same university is
+ * the same real-world programme even when a later research pass or a catalogue re-scrape
+ * captured a different display name for it (e.g. "Computer Science and Engineering" vs. a
+ * catalogue's current link text "Computer Science & Engineering - English" — found live, same
+ * TU Delft URL, name-only dedup would have inserted both). Exported so callers building
+ * `existingKeys` can construct this half consistently with how decideIngestion checks it. */
+export function programUrlKey(universityId: string, officialProgramUrl: string): string {
+  return `url:${universityId}|${officialProgramUrl}`;
+}
+
 /** Pure decision function — no I/O, fully unit-testable. `existingKeys` is the set of
  * `${university_id}|${normalized_program_name}|${degree_level ?? ""}` combinations already
  * present (live table rows + anything already accepted earlier in this same batch), so a
- * batch is idempotent against both re-runs and internal duplicates. */
+ * batch is idempotent against both re-runs and internal duplicates. Callers may additionally
+ * populate `programUrlKey()` entries in the same set — decideIngestion checks both a record's
+ * name-based key and its URL-based key, so a same-URL/different-name duplicate is caught even
+ * though a name/degree-level match alone would have missed it. */
 export function decideIngestion(record: ResearchProgramRecord, universities: readonly UniversityLookupRow[], existingKeys: ReadonlySet<string>): IngestDecision {
   if (!record.university_name?.trim() || !record.program_name?.trim()) {
     return { outcome: "rejected", detail: "Missing university_name or program_name.", universityId: null, programRow: null };
@@ -148,6 +161,9 @@ export function decideIngestion(record: ResearchProgramRecord, universities: rea
   const dedupKey = `${universityId}|${normalizedName}|${record.degree_level ?? ""}`;
   if (existingKeys.has(dedupKey)) {
     return { outcome: "duplicate", detail: "Same university + program identity + degree level already exists.", universityId, programRow: null };
+  }
+  if (existingKeys.has(programUrlKey(universityId, record.official_program_url))) {
+    return { outcome: "duplicate", detail: "Same official_program_url already exists at this university under a different name.", universityId, programRow: null };
   }
 
   if (!looksPageConfirmed(record.verification_status)) {
