@@ -3304,3 +3304,150 @@ exactly the assumption that failed for Leiden in batch 24). Two spot-checks (Fis
 Circular Engineering) both confirmed real. **Netherlands status**: 4 of 7 originally
 zero-coverage universities now researched (Utrecht, Leiden, Radboud, Maastricht); Twente and
 Wageningen remain straightforwardly open, VU Amsterdam remains blocked (see batch 25 note).
+
+**Editorial note added at session close, 2026-08-21 ~09:59 Istanbul**: batches 27 and 28's
+entries (Twente/Wageningen and KIT respectively) landed earlier in this file than this batch
+26 paragraph, out of true chronological order -- an `Edit` old_string match landed on an
+earlier occurrence of similar closing text than intended while appending under real time
+pressure. Content in every entry is accurate and self-contained (each names its own batch
+number and running total), and this file's own header already states it should be read
+top-to-bottom for current state rather than treated as a strict chronological log -- so this
+is a real but cosmetic ordering imperfection, not a correctness problem. Flagging rather than
+silently leaving it for a future reader to puzzle over, and not risking a rushed reordering
+attempt with the session's remaining time better spent on the closing summary below.
+
+## SESSION CLOSE — 2026-08-21, ORYN Night Research (university-programs lane)
+
+Work began the prior evening and ran continuously via a self-paced `/loop` dynamic-wakeup
+cycle (~25-40min between rounds) until this stopping point approaching the 11:00 Istanbul
+deadline set by the standing research brief. Full batch-by-batch detail is in the dated
+entries above (batches 1-4 predate this run, from 2026-08-18; batches 5-28 are this run,
+all dated 2026-08-21) and in each batch's own commit message — this section is the
+brief-mandated closing summary: exact verified counts and remaining gaps.
+
+**Exact counts (independently recomputed from the actual JSONL files on disk, not carried
+forward from memory)**:
+- **4,037 program records** across **24 batch files** (`independent_batch5_2026-08-21.jsonl`
+  through `independent_batch28_2026-08-21.jsonl`), covering **52 distinct universities**
+  in **6 countries**: United Kingdom (1,366 records / 11 universities), United States (1,339
+  / 17 — all from before this file's own mid-session compaction boundary, batches 5-9),
+  Ireland (745 / 8), Turkey (341 / 9), Netherlands (201 / 6), Germany (45 / 1).
+- Plus **16 records** in 4 earlier files (`independent_batch1` through `batch4`,
+  2026-08-18) from a prior session — not part of tonight's count but present in the same
+  `data/research/university-programs/` directory.
+- **10 opportunity records** this session: `data/research/opportunities/
+  wave4_2026-08-21_diverse.jsonl` (7) and `wave5_2026-08-21_thin-categories.jsonl` (3).
+- **4 Layer-1 university-spine candidates** (new institutions, not yet in the live spine):
+  `data/research/universities/new-institution-candidates_2026-08-21.json` — Kadir Has
+  University, MEF University, Istanbul Bilgi University, Marmara University, all four
+  ROR-verified live against `api.ror.org` before proposing.
+- Every batch file individually validated before commit (no missing required fields, no
+  duplicate `research_program_id`s, no accidental duplicate `program_name`s within a
+  batch) and spot-checked (2 programs per batch minimum, against independent sources)
+  before being committed. Several spot-checks surfaced and fixed real issues before
+  publishing rather than after (see below) — this was a working discipline, not a
+  formality.
+- All work is research-data-only: no production code, no migrations, no direct writes to
+  production Supabase, matching the brief's explicit constraint throughout. Everything
+  landed as committed, pushed JSONL/JSON files on `oryn/programs-pipeline-reconciled`,
+  now at `a2dc598` (plus this closing doc commit).
+
+**Real corrections and findings this run** (the session's actual value-add beyond raw
+volume, in chronological order):
+1. Caught a fabricated CAO code before it was published (Maynooth, pre-batch-15 — see
+   earlier entries) and a UT Austin extraction that was too messy to trust (dropped, later
+   redone properly).
+2. Wisconsin's Dairy Science BS (suspended admissions) and UT Austin's Great Books BA
+   (pending regulatory approval) — both real, catalogued programs with a live status
+   caveat, patched into their records rather than presented as straightforwardly open.
+3. **The Turkey generic-seed discovery (batch 20)**: 6 prestigious Turkish universities
+   (Bilkent, Boğaziçi, Koç, METU, Özyeğin, Sabancı) all carried an identical-looking
+   4-program placeholder from an earlier pass, not real per-university research — found by
+   directly querying the live DB before starting, not assumed. Fixed all 6 with a
+   deepen-don't-duplicate method (check exact existing names live, exclude them, add
+   everything else) — 314 new, correctly non-duplicate records across batches 20-23.
+4. **Entity-resolution catch (batch 15)**: the live DB's own `City St George's, University
+   of London` uses a curly right-quote (U+2019), not the ASCII apostrophe this batch
+   initially used — caught by querying the exact live string before writing, fixed with a
+   script pass over the whole batch rather than a partial hand-edit. A byte-mismatched
+   apostrophe would have made all 97 records unlinkable under this codebase's deliberately
+   strict, never-fuzzy entity linker.
+5. **Leiden language-of-instruction correction (batch 24)**: this session's most important
+   methodology finding. Initially assumed an English program name on a university's own
+   English-language international site implies English-medium teaching. A spot-check of
+   'Cybersecurity & Cybercrime (BSc)' found it is actually Dutch-taught — the site lists
+   Dutch- and English-taught programmes alike under English names for browsing purposes.
+   Corrected `language_of_instruction` to an explicit hedge for all 69 affected records
+   before commit, and applied the lesson forward for the rest of the night: only assert a
+   language when the source page gives an explicit per-program marker (Radboud, Maastricht,
+   Wageningen, KIT's negative-evidence case) or independent per-program confirmation
+   (several individual spot-check upgrades, e.g. UT's Creative Technology, KIT's Mechanical
+   Engineering International) — otherwise leave it an honest, explicit unknown rather than
+   guess. This shows up as unusually verbose `language_of_instruction` strings throughout
+   the Netherlands/Germany batches by design, not by accident — each one carries its own
+   evidence trail rather than a bare "English"/"Dutch" value asserted on faith.
+6. Caught (before extraction) that Queen's University Belfast's "All Courses" page was
+   actually a Northern-Ireland-wide further-education clearinghouse for ~7 other
+   institutions, not QUB's own catalogue — nothing misattributed. QUB itself remains
+   unresearched.
+7. Royal Holloway's A-Z course list is a genuinely inert JS widget (letter links present in
+   the DOM but zero-size/off-canvas, page renders only 3 placeholder courses no matter
+   what) — a new, more specific failure shape than the already-known "paginated JS course
+   finder" pattern, worth distinguishing for a future session's tooling choices.
+8. VU Amsterdam's programme list is virtualized (only 10 of 29 cards ever mount in the DOM
+   under this session's Browser-pane tooling, no working pagination/load-more/data-island
+   found) — dropped rather than publishing a knowingly-partial 10-of-29 catalogue.
+
+**Geographic breadth achieved this run**: started the run already having exhausted an
+initial ~30-40 US/UK QS-ranked target list (batches 5-11, carried in from before this run's
+own start); this run's own new geographic ground was Ireland (8 universities, the most
+tractable geography found — official CAO-coded A-Z catalogues fetch cleanly via plain
+WebFetch almost every time), Turkey (9 universities, including fixing the 6-university
+generic-seed problem), Netherlands (6 of 7 originally-zero-coverage universities), and
+Germany (1 university, KIT — the last research act of the night, with an unusually strong
+language-of-instruction resolution via negative evidence from KIT's own English-programs
+list).
+
+**Remaining research gaps, named specifically so a future session doesn't re-attempt
+blind**:
+- **Turkey**: Ankara Üniversitesi, Gebze Technical University genuinely untried; Istanbul
+  University tried and dropped (no single master department list, would need an ~18-page
+  per-faculty crawl).
+- **Netherlands**: VU Amsterdam blocked (virtualized list, see above). Delft (15 real
+  existing programs), Eindhoven, Erasmus, Tilburg, University of Amsterdam, and Groningen
+  each still carry only their original small, real-but-thin program sets (4-15 each,
+  genuinely distinct per-institution research, NOT the Turkey-style copy-paste problem) —
+  a reasonable deepening target using the zero-coverage-university method rather than the
+  Turkey exclude-list method.
+- **Germany**: only KIT done. Freie Universität Berlin (87-119 bachelor's programs with a
+  complex mono-/combination-bachelor structure) and RWTH Aachen (190 total programs across
+  all degree levels, English official page exists at `rwth-aachen.de/.../liste-aktuelle-
+  studiengaenge/` but is large and mixes Bachelor's/Master's/teacher-training-state-exam
+  entries) were both scouted in the closing minutes of this run and deliberately not
+  attempted — genuinely too large to complete accurately in the remaining time rather than
+  rushed. Almost the entirety of Germany's ~400 universities remain untouched.
+- **UK**: Royal Holloway (inert JS widget, see above), University of Reading (dropdown-only
+  course finder, no static list), Kent (stale/search-tool URL, not attempted), Durham,
+  Nottingham, Queen Mary, Bath, Southampton (all paginated JS course finders with no A-Z
+  static fallback, from before this run's own start but still open), Queen's University
+  Belfast (near-miss caught, still unresearched).
+- **US**: UC Davis, Newcastle, USC, UNC, WashU, Penn State (various fetch/navigation
+  failures, from before this run's own start).
+- **Untouched entirely this session**: France, Italy, Spain, Switzerland (all named
+  AGENTS.md priority countries), Canada, Australia, South Africa (briefly explored much
+  earlier, found much harder to scrape than UK/US/Ireland, not reattempted), and
+  essentially all of Asia, Africa, and Latin America beyond the institutions already in the
+  pre-existing spine from before this run.
+- **Opportunities lane**: only 10 records this run (waves 4-5, early in the session);
+  largely set aside in favor of the programme-catalogue lane for the bulk of the run. A
+  legitimate, undone secondary track if a future session picks this back up.
+- **Layer-1 spine**: only 4 new-institution candidates identified (all Turkish, ROR-
+  verified, not yet ingested into the live spine by design — this run never writes to
+  production). Layer-1 breadth work (finding entirely new universities not yet in ORYN's
+  spine at all, as opposed to deepening existing ones' program catalogues) was not this
+  run's main focus after the first pass.
+
+**Handoff for whoever continues this lane next**: the deepen-don't-duplicate method
+(batches 20-23) and the explicit-language-evidence discipline (batch 24 onward) are this
+run's two reusable, general methods — both documented in-line in their batches above with
+enough specificity to reapply directly, not just as an abstract principle.
