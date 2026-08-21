@@ -77,5 +77,34 @@ a statement about the source's authority — see
 
 ## Files
 
-One `<country>.md` per covered country: United States, United Kingdom, Germany, Netherlands,
-France, Italy, Spain, Switzerland, Ireland, Canada, Turkey.
+One `<country>.md` per covered country, all complete:
+
+- [`united-states.md`](./united-states.md) — ED/REA binding semantics, per-institution test-optional
+  variance, financial-aid variance, the year-offset cohort-labeling trap.
+- [`united-kingdom.md`](./united-kingdom.md) — Oxbridge's earlier deadline/admissions-test/
+  interview track, the predicted-grade conditional-offer mechanic, per-institution TOEFL-rescale
+  and test-provenance exclusions.
+- [`turkey.md`](./turkey.md) — domestic YKS as algorithmic placement with zero holistic channel,
+  TR-YÖS-only high-demand programmes, quota splits by credential type.
+- [`germany.md`](./germany.md) — DSD≠academic-recognition (this package's highest-stakes finding),
+  Studienkolleg track gates, uni-assist's three deference relationships.
+- [`netherlands.md`](./netherlands.md) — the Studielink undated-statutory-deadline finding,
+  per-university Turkish-diploma acceptance variance, VWO's four profielen as hard gates.
+- [`france.md`](./france.md) — the Parcoursup-vs-DAP platform split by diploma track and residence,
+  Sciences Po's after-the-fact annual pass mark.
+- [`italy.md`](./italy.md) — numerus clausus as ranking-against-quota not threshold, OFA's dual
+  hard-gate/diagnostic role, the split 2025/26 Medicine reform.
+- [`spain.md`](./spain.md) — the sequential homologación→acreditación process, UNEDasiss's numeric
+  grade formula, nota de corte as a floating retrospective floor.
+- [`switzerland.md`](./switzerland.md) — four coexisting selection mechanisms, the Turkish-applicant
+  split with ETHZ's exam-required-regardless exception, per-institution teaching language.
+- [`ireland.md`](./ireland.md) — CAO vs. non-EU/direct as two fully parallel systems with opposite
+  evidence models, CAO points as competitive outcome not published minimum.
+- [`canada.md`](./canada.md) — provincial (not national) centralization, McGill's four-way
+  transcript evaluation by applicant origin, Waterloo's AIF-replaces-essays model.
+
+Each document leads with its highest-stakes finding, marks every claim VERIFIED (corpus record id)
+or SYSTEM-LEVEL BACKGROUND, and flags open research gaps explicitly rather than filling them with
+inference. Two documents (Germany, Netherlands) were corrected mid-pass after a parallel
+conflicts-verification lane closed several originally-flagged `CONFLICTING_EVIDENCE` records —
+see each document's own history for what changed and why.
