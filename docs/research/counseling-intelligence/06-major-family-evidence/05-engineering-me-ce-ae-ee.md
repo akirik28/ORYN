@@ -131,6 +131,25 @@ specifically does not appear by name (plausibly reflecting Turkey's much smaller
 base relative to the US, though this document does not have direct evidence for that inference —
 flagged as an inference, not a sourced fact).
 
+**Germany (a fourth, genuinely distinct model, verified directly rather than assumed equivalent to
+any of the three above):** the professional title **"Ingenieur"** is protected by state-level
+**Ingenieurgesetz** (Engineering Law) legislation, restricting use of the title to those who have
+completed at least a three-year engineering bachelor's degree [S-DE-INGENIEUR]. **RULE-COUNSEL-241
+(new):** this is title protection *without* practice regulation — unlike the US (where PE
+licensure gates specific *practice*, e.g. stamping public infrastructure plans) and structurally
+different from Turkey's TMMOB (where chamber registration is required to practice the profession at
+all, not merely to use the title) — a person without the "Ingenieur" title can still perform
+engineering work in Germany in many contexts; they simply cannot call themselves an "Ingenieur."
+The **VDI (Verein Deutscher Ingenieure)**, Western Europe's largest engineering association
+(~135,000 members), is the field's central professional body — promoting the profession and
+publishing industry monitoring (the *Ingenieurmonitor*), but is explicitly not a licensing body and
+not a labor union [S-DE-INGENIEUR]. **This gives the package a genuine four-way comparison for one
+family** (US: practice-gated PE licensure; UK: institution-administered competence-based chartered
+status layered on an unrestricted base right to practice; Turkey: chamber-registration required to
+practice at all; Germany: title-protected by law but practice itself unregulated) — worth using as
+the canonical illustration, in any future explanation-template work, of why this package insists on
+country-specific licensure framing rather than one global "engineers need a license" statement.
+
 **EU:** engineering licensure/chartership is not EU-wide; it runs through each member state's own
 system (sometimes mutually recognized via EU professional-qualification directives) — not
 independently mapped per-country in this pass beyond the UK detail above (noting the UK's own
@@ -149,6 +168,7 @@ still covers engineering occupations for taxonomy/skills-matching purposes acros
 | S-TMMOB | [TMMOB official site](https://www.tmmob.org.tr/), [Law No. 6235 (TMMOB's founding law)](http://www.tmmob.org.tr/hukuk/yasal-cerceve/6235-sayili-turk-muhendis-ve-mimar-odalari-birligi-kanunu) | Official (Turkish state-recognized professional body, constitutionally referenced) | High (Turkey-specific) | §6 |
 | S-ESCO | ESCO classification (see `01-computing-information-sciences.md` §7) | Official (EU) | High for classification structure | §6 |
 | S-ISKUR-FUTURE | İŞKUR Geleceğin Meslekleri (see `01-computing-information-sciences.md` §7) | Official (Turkey) | High for the document; names 7 of this family's subfields, not aerospace | §6 |
+| S-DE-INGENIEUR | Cross-referenced sources describing Germany's Ingenieurgesetz title-protection law and the VDI (Verein Deutscher Ingenieure) professional association | Secondary description of official German legislation and a real, verifiable professional body | Medium-high — the title-protection mechanism and VDI's role are consistently described across sources; the specific Ingenieurgesetz statutory text itself (state-level legislation, not a single federal law) was not independently fetched this pass | §6 |
 
 US, UK, and Turkey engineering-licensure structures now verified and sourced above (a correction
 from this document's earlier draft, which had flagged UK/Turkey as unverified). EU-wide licensure

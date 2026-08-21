@@ -999,6 +999,22 @@
       "used_in": [
         "docs/research/counseling-intelligence/06-major-family-evidence/20-performing-arts-music.md §6"
       ]
+    },
+    {
+      "id": "S-DE-INGENIEUR",
+      "title": "Germany's Ingenieurgesetz title-protection law and VDI (Verein Deutscher Ingenieure)",
+      "url": "https://en.wikipedia.org/wiki/Verein_Deutscher_Ingenieure",
+      "additional_urls": [],
+      "publisher": "Cross-referenced secondary sources describing German engineering-title legislation and the VDI professional association",
+      "source_type": "secondary_description_of_official_legislation",
+      "retrieval_method": "WebSearch",
+      "retrieved_at": "2026-08-21",
+      "claim_supported": "The 'Ingenieur' title is legally protected in Germany (Ingenieurgesetz, 3-year engineering bachelor's minimum) but engineering practice itself is unregulated; VDI (~135,000 members, Western Europe's largest engineering association) is the field's central professional body, not a licensing authority.",
+      "confidence": "medium_high",
+      "limitations": "Ingenieurgesetz is state-level (Land) legislation in Germany's federal system, not one single federal law -- the specific statutory text was not independently fetched this pass, sourced from consistent secondary description instead.",
+      "used_in": [
+        "docs/research/counseling-intelligence/06-major-family-evidence/05-engineering-me-ce-ae-ee.md §6"
+      ]
     }
   ]
 }
