@@ -406,3 +406,47 @@ branch with the peer's — both are real, validated, non-overlapping-in-content 
 session-reconciliation]]`-style: measure live state, don't auto-merge, don't force-push, escalate
 genuinely ambiguous calls) rather than something either research session should resolve
 unilaterally by picking a winner.
+
+## Catch-up: five commits since the last checkpoint (`102 rules/48 sources` → `109 rules/54 sources`)
+
+This handoff wasn't updated after every single commit in this stretch (unlike most of the session)
+— logging it here in one batch rather than pretending it was kept continuously current:
+
+1. **CAS phrasing tightened in `15-executive-summary.md`** (`6fc200d`) — peer flagged that the
+   summary's one-line compression of `04` §8's IB/CAS finding read as implying a fixed IBO-mandated
+   hour count; `04`'s own underlying text was already correct (no fixed number, school-set targets,
+   the ~150-hour figure removed circa 2017), only the summary's lossier one-liner needed fixing.
+2. **Germany added as a 4th country to `10-medicine-clinical-pathways.md` and
+   `13-law-oriented-pathways.md`** (`67a45a1`, `RULE-COUNSEL-103-104`) — Approbation/Staatsexamen
+   for medicine, the unified Staatsexamen-plus-Referendariat pathway (no US-style flexible
+   major-then-law-school equivalent) for law. **104 rules / 50 sources.**
+3. **Germany added to `11-psychology-behavioral-science.md` and `16-architecture-design.md`**
+   (`844bf71`, `RULE-COUNSEL-105-106`) — Approbation under the Psychotherapeutengesetz for
+   clinical/therapeutic psychology specifically (not psychology generally); Architekt as a
+   chamber-based, state-by-state title-protection system (16 regional Architektenkammer under the
+   federal Bundesarchitektenkammer). **106 rules / 52 sources.**
+4. **Social-work Turkey claim upgraded and precisely split** (`78ed5c8`,
+   `RULE-COUNSEL-107-108`) — peer directly fetched the actual MEB "Rehberlik Hizmetleri
+   Yönetmeliği" regulation text. Confirmed `RULE-COUNSEL-099`'s core claim (Art. 3(p): "sosyal
+   çalışmacı" requires a bachelor's degree) verbatim, upgraded to primary-source/high confidence.
+   Could **not** confirm the associate-degree-titling sub-claim in that same regulation (it's
+   silent on that point) — rather than let the confirmed part blanket-validate the whole original
+   claim, that unconfirmed part got its own new rule (`RULE-COUNSEL-107`) explicitly downgraded to
+   low-medium/secondary-source-only. Also added `RULE-COUNSEL-108` (Turkey psychology: MEB Art.
+   3(i) requires a bachelor's-level psychology education for "Psikolog," same primary source).
+   **108 rules / 52 sources.**
+5. **`RULE-COUNSEL-057`/`058` upgraded to official-source confidence, `RULE-COUNSEL-109` added**
+   (`303e8d9`, this update) — peer directly fetched UCAS's own personal-statement guidance pages
+   (confirming `058`'s super-curricular/extracurricular distinction verbatim) and directly fetched
+   `osym.gov.tr` plus cross-checked convergent Turkish YKS-calculator sites (confirming `057`'s
+   exam-dominance finding and sharpening it: the sole non-exam channel into YKS placement, OBP, is
+   itself purely grades-based and capped small, still zero channel for non-academic dimensions —
+   captured as its own rule, `RULE-COUNSEL-109`, rather than silently folded into `057`'s existing
+   text). Both upgrades and the new rule are peer-reported, not independently re-fetched by this
+   session — consistent with this package's established pattern (e.g. the MEB upgrade above) of
+   accepting a peer's specific, checkable primary-source citation with exact URLs as upgrade-worthy
+   even without independent re-verification, while saying so explicitly in each source's
+   `limitations` field. **109 rules / 54 sources — current count as of this commit.**
+
+Peer separately reported (not yet independently checked by this session) sharpening its own
+`03-recommendation-timing.md` §6 with the same ÖSYM/YKS finding as its `RULE-COUNSEL-242`.
