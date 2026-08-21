@@ -7,6 +7,7 @@ import { refreshOpportunityMatches } from "@/lib/opportunities/persist-matches";
 import { AIProviderNotConfiguredError } from "@/lib/ai";
 import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
 import { getCounselorState } from "@/lib/counselor/state";
+import { recomputeCareerProfile } from "@/lib/scoring/persist";
 import { buildCounselorDashboardContract, type CounselorDashboardContract } from "@/lib/counselor/dashboard-contract";
 import { DashboardView } from "@/features/dashboard/dashboard-view";
 import type { ProfileDimension } from "@/types/database";
@@ -62,12 +63,31 @@ export default async function DashboardPage() {
     supabase.from("opportunity_matches").select("opportunity_id, match_score").eq("user_id", userId).eq("eligible", true).order("match_score", { ascending: false }).limit(2),
   ]);
 
-  const scores = scoresRes.data ?? [];
+  // Self-heal a profile that has facts but has never been scored. recomputeCareerProfile
+  // normally runs from onboarding and from every achievement mutation, so this is a no-op
+  // on the usual path — but if that one onboarding call ever fails, or rows arrive by any
+  // other route, the student is otherwise stuck on "your Career Profile is waiting for
+  // data" forever with no in-app way to recover, even with a full profile. Guarded on
+  // "zero score rows" rather than running every load so it costs one recompute, once, and
+  // isolated the same way the counselor state above is: a scoring failure must not take
+  // the whole dashboard down.
+  let scores = scoresRes.data ?? [];
+  // `profile` was read before the recompute below, so its cached strength score would still
+  // be null on the healing pass — take the fresh value off the recompute's own return.
+  let strengthScore = profile?.profile_strength_score ?? null;
+  if (scores.length === 0) {
+    try {
+      const { careerProfile } = await recomputeCareerProfile(userId, { snapshotReason: "first_score" });
+      strengthScore = careerProfile.overallScore;
+      const { data } = await supabase.from("profile_scores").select("*").eq("user_id", userId);
+      scores = data ?? [];
+    } catch (error) {
+      console.error("[dashboard] failed to compute first career profile", error instanceof Error ? error.stack : error);
+    }
+  }
+
   const previousSnapshot = snapshotsRes.data?.[1] ?? null;
-  const trend =
-    previousSnapshot && profile?.profile_strength_score != null
-      ? profile.profile_strength_score - previousSnapshot.overall_score
-      : null;
+  const trend = previousSnapshot && strengthScore != null ? strengthScore - previousSnapshot.overall_score : null;
 
   // Counselor Core Phase D — single source of truth for "weakest dimension" (was three
   // duplicated one-liners across this page, the advisor page, and persist-matches.ts).
@@ -140,7 +160,7 @@ export default async function DashboardPage() {
     <DashboardView
       displayName={displayName}
       greeting={greeting()}
-      score={profile?.profile_strength_score ?? null}
+      score={strengthScore}
       trend={trend}
       biggestGap={biggestGap ? { dimension: biggestGap.dimension, score: biggestGap.score } : null}
       topStrength={counselorContract?.strengths?.[0] ?? null}
