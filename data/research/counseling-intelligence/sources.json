@@ -145,15 +145,18 @@
     {
       "id": "S-IB-SUBJECTS",
       "title": "IB Diploma Programme subject-selection timeline (cross-referenced school/counseling guidance)",
-      "url": null,
-      "additional_urls": [],
-      "publisher": "IB Diploma Programme subject-selection timeline (cross-referenced school/counseling guidance)",
-      "source_type": "secondary_aggregation",
+      "url": "https://ibo.org/programmes/diploma-programme/curriculum/",
+      "additional_urls": [
+        "https://ibo.org/programmes/diploma-programme/curriculum/example-subject-choices/",
+        "https://ibo.org/university-admission/support-students-transition-to-higher-education/course-selection-guidance/"
+      ],
+      "publisher": "International Baccalaureate Organization (ibo.org)",
+      "source_type": "official_institutional_guidance",
       "retrieval_method": "WebFetch/WebSearch/direct PDF read (see limitations for specifics)",
       "retrieved_at": "2026-08-21",
-      "claim_supported": "IB subject selection occurs at the Grade 10/11 transition; DP Year 1/2 structure (subject selection + CAS/IA start in Y1, final submissions/exams in Y2).",
-      "confidence": "medium",
-      "limitations": "No single official IBO page found with the complete timeline; convergent across secondary sources only.",
+      "claim_supported": "IBO's own official pages exist for DP curriculum/subject-choice guidance; critically, IBO does NOT standardize a single subject-selection timeline across the two-year DP -- this is left to individual schools, not centrally mandated. 'Grade 10/11 transition' (this package's earlier framing) is a common school-level convention, not an IBO rule.",
+      "confidence": "high_for_page_existence_medium_high_for_school_determined_finding",
+      "limitations": "ibo.org blocks direct automated page fetching (403), so this is grounded in confirming the official pages exist and their WebSearch-indexed summaries, not a full-page read -- re-verify via a human visit or an authenticated fetch method before treating the school-determined finding as fully confirmed.",
       "used_in": [
         "docs/research/counseling-intelligence/03-recommendation-timing.md §1, §3"
       ]
