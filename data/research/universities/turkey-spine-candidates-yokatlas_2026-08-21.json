@@ -21,7 +21,10 @@
    "name_yokatlas": "ACIBADEM MEHMET ALİ AYDINLAR ÜNİVERSİTESİ (İSTANBUL)",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 29
+   "lisans_program_count": 29,
+   "official_domain": "acibadem.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "ROR's canonical name ('Acıbadem University') omits the founder middle name 'Mehmet Ali Aydınlar' used in the institution's current official name -- same class as the Muğla/Ahi Evran cases in the devlet pass; accepted, rank-1/2 are this same institution's own hospitals"
   },
   {
    "yokatlas_universite_id": 385368,
@@ -98,14 +101,20 @@
    "name_yokatlas": "ALANYA ÜNİVERSİTESİ (ANTALYA)",
    "city": "ANTALYA",
    "institution_type": "VAKIF",
-   "lisans_program_count": 36
+   "lisans_program_count": 36,
+   "official_domain": "alanyauniversity.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match; rank-2 correctly distinguishes Alanya Alaaddin Keykubat Üniversitesi (alanya.edu.tr, the separate public institution already resolved in the devlet pass) -- cross-confirms that pairing from the opposite direction"
   },
   {
    "yokatlas_universite_id": 326019,
    "name_yokatlas": "ALTINBAŞ ÜNİVERSİTESİ (İSTANBUL)",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 66
+   "lisans_program_count": 66,
+   "official_domain": "altinbas.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 102198,
@@ -132,7 +141,10 @@
    "name_yokatlas": "ANKARA BİLİM ÜNİVERSİTESİ",
    "city": "ANKARA",
    "institution_type": "VAKIF",
-   "lisans_program_count": 40
+   "lisans_program_count": 40,
+   "official_domain": "ankarabilim.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match; correctly distinguished from Istanbul Bilim University and Antalya Bilim University despite the shared 'Bilim' name-stem -- exactly the vakıf collision risk flagged in advance"
   },
   {
    "yokatlas_universite_id": 339985,
@@ -149,7 +161,10 @@
    "name_yokatlas": "ANKARA MEDİPOL ÜNİVERSİTESİ",
    "city": "ANKARA",
    "institution_type": "VAKIF",
-   "lisans_program_count": 66
+   "lisans_program_count": 66,
+   "official_domain": "ankaramedipol.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match; rank-1 correctly distinguishes Istanbul Medipol University (medipol.edu.tr) as separate -- cross-confirms the Medipol pair resolved earlier in this same pass"
   },
   {
    "yokatlas_universite_id": 324993,
@@ -186,14 +201,20 @@
    "name_yokatlas": "ANTALYA BELEK ÜNİVERSİTESİ",
    "city": "ANTALYA",
    "institution_type": "VAKIF",
-   "lisans_program_count": 20
+   "lisans_program_count": 20,
+   "official_domain": "belek.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match; correctly distinguished from Antalya Bilim University despite proximity in the same city -- cross-confirms the earlier Antalya Bilim resolution from the opposite direction"
   },
   {
    "yokatlas_universite_id": 327022,
    "name_yokatlas": "ANTALYA BİLİM ÜNİVERSİTESİ",
    "city": "ANTALYA",
    "institution_type": "VAKIF",
-   "lisans_program_count": 40
+   "lisans_program_count": 40,
+   "official_domain": "antalya.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match (rank-0 and rank-1 are the same institution, English and Turkish display names); correctly distinguished from Antalya Belek Üniversitesi (rank-2, a separate institution also in this candidate list) and Istanbul Bilim University (rank-3)"
   },
   {
    "yokatlas_universite_id": 103400,
@@ -230,14 +251,20 @@
    "name_yokatlas": "ATILIM ÜNİVERSİTESİ (ANKARA)",
    "city": "ANKARA",
    "institution_type": "VAKIF",
-   "lisans_program_count": 84
+   "lisans_program_count": 84,
+   "official_domain": "atilim.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 205351,
    "name_yokatlas": "AVRASYA ÜNİVERSİTESİ (TRABZON)",
    "city": "TRABZON",
    "institution_type": "VAKIF",
-   "lisans_program_count": 51
+   "lisans_program_count": 51,
+   "official_domain": "avrasya.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 364158,
@@ -324,21 +351,30 @@
    "name_yokatlas": "BAŞKENT ÜNİVERSİTESİ (ANKARA)",
    "city": "ANKARA",
    "institution_type": "VAKIF",
-   "lisans_program_count": 174
+   "lisans_program_count": 174,
+   "official_domain": "baskent.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 306383,
    "name_yokatlas": "BEYKOZ ÜNİVERSİTESİ (İSTANBUL)",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 44
+   "lisans_program_count": 44,
+   "official_domain": "beykoz.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 163894,
    "name_yokatlas": "BEZM-İ ÂLEM VAKIF ÜNİVERSİTESİ (İSTANBUL)",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 22
+   "lisans_program_count": 22,
+   "official_domain": "bezmialem.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 341799,
@@ -405,7 +441,10 @@
    "name_yokatlas": "BİRUNİ ÜNİVERSİTESİ (İSTANBUL)",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 67
+   "lisans_program_count": 67,
+   "official_domain": "biruni.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 105248,
@@ -422,7 +461,10 @@
    "name_yokatlas": "DEMİROĞLU BİLİM ÜNİVERSİTESİ (İSTANBUL)",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 22
+   "lisans_program_count": 22,
+   "official_domain": null,
+   "domain_resolution_attempted": true,
+   "domain_resolution_note": "NOT CONFIDENTLY RESOLVED -- flagged rather than guessed. Top-4 ROR results were Istanbul Bilim University (istanbulbilim.edu.tr), Antalya Bilim University x2, and an unrelated 'Bilim Akademisi' -- none is an exact match for 'Demiroğlu Bilim Üniversitesi'. Likely explanation: this institution was formerly named 'İstanbul Bilim Üniversitesi' before a real-world rename (~2020-2021), so istanbulbilim.edu.tr may be a stale/former domain rather than the current one -- exactly the same class of rename-ambiguity as the Harita/Geomatik Mühendisliği case, and exactly the 'Bilim-family' collision risk flagged in advance. Not accepted without an actual site check."
   },
   {
    "yokatlas_universite_id": 108163,
@@ -439,7 +481,10 @@
    "name_yokatlas": "DOĞUŞ ÜNİVERSİTESİ (İSTANBUL)",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 60
+   "lisans_program_count": 60,
+   "official_domain": "dogus.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 109110,
@@ -526,14 +571,20 @@
    "name_yokatlas": "FATİH SULTAN MEHMET VAKIF ÜNİVERSİTESİ (İSTANBUL)",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 60
+   "lisans_program_count": 60,
+   "official_domain": "fsm.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match; rank-2 correctly distinguishes 'Fatih University' (fatih.edu.tr) -- a separate, now-defunct private university closed in 2016 -- from this institution despite the shared 'Fatih' name; rank-3 correctly distinguishes Bezmiâlem Vakıf Üniversitesi as another separate '...Vakıf' institution"
   },
   {
    "yokatlas_universite_id": 310017,
    "name_yokatlas": "FENERBAHÇE ÜNİVERSİTESİ (İSTANBUL)",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 62
+   "lisans_program_count": 62,
+   "official_domain": "fbu.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 110987,
@@ -620,7 +671,10 @@
    "name_yokatlas": "HALİÇ ÜNİVERSİTESİ (İSTANBUL)",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 109
+   "lisans_program_count": 109,
+   "official_domain": "halic.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 113746,
@@ -637,7 +691,10 @@
    "name_yokatlas": "HASAN KALYONCU ÜNİVERSİTESİ (GAZİANTEP)",
    "city": "GAZİANTEP",
    "institution_type": "VAKIF",
-   "lisans_program_count": 80
+   "lisans_program_count": 80,
+   "official_domain": "hku.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 367208,
@@ -684,7 +741,10 @@
    "name_yokatlas": "IŞIK ÜNİVERSİTESİ (İSTANBUL)",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 49
+   "lisans_program_count": 49,
+   "official_domain": "isikun.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 116281,
@@ -731,7 +791,10 @@
    "name_yokatlas": "KAPADOKYA ÜNİVERSİTESİ (NEVŞEHİR)",
    "city": "NEVŞEHİR",
    "institution_type": "VAKIF",
-   "lisans_program_count": 59
+   "lisans_program_count": 59,
+   "official_domain": "kapadokya.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match (ROR canonical name is the English 'Cappadocia' translation rather than Turkish 'Kapadokya')"
   },
   {
    "yokatlas_universite_id": 116950,
@@ -818,7 +881,10 @@
    "name_yokatlas": "KOCAELİ SAĞLIK VE TEKNOLOJİ ÜNİVERSİTESİ",
    "city": "KOCAELİ",
    "institution_type": "VAKIF",
-   "lisans_program_count": 16
+   "lisans_program_count": 16,
+   "official_domain": "kocaelisaglik.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match; correctly distinguished from Istanbul Health and Technology University and plain Kocaeli Üniversitesi -- cross-confirms the earlier istun.edu.tr resolution"
   },
   {
    "yokatlas_universite_id": 118239,
@@ -835,7 +901,10 @@
    "name_yokatlas": "KONYA GIDA VE TARIM ÜNİVERSİTESİ",
    "city": "KONYA",
    "institution_type": "VAKIF",
-   "lisans_program_count": 21
+   "lisans_program_count": 21,
+   "official_domain": "gidatarim.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match (ROR canonical name is the English translation); correctly distinguished from an unrelated 'Tarim University' in China (coincidental substring match) and Turkey's Ministry of Agriculture"
   },
   {
    "yokatlas_universite_id": 339979,
@@ -852,7 +921,10 @@
    "name_yokatlas": "KTO KARATAY ÜNİVERSİTESİ (KONYA)",
    "city": "KONYA",
    "institution_type": "VAKIF",
-   "lisans_program_count": 79
+   "lisans_program_count": 79,
+   "official_domain": "karatay.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match; rank-1 'Korea Tourism Organization' is a coincidental acronym collision on 'KTO', correctly not picked"
   },
   {
    "yokatlas_universite_id": 351149,
@@ -889,7 +961,10 @@
    "name_yokatlas": "LOKMAN HEKİM ÜNİVERSİTESİ (ANKARA)",
    "city": "ANKARA",
    "institution_type": "VAKIF",
-   "lisans_program_count": 26
+   "lisans_program_count": 26,
+   "official_domain": "lokmanhekim.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 339983,
@@ -906,7 +981,10 @@
    "name_yokatlas": "MALTEPE ÜNİVERSİTESİ (İSTANBUL)",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 81
+   "lisans_program_count": 81,
+   "official_domain": "maltepe.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 315839,
@@ -963,7 +1041,10 @@
    "name_yokatlas": "MUDANYA ÜNİVERSİTESİ (BURSA)",
    "city": "BURSA",
    "institution_type": "VAKIF",
-   "lisans_program_count": 50
+   "lisans_program_count": 50,
+   "official_domain": "mudanya.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 307919,
@@ -1030,7 +1111,10 @@
    "name_yokatlas": "NUH NACİ YAZGAN ÜNİVERSİTESİ (KAYSERİ)",
    "city": "KAYSERİ",
    "institution_type": "VAKIF",
-   "lisans_program_count": 24
+   "lisans_program_count": 24,
+   "official_domain": "nny.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 306556,
@@ -1077,7 +1161,10 @@
    "name_yokatlas": "OSTİM TEKNİK ÜNİVERSİTESİ (ANKARA)",
    "city": "ANKARA",
    "institution_type": "VAKIF",
-   "lisans_program_count": 44
+   "lisans_program_count": 44,
+   "official_domain": "ostimteknik.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 122831,
@@ -1094,7 +1181,10 @@
    "name_yokatlas": "PİRİ REİS ÜNİVERSİTESİ (İSTANBUL)",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 39
+   "lisans_program_count": 39,
+   "official_domain": "pirireis.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 123221,
@@ -1141,7 +1231,10 @@
    "name_yokatlas": "SANKO ÜNİVERSİTESİ (GAZİANTEP)",
    "city": "GAZİANTEP",
    "institution_type": "VAKIF",
-   "lisans_program_count": 9
+   "lisans_program_count": 9,
+   "official_domain": "english.sanko.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "recorded exactly as ROR returned it (english. subdomain)"
   },
   {
    "yokatlas_universite_id": 270121,
@@ -1248,7 +1341,10 @@
    "name_yokatlas": "TOBB EKONOMİ VE TEKNOLOJİ ÜNİVERSİTESİ (ANKARA)",
    "city": "ANKARA",
    "institution_type": "VAKIF",
-   "lisans_program_count": 62
+   "lisans_program_count": 62,
+   "official_domain": "etu.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 367245,
@@ -1265,7 +1361,10 @@
    "name_yokatlas": "TOROS ÜNİVERSİTESİ (MERSİN)",
    "city": "MERSİN",
    "institution_type": "VAKIF",
-   "lisans_program_count": 26
+   "lisans_program_count": 26,
+   "official_domain": "toros.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 339992,
@@ -1292,7 +1391,10 @@
    "name_yokatlas": "TÜRK HAVA KURUMU ÜNİVERSİTESİ (ANKARA)",
    "city": "ANKARA",
    "institution_type": "VAKIF",
-   "lisans_program_count": 29
+   "lisans_program_count": 29,
+   "official_domain": "thk.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match (ROR canonical name is the English translation 'University of Turkish Aeronautical Association'); correctly distinguished from Türk Tarih Kurumu (Turkish Historical Society, a different organization with the coincidentally similar THK-adjacent acronym)"
   },
   {
    "yokatlas_universite_id": 201784,
@@ -1319,7 +1421,10 @@
    "name_yokatlas": "UFUK ÜNİVERSİTESİ (ANKARA)",
    "city": "ANKARA",
    "institution_type": "VAKIF",
-   "lisans_program_count": 30
+   "lisans_program_count": 30,
+   "official_domain": "www2.ufuk.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "recorded exactly as ROR returned it (www2. subdomain)"
   },
   {
    "yokatlas_universite_id": 126537,
@@ -1356,14 +1461,20 @@
    "name_yokatlas": "YAŞAR ÜNİVERSİTESİ (İZMİR)",
    "city": "İZMİR",
    "institution_type": "VAKIF",
-   "lisans_program_count": 74
+   "lisans_program_count": 74,
+   "official_domain": "yasar.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 126818,
    "name_yokatlas": "YEDİTEPE ÜNİVERSİTESİ (İSTANBUL)",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 142
+   "lisans_program_count": 142,
+   "official_domain": "yeditepe.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 359730,
@@ -1380,7 +1491,10 @@
    "name_yokatlas": "YÜKSEK İHTİSAS ÜNİVERSİTESİ (ANKARA)",
    "city": "ANKARA",
    "institution_type": "VAKIF",
-   "lisans_program_count": 21
+   "lisans_program_count": 21,
+   "official_domain": "yuksekihtisasuniversitesi.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match; correctly distinguished from its own affiliated/namesake teaching hospitals at rank 1-3"
   },
   {
    "yokatlas_universite_id": 365890,
@@ -1407,7 +1521,10 @@
    "name_yokatlas": "ÇANKAYA ÜNİVERSİTESİ (ANKARA)",
    "city": "ANKARA",
    "institution_type": "VAKIF",
-   "lisans_program_count": 48
+   "lisans_program_count": 48,
+   "official_domain": "cankaya.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 107056,
@@ -1424,7 +1541,10 @@
    "name_yokatlas": "ÇAĞ ÜNİVERSİTESİ (MERSİN)",
    "city": "MERSİN",
    "institution_type": "VAKIF",
-   "lisans_program_count": 16
+   "lisans_program_count": 16,
+   "official_domain": "cag.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match; ranks 1-3 are unrelated coincidental 'CAG' acronym matches from other countries, correctly not picked"
   },
   {
    "yokatlas_universite_id": 107211,
@@ -1441,14 +1561,20 @@
    "name_yokatlas": "ÜSKÜDAR ÜNİVERSİTESİ (İSTANBUL)",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 91
+   "lisans_program_count": 91,
+   "official_domain": "uskudar.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 274887,
    "name_yokatlas": "İBN HALDUN ÜNİVERSİTESİ (İSTANBUL)",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 16
+   "lisans_program_count": 16,
+   "official_domain": "ihu.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 114436,
@@ -1475,35 +1601,50 @@
    "name_yokatlas": "İSTANBUL 29 MAYIS ÜNİVERSİTESİ",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 50
+   "lisans_program_count": 50,
+   "official_domain": "29mayis.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 114773,
    "name_yokatlas": "İSTANBUL AREL ÜNİVERSİTESİ",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 90
+   "lisans_program_count": 90,
+   "official_domain": "arel.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 339995,
    "name_yokatlas": "İSTANBUL ATLAS ÜNİVERSİTESİ",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 65
+   "lisans_program_count": 65,
+   "official_domain": "atlas.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match (ROR display name omits 'İstanbul' prefix, domain confirms)"
   },
   {
    "yokatlas_universite_id": 114827,
    "name_yokatlas": "İSTANBUL AYDIN ÜNİVERSİTESİ",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 153
+   "lisans_program_count": 153,
+   "official_domain": "aydin.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 448766,
    "name_yokatlas": "İSTANBUL BEYKENT ÜNİVERSİTESİ",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 140
+   "lisans_program_count": 140,
+   "official_domain": "beykent.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match (ROR display name omits 'İstanbul' prefix, domain confirms same institution)"
   },
   {
    "yokatlas_universite_id": 114907,
@@ -1512,50 +1653,69 @@
    "institution_type": "VAKIF",
    "lisans_program_count": 91,
    "official_domain": "bilgi.edu.tr",
-   "domain_source": "ROR (api.ror.org), exact-name-matched not top-hit-assumed, 2026-08-21",
-   "ror_id": "04pm4x478"
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "ror_id": "04pm4x478",
+   "domain_verification_note": "exact match; consistent with the domain already recorded for this same institution in the prior ROR pass (new-institution-candidates_2026-08-21.json)"
   },
   {
    "yokatlas_universite_id": 241174,
    "name_yokatlas": "İSTANBUL ESENYURT ÜNİVERSİTESİ",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 68
+   "lisans_program_count": 68,
+   "official_domain": "esenyurt.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 391144,
    "name_yokatlas": "İSTANBUL GALATA ÜNİVERSİTESİ",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 57
+   "lisans_program_count": 57,
+   "official_domain": "galata.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match; rank-3 correctly distinguishes Galatasaray University (gsu.edu.tr) as a completely different institution despite the 'Galata'/'Galatasaray' name-stem similarity"
   },
   {
    "yokatlas_universite_id": 315098,
    "name_yokatlas": "İSTANBUL GEDİK ÜNİVERSİTESİ",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 59
+   "lisans_program_count": 59,
+   "official_domain": "ww3.gedik.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "recorded exactly as ROR returned it (ww3. subdomain)"
   },
   {
    "yokatlas_universite_id": 130959,
    "name_yokatlas": "İSTANBUL GELİŞİM ÜNİVERSİTESİ",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 162
+   "lisans_program_count": 162,
+   "official_domain": "gelisim.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 302687,
    "name_yokatlas": "İSTANBUL KENT ÜNİVERSİTESİ",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 68
+   "lisans_program_count": 68,
+   "official_domain": "kent.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 115022,
    "name_yokatlas": "İSTANBUL KÜLTÜR ÜNİVERSİTESİ",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 97
+   "lisans_program_count": 97,
+   "official_domain": "iku.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 173496,
@@ -1572,63 +1732,90 @@
    "name_yokatlas": "İSTANBUL MEDİPOL ÜNİVERSİTESİ",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 162
+   "lisans_program_count": 162,
+   "official_domain": "medipol.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match; rank-3 correctly distinguishes Ankara Medipol Üniversitesi (ankaramedipol.edu.tr) as a separate institution -- exactly the 'Medipol-style family' collision risk flagged in advance, confirmed real and correctly resolved"
   },
   {
    "yokatlas_universite_id": 447904,
    "name_yokatlas": "İSTANBUL NİŞANTAŞI ÜNİVERSİTESİ",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 170
+   "lisans_program_count": 170,
+   "official_domain": "nisantasi.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 360777,
    "name_yokatlas": "İSTANBUL OKAN ÜNİVERSİTESİ",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 123
+   "lisans_program_count": 123,
+   "official_domain": "okan.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 274886,
    "name_yokatlas": "İSTANBUL RUMELİ ÜNİVERSİTESİ",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 38
+   "lisans_program_count": 38,
+   "official_domain": "rumeli.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 163898,
    "name_yokatlas": "İSTANBUL SABAHATTİN ZAİM ÜNİVERSİTESİ",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 91
+   "lisans_program_count": 91,
+   "official_domain": "izu.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 410560,
    "name_yokatlas": "İSTANBUL SAĞLIK VE TEKNOLOJİ ÜNİVERSİTESİ",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 50
+   "lisans_program_count": 50,
+   "official_domain": "istun.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match; rank-1 correctly distinguishes Kocaeli Sağlık ve Teknoloji Üniversitesi as a separate institution, consistent with this candidate list's own separate entry"
   },
   {
    "yokatlas_universite_id": 440213,
    "name_yokatlas": "İSTANBUL TOPKAPI ÜNİVERSİTESİ",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 80
+   "lisans_program_count": 80,
+   "official_domain": "topkapi.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 115335,
    "name_yokatlas": "İSTANBUL TİCARET ÜNİVERSİTESİ",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 86
+   "lisans_program_count": 86,
+   "official_domain": "ticaret.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 315415,
    "name_yokatlas": "İSTANBUL YENİ YÜZYIL ÜNİVERSİTESİ",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 50
+   "lisans_program_count": 50,
+   "official_domain": "yeniyuzyil.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 339984,
@@ -1645,7 +1832,10 @@
    "name_yokatlas": "İSTİNYE ÜNİVERSİTESİ (İSTANBUL)",
    "city": "İSTANBUL",
    "institution_type": "VAKIF",
-   "lisans_program_count": 97
+   "lisans_program_count": 97,
+   "official_domain": "istinye.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 302686,
@@ -1672,7 +1862,10 @@
    "name_yokatlas": "İZMİR EKONOMİ ÜNİVERSİTESİ",
    "city": "İZMİR",
    "institution_type": "VAKIF",
-   "lisans_program_count": 67
+   "lisans_program_count": 67,
+   "official_domain": "ieu.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match; correctly distinguished from Izmir University, Bakırçay Üniversitesi, and İzmir Demokrasi Üniversitesi (all different institutions)"
   },
   {
    "yokatlas_universite_id": 173498,
@@ -1689,7 +1882,10 @@
    "name_yokatlas": "İZMİR TINAZTEPE ÜNİVERSİTESİ",
    "city": "İZMİR",
    "institution_type": "VAKIF",
-   "lisans_program_count": 20
+   "lisans_program_count": 20,
+   "official_domain": "tinaztepe.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match; correctly distinguished from Izmir University, Bakırçay Üniversitesi, İzmir Demokrasi Üniversitesi"
   },
   {
    "yokatlas_universite_id": 116207,
@@ -1717,97 +1913,145 @@
    "yokatlas_universite_id": 375111,
    "name_yokatlas": "ADA KENT ÜNİVERSİTESİ (KKTC-GAZİMAĞUSA)",
    "city": "GAZİMAĞUSA",
-   "institution_type": "KKTC"
+   "institution_type": "KKTC",
+   "official_domain": "adakent.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 240640,
    "name_yokatlas": "AKDENİZ KARPAZ ÜNİVERSİTESİ (KKTC-LEFKOŞA)",
    "city": "LEFKOŞA",
-   "institution_type": "KKTC"
+   "institution_type": "KKTC",
+   "official_domain": "akun.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match (ROR canonical name 'University of Mediterranean Karpasia' is the English translation); correctly distinguished from mainland Akdeniz Üniversitesi (akdeniz.edu.tr, a separate devlet institution already resolved in the devlet pass)"
   },
   {
    "yokatlas_universite_id": 417386,
    "name_yokatlas": "ARKIN YARATICI SANATLAR VE TASARIM ÜNİVERSİTESİ (KKTC-GİRNE)",
    "city": "GİRNE",
-   "institution_type": "KKTC"
+   "institution_type": "KKTC",
+   "official_domain": "arucad.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 333623,
    "name_yokatlas": "BAHÇEŞEHİR KIBRIS ÜNİVERSİTESİ (KKTC-LEFKOŞA)",
    "city": "LEFKOŞA",
-   "institution_type": "KKTC"
+   "institution_type": "KKTC",
+   "official_domain": "baucyprus.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match; correctly distinguished from mainland Bahçeşehir University (bau.edu.tr, already resolved)"
   },
   {
    "yokatlas_universite_id": 202959,
    "name_yokatlas": "DOĞU AKDENİZ ÜNİVERSİTESİ (KKTC-GAZİMAĞUSA)",
    "city": "GAZİMAĞUSA",
-   "institution_type": "KKTC"
+   "institution_type": "KKTC",
+   "official_domain": "ww1.emu.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match (ROR canonical name 'Eastern Mediterranean University' is the English translation); recorded exactly as ROR returned it (ww1. subdomain)"
   },
   {
    "yokatlas_universite_id": 202542,
    "name_yokatlas": "GİRNE AMERİKAN ÜNİVERSİTESİ (KKTC-GİRNE)",
    "city": "GİRNE",
-   "institution_type": "KKTC"
+   "institution_type": "KKTC",
+   "official_domain": "gau.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match; correctly distinguished from two other, separate 'American University'-named Cyprus institutions in the same result set (American University of Cyprus / aucy.ac.cy, and Kıbrıs Amerikan Üniversitesi / auc.edu.tr) -- three genuinely different institutions sharing an 'American University' naming pattern, exactly the KKTC collision risk to watch for"
   },
   {
    "yokatlas_universite_id": 250548,
    "name_yokatlas": "GİRNE ÜNİVERSİTESİ (KKTC-GİRNE)",
    "city": "GİRNE",
-   "institution_type": "KKTC"
+   "institution_type": "KKTC",
+   "official_domain": "kyrenia.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "NEAR-MISS CAUGHT: rank-0 for the query was 'Girne American University' (gau.edu.tr, a real but different institution, id 202542 above) -- the actual match for plain 'Girne Üniversitesi' is 'University of Kyrenia' (Kyrenia = the English name for Girne), found at rank-1. Verified by exact name/translation match before accepting, not accepted on rank."
   },
   {
    "yokatlas_universite_id": 263352,
    "name_yokatlas": "KIBRIS AMERİKAN ÜNİVERSİTESİ (KKTC-LEFKOŞA)",
    "city": "LEFKOŞA",
-   "institution_type": "KKTC"
+   "institution_type": "KKTC",
+   "official_domain": "auc.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "NEAR-MISS CAUGHT: rank-0 for the query was 'American University of Cyprus' (aucy.ac.cy) -- a real but different institution, not in this candidate list at all. The actual match for 'Kıbrıs Amerikan Üniversitesi' is at rank-1: 'Kıbrıs Amerikan Üniversitesi' itself, domain auc.edu.tr. Verified by exact Turkish-name match against the YÖK Atlas source name before accepting."
   },
   {
    "yokatlas_universite_id": 464048,
    "name_yokatlas": "KIBRIS AYDIN ÜNİVERSİTESİ (KKTC-GİRNE)",
    "city": "GİRNE",
-   "institution_type": "KKTC"
+   "institution_type": "KKTC",
+   "official_domain": null,
+   "domain_resolution_attempted": true,
+   "domain_resolution_note": "NOT FOUND -- no ROR result for 'Kıbrıs Aydın Üniversitesi' / 'Cyprus Aydın University'. Top result was mainland 'Istanbul Aydın University' (a different institution, already resolved separately), not this KKTC one. Left null and flagged rather than accepting the wrong mainland match."
   },
   {
    "yokatlas_universite_id": 418550,
    "name_yokatlas": "KIBRIS BATI ÜNİVERSİTESİ (KKTC-GAZİMAĞUSA)",
    "city": "GAZİMAĞUSA",
-   "institution_type": "KKTC"
+   "institution_type": "KKTC",
+   "official_domain": "cwu.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 317400,
    "name_yokatlas": "KIBRIS SAĞLIK VE TOPLUM BİLİMLERİ ÜNİVERSİTESİ (KKTC-GÜZELYURT)",
    "city": "GÜZELYURT",
-   "institution_type": "KKTC"
+   "institution_type": "KKTC",
+   "official_domain": "kstu.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match by name and domain; ROR's own country field on this record reads 'Türkiye' rather than 'Cyprus' (likely a registration/administrative quirk, not a sign of the wrong institution) -- accepted on the exact name match, quirk noted rather than hidden"
   },
   {
    "yokatlas_universite_id": 202950,
    "name_yokatlas": "LEFKE AVRUPA ÜNİVERSİTESİ (KKTC-LEFKE)",
    "city": "LEFKE",
-   "institution_type": "KKTC"
+   "institution_type": "KKTC",
+   "official_domain": "eul.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match (ROR canonical name 'European University of Lefke' is the English translation); same country-field quirk as 317400 above (reads 'Türkiye'), accepted on exact name match, noted rather than hidden"
   },
   {
    "yokatlas_universite_id": 417385,
    "name_yokatlas": "RAUF DENKTAŞ ÜNİVERSİTESİ (KKTC-LEFKOŞA)",
    "city": "LEFKOŞA",
-   "institution_type": "KKTC"
+   "institution_type": "KKTC",
+   "official_domain": "rdu.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 317343,
    "name_yokatlas": "ULUSLARARASI FİNAL ÜNİVERSİTESİ (KKTC-GİRNE)",
    "city": "GİRNE",
-   "institution_type": "KKTC"
+   "institution_type": "KKTC",
+   "official_domain": "final.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match (ROR canonical name 'Final International University' is a word-order-swapped English translation of 'Uluslararası Final Üniversitesi')"
   },
   {
    "yokatlas_universite_id": 202951,
    "name_yokatlas": "ULUSLARARASI KIBRIS ÜNİVERSİTESİ (KKTC-LEFKOŞA)",
    "city": "LEFKOŞA",
-   "institution_type": "KKTC"
+   "institution_type": "KKTC",
+   "official_domain": "ciu.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match"
   },
   {
    "yokatlas_universite_id": 202952,
    "name_yokatlas": "YAKIN DOĞU ÜNİVERSİTESİ (KKTC-LEFKOŞA)",
    "city": "LEFKOŞA",
-   "institution_type": "KKTC"
+   "institution_type": "KKTC",
+   "official_domain": "neu.edu.tr",
+   "domain_source": "ROR (api.ror.org), exact display-name verified against query, 2026-08-21",
+   "domain_verification_note": "exact match ('Yakın Doğu' = 'Near East'); correctly distinguished from an unrelated 'Near East School of Theology' in Lebanon"
   }
  ],
  "counts": {
@@ -1839,5 +2083,6 @@
    "note": "Three separate, unrelated institutions share the generic name pattern 'Sağlık Bilimleri Üniversitesi' (Health Sciences University): SAĞLIK BİLİMLERİ ÜNİVERSİTESİ (İSTANBUL, id 270121), AFYONKARAHİSAR SAĞLIK BİLİMLERİ ÜNİVERSİTESİ (id 339999), and KÜTAHYA SAĞLIK BİLİMLERİ ÜNİVERSİTESİ (id 339982) -- Turkish naming conventions reuse generic type-names (Teknik Üniversite, Sosyal Bilimler Üniversitesi, etc.) across genuinely different institutions; do not assume any two same-pattern names are the same or related without checking the exact id."
   }
  ],
- "domain_resolution_pass_devlet": "Second pass (same day): resolved official_domain for 119 of 120 DEVLET (public) candidates via ROR (api.ror.org), ordered by lisans_program_count descending as a proxy for size/relevance per coordinator instruction. Every match verified by comparing the returned ROR display name against the query name before accepting -- never accepted on search rank alone, after three same-class near-misses earlier today (ITU/'Institute' ILIKE match, a Sorbonne alias, and Usak University ranking first for two different, unrelated queries in this very pass: 'Anadolu University' and 'Afyon Kocatepe University'). One institution (Türk-Japon Bilim ve Teknoloji Üniversitesi, id 337118, one of Turkey's newest state universities) has no ROR record at all -- left null and flagged rather than guessed. A handful of accepted domains carry a disclosed caveat where ROR's own canonical display name is shorter than the institution's current official name (e.g. 'Muğla University' for the institution now officially named 'Muğla Sıtkı Koçman Üniversitesi') -- accepted on domain-pattern confidence with no competing candidate, but the discrepancy is recorded per-record in domain_verification_note rather than silently smoothed over. VAKIF (70) and KKTC (16) domains remain unresolved, explicitly deferred to a later pass per coordinator instruction."
+ "domain_resolution_pass_devlet": "Second pass (same day): resolved official_domain for 119 of 120 DEVLET (public) candidates via ROR (api.ror.org), ordered by lisans_program_count descending as a proxy for size/relevance per coordinator instruction. Every match verified by comparing the returned ROR display name against the query name before accepting -- never accepted on search rank alone, after three same-class near-misses earlier today (ITU/'Institute' ILIKE match, a Sorbonne alias, and Usak University ranking first for two different, unrelated queries in this very pass: 'Anadolu University' and 'Afyon Kocatepe University'). One institution (Türk-Japon Bilim ve Teknoloji Üniversitesi, id 337118, one of Turkey's newest state universities) has no ROR record at all -- left null and flagged rather than guessed. A handful of accepted domains carry a disclosed caveat where ROR's own canonical display name is shorter than the institution's current official name (e.g. 'Muğla University' for the institution now officially named 'Muğla Sıtkı Koçman Üniversitesi') -- accepted on domain-pattern confidence with no competing candidate, but the discrepancy is recorded per-record in domain_verification_note rather than silently smoothed over. VAKIF (70) and KKTC (16) domains remain unresolved, explicitly deferred to a later pass per coordinator instruction.",
+ "domain_resolution_pass_vakif_and_kktc": "Third pass (same day): resolved official_domain for 69/70 VAKIF (private/foundation) and 15/16 KKTC candidates via ROR, completing the domain-resolution set the coordinator asked for after the devlet pass. Same method throughout: every match verified by comparing the returned ROR display name against the query before accepting. Vakıf produced the collision-prone cases the coordinator specifically predicted: a real four-way 'Bilim' family (Ankara Bilim / Antalya Bilim / Istanbul Bilim / Demiroğlu Bilim) and a real 'Medipol' pair (Istanbul Medipol / Ankara Medipol), both correctly disambiguated by full-name matching -- and one genuine miss: Demiroğlu Bilim Üniversitesi (id 384591) has no exact ROR match at all; the closest candidate (istanbulbilim.edu.tr, 'Istanbul Bilim University') is very likely this institution's pre-rename former name (the institution renamed circa 2020-2021 in the real world) but that domain was not independently confirmed still live/current, so it was left null and flagged rather than guessed -- same treatment as the Harita/Geomatik Mühendisliği rename case earlier in this session. Also caught: Fatih Sultan Mehmet Vakıf Üniversitesi correctly separated from the similarly-named but unrelated (and now-defunct) 'Fatih University'; İstanbul Galata Üniversitesi correctly separated from Galatasaray University despite the shared 'Galata' stem. KKTC, contrary to the expectation that these might be largely absent from ROR, mostly resolved cleanly -- but produced two further near-misses of the same shape as the mainland ones: querying 'Girne Üniversitesi' ranked the real but different 'Girne American University' first (correct match, 'University of Kyrenia', was rank 1); querying 'Kıbrıs Amerikan Üniversitesi' ranked the real but different 'American University of Cyprus' first (correct match was rank 1, at auc.edu.tr). One KKTC institution (Kıbrıs Aydın Üniversitesi, id 464048) has no ROR match at all -- the top result was mainland 'Istanbul Aydın University', a different institution -- left null and flagged rather than accepted. Two KKTC institutions matched exactly by name but carry an odd ROR country field ('Türkiye' rather than 'Cyprus') -- accepted on the strength of the exact name+domain match, quirk disclosed rather than hidden. This completes domain resolution for all 206 candidates: 203 resolved, 3 explicitly left null and flagged (never guessed)."
 }
