@@ -3272,6 +3272,24 @@ Turkey's identical-template pattern, these looked like genuine distinct per-inst
 research, so each would need its own real fetch rather than a single reusable exclude-list,
 more like the Netherlands zero-coverage work just completed than the Turkey deepening arc.
 
+**Program catalogue batch 28 — KIT, Karlsruhe Institute of Technology, 45 new, running
+session total 4,037 across 46 universities. First Germany batch this session.** Full method
+in that commit's own message (`85947bb`). Germany is a named AGENTS.md priority country
+untouched until now. Strong, unusually well-evidenced language-of-instruction resolution:
+KIT's own official "Degree Programs Taught in English" page lists 23 English-medium
+programs, every one of them Master's-level -- zero Bachelor's programs appear on it at all.
+Rather than leave every record hedged (this session's default when no per-program tag
+exists, per the Leiden/UT precedent), this specific negative evidence supported a positive
+claim: KIT's bachelor's-level programs are German-medium by default, recorded as such for
+44 of 45 records. The 45th, 'Mechanical Engineering (International) B.Sc.', was one of this
+batch's own spot-checks and turned out to be the deliberate, named exception -- run by KIT's
+Carl Benz School specifically for non-German-speaking international students (SAT/TOEFL/
+IELTS admission) -- confirmed and recorded as English-medium. **General lesson**: absence
+from an official 'taught in English' list is itself usable evidence when that list is
+comprehensive and the absence is total (all 45 Bachelor's programs, not a handful), distinct
+from a page that simply doesn't address language at all (Leiden, UT) where no such inference
+is available. Second spot-check (Food Chemistry B.Sc.) confirmed real.
+
 **Program catalogue batch 26 — Maastricht University, 27 new, running session total 3,953
 across 43 universities.** Full method in that commit's own message (`8b44ec7`). Third
 Netherlands batch. Same Browser-pane-with-working-pagination pattern as most of this
