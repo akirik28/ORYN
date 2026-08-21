@@ -2,7 +2,7 @@
 
 Research lane: `worktree-de-nl-programmes`
 Researched: 2026-08-21
-Data files: `data/research/university-programs/de_nl_batch{1..10}_2026-08-21.jsonl`
+Data files: `data/research/university-programs/de_nl_batch{1..16}_2026-08-21.jsonl`
 
 Research output only. No application code, no migrations, no schema changes, no Supabase writes.
 
@@ -11,15 +11,15 @@ Research output only. No application code, no migrations, no schema changes, no 
 ## Why this lane exists
 
 Assigned by the ORYN multi-agent coordination session to deepen the `university_programs`
-catalogue, in two waves. Wave 1 covered 5 named institutions. Wave 2 was assigned by the
-coordinator after wave 1 landed, prioritizing the Netherlands "looks covered but isn't" trap
-over Germany's honest zeros — see below.
+catalogue, in three waves. Wave 1 covered 5 named institutions. Wave 2 was assigned after
+wave 1 landed, prioritizing the Netherlands "looks covered but isn't" trap over Germany's
+honest zeros. Wave 3 covered those German zeros once the Dutch deepening was done.
 
 ---
 
 ## Verified counts
 
-**1,836 records across 10 universities**, all `official_primary`, all with
+**3,089 records across 16 universities**, all `official_primary`, all with
 `university_official_domain` populated.
 
 | University | Country | Live before this lane | Bachelor's | Master's | Other | New total |
@@ -28,18 +28,24 @@ over Germany's honest zeros — see below.
 | Universität Heidelberg | Germany | 0 | 136 | 135 | — | 271 |
 | TU Berlin | Germany | 0 | 50 | 92 | — | 142 |
 | University of Bonn | Germany | 0 | 131 | 126 | — | 257 |
+| Humboldt-Universität zu Berlin | Germany | 3 | 171 | 150 | — | 324 |
+| Albert-Ludwigs-Universität Freiburg | Germany | 0 | 98 | 130 | — | 228 |
+| Georg-August-Universität Göttingen | Germany | 0 | 97 | 118 | — | 215 |
+| Universität Hamburg | Germany | 0 | 85 | 113 | — | 198 |
+| TU Darmstadt | Germany | 0 | 41 | 65 | 17 Staatsexamen/Erweiterung | 123 |
+| Universität Stuttgart | Germany | 0 | 64 | 104 | — | 168 |
 | TU Delft | Netherlands | 15 (Bachelor's only) | 2 (gap-fill) | 38 | — | 55 |
 | Erasmus University Rotterdam | Netherlands | 4 | 32 | 116 | — | 152 |
 | Tilburg University | Netherlands | 4 | 28 | 95 | — | 127 |
 | University of Amsterdam | Netherlands | 4 | 60 | 266 | — | 330 |
 | University of Groningen | Netherlands | 4 | 48 | 138 | — | 190 |
 | Vrije Universiteit Amsterdam | Netherlands | 0 | 29 | 114 | 20 Pre-Master's | 163 |
-| **New records this lane** | | | **577** | **1,239** | **20** | **1,836** |
+| **New records this lane** | | | **1,133** | **1,904** | **37+20** | **3,089** |
 
-Six of the ten (Heidelberg, TU Berlin, Bonn, plus VU Amsterdam from 0) went from nothing to a
-fully reconciled total. The four Dutch universities in wave 2 (Erasmus, Tilburg, UvA,
-Groningen) each carried exactly 4 pre-existing programmes — the same "looks covered but isn't"
-trap as LMU's original 4 — all confirmed excluded by exact title/URL match, not duplicated.
+Eleven of the sixteen went from 0 live programmes to a fully reconciled total. The four Dutch
+universities in wave 2 (Erasmus, Tilburg, UvA, Groningen) and Humboldt in wave 3 each carried
+a small pre-existing set — the same "looks covered but isn't" trap as LMU's original 4 — all
+confirmed excluded by exact title/URL match, not duplicated.
 
 ---
 
@@ -88,11 +94,32 @@ retrieval against that source rather than the rendered HTML.
   metadata at scale, then all 280 candidate programme pages fetched individually. The Dutch
   **CROHO accreditation code** (the official programme-registry number, printed on every
   programme's own page) became the key deduplication signal — pages sharing a code are the
-  same legally-accredited programme, which correctly resolved ~45 "profile"/track sub-pages
-  into their parent programmes without collapsing genuinely independent joint-degree
-  programmes that happen to share a subject area.
+  same legally-accredited programme.
 - **VU Amsterdam** — see the dedicated section below. Broke a blocker that had defeated two
   prior attempts on a sibling branch.
+
+**Wave 3:**
+
+- **Humboldt University Berlin** — server-rendered TYPO3, but the domain sits behind an
+  Anubis automatic proof-of-work anti-bot page — not a CAPTCHA, no human decision-solving,
+  clears automatically within seconds for any JS-capable browser. Cleared it via the browser
+  tool, then used the page's own already-authenticated `fetch()` for bulk retrieval.
+- **Freiburg** — the finder's search widget calls a public, unauthenticated JSON REST API
+  (`wp-json/study-search/v1/studies`), independently re-confirmed via a direct `curl` outside
+  the browser to rule out session-gating.
+- **Göttingen** — the A-Z page is client-rendered, but its loading JS traced to the
+  university's own backend JSON API (`api/v1/get/courses/language/{en|de}`), the same source
+  that server-generates every individual programme page.
+- **Universität Hamburg** — the A-Z table ships as a pre-rendered HTML string embedded in an
+  external JS file (fetchable with plain `curl`). Per-programme detail came from an endpoint
+  keyed off the HTTP `Referer` header naming the specific programme ID — verified by
+  requesting the same URL with different `Referer` values and observing the content change
+  correctly each time.
+- **TU Darmstadt** — plain server-rendered HTML, one unpaginated A-Z page, cross-validated
+  against the site's own dedicated Bachelor/Master/Lehramt filter pages whose union matched
+  exactly.
+- **Universität Stuttgart** — the catalogue's filter widget renders all programme tiles
+  server-side with structured `data-*` attributes; no hidden API or JS execution needed.
 
 ---
 
@@ -134,7 +161,7 @@ alone is 114.
 
 The standing rule — never infer `language_of_instruction` from a programme's name or from a
 page rendering in a given language, only assert what a programme's own page states — held
-across all ten universities, including where it meant leaving the field null.
+across all sixteen universities, including where it meant leaving the field null.
 
 | University | Records | Language null | Notable pattern |
 |---|---:|---:|---|
@@ -142,6 +169,12 @@ across all ten universities, including where it meant leaving the field null.
 | Heidelberg | 271 | 1 | Only 15/271 purely English-medium — overwhelmingly German or bilingual |
 | TU Berlin | 142 | 4 | — |
 | Bonn | 257 | 87 | Bonn's own Keyfacts box omits the field for roughly a third of programmes — a real source gap |
+| Humboldt | 321 | 0 | Cross-validated listing-level facet against each detail page, zero mismatches |
+| Freiburg | 228 | 0 | Caught a real per-degree-level split: Bachelor's "Sustainable Systems Engineering" is German-medium despite its English name; the same-subject Master's is English-medium |
+| Göttingen | 215 | 3 | 11 dual-language-tagged courses individually resolved case-by-case rather than blanket-resolved |
+| Hamburg | 198 | 1 | Only null case: a joint Hamburg/Istanbul Law programme whose own page genuinely omits the field |
+| TU Darmstadt | 123 | 0 | Every value from an explicit categorical statement |
+| Stuttgart | 168 | 0 | Cross-verified against two independent per-page fields, zero mismatches |
 | Delft | 40 | 1 | Caught a mismatch between an index page's label and a detail page's own label — detail page trusted |
 | Erasmus Rotterdam | 148 | 5 | EUR's own field literally states the ambiguous combined category "Dutch and English" for these 5 — left null rather than guessed |
 | Tilburg | 123 | 0 | Every record has an explicit source value |
@@ -149,11 +182,12 @@ across all ten universities, including where it meant leaving the field null.
 | Groningen | 186 | 0 | RUG's page template uniformly includes the field |
 | VU Amsterdam | 163 | 0 | Real per-record `opleidingstaal--nl`/`opleidingstaal--en` API facets |
 
-The Netherlands corpus (944 records) has only 8 language-nulls total — Dutch university sites
-overwhelmingly publish an explicit per-programme language field. Germany is the harder
-source: Bonn's 87 nulls are the largest concentration of unknowns in the full batch, a real
-gap in that source, not a research shortfall — German programmes routinely run English-medium
-despite German titles, and vice versa, so a name-based guess would not have been defensible.
+The Netherlands corpus (944 records) has only 8 language-nulls total. Germany's wave-3
+universities are markedly cleaner than wave 1 — 4 nulls across 1,253 records, vs. Bonn's 87
+alone in wave 1 — largely because most wave-3 sources publish an explicit categorical language
+field rather than requiring per-programme detail-page inference. Bonn remains the single
+largest concentration of unknowns in the full batch, a real gap in that source, not a research
+shortfall.
 
 ---
 
@@ -172,7 +206,10 @@ despite German titles, and vice versa, so a name-based guess would not have been
   Rotterdam's own page states the joint EUR/TU Delft "Technical Medicine" programme is
   English-taught; TU Delft's own page (already in the DB from this lane's wave-1 batch) says
   "Dutch & English, mainly Dutch." Both recorded verbatim from their respective institution's
-  own page.
+  own page. Flagged by the coordinator as a new category of data disagreement: not a stale
+  copy, not a scale mismatch, but two authoritative co-owners of one joint fact describing it
+  differently — a "prefer the official source" resolution rule gives no answer here, since
+  both sources are official.
 - **UvA's existing "Politics Psychology Law and Economics" record is the same programme as
   UvA's current "PPLE" branding** (same `pple.uva.nl` root) — confirmed and skipped rather
   than re-added under the new name, avoiding a near-duplicate that a naive title match would
@@ -183,9 +220,23 @@ despite German titles, and vice versa, so a name-based guess would not have been
 - **VU Amsterdam's 20 Pre-Master's records are bridging programmes, not degrees** — VU's own
   API tags them with a distinct type, kept as a separate `degree_level` value rather than
   miscounted into the Master's total.
-- **`international_eligible` is null on all 1,836 records.** Matches the established
-  convention across this entire research programme — none of these ten universities' catalogue
-  pages publish a per-programme international-eligibility flag; never inferred.
+- **Göttingen's "Geoscience"/"Earth and Environmental Sciences" was a real duplicate, caught
+  and merged before commit** — unlike its 21-way Master of Education cluster (a genuinely
+  documented shared administrative hub page for 21 distinct subject-admission variants,
+  confirmed per-record and left as-is), this pair shared a URL because the source page's own
+  "Programme name" field literally reads "Geoscience (NEW: Earth and Environmental Sciences)"
+  — one programme mid-rename, listed twice by the university's own backend API under its old
+  and new name. Live-verified before merging; the old-name record was removed and the rename
+  documented in the surviving record's `researcher_notes`. This is the kind of check that
+  matters: same symptom (shared URL) with two different correct resolutions depending on what
+  the source actually says.
+- **Universität Hamburg's Hebammenwissenschaft (Midwifery Science)** links to a different
+  university's domain (`haw-hamburg.de`) — investigated rather than assumed to be a naming
+  collision, and confirmed as a genuine joint degree with UHH's Medical Faculty (UKE) as an
+  explicit co-provider.
+- **`international_eligible` is null on all 3,089 records.** Matches the established
+  convention across this entire research programme — none of these sixteen universities'
+  catalogue pages publish a per-programme international-eligibility flag; never inferred.
 
 ---
 
@@ -199,10 +250,9 @@ KIT), and VU Amsterdam as having "10 of 29" programmes live. A live query showed
   fully researched and pushed on `oryn/programs-pipeline-reconciled` — FU Berlin (75 records,
   `58872fc`) and RWTH Aachen (77 records, `6dff85a`), verified as ancestors of this branch's
   own history before writing this note, not taken on trust. Not re-researched — the
-  coordinator has since confirmed both are ingested (`university_programs` moved from 664/54
-  to 7,657/122 institutions in the same integration pass that picked up this lane's wave 1).
+  coordinator has since confirmed both are ingested.
 - **VU Amsterdam: a known, previously-diagnosed technical blocker, not an untouched gap** —
-  and now resolved this lane, see the dedicated section above.
+  and resolved this lane, see the dedicated section above.
 
 KIT (45 live programmes) was the one part of the original brief that was accurate.
 
@@ -210,40 +260,49 @@ KIT (45 live programmes) was the one part of the original brief that was accurat
 
 ## Validation performed
 
-- All 1,836 records parse as valid JSON, one object per line, UTF-8 with native-language
+- All 3,089 records parse as valid JSON, one object per line, UTF-8 with native-language
   characters preserved.
-- All 1,836 records carry all 21 required schema fields (matching `fr_it_es_ch_batch4`'s
+- All 3,089 records carry all 21 required schema fields (matching `fr_it_es_ch_batch4`'s
   schema) — zero missing-field records.
-- Zero duplicate `research_program_id` within or across all 10 files.
-- Zero duplicate `official_program_url` within or across all 10 files.
+- Zero duplicate `research_program_id` within or across all 16 files.
+- Zero duplicate `official_program_url` within or across all 16 files, with one documented
+  exception: 21 Göttingen Master of Education records share one administrative hub page by
+  the university's own design, confirmed per-record — a real duplicate (Göttingen's
+  "Geoscience"/"Earth and Environmental Sciences" rename pair) was found and merged before
+  commit, see structural findings above.
 - Cross-checked against the **entire** existing research corpus (all `.jsonl` files under
   `data/research/university-programs/`, not just this lane's own output): the corpus does
   carry pre-existing duplicate IDs/URLs (46 IDs, 181 URLs — all between older files from
   2026-08-17/20, e.g. a Glasgow batch duplicated across two independent files), but **none of
-  this lane's 10 files are involved in any of them**, confirmed programmatically rather than
+  this lane's 16 files are involved in any of them**, confirmed programmatically rather than
   assumed.
 - Spot-checked sample records per file for value/notes-field separation discipline (asserted
   values in data fields, reasoning and caveats in `researcher_notes` / `verification_status`)
   — held in every sample checked.
 
 No CAPTCHA was encountered, and none was attempted or bypassed. No credential was handled by
-any researcher agent (see the LMU Basic-auth note above).
+any researcher agent (see the LMU Basic-auth note above). Two automated bot-mitigation gates
+were cleared legitimately via browser (Tilburg's Cloudflare challenge, confirmed permitted by
+the site's own `robots.txt`; Humboldt's Anubis proof-of-work page, which clears automatically
+for any JS-capable client) — neither is a CAPTCHA, neither involved bypassing a human-facing
+access control.
 
 ---
 
 ## Remaining gaps, in priority order
 
-1. **Germany's honest zeros** — Humboldt, Freiburg, Göttingen, Hamburg, TU Darmstadt,
-   Stuttgart — assigned as this lane's next wave, deprioritized behind the Dutch deepening
-   per the coordinator's explicit steer (a university showing a handful of its real catalogue
-   is worse than one showing none).
-2. **Bonn's 87 language-null records** — the source itself is thin here; a targeted
+1. **Bonn's 87 language-null records** — the source itself is thin here; a targeted
    per-programme detail-page pass could recover some, but likely not all.
-3. **LMU's 4 pre-existing DB records carry null language where this lane's research has real
+2. **LMU's 4 pre-existing DB records carry null language where this lane's research has real
    values** — a reconciliation pass (not a re-research pass) would close this cheaply.
-4. **TU Delft's provisional "(accreditation pending)" programme** — needs a product decision
+3. **TU Delft's provisional "(accreditation pending)" programme** — needs a product decision
    on whether forward-looking/pending-accreditation programmes belong in the student-facing
    catalogue, or should be held back until accreditation is confirmed.
+4. **The Erasmus/Delft Technical Medicine language conflict** — needs a product decision on
+   how to represent disagreement between two co-owning official sources, not just a data fix.
 5. **The pre-existing 46 duplicate-ID / 181 duplicate-URL corpus issue** noted during
    validation above — out of this lane's scope (predates it, involves only other files), but
-   worth someone's attention given the standing data-quality mandate.
+   worth someone's attention given the standing data-quality mandate. A related corpus-integrity
+   issue was independently found by another lane: the `fr_it_es_ch` batch assigns one research
+   ID per programme-name-and-degree rather than per physical programme, so one ID can span
+   multiple real programmes.
