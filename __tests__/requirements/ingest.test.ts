@@ -1,10 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { decideRequirementIngestion, requirementDedupKey, type ResearchRequirementRecord, type UniversityLookupRow } from "@/lib/requirements/ingest";
+import {
+  applyRequirementDecision,
+  decideRequirementIngestion,
+  requirementDedupKey,
+  requirementRecordIdentity,
+  requirementUniqueIndexKey,
+  type ResearchRequirementRecord,
+  type RequirementQueueRowInput,
+  type RequirementWriteClient,
+  type UniversityLookupRow,
+} from "@/lib/requirements/ingest";
+import { RequirementQualifiersSchema } from "@/lib/validation/requirements";
 
 const EDINBURGH_ID = "11111111-1111-1111-1111-111111111111";
+const METU_ID = "22222222-2222-2222-2222-222222222222";
 
 const UNIVERSITIES: UniversityLookupRow[] = [
   { id: EDINBURGH_ID, name: "The University of Edinburgh", country: "United Kingdom", websiteUrl: "https://www.ed.ac.uk" },
+  { id: METU_ID, name: "Middle East Technical University", country: "Türkiye", websiteUrl: "https://www.metu.edu.tr" },
 ];
 
 /** Minimal record that lands cleanly; each test overrides only the field under examination. */
@@ -133,5 +146,259 @@ describe("requirementDedupKey", () => {
     const key = requirementDedupKey(EDINBURGH_ID, "english_proficiency", null);
     const existing = new Map<string, readonly string[]>([[key, ["IELTS Academic: total 6.5 with at least 5.5 in each component."]]]);
     expect(decideRequirementIngestion(req(), UNIVERSITIES, new Set(), existing).outcome).toBe("duplicate");
+  });
+});
+
+describe("requirementUniqueIndexKey", () => {
+  it("mirrors the APPLIED index, so two alternatives with different titles are different rows", () => {
+    // 0056 replaced UNIQUE(university, type, coalesce(scope,'')) with the same plus
+    // md5(coalesce(title,'')). The pair below shares everything except the title, and under
+    // the old index one of them was destroyed on insert.
+    const a = requirementUniqueIndexKey(EDINBURGH_ID, "english_proficiency", null, "IELTS Academic: total 6.5 with at least 5.5 in each component.");
+    const b = requirementUniqueIndexKey(EDINBURGH_ID, "english_proficiency", null, "TOEFL-iBT before 21 January 2026: total 92 with at least 20 in each component.");
+    expect(a).not.toBe(b);
+  });
+
+  it("still collides for a byte-identical re-ingest, which is what the index is for", () => {
+    const title = "IELTS Academic: total 6.5 with at least 5.5 in each component.";
+    expect(requirementUniqueIndexKey(EDINBURGH_ID, "english_proficiency", null, title)).toBe(requirementUniqueIndexKey(EDINBURGH_ID, "english_proficiency", "", title));
+  });
+
+  it("is strictly finer than the application dedup bucket, and deliberately so", () => {
+    // The bucket collects candidates for the fuzzy title check; the index is the backstop
+    // underneath it. Modelling one with the other is what made the dry run report 705
+    // destroyed rows against an index that no longer exists.
+    const bucket = requirementDedupKey(EDINBURGH_ID, "english_proficiency", null);
+    expect(requirementUniqueIndexKey(EDINBURGH_ID, "english_proficiency", null, "a")).not.toBe(bucket);
+    expect(requirementUniqueIndexKey(EDINBURGH_ID, "english_proficiency", null, "a").startsWith(bucket)).toBe(true);
+  });
+});
+
+/**
+ * Migration 0056's columns, asserted on the BUILT ROW rather than on the outcome.
+ *
+ * The run this replaces reported 1,254 records as `accepted` and wrote every one of them with
+ * these six columns unset — decided correctly, inserted successfully, and stripped of the
+ * qualifier that made each one true. An outcome count of `accepted` proved nothing then and
+ * proves nothing now, which is why every assertion below reads a column off `decision.row`.
+ */
+describe("decideRequirementIngestion — migration 0056's qualifier columns", () => {
+  it("sets every one of 0056's columns on an accepted row, so none is left undefined for the insert", () => {
+    // `undefined` is the specific hazard: supabase-js omits an undefined value from the
+    // payload entirely, so the column silently takes its default instead of what was meant.
+    const row = decide(req()).row!;
+    for (const column of ["test_scale", "scale_ambiguity", "recency_rule", "excluded_provenances", "evaluation_gate", "research_record_id"] as const) {
+      expect(Object.keys(row)).toContain(column);
+      expect(row[column]).not.toBeUndefined();
+    }
+  });
+
+  it("carries the research_record_id on every accepted row — 0056 §9's whole purpose", () => {
+    // Without it a live requirement can only be traced back to its research record by matching
+    // text against requirement_research_queue.raw_payload: a full-text scan over jsonb, and
+    // exactly the lookup a reviewer needs to recover a dropped qualifier.
+    expect(decide(req({ research_requirement_id: "REQ-2026-08-21-4008" })).row!.research_record_id).toBe("REQ-2026-08-21-4008");
+  });
+
+  it("passes test_scale and scale_ambiguity through verbatim, normalising blank to null", () => {
+    const row = decide(req({ test_scale: "IELTS_0_9", scale_ambiguity: "none" })).row!;
+    expect(row.test_scale).toBe("IELTS_0_9");
+    expect(row.scale_ambiguity).toBe("none");
+    expect(decide(req({ test_scale: "   " })).row!.test_scale).toBeNull();
+    expect(decide(req()).row!.test_scale).toBeNull();
+  });
+
+  it("lands METU's IELTS record with direction not_valid_on_or_after and the inverted_recency gate", () => {
+    // REQ-2026-08-21-9102, verbatim. A max-age-only model tells this student their fresh 2026
+    // certificate qualifies, when it is the freshness that disqualifies it.
+    const row = decide(
+      req({
+        research_requirement_id: "REQ-2026-08-21-9102",
+        university_name: "Middle East Technical University",
+        university_country: "Türkiye",
+        source_url: "https://iso.metu.edu.tr/en/english-proficiency",
+        scope: "english_proficiency_undergraduate",
+        requirement_text: "IELTS exams taken on or after the 24th of December 2022 will not be anymore accepted.",
+        is_exclusion: true,
+        test_scale: "IELTS_0_9",
+        scale_ambiguity: "none",
+      })
+    ).row!;
+    expect(row.recency_rule).toEqual({ direction: "not_valid_on_or_after", boundaryDate: "2022-12-24" });
+    expect(row.evaluation_gate).toBe("inverted_recency");
+    expect(row.test_scale).toBe("IELTS_0_9");
+  });
+
+  it("lands METU's TR-YÖS percentile record with the incomparable_scale gate and its scale intact", () => {
+    // REQ-2026-08-21-9330. A rank, not a score: resolving it needs the cycle's national
+    // distribution, which Oryn does not hold and cannot derive from a stored number.
+    const row = decide(
+      req({
+        research_requirement_id: "REQ-2026-08-21-9330",
+        university_name: "Middle East Technical University",
+        university_country: "Türkiye",
+        source_url: "https://iso.metu.edu.tr/en/system/files/odtu_iso_requirements.pdf",
+        requirement_category_db: "entrance_exam",
+        scope: "international_undergraduate",
+        requirement_text: "TR-YÖS: Having ranked in the first 5th percentile in the TR-YÖS exam taken by the applicant.",
+        test_scale: "TR_YOS_PERCENTILE_RANK",
+        scale_ambiguity: "none",
+      })
+    ).row!;
+    expect(row.evaluation_gate).toBe("incomparable_scale");
+    expect(row.test_scale).toBe("TR_YOS_PERCENTILE_RANK");
+  });
+
+  it("lands Edinburgh's One Skill Retake refusal with excluded_provenances and the named_exclusion gate", () => {
+    // REQ-2026-08-21-3020, verbatim including its missing space after "component."
+    const row = decide(
+      req({
+        research_requirement_id: "REQ-2026-08-21-3020",
+        requirement_text: "IELTS Academic: total 6.5 with at least 5.5 in each component.We do not accept IELTS One Skill Retake to meet our English language requirements.",
+      })
+    ).row!;
+    expect(row.excluded_provenances).toEqual(["one_skill_retake"]);
+    expect(row.evaluation_gate).toBe("named_exclusion");
+  });
+
+  it("does not record Southampton as refusing the variant it accepts, in almost the same words", () => {
+    // The counterpart to the row above, and the reason provenance cannot be a global property
+    // of the test: same variant, two UK universities, opposite answers, both official.
+    const row = decide(
+      req({
+        research_requirement_id: "REQ-2026-08-21-9211",
+        university_name: "The University of Edinburgh", // resolution is not what this asserts
+        requirement_text: "(IELTS) Academic UKVI SELT (including One Skill Retake)",
+        researcher_notes: "Edinburgh states 'We do not accept IELTS One Skill Retake to meet our English language requirements'; Southampton names One Skill Retake as accepted.",
+      })
+    ).row!;
+    expect(row.excluded_provenances).toBeNull();
+    // Still gated: provenance demonstrably matters on this row, so a human should confirm it.
+    expect(row.evaluation_gate).toBe("named_exclusion");
+  });
+
+  it("writes recency_rule in the shape the READER parses, not the shape the migration sketched", () => {
+    // 0056 §2's header sketches `boundary_date`; RecencyRuleSchema expects `boundaryDate`, and
+    // Zod strips unknown keys rather than failing on them. Writing the migration's literal
+    // shape would parse cleanly and drop the date — the same qualifier-stripping failure one
+    // level down, invisible for the same reason. This asserts the round trip, not the writer.
+    const row = decide(
+      req({
+        university_name: "Middle East Technical University",
+        university_country: "Türkiye",
+        source_url: "https://iso.metu.edu.tr/en/english-proficiency",
+        requirement_text: "IELTS exams taken on or after the 24th of December 2022 will not be anymore accepted.",
+      })
+    ).row!;
+    const readBack = RequirementQualifiersSchema.parse({
+      evaluation_gate: row.evaluation_gate,
+      is_exclusion: row.is_exclusion,
+      test_scale: row.test_scale,
+      scale_ambiguity: row.scale_ambiguity,
+      recency_rule: row.recency_rule,
+      excluded_provenances: row.excluded_provenances,
+    });
+    expect(readBack.recencyRule).toEqual({ direction: "not_valid_on_or_after", boundaryDate: "2022-12-24" });
+    expect(readBack.evaluationGate).toBe("inverted_recency");
+  });
+
+  it("emits every qualifier column in a shape RequirementQualifiersSchema accepts — it fails CLOSED", () => {
+    // An unreadable qualifier set makes evaluateRequirement answer needs_manual_review for
+    // reasons that have nothing to do with the requirement. Asserted across the shapes this
+    // builder can produce, not just the happy one.
+    const records = [
+      req(),
+      req({ is_exclusion: true }),
+      req({ test_scale: "TR_YOS_PERCENTILE_RANK" }),
+      req({ requirement_text: "We do not accept IELTS One Skill Retake or TOEFL MyBest Scores." }),
+      req({ requirement_text: "Qualifications must be no more than two years old from the start date of this programme." }),
+      req({ requirement_text: "IELTS exams taken on or after the 24th of December 2022 will not be accepted." }),
+    ];
+    for (const record of records) {
+      const row = decide(record).row;
+      if (!row) continue;
+      const parsed = RequirementQualifiersSchema.safeParse({
+        evaluation_gate: row.evaluation_gate,
+        is_exclusion: row.is_exclusion,
+        test_scale: row.test_scale,
+        scale_ambiguity: row.scale_ambiguity,
+        recency_rule: row.recency_rule,
+        excluded_provenances: row.excluded_provenances,
+      });
+      expect(parsed.success).toBe(true);
+    }
+  });
+});
+
+/**
+ * The audit hole. Eleven inserts in the last run failed with `null value in column
+ * "research_requirement_id"`, reported against a record id of literally `undefined` — the
+ * value you get for a field the object does not have. 107 records across 19
+ * `*_requirements_*.jsonl` files are DEADLINE records carrying `research_deadline_id`.
+ *
+ * Routing is fixed at source (lib/requirements/corpus-files.ts partitions on record shape, not
+ * on filename). These assertions are the second lock: even reached directly, such a record is
+ * identified, refused with the real reason, and still gets an audit row.
+ */
+describe("requirementRecordIdentity — no record can produce an unwritable audit row", () => {
+  it("returns the requirement id for an ordinary record", () => {
+    expect(requirementRecordIdentity(req({ research_requirement_id: "REQ-2026-08-21-9102" }))).toEqual({ id: "REQ-2026-08-21-9102", shape: "requirement" });
+  });
+
+  it("keeps a misfiled deadline record's OWN id rather than manufacturing one", () => {
+    // The DL- prefix makes it self-describing in the queue, and it is the identifier that
+    // actually finds the record in the corpus — the only thing an audit trail is for.
+    const misfiled = { research_deadline_id: "DL-2026-08-21-CA-0101", university_name: "University of British Columbia" } as unknown as ResearchRequirementRecord;
+    expect(requirementRecordIdentity(misfiled)).toEqual({ id: "DL-2026-08-21-CA-0101", shape: "misfiled_deadline" });
+  });
+
+  it("gives a record with no identifier at all a deterministic marker rather than undefined", () => {
+    const nameless = { university_name: "Somewhere" } as unknown as ResearchRequirementRecord;
+    const first = requirementRecordIdentity(nameless);
+    expect(first.shape).toBe("unidentified");
+    expect(first.id).toMatch(/^UNIDENTIFIED-[0-9a-f]{8}$/);
+    expect(requirementRecordIdentity(nameless).id).toBe(first.id);
+  });
+
+  it("refuses a misfiled deadline as malformed_source, naming the routing bug rather than blaming the data", () => {
+    // The old path let these fall through to `not_ingestible: requirement_text is null/empty`,
+    // which reads as "a requirement with no text" and hides a routing bug behind a plausible
+    // data complaint.
+    const misfiled = {
+      research_deadline_id: "DL-2026-08-21-CA-0101",
+      university_name: "The University of Edinburgh",
+      university_country: "United Kingdom",
+      deadline_type: "application",
+      deadline_date: "2027-01-15",
+    } as unknown as ResearchRequirementRecord;
+    const decision = decide(misfiled);
+    expect(decision.outcome).toBe("malformed_source");
+    expect(decision.detail).toContain("DL-2026-08-21-CA-0101");
+    expect(decision.row).toBeNull();
+  });
+
+  it("writes an audit row with a non-null id for a record that has no research_requirement_id", async () => {
+    // requirement_research_queue.research_requirement_id is NOT NULL. This is the assertion
+    // that the hole is closed: the same record that produced `null value in column ...` now
+    // produces a writable row.
+    const written: RequirementQueueRowInput[] = [];
+    const client: RequirementWriteClient = {
+      async insertRequirement() {
+        throw new Error("must not insert a requirement for a misfiled deadline record");
+      },
+      async insertQueueRow(row) {
+        written.push(row);
+        return { error: null };
+      },
+    };
+    const misfiled = { research_deadline_id: "DL-2026-08-21-CA-0101", university_name: "Nowhere University", university_country: "Canada" } as unknown as ResearchRequirementRecord;
+    const result = await applyRequirementDecision(misfiled, decide(misfiled), "batch-test", client);
+    expect(result.queueInsertError).toBeNull();
+    expect(written).toHaveLength(1);
+    expect(written[0].research_requirement_id).toBe("DL-2026-08-21-CA-0101");
+    expect(written[0].outcome).toBe("malformed_source");
+    // Every field a misfiled record can be missing must be an explicit null, never undefined:
+    // supabase-js drops undefined keys, so the column would silently take its default.
+    for (const value of Object.values(written[0])) expect(value).not.toBeUndefined();
   });
 });

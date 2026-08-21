@@ -31,7 +31,8 @@
  * constraint as scripts/ingest-university-programs.ts).
  */
 import { readFileSync, readdirSync } from "node:fs";
-import { decideRequirementIngestion, requirementDedupKey, type ResearchRequirementRecord, type UniversityLookupRow } from "../lib/requirements/ingest";
+import { partitionCorpusRecords, type CorpusRecordInput } from "../lib/requirements/corpus-files";
+import { decideRequirementIngestion, requirementDedupKey, requirementUniqueIndexKey, type ResearchRequirementRecord, type UniversityLookupRow } from "../lib/requirements/ingest";
 import { decideDeadlineIngestion, deadlineDedupKey, deadlineFactKeyFromRow, type ResearchDeadlineRecord } from "../lib/deadlines/ingest";
 import { classifyDeadlineShapes, classifyRequirementShapes, findUniqueSlotCollisions, withRetry, type DeadlineShape, type RequirementShape } from "../lib/requirements/shape-audit";
 import { getSupersededUniversityIds } from "../lib/universities/canonical";
@@ -160,6 +161,14 @@ async function main() {
   const reqFiles = files.filter((f) => !f.toLowerCase().includes("deadline"));
   const dlFiles = files.filter((f) => f.toLowerCase().includes("deadline"));
 
+  // Filename picks the files; the record's own identifier picks the pipeline. Reading these
+  // counts off the filename alone was reporting 107 deadline records as requirement records
+  // that happened to be unrepresentable — a real number attached to the wrong question.
+  const parsedRecords: CorpusRecordInput[] = [];
+  for (const f of reqFiles) parseJsonl<unknown>(`${CORPUS_DIR}/${f}`).forEach((record, i) => parsedRecords.push({ file: f, index: i + 1, nameSaysShape: "requirement", record }));
+  for (const f of dlFiles) parseJsonl<unknown>(`${CORPUS_DIR}/${f}`).forEach((record, i) => parsedRecords.push({ file: f, index: i + 1, nameSaysShape: "deadline", record }));
+  const partition = partitionCorpusRecords(parsedRecords);
+
   const universities = await loadUniversityCandidates(target);
   const { rows: programs } = await withRetry("read university_programs", () => fetchAllRowsVerified<ProgramRow>(target, "university_programs", "id,university_id,name,normalized_name", "order=id"));
   const { rows: existingReqs } = await withRetry("read university_requirements", () =>
@@ -189,11 +198,16 @@ async function main() {
   console.log(`Files           : ${files.length} (${reqFiles.length} requirement, ${dlFiles.length} deadline)`);
   console.log(`Live candidates : ${universities.length} active universities (superseded excluded), ${programs.length} programmes`);
   console.log(`Live target rows: ${existingReqs.length} university_requirements, ${existingDls.length} university_deadlines`);
+  if (partition.misroutedByFilename.length > 0) {
+    const byFile = new Map<string, number>();
+    for (const m of partition.misroutedByFilename) byFile.set(m.file, (byFile.get(m.file) ?? 0) + 1);
+    console.log(`Misfiled       : ${partition.misroutedByFilename.length} record(s) across ${byFile.size} file(s) carry a shape their filename contradicts — routed by shape.`);
+    for (const [file, count] of [...byFile.entries()].sort()) console.log(`                 ${file}: ${count}`);
+  }
   console.log("");
 
   // ---- Requirements -------------------------------------------------------------------
-  const reqRecords: { file: string; record: ResearchRequirementRecord }[] = [];
-  for (const f of reqFiles) for (const record of parseJsonl<ResearchRequirementRecord>(`${CORPUS_DIR}/${f}`)) reqRecords.push({ file: f, record });
+  const reqRecords = partition.requirementRecords.map((r) => ({ file: r.file, record: r.record as ResearchRequirementRecord }));
 
   const supersededIds = new Set(reqRecords.map((r) => r.record.supersedes).filter((s): s is string => Boolean(s)));
   const existingTitlesByKey = new Map<string, string[]>();
@@ -209,11 +223,11 @@ async function main() {
   const reqShapes = new Map<RequirementShape, number>();
   const perFileReq = new Map<string, { total: number; accepted: number; blocked: number; unrepresentable: number; acceptedAndUnrepresentable: number }>();
   const acceptedSlotKeys: string[] = [];
-  // Pre-seeded with the slots LIVE rows already occupy. A live row with a different title in
-  // the same slot passes the application-level title-similarity dedup check but still violates
-  // the unique index on insert — which is precisely how the previous run produced 36 rows
-  // decided `accepted` and then destroyed by the database.
-  const claimedSlots = new Set<string>(existingReqs.map((r) => requirementDedupKey(r.university_id, r.requirement_type, r.scope)));
+  // Pre-seeded with the slots LIVE rows already occupy, keyed exactly the way the APPLIED
+  // index keys them (migration 0056 folded md5(title) in). Before 0056 this was keyed on
+  // university+type+scope alone, which is what destroyed 341 accepted rows — and modelling it
+  // that way now would report a loss the migration has already removed.
+  const claimedSlots = new Set<string>(existingReqs.map((r) => requirementUniqueIndexKey(r.university_id, r.requirement_type, r.scope, r.title)));
   let reqUnrepresentable = 0;
   let reqAcceptedUnrepresentable = 0;
   let reqUniResolved = 0;
@@ -229,16 +243,35 @@ async function main() {
    * from batch-internal collisions alone, so slots already held by live rows are included. */
   let reqSlotBlocked = 0;
   const progReasons = new Map<string, number>();
+  /** Migration 0056's columns as the builder would actually write them. The last run's
+   * outcome count said `accepted` for 1,254 rows that carried none of these, which is why
+   * `accepted` alone is not evidence of anything: these are the counts that say whether the
+   * qualifier travelled with the fact. */
+  const gateYield = new Map<string, number>();
+  const recencyYield = new Map<string, number>();
+  const provenanceYield = new Map<string, number>();
+  let acceptedWithScale = 0;
+  let acceptedWithResearchId = 0;
+  let acceptedRows = 0;
 
   for (const { file, record } of reqRecords) {
     const decision = decideRequirementIngestion(record, universities, supersededIds, existingTitlesByKey);
+    if (decision.row) {
+      acceptedRows += 1;
+      if (decision.row.test_scale) acceptedWithScale += 1;
+      if (decision.row.research_record_id) acceptedWithResearchId += 1;
+      bump(gateYield, decision.row.evaluation_gate ?? "(none — automatically evaluable)");
+      if (decision.row.recency_rule) bump(recencyYield, decision.row.recency_rule.direction);
+      for (const p of decision.row.excluded_provenances ?? []) bump(provenanceYield, p);
+    }
     let firstClaimOfSlot = false;
     if (decision.outcome === "accepted" && decision.row) {
-      const key = requirementDedupKey(decision.row.university_id, decision.row.requirement_type, decision.row.scope);
-      existingTitlesByKey.set(key, [...(existingTitlesByKey.get(key) ?? []), decision.row.title]);
-      acceptedSlotKeys.push(key);
-      firstClaimOfSlot = !claimedSlots.has(key);
-      claimedSlots.add(key);
+      const bucket = requirementDedupKey(decision.row.university_id, decision.row.requirement_type, decision.row.scope);
+      existingTitlesByKey.set(bucket, [...(existingTitlesByKey.get(bucket) ?? []), decision.row.title]);
+      const indexKey = requirementUniqueIndexKey(decision.row.university_id, decision.row.requirement_type, decision.row.scope, decision.row.title);
+      acceptedSlotKeys.push(indexKey);
+      firstClaimOfSlot = !claimedSlots.has(indexKey);
+      claimedSlots.add(indexKey);
     }
     if (decision.universityId) reqUniResolved += 1;
 
@@ -265,8 +298,7 @@ async function main() {
   }
 
   // ---- Deadlines ----------------------------------------------------------------------
-  const dlRecords: { file: string; record: ResearchDeadlineRecord }[] = [];
-  for (const f of dlFiles) for (const record of parseJsonl<ResearchDeadlineRecord>(`${CORPUS_DIR}/${f}`)) dlRecords.push({ file: f, record });
+  const dlRecords = partition.deadlineRecords.map((r) => ({ file: r.file, record: r.record as ResearchDeadlineRecord }));
 
   const existingDeadlineKeys = new Set(
     existingDls
@@ -325,9 +357,15 @@ async function main() {
   console.log("-".repeat(96));
   console.log(`${"file".padEnd(52)}${"tot".padStart(5)}${"acc".padStart(6)}${"blk".padStart(6)}${"UNREP".padStart(8)}${"acc+UNREP".padStart(11)}`);
   for (const f of files) {
-    const pf = perFileReq.get(f) ?? perFileDl.get(f);
-    if (!pf) continue;
-    console.log(`${f.padEnd(52)}${String(pf.total).padStart(5)}${String(pf.accepted).padStart(6)}${String(pf.blocked).padStart(6)}${String(pf.unrepresentable).padStart(8)}${String(pf.acceptedAndUnrepresentable).padStart(11)}`);
+    // A file can now appear in BOTH maps — 19 requirements-named files hold deadline records —
+    // so each half is printed on its own line rather than one silently masking the other.
+    for (const [label, pf] of [
+      [f, perFileReq.get(f)],
+      [`${f}  [deadline records]`, perFileDl.get(f)],
+    ] as const) {
+      if (!pf) continue;
+      console.log(`${label.padEnd(52)}${String(pf.total).padStart(5)}${String(pf.accepted).padStart(6)}${String(pf.blocked).padStart(6)}${String(pf.unrepresentable).padStart(8)}${String(pf.acceptedAndUnrepresentable).padStart(11)}`);
+    }
   }
   console.log("");
 
@@ -362,11 +400,28 @@ async function main() {
   for (const [k, v] of [...dlShapes.entries()].sort((a, b) => b[1] - a[1])) console.log(`   ${k.padEnd(28)} ${String(v).padStart(5)}`);
   console.log("");
 
+  console.log("=".repeat(96));
+  console.log("MIGRATION 0056 QUALIFIER YIELD  — what the accepted rows would actually CARRY");
+  console.log("=".repeat(96));
+  console.log(`Accepted rows built                                  : ${acceptedRows}`);
+  console.log(`  with research_record_id (0056 §9 traceability)     : ${acceptedWithResearchId} (${pct(acceptedWithResearchId, acceptedRows)})`);
+  console.log(`  with test_scale (0056 §1)                          : ${acceptedWithScale} (${pct(acceptedWithScale, acceptedRows)})`);
+  console.log("evaluation_gate (0056 §4):");
+  for (const [k, v] of [...gateYield.entries()].sort((a, b) => b[1] - a[1])) console.log(`   ${k.padEnd(34)} ${String(v).padStart(5)}`);
+  console.log("recency_rule.direction (0056 §2 — direction is the load-bearing part):");
+  if (recencyYield.size === 0) console.log("   (none)");
+  for (const [k, v] of [...recencyYield.entries()].sort((a, b) => b[1] - a[1])) console.log(`   ${k.padEnd(34)} ${String(v).padStart(5)}`);
+  console.log("excluded_provenances (0056 §3 — refusals only, never mentions):");
+  if (provenanceYield.size === 0) console.log("   (none)");
+  for (const [k, v] of [...provenanceYield.entries()].sort((a, b) => b[1] - a[1])) console.log(`   ${k.padEnd(34)} ${String(v).padStart(5)}`);
+  console.log("");
+
   const collisions = findUniqueSlotCollisions(acceptedSlotKeys);
   console.log(`Unique-slot collisions among ACCEPTED requirements: ${collisions.length} group(s) collide within this batch.`);
   console.log(`Accepted rows destroyed on insert (incl. slots already held by live rows): ${reqSlotBlocked}`);
-  console.log("   (university_requirements_university_type_scope_idx permits ONE row per university+type+scope.");
-  console.log("    All 36 of the 36 'rejected' rows already in requirement_research_queue are this constraint firing.)");
+  console.log("   (Modelled against the APPLIED index — university_requirements_university_type_scope_title_idx,");
+  console.log("    UNIQUE on university+type+scope+md5(title). The 36 'rejected' rows in requirement_research_queue");
+  console.log("    predate migration 0056 and were the OLD index, which permitted one row per university+type+scope.)");
   for (const c of collisions.slice(0, 10)) console.log(`   ${c.count} records claim slot ${c.key}  → ${c.lost} lost`);
   console.log("");
 

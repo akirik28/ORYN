@@ -901,6 +901,37 @@ export interface UniversityRequirement {
   /** The source document's own clause numbering (e.g. "B-a-1"), stored verbatim and never
    * parsed — see migration 0052's comment. */
   clause_ref: string | null;
+  /** Migration 0056's qualifier columns — everything that governs whether the comparison in
+   * `structured_rule` is legitimate at all, as opposed to what the comparison is. Read off the
+   * row by `RequirementQualifiersSchema` (lib/validation/requirements.ts) and populated by
+   * lib/requirements/ingest.ts. 0056 is APPLIED; these are live columns.
+   *
+   * Scale/version the threshold is expressed against (e.g. `TOEFL_IBT_1_6`). Null means
+   * UNKNOWN, never "the default scale" — an unqualified numeric threshold is not safely
+   * comparable. */
+  test_scale: string | null;
+  /** Whether the scale could be pinned down: none | resolved_unambiguous |
+   * undated_scale_assumption | partially_unsatisfiable | possibly_discontinued_instrument.
+   * Anything outside the first two blocks automatic evaluation. */
+  scale_ambiguity: string | null;
+  /** Validity window INCLUDING its direction (see lib/requirements/types.ts `RecencyRule`).
+   * jsonb because the anchor varies and is load-bearing. Written in the camelCase shape
+   * `RecencyRuleSchema` parses — note that 0056 §2's header sketches snake_case, and Zod
+   * strips unknown keys rather than failing, so the two are not interchangeable. */
+  recency_rule: Record<string, unknown> | null;
+  /** Provenances this institution refuses despite a qualifying number — see
+   * lib/requirements/types.ts `ScoreProvenance`. Per-institution, never a global property of
+   * the test. */
+  excluded_provenances: string[] | null;
+  /** Non-null means lib/requirements/evaluate.ts MUST return needs_manual_review for this row
+   * regardless of `structured_rule` — see lib/requirements/types.ts `EvaluationGate`. */
+  evaluation_gate: string | null;
+  /** Migration 0056 §8 — links two or more competing official readings of the same fact. */
+  conflict_group_id: string | null;
+  /** Migration 0056 §9 — the research record this row came from
+   * (`requirement_research_queue.research_requirement_id`). Without it a live requirement can
+   * be traced back only by matching text against raw_payload. */
+  research_record_id: string | null;
   source_url: string | null;
   retrieved_at: string | null;
   last_checked_at: string | null;
@@ -925,6 +956,13 @@ export type UniversityRequirementInsert = Insertable<
   | "group_role"
   | "is_exclusion"
   | "clause_ref"
+  | "test_scale"
+  | "scale_ambiguity"
+  | "recency_rule"
+  | "excluded_provenances"
+  | "evaluation_gate"
+  | "conflict_group_id"
+  | "research_record_id"
 >;
 
 export interface UniversityStatistic {

@@ -87,6 +87,16 @@ function requirement(overrides: Partial<UniversityRequirement> = {}): University
     group_role: null,
     is_exclusion: false,
     clause_ref: null,
+    // Migration 0056's qualifier columns. Spelled out rather than left off: an absent
+    // qualifier can only ever fail to block a comparison, never unlock one, so a fixture that
+    // omits them silently tests the most permissive row there is.
+    test_scale: null,
+    scale_ambiguity: null,
+    recency_rule: null,
+    excluded_provenances: null,
+    evaluation_gate: null,
+    conflict_group_id: null,
+    research_record_id: null,
     source_url: null,
     retrieved_at: null,
     last_checked_at: null,
