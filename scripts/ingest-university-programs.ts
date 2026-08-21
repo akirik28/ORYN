@@ -38,7 +38,7 @@
  * constraint as scripts/enrich-student-counts.ts).
  */
 import { readFileSync } from "node:fs";
-import { applyDecision, decideIngestion, programDedupKey, programUrlKey, type ProgramWriteClient, type ResearchProgramRecord, type UniversityLookupRow } from "../lib/programs/ingest";
+import { applyDecision, decideIngestion, programDedupKey, type ProgramWriteClient, type ResearchProgramRecord, type UniversityLookupRow } from "../lib/programs/ingest";
 import { fetchAllRowsVerified, type PostgrestTarget } from "../lib/acquisition/paginate";
 
 try {
@@ -144,10 +144,9 @@ async function main() {
   ]);
   console.log(`Candidate pool: ${universities.length} universities (paginated + exact-count verified).`);
 
-  const existingKeys = new Set([
-    ...existing.map((r) => programDedupKey(r.university_id, r.normalized_name, r.degree_level, r.language_of_instruction)),
-    ...existing.map((r) => programUrlKey(r.university_id, r.official_program_url)),
-  ]);
+  const existingKeys = new Set(
+    existing.map((r) => programDedupKey(r.university_id, r.normalized_name, r.degree_level, r.language_of_instruction, r.official_program_url))
+  );
 
   const { createClient } = await import("@supabase/supabase-js");
   const admin = createClient(url, secretKey, { auth: { autoRefreshToken: false, persistSession: false } });
@@ -181,9 +180,14 @@ async function main() {
     // Claim the key immediately so two accepted records in the same batch for the same
     // program don't both pass the pre-computed existingKeys check.
     if (decision.outcome === "accepted" && decision.programRow) {
-      const key = programDedupKey(decision.programRow.university_id, decision.programRow.normalized_name, decision.programRow.degree_level, decision.programRow.language_of_instruction);
+      const key = programDedupKey(
+        decision.programRow.university_id,
+        decision.programRow.normalized_name,
+        decision.programRow.degree_level,
+        decision.programRow.language_of_instruction,
+        decision.programRow.official_program_url
+      );
       existingKeys.add(key);
-      existingKeys.add(programUrlKey(decision.programRow.university_id, decision.programRow.official_program_url));
     }
 
     const result = await applyDecision(record, decision, batchId, writeClient);

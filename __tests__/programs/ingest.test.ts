@@ -5,7 +5,6 @@ import {
   resolveUniversity,
   looksPageConfirmed,
   programDedupKey,
-  programUrlKey,
   type ProgramWriteClient,
   type ResearchProgramRecord,
   type UniversityLookupRow,
@@ -135,7 +134,7 @@ describe("decideIngestion", () => {
   });
 
   test("flags a duplicate against an existing key without inserting again", () => {
-    const existing = new Set([programDedupKey("uni-mit", "computer science", null, null)]);
+    const existing = new Set([programDedupKey("uni-mit", "computer science", null, null, "https://cs.mit.edu")]);
     const decision = decideIngestion(record(), UNIVERSITIES, existing);
     expect(decision.outcome).toBe("duplicate");
     expect(decision.programRow).toBeNull();
@@ -145,7 +144,7 @@ describe("decideIngestion", () => {
     const first = decideIngestion(record(), UNIVERSITIES, new Set());
     expect(first.outcome).toBe("accepted");
     const row = first.programRow!;
-    const keyAfterFirst = new Set([programDedupKey(row.university_id, row.normalized_name, row.degree_level, row.language_of_instruction)]);
+    const keyAfterFirst = new Set([programDedupKey(row.university_id, row.normalized_name, row.degree_level, row.language_of_instruction, row.official_program_url)]);
     const second = decideIngestion(record(), UNIVERSITIES, keyAfterFirst);
     expect(second.outcome).toBe("duplicate");
   });
@@ -179,36 +178,88 @@ describe("decideIngestion", () => {
     const existingKeys = new Set<string>();
     const first = decideIngestion(french, UNIVERSITIES, existingKeys);
     expect(first.outcome).toBe("accepted");
-    existingKeys.add(programDedupKey(first.programRow!.university_id, first.programRow!.normalized_name, first.programRow!.degree_level, first.programRow!.language_of_instruction));
-    existingKeys.add(programUrlKey(first.programRow!.university_id, first.programRow!.official_program_url));
+    existingKeys.add(
+      programDedupKey(
+        first.programRow!.university_id,
+        first.programRow!.normalized_name,
+        first.programRow!.degree_level,
+        first.programRow!.language_of_instruction,
+        first.programRow!.official_program_url
+      )
+    );
 
     const second = decideIngestion(english, UNIVERSITIES, existingKeys);
     expect(second.outcome).toBe("accepted");
     expect(second.programRow?.language_of_instruction).toBe("English");
   });
 
-  // A genuine re-run of the SAME language track, though, must still read as a duplicate — the
-  // widened key must not accidentally stop deduplicating the case it always correctly caught.
-  test("a same-name, same-degree-level, SAME-language repeat is still a duplicate", () => {
+  // A genuine re-run of the SAME language track, same URL, though, must still read as a
+  // duplicate — the widened key must not accidentally stop deduplicating the case it always
+  // correctly caught.
+  test("a same-name, same-degree-level, same-language, SAME-url repeat is still a duplicate", () => {
     const first = decideIngestion(record({ language_of_instruction: "English" }), UNIVERSITIES, new Set());
     expect(first.outcome).toBe("accepted");
     const row = first.programRow!;
-    const existingKeys = new Set([programDedupKey(row.university_id, row.normalized_name, row.degree_level, row.language_of_instruction)]);
-    const second = decideIngestion(record({ language_of_instruction: "English", official_program_url: "https://cs.mit.edu/different-link" }), UNIVERSITIES, existingKeys);
+    const existingKeys = new Set([programDedupKey(row.university_id, row.normalized_name, row.degree_level, row.language_of_instruction, row.official_program_url)]);
+    const second = decideIngestion(record({ language_of_instruction: "English" }), UNIVERSITIES, existingKeys);
     expect(second.outcome).toBe("duplicate");
   });
 
-  test("flags a duplicate by official_program_url even when the display name differs (found live: TU Delft)", () => {
-    // Real case: university_programs already had "Computer Science and Engineering" for TU
-    // Delft (research-handoff pass), and a later deterministic catalogue scrape produced
-    // "Computer Science & Engineering - English" for the exact same official_program_url —
-    // name-based dedup alone would have inserted both as if they were different programmes.
-    const existing = new Set([programUrlKey("uni-mit", "https://cs.mit.edu")]);
+  // Migration 0053 (docs/handoffs/program-dedup-key-decision.md): official_program_url joined
+  // the composite key specifically because Bologna/Padua's campus-specific programmes (same
+  // name, same degree level, same language, genuinely DIFFERENT official_program_url per
+  // campus — real cases pulled from program_research_queue's audit trail, all 11 rejected by
+  // the database's own unique index despite decideIngestion's pre-computed snapshot saying
+  // "accepted") were being forced to share one row. A same-name/degree/language pair that
+  // differs ONLY by URL must now be accepted as two distinct rows, not merged.
+  test("a same-name, same-degree-level, same-language pair with a DIFFERENT url is accepted as a distinct program (Bologna-shaped)", () => {
+    const bologna = record({ program_name: "Nursing", degree_level: "Bachelor / first-cycle", official_program_url: "https://www.unibo.it/en/study/first-and-single-cycle-degree/programme/2026/5908" });
+    const first = decideIngestion(bologna, UNIVERSITIES, new Set());
+    expect(first.outcome).toBe("accepted");
+    const row = first.programRow!;
+    const existingKeys = new Set([programDedupKey(row.university_id, row.normalized_name, row.degree_level, row.language_of_instruction, row.official_program_url)]);
+
+    const rimini = record({ program_name: "Nursing", degree_level: "Bachelor / first-cycle", official_program_url: "https://www.unibo.it/en/study/first-and-single-cycle-degree/programme/2026/8475" });
+    const second = decideIngestion(rimini, UNIVERSITIES, existingKeys);
+    expect(second.outcome).toBe("accepted");
+  });
+
+  // Migration 0053: the old standalone "same official_program_url anywhere at this university
+  // = duplicate, regardless of name" check (previously programUrlKey, tested here as "found
+  // live: TU Delft") was removed after being measured against program_research_queue's full
+  // audit history and found wrong 53 times out of 54 real firings — every other case was a
+  // university publishing one shared catalogue-listing URL for its whole, genuinely distinct
+  // programme list (Middle East Technical University alone: 53 real, unrelated programmes —
+  // Architecture, Chemistry, History, an entire separate Northern Cyprus campus — silently
+  // rejected because "Computer Engineering" happened to be accepted first at that same shared
+  // URL). Two records with completely different names must now both accept, even sharing a URL.
+  test("two genuinely different programs sharing one catalogue-listing URL both accept independently (METU-shaped, the defect this migration fixes)", () => {
+    const existingKeys = new Set<string>();
+    const computerEngineering = decideIngestion(record({ program_name: "Computer Engineering", official_program_url: "https://metu.example/tum-bolumler" }), UNIVERSITIES, existingKeys);
+    expect(computerEngineering.outcome).toBe("accepted");
+    existingKeys.add(
+      programDedupKey(
+        computerEngineering.programRow!.university_id,
+        computerEngineering.programRow!.normalized_name,
+        computerEngineering.programRow!.degree_level,
+        computerEngineering.programRow!.language_of_instruction,
+        computerEngineering.programRow!.official_program_url
+      )
+    );
+
+    const architecture = decideIngestion(record({ program_name: "Architecture", official_program_url: "https://metu.example/tum-bolumler" }), UNIVERSITIES, existingKeys);
+    expect(architecture.outcome).toBe("accepted");
+  });
+
+  // A same-programme rename at the same URL (the one case the removed check correctly caught)
+  // is a known, accepted, explicitly-documented residual cost of the fix above — it now inserts
+  // as two rows rather than being auto-merged. Recorded here as documentation, not a defect:
+  // occasional and human-visible beats systemic and silent (see migration 0053's design doc).
+  test("a same-programme rename at the same URL (TU-Delft-shaped) now inserts as two rows — accepted, documented cost", () => {
+    const existingKeys = new Set([programDedupKey("uni-mit", "computer science and engineering", null, null, "https://cs.mit.edu")]);
     const r = record({ program_name: "Computer Science & Engineering - English" });
-    const decision = decideIngestion(r, UNIVERSITIES, existing);
-    expect(decision.outcome).toBe("duplicate");
-    expect(decision.detail).toContain("official_program_url");
-    expect(decision.programRow).toBeNull();
+    const decision = decideIngestion(r, UNIVERSITIES, existingKeys);
+    expect(decision.outcome).toBe("accepted");
   });
 
   test("two different program names at the same university both accept independently", () => {
