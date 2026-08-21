@@ -84,6 +84,21 @@ frameworks in this package, not only this specific pair. A future integration pa
 specifically re-check every pairwise combination of documents for the same kind of silent
 composition error, not assume persona-testing caught all of them.
 
+**A second, genuinely unresolved composition question, deliberately left open rather than
+answered here**: `09`'s Persona H (mixed UK/Germany target) found that a single recommendation can
+need *different, target-conditioned explanations* depending on which of a student's multiple
+active targets is being addressed (`11`'s geography tiers applied per-target, not per-student).
+Peer's `07-explainability-framework.md` §2 independently arrived at the same open question
+(`RULE-COUNSEL-236`, peer's numbering) and correctly framed it as unresolved rather than picking an
+answer: should the UI show a full per-target explanation breakdown, or default to the single
+"most specific" active target (reusing this document's own `RULE-COUNSEL-077` precedence — a
+specific target university's country over a general `target_geographies` selection)? **This is a
+genuine product/UX decision, not something either research branch can resolve unilaterally** — it
+trades off completeness (showing every target's framing) against simplicity (one clear answer),
+and the right choice likely depends on how ORYN's UI actually presents multi-target students
+elsewhere, which neither research session has visibility into. Flagged for the founder or a
+product-focused session, not resolved here.
+
 ## 4. Cross-branch rule-ID collisions (process risk, not a research risk)
 
 At least one direct `RULE-COUNSEL-###` ID collision is already known (`RULE-COUNSEL-056`, minted
