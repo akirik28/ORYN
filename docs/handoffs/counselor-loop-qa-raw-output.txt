@@ -25,7 +25,7 @@ PERSONA: A — Turkey/YKS-track, strong academics, thin extracurriculars
    vs Unknown selectivity      -> outlook=extreme_reach  composite=0  range=--- (n/a)
 
 -- computeOpportunityMatch -- (against 4 synthetic opportunities)
-   US Chemistry Olympiad (competition)            eligible=true  relevance=100 need= 45 match= 67  
+   US Chemistry Olympiad (competition)            eligible=true  relevance=  0 need= 45 match= 27  
    Summer research program, Turkey-eligible (research) eligible=true  relevance=  0 need= 85 match= 51  
    Local tech internship (internship)             eligible=false relevance=100 need= 45 match=  0  Not currently open to students from Turkey.
    Turkey-only national volunteering program (volunteering) eligible=true  relevance= 55 need= 45 match= 49  
@@ -71,8 +71,8 @@ PERSONA: C — Research-heavy student aiming for STEM
 UK-target, strong rigor (A-levels), a real 10-month mentored research experience with methodology and a poster presentation (not peer-reviewed), an international-tier science olympiad award, weak leadership and community_impact by design (single dimension of intended weakness, to check whether the engine still reads it as a real gap rather than 'the research overwhelms everything').
 ####################################################################################################
 
--- computeCareerProfile --  overall=8
-   academics                score= 15  confidence=low     reasons=[course_rigor]
+-- computeCareerProfile --  overall=10
+   academics                score= 31  confidence=medium  reasons=[course_grade_presence,course_rigor]
    intellectual_curiosity   score= 14  confidence=medium  reasons=[subject_breadth,self_directed_learning]
    leadership               score=  0  confidence=low     reasons=[]
    research                 score= 30  confidence=medium  reasons=[research_experience]
@@ -85,13 +85,13 @@ UK-target, strong rigor (A-levels), a real 10-month mentored research experience
 
 -- computeCompleteness -- 73%
 
--- computeAdmissionOutlook -- (profileStrength=8)
+-- computeAdmissionOutlook -- (profileStrength=10)
    vs Highly selective (8%)    -> outlook=extreme_reach  composite=0  range=1-11 (medium)
    vs Selective (35%)          -> outlook=extreme_reach  composite=0  range=5-25 (medium)
    vs Unknown selectivity      -> outlook=extreme_reach  composite=0  range=--- (n/a)
 
 -- computeOpportunityMatch -- (against 4 synthetic opportunities)
-   US Chemistry Olympiad (competition)            eligible=true  relevance= 50 need= 45 match= 47  
+   US Chemistry Olympiad (competition)            eligible=true  relevance=  0 need= 45 match= 27  
    Summer research program, Turkey-eligible (research) eligible=true  relevance=100 need= 45 match= 67  
    Local tech internship (internship)             eligible=false relevance=  0 need= 45 match=  0  Not currently open to students from United Kingdom.
    Turkey-only national volunteering program (volunteering) eligible=false relevance= 40 need= 85 match=  0  Not currently open to students from United Kingdom.
@@ -127,7 +127,7 @@ Freshly onboarded, one club activity, one course, nothing else. Tests graceful d
    US Chemistry Olympiad (competition)            eligible=true  relevance=  0 need= 85 match= 51  
    Summer research program, Turkey-eligible (research) eligible=false relevance=  0 need= 85 match=  0  Requires minimum age 16.
    Local tech internship (internship)             eligible=false relevance=  0 need= 45 match=  0  Requires minimum age 16.
-   Turkey-only national volunteering program (volunteering) eligible=true  relevance= 40 need= 45 match= 43  
+   Turkey-only national volunteering program (volunteering) eligible=true  relevance= 40 need= 45 match= 43  Restricted by country — add your country to check.
 
 -- evaluateRequirement (sample: minimum_grade rule, 3.5/4.0 GPA) --
    status=unknown  reasoning="No GPA is on file yet — add your education record."
