@@ -42,7 +42,7 @@ export function OpportunityMapHero({ countryCounts, filterParams }: { countryCou
   if (!showMap) return null;
   return (
     <div aria-hidden="true">
-      <OpportunityMapExplorer countryCounts={countryCounts} filterParams={filterParams} />
+      <OpportunityMapExplorer countryCounts={countryCounts} filterParams={filterParams} decorative />
     </div>
   );
 }

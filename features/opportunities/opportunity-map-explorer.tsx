@@ -73,6 +73,9 @@ const ZOOM_PAN_CONFIG = createZoomPanConfig(1, 8, [createCoordinates(-179, -85),
 // only one query.
 const WORLD_LABEL_CAP = 8;
 
+const ZOOM_BUTTON =
+  "flex size-8 items-center justify-center rounded-lg border bg-card text-foreground shadow-sm outline-none transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-40";
+
 interface HoverState {
   name: string;
   clientX: number;
@@ -82,12 +85,19 @@ interface HoverState {
 export function OpportunityMapExplorer({
   countryCounts,
   filterParams,
+  decorative = false,
 }: {
   countryCounts: OpportunityCountryCount[];
   /** Every currently-active filter/search param except `country` itself — preserved on
    * every map interaction so selecting a country never silently drops a search or category
    * filter the student already applied. */
   filterParams: URLSearchParams;
+  /** True when the caller wraps this map in `aria-hidden` because an equivalent accessible
+   * control exists alongside it (OpportunityCountryPills on desktop). Focusable controls
+   * inside an aria-hidden subtree are a WCAG violation — keyboard focus lands somewhere a
+   * screen reader has been told does not exist — so the zoom buttons drop out of the tab
+   * order in that mode. Mouse and touch still work; keyboard users navigate by the pills. */
+  decorative?: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -273,8 +283,9 @@ export function OpportunityMapExplorer({
           type="button"
           onClick={() => setZoom((z) => Math.min(MAX_ZOOM, z * 1.5))}
           disabled={zoom >= MAX_ZOOM}
+          tabIndex={decorative ? -1 : undefined}
           aria-label="Zoom in"
-          className="flex size-8 items-center justify-center rounded-lg border bg-card text-foreground shadow-sm outline-none transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-40"
+          className={ZOOM_BUTTON}
         >
           <Plus className="size-4" />
         </button>
@@ -282,8 +293,9 @@ export function OpportunityMapExplorer({
           type="button"
           onClick={() => setZoom((z) => Math.max(MIN_ZOOM, z / 1.5))}
           disabled={zoom <= MIN_ZOOM}
+          tabIndex={decorative ? -1 : undefined}
           aria-label="Zoom out"
-          className="flex size-8 items-center justify-center rounded-lg border bg-card text-foreground shadow-sm outline-none transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-40"
+          className={ZOOM_BUTTON}
         >
           <Minus className="size-4" />
         </button>
@@ -294,8 +306,9 @@ export function OpportunityMapExplorer({
             setCenter(createCoordinates(0, 0));
           }}
           disabled={zoom === 1 && center[0] === 0 && center[1] === 0}
+          tabIndex={decorative ? -1 : undefined}
           aria-label="Reset map view"
-          className="flex size-8 items-center justify-center rounded-lg border bg-card text-foreground shadow-sm outline-none transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-40"
+          className={ZOOM_BUTTON}
         >
           <Maximize2 className="size-3.5" />
         </button>
