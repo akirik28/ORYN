@@ -43,6 +43,7 @@ function opportunity(overrides: Partial<Opportunity> = {}): Opportunity {
     verified_at: "2026-08-16T00:00:00Z",
     organization_entity_id: null,
     country_entity_id: null,
+    access_channel: null,
     created_at: "2026-01-01T00:00:00Z",
     updated_at: "2026-01-01T00:00:00Z",
     ...overrides,

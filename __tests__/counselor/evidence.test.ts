@@ -58,6 +58,7 @@ function requirement(overrides: Partial<UniversityRequirement> = {}): University
     evaluation_gate: null,
     conflict_group_id: null,
     research_record_id: null,
+    unmet_consequence: null,
     source_url: "https://university.example/requirements",
     retrieved_at: null,
     last_checked_at: null,
