@@ -158,9 +158,27 @@ evidence that today's gate would reject. They are recorded rather than dropped, 
 rather than pretended-through — per the founder's instruction to record UCAS/CAO-class sources
 with an explicit marker and not to drop them.
 
-## Open question for the founder
+## RESOLVED — coordination session DECISION 1, 2026-08-21
 
-**Is an official application system an acceptable primary source for a deadline?** This lane's
-position is yes, and that for cross-institutional deadlines (UCAS equal consideration, Studielink
-numerus fixus) it is *more* authoritative than a university's restatement — but it is a product
-trust decision, not an engineering one, and it is the decision that unblocks piece (B).
+**Yes: an official application system is a primary source for the facts it owns.** Recorded
+reasoning: UCAS, CAO, Studielink and Hochschulstart do not *describe* the process, they **operate**
+it. For a cross-institutional deadline the operator's own publication outranks any university's
+restatement, because the restatement is a copy and copies go stale.
+
+The split:
+
+- **HIGH authority** for facts the system itself owns — platform-wide deadlines, equal-consideration
+  dates, platform eligibility and access rules, fee structures it sets.
+- **NOT authoritative** for institution-specific facts (a given programme's grade threshold), even
+  when the system displays them. There it is a secondary restatement.
+
+This mirrors how a university is already treated: authoritative about itself, not about UCAS.
+Implementation shape confirmed as piece (B) below — a curated `APPLICATION_SYSTEM_DOMAINS` set,
+`HIGH` for `policy`, `null` for every other fact class.
+
+**This decision was immediately vindicated by evidence.** Glasgow's own page listed the UCAS equal
+consideration date, undated, as "14 January" — the 2026-entry date. UCAS's own page, explicitly
+dated to the 2027 cycle, gives **13 January 2027**. The university's copy was stale and the
+operator's original was correct, which is precisely the failure mode this decision guards against.
+The conflict is recorded resolved in `deadlines_batch3` in favour of UCAS, with Glasgow's row
+retained unchanged as the record of what Glasgow published.
