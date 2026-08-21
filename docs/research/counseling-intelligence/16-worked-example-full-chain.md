@@ -104,6 +104,16 @@ itself."* This is the mission brief's own "Z because it develops/tests A" langua
 scoped to what is actually true for this student's real admissions system — the single concrete
 difference this entire package's geography research makes to a real recommendation.
 
+**A more precise citation available after this trace was first written**: the peer's later
+`17-dimension-weighting-by-target.md` gives this exact claim its own dedicated, more specific
+source — for a Tier-3 general-case target (this student's default YKS-track treatment among them),
+`academics` is "the entire lever (100% of it, formula-dependent)" while all other 8 dimensions,
+`research` included, are "zero, for *this specific admission decision*" (though still real
+*development* guidance). That document rates this the most consistently and officially sourced
+finding in the whole package. This trace's Step 5 explanation was already consistent with that
+conclusion when written from `RULE-COUNSEL-228`/`230` alone — the later document sharpens *why*
+with a dedicated per-dimension source, it does not change what this trace already said.
+
 ## What this trace validates, and what it doesn't
 
 **Validates**: the chain works end-to-end using only content already established elsewhere in this
