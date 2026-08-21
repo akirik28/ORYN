@@ -30,6 +30,17 @@ function classifyOutlook(compositeScore: number): OutlookLabel {
   return "extreme_reach";
 }
 
+/**
+ * Gate 1 from `docs/research/counseling-intelligence/18-geography-conditional-scoring-design-
+ * spec.md` §2: does the student's target admissions system review non-academic evidence at
+ * all? "holistic" = USA always, UK/France narrowly (per that spec's §3.1-3.2). "credential_gate"
+ * = Turkey/YKS, Germany generally, most of continental Europe (§3.3-3.4) — profile strength
+ * built from the 9-dimension taxonomy is not what these systems actually evaluate on.
+ * Optional and defaults to the pre-existing (implicitly "holistic") behavior — every caller
+ * that doesn't pass it gets byte-identical output to before this field existed.
+ */
+export type AdmissionSystemType = "holistic" | "credential_gate";
+
 export interface AdmissionOutlookInputs {
   /** 0-100 overall career profile score. */
   profileStrength: number;
@@ -37,6 +48,8 @@ export interface AdmissionOutlookInputs {
   admissionRate: number | null;
   /** Confidence in the underlying profile data (low profile completeness => lower confidence in the whole outlook). */
   dataConfidence: DataConfidence;
+  /** See AdmissionSystemType. Omit or pass "holistic" for unchanged existing behavior. */
+  admissionSystemType?: AdmissionSystemType;
 }
 
 export interface AdmissionOutlookResult {
@@ -48,6 +61,21 @@ export interface AdmissionOutlookResult {
   estimateRangeHigh: number | null;
   estimateConfidence: DataConfidence | null;
   modelVersion: string;
+  /**
+   * Non-null only for `admissionSystemType: "credential_gate"` inputs. `outlook_label` is a
+   * fixed Postgres enum (migration 0007) with no "not applicable" member, and adding one is a
+   * schema change out of this fix's bounds — so `outlook`/`compositeScore` below are still
+   * computed via the same profile-strength/selectivity formula as a holistic target, for
+   * backward type/DB compatibility, and are NOT a meaningful answer for a credential-gate
+   * target. This field is the actual fix: it's the caller's job to check it and suppress or
+   * reframe `outlook` rather than display it as a normal reach/likely-style classification —
+   * consistent with the design spec's own §7 point 4 (explanation generation must consume the
+   * mechanism, not just a label). What IS fully suppressed below, safely, is the numeric
+   * estimate range — a percentage-style figure is the one part of this result the shipped
+   * non-negotiables (AGENTS.md #5, "never presented with false precision") most directly
+   * prohibit for a system this formula doesn't actually model.
+   */
+  notApplicableReason: string | null;
 }
 
 /**
@@ -61,12 +89,13 @@ export function computeAdmissionOutlook(inputs: AdmissionOutlookInputs): Admissi
   const tier = selectivityTier(inputs.admissionRate);
   const compositeScore = Math.max(0, Math.min(100, inputs.profileStrength - SELECTIVITY_PENALTY[tier]));
   const outlook = classifyOutlook(compositeScore);
+  const isCredentialGate = inputs.admissionSystemType === "credential_gate";
 
   let estimateRangeLow: number | null = null;
   let estimateRangeHigh: number | null = null;
   let estimateConfidence: DataConfidence | null = null;
 
-  if (inputs.admissionRate !== null) {
+  if (inputs.admissionRate !== null && !isCredentialGate) {
     const baseRate = inputs.admissionRate * 100;
     const nudge = (compositeScore - 50) * 0.4;
     const center = Math.max(1, Math.min(95, baseRate + nudge));
@@ -83,5 +112,8 @@ export function computeAdmissionOutlook(inputs: AdmissionOutlookInputs): Admissi
     estimateRangeHigh,
     estimateConfidence,
     modelVersion: ADMISSION_MODEL_VERSION,
+    notApplicableReason: isCredentialGate
+      ? "This target's admissions system is credential/exam-gated — non-academic profile strength is not a general input to the admission decision itself, so this outlook should not be shown as a normal reach/competitive/likely-style classification. See 18-geography-conditional-scoring-design-spec.md §3.3-3.4."
+      : null,
   };
 }

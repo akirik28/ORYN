@@ -175,9 +175,15 @@ function computeRelevanceScore(student: StudentMatchProfile, opportunity: Opport
     return clampScore(40 + (near ? PROXIMITY_BOOST : 0));
   }
 
-  const fields = opportunity.fields.map((f) => f.toLowerCase());
-  const interests = student.interests.map((i) => i.toLowerCase());
-  const overlapCount = interests.filter((interest) => fields.some((field) => field.includes(interest) || interest.includes(field))).length;
+  const fields = opportunity.fields.map((f) => f.trim().toLowerCase());
+  const interests = student.interests.map((i) => i.trim().toLowerCase());
+  // counselor-loop QA defect #3 (docs/handoffs/counselor-loop-qa-report.md): substring
+  // containment (field.includes(interest) / interest.includes(field)) treats "computer
+  // science" as matching a field merely called "science" — the shorter string being a
+  // substring of the longer one is not the same as the two naming the same field. Exact
+  // (post-normalization) equality only; each array entry is already meant to be one field/
+  // interest, not a combined phrase to search within.
+  const overlapCount = interests.filter((interest) => fields.some((field) => field === interest)).length;
 
   return clampScore((overlapCount / interests.length) * 100 + (near ? PROXIMITY_BOOST : 0));
 }
