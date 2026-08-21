@@ -88,7 +88,8 @@ layer — both branches' work is real and valuable as *development* guidance, bu
 | A student's actual current grade/stage (only `graduation_year` exists; peer's `03` proposes a derived `yearsUntilGraduation` fallback, not implemented) | Any timing-aware recommendation logic | `03-recommendation-timing.md` (peer) §1 |
 | First-class evidence types for writing/communication and creative production | Fully representing the literature/journalism/arts family docs' evidence (`15`, `17`) in the scoring engine | `01-development-taxonomy.md` §4 |
 | Recognition of paid part-time work as distinct, legitimate `career_exploration` evidence (currently only "internship" is a named bonus) | Fair treatment of Persona F-shaped (access-constrained, work-experience-heavy) profiles | `09-persona-testing.md` Persona F |
-| A geography/admissions-system-conditional weighting layer | Everything in §1 above | This document, §1 |
+| A geography/admissions-system-conditional weighting layer | Everything in §1 above | This document, §1 — **partially addressed on a follow-up pass**, see `17-dimension-weighting-by-target.md` for a qualitative (non-numeric) per-dimension proposal; the actual scoring-architecture implementation is still not built |
+| A recommendation-type category for "practice articulating existing experience in a structured format" (e.g. rehearsing a Queen's-Commerce-style reflective response), distinct from "go get more/better experience" | Giving mechanism-correct advice for Tier-3-carve-out targets whose assessment scores response quality, not an activities list (e.g. Queen's Commerce, McMaster HHSP) | `09-persona-testing.md` Persona J, `17-dimension-weighting-by-target.md` (Canada carve-out section) |
 
 ## 3. Composition risk between this package's own documents (partially resolved, implementation still needed)
 

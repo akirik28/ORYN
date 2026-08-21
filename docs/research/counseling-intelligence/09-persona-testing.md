@@ -233,6 +233,77 @@ because `RULE-COUNSEL-101` was checked before applying the blanket country rule*
 finding holds up against a concrete case, not just the abstract principle it was stated as.
 [[RULE-COUNSEL-102]]
 
+## Persona J — Mixed UK + Canada (Queen's Commerce) target, testing `17`'s per-dimension weighting against `11`'s per-target-explanation principle
+
+Added specifically to stress-test `17-dimension-weighting-by-target.md` (new this pass) against a
+mixed-target case, per peer's suggestion that this pair would surface something concrete faster
+than an isolated single-target check — chosen deliberately because UK and Queen's Commerce now
+have *documented, mechanism-level-different* per-dimension guidance from `17` itself, not just
+different tier-framing language the way Persona H's UK/Germany pair did.
+
+**Profile:** 17 years old, `yearsUntilGraduation = 1`, British-curriculum (A-Level) international
+school, `country: "United Arab Emirates"`. Stated goal: **"study Business/Economics — applying to
+UK universities and to Queen's Commerce (Smith School of Business) in Canada."** Visible profile:
+`academics` 80 (predicted A*AA-range), `intellectual_curiosity` 55 (some independent economics
+reading, not deeply logged), `entrepreneurship` 60 (a real, sustained small resale venture run for
+~18 months), `execution_project_depth` 55 (the same venture), `leadership` 40 (treasurer of a
+school business club), `community_impact` 20, `research` 10, `awards_distinction` 15,
+`career_exploration` 35 (one summer shadowing a relative's small business).
+
+**Walkthrough:**
+
+1. **`11`'s mixed-target principle (§"what this means" point 5):** both targets need guidance
+   presented separately, never blended — already established, this persona is a direct
+   instantiation of the "common real case" `11` names, same as Persona H's UK/Germany pair.
+2. **`17`'s UK table (`RULE-COUNSEL-113`), applied to this persona's subject-relevant evidence:**
+   the entrepreneurship venture and its `execution_project_depth` reading are both subject-relevant
+   to a Business/Economics application — UK weight **high** for both, per the table. Correct,
+   actionable UK-specific recommendation: deepen and more explicitly document this venture
+   (concrete outcomes, what was learned, how it connects to economic/business reasoning) — genuine,
+   already-in-progress evidence that this package's existing achievement-tier model (`02`) handles
+   well: this is squarely "produce more/better logged evidence."
+3. **`17`'s Canada carve-out table (`RULE-COUNSEL-110`/`111`), applied to the same persona:**
+   Queen's Commerce's own supplementary-application rubric scores a written and video response for
+   *initiative, problem-solving approach, and self-reflection as demonstrated in the response
+   itself* — not an activities-list review. Per `RULE-COUNSEL-111`, recommending "build more
+   evidence of your venture" as *the* fix for this target specifically would be a mechanism-level
+   error — the rubric contains no activities criterion at all.
+4. **Where this could go wrong, and did not, once checked carefully:** it would be natural
+   (and per `RULE-COUNSEL-111`, wrong) for a counselor to give one blended explanation — "this
+   venture strengthens your Business/Economics applications" — covering both targets identically.
+   The persona confirms `11`'s per-target-explanation requirement is *necessary but not
+   sufficient* here: even fully separate, per-target explanations could still both point at the
+   *same recommended action* (continue the venture) without making clear that the action relates
+   to each target through a **categorically different mechanism** — direct, scored evidence for
+   the UK application; indirect *raw material for a differently-scored reflective response* for
+   Queen's Commerce. A student told only "this strengthens both" would reasonably (and
+   incorrectly) conclude the right move for Queen's Commerce is to document the venture more
+   thoroughly, when the actually-useful preparation is structurally different: **rehearsing how to
+   narrate a specific moment from the venture — a concrete challenge, an initiative taken, a
+   reflection on what was learned — in the format Queen's own prompts ask for**, closer to
+   interview/personal-statement rehearsal than to evidence-accumulation.
+5. **This surfaces a genuine structural gap, not just an explanation-wording nuance:** this
+   package's entire evidence/recommendation vocabulary (`01`/`02`'s achievement-tier ladder:
+   participated → completed → finalist → award → publication, etc.) is built around **logged
+   achievements**. Queen's-Commerce-style assessment requires a preparation activity — structured
+   reflective-response rehearsal — that is not really an achievement-tier evidence item at all; it
+   is closer to interview preparation or personal-statement drafting practice. **ORYN's
+   recommendation model does not currently have a clean category for "practice articulating
+   existing experience in a specific structured format," as distinct from "go get more/better
+   experience."** This is new, not previously named anywhere in this package (including `17` itself,
+   which correctly identified the *scoring mechanism* difference but did not follow it through to
+   this recommendation-type gap). [[RULE-COUNSEL-118]]
+
+**No contradiction between existing frameworks** — `11`'s per-target-explanation requirement and
+`17`'s per-dimension/per-program tables compose correctly and do not conflict. What this persona
+adds is a **sharper requirement on top of both**: per-target explanations must name the
+*mechanism* (direct evidence vs. indirect raw material for a different assessment type), not only
+the *framing register* (Tier-1-strengthens vs. Tier-3-supports-development language, `11`'s
+existing `RULE-COUNSEL-066`) — and, more structurally, that ORYN's recommendation vocabulary needs
+a genuinely new category (reflective-response rehearsal / structured-articulation practice) that
+this package has not proposed anywhere before this persona surfaced the need for it.
+[[RULE-COUNSEL-119]]
+
 ## Contradiction found: redundancy decay and timing phase interact incorrectly if composed naively
 
 **This is the most important finding in this document.** `05-redundancy-saturation.md`'s
@@ -282,3 +353,17 @@ flagged for renumbering at final integration, not resolved here.)
   itself — check target-field-specific exceptions before judging profile shape against the wrong
   comparison standard. Confidence: high (confirmed against a concrete worked case, not only
   asserted in the abstract).
+- `RULE-COUNSEL-118` — ORYN's recommendation vocabulary has no category for "practice articulating
+  existing experience in a specific structured format" (e.g. rehearsing a reflective response to
+  Queen's-Commerce-style prompts), as distinct from "go get more/better experience" — the entire
+  achievement-tier evidence model (`01`/`02`) is built around logged achievements, not
+  response-rehearsal preparation. A genuinely new recommendation-type gap, not previously named
+  anywhere in this package. Confidence: high (a real gap this persona's own walkthrough
+  demonstrates the current model cannot cleanly express, not a hypothetical concern).
+- `RULE-COUNSEL-119` — Per-target explanations for a shared recommended action must name the
+  *mechanism* by which each target values it (direct scored evidence vs. indirect raw material for
+  a differently-scored assessment), not only the framing register (`RULE-COUNSEL-066`'s
+  strengthens-vs-supports-development language) — a blended or mechanism-silent explanation risks
+  a student over-investing in the wrong kind of preparation for at least one of their targets, even
+  when the underlying recommended action is correctly the same for both. Confidence: high (direct
+  consequence of this persona's walkthrough, points 4-5).
