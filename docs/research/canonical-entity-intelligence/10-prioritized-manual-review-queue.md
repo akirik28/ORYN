@@ -113,11 +113,15 @@ part of a broader pattern. Lowest-effort item in this entire document; sequenced
 it's genuinely this small, not because it's unimportant to the one student who'd see it rendered
 wrong.
 
-**11. Improve Italian university alias coverage (3/38 currently have any alias).** `09` Finding 9.
-Same shape as the opportunity-organizer/school alias work elsewhere in this package — research
-each institution's well-known English/common forms ("La Sapienza," "Milan Polytechnic," etc.)
-rather than bulk-guessing. Not urgent, but a concrete, scoped, real gap once higher-priority items
-above are clear.
+**11. Improve alias coverage for countries outside the actively-researched corpus — Italy (3/38)
+and the Netherlands (0/13) confirmed thin-to-absent, likely the norm elsewhere too.** `09` Finding
+9. Same shape as the opportunity-organizer/school alias work elsewhere in this package — research
+each institution's well-known English/common/original-language forms ("La Sapienza," "Milan
+Polytechnic," "Universiteit van Amsterdam") rather than bulk-guessing. The Dutch case specifically
+needs `translation`-type aliases for the original-language names, not just `common`-type English
+variants — normalization alone will never bridge "University of Amsterdam" to "Universiteit van
+Amsterdam" the way it bridges an accent-only variant. Not urgent, but a concrete, scoped, real gap
+once higher-priority items above are clear.
 
 **12. Trivial: fix 3 malformed `country_code` values and one misspelled `display_name`.** `09`
 Finding 10 — `Sasmo` (`country_code='singapour'`), `EUROPE YOUTH PARLİMENT` and `Titan Akademi Spor
