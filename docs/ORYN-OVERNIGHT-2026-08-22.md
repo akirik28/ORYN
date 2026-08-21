@@ -159,6 +159,39 @@ its own query. Another traced a reported accessibility bug through a library's s
 concluded it was its own tooling — then recommended changing nothing. **A swarm that only
 confirms its own findings is not verifying anything.**
 
+## The research reached the product
+
+**Programmes went from 664 yesterday morning to 13,191, across 139 universities.** Not because
+more was researched — because what was researched finally landed.
+
+Three batches were ingested and each was verified by *content*, not by count: the US in two
+waves (2,345 rows) and the UK (934). Every row carries a real degree level and a real
+per-programme URL; the UK's 972 rows have 972 distinct URLs between them. Zero orphans.
+
+That check matters because I got it wrong earlier: I applied 1,254 requirement rows whose every
+qualifier column came back null, having verified that the counts moved rather than that the
+content arrived, and rolled the whole run back. **An outcome of "accepted" proves a row landed,
+not that it landed complete.**
+
+Three things stayed out on purpose. Dartmouth's 53 records are blocked by the authority gate
+because its catalogue lives on a registrar-contracted vendor platform. 23 Turkish placement rows
+collide because two real admission tracks map onto one programme row. And Michigan, CMU and UCLA
+each need their old rows *retired* rather than supplemented — all three had every stored row
+pointing at a single index page, and the pipeline can insert but not supersede.
+
+## A security gap, and it was mine
+
+Six backup tables I created during tonight's live fixes had row-level security disabled —
+readable by any anonymous or authenticated client. A lane found them while doing something else
+entirely and flagged rather than touched.
+
+Closed: RLS on all six, no policy, so every client is denied while the service role can still
+restore from them. Nothing dropped — an unreachable backup is still a backup, and deleting them
+is a separate decision.
+
+I wrote tens of thousands of rows tonight and verified the content of every batch. Nobody had
+checked the tables I made along the way, including me.
+
 ## Still waiting on you
 
 **`ANTHROPIC_API_KEY`.** The data layer had two very good days. `weekly_plans` and
