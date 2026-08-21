@@ -21,6 +21,19 @@ export const RATE_LIMITS = {
   /** Same shape as endorse_skill — a genuine batch of recommendations for people you
    * actually know is rare and slow to write by hand; this only bounds abuse. */
   write_recommendation: { maxCalls: 15, windowMinutes: 60 },
+  /** Social layer (migration 0058, feature switched off). Covers both an original post
+   * and a repost — they are the same insert into the same table, so they share a key
+   * deliberately rather than letting a repost loop route around the post limit. A student
+   * genuinely posting through a busy week stays far under this. */
+  create_post: { maxCalls: 30, windowMinutes: 60 },
+  /** Liking is the cheapest action in the product and the easiest to script. Bounded
+   * generously enough that reading a full feed and reacting to it never trips, tight
+   * enough that mass-liking as a contact-farming or harassment pattern does. */
+  like_post: { maxCalls: 200, windowMinutes: 60 },
+  /** Its own key rather than sharing report_message: the config's own rule is that two
+   * features must not share an action key and silently throttle each other, and a student
+   * reporting several posts should not exhaust their ability to report a message. */
+  report_post: { maxCalls: 20, windowMinutes: 60 },
   /** Canonical Entity Autocomplete System custom fallback. A student adding their own
    * school plus a handful of employers/clubs in one sitting stays well under this. This
    * is the only abuse control on that path: the underlying RPC is SECURITY DEFINER

@@ -21,6 +21,7 @@
 import { readFileSync } from "node:fs";
 import { applyDecision, decideIngestion, programDedupKey, type ProgramWriteClient, type ResearchProgramRecord, type UniversityLookupRow } from "../lib/programs/ingest";
 import { fetchAllRowsVerified, type PostgrestTarget } from "../lib/acquisition/paginate";
+import { excludeSupersededUniversities } from "../lib/universities/canonical";
 
 try {
   process.loadEnvFile(".env.local");
@@ -68,6 +69,9 @@ interface ExistingProgramRow {
   degree_type: string | null;
 }
 
+/** Excludes known-superseded duplicate rows (lib/universities/canonical.ts) before they reach
+ * resolveIdentity() — see scripts/ingest-university-programs.ts's identical helper for the full
+ * rationale (a research lane hit this live on MIT and had to hand-pick which row to target). */
 async function loadUniversityCandidates(target: PostgrestTarget): Promise<UniversityLookupRow[]> {
   const [{ rows: universities }, { rows: aliases }, { rows: externalIds }] = await Promise.all([
     fetchAllRowsVerified<UniversityRow>(target, "universities", "id,name,country,canonical_entity_id,website_url", "order=id"),
@@ -85,14 +89,16 @@ async function loadUniversityCandidates(target: PostgrestTarget): Promise<Univer
     externalIdsByEntity.set(e.entity_id, existing);
   }
 
-  return universities.map((u) => ({
-    id: u.id,
-    name: u.name,
-    country: u.country,
-    aliases: u.canonical_entity_id ? aliasesByEntity.get(u.canonical_entity_id) : undefined,
-    externalIds: u.canonical_entity_id ? externalIdsByEntity.get(u.canonical_entity_id) : undefined,
-    websiteUrl: u.website_url,
-  }));
+  return excludeSupersededUniversities(
+    universities.map((u) => ({
+      id: u.id,
+      name: u.name,
+      country: u.country,
+      aliases: u.canonical_entity_id ? aliasesByEntity.get(u.canonical_entity_id) : undefined,
+      externalIds: u.canonical_entity_id ? externalIdsByEntity.get(u.canonical_entity_id) : undefined,
+      websiteUrl: u.website_url,
+    }))
+  );
 }
 
 async function main() {

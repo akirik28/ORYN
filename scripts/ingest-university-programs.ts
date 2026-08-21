@@ -40,6 +40,7 @@
 import { readFileSync } from "node:fs";
 import { applyDecision, decideIngestion, programDedupKey, type IngestDecision, type ProgramWriteClient, type ResearchProgramRecord, type UniversityLookupRow } from "../lib/programs/ingest";
 import { fetchAllRowsVerified, type PostgrestTarget } from "../lib/acquisition/paginate";
+import { excludeSupersededUniversities } from "../lib/universities/canonical";
 
 try {
   process.loadEnvFile(".env.local");
@@ -89,7 +90,15 @@ interface ExistingProgramRow {
 
 /** Full candidate pool for identity resolution — every university, alias-enriched, read
  * completely (see the pagination note above). Aliases/external-ids are grouped in memory
- * rather than joined per-university to avoid N+1 requests. */
+ * rather than joined per-university to avoid N+1 requests.
+ *
+ * Excludes known-superseded duplicate rows (lib/universities/canonical.ts) before they ever
+ * reach resolveIdentity(). Without this, a record naming an institution that has two live
+ * `universities` rows (e.g. "Massachusetts Institute of Technology" / "...(MIT)") matches both
+ * equally well and resolveIdentity() correctly refuses to guess — but the ambiguity is
+ * spurious, since the two rows are already a confirmed duplicate elsewhere in the system. Found
+ * live: a research lane hit exactly this on MIT and had to hand-pick which row to target. Same
+ * fix as scripts/ingest-university-requirements-batch.ts already applies. */
 async function loadUniversityCandidates(target: PostgrestTarget): Promise<UniversityLookupRow[]> {
   const [{ rows: universities }, { rows: aliases }, { rows: externalIds }] = await Promise.all([
     fetchAllRowsVerified<UniversityRow>(target, "universities", "id,name,country,canonical_entity_id,website_url", "order=id"),
@@ -107,14 +116,16 @@ async function loadUniversityCandidates(target: PostgrestTarget): Promise<Univer
     externalIdsByEntity.set(e.entity_id, existing);
   }
 
-  return universities.map((u) => ({
-    id: u.id,
-    name: u.name,
-    country: u.country,
-    aliases: u.canonical_entity_id ? aliasesByEntity.get(u.canonical_entity_id) : undefined,
-    externalIds: u.canonical_entity_id ? externalIdsByEntity.get(u.canonical_entity_id) : undefined,
-    websiteUrl: u.website_url,
-  }));
+  return excludeSupersededUniversities(
+    universities.map((u) => ({
+      id: u.id,
+      name: u.name,
+      country: u.country,
+      aliases: u.canonical_entity_id ? aliasesByEntity.get(u.canonical_entity_id) : undefined,
+      externalIds: u.canonical_entity_id ? externalIdsByEntity.get(u.canonical_entity_id) : undefined,
+      websiteUrl: u.website_url,
+    }))
+  );
 }
 
 async function main() {

@@ -70,6 +70,11 @@ export const MESSAGE_REPORTS_EXPORT_COLUMNS = [
   // filed report about a recommendation would see everything except which
   // recommendation they'd actually reported.
   "recommendation_id",
+  // Social layer (migration 0058) — same gap, same fix: a reporter exporting a report
+  // they filed about a post would otherwise see everything except which post it was
+  // about. Harmless while 0058 is unapplied, for the same reason recommendation_id above
+  // is: the column simply returns nothing.
+  "post_id",
   "reason",
   "status",
   "reviewed_at",
@@ -122,3 +127,35 @@ export const SKILL_ENDORSEMENTS_EXPORT_OWN_COLUMN = "endorser_id" as const;
  * uses.
  */
 export const PROFILE_VIEWS_EXPORT_COLUMNS = ["id", "viewed_on", "created_at"] as const;
+
+/**
+ * ---------------------------------------------------------------------------
+ * Social layer (migration 0058) — DEFINED, DELIBERATELY NOT WIRED INTO THE ROUTE YET.
+ * ---------------------------------------------------------------------------
+ *
+ * AGENTS.md Phase 12 requires data export for a minor-audience product, so the export
+ * surface for posts and likes is decided here rather than left to whoever switches the
+ * feature on. It is not added to EXPORT_TABLES / EXPORT_PARTICIPANT_TABLES while the
+ * feature is off: those two lists drive live queries on a route every student can already
+ * reach, and the tables do not exist in any applied migration. Adding them now would make
+ * every export request issue two failing queries for a feature nobody can use.
+ *
+ * Switch-on checklist for this file: move "posts" into EXPORT_PARTICIPANT_TABLES (it is
+ * keyed by `author_id`, not `user_id`, so it needs its own filter shape) and "post_likes"
+ * into EXPORT_TABLES (it has a plain `user_id` and fits the generic path), then add the
+ * two queries to app/api/export-data/route.ts.
+ *
+ * `post_revisions` is deliberately NOT in the export. Its rows are superseded versions of
+ * the student's own content, retained so an edit cannot silently rewrite what others
+ * already saw and so a moderator can see what was reported; the CURRENT version of every
+ * post is already exported. Whether a portability or erasure request has to include
+ * superseded versions is a legal question, not an engineering one — recorded in
+ * docs/founder-blocked-backlog.md rather than answered here.
+ */
+export const POSTS_EXPORT_OWN_COLUMN = "author_id" as const;
+export const POST_LIKES_EXPORT_OWN_COLUMN = "user_id" as const;
+
+/** The tables the social layer adds to the export at switch-on, in the order they should
+ * be wired. Exported as a constant so a test can assert the decision above stays true in
+ * both directions: these are defined, and they are not yet live. */
+export const SOCIAL_POSTS_EXPORT_TABLES = ["posts", "post_likes"] as const;

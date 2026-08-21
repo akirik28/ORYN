@@ -9,6 +9,7 @@ import { scanDeadlines } from "@/lib/deadlines/scan";
 import { discoverRequirementsForUncoveredUniversities } from "@/lib/requirements/discover";
 import { runWithTracking } from "@/lib/jobs/run-with-tracking";
 import { isUuidLike } from "@/lib/validation/uuid";
+import { buildPostRemovalUpdate, buildPostRestoreUpdate, ModerationInputError } from "@/lib/social/posts-moderation";
 import type { MessageReportStatus } from "@/types/database";
 
 /**
@@ -105,6 +106,70 @@ export async function updateReportReview(
   if (error) {
     console.error("[admin] failed to update report review", { code: error.code, message: error.message });
     return { error: "Couldn't save that. Please try again." };
+  }
+
+  revalidatePath("/admin");
+  return {};
+}
+
+/**
+ * Content removal for a reported post (migration 0058's social layer).
+ *
+ * This is the half the report flow has never had. Migration 0030 gave `message_reports`
+ * review states so a report could be triaged; nothing could actually take content down,
+ * so "resolved" meant "an admin read it". For a product whose users are 14-18 that is not
+ * a moderation path, and shipping the social layer without it would repeat exactly the
+ * failure that migration's own header describes.
+ *
+ * Admin-only, and admin-only in the sense that matters: `requireAdmin()` 404s rather than
+ * redirects, so a student poking at URLs learns nothing. This action is reachable only
+ * from /admin — the social layer itself remains switched off and unreachable, which is why
+ * these two functions live here rather than in lib/social/post-actions.ts.
+ *
+ * MUST go through the admin (service-role) client. `posts_guard_system_columns` restores
+ * `removed_at`/`removed_by`/`removal_reason` on any UPDATE that is neither nested inside
+ * another trigger nor from `service_role` — the same guard that stops an author clearing
+ * their own removal through PostgREST.
+ *
+ * A removed post stays readable by its own author (the author branch of the read policy
+ * is the only one not gated on `removed_at is null`), so removal is never silent. Every
+ * other viewer, including anyone who reposted it, gets the neutral unavailable
+ * placeholder.
+ */
+export async function removeReportedPost(postId: string, reason: string): Promise<{ error?: string }> {
+  const adminProfile = await requireAdmin();
+  if (!isUuidLike(postId)) return { error: "Invalid post." };
+
+  let update;
+  try {
+    update = buildPostRemovalUpdate({ moderatorId: adminProfile.id, reason });
+  } catch (error) {
+    if (error instanceof ModerationInputError) return { error: error.message };
+    throw error;
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("posts").update(update).eq("id", postId);
+  if (error) {
+    console.error("[admin] failed to remove reported post", { code: error.code, message: error.message });
+    return { error: "Couldn't remove that post. Please try again." };
+  }
+
+  revalidatePath("/admin");
+  return {};
+}
+
+/** Undoes a removal. Clears all three moderation columns together — migration 0058's
+ * `posts_removal_shape` check enforces that they are set or null as a group. */
+export async function restoreReportedPost(postId: string): Promise<{ error?: string }> {
+  await requireAdmin();
+  if (!isUuidLike(postId)) return { error: "Invalid post." };
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("posts").update(buildPostRestoreUpdate()).eq("id", postId);
+  if (error) {
+    console.error("[admin] failed to restore post", { code: error.code, message: error.message });
+    return { error: "Couldn't restore that post. Please try again." };
   }
 
   revalidatePath("/admin");

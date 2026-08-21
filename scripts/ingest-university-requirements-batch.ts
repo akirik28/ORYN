@@ -35,7 +35,7 @@ import { partitionCorpusRecords, type CorpusRecordInput } from "../lib/requireme
 import { decideRequirementIngestion, requirementDedupKey, requirementUniqueIndexKey, type ResearchRequirementRecord, type UniversityLookupRow } from "../lib/requirements/ingest";
 import { decideDeadlineIngestion, deadlineDedupKey, deadlineFactKeyFromRow, type ResearchDeadlineRecord } from "../lib/deadlines/ingest";
 import { classifyDeadlineShapes, classifyRequirementShapes, findUniqueSlotCollisions, withRetry, type DeadlineShape, type RequirementShape } from "../lib/requirements/shape-audit";
-import { getSupersededUniversityIds } from "../lib/universities/canonical";
+import { excludeSupersededUniversities } from "../lib/universities/canonical";
 import { normalizeProgramName } from "../lib/programs/normalize";
 import { fetchAllRowsVerified, type PostgrestTarget } from "../lib/acquisition/paginate";
 
@@ -89,14 +89,16 @@ interface ProgramRow {
  * supersession filter. Duplicate universities are already resolved platform-wide
  * (migration 0043 + lib/universities/canonical.ts); excluding them here keeps this dry run's
  * resolution counts consistent with what the product's own read paths would see, rather than
- * inventing a second exclusion rule. */
+ * inventing a second exclusion rule. Uses the shared excludeSupersededUniversities() helper
+ * (not a hand-rolled Set filter) so this stays in lockstep with the other ingestion scripts —
+ * ingest-university-programs.ts and its siblings previously diverged from this exact filter,
+ * which is how a live "two rows for MIT" ambiguity reached a research lane. */
 async function loadUniversityCandidates(target: PostgrestTarget): Promise<UniversityLookupRow[]> {
   // Serialized, not Promise.all: concurrent count probes intermittently draw an HTTP 401 from
   // this project's endpoint. A dry run has no latency budget worth defending.
   const { rows: universities } = await withRetry("read universities", () => fetchAllRowsVerified<UniversityRow>(target, "universities", "id,name,country,canonical_entity_id,website_url", "order=id"));
   const { rows: aliases } = await withRetry("read entity_aliases", () => fetchAllRowsVerified<AliasRow>(target, "entity_aliases", "entity_id,alias", "order=id"));
   const { rows: externalIds } = await withRetry("read entity_external_ids", () => fetchAllRowsVerified<ExternalIdRow>(target, "entity_external_ids", "entity_id,id_system,external_id", "order=id"));
-  const superseded = new Set(getSupersededUniversityIds());
   const aliasesByEntity = new Map<string, string[]>();
   for (const a of aliases) aliasesByEntity.set(a.entity_id, [...(aliasesByEntity.get(a.entity_id) ?? []), a.alias]);
   const externalIdsByEntity = new Map<string, Record<string, string>>();
@@ -105,16 +107,16 @@ async function loadUniversityCandidates(target: PostgrestTarget): Promise<Univer
     existing[e.id_system] = e.external_id;
     externalIdsByEntity.set(e.entity_id, existing);
   }
-  return universities
-    .filter((u) => !superseded.has(u.id))
-    .map((u) => ({
+  return excludeSupersededUniversities(
+    universities.map((u) => ({
       id: u.id,
       name: u.name,
       country: u.country,
       aliases: u.canonical_entity_id ? aliasesByEntity.get(u.canonical_entity_id) : undefined,
       externalIds: u.canonical_entity_id ? externalIdsByEntity.get(u.canonical_entity_id) : undefined,
       websiteUrl: u.website_url,
-    }));
+    }))
+  );
 }
 
 /**

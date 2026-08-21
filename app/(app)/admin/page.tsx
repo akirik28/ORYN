@@ -5,7 +5,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { Badge } from "@/components/ui/badge";
 import { JobTriggerButton } from "@/features/admin/job-trigger-button";
 import { ReportReviewControl } from "@/features/admin/report-review-control";
+import { PostRemovalControl } from "@/features/admin/post-removal-control";
 import { resolveReportedContentPreview } from "@/lib/moderation/content-preview";
+import { REPORTED_POST_MISSING_LABEL } from "@/lib/social/posts-moderation";
 import { triggerOpportunityDiscovery, triggerUniversitySync, triggerDeadlineScan, triggerRequirementDiscovery } from "./actions";
 
 export const metadata = { title: "Admin" };
@@ -52,17 +54,35 @@ export default async function AdminPage() {
   // tightly to exactly the ids referenced by a report, for the admin moderation queue only.
   const reports = reportsRes.data ?? [];
   const profileIds = Array.from(new Set(reports.flatMap((r) => [r.reporter_id, r.reported_user_id])));
-  const messageIds = Array.from(new Set(reports.map((r) => r.message_id).filter((id): id is string => id !== null)));
-  const recommendationIds = Array.from(new Set(reports.map((r) => r.recommendation_id).filter((id): id is string => id !== null)));
+  // `typeof id === "string"` rather than `!== null`: a report row fetched before its
+  // migration is applied has the column *missing*, which reads as `undefined`, and
+  // `undefined !== null` is true — that would put an undefined into the `.in()` list and
+  // produce a malformed query. Cheap guard, and this page now reads three optional
+  // reference columns added by three different migrations.
+  const messageIds = Array.from(new Set(reports.map((r) => r.message_id).filter((id): id is string => typeof id === "string")));
+  const recommendationIds = Array.from(
+    new Set(reports.map((r) => r.recommendation_id).filter((id): id is string => typeof id === "string"))
+  );
+  // Social layer (migration 0058). The feature is switched off and unreachable by
+  // students, so this list is always empty today — it is wired now so the report ->
+  // queue -> removal loop is a real path rather than a report landing in a table nobody
+  // acts on, which is the exact failure migration 0030's header was written about.
+  const postIds = Array.from(new Set(reports.map((r) => r.post_id).filter((id): id is string => typeof id === "string")));
 
-  const [profilesRes, messagesRes, recommendationsRes] = await Promise.all([
+  const [profilesRes, messagesRes, recommendationsRes, postsRes] = await Promise.all([
     profileIds.length > 0 ? admin.from("profiles").select("id, display_name").in("id", profileIds) : Promise.resolve({ data: [] }),
     messageIds.length > 0 ? admin.from("messages").select("id, body").in("id", messageIds) : Promise.resolve({ data: [] }),
     recommendationIds.length > 0 ? admin.from("recommendations").select("id, body").in("id", recommendationIds) : Promise.resolve({ data: [] }),
+    postIds.length > 0 ? admin.from("posts").select("id, body, removed_at").in("id", postIds) : Promise.resolve({ data: [] }),
   ]);
   const nameById = new Map((profilesRes.data ?? []).map((p) => [p.id, p.display_name]));
   const messageById = new Map((messagesRes.data ?? []).map((m) => [m.id, m.body]));
   const recommendationById = new Map((recommendationsRes.data ?? []).map((r) => [r.id, r.body]));
+  // A repost with no commentary has a null body — it is still reportable content (it
+  // rebroadcasts the original), so it needs a preview label rather than falling through
+  // to the "no longer available" placeholder, which would be a lie.
+  const postById = new Map((postsRes.data ?? []).map((p) => [p.id, p.body ?? "(repost with no added comment)"]));
+  const removedPostIds = new Set((postsRes.data ?? []).filter((p) => p.removed_at !== null).map((p) => p.id));
 
   return (
     <div className="space-y-10">
@@ -103,6 +123,16 @@ export default async function AdminPage() {
                   <p className="rounded-md bg-muted px-3 py-1.5 text-xs italic text-muted-foreground">
                     {resolveReportedContentPreview(report.recommendation_id, recommendationById, "(reported recommendation no longer available)")}
                   </p>
+                ) : null}
+                {report.post_id ? (
+                  <div className="space-y-2">
+                    <p className="rounded-md bg-muted px-3 py-1.5 text-xs italic text-muted-foreground">
+                      {resolveReportedContentPreview(report.post_id, postById, REPORTED_POST_MISSING_LABEL)}
+                    </p>
+                    {postById.has(report.post_id) ? (
+                      <PostRemovalControl postId={report.post_id} isRemoved={removedPostIds.has(report.post_id)} />
+                    ) : null}
+                  </div>
                 ) : null}
                 <ReportReviewControl reportId={report.id} initialStatus={report.status} initialNote={report.resolution_note} />
               </li>
