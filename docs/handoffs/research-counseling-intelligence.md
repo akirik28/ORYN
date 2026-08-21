@@ -120,6 +120,45 @@ documents and two JSON files, done under time pressure while the peer branch is 
 changing, risks introducing reference errors for a problem that has to be re-checked at
 integration time regardless of which branch does the renumbering.
 
+### Update: peer completed its own renumbering (partial resolution)
+
+Once both branches were "functionally complete on core deliverables" (peer's own framing, several
+hours into the session, both branches still adding material but no longer in the fast-moving
+early-collision phase), peer proposed and — with an agreed refinement from this session, to use a
+safe numeric buffer rather than a number immediately adjacent to this branch's then-current top —
+executed a **same-branch-only renumbering**: peer's own `034`-`064` → `200`-`230`, on the peer
+branch, no merge or cross-branch write attempted. Peer separately caught a real bug in its own
+renumbering pass (rule IDs split across a markdown line-wrap, e.g. literally
+`"RULE-COUNSEL-\n035"`, missed by a naive string-match and caught by a second whitespace-tolerant
+regex sweep plus final verification) — a good example of exactly the kind of self-verification
+discipline this whole night has depended on.
+
+**A third rules.json/sources.json artifact was also discovered and consolidated into (by peer, on
+peer's branch)**: the shared main checkout already had its own pre-existing
+`data/research/counseling-intelligence/{rules,sources}.json` — left there by the fourth session
+("70608" / "Design student profile evidence taxonomy for ORYN," §"What happened tonight" point 3
+above) — containing `RULE-COUNSEL-001-033` (claimed by that session to be faithful copies of this
+branch's actual `001-014`/`023-031` rule text, fetched via `git show`, not independently re-minted
+content) plus a `901`/`902` reconciliation pair that session added. Peer merged its own
+renumbered `200-230` (+45 sources) directly into that pre-existing file, same-branch, no new
+cross-branch risk. Peer's branch now has a single consolidated registry (66 rules / 52 sources)
+covering: the 70608 session's copy of this branch's early rules, the 70608 session's own two
+reconciliation rules, and all of peer's own family/timing/explainability/unsafe-inference rules.
+
+**Not yet verified by this session**: whether the `001-033` entries in peer's consolidated file
+still faithfully match this branch's current `001-014`/`023-031` text (they were copied hours ago;
+this branch's originals are authoritative if they've since drifted in wording, even slightly).
+Flagged to peer directly, not independently re-checked by this session as of this update — a
+concrete, bounded task for whoever picks this up next, not a blocker for anything else.
+
+**What remains unresolved**: this branch's own registry (`90` rules, `42` sources as of this
+update) is still entirely separate from peer's now-consolidated one. The two still need a genuine
+merge — de-duplicating the `001-014`/`023-031` overlap (same content, now living in both files),
+reconciling the `901`/`902` block against this branch's own later numbering, and deciding a final
+canonical numbering scheme — which is exactly the "final integration pass" both sessions have
+consistently deferred to whoever does real cross-branch integration, not something either research
+session should finish unilaterally mid-flight.
+
 ## Integration instructions for whoever does the merge
 
 1. This branch (`-013956`) is the recommended merge *target* — it has no unrelated noise, unlike
