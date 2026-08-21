@@ -52,7 +52,12 @@ const COUNTRY_ALIASES: Record<string, string> = {
   turkiye: "turkey",
 };
 
-function canonicalCountryKey(country: string): string {
+/** Exported alongside isSameCountry for callers that need to *group* countries rather than
+ * just compare a pair — e.g. building a filter dropdown's option list without splitting one
+ * real country across multiple spellings. Not a display label: this returns the normalized
+ * key ("turkey"), not "Turkey"/"Türkiye" — callers that render UI need to pick their own
+ * label per bucket. */
+export function canonicalCountryKey(country: string): string {
   const normalized = normalizeEntitySearchText(country);
   return COUNTRY_ALIASES[normalized] ?? normalized;
 }
