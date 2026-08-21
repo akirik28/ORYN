@@ -2999,3 +2999,32 @@ GY504 Podiatric Medicine, a direct UCC per-course page for CK411 Data Science an
 confirmed the batch's codes and titles exactly. Remaining untried major Irish institutions:
 University of Limerick, Technological University Dublin, Dublin Business School — a
 reasonable next Ireland round if this lane continues.
+
+**Program catalogue batch 17 — University of Limerick + Technological University Dublin,
+301 new, running session total 3,450 across 36 universities.** Full method in that commit's
+own message (`30b008f`). Fifth and sixth Irish universities this session. UL's older
+`/courses/alphabetical-list-courses` URL (found via web search, looked like the obvious
+candidate) turned out to be a genuinely dead page -- confirmed via both a WebFetch 403 AND
+the same "Page not available" render in the Browser pane, so not a bot-block worth working
+around, just a stale/removed URL; the live course-search tool at `/study/search?type
+[undergraduate]=undergraduate` was used instead (101 results, paginated 10/page, plain
+`page=N` query param, no bulk page-size override found this time unlike City St George's
+`num_ranks` trick). One UL data nuance disclosed rather than silently resolved: 15 of the
+101 entries (Economics, English, French, Psychology, etc.) carry no degree-award suffix on
+the source page, unlike the other 86 which show "- BA"/"- BSc"/etc. -- these are UL's Arts/
+joint-honours subject options, and the source page lists "Psychology" (no suffix) as a
+separate card from "Psychology - BSc" (a distinctly named, separate standalone degree) --
+kept as two separate program_name values exactly as the university itself distinguishes
+them, not merged. TU Dublin's A-Z page fetched cleanly via plain WebFetch, 200 entries, all
+carrying TU-prefixed CAO codes -- many subjects (Business, Mechanical Engineering, etc.)
+repeat under multiple distinct codes, which is TU Dublin's real CAO structure (different
+campus/entry-route/honours-level options), not a scraping duplicate, so every code was kept
+as its own record per this session's established CAO-code-is-the-identity rule. Two
+spot-checks (UL's Undergraduate Entry Medicine BMBS against the university's own dedicated
+page, TU Dublin's TU850 Data Science and AI against a CareersPortal/CAO third-party listing)
+both confirmed accurate. Noted in passing, not acted on: search results surfaced two
+non-`tudublin.ie` domains (`universitytechnologydublin.ie`, `technologicaluniversityofdublin.ie`)
+both claiming to mirror the same A-Z course page -- this batch's own source was exclusively
+the official `tudublin.ie` domain throughout, so this doesn't affect the data quality here,
+just flagging the existence of apparent unofficial mirror/aggregator domains for awareness
+if a future pass encounters them and needs to judge source authority.
