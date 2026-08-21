@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ComposableMap, Geographies, Geography, Marker, createCoordinates } from "@vnedyalk0v/react19-simple-maps";
-import type { PreparedFeature, GeographyEventData } from "@vnedyalk0v/react19-simple-maps";
+import { Minus, Plus, Maximize2 } from "lucide-react";
+import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup, createCoordinates, createZoomPanConfig } from "@vnedyalk0v/react19-simple-maps";
+import type { PreparedFeature, GeographyEventData, Coordinates } from "@vnedyalk0v/react19-simple-maps";
 import { feature } from "topojson-client";
 import type { Topology, GeometryCollection } from "topojson-specification";
 import worldTopology from "world-atlas/countries-110m.json";
@@ -16,13 +17,15 @@ import type { OpportunityCountryCount } from "@/lib/opportunities/browse";
 // tested, and tuned for a map where most of the 89 supported countries carry real data. This
 // map's "has an opportunity" set is much smaller (the live catalog is ~11 opportunities
 // total), so the same near-white "unsupported" tone there reads as an almost entirely blank
-// map here — confirmed directly against a live render, not a guess. Land without data uses
-// `--success` (an existing supporting token, not a new color) diluted into a sage green —
-// visible terrain, not a data signal — so the map reads as a map before it reads as a data
-// visualization; land with data keeps the brand-blue ladder so "the data" is still the thing
-// that pops hardest against it. Same anti-black-fill technique as the university map either
-// way: every one of the library's four style-variant keys gets this identical, already-
-// resolved object.
+// map here — confirmed directly against a live render, not a guess. Land without data uses a
+// warm sand/parchment tone (`--warning` heavily diluted into `--card`, both existing tokens)
+// rather than green: a uniformly saturated green world reads as a single flat biome, which is
+// both wrong-looking and louder than the data it's supposed to sit behind. Warm land against
+// the cool `--info` ocean is the standard cartographic contrast pair, and it leaves green
+// unspent so terrain shading can use it later if a real biome dataset ever lands. Land with
+// data keeps the brand-blue ladder so "the data" is still the thing that pops hardest. Same
+// anti-black-fill technique as the university map either way: every one of the library's four
+// style-variant keys gets this identical, already-resolved object.
 //
 // Selected state deliberately does NOT push the fill any darker than the existing 22/30%
 // dilution — this is the same near-black-at-scale zone the shared map-visuals.ts ladder was
@@ -35,7 +38,7 @@ function resolveOpportunityCountryFillStyle({ hasResults, isSelected, isHovered 
     ? `color-mix(in oklch, var(--brand-primary), var(--background) ${isHovered ? 22 : 30}%)`
     : hasResults
       ? `color-mix(in oklch, var(--brand-primary), var(--background) ${isHovered ? 42 : 58}%)`
-      : `color-mix(in oklch, var(--success), var(--card) ${isHovered ? 60 : 68}%)`;
+      : `color-mix(in oklch, var(--warning), var(--card) ${isHovered ? 66 : 76}%)`;
   return {
     fill,
     stroke: isSelected ? "var(--brand-primary)" : "var(--card)",
@@ -48,6 +51,15 @@ const worldGeo = feature(
   worldTopology as unknown as Topology,
   (worldTopology as unknown as Topology).objects.countries as GeometryCollection
 );
+
+// The library's typings expose two incompatible ZoomableGroup shapes: a bare
+// {zoom, minZoom, maxZoom} form, and this branded {enableZoom, scaleExtent, enablePan,
+// translateExtent} form built by createZoomPanConfig. The bare form typechecks but its
+// zoom behavior isn't wired up correctly — updating `zoom` from outside a drag/wheel
+// gesture (e.g. a zoom button) throws "selection.interrupt is not a function" from inside
+// the library's internal d3-zoom sync. Module-scope constant since it never changes and
+// the branded fields should stay referentially stable across renders.
+const ZOOM_PAN_CONFIG = createZoomPanConfig(1, 8, [createCoordinates(-179, -85), createCoordinates(179, 85)]);
 
 // World scope only, deliberately — unlike the university explorer's world/region drill-down,
 // the live opportunity catalog is small (see browse.ts's own "11 active opportunities live
@@ -81,6 +93,14 @@ export function OpportunityMapExplorer({
   const searchParams = useSearchParams();
   const selected = searchParams.get("country");
   const [hover, setHover] = useState<HoverState | null>(null);
+  // Pan/zoom is a transient view preference, not a filter — local state only, same
+  // convention the mobile List/Map toggle already uses for the same reason (not
+  // URL-persisted; a reload or a shared link shouldn't have to reproduce a scroll position).
+  const [zoom, setZoom] = useState(1);
+  const [center, setCenter] = useState<Coordinates>(createCoordinates(0, 0));
+  const groupRef = useRef<SVGGElement>(null);
+  const MIN_ZOOM = ZOOM_PAN_CONFIG.minZoom;
+  const MAX_ZOOM = ZOOM_PAN_CONFIG.maxZoom;
 
   const countByName = useMemo(() => new Map(countryCounts.map((c) => [c.country, c.count])), [countryCounts]);
   const maxCount = Math.max(1, ...countryCounts.map((c) => c.count));
@@ -149,6 +169,16 @@ export function OpportunityMapExplorer({
         style={{ width: "100%", height: "auto" }}
         className="relative"
       >
+        <ZoomableGroup
+          ref={groupRef}
+          center={center}
+          zoom={zoom}
+          {...ZOOM_PAN_CONFIG}
+          onMoveEnd={(position) => {
+            setZoom(position.zoom);
+            setCenter(position.coordinates);
+          }}
+        >
         <Geographies geography={worldGeo}>
           {({ geographies }) =>
             (geographies as PreparedFeature[]).map((geo) => {
@@ -236,7 +266,40 @@ export function OpportunityMapExplorer({
             </Marker>
           );
         })}
+        </ZoomableGroup>
       </ComposableMap>
+      <div className="absolute right-3 bottom-14 flex flex-col gap-1">
+        <button
+          type="button"
+          onClick={() => setZoom((z) => Math.min(MAX_ZOOM, z * 1.5))}
+          disabled={zoom >= MAX_ZOOM}
+          aria-label="Zoom in"
+          className="flex size-8 items-center justify-center rounded-lg border bg-card text-foreground shadow-sm outline-none transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-40"
+        >
+          <Plus className="size-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => setZoom((z) => Math.max(MIN_ZOOM, z / 1.5))}
+          disabled={zoom <= MIN_ZOOM}
+          aria-label="Zoom out"
+          className="flex size-8 items-center justify-center rounded-lg border bg-card text-foreground shadow-sm outline-none transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-40"
+        >
+          <Minus className="size-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setZoom(1);
+            setCenter(createCoordinates(0, 0));
+          }}
+          disabled={zoom === 1 && center[0] === 0 && center[1] === 0}
+          aria-label="Reset map view"
+          className="flex size-8 items-center justify-center rounded-lg border bg-card text-foreground shadow-sm outline-none transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-40"
+        >
+          <Maximize2 className="size-3.5" />
+        </button>
+      </div>
       {hover ? (
         <div
           className="pointer-events-none fixed z-20 rounded-lg border bg-popover px-3 py-2 text-xs shadow-lg"
