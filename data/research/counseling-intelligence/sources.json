@@ -927,6 +927,78 @@
       "used_in": [
         "docs/research/counseling-intelligence/06-major-family-evidence/18-education-teaching.md §6"
       ]
+    },
+    {
+      "id": "S-BLS-PERFORM",
+      "title": "BLS OOH -- Musicians and Singers; Dancers and Choreographers; Music Directors and Composers",
+      "url": "https://www.bls.gov/ooh/entertainment-and-sports/musicians-and-singers.htm",
+      "additional_urls": [
+        "https://blsmon1.bls.gov/ooh/entertainment-and-sports/dancers-and-choreographers.htm",
+        "https://www.bls.gov/ooh/entertainment-and-sports/music-directors-and-composers.htm"
+      ],
+      "publisher": "US Bureau of Labor Statistics",
+      "source_type": "official_institutional_guidance",
+      "retrieval_method": "WebSearch",
+      "retrieved_at": "2026-08-21",
+      "claim_supported": "Musicians/singers typically don't need formal postsecondary education to enter the field (unlike most other families); dancers require many years of training starting young; career longevity considerations distinct from other families (dancers often stop performing by their late 30s).",
+      "confidence": "high",
+      "limitations": "US-specific.",
+      "used_in": [
+        "docs/research/counseling-intelligence/06-major-family-evidence/20-performing-arts-music.md §2, §3"
+      ]
+    },
+    {
+      "id": "S-YOUTH-MUSIC",
+      "title": "Kennedy Center NSO Young Soloists Competition; Carnegie Hall National Youth Orchestra of the United States (NYO-USA)",
+      "url": "https://www.kennedy-center.org/education/opportunities-for-artists/competitions-and-commissions/nso-young-soloists/",
+      "additional_urls": [],
+      "publisher": "John F. Kennedy Center for the Performing Arts (US federally-chartered institution); Carnegie Hall (secondary-corroborated)",
+      "source_type": "official_institutional_guidance",
+      "retrieval_method": "WebSearch",
+      "retrieved_at": "2026-08-21",
+      "claim_supported": "Official, highly selective national youth music competition/ensemble programs exist, comparable in evidentiary weight to other families' national olympiads.",
+      "confidence": "high_for_kennedy_center_medium_high_for_nyo_usa",
+      "limitations": "NYO-USA specifics were secondary-corroborated, not independently fetched from carnegiehall.org directly this pass.",
+      "used_in": [
+        "docs/research/counseling-intelligence/06-major-family-evidence/20-performing-arts-music.md §4"
+      ]
+    },
+    {
+      "id": "S-NCS-PERFORM",
+      "title": "National Careers Service -- Dancer, Actor, Musicians job profiles",
+      "url": "https://nationalcareers.service.gov.uk/job-profiles/dancer",
+      "additional_urls": [
+        "https://nationalcareers.service.gov.uk/job-profiles/actor",
+        "https://nationalcareers.service.gov.uk/job-groups/3415"
+      ],
+      "publisher": "UK National Careers Service",
+      "source_type": "official_institutional_guidance",
+      "retrieval_method": "WebSearch",
+      "retrieved_at": "2026-08-21",
+      "claim_supported": "UK dancer profile states academic qualifications may not be essential given sufficient audition talent; Equity named as actors' professional body, with a paid-work-or-student/graduate membership requirement.",
+      "confidence": "high",
+      "limitations": "UK-specific.",
+      "used_in": [
+        "docs/research/counseling-intelligence/06-major-family-evidence/20-performing-arts-music.md §2, §6"
+      ]
+    },
+    {
+      "id": "S-CONSERVATORY-TR",
+      "title": "Turkish state conservatory special talent exam (ozel yetenek sinavi) guidance, multiple official university conservatories",
+      "url": "https://konservatuvar.omu.edu.tr/tr/haberler/omudkoys202627/omudkoys2026kilavuz.pdf",
+      "additional_urls": [
+        "https://msgsu.edu.tr/wp-content/uploads/2024/07/174832-Konservatuvar-Ozel-Yetenek-Sinav-Kilavuzu7.pdf"
+      ],
+      "publisher": "Multiple Turkish state university conservatories (Ondokuz Mayis University, Mimar Sinan Fine Arts University, and others)",
+      "source_type": "official_government_regulation",
+      "retrieval_method": "WebSearch",
+      "retrieved_at": "2026-08-21",
+      "claim_supported": "Turkish conservatory admission requires a minimum TYT score threshold (150 for most music/performing-arts programs, 180 for composition/theater/opera/musicology) plus a talent exam (performance, technique, musicality, interview) -- a hybrid academic-plus-audition mechanism distinct from pure YKS placement.",
+      "confidence": "high",
+      "limitations": "Cross-referenced across multiple official university sources with consistent structure; not every individual conservatory's guidance was checked.",
+      "used_in": [
+        "docs/research/counseling-intelligence/06-major-family-evidence/20-performing-arts-music.md §6"
+      ]
     }
   ]
 }

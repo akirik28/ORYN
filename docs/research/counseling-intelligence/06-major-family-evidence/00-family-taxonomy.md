@@ -46,7 +46,7 @@ suggestions still needs a family to map to** — the "Nearest family" column exi
 matching problem, to be read heuristically by a future feature, never as a hardcoded exact-match
 requirement.
 
-## 3. The 18 families (grown from 17 once research surfaced one more genuine gap)
+## 3. The families (grown from an original 17, still growing as review surfaces genuine gaps)
 
 | # | Family | Onboarding suggestion(s) it answers to | Mission raw fields covered | Owner |
 |---|---|---|---|---|
@@ -68,6 +68,8 @@ requirement.
 | 16 | Architecture & Design | Design | architecture, product/industrial design | Peer session |
 | 17 | Visual & Media Arts | (no direct onboarding suggestion — nearest is Design or a custom interest) | visual arts, film/media | Peer session |
 | 18 | Education & Teaching | (no direct onboarding suggestion — a real, separate gap, see §4) | *(not in the mission's original raw-field list at all — added because teaching/education as a career path was found completely absent across all 17 original families during a post-completion coverage check, not because the mission named it explicitly)* | This session |
+| 19 | Social Work | (no direct onboarding suggestion) | *(not in the mission's original raw-field list — peer session found it missing, distinct from both psychology's clinical/assessment focus and generic `community_impact` volunteering)* | Peer session — in progress as of this row's addition, confirmed with this session first, no numbering conflict |
+| 20 | Performing Arts & Music | (no direct onboarding suggestion — nearest is Design or a custom interest, same real gap as family 17) | *(not in the mission's original raw-field list — found missing after checking that family 17, "Visual & Media Arts," covers only visual arts and film, no music/theater/dance anywhere)* | This session |
 
 **Filenames** (both sessions use this exact list — do not deviate): `01-computing-information-
 sciences.md`, `02-mathematics-statistics.md`, `03-physical-sciences.md`, `04-life-sciences.md`,
@@ -76,7 +78,9 @@ sciences.md`, `02-mathematics-statistics.md`, `03-physical-sciences.md`, `04-lif
 `10-medicine-clinical-pathways.md`, `11-psychology-behavioral-science.md`,
 `12-political-science-ir-public-policy.md`, `13-law-oriented-pathways.md`,
 `14-sociology-history-philosophy.md`, `15-literature-journalism-communication.md`,
-`16-architecture-design.md`, `17-visual-media-arts.md`, `18-education-teaching.md`.
+`16-architecture-design.md`, `17-visual-media-arts.md`, `18-education-teaching.md`,
+`19-social-work.md` (peer session, exact filename per their own choice — not independently
+confirmed by this document as of this writing), `20-performing-arts-music.md`.
 
 ## 4. Gaps in the onboarding vocabulary this mapping surfaces
 
