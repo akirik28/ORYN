@@ -92,8 +92,21 @@ enriches both ORYN rows with the one Rutgers ROR id, the *second* insert into
 different `entity_id`s to claim the same `(ROR, 05vt9qd57)` pair. This is not a hypothetical; it
 is exactly what the live constraint (`09`, "external_id uniqueness" clean-check) will do.
 
+**Mode C — the source registry already reflects a rename/merger ORYN's own registry doesn't know
+about yet (Université de Franche-Comté, Université Paul Sabatier Toulouse III).** A third,
+distinct shape, found checking two more `university-ror-gaps.json` "genuine single-row gap"
+candidates: ROR's own record for "Université de Franche-Comté" is `status: inactive` with a
+direct `successor` relationship to a 2024-established institution; ROR's record for "Université
+Toulouse III - Paul Sabatier" shows it as the direct `predecessor` of a 2025-established one. Both
+are real, current, very recent (2024–2025) French university mergers — unlike Modes A/B, this is
+not a granularity mismatch, it is `04`'s rename/succession framework applying directly, with ROR
+as the source that already knows about it. Full detail and the exact successor chain: `04`'s
+updated live-succession-examples section.
+
 **What this means for the enrichment recommendation, restated correctly:** it is not a purely
-mechanical, risk-free run for every one of the 111 combined candidates (41 + 70). For any
+mechanical, risk-free run for every one of the 111 combined candidates (41 + 70) — of the 16
+France/Germany-heavy "genuine single-row gap" candidates specifically, 2 of them (not counting
+Rutgers' 2 rows in the same list) turned out to be live succession cases, not simple gaps. For any
 candidate where ORYN's own entity granularity might be finer than the source registry's (a
 multi-campus US public university system is the most likely shape — check for this specifically,
 not just for Purdue/Rutgers), a researcher needs to decide, case by case, whether (a) a

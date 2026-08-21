@@ -66,16 +66,37 @@ recorded as a concrete candidate in `10` and `11`, not fixed by this session (no
 even with it, this is exactly the kind of single-row edit that belongs to whichever session owns
 write access to `canonical_entities`/`entity_aliases`, not to a read-only research pass).
 
-**Zero `successor_of`/`predecessor_of`/`related_brand` relationships exist anywhere in the live
-registry** (confirmed by direct query) — so there is currently no live example of a genuine
-succession to study. This is worth stating plainly rather than papering over with an invented
-one: this document's succession guidance is therefore evidence-based on the *identity* reasoning
-(École Polytechnique/IP Paris, which is a federation/`member_of` case, structurally adjacent but
-not itself a succession) rather than on a live succession example, because none exists yet in
-ORYN's data. A plausible future candidate worth watching for: any institution merger among the
-smaller European business schools this registry already tracks (LUISS, ESCP, ESSEC, etc., per
-`docs/handoffs/claude-b-to-claude-a.md`) — European business-school mergers are common enough in
-reality that this framework should not be surprised by one.
+**Zero `successor_of`/`predecessor_of`/`related_brand` relationships exist inside ORYN's own
+registry** (confirmed by direct query) — but two real, current, externally-verified succession
+cases were found this session by checking ORYN's own "genuine single-row ROR gap" candidates
+(`university-ror-gaps.json`) directly against ROR's live API, and both are exactly the shape this
+section originally had to describe hypothetically:
+
+- **Université de Franche-Comté → Université Marie et Louis Pasteur.** ROR's own record for
+  "Université de Franche-Comté" (`ror.org/03pcc9z86`, established 1423) is explicitly
+  `status: inactive`, with a direct `successor` relationship to Université Marie et Louis Pasteur
+  (`ror.org/04asdee31`, established 2024, `umlp.fr`) — itself one of two 2024/2025 successors to
+  the intermediate "Université Bourgogne Franche-Comté" federation (2015–2024/25; the other
+  successor, Université Bourgogne Europe, inherits the Dijon/Bourgogne side, not the
+  Franche-Comté/Besançon side — UMLP's own child-entity list includes "Laboratoire de
+  Mathématiques de Besançon" and other Franche-Comté-specific institutes, confirming which
+  successor actually carries Franche-Comté's research lineage forward).
+- **Université Toulouse III - Paul Sabatier → Université de Toulouse.** ROR's "Université de
+  Toulouse" (`ror.org/01ahyrz84`, established 2025) lists "Université Toulouse III - Paul
+  Sabatier" (`ror.org/02v6kpv12`) as a direct `predecessor`.
+
+Both are real successions **an outside registry (ROR) already knows about and ORYN's own registry
+does not yet reflect** — ORYN's `canonical_entities` rows for these two institutions (if they
+exist, or when created) need a real decision, per this document's own decision rule: does the
+ORYN row represent the historical institution (in which case `verification_state='inactive'` plus
+a `successor_of`-pointing relationship is the correct model — the same pattern `12` (case 13, Fatih
+University) independently arrived at for a closed Turkish university) or should it be updated to
+the current successor's identity? **Not decided by this session** — flagged precisely, with
+sources, for whoever owns write access; see `05`'s verification section and `10`/`11` for how this
+folds into the ROR-enrichment priority item. Both mergers are recent enough (2024–2025) that this
+is very likely still-unfolding French higher-education restructuring, not a one-off — the
+`docs/handoffs/claude-b-to-claude-a.md` era's "watch for a European business-school merger"
+prediction turned out to undersell the risk: full public research universities are mid-merger too.
 
 ## Why `legacy` alias and `successor_of` relationship must not be conflated
 
