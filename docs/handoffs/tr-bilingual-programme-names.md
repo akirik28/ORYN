@@ -124,12 +124,92 @@ sessions on this machine — future lanes dispatching parallel sub-agents should
 uniquely-named scratch files per agent and a sanity check that output data matches the
 institution it claims to describe.
 
+## Wiring pass (2026-08-22, same lane, second package)
+
+The bridge above is now wired into the actual matching pipeline.
+
+`lib/programs/yok-atlas-matching.ts`'s `matchYokPlacements` gained an optional
+`kilavuzBridge: Map<number, string>` parameter (YOK `kilavuzKodu` -> `university_programs.id`).
+An exact identifier is checked and resolved *before* any name-based heuristic — it's the only
+path that can ever match a university whose `university_programs.name` and YOK's `birimAdi`
+are recorded in different languages, since name-equality can never bridge that gap. Defended
+against a bad bridge entry: the target program must exist in the provided `dbPrograms` and
+belong to the same university, or the record is reported unmatched rather than trusted
+blindly. Defaults to an empty map, so every university this function already matched by name
+(Ankara, Istanbul, METU, Hacettepe, ITU, Sabancı) is completely unaffected.
+
+`lib/programs/tr-bilingual-name-bridge.ts` builds that map from the six `tr_bilingual_names_*`
+files above. **Only `confidence: "high"` entries are wired in.** The fee tier
+(Burslu/%50 İndirimli/Ücretli) rides inside the same kilavuzKodu record a medium/low
+confidence name pairing produced, so an uncertain pairing there is a money-error risk, not
+just a labeling one — see Özyeğin's "Computer Science" case below. Every excluded entry is
+returned in a `heldBack` list with a specific reason, never silently dropped.
+
+`scripts/ingest-yok-atlas-placements.ts` now loads every `tr_bilingual_names_*.jsonl` file
+automatically and reports the held-back set alongside its existing per-university breakdown.
+Absent entirely on a checkout with no bilingual research yet (returns an empty bridge, not an
+error), so this is additive.
+
+### Dry-run predicted yield (2026-08-22, live YÖK fetch + live DB state via Supabase MCP)
+
+This worktree has no working local `SUPABASE_SECRET_KEY` (the known cross-branch 401
+regression documented in `docs/ORYN_WORKSTREAMS.md`'s "known cross-branch facts"), so the
+dry run was computed by feeding the real `matchYokPlacements`/`buildKilavuzBridge` production
+code a fresh live YÖK Atlas fetch and DB state pulled via the Supabase MCP tool directly,
+rather than running `scripts/ingest-yok-atlas-placements.ts` end-to-end. Same matching logic
+either way — this is the identical precedent the original placement-schema pass used for the
+same reason.
+
+**288 of 306 sourced kilavuzKodu values wired** (18 held back across 8 medium-confidence
+programmes that do have real codes — see the reason breakdown below). **Predicted: 288 new
+`university_program_placement_cycles` rows, zero ambiguous groups, zero bridge-safety
+rejections** (every wired kilavuzKodu resolved to a program that actually exists and belongs
+to the right university).
+
+| University | Predicted new rows | Unmatched (LISANS) | Ambiguous |
+|---|---|---|---|
+| Bilkent University | 72 | 0 | 0 |
+| Boğaziçi University | 27 | 13 | 0 |
+| Koç University | 53 | 0 | 0 |
+| Özyeğin University | 59 | 3 | 0 |
+| Yıldız Teknik Üniversitesi | 53 | 10 | 0 |
+| Gebze Technical University | 24 | 2 | 0 |
+| **Total** | **288** | **28** | **0** |
+
+Of the 288: 277 filled (real quota/score/rank), 11 unfilled (real unfilled-quota outcome, not
+missing data), 184 carry a burs/fee tier, all 4 `puan_turu` values present (DİL, EA, SAY,
+SÖZ).
+
+**The 28 unmatched are all real, explained gaps, not a matching failure**:
+- Boğaziçi's 13: the 5 sub-majors under the deliberately-unpaired "Mathematics and Science
+  Education" department (Okul Öncesi Öğretmenliği, İngilizce Öğretmenliği, Matematik
+  Öğretmenliği, etc.) plus `(KKTC Uyruklu)` Northern-Cyprus-quota variant rows this pass's
+  bridge doesn't cover (a separate admission unit YÖK Atlas gives its own code, per this
+  project's YÖK Atlas reference memory — real information with nowhere to live in the current
+  schema, not a bug here).
+- Yıldız Teknik's 10: the sub-majors under its own 6 department-level DB rows (Sınıf
+  Öğretmenliği, Okul Öncesi Öğretmenliği, Türkçe Öğretmenliği, Sosyal Bilgiler Öğretmenliği,
+  Rehberlik ve Psikolojik Danışmanlık — the structural mismatch flagged in the research pass
+  above) plus 2 departments genuinely absent from our catalogue entirely (Fransızca Mütercim
+  ve Tercümanlık, Fotoğraf ve Video / Sanat ve Kültür Yönetimi).
+- Özyeğin's 3: exactly the "Computer Science"/"Bilgisayar Mühendisliği" medium-confidence case
+  — correctly held back rather than risking a wrong-department fee-tier insert.
+- Gebze Teknik's 2: an `(İngilizce)` English-medium tier of Management Information Systems
+  this pass's bridge didn't capture a code for (only the base entry was captured at high
+  confidence).
+
+**Not applied.** `matchYokPlacements`/`buildKilavuzBridge` are fully tested (25 tests total
+across the two files, several against real sourced pairs — e.g. Bilkent's Information Systems
+and Technologies, kilavuzKodu 202190193, verified live against YÖK Atlas before writing the
+test) and the dry run is complete, but the actual insert into
+`university_program_placement_cycles` stays pending explicit coordinator sign-off — no
+`--apply` run, no DB writes this pass.
+
 ## What this does NOT do
 
-- No `university_programs` rows were edited, added, or renamed — this is a research
-  proposal, same posture as every other research lane in this project.
-- No `university_program_placement_cycles` rows were inserted — actually wiring these
-  sourced Turkish names + kilavuzKodu values into the ingestion pipeline
-  (`lib/programs/yok-atlas-matching.ts`, `scripts/ingest-yok-atlas-placements.ts`) is a
-  follow-up for whoever owns that code, not done here.
-- No Supabase/database writes, no migrations, no application code changes.
+- No `university_programs` rows were edited, added, or renamed.
+- No `university_program_placement_cycles` rows were inserted — the matching/bridging code is
+  wired and dry-run-verified, but nothing has been applied. `0057` (or whatever the current
+  live migration number is) stays untouched.
+- No Supabase/database writes, no migrations, no application code changes beyond the matcher
+  and ingestion script wiring described above.
