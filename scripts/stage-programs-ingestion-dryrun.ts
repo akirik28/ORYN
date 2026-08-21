@@ -40,7 +40,7 @@
 import { readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { decideIngestion, programUrlKey, type ResearchProgramRecord, type UniversityLookupRow, type IngestDecision, type AcceptedProgramRow } from "../lib/programs/ingest";
-import { canonicalUniversityId } from "../lib/universities/canonical";
+import { canonicalUniversityId, excludeSupersededUniversities } from "../lib/universities/canonical";
 
 const SNAPSHOT_DIR = ".night-scratch";
 const BATCH_DIR = "data/research/university-programs";
@@ -90,14 +90,25 @@ for (const e of externalIdsRaw) {
   externalIdsByEntity.set(e.entity_id, existing);
 }
 
-const universities: UniversityLookupRow[] = universitiesRaw.map((u) => ({
-  id: u.id,
-  name: u.name,
-  country: u.country,
-  aliases: u.canonical_entity_id ? aliasesByEntity.get(u.canonical_entity_id) : undefined,
-  externalIds: u.canonical_entity_id ? externalIdsByEntity.get(u.canonical_entity_id) : undefined,
-  websiteUrl: u.website_url,
-}));
+// Pre-filtered with the same excludeSupersededUniversities() helper the live ingestion scripts
+// now use (see scripts/ingest-university-programs.ts), not just the post-hoc
+// canonicalUniversityId() redirect below. Pre-filtering fixes the actual failure mode this
+// script's redirect could not: a record whose name matches BOTH a winner and loser row equally
+// well resolves to `unresolved_university` (resolveIdentity() correctly refuses an ambiguous
+// match) before the redirect ever runs, since the redirect only fires on an already-accepted
+// decision. With the loser row removed from the pool up front, that ambiguity can't occur — the
+// redirect below now only matters for a snapshot that predates a future new supersession entry
+// this file wasn't regenerated against, so it stays as a second layer, not the primary fix.
+const universities: UniversityLookupRow[] = excludeSupersededUniversities(
+  universitiesRaw.map((u) => ({
+    id: u.id,
+    name: u.name,
+    country: u.country,
+    aliases: u.canonical_entity_id ? aliasesByEntity.get(u.canonical_entity_id) : undefined,
+    externalIds: u.canonical_entity_id ? externalIdsByEntity.get(u.canonical_entity_id) : undefined,
+    websiteUrl: u.website_url,
+  }))
+);
 
 const existingKeys = new Set<string>();
 for (const r of existingPrograms) {
