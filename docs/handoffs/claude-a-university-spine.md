@@ -3570,17 +3570,17 @@ case at the DB layer**, only at the application decision layer — worth the coo
 confirming, since this is a recurring pattern (seen so far at Radboud, and structurally
 likely at Twente, Utrecht, and any Turkish university with parallel Turkish/English tracks).
 
-Of the 5 outstanding Radboud/Exeter gaps, 2 were resolved this session (the Exeter
-"BA Classical Studies and Philosophy" insert, and the orphaned "BA Classical Studies and
-Modern Languages" queue-audit row) — both verified as genuinely still-missing via live
+Of the 5 outstanding Radboud/Exeter gaps, 2 are now confirmed fully resolved (the Exeter
+"BA Classical Studies and Philosophy" insert, id `4a715f86-3f0e-4b3d-97ff-e6fb12c2c5bb`, and
+the orphaned "BA Classical Studies and Modern Languages" queue-audit row, id
+`10e41a83-b2b2-41e4-a796-4ba84bcb28ae`) — both verified as genuinely still-missing via live
 query before insertion (the earlier summary's claim that all 4 had already been
 hand-inserted was itself stale/incorrect and was corrected against live DB state before
-acting). The write for these 2 returned no error; live re-verification was then blocked by
-a local tool-permission classifier before it could be confirmed read-back, so treat as
-"applied, not yet re-confirmed" rather than fully closed. **The remaining 3 (all Radboud)
-are intentionally left undone** pending the coordinator's call on how same-name
-different-language tracks should be represented given the DB constraint above — either a
-migration to widen the unique index, or a naming convention (e.g. this session's own
-`(Lehramt)`-style disambiguation suffix, applied consistently) — rather than one session
-quietly picking a convention that the ingestion pipeline and every other lane would need to
-independently discover and match.
+acting), then re-verified by id and queue-row count after a transient local
+tool-permission-classifier block cleared on retry. Both now show exactly 1
+`program_research_queue` row each. **The remaining 3 (all Radboud) are intentionally left
+undone** pending the coordinator's call on how same-name different-language tracks should
+be represented given the DB constraint above — either a migration to widen the unique
+index, or a naming convention (e.g. this session's own `(Lehramt)`-style disambiguation
+suffix, applied consistently) — rather than one session quietly picking a convention that
+the ingestion pipeline and every other lane would need to independently discover and match.
