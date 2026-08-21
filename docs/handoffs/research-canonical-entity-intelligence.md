@@ -14,11 +14,31 @@ state, matching the convention `docs/handoffs/claude-a-university-spine.md` alre
 ## Current state (updated 2026-08-21 ~05:25 Europe/Istanbul)
 
 **Latest work**: acted on `09` Finding 9 / `10` item 11 rather than leaving it diagnosed-only —
-real, ROR-sourced alias research for all 13 Dutch universities (full 0/13 gap closed) and a
-priority 12 of 38 Italian universities, confirming the two specific forms Finding 9 named as
+real, ROR-sourced alias research for all 13 Dutch universities (full 0/13 gap closed) and 22 of
+38 Italian universities across two batches, confirming the two specific forms Finding 9 named as
 likely missing ("La Sapienza," "Milan Polytechnic") are real, plus a few explicit collision
 cautions for whoever eventually writes these (e.g. "UM" for Maastricht would be a third live
-claimant on an already-collision-prone abbreviation). `italy-netherlands-alias-research.json`.
+claimant on an already-collision-prone abbreviation), and two small real display-name candidates
+found along the way (Roma Tre missing "Studi"; "University of Bari" predates the institution's
+current full name "University of Bari Aldo Moro"). `italy-netherlands-alias-research.json`.
+
+**Session shape, for anyone resuming cold**: this has been a single long research session
+(started ~01:26, this update ~05:25, cutoff 11:00, all Europe/Istanbul) that moved through
+several distinct phases, each building on verified findings from the last rather than starting
+fresh: (1) the original 00-11 package against the mission brief directly; (2) discovery of
+`scripts/university-duplicates-audit.ts` mid-session, forcing a "check existing tooling first"
+correction; (3) discovery of `lib/entities/*`, a second production resolution system, written up
+as `17`, including a self-caught mid-write correction; (4) discovery of six founder/prior-session
+documents (`founder-blocked-backlog.md`, `claude-a-university-spine.md`,
+`live-db-reconciliation.md`, `entity-canonicalization-audit.md`, `ORYN_WORKSTREAMS.md`,
+`research-handoff-opportunities.md`), each triggering real corrections, most consequentially a
+live-verified migration-0043 status update; (5) a founder-acceptance-criteria cross-reference;
+(6) forward-looking relationship research; (7) a dedicated consistency-audit agent finding seven
+more confirmed cross-reference/count errors; (8) alias research actually closing two of this
+package's own previously-diagnosed-only gaps. The throughline across all eight phases: verify
+directly, correct transparently when wrong (including about this session's own earlier work, not
+just the codebase), and keep pushing into genuinely new territory rather than stopping once a
+package looks complete.
 
 
 
