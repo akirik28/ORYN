@@ -5,10 +5,10 @@ Rotterdam, Tilburg, University of Amsterdam, Groningen, Vrije Universiteit Amste
 shared 991-record DE/NL corpus,
 `data/research/university-requirements/de_nl_{requirements,deadlines}_*.jsonl`), plus
 `docs/research/university-requirements/de-nl-requirements-deadlines-summary.md` (VERIFIED tier),
-and `docs/research/admissions-systems/netherlands.md` (SYSTEM-LEVEL BACKGROUND tier). **A
-conflicts-verification lane is currently working through the German/Dutch conflict set** — check
-with the coordinator before presenting any conflict below (Erasmus EUC, Groningen FEB, VU
-Amsterdam Law in Society) as still open.
+and `docs/research/admissions-systems/netherlands.md` (SYSTEM-LEVEL BACKGROUND tier). A dedicated
+conflicts-verification pass has since checked every Dutch case originally flagged in this corpus
+(Erasmus EUC, Groningen FEB, VU Amsterdam Law in Society) — **all three closed**, and none of them
+were genuine disagreements between sources; see below for what each actually resolved to.
 
 ## Studielink's 15 January numerus fixus date comes from Studielink, not the university, and carries no published year
 
@@ -114,20 +114,43 @@ TOEFL scale side by side, zero unqualified-legacy-scale records. Never assume "N
 generally handles this well" from Groningen's clean record — check the specific university and
 programme page.
 
-## Two conflicts to check before presenting as open
+## Three cases that looked like conflicts and were not — closed by a dedicated verification pass
 
-- **Erasmus (EUC)**: one page's own intro paragraph shows stale 2026 dates while its section
-  headings and sidebar show current 2027 dates, for the same deadline — reconfirmed via four
-  independent fetches before being recorded as conflicting, not assumed resolved.
-- **Groningen**: two official pages disagree on the current FEB Master's deadline for
-  international-diploma applicants — one already rolled to 1 May 2027, the general hub (headed
-  "2026/2027") still showing 1 January 2026 for the same population. **This is the case where the
-  older-looking page is actually correct** — a "prefer the newer page" heuristic gets Erasmus right
-  and Groningen wrong, which is exactly why neither was resolved by that heuristic and both need a
-  human or the conflicts lane to adjudicate directly.
-- **VU Amsterdam (Law in Society)**: three different official pages give three different dates
-  across three different framings (test-registration guidance, general deadline, rolling-admission
-  table) for what should be one application window.
+All three were originally recorded `CONFLICTING_EVIDENCE`. A conflicts-verification lane checked
+each directly and closed all three — worth keeping as counselor rules, since two of them resolve
+into a genuinely useful fact rather than dissolving into nothing.
+
+- **Erasmus (EUC): both dates are correct, for the cycles they each name.** The page's intro
+  paragraph (15 Jan / 1 May 2026) and its section headings/sidebar (2027 dates) are not stale-vs-
+  current — they describe two different, sequential application rounds, corroborated by the same
+  page's own "Applications for 2027/2028 open on 1 October." **The operative dates for the next
+  round are 15 January 2027 and 1 May 2027, 23:59 CET.**
+- **Groningen: the two pages agree exactly — this was a flattened-table misread, not a real
+  conflict.** The hub page's FEB entry is a 2×2 table (prior education × start month): RUG
+  bachelor's graduates get 1 August (September start) / 1 January (February start); **applicants
+  with other prior education get 1 May (September start) / 15 October (February start)**. The
+  original record flattened this into a list and compared "1 August" against "1 January" as
+  competing answers for the same population — but those are two cells of the *same row* (RUG
+  bachelor's), describing two different start months. The FEB international-diploma page's 1 May
+  and 15 October are precisely the "other prior education" row — the row an international
+  applicant actually falls into. The apparent ~16-month gap came from comparing a February-start
+  date against a September-start date across rows, not from any real disagreement. **The useful
+  counselor fact this leaves behind**: an international-diploma applicant to RUG's FEB faces 1 May
+  for a September start and 15 October for a February start — the RUG-bachelor's dates (1 August /
+  1 January) a student might find first on the same page **do not apply to them.**
+- **VU Amsterdam (Law in Society): three dates for three different applicant populations, not
+  three readings of one deadline.** 1 April for non-EU/EEA applicants (the earlier date reflects
+  visa lead time), 1 May for Dutch and EU applicants, 15 December specifically for the 21+
+  entrance-exam route. Two things in the original record that are not deadlines at all: the ten
+  monthly Admission Board decision rounds are a decision-timing schedule, not an application
+  deadline, and the entrance-exam timing referenced is advisory, not binding.
+
+**The general lesson, worth applying to any future Dutch (or other) date table**: a table
+flattened into a list is how a non-conflict becomes a recorded conflict. When two "competing"
+values differ by an implausible interval — here, 16 months — suspect the comparison itself (wrong
+row, wrong population, wrong cycle) before suspecting either source. This is a different failure
+mode from Heidelberg's genuinely open uni-assist conflict in the Germany doc, where no comparison
+error exists and the sources really do disagree.
 
 ## SYSTEM-LEVEL BACKGROUND: how the system works generally
 

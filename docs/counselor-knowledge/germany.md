@@ -7,9 +7,12 @@ part of the shared 991-record DE/NL corpus,
 `docs/research/university-requirements/de-nl-requirements-deadlines-summary.md` (VERIFIED tier),
 and `docs/research/admissions-systems/germany.md`, which builds directly on the DSD≠Abitur
 distinction established in `docs/research/secondary-education-systems/germany-abitur-dsd.md`
-(SYSTEM-LEVEL BACKGROUND tier). **A conflicts-verification lane is currently working through the
-German/Dutch conflict set** (6 of 13 flagged as candidates for resolution as of this writing) —
-check with the coordinator before presenting any conflict below as still open.
+(SYSTEM-LEVEL BACKGROUND tier). A dedicated conflicts-verification pass has since closed most of
+the German/Dutch corpus's originally-flagged conflicts (see `docs/research/requirement-conflicts/`
+once merged) — **the Heidelberg uni-assist question below is confirmed still genuinely open**
+(not merely unverified); a second case, Humboldt's two Winter-semester uni-assist-track deadline
+windows, is blocked by an anti-scraping challenge on both source URLs and describes an
+already-closed cycle — flagged for manual browser follow-up, not counselor-actionable today.
 
 ## The single highest-stakes finding in the whole research programme: DSD resolves language, never academic recognition
 
@@ -86,12 +89,23 @@ member list, with three distinct outcomes:
    (REQ-2026-08-21-HAM0003, the VPD/Vorprüfungsdokumentation) — a genuine third shape, neither
    "uses" nor "doesn't use."
 
-**Heidelberg has real internal disagreement on this exact question**: a 2018 official PDF
-(REQ-2026-08-21-HEI0009) describes a mandatory uni-assist step for non-EU Medicine/Pharmacy/
-Dentistry applicants, while a current live page (REQ-2026-08-21-HEI0010) says those applicants
-apply directly with no uni-assist mention. Recorded as a conflict, not resolved by assuming the
-newer-looking page wins — check with the coordinator on current status before advising a
-Heidelberg Medicine applicant on whether uni-assist is required.
+**Heidelberg has a genuine, still-open conflict on this exact question — confirmed by a dedicated
+conflicts-verification pass, not just flagged and left.** A 2018 official PDF (REQ-2026-08-21-
+HEI0009) describes a mandatory uni-assist step for non-EU Medicine/Pharmacy/Dentistry applicants;
+a current live page (REQ-2026-08-21-HEI0010) says those applicants apply directly with no
+uni-assist mention. This is **not** the same shape as Harvard's closed 2021 testing conflict in
+the US doc — that page superseded itself against five *current* pages stating the live policy.
+Heidelberg has **no current dated source at all** on this question, only an undated faculty page
+whose *silence* about uni-assist is the entire counter-evidence — and absence of mention is weak
+proof of absence, not confirmation. It got worse on re-verification: a search result confidently
+asserting uni-assist is current 2026 guidance turned out to trace back to a *third* Heidelberg PDF,
+from **winter semester 2011/12**, still live on the official domain and paraphrased in the present
+tense. **The counselor-relevant rule this earns: when a requirement's real-world consequence is
+asymmetric, advise toward the safer side.** If uni-assist is actually required and a student
+applies directly instead, the application may not be considered at all — so **never present direct
+application as sufficient** for a Heidelberg non-EU Medicine/Pharmacy/Dentistry applicant; tell
+them to complete uni-assist as well, even though the current live page doesn't explicitly demand
+it. Full write-up: `docs/research/requirement-conflicts/` (once merged).
 
 ## The TOEFL rescale trap: good and bad handling inside the same university, same day
 
@@ -106,6 +120,15 @@ post-cutover reports are the only kind available. **This is conclusively a page-
 property, not an institutional one** — never assume "this university handles TOEFL correctly"
 generalizes from one programme page to a sibling programme at the same university. TU Delft
 (Netherlands, same corpus) shows the identical pattern at MSc-vs-BSc granularity.
+
+**Hamburg's Psychology department page and its central admissions page were originally recorded
+as conflicting on English-test thresholds — closed on verification as a union, not a
+contradiction.** Both figures are real; the department page additionally accepts Oxford Test of
+English 111, PTE Academic 59, and telc B2, which the central page omits entirely. A student
+holding PTE Academic 59 is admissible via the department's own accepted-test list and would find
+no route at all if only the central page were consulted — read the specific programme's own page,
+not just the university-wide one, before telling a student they don't qualify on English
+proficiency.
 
 ## Subject-track gates inside Studienkolleg: passing the FSP doesn't open every door
 
