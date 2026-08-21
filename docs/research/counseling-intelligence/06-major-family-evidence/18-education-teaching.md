@@ -123,6 +123,30 @@ model) — worth stating to a student as the general pattern ("a subject degree 
 enough anywhere; expect a separate teaching-specific credentialing step"), while being explicit
 that the *exact* mechanics are genuinely country-specific and must not be conflated across systems.
 
+**A distinct mechanism worth naming separately, found via a cross-cutting lead from the peer
+session's medicine-family research (RULE-COUNSEL-120: a third assessment type, standardized
+situational-judgment testing, expanding beyond medicine into education):** the **Casper test**
+(Acuity Insights) is a timed, open-response situational-judgment assessment now used for
+**admission into teacher-education programs themselves** — a different gate than §6's licensure
+discussion above, which governs certification to practice *after* completing a program. Verified
+directly against Acuity Insights' own "Teacher Education" solutions page: Casper for this track is
+framed as helping a program "identify motivated and resilient students" and select "applicants with
+the highest potential to thrive in their program, and as future teachers," scored by trained human
+raters (not AI) rather than multiple-choice. Confirmed institutional adoption for teacher-education
+specifically at **Vancouver Island University** (B.Ed., Years 1 and 3) and (per Monash and Brock
+University's own program pages, both independently surfaced) at least two further institutions —
+**all confirmed examples found this pass are Canadian/Australian**; no US teacher-education program
+was independently confirmed to require Casper in this pass, unlike its documented ~50-medical-school
+US footprint (peer's `10-medicine-clinical-pathways.md`/RULE-COUNSEL-120). **RULE-COUNSEL-243
+(new):** do not assume Casper (or a Casper-style situational-judgment test) applies to a US-target
+teaching-track student by default — treat it as a real, confirmed, but currently non-US-demonstrated
+admissions mechanism for this family, re-verify per-institution rather than assuming universally.
+This is the same "rehearse a structured response, not log an achievement" recommendation-type gap
+the peer session named in `10-open-questions.md` (RULE-COUNSEL-118) — ORYN's counselor has no
+recommendation vocabulary for "practice a timed situational-judgment response" the way it does for
+building a portfolio or logging an activity, and this family is now a second, confirmed place (after
+Queen's Commerce/McMaster HHSP) where that gap is real, not hypothetical.
+
 ## Sources referenced in this document
 
 | ID | Source | Type | Confidence | Used for |
@@ -131,6 +155,7 @@ that the *exact* mechanics are genuinely country-specific and must not be confla
 | S-TEACH-CERT-US | Cross-referenced secondary sources describing US state teacher-certification structures (state boards of education as licensing authority; Praxis-style exams; teacher-prep programs) | Secondary aggregation describing an official, government-run licensure system | Medium-high — the general structure (state-issued license, exam, prep program) is well-corroborated and low-controversy; state-by-state specifics were not individually verified this pass | §6 |
 | S-QTS-UK | [GOV.UK — Qualified teacher status (QTS): qualify to teach in England](https://www.gov.uk/guidance/qualified-teacher-status-qts), [Apply for QTS in England — Department for Education](https://apply-for-qts-in-england.education.gov.uk/eligibility/start) | Official (UK Department for Education / GOV.UK) | High (England-specific; Scotland/Wales/Northern Ireland have their own separate systems not verified this pass) | §6 |
 | S-MEB-TEACH | Cross-referenced Turkish Ministry of National Education (MEB) regulatory material on teacher appointment (öğretmen atama ve yer değiştirme yönetmeliği) and secondary reporting on the transition to a Milli Eğitim Akademisi requirement | Official regulation (MEB) plus secondary reporting on a system change in progress | High for the existing KPSS/pedagogical-formation structure (sourced from the actual regulation); medium for the National-Education-Academy transition specifically (secondary-reported, not yet fetched from MEB's own final rule text) | §6 |
+| S-CASPER-TEACH | [Acuity Insights — Teacher Education solutions page](https://acuityinsights.com/solutions/teacher-education/) (directly fetched), corroborated by [Vancouver Island University — The Casper Test, B.Ed. Years One and Three](https://www.viu.ca/programs/casper-test-bed-years-1-and-3), [Monash Education — The Casper Test](https://www.monash.edu/education/future-students/teacher-education/situational-judgement-test/casper), [Brock University — Casper Test](https://brocku.ca/admissions/consecutive/casper/) | Official (vendor's own page) for the test's existence/purpose/format; official (institution's own admissions pages) for each named adopter | High for the test's existence and the 3 named institutional adopters (all Canadian/Australian); no US teacher-education adopter was independently confirmed this pass | new paragraph after §6 |
 
 US/UK/Turkey teaching-licensure structures all directly addressed in this document, an unusually
 complete three-country comparison relative to most other families in this package. EU-wide teacher

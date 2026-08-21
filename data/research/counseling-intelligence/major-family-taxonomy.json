@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "package": "counseling-intelligence",
-  "last_updated": "2026-08-21T05:00:00+03:00",
+  "last_updated": "2026-08-21T05:12:00+03:00",
   "method_note": "Structured index over docs/research/counseling-intelligence/06-major-family-evidence/*.md (both branches -- this branch's 11 families and the peer branch's 9, read directly from its worktree at .claude/worktrees/counseling-intelligence-research-013956/). This file answers the mission brief's deliverable #11 (a machine-readable structured artifact for the interest -> major/field -> skills -> experiences -> career-family -> next-action chain) in a way rules.json (rule registry) and sources.json (citation registry) do not, since neither encodes the taxonomy graph itself. This is an INDEX, not a replacement for the prose docs -- every family's source_doc field points to the authoritative detail; resolve any specific factual claim there, not here. No new research was performed to build this file; every field traces to content already established in the corresponding family document. Per-family sourcing/confidence/limitations live in that document's own Sources table and in sources.json, not duplicated here. family_id '*' in interdisciplinary_connections denotes a structural one-to-many exception (currently only family 18, Education), not a normal pairwise link. Each family's `unsafe_inferences` field extracts that document's own \"unsafe inferences\" guidance (peer branch's explicit section heading) or equivalent RULE-COUNSEL-tagged cautions (this branch's inline convention) -- directly serves the peer branch's own 13-implementation-readiness.md item 11/12: a ready-made list of things a family-aware explanation template should actively avoid saying.",
   "onboarding_vocabulary_gaps": {
     "note": "lib/validation/onboarding.ts's INTEREST_SUGGESTIONS has 16 free-text-suggest values (never a closed enum). Families 17, 18, 19, 20 and chemistry/journalism/film/sociology/philosophy/IR/product-design/sustainability-specifically have NO dedicated onboarding suggestion -- reachable only via an approximate-neighbor suggestion or free text.",
@@ -1638,11 +1638,13 @@
         "RULE-COUNSEL-232",
         "RULE-COUNSEL-233",
         "RULE-COUNSEL-234",
-        "RULE-COUNSEL-235"
+        "RULE-COUNSEL-235",
+        "RULE-COUNSEL-243"
       ],
       "distinctive_findings": [
         "A meaningful share of teachers, especially at university/adult-education level, hold subject-matter degrees (physics, literature) rather than an education-specific degree -- 'the major' is often the taught subject plus a separate pedagogical credential, not one unified 'education major' pipeline.",
-        "Turkey's teaching-credential system is actively changing (KPSS alone becoming insufficient, moving toward a National Education Academy requirement) -- must be re-verified against current MEB guidance, not treated as fixed."
+        "Turkey's teaching-credential system is actively changing (KPSS alone becoming insufficient, moving toward a National Education Academy requirement) -- must be re-verified against current MEB guidance, not treated as fixed.",
+        "A third assessment-type lead from the peer session's medicine research (Casper, a standardized situational-judgment test) generalizes into this family too -- confirmed for teacher-education admissions at 3 Canadian/Australian institutions, surfacing a second, real instance of a recommendation-vocabulary gap neither branch's docs have a type for: 'rehearse a timed situational-judgment response,' distinct from logging an achievement."
       ],
       "country_coverage": {
         "us": "high (BLS official)",
@@ -1654,7 +1656,8 @@
       "unsafe_inferences": [
         "Treat 'wanting to teach' as one undifferentiated interest -- elementary generalist, secondary subject-specialist, and special education are substantially different day-to-day work and, in most systems, different credentialing tracks (RULE-COUNSEL-232).",
         "Treat subject-matter achievement (e.g. being good at math) as equivalent evidence to enjoying and being effective at teaching that subject -- a real, family-specific instance of 'subject enthusiasm != the professional activity' (RULE-COUNSEL-233).",
-        "Describe Turkey's teaching-credential system as fixed -- it is actively transitioning toward a new Milli Eğitim Akademisi requirement and should be re-verified against current MEB guidance, not treated as static (RULE-COUNSEL-234)."
+        "Describe Turkey's teaching-credential system as fixed -- it is actively transitioning toward a new Milli Eğitim Akademisi requirement and should be re-verified against current MEB guidance, not treated as static (RULE-COUNSEL-234).",
+        "Assume the Casper situational-judgment test applies to a US-target teaching-track student by default -- confirmed used for admission into teacher-education programs at multiple Canadian/Australian institutions (Vancouver Island University, Monash, Brock University), but no US adopter was independently confirmed (RULE-COUNSEL-243)."
       ]
     },
     {

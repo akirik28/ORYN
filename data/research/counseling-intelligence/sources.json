@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "package": "oryn/counseling-intelligence-research",
-  "last_updated": "2026-08-21T04:20:00+03:00",
+  "last_updated": "2026-08-21T05:10:00+03:00",
   "method_note": "Priority order and discipline documented in full in docs/research/counseling-intelligence/00-overview.md's \"Method and source standard\" section. Blogs/aggregators appear here only where no higher-tier source was fetchable, and are always source_type discovery_or_secondary with confidence capped at medium. [Updated 2026-08-21] Merged with this session's own source shard (originally sources-session2.json, 45 sources, prefix S-<NAME> not SRC-### so no ID collision existed): docs 03, 06-major-family-evidence/00+01-09, 07, 08, 14. This file is still not yet merged with the peer branch's own separate, larger sources.json on oryn/counseling-intelligence-research-013956 -- that cross-branch merge remains the final integration step.",
   "sources": [
     {
@@ -1038,6 +1038,26 @@
       "limitations": "The current year's official ÖSYM coefficient table PDF was not directly opened this pass -- the specific ~0.12/~0.06 figures rest on convergence across multiple independent Turkish secondary sources (student-facing score calculators), not a primary re-derivation. Confirmed instead, via direct fetch, that ÖSYM's own site structurally publishes this kind of precise coefficient table as standing practice, which corroborates but does not independently re-verify the specific current values.",
       "used_in": [
         "docs/research/counseling-intelligence/03-recommendation-timing.md §6"
+      ]
+    },
+    {
+      "id": "S-CASPER-TEACH",
+      "title": "Casper situational-judgment test used for teacher-education program admissions",
+      "url": "https://acuityinsights.com/solutions/teacher-education/",
+      "additional_urls": [
+        "https://www.viu.ca/programs/casper-test-bed-years-1-and-3",
+        "https://www.monash.edu/education/future-students/teacher-education/situational-judgement-test/casper",
+        "https://brocku.ca/admissions/consecutive/casper/"
+      ],
+      "publisher": "Acuity Insights (vendor) / Vancouver Island University, Monash, Brock University (adopting institutions)",
+      "source_type": "official_vendor_page_plus_official_institutional_admissions_pages",
+      "retrieval_method": "WebSearch + direct WebFetch of acuityinsights.com's Teacher Education solutions page",
+      "retrieved_at": "2026-08-21",
+      "claim_supported": "Casper (a timed, open-response, human-rated situational-judgment test) is used for admission into teacher-education programs specifically at Vancouver Island University, Monash, and Brock University -- confirmed Canadian/Australian adopters; no US teacher-education adopter independently confirmed this pass.",
+      "confidence": "high",
+      "limitations": "Acuity Insights' own page does not name specific institutional adopters (found via separate institutional pages instead); the search/fetch performed this pass did not confirm or rule out any US teacher-education program's use of Casper, only medicine's separately-documented ~50-school US footprint (a different family, sourced elsewhere).",
+      "used_in": [
+        "docs/research/counseling-intelligence/06-major-family-evidence/18-education-teaching.md"
       ]
     }
   ]
