@@ -6,6 +6,7 @@ import type { Database } from "@/types/database";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createNotification } from "@/lib/notifications/create";
 import { canonicalUniversityId } from "@/lib/universities/canonical";
+import { NON_ACTIONABLE_VERIFICATION_STATES } from "@/lib/deadlines/ingest";
 
 /** Days-until-deadline thresholds that trigger a reminder (Phase 23/24). A student gets
  * at most one reminder per deadline per threshold — see the dedup check below. */
@@ -128,7 +129,11 @@ async function scanTargetUniversityDeadlines(supabase: SupabaseClient<Database>,
   // pre-existing loser-referencing target self-heals. See lib/universities/canonical.ts.
   const universityIds = [...new Set(targets.map((t) => canonicalUniversityId(t.university_id)))];
   const [{ data: deadlines }, { data: universities }] = await Promise.all([
-    supabase.from("university_deadlines").select("university_id, program_id, deadline_type, deadline_date").in("university_id", universityIds).not("deadline_date", "is", null),
+    supabase
+      .from("university_deadlines")
+      .select("university_id, program_id, deadline_type, deadline_date, verification_state")
+      .in("university_id", universityIds)
+      .not("deadline_date", "is", null),
     supabase.from("universities").select("id, name").in("id", universityIds),
   ]);
   const universityNameById = new Map((universities ?? []).map((u) => [u.id, u.name]));
@@ -139,8 +144,12 @@ async function scanTargetUniversityDeadlines(supabase: SupabaseClient<Database>,
     const canonicalId = canonicalUniversityId(target.university_id);
     // A university-level deadline (program_id null) always applies; a program-specific
     // one only applies once the student has actually picked that program — otherwise we
-    // can't tell which of a university's many programs it belongs to.
-    const relevant = (deadlines ?? []).filter((d) => d.university_id === canonicalId && (d.program_id === null || d.program_id === target.program_id));
+    // can't tell which of a university's many programs it belongs to. VERIFIED_HISTORICAL (and
+    // the other non-actionable states) can land since migration 0056 and must never trigger a
+    // "deadline approaching" notification for a cycle that has already closed.
+    const relevant = (deadlines ?? []).filter(
+      (d) => d.university_id === canonicalId && (d.program_id === null || d.program_id === target.program_id) && !NON_ACTIONABLE_VERIFICATION_STATES.has(d.verification_state)
+    );
     const universityName = universityNameById.get(canonicalId) ?? "A target university";
     for (const deadline of relevant) {
       checked += 1;

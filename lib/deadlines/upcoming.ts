@@ -3,6 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { canonicalUniversityId } from "@/lib/universities/canonical";
+import { NON_ACTIONABLE_VERIFICATION_STATES } from "@/lib/deadlines/ingest";
 
 export type DeadlineSource = "application" | "opportunity" | "university";
 
@@ -89,7 +90,7 @@ async function getUpcomingUniversityDeadlines(supabase: SupabaseClient<Database>
   const [{ data: deadlines }, { data: universities }] = await Promise.all([
     supabase
       .from("university_deadlines")
-      .select("id, university_id, program_id, deadline_type, deadline_date")
+      .select("id, university_id, program_id, deadline_type, deadline_date, verification_state")
       .in("university_id", universityIds)
       .not("deadline_date", "is", null)
       .gte("deadline_date", today),
@@ -106,6 +107,10 @@ async function getUpcomingUniversityDeadlines(supabase: SupabaseClient<Database>
 
   const result: UpcomingDeadline[] = [];
   for (const deadline of deadlines ?? []) {
+    // VERIFIED_HISTORICAL (and the other non-actionable states) can land in the table since
+    // migration 0056 — a real, correctly-sourced date for a cycle that has already closed must
+    // never surface here as if it were live. See NON_ACTIONABLE_VERIFICATION_STATES.
+    if (NON_ACTIONABLE_VERIFICATION_STATES.has(deadline.verification_state)) continue;
     // A university-level deadline (program_id null) always applies; a program-specific
     // one only applies once the student has actually targeted that exact program.
     const targetedPrograms = programIdsByUniversity.get(deadline.university_id);
