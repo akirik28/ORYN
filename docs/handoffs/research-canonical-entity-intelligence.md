@@ -10,13 +10,18 @@ migrations. No production Supabase writes at any point — every database access
 This file is updated as work lands, not chronologically archived — read top-to-bottom for current
 state, matching the convention `docs/handoffs/claude-a-university-spine.md` already established.
 
-## Current state (updated 2026-08-21 ~02:57 Europe/Istanbul) — major milestone
+## Current state (updated 2026-08-21 ~03:06 Europe/Istanbul) — major milestone, plus external verification pass
 
 **Package: 18 documents (00–15, including 12–13 from two background research agents) + 12 JSON
-data files.** Both dispatched background agents have completed, been reviewed in full, and been
-integrated (not just appended) — cross-references, corrections, and new rules flow both
-directions between the lead session's own work and the agents' findings. Full index in
-`00-overview.md`. All committed and pushed to `oryn/counseling-intelligence-research` @ `caecb1b`.
+data files, 27 commits.** Both dispatched background agents have completed, been reviewed in full,
+and been integrated (not just appended) — cross-references, corrections, and new rules flow both
+directions between the lead session's own work and the agents' findings. Beyond that: this
+package's own top recommendation (re-run ROR enrichment) was tested against ROR's live API for 9
+real candidates, not assumed risk-free — found 4 genuine pitfalls (Purdue's system-vs-campus ROR
+split, Rutgers' one-entity-for-two-ORYN-rows conflict, and two live 2024/2025 French university
+mergers ROR already reflects and ORYN doesn't) and 5 clean confirmations, giving `10`/`11`'s P1
+item real, externally-grounded confidence rather than a theoretical one. Full index in
+`00-overview.md`. All committed and pushed to `oryn/counseling-intelligence-research` @ `673fba7`.
 
 ## The highest-value findings, if you read nothing else
 
