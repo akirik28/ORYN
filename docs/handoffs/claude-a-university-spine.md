@@ -3570,6 +3570,263 @@ case at the DB layer**, only at the application decision layer — worth the coo
 confirming, since this is a recurring pattern (seen so far at Radboud, and structurally
 likely at Twente, Utrecht, and any Turkish university with parallel Turkish/English tracks).
 
+**Batch 32 — Durham University** (162 new, `data/research/university-programs/
+independent_batch32_2026-08-21.jsonl`, committed `f855056`): the coordinator's Bologna/
+Padova lesson ("diagnose the shape in a browser, then script the retrieval") applied
+directly to this session's own UK JS-course-finder blocklist. Durham's `/study/courses/`
+landing page has a "View all courses" link exposing a `searchstax[...]` URL-parameter
+search (SearchStax/Solr-backed, 313 raw hits across all content types). Clicking the site's
+own "Undergraduate" level-facet checkbox (174 of 313) revealed the second facet parameter
+needed (`searchstax[facets][1]=and:DegreeCourseLevel_ss:Undergraduate`) -- guessed facet
+values for this same parameter name (`Filter/any(...)`, `Scopes/any(...)`, `ItemType/
+any(...)`) were all silently ignored by the backend and returned unfiltered/broader
+results instead of erroring, a failure mode worth naming since it looks like success
+(status 200, real-looking data) unless the actual filter facet counts are checked. The
+underlying SearchStax REST endpoint was also identified directly from a `window.fetch`
+interception, but calling it directly cross-origin 401'd (needs an auth header the site's
+own JS attaches that a bare `fetch(url)` replay does not capture) -- unlike VU Amsterdam
+below, this dead-end didn't block the batch because the *page-level* URL parameter worked
+fine on its own, just without a bulk page-size option (10/page, 18 pages, paginated via 6
+parallel browser tabs per round). 174 raw hits deduplicated to 162 by UCAS code (12 exact-
+repeat rows, exact-same title+degree+UCAS, consistent with a per-entry-year index row for
+a subset of courses). Confirmed a Leiden-shaped false alarm before it became a real one:
+the DB's stored `website_url` for Durham is `dur.ac.uk`, sourced batch uses `durham.ac.uk`
+-- checked live (not assumed) that these are the same site with `dur.ac.uk` declaring
+`durham.ac.uk` as its own `<link rel=canonical>`, and confirmed directly against
+`lib/acquisition/source-authority.ts` that both independently satisfy the `.ac.` suffix
+rule regardless of which is used, so unlike Leiden this needed no `website_url` fix.
+
+**VU Amsterdam re-attempted, not resolved this pass**: same Bologna-style diagnosis applied
+first. The visible DOM issue from the earlier attempt (only 10 of 29 cards mounted) is
+confirmed still real -- but the page's `/api/search` POST endpoint itself returns the full
+result set with `@odata.count: 29` and rich structured per-program data (including explicit
+`opleidingstaal--nl` / `opleidingstaal--en` filter tags -- directly useful against the
+"group in English != degree in English" risk the coordinator flagged from the Spanish
+catalogues, since these are the site's own filterable language facets, not free-text
+extraction). The blocker is different in kind from Durham/Bologna: this is a session-scoped
+POST API (not a GET with URL parameters), and neither guessing the request body's `filter`
+field syntax (tried `Filter/any(...)`, `Scopes/any(...)`, `ItemType/any(...)`, all
+silently ignored -- same false-success shape as Durham's) nor replaying the real captured
+request verbatim via `fetch()` worked (both return unfiltered global-site results or,
+for a raw SearchStax-style direct endpoint, 401 Unauthorized). This needs either a
+properly-scoped fetch interceptor installed *before* the page's own first load (not
+achievable with a post-load `javascript_exec` call) or accepting the 3-tab/29-card manual
+click-through -- deprioritized this pass in favour of Durham, which the same technique
+resolved cleanly. Worth another pass with fresh tooling rather than written off again.
+
+**Batch 33 — University of Nottingham** (215 new, `data/research/university-programs/
+independent_batch33_2026-08-21.jsonl`, committed `bc7de0f`): an even cleaner instance of
+the same technique. The official "Browse all courses" page's network requests showed a
+plain public JSON endpoint, `bin/uon/coursepages.json` -- no auth, no session-scoping, a
+single GET returning all 416 raw rows (two entry-years x ~215 distinct UCAS codes) with
+already-structured `courseTitle`/`qualification`/`ucasCode`/`faculty`/`subject`/`duration`/
+`location`/`entryRequirementsCode` fields. Fetched, deduplicated by UCAS code (keeping the
+2027 row), and validated directly -- no HTML parsing needed at all. Two spot-checks against
+live course pages (Pharmacy MPharm, and the less common Veterinary Medicine
+BVM BVS with BVMedSci) both matched. This is the strongest version yet of "discover the
+shape first" -- worth checking every remaining JS-course-finder target's network tab for a
+plain JSON endpoint before assuming pagination or an auth-gated API is needed.
+
+**Batch 34 — Queen Mary University of London** (110 new, `data/research/university-programs/
+independent_batch34_2026-08-21.jsonl`, committed `15b1433`): same SearchStax backend as
+Durham (confirmed via identical `searchcloud-1-eu-west-2.searchstax.com` host), but a
+different integration -- URL query parameters do not drive pagination here, only real
+button clicks do (confirmed: navigating directly to a `?start=10`-style URL always
+re-rendered page 1). Retrieved by installing a `window.fetch` response interceptor,
+clicking the page's own Next/Previous controls across all 12 pages, and reading the full
+parsed Solr response after each click rather than the truncated rendered card text. A
+direct cross-origin call to the same SearchStax endpoint (mirroring Durham's) also 401'd --
+consistent finding now across two SearchStax deployments: the auth header is attached by
+the page's own JS and isn't replicable from outside it, so the click-and-intercept method
+is the reliable one for this vendor, not direct API replay. 119 raw results narrowed to
+110 by excluding 7 "Intercalated" degrees (mid-programme add-on year for students already
+enrolled in Medicine/Dentistry, not a fresh-entry route) and 2 Graduate Diplomas (require
+an existing bachelor's degree) -- both grouped under "Undergraduate" by QMUL's own finder,
+neither is genuinely Bachelor/first-cycle entry, and this session's first pass at this
+batch would have misclassified them if not caught. Each course's UCAS-code field is often
+a space-separated list of several codes (full-time / foundation-year / study-abroad
+variants) rather than one code per row -- kept as one record per distinct course, full
+code list preserved in notes rather than exploded into near-duplicate rows.
+
+**Batch 35 — University of Bath** (184 new, `data/research/university-programs/
+independent_batch35_2026-08-21.jsonl`, committed `2bdc168`): a third distinct search vendor
+this pass -- Squiz Funnelback (`search.bath.ac.uk/s/search.html`), not SearchStax. Its
+standard `num_ranks` URL parameter worked directly, server-side, on first try -- all 184
+results in one page load, the fastest retrieval of any UK batch this session (no pagination,
+no click-through, no interceptor needed). Title/qualification/duration parsed from the
+source's consistent `"{Title} {Qualification} – {duration}"` result-line text; official
+course-page URLs recovered by decoding the `url=` parameter Funnelback embeds in each
+result's own click-tracking redirect link (`/s/redirect?...&url=<encoded target>`), matched
+1:1 to titles by DOM order. Duration is kept as the full qualifier string ("with
+professional placement or study abroad", "at the University of Plymouth" for a genuine
+joint-delivery Pharmacy variant) rather than trimmed to a bare year count, since the
+qualifier changes what a student is actually applying to. Verified zero (name, degree_type,
+duration) collisions across the 119 same-named-different-route entries, and all 184 UCAS
+codes distinct. Two spot-checks against live course pages matched exactly.
+
+**Batch 36 — University of Southampton** (248 new, `data/research/university-programs/
+independent_batch36_2026-08-21.jsonl`, committed `c196481`): the simplest retrieval of the
+whole UK list -- CourseFinder renders all 250 undergraduate results directly in the DOM on
+load, no pagination/virtualization/click-through/API-hunting needed at all, closer to
+Bologna's eventual "was never actually blocked" reality than to Durham/QMUL/Bath's real
+vendor-specific workarounds. No individual per-course page links exist on this listing
+(verified: zero course-specific hrefs), so every record's official_program_url/source_url
+points to the shared CourseFinder page -- disclosed rather than fabricating per-course URLs.
+This all-248-share-one-URL shape was deliberately cross-checked against the real ingestion
+dedup logic (verified earlier this session: the live unique constraint keys on
+university_id+normalized_name+degree_level, not source URL, so this is safe). One
+source-level quirk kept faithfully: UCAS code F303 is listed identically for three distinct
+MPhys Physics titles ("Physics", "...with Industrial Placement", "...with Year of
+Experimental Research") -- kept as three separate records exactly as the source presents
+them.
+
+**UK JS-course-finder list: all 5 coordinator-prioritized targets complete.** Durham 162
+(SearchStax, URL `?page=N` works), Nottingham 215 (plain public JSON endpoint, no auth),
+Queen Mary 110 (SearchStax, but click-and-intercept only -- URL params don't paginate),
+Bath 184 (Funnelback, `num_ranks` param, fastest vendor-driven case), Southampton 248
+(fully server-rendered already, no vendor workaround needed at all) = **919 new records
+across 5 universities, all previously zero-coverage.** Four different retrieval shapes
+encountered for what looked like one problem category going in -- worth remembering that
+"JS course finder" is not one failure mode.
+
+**Running total this continuation (batches 30-36, post-SESSION-CLOSE)**: 1,071 new records
+across 7 universities (FU Berlin 75, RWTH Aachen 77, Durham 162, Nottingham 215, QMUL 110,
+Bath 184, Southampton 248), plus the 2 confirmed Radboud/Exeter historical-data fixes and
+the schema-level dual-language finding now resolved by the coordinator's migration
+(confirmed working end-to-end on a fresh Sapienza Italian/English "Classics" pair per their
+report).
+
+**Batches 37-39 — Turkey, redirected priority (coordinator: "Turkey over the other gaps... for
+a domestic YKS-track student, ÖSYM's placement algorithm IS the admission decision")**:
+
+**Batch 37 — Gebze Technical University** (23 new, `independent_batch37_2026-08-21.jsonl`,
+committed `1a9565a`): genuinely untried gap. Small single-campus technical university, 5
+faculties / 23 departments total on one official page, simplest retrieval of any university
+this session. Only Computer Engineering carries an explicit "(İngilizce)" self-description
+(found in its own MÜDEK accreditation notice); the other 22 departments have no language
+marker either way, recorded as null rather than assumed Turkish.
+
+**Batches 38-39 — a much bigger finding than either batch alone: YÖK Atlas.** Ankara
+Üniversitesi's own website had no usable faculty/department directory (the "Fakülteler" page
+is an About-page with no actual list, confirmed by checking, not assumed). Pivoted to **YÖK
+Atlas** (`yokatlas.yok.gov.tr`), Turkey's official national higher-education program
+directory operated by the Council of Higher Education itself -- its "Tercih Sihirbazı"
+(Preference Wizard) tool covers **every programme at every Turkish university** with real
+2026-YKS placement statistics attached (quota, minimum score, success rank, accreditation),
+via a clean public JSON API (`api/tercih-kilavuz/search`, no auth, found via network-request
+inspection, paginated at `size=50`). This is university-agnostic -- filter by `universiteId`
+and it works identically for any Turkish institution.
+
+- **Batch 38 — Ankara Üniversitesi** (153 new, `independent_batch38_2026-08-21.jsonl`,
+  committed `c1f98ff`).
+- **Batch 39 — Istanbul University** (127 new, `independent_batch39_2026-08-21.jsonl`,
+  committed `25d14e7`) -- this is the exact gap this session's earlier SESSION CLOSE summary
+  named as dropped ("no single master department list... would need an ~18-page per-faculty
+  crawl"). YÖK Atlas solved it in the same handful of API calls as Ankara, no per-faculty
+  crawl needed at all.
+
+**This is worth treating as infrastructure, not just two batches.** Every remaining Turkish
+gap on this session's list (and likely every Turkish university not yet in ORYN's spine at
+all) can plausibly go through this exact same method instead of fighting each institution's
+own inconsistent website. Richer than any UK catalogue this session too:
+`language_of_instruction` is explicit per programme from the source (including genuine
+partial-English "İngilizce (%30)" hybrid categories, kept verbatim rather than collapsed to
+binary Turkish/English), and real placement statistics (2026 success rank, minimum score,
+quota, accreditation body) are available per record, folded into `researcher_notes` since the
+schema has no dedicated field for them.
+
+**A new collision pattern surfaced in batch 39, distinct from the Radboud/Sapienza
+dual-language one**: 4 programme names at Istanbul University (İşletme; Siyaset Bilimi ve
+Uluslararası İlişkiler, both plain and İngilizce-suffixed) are each offered by **two or three
+different faculties** at the same university with identical `language_of_instruction` and
+`degree_level` -- e.g. "İşletme" (İngilizce %30) exists as a genuinely separate,
+separately-admitted programme via both İktisat Fakültesi and Siyasal Bilgiler Fakültesi
+(different quotas, different cutoffs, confirmed in the raw placement data). The current
+4-column dedup index (`university_id, normalized_name, degree_level, language_of_instruction`)
+does not include faculty, so these would collide if ingested. Not disambiguated in the data
+here -- kept faithful to the source and flagged, same discipline as the dual-language finding.
+
+**Batch 40 — METU/ODTÜ deepening** (79 new, `independent_batch40_2026-08-21.jsonl`,
+committed `900c18c`): coordinator redirected to "go wide on YOK Atlas... every Turkish
+university, not just the named gaps... deepening one institution's site at a time is now the
+expensive path." METU had only 4 programmes live for one of Turkey's largest technical
+universities -- worst coverage-to-importance ratio on the list. 83 raw YÖK Atlas results;
+excluded 4 confirmed-by-query (not assumed) to be the same real programmes already covered
+under English names (Business Administration/İşletme, Computer Engineering/Bilgisayar
+Mühendisliği, Economics/İktisat, Industrial Engineering/Endüstri Mühendisliği) -- worth
+naming as a real risk: an English name and a Turkish name never collide on
+`normalized_name` matching, so this class of duplicate has to be caught by hand, not by the
+dedup index. Two campuses in METU's own data (main Ankara campus + "ODTÜ Kuzey Kıbrıs
+Kampüsü", a genuinely separate physical campus in TRNC) kept distinct via the campus field.
+
+**Placement-data note format refined per coordinator guidance, effective this batch
+onward**: every record now states its placement cycle explicitly ("Placement cycle:
+2026-YKS") rather than leaving the year implicit, and unfilled quotas get a distinct
+`UNFILLED (...)` marker instead of a blank/absent line -- the coordinator's point: `null`
+success-rank here is not missing data, it is the fact that nobody qualified took an open
+seat, and a schema that can't tell that apart from "we didn't capture this" would destroy
+the signal. Batches 38-39 predate this refinement and use a slightly looser format; not
+worth reworking retroactively, but future placement-data batches should match batch 40's
+shape.
+
+**Coordinator's structural note on the future schema** (not actioned by this session, just
+recorded so it survives): placement stats are cycle-versioned (2026 quota/rank are this
+year's, not a permanent fact), so a future migration should key them on
+`(program_id, cycle_year)` in a separate table, not as columns on `university_programs`
+that would silently overwrite year over year.
+
+**Batch 41 — Sabancı University** (9 new, `independent_batch41_2026-08-21.jsonl`, committed
+`3d26411`): a genuinely different admission structure from every other Turkish university
+this session. YÖK Atlas shows only 3 broad faculty-level "program groups" (Management
+Sciences / Arts and Social Sciences / Engineering and Natural Sciences), each at 3 funding
+tiers (full scholarship / 50% discount / full fee) -- 9 admission tracks, not 9 distinct
+majors, matching Sabancı's real documented differentiated-entry model where a YKS applicant
+is admitted into one of the 3 broad faculties and declares a specific major later. This sits
+alongside, not instead of, the 12 specific-major records already in ORYN for this
+university -- both layers are genuinely useful (a domestic applicant's actual admission
+decision is which of these 9 rows their rank reaches; the major comes after).
+
+**Running total, coordinator-redirected "go wide on YÖK Atlas" push (batches 37-41)**: 391
+new records across 5 Turkish universities (GTU 23, Ankara Üniversitesi 153, Istanbul
+University 127, METU/ODTÜ 79, Sabancı 9). Combined with the UK push earlier in this
+continuation (batches 30-36, 919 records / 7 universities across DE/UK), this continuation's
+running total is now **1,462 new records across 12 universities**.
+
+**Next thinnest Turkish targets, in order** (per live query, all confirmed still accurate as
+of batch 41): Koç University (22), Özyeğin University (24), Boğaziçi University (30),
+Bilkent University (33), Yıldız Technical University (43), Istanbul Technical University
+(45), Hacettepe University (99) -- then any Turkish university not yet in ORYN's spine at
+all, per the coordinator's instruction to collect those as candidates (YÖK Atlas
+`universiteId` + domain) rather than create university rows directly, flagged for a separate
+canonical-entity resolution pass.
+
+**Checked and skipped (no batch, on purpose) -- Koç University and Özyeğin University**:
+a real, useful negative finding, not a gap. Both showed a pattern distinct from every
+YÖK Atlas target so far: Koç's 53 raw results and Özyeğin's 62 raw results each reduce to
+exactly the same 22-23 distinct subjects already fully covered in ORYN under clean English
+names (e.g. Koç's "Tıp (İngilizce) (Burslu)" / "(%50 İndirimli)" / "(Ücretli)" are 3
+funding-tier admission codes for the one existing "Medicine" record, not 3 programmes).
+Confirmed by direct comparison, not assumed. Generating 53+62 new rows here would have been
+near-total content duplication for genuinely valuable but structurally different information
+(funding-tier-specific quota/cutoff data) that the current schema has no field for anyway.
+**This suggests private English-medium foundation universities already in ORYN's spine were
+researched at the correct major-level granularity in an earlier pass**, and their "thin"
+existing-count numbers (22, 24) are not actually thin -- they're just represented as one
+clean row per subject rather than YÖK Atlas's 2-3 funding-tier variants per subject.
+
+**Boğaziçi University checked, deferred rather than guessed**: less clean than Koç/Özyeğin.
+34 unique YÖK Atlas subjects vs. 30 existing ORYN records -- most map cleanly (Tarih/History,
+İşletme/Management, etc.) but several teacher-training-specific YÖK Atlas entries (Okul
+Öncesi Öğretmenliği/Pre-School Teaching, Rehberlik ve Psikolojik Danışmanlık/Guidance and
+Psychological Counseling, and subject-specific ...Öğretmenliği variants for Chemistry/
+Physics/Science) don't obviously correspond 1:1 to the existing broader entries
+("Mathematics and Science Education", "Educational Sciences", "Elementary Education") --
+they could be genuinely distinct granular programmes YÖK Atlas splits out, or the same
+umbrella categories represented differently. Not resolved here rather than guessed wrong in
+either direction (silently duplicating, or silently dropping real new programmes) --
+flagged for whoever picks this up next to reconcile deliberately rather than pattern-match
+from Koç/Özyeğin. Bilkent not yet checked.
+
 Of the 5 outstanding Radboud/Exeter gaps, 2 are now confirmed fully resolved (the Exeter
 "BA Classical Studies and Philosophy" insert, id `4a715f86-3f0e-4b3d-97ff-e6fb12c2c5bb`, and
 the orphaned "BA Classical Studies and Modern Languages" queue-audit row, id
@@ -3584,3 +3841,215 @@ be represented given the DB constraint above — either a migration to widen the
 index, or a naming convention (e.g. this session's own `(Lehramt)`-style disambiguation
 suffix, applied consistently) — rather than one session quietly picking a convention that
 the ingestion pipeline and every other lane would need to independently discover and match.
+
+**Batch 42 — Yıldız Technical University** (5 new, `independent_batch42_2026-08-21.jsonl`):
+continuing the state-university pivot past Boğaziçi. 63 raw YÖK Atlas results across 44
+unique subjects (63 includes funding-tier/language/KKTC variants) against 43 existing ORYN
+records. Ran the full three-way comparison discipline before writing anything: matched
+subjects excluded (confirmed by name-mapping, not assumed — including two the same way
+METU's English/Turkish-name trap works: Sınıf Öğretmenliği = existing "Primary Education",
+Bilgisayar ve Öğretim Teknolojileri Öğretmenliği = existing "Computer and Instructional
+Technologies Education"), 5 genuinely new subjects included, and — this is the notable part
+— **the exact same teacher-training ambiguity pattern found at Boğaziçi shows up again
+here, confirming it's systemic rather than one university's quirk**: İngilizce
+Öğretmenliği, Türkçe Öğretmenliği, Sosyal Bilgiler Öğretmenliği, İlköğretim Matematik
+Öğretmenliği, and Fen Bilgisi Öğretmenliği each have a plausible broader existing umbrella
+match (Foreign Languages Education; Turkish and Social Sciences Education ×2; Mathematics
+and Science Education ×2) that may or may not already be meant to cover them. Deliberately
+excluded from this batch and left unresolved, same as Boğaziçi — not guessed either
+direction. One difference from Boğaziçi worth recording: YTÜ's existing 43 records contain
+no generic "Educational Sciences" catch-all, so YTÜ's Rehberlik ve Psikolojik Danışmanlık
+(Guidance and Psychological Counseling) has no plausible existing match at all and was
+included as clearly new — at Boğaziçi the equivalent programme was the ambiguous one,
+specifically because Boğaziçi's list does have that catch-all category. Same underlying
+question, different answer per university depending on what else that university's existing
+records already contain — reinforcing that this needs a genuine subject-taxonomy
+reconciliation pass, not a single global rule. The 5 new records: Okul Öncesi Öğretmenliği
+(Pre-School Teaching), Fransızca Mütercim ve Tercümanlık (French Translation and
+Interpreting), Fotoğraf ve Video (Photography and Video), Sanat ve Kültür Yönetimi (Art and
+Culture Management), Rehberlik ve Psikolojik Danışmanlık (Guidance and Psychological
+Counseling). All 5 re-verified against a fresh direct API re-query by programme code
+immediately before commit (exceeds the usual 2-spot-check minimum — checked all 5 since the
+batch itself is small) — quota/score/rank/language/faculty all matched exactly. Also
+confirmed via live DB query that none of the 5 new program names collide with any existing
+YTÜ record under any plausible English or Turkish keyword (pre-school, french, photograph,
+art and culture, guidance, counseling, okul öncesi, fransızca, fotoğraf, rehberlik) — zero
+rows returned.
+
+**Boğaziçi + Yıldız Technical teacher-training ambiguity — now flagged as one systemic
+open item, not two separate ones**: whoever reconciles this should treat it as a single
+subject-taxonomy question ("does ORYN's broad umbrella education-category granularity match
+YÖK Atlas's subject-specific teacher-training granularity, university by university, or
+should broad categories be split to match YÖK Atlas everywhere") rather than resolving each
+university's instance independently.
+
+**Running total, coordinator-redirected "go wide on YÖK Atlas" push (batches 37-42)**: 396
+new records across 6 Turkish universities (GTU 23, Ankara Üniversitesi 153, Istanbul
+University 127, METU/ODTÜ 79, Sabancı 9, Yıldız Technical 5). Combined with the UK push
+earlier in this continuation (batches 30-36, 919 records / 7 universities across DE/UK),
+this continuation's running total is now **1,467 new records across 13 universities**.
+
+**Next thinnest Turkish targets, in order** (per live query, all confirmed accurate as of
+batch 42 — Yıldız Technical now removed from this list, effectively deepened as far as
+this session will take it pending the taxonomy reconciliation above): Istanbul Technical
+University (45), Hacettepe University (99) — then any Turkish university not yet in ORYN's
+spine at all, per the coordinator's instruction to collect those as candidates (YÖK Atlas
+`universiteId` + domain) rather than create university rows directly, flagged for a separate
+canonical-entity resolution pass. Continuing to İTÜ next per the coordinator's approved
+pivot ("Yıldız, İTÜ, Hacettepe — carry on without checking in per university").
+
+**Batch 43 — Istanbul Technical University (İTÜ)** (24 new,
+`independent_batch43_2026-08-21.jsonl`): a materially different shape from every other
+Turkish university this session. 110 raw YÖK Atlas results across 45 unique base subjects
+against 45 existing (all-Turkish-named) ORYN records. Three things make İTÜ's data
+structurally distinct: (1) heavily English-medium/30%-English catalogue rather than mostly
+Turkish; (2) a genuinely separate second physical campus in Northern Cyprus (İTÜ-KKTC Eğitim
+Araştırma Yerleşkesi, Gazimağusa) with its own quotas/cutoffs, handled the same way as
+METU's Kuzey Kıbrıs campus in batch 40; (3) an unusually large UOLP joint-degree footprint —
+9 distinct foreign partner institutions named across the raw data (SUNY New Paltz, SUNY
+Binghamton, SUNY Maritime, SUNY Buffalo, Montana State, New Jersey Institute of Technology,
+Strathclyde, International University of Sarajevo, Azerbaijan University of Architecture and
+Construction), each kept as its own distinct record per this session's standing UOLP
+precedent. Matching found two more instances of the METU-style spelling/naming trap
+(confirmed same real programme, not guessed): YÖK Atlas "Makine Mühendisliği" = existing
+"Makina Mühendisliği" (old vs. modern Turkish spelling of "machine"), same for "...Gemi
+Makineleri..." = existing "...Gemi Makinaları...", and YÖK Atlas "Endüstriyel Tasarım
+(İngilizce)" = existing "Endüstri Ürünleri Tasarımı" (two customary Turkish phrasings of
+Industrial Design, both under the same Mimarlık Fakültesi).
+
+**New failure mode caught before it did damage**: the first DB lookup for İTÜ's existing
+programmes used `university.name ilike '%ITU%'` as a shortcut and returned a badly polluted
+result set — "ITU" as a bare substring matches "Institute" (Georgia Institute of Technology)
+and any other "...Institute..." named school, since I-N-S-T-**I-T-U**-T-E contains the
+literal substring. Caught immediately because the returned faculty names (Ivan Allen College
+of Liberal Arts, Scheller College of Business, plus several obviously-German faculty names)
+were clearly not İTÜ — re-ran against the exact `university_id` from a proper `universities`
+table lookup instead and got a clean 45-row result. Recorded here as a concrete warning
+against loose ILIKE shortcuts on ambiguous abbreviations, not just a private correction.
+
+**Two genuine rename-ambiguity cases, excluded and flagged rather than guessed (a different
+flavor of ambiguity from the Boğaziçi/Yıldız teacher-training pattern — this is "is this the
+same specific programme under an old vs. new name" rather than "does a broad umbrella already
+cover this specific subject")**: YÖK Atlas's "Harita Mühendisliği" (Cartography/Mapping
+Engineering, a historical pre-2009-era name for this field at several Turkish universities)
+has no existing İTÜ record under that name; the existing "Geomatik Mühendisliği" (the
+field's modern renamed term) has no YÖK Atlas match under its own name. Each is the other's
+most likely explanation but this was not confirmed against İTÜ's own site, so neither
+merged nor duplicated — left as-is, flagged. Identical reasoning for YÖK Atlas "İklim Bilimi
+ve Meteoroloji Mühendisliği" (Climate Science and Meteorology Engineering) against the
+existing "Meteoroloji Mühendisliği" (Meteorology Engineering), both under the Faculty of
+Aeronautics and Astronautics.
+
+**Separately noted, not chased**: 10 existing İTÜ records (7 Türk Musikisi Devlet
+Konservatuvarı / Turkish Music State Conservatory subjects — Bestecilik, Çalgı Eğitimi,
+Müzik Teknolojisi, Müzik Teorisi, Müzikoloji, Ses Eğitimi, Türk Halk Oyunları — plus Moda
+Tasarım, Tekstil Geliştirme ve Pazarlama, İmalat Mühendisliği) have no counterpart at all in
+this birimTuruId=46/Lisans result set. Most likely explanation is a different YÖK Atlas
+admission-track filter (talent-exam-based conservatory admission in particular is a
+well-documented separate track from standard YKS-score admission), not a real coverage gap —
+not investigated further this batch per the coordinator's "go wide, not deep on any one
+site" redirection, but recorded here rather than silently dropped.
+
+24 new records span 10 genuinely new subjects with no plausible existing match at all:
+Bilişim Sistemleri Mühendisliği (Information Systems Engineering), Biyomühendislik
+(Bioengineering), Denizcilik İşletmeleri Yönetimi (Maritime Business Administration, KKTC
+campus only), Ekonomi ve Finans (Economics and Finance, KKTC campus only, distinct from the
+existing plain "Ekonomi"), Elektrik-Elektronik Mühendisliği (combined Electrical-Electronics
+Engineering — only offered as a combined degree at the KKTC campus; the Istanbul campus
+splits it into the existing separate Elektrik Mühendisliği and Elektronik ve Haberleşme
+Mühendisliği), Endüstri Mühendisliği (Industrial Engineering — confirmed genuinely absent
+from the existing 45, distinct from the existing Industrial *Design* programme), Siber
+Güvenlik Mühendisliği (Cybersecurity Engineering), Veri Bilimi ve Analitiği (Data Science and
+Analytics), Çevre Mühendisliği (Environmental Engineering), and plain İşletme (Business
+Administration — only actually offered via the SUNY New Paltz UOLP partnership track, no
+standalone non-UOLP admission code exists for it at İTÜ). 6 records spot-checked against a
+fresh direct API re-query immediately before commit — quota/score/rank/language/faculty all
+matched exactly. Live DB query also confirmed zero collisions between these 24 program names
+and İTÜ's existing 45 records.
+
+**Running total, coordinator-redirected "go wide on YÖK Atlas" push (batches 37-43)**: 420
+new records across 7 Turkish universities (GTU 23, Ankara Üniversitesi 153, Istanbul
+University 127, METU/ODTÜ 79, Sabancı 9, Yıldız Technical 5, İTÜ 24). Combined with the UK
+push earlier in this continuation (batches 30-36, 919 records / 7 universities across
+DE/UK), this continuation's running total is now **1,491 new records across 14
+universities**.
+
+**Next, per the coordinator's approved pivot**: Hacettepe University (99 existing) — the
+last named target before returning to collecting not-yet-in-spine Turkish universities as
+candidates rather than continuing to deepen already-present ones indefinitely.
+
+**Batch 44 — Hacettepe University** (2 new, `independent_batch44_2026-08-21.jsonl`): by far
+the most thoroughly pre-covered Turkish university found this session. 89 raw YÖK Atlas
+results across 77 unique base subjects against 99 existing records — a much higher
+existing-to-raw ratio than any other Turkish university this session, confirming Hacettepe's
+existing data was researched at genuinely fine subject-specific granularity already
+(comparable to the Koç/Özyeğin finding in batches 37-41, but here at a large comprehensive
+university rather than a small foundation one, and confirmed against a much bigger dataset).
+Matching surfaced several more instances of the same naming-convention-equivalence classes
+established earlier this session (confirmed, not assumed, by direct comparison): YÖK Atlas
+"İngilizce Öğretmenliği"/"Fransızca Öğretmenliği"/"Almanca Öğretmenliği" = existing "İngiliz
+Dili Öğretmenliği"/"Fransız Dili Öğretmenliği"/"Alman Dili Öğretmenliği" (same interchangeable
+phrasing pattern for language-teaching programmes); "İngiliz Dilbilimi" = existing "İngiliz
+Dil Bilimi" (spacing variant); "Hidrojeoloji Mühendisliği" = existing "Jeoloji (Hidrojeoloji)
+Mühendisliği" (standalone vs. parenthetical naming); "Bilgisayar ve Öğretim Teknolojileri
+Öğretmenliği" = existing "...Eğitimi" (the same Öğretmenliği/Eğitimi suffix-equivalence
+already confirmed at Yıldız Technical in batch 42); and five YÖK Atlas plain-subject entries
+matching existing Faculty-suffixed record names (Diş Hekimliği/Eczacılık/Hukuk/Hemşirelik
+Fakültesi, Mimarlık Bölümü). Medicine needed one-off handling: YÖK Atlas's 3 codes (Tıp
+İngilizce / plain Tıp at 30%-English / Tıp İngilizce KKTC-Uyruklu) resolve 1:1 against the
+existing 2 records (Tıp İngilizce, Tıp Türkçe) plus one additional KKTC-restricted seat,
+which was folded into the same scope-simplification treatment as every other KKTC variant
+this batch rather than singled out as a 3rd Medicine record (see below).
+
+**Same rename-ambiguity as İTÜ, now independently confirmed a second time**: "Harita
+Mühendisliği" (YÖK Atlas) has no existing Hacettepe match, while existing "Geomatik
+Mühendisliği" has no YÖK Atlas match under its own name — identical to the İTÜ batch 43
+pairing. Two independent, consistent confirmations with zero counter-examples anywhere in
+this session's Turkish data raises real confidence this is a genuine national programme
+rename (Cartography/Mapping Engineering → Geomatics Engineering, a well-known real-world
+renaming that happened at multiple Turkish universities around 2009-2011), but this session
+still has not checked it against either university's own site, so — consistent with the
+"leave Boğaziçi flagged" standard the coordinator set earlier rather than letting accumulated
+pattern-confidence substitute for an actual check — it stays excluded and flagged rather than
+merged or duplicated. One deliberate site check would resolve this for every affected
+university at once; recommending that as the actual next action rather than a third
+independent per-university re-flag.
+
+**Scope clarification on KKTC-Uyruklu variants (refining, not reversing, the general rule
+recorded earlier this session)**: the "kept as distinct records" rule for KKTC-Uyruklu
+admission tracks was applied within batches whose primary content was new subject matter.
+This batch is the first to closely examine what that rule implies for subjects that are
+*wholesale-excluded* as already-covered — Hacettepe alone has at least 10 matched subjects
+carrying a hidden KKTC-Uyruklu sub-variant (Almanca Mütercim ve Tercümanlık, Ergoterapi,
+Fizik Mühendisliği, Fransız Dili ve Edebiyatı, Hidrojeoloji Mühendisliği, İletişim
+Bilimleri, Kimya Mühendisliği, Odyoloji, Sınıf Öğretmenliği, plus Medicine's above) that
+were not individually pulled in as extra records. Decided, and disclosed rather than left
+implicit: this is a deliberate scope simplification consistent with the coordinator's "go
+wide, not deep on any one already-covered site" redirection — every such variant is
+low-headcount (quota of 1-2 seats in every case checked) placement-tier granularity, the
+same class of "real information with nowhere to live in the current schema" already flagged
+repeatedly in this document, not new subject-matter content. **This same shortcut was
+implicitly taken, un-audited, in the Yıldız Technical/Istanbul University/Ankara
+Üniversitesi/METU batches before it** — flagged here retroactively rather than silently
+left unstated, though not reworked, since re-opening four already-committed, already-pushed
+batches for a low-value granularity pass would cost more than it returns.
+
+Final content: exactly 2 new records — Paramedik (Sağlık Bilimleri Fakültesi) and Radyo,
+Televizyon ve Sinema (İletişim Fakültesi), neither with any plausible existing match.
+Both spot-checked against a fresh direct API re-query immediately before commit — matched
+exactly. Live DB query also confirmed zero collisions against Hacettepe's existing 99
+records under any plausible keyword (paramedic, radio, television, cinema, film).
+
+**Running total, coordinator-redirected "go wide on YÖK Atlas" push (batches 37-44)**: 422
+new records across 8 Turkish universities (GTU 23, Ankara Üniversitesi 153, Istanbul
+University 127, METU/ODTÜ 79, Sabancı 9, Yıldız Technical 5, İTÜ 24, Hacettepe 2). Combined
+with the UK push earlier in this continuation (batches 30-36, 919 records / 7 universities
+across DE/UK), this continuation's running total is now **1,493 new records across 15
+universities**.
+
+**Named-target pivot complete.** All three coordinator-named targets (Yıldız, İTÜ,
+Hacettepe) are done. Per the coordinator's standing instruction, next work shifts to
+collecting (not creating rows for) Turkish universities not yet in ORYN's spine at all —
+recording YÖK Atlas `universiteId` + official domain as candidates for a separate
+canonical-entity resolution pass — rather than continuing to deepen already-present
+universities indefinitely.
