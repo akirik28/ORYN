@@ -91,31 +91,43 @@ second, driftable copy of the same data.
 
 ---
 
-## What this means for B6's open question — reported as characterization, not a final decision
+## What this means for B6's open question
 
 The design doc's B6 asked: *is the missing row in `university_programs`, or the missing column
-in the placement-cycle index?* The measurement suggests the honest answer is **both, for
-different subsets, and neither uniformly**:
+in the placement-cycle index?* Reviewed by the coordinator against this measurement: **settled
+in favor of widening the index.** Eighteen rows across two of twelve universities (2.3% of the
+population) is not evidence of a modelling error, and a split migration on that basis would be
+over-correcting from a sample too small to support it. B6's proposed migration
+(`supabase/migrations/0059_schema_gaps_2026-08-22.sql`) stands as written.
 
-- **The KKTC-quota cases (6, or 10 counting the 4 "both" cases partially)** are structurally
-  closest to the fee-tier pattern already in the schema — a reserved seat-pool variant of one
-  underlying educational product, not a second product a student would search for separately.
-  Widening the placement-cycle key (B6's proposed migration) is a sufficient, correct fix for
-  this subset on its own.
-- **The language-of-instruction cases (8, or 12 counting "both")** are a different kind of
-  fact. `university_programs.language_of_instruction` already exists as a first-class,
-  product-facing column — Oryn already treats "taught in English" vs. "taught in Turkish" as a
-  real distinguishing fact for every *other* university in this catalogue (the whole DE/NL/UK
-  research corpus routinely records both tracks as separate rows when a university offers a
-  programme in two languages). A Yıldız Teknik student choosing between the Turkish-medium and
-  English-medium "İşletme" is choosing between two genuinely different qualifications, with
-  independent quotas and cut-off scores, the same shape as any other bilingual-track programme
-  this product already models as two rows elsewhere. This is real, if modest, evidence that for
-  *this specific subset*, the missing row may genuinely be in `university_programs` — but 12
-  programmes across 2 of 12 Turkish universities is not yet a population large enough to commit
-  to a bulk-split migration without checking whether the same pattern recurs at the other 10
-  universities' unmatched or ambiguous records too (this measurement did not check that).
+That resolves the mechanical question. It does not resolve what the 18 rows' own composition
+means, which is recorded below on purpose rather than folded into the recommendation above.
 
-**This document does not choose between the two paths — that decision, and whether to treat the
-KKTC and language subsets differently rather than uniformly, is the founder's/coordinator's
-call, informed by the numbers above rather than the single-example guess B6 started from.**
+## A known inconsistency, recorded rather than acted on
+
+**The 8 language-of-instruction rows (12 counting the 4 "both" cases) are a genuine
+inconsistency in how this catalogue models Turkish programmes versus every other country in
+it, independent of whether or how B6 ships.** `university_programs.language_of_instruction`
+already exists as a first-class, product-facing column, and Oryn already treats "taught in
+English" vs. "taught in Turkish" as a real distinguishing fact everywhere else in this
+catalogue — the DE/NL and UK research lanes routinely model a bilingual track as two separate
+`university_programs` rows, not one row with an internal admission-cycle-level split. A Yıldız
+Teknik student choosing between the Turkish-medium and English-medium "İşletme" is choosing
+between two genuinely different qualifications, with independent national ranking pools and
+cut-off scores — the same shape this product already gives its own row to in every other
+country's data.
+
+Widening the placement-cycle index (B6, above) makes both of that programme's kilavuzKodu
+records storable without a database error. It does not make them correctly modelled — a
+student would still see one `university_programs` row named "İşletme" with two placement
+cycles silently mixed inside it, with no `language_of_instruction` value on the row to tell
+them apart, rather than two rows the way this same fact is presented for a bilingual
+programme anywhere else in the catalogue.
+
+**Twelve programmes across two of twelve Turkish universities is too thin a sample to migrate
+on today.** It is not too thin to record as a known, specific inconsistency: a future Turkish
+catalogue expansion — more universities, or closing the 136-record gap between what YÖK
+publishes and what this catalogue currently names as a programme at all (see "The distribution"
+above) — will very likely hit this pattern at a scale that does justify a split. Recorded here
+so that expansion starts from a named, evidenced gap instead of rediscovering it from a fresh
+collision.
