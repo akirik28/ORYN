@@ -268,6 +268,33 @@ should be led toward exam/grade preparation as the primary admissions lever, wit
 dimension guidance reframed honestly as growth/alternative-pathway value rather than implied
 primary-admission relevance.
 
+## Strategic checkpoint: both sessions agreed to stop adding new major-family docs
+
+After both branches independently found several genuine new families in succession (education/
+teaching, social work, performing arts/music — all found *after* the "original" 17-family set felt
+complete), peer proposed and this session agreed: stop hunting for new top-level families and
+redirect remaining time to **deepening** what exists (more countries per family, more persona
+stress-testing, tightening medium-confidence sourcing) rather than continuing to fragment the
+taxonomy. Reasoning: the last three finds were increasingly hard to surface (cross-checking against
+each other's docs, re-reading our own) — a signal of diminishing real gaps — and further
+granularity (nursing distinct from medicine, criminology distinct from law) is better handled as
+subfield detail *within* existing docs than as new top-level files. Both sessions independently
+converged on this before explicitly coordinating on it, for what that's worth.
+
+Since that checkpoint, this branch: added Social Work as family `19` (already decided before the
+checkpoint conversation, let it land since it was a genuine, already-in-flight major gap, not new
+fragmentation); folded a cross-branch finding (Turkish conservatory admission as a named Tier-3
+exception) into `11` directly (`RULE-COUNSEL-101`); added a persona (`I`) specifically to validate
+that exception against a concrete case rather than trust the abstract principle
+(`RULE-COUNSEL-102`); and caught and corrected a real factual error in its own `04` (the original
+"~15-20%" chronic-illness prevalence figure was a weak secondary estimate that understated actual,
+peer-reviewed prevalence — corrected to 22.57%→30.21%, 1999-2018, with the old source kept in the
+registry marked superseded rather than deleted). Package now **102 rules, 48 sources**.
+
+Added `15-executive-summary.md` — a genuinely short (5-minute) consolidation of both branches'
+highest-impact findings, for anyone who won't read all 20+ documents. Start there if pressed for
+time; this handoff is the operational/coordination record, not the content summary.
+
 ## What's next (if this session continues further, or for whoever resumes)
 
 **Peer-branch spot-verification, done, positive result**: rather than leave `10` §5's "read and
