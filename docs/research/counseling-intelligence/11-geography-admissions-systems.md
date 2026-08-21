@@ -56,7 +56,19 @@ it remains directly applicable here without modification.
   centralized exam score (TYT/AYT, and YDT for language-based programs) drives placement directly;
   **there is no application file, essay, or activity list submitted to Turkish universities via
   the standard YKS pathway at all** — admission is score-ranked placement, structurally different
-  from Tier 1/2, not just less weighted.
+  from Tier 1/2, not just less weighted. **Named exception, confirmed by the peer session against
+  official conservatory-admission guidance** (their `06-major-family-evidence/20-performing-arts-
+  music.md`, `RULE-COUNSEL-238`): **Turkish state conservatory admission is a genuine hybrid** — a
+  minimum TYT score threshold (reported around 150/180 depending on program) *plus* a talent/
+  audition exam, not pure score-ranked placement. This is structurally the same pattern already
+  noted for Switzerland (medicine's separate EMS aptitude test) and Germany (the small
+  `Zusätzliche Eignungsquote` carve-out) — **even a predominantly Tier-3 country can have specific,
+  named fields with their own audition/portfolio/aptitude exception**, and this document's blanket
+  per-country tier assignment should always be checked against the *specific target field*, not
+  applied uniformly to every program a country offers. A Turkey-target student interested in
+  performing arts/conservatory study should not receive the blanket "academics is doing all the
+  admissions work" framing `RULE-COUNSEL-067` prescribes for the general Turkish case.
+  [[RULE-COUNSEL-101]]
 - **Germany** — Abitur-grade-based; a **Numerus Clausus (NC)** grade cutoff (recalculated each
   admissions cycle from that cycle's actual applicant grades, not fixed in advance) gates the
   minority of high-demand programs, alongside waiting-period and small special-aptitude quotas
@@ -304,6 +316,12 @@ conditioning would produce technically-accurate-but-strategically-misleading gui
   closer to Turkey/Germany's narrow aptitude-quota carve-outs than to the UK's broader
   super-curricular weighting. Confidence: medium-high (Ontario-specific, not verified for other
   Canadian provinces).
+- `RULE-COUNSEL-101` — A country's general tier assignment must always be checked against the
+  specific target field before being applied — even a predominantly Tier-3 country (Turkey) can
+  have named fields (state conservatory/performing-arts admission) with their own genuine
+  audition/aptitude exception, structurally the same pattern as Switzerland's medicine EMS or
+  Germany's small aptitude quota. Confidence: high (peer-session-verified against official
+  conservatory-admission guidance, cross-branch finding folded in directly).
 
 ## Sources referenced in this document
 
