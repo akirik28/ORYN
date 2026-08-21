@@ -1,4 +1,4 @@
-import type { CourseLevel, CurriculumType, RequirementCategory, RequirementEvaluationStatus } from "@/types/database";
+import type { CourseLevel, CurriculumType, RequirementCategory, RequirementEvaluationStatus, RequirementGroupRole } from "@/types/database";
 
 export const REQUIREMENT_CATEGORIES: readonly RequirementCategory[] = [
   "curriculum",
@@ -107,4 +107,27 @@ export interface RequirementFacts {
   gpas: { value: number; scale: number }[];
   testScores: { testName: string; score: string }[];
   languages: { name: string; proficiency: string | null }[];
+}
+
+/** One member of a requirement_groups set, as evaluateRequirementGroup needs it — a narrow
+ * slice of a university_requirements row (same "narrow slice, caller maps snake_case DB
+ * columns onto this" convention as RequirementFacts itself). groupRole is never null here:
+ * only rows with a non-null requirement_group_id belong to a group at all (see migration
+ * 0052's university_requirements_group_role_consistency constraint) — an ungrouped row is
+ * evaluated with the plain evaluateRequirement instead. */
+export interface RequirementGroupMember {
+  id: string;
+  category: RequirementCategory;
+  rawStructuredRule: unknown;
+  groupRole: RequirementGroupRole;
+  title: string | null;
+}
+
+/** evaluateRequirementGroup's return shape — the combined verdict for the whole group, plus
+ * each member's own individually-computed result (e.g. for a future admin/detail view that
+ * wants to show which specific alternative was met, not just that one was). */
+export interface RequirementGroupEvaluationResult {
+  status: RequirementEvaluationStatus;
+  reasoning: string;
+  memberResults: Map<string, RequirementEvaluationResult>;
 }

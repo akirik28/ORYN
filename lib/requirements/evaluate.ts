@@ -1,6 +1,13 @@
-import type { CourseLevel, RequirementCategory } from "@/types/database";
+import type { CourseLevel, RequirementCategory, RequirementEvaluationStatus } from "@/types/database";
 import { StructuredRuleSchema } from "@/lib/validation/requirements";
-import { INFORMATIONAL_CATEGORIES, MANUAL_REVIEW_CATEGORIES, type RequirementEvaluationResult, type RequirementFacts } from "./types";
+import {
+  INFORMATIONAL_CATEGORIES,
+  MANUAL_REVIEW_CATEGORIES,
+  type RequirementEvaluationResult,
+  type RequirementFacts,
+  type RequirementGroupEvaluationResult,
+  type RequirementGroupMember,
+} from "./types";
 
 /** Rigor ordering used only to compare a course against a rule's `minLevel` — not a
  * general-purpose ranking (that's lib/scoring's job, and it deliberately doesn't rank
@@ -139,6 +146,90 @@ export function evaluateRequirement(
       return { status: "needs_manual_review", reasoning: "This requirement doesn't specify enough detail to evaluate automatically." };
     }
   }
+}
+
+/** Ordered best-to-worst for combining several inclusion alternatives into one group verdict
+ * — "the best individual outcome wins," except not_met, which requires every alternative to
+ * agree (see evaluateRequirementGroup). Distinct from the ordering __tests__/requirements/
+ * evaluate.test.ts uses for its own "higher score never evaluates worse" check — that one
+ * ranks a single requirement's own possible outcomes, this one governs how multiple sibling
+ * requirements combine, and needs_manual_review outranks unknown here specifically because an
+ * unresolved alternative could still turn out to be the one that's met. */
+const GROUP_STATUS_PRIORITY: readonly RequirementEvaluationStatus[] = ["met", "likely_met", "needs_manual_review", "unknown", "not_met"];
+
+/**
+ * Combines a requirement_groups set into one verdict (Case B: "any one of N alternatives
+ * satisfies this requirement" — Edinburgh's four English-proficiency test routes are the
+ * motivating example; a caller previously ran evaluateRequirement() on each row independently,
+ * which is exactly the defect this exists to fix: a student with a valid IELTS score being
+ * told they failed the TOEFL requirement, a confident wrong answer rather than an honest
+ * unknown).
+ *
+ * Every member is still evaluated individually via evaluateRequirement() — no logic is
+ * duplicated — this only adds the combination step on top, and only for 'inclusion' members.
+ * 'exclusion' and 'qualifier' members unconditionally force the whole group to
+ * needs_manual_review regardless of how the inclusions evaluate, never met or a confident
+ * not_met: an exclusion might apply to a student who otherwise looks like they qualify (that
+ * is the entire point of an exclusion), and this evaluator has no safe way to determine
+ * whether it does — see migration 0052's comment on why exclusions are never auto-resolved by
+ * negating the inclusion set. A qualifier is withheld from auto-evaluation for a more mundane
+ * reason: RequirementFacts has no field a recency-style qualifier could even be checked
+ * against today (no date on a test score), so pretending to evaluate one would silently ignore
+ * its actual content rather than honestly deferring to a human reviewer.
+ */
+export function evaluateRequirementGroup(members: RequirementGroupMember[], facts: RequirementFacts): RequirementGroupEvaluationResult {
+  const memberResults = new Map<string, RequirementEvaluationResult>();
+  for (const member of members) {
+    memberResults.set(member.id, evaluateRequirement(member.category, member.rawStructuredRule, facts));
+  }
+
+  if (members.some((m) => m.groupRole === "exclusion")) {
+    return {
+      status: "needs_manual_review",
+      reasoning: "This requirement has an exclusion condition attached that Oryn doesn't evaluate automatically — review the source directly.",
+      memberResults,
+    };
+  }
+  if (members.some((m) => m.groupRole === "qualifier")) {
+    return {
+      status: "needs_manual_review",
+      reasoning: "This requirement has an additional condition attached (e.g. a recency window) that Oryn doesn't evaluate automatically — review the source directly.",
+      memberResults,
+    };
+  }
+
+  const inclusions = members.filter((m) => m.groupRole === "inclusion");
+  if (inclusions.length === 0) {
+    return {
+      status: "needs_manual_review",
+      reasoning: "This requirement group has no recognized alternatives to evaluate — review the source directly.",
+      memberResults,
+    };
+  }
+
+  let best: { member: RequirementGroupMember; result: RequirementEvaluationResult; rank: number } | null = null;
+  for (const member of inclusions) {
+    const result = memberResults.get(member.id)!;
+    const rank = GROUP_STATUS_PRIORITY.indexOf(result.status);
+    if (best === null || rank < best.rank) best = { member, result, rank };
+  }
+  const { member, result } = best!;
+
+  if (result.status === "met" || result.status === "likely_met") {
+    const label = member.title ?? "one of the accepted alternatives";
+    return {
+      status: result.status,
+      reasoning: `${result.reasoning} (${label} — any one of ${inclusions.length} accepted alternatives is enough.)`,
+      memberResults,
+    };
+  }
+  if (result.status === "not_met") {
+    return { status: "not_met", reasoning: `None of the ${inclusions.length} accepted alternatives are currently met.`, memberResults };
+  }
+  // needs_manual_review or unknown: surface the best-ranked alternative's own reasoning as-is
+  // rather than inventing group-specific phrasing for cases evaluateRequirement already
+  // explains well on its own.
+  return { status: result.status, reasoning: result.reasoning, memberResults };
 }
 
 function evaluateTestScore(testName: string, minScore: number | undefined, facts: RequirementFacts): RequirementEvaluationResult {
