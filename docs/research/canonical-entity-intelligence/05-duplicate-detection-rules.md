@@ -206,7 +206,8 @@ matches the bare `normalized_name` self-join misses, **8 pairs as of 2026-08-17:
 LSE, University of Warwick, UTS, Al-Farabi Kazakh National University, University of Newcastle
 Australia**), plus a hand-cited `MANUALLY_VERIFIED` array (38 entries as of this session) each
 carrying its own live-ROR-verified reasoning, applicable via `--merge-verified`
-(`merge_canonical_entities()`) and `--supersede` (needs migration 0043, not yet live).
+(`merge_canonical_entities()`) and `--supersede` (needed migration 0043 — **now applied and
+correctly backfilled, confirmed live late in this session; see `09`'s dedicated update note**).
 
 **What this changes, precisely:**
 

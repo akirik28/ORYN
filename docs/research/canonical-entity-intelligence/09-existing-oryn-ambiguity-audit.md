@@ -116,6 +116,29 @@ to merge first once `10`/`11`'s recommended ROR-enrichment pass runs. See `17` �
 detail, including a methodology note on how this was nearly mis-presented as a new finding
 before the overlap was caught.
 
+**Time-sensitive update, found very late in this session and worth its own clearly-dated
+note**: the "row layer still blocked" status this package has cited throughout (from
+`founder-blocked-backlog.md` item 25 and `claude-a-university-spine.md`, both accurate as of
+2026-08-17) is now stale. `docs/ORYN_WORKSTREAMS.md` (a live cross-session coordination file,
+last updated 2026-08-20 by a concurrent session, "Claude B") recorded that migration `0043`'s
+DDL had since been applied — `universities.duplicate_status`/`superseded_by_id` genuinely exist
+— though as of that same 2026-08-20 check the data backfill had not yet run. Verified live,
+directly, at the end of this session (not trusted from either document): **both columns exist,
+and the backfill has since run too** — exactly 9 rows now carry `duplicate_status='superseded'`,
+and every `id`/`superseded_by_id` pair matches, exactly, the same 9 winner/loser
+`universities.id` pairs this package already had from `claude-a-university-spine.md`'s Phase 2
+table and `lib/universities/duplicate-supersessions.json` (checked row by row, not just
+counted). **This means the 9-pair item-25 duplicate set is now fully resolved at every layer
+this package tracks** — identity (`merge_canonical_entities()`, 2026-08-17/18), schema
+(migration 0043, applied sometime after 2026-08-17), and row-level data (backfilled sometime
+after 2026-08-20) — not merely "identity resolved, row layer still open" as this package's
+other documents currently state in several places. Whether every application read-path has been
+switched from the `duplicate-supersessions.json` workaround onto the new `duplicate_status`
+column directly was not checked this session (out of scope — that is `lib/universities/
+canonical.ts`'s owner's call, and the JSON-file workaround already keeps the student-facing
+behavior correct regardless of which mechanism a given query uses); only the data-layer
+question this package has repeatedly cited as "still blocked" was verified, and it no longer is.
+
 ## Finding 3: `entity_relationships` is almost entirely unpopulated
 
 **9 rows total** against 1,135 active (non-merged) canonical entities of every type, as of the
