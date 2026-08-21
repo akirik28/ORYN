@@ -13,8 +13,17 @@
  * link directly") applies to every requirement this script inserts, regardless of category.
  *
  * Idempotent and restartable: re-running the same batch produces `duplicate` outcomes for
- * anything already accepted (application-level dedup — neither target table has a DB-level
- * unique index, unlike university_programs).
+ * anything already accepted. Deadlines have no DB-level unique index at all — application-level
+ * dedup is the only protection. Requirements DO have one
+ * (university_requirements_university_type_scope_idx, migration 0042), but it is scoped to
+ * (university_id, requirement_type, COALESCE(scope,'')) — coarser than "this exact fact,"
+ * so two genuinely different same-type-same-scope requirements can still collide there. This
+ * script's own dedup key (lib/requirements/ingest.ts's requirementDedupKey) matches that
+ * constraint's shape exactly so the two never disagree about what counts as "the same slot,"
+ * but a real, too-coarse-for-the-data collision is still possible — see
+ * docs/handoffs/requirements-deadlines-apply-path-report.md. Surfaces honestly as `rejected`
+ * with the real DB error, same as any other insert failure; not something this script works
+ * around.
  *
  * Usage:
  *   npm run ingest:requirements-deadlines
@@ -27,6 +36,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import {
   applyRequirementDecision,
   decideRequirementIngestion,
+  requirementDedupKey,
   type AcceptedRequirementRow,
   type ResearchRequirementRecord,
   type RequirementWriteClient,
@@ -125,7 +135,7 @@ async function main() {
 
   const [universities, { rows: existingReqs }, { rows: existingDls }] = await Promise.all([
     loadUniversityCandidates(target),
-    fetchAllRowsVerified<{ university_id: string; requirement_type: string; title: string | null }>(target, "university_requirements", "university_id,requirement_type,title", "order=id"),
+    fetchAllRowsVerified<{ university_id: string; requirement_type: string; title: string | null; scope: string | null }>(target, "university_requirements", "university_id,requirement_type,title,scope", "order=id"),
     fetchAllRowsVerified<{ university_id: string; deadline_type: string; deadline_date: string | null }>(target, "university_deadlines", "university_id,deadline_type,deadline_date", "order=id"),
   ]);
   console.log(`Candidate pool: ${universities.length} universities. Existing: ${existingReqs.length} requirements, ${existingDls.length} deadlines.`);
@@ -135,7 +145,7 @@ async function main() {
   const existingTitlesByKey = new Map<string, string[]>();
   for (const r of existingReqs) {
     if (!r.title) continue;
-    const key = `${r.university_id}|${r.requirement_type}`;
+    const key = requirementDedupKey(r.university_id, r.requirement_type, r.scope);
     existingTitlesByKey.set(key, [...(existingTitlesByKey.get(key) ?? []), r.title]);
   }
   const existingDeadlineKeys = new Set(existingDls.filter((d) => d.deadline_date).map((d) => deadlineDedupKey(d.university_id, d.deadline_type, d.deadline_date!)));
@@ -150,7 +160,7 @@ async function main() {
   for (const record of reqRecords) {
     const decision = decideRequirementIngestion(record, universities, supersededIds, existingTitlesByKey);
     if (decision.outcome === "accepted" && decision.row) {
-      const key = `${decision.row.university_id}|${decision.row.requirement_type}`;
+      const key = requirementDedupKey(decision.row.university_id, decision.row.requirement_type, decision.row.scope);
       existingTitlesByKey.set(key, [...(existingTitlesByKey.get(key) ?? []), decision.row.title]);
     }
     reqDecisions.push({ record, decision });

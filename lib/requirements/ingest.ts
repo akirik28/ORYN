@@ -50,6 +50,7 @@ export interface AcceptedRequirementRow {
   is_required: boolean;
   structured_rule: null;
   data_confidence: "high" | "medium" | "low";
+  scope: string | null;
   source_url: string;
   retrieved_at: string;
 }
@@ -69,6 +70,13 @@ export interface RequirementIngestDecision {
 const UNSAFE_VERIFICATION_STATES = new Set(["CONFLICTING_EVIDENCE", "NEEDS_REVIEW", "CURRENT_CYCLE_NOT_PUBLISHED"]);
 const UNSAFE_SCALE_AMBIGUITY = new Set(["undated_scale_assumption", "partially_unsatisfiable"]);
 
+/** Mirrors university_requirements_university_type_scope_idx's own key shape exactly
+ * (`(university_id, requirement_type, COALESCE(scope,''))`) so the application-level dedup
+ * check and the real DB constraint agree on what "the same requirement" means. */
+export function requirementDedupKey(universityId: string, requirementType: string, scope: string | null): string {
+  return `${universityId}|${requirementType}|${scope ?? ""}`;
+}
+
 export function resolveRequirementUniversity(record: ResearchRequirementRecord, universities: readonly UniversityLookupRow[]): { universityId: string | null; reason: string | null } {
   if (!record.university_name?.trim()) {
     return { universityId: null, reason: "No university_name — a national-level or context/reference record, not attached to one institution." };
@@ -81,11 +89,20 @@ export function resolveRequirementUniversity(record: ResearchRequirementRecord, 
 /** Pure decision function — no I/O. `supersededIds` is the set of every `supersedes` value
  * present anywhere in the batch (a record another record explicitly supersedes is stale by the
  * research lane's own admission, even when nothing else about it looks wrong — see the
- * dry-run report's "Boğaziçi" case). `existingTitles` is what's already live, grouped by
- * `${university_id}|${requirement_type}`, checked via the same Jaccard title-similarity
- * lib/requirements/dedup.ts's isDuplicateRequirement already uses — there is no DB-level
- * unique index on university_requirements, so this application-level check is the only
- * duplicate protection that exists. */
+ * dry-run report's "Boğaziçi" case). `existingTitlesByKey` is what's already live, grouped by
+ * `requirementDedupKey()`, checked via the same Jaccard title-similarity
+ * lib/requirements/dedup.ts's isDuplicateRequirement already uses.
+ *
+ * university_requirements DOES have a DB-level unique index for program_id-null rows —
+ * `(university_id, requirement_type, COALESCE(scope,''))` (migration 0042) — which every row
+ * this ingestion writes falls under (program_id is always null here). It exists to keep
+ * genuinely different per-applicant-group requirements distinct (an international-only English
+ * requirement and a domestic one are two rows, not a conflict), not to guarantee one row per
+ * type per university — two different `minimum_grade` facts sharing both type and scope (or
+ * both null-scope) will still collide there. `scope` is threaded through from the record's own
+ * field for exactly this reason, but this is a real, coarser-than-ideal constraint, not
+ * something to work around here — a rejected insert surfaces honestly as `rejected` via
+ * applyRequirementDecision, same as any other DB error. */
 export function decideRequirementIngestion(
   record: ResearchRequirementRecord,
   universities: readonly UniversityLookupRow[],
@@ -129,12 +146,12 @@ export function decideRequirementIngestion(
     };
   }
 
-  const dedupKey = `${universityId}|${record.requirement_category_db}`;
+  const dedupKey = requirementDedupKey(universityId, record.requirement_category_db, record.scope ?? null);
   const title = record.requirement_text.slice(0, 200);
   const existingForKey = existingTitlesByKey.get(dedupKey) ?? [];
   const isDuplicate = existingForKey.some((existingTitle) => normalizeTitle(existingTitle) === normalizeTitle(title) || titleSimilarity(existingTitle, title) >= 0.6);
   if (isDuplicate) {
-    return { outcome: "duplicate", detail: "An existing (or earlier-in-this-batch) requirement for the same university and category has a highly similar title.", universityId, row: null };
+    return { outcome: "duplicate", detail: "An existing (or earlier-in-this-batch) requirement for the same university, category, and scope has a highly similar title.", universityId, row: null };
   }
 
   return {
@@ -149,6 +166,7 @@ export function decideRequirementIngestion(
       requirement_detail: record.requirement_text,
       is_required: true,
       structured_rule: null,
+      scope: record.scope ?? null,
       data_confidence: (record.confidence as "high" | "medium" | "low") ?? "medium",
       source_url: record.source_url,
       retrieved_at: record.retrieved_at,
@@ -161,6 +179,14 @@ export interface RequirementWriteClient {
   insertQueueRow(row: RequirementQueueRowInput): Promise<{ error: { message: string } | null }>;
 }
 
+/** Column shape must match the live requirement_research_queue table exactly — see
+ * supabase/migrations/0051_requirement_deadline_research_queue.sql's own note on why this
+ * differs from what that file originally specified (requirement_type_input/scope_input, not
+ * category_input/requirement_category_db_input): the applied schema was revised after this
+ * file was first written, and this type was updated to match reality rather than the other
+ * way round. requirement_category_db (the actual DB enum value being inserted) is what's kept
+ * — category (the founder-brief's coarser taxonomy) is still fully recoverable from
+ * raw_payload, just not as its own indexed column. */
 export interface RequirementQueueRowInput {
   batch_id: string;
   research_requirement_id: string;
@@ -168,8 +194,8 @@ export interface RequirementQueueRowInput {
   university_name_input: string | null;
   university_country_input: string | null;
   program_name_input: string | null;
-  category_input: string | null;
-  requirement_category_db_input: string | null;
+  requirement_type_input: string | null;
+  scope_input: string | null;
   requirement_text_input: string | null;
   source_url_input: string | null;
   source_type_input: string | null;
@@ -210,8 +236,8 @@ export async function applyRequirementDecision(
     university_name_input: record.university_name,
     university_country_input: record.university_country,
     program_name_input: record.program_name,
-    category_input: record.category,
-    requirement_category_db_input: record.requirement_category_db,
+    requirement_type_input: record.requirement_category_db,
+    scope_input: record.scope ?? null,
     requirement_text_input: record.requirement_text,
     source_url_input: record.source_url,
     source_type_input: record.source_type,

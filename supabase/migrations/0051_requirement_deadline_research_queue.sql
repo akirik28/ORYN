@@ -12,6 +12,20 @@
 -- deadlines) — one outcome value, with the specific reason always in outcome_detail rather than
 -- multiplying the outcome enum for every distinct cause. `superseded` is its own value because
 -- it's a relationship between two records, not a property of the record itself.
+--
+-- Applied-vs-drafted note (2026-08-21): the SQL actually applied to requirement_research_queue
+-- diverged from an earlier draft of this file — the applier read this table's block from a
+-- different, earlier version and inferred its column names from deadline_research_queue's
+-- pattern rather than the requirement-specific draft, producing `requirement_type_input` /
+-- `scope_input` here instead of `category_input` / `requirement_category_db_input`. This file
+-- now records what is actually live, not the earlier draft. On the merits the live shape is
+-- kept deliberately, not merely accepted as a fait accompli: `requirement_type_input` and
+-- `scope_input` mirror university_requirements' own `requirement_type`/`scope` columns
+-- directly, and `scope_input` is required for `university_requirements_university_type_scope_idx`
+-- (migration 0042) to be auditable at all. `requirement_category_db` (the DB enum value
+-- actually inserted) is what's kept as `requirement_type_input`; the founder-brief's coarser
+-- `category` taxonomy is dropped as its own column but remains fully recoverable from
+-- `raw_payload`.
 
 create table public.requirement_research_queue (
   id uuid primary key default gen_random_uuid(),
@@ -21,8 +35,8 @@ create table public.requirement_research_queue (
   university_name_input text,
   university_country_input text,
   program_name_input text,
-  category_input text,
-  requirement_category_db_input text,
+  requirement_type_input text,
+  scope_input text,
   requirement_text_input text,
   source_url_input text,
   source_type_input text,
