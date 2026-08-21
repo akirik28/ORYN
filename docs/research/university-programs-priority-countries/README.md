@@ -22,24 +22,33 @@ looks covered and is not. This lane deepens rather than duplicates.
 
 ## Verified counts
 
-**659 records across 15 universities.** Every record is `official_primary` read directly from the
+**762 records across 18 universities.** Every record is `official_primary` read directly from the
 institution's own domain, and every record has `university_official_domain` populated.
 
 | Country | Records | Universities |
 |---|---:|---|
 | Italy | 353 | Bologna (118), Padua (106), Sapienza (65), Politecnico di Milano (29), Politecnico di Torino (26), Bocconi (9) |
 | Spain | 227 | Complutense (165), Carlos III (62) |
+| France | 112 | Paris-Saclay (58), Paris Cité (32), PSL (13), Sorbonne Université (8), Sciences Po (1) |
 | Switzerland | 70 | ETH Zurich (23), Zurich (15), Lausanne (15), EPFL (13), Genève (4) |
-| **France** | **9** | Sorbonne Université (8), Sciences Po (1) |
 
-**France at 9 is the honest headline, not the 659.** It is the weakest of the four priority
-countries and the top target for the next pass.
+France rose from 9 to 112 in the final pass. **It is still the least trustworthy of the four**: of
+its five universities, three are explicitly partial — Paris Cité captured 32 of a documented ~81
+licences, Sorbonne covers one faculty of three, and PSL's central listing does not traverse its
+member schools. Volume here is not the same as coverage.
+
+**Switzerland at 70 is now the thinnest country** and the honest next target.
 
 ---
 
 ## The one rule that mattered most: language of instruction
 
-**Language asserted on 387 records, left as an honest disclosed unknown on 272, guessed on zero.**
+**Language asserted on 387 records, left as an honest disclosed unknown on 375, guessed on zero.**
+
+Note the ratio moved *against* sourced language in the final pass: **no French institution
+published a per-programme language marker**, so all 103 new French records carry an honest unknown.
+French instruction is the obvious expectation at a French public university and remains exactly
+that — an expectation, not evidence.
 
 The standing instruction was never to infer `language_of_instruction` from a programme's name or
 from a page being served in English. A previous lane made exactly that mistake on Leiden and had
@@ -154,7 +163,8 @@ and these are current-cycle statements that need re-verification before being su
 | **Universidad de Navarra** (ES) | English catalogue is machine-translated and demonstrably wrong — "Degree in Education" links to `/degree-in-pedagogy`, alongside "Degree of high school program in Philosophy" and "graduate in Religious Sciences". The Spanish canonical page `unav.edu/en/grados` **404s**. ~90 entries available; **none published** rather than inject mistranslated names. Recoverable with the correct Spanish listing URL. |
 | **Universitat Pompeu Fabra** (ES) | HTTP **403** to automated fetch. Per a sibling lane, 403s of this kind have cleared when retried in a real browser — worth one browser attempt before treating as closed. |
 | **USI Università della Svizzera italiana** (CH) | HTTP **403**. Same note as UPF. |
-| **Sorbonne Université — Lettres** (FR) | `formations-lettres.sorbonne-universite.fr` refused automated fetch with **ECONNRESET** on two attempts. Médecine not attempted. Only the Sciences faculty's 8 licences captured. |
+| **Sorbonne Université — Lettres** (FR) | `formations-lettres.sorbonne-universite.fr` refused automated fetch with **ECONNRESET** on two attempts, and browser navigation to that host was **denied** as well. Genuinely blocked, not a parameter problem. Médecine not attempted. Only the Sciences faculty's 8 licences captured. |
+| **Université Paris Cité** (FR) — partial, not blocked | Its ODF catalogue expands one subject domain at a time; 32 licences captured across 4 domains against a documented ~81. Needs a per-domain pass over the same catalogue. |
 | **Université de Genève — central index** (CH) | `bachelors.unige.ch` redirects to a JS SPA (`unige.ch/bachelor-master/#/bachelor`). Only the *sciences de la société* faculty captured. Given the Bologna/Padova finding, retry with the parameter-discovery checks above before assuming it is client-side. |
 | **Université de Lausanne — French index** | `unil.ch/formations/...` redirects to `www2.unil.ch` which **404s**. The English institutional index worked and was used instead. |
 
@@ -176,15 +186,18 @@ No CAPTCHA was encountered, and none was attempted or bypassed.
 
 ## Remaining gaps, in priority order
 
-1. **France (9 records).** Sorbonne Lettres + Médecine, Université Paris-Saclay, Université PSL,
-   Université Paris Cité, HEC Paris, plus deepening École Polytechnique and Paris Dauphine.
-2. **Politecnico di Milano language pass** — 29 records needing one field the catalogue already
-   publishes. Converts unknowns into sourced values, which beats adding rows.
-3. **UZH umbrella expansion** and the remaining **UNIGE faculties**.
+1. **Politecnico di Milano language pass** — 29 records needing one field the catalogue already
+   publishes. Converting honest-unknowns into sourced values beats adding rows: coverage that is
+   unknown is not coverage.
+2. **Finish the three partial French universities** before adding new French ones — Paris Cité's
+   remaining ~49 licences, PSL's member-school catalogues, and Sorbonne Médecine. A partial
+   university that looks covered is the failure mode this lane exists to avoid.
+3. **Switzerland (70, now thinnest)**: Bern, Basel, Fribourg, Neuchâtel; the remaining UNIGE
+   faculties; UZH umbrella expansion; deepen St. Gallen (8 corpus records). Retry USI in a browser.
 4. **Spain**: Universitat de Barcelona, Universidad Autónoma de Madrid, Universitat Autònoma de
-   Barcelona, UPM, UPC; retry UPF and Navarra.
-5. **Switzerland**: Bern, Basel, Fribourg, Neuchâtel; deepen St. Gallen (8 corpus records).
-6. **Italy**: Milano Statale, Torino, Pisa, Cattolica, Ca' Foscari, Trento; deepen Bocconi law.
+   Barcelona, UPM, UPC; retry UPF in a browser and Navarra with a working Spanish listing URL.
+5. **Italy**: Milano Statale, Torino, Pisa, Cattolica, Ca' Foscari, Trento; deepen Bocconi law.
+6. **France, new institutions**: HEC Paris, plus deepening École Polytechnique and Paris Dauphine.
 
 Sequencing note: this lane's agreed follow-on is **requirements + deadlines for these same four
 countries**, held until programme coverage is no longer thin — currently gated on France.
