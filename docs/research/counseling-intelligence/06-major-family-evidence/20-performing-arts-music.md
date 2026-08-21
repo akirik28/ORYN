@@ -61,8 +61,9 @@ elaborated in depth here). **Counter-stereotypical example:** many working music
 or parallel careers entirely outside music — BLS's own median-hourly-wage framing for musicians/
 singers ($42.45/hour, May 2024 [S-BLS-PERFORM]) implicitly reflects a field with substantial
 freelance/gig-based, non-continuous employment, not a single "musician" job category the way
-`RULE-COUNSEL-058`/`059` (never equate popularity/growth-rate with individual fit) already cautions
-against overreading for any family.
+`RULE-COUNSEL-225` (never equate a career family's aggregate popularity/growth-rate with a specific
+student's individual fit, `08-unsafe-inference-rules.md`) already cautions against overreading for
+any family.
 
 ## 4. Exploration pathways by stage
 
