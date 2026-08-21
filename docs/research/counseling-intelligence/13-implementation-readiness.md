@@ -39,6 +39,13 @@ framing at all, present recommendations in the current geography-neutral style r
 This precedence itself should be written down as the actual implementation contract, not
 re-derived by whoever builds it.
 
+**Added on a follow-up pass**: `17-dimension-weighting-by-target.md` (new since this document was
+first written) gives the richer, *per-dimension* version of this same item — not just which tier
+framing-language to use, but which of the 9 dimensions to weight up/down within that framing (e.g.
+subject-relevant vs. generic evidence for a UK target). Whoever builds this item should read `17`
+alongside `11` — `17` doesn't change this item's impact/effort estimate, it specifies the payload
+more precisely once the tier-lookup mechanism above exists.
+
 ### 2. Grade/stage derivation (peer's `03-recommendation-timing.md` §1, `yearsUntilGraduation`)
 
 **Impact: high** (unblocks every timing-aware rule in both branches' packages — currently
@@ -121,6 +128,25 @@ creates describing the outcome, which today are two entirely separate data-entry
 enforced connection). Lower priority than item 5's simpler version — ship the simple self-reported
 tier field first, revisit this only if self-reporting proves too unreliable in practice.
 
+### 13. A "rehearsed structured response" recommendation type, distinct from "acquire more evidence" (`09` Persona J, `RULE-COUNSEL-118/120`)
+
+**Impact: medium** (affects any student targeting a program whose non-academic assessment is a
+scored response — either institution-authored, like Queen's Commerce/McMaster HHSP, or
+standardized third-party testing like CASPer, which spans 500+ programs in medicine/health
+sciences/PA/nursing/dental hygiene currently and is expanding — a real, not hypothetical, slice of
+ORYN's population). **Effort: unclear, founder-level scoping needed, not just a schema field**:
+verified against the actual shipped types this session — `types/database.ts`'s
+`RecommendationClass` (`"do"|"consider"|"deprioritize"|"avoid_for_now"`) is orthogonal to this (it
+governs recommendation *strength*, not *kind*), and `lib/counselor/types.ts`'s
+`CandidateAction.category` is a loose `string`, not a structured enum this package can point to as
+already having room for "practice rehearsing a response" as distinct from "go get an experience."
+This is closer to item 9's shape (a genuine product-conceptual conversation) than to item 5's
+(a well-scoped enum column) — the open question is whether "rehearse a structured response" belongs
+as a new `category` value, a wholly separate recommendation *class* alongside evidence-building
+recommendations, or content-layer guidance attached to an existing recommendation rather than a new
+first-class type. This package does not resolve that question — flagged as a real founder/
+engineering scoping decision, not pre-decided here.
+
 ## Tier 4 — Content/copy work, not schema or scoring-logic changes
 
 ### 11. Populate `lib/counselor/evidence.ts`'s explanation templates with this package's reasoning
@@ -132,7 +158,7 @@ strings. Someone doing this work should read `07` first for the *structure* the 
 follow, then pull specific phrasing/reasoning from whichever of `01`-`12`'s worked examples matches
 the recommendation being explained.
 
-### 12. Major-family-specific explanation content (17 families now researched across both branches)
+### 12. Major-family-specific explanation content (20 families now researched across both branches, up from 17 at this document's first draft)
 
 Each `06-major-family-evidence/*` document's "unsafe inferences specific to this family" section is
 effectively a ready-made list of things a family-aware explanation template should actively avoid
