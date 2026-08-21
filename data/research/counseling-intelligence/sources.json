@@ -592,15 +592,15 @@
     },
     {
       "id": "SRC-CS-050",
-      "title": "German legal-training (Staatsexamen/Referendariat) guidance, including Bundesrechtsanwaltskammer (Federal Bar) description",
-      "publisher": "Various German legal-training guidance sources, including the Bundesrechtsanwaltskammer (Federal Bar, official body)",
+      "title": "\"Juristenausbildung\" (Legal Education) — official Bundesrechtsanwaltskammer page for students and prospective students, directly fetched and quoted on a follow-up pass",
+      "publisher": "Bundesrechtsanwaltskammer (Federal Bar Association, official body) — page explicitly aimed at Schüler und angehende Studierende (students and prospective university students)",
       "url": "https://www.brak.de/anwaltschaft/beruf-anwalt/juristenausbildung/",
-      "type": "mixed_official_and_secondary",
+      "type": "official_source",
       "retrieved_at": "2026-08-21",
-      "confidence": "medium-high",
-      "claim_supported": "German legal training requires the Erste Staatsexamen, a 2-year Referendariat (rotating across civil court, criminal court/prosecution, an administrative authority, and a law firm), then the Zweite Staatsexamen before qualifying as a Volljurist eligible for Rechtsanwalt/judge/prosecutor roles; total pathway commonly cited as 7-11 years.",
+      "confidence": "high",
+      "claim_supported": "BRAK's own page states directly: the Jurastudium (\"Das Jurastudium dauert in der Regel 10 Semester, also 5 Jahre\" -- typically 10 semesters/5 years, a 4-semester foundation phase plus a 6-semester advanced/specialization phase) concludes with the Erste juristische Prüfung (70% state exam, 30% university-assessed coursework); then a 2-year Referendariat (\"innerhalb von zwei Jahren sogenannte Stationen oder Stagen\" -- rotating through civil courts, prosecution, an administrative authority, and a law firm) followed by the Zweite Staatsexamen. BRAK's own page states the total is approximately 9 years (5 years study + 2 years Referendariat + examination periods) before a Volljurist can apply for bar admission through their regional Rechtsanwaltskammer.",
       "used_in_rules": ["RULE-COUNSEL-104"],
-      "limitations": "The Bundesrechtsanwaltskammer (BRAK) is Germany's official federal bar association, giving this medium-high confidence; the specific 7-11-year figure is a commonly-cited range across sources, not a single official fixed number."
+      "limitations": "Directly fetched and quoted on a follow-up pass -- this URL was already registered at medium-high/mixed-source confidence from an earlier pass; now upgraded to a pure official source with BRAK's own precise breakdown, including its own ~9-year total figure (sharper than this package's earlier '7-11 years, commonly cited range' framing, though that range may still reflect real variation this specific page's single stated figure doesn't capture, e.g. part-time study or a longer Referendariat wait time in some Länder)."
     },
     {
       "id": "SRC-CS-051",

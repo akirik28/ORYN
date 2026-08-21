@@ -64,17 +64,23 @@ applies to equally, but worth naming explicitly for a UK-facing student since th
 pathway* differs by which branch they're aiming for. (Source: `nationalcareers.service.gov.uk/
 job-profiles/solicitor` and `/barrister` — official, high confidence.) [[RULE-COUNSEL-089]]
 
-**Germany, added on a further pass**: the most exam-intensive model this package has found for any
-family. Law study culminates in the **Erste Staatsexamen** (First State Examination), followed by
-a mandatory **2-year Referendariat** (legal traineeship rotating across civil court, criminal
-court/prosecution, an administrative authority, and a law firm), then a **Zweite Staatsexamen**
-(Second State Examination) — only after both exams is a graduate a fully qualified **Volljurist**,
-eligible to practice as **Rechtsanwalt** (attorney), judge, prosecutor, or in senior civil service.
-Total time from starting law study to bar admission is commonly cited as **7-11 years** — notably
-longer than the UK's or US's pathways. (Source: German legal-training guidance sources, including
-the Bundesrechtsanwaltskammer/Federal Bar's own published training-structure description — medium-
-high confidence for the two-exam/Referendariat structure, which is consistently and specifically
-described across sources.) [[RULE-COUNSEL-104]] **This directly sharpens `RULE-COUNSEL-041`'s "no
+**Germany, added on a further pass, upgraded to a direct official-source quote on a later pass**:
+the most exam-intensive model this package has found for any family. The **Jurastudium** (law
+degree) itself typically runs **10 semesters (5 years)** — a 4-semester foundation phase plus a
+6-semester advanced/specialization phase — concluding with the **Erste juristische Prüfung**
+(First State Examination, itself 70% state-set exam and 30% university-assessed coursework,
+per BRAK's own page). This is followed by a mandatory **2-year Referendariat** (legal traineeship
+rotating across civil court, criminal court/prosecution, an administrative authority, and a law
+firm), then a **Zweite Staatsexamen** (Second State Examination) — only after both exams is a
+graduate a fully qualified **Volljurist**, eligible to practice as **Rechtsanwalt** (attorney),
+judge, prosecutor, or in senior civil service. **BRAK's own student-facing page states the total
+as approximately 9 years** (5 years study + 2 years Referendariat + examination periods) — a
+sharper figure than the "7-11 years, commonly cited range" this document previously had, though
+that wider range may still reflect real variation (part-time study, longer Referendariat waits in
+some Länder) this single official figure doesn't itself capture. (Source: BRAK's own
+"Juristenausbildung" page, `brak.de/anwaltschaft/beruf-anwalt/juristenausbildung/` — explicitly
+aimed at "Schüler und angehende Studierende" (students and prospective students), directly fetched
+and quoted — high confidence.) [[RULE-COUNSEL-104]] **This directly sharpens `RULE-COUNSEL-041`'s "no
 required pre-law major" finding for a German-track student specifically**: while true that no
 single *undergraduate* major is mandated the way, say, medicine requires pre-med coursework, German
 legal training itself *is* a single, unified, state-examined pathway with no real equivalent to
@@ -108,6 +114,6 @@ designated future occupations. [[RULE-COUNSEL-085]]
   Confidence: high (official source).
 - `RULE-COUNSEL-104` — For a German-track law student, the "no required pre-law major" finding
   needs sharpening: German legal training itself is a single, unified, two-Staatsexamen-plus-
-  Referendariat pathway with no real equivalent to the US's flexible major-then-law-school
-  structure. Confidence: medium-high (consistently described across sources, not fetched from a
-  single primary German-government page).
+  Referendariat pathway (5-year Jurastudium, 2-year Referendariat, ~9 years total per BRAK's own
+  figure) with no real equivalent to the US's flexible major-then-law-school structure. Confidence:
+  high (upgraded from medium-high — directly fetched and quoted BRAK's own student-facing page).
