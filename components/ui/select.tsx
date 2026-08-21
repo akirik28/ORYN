@@ -6,7 +6,53 @@ import { Select as SelectPrimitive } from "@base-ui/react/select"
 import { cn } from "@/lib/utils"
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react"
 
-const Select = SelectPrimitive.Root
+/**
+ * Base UI's <Select.Value> only resolves the closed-trigger label from the declarative `items`
+ * prop passed to <Select.Root> (see node_modules/@base-ui/react/select/root/SelectRoot.d.ts and
+ * internals/resolveValueLabel.js) — unlike the Radix Select this app's conventions were written
+ * against, it never reads a mounted <Select.Item>'s own children, and nothing about an item
+ * mounting registers a label anywhere; the open popup renders correctly because SelectItemText
+ * renders its own children directly, which is a completely separate code path. Every call site
+ * in this app writes `<SelectItem value={id}>{label}</SelectItem>` without ever passing `items`,
+ * so the closed trigger fell back to serializing the raw value — a UUID, an enum like
+ * "not_started" — instead of the label the option itself displays once open. Deriving `items`
+ * here, once, from the exact JSX callers already write fixes every existing and future <Select>
+ * in the app with zero call-site changes, instead of requiring `items` to be duplicated by hand
+ * at each of them.
+ */
+function collectSelectItems(node: React.ReactNode, out: { value: unknown; label: React.ReactNode }[]): void {
+  React.Children.forEach(node, (child) => {
+    if (!React.isValidElement(child)) return
+    if (child.type === SelectItem) {
+      const itemProps = child.props as SelectPrimitive.Item.Props
+      if (itemProps.value !== undefined) {
+        out.push({ value: itemProps.value, label: itemProps.label ?? itemProps.children })
+      }
+      return
+    }
+    const childProps = child.props as { children?: React.ReactNode } | undefined
+    if (childProps?.children) collectSelectItems(childProps.children, out)
+  })
+}
+
+function Select<Value = string, Multiple extends boolean | undefined = false>({
+  items,
+  children,
+  ...props
+}: SelectPrimitive.Root.Props<Value, Multiple>) {
+  const derivedItems = React.useMemo(() => {
+    if (items) return items
+    const collected: { value: Value; label: React.ReactNode }[] = []
+    collectSelectItems(children, collected as { value: unknown; label: React.ReactNode }[])
+    return collected.length > 0 ? collected : undefined
+  }, [items, children])
+
+  return (
+    <SelectPrimitive.Root items={derivedItems} {...props}>
+      {children}
+    </SelectPrimitive.Root>
+  )
+}
 
 function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   return (

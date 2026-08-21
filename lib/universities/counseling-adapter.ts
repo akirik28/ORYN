@@ -2,7 +2,7 @@ import { classifySubjects, type SubjectTaxonomy } from "@/lib/programs/subject-t
 import { checkUndergraduateFieldAvailability } from "@/lib/admissions/field-availability";
 import { computeAdmissionOutlook, type NotApplicableKind } from "@/lib/admissions/outlook";
 import { resolveAdmissionSystem, type AdmissionSystemShape } from "@/lib/admissions/system-shape";
-import { explainOutlook } from "@/lib/admissions/explain";
+import { explainOutlook, type DimensionScoreInput } from "@/lib/admissions/explain";
 import { evaluateRequirement } from "@/lib/requirements/evaluate";
 import { INFORMATIONAL_CATEGORIES, MANUAL_REVIEW_CATEGORIES, REQUIREMENT_CATEGORY_LABELS } from "@/lib/requirements/types";
 import type { RequirementFacts } from "@/lib/requirements/types";
@@ -11,7 +11,6 @@ import { formatCurrency } from "@/lib/i18n/format";
 import type {
   DataConfidence,
   OutlookLabel,
-  ProfileDimension,
   RequirementCategory,
   RequirementEvaluationStatus,
   TargetStatus,
@@ -153,8 +152,11 @@ export interface UniversityCounselingViewInput {
    * either; passing it in keeps any future divergence visible instead of silently forked. */
   profileDataConfidence: DataConfidence;
 
-  /** This student's own 9 dimension scores, for `explainOutlook`. */
-  profileDimensionScores: Partial<Record<ProfileDimension, number>>;
+  /** This student's own dimension scores (score + confidence per dimension), for
+   * `explainOutlook` — confidence must travel with the score, not just the number, so a
+   * dimension with no underlying facts can be excluded from naming a strength/gap instead of
+   * being silently treated as a real 0 (see lib/admissions/explain.ts). */
+  profileDimensionScores: DimensionScoreInput[];
 }
 
 // ---------------------------------------------------------------------------
@@ -198,6 +200,11 @@ export interface AdmissionOutlookSummary {
   strengths: string[];
   gaps: string[];
   unknowns: string[];
+  /** True when Oryn had no evidenced dimension to draw strengths/gaps from at all (every
+   * dimension "low" confidence) — see `OutlookExplanation.insufficientData` in
+   * lib/admissions/explain.ts. The UI must render this as "we don't know enough yet," not as
+   * "no strengths/gaps found." */
+  insufficientData: boolean;
   /** Non-null exactly when `outlook === "not_applicable"`. Unlike the persisted path
    * (`lib/admissions/persist.ts`, where `target_universities` has no column for it), this
    * view carries the explanation to the caller, so the UI never has to render a bare
@@ -433,6 +440,7 @@ function deriveOutlook(
     strengths: explanation.strengths,
     gaps: explanation.gaps,
     unknowns: explanation.unknowns,
+    insufficientData: explanation.insufficientData,
     notApplicableReason: outlook.notApplicableReason,
     notApplicableKind: outlook.notApplicableKind,
     admissionSystemShape: outlook.admissionSystemShape,

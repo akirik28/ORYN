@@ -4,7 +4,7 @@ import { SUBJECT_LABELS } from "@/lib/programs/subject-labels";
 import { requireUser, getCurrentProfile } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { refreshAdmissionOutlook } from "@/lib/admissions/persist";
-import { explainOutlook } from "@/lib/admissions/explain";
+import { explainOutlook, type DimensionScoreInput } from "@/lib/admissions/explain";
 import { refreshRequirementEvaluations } from "@/lib/requirements/persist";
 import { REQUIREMENT_CATEGORY_LABELS } from "@/lib/requirements/types";
 import { NON_ACTIONABLE_VERIFICATION_STATES } from "@/lib/deadlines/ingest";
@@ -21,7 +21,7 @@ import { StatusBadge } from "@/components/oryn/status-badge";
 import { canonicalUniversityId, isSupersededUniversityId } from "@/lib/universities/canonical";
 import { formatTuition, tuitionQualifier } from "@/lib/universities/tuition-format";
 import { formatNumber, formatCurrency } from "@/lib/i18n/format";
-import type { ProfileDimension, RequirementEvaluationStatus, UniversityRequirement, UniversityProgram, UniversityDeadline } from "@/types/database";
+import type { RequirementEvaluationStatus, UniversityRequirement, UniversityProgram, UniversityDeadline } from "@/types/database";
 
 /** QS's own official Size classification (S/M/L/XL) — a coarse FTE-based band, not an exact
  * headcount; QS doesn't publish the numeric thresholds between them. Used only as a fallback
@@ -87,7 +87,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
     supabase.from("university_statistics").select("*").eq("university_id", id).order("stat_year", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("university_sources").select("*").eq("university_id", id).order("retrieved_at", { ascending: false }),
     supabase.from("target_universities").select("*").eq("university_id", id).eq("user_id", session.userId!).maybeSingle(),
-    supabase.from("profile_scores").select("dimension, score").eq("user_id", session.userId!),
+    supabase.from("profile_scores").select("dimension, score, confidence").eq("user_id", session.userId!),
     supabase
       .from("university_rankings")
       .select("ranking_provider, ranking_edition, rank_display, source_url, verified_at, data_quality_flag")
@@ -159,8 +159,12 @@ export default async function UniversityDetailPage({ params }: { params: Promise
     .filter((d) => d.recurrence === "recurring_annual_undated" && d.recurrence_month != null && d.recurrence_day != null)
     .sort((a, b) => a.recurrence_month! - b.recurrence_month! || a.recurrence_day! - b.recurrence_day!);
 
-  const scoreMap = Object.fromEntries((scoresRes.data ?? []).map((s) => [s.dimension, s.score])) as Partial<Record<ProfileDimension, number>>;
-  const explanation = explainOutlook(scoreMap);
+  const dimensionScores: DimensionScoreInput[] = (scoresRes.data ?? []).map((s) => ({
+    dimension: s.dimension,
+    score: s.score,
+    confidence: s.confidence,
+  }));
+  const explanation = explainOutlook(dimensionScores);
   const stats = statsRes.data;
 
   const metricByCode = new Map((metricsRes.data ?? []).map((m) => [m.metric_code, m]));
@@ -329,13 +333,21 @@ export default async function UniversityDetailPage({ params }: { params: Promise
             <div>
               <p className="font-medium text-success">Strengths</p>
               <ul className="mt-1 space-y-0.5 text-muted-foreground">
-                {explanation.strengths.length > 0 ? explanation.strengths.map((s) => <li key={s}>+ {s}</li>) : <li>Add more profile data to see this.</li>}
+                {explanation.strengths.length > 0 ? (
+                  explanation.strengths.map((s) => <li key={s}>+ {s}</li>)
+                ) : (
+                  <li>{explanation.insufficientData ? "We don't know enough about this yet." : "Add more profile data to see this."}</li>
+                )}
               </ul>
             </div>
             <div>
               <p className="font-medium text-warning">Gaps</p>
               <ul className="mt-1 space-y-0.5 text-muted-foreground">
-                {explanation.gaps.length > 0 ? explanation.gaps.map((g) => <li key={g}>− {g}</li>) : <li>None obvious yet.</li>}
+                {explanation.gaps.length > 0 ? (
+                  explanation.gaps.map((g) => <li key={g}>− {g}</li>)
+                ) : (
+                  <li>{explanation.insufficientData ? "We don't know enough about this yet." : "None obvious yet."}</li>
+                )}
               </ul>
             </div>
             <div>
