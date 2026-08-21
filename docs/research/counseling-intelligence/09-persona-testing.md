@@ -202,6 +202,37 @@ pathway-timing). The one genuinely new finding (mixed-target recommendations nee
 target-conditioned explanations for the same action, point 3 above) is a real gap worth flagging,
 not a contradiction in what's already built.
 
+## Persona I — Closing the loop on the Turkish conservatory exception (`RULE-COUNSEL-101`)
+
+Added specifically to test a finding in the abstract before trusting it: `11`'s `RULE-COUNSEL-101`
+(a Tier-3 country can have named field-specific exceptions, verified via the peer session's
+performing-arts family and Turkish conservatory admission specifically) should be checked against
+a concrete case, not just asserted.
+
+**Profile:** 17 years old, `yearsUntilGraduation = 1`, `curriculum: "turkish_curriculum"`,
+`country: "Turkey"`. Stated goal: **"study violin performance at a Turkish state conservatory."**
+Visible profile: sustained private violin instruction since age 8 (a real, deep, single-domain
+commitment — the opposite shape from Persona H's broad-but-thin IB profile), one regional youth-
+orchestra placement, no other activities.
+
+**Walkthrough:** applying `11`'s tier logic naively (Turkey → Tier 3 → "academics is doing all the
+admissions work," `RULE-COUNSEL-067`) would produce actively wrong advice here — per
+`RULE-COUNSEL-101`, conservatory admission is a **TYT-threshold-plus-audition hybrid**, not pure
+score-ranked placement. The correct reasoning chain: (1) check target-*field*, not just target-
+country, before applying a tier (`RULE-COUNSEL-101`'s own instruction); (2) once the exception is
+identified, this persona's profile reads completely differently than it would under a blanket
+Tier-3 read — the sustained, single-domain violin commitment is not "thin relative to Tier-1
+breadth expectations" (the wrong comparison — this isn't a Tier-1 target) but is instead **exactly
+the right shape of evidence for an audition-gated exception**, closely analogous to how
+`06-major-family-evidence/17-visual-media-arts.md`'s portfolio-depth findings apply to a Tier-1
+target; (3) the academic-score threshold (TYT ≥ ~150/180 per peer's sourcing) still needs to be
+met — so the honest recommendation is **both** sustained audition preparation **and** a real,
+non-negotiable check that the TYT threshold is achievable, not one traded off against the other
+the way a pure Tier-1/Tier-3 framing would suggest. **This is the correct, richer answer precisely
+because `RULE-COUNSEL-101` was checked before applying the blanket country rule** — confirms the
+finding holds up against a concrete case, not just the abstract principle it was stated as.
+[[RULE-COUNSEL-102]]
+
 ## Contradiction found: redundancy decay and timing phase interact incorrectly if composed naively
 
 **This is the most important finding in this document.** `05-redundancy-saturation.md`'s
@@ -245,3 +276,9 @@ flagged for renumbering at final integration, not resolved here.)
   for Phase-1 (exploration-stage) students, reconciling this session's `05` with the peer session's
   `03`. Confidence: high (resolves a genuine, demonstrated composition error between two
   independently-authored frameworks).
+- `RULE-COUNSEL-102` — When a country/target-tier exception applies (per `RULE-COUNSEL-101`), a
+  deep single-domain profile that would read as "thin relative to Tier-1 breadth expectations"
+  under a naive blanket-tier read is instead exactly the right evidence shape for the exception
+  itself — check target-field-specific exceptions before judging profile shape against the wrong
+  comparison standard. Confidence: high (confirmed against a concrete worked case, not only
+  asserted in the abstract).
