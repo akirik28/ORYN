@@ -33,18 +33,21 @@ deliberately rather than letting the bulk import default silently.
 
 **2. Run existing ROR enrichment (`npm run acquire:universities -- --from-db` +
 `npm run import:universities`, per `scripts/acquire-university-facts.ts`'s own usage docs) targeted
-at the 41 "incomplete" university rows, plus the 70 entities in `09` Finding 7 (a different,
-complementary gap) — and separately, apply 8 already-known ROR ids directly.**
-`data/research/canonical-entities/duplicate-candidates-university.json` has the exact 41 ids
+at the 43 "incomplete" university rows, plus the 70 entities in `09` Finding 7 (a different,
+complementary gap) — and separately, apply 9 already-known ROR ids directly.**
+`data/research/canonical-entities/duplicate-candidates-university.json` has the exact 43 ids
 ready. This is expected to resolve the majority of the Phase 6 duplicate-audit backlog (open since
 migration 0039) with zero new classification logic — see `05`, `09`. One row (Purdue University)
-needs both sides checked, since neither currently has a ROR id. **For 8 of `university-ror-gaps
+needs both sides checked, since neither currently has a ROR id. **For 9 of `university-ror-gaps
 .json`'s "already-known duplicate-supersession" entities (MIT, UCL, LSE, Warwick, KFUPM, HKUST,
-UTS, Newcastle-Australia), no research is needed at all — `scripts/university-duplicates-audit.ts`
-already identified and hand-verified the correct ROR id for every one of them on 2026-08-17
-(cross-confirmed by this session's own independent ROR queries for 4 of the 8); the id just needs
-to be written to `entity_external_ids`, which `merge_canonical_entities()` alone does not do. See
-`05`'s dedicated section on this discovery and each entity's `ror_id_already_known` field.** The
+UTS, Newcastle-Australia, Al-Farabi Kazakh National University — the 9th found late in this
+session in `founder-blocked-backlog.md`/`claude-a-university-spine.md`, see `09` Finding 2's
+correction note; this package's own list had said "8" throughout until this correction), no
+research is needed at all — `scripts/university-duplicates-audit.ts` already identified and
+hand-verified the correct ROR id for every one of them on 2026-08-17/18 (cross-confirmed by this
+session's own independent ROR queries for 4 of the 9); the id just needs to be written to
+`entity_external_ids`, which `merge_canonical_entities()` alone does not do. See `05`'s dedicated
+section on this discovery and each entity's `ror_id_already_known` field.** The
 remaining 16 genuine single-row gaps (several in France/Germany) still need real enrichment —
 worth running in the same pass since it's the same pipeline.
 **Not purely mechanical, though — verified directly against ROR's live API (`05`'s "Verifying the
@@ -57,12 +60,12 @@ are flagged `WARNING_verified_live_against_ror_api` in their respective JSON ent
 this "ORYN splits finer than the registry does" shape on any other multi-campus US public
 university system before running the pass unattended.**
 
-**Sequencing note added by `17`**: nine of these 41 pairs — UCLA, UC Berkeley, UC San Diego, UC
+**Sequencing note added by `17`**: nine of these 43 pairs — UCLA, UC Berkeley, UC San Diego, UC
 Santa Barbara, NYU, Caltech, City University of Hong Kong, National Cheng Kung University,
 National Yang Ming Chiao Tung University — were independently rediscovered via a second,
 unrelated method (`lib/entities/audit.ts`'s alias-collision rule, run live against the
 registry), which is useful confirmation but not new scope. Worth merging this specific nine
-first if the full 41-pair pass is done incrementally rather than in one batch: several are
+first if the full 43-pair pass is done incrementally rather than in one batch: several are
 exactly the high-application-volume US institutions ORYN's own students are most likely to
 search for. Full external-id detail for these nine: `entities-lib-live-findings.json`.
 
@@ -153,7 +156,7 @@ connection rather than treating the two as unrelated.
 
 ## Explicitly out of scope for any review — do not act on these without new evidence
 
-- Do not merge any of the 41 university pairs on this package's evidence alone (no external-id
+- Do not merge any of the 43 university pairs on this package's evidence alone (no external-id
   confirmation exists yet for either side of most pairs — that is precisely the point of P1 above).
 - Do not create `partner_of`/`campus_of`/`successor_of` rows by inference from this document's
   examples — they are illustrations of the *type*, not evidence for a specific real pair.

@@ -25,7 +25,7 @@ ordered evidence check — the same shape `resolveIdentity()` already uses, gene
 4. **Is the name match exact, once normalized?** (`nameKey`/`dbNormalizedName` — see `07`.) Exact
    match within an agreeing country is strong but, per this repo's own standard
    (`isPureEncodingVariant`'s comment in `duplicates.ts`), **still not sufficient alone** — see
-   `09` for a live case (41 real pairs) where exact-name-within-plausible-city was *not* enough
+   `09` for a live case (43 real pairs) where exact-name-within-plausible-city was *not* enough
    to safely auto-merge without external-id confirmation, and why that turned out to be the
    right call.
 5. **Is the name match a known variant form** (parenthetical acronym, dash-acronym suffix,

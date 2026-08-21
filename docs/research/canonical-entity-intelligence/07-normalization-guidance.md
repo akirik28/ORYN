@@ -204,6 +204,6 @@ but worth a line in `11` for completeness rather than leaving it undiscovered.
 
 Separately from script/diacritic normalization: `citiesCompatible()` (`lib/acquisition/duplicates.ts`)
 already handles the "Boston" / "Boston, MA" shape correctly (comma-segment comparison, first
-segment matched) — confirmed by this session's own `09` audit, where every one of the 41 live
+segment matched) — confirmed by this session's own `09` audit, where every one of the 43 live
 duplicate pairs has a `citiesCompatible() = true` city pair. No gap found here; recorded as
 validated rather than re-derived.

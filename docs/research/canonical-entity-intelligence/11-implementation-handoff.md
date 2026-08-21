@@ -46,25 +46,27 @@ not a blind bulk `UPDATE`.
 (`scripts/acquire-university-facts.ts`/`scripts/import-university-facts.ts` — the actual, already-
 built ROR-enrichment pipeline, found by reading `package.json` partway through this session, not
 at the start — check for existing tooling before assuming a gap needs new automation) against the
-41 IDs in `duplicate-candidates-university.json`'s `incomplete` side, plus the 70 entities in
+43 IDs in `duplicate-candidates-university.json`'s `incomplete` side, plus the 70 entities in
 `university-ror-gaps.json`.**
 This is the same pipeline already responsible for 93.4% ROR coverage elsewhere — no new code
 expected, just a targeted run. Once both sides of a pair carry a ROR id,
 `classifyDuplicateCandidate()` requires no changes to correctly resolve most of these to
 `SAFE_TO_CANONICALIZE` (`05`). Purdue University needs both sides checked (neither currently has
-ROR). **If running this incrementally, `17` independently cross-validated 9 of the 41 pairs via
+ROR). **If running this incrementally, `17` independently cross-validated 9 of the 43 pairs via
 a second method (UCLA, UC Berkeley, UC San Diego, UC Santa Barbara, NYU, Caltech, City
 University of Hong Kong, National Cheng Kung University, National Yang Ming Chiao Tung
 University) — reasonable to merge first given several are high-application-volume US
 institutions; see `entities-lib-live-findings.json` for full detail. Not additional scope, just
-a sequencing suggestion.** **For 8 of the entities in `university-ror-gaps.json`'s
-duplicate-supersession list (MIT,
-UCL, LSE, Warwick, KFUPM, HKUST, UTS, Newcastle-Australia), skip the research step entirely —
+a sequencing suggestion.** **For 9 of the entities in `university-ror-gaps.json`'s
+duplicate-supersession list (MIT, UCL, LSE, Warwick, KFUPM, HKUST, UTS, Newcastle-Australia, and
+Al-Farabi Kazakh National University — the 9th confirmed late in this session via
+`founder-blocked-backlog.md`/`claude-a-university-spine.md`; this document said "8" until this
+correction, see `09` Finding 2), skip the research step entirely —
 `npm run audit:university-duplicates` (`scripts/university-duplicates-audit.ts`) already
-identified and hand-verified the correct ROR id for each on 2026-08-17 (independently cross-
-confirmed by this session for 4 of the 8); `merge_canonical_entities()` (run via that script's
+identified and hand-verified the correct ROR id for each on 2026-08-17/18 (independently cross-
+confirmed by this session for 4 of the 9); `merge_canonical_entities()` (run via that script's
 `--merge-verified`) merged their identity already but does not itself write `entity_external_ids`
-rows, so the known id was apparently never separately applied. Write the 8 known ids directly —
+rows, so the known id was apparently never separately applied. Write the 9 known ids directly —
 see `05`'s dedicated section on this discovery and `university-ror-gaps.json`'s
 `ror_id_already_known` fields.**
 
@@ -138,7 +140,7 @@ ORYN row id before writing. See `10` item 3b.
 - No relaxation of `resolveIdentity()`'s country-agreement gate or `classifyDuplicateCandidate()`'s
   external-id-required bar for the safe tier — `05`'s one proposed refinement (splitting a
   `NEEDS_ENRICHMENT` case out of `AMBIGUOUS`) is additive, not a loosening of the existing bar.
-- No bulk auto-merge of the 41 pairs, the 45 orphans, or anything else, on this package's evidence
+- No bulk auto-merge of the 43 pairs, the 45 orphans, or anything else, on this package's evidence
   alone, at any point in this priority list.
 - No competing identity architecture — this package found the existing one to be materially more
   precise than the mission brief's own starting relationship vocabulary (`03`) and built entirely

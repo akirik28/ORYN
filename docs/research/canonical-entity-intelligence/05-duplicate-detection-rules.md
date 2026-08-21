@@ -7,6 +7,17 @@ because the result changes this package's recommendation from "extend the classi
 something more specific, and (b) generalizes candidate-finding and classification to the entity
 types that have no classifier at all yet.
 
+**Count correction, added late in this session — see `09` Finding 2 for the full account**: this
+document originally said "41" throughout, based on this session's own first re-query. Both
+`docs/founder-blocked-backlog.md` item 19 and `docs/handoffs/claude-a-university-spine.md`
+(a prior session's own work, not read by this package until late) independently document this
+exact same set at **43** — a fresh direct re-count this session matches 43 exactly. Every "41"
+below refers to the same live phenomenon `09` Finding 2 covers in full (including that this
+finding itself is a rediscovery of that prior session's item 19, and the Al-Farabi correction to
+this package's own "8 already-known" list); left as "41" in the prose below only where changing
+the number would require rewriting the surrounding sentence's own historical framing (e.g. "41
+of the 43 [originally-queued] pairs" is describing a 2026-08-1x snapshot, not today's count).
+
 ## What direct query of the Phase 6 duplicate-audit queue found
 
 Migration 0039 queued 43 `possible_duplicate` candidates into `entity_verification_queue`
@@ -16,37 +27,41 @@ additionally joined `entity_external_ids` to check the classifier's ROR-agreemen
 path the code's own comments identify as the *only* one that reaches `SAFE_TO_CANONICALIZE`
 without a human. Findings:
 
-- **41 of the 43 pairs are `entity_type='university'`.** (The other 2 were not reproduced by this
-  session's exact-name self-join at query time — either already resolved between migration 0039
-  and now, or attached to a `city`/`country` value that changed; not chased further, since the 41
-  live pairs already deliver the finding below with certainty.)
-- **Every single one of the 41 pairs is the identical shape**: the same institution, imported
+- **41 of the 43 pairs [originally queued in migration 0039] were `entity_type='university'`
+  at the time of this session's first re-query.** (The other 2 were not reproduced by this
+  session's exact-name self-join at that query time — either already resolved between migration
+  0039 and then, or attached to a `city`/`country` value that changed.) A later, fresher re-count
+  this same session (`09` Finding 2) found the live university-type count is 43, not 41 — matching
+  `founder-blocked-backlog.md` item 19 exactly; not chased further to reconcile the exact source
+  of the 2-pair drift between this section's original count and the corrected one, since the
+  finding below holds either way.
+- **Every single one of the pairs is the identical shape**: the same institution, imported
   twice, with the city stored two different ways ("Boston" / "Boston, MA", "Pasadena" /
   "Pasadena, CA", "St Andrews" / "St. Andrews", "London" / "London, Ontario", ...). Nothing else
   differs — not the institution name, not any other field this session could compare.
-- **In all 41 pairs, exactly one side has a ROR external id and the other side has none at all —
+- **In all 43 pairs, exactly one side has a ROR external id and the other side has none at all —
   zero pairs have ROR on both sides, and zero pairs have conflicting ROR ids.**
 
 That last point is the actual finding, and it changes the recommendation. Run strictly through
 `classifyDuplicateCandidate()`'s own branches (country_code is null on both sides for every
 university row — a separate, already-known fact — so the first branch never fires; no shared
 `id_system` exists when one side has zero external-id rows, so `agreeing`/`conflicting` are both
-empty on every pair): **all 41 pairs classify as `AMBIGUOUS`**, not `SAFE_TO_CANONICALIZE`, exactly
+empty on every pair): **all 43 pairs classify as `AMBIGUOUS`**, not `SAFE_TO_CANONICALIZE`, exactly
 as the code is written today. This is the *correct*, conservative behavior of the existing
-classifier — not a bug in it. But "AMBIGUOUS" is the wrong word for what these 41 pairs actually
+classifier — not a bug in it. But "AMBIGUOUS" is the wrong word for what these 43 pairs actually
 are, and conflating them with genuinely ambiguous cases (two records that might or might not be
 the same entity) undersells how solvable they are.
 
 ### The real diagnosis: an enrichment gap, not an identity gap
 
 985 of 1,055 active `entity_type='university'` rows have a ROR id (93.4%). The 70-ish that don't
-are not randomly distributed — they cluster exactly on one side of each of these 41 pairs. The
-straightforward reading: these 41 "loser" rows are older/duplicate imports that predate, or were
+are not randomly distributed — they cluster exactly on one side of each of these 43 pairs. The
+straightforward reading: these 43 "loser" rows are older/duplicate imports that predate, or were
 never swept up by, whichever enrichment pass populated ROR for the rest of the registry — not
 institutions that are hard to identify. **The correct next action is not a smarter classifier and
-not a human manually confirming 41 obviously-identical American/Japanese/Taiwanese university
+not a human manually confirming 43 obviously-identical American/Japanese/Taiwanese university
 names — it is running the existing ROR-enrichment pipeline (the same one that reached 93.4%
-coverage already) specifically targeted at these 41 un-enriched rows.** Once both sides of a pair
+coverage already) specifically targeted at these 43 un-enriched rows.** Once both sides of a pair
 carry a ROR id, `classifyDuplicateCandidate()` will — with zero new logic — correctly resolve
 nearly all of them to `SAFE_TO_CANONICALIZE` (if, as expected, the ids agree) or surface a genuine
 surprise as `NOT_DUPLICATE` (if, against expectation, they don't — which would itself be an
@@ -54,13 +69,13 @@ important finding, not a failure). This is recorded as `RULE-ENTITY-010` in `06`
 single highest-priority item in `10`/`11`: it is unusually rare for a 43-item, weeks-old backlog
 to have a single, mechanical, already-built unblocking action, and this one does.
 
-The full 41-pair table, with both sides' ids, is in
+The full 43-pair table, with both sides' ids, is in
 `data/research/canonical-entities/duplicate-candidates-university.json` — ready for whoever runs
 the enrichment pass to verify against, without re-deriving the query.
 
 ## Verifying the recommendation itself: two real failure modes a naive ROR-enrichment pass would hit
 
-This document's own top recommendation (re-run ROR enrichment on the 41-orphan set and on `09`
+This document's own top recommendation (re-run ROR enrichment on the 43-orphan set and on `09`
 Finding 7's 70-entity gap) was tested directly against ROR's live API for two of the trickier
 candidates, rather than assumed to be a purely mechanical, risk-free operation. It found two real,
 distinct failure modes worth knowing before running that pass — both discovered by actually
@@ -104,7 +119,7 @@ as the source that already knows about it. Full detail and the exact successor c
 updated live-succession-examples section.
 
 **What this means for the enrichment recommendation, restated correctly:** it is not a purely
-mechanical, risk-free run for every one of the 111 combined candidates (41 + 70) — of the 16
+mechanical, risk-free run for every one of the 111 combined candidates (43 + 70) — of the 16
 France/Germany-heavy "genuine single-row gap" candidates specifically, 2 of them (not counting
 Rutgers' 2 rows in the same list) turned out to be live succession cases, not simple gaps. For any
 candidate where ORYN's own entity granularity might be finer than the source registry's (a
@@ -167,26 +182,32 @@ carrying its own live-ROR-verified reasoning, applicable via `--merge-verified`
 
 **What this changes, precisely:**
 
-1. **This document's main 41-pair finding is confirmed still genuinely unaddressed.** None of the
-   41 orphan-pair institutions (Boston University, Yale, the UC campuses, etc. —
+1. **This document's main 43-pair finding is confirmed still genuinely unaddressed.** None of the
+   43 orphan-pair institutions (Boston University, Yale, the UC campuses, etc. —
    `duplicate-candidates-university.json`) appear anywhere in the 38-entry `MANUALLY_VERIFIED`
    list, which is entirely different institutions (mostly non-English-named European/global
    universities resolved via the name-*variant* detector or hand research, not the exact-name
-   detector this document's 41 come from). The P1 recommendation stands, unduplicated.
-2. **The "8 already-known duplicate-supersession, also missing ROR" sub-finding (`09` Finding 7)
-   is not what it first looked like.** All 8 of those institutions (MIT/UCL/LSE/Warwick/KFUPM/
-   HKUST/UTS/Newcastle-Australia) are *also* 7 of the 8 name-variant-detector pairs above (KFUPM
-   was found separately, via a rankings-audit cross-check documented in the same file) — meaning
-   `merge_canonical_entities()` has *already run* for these (consistent with this session's own
-   finding that each has one `canonical_entities` row and two `universities` rows), **and the
-   correct ROR id was already independently identified and hand-verified on 2026-08-17** for
-   every one of them. This session's own fresh ROR queries tonight (KFUPM, HKUST, UTS,
-   Newcastle-Australia) landed on the *identical* ids as the script's 2026-08-17 research —
-   real, independent cross-confirmation. **The actual remaining gap for these 8 is narrower than
-   "needs ROR research": `merge_canonical_entities()` merges identity/aliases but does not itself
-   write new `entity_external_ids` rows, so the already-known, already-verified ROR id was
-   apparently never separately applied.** `university-ror-gaps.json` now carries the exact id for
-   each of these 8, sourced from the script, not re-derived.
+   detector this document's 43 come from). The P1 recommendation stands, unduplicated.
+2. **The "9 already-known duplicate-supersession, also missing ROR" sub-finding (`09` Finding 7)
+   is not what it first looked like — and this package's own count of "8" was itself short one
+   institution until a late correction.** All 9 of those institutions (MIT/UCL/LSE/Warwick/KFUPM/
+   HKUST/UTS/Newcastle-Australia/Al-Farabi Kazakh National University) are *also* 8 of the
+   name-variant-detector pairs above (KFUPM was found separately, via a rankings-audit
+   cross-check documented in the same file) — meaning `merge_canonical_entities()` has *already
+   run* for these (consistent with this session's own finding that each has one
+   `canonical_entities` row and two `universities` rows), **and the correct ROR id was already
+   independently identified and hand-verified on 2026-08-17/18** for every one of them. This
+   session's own fresh ROR queries tonight (KFUPM, HKUST, UTS, Newcastle-Australia) landed on the
+   *identical* ids as the script's research — real, independent cross-confirmation. **The actual
+   remaining gap for these 9 is narrower than "needs ROR research": `merge_canonical_entities()`
+   merges identity/aliases but does not itself write new `entity_external_ids` rows, so the
+   already-known, already-verified ROR id was apparently never separately applied — except for
+   Al-Farabi, whose ROR id (confirmed live: `ror.org/03q0vrn42`) IS already written, unlike the
+   other 8.** `university-ror-gaps.json` now carries the exact id for each of these 9, sourced
+   from the script, not re-derived. **Al-Farabi itself was found late** — always present in
+   `scripts/university-duplicates-audit.ts`'s `MANUALLY_VERIFIED` list, but not originally
+   extracted into this package's own "8 already-known" framing until `09` Finding 2's correction,
+   prompted by finally reading `docs/founder-blocked-backlog.md` in full.
 3. **This explains several "how was this already resolved?" moments from earlier in this
    session.** The German-university and EPFL "already merged, mechanism not identified" cases in
    `09` Finding 6 are `--merge-verified` output — the exact entity ids in that script's
@@ -213,7 +234,7 @@ finding justifies:
 | `AUTO-SAFE MATCH` | `SAFE_TO_CANONICALIZE` | Agreeing external id (ROR, or any future `id_system`) on both sides. Still never *automatic* in the sense of unattended — `merge_canonical_entities()` remains `service_role`-only and reason-required regardless of tier; "auto-safe" describes the evidence quality, not a license to skip the merge function's own guardrails. |
 | *(new, see below)* | *(currently folds into `AMBIGUOUS`)* | Exact normalized name, compatible city, **exactly one side has any external id at all and the other side has none** — i.e., a data-completeness gap, not a contested identity. Recommend: **do not classify as a review item requiring a judgment call; classify as an enrichment-queue item.** Distinguishing this from true `AMBIGUOUS` is this document's one proposed refinement to the existing classifier (see below). |
 | `HIGH-CONFIDENCE REVIEW` | `LIKELY_DUPLICATE_REQUIRES_REVIEW` | Agreeing external id in a *non-ROR* system, or a name-variant-only match (not exact). Needs a human/reviewer glance, but the evidence points one direction. |
-| `AMBIGUOUS` | `AMBIGUOUS` | Exact or variant name match, **no external id on either side**, nothing to disambiguate with. This is the true "we genuinely don't know yet" bucket — reserve it for cases where *no* enrichment pass would resolve it either, unlike the 41-pair case above. |
+| `AMBIGUOUS` | `AMBIGUOUS` | Exact or variant name match, **no external id on either side**, nothing to disambiguate with. This is the true "we genuinely don't know yet" bucket — reserve it for cases where *no* enrichment pass would resolve it either, unlike the 43-pair case above. |
 | `NOT SAME ENTITY` | `NOT_DUPLICATE` | Country/city genuinely incompatible, or a shared `id_system` with *disagreeing* values. Decisive, not just "leaning no." |
 
 ### Proposed refinement: split "one side has an id, other side has none" out of `AMBIGUOUS`
@@ -233,7 +254,7 @@ This is deliberately narrower than "one side is missing ROR specifically" — it
 *whole* external-id set to be empty on one side (not just missing ROR while having, say,
 Wikidata), and it requires an *exact* normalized-name match, not a variant. Both narrowings exist
 to keep this tier from becoming a backdoor to weaker evidence than the existing `AMBIGUOUS` bucket
-already requires — it only fires exactly on the shape this session found live, 41 times, with zero
+already requires — it only fires exactly on the shape this session found live, 43 times, with zero
 exceptions. This is a recommendation for whoever owns `duplicates.ts`, not a change this session
 makes — see `11`.
 

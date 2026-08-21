@@ -47,7 +47,7 @@ ROR-verified new case for `12`.
 draft of `17` presented nine duplicate pairs found via this new tool (UCLA, Berkeley, UCSD,
 UCSB, NYU, Caltech, and three Asia-Pacific universities) as a new discovery. Before finalizing,
 checking their entity ids against `duplicate-candidates-university.json` found all 18 already
-present there — they are nine of `09` Finding 2's already-documented 41/43 pairs, independently
+present there — they are nine of `09` Finding 2's already-documented 43/43 pairs, independently
 rediscovered via a different method, not new. Corrected in place in `17` §5 (kept in, not
 silently rewritten) and in the JSON companion — see there for what genuinely is new (cross-
 validation, a fuller external-id picture, a code-traced product-risk detail, and which specific
@@ -60,7 +60,7 @@ this session's *own* earlier work rather than only against the codebase.
 
 1. **P0 — Turkish `ı` and German `ß` normalization are both broken in `lib/acquisition/
    normalize.ts`, live.** `07`, `09` Findings 1 & 6.
-2. **P1 — 41 live duplicate-pair universities, mechanically solvable but not risk-free.**
+2. **P1 — 43 live duplicate-pair universities, mechanically solvable but not risk-free.**
    Externally verified: Purdue needs a campus-specific ROR id, not the system-level one a naive
    search returns; Rutgers has no per-campus ROR entity at all (constraint-violation risk if
    enriched naively); two more "genuine gap" candidates (Université de Franche-Comté, Université
@@ -83,17 +83,34 @@ this session's *own* earlier work rather than only against the codebase.
 6. **`entity_relationships`/`entity_locations` are careful, correct, under-populated work**, not
    neglect — confirmed by reading every live row directly (`03` and its addendum).
 7. **`scripts/university-duplicates-audit.ts` already exists, already ran, already hand-verified
-   8 ROR ids this package had been treating as needing fresh research.** Found by finally reading
-   `package.json`'s full script list, not at the start of the duplicate-detection work — `05`'s
-   dedicated section, `09` Finding 6, `university-ror-gaps.json`'s `ror_id_already_known` fields.
-   The lesson (check for existing automation before recommending a fresh approach) repeated itself
-   almost exactly with finding 8 below.
+   ROR ids for 9 already-merged pairs this package had been treating as needing fresh research
+   (8, until a later correction — see item 9 below).** Found by finally reading `package.json`'s
+   full script list, not at the start of the duplicate-detection work — `05`'s dedicated section,
+   `09` Finding 6, `university-ror-gaps.json`'s `ror_id_already_known` fields. The lesson (check
+   for existing automation before recommending a fresh approach) repeated itself almost exactly
+   with finding 8 below, and yet again with finding 9.
 8. **A second, general-purpose (all 14 entity types) production resolution system,
    `lib/entities/*`, existed the whole session and was found only by reading two scripts' full
    bodies instead of their headers.** `17`. Its live audit tool has one small precise gap (no
    `merged`/`inactive` filter); the registry's strictest trust tier is currently fully evidence-
    backed; and this package caught and corrected its own attempt to re-claim nine already-known
    duplicate pairs as new, in the same document, before it was finalized.
+9. **`docs/founder-blocked-backlog.md` — the repo's own canonical, founder-maintained tracking
+   document — existed the whole session and was never read until very late.** Reading it (plus
+   the 2,700-line `docs/handoffs/claude-a-university-spine.md` it points to) triggered three
+   corrections this package now carries: the "41 pairs" figure throughout `01`/`05`/`06`/`07`/
+   `09`/`10`/`11` is corrected to **43** (three-ways-confirmed: `founder-blocked-backlog.md` item
+   19, `claude-a-university-spine.md` Phase 2, and a fresh direct re-count this session); this
+   package's own "8 already-known duplicate-supersession" list was short one institution
+   (**Al-Farabi Kazakh National University**, always in `scripts/university-duplicates-audit.ts`'s
+   `MANUALLY_VERIFIED` list but never extracted into this package's own files until now — the true
+   count is 9, though Al-Farabi's own ROR id is already written, unlike the other 8's); and a
+   cohort this package briefly worried it had entirely missed (item 19's "28 more pairs," found by
+   a name-variant matching technique this package never itself applied) turned out to already be
+   fully resolved by the prior session (2026-08-18) — a relief, not a gap. `09` Finding 2 carries
+   the full account. Same lesson as findings 7 and 8, now landed a third time: **read the
+   founder-blocked-backlog and any directly-referenced prior-session handoff before trusting a
+   research package's own from-scratch count of anything the repo has already investigated.**
 
 ## Coordination notes
 

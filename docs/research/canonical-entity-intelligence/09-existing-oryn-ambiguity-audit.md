@@ -21,9 +21,50 @@ registry's core uniqueness guarantee: **26/26 sampled `canonical_entities` rows 
 institutions today. Severity: **P0** — this is a structural gap affecting an entire script/
 language's worth of entities, not a bounded backlog.
 
-## Finding 2: 41 live university duplicate pairs, fully explained by two bulk-import timestamps
+## Finding 2: 43 live university duplicate pairs, fully explained by two bulk-import timestamps
 
-Re-running the Phase 6 audit query (migration 0039) directly finds **41 pairs** of
+**Correction, found late in this session and important enough to state before anything else in
+this finding**: this is not new-to-ORYN research this package discovered independently — it is a
+rediscovery, by a different method, of `docs/founder-blocked-backlog.md` item 19 and
+`docs/handoffs/claude-a-university-spine.md`'s Phase 2, both written by a prior session (the
+"University Intelligence Spine" / "Claude A" workstream) before this package existed. Found only
+by finally reading `founder-blocked-backlog.md` in full late in this session — a document this
+package should have read at the very start, the same lesson as the `scripts/university-
+duplicates-audit.ts` and `lib/entities/*` discoveries elsewhere in this package, now recurring a
+third time. The count below was originally **41**, re-confirmed directly against live data
+(`select normalized_name, count(*) from canonical_entities where entity_type='university' and
+verification_state<>'merged' group by normalized_name having count(*)>1` → **43**, exactly
+matching both prior documents' own count) — the true, current, three-ways-confirmed figure is
+**43**, and every "41" elsewhere in this package (`01`, `05`, `06`, `07`, `10`, `11`, the
+handoff) should be read as 43. What this package still adds on top of the prior session's own
+work: independent re-verification via a different method now three separate ways (the original
+`entity_verification_queue` re-query below, `17`'s `lib/entities/audit.ts` run, and this direct
+re-count), external ROR verification of specific pitfalls in the *enrichment* recommendation
+(`05`'s "Verifying the recommendation itself" section — Purdue's campus-vs-system id, Rutgers'
+one-ROR-record-for-two-ORYN-rows conflict, two French mergers), and precise naming of which nine
+of the 43 are highest-priority to merge first (`17`, cross-validated below). None of that
+overlaps with what the prior session already did; the raw "43 pairs exist" fact does.
+
+**Related correction**: this package's own "8 already-known duplicate-supersession" list
+(`university-ror-gaps.json`'s `ror_id_already_known` entries, cited throughout `05`/`10`/`11`)
+is short one institution — **Al-Farabi Kazakh National University is a 9th already-merged pair**,
+confirmed live (`universities` ids `37f12391-462d-4aba-8947-d9cf159627cb` /
+`6f0df596-4ee5-49da-82ad-8057bfaa890d` share one `canonical_entity_id`, `source_verified`, 5
+external ids) and documented in `claude-a-university-spine.md`'s own Phase 2 table. Corrected in
+`university-ror-gaps.json` and everywhere this package said "8."
+
+**Also worth recording as a genuine relief, not a new problem**: `founder-blocked-backlog.md`
+item 19 also names a second, larger cohort this package had not found and briefly worried was a
+real gap in its own research — "28 more pairs" found by a name-variant-aware matching technique
+(article/parenthetical/acronym-aware, via `nameVariants()`) this package never itself applied.
+Checked in `claude-a-university-spine.md`: **already fully resolved, 2026-08-18** — all 28 turned
+out to be pure Unicode-normalization-form duplicates (NFC vs. decomposed-diacritic variants of
+the identical string), each individually ROR-confirmed before merging, not a cohort of genuine
+ambiguous candidates awaiting review. `npm run audit:university-duplicates` currently reports
+zero name-variant pairs. Nothing for this package to add here; recorded so a future reader
+doesn't go looking for a gap that isn't there.
+
+Re-running the Phase 6 audit query (migration 0039) directly finds **43 pairs** of
 `entity_type='university'` canonical entities sharing an exact `normalized_name`, all still
 `queued`/`P1`/`possible_duplicate` in `entity_verification_queue` since that migration. Every
 pair, without exception, resolves to the same two-part mechanism once `created_at` and
@@ -43,7 +84,7 @@ the diagnosis is precise: **two bulk canonical-entity-only import batches ran 1h
 2026-08-16; the later batch's ~45 rows never received a `universities` row or any external-id
 enrichment at all**, unlike the rest of the registry (93.4% ROR coverage otherwise). This is an
 **enrichment/completeness gap, not a genuine identity ambiguity** — see `05` for why the existing
-`classifyDuplicateCandidate()` correctly, conservatively reports all 41 as `AMBIGUOUS` today, and
+`classifyDuplicateCandidate()` correctly, conservatively reports all 43 as `AMBIGUOUS` today, and
 why that is the right conservative default rather than a defect.
 
 **A previously-undocumented product-surface risk this pattern implies:** because
@@ -58,17 +99,17 @@ already-partially-fixed "UCL shows twice" bug (two `universities` rows sharing o
 Not verified against the actual product UI this session (no write/browser access exercised
 against this specific path); flagged as worth a direct check, not asserted as an active bug.
 
-Full 41-row table, both sides' ids/cities/timestamps/ROR values: `duplicate-candidates-university.json`.
+Full 43-row table, both sides' ids/cities/timestamps/ROR values: `duplicate-candidates-university.json`.
 
 **Cross-validated independently, late in this session (`17`)**: running `lib/entities/audit.ts`'s
 production code (the live Canonical Entity Autocomplete System's own audit tool, a completely
 different code path than the `entity_verification_queue` re-query above) against a fresh
-registry snapshot rediscovered nine of these 41 pairs on its own — via `entity_aliases` sharing
+registry snapshot rediscovered nine of these 43 pairs on its own — via `entity_aliases` sharing
 an identical alias string, not via matching names — with no prompting from this finding. The
 nine: UCLA, UC Berkeley, UC San Diego, UC Santa Barbara, NYU, Caltech, City University of Hong
 Kong, National Cheng Kung University, National Yang Ming Chiao Tung University. Worth naming
 explicitly since several are exactly the high-application-volume US institutions ORYN's own
-users are most likely to search for — a reasonable basis for sequencing which of the 41 pairs
+users are most likely to search for — a reasonable basis for sequencing which of the 43 pairs
 to merge first once `10`/`11`'s recommended ROR-enrichment pass runs. See `17` §5 for the full
 detail, including a methodology note on how this was nearly mis-presented as a new finding
 before the overlap was caught.
@@ -94,12 +135,12 @@ Arber-Kongre-A.Ş./Radyo-ODTÜ cycle-operator case. `country_entity_id` is equal
 
 ## Finding 5: `entity_verification_queue` has 54 queued items, most already well-diagnosed
 
-Beyond the 41-43-item Phase 6 duplicate-audit slice, the remainder is dominated by an active,
+Beyond the 43-item Phase 6 duplicate-audit slice, the remainder is dominated by an active,
 in-progress Turkish IB-school research effort (source hints citing `ibo.org` school/directory
 pages, `P0`/`P1` priority, several with precise, well-written blockers — e.g. the Terakki
 Levent-granularity item quoted in full in `03`). This queue is **not neglected** — it shows
 active, careful work with specific, evidence-cited blockers, not a pile of unexamined rows. This
-package's contribution is the 41-pair diagnosis above and the normalization finding, not a
+package's contribution is the 43-pair diagnosis above and the normalization finding, not a
 re-triage of the Turkish-schools queue, which another concurrent effort already owns and is
 visibly handling well.
 
@@ -139,14 +180,18 @@ section commits to rather than hides.
 ## Finding 7: 70 active university entities lack any ROR id — including MIT, UCL, and LSE,
 which turn out to belong to a different, already-known gap
 
-Broadening Finding 2 beyond the 41 exact-duplicate pairs: **70 of 1,055 active
+Broadening Finding 2 beyond the 43 exact-duplicate pairs: **70 of 1,055 active
 `entity_type='university'` canonical entities (6.6%) have no ROR external id at all** — a
-different cut than the 41-pair count, since this one also catches under-enriched rows with no
+different cut than the 43-pair count, since this one also catches under-enriched rows with no
 duplicate at all. This splits cleanly into two distinct, differently-actionable groups:
 
 - **8 famous universities — MIT, UCL, LSE, University of Warwick, KFUPM, The Hong Kong University
   of Science and Technology, University of Technology Sydney, The University of Newcastle
-  (Australia)** — turn out to belong to a *different* known gap than Finding 2's duplicate pairs:
+  (Australia)** — deliberately 8, not the corrected 9 from Finding 2's "already-known
+  duplicate-supersession" list: Al-Farabi Kazakh National University is the 9th member of that
+  broader list but is *not* part of this specific one, because (confirmed live) its ROR id is
+  already written to `entity_external_ids` — it genuinely has zero remaining gap, unlike these 8.
+  These 8 turn out to belong to a *different* known gap than Finding 2's duplicate pairs:
   each has **one** `canonical_entities` row but **two** `universities` rows pointing at it
   (`created_at 2026-08-16T14:06:40Z`, earlier than either bulk-import timestamp in Finding 2 —
   consistent with these being part of the original small hand-seeded pilot set, per
@@ -291,7 +336,7 @@ unrelated to the `country_code` issue but found in the same query.
   duplicate-identity problem, checked by both a narrow method and a broad one.
 - **No incorrect existing `entity_relationships` row found.** Every one of the 9 live rows was
   read and checked against its own cited evidence (`03`); all 9 hold up.
-- **`citiesCompatible()` correctly classified all 41 live city pairs** as compatible (the "Boston"
+- **`citiesCompatible()` correctly classified all 43 live city pairs** as compatible (the "Boston"
   / "Boston, MA" shape) — no false negative found in this specific function.
 - **The `İ`/ASCII-`I` question that motivated this session's normalization deep-dive turned out to
   already be handled correctly** (`07`) — recorded as a validated non-issue so it is not

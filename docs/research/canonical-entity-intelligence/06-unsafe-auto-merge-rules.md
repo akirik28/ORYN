@@ -53,7 +53,7 @@ returns `NOT_DUPLICATE` outright. Source: `05`.
 **RULE-ENTITY-008 — An agreeing external id in a shared `id_system` is the only path to the
 auto-safe tier. Nothing else reaches it — not an exact name, not a compatible city, not both
 together.**
-Why: live evidence — all 41 live "Boston"/"Boston, MA"-shaped duplicate pairs have an exact name
+Why: live evidence — all 43 live "Boston"/"Boston, MA"-shaped duplicate pairs have an exact name
 match and a compatible city, and *none* reach `SAFE_TO_CANONICALIZE`, because none has an
 agreeing external id (in every pair, exactly one side has any external id at all). This is the
 classifier working as designed, not a bug. Source: `05`.
@@ -69,7 +69,7 @@ correct fix is an alias on the existing row, not a new row. Source: `04`.
 *enrichment gap*, not evidence against a match. The correct action is completing enrichment
 (re-running the existing acquisition pipeline on the under-enriched side), not guessing and not
 leaving it filed as unexplained "ambiguous" forever.**
-Why: this is the central finding of this session's live audit — all 41 queued Phase-6 duplicate
+Why: this is the central finding of this session's live audit — all 43 queued Phase-6 duplicate
 candidates fit this exact shape. Source: `05`, `09`.
 
 **RULE-ENTITY-011 — Cross-entity-type merges are always refused, even when a real institution

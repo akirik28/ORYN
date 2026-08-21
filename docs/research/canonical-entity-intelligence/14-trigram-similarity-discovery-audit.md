@@ -1,7 +1,7 @@
 # 14 — Trigram-Similarity Discovery Audit (a new, discovery-only method)
 
 `05-duplicate-detection-rules.md` named a real gap: exact-`normalized_name` self-join (the method
-behind the 41-pair audit in `09`) cannot find a near-duplicate that isn't a byte-identical string
+behind the 43-pair audit in `09`) cannot find a near-duplicate that isn't a byte-identical string
 collision — an alias-vs-canonical-name mismatch, or two genuinely similar-but-not-identical names.
 This document tries two such methods against live data and reports what each actually found,
 including one candidate researched to a definitive, sourced conclusion.
