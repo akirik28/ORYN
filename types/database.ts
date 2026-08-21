@@ -228,6 +228,89 @@ export interface ProfileView {
 }
 export type ProfileViewInsert = Insertable<ProfileView, "id" | "created_at" | "viewed_on">;
 
+// ---------- Social posts / likes / reposts (migration 0058, NOT YET APPLIED) ----------
+// The whole feature ships switched off — no route, no nav entry, and a server-side kill
+// switch (lib/social/posts-feature-flag.ts). These types exist so the data layer and its
+// tests can be written and reviewed now; nothing in `app/` references them.
+
+export type PostVisibility = "private" | "connections" | "oryn_public";
+export type PostKind = "original" | "repost";
+export type PostAttachmentKind = "image" | "document";
+
+export interface Post {
+  id: string;
+  author_id: string;
+  kind: PostKind;
+  /** Never optional on insert — the Insert type below deliberately does NOT list
+   * `visibility` as omittable, mirroring the column's `not null` with no DB default. A
+   * minor's audience must always be a decision someone made. */
+  visibility: PostVisibility;
+  body: string | null;
+  reposted_post_id: string | null;
+  attachment_path: string | null;
+  attachment_kind: PostAttachmentKind | null;
+  like_count: number;
+  repost_count: number;
+  edit_count: number;
+  edited_at: string | null;
+  removed_at: string | null;
+  removed_by: string | null;
+  removal_reason: string | null;
+  created_at: string;
+  updated_at: string;
+}
+/** `visibility` and `kind` are intentionally absent from the omittable list. Every other
+ * field here is either DB-defaulted or trigger-maintained; `like_count`/`repost_count`/
+ * `edit_count`/`edited_at`/`removed_*` are additionally guarded against client writes by
+ * posts_guard_system_columns, so listing them as omittable is a convenience, not a
+ * permission. */
+export type PostInsert = Insertable<
+  Post,
+  | "id"
+  | "created_at"
+  | "updated_at"
+  | "body"
+  | "reposted_post_id"
+  | "attachment_path"
+  | "attachment_kind"
+  | "like_count"
+  | "repost_count"
+  | "edit_count"
+  | "edited_at"
+  | "removed_at"
+  | "removed_by"
+  | "removal_reason"
+>;
+/** Only body/visibility/attachment are author-editable. The remaining columns are either
+ * immutable or restored by the guard trigger; typing them out of the Update shape keeps
+ * a Server Action from sending them by accident in the first place. */
+export type PostUpdate = Partial<Pick<Post, "body" | "visibility" | "attachment_path" | "attachment_kind">>;
+/** Moderator-only update, applied through the admin (service-role) client — the one role
+ * the guard trigger lets through. */
+export type PostModerationUpdate = Partial<Pick<Post, "removed_at" | "removed_by" | "removal_reason">>;
+
+export interface PostLike {
+  post_id: string;
+  user_id: string;
+  created_at: string;
+}
+export type PostLikeInsert = Insertable<PostLike, "created_at">;
+
+export interface PostRevision {
+  id: string;
+  post_id: string;
+  /** The post's edit_count at the moment this version was replaced; revision 0 is the
+   * text the post was created with. */
+  revision: number;
+  body: string | null;
+  visibility: PostVisibility;
+  attachment_path: string | null;
+  attachment_kind: PostAttachmentKind | null;
+  replaced_at: string;
+}
+/** No Insert type on purpose: the posts_10_record_revision trigger is the only writer and
+ * the table has no INSERT policy for any role. */
+
 // Narrow, explicit column subset exposed by the `public_profiles` view (migration
 // 0023) — never the raw `Profile` row. See that migration for why.
 export interface PublicProfileRow {
@@ -294,6 +377,11 @@ export interface MessageReport {
    * general "report this user" with neither is also valid, matching message_id's own
    * pre-existing nullability). */
   recommendation_id: string | null;
+  /** Social layer (migration 0058) — the third content type routed through this same
+   * queue, extended exactly the way `recommendation_id` was. Nullable for the same
+   * reason: a report references at most one piece of content, and a bare "report this
+   * user" with none is still valid. */
+  post_id: string | null;
   reason: string;
   status: MessageReportStatus;
   reviewed_by: string | null;
@@ -303,11 +391,11 @@ export interface MessageReport {
 }
 export type MessageReportInsert = Insertable<
   MessageReport,
-  "id" | "created_at" | "status" | "reviewed_by" | "reviewed_at" | "resolution_note" | "message_id" | "recommendation_id"
+  "id" | "created_at" | "status" | "reviewed_by" | "reviewed_at" | "resolution_note" | "message_id" | "recommendation_id" | "post_id"
 >;
 export type MessageReportUpdate = Updatable<
   MessageReport,
-  "id" | "reporter_id" | "reported_user_id" | "message_id" | "recommendation_id" | "reason" | "created_at"
+  "id" | "reporter_id" | "reported_user_id" | "message_id" | "recommendation_id" | "post_id" | "reason" | "created_at"
 >;
 
 interface AchievementCommon {
@@ -1536,6 +1624,10 @@ export interface Database {
     };
     Functions: {
       is_blocked_between: { Args: { user_a: string; user_b: string }; Returns: boolean };
+      /** SECURITY DEFINER, boolean-only (migration 0058) — same rationale as
+       * is_blocked_between: `profiles` RLS is owner-only, so the posts SELECT policy
+       * cannot read another author's `is_public` flag as the caller. */
+      is_profile_public: { Args: { p_user: string }; Returns: boolean };
       search_canonical_entities: {
         Args: { q: string; p_entity_types: string[] | null; p_limit: number };
         Returns: CanonicalEntitySearchRow[];
@@ -1558,6 +1650,10 @@ export interface Database {
       skill_endorsements: Table<SkillEndorsement, SkillEndorsementInsert, Partial<SkillEndorsementInsert>>;
       recommendations: Table<Recommendation, RecommendationInsert, Partial<RecommendationInsert>>;
       profile_views: Table<ProfileView, ProfileViewInsert, Partial<ProfileViewInsert>>;
+      // Social layer (migration 0058, NOT YET APPLIED — feature is switched off).
+      posts: Table<Post, PostInsert, PostUpdate & PostModerationUpdate>;
+      post_likes: Table<PostLike, PostLikeInsert, never>;
+      post_revisions: Table<PostRevision, never, never>;
       education_records: Table<EducationRecord, EducationRecordInsert, EducationRecordUpdate>;
       courses: Table<Course, CourseInsert, CourseUpdate>;
       test_scores: Table<TestScore, TestScoreInsert, TestScoreUpdate>;
