@@ -2933,3 +2933,19 @@ academic-catalogue/A-Z-course-list URL pattern first (works well for UK-traditio
 institutions, including former-Commonwealth ones), and don't sink much time into a
 university's flashy marketing "study with us" portal if the catalogue equivalent isn't
 found quickly -- those are reliably JS-only navigation shells with no static list.
+
+**Session resumed 03:22 via scheduled dynamic-loop wakeup (paced ~30min cycles from here,
+per this session's own note above) — worktree/branch verified clean, no drift, before
+continuing.**
+
+**Program catalogue batch 14 — Maynooth + Leicester, 172 new, running session total 2,802
+across 30 universities.** Full method in that commit's own message (`ef7b86e`). Two things
+worth flagging beyond the commit: (1) Maynooth cross-lists the same program under every
+subject heading it touches on its one listing page -- deduped by the university's own
+CAO/MU-Apply code before writing, not by name (several programs share a near-identical
+name across different codes, e.g. multiple "BSC SCIENCE (WITH EDUCATION)" variants); (2) a
+real near-miss caught before it became a mistake: Queen's University Belfast's own "All
+Courses" page turned out to be a Northern-Ireland-wide further-education clearinghouse for
+~7 *other* institutions' HNC/HND/apprenticeship programs, not QUB's own catalogue --
+recognized from the content itself (course rows tagged BMC/NWRC/SERC/etc., not QUB) before
+any row was extracted, so nothing was misattributed to QUB. QUB remains unresearched.
