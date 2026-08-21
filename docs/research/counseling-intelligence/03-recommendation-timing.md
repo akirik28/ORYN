@@ -151,6 +151,28 @@ this whole research package surfaced, and it applies to the redundancy/saturatio
 (peer's `05-redundancy-saturation.md`) and this document's own two-phase model at least as much as
 to anything career-family-specific.
 
+**Precisely how it applies to redundancy/saturation, checked directly against that document rather
+than left as a vague pointer:** the peer's `05-redundancy-saturation.md` grounds its
+"don't recommend more of an already-strong area" rules in exactly two justifications (its own §2,
+§3) — **Justification 1, signal quality to evaluators** ("more activities without added depth
+reads as weaker evidence *to an evaluator*"), and **Justification 2, opportunity cost under a
+real time constraint** (time spent on a 6th redundant activity is time not spent on an actual
+gap). **Justification 1 is an admissions-signaling claim and inherits this exact YKS caveat —
+there is no evaluator reading a holistic file in YKS placement, so "this reads as weaker evidence
+to an evaluator" is not a meaningful statement for a YKS-track student.** **Justification 2 does
+not inherit the caveat at all** — it is a pure resource-scarcity argument (a finite time budget
+is finite regardless of admissions system), so it remains fully valid for a YKS-track student.
+**RULE-COUNSEL-231 (new — not to be confused with RULE-COUNSEL-230, the Turkey-default-absent-
+target-university rule already minted above):** for a YKS-track student specifically, an
+`avoid_for_now`/redundancy-based
+recommendation should be constructed from Justification 2 (time/opportunity-cost) alone —
+Justification 1's evaluator-signal framing should be dropped from the explanation entirely, not
+merely softened, since including it would assert something false about how the student's YKS
+application is actually assessed. This does not weaken the recommendation itself (the founder
+spec's own worked example already reads as a pure opportunity-cost argument with no evaluator
+appeal, per that document's own §6) — it only constrains which of the two justifications may
+appear in the *explanation* shown to a YKS-track student.
+
 **A real gap this rule doesn't resolve on its own, surfaced by testing it against a concrete
 persona (a 14-year-old in Turkey, `yearsUntilGraduation` ≈ 4, interested in Computer Science, no
 `target_universities` added yet):** RULE-COUNSEL-228's Turkey clause is conditioned on the student
