@@ -119,6 +119,13 @@ each institution's well-known English/common forms ("La Sapienza," "Milan Polyte
 rather than bulk-guessing. Not urgent, but a concrete, scoped, real gap once higher-priority items
 above are clear.
 
+**12. Trivial: fix 3 malformed `country_code` values and one misspelled `display_name`.** `09`
+Finding 10 — `Sasmo` (`country_code='singapour'`), `EUROPE YOUTH PARLİMENT` and `Titan Akademi Spor
+Kulübü` (both `country_code='Türkiye'`) should be `SG`/`TR`; `EUROPE YOUTH PARLİMENT` should also
+become `European Youth Parliament`. Same low-effort tier as item 10. Longer-term, this class of bug
+becomes structurally impossible once item 1b (country entity bootstrap) lands — worth noting the
+connection rather than treating the two as unrelated.
+
 ## Explicitly out of scope for any review — do not act on these without new evidence
 
 - Do not merge any of the 41 university pairs on this package's evidence alone (no external-id

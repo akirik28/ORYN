@@ -201,6 +201,31 @@ only 3 live `user_submitted` aliases are almost certainly from testing, not real
 knowing before treating any of this package's findings as validated against real product traffic —
 they are validated against the reference-data registry, which is what currently exists.
 
+## Finding 10: `country_code` on `canonical_entities` has no input validation — confirmed by 3 real
+malformed rows, all `user_submitted`
+
+Direct query for any `country_code` that isn't a clean 2-letter uppercase code found exactly 3
+rows, and all 3 share the same `verification_state='user_submitted'`: **"Sasmo"**
+(`entity_type='organization'`) has `country_code='singapour'` — the *French* word for Singapore,
+lowercase, stored where an ISO alpha-2 code (`SG`, matching every other row's convention) belongs.
+**"EUROPE YOUTH PARLİMENT"** (`organization`) and **"Titan Akademi Spor Kulübü"**
+(`sports_team`) both have `country_code='Türkiye'` — a country *name*, not a code. This is a small
+(3-row) but precise finding: the one write path a student has into this registry,
+`create_or_resolve_user_submitted_entity()`, accepts `p_country_code` as a raw parameter with no
+validation against a real code list — because, per `15`, no such list (`entity_type='country'`)
+exists yet to validate against. This is the exact, concrete, live illustration of why `15`'s
+country-entity gap is not merely a theoretical infrastructure problem: **once country becomes a
+real, pickable canonical entity, this class of bug becomes structurally impossible** (a student
+could no longer type "singapour" into a field expecting a code — they would select "Singapore"
+from a resolved list, the same custom-fallback flow already gives them for schools). Until then,
+this is a live, if minor, data-quality gap worth a direct fix (validate/normalize `p_country_code`
+in the function, or upstream in whatever client-side flow collects it) independent of the larger
+`15` recommendation. Secondary, cosmetic note on the same row: **"EUROPE YOUTH PARLİMENT"** is
+also both all-caps and misspelled ("PARLİMENT," missing the second `A`) — likely a raw,
+un-corrected user-typed string (the real organization is the European Youth Parliament, a
+well-known international NGO) — worth a `display_name` correction whenever this row is reviewed,
+unrelated to the `country_code` issue but found in the same query.
+
 ## What this audit deliberately checked and found clean
 
 - **No duplicate pairs found outside `entity_type='university'`** via the same exact-name
