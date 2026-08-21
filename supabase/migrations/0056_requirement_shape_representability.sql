@@ -8,6 +8,14 @@
 -- transaction. Section 5 was exercised with real data (see below). Nothing in this file has
 -- been run against the production project.
 --
+-- ONE EDIT POSTDATES THAT VALIDATION RUN, recorded here rather than left to be assumed: §4's
+-- evaluation_gate CHECK list gained 'binding_commitment' afterwards, on the evaluator lane
+-- (see the note at that constraint). The validation was not re-run for it. The substance
+-- still holds — the value widens an IN-list on a CHECK guarding a column this same migration
+-- adds, so every existing row is null and trivially satisfies it, and a permissive widening
+-- cannot turn a clean apply into a failing one — but the run described above exercised the
+-- text as it stood before that line, and this file should not imply otherwise.
+--
 -- Re-verified against production before validation, rather than trusted from the design pass:
 --   * 36 of 36 rows recorded `rejected` in requirement_research_queue are
 --     university_requirements_university_type_scope_idx firing — every one, no other cause.
@@ -149,11 +157,20 @@ alter table university_requirements
     'eligibility_restriction', -- rule expressed as an exclusion/heading, not a threshold
     'age_bar',               -- unevaluable from birth year alone; permanent
     'source_conflict',       -- competing official readings, unresolved
-    'historical'             -- correct for a cycle that has closed
+    'historical',            -- correct for a cycle that has closed
+    'binding_commitment'     -- a legal commitment, not a condition; permanent (see §7)
   ));
 
 comment on column university_requirements.evaluation_gate is
   'Non-null means lib/requirements/evaluate.ts MUST return needs_manual_review for this row regardless of what structured_rule says or how well the number matches. An honest "a human should check this" in place of a confident wrong verdict.';
+
+-- binding_commitment was added to the list above after this file was first written, by the
+-- evaluator lane. §7 below models binding rounds on university_deadlines, which is the right
+-- home for the DATE; the companion REQUIREMENT record ("you are committing to enrol if
+-- admitted") is what a student actually reads in the requirement check, and it needs a gate of
+-- its own so no structured_rule can ever turn a legal commitment into a satisfied checkbox.
+-- lib/requirements/evaluate.ts and lib/validation/requirements.ts both enforce it already, and
+-- lib/requirements/shape-audit.ts's deriveEvaluationGate() is what populates it here.
 
 create index if not exists university_requirements_evaluation_gate_idx
   on university_requirements (evaluation_gate) where evaluation_gate is not null;

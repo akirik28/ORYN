@@ -1,4 +1,5 @@
 import type { ResearchRequirementRecord } from "./ingest";
+import type { EvaluationGate } from "./types";
 import type { ResearchDeadlineRecord } from "@/lib/deadlines/ingest";
 
 /**
@@ -249,6 +250,61 @@ export function classifyRequirementShapes(record: ResearchRequirementRecord): Sh
   }
 
   return findings;
+}
+
+/**
+ * A commitment a student MAKES rather than a condition they satisfy. US Early Decision
+ * obliges an admitted applicant to enrol and withdraw every other application; Restrictive /
+ * Single-Choice Early Action forbids other early applications. These arrive as companion
+ * requirement records alongside the deadline (`category: other`, no structured rule), and the
+ * status they already produce — `needs_manual_review` — is the right one. What is not right
+ * is that they can be *made* evaluable later: nothing today stops a rule being authored onto
+ * one, and nothing distinguishes the sentence a student reads next to a legal obligation from
+ * the one they read next to an unwritten essay.
+ *
+ * Deliberately narrower than the deadline-side `binding_semantics` detector above, which is
+ * allowed a loose `\bbinding\b` because it only feeds a report. This one sets an evaluation
+ * gate, so it matches the named rounds and the explicit obligation clause only — the corpus
+ * uses "binding" constantly for ordinary things ("the advice is non-binding", "recommended
+ * vs required").
+ */
+const BINDING_COMMITMENT_RE =
+  /\bearly decision\b|\bED\s*(?:I{1,2}|1|2)\b|\brestrictive early action\b|\bsingle[-\s]choice early action\b|\bbinding (?:commitment|agreement|application|offer|round)\b|\bif admitted\b[^.]{0,80}?\b(?:must|obliged|obligated|required)\b[^.]{0,40}?\b(?:enrol|enroll|attend|withdraw)/i;
+
+/** Which shapes make a row unevaluable, and under which gate. Ordered most-specific-first;
+ * `unresolved_conflict` and `historical_as_current` are about the record's standing rather
+ * than its arithmetic, so they come last. `scale_qualifier_dropped` is absent on purpose —
+ * a scale the schema merely has nowhere to put is recoverable once 0056 lands, and gating on
+ * it would block every TOEFL row that the research lane actually resolved correctly. */
+const SHAPE_TO_GATE: { shape: RequirementShape; gate: EvaluationGate }[] = [
+  { shape: "inverted_recency", gate: "inverted_recency" },
+  { shape: "recency_window", gate: "recency_window" },
+  { shape: "incomparable_scale", gate: "incomparable_scale" },
+  { shape: "score_provenance", gate: "named_exclusion" },
+  { shape: "unevaluable_age_bar", gate: "age_bar" },
+  { shape: "eligibility_by_absence", gate: "eligibility_restriction" },
+  { shape: "unresolved_conflict", gate: "source_conflict" },
+  { shape: "historical_as_current", gate: "historical" },
+];
+
+/**
+ * The single gate one research record should carry, or null if it is cleanly evaluable.
+ *
+ * This is the join between the audit above (which only counted shapes) and
+ * `lib/requirements/evaluate.ts` (which refuses to produce a verdict for a gated row). It is
+ * pure and exported so ingestion can populate `university_requirements.evaluation_gate` the
+ * moment migration 0056 is applied — until then nothing writes the column, so the evaluator
+ * sees no gate and behaves exactly as it did before. The mapping is worth having now
+ * regardless: it is the thing that stops the audit's findings and the evaluator's refusals
+ * drifting into two separate vocabularies.
+ *
+ * One gate, not a list, because the column is one column — the first match wins, and the
+ * ordering above is what makes that deterministic.
+ */
+export function deriveEvaluationGate(record: ResearchRequirementRecord): EvaluationGate | null {
+  if (BINDING_COMMITMENT_RE.test(textOf(record))) return "binding_commitment";
+  const shapes = new Set(classifyRequirementShapes(record).map((f) => f.shape));
+  return SHAPE_TO_GATE.find((entry) => shapes.has(entry.shape))?.gate ?? null;
 }
 
 /** Every shape one deadline record carries that the live schema cannot hold. */

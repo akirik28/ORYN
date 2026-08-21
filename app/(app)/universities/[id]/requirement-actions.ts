@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/security/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { RequirementInputSchema, StructuredRuleSchema } from "@/lib/validation/requirements";
+import { RequirementInputSchema, StructuredRuleSchema, ruleAuthoringRefusal } from "@/lib/validation/requirements";
 import { interpretRequirementText } from "@/lib/ai/interpret-requirement";
 import { categoryToRuleKind } from "@/lib/requirements/types";
 import { toFriendlyDbErrorMessage } from "@/lib/errors/friendly-db-error";
@@ -87,6 +87,11 @@ export async function suggestRequirementRule(params: {
   if (!categoryToRuleKind(params.category)) {
     return { error: "This category has no machine-evaluable rule shape — leave the structured rule blank; it will show as \"needs review\"." };
   }
+  // Same guard addUniversityRequirement applies at save time, applied here too so the admin
+  // is never handed a suggestion the save will then refuse — and so no rule is ever generated
+  // for a binding application round in the first place.
+  const refusal = ruleAuthoringRefusal({ category: params.category, title: params.title, requirementDetail: params.requirementDetail });
+  if (refusal) return { error: refusal };
   if (!params.requirementDetail || params.requirementDetail.trim().length === 0) {
     return { error: "Add the sourced requirement text first, then suggest a rule from it." };
   }

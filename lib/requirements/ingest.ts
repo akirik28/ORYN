@@ -83,7 +83,12 @@ export interface RequirementIngestDecision {
  * deadlines have their own, overlapping-but-not-identical unsafe set (VERIFIED_HISTORICAL
  * matters there; it never appears on a requirement record in this corpus). */
 const UNSAFE_VERIFICATION_STATES = new Set(["CONFLICTING_EVIDENCE", "NEEDS_REVIEW", "CURRENT_CYCLE_NOT_PUBLISHED"]);
-const UNSAFE_SCALE_AMBIGUITY = new Set(["undated_scale_assumption", "partially_unsatisfiable"]);
+/** Mirrors lib/requirements/evaluate.ts's SAFE_SCALE_AMBIGUITY as its exact complement, and
+ * migration 0056 §1's own rule ("anything other than the first two blocks automatic
+ * evaluation"). `possibly_discontinued_instrument` was missing here — a threshold on an exam
+ * that may no longer be offered was being staged as a clean current fact, which is
+ * lib/requirements/shape-audit.ts's Finding 3 and the exact drift that comment warns about. */
+const UNSAFE_SCALE_AMBIGUITY = new Set(["undated_scale_assumption", "partially_unsatisfiable", "possibly_discontinued_instrument"]);
 
 /** The bucket within which two requirements are compared for duplication. Migration 0056
  * widened the DB index to `(university_id, requirement_type, COALESCE(scope,''),

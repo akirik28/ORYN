@@ -28,7 +28,11 @@ export async function refreshRequirementEvaluations(universityId: string, userId
   const now = new Date().toISOString();
 
   const rows = evaluable.map((requirement) => {
-    const result = evaluateRequirement(requirement.requirement_type, requirement.structured_rule, facts, requirement.is_exclusion);
+    // The row itself is the qualifier source: RequirementQualifiersSchema reads migration
+    // 0056's columns off it by name — plus migration 0052's applied `is_exclusion` — and
+    // strips the rest, so this is correct both before 0056 is applied (those qualifiers
+    // absent, exclusions still honoured) and after.
+    const result = evaluateRequirement(requirement.requirement_type, requirement.structured_rule, facts, requirement);
     return {
       user_id: userId,
       requirement_id: requirement.id,

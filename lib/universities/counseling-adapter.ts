@@ -257,13 +257,19 @@ export interface UniversityCounselingView {
 const MAX_RECOMMENDED_ACTIONS = 5;
 
 /** `evaluateRequirement`'s manual-review and informational branches never read `facts` — both
- * are unconditional checks at the very top of the function, before `rawStructuredRule` or
- * `facts` is ever touched (see lib/requirements/evaluate.ts). That makes it safe to reuse the
- * function here with a placeholder facts object for either category, instead of duplicating
- * either branch's literal reasoning string. `refreshRequirementEvaluations` does persist a row
- * for manual-review categories (only informational ones are filtered out before upserting), so
+ * are unconditional checks near the top of the function, before `rawStructuredRule` or `facts`
+ * is ever touched (see lib/requirements/evaluate.ts). That makes it safe to reuse the function
+ * here with a placeholder facts object for either category, instead of duplicating either
+ * branch's literal reasoning string. `refreshRequirementEvaluations` does persist a row for
+ * manual-review categories (only informational ones are filtered out before upserting), so
  * this fallback is normally only exercised for informational rows in practice — kept for both
- * so the function stays correct even if a caller's fetch is incomplete. */
+ * so the function stays correct even if a caller's fetch is incomplete.
+ *
+ * The one check that now runs ahead of those two is the evaluation gate, which reads only
+ * `rawQualifiers` — omitted here, since `CounselingRequirementInput` carries no qualifier
+ * columns. The persisted path (`student_requirement_evaluations`, written by
+ * `refreshRequirementEvaluations`, which does pass the row) is where a gated row's own
+ * reasoning reaches this view; this fallback only ever runs for a row that path skipped. */
 const FACT_INDEPENDENT_FACTS: RequirementFacts = { curricula: [], courses: [], gpas: [], testScores: [], languages: [] };
 
 function resolveRequirementStatus(
