@@ -1,15 +1,19 @@
 # 06.00 — Major-Family Taxonomy
 
 **Answers:** For each of the mission brief's requested fields, what experiences genuinely
-demonstrate interest/ability — organized under a coherent family structure, so 17 detailed
+demonstrate interest/ability — organized under a coherent family structure, so 18 detailed
 documents share one consistent taxonomy instead of each inventing its own.
 
-**Status note (concurrent-session coordination):** this document — and the family-list/filename
-assignment below — is being shared live with a second session also working this branch (see
-`docs/handoffs/research-counseling-intelligence.md`'s concurrent-session note). Families 01–09 are
-authored by this session; 10–17 by the other. Do not renumber or rename a family after both
-sessions have started writing against this list — if a genuine problem is found with the grouping,
-add a note in `10-open-questions.md` rather than silently reshaping this file.
+**Status note (concurrent-session coordination, updated as the package matured):** this document —
+and the family-list/filename assignment below — was built live with a second session also working
+this branch (now on its own worktree/branch, `oryn/counseling-intelligence-research-013956`; see
+`docs/handoffs/research-counseling-intelligence.md` for the full account). Families 01–09 and 18
+are authored by this session; 10–17 by the peer session. Both sides' full family sets are now
+complete. Family 18 was added later, after both sessions had finished their original 17 — a
+genuine coverage gap found on review, not part of the original split; see §3's own note on its
+addition. Do not renumber or rename an existing family — if a genuine problem is found with the
+grouping, add a note in `10-open-questions.md` (peer-owned) rather than silently reshaping this
+file.
 
 ## 1. Why a family layer at all, and why it does not become a 10th `ProfileDimension`
 
@@ -100,12 +104,14 @@ Restated here once so no family document has to repeat it (per `01-development-t
    must show at least 3-4 genuinely different career-family destinations and, where a real,
    sourced example exists, at least one *counter-stereotypical* one (a mathematics graduate in
    quantitative finance, not just "becomes a mathematician").
-2. **No career-fit percentages, ever** — matches `RULE-CAREER-*`-equivalent framing already
-   established in `08-unsafe-inference-rules.md`'s scope (see that document once it exists;
-   forward-referenced here because this principle must be live from family doc 01 onward, not
-   retrofitted).
+2. **No career-fit percentages, ever** — matches `RULE-CAREER-*`-equivalent framing, now made
+   concrete in `08-unsafe-inference-rules.md` (this principle was live from family doc 01 onward,
+   before that document existed to formalize it — not retrofitted, confirmed consistent once it
+   did).
 3. **Professional/licensure caution is explicit and country-scoped**, never a single global claim —
-   required especially for families 06, 10, 11 (clinical track), 13, 16.
+   required especially for families 06, 10, 11 (clinical track), 13, 16, and 18 (teaching
+   certification/licensure, an unusually clean three-country comparison — see that family's own
+   §6).
 4. **Exploration pathways are graded by stage** (middle school / early high school / late high
    school), cross-referencing `03-recommendation-timing.md`'s grade-banding rather than restating
    its reasoning.
