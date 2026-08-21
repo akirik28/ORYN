@@ -1,0 +1,577 @@
+{
+  "_readme": "Full pre-change capture of university_programs.language_of_instruction for the 95 rows identified as carrying raw research-hedge prose instead of a clean production value (see docs/handoffs/ingestion-staging-2026-08-21-report.md and the ORYN multi-agent coordination reconciliation exchange, 2026-08-21). Captured immediately before the corrective UPDATE that nulls these 95 rows' language_of_instruction column, per the coordinator's explicit condition: 'Capture the current values first (dump them to a file on your branch) so nothing is unrecoverable.' Selection query: WHERE lower(language_of_instruction) LIKE any of ('%unconfirmed%', '%left explicitly%', '%left as an explicit%', '%left unknown%', '%not confirmed either way%', '%no per-program%', '%no separate per-program%', '%not resolved%', '%dutch track exists but%'). Breakdown: Eindhoven University of Technology (11), Leiden University (69), University of Twente (15) = 95.",
+  "captured_at": "2026-08-21T08:30:04Z",
+  "row_count": 95,
+  "rows": [
+  {
+    "id": "9eb0d925-2f4c-4856-8cf6-094631b80664",
+    "university_name": "Eindhoven University of Technology",
+    "program_name": "Bachelor Applied Mathematics",
+    "language_of_instruction": "Unconfirmed (this university's own bachelor's-programs page lists the program name but gives no per-program language marker; independent secondary sources suggest most TU/e bachelor's programs are Dutch-taught with some exceptions such as Industrial Design in English, but this was not confirmed per-program against an official source given session time constraints -- left explicitly unknown rather than guessed, consistent with this session's established practice for pages lacking an explicit language tag)"
+  },
+  {
+    "id": "f96f2269-9285-48c0-a075-d18adec09a63",
+    "university_name": "Eindhoven University of Technology",
+    "program_name": "Bachelor Applied Physics",
+    "language_of_instruction": "Unconfirmed (this university's own bachelor's-programs page lists the program name but gives no per-program language marker; independent secondary sources suggest most TU/e bachelor's programs are Dutch-taught with some exceptions such as Industrial Design in English, but this was not confirmed per-program against an official source given session time constraints -- left explicitly unknown rather than guessed, consistent with this session's established practice for pages lacking an explicit language tag)"
+  },
+  {
+    "id": "0ab1fd3d-e973-4b82-ac87-e5ab862c6f0d",
+    "university_name": "Eindhoven University of Technology",
+    "program_name": "Bachelor Architecture, Urbanism and Building Sciences",
+    "language_of_instruction": "Unconfirmed (this university's own bachelor's-programs page lists the program name but gives no per-program language marker; independent secondary sources suggest most TU/e bachelor's programs are Dutch-taught with some exceptions such as Industrial Design in English, but this was not confirmed per-program against an official source given session time constraints -- left explicitly unknown rather than guessed, consistent with this session's established practice for pages lacking an explicit language tag)"
+  },
+  {
+    "id": "daa72649-24c6-4211-9ec7-ac3daaec6fff",
+    "university_name": "Eindhoven University of Technology",
+    "program_name": "Bachelor Automotive Technology",
+    "language_of_instruction": "Unconfirmed (this university's own bachelor's-programs page lists the program name but gives no per-program language marker; independent secondary sources suggest most TU/e bachelor's programs are Dutch-taught with some exceptions such as Industrial Design in English, but this was not confirmed per-program against an official source given session time constraints -- left explicitly unknown rather than guessed, consistent with this session's established practice for pages lacking an explicit language tag)"
+  },
+  {
+    "id": "cf333141-7bca-43ea-8ad1-6f5add08f2f6",
+    "university_name": "Eindhoven University of Technology",
+    "program_name": "Bachelor Biomedical Engineering",
+    "language_of_instruction": "Unconfirmed (this university's own bachelor's-programs page lists the program name but gives no per-program language marker; independent secondary sources suggest most TU/e bachelor's programs are Dutch-taught with some exceptions such as Industrial Design in English, but this was not confirmed per-program against an official source given session time constraints -- left explicitly unknown rather than guessed, consistent with this session's established practice for pages lacking an explicit language tag)"
+  },
+  {
+    "id": "6aafcfbc-f8fb-47f7-9648-dc69f59d969e",
+    "university_name": "Eindhoven University of Technology",
+    "program_name": "Bachelor Chemical Engineering and Chemistry",
+    "language_of_instruction": "Unconfirmed (this university's own bachelor's-programs page lists the program name but gives no per-program language marker; independent secondary sources suggest most TU/e bachelor's programs are Dutch-taught with some exceptions such as Industrial Design in English, but this was not confirmed per-program against an official source given session time constraints -- left explicitly unknown rather than guessed, consistent with this session's established practice for pages lacking an explicit language tag)"
+  },
+  {
+    "id": "6a13da34-f161-42c1-8d1e-9d465a3a12d0",
+    "university_name": "Eindhoven University of Technology",
+    "program_name": "Bachelor Industrial Design",
+    "language_of_instruction": "Unconfirmed (this university's own bachelor's-programs page lists the program name but gives no per-program language marker; independent secondary sources suggest most TU/e bachelor's programs are Dutch-taught with some exceptions such as Industrial Design in English, but this was not confirmed per-program against an official source given session time constraints -- left explicitly unknown rather than guessed, consistent with this session's established practice for pages lacking an explicit language tag)"
+  },
+  {
+    "id": "dc25b59c-3bd3-4935-97cc-8d5287aefd31",
+    "university_name": "Eindhoven University of Technology",
+    "program_name": "Bachelor Mechanical Engineering",
+    "language_of_instruction": "Unconfirmed (this university's own bachelor's-programs page lists the program name but gives no per-program language marker; independent secondary sources suggest most TU/e bachelor's programs are Dutch-taught with some exceptions such as Industrial Design in English, but this was not confirmed per-program against an official source given session time constraints -- left explicitly unknown rather than guessed, consistent with this session's established practice for pages lacking an explicit language tag)"
+  },
+  {
+    "id": "333d8a9d-b1e8-444a-bbee-44fbfa021e7e",
+    "university_name": "Eindhoven University of Technology",
+    "program_name": "Bachelor Medical Sciences and Technology",
+    "language_of_instruction": "Unconfirmed (this university's own bachelor's-programs page lists the program name but gives no per-program language marker; independent secondary sources suggest most TU/e bachelor's programs are Dutch-taught with some exceptions such as Industrial Design in English, but this was not confirmed per-program against an official source given session time constraints -- left explicitly unknown rather than guessed, consistent with this session's established practice for pages lacking an explicit language tag)"
+  },
+  {
+    "id": "83568c2d-5894-4ab1-9338-bc3087bf4c50",
+    "university_name": "Eindhoven University of Technology",
+    "program_name": "Bachelor Psychology & Technology",
+    "language_of_instruction": "Unconfirmed (this university's own bachelor's-programs page lists the program name but gives no per-program language marker; independent secondary sources suggest most TU/e bachelor's programs are Dutch-taught with some exceptions such as Industrial Design in English, but this was not confirmed per-program against an official source given session time constraints -- left explicitly unknown rather than guessed, consistent with this session's established practice for pages lacking an explicit language tag)"
+  },
+  {
+    "id": "80064f98-77a7-4cd8-bdde-d1cec703fe88",
+    "university_name": "Eindhoven University of Technology",
+    "program_name": "Bachelor Sustainable Innovation",
+    "language_of_instruction": "Unconfirmed (this university's own bachelor's-programs page lists the program name but gives no per-program language marker; independent secondary sources suggest most TU/e bachelor's programs are Dutch-taught with some exceptions such as Industrial Design in English, but this was not confirmed per-program against an official source given session time constraints -- left explicitly unknown rather than guessed, consistent with this session's established practice for pages lacking an explicit language tag)"
+  },
+  {
+    "id": "77c4a77c-7d00-488a-9f6f-b16cdd275146",
+    "university_name": "Leiden University",
+    "program_name": "African Studies (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "beac7c80-a913-4ae7-86d7-2a5a776636f6",
+    "university_name": "Leiden University",
+    "program_name": "Ancient Near Eastern Studies (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "da8a4813-5bc8-475c-9b90-2048f9151174",
+    "university_name": "Leiden University",
+    "program_name": "Arabic Language and Culture (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "a15c4b30-c839-4959-b7bc-f05e8d5adeb5",
+    "university_name": "Leiden University",
+    "program_name": "Archaeology (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "37a697d2-4ba8-491e-bea0-e921e8fcc040",
+    "university_name": "Leiden University",
+    "program_name": "Art History (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "b19f7b81-6768-4715-b79a-05c66c579659",
+    "university_name": "Leiden University",
+    "program_name": "Arts, Media and Society (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "b20601e8-963d-4d8d-ba3a-47cb47424bda",
+    "university_name": "Leiden University",
+    "program_name": "Astronomy (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "0ea31ce6-faf9-4323-8b9e-67a5b3133c57",
+    "university_name": "Leiden University",
+    "program_name": "Bio-Pharmaceutical Sciences (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "5327daa6-cb27-42f3-b4ba-6ce089ebc591",
+    "university_name": "Leiden University",
+    "program_name": "Biology (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "316b5779-0a18-4444-964f-76fe039434f8",
+    "university_name": "Leiden University",
+    "program_name": "Biomedical Sciences (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "c919e704-fcdd-437f-932c-8619655785ae",
+    "university_name": "Leiden University",
+    "program_name": "Chinese Studies (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "cde84e9d-e120-447b-ab1f-f6c06e03aa97",
+    "university_name": "Leiden University",
+    "program_name": "Classics (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "766a65e4-1eff-4a9c-98a8-e0a6f8f5e0c5",
+    "university_name": "Leiden University",
+    "program_name": "Clinical Technology (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "6ad8e07e-921c-4fc8-a36b-a02819d7c949",
+    "university_name": "Leiden University",
+    "program_name": "Computer Science (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "0ffb8a39-c97c-4944-bdb3-b8e4b85e1c26",
+    "university_name": "Leiden University",
+    "program_name": "Computer Science & Economics (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "69f02171-2b99-4eb1-8320-3b9e14a64d77",
+    "university_name": "Leiden University",
+    "program_name": "Criminology (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "3ab8e3cc-ff9f-41bf-a948-dedc3914f939",
+    "university_name": "Leiden University",
+    "program_name": "Cultural Anthropology and Development Sociology (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "8cc9b60e-7fd3-49ce-837f-2f1d1c9bafac",
+    "university_name": "Leiden University",
+    "program_name": "Culture, History and Society (BA Major of Liberal Arts and Sciences: Global Challenges)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "ce6284df-b3db-4b88-a2f5-ee363db968a3",
+    "university_name": "Leiden University",
+    "program_name": "Cybersecurity & Cybercrime (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "d34efcd0-92f6-40b4-b273-fd9a872ef19b",
+    "university_name": "Leiden University",
+    "program_name": "Data Science and Artificial Intelligence (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "866677c5-e444-419d-af61-30979d63bb54",
+    "university_name": "Leiden University",
+    "program_name": "Digitalisation, Governance and Society (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "29d7e186-1af9-4deb-bcb5-a75cc18651bb",
+    "university_name": "Leiden University",
+    "program_name": "Dutch Language and Culture (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "48bf517f-9f62-472a-b891-27bfe9f2dc37",
+    "university_name": "Leiden University",
+    "program_name": "Dutch Studies (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "391704a8-1f47-43f9-ad41-995aeac87687",
+    "university_name": "Leiden University",
+    "program_name": "Earth, Energy and Sustainability (BSc Major of Liberal Arts and Sciences: Global Challenges)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "467d5d68-900f-406e-93dc-e43aab156396",
+    "university_name": "Leiden University",
+    "program_name": "Economics, Public Administration and Management (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "f149dd94-682d-4216-aff9-b935d1dac26c",
+    "university_name": "Leiden University",
+    "program_name": "English Language and Culture (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "da53d5cc-362f-4d09-8ae0-02790465174f",
+    "university_name": "Leiden University",
+    "program_name": "Film and Literary Studies (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "43219dbb-8aa1-4127-984e-e8ea6eae2521",
+    "university_name": "Leiden University",
+    "program_name": "French Language and Culture (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "4fbfaa9d-d20e-4390-ae96-20410e1d6022",
+    "university_name": "Leiden University",
+    "program_name": "German Language and Culture (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "4c01e771-1891-402b-818c-678fe33cd556",
+    "university_name": "Leiden University",
+    "program_name": "Global Health, Innovation and Society (BSc Major of Liberal Arts and Sciences: Global Challenges)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "f4fc8cd2-31cd-4ba8-86c8-ec486dcb56bd",
+    "university_name": "Leiden University",
+    "program_name": "Governance, Economics and Development (BSc Major of Liberal Arts and Sciences: Global Challenges)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "510124f4-2b5e-4188-aa9f-c11cd0e18763",
+    "university_name": "Leiden University",
+    "program_name": "Hebrew Language and Culture (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "0645c22b-cd07-4744-993b-18e3a80a85eb",
+    "university_name": "Leiden University",
+    "program_name": "History (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "7c777429-a71d-4942-bcc2-9c69ea81fab4",
+    "university_name": "Leiden University",
+    "program_name": "International Justice (BA Major of Liberal Arts and Sciences: Global Challenges)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "3243c81c-4349-46c1-b621-863507b7b44f",
+    "university_name": "Leiden University",
+    "program_name": "International Relations and Organisations (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "eb956e6c-e7a1-4b79-b789-e7a5c4a7a4b3",
+    "university_name": "Leiden University",
+    "program_name": "International Studies (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "1254aa11-df8b-41c8-83cc-cb2cde21f193",
+    "university_name": "Leiden University",
+    "program_name": "Italian Language and Culture (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "36f67410-3809-4fd8-ba7f-15e46db468d9",
+    "university_name": "Leiden University",
+    "program_name": "Japanese Studies (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "a38be172-433a-4942-9fde-59df35005b16",
+    "university_name": "Leiden University",
+    "program_name": "Korean Studies (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "6057a18f-94b4-4d9d-a623-7c374396dfcf",
+    "university_name": "Leiden University",
+    "program_name": "Latin American Studies (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "fdf0fb83-9f1b-4d85-b6a5-8b9e7e0b0664",
+    "university_name": "Leiden University",
+    "program_name": "Law (LL.B.)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "77a82a41-a23a-49fd-bc0d-7b9f0b998480",
+    "university_name": "Leiden University",
+    "program_name": "Liberal Arts and Sciences: Global Challenges (BA/BSc) - Leiden University College",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "79cc4c10-d59a-4a68-9da0-c0bf6e2014eb",
+    "university_name": "Leiden University",
+    "program_name": "Life Science and Technology (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "42ecdbaa-52a1-4dfc-85e5-ede3236dd901",
+    "university_name": "Leiden University",
+    "program_name": "Linguistics (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "eefa8336-a337-4b49-a5e4-7024fd55d870",
+    "university_name": "Leiden University",
+    "program_name": "Mathematics (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "a15aa9b5-726c-443f-9f32-dc80c859537a",
+    "university_name": "Leiden University",
+    "program_name": "Medicine (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "5e67aeed-8fc5-41a9-a36c-3da0c38ac051",
+    "university_name": "Leiden University",
+    "program_name": "Middle Eastern Studies (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "80e82f61-8c80-4c05-af8b-cb84567919c6",
+    "university_name": "Leiden University",
+    "program_name": "Modern Middle Eastern Studies (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "e126696f-224e-4e0e-9319-215e02556325",
+    "university_name": "Leiden University",
+    "program_name": "Molecular Science & Technology (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "4b0b17fc-374f-4eaa-b86c-f994239e068e",
+    "university_name": "Leiden University",
+    "program_name": "National and International Politics (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "2916b5db-1423-4dd3-a8c4-eacc7b7dd597",
+    "university_name": "Leiden University",
+    "program_name": "Notarial Law (LL.B.)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "002baa9c-c6ac-43d0-9b2e-d0ef2e2ed4d2",
+    "university_name": "Leiden University",
+    "program_name": "Pedagogical Sciences (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "e46879da-36ca-4d7d-8ee7-d7f643286f08",
+    "university_name": "Leiden University",
+    "program_name": "Persian Language and Culture (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "dc1bf197-13c1-4760-9aac-d54e4e1b822d",
+    "university_name": "Leiden University",
+    "program_name": "Philosophy (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "87330625-6831-4b47-a8cb-ee938a25c938",
+    "university_name": "Leiden University",
+    "program_name": "Philosophy: Global and Comparative Perspectives (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "29e979e5-5886-4edd-bc99-b95186701cf3",
+    "university_name": "Leiden University",
+    "program_name": "Physics (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "c7c75d34-d35e-4170-ac33-4aa457e8491d",
+    "university_name": "Leiden University",
+    "program_name": "Policy, Public Administration and Organisation (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "36cded06-1f19-4552-ba25-61fea849db48",
+    "university_name": "Leiden University",
+    "program_name": "Political Science (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "c3be054a-1d7a-4b18-950d-37d573e48d51",
+    "university_name": "Leiden University",
+    "program_name": "Psychology (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "02d8a90f-780d-472f-8627-eabbf4984c83",
+    "university_name": "Leiden University",
+    "program_name": "Public Administration Science (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "583d0bf7-f613-4909-9f9f-09d004420f9e",
+    "university_name": "Leiden University",
+    "program_name": "Religious Studies (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "a8f81568-a40c-40b3-b198-79dfc2b87706",
+    "university_name": "Leiden University",
+    "program_name": "Russian Studies (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "14ad3828-7d66-426e-a08a-201d7de768b1",
+    "university_name": "Leiden University",
+    "program_name": "Science for Sustainable Societies (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "221ed85c-4105-44b5-8f9e-1b3cba9f7018",
+    "university_name": "Leiden University",
+    "program_name": "Security Studies (BSc)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "10faa6cc-a8c7-40a8-a0b6-4a541310745e",
+    "university_name": "Leiden University",
+    "program_name": "South and Southeast Asian Studies (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "d20fc086-83cc-48cc-8d86-0e70324e2342",
+    "university_name": "Leiden University",
+    "program_name": "Tax Law (LL.B.)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "eb6631b5-2e72-496e-b8d4-36ddcf45afb6",
+    "university_name": "Leiden University",
+    "program_name": "Turkish Language and Culture (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "72784b4f-55e3-4f1e-9931-c6d731aa54b3",
+    "university_name": "Leiden University",
+    "program_name": "Urban Studies (BA)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "5c94da0d-1006-44b2-a766-230caa6b0107",
+    "university_name": "Leiden University",
+    "program_name": "World Politics (BA Major of Liberal Arts and Sciences: Global Challenges)",
+    "language_of_instruction": "Unconfirmed per-program (see caveat added after spot-check): this program's English name on Leiden's international site does NOT reliably indicate English-medium teaching -- a spot-check of \"Cybersecurity & Cybercrime (BSc)\" found it is actually a Dutch-taught programme despite its English listing, showing the page lists ALL programmes (Dutch- and English-taught alike) under English names for browsing purposes. Left unknown rather than asserted as English; a future pass should check each program's own dedicated page, which does state language of instruction explicitly."
+  },
+  {
+    "id": "b42da74f-cce7-403e-aad1-7955c68cf243",
+    "university_name": "University of Twente",
+    "program_name": "Advanced Technology",
+    "language_of_instruction": "Unconfirmed (this university's own bachelor's-overview page lists the program name but gives no per-program language marker, unlike Radboud/Maastricht/Wageningen's pages -- independent search confirms UT teaches in 'either Dutch or English' university-wide but does not resolve it per program here; left explicitly unknown rather than guessed, consistent with the correction made for Leiden in batch 24 rather than repeating that mistake)"
+  },
+  {
+    "id": "35ca21d5-96df-4f8c-8067-2a34c82963f6",
+    "university_name": "University of Twente",
+    "program_name": "Applied Mathematics",
+    "language_of_instruction": "Unconfirmed (this university's own bachelor's-overview page lists the program name but gives no per-program language marker, unlike Radboud/Maastricht/Wageningen's pages -- independent search confirms UT teaches in 'either Dutch or English' university-wide but does not resolve it per program here; left explicitly unknown rather than guessed, consistent with the correction made for Leiden in batch 24 rather than repeating that mistake)"
+  },
+  {
+    "id": "290e1082-b898-42e3-b973-cd629679fa56",
+    "university_name": "University of Twente",
+    "program_name": "Applied Physics",
+    "language_of_instruction": "Unconfirmed (this university's own bachelor's-overview page lists the program name but gives no per-program language marker, unlike Radboud/Maastricht/Wageningen's pages -- independent search confirms UT teaches in 'either Dutch or English' university-wide but does not resolve it per program here; left explicitly unknown rather than guessed, consistent with the correction made for Leiden in batch 24 rather than repeating that mistake)"
+  },
+  {
+    "id": "438d7ee5-3e25-4fc5-9273-ecbdff216ea6",
+    "university_name": "University of Twente",
+    "program_name": "Business Information Technology",
+    "language_of_instruction": "Unconfirmed (this university's own bachelor's-overview page lists the program name but gives no per-program language marker, unlike Radboud/Maastricht/Wageningen's pages -- independent search confirms UT teaches in 'either Dutch or English' university-wide but does not resolve it per program here; left explicitly unknown rather than guessed, consistent with the correction made for Leiden in batch 24 rather than repeating that mistake)"
+  },
+  {
+    "id": "51adbb9d-1d95-4ea6-aab7-b5fc9af72d54",
+    "university_name": "University of Twente",
+    "program_name": "Chemical Science & Engineering",
+    "language_of_instruction": "Unconfirmed (this university's own bachelor's-overview page lists the program name but gives no per-program language marker, unlike Radboud/Maastricht/Wageningen's pages -- independent search confirms UT teaches in 'either Dutch or English' university-wide but does not resolve it per program here; left explicitly unknown rather than guessed, consistent with the correction made for Leiden in batch 24 rather than repeating that mistake)"
+  },
+  {
+    "id": "d98bc0bb-8fa5-4155-87d3-cdb6af1a2d7c",
+    "university_name": "University of Twente",
+    "program_name": "Civil Engineering",
+    "language_of_instruction": "Unconfirmed (this university's own bachelor's-overview page lists the program name but gives no per-program language marker, unlike Radboud/Maastricht/Wageningen's pages -- independent search confirms UT teaches in 'either Dutch or English' university-wide but does not resolve it per program here; left explicitly unknown rather than guessed, consistent with the correction made for Leiden in batch 24 rather than repeating that mistake)"
+  },
+  {
+    "id": "e5ebd4f0-b92e-43c3-87ef-e789c02bbc32",
+    "university_name": "University of Twente",
+    "program_name": "Communication Science",
+    "language_of_instruction": "Unconfirmed (this university's own bachelor's-overview page lists the program name but gives no per-program language marker, unlike Radboud/Maastricht/Wageningen's pages -- independent search confirms UT teaches in 'either Dutch or English' university-wide but does not resolve it per program here; left explicitly unknown rather than guessed, consistent with the correction made for Leiden in batch 24 rather than repeating that mistake)"
+  },
+  {
+    "id": "1b883af9-148d-4820-9789-e7ffebd71cb2",
+    "university_name": "University of Twente",
+    "program_name": "Electrical Engineering",
+    "language_of_instruction": "Unconfirmed (this university's own bachelor's-overview page lists the program name but gives no per-program language marker, unlike Radboud/Maastricht/Wageningen's pages -- independent search confirms UT teaches in 'either Dutch or English' university-wide but does not resolve it per program here; left explicitly unknown rather than guessed, consistent with the correction made for Leiden in batch 24 rather than repeating that mistake)"
+  },
+  {
+    "id": "b083487c-f2e0-4040-a092-b208d54eea6d",
+    "university_name": "University of Twente",
+    "program_name": "Industrial Design Engineering",
+    "language_of_instruction": "Unconfirmed (this university's own bachelor's-overview page lists the program name but gives no per-program language marker, unlike Radboud/Maastricht/Wageningen's pages -- independent search confirms UT teaches in 'either Dutch or English' university-wide but does not resolve it per program here; left explicitly unknown rather than guessed, consistent with the correction made for Leiden in batch 24 rather than repeating that mistake)"
+  },
+  {
+    "id": "f254696b-b606-4e49-8431-e21aa0d29d79",
+    "university_name": "University of Twente",
+    "program_name": "Industrial Engineering & Management",
+    "language_of_instruction": "Unconfirmed (this university's own bachelor's-overview page lists the program name but gives no per-program language marker, unlike Radboud/Maastricht/Wageningen's pages -- independent search confirms UT teaches in 'either Dutch or English' university-wide but does not resolve it per program here; left explicitly unknown rather than guessed, consistent with the correction made for Leiden in batch 24 rather than repeating that mistake)"
+  },
+  {
+    "id": "09d4e084-4fec-4ada-97e3-dd4556a35c77",
+    "university_name": "University of Twente",
+    "program_name": "International Business Administration",
+    "language_of_instruction": "Unconfirmed (this university's own bachelor's-overview page lists the program name but gives no per-program language marker, unlike Radboud/Maastricht/Wageningen's pages -- independent search confirms UT teaches in 'either Dutch or English' university-wide but does not resolve it per program here; left explicitly unknown rather than guessed, consistent with the correction made for Leiden in batch 24 rather than repeating that mistake)"
+  },
+  {
+    "id": "34cce785-4c64-40d4-a3e3-169f326d0d41",
+    "university_name": "University of Twente",
+    "program_name": "Mechanical Engineering",
+    "language_of_instruction": "Unconfirmed (this university's own bachelor's-overview page lists the program name but gives no per-program language marker, unlike Radboud/Maastricht/Wageningen's pages -- independent search confirms UT teaches in 'either Dutch or English' university-wide but does not resolve it per program here; left explicitly unknown rather than guessed, consistent with the correction made for Leiden in batch 24 rather than repeating that mistake)"
+  },
+  {
+    "id": "78947fba-e589-46b6-821c-7db79539ad89",
+    "university_name": "University of Twente",
+    "program_name": "Psychology",
+    "language_of_instruction": "Unconfirmed -- independent reporting mentions this program has 'a Dutch track' at UT, implying an English track/default also exists, but the exact structure (separate listings vs. one program with two tracks) is not resolved by available sources; not asserted either way"
+  },
+  {
+    "id": "710e6826-6b7b-4af4-85d4-53e716c33bf8",
+    "university_name": "University of Twente",
+    "program_name": "Public Administration",
+    "language_of_instruction": "Unconfirmed (this university's own bachelor's-overview page lists the program name but gives no per-program language marker, unlike Radboud/Maastricht/Wageningen's pages -- independent search confirms UT teaches in 'either Dutch or English' university-wide but does not resolve it per program here; left explicitly unknown rather than guessed, consistent with the correction made for Leiden in batch 24 rather than repeating that mistake)"
+  },
+  {
+    "id": "1909ffc7-a020-4a58-9de2-432639c58e00",
+    "university_name": "University of Twente",
+    "program_name": "Technical Computer Science",
+    "language_of_instruction": "Unconfirmed (this university's own bachelor's-overview page lists the program name but gives no per-program language marker, unlike Radboud/Maastricht/Wageningen's pages -- independent search confirms UT teaches in 'either Dutch or English' university-wide but does not resolve it per program here; left explicitly unknown rather than guessed, consistent with the correction made for Leiden in batch 24 rather than repeating that mistake)"
+  }
+]
+}
