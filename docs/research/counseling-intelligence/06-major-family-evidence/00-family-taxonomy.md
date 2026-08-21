@@ -1,8 +1,12 @@
 # 06.00 — Major-Family Taxonomy
 
 **Answers:** For each of the mission brief's requested fields, what experiences genuinely
-demonstrate interest/ability — organized under a coherent family structure, so 18 detailed
-documents share one consistent taxonomy instead of each inventing its own.
+demonstrate interest/ability — organized under a coherent family structure, so every family
+document shares one consistent taxonomy instead of each inventing its own. **The family count is a
+living number, not a fixed one** — see §3's own table for the current authoritative list and count;
+do not trust a specific number quoted elsewhere in this package (including in this very document's
+prose, outside §3's table) without checking that table first, since both sessions keep finding
+genuine gaps as they go.
 
 **Status note (concurrent-session coordination, updated as the package matured):** this document —
 and the family-list/filename assignment below — was built live with a second session also working

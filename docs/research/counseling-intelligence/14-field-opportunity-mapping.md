@@ -177,7 +177,7 @@ noted here since it was found via this document's own category-by-category revie
 
 ## What this implies for a future implementation (not built here)
 
-1. A per-opportunity `fields`-tag refinement could reasonably draw on this document's 18-family
+1. A per-opportunity `fields`-tag refinement could reasonably draw on this document's family
    vocabulary (already the shared taxonomy `06-major-family-evidence/00-family-taxonomy.md`
    establishes) rather than inventing a new one — but implementing that tagging, and deciding
    whether it's free-text, a controlled list, or AI-assisted classification, is out of this

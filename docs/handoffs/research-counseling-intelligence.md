@@ -135,7 +135,7 @@ branches before trusting any table, including this one, past this checkpoint's t
 | `03-recommendation-timing.md` | Done, including the YKS/UCAS geography caveat (§6) | this branch |
 | `04-profile-gap-framework.md` | Done | peer branch |
 | `05-redundancy-saturation.md` | Done, tier-aware redundancy model | peer branch |
-| `06-major-family-evidence/00-family-taxonomy.md` | Done, 18-family shared taxonomy (grew from 17) | this branch |
+| `06-major-family-evidence/00-family-taxonomy.md` | Done, shared taxonomy — a living, growing list (17 originally, more added by both sessions since; check that file's §3 table for the current count rather than trusting a number here) | this branch |
 | `06-major-family-evidence/01`-`09` | Done (computing, math/stats, physical sciences, life sciences, engineering, biomedical eng, econ/finance, business/entrepreneurship, environmental science) — all with UK/EU/Turkey country notes | this branch |
 | `06-major-family-evidence/10`-`17` | Done (medicine, psychology, poli-sci/IR/policy, law, sociology/history/philosophy, literature/journalism/comms, architecture/design, visual/media arts) | peer branch |
 | `06-major-family-evidence/18-education-teaching.md` | Done — added after both sides finished their original 17; genuinely missing from both, three-country (US/UK/Turkey) licensure comparison | this branch |
