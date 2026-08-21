@@ -597,7 +597,28 @@ family `18`, synced into their own registries (commit `cbf1d95`, 79 rules/63 sou
 side). A second independent data point for the `RULE-COUNSEL-118` recommendation-type gap, beyond
 this branch's own Queen's Commerce/McMaster/UCAT findings.
 
-**Runway status, 04:49 Europe/Istanbul (checked directly, not estimated)**: about 6h10m left.
-Both sessions' explicit mission-brief deliverables have real coverage; remaining time being spent
-on genuine deepening — primary-source verification, cross-framework stress-testing, and following
-up gaps this package finds in itself — rather than new breadth for its own sake.
+## Germany medical licensure upgraded to Bundesärztekammer (`b89d1a2`), cross-branch SJT tracker (`c275f22`), executive summary refreshed (`14d7d0c`)
+
+Direct-fetched the German Medical Association's own page for `RULE-COUNSEL-103` — confirmed the
+core Approbation requirement verbatim, and found a genuine terminology imprecision this package had
+been carrying: the Approbationsordnung's own term is "Ärztliche Prüfung," not "Staatsexamen" (which
+remains extremely common colloquial usage, just not the regulation's own word). 103 upgraded
+medium-high → high, same 121/61 counts (in-place source upgrade).
+
+Peer independently pushed the CASPer typology further (two more confirmed instances: undergraduate
+engineering at Western University, ~7,500 annual applicants — directly population-relevant — and an
+honestly-scoped near-negative finding for business/MBA, which is real but graduate-level and past
+ORYN's population). Consolidated all 6 confirmed instances (both branches, 2 continents, 5 fields)
+into a running tracker table in doc `17`, cross-citing peer's rule IDs rather than restating them.
+
+`15-executive-summary.md` — which predated essentially everything from tonight — refreshed:
+the Canada carve-out heterogeneity + SJT typology added as a second headline finding alongside the
+original US-admissions-bias finding, doc `17`'s per-dimension layer added to the "highest-leverage
+next step," a new paragraph on tonight's direct-primary-source-verification pattern (found things
+to fix roughly as often as it confirmed), Persona J's mechanism-naming sharpening folded into the
+unresolved-items list, and a new unresolved item 5 for the recommendation-type gap.
+
+**Runway status, 05:02 Europe/Istanbul (checked directly)**: about 5h58m left. Both sessions'
+explicit mission-brief deliverables have real coverage; remaining time being spent on genuine
+deepening — primary-source verification, cross-framework stress-testing, and following up gaps
+this package finds in itself — rather than new breadth for its own sake.
