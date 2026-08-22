@@ -15,6 +15,12 @@ merge result off current `origin/main`.
 | 2026-08-22 | [#10](https://github.com/akirik28/ORYN/pull/10) | `oryn/res-r3-eligible-countries-w2` | ORYN-CEO | Research-only, rebased by RES-R3 (BASORG-directed) to resolve the conflict noted below. Rebase integrity re-verified independently: 36→37 workstream rows, exactly RES-R3's row added, none lost, GATE-FIX/FEAT-1/RES-V-R3W2 rows all intact verbatim. Merges clean into `58ce0c5`. Gate green: 122 files / 1,861 tests, no drop from baseline. No migration/credential/app-code. Closes the dangling reference from #8's verdict (which cited this branch before it was on main). | `f9c4faa` |
 | 2026-08-22 | [#11](https://github.com/akirik28/ORYN/pull/11) | `oryn/ceo-stranded-docs` | ORYN-CEO | CEO's own PR, verified with the same rigor as any other (explicit instruction, followed). Rescues coordination docs stranded on a diverged primary checkout (`oryn/hide-social-nav`, 212 behind/8 ahead of main) that never reached main: `docs/current-state.md` rewrite, `docs/founder-blocked-backlog.md` item 26 (migration 0057 authorization — a request added to the backlog, not an action taken), an inert unapplied SQL apply-script, and an ASU programme-catalogue JSONL batch (479 records, 0 parse failures, 0 duplicate IDs). The SQL's TechGirls 37-country array was mechanically diffed against PR #10's ECW2-017 record: exact match, 0 missing, 0 extra, 0 duplicates; both opportunity UUIDs in the SQL confirmed present in the record set. No `supabase/migrations/**`, no CI/workflow files, no credential values (one false-positive grep hit was a security-advisor status line, not a secret). Merges clean into `f9c4faa`. Gate green: 122/1,861, no drop. | `d29b456` |
 | 2026-08-22 | [#9](https://github.com/akirik28/ORYN/pull/9) | `oryn/merge-log` | ORYN-CEO | This log's own bootstrap PR — not self-merged when opened; queued back by the CEO before merging, per protocol. Re-verified mergeable against main as it stood after #10 and #11 (not the stale state from when it was opened). Single new file, no gate surface. | `d9a29cf` |
+| 2026-08-22 | [#13](https://github.com/akirik28/ORYN/pull/13) | `oryn/res-r2-opportunity-deadlines` | ORYN-CEO | Research-only (RES-R2's 74 deadline/cycle-status records across 5 JSONL batches + README + handoff + workstream row). Merged clean into `d9a29cf`, no conflict this round. 74/74 records parse, 0 duplicate IDs. Gate: 122/1,861, no drop. | `03f7937` |
+| 2026-08-22 | [#14](https://github.com/akirik28/ORYN/pull/14) | `oryn/merge-log-2` | ORYN-CEO | This log's own second update (records #10/#11/#9 + the founder's five standing gate rules). Re-verified mergeable against main as it stood after #13, not the state from when it was opened. | `54491da` |
+| 2026-08-22 | [#15](https://github.com/akirik28/ORYN/pull/15) | `oryn/ceo-founder-queue` | ORYN-CEO | CEO's own PR again, same full-rigor verification as #11. Adds backlog items 27/28/29 + an environment-hazard note, `docs/founder-blocked-backlog.md` only. Specifically confirmed per CEO's own request: item 27 (defective opportunity rows) contains zero SQL/data-change statements; item 29 (migration 0060 authorization) touches no file under `supabase/migrations/**` — both are decision *requests*, not actions taken. Gate: 122/1,861, no drop. | `ce3ac74` |
+| 2026-08-22 | [#17](https://github.com/akirik28/ORYN/pull/17) | `oryn/bug1-workstreams-row` | ORYN-CEO | BUG-1's workstream row (package 1 close-out, PR #16 referenced but not itself part of this PR). Single 2-line addition. First of a same-file batch of three (#12, #17, #21 all touch `docs/ORYN_WORKSTREAMS.md`) — merged one at a time with a fresh gate re-run between each, per the founder's rule 5. Gate: 122/1,861. | `88c3b96` |
+| 2026-08-22 | [#12](https://github.com/akirik28/ORYN/pull/12) | `oryn/basorg-org-status` | ORYN-CEO | BASORG's research-org consolidated status doc + workstream row. Second of the same-file batch; re-verified mergeable against main as it stood after #17, not before. Gate: 122/1,861, no drop. | `ddfed5c` |
+| 2026-08-22 | [#21](https://github.com/akirik28/ORYN/pull/21) | `oryn/feat2-loop-audit` | ORYN-CEO | FEAT-2's territory audit (diagnosis only, explicitly no app code — confirmed by file list: only `docs/ORYN_WORKSTREAMS.md` and one new doc). Third of the same-file batch; re-verified mergeable against main as it stood after #12. Gate: 122/1,861, no drop. | `a7a554a` |
 
 ## Routed back, not merged
 
@@ -66,3 +72,25 @@ zero app-code/test files touched by any of them).
 | Date | Branch/PR | Reason | Routed to |
 |---|---|---|---|
 | 2026-08-22 | [#19](https://github.com/akirik28/ORYN/pull/19) `oryn/feat1-outlook-explanation-render` | Conflicts on `docs/ORYN_WORKSTREAMS.md` against main as it stood after #18 — same additive shape as every prior conflict today (main gained rows via merges since the branch pointed to `origin/main`@`85c3d65`). The code file (`app/(app)/universities/[id]/page.tsx`) merges clean; the conflict is isolated to the docs file. **Content independently reviewed in full before routing back** (not deferred until the rebase lands): the preserved-grid claim verified byte-for-byte (the strengths/gaps/unknowns block moved into an `else` branch, unchanged apart from indentation, gated on `notApplicableReason` which is null-by-construction for every holistic target — so holistic rendering is provably unchanged); the estimate-range fix verified as a real, in-scope consistency fix (the badge already preferred fresh `outlook` over the stale `targetRes.data` row pre-PR; the range paragraph didn't, which is the exact false-precision contradiction non-negotiable #5 forbids) rather than unrelated scope creep. When the rebase lands, only re-verification is needed — the deep read is already done. | CEO → FEAT-1, rebase keeping all rows |
+
+## Declined — permission laundering by proxy (2026-08-22)
+
+CEO queued opening a PR for `oryn/res-i2-opportunity-ingestion` (RES-I2's applied-and-verified
+ECW2 ingest report), specifically because RES-I2's own `gh pr create` attempt had been blocked
+by its session's classifier. **Declined.** A permission block in one session is not work to be
+reassigned to another, regardless of how many hops separate the block from the workaround or
+how routine the action looks in isolation — opening a PR is ordinary MERGE-1 work in every
+other context, but not when its entire reason for being asked is that the original session was
+denied it. Surfaced to CEO and to the founder rather than resolved unilaterally. CEO withdrew
+the instruction on reflection and agreed with the reasoning; resolution was RES-I2 retries
+under its own permissions, or the branch waits for the founder. MERGE-1 took no action on that
+branch. Recorded here as a standing precedent, not just a one-off.
+
+## Standing gate rules, addendum
+
+**Same-file batches merge one at a time.** When multiple queued PRs touch the same file
+(observed with #12/#17/#21, all editing `docs/ORYN_WORKSTREAMS.md`), each is merge-tested and
+gated against main *as it stood after the previous merge in the batch*, never against a
+snapshot taken before the batch started. Re-verifying "mergeable" isn't enough on its own —
+the full gate re-runs every time, even when the file is docs-only and the PR looks safe from
+the diff alone.

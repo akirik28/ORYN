@@ -7,6 +7,11 @@ this information; update here first, not in five places.
 
 Each item: **exact action**, **why it's blocking**, **what it depends on**.
 
+> **Numbering is discovery order, not priority.** As of 2026-08-22 evening the two highest-priority
+> items are **[36](#36-critical--any-signed-in-user-can-make-themselves-an-admin)** (privilege
+> escalation, live now) then **[30](#30-launch-blocker--anonymous-users-can-read-any-public-student-profile)**.
+> Everything else can wait, and **nothing on this list expires.**
+
 > Looking for *what to do first*, not *the full list*? **[FOUNDER-START-HERE.md](./FOUNDER-START-HERE.md)**
 > sequences the subset that actually gets the app running, in order, with expected results.
 > This file stays the complete inventory — including the optional and later-stage items
@@ -577,9 +582,12 @@ separation is what produced today's real catches, and collapsing it under staffi
 would trade the quality mechanism for a handful of rows.
 
 **What's waiting, all verified, all bounded, all revertible:**
-- **Habitat Derneği's application deadline: 26 August — four days out.** The only item here with
-  a real clock. It needs its PR merged *and* the record applied to reach a student; merging
-  alone isn't enough. If nothing else on this list gets done, do this one.
+- ~~Habitat Derneği's 26 August deadline~~ — **NOT stranded. Corrected 2026-08-22 evening.**
+  The row is already live, `active`, with `deadline 2026-08-26` matching its source verbatim;
+  a student can see it now. Only `last_verified_at` is null — a provenance stamp, not a
+  student-facing defect. This was escalated all afternoon on a false premise: the research
+  record being unmerged was read as the fact not being live, which conflates the pipeline's
+  state with the database's. Nobody queried the row until ORYN-BASORG did and corrected itself.
 - Five `cycle_status` corrections resolved against their own sources (IPPF → open, HOSA →
   upcoming, Wharton Data Science → closed, CMIMC → closed, BIYSC → upcoming).
 - Glasgow's ~10 single-award `degree_type` records (the ~51 multi-award ones are correctly held
@@ -589,16 +597,16 @@ would trade the quality mechanism for a handful of rows.
 - The 1,429 URL corrections — but those need item 31's apply path built first, so they're
   blocked twice over.
 
-**Nothing here is harmful while it waits.** Today's live state is honest; an unapplied
-correction is a missing improvement, not a defect. Only Habitat has an expiry.
+**Nothing here is harmful while it waits, and nothing here expires.** Today's live state is
+honest; an unapplied correction is a missing improvement, not a defect.
 
 > ### ⚠️ READ BEFORE INGESTING ANY OF THIS — 325 contract defects are on `main`
 >
 > The **116** records from RES-R2's P2/P3 output — 87 summer-programme plus 27
 > remaining-category, which is 114 *distinct* records, plus 2 correction records for 116 raw —
 > **failed contract validation** and were merged anyway, deliberately. Full verdict:
-> `docs/research/verification/v1-5_dlopp_p2_p3_verdict.md`, which **lives on PR #20's branch,
-> not yet on `main`** — if you're reading this before #20 merges, the file is only reachable
+> `docs/research/verification/v1-5_dlopp_p2_p3_verdict.md`, which **lives on PR #39's branch,
+> not yet on `main`** — if you're reading this before #39 merges, the file is only reachable
 > from that branch.
 >
 > - **232** missing `record_type`/`lane` fields — systemic, in all 116 records.
@@ -675,6 +683,45 @@ proposal, and it answers all five instances at once.
 **Depends on**: nothing technical — a schema/product judgment. Deciding the principle once
 settles all five and prevents the next one. ORYN-CFO was asked to weigh in on the `degree_type`
 instance. Full analysis: `docs/feat2-multi-axis-status-audit-2026-08-22.md`.
+
+---
+
+## 36. CRITICAL — any signed-in user can make themselves an admin
+
+**Action**: authorize applying migration `0062`. Same shape as items 26/29/30 — written, not
+applied, needs your go-ahead. This is now the highest-priority item on this list, above item 30.
+
+**What was found** (BUG-1, 2026-08-22, live against `oryn-qa-scratch`; I re-verified the policy
+definitions independently): the QA account `oryn.qa.b@example.com` — an ordinary, non-admin
+student account — **granted itself `is_admin = true` with a single unprivileged API call.** Not a
+theoretical read of the schema. It was executed, it succeeded, and the row changed.
+
+**Why it happens**: the `profiles` UPDATE policy is `USING (id = auth.uid())` with
+`WITH CHECK (id = auth.uid())`. That is exactly right for what it says — *you may update your own
+row* — and it is the whole protection. **RLS policies are row-scoped, not column-scoped.** Postgres
+has no notion here of "this row, but not that column". Nothing anywhere else restricts which
+columns a student may write, so `is_admin` is as writable to them as their own display name.
+
+**Why this is worse than item 30**: item 30 requires a student to opt into a public profile and
+exposes a whitelist of safe columns. This one requires nothing, is available to every account the
+moment it signs up, and grants everything. Admin routes call `requireAdmin()` and then
+`createAdminClient()` — a **service-role client that bypasses RLS entirely**. So the escalation
+doesn't grant a slightly wider view; it grants the key that turns RLS off.
+
+**Two more columns of the same shape**, found by the same sweep: `profile_strength_score` and
+`completeness_percent`. Both are meant to be computed by Oryn from a student's actual record, and
+both are directly writable by the student they describe. Less severe — a student can only inflate
+their own numbers, and the fabrication is invisible to them and to us — but the same defect, and
+the fix covers all three in one place.
+
+**The fix**: a `BEFORE UPDATE` trigger on `profiles` that resets the protected columns to their
+`OLD` values unless the caller is the service role. This is not a new pattern for this codebase —
+it is the same mechanism as `posts_guard_system_columns` in `0058`, and three
+`enforce_canonical_entity_type` triggers already guard other columns on other tables. The pattern
+was known and simply never applied to `profiles`. Legitimate admin grants keep working: they run
+through the service-role client, which the trigger deliberately exempts.
+
+**Depends on**: your approval to run one migration. Written by BUG-1, mechanism reviewed by CEO.
 
 ---
 

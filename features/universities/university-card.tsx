@@ -125,7 +125,7 @@ export function UniversityCard({
           // degree programs offered — unlabeled chips here read as majors on a compact
           // card, exactly the confusion the product spec calls out to avoid.
           <div className="space-y-1">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70">Research focus</p>
+            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Research focus</p>
             <div className="flex flex-wrap gap-1.5">
               {researchTopics.map((topic) => (
                 <span key={topic} className="rounded-full border bg-muted/50 px-2 py-0.5 text-xs text-muted-foreground">
