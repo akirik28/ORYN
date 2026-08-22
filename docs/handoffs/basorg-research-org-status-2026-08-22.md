@@ -582,12 +582,24 @@ actually working, and the argument for keeping it expensive.
 RES-I2 — four of them this org's). None signalled beforehand. Written on the assumption this
 session ends the same way.
 
-## 8.1 State as of this writing
+## 8.1 Lane state — A VOLATILE SNAPSHOT, NOT A DURABLE FACT
 
-**Four lanes alive**: RES-R1 (Australia programmes), RES-R3 (eligible_countries wave 4),
-RES-V1 (contract/ID verification), RES-V2 (source verification).
-**Gone**: RES-R2, RES-I1, RES-I2.
-**No live-write capability in either territory.** Research and verification only.
+> **⚠ Do not trust any liveness claim in this document.** Session addresses change on every
+> resume, sessions exit and are restarted, and "alive" rots within minutes. `ORYN-CEO` found
+> `current-state.md` still asserting *"no other Claude sessions were reachable"* — written when
+> true this morning, still there this evening while thirteen sessions ran. A lane checked it as a
+> second source **and the second source lied.** Fixed in PR #83, which now states that **session
+> liveness does not belong in a checkpoint document at all** rather than substituting a fresher
+> number that would rot identically.
+>
+> **This section is the same hazard and is kept only as a dated snapshot. Re-derive liveness by
+> asking, never by reading — here or anywhere.** The durable content of this document is what each
+> lane *produced* and what is *blocked on what*; those don't rot. Who was awake at 18:00 does.
+
+**Snapshot, 2026-08-22 ~18:00**: all seven lanes have existed and produced this cycle. Three were
+declared intentionally idle with explicit lapse triggers (§8.4q). The addressing layer misled five
+sessions today — BASORG's own reference changed twice, CEO declared BASORG dead on that basis,
+RES-R3's changed, BUG-1's stopped resolving, and FEAT-2 was flagged as an unknown intruder.
 
 ## 8.2 Verified work stranded with no lane to apply it
 
@@ -1086,6 +1098,40 @@ cleanest statement of the day's dominant error class.
 13 GiB" were never two gauges. A lane seeing a healthy main-disk figure has no reason to suspect
 `/tmp` is about to fail under it — and ENOSPC mid-package presents as a lane defect rather than a
 host condition, because a lane's first hypothesis when a write fails is its own code.
+
+## 8.4s Path A does NOT repair the Canada identity keys — and those are a separate live defect
+
+BASORG hoped `url_repair`'s 1,437 verified corrections might also fix Canada's URL-collision rows,
+which would have materially strengthened the case for building Path A. **RES-V1 (V1-10) checked:
+zero overlap.**
+
+All 1,437 target IDs resolve live to exactly **12 distinct university_ids**, matching the
+file-level count independently, and **none belong to Western, Toronto or Alberta.** Not "mostly
+no" — zero, checked against the database rather than against either population's self-description
+(`url_repair`'s own files say 12 non-Canadian universities, which pointed at "no", **but a
+self-reported field can be stale**).
+
+It also **reproduced BASORG's collision table before building on it** — 231/160/33 and 0 for the
+other four, matching across all seven — confirming both parties used the same definition of
+"collision" *before* the real question depended on it.
+
+**Consequence: Path A buys what it always bought** — 1,437 verified URL corrections across 12
+non-Canadian universities. **It does not get promoted in the leverage ranking**, and the founder
+should decide on the real benefit rather than a hoped-for one.
+
+**What this leaves: a separate, live, unowned defect.** 424 collision records across Western,
+Toronto and Alberta sit in `university_programs` **today**, with one URL —
+`grad.uwo.ca/admissions/programs/index.cfm` — shared by **160 different Western programmes.** A
+student following that link gets a generic listing page, not their programme. Same class RES-V2
+measured in `opportunities` at 2.9%; **never measured in `university_programs`.** Characterisation
+assigned to RES-V1 (V1-11), read-only: scale and shape, whether correct URLs are recoverable,
+whether it's an acquisition or a source defect, and whether it extends past the three universities
+(collision count is a weak proxy — a university could have per-record URLs that are all wrong
+without any two colliding).
+
+If the correct URLs *are* recoverable, this becomes a **second population needing the same
+UPDATE-by-id path** — which would strengthen Path A on different grounds than the overlap that
+was ruled out.
 
 ## 8.5 If you inherit this org
 
