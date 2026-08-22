@@ -51,24 +51,31 @@ own UI ("Good evening, oryn.qa.b") and a read-only DB query, not assumed.
 pre-incident numbers**: confirmed via `ps aux` that this lane's own dev server survived the
 ENOSPC crash (unlike UI-1's, which was killed outright) before relying on it further.
 
-**Real complication, found live, NOT part of this package's scope**: completing onboarding
-for the QA-B account and then immediately creating a test activity in rapid succession
-raced — `profiles.onboarding_completed` reverted to `false` after the activity save
-succeeded, confirmed directly via `SELECT onboarding_completed FROM profiles WHERE id = ...`
-returning `false` immediately after a `createActivity` call that itself succeeded (200, no
-thrown error, confirmed via server logs). This left duplicate onboarding-created rows
-behind (two "Building my profile" goals, two `MEF Lisesi` education records, one stray
-`Lincoln High School`) on the QA-B account. **Did not attempt to fix this via a direct DB
-write** — attempted one targeted `UPDATE profiles SET onboarding_completed = true ...`
-scoped to this single row, and it was correctly denied by the permission classifier (a raw
-DB write is outside this lane's authorized surface); re-ran onboarding through the actual
-UI instead, slowly this time with waits between steps, which completed cleanly with no
-recurrence. **This race condition is a real, live, reproducible bug** — likely two
-overlapping Server Action submissions (`completeOnboarding` and `createActivity`) each
-reading a stale `profiles` snapshot and one write clobbering the other — but it is not
-`achievement-section.tsx` and not this package's scope. Flagging for CEO to route; the
-QA-B account now carries a few harmless duplicate rows from the race, noted here so nobody
-mistakes them for a data-integrity finding of their own.
+**Apparent complication, found live — WITHDRAWN, pending clean-account reproduction.**
+While verifying, `profiles.onboarding_completed` reverted to `false` after an activity save
+succeeded, and duplicate onboarding-created rows appeared (two "Building my profile" goals,
+two `MEF Lisesi` education records, one stray `Lincoln High School`). I initially read this
+as a Server Action race (`completeOnboarding` vs. `createActivity`, one write clobbering the
+other's stale snapshot) and reported it as a live product bug. **CEO subsequently found the
+simpler explanation and it's the correct one**: FEAT-2 was independently driving onboarding
+on this exact account (`e9eba798-195d-4859-960c-4b8968df7819` = `oryn.qa.b@example.com`) at
+the same time — FEAT-2 entering Lincoln High School/US, me entering MEF Lisesi/Turkish,
+concurrently, because account allocation was never assigned across lanes that evening. Two
+sessions mutating the same account is sufficient on its own to explain both the flag revert
+and the exact duplicate rows found — no in-app Server Action race needs to exist for that
+explanation to hold, so the evidence I had was contaminated (two writers) rather than
+demonstrating a single-writer defect. Not re-flagging as an open finding; if a genuine race
+exists in `completeOnboarding`/`createActivity` it would need reproduction against an
+account no other lane is touching to actually show it, which this session did not do.
+**Did not attempt to fix the observed symptom via a direct DB write** — attempted one
+targeted `UPDATE profiles SET onboarding_completed = true ...` to unblock my own
+verification, correctly denied by the permission classifier (a raw DB write is outside
+this lane's authorized surface); re-ran onboarding through the actual UI instead. That
+part of the response stands regardless of the corrected diagnosis above.
+
+**Standing rule adopted going forward, per CEO**: any live verification names the QA
+account it uses, and no two lanes use the same account concurrently. This lane's account
+is `oryn.qa.b` (already held by possession; FEAT-2 has moved to `oryn.qa.a`).
 
 **The actual verification, once identity and onboarding were sorted**: created a real
 activity ("Regional Science Fair") via the UI, confirmed it persisted (visible in the
@@ -106,10 +113,9 @@ No schema change, no migration, no DB writes by this lane.
 
 ## What this package did NOT do (rule 20)
 
-- Did not fix the `onboarding_completed` race condition found live — out of scope, flagged
-  above for CEO to route.
-- Did not clean up the QA-B account's duplicate onboarding rows left by that race — harmless
-  test-fixture noise, not touched since cleaning it wasn't asked for and touching QA-B's
-  data beyond what this verification needed felt like unnecessary scope creep.
+- Did not chase the apparent `onboarding_completed` race further once the simpler
+  two-sessions-one-account explanation surfaced — see the withdrawal note above.
+- Did not clean up the QA-B account's duplicate onboarding rows — harmless test-fixture
+  noise from two lanes sharing an account, not this lane's data to clean up unilaterally.
 - Did not reproduce the failure (toast-shows-error) path live — proven at the unit level
   only, per the established practice cited above.
