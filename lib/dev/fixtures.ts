@@ -264,6 +264,9 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       organization_entity_id: null,
       country_entity_id: null,
       access_channel: null,
+      // Matches this fixture's own description ("open to students aged 15-18 worldwide") —
+      // the research-confirmed-open case, so no "not verified" note renders for it.
+      country_eligibility_confirmed_open: true,
       created_at: daysFromNow(-30),
       updated_at: daysFromNow(-3),
     },
@@ -312,6 +315,9 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       organization_entity_id: null,
       country_entity_id: null,
       access_channel: null,
+      // Deliberately unconfirmed — the live-common case, so dev preview exercises the
+      // "Country eligibility not verified yet" advisory note on a realistic row.
+      country_eligibility_confirmed_open: false,
       created_at: daysFromNow(-20),
       updated_at: daysFromNow(-5),
     },

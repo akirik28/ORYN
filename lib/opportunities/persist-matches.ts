@@ -69,6 +69,13 @@ export async function refreshOpportunityMatches(userId: string): Promise<void> {
       eligibleCountries: opportunity.eligible_countries,
       eligibleCitizenships: opportunity.eligible_citizenships ?? [],
       eligibleGrades: opportunity.eligible_grades ?? [],
+      // ?? false: migration 0060 may not be applied on this environment yet — an absent
+      // column means "not confirmed open," which is also the honest live default.
+      countryEligibilityConfirmedOpen: opportunity.country_eligibility_confirmed_open ?? false,
+      // Restriction prose suppresses the "not verified yet" note — the row WAS researched
+      // and its restriction evidence is already surfaced (counselor advisory notes, the
+      // opportunity detail page's Eligibility notes section).
+      hasUnstructuredEligibilityEvidence: Boolean(opportunity.citizenship_restrictions || opportunity.residency_restrictions),
       fields: opportunity.fields,
       country: opportunity.country,
     };

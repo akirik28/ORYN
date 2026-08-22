@@ -140,6 +140,53 @@ describe("computeEligibility", () => {
     const result = computeEligibility(student(), opportunity(), null);
     expect(result.eligible).toBe(true);
   });
+
+  // The live trust defect (docs/handoffs/opportunities-eligible-countries-gap.md Key
+  // Finding 1): an empty eligibleCountries has two live meanings — research-confirmed
+  // open (deliberately stored empty) and never-researched (~90% of live rows) — and
+  // before this rule both rendered identically: eligible, no warning. Only the first
+  // has earned silence.
+  describe("unverified country eligibility", () => {
+    test("surfaces a not-verified note when eligibleCountries is empty and not research-confirmed open", () => {
+      const result = computeEligibility(student(), opportunity());
+      expect(result.eligible).toBe(true); // never an exclusion — absence of research is not evidence of a restriction
+      expect(result.notes).toMatch(/not verified yet/i);
+    });
+
+    test("no note when research confirmed the program open worldwide", () => {
+      const result = computeEligibility(student(), opportunity({ countryEligibilityConfirmedOpen: true }));
+      expect(result.eligible).toBe(true);
+      expect(result.notes).toBeNull();
+    });
+
+    test("no note when a populated allow-list already covers the row (researched-restricted case)", () => {
+      const result = computeEligibility(student({ country: "Canada" }), opportunity({ eligibleCountries: ["United States", "Canada"] }));
+      expect(result.eligible).toBe(true);
+      expect(result.notes).toBeNull();
+    });
+
+    test("no note when a structured citizenship gate already covers the row", () => {
+      const result = computeEligibility(
+        student({ citizenshipCountries: ["United States"] }),
+        opportunity({ eligibleCitizenships: ["United States"] })
+      );
+      expect(result.eligible).toBe(true);
+      expect(result.notes).toBeNull();
+    });
+
+    test("no note when the row carries restriction prose (researched — the prose is surfaced elsewhere, 'not verified' would be false)", () => {
+      const result = computeEligibility(student(), opportunity({ hasUnstructuredEligibilityEvidence: true }));
+      expect(result.eligible).toBe(true);
+      expect(result.notes).toBeNull();
+    });
+
+    test("the note stacks with other unknown-notes instead of replacing them", () => {
+      const result = computeEligibility(student({ age: null }), opportunity({ minimumAge: 16 }));
+      expect(result.eligible).toBe(true);
+      expect(result.notes).toMatch(/age requirement/i);
+      expect(result.notes).toMatch(/not verified yet/i);
+    });
+  });
 });
 
 describe("computeOpportunityMatch", () => {

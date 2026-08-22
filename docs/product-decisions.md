@@ -266,3 +266,45 @@ chat instructions, not the doc** — full reasoning and exact evidence in
 not just a bug: the doc's "FİNAL scope kararı" language means a future session should not
 assume this resolution is obviously correct forever, only that it was the best call
 available without being able to ask.
+
+## FEAT-1 Package 1 — empty `eligible_countries` says "not verified," never silence, never exclusion
+
+**The unresearched-country case now speaks (advisory note + `unknown` verdict), and
+"confirmed open" got a structured home (`country_eligibility_confirmed_open`, migration
+0060, written NOT applied).** The live defect: `eligible_countries` is empty on ~352/391
+opportunities, and both read paths (`lib/opportunities/matching.ts` `computeEligibility`,
+`lib/counselor/eligibility.ts` `evaluateOpportunityEligibility`) skipped the country check
+entirely for an empty array — so an unresearched-but-possibly-restricted program rendered
+as eligible to every student with zero warning (Phase 68 violation, non-negotiable #5,
+docs/handoffs/opportunities-eligible-countries-gap.md Key Finding 1).
+
+Options weighed, per the assignment brief:
+- **Copy-only fix (no migration), rejected as not fully honest**: with no structured
+  signal, "not verified yet" copy would also stamp the handful of rows a research pass
+  genuinely confirmed open (wave 1's deliberate "confirmed open stays empty" convention)
+  — a false claim in the other direction, with no path to ever remove it, since future
+  research passes would still have nowhere to record a confirmation.
+- **Reinterpreting empty as unknown in the hard gate, rejected as the opposite
+  overcorrection**: empty-means-open is load-bearing for genuinely open programs, and
+  marking 352 rows ineligible would punish students for Oryn's own missing research.
+- **Shipped: the smallest change honest in both directions.** A boolean marker
+  (`country_eligibility_confirmed_open`, default false — same "absence of research is
+  never absence of a restriction" principle as 0059's `access_channel`) completes the
+  tri-state: array populated = restricted (unchanged hard check); empty + confirmed =
+  open, silence earned; empty + unconfirmed = an advisory unknown-note in both call
+  sites, extending each side's existing advisory-notes pattern (matching.ts
+  `unknownNotes`, counselor `notes` → verdict `unknown`), never a parallel mechanism and
+  never `eligible: false`/`known_ineligible`. The note is suppressed when the row carries
+  any other researched eligibility signal (structured citizenship list, or
+  citizenship/residency restriction prose — which the counselor path and the opportunity
+  detail page already surface verbatim), because "not verified" would be false for a row
+  research has in fact visited.
+
+Consequences accepted deliberately: most opportunity cards now carry an "Eligibility
+unknown" badge and most counselor opportunity candidates carry verdict `unknown` (which
+already down-weights their data-quality score component ×0.6 in `lib/counselor/scoring.ts`)
+— that is the honest state of the catalogue today, and it converges to silence exactly as
+fast as the research org fills in `eligible_countries`/the confirmed-open marker. Code
+reads the column defensively (`?? false`) so behavior is identical whether or not 0060 is
+applied. No data backfill in the migration: flagging the specific research-confirmed-open
+rows is a per-row evidence write for the research org/coordinator, not a schema change.
