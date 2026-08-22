@@ -343,6 +343,34 @@ simplification of the org.
     by classifier" report during resource pressure as unconfirmed cause until disk is verified
     healthy — including blocks that were already reasoned about and acted on.
 
+27. **After a squash-merge, do not read a diff — compute the merge result.** Squash-merging
+    rewrites what a branch's relationship to `main` means, and both diff forms then lie, in
+    opposite directions. Measured on one branch inside one minute:
+
+    - `git diff origin/main...origin/<branch>` (three dots) showed ~750 already-merged records
+      as **new additions**, because the merge-base predates them.
+    - `git diff origin/main origin/<branch>` (two dots) showed **15,638 deletions**, including
+      migrations `0061`–`0063` — reading as though the PR would revert the evening's security
+      work.
+
+    Neither was true. The actual answer was **+20 lines, 0 deletions**:
+
+    ```bash
+    tree=$(git merge-tree --write-tree origin/main origin/<branch>)
+    git diff --stat origin/main "$tree"
+    ```
+
+    The CEO came within one command of escalating "a PR is about to delete our security
+    migrations" on the strength of a stat line.
+
+    **This is the fourth trap of one species on a single day**, and the species is what matters
+    more than any of the four: *a tool's output standing in for the question you actually
+    asked.* The others were bare `git merge-tree`'s exit-0 on conflict (twice), selecting a
+    merge target by a predicate over the open-PR list (rule 24), and a `ListAgents` reference
+    read as an identity (rules 24, 26). In each case the tool answered honestly — a different
+    question. **Before trusting any tool output as evidence, state the question you meant and
+    check that the command answers that one.**
+
 ## 6. Known founder-pending items no lane may act on unilaterally
 
 - Evidence-gate false rejections (2,097 blocked records) — `docs/handoffs/evidence-gate-false-rejections-2026-08-22.md`
