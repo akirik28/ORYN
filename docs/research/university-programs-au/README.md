@@ -26,7 +26,7 @@ University" below.
 | Melbourne | 22 | 0 | — | **Deferred** — domain-wide bot-mitigation block, see below |
 | Sydney | 28 | **149** | `au_programs_sydney_2026-08-22.jsonl` | Complete |
 | ANU | 29 | 0 | — | **Deferred** — explicit robots.txt block on the only host serving the catalogue, see below |
-| Monash | 31 | in progress | — | Posture checked (not blocked, different platform shape); extraction not yet started |
+| Monash | 31 | **178** | `au_programs_monash_2026-08-22.jsonl` | Complete |
 | Queensland | 40 | not started | — | |
 | UWA | 77 | not started | — | |
 | Adelaide University | 79 | not started | — | Scheduled deliberately last — identity question, see below |
@@ -193,6 +193,95 @@ failures.
   use as a signal, so not relied on; recorded raw in `researcher_notes` only where true, no field
   in the 21-field contract asserts a meaning from it.
 
+## Method: Monash (live_fetch, official primary source, same platform family as UNSW — verified, not assumed, to differ)
+
+`www.monash.edu` carries the same Cloudflare "Just a moment" bot-mitigation as Melbourne
+(checked as its own isolated call, per the structural rule). `handbook.monash.edu` is clean —
+permissive `robots.txt`, real sitemap, and the same Callista-family `__NEXT_DATA__` JSON
+structure as UNSW's handbook. That surface similarity is where the resemblance to UNSW ends;
+every specific worth relying on was checked fresh rather than ported.
+
+**Discovery, genuinely different from UNSW:** Monash's sitemap URLs are `/2026/courses/<code>`
+with no undergraduate/postgraduate/research path split — 503 unique current-year codes covering
+every level together. The code prefix letters (`B`=109, `M`=91, `A`=69, `S`=33, `L`=30, `D`=29,
+`E`=28, `C`=27, `F`=25, `P`=12, `U`=7, plus 43 unprefixed numeric) turned out to be
+faculty/subject-area codes, not degree-level codes — verified by sampling at least one record
+from every single prefix before concluding this (not just the first one checked), since assuming
+"B for Bachelor" from a superficially plausible pattern is exactly the trap this package's brief
+warned about. With no URL-level shortcut available, all 503 were fetched and classified by each
+record's own structured `aqf_level` field — a read, not an inference, and a stronger evidentiary
+basis than UNSW's `hb_awards` indirection needed. 502 of 503 fetched successfully; one genuine
+404 (`M6011`) confirmed on a manual retry, not transient like UNSW's 4511 — recorded as a real
+negative finding, likely a stale sitemap entry for a retired code, not fixed by re-fetching.
+
+**The central finding: AQF "Level 8" is not one thing at Monash, and the numeric prefix cannot
+be trusted alone.** Level 8 covers `8_bach_hon_deg` (undergraduate Bachelor Honours, in scope),
+`8_grad_cert` (Graduate Certificate, 60 records, out of scope), and `8_grad_dip` (Graduate
+Diploma, 21 records, out of scope) — three different qualification tiers sharing one AQF number,
+because Australia's actual national framework groups them at the same level despite one being
+undergraduate and two being postgraduate. Classification therefore matches the **exact**
+`aqf_level.value` string against an explicit allowlist, never a "starts with 8" heuristic. Full
+distribution observed (all 502 fetched records, not a sample):
+
+| `aqf_level.value` | Count | In scope? | `degree_level` |
+|---|---|---|---|
+| `9_mast_deg_coursework` | 127 | No | — |
+| `8_grad_cert` | 60 | No | — |
+| `7_7_combo` | 56 | **Yes** | `Bachelor / first-cycle` |
+| `7_bach_deg` | 46 | **Yes** | `Bachelor / first-cycle` |
+| `10_doc_deg` | 39 | No | — |
+| `9_9_combo` | 35 | No | — |
+| `8_bach_hon_deg` | 29 | **Yes** | `Bachelor / first-cycle (Honours)` |
+| `9_mast_deg_research` | 27 | No | — |
+| `8_7_combo` | 26 | **Yes** | `Bachelor / first-cycle (Honours)` |
+| `8_grad_dip` | 21 | No | — |
+| `null` (12 total) | 12 | **3 of 12** | see below |
+| `5_dip` | 12 | **Yes** | `Undergraduate diploma / first-cycle (AQF Level 5, sub-bachelor pathway)` |
+| `9_mast_deg_ext` | 5 | No | — |
+| `7_9_combo` | 2 | **Yes** | `Bachelor / first-cycle (integrated master's)` |
+| `10_hi_doc_deg`, `8_8_combo`, `7_8_combo`, `7_9_combo2`, `8_9_combo` | 1 each | **4 of 5 yes** (`10_hi_doc_deg` no) | Honours/integrated-master's per combo |
+
+**The `null` case is why BASORG's instruction to verify individually, not assume, mattered in
+practice, not just in principle.** BASORG's ruling (informed by UNSW, where all 3 null-AQF
+records were genuine non-award pathway programs) was "null = the non-award pathway category, in
+scope." Generalizing that to Monash without checking would have wrongly included 9 records: of
+the 12 with no `aqf_level`, only 3 (`Monash Transition Program`, `Monash Access Program`,
+`Monash Advanced Preparation Program` — each individually confirmed via its own `type` field,
+`{"label": "Non award pathway", "value": "101"}`) are actually pathway programs. The other 9 are
+postgraduate credentials — Postgraduate Diplomas, Postgraduate Certificates, and "Professional
+Certificate" programs — that simply have an unpopulated `aqf_level` field on Monash's side (a
+source data-completeness gap, not a signal of undergraduate status); their own `type` field reads
+`"PG Grad Cert / Grad Dip"` or `"Other"`, never `"Non award pathway"`. All 9 correctly excluded.
+
+**The `_combo` values are Monash's own double-degree encoding** — a combo code states both
+component levels (`8_7_combo` = "Level 8 - Bachelor Honours Degree / Level 7 - Bachelor Degree").
+Mapped by the higher of the two components: any combo touching Level 8 → `(Honours)`; a
+combo of two Level-7s → plain. The `7_9_combo`/`7_9_combo2`/`8_9_combo` codes (4 records total)
+are genuine undergraduate-entry programs whose own `type` field labels them **"Vertical
+double"** — real ATAR-admitted school-leaver programs (e.g. Actuarial Science 88, Architectural
+Design 75) that culminate in a master's-level award, the same shape as UNSW's `9_masters_extended`
+records — mapped to the same `degree_level` for corpus consistency rather than a new value.
+
+**Field mapping, verified per-field rather than ported from UNSW's names:**
+- `degree_type`: `abbreviated_name` (e.g. `"BBus"`), falling back to `post_nominals` — both
+  populated directly by the source, no invented abbreviation.
+- `faculty_or_school`: Monash's `school` field states this directly (e.g. `"Faculty of Business
+  and Economics"`) — cleaner than UNSW's split `faculty_detail`/`academic_org`, used as-is.
+- `duration`: `full_time_duration` is a **list of structured objects** here (`duration_number`,
+  `duration_period`, `type`, `duration_display`), not the simple string UNSW's identically-named
+  field held — the third distinct shape this field name has taken in this package alone (UNSW's
+  broken-vs-working pair, now Monash's list-vs-string). Recorded faithfully by joining each
+  entry's `duration_display` and `type` (e.g. `"3 Years (Full time)"`), never flattened to match
+  UNSW's shape — different platforms genuinely represent duration differently, and normalizing
+  that away would be the same convention drift this org has already paid for once (Glasgow).
+- `international_eligible`: same `cricos_code`-presence signal and `regulatory_inference`
+  provenance as UNSW (Monash exposes the same field, verified present on samples before relying
+  on it) — Sydney's `coursecitizenship`-style field does not exist here.
+- `atar`: a real, populated field with actual admission-score text on many records — not a slot
+  in the 21-field contract (no downstream consumer yet, per BASORG), so recorded verbatim in
+  `researcher_notes` rather than forcing a new field for one university. Flagged to BASORG to
+  revisit as a structured field if it recurs across further AU universities.
+
 ## ANU: deferred, explicit robots.txt block
 
 `programsandcourses.anu.edu.au` — the only host that actually serves ANU's programme/course
@@ -291,29 +380,33 @@ actual data before relying on it: grepped all 149 titles for the absence of both
 field-absent records individually identified and confirmed to all be one coherent pattern
 (Honours-year extensions of Arts-family base degrees), not a mix of unrelated causes.
 
-**Combined corpus check (366 AU records total, UNSW + Sydney):** re-ran the corpus-wide validator
-after the `field_provenance` retrofit — still zero duplicate IDs, zero schema failures.
+**Monash (178):** same schema + corpus-wide ID validation, zero mismatches, zero duplicate IDs,
+zero duplicate `official_program_url`. Classification checked before writing, not after: all 502
+fetched records' `aqf_level` values enumerated and individually assigned in/out-of-scope status
+(see the method section above) — including catching that only 3 of 12 null-`aqf_level` records
+were genuine pathway programs, not all 12 as a naive port of the UNSW pattern would have assumed.
+
+**Combined corpus check (544 AU records total, UNSW + Sydney + Monash):** re-ran the corpus-wide
+validator after every retrofit — zero duplicate IDs, zero schema failures.
 
 ## Remaining gaps, in priority order
 
-1. **Monash (rank 31) posture checked, extraction not started.** Not blocked, but a materially
-   different discovery shape from UNSW/Sydney: 503 total 2026 course codes with no
-   undergraduate-only URL pre-filter (unlike UNSW's clean sitemap split) — the letter-prefixes in
-   the code scheme are faculty/subject-area codes, not degree-level codes (verified by sampling
-   every prefix, not assumed from the first one checked), so building the undergraduate subset
-   requires fetching all 503 and reading each one's `aqf_level` field. Reported to BASORG before
-   committing the extra request volume; awaiting direction.
-2. **Queensland, UWA, Adelaide University (ranks 40/77/79) not yet started.**
-3. **Adelaide University identity question (rank 79) deliberately scheduled last** per BASORG's
+1. **Queensland, UWA, Adelaide University (ranks 40/77/79) not yet started.**
+2. **Adelaide University identity question (rank 79) deliberately scheduled last** per BASORG's
    instruction — the DB holds a "Adelaide University" row (adelaide.edu.au) but no "The
    University of Adelaide" or "University of South Australia" row; whether this is the newly
    merged institution or a renamed legacy one is not yet resolved.
-4. **Melbourne and ANU deferred with reason** (see above) — Melbourne pending either a Course
+3. **Melbourne and ANU deferred with reason** (see above) — Melbourne pending either a Course
    Seeker browser-tooling retry or a later robots.txt/WAF-posture recheck; ANU pending either a
    Wayback retry (rate-limited, not exhausted) or browser tooling against
    `programsandcourses.anu.edu.au` weighed against its explicit `robots.txt` disallow (that
    disallow governs regardless of tooling — a browser render would still be crawling a host that
    named this crawler by name, so this is a policy question for BASORG, not a technical one).
+4. **Monash `M6011`: genuine 404, not resolved.** Unlike UNSW's transient 4511, confirmed on a
+   manual retry to be a real broken link — the sitemap lists a code that no longer resolves.
+   Likely a stale sitemap entry for a retired/renamed program; not investigated further since a
+   single missing code out of 503 doesn't warrant more time, but noted rather than silently
+   dropped from the 503-vs-502-vs-178 count chain.
 5. **No postgraduate or research-degree coverage** — out of scope for this package by the original
-   brief (undergraduate only); both UNSW's and Sydney's sitemaps also index postgraduate/research
-   programmes that were not touched here.
+   brief (undergraduate only); UNSW's, Sydney's, and Monash's sitemaps/catalogues all index
+   postgraduate/research programmes that were not touched here.
