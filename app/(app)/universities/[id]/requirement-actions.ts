@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { RequirementInputSchema, StructuredRuleSchema, ruleAuthoringRefusal } from "@/lib/validation/requirements";
 import { interpretRequirementText } from "@/lib/ai/interpret-requirement";
 import { categoryToRuleKind } from "@/lib/requirements/types";
+import { validateProgramOwnership } from "@/lib/requirements/program-ownership";
 import { toFriendlyDbErrorMessage } from "@/lib/errors/friendly-db-error";
 import type { RequirementCategory } from "@/types/database";
 
@@ -40,6 +41,27 @@ export async function addUniversityRequirement(input: unknown): Promise<{ error?
   }
 
   const admin = createAdminClient();
+
+  // See lib/requirements/program-ownership.ts — a program_id must actually belong to
+  // universityId, or this silently writes a requirement that shows against the wrong
+  // university's program page. Only fetches when a specific program was chosen; the
+  // common "University-wide" case (programId null) never needs this round trip.
+  if (data.programId) {
+    const { data: program, error: programLookupError } = await admin
+      .from("university_programs")
+      .select("university_id")
+      .eq("id", data.programId)
+      .maybeSingle();
+    if (programLookupError) {
+      console.error("[requirement-actions] failed to verify program ownership", { code: programLookupError.code, message: programLookupError.message });
+      return { error: toFriendlyDbErrorMessage("save") };
+    }
+    const ownership = validateProgramOwnership(data.programId, data.universityId, program?.university_id ?? null);
+    if (!ownership.ok) {
+      return { error: ownership.error };
+    }
+  }
+
   const { error } = await admin.from("university_requirements").insert({
     university_id: data.universityId,
     program_id: data.programId,
