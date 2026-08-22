@@ -1688,3 +1688,73 @@ verifier can settle it from the corpus side.**
 **Routed to RES-I1 as a pre-ingestion question for whenever Adelaide moves**, with RES-V2's writeup
 cited. **Flagged, routed, not resolved — and deliberately not filed as "minor,"** because "minor"
 is where a question goes to stop being asked.
+
+## 8.4mm OTTAWA CLEARED BOTH LANES — I1-11 DISPATCHED
+
+**RES-V1, V1-12a: PASS** (`902d5f2`), with a newly-built **`ca-r1` validator contract** — Canada's
+first formalized lane, modeled on `au-r1`, built rather than checked ad-hoc. **RES-V2, V2-11a:
+72/72 clean.** Gate met; **RES-I1 dispatched on the 276 Ottawa records** under the UWA conditions
+(re-measure live, dry-run then apply, `batch_id` as revert path, invariants checked directly, **stop
+before applying if accepted ≠ 276**).
+
+### Two RES-V1 findings worth keeping
+**Sampling 30 of the 123 exclusions live** rather than trusting the major/minor pattern from slugs
+is what makes the exclusion defensible — and **major-psychology's own page confirming the exclusion
+logic in its own words** is the strongest form that evidence takes.
+
+**The integrated-master's reframe**: it reused the AU corpus's check, saw it **fire 28 times**, and
+recognised that **Canada has no AQF** — so what it found is an *Ottawa-internal inconsistency*, not a
+mismatch against a label that was never Canada's to match.
+
+> **A check that fires is not the same as a defect that exists.**
+
+Reconciliation re-derived from Ottawa's **own live sitemap** rather than from BASORG's report: 399
+vs 398 claimed, the same drift as every AU sitemap check so far.
+
+## 8.4nn CORRECTION: "four rewritten" was three — and chasing it found a real defect
+
+**BASORG's assignment said four pathway records had their `international` key rewritten. It is
+three.** RES-V1 caught it against the file and Adelaide's own README. **Verified directly in the
+corpus rather than adopted from either lane's report:**
+
+```
+explanatory string present — 3 records: idx0 Aboriginal/TSI Pathway, idx84 CASM, idx88 Foundation Studies
+international key absent  — 1 record:  idx119 UniStart
+```
+
+**Three rewritten; UniStart created in corrected form** — a different edit, not a fourth instance.
+**Same species as "651 across five universities": a count that merged two populations because both
+were "records affected."**
+
+### Two lanes held two halves of one fact
+RES-V2 flagged the field as **non-uniform**; RES-V1 corrected the **count**. **Neither had the
+other's half** — and the count *is the cause of* the non-uniformity: UniStart omits the key
+**because it was created correct rather than rewritten.**
+
+### Following it down INVERTED the finding
+```
+idx1   Bachelor of Agricultural Sciences   study_mode.international = "Full-time"
+idx119 UniStart                            study_mode.domestic      = "Full time or part time"
+idx0/84/88                                 study_mode.international = "No distinct international
+                                             variant published for this pathway -- confirmed live
+                                             (2026-08-22): the bare URL and the explicit /int/ pa..."
+```
+
+**`study_mode` holds study modes. Three records put a provenance sentence in a value slot.** Same in
+`entry_requirements.international`.
+
+> **UniStart is the CORRECT shape. The three records with the more careful fix are the defective
+> ones.** RES-V2 framed UniStart as the outlier and BASORG amplified that into a queued question.
+> **Both backwards.**
+
+**BASORG's escalation was wrong in kind, not merely in direction.** It went to RES-I1 as a
+*consumer-side presence-check risk* only the ingester could settle. **It requires no consumer
+knowledge at all** — the field's own siblings establish the value domain, so **it is visible in the
+data itself.**
+
+**Withdrawn from RES-I1. Routed to RES-R1 as a corpus fix** (move the note to a provenance field,
+let `international` be absent, **preserve the text — it took live verification to establish**).
+Adelaide is not ingested, so it never reaches the database.
+
+**RES-V2's caution was correct from where it sat** — it declined to guess at the consumer, which was
+the right stopping point. **What resolved it was not better reasoning. It was opening the file.**
