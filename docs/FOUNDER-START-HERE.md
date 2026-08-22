@@ -9,7 +9,7 @@ where, and how to tell it worked.
 
 - **What happened today**: `docs/ORYN-DAY-REPORT-2026-08-22.md` — read this first if you only
   read one thing.
-- **The complete list of everything needing you**: `docs/founder-blocked-backlog.md` (36 items;
+- **The complete list of everything needing you**: `docs/founder-blocked-backlog.md` (37 items;
   this page sequences only the ones that matter tonight).
 - **What is actually true right now**: `docs/current-state.md`.
 
@@ -79,7 +79,17 @@ confirm with an anonymous query that the view returns nothing for a public profi
 
 Full reasoning: backlog item 30, and `docs/research/verification/rls-live-verification-2026-08-22.md`.
 
-### 3. Approve migrations `0060` and `0057` — same shape, no urgency
+### 3. Approve migrations `0063` and `0064` — written this evening, no urgency
+
+Both came out of the same security sweep that produced `0062`, both written and **not applied**.
+- **`0063`** stops a student writing their own computed scores — the numbers Oryn calculates
+  about them — and moves those writes to the privileged path where they belonged.
+- **`0064`** stops a student filing a moderation report that names an innocent third party as
+  the author of a message they didn't write.
+
+Neither is urgent. Both are safe to apply whenever you approve `0062`.
+
+### 4. Approve migrations `0060` and `0057` — same shape, no urgency
 
 Both written, reviewed, unapplied, waiting only on your go-ahead.
 - **`0060`** adds an honest "research confirmed this is open worldwide" marker, so that
@@ -89,7 +99,7 @@ Both written, reviewed, unapplied, waiting only on your go-ahead.
 
 Backlog items 29 and 26.
 
-### 4. Open one ingester session (whenever suits you — no deadline)
+### 5. Open one ingester session (whenever suits you — no deadline)
 
 Six of thirteen working sessions ended without warning this afternoon, including **both** lanes
 permitted to write to the database. Verified, bounded, revertible work is stranded with nothing
@@ -101,7 +111,7 @@ a missing improvement, not a defect.
 **How**: open a new chat and paste the `RES-I2` brief from `docs/ORYN-ORG-BRIEFS.md`. One session
 clears most of it in under an hour. Backlog item 34.
 
-### 4b. If you un-hang MERGE-1, point it at its resume brief first
+### 5b. If you un-hang MERGE-1, point it at its resume brief first
 
 MERGE-1's session has been hung since 15:42 — over three hours, holding a "running" slot, which
 is why nobody could reach it. **Only you can un-hang it, at its terminal.**
@@ -113,7 +123,7 @@ exists for exactly this and explains what changed and why it should not start me
 
 Entirely optional. Nothing is waiting on MERGE-1; the queue is empty.
 
-### 5. Two product decisions nobody can make for you
+### 6. Two product decisions nobody can make for you
 
 - **Item 27 — ~79 opportunity rows** whose descriptions are degraded *in your own Drive source
   spreadsheet* (the importer carried the defect faithfully; it did not create it). 31% of the
@@ -126,7 +136,7 @@ Entirely optional. Nothing is waiting on MERGE-1; the queue is empty.
   misleads is the field's implied claim to be complete. Deciding the principle once settles all
   four.
 
-### 6. The UI conversation you deferred
+### 7. The UI conversation you deferred
 
 `docs/ui-audit-2026-08-22.md` is the agenda: six defects verified safe to fix now, findings that
 need your taste rather than a fix, and costed proposals in three tiers (colour/typography ·
@@ -152,7 +162,9 @@ unresolved and flagged rather than guessed at.
 ## What you do NOT need to do
 
 - **No code fixes tonight.** `main` was independently re-verified at the end of the evening:
-  lint clean, typecheck clean, **142 files / 2,108 tests passing**, production build succeeds.
+  lint clean, typecheck clean, **144 files / 2,122 tests passing**, production build compiles —
+  and independently reproduced by a second session in its own clean-room checkout. (Figures
+  measured 19:40; `docs/current-state.md` carries the authoritative, dated version.)
   (The app was also run against the live database and walked by hand — but that was this
   morning, ~78 merges ago. A full end-to-end walk is in progress and will be reported
   separately; treat the hand-walk as verified for this morning's code, not tonight's.)
