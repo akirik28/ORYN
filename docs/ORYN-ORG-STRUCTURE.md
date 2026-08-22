@@ -371,6 +371,39 @@ simplification of the org.
     question. **Before trusting any tool output as evidence, state the question you meant and
     check that the command answers that one.**
 
+28. **A shared test account is a shared resource. Claim it, name it, never share it
+    concurrently.** Any lane doing live verification states in its report **which account it is
+    using**, and no two lanes use the same account at the same time. The CEO allocates.
+
+    Earned expensively. Three lanes — FEAT-1, FEAT-2 and UI-1 — were assigned live browser work
+    on the same evening with two QA accounts between them and **no allocation from the CEO**.
+    All three ended up driving onboarding on `oryn.qa.b` simultaneously. The result was a
+    profile row reading `country: United States` with `school_name: MEF Lisesi`, a Turkish
+    school — one lane's US selection interleaved with another's Turkish one.
+
+    **That row was then escalated as a confirmed product defect.** The CEO argued the
+    self-contradiction *ruled out* measurement artifacts, on the reasoning that a mis-aimed
+    click yields a wrong record rather than a self-inconsistent one. True as far as it went, and
+    wrong — it enumerated one class of artifact and stopped. **A second writer produces exactly
+    that signature.** A third lane was sent to diagnose a defect that the evidence did not
+    support, and two lanes independently retracted findings built on the same contaminated row.
+
+    Two lessons, and the second is the general one:
+
+    - **Contamination is not corruption.** The account was never damaged, it was crowded. The
+      fix is exclusivity, not a fresh account — under sole access, every observation becomes
+      attributable again. Reaching for a new fixture is usually solving the wrong problem, and
+      it may require permissions no session holds.
+    - **Before concluding that data is corrupted, ask who else was writing.** Shared fixtures
+      manufacture defects that look exactly like real ones, and look *most* convincing when the
+      resulting record is internally inconsistent — the very feature that seems to prove a
+      single-writer bug is the signature of two writers.
+
+    Note what did survive: UI-1's independent diagnosis, which rested on **static source code**
+    rather than on the live row, and which it had explicitly declined to corroborate against an
+    account it noticed was moving under it. When a fixture is shared, the artifact that cannot
+    be contaminated is the one to reason from.
+
 ## 6. Known founder-pending items no lane may act on unilaterally
 
 - Evidence-gate false rejections (2,097 blocked records) — `docs/handoffs/evidence-gate-false-rejections-2026-08-22.md`
