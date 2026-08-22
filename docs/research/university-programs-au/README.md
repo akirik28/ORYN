@@ -301,6 +301,18 @@ failures.
   use as a signal, so not relied on; recorded raw in `researcher_notes` only where true, no field
   in the 21-field contract asserts a meaning from it.
 
+**`degree_type` is `null` on all 149 — a source-level limitation, checked live, not assumed
+(2026-08-22, BASORG-directed check after CEO found the null rate):** the `.model.json` schema
+(back up after RES-V2's earlier intraday HTTP 400) does publish a per-programme code —
+`ippCode`, e.g. `"DBUSOCWRK2000-0"` on Bachelor of Social Work, confirmed present across 5
+sampled degree families. **This is a course/admission code, not a post-nominal degree
+abbreviation** — compare Monash's `degree_type` values below (`BE(Hons)`, `BDigBus`,
+`BScAdvGlblChal(Hons)`, mixed-case source-stated abbreviations) to Sydney's `ippCode` shape
+(all-caps, fixed structure, a catalogue identifier). Filling `degree_type` with `ippCode` would
+put two different kinds of fact under one field name across the corpus. Sydney genuinely does
+not publish a post-nominal abbreviation anywhere on its pages (checked directly); `null` is
+correct and stays.
+
 ## Method: Monash (live_fetch, official primary source, same platform family as UNSW — verified, not assumed, to differ)
 
 `www.monash.edu` carries the same Cloudflare "Just a moment" bot-mitigation as Melbourne
@@ -478,7 +490,13 @@ Cards seen: `Minimum ATAR`, `Intake`, `Full time completion`, `Course Code`, `CR
 `Annual course fee` (not captured — no fee field in this contract).
 
 **Field mapping:** `degree_type`=null (no clean abbreviation field exists, unlike UNSW's
-`abbreviated_name`/Monash's `post_nominals`/`abbreviated_name`); `faculty_or_school`=null and
+`abbreviated_name`/Monash's `post_nominals`/`abbreviated_name`) — **re-verified live 2026-08-22**
+after CEO's null-rate finding prompted a fresh check, not just carried forward from the original
+claim: checked the full card-label set across 6 pages spanning all 4 `degree_level` categories.
+One similarly-named card exists — "DEGREE TYPE" — but on only 2 of 6 pages, holding a broad
+classification (`"Specialised Bachelor's Degree"`) redundant with `degree_level`, not an
+abbreviation. No `(BSc)`-style post-nominal found anywhere. Confirmed source-level limitation,
+not an extraction gap; `faculty_or_school`=null and
 `campus`=null (checked card fields, page prose, and breadcrumb navigation — neither is
 structurally exposed on individual degree pages here, though UWA's separate major pages do carry
 a `Locations` card, out of scope since majors are excluded); `degree_level` from explicit title
@@ -488,6 +506,24 @@ Monash; `atar` as the structured `{value, scale: "ATAR", source_field}` object B
 Monash, reused here since the field recurred a third time.
 
 ## Adelaide University (119 records, complete)
+
+**`degree_type` correction (2026-08-22), caught pre-ingestion — Adelaide was never live, so this
+never shipped wrong:** all 119 records originally carried a value like `BCOMP`, `HECON`, `BARTS`
+in `degree_type`, reasoned by analogy to UWA/Monash's structured-code precedent. That analogy was
+itself the defect, caught when BASORG asked whether the same precedent held up under Sydney's
+parallel `ippCode` finding. Checked live, not assumed: `adelaide.edu.au` labels this exact value
+**"Program code"** on its own page, directly beside "Degree Structure: Bachelor of Computer
+Science" — a catalogue identifier, not a post-nominal a graduate would write after their name.
+The shape itself was a tell in hindsight: `BCOMP`/`HCOMP` and `BECON`/`HECON` track the identical
+subject across plain/Honours variants with a rigid all-caps 5-character format — a system code
+convention, not the mixed-case, source-stated abbreviations Monash's `degree_type` actually holds
+(`BE(Hons)`, `BDigBus`, `BScAdvGlblChal(Hons)`). No genuine post-nominal exists anywhere on
+Adelaide's pages (checked directly). **All 119 `degree_type` values reset to `null`**; the
+original program code is not lost — every record's `researcher_notes` already stated
+`program_code='XXX'` before this fix and still does, now with an explanatory correction note
+alongside it. Same standard now applies retroactively to this lane's own UWA/Adelaide precedent
+that Sydney's finding was checked against: a source's own internal code does not belong in
+`degree_type` just because it's the only structured value on the page.
 
 **Identity, resolved from the source's own statement, not from any prior-knowledge lead:**
 `adelaide.edu.au`'s own homepage schema.org organization markup states directly: *"Adelaide
