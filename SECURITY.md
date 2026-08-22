@@ -214,10 +214,3 @@ admin Server Action, not just the page.
   throttling, not this app's code.
 - **No content moderation** on free-text fields (activity descriptions, advisor
   messages) beyond what the AI system prompt discourages.
-- **The admin-only "add a requirement" form (Phase 69,
-  `app/(app)/universities/[id]/requirement-actions.ts`) doesn't cross-check that a
-  submitted `program_id` actually belongs to the given `university_id`.** Low severity —
-  it's gated by `requireAdmin()` (a trusted operator, not a student-facing surface) and the
-  UI only ever offers programs already scoped to that university — but a direct call to the
-  Server Action with a mismatched pair wouldn't be rejected server-side. Worth adding if
-  this form gets more than one admin using it.

@@ -174,6 +174,24 @@ so the retraction has a durable home, not just a chat message.) No code change m
 merge decision on the two rows stays a human/review-queue call, not an automatic one,
 per this org's standing rule against fuzzy-merging entities.
 
+## Fixed this session (BUG-1, triage cycle 2)
+
+- **The admin "add a requirement" form didn't verify a submitted `program_id` belonged to
+  the given `university_id`.** Previously listed here and in `SECURITY.md` as a known,
+  deliberately-unfixed gap (low severity — admin-only, gated by `requireAdmin()`, and the
+  real UI only ever offers that university's own programs in its dropdown) but a real one:
+  the Server Action itself trusted client-submitted IDs with no cross-check, so a direct
+  call (devtools, a future admin surface reusing this action, a caller bug) could silently
+  write a `university_requirements` row attributing one university's program requirement
+  to a different university — exactly the kind of traceable, sourced fact AGENTS.md
+  Phase 69's "Requirement Check" shows a student. Fixed: `addUniversityRequirement`
+  (`app/(app)/universities/[id]/requirement-actions.ts`) now fetches the program's actual
+  `university_id` and rejects a mismatch with a clear error, via a new pure decision
+  function `lib/requirements/program-ownership.ts` (unit-tested, 4 cases: university-wide/
+  matching/mismatched/not-found, mirrors this codebase's existing `decideIngestion`
+  pattern of separating pure logic from the I/O that feeds it). Both stale entries
+  removed from this file and `SECURITY.md`.
+
 ## Needs founder decision — real conflict found in the founder's own Drive doc
 
 While working autonomously, this session found "ORYN Programlama" (a Google Doc in the
@@ -509,9 +527,6 @@ this pass.
 - **`ProviderStatus`'s `down` value is never set** — `lib/providers/health.ts` only ever
   writes `healthy` or `degraded`. Distinguishing "one request failed" from "confirmed down"
   would need consecutive-failure tracking; low value for a pre-launch admin-only signal.
-- **The admin "add a requirement" form doesn't verify a submitted `program_id` belongs to
-  the given `university_id`.** Low severity (admin-only, gated by `requireAdmin()`, and the
-  UI only ever offers that university's own programs) — see `SECURITY.md`.
 - **Rate limiting doesn't cover every Server Action.** **Partially fixed** (autonomous
   pass, 2026-08-16): `sendMessage`, `sendConnectionRequest`, and `reportMessage` now have
   limits (`lib/security/rate-limit-config.ts`), on top of the pre-existing AI-backed
