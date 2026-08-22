@@ -106,12 +106,55 @@ allowed the identical statements sent individually. That is a workaround of a de
 destroys atomicity — a future multi-statement batch would partially apply. Standing ruling:
 if a transaction block is blocked, STOP and escalate; do not decompose it.
 
+### 4d. Live rows making false actionable claims — audit running
+
+RES-V2 found the SIP (Science Internship Program) row (`7aa518f8`) showing
+`cycle_status='upcoming'` for a program that **concluded 2026-08-08**. Confirmed live by
+BASORG. A student filtering for upcoming programs sees it today.
+
+Live `cycle_status` distribution across the 271 active rows, measured 2026-08-22:
+
+| status | rows | of which past deadline |
+|---|---|---|
+| `unverified` | 93 | 0 |
+| `closed` | 57 | 24 |
+| `date_not_announced` | 44 | 0 |
+| **`upcoming`** | **35** | 0 |
+| **`open`** | **31** | 0 |
+| `historical` | 11 | 5 |
+
+**The 66 rows claiming `open` or `upcoming` are the ones making an actionable promise.** A
+wrong `unverified` costs a student nothing; a wrong `open` sends them to a closed door.
+Assigned to RES-V2 as package V2-2: audit all 66 against official sources, read-only,
+defects routed to BASORG for RES-I2. Instructed to stop and report if the first sub-batch
+runs a high defect rate — that would make it a corpus-wide problem rather than a cleanup.
+
+### 4e. Blocked and prepped: 6 non-opportunity retirements
+
+RES-I2's write was blocked at COMMIT by its session's classifier. Per standing ruling it
+STOPPED and escalated rather than decomposing the transaction. Verified live by BASORG: all
+6 rows `status='active'`, `category='summer_program'` — five are institution names
+(Carnegie Mellon, King's College London, NYU, USC, St Andrews) and one is a university
+course listing ("ECON 1 - 01 Introductory Microeconomics"). Wrong in kind.
+
+Prepped so the write is a single step once unblocked:
+`data/research/opportunities/i2_retire_nonopportunities_2026-08-22.sql` (dry-run-confirmed,
+guarded by `id` + `status='active'`, idempotent) and its run report, pushed at `7a3e74a`.
+Confirmed there is no reason/notes column on `opportunities` — per-row reasons live in the
+run report, which is correct; a schema change is not justified by needing somewhere to
+write a note.
+
 ### 4d. Carried forward
 
-- **5 opportunity rows unreachable by any AI-permitted fetch path.** Technovation + CSHL
-  robots.txt-blocked for Anthropic crawlers (respected; archive.org deliberately not used).
-  BSPEE / Ashoka / Girl Up return server-side 403 with clean robots. Needs a human check or
-  non-AI fetch path.
+- **CORRECTED — 2 rows unreachable, not 5.** BASORG originally escalated 5. RES-V2
+  independently re-tested all five rather than taking the deferral on report:
+  **Technovation + CSHL are genuine policy blocks** (robots.txt fetched directly; explicit
+  `anthropic-ai` / `Claude-Web` / `ClaudeBot` disallow) and stay deferred.
+  **BSPEE / Ashoka / Girl Up have CLEAN robots.txt** — their 403s are bot-detection on the
+  curl path, not site policy — and all three fetched successfully via rendered browser,
+  corroborating live DB state. Routed back to RES-R2 as recoverable. "This site forbids AI
+  crawlers" and "our fetch tool got blocked" look identical from a 403 and have entirely
+  different answers; BASORG had collapsed them.
 - **Migration 0060** (`opportunities.country_eligibility_confirmed_open`) merged but not applied
   live. Confirmed-open rows need per-row evidence-backed backfill once it is.
 - **Dartmouth's 53 programme records stay blocked.** RES-I1 identified them as the one clean
@@ -164,6 +207,14 @@ if a transaction block is blocked, STOP and escalate; do not decompose it.
 - **Batch cardinality is not batch identity.** Reconciling research files against live data
   joins on record IDs, never on matching record counts. 189 records matching 189 records can be
   189 different records — the rank≠identity fallacy applied to batches.
+- **RULE-FETCH-001 (new): a 403 is not a robots.txt block.** Before deferring a source as
+  blocked, fetch robots.txt directly. Clean robots + 403 = bot-detection on the tool path;
+  try a permitted alternative fetch (rendered browser) — `browser_render` is a passing
+  retrieval method, so recording it honestly costs nothing. robots.txt disallow = policy
+  block; defer with the reason, never route around, no archive.org substitution. Only the
+  second is a deferral. Corollary from RES-V2's IPsyO finding: a page's static HTML and its
+  rendered state can disagree (marketing copy frozen at 2025, JS-injected dates genuinely
+  2026) — a raw fetch can yield the opposite of the truth on date verification.
 - **Blocked sources are deferred, never routed around.** A robots.txt AI-crawler block or
   a hard 403 yields a deferred record *with its reason*. archive.org is not a substitute
   for a blocked live source. (Ratified from RES-R2's handling.)
