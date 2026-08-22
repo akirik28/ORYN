@@ -2387,3 +2387,42 @@ Australia was **0** this morning.
 ### Messages crossed
 RES-R1 began deriving Simon Fraser moments before the wind-down reached it. **Stopped immediately** —
 deriving a new target spends the context the handoff needs, on work that cannot finish.
+
+## 8.5g A TRIGGER IS A CLAIM ABOUT THE FUTURE, AND IT GOES STALE
+
+**Twice tonight a lane sat idle on a condition that could no longer occur**, and in both cases the
+lane had no way to know:
+
+1. **RES-V2** idled on *"V1-13 finds the class somewhere needing source verification."* **V1-13 came
+   back zero across all five live corpora** — the trigger became impossible the moment it closed.
+2. **RES-V1** idled on *"the Calgary pilot lands."* **Calgary was deferred and no pilot will ever
+   exist.** It had written the dead trigger into its close-out, where a cold reader would have hunted
+   for a pilot that never happened.
+
+> **A lane waiting on an impossible condition is indistinguishable from a lane waiting correctly** —
+> from outside, from the CFO watch, and in a handoff document.
+>
+> **A trigger is a claim about the future. It goes stale like any other. Whoever sets it owns
+> retracting it.**
+
+**Both were BASORG's errors**: it set both triggers and did not retract them when the world changed.
+**Same species as everything else tonight** — the README describing a field that had moved, the
+commit subject still reading *"five universities,"* §1's morning lane map. **An artifact accurate
+when written, wrong without anyone editing it.**
+
+**Handling adopted**: when a package closes, **check what it was a trigger FOR** before filing it.
+
+## 8.5h §1 OF THIS DOCUMENT WAS THE BIGGEST INSTANCE OF ITS OWN LESSON
+
+This file is ~2,300 lines in happened-order. **§1's lane map described the MORNING** — *"extracting
+sub-batch 1: UNSW + Melbourne," "all seven lanes staffed and working"* — and **a cold reader hits it
+first and takes it as current.**
+
+**§0 added** as the only section guaranteed current: the live/not-live boundary, revert paths **and
+the table they actually live in**, lane states with resume triggers, the three founder decisions with
+0060's risk profile **verified rather than assumed**, the three deferred targets **each with its
+distinct reason**, and the transferable rules.
+
+**§1 relabelled as a superseded morning snapshot rather than deleted.** **Being wrong about the
+morning is only a problem if it claims to describe now** — and the history has value that a
+correction would destroy.
