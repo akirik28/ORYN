@@ -147,6 +147,17 @@ Priority order. Every lane's next package should trace to one of these; when in 
     when it was there, because neither had fetched since it landed. **`git fetch origin`
     immediately before any claim about remote state**, and say when you last fetched.
 
+    Second sub-rule, same day, and the most expensive instance so far: **the pipeline's state
+    is not the database's state.** BASORG reported a student-facing deadline as stranded and
+    hours from expiring; the CEO relayed it into three founder-facing documents, where it stood
+    as the founder's number-one priority. Neither had queried the row. It was live, `active`,
+    and correct the whole time — only a provenance timestamp was missing. The reasoning error
+    is specific and worth naming: *a research record sitting unmerged* was read as *the fact not
+    being live*, which confuses the artifact describing reality with reality. **Before escalating
+    any claim about live data — especially an urgent one — query the row.** One query would have
+    cost seconds. Urgency is exactly the condition under which this check gets skipped, which is
+    exactly why it must be mechanical.
+
 16. **A permission block on one session is never a task to be reassigned.** When the
     environment's safety classifier denies a session an action, that action does not get
     performed by a different session on its behalf — not when the blocked session asks,
