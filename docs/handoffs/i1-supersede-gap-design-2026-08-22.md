@@ -182,10 +182,107 @@ schema questions for the founder/BASORG, not something `decideIngestion` routing
 over. Recommend they get resolved together with backlog item 26 rather than as a third
 mechanism bolted onto Path A or B.
 
+## Addendum — Package I1-4: Glasgow's 69 fold into Path A, with a resolution step Path A didn't have
+
+ORYN-CFO re-derived the Glasgow finding independently and surfaced a reclassification: under
+RULE-INGEST-003 (populating an empty field is the permitted case), live Glasgow's
+`degree_type` is NULL on all 101 rows while the file populates 93 of its 101 — so the correct
+handling of the near-certain-duplicates isn't "skip," it's "enrich." That makes them
+UPDATE-shaped, the same structural category as `url_repair`. BASORG assigned folding this into
+the design, with one binding constraint checked below before anything else.
+
+### The constraint, verified directly, not taken on description alone
+
+CFO's claim: URL must be the primary identity-resolution axis; stripped-name is corroboration
+only, never sufficient alone. Checked the specific counter-example directly rather than
+trusting the description:
+
+```
+File:  "Music [BMus]"  →  official_program_url: https://www.gla.ac.uk/undergraduate/degrees/musicbmus/
+Live:  "Music"          →  official_program_url: https://www.gla.ac.uk/undergraduate/degrees/musicma/
+```
+
+Confirmed: these are genuinely different pages for genuinely different degrees (BMus vs. MA)
+that happen to share a stripped name. **Zero URL overlap.** A name-only resolver would merge
+the file's BMus record into live's MA row and enrich it with the wrong degree_type — silent
+corruption, not a caught error, because a wrong-but-plausible degree_type looks exactly like a
+right one. **Constraint confirmed as binding, not adopted on trust.**
+
+### Measuring the actual shape of the 93 populated-degree_type candidates
+
+Ran URL-based resolution (own script, deleted after use) against all 93 Glasgow file records
+that carry a non-null `degree_type`, matching each against live Glasgow rows by exact
+`official_program_url`:
+
+| Resolution outcome | Count |
+|---|---|
+| URL matches exactly one live row (clean, resolvable) | **62** |
+| URL matches zero live rows | **31** |
+| URL matches multiple live rows (ambiguous) | 0 |
+
+The 31 zero-match records overlap heavily with the "32 genuine variants needing research
+adjudication" already identified for Glasgow (partnership/dual-degree/graduate-entry
+programmes, confirmed by inspecting the sample — `Aeronautical Engineering (in partnership
+with Tianjin University)`, `Common Law (graduate entry)`, and similar). **These are not
+enrichment candidates at all** — there is no live row for them to enrich, by URL or otherwise.
+Routing them through a name-based fallback (rather than leaving them unresolved) is exactly
+the mechanism that would produce the Music/BMus-vs-MA failure at scale. They stay in RES-V1's
+research-adjudication queue, unchanged by anything proposed here.
+
+So the real enrichment set is **62 of Glasgow's 101**, not 69 or 93 — the difference from
+CFO's "69 near-certain duplicates" figure is that a name-based duplicate count and a
+URL-resolvable-identity count aren't the same measurement, which is itself the point of this
+whole package.
+
+### Does Path A cover this, or does it need extending?
+
+**It needs extending — the difference is a resolution step Path A didn't have.**
+`url_repair`/`tr_bilingual_names` both carry an explicit `program_id` naming an exact live row
+— identity is *given*, so Path A's plain `UPDATE ... WHERE id = $1` applies directly.
+Glasgow-class research records carry no such reference; they look like new-programme captures
+and need identity *resolved* before any update can happen at all. Proposed extension:
+
+1. **Resolve university** (existing `resolveUniversity()`, unchanged).
+2. **Resolve program identity within that university by exact `official_program_url` match
+   against live rows — never by name, stripped or otherwise.** Zero matches → not an
+   enrichment case, falls through to the normal `decideIngestion` insert/research path
+   unchanged. Multiple matches → ambiguous, routes to manual review, never auto-resolved.
+   Exactly one match → proceed to step 3.
+3. **Enrich, field by field, only where the live value is currently NULL.** This is a
+   narrower write rule than `url_repair`'s: `url_repair` *replaces* an already-populated
+   value because the file carries explicit evidence the old value was wrong
+   (`previous_official_program_url`/`correction_type`/`evidence_note`). Glasgow's case only
+   *fills* an empty column — RULE-INGEST-003's permitted case specifically, not a claim that
+   any existing populated value is wrong. Path A's audit-queue table needs an `enrichment` vs.
+   `correction` distinction (or an explicit `was_null_before` column) so a future reader can
+   tell "we knew the old value was wrong and replaced it" apart from "there was no old value
+   and we added one" — different evidence bars, shouldn't be recorded identically.
+
+### Superseded_by_id — not needed here, confirmed against my own read of the code
+
+Agree with BASORG's read: this is in-place, not retirement. Path B exists for when the *old
+row itself* is a worse capture that a *new* row should replace (Michigan/CMU/UCLA — a new row
+gets inserted, the old one marked superseded). Here there is no new row: the same row, same
+identity, same URL, gains one previously-empty field. Nothing about the row's identity or
+correctness-as-far-as-it-goes changes; it was simply incomplete. Using Path B's machinery for
+this would be modeling "this row got better" as "this row got replaced," which isn't what
+happened.
+
+### Dependency flagged, not scoped in
+
+Per BASORG's explicit instruction: **not** treating `url_repair`'s 1,429 records, or
+Glasgow's 62 resolved-by-URL records, as ready to apply once a path exists. Nobody has
+verified the *content* is correct — that a corrected URL actually is the right page, that a
+filled-in `degree_type` is the right degree — only that identity resolution and the write
+mechanism can be designed soundly. A wrong value written through a well-designed path is still
+a wrong value; content verification is V-lane work, not assigned here, and this design
+depends on it before either Path A sub-mode goes live.
+
 ## What this package did not do, by design
 
 No migration written, no code changed, no `--apply` of anything, no schema modified. Both
 proposed paths are options for BASORG/the founder to choose between (or reject), not a
 commitment. Nothing here widens `university_programs`' evidence or authority gates — Path A
 and Path B both still run through identity/source checks equivalent to what `decideIngestion`
-already does before anything is proposed as a correction.
+already does before anything is proposed as a correction, and the addendum's URL-only
+resolution rule is, if anything, stricter than what `decideIngestion` requires today.
