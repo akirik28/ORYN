@@ -64,6 +64,21 @@ Full detail: `docs/handoffs/feat2-mvp-checklist-audit-2026-08-22.md`.
 > querying the row myself; the lane caught its own mistake and I confirmed the correction live.
 > **Nothing on this list expires.** What follows is ordered by severity instead.
 
+> ### One thing to understand before the migration items below
+>
+> Every security fix today has two halves: **application code** and a **database migration**.
+>
+> **The code half is already live.** It merged and deployed with everything else.
+> **The database half is not** — `0061` through `0065` are written and waiting on you.
+>
+> That matters because these holes are in the *database's* permission rules, not in the app.
+> Closing them in the app narrows what the app will do; it does **not** stop someone sending a
+> request straight to the database's own API and getting the same result. **Until you apply the
+> migrations, every gap listed below is still open**, regardless of how correctly the app behaves.
+>
+> This is why they're the top of the list rather than routine maintenance, and why "written, not
+> applied" means *the hole is still there* rather than *an improvement is pending*.
+
 ### 1. Approve migration `0062` — any signed-in user can make themselves an admin
 
 **What**: a trigger migration written by BUG-1 and **not applied**. Ranked above everything else
