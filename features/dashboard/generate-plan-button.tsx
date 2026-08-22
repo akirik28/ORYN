@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { regenerateWeeklyPlan } from "@/app/(app)/plan/actions";
@@ -15,7 +16,8 @@ export function GeneratePlanButton({ label = "Generate my plan" }: { label?: str
       onClick={() =>
         startTransition(async () => {
           const result = await regenerateWeeklyPlan();
-          if (!result.error) router.refresh();
+          if (result.error) toast.error(result.error);
+          else router.refresh();
         })
       }
       disabled={isPending}

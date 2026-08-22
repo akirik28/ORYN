@@ -51,17 +51,18 @@ file is a snapshot, not a live view.
 
 - `universities`: **1,019** rows — **1,010 `canonical`, 9 `superseded`** (migration 0043's
   data backfill confirmed genuinely live and correct: `duplicate_status` is populated).
-- `university_programs`: **14,457** rows (up from 418 at the 08-20 checkpoint — the DE/NL,
-  Canada, UK, Ireland, France/Italy, Turkey/YÖK Atlas and US research lanes have been ingested
-  at real scale since then).
+- `university_programs`: **16,119** rows (418 at the 08-20 checkpoint → 14,457 this morning →
+  16,119 now; the last +1,662 is the Canadian corpus that the evidence-gate fix unblocked,
+  ingested and verified today).
 - `university_requirements`: **1,254** rows (up from 84).
 - `university_deadlines`: **396** rows (up from 26).
-- `opportunities`: **391** rows (ORYN-BASORG re-measured independently 2026-08-22 and got the
-  same 391 — 56 with a deadline / 335 without, 39 with `eligible_countries` / 352 without, 271
-  `active`), **188 `verified_current`** (48.1%, up from 31.2%). Still-open
-  gap, essentially unchanged in relative terms: **366/391 (93.6%) missing
-  `eligible_countries`** — this remains the single gate blocking real eligibility matching,
-  per `docs/MASTER-EXECUTION-STRATEGY.md` §P3.
+- `opportunities`: **391** rows, **271 `active`** (the browse surface). Two open gaps, both
+  measured live this afternoon and both independently re-measured by ORYN-BASORG:
+  - **351/391 missing `eligible_countries`** (was 366 this morning). Still the gate on real
+    eligibility matching per `docs/MASTER-EXECUTION-STRATEGY.md` §P3. Now honestly *labelled*
+    even where unresearched — see FEAT-1's Package 1 below.
+  - **only 56/391 carry a deadline.** The deadline research lane has 74 verified records
+    moving through verification toward ingestion.
 - `canonical_entities`: **1,172** rows. `entity_verification_queue`: **101** rows still open.
 - `profiles`: **5** — no longer the pre-launch scratch "1", real signups now exist.
 
@@ -136,10 +137,46 @@ Only items no Claude session can do unilaterally. Full detail:
    5-wave plan for the remaining 352 in `docs/research/opportunities-eligible-countries/README.md`
    — Wave 2 (research/scholarship/fellowship/internship, ~20 records) is next, see the research
    queue below.
-3. **Branch/worktree integration audit**: 80+ branches, ~85 worktrees, several
-   idle-pending-assignment research lanes with real uningested output — worth a dedicated
-   reconciliation pass rather than continuing to accumulate more parallel lanes.
-4. ~~Migration 0056/0057 reconciliation~~ — resolved this checkpoint, see Migrations section
-   above. What's left is founder-blocked-backlog item 26 (authorize applying 0057), not a
-   Claude-session task.
+3. ~~Branch/worktree integration audit~~ — done. 55 clean, already-merged worktrees removed
+   (no branch deleted, no work lost); disk went from 9.7GB free to ~11GB with headroom held
+   steady since despite 13 concurrent sessions.
+4. ~~Migration 0056/0057 reconciliation~~ — resolved. What's left is founder-blocked-backlog
+   item 26 (authorize applying 0057), not a Claude-session task.
 5. Production readiness items unchanged (legal review, hosting, error-monitoring, CI).
+
+## What the 13-session organization shipped on 2026-08-22
+
+Structure and operating rules: `docs/ORYN-ORG-STRUCTURE.md`. Per-role briefs:
+`docs/ORYN-ORG-BRIEFS.md`. Merge history: `docs/handoffs/merge-log.md`.
+
+**Live trust defects closed** — every one of these was the product asserting something its
+own data did not support, which is the strategy's first priority:
+- **Türkiye Scholarships** told students it was open to citizens of all countries while its
+  own official `.gov.tr` source separately lists Turkish citizens as *ineligible*. For a
+  product whose core audience is Turkish students, the live row said the opposite of its
+  source. Fixed and verified live.
+- **Unresearched opportunities read as unrestricted.** An empty `eligible_countries` meant
+  "no country restriction" in both the matching layer and the counselor, so a genuinely
+  restricted programme nobody had researched appeared eligible to everyone, silently.
+  Now carries an honest "not verified yet" note instead (FEAT-1 Package 1, migration 0060
+  written and **not applied** — founder item 29).
+- **Closed-cycle opportunities could appear in "Due soon"** and fire a deadline reminder —
+  the dashboard's own opportunity block already suppressed them, the deadline block did not
+  (FEAT-2 Package 2).
+- **The admission outlook told students with no essays that essays were an unknown.** For a
+  YKS/CAO-style placement system the engine correctly computed a sourced explanation, and the
+  page dropped it on the floor and rendered a US-holistic strengths/gaps/essays panel instead
+  (FEAT-1 Package 2).
+- **2,097 well-sourced programme records were wrongly blocked** by an evidence gate that
+  prose-matched attestation wording instead of judging evidence. Replaced with a structured
+  `retrieval_method`; 1,657 Canadian records ingested and verified as a result. Genuinely weak
+  evidence (McGill's archive captures) stays correctly blocked.
+
+**Known and deliberately not acted on** (founder items 27–29): ~79 opportunity rows whose
+descriptions are degraded in the founder's own source spreadsheet; 5 opportunities no
+AI-permitted fetch path can reach; migration 0060.
+
+**In flight at time of writing**: RLS/database-security verification (BUG-1), Australia
+programme catalogues (RES-R1, 37 universities at zero coverage), opportunity deadlines
+wave 2 and eligibility wave 3, territory test coverage (FEAT-2), UI defect fixes (UI-1,
+audit at `docs/ui-audit-2026-08-22.md` — the agenda for the founder's UI conversation).

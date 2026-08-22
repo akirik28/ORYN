@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Check } from "lucide-react";
 import { motion } from "motion/react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ActionCard } from "@/components/oryn/action-card";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
@@ -45,20 +46,30 @@ function ActionRow({ action, index }: { action: WeeklyAction; index: number }) {
   const isDone = localStatus === "completed";
 
   function toggle() {
+    const previousStatus = localStatus;
+    const previousShowReflection = showReflection;
     const nextStatus = isDone ? "not_started" : "completed";
     setLocalStatus(nextStatus);
-    if (!isDone) setShowReflection(true);
-    else setShowReflection(false);
+    setShowReflection(!isDone);
     startTransition(async () => {
-      await updateActionStatus({ actionId: action.id, status: nextStatus });
+      const result = await updateActionStatus({ actionId: action.id, status: nextStatus });
+      if (result.error) {
+        // Roll back both optimistic updates this click made — otherwise a failed write
+        // leaves the checkbox showing "completed" (or the reflection prompt open)
+        // indefinitely, misreporting success rather than just failing silently.
+        setLocalStatus(previousStatus);
+        setShowReflection(previousShowReflection);
+        toast.error(result.error);
+      }
     });
   }
 
   function saveReflection(outcome: ReflectionOutcome) {
-    startTransition(async () => {
-      await updateActionStatus({ actionId: action.id, status: "completed", reflectionOutcome: outcome });
-    });
     setShowReflection(false);
+    startTransition(async () => {
+      const result = await updateActionStatus({ actionId: action.id, status: "completed", reflectionOutcome: outcome });
+      if (result.error) toast.error(result.error);
+    });
   }
 
   return (

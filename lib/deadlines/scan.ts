@@ -7,6 +7,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createNotification } from "@/lib/notifications/create";
 import { canonicalUniversityId, loadSupersessionMap, type SupersessionMap } from "@/lib/universities/canonical";
 import { NON_ACTIONABLE_VERIFICATION_STATES } from "@/lib/deadlines/ingest";
+import { isOpportunityActionable } from "@/lib/opportunities/lifecycle";
+import { deadlineDetailLabel } from "@/lib/deadlines/upcoming";
 
 /** Days-until-deadline thresholds that trigger a reminder (Phase 23/24). A student gets
  * at most one reminder per deadline per threshold — see the dedup check below. */
@@ -25,8 +27,13 @@ interface DeadlineCandidate {
 /** Shared threshold-check + dedup + notify for one deadline candidate, reused across all
  * three sources below. Dedup is a cheap "was a notification linking to this already sent
  * in roughly the last day" check — good enough for a once-daily cron; a job running more
- * than once a day could double up right at a threshold boundary. */
-async function notifyIfThresholdCrossed(supabase: SupabaseClient<Database>, today: Date, candidate: DeadlineCandidate): Promise<boolean> {
+ * than once a day could double up right at a threshold boundary.
+ *
+ * Exported (only) so __tests__/deadlines/notify-if-threshold-crossed.test.ts can pin this
+ * shared core directly — the actual threshold/dedup decision every one of the three scan
+ * sources delegates to — rather than only exercising it indirectly through one source's
+ * own table set. No behavior change. */
+export async function notifyIfThresholdCrossed(supabase: SupabaseClient<Database>, today: Date, candidate: DeadlineCandidate): Promise<boolean> {
   const daysUntil = differenceInCalendarDays(new Date(candidate.deadlineDate), today);
   if (!REMINDER_THRESHOLDS.includes(daysUntil)) return false;
 
@@ -50,7 +57,10 @@ async function notifyIfThresholdCrossed(supabase: SupabaseClient<Database>, toda
   return true;
 }
 
-async function scanApplications(supabase: SupabaseClient<Database>, today: Date, supersessionMap: SupersessionMap): Promise<{ notified: number; checked: number }> {
+/** Exported (only) so __tests__/deadlines/scan-applications.test.ts can pin its behavior
+ * directly, without also mocking the opportunity/university scan sources. No behavior
+ * change. */
+export async function scanApplications(supabase: SupabaseClient<Database>, today: Date, supersessionMap: SupersessionMap): Promise<{ notified: number; checked: number }> {
   const { data: applications } = await supabase
     .from("applications")
     .select("id, user_id, deadline, target_university_id")
@@ -88,14 +98,17 @@ async function scanApplications(supabase: SupabaseClient<Database>, today: Date,
   return { notified, checked: applications.length };
 }
 
-async function scanSavedOpportunityDeadlines(supabase: SupabaseClient<Database>, today: Date): Promise<{ notified: number; checked: number }> {
+/** Exported (only) so __tests__/deadlines/scan.test.ts can pin and verify its
+ * cycle_status filtering directly, without also mocking the application/university
+ * scan sources. No behavior change. */
+export async function scanSavedOpportunityDeadlines(supabase: SupabaseClient<Database>, today: Date): Promise<{ notified: number; checked: number }> {
   const { data: saved } = await supabase.from("saved_opportunities").select("user_id, opportunity_id").eq("status", "saved");
   if (!saved || saved.length === 0) return { notified: 0, checked: 0 };
 
   const opportunityIds = [...new Set(saved.map((s) => s.opportunity_id))];
   const { data: opportunities } = await supabase
     .from("opportunities")
-    .select("id, title, deadline")
+    .select("id, title, deadline, cycle_status")
     .in("id", opportunityIds)
     .not("deadline", "is", null);
   const opportunityById = new Map((opportunities ?? []).map((o) => [o.id, o]));
@@ -105,6 +118,10 @@ async function scanSavedOpportunityDeadlines(supabase: SupabaseClient<Database>,
   for (const save of saved) {
     const opportunity = opportunityById.get(save.opportunity_id);
     if (!opportunity?.deadline) continue;
+    // Same guard as lib/deadlines/upcoming.ts's read-side sibling: a closed/historical/
+    // discontinued cycle must never trigger a "deadline approaching" notification, even
+    // with a future-dated deadline still on file. 'unverified' stays reachable.
+    if (!isOpportunityActionable(opportunity, today)) continue;
     checked += 1;
     const wasNotified = await notifyIfThresholdCrossed(supabase, today, {
       userId: save.user_id,
@@ -117,7 +134,10 @@ async function scanSavedOpportunityDeadlines(supabase: SupabaseClient<Database>,
   return { notified, checked };
 }
 
-async function scanTargetUniversityDeadlines(supabase: SupabaseClient<Database>, today: Date, supersessionMap: SupersessionMap): Promise<{ notified: number; checked: number }> {
+/** Exported (only) so __tests__/deadlines/scan-target-universities.test.ts can pin its
+ * behavior directly, without also mocking the application/opportunity scan sources. No
+ * behavior change. */
+export async function scanTargetUniversityDeadlines(supabase: SupabaseClient<Database>, today: Date, supersessionMap: SupersessionMap): Promise<{ notified: number; checked: number }> {
   const { data: targets } = await supabase
     .from("target_universities")
     .select("id, user_id, university_id, program_id")
@@ -131,7 +151,7 @@ async function scanTargetUniversityDeadlines(supabase: SupabaseClient<Database>,
   const [{ data: deadlines }, { data: universities }] = await Promise.all([
     supabase
       .from("university_deadlines")
-      .select("university_id, program_id, deadline_type, deadline_date, verification_state")
+      .select("university_id, program_id, deadline_type, deadline_date, verification_state, cycle_label, deadline_text_verbatim")
       .in("university_id", universityIds)
       .not("deadline_date", "is", null),
     supabase.from("universities").select("id, name").in("id", universityIds),
@@ -157,7 +177,7 @@ async function scanTargetUniversityDeadlines(supabase: SupabaseClient<Database>,
         userId: target.user_id,
         deadlineDate: deadline.deadline_date!,
         link: `/universities/${canonicalId}`,
-        body: `${universityName} — ${deadline.deadline_type} deadline approaching.`,
+        body: `${universityName} — ${deadlineDetailLabel(deadline)} deadline approaching.`,
       });
       if (wasNotified) notified += 1;
     }
