@@ -17,10 +17,10 @@ answers "what is actually true right now."**
 
 | What | Value |
 |---|---|
-| Code measured against | `origin/main` @ `16f4f73` |
-| Code measurement timestamp | **2026-08-22 18:20** (evening checkpoint — supersedes the 04:34 one) |
-| Gate on that commit | lint clean · typecheck clean · **137 files / 2073 tests** · production build succeeds — re-run by ORYN-CEO in a clean checkout |
-| PR queue | **1 open.** 75 merged today, 21 of them this evening |
+| Code measured against | `origin/main` @ `2334f07` |
+| Code measurement timestamp | **2026-08-22 19:40** (late-evening checkpoint — supersedes 18:20 and 04:34) |
+| Gate on that commit | lint clean · typecheck clean · **144 files / 2,122 tests** · production build compiles — run by ORYN-CEO in a clean checkout, then **independently reproduced by ORYN-CFO** in a second clean-room worktree |
+| PR queue | **empty.** 93 merged today |
 | Live DB measured against | `oryn-qa-scratch` (`qtcvcflzxbuagvvwahhu`), via Supabase MCP `execute_sql`/`list_migrations`/`get_advisors` |
 | Live DB measurement timestamp | 2026-08-22 (this checkpoint) |
 
