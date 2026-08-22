@@ -193,6 +193,27 @@ const UNSAFE_VERIFICATION_STATES = new Set(["CONFLICTING_EVIDENCE", "NEEDS_REVIE
  * that only trusts ingestion to have been the sole writer is one bypass away from being wrong. */
 export const NON_ACTIONABLE_VERIFICATION_STATES = new Set(["VERIFIED_HISTORICAL", "CONFLICTING_EVIDENCE", "NEEDS_REVIEW", "CURRENT_CYCLE_NOT_PUBLISHED"]);
 
+/**
+ * Whether a dated deadline may be shown to a student as something still to act on.
+ *
+ * Both halves are required and neither implies the other. `verification_state` answers "is this
+ * *cycle* closed?"; the date answers "has *this date* passed?" — and they disagree in both
+ * directions in live data. A row for an open cycle whose own date has gone by still reads as
+ * VERIFIED_CURRENT; and rows for the still-open Wintersemester 2026/27 were marked
+ * VERIFIED_HISTORICAL because their individual dates had passed. Trusting either alone gets one
+ * of those two populations wrong.
+ *
+ * This exists because the state half and the date half were applied at one read path and only
+ * the state half at another: 35% of what the university detail page rendered under a heading
+ * saying "Upcoming" was in the past, ascending-sorted, so the stalest date led the list. The
+ * shared predicate is the fix — a comment promising two call sites will stay in step is not one.
+ */
+export function isActionableDatedDeadline(deadline: { verification_state: string; deadline_date: string | null }, todayIso: string): boolean {
+  if (NON_ACTIONABLE_VERIFICATION_STATES.has(deadline.verification_state)) return false;
+  if (!deadline.deadline_date) return false;
+  return deadline.deadline_date >= todayIso;
+}
+
 export function resolveDeadlineUniversity(record: ResearchDeadlineRecord, universities: readonly UniversityLookupRow[]): { universityId: string | null; reason: string | null } {
   if (!record.university_name?.trim()) {
     return { universityId: null, reason: "No university_name." };

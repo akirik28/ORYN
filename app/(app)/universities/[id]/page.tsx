@@ -8,7 +8,7 @@ import { refreshAdmissionOutlook } from "@/lib/admissions/persist";
 import { explainOutlook, type DimensionScoreInput } from "@/lib/admissions/explain";
 import { refreshRequirementEvaluations } from "@/lib/requirements/persist";
 import { REQUIREMENT_CATEGORY_LABELS } from "@/lib/requirements/types";
-import { NON_ACTIONABLE_VERIFICATION_STATES } from "@/lib/deadlines/ingest";
+import { NON_ACTIONABLE_VERIFICATION_STATES, isActionableDatedDeadline } from "@/lib/deadlines/ingest";
 import { OutlookBadge } from "@/features/universities/outlook-badge";
 import { SourceBadge } from "@/components/oryn/source-badge";
 import { PageHeader } from "@/components/oryn/page-header";
@@ -165,8 +165,11 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   // lib/deadlines/upcoming.ts, reused rather than re-derived so this page can't quietly
   // drift from what "Due soon" already treats as actionable.
   const actionableDeadlines = (deadlinesRes.data ?? []).filter((d) => !NON_ACTIONABLE_VERIFICATION_STATES.has(d.verification_state));
+  // Both halves of actionability, via the shared predicate — see isActionableDatedDeadline for
+  // why the state filter alone is not sufficient and how this page drifted from "Due soon".
+  const todayIso = new Date().toISOString().slice(0, 10);
   const datedDeadlines = actionableDeadlines
-    .filter((d) => d.recurrence === "dated_specific" && d.deadline_date)
+    .filter((d) => d.recurrence === "dated_specific" && isActionableDatedDeadline(d, todayIso))
     .sort((a, b) => a.deadline_date!.localeCompare(b.deadline_date!));
   // "recurring_annual_undated" rows carry a month/day, never a year — migration 0056's own
   // shape constraint guarantees deadline_date is null here. recurrence_month/day flow straight
