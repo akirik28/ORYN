@@ -112,15 +112,26 @@ verification pipeline, not yet ingested. That's the honest state, not a rounding
 
 Full detail in `docs/founder-blocked-backlog.md`. In priority order:
 
-1. **Item 30 — the anonymous-read hole.** Approve applying migration `0061`. Launch blocker.
-2. **Item 29 — migration 0060** (honest eligibility marker), and **item 26 — migration 0057**
+1. **Item 34 — open one ingester session.** Six of thirteen sessions ended without warning this
+   afternoon, including **both** database-writing lanes. Verified, bounded, revertible work is
+   now stranded with nothing able to apply it, and one new session clears most of it in under
+   an hour. **The piece with a clock: Habitat Derneği's application deadline, 26 August — four
+   days out.** It needs its PR merged *and* the record applied to reach a student; merging alone
+   isn't enough. Nothing else on this list expires.
+2. **Item 30 — the anonymous-read hole.** Approve applying migration `0061`. Launch blocker.
+3. **Item 29 — migration 0060** (honest eligibility marker), and **item 26 — migration 0057**
    (YÖK Atlas identifier). Both written, reviewed, unapplied, waiting on you.
-3. **Item 27 — ~79 opportunity rows** whose descriptions are degraded *in your own Drive source
+4. **Item 27 — ~79 opportunity rows** whose descriptions are degraded *in your own Drive source
    spreadsheet*. 31% of the live browse surface carries a defect signature; the categorically
    broken ones are already retired. Re-research, retire, or accept.
-4. **Item 32 — should `degree_type` hold more than one award?** A student searching MEng
-   currently misses a programme recorded as BEng.
-5. **Items 31, 33, 28** — an unbuilt apply path blocking 1,429 verified URL corrections; ten
+5. **Item 35 — the schema forces one value where reality has several.** Four lanes hit this
+   independently today in four different columns, without coordinating: an opportunity can be
+   `closed` *and* awaiting an unannounced next cycle at once (true for 11 of 18 rows examined);
+   a programme lists 2–4 awards and the field holds one; Girl Up has per-region deadlines and
+   one deadline field. Every stored value is factually correct — the misleading part is the
+   field's implied claim to be complete. Deciding the principle once settles all four. Item 32
+   (`degree_type` specifically) is the sharpest instance if you want a concrete entry point.
+6. **Items 31, 33, 28** — an unbuilt apply path blocking 1,429 verified URL corrections; ten
    backup tables to drop or relocate; five opportunities no permitted fetch path can reach.
 6. **UI.** `docs/ui-audit-2026-08-22.md` is the agenda for the conversation you deferred:
    six safe fixes, findings that need your taste, and costed proposals in three tiers. Theme
@@ -133,7 +144,8 @@ server-side and it's been working all day. Two QA accounts exist and work.
 
 ## Honest notes
 
-**Two lanes died mid-session** (FEAT-1 and RES-I1). FEAT-1 left an open PR nobody could rebase;
+**Six of thirteen sessions died mid-afternoon** — FEAT-1, UI-1, BUG-1, RES-R2, RES-I1 and
+RES-I2, within about an hour, with no warning and no pattern I could find. FEAT-1 left an open PR nobody could rebase;
 I carried it. RES-I1 left a design for a write path that was never built, which is why 1,429
 verified corrections sit unapplied. Standing practice changed: closure is *not* reversible, so
 every lane now pushes everything and leaves a resumable handoff before standing down.
