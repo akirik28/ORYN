@@ -1859,3 +1859,67 @@ answer if that's what it shows.**
 
 **RES-V2 idle with two triggers**: RES-R1's Adelaide fix lands, or V1-13 finds the class somewhere
 needing source verification.
+
+## 8.4rr RES-R1 DISPATCHED ON CANADA — and why not to wait for V1-13
+
+**Canada lane confirmed clear** (checked, not assumed: every Canada commit in twelve hours is
+RES-R1's research or RES-V1's verification). **17 of 19 targets remain** — Ottawa done, McMaster
+excluded on the evidence gate.
+
+**Target deliberately NOT named by BASORG.** RES-R1 derives it by its live-QS-rank method and reports
+the resolution before extracting. Naming a university from memory is the pattern-match failure the
+org already has a rule about; its method fetches rank live.
+
+### The sequencing call
+The obvious move is to **hold RES-R1 until V1-13 reports** whether the value-domain class is
+systemic. **Deliberately not doing that.**
+
+**RES-R1 just made this mistake and diagnosed it precisely — *"careful in the wrong dimension."***
+That understanding is freshest now, and **the cheapest place to fix a convention defect is the corpus
+that hasn't been built yet.** Systemic → the new corpus is already clean. Adelaide-only → nothing lost.
+
+**The rule given, to be built into extraction rather than a later review pass:**
+
+> **Before writing a field, look across what that field holds on the records already extracted. If
+> the value doesn't belong to the same domain as its siblings, it goes to a provenance/notes field
+> and the value slot stays absent.**
+
+**Costs nothing at extraction; costs a full verify-fix-reverify cycle afterwards.**
+
+### Context handed over
+RES-V1's **three distinct Canada URL collision defects** (`734aad1`) and **url_repair's 0/1437
+overlap** (`4cb4b15`) — properties of Canadian university sites, not Ottawa-specific. **McMaster stays
+excluded; a similar hosting arrangement on the next target escalates to BASORG as a policy call, not
+a research call.**
+
+## 8.4ss V2-12 — asking a verifier to check BASORG's own proposal
+
+RES-R1's fix (`871bbc9`) was designed **against a shape BASORG proposed**, and RES-R1 confirmed it
+would have argued for the same shape independently. **That is agreement without independent origin —
+Rule 27 — and the shape was generalized from a single record (UniStart).**
+
+**Combined with Rule 28** (*a delta check cannot detect that the intent was wrong*), a
+diff-against-intent would **confirm a wrong proposal perfectly.** So V2-12 asks whether the
+**resulting shape belongs**, not merely whether the change matched the plan:
+
+1. Does `domestic`-only now assert something the live pages don't support?
+2. **Does `researcher_notes` have a value convention of its own that this prose must meet?** If so
+   and it doesn't, **the defect moved rather than got fixed.**
+3. **The README is the live risk** — 56 lines of prose changed against 6 of data. Rewritten prose
+   describing a just-changed state is where a stale or overcorrected description survives.
+4. Provenance text preserved **verbatim** — not paraphrased, not truncated.
+
+**RES-R1 declined to re-check its own fix against live pages**, correctly: *"that's not independent
+verification either, it's the same non-independent-agreement problem one level down."*
+
+## 8.4tt The branch guard earned itself back tonight
+
+The commit for §8.4rr–ss **failed with exit 1**: the shell's working directory had reverted to the
+**primary checkout on `oryn/hide-social-nav`**, and
+`test "$(git branch --show-current)" = "oryn/basorg-org-status" && ...` **short-circuited before
+`cat >>` or `git add` ran.** Primary checkout verified clean afterwards at `0435ef4`.
+
+**This is the exact failure that committed `Claude.pdf` to the founder's branch twice earlier
+tonight**, when the chain was unguarded and a missing `cd` let `git add -A && git commit` run
+anyway. **`cd` persistence between tool calls is not reliable** — the guard, not the `cd`, is what
+makes the chain safe.
