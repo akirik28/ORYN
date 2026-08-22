@@ -1553,3 +1553,58 @@ Two things worth keeping:
 The mechanical check was adopted to stop me publishing **corpus** counts as **live** counts. It
 instead caught a phantom outage before I reported one. **A check that only ever confirms what you
 expect is not doing anything.**
+
+## 8.4hh THE CANONICAL TWO-POPULATION TABLE — copy from here, not from commit subjects
+
+**Use this and nothing else when stating Australian counts:**
+
+| Population | Count | Universities |
+|---|---|---|
+| **Live / ingested** (`university_programs`) | **651** | **FOUR** — UNSW 217, Monash 178, Sydney 149, UWA 107 |
+| **Research corpus** (JSONL on branch) | **771** | **FIVE** — the four above plus Adelaide's 120 |
+
+`university_programs` total: **16,770**. **Adelaide is verified, not ingested.**
+
+**Do not purge every "5" on sight.** `703476d` — *"770 records, 5 universities"* — is **correct as
+written**, because the corpus genuinely spans five. The rule is not *five is wrong*; it is that
+**a sentence must say which population it means.**
+
+### The propagation risk, caught by ORYN-CFO
+RES-I1's UWA apply commit `ba91aaa` is subject-lined *"Australia closed at 651 across 5
+universities."* The commit is **immutable** and **the data under it is correct**. The risk is that
+an authoritative-looking commit message in git history becomes a **fresh source** from which the
+wrong "five" re-enters circulation *after* both BASORG and CFO had corrected it in their own docs.
+
+### But the defect is narrower than it first reads — and the distinction matters
+`ba91aaa`'s **body** says: *"UNSW 217 + Sydney 149 + Monash 178 + UWA 107 = 651, five universities.
+Adelaide's 119 remain unextracted for ingestion, untouched."*
+
+It **enumerates four terms** and **states outright that Adelaide is not ingested.** RES-I1 had the
+substance right and mislabelled it — **the sentence contradicts its own arithmetic.**
+
+**That is a labelling defect, not the reasoning error BASORG made.** BASORG genuinely believed five
+were live. *"You made your manager's mistake"* and *"your label disagreed with your own sum"* warrant
+different corrections, and only the second is true of RES-I1. **Told to it explicitly**, with a
+*"do not wake up to act on this"* header — the correction applies when it next writes a doc, and an
+idle lane is not resolved with a phrasing task.
+
+(Also stale in that body: **"Adelaide's 119" is now 120.** Accurate when written.)
+
+## 8.4ii Rule 27 actually satisfied, and how you can tell
+
+ORYN-CFO ran its own count **before BASORG's figures arrived**. Two **separately-built instruments**
+agree — not one instrument read twice — and **the independence is established by timing**, which is
+checkable after the fact.
+
+**This is the first agreement today that passes Rule 27 rather than merely not obviously failing
+it.** The reconciliation that "closed perfectly" did so on three cancelling terms; the combined-green
+verdict masked an individual red; the consistency check that couldn't detect single-source origin is
+what produced the rule. **Agreement is cheap. Independently-originated agreement is the thing.**
+
+### The empty-predicate rule, generalised across three shapes
+CFO's Habitat error was a **wrong field**; BASORG's was a **wrong value**; the third shape is a
+**wrong table**. The field/value/table distinction is **incidental** — the failure mode is identical:
+
+> **A predicate that matches nothing returns absence, and absence reads as a finding.**
+
+**One check catches all three: unfiltered `count(*)` first.**
