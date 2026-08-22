@@ -252,6 +252,59 @@ error.
 
 ---
 
+### An infrastructure incident, and two failures that disguised themselves
+
+Around 18:10 the machine ran out of disk — **143MB free, 99% full.** Three lanes halted, and my
+own ability to run commands stopped entirely: the tool could no longer create its own output
+file, so I could not run `df` to diagnose it or `rm` to fix it.
+
+**The cause was me, and it was a gap in our own rules rather than carelessness.** Our standing
+rule requires a fresh, isolated checkout for every PR verification — written after I once
+reported a test failure that didn't exist, from a worktree I'd reused. I followed it twenty-one
+times this evening, each with its own clean dependency install at roughly 900MB, and reclaimed
+none of them. **Following the rules correctly and often enough was sufficient to exhaust the
+machine.** ORYN-CFO cleared the space after independently verifying each path held nothing
+unpushed, and proposed the fix: a verification isn't finished until its workspace is gone. That
+is now a standing rule.
+
+**The part worth your attention is not the disk. It is that two separate failures presented as
+something else entirely:**
+
+- **Disk exhaustion appeared as a permission denial.** One lane had three actions refused as
+  "denied by the classifier", then found a plain file edit failing with a literal out-of-space
+  error. Some of tonight's "blocked" reports were therefore never permission decisions.
+- **A dev server died silently under the pressure** and kept its port, with nothing surfaced to
+  the lane using it — discoverable only by inspecting the process list. A session can keep
+  verifying against a server that no longer exists and report results with full confidence.
+
+Then a third, in the opposite direction: another lane hit a genuine classifier denial while disk
+was already healthy, and had the same commands succeed when split apart. So both phenomena are
+real and **the cause cannot be read off the message.** I had started assuming disk; that was
+overcorrecting. The honest rule is that a denial's cause is unknown until disk is measured
+separately.
+
+Nothing was lost, no work was destroyed, and every lane resumed. I'm reporting it because the
+disguised-failure pattern is the kind of thing that quietly corrupts a day's conclusions, and
+because one of tonight's judgment calls rests on it — see below.
+
+### One judgment call I want you to review rather than accept
+
+A lane was blocked from running a read-only database count that I had required before merging
+its work. I ran it myself. I reasoned that this was not the "permission laundering" our rules
+forbid, because I needed that number for my own merge duty regardless of whether any lane had
+ever attempted it — and a second lane, asked independently, agreed and named the right test:
+laundering means routing around a *specific refusal*, not two sessions having different
+capabilities.
+
+**Then the disguised-failure finding above put the premise in question.** If that lane's block
+was actually the disk filling up rather than a permission decision, then nothing was ever
+refused and the whole analysis was answering a question that never arose. It doesn't change the
+result — zero rows were affected — but I'd rather hand you a live ambiguity than a tidy story.
+**You may want to decide the principle**: when one session can't do something and another can,
+where is the line.
+
+---
+
 ## Honest notes
 
 **Six of thirteen sessions died mid-afternoon** — FEAT-1, UI-1, BUG-1, RES-R2, RES-I1 and

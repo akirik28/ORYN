@@ -17,8 +17,10 @@ answers "what is actually true right now."**
 
 | What | Value |
 |---|---|
-| Code measured against | `origin/main` @ `dcce22f` ("merge: Canada handoff — co-op taxonomy is per-programme, not per-institution") |
-| Code measurement timestamp | 2026-08-22 04:34 |
+| Code measured against | `origin/main` @ `16f4f73` |
+| Code measurement timestamp | **2026-08-22 18:20** (evening checkpoint — supersedes the 04:34 one) |
+| Gate on that commit | lint clean · typecheck clean · **137 files / 2073 tests** · production build succeeds — re-run by ORYN-CEO in a clean checkout |
+| PR queue | **1 open.** 75 merged today, 21 of them this evening |
 | Live DB measured against | `oryn-qa-scratch` (`qtcvcflzxbuagvvwahhu`), via Supabase MCP `execute_sql`/`list_migrations`/`get_advisors` |
 | Live DB measurement timestamp | 2026-08-22 (this checkpoint) |
 
@@ -51,9 +53,14 @@ file is a snapshot, not a live view.
 
 - `universities`: **1,019** rows — **1,010 `canonical`, 9 `superseded`** (migration 0043's
   data backfill confirmed genuinely live and correct: `duplicate_status` is populated).
-- `university_programs`: **16,119** rows (418 at the 08-20 checkpoint → 14,457 this morning →
-  16,119 now; the last +1,662 is the Canadian corpus that the evidence-gate fix unblocked,
-  ingested and verified today).
+- `university_programs`: **16,663** rows (418 at the 08-20 checkpoint → 14,457 this morning →
+  16,119 this afternoon → **16,663** now). The last +544 is **Australia, which had zero
+  programme coverage this morning** — now 544 across 3 universities. Three further Australian
+  universities were deliberately deferred, each blocked by a different access-control mechanism
+  (bot mitigation, a `robots.txt` naming our crawler, a CAPTCHA gate); three honest gaps rather
+  than three unciteable sources. All 107 UWA records were re-fetched through a
+  `robots.txt`-permitted path before merge, after the lane caught that its own completed work
+  had used a disallowed one.
 - `university_requirements`: **1,254** rows (up from 84).
 - `university_deadlines`: **396** rows (up from 26).
 - `opportunities`: **391** rows, **271 `active`** (the browse surface). Two open gaps, both
@@ -61,8 +68,13 @@ file is a snapshot, not a live view.
   - **351/391 missing `eligible_countries`** (was 366 this morning). Still the gate on real
     eligibility matching per `docs/MASTER-EXECUTION-STRATEGY.md` §P3. Now honestly *labelled*
     even where unresearched — see FEAT-1's Package 1 below.
-  - **only 56/391 carry a deadline.** The deadline research lane has 74 verified records
-    moving through verification toward ingestion.
+  - **only 60/391 carry a deadline.** Verified records are still moving through the pipeline
+    with nothing able to apply them: **the `opportunities*` write territory is deliberately
+    vacant.** The founder stopped one of two RES-I2 instances and which one is ambiguous, so
+    waking either risks overriding a deliberate stop or handing live-write access to the wrong
+    session. Ruling: nobody writes to `opportunities*` until the founder opens a lane
+    (backlog item 34). Research on those tables continues and is unaffected — produce freely,
+    apply nothing.
 - `canonical_entities`: **1,172** rows. `entity_verification_queue`: **101** rows still open.
 - `profiles`: **5** — no longer the pre-launch scratch "1", real signups now exist.
 
