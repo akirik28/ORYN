@@ -75,8 +75,9 @@ modeled directly on `AU_R1_CONTRACT`. Covers Ottawa's 24-field schema (AU-R1's 2
 `status_note`, a free-text field for source-stated program status like "admission
 suspended"). Same `field_provenance` closed-vocabulary check, same null-fence, same
 duplicate-URL and university-resolution logic. Canada's first formalized lane — any
-future Canadian research package (a Calgary pilot is imminent as of this write-up, per
-BASORG) should run through `--lane=ca-r1`, not a fresh ad-hoc script.
+future Canadian research package should run through `--lane=ca-r1`, not a fresh ad-hoc
+script. (A Calgary pilot looked imminent earlier tonight; it isn't — see "Resume
+condition" below, corrected after this doc's first push.)
 
 ## V1-13's result, stated plainly — do not re-run this sweep
 
@@ -88,6 +89,25 @@ independently by RES-V2's own sweep of Adelaide's other 116 in V2-12). A success
 verifying a **new** corpus should run `findValueDomainOutliers` on it (per #2's own
 `ca-r1`/`au-r1` wiring, this happens automatically) — but should not re-sweep the six
 corpora already covered here unless one of them changes again.
+
+## Resume condition (corrected after first push — read this, not §5's original line)
+
+**No pending trigger.** This doc originally named "RES-R1's 8–10 record Calgary pilot" as
+the resume condition. It's dead: Calgary was deferred (source-authority gate passed;
+feasibility didn't — sustained 429s against a host rate-limiting at ~50 requests/15min,
+against 493 programmes needing a browser render each), and the follow-up attempt,
+Dalhousie, came back inconclusive (no response in a generous budget, cause undetermined).
+Verified live before writing this correction: both `University of Calgary` and
+`Dalhousie University` show 0 rows in `university_programs` today. **Resume condition is
+now: a new corpus reaching contract/ID verification** — 15 Canada targets remain,
+re-queried at zero programmes as of tonight, none currently in flight.
+
+**A trigger is a claim about the future, and goes stale the same way any other claim
+does** — BASORG had to retract this same kind of dead trigger twice tonight (this one,
+and a separate one left standing for RES-V2). Whoever sets a trigger owns retracting it
+when the world changes; whoever reads one on a cold resume should still verify it's still
+live before treating it as the next task, the same way every other claim in this doc is
+checked against a commit rather than asserted.
 
 ## Session tally
 
