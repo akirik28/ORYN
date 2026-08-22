@@ -432,6 +432,36 @@ simplification of the org.
     account it noticed was moving under it. When a fixture is shared, the artifact that cannot
     be contaminated is the one to reason from.
 
+29. **Live browser verification is serialized. One lane at a time, allocated by the CEO.**
+    The Browser pane appears to be a **single shared browser instance across concurrent sessions
+    on this machine**, not one private instance per session. A lane logging in as account X
+    silently rewrites the session cookie in *every other lane's tabs* on that origin — no error,
+    no prompt, no signal until something happens to expose it.
+
+    Evidence: FEAT-2 had its identity change twice. The second time was on a **single tab it was
+    driving continuously**, with no new tab, no login, and no action that touches auth. It
+    checked the cookie immediately before a write, with the form already filled, and found it
+    had become another account's. It did not save. UI-1 was logging into that account, in the
+    same window, for an unrelated investigation.
+
+    **This defeats rule 28 entirely.** Allocating accounts exclusively assumes a session controls
+    which identity its browser presents; it does not. It also defeats rule 28's own amendment:
+    checking the cookie before a write narrows the window but cannot close it, because identity
+    can change between the check and the write. As FEAT-2 put it, **"'before' isn't 'at'."**
+
+    So the control is exclusivity of the *browser*, not of the account. **Ask the CEO before any
+    live browser verification; do not start because your account is unshared.** Keep checking the
+    cookie before each write anyway: under exclusive use it becomes a detector — a flip while you
+    hold the browser alone would falsify this and point somewhere worse.
+
+    **The general lesson is the expensive one.** This is the third tooling failure in one day that
+    disguised itself as something else: disk exhaustion surfaced as a permission denial, a dev
+    server died while keeping its port, and identity was reassigned mid-session. **None was
+    visible from inside the affected session**, and all three were found by a lane checking
+    something it had no particular reason to doubt. When an observation is inexplicable in terms
+    of your own actions, suspect the environment before suspecting your reasoning — and report it
+    rather than explaining it away.
+
 ## 6. Known founder-pending items no lane may act on unilaterally
 
 - Evidence-gate false rejections (2,097 blocked records) — `docs/handoffs/evidence-gate-false-rejections-2026-08-22.md`
