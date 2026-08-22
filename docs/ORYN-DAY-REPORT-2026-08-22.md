@@ -100,11 +100,12 @@ structurally safe. So this is one specific hole and one near-miss, not a systemi
 | `university_programs` | 418 | 14,457 | **16,119** |
 | `university_requirements` | 84 | 1,254 | 1,254 |
 | `opportunities` missing `eligible_countries` | — | 366 | **351** |
-| `opportunities` with a deadline | — | 56 | 56 |
+| `opportunities` with a deadline | — | 56 | **60** |
 | Test suite | 1,824 | 1,861 | **1,888** |
 
-The deadline number hasn't moved yet: 74 verified deadline records plus more are in the
-verification pipeline, not yet ingested. That's the honest state, not a rounding.
+The deadline number barely moved: four landed before the ingester lanes died. 74 verified
+records plus more are still in the verification pipeline with nothing able to apply them — see
+item 34. That's the honest state, not a rounding.
 
 ---
 
