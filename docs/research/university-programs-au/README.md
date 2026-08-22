@@ -4,25 +4,44 @@
 unfinished work, start here.** Sessions in this org have been ending without warning; this file
 is kept current after every sub-batch, not just at close-out, specifically so that's survivable.
 
-- **Done, pushed, corpus-validated:** UNSW (217), Sydney (149), Monash (178) = 544 records.
-- **In progress:** UWA — extraction script `fetch_classify_uwa.py` (this repo's scratch area,
-  not committed; logic is documented in the UWA method section below and is reproducible from
-  this doc alone if the script itself is lost) running against 422 sitemap URLs, classifying by
-  each page's own `Course Code` prefix (`MJD-` = major, excluded; anything else = degree,
-  included). Partial output committed at whatever count was reached — check the file's own line
-  count, not this table, for the true current number.
+- **Done, pushed, corpus-validated:** UNSW (217), Sydney (149, degree_level corrected — see fix
+  note below), Monash (178), UWA (289, corrected after a self-caught classification bug — see fix
+  note below) = **833 records across 4 universities.**
+- **A self-caught bug in UWA's first pass, fixed before README close-out:** the first extraction
+  used "has a `Course Code` card" as its inclusion gate, which wrongly excluded genuine top-level
+  degree pages that simply don't publish that specific card (e.g. bare "Bachelor of Commerce",
+  "Bachelor of Science" — real, admittable degrees confirmed by their other cards: ATAR, CRICOS,
+  duration, "Degree specific majors" count). 93 of 422 records were wrongly excluded this way.
+  Corrected gate: `MJD-` prefix exclusion (when a code exists at all) plus title-token inclusion,
+  the same method already used for Sydney — re-fetched and reclassified those 93 specifically
+  (not a full 422 re-run), recovering 73 genuine records; the other 20 were confirmed correctly
+  excluded (9 Engineering "major"-equivalent specialisation pages with no Bachelor title token, 5
+  Pathways hub pages, 5 genuine 404s, 1 Graduate Certificate). One further near-duplicate found
+  and removed during this pass: "Bachelor of Human Sciences (Pharmaceutical Health) and Doctor of
+  Pharmacy" was reachable via two different sitemap URL slugs that both 301-redirect to the same
+  canonical page — kept the record matching the canonical slug, dropped the alias.
+- **A verification-caught bug in Sydney's degree_level, fixed:** RES-V1's cross-university
+  consistency check found Sydney's title-token method checked only "Honours"/"Diploma", with no
+  path to detect "Master of"/"Doctor of" — 10 combined-award titles (e.g. "Bachelor of Arts and
+  Doctor of Medicine") landed one tier below where UNSW's/Monash's AQF-code methods correctly
+  place the same real-world shape. Audited comprehensively (every capitalized token across all
+  149 titles, not just the 10 flagged) before fixing — confirmed exactly 7 Master- + 3
+  Doctor-titled records and no other missed category. All 10 reclassified to `Bachelor /
+  first-cycle (integrated master's)`; UNSW and Monash untouched (their basis was already
+  correct); `field_provenance` unchanged (`explicit_title_token` — a more complete read, not a
+  different kind of evidence).
 - **Investigated, not yet extracted:** Adelaide University — identity question resolved (genuine
   2026 merger, single settled catalogue, see below), dom/int page-variant structure mapped and
   invariance-verified on 10 sample programmes, extraction methodology designed and approved by
   BASORG (fetch international variant for all ~560 URLs, domestic sampled on ~18 for faculty
   spread, `entry_requirements`/`study_mode` keyed by audience per BASORG's structural ruling — see
-  the Adelaide section below for the full field-extraction pattern). **Also found mid-testing,
-  not yet fixed in a full run**: Adelaide represents major variants of one degree as separate
-  pages sharing the SAME `Program code` (e.g. "Bachelor of Arts", "Bachelor of Arts majoring in
-  Anthropology", "...majoring in Aboriginal Studies" all carry code `BARTS`) — the same
-  majors-vs-degree grain problem UWA had, structured differently (same code, not a different
-  prefix). Must be filtered by title text containing "majoring in" before any bulk run, or the
-  record count will be inflated with near-duplicates. Not yet applied to a full Adelaide extract.
+  the Adelaide section below for the full field-extraction pattern). **A majors-vs-degree grain
+  problem already found and designed around, not yet applied to a full run**: Adelaide represents
+  major variants of one degree as separate pages sharing the SAME `Program code` (e.g. "Bachelor
+  of Arts", "Bachelor of Arts majoring in Anthropology" both carry code `BARTS`) — filtered by
+  title text containing "majoring in" (the extraction script is written with this exclusion built
+  in from the start, learning from the UWA experience above rather than repeating it) but the
+  full ~560-URL batch has not yet been run.
 - **Deferred by policy, not by research effort — a property of the web, not a gap in this
   lane's work:** Melbourne, ANU, Queensland. See the named section below.
 - **Not started:** none remaining in the top 8 after the above.
@@ -54,9 +73,9 @@ University" below.
 | Sydney | 28 | **149** | `au_programs_sydney_2026-08-22.jsonl` | Complete |
 | ANU | 29 | 0 | — | **Deferred** — explicit robots.txt block on the only host serving the catalogue, see below |
 | Monash | 31 | **178** | `au_programs_monash_2026-08-22.jsonl` | Complete |
-| Queensland | 40 | not started | — | |
-| UWA | 77 | not started | — | |
-| Adelaide University | 79 | not started | — | Scheduled deliberately last — identity question, see below |
+| Queensland | 40 | 0 | — | **Deferred** — CAPTCHA gate on the catalogue host, see below |
+| UWA | 77 | **289** | `au_programs_uwa_2026-08-22.jsonl` | Complete (corrected — see resumability note above) |
+| Adelaide University | 79 | not started | — | Investigated and methodology-approved; not yet extracted — see below |
 
 Substitution history: Melbourne deferred → Sydney substituted into sub-batch 2 (BASORG-approved).
 ANU deferred → Monash substituted into sub-batch 3 (BASORG-approved).
@@ -321,7 +340,7 @@ records — mapped to the same `degree_level` for corpus consistency rather than
   retrofitted onto UNSW or Sydney — neither platform publishes an equivalent field at all, and
   BASORG's ruling was explicit: don't manufacture one where the source doesn't have it.
 
-## Method: UWA (IN PROGRESS — this section documents the method so it's reproducible even if the script isn't recovered)
+## Method: UWA (289 records, complete)
 
 `www.uwa.edu.au` is fully permissive (Sitecore-based, `Allow: /` with only technical paths
 disallowed, no bot-mitigation on a live fetch). Catalogue discovered via `robots.txt`'s
@@ -341,10 +360,19 @@ own negative finding, not a silent omission: UWA publishes 175 major/specialisat
 excluded here as a different entity type, available if the product ever wants majors as their
 own grain later.
 
-**Classification method: by each page's own `Course Code` prefix, not the URL slug** (a
-"bachelor/master/doctor/diploma"-in-slug heuristic was checked as a sanity cross-check — 3
-non-degree-like slugs spot-fetched and confirmed `MJD-` — but the slug is never trusted as the
-filter itself, same discipline as Monash's `aqf_level`).
+**Classification method, corrected after a self-caught bug in the first pass.** Exclusion is by
+each page's own `Course Code` prefix (`MJD-` = major) when a code exists at all — verified
+against the URL slug as a sanity cross-check (3 non-degree-like slugs spot-fetched and confirmed
+`MJD-`, same discipline as Monash's `aqf_level`), never trusted as the filter itself. **Inclusion
+is by title-token read (Bachelor/Honours/Master-or-Doctor-combo/Associate Degree/Diploma), the
+same method as Sydney — not by requiring the `Course Code` card to be present.** The first pass
+used code-card presence as an implicit inclusion gate too, which wrongly excluded 93 genuine
+degree pages that simply don't publish a `Course Code` card while still being real, admittable
+degrees (confirmed via their other cards — ATAR, CRICOS, duration, "Degree specific majors"
+count — all present and legitimate). Re-fetched and reclassified those 93 specifically: 73
+recovered as genuine records, 20 confirmed correctly excluded on title-token grounds (9
+Engineering "major"-equivalent pages, 5 Pathways hub pages, 5 genuine 404s, 1 Graduate
+Certificate).
 
 **No JSON data blob on this platform** (no `__NEXT_DATA__`; a thin per-page schema.org
 `ld+json` block exists with only name/description/courseCode, not enough for duration/ATAR/
@@ -582,12 +610,20 @@ fetched records' `aqf_level` values enumerated and individually assigned in/out-
 (see the method section above) — including catching that only 3 of 12 null-`aqf_level` records
 were genuine pathway programs, not all 12 as a naive port of the UNSW pattern would have assumed.
 
-**Combined corpus check (544 AU records total, UNSW + Sydney + Monash):** re-ran the corpus-wide
-validator after every retrofit — zero duplicate IDs, zero schema failures.
+**UWA (289, after the fix above):** schema + corpus-wide ID validation clean. One duplicate
+program name found and resolved during this pass (not a schema/ID collision — same title reached
+via two sitemap URL slugs that both redirect to the same canonical page; the alias removed,
+verified by following both redirect chains to their shared final URL before deciding which to
+drop, not assumed from the name match alone).
+
+**Combined corpus check (833 AU records total, UNSW + Sydney + Monash + UWA):** re-ran the
+corpus-wide validator after every retrofit and fix in this package — zero duplicate IDs, zero
+schema failures.
 
 ## Remaining gaps, in priority order
 
-1. **Queensland, UWA, Adelaide University (ranks 40/77/79) not yet started.**
+1. **Adelaide University (rank 79) investigated, methodology approved, not yet extracted** — see
+   above; the largest remaining piece of this package.
 2. **Adelaide University identity question (rank 79) deliberately scheduled last** per BASORG's
    instruction — the DB holds a "Adelaide University" row (adelaide.edu.au) but no "The
    University of Adelaide" or "University of South Australia" row; whether this is the newly
