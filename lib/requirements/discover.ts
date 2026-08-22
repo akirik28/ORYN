@@ -5,7 +5,7 @@ import { extractRequirementsFromContent } from "@/lib/ai/requirement-extraction"
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isDuplicateRequirement } from "./dedup";
 import { categoryToRuleKind } from "./types";
-import { getSupersededUniversityIds } from "@/lib/universities/canonical";
+import { getSupersededUniversityIds, loadSupersessionMap } from "@/lib/universities/canonical";
 import type { RequirementCategory } from "@/types/database";
 
 export interface RequirementDiscoveryResult {
@@ -109,7 +109,8 @@ export async function getUniversitiesNeedingRequirementDiscovery(limit = DEFAULT
   // lib/universities/canonical.ts) must never reach a discovery run: it can't be attached to
   // requirements a student would ever see, so a Tavily search + AI extraction call against it
   // is pure waste. Same filter already applied to browse/search/target-university surfaces.
-  const supersededIds = getSupersededUniversityIds();
+  const supersessionMap = await loadSupersessionMap(admin);
+  const supersededIds = getSupersededUniversityIds(supersessionMap);
   let query = admin.from("universities").select("id, name").order("created_at", { ascending: true }).limit(200);
   if (supersededIds.length > 0) query = query.not("id", "in", `(${supersededIds.join(",")})`);
   const { data: universities } = await query;

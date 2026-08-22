@@ -6,7 +6,7 @@ import { ENTITY_SCOPES, type EntityScope } from "./field-policy";
 import { normalizeEntitySearchText } from "./normalize";
 import { rankEntityCandidates, type EntityCandidate } from "./rank";
 import type { EntitySearchResult, EntitySearchContext } from "./types";
-import { getSupersededUniversityIds } from "@/lib/universities/canonical";
+import { getSupersededUniversityIds, loadSupersessionMap } from "@/lib/universities/canonical";
 
 export type { EntityScope, EntitySearchResult, EntitySearchContext } from "./types";
 
@@ -114,7 +114,8 @@ async function searchUniversities(
   // with its winner, so without this exclusion the Map below could non-deterministically keep
   // whichever row Postgres returns last for that key — sometimes the loser. Excluding at the
   // query level is also what stops a loser row from ever being offered as a selectable result.
-  const supersededIds = getSupersededUniversityIds();
+  const supersessionMap = await loadSupersessionMap(supabase);
+  const supersededIds = getSupersededUniversityIds(supersessionMap);
   let universitiesQuery = supabase
     .from("universities")
     .select("id, name, city, country, institution_type, canonical_entity_id")

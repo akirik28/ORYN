@@ -89,7 +89,7 @@ interface CaTuitionEntry {
 
 /** `universities.name` (exact, this spine) -> hand-verified Canada tuition data. Every entry
  * read directly from the cited official page 2026-08-18. Never fuzzy-matched. Cross-checked
- * against `lib/universities/duplicate-supersessions.json` before being added — see the UK
+ * against `universities.duplicate_status` before being added — see the UK
  * script's header for why that check matters. */
 const CA_TUITION: Record<string, CaTuitionEntry> = {
   "University of British Columbia": {

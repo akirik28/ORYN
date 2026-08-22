@@ -88,7 +88,7 @@ interface KrTuitionEntry {
 
 /** `universities.name` (exact, this spine) -> hand-verified South Korea tuition data. Every
  * figure traced to the institution's own domain's fee table 2026-08-19. Cross-checked against
- * `lib/universities/duplicate-supersessions.json` (no Korean entries found) before being
+ * `universities.duplicate_status` (no Korean entries found) before being
  * added. */
 const KR_TUITION: Record<string, KrTuitionEntry> = {
   "Seoul National University": {

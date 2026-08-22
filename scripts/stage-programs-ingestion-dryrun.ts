@@ -20,6 +20,13 @@
  * candidate pool" discipline the assignment asked for, just via a different read path
  * than the existing script's own supabase-js client.
  *
+ * `universities-live.json` must include `duplicate_status`/`superseded_by_id` (added when
+ * this script was updated for the migration-0043-live cutover -- lib/universities/canonical.ts
+ * no longer ships a static duplicate-supersessions.json this script could import instead, so
+ * this snapshot is now the ONLY source that fact can come from for a no-DB-connection run like
+ * this one; a snapshot taken before those two columns were selected will make every university
+ * resolve as "canonical," silently under-filtering rather than erroring).
+ *
  * Classifies every record into exactly one of:
  *   READY_TO_INSERT        -- decideIngestion() accepted it AND language_of_instruction
  *                              (when present) reads as a confirmed fact, not a hedge.
@@ -40,7 +47,7 @@
 import { readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { decideIngestion, programUrlKey, type ResearchProgramRecord, type UniversityLookupRow, type IngestDecision, type AcceptedProgramRow } from "../lib/programs/ingest";
-import { canonicalUniversityId, excludeSupersededUniversities } from "../lib/universities/canonical";
+import { canonicalUniversityId, excludeSupersededUniversities, type SupersessionEntry, type SupersessionMap } from "../lib/universities/canonical";
 
 const SNAPSHOT_DIR = ".night-scratch";
 const BATCH_DIR = "data/research/university-programs";
@@ -53,6 +60,8 @@ interface UniRow {
   country: string;
   canonical_entity_id: string | null;
   website_url: string | null;
+  duplicate_status: "canonical" | "superseded";
+  superseded_by_id: string | null;
 }
 interface AliasRow {
   entity_id: string;
@@ -90,6 +99,15 @@ for (const e of externalIdsRaw) {
   externalIdsByEntity.set(e.entity_id, existing);
 }
 
+// No live Supabase connection in this script (see the file header) — built directly from the
+// same universities-live.json snapshot already loaded above, rather than either live loader in
+// lib/universities/canonical.ts (loadSupersessionMap needs a SupabaseClient, loadSupersessionMapViaRest
+// needs a url/key, neither of which this script has). The snapshot's own duplicate_status/
+// superseded_by_id columns are the live truth as of whenever that snapshot was taken.
+const supersessionMap: SupersessionMap = new Map<string, SupersessionEntry>(
+  universitiesRaw.filter((u) => u.duplicate_status === "superseded" && u.superseded_by_id).map((u) => [u.id, { winnerId: u.superseded_by_id! }])
+);
+
 // Pre-filtered with the same excludeSupersededUniversities() helper the live ingestion scripts
 // now use (see scripts/ingest-university-programs.ts), not just the post-hoc
 // canonicalUniversityId() redirect below. Pre-filtering fixes the actual failure mode this
@@ -100,6 +118,7 @@ for (const e of externalIdsRaw) {
 // redirect below now only matters for a snapshot that predates a future new supersession entry
 // this file wasn't regenerated against, so it stays as a second layer, not the primary fix.
 const universities: UniversityLookupRow[] = excludeSupersededUniversities(
+  supersessionMap,
   universitiesRaw.map((u) => ({
     id: u.id,
     name: u.name,
@@ -199,7 +218,7 @@ for (const file of batchFiles) {
       // this as ready. Re-check duplicate/URL keys against the WINNER id too, since the
       // winner (not the loser) is where real existing rows live.
       const originalId = decision.universityId!;
-      const canonicalId = canonicalUniversityId(originalId);
+      const canonicalId = canonicalUniversityId(supersessionMap, originalId);
       if (canonicalId !== originalId) {
         supersessionRedirects += 1;
         redirectedFromSupersededId = originalId;

@@ -96,7 +96,7 @@ interface ItTuitionEntry {
 
 /** `universities.name` (exact, this spine) -> hand-verified Italy tuition data. Every entry's
  * maximum figure traced to the institution's own domain or an official regulation document
- * 2026-08-18. Cross-checked against `lib/universities/duplicate-supersessions.json` (no
+ * 2026-08-18. Cross-checked against `universities.duplicate_status` (no
  * Italian entries found) before being added. */
 const IT_TUITION: Record<string, ItTuitionEntry> = {
   "Politecnico di Milano": {

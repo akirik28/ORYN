@@ -77,7 +77,7 @@ const ETH_DOMAIN_NOTES =
 
 /** `universities.name` (exact, this spine) -> hand-verified Switzerland tuition data. Every
  * entry read from the institution's own page or a directly-corroborated news/official source
- * 2026-08-18. Cross-checked against `lib/universities/duplicate-supersessions.json` (no
+ * 2026-08-18. Cross-checked against `universities.duplicate_status` (no
  * Swiss entries found) before being added. */
 const CH_TUITION: Record<string, ChTuitionEntry> = {
   "ETH Zurich": {

@@ -64,7 +64,7 @@
  * first version of this script keyed its UCL entry as `"UCL"` — the LOSER row
  * (`cf8adcbd-...`), which every browse/search/detail surface excludes — instead of the winner,
  * `"University College London"` (`03c8faf1-...`). The data would have been permanently
- * invisible. Caught before `--apply` reached `main` by checking `duplicate-supersessions.json`
+ * invisible. Caught before `--apply` reached `main` by checking `universities.duplicate_status`
  * directly, not by re-litigating "which row looks more complete" from scratch (which is also
  * what happened, unnoticed, for the LSE entry: it happened to land on the already-registered
  * winner row by that same heuristic, not because the registry was actually checked at the
@@ -114,7 +114,7 @@ const UK_TUITION: Record<string, UkTuitionEntry> = {
   },
   // Keyed "University College London", NOT "UCL" — this spine has both as separate rows
   // (cf8adcbd-... "UCL" and 03c8faf1-... "University College London") sharing one
-  // canonical_entity_id, already resolved in duplicate-supersessions.json: "University
+  // canonical_entity_id, already resolved in universities.duplicate_status: "University
   // College London" is the winner (7 vs 2 FK references), "UCL" the loser. Caught live: a
   // first version of this table used "UCL" and would have written real, carefully-verified
   // tuition data onto the superseded row — invisible everywhere, since getSupersededUniversityIds()
@@ -211,7 +211,7 @@ const UK_TUITION: Record<string, UkTuitionEntry> = {
   "University of Warwick": {
     // Winner of the Warwick duplicate pair (0b204add-..., 6 vs 2 FK references) —
     // "The University of Warwick" (ad3ef0a4-...) is the loser, cross-checked against
-    // duplicate-supersessions.json before writing, same discipline as every entry above.
+    // universities.duplicate_status before writing, same discipline as every entry above.
     domestic: 9790,
     international: [27870, 35530],
     sourceUrl: "https://warwick.ac.uk/services/finance/studentfinance/fees/overseasfees/",

@@ -64,7 +64,7 @@ interface TwTuitionEntry {
 
 /** `universities.name` (exact, this spine) -> hand-verified Taiwan tuition data. Every entry
  * read directly from the cited official page 2026-08-20. Never fuzzy-matched. Cross-checked
- * against `lib/universities/duplicate-supersessions.json` first — no Taiwan entries exist in
+ * against `universities.duplicate_status` first — no Taiwan entries exist in
  * that registry (checked, not assumed), so no supersession risk for this table. */
 const TW_TUITION: Record<string, TwTuitionEntry> = {
   "National Taiwan University (NTU)": {

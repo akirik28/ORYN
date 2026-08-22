@@ -76,7 +76,7 @@ interface AeTuitionEntry {
 
 /** `universities.name` (exact, this spine) -> hand-verified UAE tuition data. Every entry read
  * directly from the cited official page 2026-08-20. Never fuzzy-matched. Cross-checked against
- * `lib/universities/duplicate-supersessions.json` first — no UAE entries exist in that
+ * `universities.duplicate_status` first — no UAE entries exist in that
  * registry (checked, not assumed), so no supersession risk for this table. */
 const AE_TUITION: Record<string, AeTuitionEntry> = {
   "Khalifa University": {

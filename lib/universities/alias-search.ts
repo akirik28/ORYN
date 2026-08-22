@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, University } from "@/types/database";
 import { rankEntityCandidates, type EntityCandidate } from "@/lib/entities/rank";
-import { getSupersededUniversityIds } from "@/lib/universities/canonical";
+import { getSupersededUniversityIds, loadSupersessionMap } from "@/lib/universities/canonical";
 
 /**
  * University name search, alias- and accent-aware.
@@ -86,9 +86,9 @@ export async function searchUniversityRows(
   // returns BOTH "UCL" and "University College London" for a search that matched their one
   // shared entity. Excluding known-superseded ids at the query level is what makes the RPC's
   // already-deduplicated one-entity-id result stay one row after the join back to
-  // `universities` (see lib/universities/canonical.ts for why this can't be a DB-level filter
-  // yet — migration 0043 is written but not DDL-applicable in this environment).
-  const supersededIds = getSupersededUniversityIds();
+  // `universities`. See lib/universities/canonical.ts.
+  const supersessionMap = await loadSupersessionMap(supabase);
+  const supersededIds = getSupersededUniversityIds(supersessionMap);
   let rowQuery = supabase.from("universities").select("*").in("canonical_entity_id", ordered);
   if (supersededIds.length > 0) rowQuery = rowQuery.not("id", "in", `(${supersededIds.join(",")})`);
   if (options.countries && options.countries.length > 0) rowQuery = rowQuery.in("country", options.countries);

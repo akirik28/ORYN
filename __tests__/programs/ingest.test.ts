@@ -10,7 +10,7 @@ import {
   type ResearchProgramRecord,
   type UniversityLookupRow,
 } from "@/lib/programs/ingest";
-import { excludeSupersededUniversities } from "@/lib/universities/canonical";
+import { excludeSupersededUniversities, type SupersessionMap } from "@/lib/universities/canonical";
 
 const MIT: UniversityLookupRow = { id: "uni-mit", name: "Massachusetts Institute of Technology", country: "United States" };
 const EDINBURGH: UniversityLookupRow = { id: "uni-edi", name: "The University of Edinburgh", country: "United Kingdom", aliases: ["University of Edinburgh"] };
@@ -81,15 +81,17 @@ describe("resolveUniversity (via lib/acquisition/identity.resolveIdentity)", () 
 });
 
 describe("candidate pool must exclude superseded universities (regression: live MIT ingestion ambiguity)", () => {
-  // Real ids from lib/universities/duplicate-supersessions.json — MIT has two live `universities`
-  // rows, already resolved as duplicates elsewhere in the system (migration 0043 / canonical.ts).
-  // scripts/ingest-university-programs.ts (and 3 sibling scripts) built their identity-resolution
-  // candidate pool straight from the raw `universities` table with no supersession filter, so
+  // Real ids — MIT has two live `universities` rows, already resolved as duplicates elsewhere
+  // in the system (migration 0043's duplicate_status/superseded_by_id columns, live and
+  // DB-native as of 2026-08-22 — see lib/universities/canonical.ts's header). scripts/ingest-
+  // university-programs.ts (and 3 sibling scripts) built their identity-resolution candidate
+  // pool straight from the raw `universities` table with no supersession filter, so
   // resolveIdentity() saw both rows, judged the match genuinely ambiguous, and correctly refused
   // — but a research lane still had to hand-pick which row to target, because the ambiguity was
   // spurious: these two rows are a confirmed duplicate, not two real candidates.
   const MIT_WINNER_ID = "03167d0c-2315-49e3-a37e-f9c9c7d2d27c"; // "Massachusetts Institute of Technology"
   const MIT_LOSER_ID = "ba3a30b2-c6e2-4a0f-ba32-6da028175d35"; // "Massachusetts Institute of Technology (MIT)"
+  const supersessionMap: SupersessionMap = new Map([[MIT_LOSER_ID, { winnerId: MIT_WINNER_ID }]]);
 
   const rawCandidatePool: UniversityLookupRow[] = [
     { id: MIT_WINNER_ID, name: "Massachusetts Institute of Technology", country: "United States" },
@@ -112,7 +114,7 @@ describe("candidate pool must exclude superseded universities (regression: live 
   });
 
   test("excludeSupersededUniversities() on the candidate pool fixes it: MIT resolves cleanly to the winner", () => {
-    const filteredPool = excludeSupersededUniversities(rawCandidatePool);
+    const filteredPool = excludeSupersededUniversities(supersessionMap, rawCandidatePool);
     expect(filteredPool.map((u) => u.id)).toEqual([MIT_WINNER_ID]);
 
     const decision = decideIngestion(mitRecord(), filteredPool, new Set());
@@ -121,7 +123,7 @@ describe("candidate pool must exclude superseded universities (regression: live 
   });
 
   test("no superseded id can appear in a filtered candidate pool, generally", () => {
-    const filtered = excludeSupersededUniversities(rawCandidatePool);
+    const filtered = excludeSupersededUniversities(supersessionMap, rawCandidatePool);
     expect(filtered.some((u) => u.id === MIT_LOSER_ID)).toBe(false);
   });
 });

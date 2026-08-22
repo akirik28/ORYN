@@ -35,7 +35,7 @@ import { partitionCorpusRecords, type CorpusRecordInput } from "../lib/requireme
 import { decideRequirementIngestion, requirementDedupKey, requirementUniqueIndexKey, type ResearchRequirementRecord, type UniversityLookupRow } from "../lib/requirements/ingest";
 import { decideDeadlineIngestion, deadlineDedupKey, deadlineFactKeyFromRow, type ResearchDeadlineRecord } from "../lib/deadlines/ingest";
 import { classifyDeadlineShapes, classifyRequirementShapes, findUniqueSlotCollisions, withRetry, type DeadlineShape, type RequirementShape } from "../lib/requirements/shape-audit";
-import { excludeSupersededUniversities } from "../lib/universities/canonical";
+import { excludeSupersededUniversities, loadSupersessionMapViaRest } from "../lib/universities/canonical";
 import { normalizeProgramName } from "../lib/programs/normalize";
 import { fetchAllRowsVerified, type PostgrestTarget } from "../lib/acquisition/paginate";
 
@@ -107,7 +107,9 @@ async function loadUniversityCandidates(target: PostgrestTarget): Promise<Univer
     existing[e.id_system] = e.external_id;
     externalIdsByEntity.set(e.entity_id, existing);
   }
+  const supersessionMap = await withRetry("read universities.duplicate_status", () => loadSupersessionMapViaRest(target));
   return excludeSupersededUniversities(
+    supersessionMap,
     universities.map((u) => ({
       id: u.id,
       name: u.name,

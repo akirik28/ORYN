@@ -66,7 +66,7 @@ import {
   type ResearchDeadlineRecord,
 } from "../lib/deadlines/ingest";
 import { fetchAllRowsVerified, type PostgrestTarget } from "../lib/acquisition/paginate";
-import { excludeSupersededUniversities } from "../lib/universities/canonical";
+import { excludeSupersededUniversities, loadSupersessionMapViaRest } from "../lib/universities/canonical";
 
 try {
   process.loadEnvFile(".env.local");
@@ -123,7 +123,9 @@ async function loadUniversityCandidates(target: PostgrestTarget): Promise<ReqUni
     existing[e.id_system] = e.external_id;
     externalIdsByEntity.set(e.entity_id, existing);
   }
+  const supersessionMap = await loadSupersessionMapViaRest(target);
   return excludeSupersededUniversities(
+    supersessionMap,
     universities.map((u) => ({
       id: u.id,
       name: u.name,

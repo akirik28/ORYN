@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { allSupersessions, canonicalUniversityId, excludeSupersededUniversities, isSupersededUniversityId } from "@/lib/universities/canonical";
+import { canonicalUniversityId, excludeSupersededUniversities, isSupersededUniversityId, type SupersessionMap } from "@/lib/universities/canonical";
 import { rankUniversities, type UniversityLike } from "@/lib/universities/alias-search";
 
 /**
@@ -7,10 +7,19 @@ import { rankUniversities, type UniversityLike } from "@/lib/universities/alias-
  * Named pairs required at minimum: UCL, MIT, LSE, Warwick, HKUST, KFUPM, UTS, Newcastle
  * Australia, Al-Farabi — every one of them, not just the reported UCL case.
  *
- * These assert against the REAL generated lib/universities/duplicate-supersessions.json (via
- * canonical.ts's static import), not mocked data — if a future `resolve:university-duplicates`
- * re-run ever changes a winner or drops a pair, this suite is meant to catch that and force a
- * conscious look, not silently pass.
+ * lib/universities/canonical.ts used to read a static, generated duplicate-supersessions.json
+ * snapshot; it now queries the live `universities.duplicate_status`/`superseded_by_id` columns
+ * (migration 0043, confirmed live 2026-08-22) via an async loader. What's under test below is
+ * therefore the pure map-consuming logic (canonicalUniversityId / excludeSupersededUniversities
+ * / isSupersededUniversityId), fed a hand-built map shaped exactly like the real 9 known pairs —
+ * not a live-data regression test anymore, since there is no longer a committed snapshot to
+ * diff against and this environment has no database connection to hit instead (see below). The
+ * real ids/names are kept as fixture data anyway so this stays a representative example rather
+ * than opaque "id-1"/"id-2" placeholders, and so a reviewer can still recognize the real pairs.
+ * Live-state correctness (are these still the right 9 pairs, right now) is a DB-level property
+ * now, not a unit-testable one — see scripts/university-duplicates-audit.ts (the tool that sets
+ * duplicate_status/superseded_by_id) and __tests__/programs/ingest.test.ts's own MIT-ambiguity
+ * regression for the adjacent coverage that does still exercise real ids end-to-end.
  *
  * What these do NOT do: hit a live Supabase RPC. `searchUniversityRows` (lib/universities/
  * alias-search.ts) and the EntityCombobox university-scope backend (lib/entities/search.ts)
@@ -35,21 +44,19 @@ const KNOWN_PAIRS: { name: string; loserId: string; winnerId: string; loserName:
   { name: "Al-Farabi", loserId: "6f0df596-4ee5-49da-82ad-8057bfaa890d", winnerId: "37f12391-462d-4aba-8947-d9cf159627cb", loserName: "Farabi University (former Al - Farabi Kazakh National University)", winnerName: "Al-Farabi Kazakh National University" },
 ];
 
-describe("duplicate-supersessions.json — the 9 known pairs, individually", () => {
+/** Built once, reused by every describe block below — mirrors what `loadSupersessionMap`
+ * would return for exactly these 9 pairs, without a live DB connection. */
+const KNOWN_PAIRS_MAP: SupersessionMap = new Map(KNOWN_PAIRS.map((p) => [p.loserId, { winnerId: p.winnerId }]));
+
+describe("the 9 known pairs, individually", () => {
   test.each(KNOWN_PAIRS)("$name: loser resolves to the correct winner", ({ loserId, winnerId }) => {
-    expect(isSupersededUniversityId(loserId)).toBe(true);
-    expect(canonicalUniversityId(loserId)).toBe(winnerId);
+    expect(isSupersededUniversityId(KNOWN_PAIRS_MAP, loserId)).toBe(true);
+    expect(canonicalUniversityId(KNOWN_PAIRS_MAP, loserId)).toBe(winnerId);
   });
 
   test.each(KNOWN_PAIRS)("$name: winner is never itself marked superseded", ({ winnerId }) => {
-    expect(isSupersededUniversityId(winnerId)).toBe(false);
-    expect(canonicalUniversityId(winnerId)).toBe(winnerId);
-  });
-
-  test("exactly these 9 pairs are recorded — a new one appearing (or one vanishing) should be a conscious change, not silent drift", () => {
-    const recorded = Object.keys(allSupersessions()).sort();
-    const expected = KNOWN_PAIRS.map((p) => p.loserId).sort();
-    expect(recorded).toEqual(expected);
+    expect(isSupersededUniversityId(KNOWN_PAIRS_MAP, winnerId)).toBe(false);
+    expect(canonicalUniversityId(KNOWN_PAIRS_MAP, winnerId)).toBe(winnerId);
   });
 });
 
@@ -61,7 +68,7 @@ describe("canonical university list — a mixed winner+loser row set collapses t
     ]);
     expect(rows).toHaveLength(18);
 
-    const visible = excludeSupersededUniversities(rows);
+    const visible = excludeSupersededUniversities(KNOWN_PAIRS_MAP, rows);
     expect(visible).toHaveLength(9);
     expect(visible.map((r) => r.id).sort()).toEqual(KNOWN_PAIRS.map((p) => p.winnerId).sort());
     // Every kept name is the winner's, never the loser's.
@@ -73,13 +80,13 @@ describe("canonical university list — a mixed winner+loser row set collapses t
 
   test("row order within the input is preserved (a stable filter, not a re-sort)", () => {
     const rows = [{ id: "z-unrelated", name: "Zzz University" }, ...KNOWN_PAIRS.slice(0, 2).flatMap((p) => [{ id: p.loserId, name: p.loserName }, { id: p.winnerId, name: p.winnerName }])];
-    const visible = excludeSupersededUniversities(rows);
+    const visible = excludeSupersededUniversities(KNOWN_PAIRS_MAP, rows);
     expect(visible[0].id).toBe("z-unrelated");
   });
 
   test("a university with no known duplicate is never touched", () => {
     const rows = [{ id: "genuinely-unique-id", name: "Some University With No Duplicate" }];
-    expect(excludeSupersededUniversities(rows)).toEqual(rows);
+    expect(excludeSupersededUniversities(KNOWN_PAIRS_MAP, rows)).toEqual(rows);
   });
 });
 
@@ -100,7 +107,7 @@ describe("alias search — the exact reported bug (\"UCL\" search surfacing both
 
     // The fix: exclude superseded rows BEFORE ranking (what searchUniversityRows now does at
     // the query level), not after — proves the candidate set itself never contains the loser.
-    const filteredCandidates = excludeSupersededUniversities(allCandidates);
+    const filteredCandidates = excludeSupersededUniversities(KNOWN_PAIRS_MAP, allCandidates);
     expect(filteredCandidates).toHaveLength(1);
 
     const results = rankUniversities("UCL", filteredCandidates, 8);
@@ -111,13 +118,13 @@ describe("alias search — the exact reported bug (\"UCL\" search surfacing both
 
   test("the full canonical name also resolves to the same single winner, not the loser", () => {
     const ucl = KNOWN_PAIRS.find((p) => p.name === "UCL")!;
-    const filteredCandidates = excludeSupersededUniversities([asUniversityLike(ucl.loserId, ucl.loserName, ["UCL"]), asUniversityLike(ucl.winnerId, ucl.winnerName, ["UCL"])]);
+    const filteredCandidates = excludeSupersededUniversities(KNOWN_PAIRS_MAP, [asUniversityLike(ucl.loserId, ucl.loserName, ["UCL"]), asUniversityLike(ucl.winnerId, ucl.winnerName, ["UCL"])]);
     const results = rankUniversities("University College London", filteredCandidates, 8);
     expect(results[0]?.id).toBe(ucl.winnerId);
   });
 
   test.each(KNOWN_PAIRS)("$name: filtering before ranking never leaves the loser searchable", ({ loserId, winnerId, loserName, winnerName }) => {
-    const filtered = excludeSupersededUniversities([asUniversityLike(loserId, loserName), asUniversityLike(winnerId, winnerName)]);
+    const filtered = excludeSupersededUniversities(KNOWN_PAIRS_MAP, [asUniversityLike(loserId, loserName), asUniversityLike(winnerId, winnerName)]);
     expect(filtered.map((r) => r.id)).toEqual([winnerId]);
   });
 

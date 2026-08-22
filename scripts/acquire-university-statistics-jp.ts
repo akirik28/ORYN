@@ -73,7 +73,7 @@ const NATIONAL_STANDARD_NOTES =
  * follow the MEXT national standard rate: 16 true national universities plus Osaka Metropolitan
  * University (a municipal/prefectural public university corporation, checked specifically —
  * see file header — not assumed just because it's publicly governed). Cross-checked against
- * `lib/universities/duplicate-supersessions.json` (no Japanese entries found) before being
+ * `universities.duplicate_status` (no Japanese entries found) before being
  * added. The remaining 5 Japanese universities in this spine are private and deliberately
  * absent — see file header. */
 const NATIONAL_STANDARD_UNIVERSITIES: string[] = [

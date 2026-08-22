@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
-import { canonicalUniversityId } from "@/lib/universities/canonical";
+import { canonicalUniversityId, loadSupersessionMap } from "@/lib/universities/canonical";
 import { PageHeader } from "@/components/oryn/page-header";
 import { EmptyState } from "@/components/oryn/empty-state";
 import { Scale } from "lucide-react";
@@ -23,8 +23,9 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
   const { ids: idsParam } = await searchParams;
   await requireUser();
   const supabase = await createClient();
+  const supersessionMap = await loadSupersessionMap(supabase);
 
-  const requestedIds = [...new Set((idsParam ?? "").split(",").map((id) => canonicalUniversityId(id.trim())).filter(Boolean))].slice(0, COMPARE_MAX);
+  const requestedIds = [...new Set((idsParam ?? "").split(",").map((id) => canonicalUniversityId(supersessionMap, id.trim())).filter(Boolean))].slice(0, COMPARE_MAX);
 
   if (requestedIds.length < 2) {
     return (

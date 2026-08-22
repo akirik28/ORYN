@@ -37,7 +37,7 @@
  *
  * A REAL SUPERSESSION CAUGHT BEFORE WRITING: this spine has a KFUPM duplicate pair —
  * "King Fahd University of Petroleum and Minerals (KFUPM)" (winner) and "KFUPM" (loser, short
- * form) — checked against `lib/universities/duplicate-supersessions.json` before writing
+ * form) — checked against `universities.duplicate_status` before writing
  * anything, same discipline as every other country in this project.
  *
  * NOT INCLUDED: 4 private universities in this spine (Prince Mohammad Bin Fahd University,
@@ -67,7 +67,7 @@ const DOMESTIC_FREE_NOTES =
 
 /** The 13 confirmed-public Saudi universities in this spine (4 private universities —
  * Prince Mohammad Bin Fahd, Prince Sultan, Alfaisal, Effat — deliberately excluded, see file
- * header). Cross-checked against `lib/universities/duplicate-supersessions.json`: the KFUPM
+ * header). Cross-checked against `universities.duplicate_status`: the KFUPM
  * pair resolved to its winner name below. */
 const PUBLIC_UNIVERSITIES: string[] = [
   "King Fahd University of Petroleum and Minerals (KFUPM)",

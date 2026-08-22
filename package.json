@@ -49,7 +49,6 @@
     "check:university-spine-health": "tsx scripts/university-spine-health.ts",
     "expand:university-spine": "tsx scripts/expand-university-spine.ts",
     "audit:admissions-quality": "tsx scripts/audit-admissions-quality.ts",
-    "resolve:university-duplicates": "tsx scripts/resolve-university-duplicates.ts",
     "reconcile:custom-vocabulary": "tsx scripts/reconcile-custom-vocabulary.ts",
     "acquire:university-images": "tsx scripts/acquire-university-images.ts",
     "report:university-images": "tsx scripts/university-image-coverage-report.ts",
