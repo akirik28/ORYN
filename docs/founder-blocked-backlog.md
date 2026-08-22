@@ -594,9 +594,12 @@ correction is a missing improvement, not a defect. Only Habitat has an expiry.
 
 > ### ⚠️ READ BEFORE INGESTING ANY OF THIS — 325 contract defects are on `main`
 >
-> The 116 records from RES-R2's P2/P3 output (87 summer-programme + 27 remaining-category)
+> The **116** records from RES-R2's P2/P3 output — 87 summer-programme plus 27
+> remaining-category, which is 114 *distinct* records, plus 2 correction records for 116 raw —
 > **failed contract validation** and were merged anyway, deliberately. Full verdict:
-> `docs/research/verification/v1-5_dlopp_p2_p3_verdict.md`.
+> `docs/research/verification/v1-5_dlopp_p2_p3_verdict.md`, which **lives on PR #20's branch,
+> not yet on `main`** — if you're reading this before #20 merges, the file is only reachable
+> from that branch.
 >
 > - **232** missing `record_type`/`lane` fields — systemic, in all 116 records.
 > - **92** `cycle_status_found` format drifts.
