@@ -5,7 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createNotification } from "@/lib/notifications/create";
-import { canonicalUniversityId } from "@/lib/universities/canonical";
+import { canonicalUniversityId, loadSupersessionMap, type SupersessionMap } from "@/lib/universities/canonical";
 import { NON_ACTIONABLE_VERIFICATION_STATES } from "@/lib/deadlines/ingest";
 
 /** Days-until-deadline thresholds that trigger a reminder (Phase 23/24). A student gets
@@ -50,7 +50,7 @@ async function notifyIfThresholdCrossed(supabase: SupabaseClient<Database>, toda
   return true;
 }
 
-async function scanApplications(supabase: SupabaseClient<Database>, today: Date): Promise<{ notified: number; checked: number }> {
+async function scanApplications(supabase: SupabaseClient<Database>, today: Date, supersessionMap: SupersessionMap): Promise<{ notified: number; checked: number }> {
   const { data: applications } = await supabase
     .from("applications")
     .select("id, user_id, deadline, target_university_id")
@@ -65,7 +65,7 @@ async function scanApplications(supabase: SupabaseClient<Database>, today: Date)
     : { data: [] };
   // Canonicalized so a target referencing a known-duplicate loser row still resolves to a
   // real name in the notification body. See lib/universities/canonical.ts.
-  const universityIdByTarget = new Map((targets ?? []).map((t) => [t.id, canonicalUniversityId(t.university_id)]));
+  const universityIdByTarget = new Map((targets ?? []).map((t) => [t.id, canonicalUniversityId(supersessionMap, t.university_id)]));
 
   const universityIds = [...new Set(universityIdByTarget.values())];
   const { data: universities } = universityIds.length
@@ -117,7 +117,7 @@ async function scanSavedOpportunityDeadlines(supabase: SupabaseClient<Database>,
   return { notified, checked };
 }
 
-async function scanTargetUniversityDeadlines(supabase: SupabaseClient<Database>, today: Date): Promise<{ notified: number; checked: number }> {
+async function scanTargetUniversityDeadlines(supabase: SupabaseClient<Database>, today: Date, supersessionMap: SupersessionMap): Promise<{ notified: number; checked: number }> {
   const { data: targets } = await supabase
     .from("target_universities")
     .select("id, user_id, university_id, program_id")
@@ -127,7 +127,7 @@ async function scanTargetUniversityDeadlines(supabase: SupabaseClient<Database>,
   // Canonicalized: both so university_deadlines is queried for the winner row (where real
   // deadline data actually lives, per how pickCanonicalWinner scores FK richness) and so a
   // pre-existing loser-referencing target self-heals. See lib/universities/canonical.ts.
-  const universityIds = [...new Set(targets.map((t) => canonicalUniversityId(t.university_id)))];
+  const universityIds = [...new Set(targets.map((t) => canonicalUniversityId(supersessionMap, t.university_id)))];
   const [{ data: deadlines }, { data: universities }] = await Promise.all([
     supabase
       .from("university_deadlines")
@@ -141,7 +141,7 @@ async function scanTargetUniversityDeadlines(supabase: SupabaseClient<Database>,
   let notified = 0;
   let checked = 0;
   for (const target of targets) {
-    const canonicalId = canonicalUniversityId(target.university_id);
+    const canonicalId = canonicalUniversityId(supersessionMap, target.university_id);
     // A university-level deadline (program_id null) always applies; a program-specific
     // one only applies once the student has actually picked that program — otherwise we
     // can't tell which of a university's many programs it belongs to. VERIFIED_HISTORICAL (and
@@ -175,11 +175,15 @@ async function scanTargetUniversityDeadlines(supabase: SupabaseClient<Database>,
 export async function scanDeadlines(): Promise<{ notified: number; checked: number }> {
   const supabase = createAdminClient();
   const today = new Date();
+  // Loaded once and threaded into the two functions below that need it — both run inside the
+  // same Promise.all, so a single upfront load also avoids a redundant round trip. See
+  // lib/universities/canonical.ts.
+  const supersessionMap = await loadSupersessionMap(supabase);
 
   const [applications, opportunities, universities] = await Promise.all([
-    scanApplications(supabase, today),
+    scanApplications(supabase, today, supersessionMap),
     scanSavedOpportunityDeadlines(supabase, today),
-    scanTargetUniversityDeadlines(supabase, today),
+    scanTargetUniversityDeadlines(supabase, today, supersessionMap),
   ]);
 
   return {

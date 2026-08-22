@@ -5,7 +5,7 @@ import type { Database } from "@/types/database";
 import { createClient } from "@/lib/supabase/server";
 import { rankResults, toIlikePattern } from "./rank";
 import { searchUniversityRows } from "@/lib/universities/alias-search";
-import { canonicalUniversityId } from "@/lib/universities/canonical";
+import { canonicalUniversityId, loadSupersessionMap } from "@/lib/universities/canonical";
 import type { SearchResult } from "./types";
 
 type DB = SupabaseClient<Database>;
@@ -41,7 +41,10 @@ async function searchUniversities(supabase: DB, term: string): Promise<SearchRes
 
 async function searchPrograms(supabase: DB, pattern: string): Promise<SearchResult[]> {
   const result = await supabase.from("university_programs").select("id, university_id, name, field, degree_level").ilike("name", pattern).limit(8);
-  return unwrap(result).map((p) => ({
+  const rows = unwrap(result);
+  if (rows.length === 0) return [];
+  const supersessionMap = await loadSupersessionMap(supabase);
+  return rows.map((p) => ({
     type: "program" as const,
     id: p.id,
     title: p.name,
@@ -54,7 +57,7 @@ async function searchPrograms(supabase: DB, pattern: string): Promise<SearchResu
     // on the page the student expects rather than depending on that coincidence, and the
     // detail page's own redirect (see app/(app)/universities/[id]/page.tsx) is only a
     // second, redundant safety net rather than the sole protection.
-    href: `/universities/${canonicalUniversityId(p.university_id)}`,
+    href: `/universities/${canonicalUniversityId(supersessionMap, p.university_id)}`,
   }));
 }
 

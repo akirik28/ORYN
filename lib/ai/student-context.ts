@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { assembleScoringFacts } from "@/lib/scoring/assemble-facts";
 import { computeCareerProfile } from "@/lib/scoring";
 import { getUpcomingDeadlines } from "@/lib/deadlines/upcoming";
-import { canonicalUniversityId } from "@/lib/universities/canonical";
+import { canonicalUniversityId, loadSupersessionMap, type SupersessionMap } from "@/lib/universities/canonical";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 
@@ -65,7 +65,8 @@ export interface StudentAdvisorContext {
  */
 async function getPendingApplicationRequirements(
   supabase: SupabaseClient<Database>,
-  userId: string
+  userId: string,
+  supersessionMap: SupersessionMap
 ): Promise<{ applicationTitle: string; requirementTitle: string }[]> {
   const { data: pending } = await supabase
     .from("application_requirements")
@@ -82,7 +83,7 @@ async function getPendingApplicationRequirements(
   const targetIds = [...new Set([...targetIdByApplication.values()])];
   const { data: targets } = targetIds.length > 0 ? await supabase.from("target_universities").select("id, university_id").in("id", targetIds) : { data: [] };
   // Canonicalized — see lib/universities/canonical.ts.
-  const universityIdByTarget = new Map((targets ?? []).map((t) => [t.id, canonicalUniversityId(t.university_id)]));
+  const universityIdByTarget = new Map((targets ?? []).map((t) => [t.id, canonicalUniversityId(supersessionMap, t.university_id)]));
 
   const universityIds = [...new Set([...universityIdByTarget.values()])];
   const { data: universities } =
@@ -106,17 +107,18 @@ async function getPendingApplicationRequirements(
  */
 async function getTargetUniversitiesForContext(
   supabase: SupabaseClient<Database>,
-  userId: string
+  userId: string,
+  supersessionMap: SupersessionMap
 ): Promise<{ id: string; universityId: string; programId: string | null; name: string; status: string; outlook: string | null }[]> {
   const { data: targets } = await supabase.from("target_universities").select("id, status, outlook, university_id, program_id").eq("user_id", userId);
   if (!targets || targets.length === 0) return [];
 
-  const universityIds = [...new Set(targets.map((t) => canonicalUniversityId(t.university_id)))];
+  const universityIds = [...new Set(targets.map((t) => canonicalUniversityId(supersessionMap, t.university_id)))];
   const { data: universities } = await supabase.from("universities").select("id, name").in("id", universityIds);
   const universityNameById = new Map((universities ?? []).map((u) => [u.id, u.name]));
 
   return targets.map((t) => {
-    const canonicalId = canonicalUniversityId(t.university_id);
+    const canonicalId = canonicalUniversityId(supersessionMap, t.university_id);
     return {
       id: t.id,
       universityId: canonicalId,
@@ -137,6 +139,10 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
   const supabase = await createClient();
   const facts = await assembleScoringFacts(supabase, userId);
   const { dimensions, overallScore } = computeCareerProfile(facts);
+  // Loaded once and threaded into the two helpers below that need it, rather than each loading
+  // its own copy — both run inside the same Promise.all, so a single upfront load also avoids
+  // two redundant round trips to the same 9-row table. See lib/universities/canonical.ts.
+  const supersessionMap = await loadSupersessionMap(supabase);
 
   const [profileRes, targetUniversities, upcomingDeadlines, recentRecsRes, recentActionsRes, pendingApplicationRequirements, sportsRes, interestsRes] = await Promise.all([
     // select("*"), not an explicit column list: an explicit list naming a column that
@@ -146,7 +152,7 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
     // fallback too, not just the missing one. Confirmed live this session. select("*") only
     // returns whatever columns actually exist, self-healing once the migration lands.
     supabase.from("profiles").select("*").eq("id", userId).single(),
-    getTargetUniversitiesForContext(supabase, userId),
+    getTargetUniversitiesForContext(supabase, userId, supersessionMap),
     // Reuses the same cross-source Deadline Engine the dashboard's "Due soon" widget and
     // the deadline-reminder job use (lib/deadlines/upcoming.ts) — this used to be a bespoke
     // applications-only query here, so the advisor's view of "what's due" was narrower than
@@ -175,7 +181,7 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
       .in("status", ["completed", "skipped", "expired"])
       .order("created_at", { ascending: false })
       .limit(10),
-    getPendingApplicationRequirements(supabase, userId),
+    getPendingApplicationRequirements(supabase, userId, supersessionMap),
     supabase.from("sports_experiences").select("sport, level, is_captain, hours_per_week, ongoing, achievements").eq("user_id", userId),
     supabase.from("student_interests").select("label").eq("user_id", userId),
   ]);

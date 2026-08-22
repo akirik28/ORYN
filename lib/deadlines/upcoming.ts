@@ -2,7 +2,7 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
-import { canonicalUniversityId } from "@/lib/universities/canonical";
+import { canonicalUniversityId, loadSupersessionMap, type SupersessionMap } from "@/lib/universities/canonical";
 import { NON_ACTIONABLE_VERIFICATION_STATES } from "@/lib/deadlines/ingest";
 
 export type DeadlineSource = "application" | "opportunity" | "university";
@@ -20,7 +20,7 @@ const ACTIVE_APPLICATION_STATUSES = ["not_started", "in_progress", "submitted", 
  * not a second copy of the same business rule. */
 export const ACTIVE_TARGET_STATUSES = ["exploring", "target", "applying"] as const;
 
-async function getUpcomingApplicationDeadlines(supabase: SupabaseClient<Database>, userId: string, today: string): Promise<UpcomingDeadline[]> {
+async function getUpcomingApplicationDeadlines(supabase: SupabaseClient<Database>, userId: string, today: string, supersessionMap: SupersessionMap): Promise<UpcomingDeadline[]> {
   const { data: applications } = await supabase
     .from("applications")
     .select("id, deadline, target_university_id")
@@ -35,7 +35,7 @@ async function getUpcomingApplicationDeadlines(supabase: SupabaseClient<Database
     ? await supabase.from("target_universities").select("id, university_id").in("id", targetIds)
     : { data: [] };
   // Canonicalized — see lib/universities/canonical.ts.
-  const universityIdByTarget = new Map((targets ?? []).map((t) => [t.id, canonicalUniversityId(t.university_id)]));
+  const universityIdByTarget = new Map((targets ?? []).map((t) => [t.id, canonicalUniversityId(supersessionMap, t.university_id)]));
 
   const universityIds = [...new Set(universityIdByTarget.values())];
   const { data: universities } = universityIds.length
@@ -77,7 +77,7 @@ async function getUpcomingOpportunityDeadlines(supabase: SupabaseClient<Database
   }));
 }
 
-async function getUpcomingUniversityDeadlines(supabase: SupabaseClient<Database>, userId: string, today: string): Promise<UpcomingDeadline[]> {
+async function getUpcomingUniversityDeadlines(supabase: SupabaseClient<Database>, userId: string, today: string, supersessionMap: SupersessionMap): Promise<UpcomingDeadline[]> {
   const { data: targets } = await supabase
     .from("target_universities")
     .select("university_id, program_id")
@@ -86,7 +86,7 @@ async function getUpcomingUniversityDeadlines(supabase: SupabaseClient<Database>
   if (!targets || targets.length === 0) return [];
 
   // Canonicalized — see lib/universities/canonical.ts.
-  const universityIds = [...new Set(targets.map((t) => canonicalUniversityId(t.university_id)))];
+  const universityIds = [...new Set(targets.map((t) => canonicalUniversityId(supersessionMap, t.university_id)))];
   const [{ data: deadlines }, { data: universities }] = await Promise.all([
     supabase
       .from("university_deadlines")
@@ -99,7 +99,7 @@ async function getUpcomingUniversityDeadlines(supabase: SupabaseClient<Database>
   const universityNameById = new Map((universities ?? []).map((u) => [u.id, u.name]));
   const programIdsByUniversity = new Map<string, Set<string | null>>();
   for (const target of targets) {
-    const canonicalId = canonicalUniversityId(target.university_id);
+    const canonicalId = canonicalUniversityId(supersessionMap, target.university_id);
     const set = programIdsByUniversity.get(canonicalId) ?? new Set<string | null>();
     set.add(target.program_id);
     programIdsByUniversity.set(canonicalId, set);
@@ -135,11 +135,15 @@ async function getUpcomingUniversityDeadlines(supabase: SupabaseClient<Database>
  * with what they get reminded about. */
 export async function getUpcomingDeadlines(supabase: SupabaseClient<Database>, userId: string, limit = 5): Promise<UpcomingDeadline[]> {
   const today = new Date().toISOString().slice(0, 10);
+  // Loaded once and threaded into the two functions below that need it — both run inside the
+  // same Promise.all, so a single upfront load also avoids a redundant round trip. See
+  // lib/universities/canonical.ts.
+  const supersessionMap = await loadSupersessionMap(supabase);
 
   const [applications, opportunities, universities] = await Promise.all([
-    getUpcomingApplicationDeadlines(supabase, userId, today),
+    getUpcomingApplicationDeadlines(supabase, userId, today, supersessionMap),
     getUpcomingOpportunityDeadlines(supabase, userId, today),
-    getUpcomingUniversityDeadlines(supabase, userId, today),
+    getUpcomingUniversityDeadlines(supabase, userId, today, supersessionMap),
   ]);
 
   return [...applications, ...opportunities, ...universities].sort((a, b) => a.date.localeCompare(b.date)).slice(0, limit);
