@@ -743,6 +743,79 @@ through the service-role client, which the trigger deliberately exempts.
 
 ---
 
+## 37. Product decision: how should Oryn represent "we haven't checked," across every eligibility dimension?
+
+**Action**: decide the one principle below (it is almost certainly a rubber stamp — it is the
+principle migration `0060` already encodes), then approve writing and applying one more migration
+that extends it to the two dimensions that don't have it yet.
+
+**Why it's blocked**: five eligibility dimensions on `opportunities` each independently answer
+"what does an absent/empty value mean?" and today they give three different answers. That's a
+product decision (what should absence mean, product-wide), not a bug I can just fix — item 29
+already asks you to apply half of it (`0060`) without stating the fuller decision it's part of.
+
+**The five dimensions, verified against current `lib/opportunities/matching.ts`
+(`computeEligibility`) and `lib/counselor/eligibility.ts`
+(`evaluateOpportunityEligibility`) today:**
+
+1. **Country** (`eligible_countries`, structured array). Empty means either "confirmed open
+   worldwide" or "never researched" — identical on the wire, both read paths currently treat empty
+   as "no restriction, no warning." `0060` (item 29) fixes this with a tri-state marker column,
+   `country_eligibility_confirmed_open` — written, reviewed, **not applied**.
+2. **Citizenship — structured** (`eligible_citizenships`, array). Same table, same column, same
+   fix: `0060`'s own CHECK constraint already spans both `eligible_countries` and
+   `eligible_citizenships` under one marker. Already solved once `0060` is applied.
+3. **Age** (`minimum_age`/`maximum_age`, nullable). Null silently passes with zero warning today.
+   No column anywhere distinguishes "confirmed no age gate" from "nobody checked." Same defect
+   shape `0060` fixes for country — just not built yet for this field.
+4. **Grade** (`eligible_grades`, nullable/empty array). Identical defect shape to age: empty
+   passes silently, no confirmation marker exists.
+5. **Citizenship/residency prose** (`citizenship_restrictions`/`residency_restrictions`, free
+   text). A *different* failure mode — not a missing marker but a code disagreement:
+   `evaluateOpportunityEligibility` correctly surfaces this prose as an "unknown" warning when
+   present; `computeEligibility` doesn't consult these fields at all. Listed here for completeness
+   only — this is one of the two live defects Package 6 already found, and per CEO it's assigned
+   separately, not part of this decision.
+
+**What a student sees today**: silence in 4 of 5 cases. Only the counselor's prose handling
+(dimension 5) shows any "unknown" signal — and only on the surface that reads it.
+
+**The one principle that settles all of it**: *a field may assert "no restriction" only through an
+explicit, dedicated confirmation signal — never through the mere absence, emptiness, or
+non-specificity of restriction data.* This is not a new idea — it's exactly what `0060` already
+encodes for dimensions 1–2. Dimensions 3–4 are the same decision, unapplied to two more columns.
+
+**What it costs**: one new migration, one new boolean column shared across age+grade (mirroring
+`0060`'s one column shared across country+citizenship) — e.g.
+`age_grade_eligibility_confirmed_unrestricted`, `not null default false`, with a CHECK constraint
+mirroring `0060`'s (can't claim "confirmed unrestricted" while `minimum_age`/`maximum_age`/
+`eligible_grades` carry real values). Read-path changes in both `computeEligibility` and
+`evaluateOpportunityEligibility` — the same shape of change `0060` already requires there, applied
+to two more fields instead of two. No data backfill, same reasoning as `0060`: confirming
+individual rows is a research-pass write, not a schema migration's job.
+
+**This subsumes item 29** — applying `0060` alone only half-answers the question this item asks.
+The founder decision here is "yes, and the same thing for age/grade," not a separate topic.
+
+**Distinct from item 35**, despite the surface similarity (both surfaced during eligibility work):
+item 35 is about a field needing two *simultaneous* true values at once (e.g. `cycle_status` being
+both "closed" and "date not yet announced" — solved by splitting one field into two rows). This
+item is about one field's *absence* being ambiguous between two meanings *over time* (solved by a
+tri-state marker). Different failure mode, different fix. Not a duplicate — read separately.
+
+**Two live defects intentionally left out of this decision** (don't need founder input; CEO said
+to assign these directly once this item exists):
+- The `computeEligibility`/`evaluateOpportunityEligibility` disagreement on citizenship/residency
+  prose (dimension 5 above).
+- The ~38-row Browse eligible-by-default gap (`lib/opportunities/browse.ts`'s fallback treats a
+  missing match row as `eligible: true`).
+
+**Depends on**: your decision on the principle (likely a formality) + approval to write and apply
+one migration for age/grade, following `0060`'s exact pattern. Audit and design by FEAT-1,
+2026-08-22 — no code or migration written for this item, per CEO's explicit scope.
+
+---
+
 ## Environment hazard (not a decision, but you should know)
 
 **The primary checkout `/Users/adasarpkirik/Desktop/Founder/ORYN` sits on branch
