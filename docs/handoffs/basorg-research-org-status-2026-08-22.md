@@ -1923,3 +1923,57 @@ The commit for §8.4rr–ss **failed with exit 1**: the shell's working director
 tonight**, when the chain was unguarded and a missing `cd` let `git add -A && git commit` run
 anyway. **`cd` persistence between tool calls is not reliable** — the guard, not the `cd`, is what
 makes the chain safe.
+
+## 8.4uu OTTAWA LIVE — 17,046. Canada's first corpus through the full pipeline.
+
+RES-I1 applied I1-11 (`9d8fc27`, `docs/handoffs/i1-ottawa-apply-2026-08-22.md`).
+**Independently counted by BASORG against the table, not taken from the report:**
+
+```
+university_programs total   17,046   (16,770 -> exactly +276)
+University of Ottawa           276
+Australia                      651   unchanged
+```
+
+**Revert path**: `batch_id = ca_programs_ottawa_2026-08-22.jsonl_2026-08-22` — 276 rows, all
+accepted, all promoted, 276 distinct promoted ids, zero orphans.
+
+### Two steps RES-I1 added that nobody asked for
+**Within-batch checks before touching the database** — zero duplicate `research_program_id`, URL
+cardinality 276/276 = 1.000. **Glasgow's 69 duplicates passed a zero-failure dry-run because
+convention drift defeated the exact-match key; checking a batch against *itself* first is what
+catches that class.**
+
+**The dry-run treated as a gate** — `{accepted: 276}` exact-match required before applying, with a
+standing stop condition. **It didn't need to fire, which is not the same as being unnecessary.**
+
+It also **fixed the "5 universities" phrasing in its own commit and the workstreams row**, closing
+CFO's propagation route at the source rather than only correcting it downstream.
+
+## 8.4vv BASORG ERROR — verified lane claims instead of database state, again
+
+**Dispatched RES-R1 on "the next Canada target" after confirming no lane had claimed the list.**
+That confirmation was **true and irrelevant.**
+
+Counting by country after Ottawa's apply: **Canada holds 3,306 rows across EIGHT universities.**
+
+```
+Montréal 679 · Toronto 635 · Western 547 · UBC 546 · Queen's 337 · Ottawa 276 · Alberta 179 · Waterloo 107
+```
+
+**Seven were live before tonight.** By live QS rank, Toronto / UBC / Montréal are exactly what
+RES-R1's method would have resolved to next — **a full extraction cycle on already-ingested data.**
+
+> **No lane needs to CLAIM a university that is already in the database. Recent commits show
+> activity, not state.**
+
+**Fourth instance today of *the pipeline's state is not the database's state*, and the second by
+BASORG** — which wrote the mechanical check for it, applied it to counts, and **then failed to apply
+it to a work assignment.** The check was scoped to the symptom it was born from, not to the class.
+
+**Caught before extraction began**, only because RES-I1's apply prompted a re-count.
+
+**Corrected instruction to RES-R1**: reconcile the remaining-17 list against live data before
+extracting; ask BASORG for live counts (the researcher cannot query the table); **if the next target
+is already live, flag rather than skip silently** — an already-live corpus of unknown provenance may
+predate the evidence gate, and that is a BASORG call.
