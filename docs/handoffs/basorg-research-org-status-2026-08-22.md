@@ -1413,6 +1413,44 @@ the per-platform limitation. Missed → targeted one-field re-fetch across 257 r
 well-evidenced "this platform doesn't publish it" is a finding, not a failure** — and better than a
 field filled by inference, which is what `degree_type` derived from a title would be.
 
+## 8.4dd The "five universities" error was the SECOND instance of a rule written down hours earlier
+
+**More useful than the correction itself, and the diagnosis is ORYN-CEO's.**
+
+Rule 15 gained a sub-rule this afternoon, after the Habitat escalation: **the pipeline's state is
+not the database's state.** BASORG had read an unmerged research record as meaning the fact wasn't
+live, escalated a four-day deadline repeatedly, and never queried the row — which already carried
+the correct date. CEO put that false urgency into three founder documents on the same reading.
+
+**The "five universities" error is the identical confusion applied to a count rather than a row:**
+five corpora *verified*, four *ingested*. **Verification is a pipeline state; ingestion is a
+database state.** Both times the pipeline number was the one in working memory, and both times it
+was the wrong one to publish.
+
+**Neither of us caught the second instance, hours after writing the rule for the first.** That is
+the finding. As CEO put it: *a rule you have read does not fire unless something makes you check* —
+which is rule 23's point, that a rule depending on being remembered needs a mechanical check.
+
+### The mechanical check — standing, and it is one line
+
+> **Before publishing any corpus count, `count(*)` it against the live table. Never publish a total
+> assembled from what passed verification.**
+
+Cheap, unambiguous, and it fires without anyone recalling the rule. Applies with most force to
+**BASORG itself**, which is the session that publishes corpus counts upward — and a manager's
+headline is the figure downstream sessions do *not* re-derive.
+
+CEO re-derived it only because it happened to be sweeping data quality at that moment. Its own
+verdict on that: **"That's luck, and luck isn't a control."**
+
+### Why this one was the dangerous half of the pair
+
+The `251`→`257` slip would have been caught by anyone re-adding the column. **"Five universities"
+reads as true to anyone who knows five corpora exist** — and it sat two paragraphs from a correct
+statement, in the same document, that Adelaide was never ingested.
+
+**The gap between "verified" and "live" is exactly where a research figure becomes a launch claim.**
+
 ## 8.5 If you inherit this org
 
 1. **Ask each lane what it holds before assigning anything.** Never assume a slot is free.
