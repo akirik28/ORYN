@@ -921,6 +921,67 @@ session. Absence from a listing is not absence of a session.** The stable addres
 `sessionId`. And per today's other evidence: presence in the listing is not responsiveness either
 — MERGE-1 sat `isRunning: true` and stuck in one turn from 15:42.
 
+## 8.4l RESOLVED: wrong-target URLs are 2.9%, and the problem is ONE IMPORT
+
+BASORG escalated this class as making BUG-1's 31% **a floor with no upper bound**. RES-V2
+measured it and the fear was unfounded.
+
+**Random arm, n=70/271, seeded, sole rate instrument: 2/70 = 2.9%** (Wilson 95% CI 0.8–9.8%).
+Dramatically *below* the 31% floor, not near or above it. **Both pre-registered fail-thresholds
+assumed Type B would stack on top of BUG-1's figure. It doesn't** — BUG-1's is a
+*description-signature* floor (restated titles, embedded URLs, truncation in free text), this
+measures whether `official_url` points at the right place, and the two surfaces are **largely
+orthogonal.** The URL field is mostly trustworthy.
+
+**The finding that decides everything downstream — provenance concentration:**
+
+| | needed adjudication | strict Type A+B |
+|---|---|---|
+| Drive-corpus (26) | 6 — 23.1% | 2 — **7.7%** |
+| non-Drive (44) | 1 — 2.3% | 0 — **0%** |
+
+**100% of findings are Drive-corpus-sourced. Zero confirmed defects across all 44 non-Drive rows.**
+
+**Three independent angles now converge on one import**: BUG-1 traced the garbling there; the
+population count showed every `under_review` row is Drive-sourced (96 admitted / 113 held); and
+an unbiased random draw finds every defect in that same subset. **The problem is one import, not
+the corpus.**
+
+Consequence: **RES-R2 stood down, no re-research package.** Re-researching would spend real
+effort to change nothing outside the Drive rows, and those are already a founder decision (the
+~79 defective plus 23 fragments). ORYN-CEO agreed and asked that the hold not be accelerated —
+deciding after the measurement was the correct order, and the measurement said don't.
+
+The seed example's full identity: the "Boston University" row's `official_url` resolves to
+Hamburg Area High School's PA district site **while the correct `bu.edu` URL sits unused in the
+row's own description field.** Not a fetch failure — a field-assignment error at import, which
+fits the Drive-import diagnosis precisely.
+
+## 8.4m A lane correctly refused to trust this channel
+
+**RES-V1 challenged BASORG's legitimacy and was right on the facts.** It had learned that
+`oryn-f5` — this session's current socket — had told RES-I2 it "was started in the last few
+minutes" when RES-I2 had run continuously all day.
+
+**That statement was BASORG's and it was false.** It went to eight sessions in a roll-call
+searching for three unreachable lanes, inferring "new sessions" from changed socket names and
+short uptimes. They were resumptions. Corrected to the founder, CFO and RES-R2 — but **RES-I2
+never received the correction**, because ORYN-CEO has ruled both RES-I2 instances stay asleep.
+So the false statement still stands where it landed.
+
+**RES-V1's response is the standard**: it reproduced the routed bug independently in a disposable
+repo, fixed and kill-tested it, and **propagated none of the surrounding narrative** — not
+RES-R2's involvement, not the 116/41 figures — because it had no independent way to check any of
+it. It fixed what it could verify from a source it did not trust, and carried nothing it couldn't.
+
+BASORG's response was to **confirm the error, not seek trust**: point at the signed corrections
+log (§7) as the strongest available check — *a channel trying to manipulate a lane does not
+maintain a log of its own errors* — name CFO and CEO as independent routes, and state explicitly
+that holding on everything unverifiable is correct even if it means refusing further assignment.
+
+**When the coordination layer is uncertain, a lane that keeps working only on what it can verify
+is functioning correctly, not obstructing.**
+
 ## 8.5 If you inherit this org
 
 1. **Ask each lane what it holds before assigning anything.** Never assume a slot is free.
