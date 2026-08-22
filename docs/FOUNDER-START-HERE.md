@@ -50,15 +50,11 @@ then use a service-role client that bypasses RLS entirely, so this doesn't widen
 over the key that switches RLS off. Two computed columns, `profile_strength_score` and
 `completeness_percent`, have the same defect and the same fix.
 
-**⚠️ DO NOT APPLY the version currently on `main` — wait for the amendment.** Hours after this
-was written, BUG-1 found a real defect in its own migration: `0062` also guards
-`profile_strength_score` and `completeness_percent`, and those two are legitimately written by
-the score-recompute path through the *same* client a student's browser uses. The database can't
-tell the app apart from the student — both are role `authenticated` — so applying it as written
-would **silently freeze score recompute**: no error, no failed write, scores just stop moving.
-The amendment narrows `0062` to `is_admin` alone, which closes the whole escalation and is safe.
+**Note, if you saw the earlier warning on this item**: `0062` was briefly defective and has been
+corrected. It now guards `is_admin` alone — the version that would have frozen score recompute
+never reached the database. Details in backlog item 36.
 
-**How, once the amendment lands**: Supabase dashboard → SQL Editor → paste
+**How**: Supabase dashboard → SQL Editor → paste
 `supabase/migrations/0062_*.sql` → Run. Then confirm a non-admin account can no longer change
 its own `is_admin`.
 

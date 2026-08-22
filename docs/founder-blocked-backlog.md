@@ -688,32 +688,26 @@ instance. Full analysis: `docs/feat2-multi-axis-status-audit-2026-08-22.md`.
 
 ## 36. CRITICAL — any signed-in user can make themselves an admin
 
-> ### ⚠️ DO NOT APPLY `0062` AS IT CURRENTLY STANDS ON `main`. A corrected version is coming.
+> ### ✅ RESOLVED — `0062` is now correct and safe to apply.
 >
-> **Added 2026-08-22 evening, hours after this item was written.** BUG-1 traced the actual
-> writers rather than re-reading its own migration and found a real defect in it. `0062` guards
-> three columns by resetting them unless the caller is the service role. That is correct for
-> `is_admin`, which no ordinary app path ever writes. It is **wrong for
-> `profile_strength_score` and `completeness_percent`**: the legitimate score-recompute path
-> (`lib/scoring/persist.ts`, which runs every time a student edits their profile) writes those
-> two through the *same* RLS-scoped client a student's browser uses. The database cannot tell
-> "Oryn computing your score" from "you forging it" — both arrive as role `authenticated`.
+> **Read this only if you saw the earlier warning.** For part of this evening, `0062` on `main`
+> was defective and this item told you to run it. BUG-1 found the bug in its own migration by
+> tracing the actual writers instead of re-reading the file: the version then on `main` also
+> guarded `profile_strength_score` and `completeness_percent`, and those two are legitimately
+> written by the score-recompute path through the *same* client a student's browser uses. The
+> database cannot tell the app from the student — both are role `authenticated` — so applying it
+> would have **silently frozen score recompute**: no error, no failed write, scores just stopped.
 >
-> **If you applied it as written, score recompute would stop silently** — no error, no failed
-> write, scores simply frozen while the app kept reporting success. That is exactly the
-> defect class this whole day was spent closing, and we nearly shipped it ourselves.
+> **`0062` now guards `is_admin` alone.** That closes the entire privilege escalation, collides
+> with nothing, and needs no code change. Merged and gated. The two computed columns move to
+> `0063`, paired with a small code change routing their writes through the admin client where
+> they always belonged — that one is still being written and is **not** urgent.
 >
-> **The fix, already in progress**: `0062` is being amended to guard **`is_admin` only** — which
-> closes the entire privilege escalation, needs no code change, and is safe to apply the moment
-> it lands. The two computed columns move to `0063`, paired with a small code change that routes
-> their writes through the admin client where they always belonged.
->
-> **Wait for the amended `0062`.** ORYN-CEO reviewed the original line by line and merged it
-> without catching this; BUG-1 caught its own bug before it reached you.
+> Nothing was ever applied to the database during the defective window, so there is nothing to
+> undo. ORYN-CEO reviewed the original line by line and merged it without catching this.
 
-**Action**: authorize applying migration `0062` **once the amendment lands** — see the warning
-above. Same shape as items 26/29/30: written, not applied, needs your go-ahead. This is still
-the highest-priority item on this list, above item 30.
+**Action**: authorize applying migration `0062`. Written, not applied — same shape as items
+26/29/30. Still the highest-priority item on this list, above item 30.
 
 **What was found** (BUG-1, 2026-08-22, live against `oryn-qa-scratch`; I re-verified the policy
 definitions independently): the QA account `oryn.qa.b@example.com` — an ordinary, non-admin
