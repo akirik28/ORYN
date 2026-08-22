@@ -6,7 +6,9 @@ is kept current after every sub-batch, not just at close-out, specifically so th
 
 - **Done, pushed, corpus-validated:** UNSW (217), Sydney (149, degree_level corrected — see fix
   note below), Monash (178), UWA (**107**, after two rounds of self-caught fixes — see below),
-  Adelaide University (**119**) = **770 records across all 5 extracted universities. All 8 of
+  Adelaide University (**120**, updated 2026-08-22 — see resumability note below on the UniStart
+  addition and the degree_type/provenance corrections) = **771 records across all 5 extracted
+  universities. All 8 of
   this package's target universities are now resolved — 5 extracted, 3 deferred by policy.**
 - **UWA went through two rounds of self-caught bugs before landing on a correct, comprehensively
   audited count. Both are recorded here because the first "fix" was itself incomplete, and that
@@ -66,15 +68,18 @@ is kept current after every sub-batch, not just at close-out, specifically so th
   first-cycle (integrated master's)`; UNSW and Monash untouched (their basis was already
   correct); `field_provenance` unchanged (`explicit_title_token` — a more complete read, not a
   different kind of evidence).
-- **Adelaide University: complete, 119 records, corpus-wide validated.** Identity resolved
+- **Adelaide University: complete, 120 records (119 + UniStart, added 2026-08-22 — see below), corpus-wide validated.** Identity resolved
   (genuine 2026 merger via the institution's own official statement), dom/int page-variant
   structure mapped and re-verified on a fresh 18-programme sample (title/code/duration: 0
   mismatches, checked by direct comparison not assumed), the majoring-in grain exclusion designed
   in from the start this time rather than discovered mid-run — classified in two stages (raw
   fetch with zero classification decisions, then one classifier built and audited against the
   complete 559-title census before it ever ran), the same discipline the UWA rebuild established.
-  Every exclusion category reconciled explicitly against the total (559 = 119 in-scope + 215
-  majoring-in + 126 standalone-postgraduate + 98 Graduate Diploma/Certificate + 1 blank). See the
+  Every exclusion category reconciled explicitly against the total — restated in full 2026-08-22
+  after RES-V2's UniStart finding: 560 = 120 in-scope + 215 majoring-in + 126
+  standalone-postgraduate + 98 Graduate Diploma/Certificate + 1 blank, against a true grand total
+  of 562 once the original enumeration's own 1-URL shortfall is counted (see Adelaide's own
+  section for the full restatement and why the total moved twice). See the
   Adelaide section below for the full account, including a genuine (non-duplicate) on-campus/
   online delivery-pathway finding.
 - **Adelaide verification status (2026-08-22, BASORG ruling — read this before assuming Adelaide
@@ -91,7 +96,7 @@ is kept current after every sub-batch, not just at close-out, specifically so th
   will not run further verification on Adelaide.** The 20/20 result above is informational only —
   a data point RES-V2 may or may not find useful — not a substitute for their pass.
 - **This closes all 8 target universities: 5 extracted (UNSW, Sydney, Monash, UWA, Adelaide =
-  770 records), 3 deferred by policy (Melbourne, ANU, Queensland) — a property of the web, not a
+  771 records), 3 deferred by policy (Melbourne, ANU, Queensland) — a property of the web, not a
   gap in this lane's work. See the named deferral section below.**
 
 ## Why this lane exists
@@ -123,7 +128,7 @@ University" below.
 | Monash | 31 | **178** | `au_programs_monash_2026-08-22.jsonl` | Complete |
 | Queensland | 40 | 0 | — | **Deferred** — CAPTCHA gate on the catalogue host, see below |
 | UWA | 77 | **107** | `au_programs_uwa_2026-08-22.jsonl` | Complete (two rounds of self-caught fixes — see resumability note above) |
-| Adelaide University | 79 | **119** | `au_programs_adelaide_2026-08-22.jsonl` | Complete — independent verification assigned to RES-V2 (source) / RES-V1 (contract/ID), not yet run; see resumability note |
+| Adelaide University | 79 | **120** | `au_programs_adelaide_2026-08-22.jsonl` | Complete — RES-V2's independent pass found 2 issues (fixed, see resumability note); RES-V1's contract/ID pass not yet run |
 
 Substitution history: Melbourne deferred → Sydney substituted into sub-batch 2 (BASORG-approved).
 ANU deferred → Monash substituted into sub-batch 3 (BASORG-approved).
@@ -505,7 +510,7 @@ award-tokens (Bachelor/Honours/Master+Doctor-combo/Diploma), same method as Sydn
 Monash; `atar` as the structured `{value, scale: "ATAR", source_field}` object BASORG ruled for
 Monash, reused here since the field recurred a third time.
 
-## Adelaide University (119 records, complete)
+## Adelaide University (120 records, complete — 119 original + UniStart added 2026-08-22)
 
 **`degree_type` correction (2026-08-22), caught pre-ingestion — Adelaide was never live, so this
 never shipped wrong:** all 119 records originally carried a value like `BCOMP`, `HECON`, `BARTS`
@@ -602,26 +607,56 @@ for Aboriginal Studies in Music (CASM) Foundation Year" (`FCASM`), "Foundation S
 alone), the same category and same verification standard as UNSW's and Monash's non-award
 pathway programmes.
 
-**Full exclusion reconciliation, every term stated (learning from the UWA reconciliation gap —
-BASORG's own reconciliation of that gap fit perfectly and was still wrong, so a number that
-closes is not by itself a verified number; every term here is read directly from the
-classification script's own printed counts, not inferred):**
+**Full exclusion reconciliation, restated in full (2026-08-22, after RES-V2's UniStart finding —
+BASORG's instruction: when a term moves, restate every term, don't just adjust the one that
+changed; the same discipline that caught BASORG's own UWA reconciliation error, which fit
+perfectly and was still wrong). Every term below is read directly from the classification
+script's own printed counts or from RES-V2's independently-confirmed addition, not inferred:**
 
 | Category | Count |
 |---|---|
-| In scope (written) | 119 |
+| In scope (written) | 120 |
 | Excluded — "majoring in" major-variant pages | 215 |
 | Excluded — standalone postgraduate (Master/Doctor with no Bachelor) | 126 |
 | Excluded — Graduate Diploma/Graduate Certificate | 98 |
 | Excluded — blank title (one `/legacy/` landing page, no real content) | 1 |
-| **Total accounted for** | **559** |
+| **Total accounted for** | **560** |
 | Stage-1 fetch failures (the `/2027/` 404) | 1 |
-| **Grand total** | **560** |
+| **Subtotal — original sitemap enumeration** | **561** |
+| Missing from the original enumeration entirely (UniStart, `XUNIS`) — not excluded, not a fetch failure, genuinely absent from this lane's original 560-URL candidate list; found by RES-V2, confirmed by this lane, no sibling gaps found anywhere else in the sitemap | 1 |
+| **True grand total** | **562** |
+
+**What changed and why the total moved twice, stated plainly rather than left implicit:** the
+original 560-URL sitemap enumeration this lane ran was itself short by one URL — UniStart lived
+at `/study/degrees/online/unistart/`, a path this lane's original filtering evidently didn't
+catch even though other `/degrees/online/` URLs (the 30 on-campus/online delivery-pathway pairs
+below) were caught correctly. That is a narrower miss than it could have been — RES-V2 checked
+for siblings and found none — but it means the "560" and "559" figures documented through the
+rest of this section describe this lane's original *enumeration*, not the true total of what
+`adelaide.edu.au` actually publishes. **In scope moved from 119 to 120; total accounted for from
+559 to 560; true grand total from 560 to 562** (the original enumeration's 561, plus the one URL
+that was never in it at all).
+
+**Non-award pathway provenance, corrected (2026-08-22, RES-V2 finding, BASORG-ruled):** all 3
+original non-award pathway records (ATSIP, CASM Foundation Year, Foundation Studies) had their
+`entry_requirements.international` / `study_mode.international` values wrongly presenting
+duplicated domestic content as if it were an independently-sourced international variant.
+Confirmed live by this lane, not just RES-V2: bare URL and the explicit `/int/` path both
+301-redirect to `/dom/` on all three, byte-for-byte identical destination. There is no
+international variant for this category — the `international` key on all 3 (and on UniStart,
+added in the same category) now states that explicitly rather than duplicating `domestic`'s
+text. Self-caught while applying this fix, not part of RES-V2's original two findings: Foundation
+Studies' `entry_requirements`/`study_mode` had no `domestic` key at all in the original
+extraction (the other two had both) — fetched live and filled in, confirmed identical in
+substance to the content already stored, consistent with there being one real content source for
+this page rather than two. `international_eligible` required no change on any of the four — it
+was already `null` on the correct independent basis (no CRICOS code found).
 
 **Final distribution:** 69 plain Bachelor, 39 Honours, 5 plain (non-graduate) Diploma
 (`Undergraduate diploma / first-cycle`, a category UWA had zero of — Adelaide genuinely has it:
 Diploma in Building Studies, Legal Studies, Mathematical Studies, Digital Business, Health), 3
-Associate Degree, 3 Non-award pathway. **Zero integrated-master's records** — checked directly
+Associate Degree, **4 Non-award pathway (ATSIP, CASM Foundation Year, Foundation Studies,
+UniStart)**. **Zero integrated-master's records** — checked directly
 against the raw fetch (searched for any title containing both "bachelor" and "master"/"doctor")
 rather than assumed absent; Adelaide genuinely has no combined Bachelor+Master/Doctor titles in
 its current undergraduate catalogue, unlike UNSW/Monash/UWA.
@@ -661,9 +696,16 @@ programmes) by fetching both variants and diffing directly:
 "domestic": ...}`) rather than tagged via `field_provenance` (which describes *how* a value was
 derived, not *which audience* it describes — mixing those axes in one closed enum was rejected as
 the same convention-drift risk that produced a Glasgow-adjacent defect elsewhere in this org).
-Populated for all 119 records on the `international` key; the `domestic` key exists only on the
-18 sampled records, documented explicitly as a sample rather than full coverage — a domestic
-student sees no data rather than mislabeled international data, an honest, visible gap.
+Populated for all 120 records on the `international` key **except UniStart, which has no
+`international` key at all** — the one non-award pathway record added after this section was
+first written has no international variant to key, so it carries `domestic` only rather than a
+key that would misleadingly imply one was checked and found absent. The other 3 non-award
+pathway records still carry an `international` key, but as of the 2026-08-22 provenance
+correction above, its value states plainly that no distinct international variant exists rather
+than duplicating `domestic`'s content under a misleading label. The `domestic` key beyond the
+non-award pathway category exists only on the 18 sampled records, documented explicitly as a
+sample rather than full coverage — a domestic student sees no data rather than mislabeled
+international data, an honest, visible gap.
 
 **No JSON data blob** (a site-wide organization-level `ld+json` block exists, not per-course);
 facts extracted via labeled text anchors in the flattened page text: `Program code`, a
@@ -827,17 +869,18 @@ both redirect chains to their shared final URL before deciding which to drop, no
 the name match alone) — re-confirmed present after the rebuild rather than assumed carried over,
 since the rebuild re-fetched from the same sitemap and could plausibly have reproduced it.
 
-**Adelaide (119):** schema + corpus-wide ID validation clean. Verified with the token-census
+**Adelaide (120, 119 original + UniStart):** schema + corpus-wide ID validation clean. Verified with the token-census
 method throughout, not corpus-wide validation alone: the classifier was built and audited against
 the complete 559-title census *before* stage 2 ran (not after, unlike UWA's round 1), so there
 was no incremental-discovery phase to retroactively check. Every exclusion category reconciled
-explicitly against the total (559 = 119 + 215 + 126 + 98 + 1). The 7 duplicate-name pairs were
+explicitly against the total (full restated reconciliation, including UniStart and the true
+grand total of 562, in Adelaide's own section above). The 7 duplicate-name pairs were
 investigated individually rather than assumed duplicates and confirmed genuine (different program
 codes, on-campus vs online delivery) — not deduplicated. The dom/int invariance claim was
 re-verified on a fresh 18-programme sample by direct comparison (0 title/code/duration
 mismatches), not re-asserted from the earlier 10-programme check.
 
-**Combined corpus check (770 AU records total, UNSW + Sydney + Monash + UWA + Adelaide):**
+**Combined corpus check (771 AU records total, UNSW + Sydney + Monash + UWA + Adelaide):**
 re-ran the corpus-wide validator after every retrofit and fix in this package — zero duplicate
 IDs, zero schema failures. Note this validator checks schema/ID uniqueness only, not semantic
 correctness of field values — it would not have caught either UWA classification bug, both of
@@ -880,7 +923,7 @@ trustworthy than one that doesn't; it just fails silently instead of loudly.
    brief (undergraduate only); every university's sitemap/catalogue in this package indexes
    postgraduate/research programmes that were not touched here.
 5. **This package's original scope (the top 8 Australian universities by QS 2027 rank) is now
-   fully resolved** — 5 extracted (770 records), 3 deferred by policy. Extending coverage further
+   fully resolved** — 5 extracted (771 records), 3 deferred by policy. Extending coverage further
    down the ranking (rank 9+) or to postgraduate levels would be new scope, not a gap in this
    package, and should come as a new assignment from BASORG rather than this lane's own
    extension.
