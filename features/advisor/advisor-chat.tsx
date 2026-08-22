@@ -198,7 +198,7 @@ export function AdvisorChat({
           rows={1}
           className="max-h-32 min-h-9 flex-1 resize-none"
         />
-        <Button type="submit" size="icon" disabled={!aiConfigured || isPending || !input.trim()}>
+        <Button type="submit" size="icon" aria-label="Send message" disabled={!aiConfigured || isPending || !input.trim()}>
           <ArrowUp className="size-4" />
         </Button>
       </form>
