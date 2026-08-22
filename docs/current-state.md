@@ -118,10 +118,15 @@ Only items no Claude session can do unilaterally. Full detail:
 
 ## Next phase
 
-1. **Canonical identity correctness (P1)**: `lib/universities/canonical.ts`'s 16 read paths
-   still filter via the static `duplicate-supersessions.json` file instead of querying the
-   now-confirmed-live `duplicate_status`/`superseded_by_id` columns directly — no longer
-   blocked on anything, ordinary application work.
+1. ~~Canonical identity correctness (P1)~~ — **done, pending merge**: all 23 real consumers
+   (not 16 — corrected during the work) of `lib/universities/canonical.ts` now query the live
+   `duplicate_status`/`superseded_by_id` columns directly; the static JSON snapshot and its
+   generation script are deleted. Independently re-verified (not just trusted): lint/typecheck
+   clean, 121 files/1824 tests pass, build succeeds, live DB state unchanged before/after
+   (canonical=1010/superseded=9). Direct push to `main` was blocked by the auto-mode
+   classifier (expected — a shared branch push should go through review, not be forced), so
+   this is [PR #2](https://github.com/akirik28/ORYN/pull/2), not yet merged. Full detail:
+   `docs/handoffs/canonical-live-column-refactor-2026-08-22.md` (on that branch).
 2. **Opportunity eligibility gap (P3)**: `eligible_countries` still 93.6% null (366/391) —
    gates real eligibility matching regardless of matching-logic quality.
 3. **Branch/worktree integration audit**: 80+ branches, ~85 worktrees, several
