@@ -363,11 +363,32 @@ guard, unlike Back and Finish. Fixed and merged.
 Underneath it, something stranger: after the first Continue, the wizard's internal state advances
 while the visible heading **stays on the previous step**. Isolated by elimination to a single
 animation property. It may be an artifact of the test environment rather than a real-browser bug,
-and that is stated as an open question rather than resolved by assertion — because the fix, if
+and that was stated as an open question rather than resolved by assertion — because the fix, if
 applied wrongly, would degrade what a real student sees to satisfy something no student
 experiences.
 
 ---
+
+### Closing the one question left open tonight
+
+The onboarding fix above was merged while a real doubt hung over it: the browser tool we verify
+in reports itself as a hidden tab, and hidden tabs commonly freeze animations. If that was the
+cause, we'd have removed a working animation to fix something no student ever experiences.
+
+**It's resolved, and the answer is that the defect is real.** The live reproduction was recorded
+*before* the hidden-tab problem was known — so it can't have been reasoned backwards from it —
+under exclusive browser access with the server and account identity both verified. Five seconds,
+content pixel-identical. The fix stays.
+
+**And a separate finding was withdrawn in the process.** The accessibility issue reported earlier
+— that dialogs don't trap keyboard focus — no longer stands as confirmed. Reading the dialog
+library's own source showed the focus trap isn't animation-dependent at all, and an isolated test
+shows focus landing correctly inside the dialog. The live reading that produced the original
+finding came from the same environment with the animation defect. **Downgraded to unconfirmed
+rather than deleted** — it needs one clean check in a working browser.
+
+**Practical consequence for you**: there is no known serious accessibility defect outstanding.
+Tonight's UI conversation is a design discussion, not a bug list.
 
 ### An infrastructure incident, and two failures that disguised themselves
 
