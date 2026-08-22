@@ -324,6 +324,25 @@ simplification of the org.
     to the call sites. A reviewer who checks text and a reviewer who checks callers are
     different disciplines, and security-relevant changes need the second one.
 
+26. **A gate is not green until its worktree is gone.** Reclaiming the verification worktree is
+    part of the verification, not cleanup afterwards. Proposed by ORYN-CFO after the CEO ran
+    twenty-one PR gates in one evening — each in a fresh worktree with its own clean `npm ci`,
+    roughly 900MB apiece, exactly as rule 18 requires — and removed none of them. The volume
+    reached **143MB free / 99% full**. Three lanes halted under rule 13, and the CEO's own Bash
+    tool stopped working entirely: it could no longer create its own output file, so it could
+    not even run `df` to diagnose the problem, let alone `rm` to fix it.
+
+    **This was a ruleset gap, not one session's untidiness.** Rule 18 mandates creating a fresh
+    worktree and nothing mandated reclaiming it, so following the rules correctly and often
+    enough was sufficient to exhaust the machine. A correctness rule with no paired reclamation
+    rule is a slow resource leak with a mandate.
+
+    Also learned here, and it colours how every report tonight should be read: **disk exhaustion
+    can surface as a permission denial.** FEAT-1 had three actions refused as "denied by the
+    classifier" and then found a plain `Edit` failing with a literal ENOSPC. Treat any "blocked
+    by classifier" report during resource pressure as unconfirmed cause until disk is verified
+    healthy — including blocks that were already reasoned about and acted on.
+
 ## 6. Known founder-pending items no lane may act on unilaterally
 
 - Evidence-gate false rejections (2,097 blocked records) — `docs/handoffs/evidence-gate-false-rejections-2026-08-22.md`
