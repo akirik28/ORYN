@@ -5,21 +5,57 @@ unfinished work, start here.** Sessions in this org have been ending without war
 is kept current after every sub-batch, not just at close-out, specifically so that's survivable.
 
 - **Done, pushed, corpus-validated:** UNSW (217), Sydney (149, degree_level corrected — see fix
-  note below), Monash (178), UWA (289, corrected after a self-caught classification bug — see fix
-  note below) = **833 records across 4 universities.**
-- **A self-caught bug in UWA's first pass, fixed before README close-out:** the first extraction
-  used "has a `Course Code` card" as its inclusion gate, which wrongly excluded genuine top-level
-  degree pages that simply don't publish that specific card (e.g. bare "Bachelor of Commerce",
-  "Bachelor of Science" — real, admittable degrees confirmed by their other cards: ATAR, CRICOS,
-  duration, "Degree specific majors" count). 93 of 422 records were wrongly excluded this way.
-  Corrected gate: `MJD-` prefix exclusion (when a code exists at all) plus title-token inclusion,
-  the same method already used for Sydney — re-fetched and reclassified those 93 specifically
-  (not a full 422 re-run), recovering 73 genuine records; the other 20 were confirmed correctly
-  excluded (9 Engineering "major"-equivalent specialisation pages with no Bachelor title token, 5
-  Pathways hub pages, 5 genuine 404s, 1 Graduate Certificate). One further near-duplicate found
-  and removed during this pass: "Bachelor of Human Sciences (Pharmaceutical Health) and Doctor of
-  Pharmacy" was reachable via two different sitemap URL slugs that both 301-redirect to the same
-  canonical page — kept the record matching the canonical slug, dropped the alias.
+  note below), Monash (178), UWA (**107**, after two rounds of self-caught fixes plus one further duplicate found
+  post-rebuild — see below, this number is the trustworthy one) = **651 records across 4
+  universities.**
+- **UWA went through two rounds of self-caught bugs before landing on a correct, comprehensively
+  audited count. Both are recorded here because the first "fix" was itself incomplete, and that
+  is the more important lesson than either bug individually.**
+  - **Round 1 (self-caught):** the first extraction used "has a `Course Code` card" as its
+    inclusion gate, wrongly excluding genuine top-level degree pages that simply don't publish
+    that specific card (bare "Bachelor of Commerce", "Bachelor of Science" — real degrees,
+    confirmed via their other cards: ATAR, CRICOS, duration). 93 of 422 wrongly excluded.
+    "Fixed" by re-fetching those 93 specifically with a corrected title-token classifier,
+    recovering 73 — but the corrected classifier was only ever applied to those 93 URLs, never
+    back-applied to the original 217. Reported as "217 → 289, fixed" at the time.
+  - **Round 2 (found while auditing UWA's title-token method before Adelaide, per BASORG's
+    instruction not to port Sydney's method without checking it for the same class of gap):** a
+    full 422-title token census found the *original 217* — never touched by round 1's fix — had
+    three further defects: (a) 41 records with `degree_level: null` had been written to the
+    output file at all (the original script never gated on null, only on a missing `Course Code`
+    card or an `MJD-` prefix); (b) 28 genuine postgraduate "Graduate Diploma in X" titles were
+    mislabeled as `Undergraduate diploma / first-cycle` (the diploma-branch matched the substring
+    "diploma" without excluding "graduate diploma" — the single worst defect in this package,
+    because a mislabeled record looks correct where a null one at least looks suspicious); (c)
+    ~109 standalone "Master of X"/"Doctor of X" titles with no "Bachelor" were promoted to
+    `Bachelor / first-cycle (integrated master's)` (the original rule matched "master" or "doctor"
+    with no `has_bachelor` requirement at all).
+  - **Root cause, named precisely: a fix applied at the boundary rather than to the population.**
+    The classification *method* was corrected in round 1; the *data already produced by the old
+    method* was left in place, because the fix was scoped to "the URLs I know are affected"
+    rather than "everywhere this derivation was ever run." The same shape as this package's
+    Glasgow-adjacent lesson on entity conventions: a correction has a scope, and its scope is not
+    automatically the whole dataset.
+  - **The actual fix: a full clean rebuild**, not a third patch. Built one classifier function,
+    audited against the complete token census of all 422 titles *before* running (every
+    capitalized word enumerated; every category — Bachelor, Honours, integrated-master's combo,
+    Associate Degree, Diploma vs. Graduate Diploma, Graduate Certificate, standalone Master/
+    Doctor, bare major/"Extended Major"/"Pathways" pages — explicitly assigned in or out), then
+    re-fetched all 422 URLs fresh and rebuilt the file from nothing. Verified the same way the
+    bugs were found: re-ran the token census against the actual output, confirmed zero null
+    `degree_level`, zero Graduate Diploma/Certificate present, zero standalone Master/Doctor
+    present.
+  - **Post-rebuild count: 108, then 107 after one further duplicate.** The rebuild re-fetched
+    fresh from the same sitemap, so the same "Bachelor of Human Sciences (Pharmaceutical Health)
+    and Doctor of Pharmacy" alias pair round 1 had already found (two sitemap URL slugs that both
+    301-redirect to the same canonical page) was naturally re-derived — checked rather than
+    assumed still present, then deduplicated the same way, keeping the record matching the
+    canonical slug. **Final: 107 — 67 plain Bachelor, 25 integrated-master's, 13 Honours, 2
+    Associate Degree.** Genuinely lower than either prior number, because UWA's `/study/courses/`
+    namespace turned out to hold far more postgraduate content (94 standalone Masters, 45
+    Graduate Certificates, 28 Graduate Diplomas, 15 standalone Doctorates — 182 items) than
+    undergraduate, and both earlier passes had been silently counting a large share of it as
+    undergraduate.
 - **A verification-caught bug in Sydney's degree_level, fixed:** RES-V1's cross-university
   consistency check found Sydney's title-token method checked only "Honours"/"Diploma", with no
   path to detect "Master of"/"Doctor of" — 10 combined-award titles (e.g. "Bachelor of Arts and
@@ -74,7 +110,7 @@ University" below.
 | ANU | 29 | 0 | — | **Deferred** — explicit robots.txt block on the only host serving the catalogue, see below |
 | Monash | 31 | **178** | `au_programs_monash_2026-08-22.jsonl` | Complete |
 | Queensland | 40 | 0 | — | **Deferred** — CAPTCHA gate on the catalogue host, see below |
-| UWA | 77 | **289** | `au_programs_uwa_2026-08-22.jsonl` | Complete (corrected — see resumability note above) |
+| UWA | 77 | **107** | `au_programs_uwa_2026-08-22.jsonl` | Complete (two rounds of self-caught fixes — see resumability note above) |
 | Adelaide University | 79 | not started | — | Investigated and methodology-approved; not yet extracted — see below |
 
 Substitution history: Melbourne deferred → Sydney substituted into sub-batch 2 (BASORG-approved).
@@ -354,7 +390,7 @@ records — mapped to the same `degree_level` for corpus consistency rather than
   retrofitted onto UNSW or Sydney — neither platform publishes an equivalent field at all, and
   BASORG's ruling was explicit: don't manufacture one where the source doesn't have it.
 
-## Method: UWA (289 records, complete)
+## Method: UWA (107 records, complete — see the resumability note at the top for the two-round fix history)
 
 `www.uwa.edu.au` is fully permissive (Sitecore-based, `Allow: /` with only technical paths
 disallowed, no bot-mitigation on a live fetch). Catalogue discovered via `robots.txt`'s
@@ -374,19 +410,19 @@ own negative finding, not a silent omission: UWA publishes 175 major/specialisat
 excluded here as a different entity type, available if the product ever wants majors as their
 own grain later.
 
-**Classification method, corrected after a self-caught bug in the first pass.** Exclusion is by
-each page's own `Course Code` prefix (`MJD-` = major) when a code exists at all — verified
-against the URL slug as a sanity cross-check (3 non-degree-like slugs spot-fetched and confirmed
-`MJD-`, same discipline as Monash's `aqf_level`), never trusted as the filter itself. **Inclusion
-is by title-token read (Bachelor/Honours/Master-or-Doctor-combo/Associate Degree/Diploma), the
-same method as Sydney — not by requiring the `Course Code` card to be present.** The first pass
-used code-card presence as an implicit inclusion gate too, which wrongly excluded 93 genuine
-degree pages that simply don't publish a `Course Code` card while still being real, admittable
-degrees (confirmed via their other cards — ATAR, CRICOS, duration, "Degree specific majors"
-count — all present and legitimate). Re-fetched and reclassified those 93 specifically: 73
-recovered as genuine records, 20 confirmed correctly excluded on title-token grounds (9
-Engineering "major"-equivalent pages, 5 Pathways hub pages, 5 genuine 404s, 1 Graduate
-Certificate).
+**Final classification method (after the two-round fix history in the resumability note at the
+top — read that first for the full account of what went wrong and why a patch wasn't enough).**
+Exclusion is by each page's own `Course Code` prefix (`MJD-` = major) when a code exists at all —
+verified against the URL slug as a sanity cross-check (3 non-degree-like slugs spot-fetched and
+confirmed `MJD-`, same discipline as Monash's `aqf_level`), never trusted as the filter itself.
+**Inclusion is by title-token read, never by `Course Code` card presence** (the round-1 bug):
+`bachelor` required for every branch except Associate Degree and plain Diploma; `graduate
+diploma`/`graduate certificate` explicitly excluded before the plain-diploma check ever runs, so
+the substring "diploma" alone can't misfire on a postgraduate title (the round-2 bug); `master`/
+`doctor` alone, without an accompanying `bachelor`, is never sufficient for any inclusion branch
+(the round-2 bug's other half). This method was built and audited against the complete token
+census of all 422 titles before the final rebuild ran, not assembled incrementally from
+encountered cases.
 
 **No JSON data blob on this platform** (no `__NEXT_DATA__`; a thin per-page schema.org
 `ld+json` block exists with only name/description/courseCode, not enough for duration/ATAR/
@@ -624,15 +660,24 @@ fetched records' `aqf_level` values enumerated and individually assigned in/out-
 (see the method section above) — including catching that only 3 of 12 null-`aqf_level` records
 were genuine pathway programs, not all 12 as a naive port of the UNSW pattern would have assumed.
 
-**UWA (289, after the fix above):** schema + corpus-wide ID validation clean. One duplicate
-program name found and resolved during this pass (not a schema/ID collision — same title reached
-via two sitemap URL slugs that both redirect to the same canonical page; the alias removed,
-verified by following both redirect chains to their shared final URL before deciding which to
-drop, not assumed from the name match alone).
+**UWA (107, after the two-round fix history above):** schema + corpus-wide ID validation clean
+on the final rebuilt file. Verified with the same method that found the original bugs, not a
+different or lighter check: re-ran the full 422-title token census against the actual output
+(not just the logic on paper) and confirmed zero null `degree_level`, zero Graduate Diploma/
+Certificate present as undergraduate, zero standalone Master/Doctor present. One duplicate
+program name found and resolved (not a schema/ID collision — same title reached via two sitemap
+URL slugs that both redirect to the same canonical page; the alias removed, verified by following
+both redirect chains to their shared final URL before deciding which to drop, not assumed from
+the name match alone) — re-confirmed present after the rebuild rather than assumed carried over,
+since the rebuild re-fetched from the same sitemap and could plausibly have reproduced it.
 
-**Combined corpus check (833 AU records total, UNSW + Sydney + Monash + UWA):** re-ran the
+**Combined corpus check (651 AU records total, UNSW + Sydney + Monash + UWA):** re-ran the
 corpus-wide validator after every retrofit and fix in this package — zero duplicate IDs, zero
-schema failures.
+schema failures. Note this validator checks schema/ID uniqueness only, not semantic correctness
+of field values — it would not have caught either UWA classification bug, both of which produced
+well-formed, schema-valid, wrong records. That gap is exactly what the token-census method above
+exists to catch instead, and it's why that method (not just corpus-wide ID validation) is now the
+standard this lane applies before calling any title-token-classified university complete.
 
 ## Remaining gaps, in priority order
 
