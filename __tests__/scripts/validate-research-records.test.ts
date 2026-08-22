@@ -65,6 +65,7 @@ import {
   filterRealBranches,
   findIdCollisionsInFileContent,
   findTaxonomyConsistencyGaps,
+  findValueDomainOutliers,
   gatherSourceBlobHashes,
   type Json,
   type LaneContract,
@@ -711,5 +712,77 @@ describe("findTaxonomyConsistencyGaps", () => {
       },
     ]);
     expect(findings).toEqual([]);
+  });
+});
+
+// -----------------------------------------------------------------------------------
+// findValueDomainOutliers — the mechanism from V1-13's sweep, calibrated on the real
+// Adelaide finding (BASORG + RES-V2, 2026-08-22): a provenance sentence sitting in
+// study_mode/entry_requirements where every sibling record held a genuine value.
+// -----------------------------------------------------------------------------------
+
+describe("findValueDomainOutliers", () => {
+  function corpusOf(intlValue: string): Json[] {
+    const records: Json[] = [];
+    for (let i = 1; i <= 6; i++) {
+      records.push({
+        research_program_id: `TEST-${i}`,
+        study_mode: { international: "Full-time", domestic: "Full-time" },
+      });
+    }
+    records.push({
+      research_program_id: "TEST-defect",
+      study_mode: { international: intlValue, domestic: "Full-time" },
+    });
+    return records;
+  }
+
+  test("flags the real Adelaide shape — a provenance sentence where every sibling holds a genuine study-mode value", () => {
+    const findings = findValueDomainOutliers(
+      corpusOf(
+        "No distinct international variant published for this pathway -- confirmed live (2026-08-22): the bare URL and the explicit /int/ path both 301-redirect to the /dom/ variant, returning byte-identical content."
+      )
+    );
+    // This synthetic value is both a length outlier AND carries provenance language —
+    // same as the real Adelaide case — so both signals should independently fire on it.
+    const defectFindings = findings.filter((f) => f.includes("TEST-defect"));
+    expect(defectFindings.some((f) => f.includes("provenance/derivation language"))).toBe(true);
+    expect(defectFindings.some((f) => f.includes("this field's own corpus median"))).toBe(true);
+  });
+
+  test("flags a length outlier even without provenance language — the lead-generation signal, not a verdict", () => {
+    const findings = findValueDomainOutliers(
+      corpusOf(
+        "Clayton for Bachelor of Engineering (Honours), Parkville for Bachelor of Pharmaceutical Science — dual-campus double degree, both components mandatory."
+      )
+    );
+    const hit = findings.find((f) => f.includes("TEST-defect"));
+    expect(hit).toBeDefined();
+    expect(hit).toContain("this field's own corpus median");
+  });
+
+  test("does NOT flag a uniform corpus where every value is genuinely the same shape", () => {
+    const records: Json[] = [];
+    for (let i = 1; i <= 8; i++) {
+      records.push({
+        research_program_id: `TEST-${i}`,
+        study_mode: { international: "Full-time", domestic: "Full-time" },
+        degree_level: "Bachelor / first-cycle (Honours)",
+      });
+    }
+    expect(findValueDomainOutliers(records)).toEqual([]);
+  });
+
+  test("does NOT scan researcher_notes or verification_status — expected long free text, not a value slot", () => {
+    const records: Json[] = [];
+    for (let i = 1; i <= 6; i++) {
+      records.push({ research_program_id: `TEST-${i}`, researcher_notes: "short" });
+    }
+    records.push({
+      research_program_id: "TEST-long-notes",
+      researcher_notes:
+        "This is a much longer researcher note explaining program_code='XYZ' and other context that is expected to be long free text and must never be flagged as a value-domain violation regardless of length.",
+    });
+    expect(findValueDomainOutliers(records)).toEqual([]);
   });
 });

@@ -479,6 +479,95 @@ export function findTaxonomyConsistencyGaps(records: Json[]): string[] {
   return findings;
 }
 
+// Fields legitimately expected to be long free text, a URL, or non-value metadata — not
+// candidates for the "does this value belong in this field's domain" check below.
+const VALUE_DOMAIN_SKIP_FIELDS = new Set([
+  "research_program_id", "official_program_url", "admissions_url", "source_url",
+  "verification_status", "researcher_notes", "field_provenance", "university_name",
+  "university_official_domain", "program_name", "researched_at",
+]);
+
+// Phrases that describe HOW a value was derived/checked rather than being a value
+// themselves — the exact shape of the Adelaide V1-12b/RES-V2 finding (a "no distinct
+// international variant... confirmed live... 301-redirect... byte-identical" provenance
+// sentence sitting in study_mode/entry_requirements, where every sibling record held a
+// genuine study-mode or entry-criteria value). Narrow and wording-specific by
+// construction — this catches a recurrence of the SAME phrasing, not every possible
+// instance of the class; the length-outlier check below is the general-shape catch.
+const PROVENANCE_LANGUAGE_MARKERS =
+  /confirmed live|no distinct|byte-identical|byte for byte|301-redirect|301 redirect|\(20\d\d-\d\d-\d\d\)|checked directly|see the [`'"]|this key is intentionally|not (a )?duplicate of|independently[- ]sourced|wrongly presenting|verified live|self-caught|redirects? to/i;
+
+/** Pure: does a string value belong to its own field's value domain, judged against that
+ * field's OTHER values in the SAME corpus — not against any fixed schema, since "normal"
+ * length/shape varies by field and even by record (a genuinely dual-campus program's
+ * `campus` value is legitimately longer than a single-campus one's). Two independent
+ * signals, both required to be cheap and corpus-agnostic so this runs on any lane:
+ *
+ * 1. Length outlier: a field whose values are normally short (median < 150 chars, i.e.
+ *    enum/label-shaped) getting a value dramatically longer than its own median. This is
+ *    a LEAD, not a verdict — V1-13's sweep found real length outliers in Monash's
+ *    `campus`/`atar.value` that were genuine, correct, unusually-complex program facts
+ *    (a dual-campus double degree, a multi-band ATAR cutoff), not defects. Reported as a
+ *    finding for review, same as this function's other signal and as
+ *    findTaxonomyConsistencyGaps — never a batch-failing defect, because the false-positive
+ *    rate on this signal alone is real and was measured, not assumed.
+ * 2. Provenance-language marker: the value contains phrasing that explains how data was
+ *    obtained rather than stating what the data is, regardless of the field's normal
+ *    length (entry_requirements is normally long, so signal 1 alone wouldn't catch a
+ *    similarly-long provenance sentence replacing similarly-long genuine content there).
+ *
+ * V1-13 (2026-08-22) swept UNSW/Sydney/Monash/UWA/Adelaide/Ottawa with this exact logic
+ * and found the class nowhere outside Adelaide's already-fixed 3 records (commit
+ * 871bbc9) — recorded here so a future corpus gets the same check without re-deriving it. */
+export function findValueDomainOutliers(records: Json[]): string[] {
+  const findings: string[] = [];
+
+  function* walk(record: Json): Generator<[string, string]> {
+    for (const [k, v] of Object.entries(record)) {
+      if (VALUE_DOMAIN_SKIP_FIELDS.has(k)) continue;
+      if (typeof v === "string") yield [k, v];
+      else if (v && typeof v === "object" && !Array.isArray(v)) {
+        for (const [sk, sv] of Object.entries(v as Record<string, Json>)) {
+          if (typeof sv === "string") yield [`${k}.${sk}`, sv];
+        }
+      }
+    }
+  }
+
+  // Signal 1: per-field length outliers, computed corpus-wide before per-record checking.
+  const byField = new Map<string, { id: string; value: string }[]>();
+  for (const r of records) {
+    const id = String(r["research_program_id"]);
+    for (const [field, value] of walk(r)) {
+      if (!byField.has(field)) byField.set(field, []);
+      byField.get(field)!.push({ id, value });
+    }
+  }
+  for (const [field, entries] of byField) {
+    if (entries.length < 5) continue;
+    const lengths = entries.map((e) => e.value.length).sort((a, b) => a - b);
+    const median = lengths[Math.floor(lengths.length / 2)]!;
+    if (median === 0 || median >= 150) continue;
+    for (const { id, value } of entries) {
+      if (value.length > Math.max(2.5 * median, median + 60) && value.length > 90) {
+        findings.push(`${id}: ${field} is ${value.length} chars, ${(value.length / median).toFixed(1)}x this field's own corpus median (${median}) — review whether this is a genuinely complex value or content that doesn't belong in this field's domain: "${value.slice(0, 100)}..."`);
+      }
+    }
+  }
+
+  // Signal 2: provenance-language markers, independent of field length norms.
+  for (const r of records) {
+    const id = String(r["research_program_id"]);
+    for (const [field, value] of walk(r)) {
+      if (PROVENANCE_LANGUAGE_MARKERS.test(value)) {
+        findings.push(`${id}: ${field} contains provenance/derivation language ("${value.slice(0, 100)}...") — review whether this describes how the value was obtained rather than being the value itself`);
+      }
+    }
+  }
+
+  return findings;
+}
+
 /** Duplicated from scripts/audit-dedup-convention-drift.ts's loadUniversityCandidates
  * (same ~25 lines, not worth a shared module for one reused helper this small) — keep the
  * two in sync if the university-pool-building recipe changes. */
@@ -627,6 +716,7 @@ export const AU_R1_CONTRACT: LaneContract = {
     // --- 3. Taxonomy consistency (see findTaxonomyConsistencyGaps's own doc comment —
     //        extracted so this specific check can be unit tested without a live fetch). ---
     findings.push(...findTaxonomyConsistencyGaps(records));
+    findings.push(...findValueDomainOutliers(records));
 
     // --- 4. Null discipline: scan for postgraduate-credential terms outside the
     //        already-accounted-for integrated-master's bucket, per university — Monash's
@@ -730,6 +820,7 @@ export const CA_R1_CONTRACT: LaneContract = {
     }
 
     findings.push(...findTaxonomyConsistencyGaps(records));
+    findings.push(...findValueDomainOutliers(records));
 
     findings.push(`University resolution: ${byUniversity.size} distinct universities resolved across ${records.length} records, 0 failures` + (defects.some((d) => d.includes("did not resolve")) ? "" : " (all resolved)"));
 
