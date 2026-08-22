@@ -1250,6 +1250,83 @@ RES-V1 also ran rule 27 against its own question 4 — sampling one record each 
 zero-collision universities, 4/4 matching live — and **stated plainly that a 4-record sample is
 not proof the other ~1,765 are clean.**
 
+## 8.4x AUSTRALIA CLOSED — 651 records, five universities, both verifier lanes
+
+**The largest English-language coverage hole in the corpus, worked end to end.** Australia held
+**37 universities and zero programmes** at the start of this cycle.
+
+| university | records | status |
+|---|---:|---|
+| UNSW | 217 | **live** |
+| Sydney | 149 | **live** |
+| Monash | 178 | **live** |
+| UWA | 107 | verified, cleared, dry-run queued |
+| Adelaide | 119 | verified, 2 findings open with RES-R1 |
+
+**544 live. 651 verified.** Every record passed research → contract verification → source
+verification, by three different lanes, with dry-run and apply as separate packages.
+
+**Three of the top eight are deferred on policy grounds** — Melbourne (domain-wide Cloudflare), ANU
+(robots.txt naming ClaudeBot explicitly), Queensland (AWS WAF CAPTCHA gate). **A property of the
+web, not a gap in the work.** All three verified by reading robots.txt directly and confirming no
+permitted alternative host carries the catalogue.
+
+**UWA is the one worth remembering**: it passed its own validation *twice* while being **63%
+wrong** (182 of 289 misclassified), and was only closed by RES-V2 running the test nobody had —
+**25 sampled from the 315 records the rebuild EXCLUDED**, confirming the stricter classifier cut
+nothing that should have stayed. 25/25 correct, zero Bachelor-level degrees wrongly cut.
+
+## 8.4y BASORG made four errors about one lane's record — and stopped restating it
+
+RES-V2 flagged that BASORG had re-cited *"43 false `current_cycle_label` findings"* in its
+assignment — a figure it had already corrected once, and could not find anywhere in its own docs.
+
+**Traced: the 43 is RES-V1's.** From `v1-5_dlopp_p2_p3_verdict.md` — a check RES-V1 built, found
+43 false findings in, deleted, and documented. BASORG praised it in *that* lane's package, then
+wrote it into RES-V2's assignments as though it were RES-V2's work. **Twice, after correction.**
+
+Not a stale instruction source, which was RES-V2's charitable hypothesis. **Cross-lane
+misattribution from BASORG's own memory, repeated.**
+
+**Then, correcting it, BASORG made a fourth error** — restating RES-V2's actual V2-4 entry as only
+the `unknown`-marker half, dropping the string-inequality half (56 flagged → 18 genuine).
+
+**Four errors in four attempts is not bad luck. It is evidence that restating another lane's
+record from memory is unreliable.** The fix is behavioural, not another correction:
+
+> **Cite the document; do not restate its contents.** "Per V2-10's near-miss catalogue" rather
+> than a summary of it. The documents are precise and one fetch away.
+
+Which is the same discipline BASORG demanded of every lane all day — **go to the artifact** —
+applied to the one place it kept not applying it. The pattern across the day is consistent:
+BASORG's errors are almost entirely **restating someone else's finding from memory instead of from
+the artifact** (the 214-vs-96 Drive count, the reconciliation closing on cancelling terms, the
+`sitecore` grep counting prose as URL fields, "recovered on its own" when CFO had remediated it,
+"new sessions" for resumed lanes). **Every one was caught by the lane it concerned, checking.**
+
+## 8.4z Five of seven idle — and the reasons split into two different kinds
+
+| lane | idle because | lapses when |
+|---|---|---|
+| RES-R2 | measurement decided against its only candidate | founder decides Drive corpus |
+| RES-R3 | 39 determinations already unusable | **0060 applied** |
+| RES-I1 | nothing cleared *(lapsed — UWA dry-run assigned)* | — |
+| RES-V1 | **pipeline serialisation** | Ottawa records pushed |
+| RES-V2 | **pipeline serialisation** | Ottawa records pushed |
+
+**The distinction matters and is invisible in a per-lane view.** Three lanes are idle on *founder
+decisions*. **Two are idle purely on serialisation** — one researcher produces, two verifiers wait,
+and neither can start until the producer finishes.
+
+**Verification capacity is now sitting unused while research is the constraint — the exact inverse
+of earlier in the cycle**, when researchers outran verification and 74 deadline records plus 22
+eligibility records queued behind a verify→ingest stall.
+
+That oscillation is **the cost side of the research→verify→ingest separation, not a problem to fix
+by loosening it.** That separation caught Glasgow's 69 duplicates, UWA's 63%, the Adelaide
+provenance defect, and the CyberPatriot inadmissible source. **A pipeline that never idles anyone
+is a pipeline where nobody is waiting to check anybody.**
+
 ## 8.5 If you inherit this org
 
 1. **Ask each lane what it holds before assigning anything.** Never assume a slot is free.
