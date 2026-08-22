@@ -65,10 +65,16 @@ file is a snapshot, not a live view.
 
 ## Migrations
 
-Applied through `20260821184903_requirement_shape_representability`. Recent commits on `main`
-reference "migration 0056" / a "0056 → 0057" renumbering (YÖK Atlas `kilavuz_kodu` work), but
-no migration by that name appears in `list_migrations` against `oryn-qa-scratch` —
-**not reconciled this checkpoint**, flagged for follow-up rather than assumed either way.
+Applied through `20260821184903_requirement_shape_representability` — this **is** migration
+`0056` (`0056_requirement_shape_representability.sql`), confirmed live. **Reconciled this
+checkpoint**: commit messages loosely calling two different things "migration 0056" was the
+source of the apparent discrepancy flagged at the last checkpoint, not a real gap —
+`0057_university_program_kilavuz_kodu.sql` was originally drafted *as* 0056, then renumbered
+to 0057 once the real 0056 claimed that number first (`c710acc`). 0057 itself is **deliberately
+not applied**: its own header states a prior coordination session's authorization for 0055
+"does not extend to this migration" and instructs not to apply without asking the founder
+again. Confirmed live: no `kilavuz_kodu` column exists on `university_programs`. Now tracked as
+founder-blocked-backlog item 26.
 
 ## External service status (measured 2026-08-22, via `npm run check:integrations` — this
 worktree only; credentials are per-checkout via `.env.local`, not shared across worktrees)
@@ -121,6 +127,7 @@ Only items no Claude session can do unilaterally. Full detail:
 3. **Branch/worktree integration audit**: 80+ branches, ~85 worktrees, several
    idle-pending-assignment research lanes with real uningested output — worth a dedicated
    reconciliation pass rather than continuing to accumulate more parallel lanes.
-4. **Migration 0056/0057 reconciliation**: confirm whether it's actually applied live or still
-   pending, per the discrepancy noted above.
+4. ~~Migration 0056/0057 reconciliation~~ — resolved this checkpoint, see Migrations section
+   above. What's left is founder-blocked-backlog item 26 (authorize applying 0057), not a
+   Claude-session task.
 5. Production readiness items unchanged (legal review, hosting, error-monitoring, CI).
