@@ -11,6 +11,47 @@ dedicated living docs rather than being tracked here — start at
 file's remaining entries (the Drive-doc product-decision conflict, data-readiness gaps,
 scoped-out items) are still current as of the dates on each entry.
 
+## Needs founder decision — CRITICAL: any authenticated user can self-grant admin
+
+**2026-08-22, BUG-1, live RLS verification package, surface 2 (admin gate)**. Full
+evidence: `docs/research/verification/rls-live-verification-2026-08-22.md`. Escalated by
+ORYN-CEO to the founder as the top item in the queue, above the `public_profiles` finding
+below — that one needed a student to opt into "public" and exposed a fixed whitelist;
+this one needs nothing from anyone and grants everything.
+
+**The gap**: `profiles`' RLS policies are exclusively row-scoped (`id = auth.uid()`) —
+they govern which row a caller may touch, never which columns within that row. Verified
+live against `oryn-qa-scratch`: QA account B, an ordinary non-admin student account, ran
+`update profiles set is_admin = true where id = <own id>` through a real authenticated
+session (real GoTrue sign-in, the app's own anon-key client) and it succeeded — no error,
+no rejection. Reverted in the same test, independently re-confirmed reverted via a
+separate admin-access query afterward. `is_admin` is an ordinary `boolean not null
+default false` column (migration 0002) with no protective trigger — checked, not
+assumed, before concluding this was exploitable.
+
+**Blast radius**: `is_admin` is the sole input to `isAdminProfile()`/`requireAdmin()`,
+which gates `/admin` and every export in `app/(app)/admin/actions.ts`. Every one of
+those, once past `requireAdmin()`, switches to the service-role client, bypassing RLS
+entirely. So this isn't "read an admin page" — it's full service-role-backed access to
+the whole schema, self-grantable by any existing account or new signup, one API call, no
+UI needed. Live state confirmed: exactly one admin exists (QA account A, granted
+deliberately by the founder).
+
+**The mechanism already existed in this codebase and was never applied to this column**:
+`profiles` itself already carries three column-scoped `BEFORE UPDATE OF <col>` guard
+triggers (migration 0038, `enforce_canonical_entity_type`) — never extended to `is_admin`.
+Migration 0058's `posts_guard_system_columns` (reset-to-`OLD` rather than raising, gated
+on `current_user <> 'service_role'`) is the closer precedent for the actual fix shape.
+
+**Fix written, not applied**: `supabase/migrations/0062_profiles_guard_protected_columns.sql`
+adds a `BEFORE UPDATE` trigger on `profiles` resetting `is_admin`,
+`profile_strength_score`, and `completeness_percent` to their prior value unless the
+caller is the service role — the latter two share the identical unguarded-column shape
+(computed server-side by `lib/scoring/persist.ts`, displayed as an Oryn-computed fact,
+not user-entered) at much lower severity: self-directed score inflation and a forced
+"high" admissions-outlook confidence label, not cross-user data access. Founder-gated per
+standing rule; do not apply without review.
+
 ## Needs founder decision — live RLS gap: `public_profiles` readable by anonymous callers
 
 **2026-08-22, BUG-1, live RLS verification package** (assigned by ORYN-CEO after

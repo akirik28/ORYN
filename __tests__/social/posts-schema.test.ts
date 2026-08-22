@@ -26,11 +26,11 @@ describe("migration numbering", () => {
     // Two lanes collided on a number once already. This fails loudly if another lane
     // lands a 0058 too, instead of one of them silently never running. This test only
     // pins 0058's own uniqueness — it does not assert 0058 is the highest number in the
-    // directory forever; migration 0061 (public_profiles_require_authenticated,
-    // 2026-08-22 — the RLS verification package's own fix, unapplied like 0058) is the
-    // one that currently follows it. Bump the literal below when the next migration
-    // lands, the same way this one did — it is a collision guard, not a permanent
-    // ceiling.
+    // directory forever; migrations 0061 and 0062 (the RLS verification package's own
+    // fixes, both unapplied like 0058 — public_profiles_require_authenticated and
+    // profiles_guard_protected_columns) are what currently follow it. Bump the literal
+    // below when the next migration lands, the same way this one did — it is a collision
+    // guard, not a permanent ceiling.
     const numbers = readdirSync(MIGRATIONS_DIR)
       .filter((f) => f.endsWith(".sql"))
       .map((f) => f.slice(0, 4));
@@ -38,7 +38,8 @@ describe("migration numbering", () => {
     expect(numbers.filter((n) => n === "0059")).toHaveLength(1);
     expect(numbers.filter((n) => n === "0060")).toHaveLength(1);
     expect(numbers.filter((n) => n === "0061")).toHaveLength(1);
-    expect(Math.max(...numbers.map(Number))).toBe(61);
+    expect(numbers.filter((n) => n === "0062")).toHaveLength(1);
+    expect(Math.max(...numbers.map(Number))).toBe(62);
   });
 });
 
