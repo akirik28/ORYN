@@ -1636,3 +1636,55 @@ both correct.**
 > it lands on someone's work.
 
 The shared remedy in both cases: **date the epistemics, don't re-litigate the entries.**
+
+## 8.4kk OTTAWA CLEARED ONE LANE, NOT BOTH — RES-I1 STILL GATED
+
+**RES-V2 delivered V2-11a and V2-11b** at `c98def5` on `origin/oryn/res-v2-source-verification`.
+Documents, not restatements: `v2_11a_ottawa-source-verification-results.md` and
+`v2_11b_adelaide-delta-results.md`.
+
+**Sampling design committed at `13272fe` BEFORE the results at `c98def5`** — unprompted. That
+ordering is what makes the sample **pre-registered rather than reconstructed**, and it is checkable
+by anyone from the commit graph alone.
+
+**Ottawa V2-11a: 72/72 clean, zero defects. Adelaide delta V2-11b: both prior findings confirmed
+fixed**, redirects re-checked at the HTTP level (301 + `Location`) rather than by content.
+
+### Why the language result is the strongest thing in it
+Nine French-titled records correctly **null** — *including the three carrying a French
+eligibility-restriction paragraph*, the exact text most likely to induce a wrong inference — while
+eight separate records carry *"This program is offered in French only"* **verbatim**.
+
+**That is not "the field is populated correctly." It is evidence the field was derived from what the
+page states rather than from what the page suggests.** Path-inference would have produced the
+opposite result on precisely those three records.
+
+### STATE: the gate is still closed
+**No `v1-12` verdict exists on any branch.** RES-V1 is still working.
+
+> **Ottawa has cleared ONE of two lanes. RES-I1's lapse condition (BOTH V1-12 and V2-11) is NOT
+> met, and RES-I1 remains idle.**
+
+**RES-V2 idle, lapse = RES-V1 lands V1-12.** No work invented to fill the gap; everything else in
+its territory sits behind a founder decision.
+
+## 8.4ll ESCALATED, NOT CLOSED: Adelaide's `international` field has two shapes
+
+RES-V2 flagged this as honest-but-not-uniform and non-blocking. **Non-blocking agreed. Not closed.**
+
+Three pathway records carry an **explanatory string** in `international` meaning *"no international
+variant exists."* **UniStart omits the key entirely.** Both truthful.
+
+**The risk is one step downstream, not in the corpus**: a consumer doing a presence or truthiness
+check reads the **explanatory string as `present`** — i.e. as evidence an international variant DOES
+exist — and the **missing key as `absent`**. If any downstream reader works that way, **the three
+records with the more careful fix are the ones that mislead, and the field's most explicit records
+become its most dangerous.**
+
+**Not asserted as a defect.** No consumer has been shown to behave this way, and BASORG overstated a
+defect once already tonight (§8.4jj). **What is established is that neither the researcher nor the
+verifier can settle it from the corpus side.**
+
+**Routed to RES-I1 as a pre-ingestion question for whenever Adelaide moves**, with RES-V2's writeup
+cited. **Flagged, routed, not resolved — and deliberately not filed as "minor,"** because "minor"
+is where a question goes to stop being asked.
