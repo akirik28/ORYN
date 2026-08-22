@@ -45,6 +45,7 @@ function opportunity(overrides: Partial<Opportunity> = {}): Opportunity {
     organization_entity_id: null,
     country_entity_id: null,
     access_channel: null,
+    country_eligibility_confirmed_open: false,
     created_at: "2026-01-01T00:00:00Z",
     updated_at: "2026-01-01T00:00:00Z",
     ...overrides,
@@ -93,10 +94,62 @@ function state(opp: Opportunity, birthYear: number | null = 2009, overrides: Par
 }
 
 describe("evaluateCandidateEligibility — opportunities", () => {
-  test("known_eligible when there are no restrictions of any kind", () => {
-    const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity()));
+  test("known_eligible when no restrictions exist and country eligibility is research-confirmed open", () => {
+    const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ country_eligibility_confirmed_open: true })));
     expect(result.verdict).toBe("known_eligible");
     expect(result.notes).toEqual([]);
+  });
+
+  // The live trust defect (docs/handoffs/opportunities-eligible-countries-gap.md Key
+  // Finding 1): ~90% of live rows have an empty eligible_countries because nobody has
+  // researched them — not because the program is open. Unknown must never be called
+  // eligible (docs/counselor-core-plan.md Assumption A2).
+  test("unknown, with a not-verified note, when eligible_countries is empty and NOT research-confirmed open", () => {
+    const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ country_eligibility_confirmed_open: false })));
+    expect(result.verdict).toBe("unknown");
+    expect(result.notes.join(" ")).toMatch(/country eligibility hasn't been verified/i);
+  });
+
+  // The opposite overcorrection is forbidden too: unresearched is not evidence of a
+  // restriction — the student must never be told they're ineligible because of it.
+  test("an unverified country eligibility is never known_ineligible", () => {
+    const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ country_eligibility_confirmed_open: false })));
+    expect(result.verdict).not.toBe("known_ineligible");
+  });
+
+  // A structured citizenship gate means the row WAS researched and citizenship is the
+  // operative check — stacking a "country not verified" note on top would be noise.
+  test("no not-verified note when a structured citizenship restriction already covers the row", () => {
+    const result = evaluateCandidateEligibility(
+      opportunityCandidate(),
+      state(opportunity({ eligible_citizenships: ["United States"] }), 2009, {
+        advisor: { student: { birthYear: 2009, citizenshipCountries: ["United States"] } } as CounselorState["advisor"],
+      })
+    );
+    expect(result.notes.join(" ")).not.toMatch(/hasn't been verified/i);
+  });
+
+  // Restriction prose means the row was researched and a restriction is KNOWN to exist —
+  // "not verified yet" would be false for it; the prose note is the honest surface.
+  test("prose restrictions surface as their own note, not as a not-verified note", () => {
+    const result = evaluateCandidateEligibility(
+      opportunityCandidate(),
+      state(opportunity({ residency_restrictions: "Must attend school in Ohio" }))
+    );
+    expect(result.verdict).toBe("unknown");
+    expect(result.notes.join(" ")).toContain("Must attend school in Ohio");
+    expect(result.notes.join(" ")).not.toMatch(/hasn't been verified/i);
+  });
+
+  // A populated allow-list is the researched-restricted case — the hard check runs and no
+  // not-verified note applies in either direction.
+  test("no not-verified note when eligible_countries is populated", () => {
+    const eligible = evaluateCandidateEligibility(
+      opportunityCandidate(),
+      state(opportunity({ eligible_countries: ["Turkey"] }), 2009, { advisor: { student: { birthYear: 2009, country: "Türkiye" } } as CounselorState["advisor"] })
+    );
+    expect(eligible.verdict).toBe("known_eligible");
+    expect(eligible.notes).toEqual([]);
   });
 
   test("known_ineligible when the current cycle is closed", () => {
@@ -110,7 +163,8 @@ describe("evaluateCandidateEligibility — opportunities", () => {
   });
 
   test("known_eligible (not unknown) when an age restriction exists and the student's age is known", () => {
-    const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ minimum_age: 14 }), 2009));
+    // confirmed-open so this test stays about the age dimension alone.
+    const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ minimum_age: 14, country_eligibility_confirmed_open: true }), 2009));
     expect(result.verdict).toBe("known_eligible");
   });
 
@@ -162,7 +216,8 @@ describe("evaluateCandidateEligibility — opportunities", () => {
   });
 
   test("known_eligible when verification_state is verified_current (the normal case)", () => {
-    const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ verification_state: "verified_current" })));
+    // confirmed-open so this test stays about the verification_state dimension alone.
+    const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ verification_state: "verified_current", country_eligibility_confirmed_open: true })));
     expect(result.verdict).toBe("known_eligible");
   });
 });
