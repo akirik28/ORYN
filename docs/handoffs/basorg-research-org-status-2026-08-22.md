@@ -142,6 +142,16 @@ if a transaction block is blocked, STOP and escalate; do not decompose it.
   never coerced**. Vocabulary coercion at the ingestion boundary is how research uncertainty
   gets laundered into database fact. (Supersedes the narrower cycle_status-only RULE-INGEST-002;
   generalized after RES-V1 showed the same failure mode reachable on `current_cycle_label`.)
+- **RULE-DEDUP-001 (new): every opportunities ingestion is followed by
+  `npm run audit:opportunity-duplicates`, result recorded in the run report.**
+  `lib/opportunities/duplicates.ts` is good — domain-matched, stopword-stripped title
+  similarity, scores the Diamond Challenge pair at 1.0 / `deterministic`, and was built from
+  that case. But the audit is **manual-invoke only** (`package.json:57`, no CI hook, no
+  schedule — verified by grep). A deterministic-confidence dedup tool that nobody runs is
+  operationally indistinguishable from no dedup tool, and its quality is what makes that
+  dangerous: it creates a reasonable belief the problem is handled. This rule closes the gap
+  for records entering through the research pipeline; scheduling it more broadly is a
+  code/ops question outside this org, raised to CEO.
 - **RULE-REBASE-001 (new).** On a `ORYN_WORKSTREAMS.md` rebase conflict: rows from DIFFERENT
   lanes are additive — keep all. A duplicate of YOUR OWN row is your row's history replaying,
   not a collision — keep the accurate final version, drop the stale one, never concatenate.
