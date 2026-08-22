@@ -8,6 +8,7 @@ import { createNotification } from "@/lib/notifications/create";
 import { canonicalUniversityId, loadSupersessionMap, type SupersessionMap } from "@/lib/universities/canonical";
 import { NON_ACTIONABLE_VERIFICATION_STATES } from "@/lib/deadlines/ingest";
 import { isOpportunityActionable } from "@/lib/opportunities/lifecycle";
+import { deadlineDetailLabel } from "@/lib/deadlines/upcoming";
 
 /** Days-until-deadline thresholds that trigger a reminder (Phase 23/24). A student gets
  * at most one reminder per deadline per threshold — see the dedup check below. */
@@ -139,7 +140,7 @@ async function scanTargetUniversityDeadlines(supabase: SupabaseClient<Database>,
   const [{ data: deadlines }, { data: universities }] = await Promise.all([
     supabase
       .from("university_deadlines")
-      .select("university_id, program_id, deadline_type, deadline_date, verification_state")
+      .select("university_id, program_id, deadline_type, deadline_date, verification_state, cycle_label, deadline_text_verbatim")
       .in("university_id", universityIds)
       .not("deadline_date", "is", null),
     supabase.from("universities").select("id, name").in("id", universityIds),
@@ -165,7 +166,7 @@ async function scanTargetUniversityDeadlines(supabase: SupabaseClient<Database>,
         userId: target.user_id,
         deadlineDate: deadline.deadline_date!,
         link: `/universities/${canonicalId}`,
-        body: `${universityName} — ${deadline.deadline_type} deadline approaching.`,
+        body: `${universityName} — ${deadlineDetailLabel(deadline)} deadline approaching.`,
       });
       if (wasNotified) notified += 1;
     }

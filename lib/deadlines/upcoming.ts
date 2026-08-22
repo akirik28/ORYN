@@ -85,6 +85,19 @@ export async function getUpcomingOpportunityDeadlines(supabase: SupabaseClient<D
   }));
 }
 
+/** `deadline_type` is a coarse category ("scholarship", "application") shared by every cycle
+ * of the same kind at a university — e.g. Yale carries four "scholarship"-typed rows (Early
+ * Action for US/PR citizens, Early Action for international citizens, Regular Decision,
+ * Transfer) that are only distinguishable by the field actually holding that distinction.
+ * `cycle_label` is the structured cycle name where research populated one; it still collides
+ * for the two Early Action rows above (both "Single-Choice Early Action" — the citizenship
+ * split isn't a distinct cycle). `deadline_text_verbatim` is the one field guaranteed to carry
+ * whatever actually differs, because it's the source's own wording rather than a normalized
+ * category — prefer it, falling back only when it's null (both fields are nullable). */
+export function deadlineDetailLabel(deadline: { deadline_text_verbatim: string | null; cycle_label: string | null; deadline_type: string }): string {
+  return deadline.deadline_text_verbatim ?? deadline.cycle_label ?? deadline.deadline_type;
+}
+
 async function getUpcomingUniversityDeadlines(supabase: SupabaseClient<Database>, userId: string, today: string, supersessionMap: SupersessionMap): Promise<UpcomingDeadline[]> {
   const { data: targets } = await supabase
     .from("target_universities")
@@ -98,7 +111,7 @@ async function getUpcomingUniversityDeadlines(supabase: SupabaseClient<Database>
   const [{ data: deadlines }, { data: universities }] = await Promise.all([
     supabase
       .from("university_deadlines")
-      .select("id, university_id, program_id, deadline_type, deadline_date, verification_state")
+      .select("id, university_id, program_id, deadline_type, deadline_date, verification_state, cycle_label, deadline_text_verbatim")
       .in("university_id", universityIds)
       .not("deadline_date", "is", null)
       .gte("deadline_date", today),
@@ -129,7 +142,7 @@ async function getUpcomingUniversityDeadlines(supabase: SupabaseClient<Database>
     result.push({
       id: `university-${deadline.id}`,
       source: "university",
-      title: `${name} — ${deadline.deadline_type}`,
+      title: `${name} — ${deadlineDetailLabel(deadline)}`,
       date: deadline.deadline_date!,
       href: `/universities/${deadline.university_id}`,
     });
