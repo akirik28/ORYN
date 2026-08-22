@@ -57,7 +57,10 @@ export async function notifyIfThresholdCrossed(supabase: SupabaseClient<Database
   return true;
 }
 
-async function scanApplications(supabase: SupabaseClient<Database>, today: Date, supersessionMap: SupersessionMap): Promise<{ notified: number; checked: number }> {
+/** Exported (only) so __tests__/deadlines/scan-applications.test.ts can pin its behavior
+ * directly, without also mocking the opportunity/university scan sources. No behavior
+ * change. */
+export async function scanApplications(supabase: SupabaseClient<Database>, today: Date, supersessionMap: SupersessionMap): Promise<{ notified: number; checked: number }> {
   const { data: applications } = await supabase
     .from("applications")
     .select("id, user_id, deadline, target_university_id")
@@ -131,7 +134,10 @@ export async function scanSavedOpportunityDeadlines(supabase: SupabaseClient<Dat
   return { notified, checked };
 }
 
-async function scanTargetUniversityDeadlines(supabase: SupabaseClient<Database>, today: Date, supersessionMap: SupersessionMap): Promise<{ notified: number; checked: number }> {
+/** Exported (only) so __tests__/deadlines/scan-target-universities.test.ts can pin its
+ * behavior directly, without also mocking the application/opportunity scan sources. No
+ * behavior change. */
+export async function scanTargetUniversityDeadlines(supabase: SupabaseClient<Database>, today: Date, supersessionMap: SupersessionMap): Promise<{ notified: number; checked: number }> {
   const { data: targets } = await supabase
     .from("target_universities")
     .select("id, user_id, university_id, program_id")
