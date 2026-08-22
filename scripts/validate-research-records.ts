@@ -67,9 +67,9 @@ try {
   // No .env.local — fine, maybe using real environment variables.
 }
 
-type Json = Record<string, unknown>;
+export type Json = Record<string, unknown>;
 
-interface MonotonicityCheck {
+export interface MonotonicityCheck {
   /** Short label for report output, e.g. "cycle_status". */
   name: string;
   /** Field on the research record proposing a value. */
@@ -81,7 +81,7 @@ interface MonotonicityCheck {
   describe: (recordValue: unknown, liveValue: unknown) => string;
 }
 
-interface EnumVocabCheck {
+export interface EnumVocabCheck {
   recordField: string;
   liveColumn: string;
   /** The live column's ACTUAL constraint vocabulary — verify via Supabase MCP / a schema
@@ -93,7 +93,7 @@ interface EnumVocabCheck {
   asOf: string;
 }
 
-interface LaneContract {
+export interface LaneContract {
   id: string;
   description: string;
   idField: string;
@@ -143,7 +143,7 @@ const LIVE_OPPORTUNITY_CYCLE_STATUS_VOCAB = [
 const CYCLE_STATUS_DETERMINED = new Set(["open", "upcoming", "closed", "historical", "discontinued"]);
 const CYCLE_STATUS_UNINFORMATIVE = new Set(["unverified", "date_not_announced"]);
 
-const DLOPP_CONTRACT: LaneContract = {
+export const DLOPP_CONTRACT: LaneContract = {
   id: "dlopp",
   description: "RES-R2 — opportunity deadlines & cycle status (docs/research/opportunities-deadlines/README.md)",
   idField: "research_record_id",
@@ -355,7 +355,7 @@ const DLOPP_CONTRACT: LaneContract = {
 // ECW — RES-R3 eligible_countries waves (ECW2/ECW3/ECW4/...), package V1-3
 // ---------------------------------------------------------------------------------------
 
-const ECW_CONTRACT: LaneContract = {
+export const ECW_CONTRACT: LaneContract = {
   id: "ecw",
   description: "RES-R3 — opportunities.eligible_countries research waves (docs/research/opportunities-eligible-countries/). Prefix 'ECW' covers ECW2/ECW3/ECW4/... together — the collision check narrows by prefix, then compares exact id strings, so this is safe across waves.",
   idField: "record_id",
@@ -453,6 +453,32 @@ const ECW_CONTRACT: LaneContract = {
 
 const AU_R1_FIELD_PROVENANCE_VOCAB = ["explicit_source_field", "explicit_title_token", "structured_code_mapping", "regulatory_inference"] as const;
 
+const GRADUATE_TITLE_TOKEN = /\b(Master of|Doctor of)\b/i;
+const INTEGRATED_MASTERS_LEVEL = "Bachelor / first-cycle (integrated master's)";
+
+/** Pure: does the SAME degree_level label mean the same real-world qualification shape
+ * across universities? The concrete, checkable version — a program whose title itself
+ * names a graduate award ("Master of...", "Doctor of...") should land in the same
+ * taxonomic bucket regardless of which university's derivation method produced it. This
+ * is the exact mechanism that found the real V1-4 gap (10 Sydney combined-award records
+ * under-classified because Sydney's title-token method only checks for "Honours"/
+ * "Diploma", with no path to "Master"/"Doctor") — split out from the network-dependent
+ * university-resolution work in customLiveChecks so the calibrated case can be locked in
+ * with a fast unit test, independent of any live Supabase state. */
+export function findTaxonomyConsistencyGaps(records: Json[]): string[] {
+  const findings: string[] = [];
+  for (const r of records) {
+    const title = String(r["program_name"] ?? "");
+    const level = r["degree_level"];
+    if (GRADUATE_TITLE_TOKEN.test(title) && level !== INTEGRATED_MASTERS_LEVEL) {
+      findings.push(
+        `${r["research_program_id"]} (${r["university_name"]}): title "${title}" names a graduate award (Master/Doctor) but degree_level="${String(level)}", not "${INTEGRATED_MASTERS_LEVEL}" — the same real-world combined-degree shape gets a more specific label at other universities in this corpus using an AQF-code-based method; this one used title-token matching that only checks for "Honours"/"Diploma", missing "Master"/"Doctor"`
+      );
+    }
+  }
+  return findings;
+}
+
 /** Duplicated from scripts/audit-dedup-convention-drift.ts's loadUniversityCandidates
  * (same ~25 lines, not worth a shared module for one reused helper this small) — keep the
  * two in sync if the university-pool-building recipe changes. */
@@ -502,7 +528,7 @@ async function loadUniversityPool(target: PostgrestTarget): Promise<import("../l
   );
 }
 
-const AU_R1_CONTRACT: LaneContract = {
+export const AU_R1_CONTRACT: LaneContract = {
   id: "au-r1",
   description: "RES-R1 — Australian undergraduate programme catalogue (docs/research/university-programs-au/README.md). Records propose NEW programme rows — 0 live university_programs exist for these universities yet — so there is nothing to reconcile against by foreign key; customLiveChecks does university-identity resolution + corpus-internal consistency instead.",
   idField: "research_program_id",
@@ -598,23 +624,9 @@ const AU_R1_CONTRACT: LaneContract = {
       if (ids.length > 1) defects.push(`official_program_url "${url}" appears on ${ids.length} records: ${ids.join(", ")} — duplicate URL, contradicts R1's own zero-duplicate claim`);
     }
 
-    // --- 3. Taxonomy consistency: does the SAME degree_level label mean the same
-    //        real-world qualification shape across universities? The concrete, checkable
-    //        version: a program whose title itself names a graduate award ("Master of...",
-    //        "Doctor of...") should land in the same taxonomic bucket regardless of which
-    //        university's derivation method produced it. Not a source-truth check (the
-    //        titles/facts are trusted) — a classification-consistency check. ---
-    const GRADUATE_TITLE_TOKEN = /\b(Master of|Doctor of)\b/i;
-    const INTEGRATED_MASTERS_LEVEL = "Bachelor / first-cycle (integrated master's)";
-    for (const r of records) {
-      const title = String(r["program_name"] ?? "");
-      const level = r["degree_level"];
-      if (GRADUATE_TITLE_TOKEN.test(title) && level !== INTEGRATED_MASTERS_LEVEL) {
-        findings.push(
-          `${r["research_program_id"]} (${r["university_name"]}): title "${title}" names a graduate award (Master/Doctor) but degree_level="${String(level)}", not "${INTEGRATED_MASTERS_LEVEL}" — the same real-world combined-degree shape gets a more specific label at other universities in this corpus using an AQF-code-based method; this one used title-token matching that only checks for "Honours"/"Diploma", missing "Master"/"Doctor"`
-        );
-      }
-    }
+    // --- 3. Taxonomy consistency (see findTaxonomyConsistencyGaps's own doc comment —
+    //        extracted so this specific check can be unit tested without a live fetch). ---
+    findings.push(...findTaxonomyConsistencyGaps(records));
 
     // --- 4. Null discipline: scan for postgraduate-credential terms outside the
     //        already-accounted-for integrated-master's bucket, per university — Monash's
@@ -634,7 +646,7 @@ const AU_R1_CONTRACT: LaneContract = {
   },
 };
 
-const LANE_CONTRACTS: Record<string, LaneContract> = {
+export const LANE_CONTRACTS: Record<string, LaneContract> = {
   dlopp: DLOPP_CONTRACT,
   ecw: ECW_CONTRACT,
   "au-r1": AU_R1_CONTRACT,
@@ -644,7 +656,7 @@ const LANE_CONTRACTS: Record<string, LaneContract> = {
 // Engine
 // ---------------------------------------------------------------------------------------
 
-function loadJsonl(path: string): { records: Json[]; parseErrors: string[] } {
+export function loadJsonl(path: string): { records: Json[]; parseErrors: string[] } {
   const records: Json[] = [];
   const parseErrors: string[] = [];
   const lines = readFileSync(path, "utf8").split("\n");
@@ -660,7 +672,7 @@ function loadJsonl(path: string): { records: Json[]; parseErrors: string[] } {
   return { records, parseErrors };
 }
 
-function checkContract(records: Json[], contract: LaneContract): string[] {
+export function checkContract(records: Json[], contract: LaneContract): string[] {
   const defects: string[] = [];
   const keysets = new Set<string>();
   for (const r of records) {
@@ -676,7 +688,21 @@ function checkContract(records: Json[], contract: LaneContract): string[] {
   return defects;
 }
 
-function checkIdDiscipline(records: Json[], contract: LaneContract, sourceFiles: string[]): string[] {
+/** The exact known id-field names a corpus record might use across lanes — deliberately
+ * a closed list, not "any field ending in _id", so an unrelated identifier never gets
+ * treated as this collision check's business. */
+export const ID_LIKE_FIELDS = ["research_record_id", "record_id", "research_program_id"] as const;
+
+/** Pure: within-batch ID discipline only — unique idField, and unique foreignKeyField
+ * with supersession-awareness. A record carrying `supersedes_record_id` is an
+ * intentional, explicit correction of an earlier record for the same live row — not a
+ * duplicate researched-twice case (the same RULE-CORPUS-ID-001 principle applied to a
+ * foreign key instead of an ID: a real, pointer-declared revision, not an accidental
+ * collision). Records that supersede something are excluded from the foreign-key
+ * duplicate count on BOTH sides of the pairing. Split out from the git-based corpus-wide
+ * scan below (checkIdDiscipline) so this half — no I/O, no git — can be unit tested
+ * directly. */
+export function checkWithinBatchIdDiscipline(records: Json[], contract: LaneContract): string[] {
   const defects: string[] = [];
 
   const ids = records.map((r) => String(r[contract.idField]));
@@ -686,11 +712,6 @@ function checkIdDiscipline(records: Json[], contract: LaneContract, sourceFiles:
 
   if (contract.foreignKeyField) {
     const foreignKeyField = contract.foreignKeyField;
-    // A record carrying `supersedes_record_id` is an intentional, explicit correction of
-    // an earlier record for the same live row — not a duplicate researched-twice case
-    // (the same RULE-CORPUS-ID-001 principle applied to a foreign key instead of an ID:
-    // a real, pointer-declared revision, not an accidental collision). Records that
-    // supersede something are excluded from this count on BOTH sides of the pairing.
     const supersededIds = new Set(records.map((r) => r["supersedes_record_id"]).filter((v): v is string => typeof v === "string"));
     const nonSupersessionRecords = records.filter((r) => !r["supersedes_record_id"] && !supersededIds.has(String(r[contract.idField])));
     const fkIds = nonSupersessionRecords.map((r) => String(r[foreignKeyField]));
@@ -698,6 +719,52 @@ function checkIdDiscipline(records: Json[], contract: LaneContract, sourceFiles:
     for (const id of fkIds) fkCounts.set(id, (fkCounts.get(id) ?? 0) + 1);
     for (const [id, count] of fkCounts) if (count > 1) defects.push(`Foreign key "${foreignKeyField}"="${id}" appears ${count} times within the batch — same live row researched twice`);
   }
+
+  return defects;
+}
+
+/** Pure: given one candidate file's raw text and this batch's own unique IDs, which
+ * (field, value) pairs are a REAL collision — the id string as another record's own
+ * id-field VALUE — as opposed to merely appearing somewhere in the file's text. Parses
+ * each line as JSON and checks only known id-field values; never a raw substring match
+ * across the whole file. A raw substring match produces real false positives: caught live
+ * on ECW4-021, cited by its own record_id inside a *different* record's `notes` field
+ * ("...the CTY Residential Program, ECW4-021, succeeding earlier this wave") — a
+ * legitimate cross-reference, not a duplicate. Substring search can't distinguish "this
+ * IS the id" from "this MENTIONS the id in prose"; field-value equality can. Split out
+ * from the git plumbing around it (checkIdDiscipline) so this matching logic — the actual
+ * bug that shipped — can be unit tested without a real git repository. */
+export function findIdCollisionsInFileContent(content: string, uniqueIds: readonly string[]): { field: string; value: string }[] {
+  const matches: { field: string; value: string }[] = [];
+  for (const line of content.split("\n")) {
+    if (!line.trim()) continue;
+    let obj: Json;
+    try {
+      obj = JSON.parse(line) as Json;
+    } catch {
+      continue; // not JSONL, or a non-record line in this file — skip rather than false-positive on raw text
+    }
+    for (const field of ID_LIKE_FIELDS) {
+      const value = obj[field];
+      if (typeof value === "string" && uniqueIds.includes(value)) {
+        matches.push({ field, value });
+      }
+    }
+  }
+  return matches;
+}
+
+/** Pure: `git branch -r --format=%(refname:short)` lists the origin/HEAD symref as a bare
+ * `origin` entry alongside real `origin/<branch>` entries. An unfiltered listing fed that
+ * bogus entry into the collision-check's branch loop. Split out so this one-line filter —
+ * trivial, but a real bug the first version shipped without — has its own regression
+ * test rather than being invisible inside checkIdDiscipline's try block. */
+export function filterRealBranches(branchLines: string[]): string[] {
+  return branchLines.map((b) => b.trim()).filter((b) => b.includes("/"));
+}
+
+function checkIdDiscipline(records: Json[], contract: LaneContract, sourceFiles: string[]): string[] {
+  const defects: string[] = [...checkWithinBatchIdDiscipline(records, contract)];
 
   // Corpus-wide collision check: do any of this batch's own IDs already exist as a
   // DIFFERENT file's ID anywhere else in the corpus? (RULE-CORPUS-ID-001 scoping —
@@ -713,14 +780,19 @@ function checkIdDiscipline(records: Json[], contract: LaneContract, sourceFiles:
   // path-suffix check misfire as 74 false "collisions" against its own content).
   // Dedupe on git BLOB HASH instead — content-identity is unambiguous regardless of how
   // many refs currently point at the same bytes.
+  //
+  // This whole block is deliberately NOT unit tested (see __tests__/scripts/
+  // validate-research-records.test.ts's own header) — it is real git-process
+  // orchestration (execFileSync × N branches), not logic. What IS unit tested, because it
+  // is where the real bugs lived: filterRealBranches (the origin/HEAD filter) and
+  // findIdCollisionsInFileContent (the JSON-field-value matching) above.
   try {
     const sourceBlobHashes = new Set(sourceFiles.map((f) => execFileSync("git", ["hash-object", f], { encoding: "utf8" }).trim()));
-    const branches = execFileSync("git", ["branch", "-r", "--format=%(refname:short)"], { encoding: "utf8" })
-      .split("\n")
-      .map((b) => b.trim())
-      .filter((b) => b.includes("/")); // excludes the bare `origin` entry (origin/HEAD symref), keeps origin/<branch>
+    const branches = filterRealBranches(
+      execFileSync("git", ["branch", "-r", "--format=%(refname:short)"], { encoding: "utf8" }).split("\n")
+    );
 
-    const uniqueIds = [...new Set(ids)];
+    const uniqueIds = [...new Set(records.map((r) => String(r[contract.idField])))];
     const checkedBlobs = new Set<string>(); // avoid re-scanning identical content found via multiple branches
     for (const branch of branches) {
       let filesWithPrefix: string[] = [];
@@ -749,28 +821,8 @@ function checkIdDiscipline(records: Json[], contract: LaneContract, sourceFiles:
         } catch {
           continue;
         }
-        // Parse each line and check the ID against KNOWN id-field VALUES only — never a
-        // raw substring match across the whole file. A raw substring match produces real
-        // false positives: caught live on ECW4-021, cited by its own record_id inside a
-        // *different* record's `notes` field ("...the CTY Residential Program, ECW4-021,
-        // succeeding earlier this wave") — a legitimate cross-reference, not a
-        // duplicate. Substring search can't distinguish "this IS the id" from "this
-        // MENTIONS the id in prose"; field-value equality can.
-        const ID_LIKE_FIELDS = ["research_record_id", "record_id", "research_program_id"];
-        for (const line of content.split("\n")) {
-          if (!line.trim()) continue;
-          let obj: Json;
-          try {
-            obj = JSON.parse(line) as Json;
-          } catch {
-            continue; // not JSONL, or a non-record line in this file — skip rather than false-positive on raw text
-          }
-          for (const field of ID_LIKE_FIELDS) {
-            const value = obj[field];
-            if (typeof value === "string" && uniqueIds.includes(value)) {
-              defects.push(`ID "${value}" also appears as ${branch}:${path}'s own "${field}" (blob ${blobHash.slice(0, 12)}) — real corpus collision, not just a shared prefix or a prose mention`);
-            }
-          }
+        for (const { field, value } of findIdCollisionsInFileContent(content, uniqueIds)) {
+          defects.push(`ID "${value}" also appears as ${branch}:${path}'s own "${field}" (blob ${blobHash.slice(0, 12)}) — real corpus collision, not just a shared prefix or a prose mention`);
         }
       }
     }
@@ -786,7 +838,7 @@ interface LiveRow {
   [column: string]: unknown;
 }
 
-async function fetchLiveRows(table: string, ids: string[]): Promise<Map<string, LiveRow>> {
+export async function fetchLiveRows(table: string, ids: string[]): Promise<Map<string, LiveRow>> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SECRET_KEY;
   if (!url || !key) {
@@ -820,7 +872,7 @@ async function fetchLiveRows(table: string, ids: string[]): Promise<Map<string, 
 /** The standard shape: verify each record against an EXISTING live row via a foreign
  * key. Only meaningful when the contract declares both liveTable and foreignKeyField —
  * see customLiveChecks for the alternative shape (records proposing new rows). */
-async function checkLiveIdentityAndVocab(records: Json[], contract: LaneContract): Promise<{ defects: string[]; monotonicityFindings: string[] }> {
+export async function checkLiveIdentityAndVocab(records: Json[], contract: LaneContract): Promise<{ defects: string[]; monotonicityFindings: string[] }> {
   const defects: string[] = [];
   const monotonicityFindings: string[] = [];
   if (!contract.liveTable || !contract.foreignKeyField) return { defects, monotonicityFindings };
