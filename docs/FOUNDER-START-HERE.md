@@ -27,6 +27,33 @@ where, and how to tell it worked.
 
 ---
 
+## Where the MVP actually stands (measured tonight, for the first time)
+
+`AGENTS.md` Phase 53 lists sixteen things a student must be able to do before V1 is real. That
+list has been treated as satisfied because the features were built and tested individually —
+**nobody had ever walked it end to end, in order, as one student.** Tonight someone did, against
+the live database, checking real writes rather than trusting the screen.
+
+**14 of 16 work end to end. The two that don't are the same root cause: `ANTHROPIC_API_KEY`.**
+
+Weekly-plan generation has no non-AI fallback, so without the key no `weekly_actions` row is ever
+created — which takes out both *"receive 3 prioritized actions"* and *"complete actions"*. They
+are one gap seen from both ends, not two. **Adding that key is what closes the MVP checklist.**
+
+Two things worth knowing about how this was measured. The auditor **declined to insert a
+`weekly_actions` row by hand** to make the test pass, because that would verify a state no real
+student can reach. And it corrected its own assumption mid-audit: profile analysis was thought to
+be AI-gated and isn't — `lib/scoring/` contains no AI at all and is fully deterministic.
+
+**The one feature I'd have bet against came out best.** The admission outlook matches your own
+specification almost word for word — honest range, explicit "not a guarantee," the exact
+Strengths/Gaps/Unknowns structure — verified live rather than read off the source. That's the
+feature where overclaiming would have done real harm to a 16-year-old.
+
+Full detail: `docs/handoffs/feat2-mvp-checklist-audit-2026-08-22.md`.
+
+---
+
 ## What needs you tonight, in order of severity
 
 > **Correction to the earlier version of this page, 2026-08-22 evening.** It opened by telling you
@@ -151,9 +178,6 @@ unresolved and flagged rather than guessed at.
 
 ## Optional, any time
 
-- **`ANTHROPIC_API_KEY`** — the AI Advisor, weekly plan generation, and CV import have still
-  never run against a live model. Everything else works without it, and the dashboard correctly
-  falls back to deterministic non-AI recommendations rather than pretending.
 - **`TAVILY_API_KEY`** — plan usage limit exceeded; blocks the discovery jobs only.
 - **`COLLEGE_SCORECARD_API_KEY`** — free and instant; US university sync only.
 
