@@ -159,6 +159,52 @@ function nullTolerantEqual(a: string | null | undefined, b: string | null | unde
   return a === b;
 }
 
+/**
+ * Live-internal scan (ORYN-BASORG's scope addition, 2026-08-22): did a PAST ingestion
+ * already insert the same programme twice under two different composite keys, the same
+ * convention-drift shape as Glasgow but already landed live instead of still pending?
+ * Groups live rows by (university, official_program_url) — legitimately many rows can
+ * share one URL (a catalogue-listing page; Radboud has 49) — and within each group,
+ * checks every pair for the same cosmetic-only-difference test §1 uses for research-vs-
+ * live: name matches after stripping one trailing degree-code group (checked both
+ * directions — either row could be the one carrying the code), degree_level exact,
+ * degree_type/language_of_instruction cosmetic-tolerant. A group of size 1 can never
+ * produce a pair and is skipped without inspection (cheap: most live groups are size 1).
+ */
+function findLiveInternalDuplicates(liveByUniversityAndUrl: Map<string, LiveProgramRow[]>, universityNames: Map<string, string>, strictLanguage: boolean): LiveInternalDuplicate[] {
+  const results: LiveInternalDuplicate[] = [];
+  for (const [urlKey, rows] of liveByUniversityAndUrl) {
+    if (rows.length < 2) continue;
+    const universityId = urlKey.split("|")[0]!;
+    for (let i = 0; i < rows.length; i++) {
+      for (let j = i + 1; j < rows.length; j++) {
+        const a = rows[i]!;
+        const b = rows[j]!;
+        if ((a.degree_level ?? "") !== (b.degree_level ?? "")) continue; // substantive, never cosmetic
+        const degreeTypeCosmetic = nullTolerantEqual(a.degree_type, b.degree_type);
+        const languageCosmetic = strictLanguage ? (a.language_of_instruction ?? "") === (b.language_of_instruction ?? "") : nullTolerantEqual(a.language_of_instruction, b.language_of_instruction);
+        if (!degreeTypeCosmetic || !languageCosmetic) continue;
+        const nameA = normalizeProgramName(stripOutermostTrailingCodeGroup(a.name));
+        const nameB = normalizeProgramName(stripOutermostTrailingCodeGroup(b.name));
+        const nameAraw = normalizeProgramName(a.name);
+        const nameBraw = normalizeProgramName(b.name);
+        // exact match either after stripping one side, or identical outright (a true
+        // exact-duplicate live pair, a distinct and worse problem than convention drift)
+        if (nameA !== nameBraw && nameB !== nameAraw && nameAraw !== nameBraw) continue;
+        results.push({
+          university_name: universityNames.get(universityId) ?? universityId,
+          university_id: universityId,
+          official_program_url: urlKey.split("|").slice(1).join("|"),
+          live_rows_sharing_url: rows.length,
+          row_a: { id: a.id, name: a.name, degree_type: a.degree_type, language_of_instruction: a.language_of_instruction },
+          row_b: { id: b.id, name: b.name, degree_type: b.degree_type, language_of_instruction: b.language_of_instruction },
+        });
+      }
+    }
+  }
+  return results;
+}
+
 interface Finding {
   file: string;
   research_program_id: string;
@@ -170,6 +216,21 @@ interface Finding {
   official_program_url: string;
   confidence: "high" | "medium";
   reason: string;
+  /** enrich-shaped: the record carries a non-null value for degree_type or
+   * language_of_instruction where the live row is currently null (RULE-INGEST-003
+   * "populate an empty field" case — an UPDATE target, not a record to discard).
+   * true-duplicate-shaped: the record adds nothing live doesn't already have. */
+  classification: "enrich-shaped" | "true-duplicate-shaped";
+  enrichableFields: string[];
+}
+
+interface LiveInternalDuplicate {
+  university_name: string;
+  university_id: string;
+  official_program_url: string;
+  live_rows_sharing_url: number;
+  row_a: { id: string; name: string; degree_type: string | null; language_of_instruction: string | null };
+  row_b: { id: string; name: string; degree_type: string | null; language_of_instruction: string | null };
 }
 
 async function main(): Promise<void> {
@@ -207,6 +268,14 @@ async function main(): Promise<void> {
     liveByUniversityAndUrl.get(urlKey)!.push(p);
     strictLiveKeys.add(programDedupKey(p.university_id, normalizeProgramName(p.name), p.degree_level, p.language_of_instruction, p.official_program_url, p.degree_type));
   }
+
+  console.log("Scanning live table for internal convention-drift duplicates (already-ingested batches)...");
+  const universityNames = new Map(universities.map((u) => [u.id, u.name]));
+  const liveInternalDuplicates = findLiveInternalDuplicates(liveByUniversityAndUrl, universityNames, strictLanguage);
+  console.log(`  ${liveInternalDuplicates.length} live-internal duplicate pairs found.`);
+  const caUniversityNames = new Set(["McGill University", "Université de Montréal", "Queen's University", "University of Alberta", "Western University"]);
+  const caInternalDuplicates = liveInternalDuplicates.filter((d) => caUniversityNames.has(d.university_name));
+  console.log(`  ${caInternalDuplicates.length} of those are in the CA lane (Montréal/Queen's/Alberta/Western — the 1,657 RES-I2 already applied).`);
 
   console.log("Loading program_research_queue (attempted-record set)...");
   const { rows: queueRows } = await fetchAllRowsVerified<{ research_program_id: string | null }>(
@@ -305,6 +374,18 @@ async function main(): Promise<void> {
       else stats.medium++;
 
       const sharedUrlNote = liveCandidates.length > 1 ? ` (this URL is shared by ${liveCandidates.length} live rows — catalogue-listing-page pattern; flagged only because the name matched exactly after stripping)` : "";
+
+      // RULE-INGEST-003 classification (ORYN-BASORG, 2026-08-22): live degree_type is
+      // NULL on all 101 Glasgow rows; the record populates it on most of them. Populating
+      // an empty field is the *permitted* case under RULE-INGEST-003 — so a record whose
+      // only "new" information is filling a live-null field is an UPDATE target
+      // (enrich-shaped), not a pure duplicate to discard. Only flag actual enrichment: the
+      // record must be non-null where live is null, not merely non-empty in general.
+      const enrichableFields: string[] = [];
+      if (record.degree_type && !best.row.degree_type) enrichableFields.push("degree_type");
+      if (record.language_of_instruction && !best.row.language_of_instruction) enrichableFields.push("language_of_instruction");
+      const classification: "enrich-shaped" | "true-duplicate-shaped" = enrichableFields.length > 0 ? "enrich-shaped" : "true-duplicate-shaped";
+
       findings.push({
         file: fileName,
         research_program_id: record.research_program_id,
@@ -319,6 +400,8 @@ async function main(): Promise<void> {
           (best.confidence === "high"
             ? "same URL, name matches after stripping one trailing degree-code group, degree_level exact, degree_type/language cosmetic-only"
             : "same URL, degree_level exact, degree_type/language cosmetic-only, but name does not match even after stripping — needs closer look") + sharedUrlNote,
+        classification,
+        enrichableFields,
       });
     }
   }
@@ -343,11 +426,27 @@ async function main(): Promise<void> {
     console.log(`  ${uni}: ${fs.length} review candidates (${high} high, ${medium} medium)`);
   }
 
+  const enrichShaped = findings.filter((f) => f.classification === "enrich-shaped").length;
+  const trueDupShaped = findings.filter((f) => f.classification === "true-duplicate-shaped").length;
   console.log(`\n=== TOTAL: ${findings.length} review candidates across ${byUniversity.size} universities (${findings.filter((f) => f.confidence === "high").length} high, ${findings.filter((f) => f.confidence === "medium").length} medium) ===`);
+  console.log(`RULE-INGEST-003 classification: ${enrichShaped} enrich-shaped (record fills a live-null field — an UPDATE target), ${trueDupShaped} true-duplicate-shaped (record adds nothing live doesn't have — a skip target).`);
   console.log("This is a REVIEW QUEUE, not a resolution. No merges, no writes, no dedup-key changes performed.");
 
+  console.log(`\n=== Live-internal duplicates (already-ingested batches, same failure mode already landed) ===`);
+  console.log(`${liveInternalDuplicates.length} pairs corpus-wide, ${caInternalDuplicates.length} in the CA lane (Montréal/Queen's/Alberta/Western).`);
+  for (const d of liveInternalDuplicates) {
+    console.log(`  ${d.university_name}: "${d.row_a.name}" (${d.row_a.id}) <-> "${d.row_b.name}" (${d.row_b.id}) — url shared by ${d.live_rows_sharing_url} rows`);
+  }
+
   const reportPath = "/tmp/audit-dedup-convention-drift-report.json";
-  writeFileSync(reportPath, JSON.stringify({ generatedAt: new Date().toISOString(), strictLanguage, perFile: Object.fromEntries(perFile), findings }, null, 2));
+  writeFileSync(
+    reportPath,
+    JSON.stringify(
+      { generatedAt: new Date().toISOString(), strictLanguage, perFile: Object.fromEntries(perFile), findings, liveInternalDuplicates, caInternalDuplicates },
+      null,
+      2
+    )
+  );
   console.log(`\nFull findings written to ${reportPath}`);
 }
 

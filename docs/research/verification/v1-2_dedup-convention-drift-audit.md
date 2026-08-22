@@ -9,15 +9,27 @@ Every finding below is a **review candidate**, not a resolution (org rule 10).
 
 ## Headline result
 
-**The blind spot is real, but — checked against the entire not-yet-ingested research
-corpus (19,657 records across 131 files) — it currently manifests in exactly one place:
-University of Glasgow's `acquire-programs-batch2_2026-08-20.jsonl`, 69 of its 101 records
-(68 high-confidence, 1 medium).** No other university's uningested research shows this
-failure mode today. That is a complete, corpus-wide answer to "where else does this exist,"
-not a partial scan — see §3 for the reconciliation that backs the "complete" claim.
+**Uningested-vs-live: the blind spot is real, but — checked against the entire
+not-yet-ingested research corpus (19,657 records across 131 files) — it currently
+manifests in exactly one place: University of Glasgow's
+`acquire-programs-batch2_2026-08-20.jsonl`, 69 of its 101 records (68 high-confidence, 1
+medium).** No other university's uningested research shows this failure mode today. That
+is a complete, corpus-wide answer to "where else does this exist," not a partial scan —
+see §3 for the reconciliation that backs the "complete" claim. Of those 69, **62 are
+enrichment candidates, not pure duplicates** — the research file populates a `degree_type`
+the live rows currently lack (§5); only 7 add nothing live doesn't already have.
+
+**Already-ingested-vs-live-internally: 114 raw candidates surfaced corpus-wide, 0 in the
+CA lane — and 0 of the 114 survive manual inspection.** Already-live rows differing only
+by a trailing qualifier are overwhelmingly genuine distinct programmes (citizenship-quota
+codes, teaching-track degrees, campuses, specializations, delivery modes — §6), not
+accidental duplicates; the method that works research-vs-live does not safely generalize
+live-vs-live. Reporting that negative result, and the false-positive pattern behind it,
+is itself the finding for this half of the package.
 
 This is not a reason to stop checking: the tool is built to run on every future batch
-(§6), and §4 argues the underlying problem is bigger than this one dedup key.
+(§9), and §4 argues the underlying problem is bigger than this one dedup key. §7 states
+explicitly which failure classes this audit covers and which remain open.
 
 ## 1. What the tool checks
 
@@ -101,6 +113,45 @@ only the English track exists live. Different language, both populated, correctl
 as substantive rather than cosmetic. The composite key's `language_of_instruction`
 component is doing exactly the job its own header describes it for.
 
+### 2c. URL-exact-match is a prerequisite gate, not a corroborating signal — and why that distinction matters
+
+ORYN-BASORG's original method spec for this package was name-first: *"strip trailing
+bracketed/parenthesized degree codes, compare against live names... `degree_type`
+NULL-vs-populated is the corroborating signal."* That is a method with no URL check in
+it at all. What got built instead — described in §1 — makes an exact
+`official_program_url` match a **hard prerequisite**: no code path in this tool ever
+compares a record's name against a live row at a *different* URL. That distinction
+turned out to matter concretely, not just in principle.
+
+ORYN-CFO independently re-derived the Glasgow case and surfaced the worked counter-
+example the name-first spec is vulnerable to: `"Music [BMus]"`
+(`.../undergraduate/degrees/musicbmus/`) strips to `"Music"`, which live Glasgow
+carries — but live's `"Music"` is the *MA* programme, at a *different* URL
+(`.../musicma/`); `/musicbmus/` doesn't exist live at all. Two real, separately-admitted
+degrees. A name-first method really would merge them.
+
+Checked directly against this tool's own output rather than assumed either way:
+`ACQ-PRG-2026-08-20-b2-2-70` ("Music [BMus]") is **not** among the 69 findings — it
+correctly falls into the "no live row shares this URL" bucket (§3), alongside Glasgow's
+other 32 out-of-scope records, and is never compared by name against anything. This is
+cheap to re-verify independently — two greps and a JSON lookup, no judgment calls:
+
+```bash
+grep '"program_name": "Music \[BMus\]"' data/research/university-programs/acquire-programs-batch2_2026-08-20.jsonl
+python3 -c "import json; print('ACQ-PRG-2026-08-20-b2-2-70' in [f['research_program_id'] for f in json.load(open('/tmp/audit-dedup-convention-drift-report.json'))['findings']])"
+```
+
+Recording this as a **validated negative case**, not a bug this tool needed patching
+for: worked evidence the URL-first design already satisfies "a name-match without a
+URL-match is a review candidate, never a merge" (now binding org-wide per BASORG,
+constraining RES-I1's supersede design too). The general lesson generalizes past this
+one tool either way: **suffix-stripping discards exactly the information that
+distinguishes two real awards** — the same-shaped mistake as Glasgow itself (a key
+*ignoring* a distinguishing field), just one level up (a normalization step *destroying*
+one). Anyone implementing name-based matching without a URL (or equivalent hard
+identity) prerequisite gate first is exposed to this; this tool isn't, and §6/§7 restate
+that explicitly as a covered/not-covered boundary.
+
 ## 3. Full corpus reconciliation (why "one university" is a complete answer, not a gap)
 
 | | records |
@@ -147,45 +198,170 @@ value was obtained, in a closed vocabulary, at write time), not a smarter compar
 downstream. This audit's tool is useful and should keep running every batch, but it is a
 detector, not a cure — same relationship a linter has to a type system.
 
-## 5. Update-vs-duplicate: relevant to RES-I1's supersede-gap package
+## 5. Enrich-vs-duplicate classification — I revise my own earlier framing here
 
-BASORG asked me to say explicitly if any finding looks like an *update* to an existing
-row (new/better information under a changed convention) rather than a pure duplicate,
-since that's I1's separate supersede-gap problem (insert-only pipeline, can't retire or
-revise an existing row) to design for.
+**Correction to what I first wrote in this section**: my first pass called all 69 pure
+duplicates ("the live rows already carry everything they carry — applying the batch
+would just duplicate rows, not improve them"). That's wrong for most of them, and
+BASORG caught it: live `degree_type` is **NULL on all 101 Glasgow rows**; the research
+file *populates* it on most of what it proposes. Under RULE-INGEST-003, populating an
+empty field is the **permitted** case — filling a live-null `degree_type` from a
+record that has one is an UPDATE, not a discard, and skipping these outright would throw
+away real information already in hand.
 
-**None of these 69 are updates.** Every high-confidence pair is the same fact, twice,
-with a formatting difference on the researching side — the live rows are not stale or
-missing information the research file has; applying the batch as-is would just duplicate
-69 rows, not improve them. The one medium-confidence case (Dumfries campus) is the
-closest thing to a content difference — the record adds a campus qualifier the live row
-lacks — but it's a genuinely ambiguous case (same programme with an added detail, or a
-distinct campus-specific offering that happens to share a URL) that needs a human
-judgment call, not an automatic route to either "duplicate" or "update."
+Reclassified all 69 findings on that basis — does the record carry a non-null value for
+`degree_type` or `language_of_instruction` where the matched live row is currently null:
 
-## 6. Review queue
+| classification | count | meaning |
+|---|---|---|
+| **enrich-shaped** | 62 | record's `degree_type` is populated, live's is null — an UPDATE target (populate-empty-field, RULE-INGEST-003-permitted) |
+| **true-duplicate-shaped** | 7 | record adds nothing live doesn't already have — a genuine skip target |
 
-Full detail (`research_program_id`, both names, university, URL, confidence, reason) in
-`/tmp/audit-dedup-convention-drift-report.json` from this run — not committed (a
-regenerable artifact, not a source document; re-run the tool for a fresh copy against
-whatever's live at review time). Summary:
+All 62 enrichment cases are on `degree_type` specifically (Glasgow's `language_of_
+instruction` is uniformly `"English"` live across all 101 rows, so it was never the
+null side in this batch — `language_of_instruction` enrichment is a real category the
+classification checks for corpus-wide, just empty here).
 
-| university | high | medium | total |
-|---|---|---|---|
-| University of Glasgow | 68 | 1 | 69 |
+**This reclassifies the 62 from an insert-avoidance problem into an update-shaped one —
+structurally the same missing pipeline path as RES-I1's 1,437 `url_repair_*`/
+`tr_bilingual_names_*` records** (keyed by an existing `program_id`, can't go through
+`decideIngestion` at all per RES-I1's own supersede-gap characterization). Two problems
+that looked separate are the same missing capability: the pipeline can insert, not
+update or supersede an existing row. If RES-I1's update/supersede path gets built, these
+62 `degree_type` values are real, evidenced, ready-to-apply enrichment content for it —
+not dead weight to discard.
 
-68 high-confidence pairs: exact name match (after stripping one trailing degree-code
-group), exact `degree_level`, `degree_type`/`language_of_instruction` differing only by
-one side being null. 1 medium-confidence pair (Dumfries campus, §5) needs a human look.
+The 1 medium-confidence pair (Dumfries campus) and Glasgow's other 32 (URL-unmatched)
+records stay in §6's review queue, unclassified — the Dumfries case adds a campus
+qualifier the live row lacks, which could itself be enrichment (append the qualifier) or
+a genuinely separate offering; a human call, not this audit's to make either way.
 
-**Recommendation, not a decision:** the 68 high-confidence pairs are strong candidates to
-simply **not ingest** from `acquire-programs-batch2_2026-08-20.jsonl` (the live rows
-already carry everything they carry); the 1 medium pair and Glasgow's other 32
-(URL-unmatched) records need research/founder-level review before any ingestion
-decision. This audit does not and should not make that call — flagging it for whoever
-does (BASORG / RES-I1 / founder, per the org's own escalation path).
+## 6. Live-internal scan: already-ingested batches (new scope, added mid-package)
 
-## 7. The reusable tool
+ORYN-BASORG asked whether the SAME convention-drift shape already exists **inside** the
+live table — did a past ingestion insert the same programme twice, under two different
+composite keys, because it already went through this failure mode before Glasgow's
+batch was ever dry-run? Named the CA lane specifically (Montréal/Queen's/Alberta/
+Western — RES-I2's already-applied 1,657) as the priority.
+
+**Method**: group all 16,119 live rows by `(university_id, official_program_url)`;
+within any group of 2+, check every pair with the same cosmetic-tolerant test §1 uses
+(name after stripping one trailing bracket/paren group either direction, `degree_level`
+exact, `degree_type`/`language_of_instruction` null-tolerant).
+
+**Raw result: 114 candidate pairs corpus-wide, 0 in the CA lane.**
+
+**Manually inspected all 114 — not a sample — before reporting a number, same discipline
+as §2. Zero survive as genuine duplicates.** The method that correctly separated
+convention-drift from real distinctions in research-vs-live data does not safely
+generalize to live-vs-live: already-curated live rows differing only by a trailing
+qualifier are overwhelmingly **real, separately-meaningful variants**, not accidental
+duplicates from formatting drift. What the trailing qualifiers actually encode, by
+volume:
+
+| pattern | example | what it really means |
+|---|---|---|
+| Turkish citizenship/quota codes (61 pairs: METU, Ankara, Istanbul, ITU) | `"İnşaat Mühendisliği"` vs `"İnşaat Mühendisliği (KKTC Uyruklu)"` | different admission quota (TRNC-citizen track), different cutoff — genuinely separate placements, not the same programme |
+| German teacher-training track (17 pairs, Freie Universität Berlin) | `"Physik"` vs `"Physik (Lehramt)"` | `Lehramt` = teaching-qualification degree — a different degree entirely, the exact shape of Glasgow's own `"Education with Teaching Qualification (Primary)"` lesson from §2a |
+| Campus/location (9 pairs) | `"Civil Engineering"` vs `"Civil Engineering (METU Northern Cyprus Campus)"` | different physical campus |
+| Specialization/entry-route (18 pairs: Southampton, Limerick, CMU, Toronto, Durham) | `"B.S. in Mathematical Sciences"` vs `"...(Discrete Mathematics and Logic)"`; `"...(Direct entry)"` | genuinely distinct concentration or admission route |
+| Delivery mode (9 pairs, Istanbul/Ankara) | `"Sosyoloji"` vs `"Sosyoloji (Açıköğretim)"` | on-campus vs distance/open education — different programme |
+
+The 2 remaining "exact name, no qualifier at all" pairs (Harvard `"Computer Science"` and
+`"Government"`, each appearing twice) looked like the strongest candidates — checked
+those individually against the live table directly, past what the tool itself compares.
+Each pair is Harvard College's regular programme against **Harvard Extension School's**
+ALB programme of the same subject name: different `faculty_or_school`
+("Harvard Extension School (Division of Continuing Education)"), different `degree_type`
+(`"ALB"` vs null), different `campus` string — a field this tool's comparison doesn't
+use at all, and neither does `programDedupKey`. Genuinely different schools within
+Harvard, not a duplicate. **0 of 114 survive.**
+
+**Incidental finding, outside this audit's scope but worth routing**: those same 2
+Harvard pairs share the identical `official_program_url`
+(`https://www.harvard.edu/programs/computer-science/`,
+`https://www.harvard.edu/programs/government/`) across two different schools — plausibly
+a real URL-provenance defect (the Extension School likely has its own distinct URL,
+not harvard.edu/programs/…), not a duplicate-programme question. Flagging for whoever
+owns URL correctness (the `url_repair_*` lane's territory), not fixing here.
+
+**On the CA lane specifically**: 0 raw candidates. Given this method's 0/114 survival
+rate everywhere else it was tested, treat that as **weak, not strong, evidence** that
+the CA lane is clean — the honest statement is "this check found nothing there, and
+this check has a demonstrated near-100% false-positive rate on already-live data," not
+"the CA lane is confirmed duplicate-free."
+
+**What this means for the live-internal scan going forward**: it is not currently a
+usable automated signal — every raw candidate needs the kind of manual, multi-field
+inspection (`faculty_or_school`, `campus`, language-specific qualifier vocabulary) this
+pass did by hand. The tool runs this scan automatically on every corpus-wide invocation
+(no separate flag — it's cheap once the live table is already loaded for §1–§3) and
+writes the raw candidate list to `liveInternalDuplicates` in the JSON report for anyone
+who wants to re-run the manual check themselves; it should not be trusted as a
+standalone duplicate detector without a materially different method (e.g. requiring
+agreement on `faculty_or_school`/`campus` too, or a maintained list of "these qualifier
+words are never cosmetic" per language/institution) — an escalation-worthy design
+question, not something to build unilaterally here.
+
+## 7. Scope: what this audit covers, and what it does not
+
+Per the standing rule ORYN-CEO/BASORG established today (state failure classes covered
+and NOT covered explicitly, rather than let a PASS/clean result imply more than what was
+checked):
+
+**Covered:**
+- Uningested research records (not in `program_research_queue`) vs. live rows at the
+  same university, same exact `official_program_url` — §1–§3.
+- Cosmetic-drift axes checked: program name (after stripping exactly one trailing
+  bracket/paren group), `degree_type` (null-tolerant), `language_of_instruction`
+  (null-tolerant, an extension beyond the original spec — §2). `degree_level` held
+  exact throughout, never cosmetic.
+- Enrich-vs-duplicate classification on the `degree_type`/`language_of_instruction` axes
+  — §5.
+- A live-internal scan for the same shape already landed in already-ingested batches —
+  §6 (manually resolved to zero survivors; not a reliable automated check as built).
+
+**NOT covered — open classes, not confirmed-absent:**
+- **Records with no URL match at all** (1,284 corpus-wide, including Glasgow's other 32)
+  — genuinely-new-vs-mis-researched is a research/adjudication question, not checked
+  here.
+- **Cross-file research-vs-research duplication**: two different uningested files
+  proposing the same programme under different research_program_ids. Not checked —
+  only research-vs-*live* was in scope.
+- **Fields beyond the dedup key's own four** (`faculty_or_school`, `campus`,
+  `admissions_url`, tuition, etc.) as either a matching signal or an enrichment target.
+  §6's Harvard case shows `faculty_or_school` can be the actual distinguishing fact a
+  URL+name match misses — not audited systematically anywhere in this corpus.
+- **Convention drift that isn't name/degree_type/language shaped** — e.g. a genuinely
+  different URL for the same real-world programme (a site redirect, a re-slugged page)
+  would not be caught by this audit at all; that is the `url_repair_*` lane's territory,
+  a different failure mode with a different fix.
+- **Whether any of the 1,356 "strict-key new" records are themselves internally
+  duplicated against each other** *within* their own file (a same-batch dedup question,
+  distinct from same-batch-vs-live) — not this audit's question; `decideIngestion`'s own
+  within-batch key tracking already covers that at ingestion time regardless.
+
+## 8. Review queue
+
+Full detail (`research_program_id`, both names, university, URL, confidence, reason,
+`classification`, `enrichableFields`) in `/tmp/audit-dedup-convention-drift-report.json`
+from this run — not committed (a regenerable artifact, not a source document; re-run the
+tool for a fresh copy against whatever's live at review time). Summary:
+
+| university | high | medium | enrich-shaped | true-duplicate-shaped |
+|---|---|---|---|---|
+| University of Glasgow | 68 | 1 | 62 | 7 |
+
+**Recommendation, not a decision** (§5/§6 change this from my first draft): the 62
+enrich-shaped records are candidates for an UPDATE path once one exists (populate
+`degree_type` on the matching live rows, per RULE-INGEST-003) rather than either a
+straight ingest (would duplicate 62 rows) or a straight skip (would discard 62 real,
+sourced facts); the 7 true-duplicate-shaped records are clean skip candidates; the 1
+medium pair and Glasgow's other 32 (URL-unmatched) records need research/founder-level
+review before any decision. This audit does not and should not make the update-vs-skip
+call itself — flagging it for whoever does (BASORG / RES-I1 / founder).
+
+## 9. The reusable tool
 
 `scripts/audit-dedup-convention-drift.ts` — read-only throughout (Supabase reads only;
 `.env.local` / `SUPABASE_SECRET_KEY`). Reuses the real `resolveUniversity`,
