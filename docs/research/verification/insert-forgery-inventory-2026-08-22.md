@@ -95,18 +95,39 @@ cross-checked that the accused matched the message's actual `sender_id`.
   (AGENTS.md Section 12), the failure mode is a minor accused of something in a queue an
   adult acts on, not a wrong statistic. Still not critical: reaching it needs a deliberate
   raw insert, not the UI, and it remains catchable by a reviewer who happens to check.
-- **Fix**: `supabase/migrations/0064_message_reports_verify_reported_user.sql` — a
-  `WITH CHECK` subquery cross-referencing `message_id`'s real `sender_id`, DB-level rather
-  than app-layer, for the same reason this pass's own surface-3 testing established:
-  `messages`' own INSERT policy is the actual security boundary, not `sendMessage`'s
-  friendly-error re-check, and follows that same subquery-in-WITH-CHECK precedent rather
-  than inventing a new mechanism. A deliberate side effect: because the subquery itself
-  runs under the caller's own RLS (not security-definer), a report on a message the
-  caller was never a party to also gets rejected, correctly. `message_id is null` is left
-  unconstrained — no current app path inserts one, so nothing is newly restricted for an
-  unused case. Regression test: `__tests__/security/message-reports-forgery-guard.test.ts`.
+- **Fix, amended once before ever being applied**: the first version of
+  `supabase/migrations/0064_message_reports_verify_reported_user.sql` only closed the
+  `message_id` branch, reasoning `message_id is null` was safe to leave unconstrained
+  because "no current app path inserts one." **That premise was wrong, caught by
+  ORYN-CEO before merge**: `message_reports` has a second reference column,
+  `recommendation_id` (migration 0035, added specifically so this same table could also
+  queue reported recommendations rather than building a parallel moderation system), and
+  `reportRecommendation()` (`app/(app)/u/[id]/recommendation-actions.ts`) inserts with
+  `recommendation_id` set and `message_id` left null on every real call — precisely the
+  branch the first version left with zero attribution check. The forgery was therefore
+  still fully open via the second column, reachable without ever calling
+  `reportMessage()` — the exact same shape as the original finding, one field different.
+  **Amended**: two symmetric OR'd branches, `message_id` cross-checked against the
+  message's real `sender_id`, `recommendation_id` cross-checked against the
+  recommendation's real `author_id` (`not null`, migration 0035). Both DB-level `WITH
+  CHECK` subqueries, matching `messages`' own existing subquery-in-WITH-CHECK precedent.
+  The recommendation branch's safety (does the subquery resolve correctly under the
+  caller's own RLS, or does it need security-definer) was checked independently rather
+  than assumed by analogy: `recommendations`' own SELECT policy is the same party-scoped
+  shape as `messages`' (`author_id = auth.uid() or recipient_id = auth.uid()`), so a
+  caller reporting a recommendation they were never a party to also gets correctly
+  rejected. Requiring at least one correctly-attributed branch also rejects a report with
+  neither column set, closed for free. Regression test extended to cover both branches
+  and the OR structure: `__tests__/security/message-reports-forgery-guard.test.ts`.
   Written, not applied — founder-gated, same standing constraint as every migration in
   this package.
+- **What this amendment is really evidence of**: not that the fix was careless, but that
+  "no legitimate path does X" is a claim that needs the same verification standard as
+  everything else in this package — checked against every actual call site, not asserted
+  from the one call site that prompted the finding. The same discipline this whole
+  package has applied to live database behavior (verify, don't assume from policy text)
+  applies just as much to a migration's own stated premises about the application code
+  it's protecting.
 
 ### `profile_scores`, `opportunity_matches`, `student_requirement_evaluations` — OPEN, same shape
 

@@ -32,15 +32,27 @@ forged row presents as validated input. On a product for 14–18-year-olds (AGEN
 Section 12), the failure mode is a minor accused of something in a queue an adult acts
 on, not a wrong statistic.
 
-**Fix, written not applied**: `supabase/migrations/0064_message_reports_verify_reported_user.sql`
-adds a `WITH CHECK` subquery cross-referencing the referenced message's real `sender_id` —
-DB-level, matching `messages`' own INSERT policy's existing subquery-cross-check
-precedent, for the same reason this pass's own live testing established: a Server Action
-is directly callable with any argument, so the app-layer check was a friendly-error
-nicety, never the actual security boundary. A deliberate side effect: because the
-subquery isn't security-definer, it runs under the caller's own RLS, so a report on a
-message the caller was never a party to (neither sender nor recipient) is now correctly
-rejected too. Founder-gated per standing rule; do not apply without review.
+**Fix, written not applied, amended once before ever being applied — recorded rather than
+quietly corrected**: the first version of `0064` closed only the `message_id` branch, on
+the stated premise that no legitimate path inserts a null-`message_id` row. **That
+premise was wrong**, caught by ORYN-CEO before merge: `message_reports` has a *second*
+reference column, `recommendation_id` (migration 0035, added specifically so this same
+table could also queue reported recommendations), and `reportRecommendation()`
+(`app/(app)/u/[id]/recommendation-actions.ts`) inserts with `recommendation_id` set and
+`message_id` left null — exactly the branch the first version left completely
+unconstrained. The forgery this migration set out to close was still fully open via that
+second branch: a raw insert with `message_id: null, recommendation_id: <any real id>`
+satisfied the old check outright. Amended: `supabase/migrations/0064_message_reports_verify_reported_user.sql`
+now OR's two symmetric branches — `message_id` cross-checked against the message's real
+`sender_id`, `recommendation_id` cross-checked against the recommendation's real
+`author_id` (confirmed `not null`) — both DB-level `WITH CHECK` subqueries, matching
+`messages`' own existing precedent. The recommendation branch's safety was checked
+independently, not assumed by analogy to the message branch: `recommendations`' own
+SELECT policy is the same party-scoped shape (`author_id = auth.uid() or recipient_id =
+auth.uid()`), so a caller reporting a recommendation they were never party to also gets
+correctly rejected. A report with neither column set is now rejected too, closed for
+free by requiring at least one correctly-attributed branch. Founder-gated per standing
+rule; do not apply without review.
 
 **Testing methodology note, not a product defect — recorded so the next lane doesn't
 repeat it**: `messages` and `message_reports` have **no RLS DELETE policy at all**
