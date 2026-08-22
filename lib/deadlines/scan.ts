@@ -7,6 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createNotification } from "@/lib/notifications/create";
 import { canonicalUniversityId, loadSupersessionMap, type SupersessionMap } from "@/lib/universities/canonical";
 import { NON_ACTIONABLE_VERIFICATION_STATES } from "@/lib/deadlines/ingest";
+import { isOpportunityActionable } from "@/lib/opportunities/lifecycle";
 
 /** Days-until-deadline thresholds that trigger a reminder (Phase 23/24). A student gets
  * at most one reminder per deadline per threshold — see the dedup check below. */
@@ -88,14 +89,17 @@ async function scanApplications(supabase: SupabaseClient<Database>, today: Date,
   return { notified, checked: applications.length };
 }
 
-async function scanSavedOpportunityDeadlines(supabase: SupabaseClient<Database>, today: Date): Promise<{ notified: number; checked: number }> {
+/** Exported (only) so __tests__/deadlines/scan.test.ts can pin and verify its
+ * cycle_status filtering directly, without also mocking the application/university
+ * scan sources. No behavior change. */
+export async function scanSavedOpportunityDeadlines(supabase: SupabaseClient<Database>, today: Date): Promise<{ notified: number; checked: number }> {
   const { data: saved } = await supabase.from("saved_opportunities").select("user_id, opportunity_id").eq("status", "saved");
   if (!saved || saved.length === 0) return { notified: 0, checked: 0 };
 
   const opportunityIds = [...new Set(saved.map((s) => s.opportunity_id))];
   const { data: opportunities } = await supabase
     .from("opportunities")
-    .select("id, title, deadline")
+    .select("id, title, deadline, cycle_status")
     .in("id", opportunityIds)
     .not("deadline", "is", null);
   const opportunityById = new Map((opportunities ?? []).map((o) => [o.id, o]));
@@ -105,6 +109,10 @@ async function scanSavedOpportunityDeadlines(supabase: SupabaseClient<Database>,
   for (const save of saved) {
     const opportunity = opportunityById.get(save.opportunity_id);
     if (!opportunity?.deadline) continue;
+    // Same guard as lib/deadlines/upcoming.ts's read-side sibling: a closed/historical/
+    // discontinued cycle must never trigger a "deadline approaching" notification, even
+    // with a future-dated deadline still on file. 'unverified' stays reachable.
+    if (!isOpportunityActionable(opportunity, today)) continue;
     checked += 1;
     const wasNotified = await notifyIfThresholdCrossed(supabase, today, {
       userId: save.user_id,

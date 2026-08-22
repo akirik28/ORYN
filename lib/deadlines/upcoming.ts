@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { canonicalUniversityId, loadSupersessionMap, type SupersessionMap } from "@/lib/universities/canonical";
 import { NON_ACTIONABLE_VERIFICATION_STATES } from "@/lib/deadlines/ingest";
+import { filterActionableOpportunities } from "@/lib/opportunities/lifecycle";
 
 export type DeadlineSource = "application" | "opportunity" | "university";
 
@@ -56,19 +57,26 @@ async function getUpcomingApplicationDeadlines(supabase: SupabaseClient<Database
   });
 }
 
-async function getUpcomingOpportunityDeadlines(supabase: SupabaseClient<Database>, userId: string, today: string): Promise<UpcomingDeadline[]> {
+/** Exported (only) so __tests__/deadlines/upcoming.test.ts can pin and verify its
+ * cycle_status filtering directly, without also mocking the application/university
+ * sources getUpcomingDeadlines fans out to. No behavior change. */
+export async function getUpcomingOpportunityDeadlines(supabase: SupabaseClient<Database>, userId: string, today: string): Promise<UpcomingDeadline[]> {
   const { data: saved } = await supabase.from("saved_opportunities").select("opportunity_id").eq("user_id", userId).eq("status", "saved");
   if (!saved || saved.length === 0) return [];
 
   const opportunityIds = [...new Set(saved.map((s) => s.opportunity_id))];
   const { data: opportunities } = await supabase
     .from("opportunities")
-    .select("id, title, deadline")
+    .select("id, title, deadline, cycle_status")
     .in("id", opportunityIds)
     .not("deadline", "is", null)
     .gte("deadline", today);
 
-  return (opportunities ?? []).map((opportunity) => ({
+  // A closed/historical/discontinued cycle must never surface as "due soon" even with a
+  // future-dated deadline on file — the same guard the dashboard's opportunity-match
+  // preview already applies (see lib/opportunities/lifecycle.ts's module comment).
+  // Deliberately leaves 'unverified' visible: unconfirmed is not the same claim as wrong.
+  return filterActionableOpportunities(opportunities ?? []).map((opportunity) => ({
     id: `opportunity-${opportunity.id}`,
     source: "opportunity" as const,
     title: opportunity.title,
