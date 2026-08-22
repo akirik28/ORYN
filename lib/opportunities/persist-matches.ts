@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { computeOpportunityMatch, isNearStudent } from "./matching";
 import type { StudentMatchProfile, OpportunityForMatching } from "./matching";
 import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
@@ -10,9 +11,19 @@ import { filterActionableOpportunities } from "./lifecycle";
  * Recomputes and upserts opportunity_matches for one student against every active
  * opportunity. Cheap (pure deterministic math, no AI call) — safe to run on every
  * /opportunities page view, unlike weekly-plan generation.
+ *
+ * Every READ below stays on `supabase`, the caller's own RLS-scoped client. Only the
+ * final `opportunity_matches` upsert uses `admin` (added 2026-08-22, migration 0063,
+ * BUG-1's RLS verification package) — that write is fully computed by
+ * `computeOpportunityMatch` above before either client is touched, so this changes which
+ * connection carries the result, not what the student can see. Paired with a guard
+ * trigger on `eligible`/`match_score`/etc: before this change, a student's own RLS-scoped
+ * client could upsert this table directly, including setting `eligible = true` on a
+ * restricted opportunity with no relation to what this function actually computed.
  */
 export async function refreshOpportunityMatches(userId: string): Promise<void> {
   const supabase = await createClient();
+  const admin = createAdminClient();
 
   const [profileRes, scoresRes, interestsRes, opportunitiesRes, savedRes] = await Promise.all([
     // select("*"), not an explicit column list: an explicit list naming citizenship_countries
@@ -95,7 +106,7 @@ export async function refreshOpportunityMatches(userId: string): Promise<void> {
     };
   });
 
-  await supabase.from("opportunity_matches").upsert(rows, { onConflict: "user_id,opportunity_id" });
+  await admin.from("opportunity_matches").upsert(rows, { onConflict: "user_id,opportunity_id" });
 }
 
 function buildReasonCodes(

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { assembleScoringFacts } from "./assemble-facts";
 import { computeCareerProfile } from "./index";
 import { computeCounselingCompleteness } from "./completeness";
@@ -12,11 +13,23 @@ import { computeCounselingCompleteness } from "./completeness";
  * a history snapshot when the overall score meaningfully changed (Phase 41) so the
  * monthly review has real before/after data instead of noise from every trivial edit.
  *
- * Called after achievement CRUD and from the dashboard's initial load. Always runs
- * against the current user's RLS-scoped client — never the admin client.
+ * Called after achievement CRUD and from the dashboard's initial load. EVERY READ stays on
+ * `supabase`, the caller's own RLS-scoped client -- this function reads exactly what the
+ * caller is already allowed to see, and widening a client to fix a write must never widen
+ * what it reads too. The THREE WRITES below (`profile_scores`, `profiles`'
+ * `profile_strength_score`/`completeness_percent`, `profile_score_snapshots`) go through
+ * `admin`, the service-role client, added 2026-08-22 (BUG-1's RLS verification package,
+ * migration 0063 -- see that migration's own comment). Not a privilege widening for the
+ * student: the values being written are already fully computed above, server-side, before
+ * either client is touched; this only changes which connection carries them the last few
+ * lines to the database, so that migration 0063's guard trigger on these exact columns can
+ * tell a real recompute apart from a forged direct write. Before this change all three
+ * writes ran on `supabase` too, which is exactly what let a student overwrite them
+ * directly -- see docs/research/verification/rls-live-verification-2026-08-22.md.
  */
 export async function recomputeCareerProfile(userId: string, opts?: { snapshotReason?: string }) {
   const supabase = await createClient();
+  const admin = createAdminClient();
   const facts = await assembleScoringFacts(supabase, userId);
 
   const [profileResult, skillsResult, featuredResult, contactResult] = await Promise.all([
@@ -53,7 +66,7 @@ export async function recomputeCareerProfile(userId: string, opts?: { snapshotRe
   });
 
   const calculatedAt = new Date().toISOString();
-  const { error: scoresError } = await supabase.from("profile_scores").upsert(
+  const { error: scoresError } = await admin.from("profile_scores").upsert(
     careerProfile.dimensions.map((d) => ({
       user_id: userId,
       dimension: d.dimension,
@@ -68,7 +81,7 @@ export async function recomputeCareerProfile(userId: string, opts?: { snapshotRe
   if (scoresError) throw new Error(`Failed to persist dimension scores: ${scoresError.message}`);
 
   const previousScore = profileRow.profile_strength_score;
-  const { error: profileUpdateError } = await supabase
+  const { error: profileUpdateError } = await admin
     .from("profiles")
     .update({ profile_strength_score: careerProfile.overallScore, completeness_percent: completeness })
     .eq("id", userId);
@@ -76,7 +89,7 @@ export async function recomputeCareerProfile(userId: string, opts?: { snapshotRe
 
   const changedMeaningfully = previousScore === null || Math.abs(previousScore - careerProfile.overallScore) >= 1;
   if (changedMeaningfully || opts?.snapshotReason) {
-    const { error: snapshotError } = await supabase.from("profile_score_snapshots").insert({
+    const { error: snapshotError } = await admin.from("profile_score_snapshots").insert({
       user_id: userId,
       score_version: careerProfile.version,
       overall_score: careerProfile.overallScore,
