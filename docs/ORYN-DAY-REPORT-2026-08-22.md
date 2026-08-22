@@ -252,6 +252,37 @@ error.
 
 ---
 
+### One more of the day's own defect, found late and not yet fixed
+
+This morning's biggest trust fix made unresearched opportunities stop pretending to be open to
+everyone: an empty country list had meant "no restriction" in both the matching layer and the
+counselor, so a genuinely restricted programme nobody had researched looked eligible to every
+student. That's fixed, and the code now says *"Country eligibility not verified yet"* out loud.
+
+**The same bug is still live in the field next to it.** Eight lines above the country logic, in
+the same function, an opportunity with **no age bounds recorded** produces no note at all — it
+simply reads as having no age restriction. "We checked, there is no age limit" and "nobody has
+looked" are again indistinguishable.
+
+**Measured live: 192 of 271 active opportunities — 71% — have no age bounds.**
+
+This matters more for age than it did for countries. Oryn's users are 14–18. Summer programmes,
+competitions and fellowships routinely specify a grade or age range, so a large share of those
+192 almost certainly *do* have requirements nobody has researched. An age cutoff is the single
+most likely reason a 14-year-old gets turned away, and it is the thing the product is currently
+quietest about.
+
+**Not fixed tonight, deliberately.** The country fix needed a database change — migration `0060`,
+which is still waiting on you — to distinguish "researched, genuinely open" from "never checked."
+An age fix needs the same kind of marker, so proposing it means proposing a second thing for you
+to approve. It's being quantified first: how many of those 192 plausibly have a real age
+requirement, by category. A number makes that a decision rather than a guess.
+
+Worth naming why it survived: the fix was scoped to one field and the reasoning behind it was
+never carried across to the others. The thinking was right; its blast radius was too small.
+
+---
+
 ### An infrastructure incident, and two failures that disguised themselves
 
 Around 18:10 the machine ran out of disk — **143MB free, 99% full.** Three lanes halted, and my

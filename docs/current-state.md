@@ -60,14 +60,22 @@ file is a snapshot, not a live view.
 
 - `universities`: **1,019** rows — **1,010 `canonical`, 9 `superseded`** (migration 0043's
   data backfill confirmed genuinely live and correct: `duplicate_status` is populated).
-- `university_programs`: **16,663** rows (418 at the 08-20 checkpoint → 14,457 this morning →
-  16,119 this afternoon → **16,663** now). The last +544 is **Australia, which had zero
-  programme coverage this morning** — now 544 across 3 universities. Three further Australian
-  universities were deliberately deferred, each blocked by a different access-control mechanism
-  (bot mitigation, a `robots.txt` naming our crawler, a CAPTCHA gate); three honest gaps rather
-  than three unciteable sources. All 107 UWA records were re-fetched through a
-  `robots.txt`-permitted path before merge, after the lane caught that its own completed work
-  had used a disallowed one.
+- `university_programs`: **16,770** rows (418 at the 08-20 checkpoint → 14,457 yesterday morning
+  → 16,119 this afternoon → **16,770** now). The last +651 is **Australia, which had zero
+  programme coverage this morning** — now 651 across **four** universities (UNSW 217, Monash 178,
+  Sydney 149, UWA 107). Adelaide's 119 are researched and deliberately **not** applied. Three
+  further universities were deferred, each blocked by a different access-control mechanism. All
+  107 UWA records were re-fetched through a `robots.txt`-permitted path before merge, after the
+  lane caught that its own completed work had used a disallowed one — verified live: zero
+  `/sitecore` URLs remain.
+- **Known completeness gap**: `degree_type` is null on **257 of 651** Australian rows — 100% of
+  Sydney and 100% of UWA, versus 1 of 217 at UNSW and 0 of 178 at Monash. The null tracks the
+  *extraction method*, not the university: title-token extraction leaves it empty, structured-field
+  extraction fills it densely. `degree_level` is populated on **all 651**, so the qualification
+  level shows on every record and only the abbreviation is missing. **Completeness, not
+  correctness** — and an honest null is the right outcome if the source doesn't publish an
+  abbreviation, since a `degree_type` inferred from a title would be Oryn's guess dressed as a
+  sourced fact. Open question routed to the research lane: does the source publish one at all?
 - `university_requirements`: **1,254** rows (up from 84).
 - `university_deadlines`: **396** rows (up from 26).
 - `opportunities`: **391** rows, **271 `active`** (the browse surface). Two open gaps, both
