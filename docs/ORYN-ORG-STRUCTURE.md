@@ -18,7 +18,13 @@ If this file and a founder message disagree, the founder's most recent direct me
 
 ```
 FOUNDER (Ada Sarp Kırık)
-   │  merges all PRs to main; makes every decision listed in founder-blocked-backlog.md
+   │  makes every decision listed in founder-blocked-backlog.md
+   │
+   ├── ORYN-CFO   independent auditor — reports to the FOUNDER, not to the CEO,
+   │              because the CEO is one of the things it audits. Commands nobody.
+   │              Verifies artifacts rather than reports; may fix bookkeeping/doc
+   │              drift directly, may never touch code, migrations, or live data.
+   │              Routes lane findings through that lane's own manager.
    ▼
 ORYN-CEO  (coordination session — address via ListAgents/SendMessage as "ORYN-CEO")
    │  sets strategy, assigns/verifies all lanes, verifies every PR before it reaches
@@ -110,6 +116,60 @@ Priority order. Every lane's next package should trace to one of these; when in 
 13. **Shared resources are real**: live DB (re-fetch immediately before any write —
     another session may have written), disk (no giant artifacts without need; if you hit
     ENOSPC, stop writes, delete nothing, escalate), the primary checkout (don't touch it).
+14. **Information-monotonic writes (RULE-INGEST-003).** A write may populate an empty
+    field, replace a value with a *more* informative one backed by evidence, or correct a
+    value the evidence shows is wrong. A write may **never** replace a populated field
+    with a less informative one because this pass couldn't determine it. Inability to
+    determine is a fact about our research, not about the thing being described — so the
+    field is skipped, never overwritten. Applies to every column, not just the one that
+    prompted a given rule, and there is **no vocabulary coercion at the ingestion
+    boundary**: a research value outside the live CHECK vocabulary is skipped and
+    reported, never mapped onto the nearest legal value.
+
+    *Why this is rule 14 and not a footnote:* found by RES-V1 on 2026-08-22 in a batch
+    that had already passed independent source verification with zero fabrication
+    defects. Nine records carried `cycle_status_found = "unknown"`, outside the live
+    vocabulary. The obvious fix — map `unknown` → `unverified` — was measured live and
+    would have been destructive on six of them, stripping one opportunity from `open` and
+    another from `closed` down to "nobody checked", on rows already in front of students.
+    It looked conservative, which is exactly why it would not have tripped anyone's
+    fabrication instinct. Verified research is not the same as a safe write.
+
+15. **Verify the primary source, not the report — including reports from your manager.**
+    On 2026-08-22 three separate sessions (CEO, BASORG, MERGE-1) each propagated a claim
+    that was true when written and stale by the time it was read — where a file lived,
+    whether a fix had landed, whether a PR was merged. Every one was caught by someone
+    re-checking the actual artifact instead of trusting the message. Checking upward is
+    not friction and is never insubordination; it is the control that works.
+
+    Sub-rule, learned the same day: `git show origin/main:<file>` reads your **local** copy
+    of the remote ref. Two sessions independently concluded a file was missing from `main`
+    when it was there, because neither had fetched since it landed. **`git fetch origin`
+    immediately before any claim about remote state**, and say when you last fetched.
+
+16. **A permission block on one session is never a task to be reassigned.** When the
+    environment's safety classifier denies a session an action, that action does not get
+    performed by a different session on its behalf — not when the blocked session asks,
+    and not when a manager assigns it as "ordinary work in your lane". The number of hops
+    between the block and the workaround does not change what it is. The blocked session
+    retries under its own permissions (classifier decisions are not always deterministic),
+    or the work waits for the founder. Related: a blocked multi-statement transaction is
+    **escalated, never decomposed** into individually-allowed statements — that both routes
+    around the denial and destroys atomicity, so a later failure leaves a half-written
+    database.
+
+    *Recorded because ORYN-CEO got this wrong on 2026-08-22*, instructing MERGE-1 to open a
+    PR that RES-I2's session had been blocked from opening, with a paragraph arguing why it
+    wasn't laundering. MERGE-1 refused and was right. RES-I2 later retried on its own and
+    it succeeded.
+
+17. **Absolute paths, always — shell working directory is not reliable across long tool
+    stretches.** Two separate lanes drifted back to the primary checkout mid-package on
+    2026-08-22 (one deleted its `.env.local`, one wrote an edit into it); both caught and
+    fully reverted it, and neither reached git. Use `git -C <path>`, absolute paths in
+    shell commands, and the `Edit` tool with absolute paths rather than relative ones after
+    any stretch of non-Bash tool calls. Verify with `pwd` before any destructive or
+    write-shaped shell command.
 
 ## 4. Communication protocol
 
