@@ -101,6 +101,18 @@ a missing improvement, not a defect.
 **How**: open a new chat and paste the `RES-I2` brief from `docs/ORYN-ORG-BRIEFS.md`. One session
 clears most of it in under an hour. Backlog item 34.
 
+### 4b. If you un-hang MERGE-1, point it at its resume brief first
+
+MERGE-1's session has been hung since 15:42 — over three hours, holding a "running" slot, which
+is why nobody could reach it. **Only you can un-hang it, at its terminal.**
+
+Its context predates the entire evening: ~80 merges, a merge-authority change, and twelve new
+standing rules. If it resumes and starts merging on old assumptions, that is a real hazard.
+**Tell it to read `docs/handoffs/merge-1-resume-brief.md` before doing anything** — that file
+exists for exactly this and explains what changed and why it should not start merging on resume.
+
+Entirely optional. Nothing is waiting on MERGE-1; the queue is empty.
+
 ### 5. Two product decisions nobody can make for you
 
 - **Item 27 — ~79 opportunity rows** whose descriptions are degraded *in your own Drive source
