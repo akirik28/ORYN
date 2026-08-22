@@ -128,3 +128,31 @@ discipline:
 
 Items 1 and 4 don't depend on anything else and could run in either order or in parallel
 with item 2's test-debt work. Item 5 should follow item 3.
+
+## Addendum (2026-08-22, later same day) — a finding from Package 3's test-debt work
+
+Writing tests for weekly-action status transitions (this document's item 5, above) surfaced
+something worth recording on its own rather than folding silently into a test file: **there
+is no transition validation anywhere.** `updateActionStatus`
+(`app/(app)/plan/actions.ts`) writes whatever `status` it's given directly, with no check
+against the action's current status first. A student's weekly action can currently go
+`expired` → `completed`, or `skipped` → `in_progress`, or any other combination, with
+nothing in the code preventing it — not a bug in the sense of doing the wrong thing on a
+request, but a genuine absence of a constraint the product's own data model implies one
+should exist.
+
+This isn't just a data-integrity nicety. Phase 10's reflection loop and Phase 63's
+recommendation history both read `weekly_actions.status` to decide what the advisor says
+next (`lib/ai/student-context.ts`'s `recentActionOutcomes`, described in `lib/ai/advisor-
+prompt.ts` as "learn from these — don't just repeat what was skipped or didn't work") — so
+an unconstrained status history is unconstrained *advisor input*, not just an internal
+inconsistency nobody sees.
+
+Not fixed here, and not obviously a bug to fix reflexively: whether transitions should be
+constrained, and to what set of rules, is a product decision (does re-completing an expired
+action make sense if a student picks it back up? does `skipped` "expire" 's own semantics
+even apply once something's already `completed`?) rather than something this audit should
+decide unilaterally. Recording as a finding for whoever scopes the eventual fix — likely
+paired with item 5's `skipped`/`expired` UI work above, since building explicit transition
+controls there is a natural place to also decide what transitions those controls should
+allow.
