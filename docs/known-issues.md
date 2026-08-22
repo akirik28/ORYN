@@ -11,6 +11,59 @@ dedicated living docs rather than being tracked here — start at
 file's remaining entries (the Drive-doc product-decision conflict, data-readiness gaps,
 scoped-out items) are still current as of the dates on each entry.
 
+## Needs founder decision — same self-write gap on 5 more computed columns (migration 0063)
+
+**2026-08-22, BUG-1, live RLS verification package, continuing the sweep after the
+`is_admin` finding below.** Full evidence:
+`docs/research/verification/rls-live-verification-2026-08-22.md`.
+
+**Cross-referenced every table with an "owner full access" RLS policy against columns the
+app only ever writes via the service-role client** — the same shape that produced the
+`is_admin` finding. Found five: `profiles.profile_strength_score`/`completeness_percent`
+(the same columns removed from migration 0062 below, now correctly paired with a code
+change), `profile_scores`, `profile_score_snapshots`, `opportunity_matches`,
+`student_requirement_evaluations.status`, `evidence_files.verification_status`. Each
+column's own reasoning is in `supabase/migrations/0063_guard_computed_score_columns.sql`.
+
+**`opportunity_matches` is the highest-priority of these**: FEAT-1's concurrent work is
+building honest eligibility (empty `eligible_countries` no longer silently reads as
+open). A student setting `eligible = true` on their own `opportunity_matches` row for a
+restricted opportunity doesn't defeat that algorithm — it defeats the premise the whole
+effort exists to establish, sourced back to Oryn.
+
+**Fix, migration and code together, one reviewable unit, written not applied**:
+`supabase/migrations/0063_guard_computed_score_columns.sql` adds a guard trigger per
+table, reset-not-raise, same shape as 0062. Paired code change in the same PR: the one
+legitimate writer for each guarded column (`lib/scoring/persist.ts`,
+`lib/opportunities/persist-matches.ts`, `lib/requirements/persist.ts`) now writes that
+*specific* value via `createAdminClient()` instead of the caller's RLS-scoped client —
+every read in all three files is untouched, still RLS-scoped, so a student's own view of
+their own data is unaffected and they gain no visibility into anyone else's. Not a new
+privilege: every value written was already fully computed server-side before either
+client was touched: this only changes which connection carries it the last step to the
+database, matching how `lib/social/public-profile.ts` already splits RLS-scoped reads
+from explicit admin-client writes elsewhere in this codebase.
+
+**A real, named limit of this fix, not left unstated**: a `BEFORE UPDATE OF <col>` guard
+protects an *existing* row from being overwritten. It does nothing against a freshly
+INSERTed row carrying a fabricated value from the start. `profiles` has no such gap (one
+row per user, from signup), but the other four tables' rows may not pre-exist for a given
+key — most acute for `profile_score_snapshots`, which has no legitimate UPDATE path at
+all in this codebase (pure append log, insert-only), so this migration's guard on it is
+close to inert against the actual risk of a fabricated improvement history. Included
+because it was named in scope, not because it closes that gap.
+
+**`ai_recommendations` — deliberately NOT included in 0063. A design question, not a
+mechanical fix, tracked here rather than routed around**: the only writer
+(`lib/plan/persist.ts`) is a single INSERT site with no UPDATE path anywhere, so a
+column guard (which only ever fires on UPDATE) provides no protection at all — the same
+INSERT-forgery shape as `profile_score_snapshots` above, but with no update surface to
+even partially guard. The real question this surfaces: **should a student's RLS-scoped
+client be inserting advisor output at all, or should that whole path move to the
+service-role client** — a design decision with real blast radius (it changes who can
+write to a table currently modeled as user-owned), not something to bolt a policy split
+onto without deciding the shape first. Needs routing to whoever owns the plan pipeline.
+
 ## Needs founder decision — CRITICAL: any authenticated user can self-grant admin
 
 **2026-08-22, BUG-1, live RLS verification package, surface 2 (admin gate)**. Full
