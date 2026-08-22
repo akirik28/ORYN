@@ -381,6 +381,11 @@ describe("Persona F — Turkish/international student, MEB curriculum diploma la
       eligibleCountries: opp.eligible_countries,
       eligibleCitizenships: opp.eligible_citizenships,
       eligibleGrades: opp.eligible_grades,
+      // Mirrors lib/opportunities/persist-matches.ts's real construction (Package 8) — this
+      // local converter must not silently drift from what the actual match-refresh path
+      // passes, or a persona test could pass while the real data flow diverges from it.
+      citizenshipRestrictions: opp.citizenship_restrictions,
+      residencyRestrictions: opp.residency_restrictions,
       fields: opp.fields,
       country: opp.country,
     };

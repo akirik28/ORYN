@@ -174,8 +174,54 @@ describe("computeEligibility", () => {
       expect(result.notes).toBeNull();
     });
 
-    test("no note when the row carries restriction prose (researched — the prose is surfaced elsewhere, 'not verified' would be false)", () => {
-      const result = computeEligibility(student(), opportunity({ hasUnstructuredEligibilityEvidence: true }));
+    // Package 8: this used to be a boolean-flag test asserting silence ("the prose is
+    // surfaced elsewhere") — that was the defect itself, not a real behavior worth pinning.
+    // lib/counselor/eligibility.ts's evaluateOpportunityEligibility already surfaced this
+    // same prose; this function silently didn't, so the card and the Advisor disagreed
+    // about one row's own text (live-confirmed on Garcia Summer Research Program).
+    test("surfaces a note quoting citizenship-restriction prose instead of going silent", () => {
+      const result = computeEligibility(
+        student(),
+        opportunity({ citizenshipRestrictions: "Applicants must be U.S. citizens or U.S. permanent residents." })
+      );
+      expect(result.eligible).toBe(true); // prose alone is never a hard exclusion, only a structured gate is
+      expect(result.notes).toContain("Applicants must be U.S. citizens or U.S. permanent residents.");
+    });
+
+    test("surfaces a note quoting residency-restriction prose the same way", () => {
+      const result = computeEligibility(student(), opportunity({ residencyRestrictions: "Open only to residents of EU member states." }));
+      expect(result.eligible).toBe(true);
+      expect(result.notes).toContain("Open only to residents of EU member states.");
+    });
+
+    // Wording parity with lib/counselor/eligibility.ts's evaluateOpportunityEligibility is
+    // deliberate, not incidental — the two surfaces reading one row's prose differently would
+    // be a weaker version of the same disagreement this package fixes.
+    test("the prose note matches the counselor's exact wording", () => {
+      const prose = "Applicants must be U.S. citizens or U.S. permanent residents.";
+      const result = computeEligibility(student(), opportunity({ citizenshipRestrictions: prose }));
+      expect(result.notes).toBe(`Citizenship restriction on file (not automatically verified): ${prose}`);
+    });
+
+    test("no separate 'not verified yet' note when restriction prose already answers the question", () => {
+      const result = computeEligibility(student(), opportunity({ citizenshipRestrictions: "Open only to EU citizens." }));
+      expect(result.notes).not.toMatch(/not verified yet/i);
+    });
+
+    test("citizenship prose stays quiet when a structured citizenship gate already resolved the row", () => {
+      const result = computeEligibility(
+        student({ citizenshipCountries: ["United States"] }),
+        opportunity({ eligibleCitizenships: ["United States"], citizenshipRestrictions: "Applicants must be U.S. citizens." })
+      );
+      expect(result.eligible).toBe(true);
+      expect(result.notes).toBeNull();
+    });
+
+    test("residency prose stays quiet when a structured country allow-list already resolved the row", () => {
+      const result = computeEligibility(
+        student({ country: "Canada" }),
+        opportunity({ eligibleCountries: ["Canada"], residencyRestrictions: "Open only to North American residents." })
+      );
       expect(result.eligible).toBe(true);
       expect(result.notes).toBeNull();
     });
