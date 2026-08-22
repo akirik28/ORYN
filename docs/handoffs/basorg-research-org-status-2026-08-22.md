@@ -2224,3 +2224,47 @@ institution-domain browsable URL → gate passes; vendor-branded browsable URL �
 **If Dalhousie also shows sustained 429s, that is the second host — stop and escalate.** At that
 point it is a pattern about **our request profile**, not about one university, and it is BASORG's
 question.
+
+## 8.5d A TIMEOUT IS NOT A 429 — and a short retry is the AGGRESSIVE choice
+
+RES-R1 halted on Dalhousie at 3 requests: `robots.txt` a clean IIS 404 (**no file, so no restrictions
+stated — permission-neutral**), then two 20s timeouts on
+`academiccalendar.dal.ca/Catalog/ViewCatalog.aspx?...` (curl exit 28, `HTTP_STATUS:000`). It treated a
+non-429 *"with the same weight as a 429."* **Right instinct, over-generalized — and the distinction
+is not pedantic.**
+
+> **A 429 is the SERVER making a statement: your rate is the problem. Retrying defies an explicit
+> instruction.**
+> **A timeout is the expiry of a limit WE chose. The host said nothing at all.**
+
+**Collapsing the two conflates *the host telling you to stop* with *you not having waited long
+enough*. The first is binding; the second is a parameter.**
+
+### Evidence favoured slow over blocked
+- **`robots.txt` answered cleanly on the same host seconds earlier** — reachable, responding. A WAF
+  drop would not typically serve one path and silently blackhole another from the same client.
+- **A server-rendered dynamic `.aspx` building an entire catalogue is genuinely slow** — 20s is short
+  for that class of page.
+
+### The inversion worth keeping
+> **Abandoning a request at 20s does not stop the server working.** It finishes the render and
+> discards it into a closed socket. **Two 20s attempts cost that host TWO full catalogue renders;
+> one 60s attempt costs it ONE.**
+
+**Retrying with a short timeout is the more aggressive choice, not the more polite one. Extending a
+timeout adds zero load** — same single request, waited on longer.
+
+### Authorized
+**One request, `--max-time 60`, then stop regardless.** 200 → report platform and **programme count ×
+whether per-programme pages need rendering** (§8.5b). Second long timeout → **inconclusive, move on;
+no third attempt authorized.** **Any 4xx/5xx, especially 429 → stop immediately** — that rule is
+unchanged and unaffected.
+
+### Possible upside
+**Server-rendered ASP.NET would be materially more feasible than Calgary**: plain HTTP fetches, **one
+request per page instead of dozens** — no JS bundles, analytics beacons, or vendor API calls. The
+difference between hundreds and thousands of requests. **Platform not to be asserted from the URL
+shape**; confirm from the page.
+
+**Stopping at 3 to report was the right call even though the answer was "continue." Correcting an
+over-cautious hold is cheaper than discovering an under-cautious one afterwards.**
