@@ -425,7 +425,7 @@ export default async function UniversitiesPage({
       )}
 
       {uncoveredCountries.length > 0 ? (
-        <p className="text-xs text-muted-foreground/70">
+        <p className="text-xs text-muted-foreground">
           Note: {uncoveredCountries.length} check-in-progress {uncoveredCountries.length === 1 ? "country isn't" : "countries aren't"} yet mapped to a
           region ({uncoveredCountries.join(", ")}) — included in the total above, not yet in any region tab.
         </p>
