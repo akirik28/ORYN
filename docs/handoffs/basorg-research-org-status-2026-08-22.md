@@ -2170,3 +2170,57 @@ the rate limit stopped us, not the reverse.**
 
 **If a second host shows the same sustained-429 posture: stop and escalate before probing.** At that
 point it is **a pattern about our request profile, not about one university** — a BASORG question.
+
+## 8.5b THE REAL CALGARY LESSON WAS SEQUENCING — robots.txt goes FIRST
+
+The backoff correction in §8.5a was **the smaller half.** The structural error was **order of
+operations**, and it was BASORG's for never specifying it:
+
+On Calgary, RES-R1 ran the posture check **and a full `/programs` browser render** — dozens of
+sub-resources — **before fetching robots.txt.** By the time it requested the permission artifact, it
+had already spent **~50 requests** on the host.
+
+> **The 429 that blocked robots.txt was substantially caused by requests robots.txt might have told
+> it not to make.**
+
+**RULE: `robots.txt` is the FIRST request to any new host — not the first of the crawl, the first of
+anything.** Nothing else touches the domain until it returns 200 and has been read. **That single
+change would likely have avoided the entire Calgary outcome.**
+
+### Concrete throttling, since "throttle" was not enough
+1. **Request #1 to a new host is `robots.txt`.**
+2. **On ANY 429: full stop, no retry, report.** A 429 states the rate is the problem; **retrying is
+   the one response guaranteed to make it worse.** **Supersedes any earlier BASORG instruction that
+   implied polling.**
+3. After a clean read: **≤1 request / 10s**, entire posture check **under ~15 requests** including
+   sub-resources. **If platform identification needs a full SPA render, that render is the whole
+   budget** — do it last, stop after.
+4. **Report the posture check before anything at volume.**
+
+### Feasibility is now a standing posture-check output
+Calgary established that **for a SaaS-backed SPA, feasibility fails independently of authority.** So
+the posture check must now report **programme count × whether per-programme pages need rendering** —
+**that product decides extractability, and it must be known before extraction, not after 50 records.**
+
+## 8.5c DALHOUSIE APPROVED for posture check
+
+**Verified by BASORG against the table before approving**, identity by domain:
+
+```
+Dalhousie University · https://www.dal.ca · canonical · superseded_by_id null · programs 0
+```
+
+**QS 2027 #298 / Canada #12**, next after Calgary's #11 — derived by RES-R1 from **Dal's own press
+release rather than a third-party aggregator**: the institution's own claim about itself, the same
+source class we hold their programme pages to.
+
+**Gate run per-target rather than inherited** from the earlier 17-wide check. Five incidental corpus
+hits, all in `counseling-intelligence/` — a different data domain — with one **spot-checked directly**
+and confirmed a passing mention in an unrelated proposal, not coverage.
+
+**Standing ruling applies without re-litigation** if Dalhousie is another Coursedog/Kuali SPA:
+institution-domain browsable URL → gate passes; vendor-branded browsable URL → McMaster, escalate.
+
+**If Dalhousie also shows sustained 429s, that is the second host — stop and escalate.** At that
+point it is a pattern about **our request profile**, not about one university, and it is BASORG's
+question.
