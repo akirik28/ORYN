@@ -11,6 +11,68 @@ dedicated living docs rather than being tracked here — start at
 file's remaining entries (the Drive-doc product-decision conflict, data-readiness gaps,
 scoped-out items) are still current as of the dates on each entry.
 
+## Needs founder decision — message_reports let a student name an innocent user as the accused
+
+**2026-08-22, BUG-1, live RLS verification package, surfaces 3+4 (sendMessage / block /
+report), then the INSERT-forgery inventory that followed it.** Full evidence:
+`docs/research/verification/rls-live-verification-2026-08-22.md`,
+`docs/research/verification/insert-forgery-inventory-2026-08-22.md`.
+
+**The gap**: `message_reports`' `"create own report"` policy only ever checked
+`reporter_id = auth.uid()` — nothing tied `reported_user_id` to `message_id`'s actual
+`sender_id`. Verified live: QA account B filed a report on a message genuinely sent by QA
+account A, naming an entirely unrelated user as `reported_user_id`, and the insert
+succeeded with no error. Neither RLS nor `reportMessage()`'s app code cross-checked this.
+
+**Severity**: not critical (needs a deliberate raw insert, not reachable through the UI;
+still catchable by an admin who happens to check the message against the accusation), but
+higher than a first read suggested. `message_reports` feeds the admin moderation queue —
+a reviewer has no reason to suspect the accused doesn't match the message shown, so a
+forged row presents as validated input. On a product for 14–18-year-olds (AGENTS.md
+Section 12), the failure mode is a minor accused of something in a queue an adult acts
+on, not a wrong statistic.
+
+**Fix, written not applied**: `supabase/migrations/0064_message_reports_verify_reported_user.sql`
+adds a `WITH CHECK` subquery cross-referencing the referenced message's real `sender_id` —
+DB-level, matching `messages`' own INSERT policy's existing subquery-cross-check
+precedent, for the same reason this pass's own live testing established: a Server Action
+is directly callable with any argument, so the app-layer check was a friendly-error
+nicety, never the actual security boundary. A deliberate side effect: because the
+subquery isn't security-definer, it runs under the caller's own RLS, so a report on a
+message the caller was never a party to (neither sender nor recipient) is now correctly
+rejected too. Founder-gated per standing rule; do not apply without review.
+
+**Testing methodology note, not a product defect — recorded so the next lane doesn't
+repeat it**: `messages` and `message_reports` have **no RLS DELETE policy at all**
+(deliberate — permanent message/report history). This pass's own test-cleanup script,
+running on the RLS-scoped client, called `.delete()` on both tables and returned no
+error, but silently removed nothing — the delete matched zero rows because RLS's
+default-deny (no matching policy) let the call resolve without an error, not because
+anything was actually removed. Caught only by re-querying row counts after cleanup
+instead of trusting the cleanup call's own success. **Any future session testing these
+two tables must verify cleanup by re-counting rows afterward, never by the cleanup call
+returning without error** — and must remove leftover rows via admin access, since the
+RLS-scoped client structurally cannot delete from either table regardless of whose
+session runs it.
+
+**Six more tables inventoried for the same INSERT-forgery class, not yet fixed** (started
+after `profile_score_snapshots`' own finding in migration 0063 showed a `BEFORE UPDATE`
+guard can be close to inert against the real risk): `profile_scores`,
+`profile_score_snapshots`, `opportunity_matches`, `student_requirement_evaluations`,
+`evidence_files` all share the same shape — this package's guard triggers close
+*overwriting* a row the real engine already computed, but not *inserting* a fresh row for
+a key the engine has never touched, which a student's own RLS-scoped session can still do
+directly. `opportunity_matches` and `profile_score_snapshots` were empirically confirmed
+exploitable live (a fabricated `eligible=true`/`match_score=100` row for a never-matched
+opportunity; a fabricated low-baseline snapshot), then reverted and re-verified reverted.
+`ai_recommendations` shares the shape but is tracked separately below as its own design
+question. Full per-table detail, severity, and why a guard trigger isn't the right tool
+for any of these six: `docs/research/verification/insert-forgery-inventory-2026-08-22.md`.
+**Inventory only — none of these six are fixed by this pass.** Closing the class needs one
+deliberate, INSERT-scoped design decision applied consistently across all six (it changes
+an RLS INSERT grant currently `authenticated`-wide, spanning three feature areas), not six
+separate patches — routed up rather than built ad hoc.
+
 ## Needs founder decision — same self-write gap on 5 more computed columns (migration 0063)
 
 **2026-08-22, BUG-1, live RLS verification package, continuing the sweep after the
