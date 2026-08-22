@@ -637,14 +637,56 @@ One modelling principle violated four times, not four schema requests. Decidable
   **Three of Australia's top 8 are policy-inaccessible**: Melbourne (domain-wide Cloudflare), ANU
   (robots.txt names ClaudeBot), Queensland (CAPTCHA gate). A property of the web, not a gap in
   the work.
-- **RES-R3** — waves 2–4; **54 confirmed-open active rows** ready for migration 0060's backfill
-  (FEAT-1 estimated ~5). Wave-4 pool corrected to **57 active-only** (was ~191); ~1/3 are scrape
-  fragments being routed out, not researched.
+- **RES-R3** — **CLOSED.** Waves 2, 3 and 4 all closed completely (research, competition,
+  summer_program). 187 records total. **Verified count, computed by BASORG from the committed
+  JSONL rather than estimated: 47 `confirmed_open_worldwide` records — 39 against `active` rows,
+  8 against `under_review`.** The lane's own running estimate was 54 active; the verified figure
+  is **39**. All 47 still carry empty `eligible_countries`, which is correct — confirmed-open
+  means the array stays empty and the confirmation lives in the 0060 flag.
+  Outcome distribution across all three waves: `no_statement_found` 106 · `confirmed_open_worldwide`
+  47 · `unresolved` 26 · `compound_null_by_design` 5 · `populate_proposal` 2 · `prose_proposal_only` 1.
+  **2 populates total** (CMU AI Scholars, Harvard CURE Initiative — both `United States`, both
+  active). Wave-4 pool corrected to 57 active-only (from ~191); 23 unambiguous scrape fragments
+  routed out rather than researched.
 - **RES-V1** — validating RES-R1's 544 AU records: contract, ID, and **taxonomy consistency
   across three universities that each derived `degree_level` differently** (AQF codes / title
   tokens / exact AQF value strings). Nobody else can do that cross-university check.
 - **RES-V2** — same 544 for source truth. Two instruments, seeded, zero overlap: targeted 37 at
   each university's load-bearing derivation, random 45 for the population rate.
+
+## 8.4b The eligibility taxonomy — RES-R3's most transferable output
+
+`eligible_countries` is inclusion-only at country granularity, and **a large fraction of real
+eligibility rules do not live at that granularity.** That is the honest explanation for this
+lane's ~1% populate yield — a finding about the schema, not a research shortfall.
+
+**Four mechanisms that do NOT reduce to a country list:**
+- **National delegation** (IPO — entry requires winning your own country's olympiad first; a
+  57-country participant list was found, documented as evidence, and deliberately not used)
+- **Member-organisation mediation** (IYPT — and explicitly not nationality-based; a country with
+  no body can found one)
+- **School partnership** (Harvard GlobalWE — official example list mixes countries with US cities)
+- **Visa/immigration status** (Garcia — "already hold legal documentation to be in the U.S.")
+
+**Two that DO reduce**: citizenship (CMU AI Scholars → `United States`) and US-internal residency
+tiers (Harvard CURE → `United States`, because both tiers are domestic).
+
+**Three method rules other lanes adopted:** the forward-vs-backward framing test applied **per
+page, not per organisation** (two Wharton siblings landed on opposite sides of it); RULE-ATTRIBUTION-001;
+and the international-applicants-as-a-named-category distinction (Duke/FU Berlin/Parsons
+confirmed-open vs Cornell/Georgetown/Harvard SSP no-statement).
+
+## 8.4c Unmeasured defect class: wrong-target URLs in `opportunities`
+
+RES-R3 hit a row titled *"Summer High School Programs - at BU"* whose stored URL resolves to
+**Hamburg Area High School, Pennsylvania** — an unrelated institution. Unlike the other routed
+fragments it is **not recognisable from row contents**: plausible title, plausible organisation,
+fails only when the URL is followed.
+
+BUG-1's 85-of-271 measurement was built on *description* signatures (restated titles, embedded
+URLs, mid-word truncation). A wrong-target URL produces none of them. **So 31.4% is a floor on
+that corpus, not a total.** This is the Type B failure mode RES-V2 split out for url_repair —
+measured at zero in `university_programs`, **never measured in `opportunities`.**
 
 ## 8.5 If you inherit this org
 
