@@ -83,7 +83,13 @@ function scoreRequirementCandidate(candidate: CandidateAction, state: CounselorS
   const source = candidate.source as { kind: "requirement_action"; requirementId: string; status: "not_met" | "unknown" };
   const input = state.requirementCandidateInputs.find((i) => i.requirement.id === source.requirementId);
   const score = source.status === "not_met" ? 80 : 55;
-  const confidenceScore = input ? DATA_CONFIDENCE_SCORE[input.requirement.data_confidence] : DATA_CONFIDENCE_SCORE.medium;
+  // Absent input means the candidate's own backing requirement wasn't found in state — the
+  // same "shouldn't happen but let's be honest when it does" case scoreOpportunityCandidate's
+  // `dataQualityBase` handles above with DATA_CONFIDENCE_SCORE.low. This branch used to default
+  // to .medium instead — an absence of data reading as a real, moderate confidence level,
+  // inconsistent with its own sibling one function up (Tier 2,
+  // docs/handoffs/feat1-territory-audit-2026-08-22.md).
+  const confidenceScore = input ? DATA_CONFIDENCE_SCORE[input.requirement.data_confidence] : DATA_CONFIDENCE_SCORE.low;
 
   return {
     candidate,

@@ -6,7 +6,7 @@ import { computeCareerProfile } from "@/lib/scoring";
 import { getUpcomingDeadlines } from "@/lib/deadlines/upcoming";
 import { canonicalUniversityId, loadSupersessionMap, type SupersessionMap } from "@/lib/universities/canonical";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/database";
+import type { Database, EvidenceStatus } from "@/types/database";
 
 export interface StudentAdvisorContext {
   student: {
@@ -28,10 +28,19 @@ export interface StudentAdvisorContext {
   profileScores: { dimension: string; score: number; confidence: string }[];
   overallScore: number;
   completenessPercent: number;
-  activities: { title: string; category: string; isLeadership: boolean; ongoing: boolean; selfReported: boolean }[];
-  projects: { title: string; outcomeSummary: string | null; ongoing: boolean; selfReported: boolean }[];
-  research: { title: string; field: string | null; outputType: string; ongoing: boolean; selfReported: boolean }[];
-  awards: { title: string; level: string | null; selfReported: boolean }[];
+  /**
+   * The real four-value `EvidenceStatus`, not a collapsed boolean (Package 4,
+   * docs/handoffs/feat1-territory-audit-2026-08-22.md Finding 1). Before this, only
+   * `self_reported` was distinguishable from everything else — `evidence_added` (uploaded,
+   * unreviewed) and `verification_rejected` (reviewed and NOT confirmed) both rendered
+   * identically to `verified` in the prompt, so a claim someone actively disbelieved
+   * reached the live advisor chat and weekly-plan generator with full certainty.
+   * `formatContextForPrompt` below renders all four distinctly.
+   */
+  activities: { title: string; category: string; isLeadership: boolean; ongoing: boolean; evidenceStatus: EvidenceStatus }[];
+  projects: { title: string; outcomeSummary: string | null; ongoing: boolean; evidenceStatus: EvidenceStatus }[];
+  research: { title: string; field: string | null; outputType: string; ongoing: boolean; evidenceStatus: EvidenceStatus }[];
+  awards: { title: string; level: string | null; evidenceStatus: EvidenceStatus }[];
   /** Chat 4 founder scope update — deliberately NOT part of `assembleScoringFacts`/the
    * scoring engine this pass (see docs/product-decisions.md): sports feeds the advisor's
    * time-budget reasoning ("10 committed hours/week isn't free capacity") and opportunity-
@@ -209,22 +218,22 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
       category: a.category,
       isLeadership: a.is_leadership_role,
       ongoing: a.ongoing,
-      selfReported: a.evidence_status === "self_reported",
+      evidenceStatus: a.evidence_status,
     })),
     projects: facts.projects.map((p) => ({
       title: p.title,
       outcomeSummary: p.outcome_summary,
       ongoing: p.ongoing,
-      selfReported: p.evidence_status === "self_reported",
+      evidenceStatus: p.evidence_status,
     })),
     research: facts.researchExperiences.map((r) => ({
       title: r.title,
       field: r.field,
       outputType: r.output_type,
       ongoing: r.ongoing,
-      selfReported: r.evidence_status === "self_reported",
+      evidenceStatus: r.evidence_status,
     })),
-    awards: facts.awards.map((a) => ({ title: a.title, level: a.level, selfReported: a.evidence_status === "self_reported" })),
+    awards: facts.awards.map((a) => ({ title: a.title, level: a.level, evidenceStatus: a.evidence_status })),
     goals: facts.goals.map((g) => ({ title: g.title, category: g.category })),
     interests: (interestsRes.data ?? []).map((i) => i.label),
     sports: (sportsRes.data ?? []).map((s) => ({
@@ -260,13 +269,27 @@ export function formatContextForPrompt(context: StudentAdvisorContext): string {
   for (const d of context.profileScores) {
     lines.push(`  - ${d.dimension}: ${d.score}/100 (confidence: ${d.confidence})`);
   }
-  const tag = (ongoing: boolean, selfReported: boolean) => `${ongoing ? " [ongoing]" : ""}${selfReported ? " [self-reported]" : ""}`;
+  /**
+   * `verified` renders silently (no tag) — the "no news is good news" default, unchanged
+   * from before. The other three states each get their own explicit tag; before this fix
+   * `evidence_added` and `verification_rejected` both fell through to that same silence,
+   * indistinguishable from `verified` (Finding 1,
+   * docs/handoffs/feat1-territory-audit-2026-08-22.md). `ADVISOR_SYSTEM_PROMPT` below
+   * spells out what each tag means so the model doesn't have to guess.
+   */
+  const evidenceTag = (status: EvidenceStatus): string => {
+    if (status === "self_reported") return " [self-reported]";
+    if (status === "evidence_added") return " [evidence added, not independently verified]";
+    if (status === "verification_rejected") return " [verification rejected]";
+    return "";
+  };
+  const tag = (ongoing: boolean, evidenceStatus: EvidenceStatus) => `${ongoing ? " [ongoing]" : ""}${evidenceTag(evidenceStatus)}`;
   lines.push(
-    `Activities (${context.activities.length}): ${context.activities.map((a) => `${a.title}${a.isLeadership ? " [leadership]" : ""}${tag(a.ongoing, a.selfReported)}`).join("; ") || "none"}`
+    `Activities (${context.activities.length}): ${context.activities.map((a) => `${a.title}${a.isLeadership ? " [leadership]" : ""}${tag(a.ongoing, a.evidenceStatus)}`).join("; ") || "none"}`
   );
-  lines.push(`Projects (${context.projects.length}): ${context.projects.map((p) => `${p.title}${tag(p.ongoing, p.selfReported)}`).join("; ") || "none"}`);
-  lines.push(`Research (${context.research.length}): ${context.research.map((r) => `${r.title}${tag(r.ongoing, r.selfReported)}`).join("; ") || "none"}`);
-  lines.push(`Awards (${context.awards.length}): ${context.awards.map((a) => `${a.title}${a.selfReported ? " [self-reported]" : ""}`).join("; ") || "none"}`);
+  lines.push(`Projects (${context.projects.length}): ${context.projects.map((p) => `${p.title}${tag(p.ongoing, p.evidenceStatus)}`).join("; ") || "none"}`);
+  lines.push(`Research (${context.research.length}): ${context.research.map((r) => `${r.title}${tag(r.ongoing, r.evidenceStatus)}`).join("; ") || "none"}`);
+  lines.push(`Awards (${context.awards.length}): ${context.awards.map((a) => `${a.title}${evidenceTag(a.evidenceStatus)}`).join("; ") || "none"}`);
   if (context.sports.length > 0) {
     const committedHours = context.sports.filter((s) => s.ongoing).reduce((sum, s) => sum + (s.hoursPerWeek ?? 0), 0);
     lines.push(
