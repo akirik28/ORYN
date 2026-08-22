@@ -1133,6 +1133,53 @@ If the correct URLs *are* recoverable, this becomes a **second population needin
 UPDATE-by-id path** — which would strengthen Path A on different grounds than the overlap that
 was ruled out.
 
+## 8.4t RULE 27 — the day's most important rule, in RES-V2's words
+
+Adopted org-wide by ORYN-CEO, which asked that **RES-V2's formulation carry rather than a
+paraphrase**, because it names *why* a passing check can be empty rather than only warning it can:
+
+> **A consistency check between two values cannot detect a single-source origin.**
+
+Adelaide's `international` and `domestic` fields agreed — **because they were the same page.** The
+check was **structurally incapable of failing**, so passing told us nothing.
+
+**Corollary, standing for both verifier lanes: a check comparing two derived values must first
+establish those values have independent origins. Otherwise agreement is tautology.**
+
+**General form (rule 27): before trusting any check as evidence, state the question you meant, and
+confirm the check answers that one rather than a narrower one that passes trivially.**
+
+**One species, and it bit every session today:** contract validation passing UWA's 63% defect (the
+records *were* contract-valid) · blob-hash matching failing to recognise a file as its own later
+revision · BASORG's reconciliation closing on three cancelling terms · CFO's title-scoped query
+reading no-match as absence · bare `git merge-tree` exiting 0 regardless of conflicts · a merge
+target selected by a predicate over the mutable open-PR list · a `ListAgents` reference read as an
+identity · a post-squash diff reporting 15,638 phantom deletions including live security
+migrations.
+
+**In every case the check answered honestly. It answered a different question.**
+
+## 8.4u Verify in the direction the defect pointed — not just that the fix held
+
+RES-V2 designed V2-9 around an asymmetry nobody else had named, **including BASORG**:
+
+UWA's defect was **over-inclusion** — 182 of 289 postgraduate records classified as undergraduate.
+The rebuild fixed it by being **stricter**, cutting 289 → 107. Everyone then verified **what was
+kept**: RES-R1 re-ran its census against its own output, RES-V1 confirmed the three defect classes
+absent, BASORG accepted the 182 exclusions because the categories were itemised and the arithmetic
+closed.
+
+**Nobody checked whether the stricter rebuild cut anything that should have stayed in.**
+
+A fix for over-inclusion creates exactly one new risk — **over-exclusion** — and that risk is
+invisible to every check aimed at the original defect. RES-V2 is sampling **25 records from the
+excluded population** alongside its 40-record content arm, to test the direction the defect
+pointed rather than the direction the fix moved.
+
+**Standing: when a fix tightens a rule, verify the newly-excluded population, not only the
+retained one. An exclusion is a silent deletion — nothing downstream ever notices a record that
+isn't there.**
+
 ## 8.5 If you inherit this org
 
 1. **Ask each lane what it holds before assigning anything.** Never assume a slot is free.
