@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
-import { getUpcomingOpportunityDeadlines } from "@/lib/deadlines/upcoming";
+import { getUpcomingOpportunityDeadlines, deadlineDetailLabel } from "@/lib/deadlines/upcoming";
 
 /**
  * getUpcomingOpportunityDeadlines feeds the dashboard's "Due soon" widget (Phase 23).
@@ -164,5 +164,59 @@ describe("getUpcomingOpportunityDeadlines — cycle_status guard (this package's
     });
     const result = await getUpcomingOpportunityDeadlines(supabase, USER_ID, TODAY);
     expect(result.map((d) => d.title)).toEqual(["Still Open"]);
+  });
+});
+
+/**
+ * Regression coverage for the "four indistinguishable Yale deadlines" defect: the dashboard's
+ * "Due soon" widget and the deadline-reminder notification (lib/deadlines/scan.ts) both used
+ * to build their student-facing label from `deadline_type` alone — a coarse category shared by
+ * every cycle of the same kind at a university, not an actual differentiator. Real Yale data
+ * (confirmed live by ORYN-BASORG) has four `deadline_type: "scholarship"` rows that are
+ * genuinely distinct cycles, only two of which even have distinct `cycle_label`s.
+ */
+describe("deadlineDetailLabel", () => {
+  test("prefers deadline_text_verbatim when present, even if cycle_label also exists", () => {
+    expect(
+      deadlineDetailLabel({
+        deadline_text_verbatim: "Early Action (US Citizens/Permanent Residents): November 1, 2026",
+        cycle_label: "Single-Choice Early Action",
+        deadline_type: "scholarship",
+      })
+    ).toBe("Early Action (US Citizens/Permanent Residents): November 1, 2026");
+  });
+
+  test("the real Yale case: two rows share deadline_type AND cycle_label — only verbatim tells them apart", () => {
+    const earlyActionDomestic = deadlineDetailLabel({
+      deadline_text_verbatim: "Early Action (US Citizens/Permanent Residents): November 1, 2026",
+      cycle_label: "Single-Choice Early Action",
+      deadline_type: "scholarship",
+    });
+    const earlyActionInternational = deadlineDetailLabel({
+      deadline_text_verbatim: "Early Action (International Citizens): December 1, 2026",
+      cycle_label: "Single-Choice Early Action",
+      deadline_type: "scholarship",
+    });
+    expect(earlyActionDomestic).not.toBe(earlyActionInternational);
+  });
+
+  test("falls back to cycle_label when verbatim is null", () => {
+    expect(
+      deadlineDetailLabel({
+        deadline_text_verbatim: null,
+        cycle_label: "Regular Decision",
+        deadline_type: "scholarship",
+      })
+    ).toBe("Regular Decision");
+  });
+
+  test("falls back to deadline_type when both verbatim and cycle_label are null (pre-migration-0056 rows)", () => {
+    expect(
+      deadlineDetailLabel({
+        deadline_text_verbatim: null,
+        cycle_label: null,
+        deadline_type: "application",
+      })
+    ).toBe("application");
   });
 });
