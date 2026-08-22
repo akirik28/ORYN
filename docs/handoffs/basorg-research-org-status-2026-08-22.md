@@ -2037,3 +2037,86 @@ list was built correctly hours ago"* and **re-queried all 17 live — all zero, 
 > **Correct-when-built is exactly the property that stops holding.** Same shape as the README
 > passages that went wrong when the data moved, and the commit still reading "five universities."
 > **Sound construction and re-checking are not alternatives.**
+
+## 8.4yy V1-13 CLOSED — the class is Adelaide-only. No Path A items.
+
+RES-V1 (`345ebdd`): **zero instances outside Adelaide's already-fixed 3 records** across UNSW,
+Sydney, Monash, UWA and Ottawa. **Nothing live is affected; the sweep generated no new
+founder-decision items.**
+
+Shipped as a **standing, unit-tested check** — `findValueDomainOutliers`, 4 tests, wired into both
+`au-r1` and `ca-r1` — not a one-off script. **A defect class discovered once should not depend on
+someone remembering it.**
+
+### The false-positive measurement is the finding, not the zero
+The **length signal fired 13 times and every one was genuine** — Sydney campus ×8, Monash campus ×2,
+`atar.value` ×3: real dual-campus programmes and multi-band ATAR cutoffs. **RES-V1 read every one in
+full before reporting, and measured the rate rather than assuming it.**
+
+> **Length alone is a weak signal — 13 fired, 0 real. The provenance-language regex is the
+> discriminating arm, and it returned zero everywhere.**
+
+**Anyone reusing this check needs that number, or the next run reports 13 defects.** Second time
+tonight a firing check was not a defect, after the integrated-master's 28 hits that Canada's lack of
+an AQF explained. **A check whose false-positive rate is unmeasured produces output nobody can act
+on.**
+
+Length judged against **each field's own corpus median rather than a fixed schema** — the
+sibling-domain logic made numeric.
+
+### The blind-pass / informed-pass control
+RES-V1 re-ran **Ottawa specifically because it had gone live**, since that changed what a finding
+there would mean — and got **the same zero on the deliberate recheck as on the pass that ran before
+it knew the stakes had changed.**
+
+> **That is a control against one's own bias, and the only clean way to answer "would you have
+> looked as hard if it mattered less?"** Nobody asked for it.
+
+### Corroboration declined-to-be-collapsed
+Its Adelaide pass **ran before** BASORG's scope-reduction message arrived, and it reported the result
+as **corroboration of V2-12 rather than as its own find.** **Two independent origins reaching one
+answer is worth strictly more than either alone** — Rule 27 satisfied in the rare direction, by
+someone declining to merge two findings into one.
+
+## 8.4zz RULING — client-side rendering with a vendor backend does NOT fail the gate
+
+RES-R1 stopped before extracting Calgary and escalated: `calendar.ucalgary.ca/programs` is a
+client-rendered Nuxt SPA whose data comes from **`app.coursedog.com`** (path `ucalgary_peoplesoft` —
+Calgary's own SIS). It asked rather than deciding whether this is McMaster-shaped.
+
+**RULING: it is not.**
+
+> **The evidence gate asks WHERE THE UNIVERSITY PUBLISHES, not WHAT INFRASTRUCTURE SITS BEHIND IT.**
+> **Client-side rendering with a vendor backend passes, provided the browsable canonical URL is on
+> the institution's own domain and that URL is what gets recorded. A vendor-hosted PUBLICATION
+> address (McMaster's `romcmaster.ca`) still fails.**
+
+McMaster's *published address* was the contractor's — what a student lands on and cites. **Calgary
+publishes at `calendar.ucalgary.ca/programs/<code>`.** Treating a SaaS-backed calendar as
+third-party-sourced would block most modern universities and make the gate measure **vendor
+procurement rather than source authority.**
+
+**Approved**: browser-render Calgary's own URLs, `retrieval_method: browser_render`, Calgary URLs as
+`source_url`. The page fetching Coursedog while rendering is **how the page loads for any student**.
+
+**Prohibited — and this is the part that matters**: querying the vendor API directly as a data
+source. Recording the **vendor URL** fails authority correctly; recording the **Calgary URL** for
+vendor-fetched data is **a false provenance claim — a `source_url` that was not retrieved.**
+
+**That is precisely the Adelaide defect** (the `international` key sourced from the domestic-only
+page) **and we are not re-introducing it at 493× scale.**
+
+**This ruling TIGHTENS rather than loosens the bar**: `browser_render` already passed and the URL is
+the institution's own; what's prohibited is a shortcut that would have produced unfalsifiable
+provenance.
+
+### Conditions attached
+- **`calendar.ucalgary.ca/robots.txt` must be fetched first** — RES-R1 reported the *vendor's* (429)
+  but not the one that actually governs it. A disallow there is a **hard block, not a cost.**
+- **Throttle**: 493 renders hit a shared multi-tenant backend 493+ times. **Slow is acceptable.**
+- **Pilot 8–10 records and stop**, for RES-V1 contract/ID pass + `findValueDomainOutliers` and
+  RES-V2 spot-check. **A convention defect costs nothing to fix at 10 records and a full
+  verify-fix-reverify cycle at 493.**
+
+**Expected to recur**: Coursedog, Kuali and Modern Campus back a large share of university calendars.
+**A vendor-branded browsable URL is McMaster — escalate, don't decide.**
