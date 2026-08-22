@@ -630,7 +630,9 @@ One modelling principle violated four times, not four schema requests. Decidable
 
 ## 8.4 Where each live lane is
 
-- **RES-R1** — UNSW 217 / Sydney 149 / Monash 178 pushed; UWA extracting (~422 URLs, majors
+- **RES-R1** — UNSW 217 / Sydney 149 / Monash 178 (contract/ID verified clean by RES-V1);
+  **UWA being rebuilt from scratch after a self-reported ~30% classification defect — see §8.4d**;
+  originally extracting (~422 URLs, majors
   excluded by `MJD-` prefix); Adelaide next (identity **resolved** — 2026 merger, confirmed from
   the institution's own schema.org markup; catalogue consolidated; international variant in full
   + domestic sample of 15–20, variant recorded **as structure not metadata**).
@@ -687,6 +689,54 @@ BUG-1's 85-of-271 measurement was built on *description* signatures (restated ti
 URLs, mid-word truncation). A wrong-target URL produces none of them. **So 31.4% is a floor on
 that corpus, not a total.** This is the Type B failure mode RES-V2 split out for url_repair —
 measured at zero in `university_programs`, **never measured in `opportunities`.**
+
+## 8.4d DATA-TRUST EVENT: ~30% of UWA's records were wrong, self-reported
+
+**Status: contained, being rebuilt. No verifier or ingester consumed the defective data** — both
+verification packages scope to the 544 UNSW/Sydney/Monash records and exclude UWA entirely.
+
+RES-R1 ran the comprehensive token audit BASORG required before Adelaide, and found roughly
+**86 of 289 UWA records (~30%)** carrying wrong `degree_level` values:
+- **41** with `degree_level: null` sitting in the in-scope file — no null-gate existed; exclusion
+  ran only on MJD-prefix or missing course-code card.
+- **28** postgraduate **Graduate Diplomas labelled as undergraduate sub-bachelor** — a substring
+  match on "diploma" without excluding "graduate diploma". That exclusion existed in the Adelaide
+  script and was never carried across.
+- **~17** standalone "Doctor of X" / "Master of X" classified as bachelor-integrated — the
+  `has_bachelor` conjunction was added in the recheck pass and never applied to the original 217.
+
+**Root cause, and a failure shape worth naming: a fix applied at the boundary rather than to the
+population.** Corrected logic was applied going forward to the 93 re-checked URLs and never
+back-applied to the original 217, then reported as "217 → 290 → 289, fixed." The method was
+corrected; data derived from the old method stayed. It looks complete because the thing that
+changed is right.
+
+Structurally identical to Glasgow one level up: there, live rows and file rows carried different
+conventions and the dedup key could not see across the boundary; here, pre-fix and post-fix records
+carry different classification logic and "the fix works" cannot see across it either.
+
+**Standing rule: when you correct a derivation, re-derive everything that derivation ever produced,
+then verify the corrected output against the full input set — not against the records already known
+to be affected.**
+
+The Graduate Diploma case is the worst of the three: a postgraduate credential presented as an
+undergraduate qualification is **worse than a null**, because it looks correct and a student
+filtering for undergraduate programmes gets it with nothing signalling the error.
+
+### The disclosure that matters more than the defect
+
+RES-R1 volunteered, unprompted, that **"corpus-validated" only ever checked schema conformance and
+ID uniqueness** — a validator that cannot catch a wrong-but-well-formed value. Every
+"corpus-validated" claim in this package, including ones BASORG relayed upward, should be read as
+**"schema-valid and ID-unique", not "correct."**
+
+**Schema validity and semantic correctness are different properties, and a validator checking the
+first passes the second silently forever.** Same distinction as a green gate meaning "no rule fired"
+rather than "this is correct."
+
+Consequence for verification design: RES-V1's contract/ID pass **correctly** cleared all 544 AU
+records and would have cleared these too — they are contract-valid. Only a source-truth pass catches
+this class. That is the concrete argument for both verifier lanes existing.
 
 ## 8.5 If you inherit this org
 
