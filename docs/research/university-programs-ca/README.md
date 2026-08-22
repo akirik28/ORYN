@@ -347,3 +347,57 @@ generic listing URL) that would have broken a URL-as-identity assumption if repr
    future crawl of `catalogue.uottawa.ca` finds one, this is the credential it would belong to.
 8. **Ottawa: postgraduate coverage was out of scope**, same as every other university in this
    corpus and the AU package before it — the sitemap's 305 `/en/graduate/` URLs were never fetched.
+
+## Calgary — deferred (RES-R1, 2026-08-22): feasibility, not authority
+
+Picked by the same live-QS-rank method as Ottawa (QS 2027, #249 world / #11 Canada, the rank
+immediately after Ottawa's #10). DB and corpus gate both clean before starting: 0
+`university_programs` rows, `duplicate_status: canonical`, no dedicated corpus file anywhere
+(local worktree or any remote branch) — the only two grep hits (a passing mention of "Calgary
+Faculty of Veterinary Medicine" inside Alberta's own file, and a shared-application-system
+listing in `admissions-systems-v1.json`) confirmed incidental, not coverage.
+
+**The source-authority question — resolved, not the reason this stopped.** Calgary's catalogue
+(`calendar.ucalgary.ca/programs/<code>`) is a client-side-rendered SPA whose data comes from a
+third-party backend, `app.coursedog.com` (Coursedog, reading Calgary's own PeopleSoft SIS).
+BASORG ruled this is **not** McMaster-shaped: the browsable, citable URL is Calgary's own domain
+— Coursedog is infrastructure the page fetches from, not the publisher of record, the same way a
+Next.js site calling its own `/_next/data/*.json` isn't third-party-sourced. **This becomes
+standing policy for the corpus**: client-side rendering backed by a SaaS vendor (Coursedog,
+Kuali, Modern Campus, etc.) passes the gate provided the canonical URL a student would cite is
+on the institution's own domain and that URL is what gets recorded — a vendor-hosted *publication
+address* (McMaster's `romcmaster.ca`) still fails. Querying the vendor API directly was
+explicitly prohibited regardless of gate outcome, for a provenance reason distinct from
+authority: recording a Calgary URL for data actually fetched from `app.coursedog.com` would be
+the same "one field, two sources" defect as Adelaide's international-key finding, just upstream
+of it. Approved method was browser-rendering Calgary's own URLs (`retrieval_method:
+browser_render`) and letting the page fetch Coursedog the way any visiting student's browser
+would.
+
+**What actually stopped it: `calendar.ucalgary.ca` rate-limits well below what 493 browser
+renders would require.** `robots.txt` returned HTTP 429 on every check — first attempt, and again
+after 8 polls spaced 25s apart (~3.5 minutes of deliberately slow, spaced requests). Most likely
+self-inflicted rather than a sign the site is broadly down: a single browser render of the
+`/programs` listing alone pulls dozens of sub-resources (JS bundles, the Coursedog API call,
+analytics/telemetry beacons), and combined with the posture-check requests this lane made
+roughly 50 requests to the domain in 10-15 minutes before the host started responding 429
+site-wide, not just on the path being probed. **493 full-page renders would be several thousand
+requests against a host that already flagged ~50.** A clean robots.txt would have been permission
+to crawl, not permission to crawl at that volume — the two questions are separate, and the volume
+one was already answered by the host itself.
+
+**Explicitly not tried, and should not be tried by a future lane either:** changing the request's
+user-agent to look like an ordinary browser (evasion, regardless of whether it would work — never
+do this in response to a rate limit or a block, escalate instead); retrying at a shorter interval
+to "push through" (429 is the host stating the rate itself is the problem, not a transient failure
+worth a quick retry — WAF-style limiters generally want backoff in minutes to tens of minutes,
+across the whole host, not just the path being fetched); falling back to the vendor API to route
+around the slow institutional path (the provenance ruling above is about authority, not
+availability — an availability problem does not reopen it).
+
+**Status: deferred, not excluded.** Unlike McGill/McMaster (policy-blocked, do not attempt), the
+gate for Calgary is open. A future attempt should retry `calendar.ucalgary.ca/robots.txt` cold
+(a fresh IP/session, or simply much later) before assuming anything about current site health,
+and if renders proceed, throttle far more conservatively than this lane did on the initial
+posture check — real minutes between requests, not seconds, given how quickly ~50 requests
+triggered a response here.
