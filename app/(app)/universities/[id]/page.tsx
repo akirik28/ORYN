@@ -183,7 +183,37 @@ export default async function UniversityDetailPage({ params }: { params: Promise
     score: s.score,
     confidence: s.confidence,
   }));
-  const explanation = explainOutlook(dimensionScores);
+  // Gate 1's resolved shape drives the explanation, not just the badge. Without it this panel
+  // contradicts itself: a badge reading "Not a profile-review system" sitting directly above a
+  // list of profile strengths, profile gaps, and essay/recommendation "unknowns" for a
+  // mechanism (YKS, CAO, a Dutch open programme) that reads none of them.
+  const explanation = explainOutlook(dimensionScores, outlook?.admissionSystemShape);
+
+  // Fresh-computation-wins, consistently: the badge already used `outlook` over the row for
+  // staleness reasons, and the range and the reason have to agree with the badge or the panel
+  // contradicts itself. Falls back to the persisted row only when this render didn't recompute
+  // (no target => no refresh ran).
+  const outlookEstimate =
+    outlook !== null
+      ? outlook.estimateRangeLow !== null && outlook.estimateRangeHigh !== null
+        ? { low: outlook.estimateRangeLow, high: outlook.estimateRangeHigh, confidence: outlook.estimateConfidence }
+        : null
+      : targetRes.data?.estimate_range_low != null && targetRes.data.estimate_range_high != null
+        ? {
+            low: Math.round(targetRes.data.estimate_range_low * 100),
+            high: Math.round(targetRes.data.estimate_range_high * 100),
+            confidence: targetRes.data.outlook_confidence,
+          }
+        : null;
+  const notApplicableReason = outlook?.notApplicableReason ?? null;
+  // The mechanism's own unknown ("where this cycle's cutoff lands") is worth showing for a real
+  // admission that simply doesn't read profiles. It is not worth showing when the finding is
+  // that the degree doesn't exist at this level — there is no cycle and no cutoff to wonder
+  // about, and `field_not_offered_at_undergraduate` can co-occur with any shape.
+  const showMechanismUnknowns =
+    explanation.profileNotAnInput &&
+    outlook?.notApplicableKind !== "field_not_offered_at_undergraduate" &&
+    explanation.unknowns.length > 0;
   const stats = statsRes.data;
 
   const metricByCode = new Map((metricsRes.data ?? []).map((m) => [m.metric_code, m]));
@@ -338,46 +368,71 @@ export default async function UniversityDetailPage({ params }: { params: Promise
                 for a classification that is no longer the one displayed. */}
             <OutlookBadge outlook={outlook?.outlook ?? targetRes.data.outlook} notApplicableKind={outlook?.notApplicableKind} />
           </div>
-          {targetRes.data.estimate_range_low != null && targetRes.data.estimate_range_high != null ? (
+          {/* The freshly computed range, for the same reason as the badge above: `targetRes.data`
+              was read before the refresh wrote to it, so pairing a stale range with a fresh
+              label can print "Oryn estimate: 15-25%" directly under "Not rated on this scale" —
+              exactly the false precision non-negotiable #5 forbids. `computeAdmissionOutlook`
+              returns whole percentage points; the persisted columns store 0-1. */}
+          {outlookEstimate ? (
             <p className="text-sm text-muted-foreground">
               Oryn estimate:{" "}
               <span className="font-medium text-foreground">
-                {Math.round(targetRes.data.estimate_range_low * 100)}–{Math.round(targetRes.data.estimate_range_high * 100)}%
+                {outlookEstimate.low}–{outlookEstimate.high}%
               </span>{" "}
-              ({targetRes.data.outlook_confidence} confidence). This is not a guarantee or an official university
+              ({outlookEstimate.confidence} confidence). This is not a guarantee or an official university
               probability.
             </p>
           ) : null}
-          <div className="grid gap-4 text-sm sm:grid-cols-3">
-            <div>
-              <p className="font-medium text-success">Strengths</p>
-              <ul className="mt-1 space-y-0.5 text-muted-foreground">
-                {explanation.strengths.length > 0 ? (
-                  explanation.strengths.map((s) => <li key={s}>+ {s}</li>)
-                ) : (
-                  <li>{explanation.insufficientData ? "We don't know enough about this yet." : "Add more profile data to see this."}</li>
-                )}
-              </ul>
+          {/* Phase 16.2's explanation is mandatory, and for a target Oryn declined to rate, the
+              explanation IS the reason — the sourced mechanism sentence, not a strengths/gaps
+              grid describing a review step this system doesn't have. Before this, the reason was
+              computed in full and dropped on the floor. */}
+          {notApplicableReason ? (
+            <p className="max-w-3xl text-sm text-muted-foreground">{notApplicableReason}</p>
+          ) : null}
+          {notApplicableReason ? (
+            showMechanismUnknowns ? (
+              <div className="text-sm">
+                <p className="font-medium text-muted-foreground">Unknowns</p>
+                <ul className="mt-1 space-y-0.5 text-muted-foreground">
+                  {explanation.unknowns.map((u) => (
+                    <li key={u}>? {u}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null
+          ) : (
+            <div className="grid gap-4 text-sm sm:grid-cols-3">
+              <div>
+                <p className="font-medium text-success">Strengths</p>
+                <ul className="mt-1 space-y-0.5 text-muted-foreground">
+                  {explanation.strengths.length > 0 ? (
+                    explanation.strengths.map((s) => <li key={s}>+ {s}</li>)
+                  ) : (
+                    <li>{explanation.insufficientData ? "We don't know enough about this yet." : "Add more profile data to see this."}</li>
+                  )}
+                </ul>
+              </div>
+              <div>
+                <p className="font-medium text-warning">Gaps</p>
+                <ul className="mt-1 space-y-0.5 text-muted-foreground">
+                  {explanation.gaps.length > 0 ? (
+                    explanation.gaps.map((g) => <li key={g}>− {g}</li>)
+                  ) : (
+                    <li>{explanation.insufficientData ? "We don't know enough about this yet." : "None obvious yet."}</li>
+                  )}
+                </ul>
+              </div>
+              <div>
+                <p className="font-medium text-muted-foreground">Unknowns</p>
+                <ul className="mt-1 space-y-0.5 text-muted-foreground">
+                  {explanation.unknowns.map((u) => (
+                    <li key={u}>? {u}</li>
+                  ))}
+                </ul>
+              </div>
             </div>
-            <div>
-              <p className="font-medium text-warning">Gaps</p>
-              <ul className="mt-1 space-y-0.5 text-muted-foreground">
-                {explanation.gaps.length > 0 ? (
-                  explanation.gaps.map((g) => <li key={g}>− {g}</li>)
-                ) : (
-                  <li>{explanation.insufficientData ? "We don't know enough about this yet." : "None obvious yet."}</li>
-                )}
-              </ul>
-            </div>
-            <div>
-              <p className="font-medium text-muted-foreground">Unknowns</p>
-              <ul className="mt-1 space-y-0.5 text-muted-foreground">
-                {explanation.unknowns.map((u) => (
-                  <li key={u}>? {u}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
+          )}
         </section>
       ) : null}
 
