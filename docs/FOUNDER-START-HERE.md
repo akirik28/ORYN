@@ -1,220 +1,120 @@
 # Founder: start here
 
-One ordered path from "just got back" to "ORYN running end-to-end in a browser." Follow
-top to bottom. Every step says what to do, where, what you should see, and when to stop.
+**Rewritten 2026-08-22 by ORYN-CEO.** The previous version dated from 08-17 and had gone stale —
+it described several things as blocking that have since been resolved, and none of what's
+actually urgent now. Everything below was measured today, not carried forward.
 
-This is the **only** document you need to open first. It links out to detail where a step
-needs it; you shouldn't have to read the others to get unblocked.
+One ordered path from "just got back" to "what needs me tonight." Each step says what to do,
+where, and how to tell it worked.
 
-- Full list of everything still needing you: `docs/founder-blocked-backlog.md`
-- Per-migration SQL and post-checks: `docs/founder-environment-unblock-runbook.md`
-- Browser test script for step 9: `docs/browser-qa-checklist.md`
-
-**Current state of the code:** every founder-independent task is done. Lint, typecheck,
-the full test suite, and a production build all pass on `main`, and GitHub Actions is
-green. Nothing below is a code fix — it is all credentials, dashboard settings, and
-applying migrations that this environment could not apply itself.
+- **What happened today**: `docs/ORYN-DAY-REPORT-2026-08-22.md` — read this first if you only
+  read one thing.
+- **The complete list of everything needing you**: `docs/founder-blocked-backlog.md` (35 items;
+  this page sequences only the ones that matter tonight).
+- **What is actually true right now**: `docs/current-state.md`.
 
 ---
 
-## The 10 actions, in order
+## What is no longer blocking (so you don't redo it)
 
-### 1. Turn off "Confirm email" (QA project only)
-
-**Where:** Supabase dashboard → your `oryn-qa-scratch` project → Authentication → Sign In
-/ Providers → Email → turn **Confirm email** off. While you're there, confirm Site URL /
-Redirect URLs includes `http://localhost:3000`.
-
-**Why first:** no browser QA is possible until this is off. There is no email provider in
-this repo, so a confirmation email can never arrive and signup never yields a session.
-
-**Expected result:** the Email provider row shows "Confirm email" disabled.
-
-**Stop if:** you can't find the setting — nothing after this will work, so resolve it
-before continuing.
+| Was blocking | Status now |
+|---|---|
+| `SUPABASE_SECRET_KEY` failing with "JWT issued at future" | **Resolved.** Never a bad credential — a transient server-side condition. Verified OK today. |
+| No QA accounts | **Done.** Two exist and work: `oryn.qa.a@example.com` (admin) and `oryn.qa.b@example.com`. Passwords in `.env.qa-accounts.local` (gitignored). |
+| Signup blocked by "Confirm email" | **Worked around.** The setting is still on, but the two QA accounts were created pre-confirmed via the admin API, so browser QA is unblocked without it. Only turn it off if you want to test the real signup flow. |
+| Migrations 0028–0038 | **Applied.** Live schema is at `0056`. |
+| 43 duplicate university identities | **Resolved.** Live `duplicate_status` is populated and every read path now queries it. |
 
 ---
 
-### 2. Add `SUPABASE_SECRET_KEY` to `.env.local`
+## The five things that need you tonight, in order
 
-**Where:** Supabase dashboard → Project Settings → API → copy the **secret** key (not the
-publishable one) → paste into `/Users/direncagankirik/Desktop/Founder/ORYN/.env.local` as
-`SUPABASE_SECRET_KEY=...`
+### 1. Open one ingester session — this is the only item with a clock
 
-**Verify:**
+**Why**: six of thirteen working sessions ended without warning this afternoon, including **both**
+lanes permitted to write to the database. Verified, bounded, revertible work is now stranded with
+nothing able to apply it.
 
-```bash
-npm run check:integrations
-```
+**The piece that expires: Habitat Derneği's application deadline, 26 August — four days out.**
+It needs its PR merged *and* the record applied to reach a student. Merging alone isn't enough.
 
-**Expected result:** `Supabase (secret key)   OK` (it currently reports
-`Missing credential`). No secret value is ever printed.
+Also waiting, none of it urgent: five `cycle_status` corrections resolved against their own
+sources, Glasgow's ~10 cleared `degree_type` records, six non-opportunity retirements.
 
-**Stop if:** it still says missing — steps 3–8 all depend on this.
+**How**: open a new chat and paste the `RES-I2` brief from `docs/ORYN-ORG-BRIEFS.md`. Tell it to
+start with the Habitat record. One session clears most of the backlog in under an hour.
 
----
+**Why nobody did it for you**: I nearly applied the Habitat record myself and stopped. That
+territory belongs to a lane that no longer exists, and crossing a boundary under deadline
+pressure is exactly how boundaries stop meaning anything. ORYN-CFO flagged the same gap
+independently and recommended you decide it as policy rather than leave it to judgment.
 
-### 3. Apply the pending migrations, in numeric order
+### 2. Approve migration `0061` — the launch blocker
 
-**Where:** Supabase dashboard → SQL Editor (or `npx supabase db push` if you've linked the
-CLI, which applies all of them in one command).
+**What**: `supabase/migrations/0061_public_profiles_require_authenticated.sql`, written and
+**not applied**.
 
-**Order — this matters:**
+**Why**: the `public_profiles` view currently returns data to **anonymous, unauthenticated
+callers** for any profile marked public. Measured exposure: 7 profiles, 1 currently public,
+safe-column fields only — private fields verified still protected. Small today. It is a
+14–18-year-old's display name, curriculum, graduation year and free-text "about", readable by
+anyone on the internet, for a profile the product tells them is visible to other Oryn students.
 
-| # | File | Note |
-|---|---|---|
-| 0028 | `supabase/migrations/0028_program_requirement_dedup_indexes.sql` | |
-| 0029 | `0029_story_notes.sql` | **already applied to `oryn-qa-scratch`** — skip it there |
-| 0030 | `0030_moderation.sql` | |
-| 0031 | `0031_messages_realtime.sql` | |
-| 0032 | `0032_ingestion_dedup_and_unknown_fields.sql` | |
-| 0033 | `0033_professional_profile_core.sql` | |
-| 0034 | `0034_skill_endorsements.sql` | |
-| 0035 | `0035_recommendations.sql` | |
-| 0036 | `0036_profile_views.sql` | |
-| 0037 | `0037_public_profile_headline_about.sql` | |
-| 0038 | `0038_canonical_entity_registry.sql` | |
+**How**: Supabase dashboard → SQL Editor → paste the migration file's contents → Run. Then
+confirm with an anonymous query that the view returns nothing for a public profile.
 
-Every one is additive — new tables, columns, indexes, RLS policies, and one
-`CREATE OR REPLACE VIEW`. Nothing drops or rewrites existing data.
+Full reasoning: backlog item 30, and `docs/research/verification/rls-live-verification-2026-08-22.md`.
 
-`docs/founder-environment-unblock-runbook.md` has a pre-check and post-check query for
-each of 0028–0032; run them rather than assuming.
+### 3. Approve migrations `0060` and `0057` — same shape, no urgency
 
-**Expected result:** each migration completes without error, and each post-check returns
-the row count that file states.
+Both written, reviewed, unapplied, waiting only on your go-ahead.
+- **`0060`** adds an honest "research confirmed this is open worldwide" marker, so that
+  "unresearched" and "unrestricted" stop looking identical in the data.
+- **`0057`** adds YÖK Atlas's own per-programme identifier for the 779 Turkish programme rows,
+  which currently have no usable per-programme source reference at all.
 
-**Stop if:** any migration errors. Don't skip ahead — later ones and the seeds below
-depend on earlier ones.
+Backlog items 29 and 26.
 
----
+### 4. Two product decisions nobody can make for you
 
-### 4. Apply the seed data, in this order
+- **Item 27 — ~79 opportunity rows** whose descriptions are degraded *in your own Drive source
+  spreadsheet* (the importer carried the defect faithfully; it did not create it). 31% of the
+  live browse surface carries a defect signature. Rows that were categorically not opportunities
+  at all are already retired. **Re-research, retire, or accept?**
+- **Item 35 — should a field hold more than one simultaneous truth?** Four lanes hit this
+  independently today in four different columns: an opportunity can be `closed` *and* awaiting
+  an unannounced next cycle; a programme lists 2–4 awards and the field stores one; Girl Up has
+  per-region deadlines and one deadline field. Every stored value is factually correct — what
+  misleads is the field's implied claim to be complete. Deciding the principle once settles all
+  four.
 
-```
-supabase/seed.sql                      (if not already applied)
-supabase/seed_drive_batch1.sql         needs 0028 + 0032
-supabase/seed_canonical_delta.sql         needs 0038 + 0039
-```
+### 5. The UI conversation you deferred
 
-All three are idempotent (`ON CONFLICT DO NOTHING`) — safe to re-run.
+`docs/ui-audit-2026-08-22.md` is the agenda: six defects verified safe to fix now, findings that
+need your taste rather than a fix, and costed proposals in three tiers (colour/typography ·
+density/hierarchy · information architecture) so you can choose with real prices attached.
 
-`seed_entities_drive_batch1.sql` is the canonical entity data from your own Drive pack:
-19 verified organizations, 54 verified Turkish schools with 126 verified aliases, 77 new
-universities plus 3 alias enrichments, 5 opportunity aliases.
-
-**Expected result:**
-
-```sql
-select count(*) from public.canonical_entities;  -- 1160  (1083 universities, 59 schools, 18 organizations/providers)
-select count(*) from public.universities;   -- 128 (51 existing + 77 new)
-```
-
-**Stop if:** `canonical_entities` doesn't exist — 0038 didn't apply, go back to step 3.
+**The light-vs-dark theme decision is still formally open** — nobody resolved it in your absence,
+deliberately. Note that `docs/known-issues.md` records the theme half as resolved while
+`founder-blocked-backlog.md` item 11 still lists it as open; that contradiction is itself
+unresolved and flagged rather than guessed at.
 
 ---
 
-### 5. Add `ANTHROPIC_API_KEY`
+## Optional, any time
 
-**Where:** [console.anthropic.com](https://console.anthropic.com) → API Keys → add to
-`.env.local`.
-
-**Verify:** `npm run check:integrations` → `Anthropic  OK`
-
-**Unblocks:** the AI Advisor (never yet run against a live model), weekly plan
-generation, CV extraction during onboarding, achievement refinement, research-project
-generation, and Essay Story Bank outlines.
-
-**Optional, same pattern, any time later:** `TAVILY_API_KEY` (opportunity/requirement
-discovery jobs), `COLLEGE_SCORECARD_API_KEY` (free, instant, at
-[api.data.gov/signup](https://api.data.gov/signup/) — US university sync only),
-`CRON_SECRET` (`openssl rand -hex 32`, only if you want the background jobs on a
-schedule rather than triggered by hand from `/admin`).
+- **`ANTHROPIC_API_KEY`** — the AI Advisor, weekly plan generation, and CV import have still
+  never run against a live model. Everything else works without it, and the dashboard correctly
+  falls back to deterministic non-AI recommendations rather than pretending.
+- **`TAVILY_API_KEY`** — plan usage limit exceeded; blocks the discovery jobs only.
+- **`COLLEGE_SCORECARD_API_KEY`** — free and instant; US university sync only.
 
 ---
 
-### 6. Create two QA accounts
+## What you do NOT need to do
 
-**Where:** the running app at `http://localhost:3000/signup` (start it with `npm run dev`).
-
-Sign up **two** accounts — you need a second one to test connections, messaging,
-endorsements, recommendations, and mutual connections. Real signup through the UI, not
-inserted by hand, so the profile trigger and onboarding flow are exercised too.
-
-**Expected result:** both land in onboarding and reach the dashboard.
-
-**Stop if:** signup returns "check your email" — step 1 didn't take effect.
-
----
-
-### 7. Grant yourself admin
-
-**Where:** Supabase SQL Editor.
-
-```sql
-update public.profiles set is_admin = true where id = '<your account A user id>';
-```
-
-Find the id under Authentication → Users, or `select id, display_name from public.profiles;`
-
-**Expected result:** `/admin` loads for account A and 404s for account B. Both are correct.
-
----
-
-### 8. Run the data-quality audit on the now-live registry
-
-```bash
-npm run entities:audit
-```
-
-Read-only. Reports duplicates, alias collisions, malformed fields, and any stale
-denormalized names, bucketed SAFE_EXACT_LINK / POSSIBLE_DUPLICATE / AMBIGUOUS /
-UNRESOLVED / INVALID. It never merges anything.
-
-**Expected result:** all buckets 0 on freshly seeded data. If a `stale_denormalized_name`
-appears later (only possible after you rename a canonical entity), re-sync with
-`npm run entities:audit -- --fix-drift`.
-
----
-
-### 9. Browser QA
-
-Follow `docs/browser-qa-checklist.md` with both accounts. The highest-value checks, in
-order:
-
-1. Onboarding: type `uskudar` in the school field → **Üsküdar American Academy** appears
-   and selecting it links the canonical entity rather than storing free text.
-2. Profile: add coursework (AP / IB HL / A-Level) and confirm the academics and
-   intellectual-curiosity scores move.
-3. Add an activity with an organization; try `YYGS` in the program field.
-4. Universities: search `MIT` → Massachusetts Institute of Technology.
-5. Account B: connect to account A, accept, then message, endorse a skill, and write a
-   recommendation.
-6. Account A: check Profile Strength, profile views, and mutual connections.
-7. Report a recommendation from B, then review it at `/admin` as A.
-
----
-
-### 10. Two product decisions only you can make
-
-Neither blocks anything above; both are waiting on you, and both are written up in full
-in `docs/founder-blocked-backlog.md`:
-
-- **Item 16b — should Education (and therefore GPA) appear on public profiles?** Your own
-  earlier decision was to keep school name and GPA off public profiles for minor safety;
-  a later migration added a `show_gpa` opt-in that assumes the opposite. Until you decide,
-  GPA stays private and the toggle is hidden. Say yes or no and the wiring is small either
-  way.
-- **Item 11 — the Drive-doc conflict** on messaging scope and visual theme, where your
-  planning doc and your later chat instructions disagree. The chat instructions were
-  followed; the conflict is logged rather than silently resolved.
-
----
-
-## What you do *not* need to do
-
-- No code fixes. `npm ci && npm run lint && npm run typecheck && npm test && npm run build`
-  all pass on `main`.
-- No hunting for what's left. Everything remaining is in
-  `docs/founder-blocked-backlog.md`, and every item there names the exact action,
-  why it blocks, and what it depends on.
+- **No code fixes.** `main` was independently verified today: lint clean, typecheck clean,
+  124 files / 1,888 tests passing, production build succeeds. The app was also run against the
+  live database and walked by hand.
+- **No hunting.** Everything remaining is in `docs/founder-blocked-backlog.md`, and every item
+  there names the exact action, why it blocks, and what it depends on.
