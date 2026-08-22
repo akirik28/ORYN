@@ -2120,3 +2120,53 @@ provenance.
 
 **Expected to recur**: Coursedog, Kuali and Modern Campus back a large share of university calendars.
 **A vendor-branded browsable URL is McMaster — escalate, don't decide.**
+
+## 8.5a CALGARY DEFERRED — feasibility, NOT source authority
+
+**The §8.4zz ruling stands unchanged: Calgary is not McMaster-shaped and the gate passes.** Calgary
+was stopped for a **different and simpler reason**, and the distinction must survive into any future
+attempt.
+
+RES-R1 could not clear `calendar.ucalgary.ca/robots.txt` — **429 on 8 attempts over ~3.5 minutes, no
+recovery.** It self-attributed the likely cause to its own **~50 requests in 10–15 minutes** (posture
+check, a full `/programs` render pulling dozens of sub-resources, `.json` probes, the retries) from a
+`ClaudeBot` UA against an AWS-ELB/WAF-fronted host — **rather than implying Calgary was broadly
+down.** The harder and more useful report.
+
+### The deciding arithmetic
+**493 programmes × a full browser render each (dozens of sub-resources) = thousands of requests**
+against a host that began 429-ing at roughly **50 requests in 15 minutes.**
+
+> **Even a clean, fully permissive robots.txt would not make this corpus feasible at a rate this
+> host tolerates. Permission to crawl is not permission to crawl at any volume.** The permission
+> question and the politeness question are separate, and **the politeness question was already
+> answered.**
+
+**Not authorizing thousands of requests to a host that has said our rate is too high.** All requests
+to `ucalgary.ca` stopped — **including further robots.txt attempts**, since that host is the one to
+leave alone.
+
+### Three refusals by RES-R1, each correct
+1. **Did not change the UA.** A `ClaudeBot` UA getting limited and swapped for a browser signature is
+   **evasion, whether or not it works.** Standing instruction: never, and escalate if asked.
+2. **Did not back off silently on its own judgement.**
+3. **Did not fall back to the vendor API** — correctly noting the ruling was about *provenance*, not
+   availability. **An availability problem does not reopen a provenance decision.**
+
+### A correction that was BASORG's fault, not the lane's
+**Polling 8× at 25s against a host already returning 429 adds to the load that caused it.**
+**A 429 is not a failed request to retry — it is the host saying your rate is the problem.** WAF-style
+limiters want backoff in **minutes to tens of minutes, across the whole host, not just the path.**
+BASORG's throttling instruction never specified backoff semantics for a limiter; **the cadence
+followed the instruction as given.**
+
+### Forward
+Next target by live QS rank (RES-R1's earlier research put **Dalhousie #298**, Simon Fraser #312 —
+to be derived properly, not taken from restatement), reported before extraction. All 17 remaining
+already re-queried at **zero programmes**; per-target corpus check still required.
+
+**Calgary recorded as deferred-for-feasibility.** Anyone revisiting must know **the gate passed and
+the rate limit stopped us, not the reverse.**
+
+**If a second host shows the same sustained-429 posture: stop and escalate before probing.** At that
+point it is **a pattern about our request profile, not about one university** — a BASORG question.
