@@ -171,7 +171,30 @@ Priority order. Every lane's next package should trace to one of these; when in 
     any stretch of non-Bash tool calls. Verify with `pwd` before any destructive or
     write-shaped shell command.
 
-## 4. Communication protocol
+18. **One fresh worktree per verification — never reuse-and-reset.** A verification tree
+    that has been `git reset --hard`-ed between checks carries residue: stale build
+    artifacts, a `node_modules` cloned from elsewhere, leftovers from the previous merge.
+    Build a new worktree off current `origin/main`, `npm ci` into it, merge the one branch
+    under test, gate, then remove it. Merge each PR **alone**, not stacked with others,
+    unless you are specifically testing a stack.
+
+    *Recorded because ORYN-CEO got this wrong on 2026-08-22*: a reused verification tree
+    produced a test failure that existed nowhere else. BUG-1 was told to hold two clean
+    PRs, ran the suite three times (once serially) without reproducing it, and correctly
+    refused to guess-fix against a failure it could not see — while naming the CEO's
+    scratch-tree construction as the likely cause, which is exactly what it was. A phantom
+    *pass* from the same cause would have been far worse than the phantom failure.
+
+19. **Check the premise, not only the conclusion.** Elimination reasoning ("it isn't the
+    code, so it must be the data") is only as good as the premise it eliminates from, and
+    a premise stated confidently by a competent lane is still a claim to verify.
+
+    *2026-08-22:* four dashboard deadlines rendered identically as "Yale University —
+    scholarship". The finding routed as a data defect on the reasoning that the UI already
+    rendered the differentiator correctly. The data turned out to be perfectly
+    differentiated — four dates, four `cycle_label`s, four verbatim strings — and the UI
+    was rendering `deadline_type` (identical across all four by design) while the
+    distinguishing field sat unused beside it. The eliminated premise was the defect.
 
 - **Addressing**: run `ListAgents`; the CEO session is titled `ORYN-CEO`, the research
   lead `ORYN-BASORG`. On starting, set your own session title to your lane code if your
