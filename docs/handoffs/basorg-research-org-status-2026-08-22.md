@@ -690,6 +690,29 @@ URLs, mid-word truncation). A wrong-target URL produces none of them. **So 31.4%
 that corpus, not a total.** This is the Type B failure mode RES-V2 split out for url_repair —
 measured at zero in `university_programs`, **never measured in `opportunities`.**
 
+### BASORG attempted to size it and failed — the instrument doesn't work
+
+Two domain-matching heuristics were built against the 271 active rows and **both were dominated
+by false positives**, so **no number is reported**:
+
+- **v1** (first domain label absent from title+organization): 87 candidates, **13 of 14 sampled
+  were false positives** — it compared only the leading label, so `summer.ucsb.edu` for a UCSB
+  programme scored as a mismatch while `ucsb` sat right there.
+- **v2** (no domain label of length >3 appears in title+organization): 107 candidates, **12 of 12
+  sampled were false positives** — the length threshold excludes precisely the acronyms that would
+  match: `usc`, `rsc`, `kcl`, `nyu`, `ufl`, `ed`. Legitimate different-domain cases
+  (`nslcleaders.org`, `arml3.com`, `inspiritaiprojects.com`) are indistinguishable from real
+  defects by this method.
+
+Neither run surfaced a single new defect. The one true positive that appeared — the BU row — was
+already known, found by **RES-R3 fetching it**.
+
+**Conclusion: this class is not measurable by DB-side heuristics. It requires fetching each URL
+and checking the landing page's identity, which is research work.** BASORG's own standing rule
+applied to itself: a pattern match is a candidate, not a finding — and here the candidates were
+almost entirely noise. The size of the wrong-target-URL population in `opportunities` remains
+**genuinely unknown**, and sizing it needs a research lane with fetch capability.
+
 ## 8.4d DATA-TRUST EVENT: ~30% of UWA's records were wrong, self-reported
 
 **Status: contained, being rebuilt. No verifier or ingester consumed the defective data** — both
