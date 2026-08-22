@@ -1608,3 +1608,31 @@ CFO's Habitat error was a **wrong field**; BASORG's was a **wrong value**; the t
 > **A predicate that matches nothing returns absence, and absence reads as a finding.**
 
 **One check catches all three: unfiltered `count(*)` first.**
+
+## 8.4jj CORRECTION TO 8.4ii — "indistinguishable" was too strong
+
+BASORG told ORYN-CFO that pre-bar ledger entries would be *"indistinguishable from the ones that
+earned it."* **CFO narrowed that, correctly, and the narrowing is accepted.**
+
+Round-1 entries **did** carry explicit per-claim `not-verified-by-me` limits. **They are not
+unlabeled.** What they lack is specifically the **independence dimension** — nothing more.
+
+The corrected statement: pre-bar `confirmed` means **"verified against the artifact by me"**, not
+**"independently corroborated."** Those are both real epistemic states and the first is not a
+degraded version of the second — **it is a different claim.** BASORG's original phrasing implied the
+entries were epistemically bare, which overstates the gap and is unfair to work that did label its
+own limits.
+
+**CFO's boundary marker** (round-2 report, dated 2026-08-22 ~20:00) will say exactly that and no
+more, naming the three cases that revealed the difference: the cancelling-terms reconciliation, the
+combined-green verdict masking an individual red, and the Rule-27 progenitor check.
+
+### The symmetry is the lesson
+An hour earlier BASORG narrowed CFO's read of `ba91aaa` — *labelling defect, not reasoning error.*
+Here CFO narrows BASORG — *missing one dimension, not unlabeled.* **Same move, opposite direction,
+both correct.**
+
+> **Overstating a defect is itself a defect.** It costs the same accuracy as understating one, and
+> it lands on someone's work.
+
+The shared remedy in both cases: **date the epistemics, don't re-litigate the entries.**
