@@ -110,6 +110,21 @@ function evaluateOpportunityEligibility(candidate: CandidateAction & { source: {
     notes.push(`Residency restriction on file (not automatically verified): ${opportunity.residency_restrictions}`);
   }
 
+  // --- Unverified country eligibility (migration 0060, read defensively like 0047's
+  // eligible_citizenships above). An empty eligible_countries has two live meanings —
+  // research-confirmed open (deliberately stored empty) and never-researched (~90% of
+  // live rows, docs/handoffs/opportunities-eligible-countries-gap.md Key Finding 1) —
+  // and only the confirmed-open marker distinguishes them. When the row carries NO
+  // eligibility signal at all (no structured lists, no restriction prose above, no
+  // confirmed-open marker), silence would present unresearched data as "open to you" —
+  // exactly the unknown-called-eligible failure Assumption A2 forbids. An advisory note,
+  // never an exclusion: absence of research is not evidence of a restriction either. ---
+  const countryEligibilityConfirmedOpen = opportunity.country_eligibility_confirmed_open ?? false;
+  const hasUnstructuredRestrictionEvidence = Boolean(opportunity.citizenship_restrictions || opportunity.residency_restrictions);
+  if (!hasCountryRestriction && !hasCitizenshipRestriction && !hasUnstructuredRestrictionEvidence && !countryEligibilityConfirmedOpen) {
+    notes.push("Country eligibility hasn't been verified for this opportunity yet — check the official page for restrictions.");
+  }
+
   // --- Grade level, computed from graduation_year (lib/profile/grade-level.ts) — closes
   // docs/counselor-core.md's documented limitation #5 ("Oryn doesn't derive a student's
   // current grade from graduation_year anywhere"). Arithmetic on a fact the student already
