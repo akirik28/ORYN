@@ -248,8 +248,105 @@ const DLOPP_CONTRACT: LaneContract = {
   ],
 };
 
+// ---------------------------------------------------------------------------------------
+// ECW — RES-R3 eligible_countries waves (ECW2/ECW3/ECW4/...), package V1-3
+// ---------------------------------------------------------------------------------------
+
+const ECW_CONTRACT: LaneContract = {
+  id: "ecw",
+  description: "RES-R3 — opportunities.eligible_countries research waves (docs/research/opportunities-eligible-countries/). Prefix 'ECW' covers ECW2/ECW3/ECW4/... together — the collision check narrows by prefix, then compares exact id strings, so this is safe across waves.",
+  idField: "record_id",
+  idPrefix: "ECW",
+  requiredFields: [
+    "record_id",
+    "lane",
+    "batch",
+    "opportunity_id",
+    "opportunity_title",
+    "category",
+    "finding",
+    "proposed_eligible_countries",
+    "proposed_action",
+    "verbatim_evidence",
+    "source_url",
+    "source_type",
+    "retrieved_at",
+    "fetch_method",
+    "confidence",
+    "notes",
+  ],
+  liveTable: "opportunities",
+  foreignKeyField: "opportunity_id",
+  identityReconciliation: [
+    ["opportunity_title", "title"],
+    ["category", "category"],
+  ],
+  // Deliberately NOT set: unlike DLOPP, this lane's own scope (per wave 1/2/3 precedent)
+  // is "every null/empty eligible_countries row," not filtered by verification_state or
+  // status — a mixed distribution here is expected, not a defect. Reported as an
+  // observation in logicalRules instead of enforced as a hard requirement.
+  enumVocabChecks: [],
+  logicalRules: (r, id) => {
+    const defects: string[] = [];
+    const finding = r["finding"] as string;
+    const proposedAction = r["proposed_action"] as string;
+    const proposedCountries = r["proposed_eligible_countries"];
+    const hasProposedCountries = proposedCountries !== null && proposedCountries !== undefined && Array.isArray(proposedCountries) && (proposedCountries as unknown[]).length > 0;
+
+    // confirmed_open_worldwide must never carry a populated array — empty is the whole
+    // point (an all-countries enumeration would be the fabrication this project's
+    // standing rule prohibits, per every ECW wave's own documented discipline).
+    if (finding === "confirmed_open_worldwide" && hasProposedCountries) {
+      defects.push(`${id}: finding=confirmed_open_worldwide but proposed_eligible_countries is populated — confirmed-open should keep the array empty, never enumerate`);
+    }
+    // A populate proposal's action must actually say so, not a none_*/defer action.
+    if (hasProposedCountries && proposedAction.startsWith("none_")) {
+      defects.push(`${id}: proposed_eligible_countries is populated but proposed_action="${proposedAction}" reads as a no-op — action/value mismatch`);
+    }
+    // The reverse: an action that claims a populate must have the array to back it.
+    if (proposedAction === "propose_eligible_countries" && !hasProposedCountries) {
+      defects.push(`${id}: proposed_action claims a populate but proposed_eligible_countries is empty/null`);
+    }
+    if (!String(r["verbatim_evidence"] ?? "").trim()) {
+      defects.push(`${id}: verbatim_evidence is empty — every finding needs quoted evidence, even a null-by-design one`);
+    }
+    if (!String(r["retrieved_at"] ?? "").trim()) {
+      defects.push(`${id}: retrieved_at is empty`);
+    }
+    return defects;
+  },
+  monotonicityChecks: [
+    {
+      name: "eligible_countries",
+      recordField: "proposed_eligible_countries",
+      liveColumn: "eligible_countries",
+      isRegression: (recordValue, liveValue) => {
+        const proposed = Array.isArray(recordValue) ? (recordValue as unknown[]) : null;
+        const live = Array.isArray(liveValue) ? (liveValue as unknown[]) : null;
+        if (!proposed || proposed.length === 0) return false; // nothing proposed, not a write
+        return !!live && live.length > 0; // populating over an already-non-empty live array is a replacement, not a populate
+      },
+      describe: (_rv, liveValue) => `proposes a non-empty eligible_countries while live already holds ${JSON.stringify(liveValue)} — this is a REPLACEMENT, not a populate-empty-field write; needs evidence-backed correction review, not an automatic apply`,
+    },
+    {
+      // RULE-INGEST-004: free text is outside the monotonicity guard's domain — this
+      // check only asks "would a write here touch an already-populated field," not
+      // "is the proposed prose correct." A record's citizenship_restrictions/
+      // residency_restrictions prose proposal is signaled by proposed_action, not a
+      // dedicated proposed-text field (the contract carries the wording in
+      // verbatim_evidence + notes) — checked against proposed_action as the marker.
+      name: "citizenship_restrictions (prose, unadjudicated content)",
+      recordField: "proposed_action",
+      liveColumn: "citizenship_restrictions",
+      isRegression: (recordValue, liveValue) => recordValue === "propose_citizenship_restrictions_prose_only" && liveValue !== null && liveValue !== undefined && String(liveValue).trim() !== "",
+      describe: (_rv, liveValue) => `proposes new citizenship_restrictions prose while live already holds "${String(liveValue).slice(0, 70)}..." — a REPLACEMENT of existing prose, not a populate; content correctness is NOT checked here (RULE-INGEST-004 — free text is outside this guard's domain), only that live isn't already populated`,
+    },
+  ],
+};
+
 const LANE_CONTRACTS: Record<string, LaneContract> = {
   dlopp: DLOPP_CONTRACT,
+  ecw: ECW_CONTRACT,
 };
 
 // ---------------------------------------------------------------------------------------
