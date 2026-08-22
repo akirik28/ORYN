@@ -19,5 +19,13 @@ export const SUBJECT_LABELS: Record<SubjectTaxonomy, string> = {
   architecture: "Architecture",
   design: "Design",
   entrepreneurship: "Entrepreneurship",
+  biology: "Biology",
+  chemistry: "Chemistry",
+  history: "History",
+  environmental_science: "Environmental Science",
+  education: "Education",
+  arts_humanities: "Arts & Humanities",
+  social_sciences: "Social Sciences",
+  health_sciences: "Health Sciences",
   other: "Other programs",
 };

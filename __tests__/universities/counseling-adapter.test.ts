@@ -285,7 +285,11 @@ describe("buildUniversityCounselingView — programFocus (target major, not an o
   });
 
   test("no target program and no classifiable interest at all is 'none' — never guesses a target major the student never stated", () => {
-    const view = buildUniversityCounselingView(baseInput({ studentInterestLabels: ["Marine Biology"] }));
+    // Was "Marine Biology" — the 2026-08-22 subject-taxonomy expansion added a `biology`
+    // category specifically so interests like this classify correctly, so it's no longer a
+    // genuinely-unclassifiable example. "Veterinary Science" stays other at the same
+    // measurement (not medicine, not biology) and keeps this test's actual intent.
+    const view = buildUniversityCounselingView(baseInput({ studentInterestLabels: ["Veterinary Science"] }));
     expect(view.programFocus.interestSource).toBe("none");
     expect(view.programFocus.matchedSubjectLabel).toBeNull();
   });

@@ -823,7 +823,7 @@ export type UniversityInsert = Insertable<
 export type UniversityUpdate = Updatable<University, "id" | "created_at" | "updated_at">;
 
 /** See lib/programs/subject-taxonomy.ts SUBJECT_TAXONOMY — must stay in sync with the
- * university_programs.subject_taxonomy CHECK constraint (migration 0042). */
+ * university_programs.subject_taxonomy CHECK constraint (migration 0044, widened by 0060). */
 export type ProgramSubjectTaxonomy =
   | "economics"
   | "business"
@@ -841,6 +841,14 @@ export type ProgramSubjectTaxonomy =
   | "architecture"
   | "design"
   | "entrepreneurship"
+  | "biology"
+  | "chemistry"
+  | "history"
+  | "environmental_science"
+  | "education"
+  | "arts_humanities"
+  | "social_sciences"
+  | "health_sciences"
   | "other";
 
 export type ProgramVerificationState = "verified_current" | "verified_historical" | "discontinued" | "unverified" | "conflicting";
