@@ -91,6 +91,25 @@ structurally safe. So this is one specific hole and one near-miss, not a systemi
 
 **Migration `0061` fixes the live hole. It is written and NOT applied — it needs you.**
 
+**Then, later in the evening, a third and worse one.** BUG-1 kept sweeping and found that an
+ordinary student account can **grant itself `is_admin`** with one unprivileged call. It executed
+this live against a real QA account; the row changed. The `profiles` UPDATE policy is
+`USING (id = auth.uid())` — correct for what it says, and the whole protection — but **RLS is
+row-scoped, not column-scoped**, so `is_admin` is as writable to a student as their display name.
+Admin routes then use a service-role client that bypasses RLS entirely, so this doesn't widen a
+view; it hands over the key that switches RLS off. Two computed columns,
+`profile_strength_score` and `completeness_percent`, share the defect.
+
+This ranks above the anonymous-read hole: that one needs a student to opt into a public profile
+and exposes a whitelist of safe fields; this one needs nothing and grants everything. Migration
+`0062` fixes all three columns with a trigger — the same mechanism `0058` already uses, and one
+this codebase already applies to three other columns elsewhere. The pattern was known and simply
+never applied to `profiles`. **Written, not applied. Backlog item 36.**
+
+Worth noting what this says about the sweep just described: reading all ~90 policies and finding
+them clean was true, and still missed this, because the defect isn't in any policy — it's in what
+a policy structurally cannot express. A correct answer to a question that was too narrow.
+
 ---
 
 ## Numbers
@@ -113,28 +132,32 @@ item 34. That's the honest state, not a rounding.
 
 Full detail in `docs/founder-blocked-backlog.md`. In priority order:
 
-1. **Item 34 — open one ingester session.** Six of thirteen sessions ended without warning this
-   afternoon, including **both** database-writing lanes. Verified, bounded, revertible work is
-   now stranded with nothing able to apply it, and one new session clears most of it in under
-   an hour. **The piece with a clock: Habitat Derneği's application deadline, 26 August — four
-   days out.** It needs its PR merged *and* the record applied to reach a student; merging alone
-   isn't enough. Nothing else on this list expires.
+1. **Item 36 — the privilege escalation.** Approve applying migration `0062`. Any signed-in
+   student can currently make themselves an admin, and admin means a client that bypasses RLS.
 2. **Item 30 — the anonymous-read hole.** Approve applying migration `0061`. Launch blocker.
-3. **Item 29 — migration 0060** (honest eligibility marker), and **item 26 — migration 0057**
+3. **Item 34 — open one ingester session**, whenever suits you. Six of thirteen sessions ended
+   without warning this afternoon, including **both** database-writing lanes; verified, bounded,
+   revertible work is stranded with nothing able to apply it, and one new session clears most of
+   it in under an hour. **Correction, evening**: I spent the afternoon escalating Habitat
+   Derneği's 26 August deadline as the one item with a clock. It was already live and already
+   correct — `active`, right date, matching its source. Nobody had queried the row; a research
+   record being unmerged was read as the fact not being live, and I propagated that into three
+   documents including this one. **Nothing on this list expires.**
+4. **Item 29 — migration 0060** (honest eligibility marker), and **item 26 — migration 0057**
    (YÖK Atlas identifier). Both written, reviewed, unapplied, waiting on you.
-4. **Item 27 — ~79 opportunity rows** whose descriptions are degraded *in your own Drive source
+5. **Item 27 — ~79 opportunity rows** whose descriptions are degraded *in your own Drive source
    spreadsheet*. 31% of the live browse surface carries a defect signature; the categorically
    broken ones are already retired. Re-research, retire, or accept.
-5. **Item 35 — the schema forces one value where reality has several.** Four lanes hit this
+6. **Item 35 — the schema forces one value where reality has several.** Four lanes hit this
    independently today in four different columns, without coordinating: an opportunity can be
    `closed` *and* awaiting an unannounced next cycle at once (true for 11 of 18 rows examined);
    a programme lists 2–4 awards and the field holds one; Girl Up has per-region deadlines and
    one deadline field. Every stored value is factually correct — the misleading part is the
    field's implied claim to be complete. Deciding the principle once settles all four. Item 32
    (`degree_type` specifically) is the sharpest instance if you want a concrete entry point.
-6. **Items 31, 33, 28** — an unbuilt apply path blocking 1,429 verified URL corrections; ten
+7. **Items 31, 33, 28** — an unbuilt apply path blocking 1,429 verified URL corrections; ten
    backup tables to drop or relocate; five opportunities no permitted fetch path can reach.
-6. **UI.** `docs/ui-audit-2026-08-22.md` is the agenda for the conversation you deferred:
+8. **UI.** `docs/ui-audit-2026-08-22.md` is the agenda for the conversation you deferred:
    six safe fixes, findings that need your taste, and costed proposals in three tiers. Theme
    (light vs dark) is still formally open — nobody resolved it in your absence.
 
@@ -151,13 +174,17 @@ I carried it. RES-I1 left a design for a write path that was never built, which 
 verified corrections sit unapplied. Standing practice changed: closure is *not* reversible, so
 every lane now pushes everything and leaves a resumable handoff before standing down.
 
-**I made three mistakes worth recording.** I let my own doc commits land on a diverged branch
+**I made four mistakes worth recording.** I let my own doc commits land on a diverged branch
 where nobody could see them, and told two lanes a file was on `main` when it wasn't — caught by
 UI-1. I instructed one session to perform work another session had been denied permission for —
 refused, correctly, by MERGE-1. And I reported a test failure that didn't exist, from a
 verification worktree I'd reused instead of rebuilding — BUG-1 ran it three times, couldn't
-reproduce it, and held its ground. All three are now written into the org's standing rules
-against my name, because the rules are worth more than the record.
+reproduce it, and held its ground. And I spent an afternoon escalating a deadline as the
+single most urgent thing on the founder's list without ever querying the row — it was already
+live and already correct, and I put that false urgency into three documents, one of which told
+the founder it was the first thing to do. All four are now written into the org's standing rules
+against my name, because the rules are worth more than the record. The fourth is the one that
+stings: rule 15 says verify the artifact, not the report. I wrote that rule this morning.
 
 **The thing that actually worked** wasn't any individual lane's cleverness. Every real error
 today — mine included — was caught by someone re-checking the primary artifact instead of

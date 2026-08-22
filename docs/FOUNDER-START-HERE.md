@@ -27,29 +27,37 @@ where, and how to tell it worked.
 
 ---
 
-## The five things that need you tonight, in order
+## What needs you tonight, in order of severity
 
-### 1. Open one ingester session — this is the only item with a clock
+> **Correction to the earlier version of this page, 2026-08-22 evening.** It opened by telling you
+> Habitat Derneği's 26 August deadline was four days out and stranded. **That was wrong, and it was
+> my error.** The row is already live, `active`, with `deadline 2026-08-26` matching its source — a
+> student can see it right now. The only gap is a null `last_verified_at`, a provenance stamp, not
+> a student-facing defect. I propagated a research lane's premise into three documents without
+> querying the row myself; the lane caught its own mistake and I confirmed the correction live.
+> **Nothing on this list expires.** What follows is ordered by severity instead.
 
-**Why**: six of thirteen working sessions ended without warning this afternoon, including **both**
-lanes permitted to write to the database. Verified, bounded, revertible work is now stranded with
-nothing able to apply it.
+### 1. Approve migration `0062` — any signed-in user can make themselves an admin
 
-**The piece that expires: Habitat Derneği's application deadline, 26 August — four days out.**
-It needs its PR merged *and* the record applied to reach a student. Merging alone isn't enough.
+**What**: a trigger migration written by BUG-1 and **not applied**. Ranked above everything else
+on this page.
 
-Also waiting, none of it urgent: five `cycle_status` corrections resolved against their own
-sources, Glasgow's ~10 cleared `degree_type` records, six non-opportunity retirements.
+**Why**: an ordinary QA student account granted itself `is_admin = true` with a single
+unprivileged call. This was executed live, not inferred from reading the schema. The `profiles`
+UPDATE policy says *you may update your own row*, which is correct — but **RLS is row-scoped, not
+column-scoped**, so `is_admin` is as writable to a student as their own display name. Admin routes
+then use a service-role client that bypasses RLS entirely, so this doesn't widen a view — it hands
+over the key that switches RLS off. Two computed columns, `profile_strength_score` and
+`completeness_percent`, have the same defect and the same fix.
 
-**How**: open a new chat and paste the `RES-I2` brief from `docs/ORYN-ORG-BRIEFS.md`. Tell it to
-start with the Habitat record. One session clears most of the backlog in under an hour.
+**How**: Supabase dashboard → SQL Editor → paste `supabase/migrations/0062_*.sql` → Run. Then
+confirm a non-admin account can no longer change its own `is_admin`.
 
-**Why nobody did it for you**: I nearly applied the Habitat record myself and stopped. That
-territory belongs to a lane that no longer exists, and crossing a boundary under deadline
-pressure is exactly how boundaries stop meaning anything. ORYN-CFO flagged the same gap
-independently and recommended you decide it as policy rather than leave it to judgment.
+Full reasoning: backlog item 36. The mechanism is not novel here — it mirrors
+`posts_guard_system_columns` in migration `0058`, and legitimate admin grants keep working
+because they run through the service-role path the trigger exempts.
 
-### 2. Approve migration `0061` — the launch blocker
+### 2. Approve migration `0061` — the anonymous-read launch blocker
 
 **What**: `supabase/migrations/0061_public_profiles_require_authenticated.sql`, written and
 **not applied**.
@@ -75,7 +83,19 @@ Both written, reviewed, unapplied, waiting only on your go-ahead.
 
 Backlog items 29 and 26.
 
-### 4. Two product decisions nobody can make for you
+### 4. Open one ingester session (whenever suits you — no deadline)
+
+Six of thirteen working sessions ended without warning this afternoon, including **both** lanes
+permitted to write to the database. Verified, bounded, revertible work is stranded with nothing
+able to apply it: five `cycle_status` corrections resolved against their own sources, Glasgow's
+~10 cleared `degree_type` records, six non-opportunity retirements, and the Habitat provenance
+stamp. None of it is urgent and none of it is harmful while it waits — an unapplied correction is
+a missing improvement, not a defect.
+
+**How**: open a new chat and paste the `RES-I2` brief from `docs/ORYN-ORG-BRIEFS.md`. One session
+clears most of it in under an hour. Backlog item 34.
+
+### 5. Two product decisions nobody can make for you
 
 - **Item 27 — ~79 opportunity rows** whose descriptions are degraded *in your own Drive source
   spreadsheet* (the importer carried the defect faithfully; it did not create it). 31% of the
@@ -88,7 +108,7 @@ Backlog items 29 and 26.
   misleads is the field's implied claim to be complete. Deciding the principle once settles all
   four.
 
-### 5. The UI conversation you deferred
+### 6. The UI conversation you deferred
 
 `docs/ui-audit-2026-08-22.md` is the agenda: six defects verified safe to fix now, findings that
 need your taste rather than a fix, and costed proposals in three tiers (colour/typography ·
