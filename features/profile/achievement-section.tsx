@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Plus, Pencil, Trash2, Loader2, Sparkles, Check, Inbox, type LucideIcon } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -130,7 +131,17 @@ export function AchievementSection<T extends { id: string }>({
   function handleDelete(id: string) {
     setDeletingId(id);
     startTransition(async () => {
-      await onDelete(id);
+      // No optimistic removal here — the item stays in `items` (server-truthed) until
+      // `onDelete`'s Server Action actually succeeds and revalidates, so a failure was
+      // already honest, never a false success. It was silent, though: the result was
+      // discarded entirely, so a student who clicked delete and hit an RLS denial or a
+      // transient DB error saw nothing happen and no reason why. Backs all achievement
+      // types sharing this component (Activities, Projects, Awards, Research, Goals, ...),
+      // so this one fix covers every one of them at once — same pattern already used two
+      // functions up in submit(), and the one requirement-checklist.tsx already uses for a
+      // delete-shaped action with no optimistic state to roll back.
+      const result = await onDelete(id);
+      if (result.error) toast.error(result.error);
       setDeletingId(null);
     });
   }
