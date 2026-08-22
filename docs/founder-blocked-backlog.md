@@ -387,6 +387,28 @@ header comment. **No longer depends on DDL/founder action** — it's ordinary ap
 now. Related: item 19's remaining ~63 lower-confidence orphan pairs (no visible-card impact,
 lower priority).
 
+## 26. Approve applying migration 0057 (YÖK Atlas `kilavuz_kodu` column)
+
+**Action**: decide whether to authorize applying
+`supabase/migrations/0057_university_program_kilavuz_kodu.sql` to the live database.
+**Why it's blocked**: not technical — the migration is written and reviewed, adds a single
+nullable `text` column plus a partial index, and does not touch dedup/identity logic. It's
+withheld because a prior coordination session's authorization for migration 0055 was explicit
+that it "does not extend to this migration," and the file's own header says not to apply
+without asking the founder again. Confirmed still not applied: `information_schema.columns`
+has no `kilavuz_kodu` on `university_programs` as of 2026-08-22.
+**What it unblocks**: a stable per-programme source identifier for Turkey's 779
+`university_programs` rows, all of which currently carry only the bare YÖK Atlas portal root
+as `official_program_url` (no per-programme page exists on that site) — the largest population
+in this schema with no usable per-programme source reference. `kilavuz_kodu` is confirmed live
+and stable in YÖK Atlas's own API, already stored without incident across 456 real placement
+rows (see `docs/handoffs/yok-atlas-placements-scale-12-universities.md`).
+**What it does NOT do**: backfill the column for the existing 779 rows (separate, harder work —
+6 universities have programme names recorded in English rather than Turkish, a gap that needs
+closing first) or touch deduplication/identity resolution.
+**Depends on**: nothing technical — a founder go-ahead, same shape as item 25's original
+DDL-access gate but for authorization rather than access.
+
 ---
 
 ## Environment-capability gap (not founder-blocked, noted for completeness)
