@@ -26,16 +26,20 @@ describe("migration numbering", () => {
     // Two lanes collided on a number once already. This fails loudly if another lane
     // lands a 0058 too, instead of one of them silently never running. This test only
     // pins 0058's own uniqueness — it does not assert 0058 is the highest number in the
-    // directory forever; migration 0059 (schema-gaps-design, 2026-08-22) legitimately
-    // follows it. Bump the literal below when the next migration lands, the same way this
-    // one did — it is a collision guard, not a permanent ceiling.
+    // directory forever; migrations 0061 and 0062 (the RLS verification package's own
+    // fixes, both unapplied like 0058 — public_profiles_require_authenticated and
+    // profiles_guard_protected_columns) are what currently follow it. Bump the literal
+    // below when the next migration lands, the same way this one did — it is a collision
+    // guard, not a permanent ceiling.
     const numbers = readdirSync(MIGRATIONS_DIR)
       .filter((f) => f.endsWith(".sql"))
       .map((f) => f.slice(0, 4));
     expect(numbers.filter((n) => n === "0058")).toHaveLength(1);
     expect(numbers.filter((n) => n === "0059")).toHaveLength(1);
     expect(numbers.filter((n) => n === "0060")).toHaveLength(1);
-    expect(Math.max(...numbers.map(Number))).toBe(60);
+    expect(numbers.filter((n) => n === "0061")).toHaveLength(1);
+    expect(numbers.filter((n) => n === "0062")).toHaveLength(1);
+    expect(Math.max(...numbers.map(Number))).toBe(62);
   });
 });
 
@@ -172,6 +176,20 @@ describe("RLS", () => {
     expect(policy).toContain("visibility = 'connections'");
     expect(policy).toContain("visibility = 'oryn_public'");
     expect(policy).not.toContain("visibility = 'private'");
+  });
+
+  test("the read policy is restricted to authenticated — the oryn_public branch never checks the CALLER's identity, only the author's, so without this restriction anon inherits it from the schema-wide default grant", () => {
+    // Regression pin for the exact defect BUG-1's RLS verification package found and
+    // fixed here on 2026-08-22 (docs/research/verification/rls-live-verification-2026-08-22.md):
+    // the identical shape was live in migration 0023's public_profiles view (fixed
+    // separately in migration 0061) before this one was caught unapplied. A future edit
+    // that drops "to authenticated" while "cleaning up" this policy would reopen it
+    // silently — this test exists so that fails here instead of in production.
+    const policy = MIGRATION.slice(
+      MIGRATION.indexOf('create policy "read visible posts"'),
+      MIGRATION.indexOf('create policy "create own post"')
+    );
+    expect(policy).toMatch(/for select\s+to authenticated/);
   });
 
   test("blocking gates reads in both directions via the symmetric helper", () => {

@@ -167,4 +167,39 @@ describe("decideIngestion", () => {
     const decision = decideIngestion(record({ application_url: "https://promys.org/apply-now" }), []);
     expect(decision.row?.application_url).toBe("https://promys.org/apply-now");
   });
+
+  describe("description-quality gate (lib/opportunities/description-quality.ts)", () => {
+    test("rejects as description_defect on the one no-legitimate-form signature: multi-programme concatenation", () => {
+      const r = record({
+        description:
+          "PROMYS | https://promys.org | Ross Mathematics Program | https://u.osu.edu/rossmath/ | HCSSiM | https://hcssim.org",
+      });
+      const decision = decideIngestion(r, []);
+      expect(decision.outcome).toBe("description_defect");
+      expect(decision.row).toBeNull();
+      expect(decision.detail).toContain("segments");
+    });
+
+    test("still accepts a record whose description only trips advisory signatures, and carries them as warnings — never silently drops a correct research record over an ambiguous signal", () => {
+      const r = record({ description: "PROMYS is a rigorous summer program. Details: https://promys.org/details" });
+      const decision = decideIngestion(r, []);
+      expect(decision.outcome).toBe("accepted");
+      expect(decision.row).not.toBeNull();
+      expect(decision.warnings.some((w) => w.defect === "embedded_url")).toBe(true);
+      expect(decision.detail).toContain("description-quality flag");
+    });
+
+    test("a clean description accepts with zero warnings and a null detail, same as before this gate existed", () => {
+      const decision = decideIngestion(record(), []);
+      expect(decision.outcome).toBe("accepted");
+      expect(decision.warnings).toEqual([]);
+      expect(decision.detail).toBeNull();
+    });
+
+    test("a missing description is not itself a defect — never rejects a record that simply has no description yet", () => {
+      const decision = decideIngestion(record({ description: null }), []);
+      expect(decision.outcome).toBe("accepted");
+      expect(decision.warnings).toEqual([]);
+    });
+  });
 });

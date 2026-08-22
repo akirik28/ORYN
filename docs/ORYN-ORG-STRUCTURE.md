@@ -18,7 +18,13 @@ If this file and a founder message disagree, the founder's most recent direct me
 
 ```
 FOUNDER (Ada Sarp Kırık)
-   │  merges all PRs to main; makes every decision listed in founder-blocked-backlog.md
+   │  makes every decision listed in founder-blocked-backlog.md
+   │
+   ├── ORYN-CFO   independent auditor — reports to the FOUNDER, not to the CEO,
+   │              because the CEO is one of the things it audits. Commands nobody.
+   │              Verifies artifacts rather than reports; may fix bookkeeping/doc
+   │              drift directly, may never touch code, migrations, or live data.
+   │              Routes lane findings through that lane's own manager.
    ▼
 ORYN-CEO  (coordination session — address via ListAgents/SendMessage as "ORYN-CEO")
    │  sets strategy, assigns/verifies all lanes, verifies every PR before it reaches
@@ -110,8 +116,137 @@ Priority order. Every lane's next package should trace to one of these; when in 
 13. **Shared resources are real**: live DB (re-fetch immediately before any write —
     another session may have written), disk (no giant artifacts without need; if you hit
     ENOSPC, stop writes, delete nothing, escalate), the primary checkout (don't touch it).
+14. **Information-monotonic writes (RULE-INGEST-003).** A write may populate an empty
+    field, replace a value with a *more* informative one backed by evidence, or correct a
+    value the evidence shows is wrong. A write may **never** replace a populated field
+    with a less informative one because this pass couldn't determine it. Inability to
+    determine is a fact about our research, not about the thing being described — so the
+    field is skipped, never overwritten. Applies to every column, not just the one that
+    prompted a given rule, and there is **no vocabulary coercion at the ingestion
+    boundary**: a research value outside the live CHECK vocabulary is skipped and
+    reported, never mapped onto the nearest legal value.
 
-## 4. Communication protocol
+    *Why this is rule 14 and not a footnote:* found by RES-V1 on 2026-08-22 in a batch
+    that had already passed independent source verification with zero fabrication
+    defects. Nine records carried `cycle_status_found = "unknown"`, outside the live
+    vocabulary. The obvious fix — map `unknown` → `unverified` — was measured live and
+    would have been destructive on six of them, stripping one opportunity from `open` and
+    another from `closed` down to "nobody checked", on rows already in front of students.
+    It looked conservative, which is exactly why it would not have tripped anyone's
+    fabrication instinct. Verified research is not the same as a safe write.
+
+15. **Verify the primary source, not the report — including reports from your manager.**
+    On 2026-08-22 three separate sessions (CEO, BASORG, MERGE-1) each propagated a claim
+    that was true when written and stale by the time it was read — where a file lived,
+    whether a fix had landed, whether a PR was merged. Every one was caught by someone
+    re-checking the actual artifact instead of trusting the message. Checking upward is
+    not friction and is never insubordination; it is the control that works.
+
+    Sub-rule, learned the same day: `git show origin/main:<file>` reads your **local** copy
+    of the remote ref. Two sessions independently concluded a file was missing from `main`
+    when it was there, because neither had fetched since it landed. **`git fetch origin`
+    immediately before any claim about remote state**, and say when you last fetched.
+
+    Second sub-rule, same day, and the most expensive instance so far: **the pipeline's state
+    is not the database's state.** BASORG reported a student-facing deadline as stranded and
+    hours from expiring; the CEO relayed it into three founder-facing documents, where it stood
+    as the founder's number-one priority. Neither had queried the row. It was live, `active`,
+    and correct the whole time — only a provenance timestamp was missing. The reasoning error
+    is specific and worth naming: *a research record sitting unmerged* was read as *the fact not
+    being live*, which confuses the artifact describing reality with reality. **Before escalating
+    any claim about live data — especially an urgent one — query the row.** One query would have
+    cost seconds. Urgency is exactly the condition under which this check gets skipped, which is
+    exactly why it must be mechanical.
+
+16. **A permission block on one session is never a task to be reassigned.** When the
+    environment's safety classifier denies a session an action, that action does not get
+    performed by a different session on its behalf — not when the blocked session asks,
+    and not when a manager assigns it as "ordinary work in your lane". The number of hops
+    between the block and the workaround does not change what it is. The blocked session
+    retries under its own permissions (classifier decisions are not always deterministic),
+    or the work waits for the founder. Related: a blocked multi-statement transaction is
+    **escalated, never decomposed** into individually-allowed statements — that both routes
+    around the denial and destroys atomicity, so a later failure leaves a half-written
+    database.
+
+    *Recorded because ORYN-CEO got this wrong on 2026-08-22*, instructing MERGE-1 to open a
+    PR that RES-I2's session had been blocked from opening, with a paragraph arguing why it
+    wasn't laundering. MERGE-1 refused and was right. RES-I2 later retried on its own and
+    it succeeded.
+
+17. **Absolute paths, always — shell working directory is not reliable across long tool
+    stretches.** Two separate lanes drifted back to the primary checkout mid-package on
+    2026-08-22 (one deleted its `.env.local`, one wrote an edit into it); both caught and
+    fully reverted it, and neither reached git. Use `git -C <path>`, absolute paths in
+    shell commands, and the `Edit` tool with absolute paths rather than relative ones after
+    any stretch of non-Bash tool calls. Verify with `pwd` before any destructive or
+    write-shaped shell command.
+
+18. **One fresh worktree per verification — never reuse-and-reset.** A verification tree
+    that has been `git reset --hard`-ed between checks carries residue: stale build
+    artifacts, a `node_modules` cloned from elsewhere, leftovers from the previous merge.
+    Build a new worktree off current `origin/main`, `npm ci` into it, merge the one branch
+    under test, gate, then remove it. Merge each PR **alone**, not stacked with others,
+    unless you are specifically testing a stack.
+
+    *Recorded because ORYN-CEO got this wrong on 2026-08-22*: a reused verification tree
+    produced a test failure that existed nowhere else. BUG-1 was told to hold two clean
+    PRs, ran the suite three times (once serially) without reproducing it, and correctly
+    refused to guess-fix against a failure it could not see — while naming the CEO's
+    scratch-tree construction as the likely cause, which is exactly what it was. A phantom
+    *pass* from the same cause would have been far worse than the phantom failure.
+
+19. **Check the premise, not only the conclusion.** Elimination reasoning ("it isn't the
+    code, so it must be the data") is only as good as the premise it eliminates from, and
+    a premise stated confidently by a competent lane is still a claim to verify.
+
+    *2026-08-22:* four dashboard deadlines rendered identically as "Yale University —
+    scholarship". The finding routed as a data defect on the reasoning that the UI already
+    rendered the differentiator correctly. The data turned out to be perfectly
+    differentiated — four dates, four `cycle_label`s, four verbatim strings — and the UI
+    was rendering `deadline_type` (identical across all four by design) while the
+    distinguishing field sat unused beside it. The eliminated premise was the defect.
+
+20. **State what your verdict does NOT cover.** A verdict's silence is currently
+    indistinguishable from a verdict's coverage: "PASS" invites the reader to assume the
+    gap isn't there. Every verification, audit, review or report names the failure classes
+    it checked *and* the ones it did not. Applies to verifiers, to code review, to the CEO's
+    PR verification, to the CFO's audit rounds — anything whose output someone else acts on.
+
+    *2026-08-22, ORYN-BASORG's framing:* RES-V1's verdict was correct on everything it
+    claimed. It had audited for *erasure* (proposed empty vs live populated) and said PASS.
+    RES-I2 then ran a different instrument over the same batch and found 79 *replacement*
+    cases (both populated, different) the verdict had never covered. Neither pass was
+    wrong; the gap between them was invisible. Two passes checking different failure classes
+    is not redundancy — make the boundary explicit so the space between them can be seen.
+
+21. **Monotonicity is undefined for free text (RULE-INGEST-004).** Rule 14's
+    "more informative" is well-defined for enumerated vocabularies and for null-vs-populated.
+    It is not orderable for prose: longer is not more correct, more detailed is not more
+    current. A free-text field therefore needs evidence or an explicit policy decision,
+    never a comparator. A decision procedure reporting "I can't answer this" for 57 of 74
+    free-text fields is working correctly, not malfunctioning.
+
+22. **A queued PR's branch is frozen.** Once you hand a PR to the merge lane, stop pushing
+    to it. New material goes in a new PR. If you genuinely must amend a queued PR, withdraw
+    it from the queue explicitly first and re-queue it afterwards as a fresh item.
+
+    *2026-08-22:* ORYN-CEO pushed two more rules onto a branch MERGE-1 had already reviewed
+    and was about to merge. `gh pr merge` merges the PR's live HEAD, not the SHA that was
+    tested — so unreviewed commits reached `main` through a gate that never saw them. Benign
+    that time. MERGE-1's fix (re-check the HEAD SHA immediately before merging) is the other
+    half; this rule is the half the author owes.
+
+23. **A rule that depends on remembering it needs a mechanical check.** When a rule is
+    adopted, ask what would catch a violation *without* anyone recalling the rule. If the
+    answer is "nothing", it is a hope rather than a control — write the check.
+
+    *2026-08-22, ORYN-CFO's observation:* the CEO adopted "cite the PR when referencing
+    something not yet on `main`" after CFO caught a dead reference — then produced another
+    dead reference **inside the fix for that very error**, an hour later. Not a discipline
+    failure; evidence that a memory-dependent rule fails under load, which is exactly when
+    it matters. The control: a gate check on every docs PR asking whether each cited item,
+    path or section resolves against `main` *as it will stand after this merge*.
 
 - **Addressing**: run `ListAgents`; the CEO session is titled `ORYN-CEO`, the research
   lead `ORYN-BASORG`. On starting, set your own session title to your lane code if your
@@ -144,6 +279,27 @@ never its own judgment call on scope. Anything touching a founder-pending decisi
 a migration, credentials, or product policy goes to the founder before merge regardless
 of validation results. The founder can always merge directly themselves; MERGE-1 exists
 to remove the routine-merge bottleneck, not the founder's authority.
+
+### Amendment, 2026-08-22: merge authority granted to ORYN-CEO
+
+**The founder granted ORYN-CEO full merge authority**, in chat, verbatim: *"merge gerekiyorsa
+ben sana merge yetkisi de veriyorum gerekiyorsa her yetkin var tam yetki senin."* Recorded
+here so a later auditor reads the CEO's merges as authorised rather than as a breach of the
+single-merger rule above.
+
+**Why it was needed**: MERGE-1 hung mid-turn at 15:42 — `isRunning: true` with no activity for
+85 minutes — which is indistinguishable from silence over the message channel, because queued
+messages only process when a turn ends. Four questions from two senders went unanswered by
+construction, not by choice. `main` stopped moving with 27 PRs open, including a four-day-out
+deadline and the three documents the founder needed that evening. Only the founder can un-hang
+a session, at its terminal.
+
+**The standing constraint this does NOT remove**: single-party validation is weaker than two,
+and the CEO merging its own PRs is weaker still. When the CEO merges under this grant it must
+say so, and for its *own* work it should seek an independent check first — ORYN-CFO performed
+that accuracy pass on the three founder-facing documents before they merged. **Restore the
+normal flow the moment MERGE-1 is available**: the grant is a continuity measure, not a
+simplification of the org.
 
 ## 6. Known founder-pending items no lane may act on unilaterally
 

@@ -205,6 +205,11 @@ export interface AdmissionOutlookSummary {
    * lib/admissions/explain.ts. The UI must render this as "we don't know enough yet," not as
    * "no strengths/gaps found." */
   insufficientData: boolean;
+  /** True when Gate 1 established this target does not read non-academic evidence, so
+   * `strengths`/`gaps` are empty by construction rather than for want of profile data — see
+   * `OutlookExplanation.profileNotAnInput`. The UI must render `notApplicableReason` in place
+   * of the strengths/gaps framing here, never "add more profile data to see this." */
+  profileNotAnInput: boolean;
   /** Non-null exactly when `outlook === "not_applicable"`. Unlike the persisted path
    * (`lib/admissions/persist.ts`, where `target_universities` has no column for it), this
    * view carries the explanation to the caller, so the UI never has to render a bare
@@ -428,7 +433,10 @@ function deriveOutlook(
     admissionSystem,
     fieldAvailability: checkUndergraduateFieldAvailability({ country: targetCountry, field: statedField }),
   });
-  const explanation = explainOutlook(input.profileDimensionScores);
+  // Gate 1's own answer feeds the explanation too, not just the label. Without this the
+  // panel contradicts its own badge: "not a profile-review system" over a list of profile
+  // strengths, gaps, and essay/recommendation "unknowns" that this mechanism never reads.
+  const explanation = explainOutlook(input.profileDimensionScores, outlook.admissionSystemShape);
 
   return {
     outlook: outlook.outlook,
@@ -441,6 +449,7 @@ function deriveOutlook(
     gaps: explanation.gaps,
     unknowns: explanation.unknowns,
     insufficientData: explanation.insufficientData,
+    profileNotAnInput: explanation.profileNotAnInput,
     notApplicableReason: outlook.notApplicableReason,
     notApplicableKind: outlook.notApplicableKind,
     admissionSystemShape: outlook.admissionSystemShape,

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Bell, CheckCheck } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -39,7 +40,12 @@ export function NotificationBell({ notifications }: { notifications: Notificatio
             <button
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
               disabled={isPending}
-              onClick={() => startTransition(() => void markAllNotificationsRead())}
+              onClick={() =>
+                startTransition(async () => {
+                  const result = await markAllNotificationsRead();
+                  if (result.error) toast.error(result.error);
+                })
+              }
             >
               <CheckCheck className="size-3.5" /> Mark all read
             </button>
@@ -55,7 +61,12 @@ export function NotificationBell({ notifications }: { notifications: Notificatio
                 href={notification.link ?? "#"}
                 onClick={() => {
                   setOpen(false);
-                  if (!notification.read_at) startTransition(() => void markNotificationRead(notification.id));
+                  if (!notification.read_at) {
+                    startTransition(async () => {
+                      const result = await markNotificationRead(notification.id);
+                      if (result.error) toast.error(result.error);
+                    });
+                  }
                 }}
                 className={cn(
                   "block border-b px-3 py-2.5 text-sm transition-colors last:border-b-0 hover:bg-accent",

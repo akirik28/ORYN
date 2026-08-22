@@ -108,6 +108,75 @@ describe("buildUniversityCounselingView — Gate 1 (geography-conditional outloo
     expect(view.outlook!.sources.length).toBeGreaterThan(0);
   });
 
+  /**
+   * The badge and the panel beneath it must never contradict each other. Gate 1 suppressed the
+   * label but the explanation was still computed holistically, so "Not a profile-review system"
+   * sat directly above the student's profile strengths, profile gaps, and "Unknowns ? Essays
+   * ? Recommendations" — for a mechanism that reads none of those.
+   */
+  test("a no-review target names no strengths or gaps and claims no essay/recommendation unknowns", () => {
+    const evidenced: DimensionScoreInput[] = [
+      { dimension: "leadership", score: 91, confidence: "high" },
+      { dimension: "research", score: 42, confidence: "high" },
+    ];
+    const view = buildUniversityCounselingView(
+      baseInput({
+        universityName: "Boğaziçi Üniversitesi",
+        universityCountry: "Türkiye",
+        studentCountry: "Türkiye",
+        target: targeted,
+        admissionRate: 0.08,
+        profileStrength: 92,
+        profileDimensionScores: evidenced,
+      })
+    );
+    expect(view.outlook!.profileNotAnInput).toBe(true);
+    expect(view.outlook!.strengths).toEqual([]);
+    expect(view.outlook!.gaps).toEqual([]);
+    expect(view.outlook!.unknowns).not.toContain("Essays");
+    expect(view.outlook!.unknowns).not.toContain("Recommendations");
+    // Not an absence of profile data — the profile is fully evidenced here, it just isn't read.
+    expect(view.outlook!.insufficientData).toBe(false);
+    // And the reason that replaces the grid is present, so the panel is never left blank.
+    expect(view.outlook!.notApplicableReason).toBeTruthy();
+  });
+
+  test("a Dutch open programme invents no unknowns — no cutoff exists to wonder about", () => {
+    const view = buildUniversityCounselingView(
+      baseInput({
+        universityName: "University of Amsterdam",
+        universityCountry: "Netherlands",
+        studentCountry: "Türkiye",
+        target: targeted,
+        profileStrength: 70,
+        profileDimensionScores: [{ dimension: "leadership", score: 91, confidence: "high" }],
+      })
+    );
+    expect(view.outlook!.notApplicableKind).toBe("no_evidence_review_threshold");
+    expect(view.outlook!.profileNotAnInput).toBe(true);
+    expect(view.outlook!.unknowns).toEqual([]);
+  });
+
+  test("a holistic target keeps the full strengths/gaps/unknowns explanation", () => {
+    const view = buildUniversityCounselingView(
+      baseInput({
+        universityName: "Yale University",
+        universityCountry: "United States",
+        studentCountry: "Türkiye",
+        target: targeted,
+        admissionRate: 0.05,
+        profileStrength: 92,
+        profileDimensionScores: [
+          { dimension: "leadership", score: 91, confidence: "high" },
+          { dimension: "research", score: 42, confidence: "high" },
+        ],
+      })
+    );
+    expect(view.outlook!.profileNotAnInput).toBe(false);
+    expect(view.outlook!.strengths.length).toBeGreaterThan(0);
+    expect(view.outlook!.unknowns).toContain("Essays");
+  });
+
   test("the same student targeting a US university still gets a normal holistic outlook", () => {
     const view = buildUniversityCounselingView(
       baseInput({
