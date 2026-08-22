@@ -269,6 +269,27 @@ a migration, credentials, or product policy goes to the founder before merge reg
 of validation results. The founder can always merge directly themselves; MERGE-1 exists
 to remove the routine-merge bottleneck, not the founder's authority.
 
+### Amendment, 2026-08-22: merge authority granted to ORYN-CEO
+
+**The founder granted ORYN-CEO full merge authority**, in chat, verbatim: *"merge gerekiyorsa
+ben sana merge yetkisi de veriyorum gerekiyorsa her yetkin var tam yetki senin."* Recorded
+here so a later auditor reads the CEO's merges as authorised rather than as a breach of the
+single-merger rule above.
+
+**Why it was needed**: MERGE-1 hung mid-turn at 15:42 — `isRunning: true` with no activity for
+85 minutes — which is indistinguishable from silence over the message channel, because queued
+messages only process when a turn ends. Four questions from two senders went unanswered by
+construction, not by choice. `main` stopped moving with 27 PRs open, including a four-day-out
+deadline and the three documents the founder needed that evening. Only the founder can un-hang
+a session, at its terminal.
+
+**The standing constraint this does NOT remove**: single-party validation is weaker than two,
+and the CEO merging its own PRs is weaker still. When the CEO merges under this grant it must
+say so, and for its *own* work it should seek an independent check first — ORYN-CFO performed
+that accuracy pass on the three founder-facing documents before they merged. **Restore the
+normal flow the moment MERGE-1 is available**: the grant is a continuity measure, not a
+simplification of the org.
+
 ## 6. Known founder-pending items no lane may act on unilaterally
 
 - Evidence-gate false rejections (2,097 blocked records) — `docs/handoffs/evidence-gate-false-rejections-2026-08-22.md`
