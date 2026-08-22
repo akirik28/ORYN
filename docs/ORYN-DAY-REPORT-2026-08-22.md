@@ -16,10 +16,18 @@ prevent, and because a student can't tell the difference between a fact Oryn kno
 Oryn is guessing. Six instances were closed today. One of them was telling Turkish students the
 opposite of what its own official source said.
 
-**~30 PRs merged. `main` is healthy** — independently verified at `297c220` in a clean
-checkout: lint clean, typecheck clean, 124 files / 1,888 tests, production build succeeds. The
-app was also run against the live database and walked by hand; the dashboard and opportunities
-surfaces render correctly.
+**102 PRs merged over the day. `main` is healthy.** Two independent clean-room verifications
+bracket the whole wave: one at `297c220` this morning (124 files / 1,888 tests) and one at
+`2334f07` this evening (**144 files / 2,122 tests**), each run from a fresh checkout with
+dependencies installed from scratch — the second by ORYN-CFO, reproducing my own figures in a
+separate environment. Production build compiles. Referential integrity across every table is
+clean, and there are zero duplicate programme rows across all 16,770.
+
+The app was also run against the live database and walked by hand — **but that was this morning**,
+roughly 100 merges ago. A full end-to-end walk of the MVP checklist is in progress separately.
+
+*This page was written in sections as the day went. Where a later section contradicts an earlier
+one, the later one is right and says so; nothing has been quietly rewritten.*
 
 ---
 
