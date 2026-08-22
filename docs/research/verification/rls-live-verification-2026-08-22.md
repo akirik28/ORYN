@@ -207,14 +207,96 @@ comments, each citing the other as precedent, before
 this sweep. Any future table/view creation should be checked against this signature
 before merge, not just against its own stated intent.
 
+## Surface 2 — admin gate: critical, live, self-service privilege escalation
+
+Started surface 2 with the more fundamental question before the surface-level one:
+before testing whether `requireAdmin()` correctly blocks a non-admin from `/admin`, is
+there anything at the database level stopping a user from setting `is_admin = true` on
+their own row directly. There wasn't, and it was tested live rather than assumed.
+
+| Identity | Query | Expected | Actual | Verdict |
+|---|---|---|---|---|
+| B (`is_admin=false`, ordinary account) | `update profiles set is_admin = true where id = <own id>`, via B's own real authenticated session | rejected — RLS should not let a caller grant themselves admin | **succeeded — no error, no rejection** | **FAIL, CRITICAL** |
+
+**Root cause**: `profiles`' RLS is exclusively row-scoped (`"select own profile"` /
+`"update own profile"`, both `id = auth.uid()`, migration 0014). Row-scoping answers
+"which row" — it says nothing about "which columns within that row." `is_admin` is an
+ordinary column (migration 0002: `boolean not null default false`) with no protective
+trigger. Checked directly before concluding this, not inferred from the RLS policy
+alone: enumerated every trigger on `profiles` — `profiles_set_updated_at` and three
+`enforce_canonical_entity_type` triggers on the entity-id columns. None touch `is_admin`.
+
+**Verification discipline**: reverted `is_admin` to `false` in the same script run
+immediately after confirming the write succeeded, then independently re-confirmed via a
+separate admin-access query (not the same client/session that performed the test write)
+— `is_admin=false`, matching the pre-test state. ORYN-CEO independently re-derived the
+same two structural facts (row-scoped-only policy, no protective trigger) within minutes
+of the report, from `pg_policies`/`pg_trigger` directly rather than trusting this
+report's account of them.
+
+**Blast radius**: `is_admin` is the sole input to `isAdminProfile()`
+(`lib/security/is-admin.ts`) and therefore to `requireAdmin()`, which gates `/admin` and
+every export in `app/(app)/admin/actions.ts`. Confirmed directly: every one of those,
+once past `requireAdmin()`, calls `createAdminClient()` — the service-role client, which
+bypasses RLS entirely. This is not "read a page" — it is full service-role-backed access
+to the entire schema, self-grantable by any account with a single API call and no UI.
+Materially worse than the `public_profiles` finding above: that one required a student to
+have opted into "public" and exposed a fixed safe-column whitelist; this one requires
+nothing from anyone and grants everything. Live state: exactly one admin exists in
+`oryn-qa-scratch` (QA account A, deliberately founder-granted).
+
+**Precedent this codebase already had and never applied here**: `profiles` itself already
+carries three column-scoped `BEFORE UPDATE OF <col>` guard triggers (migration 0038,
+`enforce_canonical_entity_type` on the three entity-id columns) — the exact mechanism,
+on the exact table, never extended to the one column that grants privilege. Migration
+0058's `posts_guard_system_columns` (reset-to-`OLD`, gated on `current_user <>
+'service_role'`) is the closer precedent for the fix's actual shape, since it protects a
+"looks client-writable, is actually system-owned" column rather than validating a
+foreign-key-shaped value.
+
+**Related, lower-severity finding, same root cause**: cataloged every column on
+`profiles` for the same shape (presented as system-computed, no actual protection).
+Two more qualify, both self-directed rather than cross-user:
+- `profile_strength_score` — written only by `lib/scoring/persist.ts`, displayed as the
+  "Career Profile" score on the dashboard header and `MobileNav` badge, and read
+  cross-user by `lib/benchmarking/cohort.ts` for peer-comparison cohorts (so an unguarded
+  write pollutes another student's benchmark view too, not just the writer's own).
+- `completeness_percent` — same write-owner; directly sets
+  `dataConfidence = completeness_percent >= 60 ? "high" : "medium"` in
+  `lib/admissions/persist.ts`, so a student could force their own admission-outlook
+  confidence label to "high" regardless of actual completeness.
+
+Every other column on `profiles` (the ~20 remaining, including the three already guarded
+for a different reason by migration 0038) is genuinely meant to be student-writable via
+Settings or onboarding and was deliberately left unguarded — see the migration's own
+per-column reasoning.
+
+**Fix written, not applied**: `supabase/migrations/0062_profiles_guard_protected_columns.sql`.
+A `BEFORE UPDATE OF is_admin, profile_strength_score, completeness_percent` trigger,
+mirroring `posts_guard_system_columns`'s reset-not-raise shape exactly: resets each
+protected column to `OLD` unless `current_user = 'service_role'`, silently rather than
+with an exception (an exception would tell an attacker precisely which column is
+guarded, and would fail an otherwise-legitimate multi-column profile update for an
+unrelated reason). Regression test: `__tests__/security/profiles-guard.test.ts` (6
+assertions — the reset behavior per column, the exact column list and nothing more, the
+service-role detection mechanism, the trigger-depth guard, the column-scoped `OF`
+clause, the not-applied marker).
+
 ## Files touched
 
 - `supabase/migrations/0061_public_profiles_require_authenticated.sql` (new, **written,
   not applied**).
+- `supabase/migrations/0062_profiles_guard_protected_columns.sql` (new, **written, not
+  applied**).
 - `supabase/migrations/0058_social_posts.sql` (edited in place — unapplied file, no
   deployed state to correct; policy fix + comment correction).
-- `docs/known-issues.md` (new entry).
+- `__tests__/security/profiles-guard.test.ts` (new regression test).
+- `__tests__/social/posts-schema.test.ts` (migration-count ceiling bumped, per its own
+  comment's instruction, for both 0061 and 0062).
+- `docs/known-issues.md` (two new entries).
 - This file.
 
-No live database write in this pass beyond the test `connections` row and `is_public`
-flip, both created and removed by this session, verified restored.
+No live database write survives this pass. Both live-write tests (the surface-1
+connection/is_public tests, and the surface-2 `is_admin` escalation test) created state
+that was reverted within the same session and independently re-verified reverted via a
+separate read path afterward.
