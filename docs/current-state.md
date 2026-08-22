@@ -45,9 +45,16 @@ file is a snapshot, not a live view.
   in `ORYN_WORKSTREAMS.md` are marked complete/idle-pending-assignment; several product/data
   branches are marked dormant/superseded. Not individually re-verified this checkpoint —
   flagged as real integration debt worth a dedicated audit.
-- No other Claude sessions were reachable via `ListAgents` at this checkpoint — the 08-21
-  overnight fleet appears to have gone idle; nobody is currently picking up the
-  idle-pending-assignment research lanes.
+- **CORRECTED 18:35.** This line previously read "no other Claude sessions were reachable —
+  the overnight fleet appears to have gone idle." That was true when written this morning and
+  **false for the whole of this afternoon and evening**, when a 13-session organization was
+  running against this repo. A research lane read it as current, concluded its own manager was
+  gone, and re-routed its reporting on that basis — the doc did the misleading, not the lane.
+  **Live at 18:35: roughly a dozen sessions active**, coordinated per
+  `docs/ORYN-ORG-STRUCTURE.md`. Session liveness changes by the minute and does not belong in
+  a checkpoint document at all; `ListAgents` is the only answer to that question, and even it
+  reports a moment rather than an identity — a session that briefly drops and resumes returns
+  under a different reference, which misled three sessions today including this one's author.
 
 ## Live database (measured 2026-08-22, this checkpoint)
 
