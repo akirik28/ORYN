@@ -464,6 +464,50 @@ org can backfill the confirmed-open rows with per-row evidence.
 
 ---
 
+## 30. LAUNCH BLOCKER — anonymous users can read any public student profile
+
+**Action**: authorize the fix. A migration will be written (not applied) — you approve applying
+it, the same as items 26 and 29. This is the one item on this list that must be closed before a
+real student signs up.
+
+**What was found** (BUG-1, 2026-08-22, live RLS verification against `oryn-qa-scratch`, using
+real GoTrue password sign-in rather than simulated tokens): the `public_profiles` view returns a
+row to an **anonymous, unauthenticated caller** for any profile with `is_public = true`.
+
+**Why it happens, since it isn't obvious from reading the migration**: migration 0023 granted
+the view to `authenticated` and its own comment states this was "deliberately more conservative…
+than a fully public, unauthenticated, indexable page." That grant was already redundant —
+Supabase's default project bootstrap grants `anon` SELECT on every table and view in the
+`public` schema. Normally RLS is the real gate on top of that, and it correctly is everywhere
+else (an anonymous caller reading the base `profiles` table gets nothing, verified). But
+`public_profiles` is a security-definer view whose `is_public = true` branch never references
+`auth.uid()` — it's satisfied by the row's own data, regardless of who is asking. **Intent and
+implementation disagree; the intent is documented, so this is a defect, not a decision about
+what we meant.**
+
+**Exposure, measured rather than estimated**: 7 profiles live, **1 currently public**. Only
+fields already in `PUBLIC_PROFILE_SAFE_COLUMNS` are reachable — display name, headline, about,
+country, curriculum, graduation year, looking-for. Private fields (name, birth year, city,
+school, admin flag) all correctly stayed inaccessible, separately verified. Only one profile at
+a time by id; no anonymous enumeration path was found.
+
+**Why it still matters**: this is minor-safety data. A 14–18-year-old's display name,
+curriculum, graduation year and free-text "about", readable by anyone on the internet with no
+account, for a profile the product tells them is visible to other Oryn students.
+`AGENTS.md` Phase 12 names avoiding public-by-default profiles explicitly, and non-negotiable
+minor-safety framing runs through the whole spec. The gap between what the product promises and
+what the database permits is the defect.
+
+**8 of 9 other checks on this surface passed**, including both regressions migration 0024 was
+written to close — so the surrounding design is sound and this is one specific hole, not a
+systemic failure.
+
+**Depends on**: nothing technical — your go-ahead to apply the migration once written. Related
+open thread: whether other security-definer views rest on the same incomplete-grant assumption
+(BUG-1 is checking).
+
+---
+
 ## Environment hazard (not a decision, but you should know)
 
 **The primary checkout `/Users/adasarpkirik/Desktop/Founder/ORYN` sits on branch
