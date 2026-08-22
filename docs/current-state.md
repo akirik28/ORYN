@@ -127,8 +127,15 @@ Only items no Claude session can do unilaterally. Full detail:
    classifier (expected — a shared branch push should go through review, not be forced), so
    this is [PR #2](https://github.com/akirik28/ORYN/pull/2), not yet merged. Full detail:
    `docs/handoffs/canonical-live-column-refactor-2026-08-22.md` (on that branch).
-2. **Opportunity eligibility gap (P3)**: `eligible_countries` still 93.6% null (366/391) —
-   gates real eligibility matching regardless of matching-logic quality.
+2. ~~Opportunity eligibility gap (P3)~~ — **first pass done, pending merge**: `eligible_countries`
+   moved from 366/391 null (93.6%) to 352/391 (90.0%) — [PR #3](https://github.com/akirik28/ORYN/pull/3),
+   pure data/docs, no app code. **Real finding, not just a completeness one**: confirmed directly
+   in `lib/opportunities/matching.ts`/`lib/counselor/eligibility.ts` that an empty array already
+   means "not restricted," not "unknown" — a genuinely restricted program with no data is shown
+   as eligible to everyone today with no warning (e.g. MIT PRIMES, QuestBridge, both closed by
+   this pass). Worth counselor/PROD-B attention independent of finishing the backfill. Scoped
+   5-wave plan for the remaining 352 in `docs/research/opportunities-eligible-countries/README.md`
+   (on that branch) — Wave 2 (research/scholarship/fellowship/internship, ~20 records) is next.
 3. **Branch/worktree integration audit**: 80+ branches, ~85 worktrees, several
    idle-pending-assignment research lanes with real uningested output — worth a dedicated
    reconciliation pass rather than continuing to accumulate more parallel lanes.
