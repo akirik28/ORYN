@@ -27,8 +27,13 @@ interface DeadlineCandidate {
 /** Shared threshold-check + dedup + notify for one deadline candidate, reused across all
  * three sources below. Dedup is a cheap "was a notification linking to this already sent
  * in roughly the last day" check — good enough for a once-daily cron; a job running more
- * than once a day could double up right at a threshold boundary. */
-async function notifyIfThresholdCrossed(supabase: SupabaseClient<Database>, today: Date, candidate: DeadlineCandidate): Promise<boolean> {
+ * than once a day could double up right at a threshold boundary.
+ *
+ * Exported (only) so __tests__/deadlines/notify-if-threshold-crossed.test.ts can pin this
+ * shared core directly — the actual threshold/dedup decision every one of the three scan
+ * sources delegates to — rather than only exercising it indirectly through one source's
+ * own table set. No behavior change. */
+export async function notifyIfThresholdCrossed(supabase: SupabaseClient<Database>, today: Date, candidate: DeadlineCandidate): Promise<boolean> {
   const daysUntil = differenceInCalendarDays(new Date(candidate.deadlineDate), today);
   if (!REMINDER_THRESHOLDS.includes(daysUntil)) return false;
 
