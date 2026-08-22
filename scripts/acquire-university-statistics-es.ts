@@ -95,7 +95,7 @@ const CATALUNYA: EsRegionalEntry = {
 
 /** `universities.name` (exact, this spine) -> which regional price applies. Every public
  * university in Madrid or Catalunya in this spine, cross-checked against
- * `lib/universities/duplicate-supersessions.json` (no Spanish entries found) before being
+ * `universities.duplicate_status` (no Spanish entries found) before being
  * added. Private universities and universities in other regions are deliberately absent — see
  * file header. */
 const REGION_BY_UNIVERSITY: Record<string, EsRegionalEntry> = {

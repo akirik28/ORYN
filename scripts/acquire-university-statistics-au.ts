@@ -63,7 +63,7 @@ interface AuTuitionEntry {
 
 /** `universities.name` (exact, this spine) -> hand-verified Australia tuition data. Every
  * entry read directly from the cited official page 2026-08-18. Never fuzzy-matched.
- * Cross-checked against `lib/universities/duplicate-supersessions.json` before being added. */
+ * Cross-checked against `universities.duplicate_status` before being added. */
 const AU_TUITION: Record<string, AuTuitionEntry> = {
   "The University of Sydney": {
     international: [49200, 60600],
