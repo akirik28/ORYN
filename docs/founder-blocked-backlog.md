@@ -387,6 +387,139 @@ header comment. **No longer depends on DDL/founder action** — it's ordinary ap
 now. Related: item 19's remaining ~63 lower-confidence orphan pairs (no visible-card impact,
 lower priority).
 
+## 26. Approve applying migration 0057 (YÖK Atlas `kilavuz_kodu` column)
+
+**Action**: decide whether to authorize applying
+`supabase/migrations/0057_university_program_kilavuz_kodu.sql` to the live database.
+**Why it's blocked**: not technical — the migration is written and reviewed, adds a single
+nullable `text` column plus a partial index, and does not touch dedup/identity logic. It's
+withheld because a prior coordination session's authorization for migration 0055 was explicit
+that it "does not extend to this migration," and the file's own header says not to apply
+without asking the founder again. Confirmed still not applied: `information_schema.columns`
+has no `kilavuz_kodu` on `university_programs` as of 2026-08-22.
+**What it unblocks**: a stable per-programme source identifier for Turkey's 779
+`university_programs` rows, all of which currently carry only the bare YÖK Atlas portal root
+as `official_program_url` (no per-programme page exists on that site) — the largest population
+in this schema with no usable per-programme source reference. `kilavuz_kodu` is confirmed live
+and stable in YÖK Atlas's own API, already stored without incident across 456 real placement
+rows (see `docs/handoffs/yok-atlas-placements-scale-12-universities.md`).
+**What it does NOT do**: backfill the column for the existing 779 rows (separate, harder work —
+6 universities have programme names recorded in English rather than Turkish, a gap that needs
+closing first) or touch deduplication/identity resolution.
+**Depends on**: nothing technical — a founder go-ahead, same shape as item 25's original
+DDL-access gate but for authorization rather than access.
+
+## 27. Decide what happens to ~80 defective opportunity rows from your own Drive corpus
+
+**Action**: decide, for roughly 80 live `opportunities` rows, whether to (a) re-research them
+from official sources, (b) retire them (`status='disabled'`) until someone does, or (c) accept
+them as-is for now.
+**The measurement** (BUG-1, 2026-08-22, live, read-only): of 271 `status='active'` rows — the
+ones students actually browse — **85 (31.4%) carry at least one hard defect signature**: 77
+whose description opens by restating its own title (a spreadsheet-cell dump, not prose), 77 with
+a raw `https://…` URL sitting in the description body shown to students, 45 truncated mid-word
+ending in a literal `…`, and 5 whose *title* is an institution name rather than an opportunity.
+A random sample of 8 was 8/8 genuinely defective — no false positives in the detector.
+**Root cause, established not inferred**: the garbling is already present in the source Drive
+spreadsheet cells. ORYN's importer carried it through faithfully rather than introducing it —
+the ` | ` separators and the ~900-character truncation exist verbatim in the seed SQL, and no
+900-character clip exists anywhere in the generator. **There is no extraction bug to fix; the
+source corpus is the defect.** That is why this is your call and not an engineering task.
+**Already handled without you** (categorically-wrong rows, not a judgment call): a UCSC
+course-catalogue entry, the 5 institution-name titles, and one record that is three separate CMU
+programs concatenated are being retired, because they are wrong in kind rather than degraded in
+quality.
+**Why it matters**: these are on the surface students browse. Per your own non-negotiables,
+nothing that misleads should ship. But re-researching ~80 rows to this project's evidence bar is
+real work (measured yield elsewhere: ~5% of rows per hour of research), so the honest options are
+retire-now-research-later or accept-and-schedule.
+**Depends on**: nothing technical. Full detail will be in `docs/known-issues.md` under BUG-1's
+investigation note.
+
+## 28. Five opportunities that no AI-permitted fetch path can reach
+
+**Action**: check these by hand, or decide to drop them: **Technovation** and **CSHL** block
+Anthropic's crawler by name in `robots.txt` (respected — this org does not route around a
+block, and deliberately does not substitute archive.org for a live fetch); **BSPEE**, **Ashoka**
+and **Girl Up** return server-side 403s despite clean robots.txt.
+**Why it's blocked**: not a capability gap that more effort solves. Two hosts have explicitly
+opted out of AI access; three refuse the connection. A human browser can read all five.
+**Blocks**: their deadline and eligibility facts stay unverifiable, so they cannot be presented
+as verified. They are not wrong today — they are unknown, and correctly labelled as such.
+**Depends on**: nothing but a person with a browser, or a decision to retire them.
+
+## 29. Apply migration 0060 (`opportunities.country_eligibility_confirmed_open`)
+
+**Action**: apply `supabase/migrations/0060_opportunity_country_eligibility_confirmed_open.sql`
+to the live database, or say no.
+**Why it's blocked**: same posture as 0057 — written, reviewed, merged to `main` (PR #5), and
+deliberately not applied. The application code reads the column defensively, so every
+environment behaves identically and honestly whether or not it has been applied; nothing is
+broken while it waits.
+**What it unblocks**: the honest distinction between "this program is confirmed open worldwide"
+and "nobody has researched this row yet" — both of which are an empty `eligible_countries` array
+today, which is why unresearched rows can read as open to everyone. Once applied, the research
+org can backfill the confirmed-open rows with per-row evidence.
+**Depends on**: nothing technical — your go-ahead.
+
+---
+
+## 30. LAUNCH BLOCKER — anonymous users can read any public student profile
+
+**Action**: authorize the fix. A migration will be written (not applied) — you approve applying
+it, the same as items 26 and 29. This is the one item on this list that must be closed before a
+real student signs up.
+
+**What was found** (BUG-1, 2026-08-22, live RLS verification against `oryn-qa-scratch`, using
+real GoTrue password sign-in rather than simulated tokens): the `public_profiles` view returns a
+row to an **anonymous, unauthenticated caller** for any profile with `is_public = true`.
+
+**Why it happens, since it isn't obvious from reading the migration**: migration 0023 granted
+the view to `authenticated` and its own comment states this was "deliberately more conservative…
+than a fully public, unauthenticated, indexable page." That grant was already redundant —
+Supabase's default project bootstrap grants `anon` SELECT on every table and view in the
+`public` schema. Normally RLS is the real gate on top of that, and it correctly is everywhere
+else (an anonymous caller reading the base `profiles` table gets nothing, verified). But
+`public_profiles` is a security-definer view whose `is_public = true` branch never references
+`auth.uid()` — it's satisfied by the row's own data, regardless of who is asking. **Intent and
+implementation disagree; the intent is documented, so this is a defect, not a decision about
+what we meant.**
+
+**Exposure, measured rather than estimated**: 7 profiles live, **1 currently public**. Only
+fields already in `PUBLIC_PROFILE_SAFE_COLUMNS` are reachable — display name, headline, about,
+country, curriculum, graduation year, looking-for. Private fields (name, birth year, city,
+school, admin flag) all correctly stayed inaccessible, separately verified. Only one profile at
+a time by id; no anonymous enumeration path was found.
+
+**Why it still matters**: this is minor-safety data. A 14–18-year-old's display name,
+curriculum, graduation year and free-text "about", readable by anyone on the internet with no
+account, for a profile the product tells them is visible to other Oryn students.
+`AGENTS.md` Phase 12 names avoiding public-by-default profiles explicitly, and non-negotiable
+minor-safety framing runs through the whole spec. The gap between what the product promises and
+what the database permits is the defect.
+
+**8 of 9 other checks on this surface passed**, including both regressions migration 0024 was
+written to close — so the surrounding design is sound and this is one specific hole, not a
+systemic failure.
+
+**Depends on**: nothing technical — your go-ahead to apply the migration once written. Related
+open thread: whether other security-definer views rest on the same incomplete-grant assumption
+(BUG-1 is checking).
+
+---
+
+## Environment hazard (not a decision, but you should know)
+
+**The primary checkout `/Users/adasarpkirik/Desktop/Founder/ORYN` sits on branch
+`oryn/hide-social-nav`, which has genuinely diverged from `main`** (212 behind, 8 ahead, not an
+ancestor). Two real consequences hit on 2026-08-22: the long-running dev server on `:3000` was
+serving 212-commit-stale code — including a font bug already fixed on `main` — and every
+coordination doc commit made from that checkout landed on the diverged branch instead of `main`,
+invisible to anyone reading `main`, until it was caught and rescued (PR #11).
+**No session may change this unilaterally** (org rule: nobody works in the primary checkout).
+Worth deciding what that checkout should be on. In the meantime, no lane verifies against
+`:3000`; each stands up its own server from `main`.
+
 ---
 
 ## Environment-capability gap (not founder-blocked, noted for completeness)

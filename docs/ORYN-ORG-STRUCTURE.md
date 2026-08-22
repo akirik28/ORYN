@@ -18,7 +18,13 @@ If this file and a founder message disagree, the founder's most recent direct me
 
 ```
 FOUNDER (Ada Sarp Kırık)
-   │  merges all PRs to main; makes every decision listed in founder-blocked-backlog.md
+   │  makes every decision listed in founder-blocked-backlog.md
+   │
+   ├── ORYN-CFO   independent auditor — reports to the FOUNDER, not to the CEO,
+   │              because the CEO is one of the things it audits. Commands nobody.
+   │              Verifies artifacts rather than reports; may fix bookkeeping/doc
+   │              drift directly, may never touch code, migrations, or live data.
+   │              Routes lane findings through that lane's own manager.
    ▼
 ORYN-CEO  (coordination session — address via ListAgents/SendMessage as "ORYN-CEO")
    │  sets strategy, assigns/verifies all lanes, verifies every PR before it reaches
@@ -110,8 +116,85 @@ Priority order. Every lane's next package should trace to one of these; when in 
 13. **Shared resources are real**: live DB (re-fetch immediately before any write —
     another session may have written), disk (no giant artifacts without need; if you hit
     ENOSPC, stop writes, delete nothing, escalate), the primary checkout (don't touch it).
+14. **Information-monotonic writes (RULE-INGEST-003).** A write may populate an empty
+    field, replace a value with a *more* informative one backed by evidence, or correct a
+    value the evidence shows is wrong. A write may **never** replace a populated field
+    with a less informative one because this pass couldn't determine it. Inability to
+    determine is a fact about our research, not about the thing being described — so the
+    field is skipped, never overwritten. Applies to every column, not just the one that
+    prompted a given rule, and there is **no vocabulary coercion at the ingestion
+    boundary**: a research value outside the live CHECK vocabulary is skipped and
+    reported, never mapped onto the nearest legal value.
 
-## 4. Communication protocol
+    *Why this is rule 14 and not a footnote:* found by RES-V1 on 2026-08-22 in a batch
+    that had already passed independent source verification with zero fabrication
+    defects. Nine records carried `cycle_status_found = "unknown"`, outside the live
+    vocabulary. The obvious fix — map `unknown` → `unverified` — was measured live and
+    would have been destructive on six of them, stripping one opportunity from `open` and
+    another from `closed` down to "nobody checked", on rows already in front of students.
+    It looked conservative, which is exactly why it would not have tripped anyone's
+    fabrication instinct. Verified research is not the same as a safe write.
+
+15. **Verify the primary source, not the report — including reports from your manager.**
+    On 2026-08-22 three separate sessions (CEO, BASORG, MERGE-1) each propagated a claim
+    that was true when written and stale by the time it was read — where a file lived,
+    whether a fix had landed, whether a PR was merged. Every one was caught by someone
+    re-checking the actual artifact instead of trusting the message. Checking upward is
+    not friction and is never insubordination; it is the control that works.
+
+    Sub-rule, learned the same day: `git show origin/main:<file>` reads your **local** copy
+    of the remote ref. Two sessions independently concluded a file was missing from `main`
+    when it was there, because neither had fetched since it landed. **`git fetch origin`
+    immediately before any claim about remote state**, and say when you last fetched.
+
+16. **A permission block on one session is never a task to be reassigned.** When the
+    environment's safety classifier denies a session an action, that action does not get
+    performed by a different session on its behalf — not when the blocked session asks,
+    and not when a manager assigns it as "ordinary work in your lane". The number of hops
+    between the block and the workaround does not change what it is. The blocked session
+    retries under its own permissions (classifier decisions are not always deterministic),
+    or the work waits for the founder. Related: a blocked multi-statement transaction is
+    **escalated, never decomposed** into individually-allowed statements — that both routes
+    around the denial and destroys atomicity, so a later failure leaves a half-written
+    database.
+
+    *Recorded because ORYN-CEO got this wrong on 2026-08-22*, instructing MERGE-1 to open a
+    PR that RES-I2's session had been blocked from opening, with a paragraph arguing why it
+    wasn't laundering. MERGE-1 refused and was right. RES-I2 later retried on its own and
+    it succeeded.
+
+17. **Absolute paths, always — shell working directory is not reliable across long tool
+    stretches.** Two separate lanes drifted back to the primary checkout mid-package on
+    2026-08-22 (one deleted its `.env.local`, one wrote an edit into it); both caught and
+    fully reverted it, and neither reached git. Use `git -C <path>`, absolute paths in
+    shell commands, and the `Edit` tool with absolute paths rather than relative ones after
+    any stretch of non-Bash tool calls. Verify with `pwd` before any destructive or
+    write-shaped shell command.
+
+18. **One fresh worktree per verification — never reuse-and-reset.** A verification tree
+    that has been `git reset --hard`-ed between checks carries residue: stale build
+    artifacts, a `node_modules` cloned from elsewhere, leftovers from the previous merge.
+    Build a new worktree off current `origin/main`, `npm ci` into it, merge the one branch
+    under test, gate, then remove it. Merge each PR **alone**, not stacked with others,
+    unless you are specifically testing a stack.
+
+    *Recorded because ORYN-CEO got this wrong on 2026-08-22*: a reused verification tree
+    produced a test failure that existed nowhere else. BUG-1 was told to hold two clean
+    PRs, ran the suite three times (once serially) without reproducing it, and correctly
+    refused to guess-fix against a failure it could not see — while naming the CEO's
+    scratch-tree construction as the likely cause, which is exactly what it was. A phantom
+    *pass* from the same cause would have been far worse than the phantom failure.
+
+19. **Check the premise, not only the conclusion.** Elimination reasoning ("it isn't the
+    code, so it must be the data") is only as good as the premise it eliminates from, and
+    a premise stated confidently by a competent lane is still a claim to verify.
+
+    *2026-08-22:* four dashboard deadlines rendered identically as "Yale University —
+    scholarship". The finding routed as a data defect on the reasoning that the UI already
+    rendered the differentiator correctly. The data turned out to be perfectly
+    differentiated — four dates, four `cycle_label`s, four verbatim strings — and the UI
+    was rendering `deadline_type` (identical across all four by design) while the
+    distinguishing field sat unused beside it. The eliminated premise was the defect.
 
 - **Addressing**: run `ListAgents`; the CEO session is titled `ORYN-CEO`, the research
   lead `ORYN-BASORG`. On starting, set your own session title to your lane code if your
