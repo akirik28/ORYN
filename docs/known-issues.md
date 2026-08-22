@@ -11,6 +11,59 @@ dedicated living docs rather than being tracked here — start at
 file's remaining entries (the Drive-doc product-decision conflict, data-readiness gaps,
 scoped-out items) are still current as of the dates on each entry.
 
+## Needs founder decision — live RLS gap: `public_profiles` readable by anonymous callers
+
+**2026-08-22, BUG-1, live RLS verification package** (assigned by ORYN-CEO after
+`docs/production-route-audit.md` named real RLS verification as its one remaining
+blocked gap — this session has live Supabase MCP access to a real, hosted project,
+which that audit's environment did not). Full evidence, per-check table, and the
+full-schema sweep this finding triggered:
+`docs/research/verification/rls-live-verification-2026-08-22.md`.
+
+**The gap**: migration 0023's `public_profiles` view was intended to be readable only by
+`authenticated` sessions (its own comment: "a deliberately more conservative reading of
+'optionally shareable' than a fully public, unauthenticated, indexable page"). Verified
+live with a real GoTrue-authenticated (and separately, real anonymous) client against
+`oryn-qa-scratch`: a fully unauthenticated caller with no account **can** read any
+profile a student has marked public — the safe-column set only (display_name, headline,
+about, country, curriculum, graduation_year, looking_for), never private fields, never
+achievement data, confirmed by also testing that the base `profiles` table and portfolio
+tables stay correctly gated. Root cause: this project's schema-wide default ACL grants
+`anon` a baseline privilege on every table/view in `public` (standard Supabase project
+bootstrap, not something any migration here did); `public_profiles` is a security-definer
+view whose `is_public = true` branch never checks caller identity, so once the default
+grant is accounted for, nothing blocks anon from that branch. The base `profiles` table
+is unaffected (its RLS policy has no is_public exception). Live exposure measured: 7
+profiles in the scratch project, 1 currently public.
+
+**Fix written, not applied**: `supabase/migrations/0061_public_profiles_require_authenticated.sql`
+adds an `auth.uid() is not null` guard to the view. Founder-gated per standing rule — do
+not apply without review. Escalated by ORYN-CEO as founder-blocked-backlog item 30.
+
+**Same defect class, caught before shipping**: the sweep this finding triggered found an
+identical pattern in `supabase/migrations/0058_social_posts.sql` (written, not applied,
+ships behind a kill switch + legal-review gate) — its `"read visible posts"` policy had
+no `to authenticated` restriction, which would have let an anonymous caller read full
+post content (not just a safe-column whitelist) once applied. **Fixed in place** in that
+same migration file (not a corrective migration — nothing is deployed to correct), since
+CEO judged an unapplied file with a known hole not worth routing around a scheduling gap
+for the currently-inactive social-posts lane.
+
+**Swept and found clean**: every one of the ~90 live RLS policies in `public` (read
+individually via `pg_policies`, not sampled — including every OR'd branch, not a
+whole-object check for whether `auth.uid()` appears anywhere) is either identity-bound on
+every branch or correctly role-restricted to `authenticated`. Zero tables in `public`
+have RLS disabled (`pg_class.relrowsecurity`, checked directly — no table sits open
+behind the schema-wide default grant with nothing gating it). Only one other view exists
+in the schema, `current_university_student_counts`; initially flagged here as a lesser
+version of the same gap, then verified live and found NOT vulnerable: it is
+`security_invoker = true` (confirmed via `pg_class`/`reloptions`, and empirically — an
+anonymous client queries it and gets zero rows, not data), so the caller's own RLS on the
+underlying `universities`/`university_profile_metrics` tables applies and correctly
+blocks anon there. `public_profiles` is the only security-definer view in the schema
+(`security_invoker` unset, i.e. Postgres's default of `false`) and the only one where a
+missing identity check in the view body actually matters.
+
 ## Needs founder decision — real conflict found in the founder's own Drive doc
 
 While working autonomously, this session found "ORYN Programlama" (a Google Doc in the
