@@ -66,8 +66,48 @@ overlap (Edinburgh), heavy overlap (Waterloo), and zero overlap (Glasgow) — wh
 level reasoning alone would not have distinguished reliably, consistent with I1-1's
 finding that cardinality is not identity.
 
+## Addendum — Glasgow's "clean" verdict was wrong; Edinburgh/Waterloo's 5 verified separately
+
+**BASORG caught this before any apply**, by checking live Glasgow data directly rather than
+trusting the dry-run's zero-duplicate result. Live Glasgow `degree_type` is NULL on all 101
+rows; the file's Glasgow records carry it populated (BSc/BEng/LLB/etc. on 93 of 101) and
+append a bracketed degree code to `program_name` (e.g. file `Accountancy & Finance [BAcc]`
+vs. live `Accountancy & Finance`). Both components of the dedup key's 6-tuple differ
+simultaneously, so every one of the 101 read as net-new. Stripping the bracket suffix and
+comparing by name against live: **69 of 101 are near-certain duplicates** (same programme,
+cosmetic naming difference) and 32 look like genuinely distinct partnership/dual-degree/
+graduate-entry variants requiring per-record adjudication against Glasgow's official
+catalogue — research work, not ingestion. **Ruling: Glasgow's 101 are BLOCKED, no apply, no
+partial apply.** This dry-run's "zero gate concerns" verdict was correct about the
+authority gate specifically and wrong about data quality more broadly — a clean gate result
+is not the same claim as a clean dedup result, and I reported it in a way that could be read
+as endorsing both. The dedup key itself is not being loosened over this (its own header
+documents why a looser URL-based check was already tried and wrong 53/54 times) — this is a
+research-adjudication problem, assigned to RES-V1 as a corpus-wide investigation (any
+university whose live rows and a later research pass drifted onto different naming/
+degree_type conventions is exposed to the same 100%-false-net-new failure mode, silently,
+under an apparently clean dry-run).
+
+**Follow-up requested**: verify the Edinburgh 3 / Waterloo 2 net-new records the same way,
+by name against live, before either gets cleared.
+
+- **Edinburgh's 3** (Theoretical Physics BSc(Hons); Veterinary Medicine 5-year BVM&S;
+  Veterinary Medicine Graduate-Entry 4-year BVM&S): live Edinburgh has **zero** programmes
+  matching `%theoretical physics%` or `%veterinary%` by name, at all — not a near-miss, no
+  existing row of any kind to be a duplicate of. Genuinely new content.
+- **Waterloo's 2** (generic "Bachelor of Arts"; generic "Bachelor of Science", no major):
+  live Waterloo's only BA/BSc-named rows are "Psychology – Bachelor of Arts" and
+  "Psychology – Bachelor of Science" — major-specific tracks, not the same programme as an
+  undeclared/general BA or BSc entry. Different identity, not a naming variant of the same
+  thing. Genuinely new content.
+
+**Verified: none of the Edinburgh/Waterloo 5 show Glasgow's failure pattern.** Both
+components (name, degree_type) were checked, not just name.
+
 ## Net effect of this package
 
-No writes. `university_programs` unchanged at 16,114. Ready for BASORG to assign the apply
-— which per this dry-run would insert exactly 106 rows (3 Edinburgh + 2 Waterloo + 101
-Glasgow), zero gate concerns, zero founder-pending items touched.
+No writes. `university_programs` unchanged at 16,114. **Glasgow's 101: blocked, not part of
+any apply.** Edinburgh's 3 and Waterloo's 2 verified clean by name against live — 5 rows
+ready if BASORG assigns an apply scoped to just those 5. The original "106 rows, zero
+concerns" framing is superseded by this addendum; treat this file's addendum section, not
+the original body above it, as current.
