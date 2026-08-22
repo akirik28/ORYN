@@ -37,9 +37,21 @@
 
 -- Who can see a post. Note there is NO `world` / anonymous tier: the widest value,
 -- `oryn_public`, means "any signed-in Oryn user", never an unauthenticated visitor and
--- never a search-engine-indexable page. That mirrors the deliberately conservative choice
--- migration 0023 already made for `public_profiles` (granted to `authenticated` only, not
--- `anon`) and follows AGENTS.md Phase 12's "avoid public-by-default profiles".
+-- never a search-engine-indexable page, following AGENTS.md Phase 12's "avoid
+-- public-by-default profiles". EDITED 2026-08-22 (BUG-1 RLS verification package): this
+-- comment previously cited migration 0023's `public_profiles` grant
+-- (`GRANT ... TO authenticated`, not `anon`) as precedent for that guarantee. Verified
+-- live that grant does NOT create the exclusivity it looks like it does: this project's
+-- `anon` role already holds a schema-wide default ACL (`pg_default_acl`, set at project
+-- bootstrap) granting it full privileges on every table/view created in `public`, so an
+-- explicit `GRANT ... TO authenticated` neither implies nor creates "not anon" — grants
+-- are additive, and 0023's view had exactly this hole until this same package's
+-- migration 0061 fixed it. The actual, correct guarantee here is NOT the grant on
+-- `posts` (which `anon` also already implicitly holds) — it's the `to authenticated`
+-- restriction explicitly added to the "read visible posts" policy below. See that
+-- policy's own comment for detail; this is the pattern to check for in any future
+-- policy on a table/view in this schema: a permitting branch that never references
+-- `auth.uid()` is a public branch, regardless of what any GRANT statement says.
 --
 -- `posts.visibility` is `not null` WITH NO DEFAULT — on purpose, and this is the single
 -- most important line in this file. Every insert must name a visibility, so a minor's
@@ -400,8 +412,22 @@ alter table public.posts enable row level security;
 -- visible to a blocked party as to anyone else. A feed is a different exposure shape — it
 -- is repeated and push-style rather than a one-off pull — so a block has to stop it in
 -- both directions. The two comments are not in conflict; they describe two surfaces.
+--
+-- EXPLICIT `to authenticated` restriction (added 2026-08-22, BUG-1 RLS verification
+-- package): the `oryn_public` branch below — `visibility = 'oryn_public' and
+-- is_profile_public(posts.author_id)` — never references the CALLER's identity, only
+-- the author's, exactly like the bug this same package found and fixed in
+-- `public_profiles` (migration 0061). Without this restriction, `anon`'s schema-wide
+-- default grant on this table (see the enum comment above) would let a fully
+-- unauthenticated caller read any `oryn_public` post's full content from any
+-- public-profiled author — worse than the `public_profiles` leak, since a post carries
+-- real user-authored text/media, not a fixed safe-column whitelist. Every other branch
+-- of this policy (`author_id = auth.uid()`, the `connections` branch) already requires
+-- `auth.uid()` as a hard condition, so this restriction changes nothing for a genuinely
+-- authenticated caller — it only removes the one anon-reachable path.
 create policy "read visible posts" on public.posts
-  for select using (
+  for select to authenticated
+  using (
     author_id = auth.uid()
     or (
       removed_at is null
