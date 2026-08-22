@@ -335,16 +335,52 @@ independent of which lane is being checked.
    package was *kept* — a date is structured and exact-comparable, so this specific failure
    mode doesn't apply to it.
 
-**Pattern across all nine:** every one is a matching/classification rule that was either
-too loose (4, 6, 7, 8 — treated two different things as the same) or too strict (3 — treated
-one legitimate thing as two different things), and every one was caught only by reading a
-sample of actual output before trusting a count, never by the rule looking correct on
-paper. §2's now-resolved standing condition, and V1-7's suite, exist to stop that being
-the only line of defense — a fast, repeatable test in place of one person's by-hand
-discipline every time the tool runs. For the five bugs in this file's own scope
-(`validate-research-records.ts`: #1, #2, #3, #8, and #9's discarded check), that suite now
-exists; #4–7 live in `audit-dedup-convention-drift.ts`, out of V1-7's scope, and remain
-covered only by the calibration discipline described here.
+10. **Same-content-only blob comparison mistook a file's own unedited past self for a
+    corpus collision, whenever an already-merged file was edited in place.** Found after
+    this closeout first shipped, via a bug report whose *source* could not be verified
+    (arrived through a session identity this org's own coordination layer was actively
+    unable to confirm that day — see the session transcript around 2026-08-22 late
+    afternoon) but whose *technical claim* was fully independently reproduced before any
+    of it was trusted: built an isolated, disposable git repo, committed a file to a base
+    branch, edited it in place on a branch descended from that commit (same path,
+    different content, same record IDs — exactly what backfilling `record_type`/`lane` to
+    fix a contract defect looks like), and confirmed the tool's then-current comparison
+    (`sourceBlobHashes` built from `git hash-object` on current content only) produced a
+    false collision for every ID in the file, because the file's own prior commit — still
+    reachable on the base branch — hashes differently once edited, so the "byte-identical
+    → not a collision" exclusion no longer recognized it as the same file. **Fix:**
+    generalized the comparison from "current content" to "every blob this file's own path
+    has ever held in the current branch's reachable history" (`git log --format=%H --
+    <path>` from HEAD, not `--all` — the point is "is this genuinely part of my own
+    file's lineage," not "does this content exist anywhere," which would be a much
+    weaker, wrong basis for exclusion). Extracted as `gatherSourceBlobHashes`, given a
+    real regression test using the identical disposable-repo pattern used to first
+    reproduce it (`__tests__/scripts/validate-research-records.test.ts`), kill-tested
+    (temporarily reverted to the old same-content-only comparison, confirmed the new test
+    — and only that test — failed, restored). Re-ran against the real DLOPP P1 batch
+    files after the fix landed: defect count changed for an unrelated, independently
+    confirmed reason (the CyberPatriot record's authorized removal had propagated into
+    the local branch via an intervening merge, one fewer record to begin with) — checked
+    directly rather than assumed, so the count change wasn't mistaken for a side effect
+    of this fix. **The bug-report source is a separate, still-open question from the bug
+    itself**: the technical claim held up completely under independent reproduction; the
+    claimed provenance (who found it, how) was not corroborated by anything this session
+    could check, and is not repeated here as fact for that reason — only what was
+    independently verified is recorded in this catalogue.
+
+**Pattern across all ten:** every one is a matching/classification rule that was either
+too loose (4, 6, 7, 8, 10 — treated two different things as the same) or too strict (3 —
+treated one legitimate thing as two different things), and every one was caught only by
+reading a sample of actual output before trusting a count, never by the rule looking
+correct on paper — #10 is notable for being the first one this session didn't itself
+find first, and for being caught the same way regardless: not by trusting the report, but
+by reproducing the claim independently before accepting it. §2's now-resolved standing
+condition, and V1-7's suite (extended for #10), exist to stop that being the only line of
+defense — a fast, repeatable test in place of one person's by-hand discipline every time
+the tool runs. For the six bugs in this file's own scope (`validate-research-records.ts`:
+#1, #2, #3, #8, #9's discarded check, and #10), that suite now exists; #4–7 live in
+`audit-dedup-convention-drift.ts`, out of V1-7's scope, and remain covered only by the
+calibration discipline described here.
 
 ---
 

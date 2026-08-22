@@ -763,6 +763,43 @@ export function filterRealBranches(branchLines: string[]): string[] {
   return branchLines.map((b) => b.trim()).filter((b) => b.includes("/"));
 }
 
+/** Every blob hash a source file's own path has EVER held in the current branch's own
+ * reachable history, not just its current working-tree content. Editing an
+ * already-merged file in place (e.g. backfilling `record_type`/`lane` to fix a contract
+ * defect) changes the blob hash — a same-content-only comparison then mistakes the
+ * file's own unedited past self (still sitting on whatever ref it was originally merged
+ * to) for a different file that happens to collide on IDs, which it isn't: it's the same
+ * file, at an earlier revision. Reproduced directly (an isolated repo: commit a file to
+ * `main`, edit it in place on a branch descended from that commit, compare) before
+ * trusting this was real — the pre-fix comparison produced exactly the false-positive
+ * shape described: 2 IDs, both flagged as colliding with `main`'s own prior commit of
+ * the identical path. `git log --format=%H -- <path>` from the CURRENT HEAD is the right
+ * scope (not `--all`): it answers "is this genuinely part of my own file's own lineage,"
+ * not "does this content exist anywhere in the universe" — the latter would accept a
+ * coincidental match from an unrelated branch as safe, which is a real collision, not a
+ * revision. A file with no commit history yet (brand new, never committed) degrades
+ * safely: `git log` returns nothing, the current working-tree hash is still included. */
+export function gatherSourceBlobHashes(sourceFiles: string[]): Set<string> {
+  const hashes = new Set<string>();
+  for (const f of sourceFiles) {
+    hashes.add(execFileSync("git", ["hash-object", f], { encoding: "utf8" }).trim());
+    let commits: string[] = [];
+    try {
+      commits = execFileSync("git", ["log", "--format=%H", "--", f], { encoding: "utf8" }).split("\n").filter(Boolean);
+    } catch {
+      continue; // no history for this path yet — current hash above is enough
+    }
+    for (const commit of commits) {
+      try {
+        hashes.add(execFileSync("git", ["rev-parse", `${commit}:${f}`], { encoding: "utf8" }).trim());
+      } catch {
+        // path didn't exist at this commit (renamed/moved into place) — skip, not fatal
+      }
+    }
+  }
+  return hashes;
+}
+
 function checkIdDiscipline(records: Json[], contract: LaneContract, sourceFiles: string[]): string[] {
   const defects: string[] = [...checkWithinBatchIdDiscipline(records, contract)];
 
@@ -779,15 +816,20 @@ function checkIdDiscipline(records: Json[], contract: LaneContract, sourceFiles:
   // this batch merged to main via PR #13 mid-verification, which made a naive
   // path-suffix check misfire as 74 false "collisions" against its own content).
   // Dedupe on git BLOB HASH instead — content-identity is unambiguous regardless of how
-  // many refs currently point at the same bytes.
+  // many refs currently point at the same bytes. And "same file" means the whole of its
+  // own history, not just its current content — see gatherSourceBlobHashes's own comment
+  // for the in-place-edit false positive this generalization fixes.
   //
-  // This whole block is deliberately NOT unit tested (see __tests__/scripts/
-  // validate-research-records.test.ts's own header) — it is real git-process
-  // orchestration (execFileSync × N branches), not logic. What IS unit tested, because it
-  // is where the real bugs lived: filterRealBranches (the origin/HEAD filter) and
-  // findIdCollisionsInFileContent (the JSON-field-value matching) above.
+  // The git-process orchestration in this block (branch enumeration, blob hashing) is
+  // deliberately NOT unit tested (see __tests__/scripts/validate-research-records.test.ts's
+  // own header) — real execFileSync × N branches, not logic. What IS unit tested, because
+  // it is where the real bugs lived: filterRealBranches (the origin/HEAD filter),
+  // findIdCollisionsInFileContent (the JSON-field-value matching), and
+  // gatherSourceBlobHashes (the same-file-at-an-earlier-revision fix above) — the last one
+  // against a real, disposable temp git repo, since this logic is inherently git-native
+  // and a mock would only test the mock.
   try {
-    const sourceBlobHashes = new Set(sourceFiles.map((f) => execFileSync("git", ["hash-object", f], { encoding: "utf8" }).trim()));
+    const sourceBlobHashes = gatherSourceBlobHashes(sourceFiles);
     const branches = filterRealBranches(
       execFileSync("git", ["branch", "-r", "--format=%(refname:short)"], { encoding: "utf8" }).split("\n")
     );
