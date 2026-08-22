@@ -371,6 +371,18 @@ simplification of the org.
     question. **Before trusting any tool output as evidence, state the question you meant and
     check that the command answers that one.**
 
+    **Variant, contributed by ORYN-BASORG: the check was correct and the timing wasn't.** It read
+    a per-university count *mid-apply*, saw 102 where 107 was expected, and briefly read the
+    five-row shortfall as an identity defect. It was a table read during a write. It verified the
+    canonical row and the batch reconciliation **before reporting**, and the discrepancy
+    dissolved. This is the mirror of the cases above: there, the tool answered a *different*
+    question; here it answered the **right** question at an instant that made the answer wrong.
+
+    Same species, same day: a `ListAgents` ref read as an identity, a `current-state.md` liveness
+    line read as current, React state read before it committed, a table read mid-write. **Four
+    true answers, each taken at the wrong instant.** When a measurement disagrees with an
+    expectation, establish *when* it was taken before concluding *what* it means.
+
 28. **A shared test account is a shared resource. Claim it, name it, never share it
     concurrently.** Any lane doing live verification states in its report **which account it is
     using**, and no two lanes use the same account at the same time. The CEO allocates.
