@@ -82,7 +82,7 @@ worktree only; credentials are per-checkout via `.env.local`, not shared across 
 | Service | Status |
 |---|---|
 | Supabase (anon key) | OK |
-| Supabase (secret key) | **Still failing — "JWT issued at future".** Same regression flagged at the 08-20 checkpoint, unresolved 2+ days later. Founder action — see below. |
+| Supabase (secret key) | **OK — resolved 2026-08-22 ~10:15 UTC.** The "JWT issued at future" failure (open since 08-20) turned out to be a transient Supabase server-side condition, not a credential problem: the key in `.env.local` was a valid current `sb_secret_` key all along, and the identical request now returns 200 on 10/10 direct probes and 3/3 `check:integrations` runs. Investigated and ruled out before concluding transient: key format/staleness, project-URL mismatch, duplicate env definitions, shell-env override, local clock skew (server and local clocks matched to the second), supabase-js client-side validation (error string absent from the library). Everything secret-key-dependent (admin panel, notifications, account deletion, moderation) is unblocked. If it recurs, it flaps server-side — re-probe before touching credentials. |
 | Anthropic | Missing credential in this checkout specifically (not necessarily a global blocker — other worktrees have had this working per `ORYN_WORKSTREAMS.md`'s DATA-A row) |
 | Tavily | Missing credential in this checkout specifically (same caveat) |
 | College Scorecard | Missing credential (unchanged; optional) |
@@ -104,13 +104,12 @@ pass once nobody needs them for rollback.
 Only items no Claude session can do unilaterally. Full detail:
 `docs/founder-blocked-backlog.md`, `docs/FOUNDER-START-HERE.md`.
 
-1. **Still open, still time-sensitive**: the Supabase secret-key "JWT issued at future"
-   failure — check the project's service-role key hasn't rotated and this environment's
-   clock/credential is current. Blocks every secret-key-dependent write (account deletion,
-   admin panel, notification writes, moderation) in any environment hitting this.
-2. Add billing credit to the Anthropic account / resolve the Tavily plan-usage limit — not
-   re-confirmed globally this checkpoint (this specific checkout simply has no local key for
-   either, which is a separate, per-worktree issue).
+1. ~~Supabase secret-key failure~~ — **resolved 2026-08-22, transient server-side; no
+   founder action was needed after all** (see External service status above).
+2. Supabase dashboard → Authentication → Sign In / Providers → Email → turn **Confirm
+   email** off — still the one gate on browser-QA signup.
+3. Add billing credit to the Anthropic account (unblocks live AI-advisor testing; timing
+   optional) / resolve the Tavily plan-usage limit when discovery jobs are wanted.
 3. The remaining `founder-blocked-backlog.md` items (QA accounts, `is_admin` grant, legal
    review, hosting/deploy choice, error-monitoring provider, scholarship-sourcing policy,
    QS-ranking licensing position, GPA-on-public-profile decision, etc.) — unchanged, see that
