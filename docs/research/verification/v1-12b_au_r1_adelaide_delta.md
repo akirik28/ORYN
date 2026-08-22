@@ -108,3 +108,23 @@ this lane both already did this for the same finding, referenced in V1-9 and in 
 README; not repeated here since the file's own claim — 301 to `/dom/`, byte-identical —
 was the thing already confirmed, not something this delta reopened); source-truth
 re-verification of anything outside the 4 changed fields.
+
+## Addendum (2026-08-22, same day): a real defect this package missed, found by BASORG/RES-V2
+
+This package verified that the 3 rewritten records' new `international` text matched its
+own stated purpose (a "no distinct variant" explanation) and matched the README's
+description of the fix. It did not check whether that text belongs in the field's value
+domain at all — and it doesn't. Checked independently, across all 120 records, after
+BASORG raised it: `study_mode.international` holds a genuine study-mode value
+(`"Full-time"` ×110, `"Full time or part time"` ×6) on every one of the other 116
+records with the key present; `entry_requirements.international` holds genuine
+admission-criteria text on the same 116. The 3 rewritten records hold a provenance
+sentence instead, in both fields. UniStart — which has no `international` key at all —
+is the shape consistent with the other 116, not an outlier from them. **The three
+"careful" rewrites introduced the same species of defect the entry_requirements/
+study_mode-keyed-by-audience ruling in V1-9 was meant to prevent: provenance information
+in a value slot.** This package's own delta check verified the edit against its stated
+intent and against the README, and stopped there — it did not run the cross-corpus
+value-domain check that would have caught this on its own. Recorded here rather than
+left implicit, since a verdict is only as good as what it actually checked, including
+this one's.
