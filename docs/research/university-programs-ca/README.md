@@ -1,5 +1,49 @@
 # Canada Programme Catalogue — Nine Universities
 
+## SESSION CLOSE-OUT (2026-08-22, end of founder's window) — read this first
+
+Written for a cold session with none of tonight's context. Five things, in order of what a
+successor needs first:
+
+1. **Adelaide is 120, not 119.** UniStart was added (a genuine 4th non-award pathway record,
+   confirmed live), and a false international-provenance claim on those 4 records was fixed
+   twice (once wrong, once corrected — full account in `docs/research/university-programs-au/
+   README.md`). Verified by both verification lanes tonight. **Deliberately not ingested** —
+   this is a separate corpus from Canada, part of the AU package, flagged here only because the
+   number is easy to misstate.
+2. **Calgary is deferred, not blocked — the source-authority gate PASSED.** Say this direction
+   explicitly, because the opposite reading is the natural mistake: this is a *feasibility*
+   finding (`calendar.ucalgary.ca` returned sustained HTTP 429, most likely from this lane's own
+   ~50 posture-check requests in 10-15 minutes), not a policy finding. Full detail in the
+   "Calgary — deferred" section below, including the standing policy it established: SaaS-backed
+   client-side rendering (Coursedog/Kuali/Modern Campus) passes the gate when the browsable URL
+   a student would cite is the institution's own domain; a vendor-branded browsable URL (like
+   McMaster's) still fails.
+3. **Dalhousie is inconclusive, and is a *different* finding from Calgary's — do not merge
+   them.** `academiccalendar.dal.ca/robots.txt` returned a clean 404 (no restrictions stated),
+   but the catalog page itself (`.../Catalog/ViewCatalog.aspx?pageid=viewcatalog&catalogid=133`,
+   a server-rendered ASP.NET/IIS system) never returned a response at either a 20s or an
+   authorized 60s timeout — `HTTP_STATUS:000` both times, no server statement of any kind, not a
+   429. Genuinely unknown whether this is a slow legacy system or something silently dropping
+   the request. Two long-timeout attempts were judged enough to stop for tonight; not exhausted,
+   just paused. Full detail in the "Dalhousie — inconclusive" section below.
+4. **15 Canada targets remain** from the original 17 (Calgary and Dalhousie now attempted/paused
+   rather than untried): Carleton, Concordia, Memorial, Simon Fraser, Toronto Metropolitan,
+   Sherbrooke, Université du Québec, Université Laval, Guelph, Manitoba, New Brunswick,
+   Saskatchewan, Victoria, Windsor, York. **All 17 (now 15 remaining + these 2) were re-queried
+   live against the DB tonight and confirmed at zero `university_programs` rows** — this was not
+   carried forward from an earlier check. Pick the next by the same live-QS-rank method (don't
+   trust a rank from memory — fetch it), then run the DB-and-corpus gate for that specific name
+   before extracting, even though the 17-wide check already passed once.
+5. **Carry the value-domain rule into extraction, not into a later review pass**: before writing
+   any field, check what its own siblings already hold. If the value about to be written doesn't
+   belong to that field's domain (a provenance sentence where a study mode goes; a catalogue code
+   where a post-nominal goes), it belongs in `researcher_notes` instead, and the value slot stays
+   absent. This cost Adelaide a full verify-fix-reverify cycle after the fact; at write time it
+   costs nothing.
+
+---
+
 **Note (2026-08-22): a ninth university, Ottawa, was added after this document's original eight
 by a separate lane (RES-R1) under a separate mandate — BASORG-scoped "zero DB coverage AND zero
 research corpus" targeting by live QS 2027 rank, not the coordinator's originally-named eight.
@@ -401,3 +445,39 @@ gate for Calgary is open. A future attempt should retry `calendar.ucalgary.ca/ro
 and if renders proceed, throttle far more conservatively than this lane did on the initial
 posture check — real minutes between requests, not seconds, given how quickly ~50 requests
 triggered a response here.
+
+## Dalhousie — inconclusive (RES-R1, 2026-08-22): not the same finding as Calgary, do not merge them
+
+Picked by the same live-QS-rank method (QS 2027, #298 world / #12 Canada, immediately after
+Calgary's #11 — sourced from Dalhousie's own press release, not a third-party aggregator). DB
+and corpus gate both clean: 0 `university_programs` rows, `duplicate_status: canonical`, identity
+confirmed by domain (`dal.ca`), no dedicated corpus file anywhere; the only 5 grep hits are inside
+`counseling-intelligence/` files (unrelated taxonomy/rules proposals), spot-checked and confirmed
+incidental — "the one confirmed adopter (Dalhousie's MBA program) is graduate-level," a passing
+example, not coverage.
+
+**This stopped for a different reason than Calgary, and the two should not be read as the same
+kind of outcome.** Calgary's gate passed and a *known* cost (rate-limiting, evidenced by a
+sustained 429) stopped extraction — a feasibility finding with a clear mechanism. Dalhousie's
+gate also passed, but the candidate catalogue endpoint
+(`academiccalendar.dal.ca/Catalog/ViewCatalog.aspx?pageid=viewcatalog&catalogid=133`, found via
+search, a server-rendered ASP.NET catalog system — `.aspx`, IIS) **never returned a response at
+all**, at either a 20-second or a 60-second timeout — curl exit 28/1, `HTTP_STATUS:000` both
+times, not a 429, not a 4xx/5xx, no server statement of any kind. `robots.txt` on the same host
+returned a clean IIS 404 (no file present, so no restriction stated) moments before, so the host
+is reachable in general — only this specific dynamic page failed to respond twice.
+
+**Genuinely undetermined which of two explanations is correct**, and this document should not be
+read as asserting either: (a) this class of legacy server-rendered catalog page is simply slow
+under load and needs a longer timeout than even 60s tolerated here, or (b) something about this
+specific request is being silently dropped rather than answered, for a reason not visible from
+outside. Two independent long-timeout attempts failing was judged enough to stop spending further
+requests chasing the distinction rather than moving to the next target.
+
+**For a future attempt:** try a longer timeout still (90-120s) or a different entry point into
+the same catalog system before concluding it's unreachable — this was not exhausted, just paused
+after a bounded, deliberately-authorized amount of trying. If it turns out to be genuinely slow
+rather than blocked, this may be one of the more feasible remaining targets precisely because it
+looked server-rendered rather than SPA-based: a single plain HTTP fetch per programme page, no
+browser rendering, no vendor API, no sub-resource multiplication — the opposite cost profile from
+Calgary's, if it can be gotten to respond at all.
