@@ -301,6 +301,29 @@ that accuracy pass on the three founder-facing documents before they merged. **R
 normal flow the moment MERGE-1 is available**: the grant is a continuity measure, not a
 simplification of the org.
 
+24. **Select by an identifier the author minted, never by a predicate over shared mutable
+    state.** Proposed by ORYN-CFO after the CEO's merge script chose its target with
+    "the first open PR numbered >= 73", raced with another lane's PR created seconds earlier,
+    and merged that lane's work through a gate that verified nothing. The open-PR list is
+    shared mutable state; so is a `ListAgents` ref. **Both identify a moment, not an identity.**
+
+    Mechanically: pass `gh pr merge` the **head branch name** — minted by the author, unraceable.
+    Where a number is unavoidable, capture the expected `headRefName` at creation time from
+    `gh pr create`'s own output (never re-derive it), re-read it immediately before merging, and
+    hard-fail on mismatch. For docs-only merges, assert the file list against an allowlist too.
+
+    This generalises: the same class produced today's three ref-based identity misreads — a
+    session declared dead, a resumed session mistaken for a stranger, and a lane's PR merged in
+    place of another's. Rule 23 says a rule that depends on remembering it needs a mechanical
+    check; this is that check for anything addressed by position.
+
+25. **Trace the callers, not the artifact, when reviewing anything that guards behaviour.**
+    Migration `0062` was read line by line by its author and again by the CEO, and merged. It
+    would have silently frozen score recompute, because the defect was not visible in the file
+    — it was in *who else writes those columns and with which client*. BUG-1 found it by going
+    to the call sites. A reviewer who checks text and a reviewer who checks callers are
+    different disciplines, and security-relevant changes need the second one.
+
 ## 6. Known founder-pending items no lane may act on unilaterally
 
 - Evidence-gate false rejections (2,097 blocked records) — `docs/handoffs/evidence-gate-false-rejections-2026-08-22.md`

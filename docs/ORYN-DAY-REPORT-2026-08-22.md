@@ -166,6 +166,92 @@ server-side and it's been working all day. Two QA accounts exist and work.
 
 ---
 
+## The evening, 17:00–18:15
+
+Written after the sections above. Where the two disagree, this one is later.
+
+**Twenty-one PRs merged, and the queue is now empty.** Every branch that was open is merged or
+superseded. `main` was independently re-gated by me in a clean checkout afterwards:
+lint clean, typecheck clean, **137 files / 2068 tests**, production build succeeds.
+
+Six of those were branches whose owning session could no longer rebase them — MERGE-1 has been
+hung since 15:42, and two research lanes are deliberately asleep. Rather than let that work die
+with the sessions, I rebased and gated each one myself and said so in every PR body.
+
+### The migration that would have broken the thing it was protecting
+
+`0062` — the privilege-escalation fix, **the number-one item on your list** — was defective when
+I merged it, and this item told you to paste it into the SQL Editor and run it.
+
+BUG-1 found it by tracing the actual writers instead of re-reading the file it had just written.
+The merged version guarded three columns by resetting them unless the caller is the service role.
+That is right for `is_admin`, which no ordinary app path ever writes. It is **wrong for
+`profile_strength_score` and `completeness_percent`**: the score-recompute path — which runs every
+time a student edits their profile — writes both through the *same* client a student's browser
+uses. The database cannot tell "Oryn computing your score" from "you forging it"; both arrive as
+role `authenticated`.
+
+**Applied as written, score recompute would have stopped silently.** No error, no failed write —
+scores simply frozen while the app kept reporting success. The exact defect class this entire day
+was spent closing, in the one item flagged most urgent.
+
+It is fixed. `0062` now guards **`is_admin` alone**, which closes the whole escalation and needs no
+code change. The two computed columns move to `0063`, paired with a small code change routing their
+writes through the admin client where they always belonged — not urgent, still being written.
+**Nothing was ever applied to the database during the defective window, so there is nothing to undo.**
+
+I reviewed that migration line by line before merging it, including checking a `search_path`
+concern its own precedent didn't cover. I did not catch this. The person who caught it stopped
+re-reading the artifact and went to look at its callers.
+
+### Australia: 0 → 544, and a sourcing catch worth more than the number
+
+`university_programs` is **16,663**, up from 16,119 this morning. Australia went from **zero
+programmes to 544 live**, across three universities.
+
+The part worth your attention is what RES-R1 did *not* ship. Three of the eight target universities
+were deferred, each blocked by a different access-control mechanism — Melbourne by bot mitigation,
+ANU by a `robots.txt` that names our crawler explicitly, Queensland by a CAPTCHA gate. Three honest
+gaps beat eight universities where three came from somewhere we can't name.
+
+Then it caught something in its own completed work: all **107 UWA records** had been fetched from a
+path UWA's `robots.txt` disallows. The *data* was correct and independently verified — but the
+stored `source_url` pointed at a path we'd been asked not to request. It re-fetched all 107 through
+the permitted URL before the work merged, rather than after. `AGENTS.md` rule 5 honoured when it
+was inconvenient, which is the only time it counts.
+
+### Also closed this evening
+
+- **The advisor was reading disbelieved claims as fact.** Underneath the "Self reported" badge you
+  see, the layer that actually feeds the AI collapsed a four-value evidence status into a yes/no —
+  so an achievement someone had *looked at and rejected* reached the weekly-plan generator carrying
+  the same weight as a verified one. Fixed at the scoring choke point. **I measured the live impact:
+  zero rows are currently in that state** — the defect was real and simply hadn't been triggered yet,
+  because there are no real users. Fixing it now, while the blast radius is thirteen rows, is the
+  whole point.
+- **Four more tables** carry the same row-scoped-only defect as `is_admin`, including
+  `profile_scores` — the source-of-truth table the earlier fix was caching from. Scoped into `0063`.
+- **Accessibility**: three controls had no accessible name; two colour pairs failed WCAG AA. Both
+  fixed within the existing palette — **no theme decision was made or prejudged**, that's still yours.
+- **325 contract defects** in the deadline-research corpus, fixed and verified by me: 189 records,
+  zero missing required fields.
+- A student could set `program_id` on a requirement belonging to a different university. Fixed.
+
+### Two mistakes of mine
+
+I declared a session dead because its `ListAgents` reference changed, and re-routed two lanes'
+reporting on that basis. It had briefly dropped and resumed, keeping all its context. CFO checked
+and declined to act on my instruction, which is the second time today a session was right to push
+back on me. Reversed with the reason attached.
+
+And while scripting the merge of the urgent `0062` warning, I selected the target PR by "first open
+number ≥ 73." Another lane's PR had been created in that window, so **I merged theirs instead,
+having verified nothing.** It was docs-only and harmless, and I disclosed it to them — but that is
+the gate I require of everyone else, failing on my own desk, inside a fix for a different mechanical
+error.
+
+---
+
 ## Honest notes
 
 **Six of thirteen sessions died mid-afternoon** — FEAT-1, UI-1, BUG-1, RES-R2, RES-I1 and
