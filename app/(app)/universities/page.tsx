@@ -8,7 +8,7 @@ import { UniversitySearchBox } from "@/features/universities/university-search-b
 import { SUPPORTED_COUNTRIES } from "@/lib/data/country-geo";
 import { regionById } from "@/lib/data/regions";
 import { searchUniversityRows } from "@/lib/universities/alias-search";
-import { getSupersededUniversityIds } from "@/lib/universities/canonical";
+import { getSupersededUniversityIds, loadSupersessionMap } from "@/lib/universities/canonical";
 import { getUniversityCountByCountry, getAllCostOfAttendance, getAllQsListPositions } from "@/lib/universities/queries";
 import {
   COST_BUCKETS,
@@ -94,7 +94,8 @@ export default async function UniversitiesPage({
   // "University College London") must never independently surface as its own card — see
   // lib/universities/canonical.ts. Applied to the browse query, the country-count query, and
   // search, so none of the three shows a duplicate card or an inflated per-country count.
-  const supersededIds = getSupersededUniversityIds();
+  const supersessionMap = await loadSupersessionMap(supabase);
+  const supersededIds = getSupersededUniversityIds(supersessionMap);
 
   // cost/size/rank are checked via an in-memory intersection (see fetchViaIdIntersection)
   // rather than a `.in("id", [...])` filter, because that filter has a real, verified server-

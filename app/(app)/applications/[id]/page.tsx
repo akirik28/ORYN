@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { computeReadiness } from "@/lib/applications/readiness";
-import { canonicalUniversityId } from "@/lib/universities/canonical";
+import { canonicalUniversityId, loadSupersessionMap } from "@/lib/universities/canonical";
 import { RequirementChecklist } from "@/features/applications/requirement-checklist";
 import { ApplicationStatusControl } from "@/features/applications/status-control";
 import { PageHeader } from "@/components/oryn/page-header";
@@ -30,10 +30,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     .eq("id", application.target_university_id)
     .single();
   if (!target) return { title: "Application" };
+  const supersessionMap = await loadSupersessionMap(supabase);
   const { data: university } = await supabase
     .from("universities")
     .select("name")
-    .eq("id", canonicalUniversityId(target.university_id))
+    .eq("id", canonicalUniversityId(supersessionMap, target.university_id))
     .single();
   return { title: university?.name ?? "Application" };
 }
@@ -51,8 +52,9 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
     supabase.from("application_requirements").select("*").eq("application_id", id).order("requirement_type"),
   ]);
 
+  const supersessionMap = await loadSupersessionMap(supabase);
   const { data: university } = targetRes.data
-    ? await supabase.from("universities").select("name").eq("id", canonicalUniversityId(targetRes.data.university_id)).single()
+    ? await supabase.from("universities").select("name").eq("id", canonicalUniversityId(supersessionMap, targetRes.data.university_id)).single()
     : { data: null };
 
   const requirements = requirementsRes.data ?? [];

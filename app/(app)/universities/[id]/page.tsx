@@ -19,7 +19,7 @@ import { RequirementEvaluationBadge } from "@/features/universities/requirement-
 import { AdminRequirementForm } from "@/features/universities/admin-requirement-form";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
 import { StatusBadge } from "@/components/oryn/status-badge";
-import { canonicalUniversityId, isSupersededUniversityId } from "@/lib/universities/canonical";
+import { canonicalUniversityId, isSupersededUniversityId, loadSupersessionMap } from "@/lib/universities/canonical";
 import { formatTuition, tuitionQualifier } from "@/lib/universities/tuition-format";
 import { formatNumber, formatCurrency } from "@/lib/i18n/format";
 import type { RequirementEvaluationStatus, UniversityRequirement, UniversityProgram, UniversityDeadline } from "@/types/database";
@@ -67,10 +67,11 @@ const MONTH_NAMES = [
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const supabase = await createClient();
+  const supersessionMap = await loadSupersessionMap(supabase);
   const { data: university } = await supabase
     .from("universities")
     .select("name")
-    .eq("id", canonicalUniversityId(id))
+    .eq("id", canonicalUniversityId(supersessionMap, id))
     .single();
   return { title: university?.name ?? "University" };
 }
@@ -85,8 +86,9 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   // let a student land on it as if it were the canonical result: redirect to the winner instead
   // of rendering. Catches every path here, not just the now-fixed browse/search — an old
   // bookmark, a program search result, a saved deep link. See lib/universities/canonical.ts.
-  if (isSupersededUniversityId(id)) {
-    redirect(`/universities/${canonicalUniversityId(id)}`);
+  const supersessionMap = await loadSupersessionMap(supabase);
+  if (isSupersededUniversityId(supersessionMap, id)) {
+    redirect(`/universities/${canonicalUniversityId(supersessionMap, id)}`);
   }
 
   const { data: university } = await supabase.from("universities").select("*").eq("id", id).single();

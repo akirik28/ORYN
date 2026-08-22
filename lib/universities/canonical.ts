@@ -11,67 +11,131 @@
  * therefore surface BOTH rows for one real institution — this is the literal mechanism behind
  * the reported bug ("UCL" search returning both "UCL" and "University College London").
  *
- * The architecturally correct fix is `universities.superseded_by_id` (migration
- * 0043_university_duplicate_supersession.sql). **Status as of 2026-08-20: applied and
- * backfilled live** — `duplicate_status`/`superseded_by_id` are populated for all 9 known
- * pairs, verified to match this file's own JSON mapping exactly (see
- * docs/founder-blocked-backlog.md and the commit that ran the backfill). This module has
- * NOT yet been switched over, though — the DB now agrees with the JSON file, but every read
- * path below still goes through the JSON snapshot below, not a live query. Until that
- * migration happens, this module remains the same fix implemented at the application layer
- * instead of the schema layer:
+ * The architecturally correct fix is `universities.duplicate_status` / `superseded_by_id`
+ * (migration 0043_university_duplicate_supersession.sql). **Status as of 2026-08-22: live and
+ * DB-native.** `duplicate_status` ('canonical' | 'superseded') and `superseded_by_id` are
+ * populated for all 9 known pairs, re-verified directly against `oryn-qa-scratch` before this
+ * module was switched over (canonical=1010, superseded=9, every id matched what used to be
+ * this module's static JSON snapshot exactly). This module now queries those live columns —
+ * it no longer reads a generated build artifact.
  *
- *   1. `scripts/resolve-university-duplicates.ts` finds every `canonical_entity_id` shared by
- *      more than one live `universities` row (this can ONLY happen for entities a human/session
- *      has already verified are the same institution via `merge_canonical_entities()` — this
- *      module never decides identity, only which of two already-confirmed-identical rows a
- *      product surface should show), scores each row with `pickCanonicalWinner`, and writes
- *      the losing → winning id mapping to `duplicate-supersessions.json` below.
- *   2. This module reads that generated file and exposes the primitives every read path needs:
- *      is this id superseded, what's its canonical id, filter a row list down to canonical-only.
+ * What changed from the JSON-snapshot version: the old `isSupersededUniversityId(id)` /
+ * `canonicalUniversityId(id)` / `getSupersededUniversityIds()` / `excludeSupersededUniversities(rows)`
+ * were plain synchronous functions closing over a module-level constant loaded from
+ * `duplicate-supersessions.json` at build time. A DB-native replacement is unavoidably async (it's
+ * a network round trip), so this was a genuine call-site-by-call-site refactor, not a drop-in
+ * internals swap — every consumer needed its own update, some by loading the map once per
+ * request/script and passing it to already-synchronous helpers (`.map()`/`.filter()` callbacks
+ * can't trivially become async), others by loading it directly where a single id needed resolving.
  *
- * Remaining upgrade step (DDL/backfill are done, this part isn't): delete this file and
- * switch every read path below to a `.is("duplicate_status", null)` (or equivalent) filter
- * against the live column instead — a deliberate, wider refactor (these functions are
- * synchronous and used broadly; a DB-native replacement is naturally async, so this isn't a
- * drop-in internals swap, every call site needs its own update) rather than something to
- * change opportunistically. Until then, re-run the generation script whenever a new pair is
- * merged via `merge_canonical_entities()` — this file is a build artifact, not hand-maintained.
+ *   1. `loadSupersessionMap(supabase)` — for every call site that already holds a
+ *      `SupabaseClient<Database>` (every app/lib call site, most scripts). Issues one
+ *      `.eq("duplicate_status", "superseded")` query and returns a `loserId -> { winnerId }` map.
+ *   2. `loadSupersessionMapViaRest(target)` — for the university-acquisition scripts, which use
+ *      the raw-REST `PostgrestTarget` convention (`lib/acquisition/paginate.ts`) rather than a
+ *      supabase-js client for reads, so they never had one to pass to (1).
+ *   3. The four query-shaped helpers below (`isSupersededUniversityId`, `canonicalUniversityId`,
+ *      `getSupersededUniversityIds`, `excludeSupersededUniversities`) are still pure and
+ *      synchronous, unchanged in spirit from the JSON-snapshot version — they just take the
+ *      freshly loaded map as their first argument instead of closing over a module constant.
+ *      Call (1) or (2) once per request/script/function, then use these exactly like before.
+ *
+ * There is no longer a generation step to keep in sync — `scripts/resolve-university-duplicates.ts`
+ * (whose only job was producing the now-deleted JSON file) was retired along with the file. A new
+ * pair merged via `merge_canonical_entities()` just needs `duplicate_status`/`superseded_by_id` set
+ * on the losing `universities` row (see `scripts/university-duplicates-audit.ts --supersede` for the
+ * existing tool that does this) — every read path here picks it up on the next query, nothing to
+ * regenerate.
  */
 
-import supersessionsData from "./duplicate-supersessions.json";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/database";
+import type { PostgrestTarget } from "@/lib/acquisition/paginate";
+import { fetchAllRowsVerified } from "@/lib/acquisition/paginate";
 
 export interface SupersessionEntry {
   /** The `universities.id` a student should actually see. */
   winnerId: string;
-  winnerName: string;
-  loserName: string;
-  /** Why this side won — kept for auditability, not read by the app. */
-  reason: string;
 }
 
-const SUPERSESSIONS: Record<string, SupersessionEntry> = supersessionsData;
+/** `universities.id` (loser) -> its supersession entry. Load fresh via `loadSupersessionMap`
+ * or `loadSupersessionMapViaRest` once per request/script/function; the helpers below are pure
+ * functions over whatever map you pass them, so a stale map is only ever as stale as your own
+ * call site chose to let it be — there is no shared, implicitly-cached copy anywhere in this
+ * module. `ReadonlyMap` because nothing downstream should be mutating another call site's map. */
+export type SupersessionMap = ReadonlyMap<string, SupersessionEntry>;
+
+function toMap(rows: { id: string; superseded_by_id: string | null }[]): SupersessionMap {
+  const map = new Map<string, SupersessionEntry>();
+  for (const row of rows) {
+    // superseded_by_id is only ever null when duplicate_status='canonical' (the DB's own
+    // universities_superseded_consistency check enforces this) — every row here already came
+    // from a duplicate_status='superseded' filter, so this guard is defensive, not expected to
+    // ever actually trigger. Skipping rather than throwing keeps one malformed row from taking
+    // down every other correct one.
+    if (row.superseded_by_id) map.set(row.id, { winnerId: row.superseded_by_id });
+  }
+  return map;
+}
+
+/**
+ * Loads the current superseded -> canonical mapping via a `SupabaseClient` — the right choice
+ * for every app/lib call site and any script that already constructs one. On a query failure,
+ * logs and returns an empty map (fails OPEN: "no known supersessions") rather than throwing —
+ * consistent with how every existing call site already treats "no exclusion list" as the safe
+ * default when this data was simply absent, and matches Rule 8 (external/DB hiccups must not
+ * crash the page) more closely than surfacing a hard error over 9 rows on an indexed column
+ * would justify. A prolonged outage here degrades to "duplicate cards can reappear," not a
+ * broken page — an acceptable, visible, non-corrupting failure mode.
+ */
+export async function loadSupersessionMap(supabase: SupabaseClient<Database>): Promise<SupersessionMap> {
+  const { data, error } = await supabase.from("universities").select("id, superseded_by_id").eq("duplicate_status", "superseded");
+  if (error) {
+    console.error("[universities] loadSupersessionMap failed — treating as no known supersessions", { code: error.code, message: error.message });
+    return new Map();
+  }
+  return toMap(data ?? []);
+}
+
+/**
+ * Same contract as `loadSupersessionMap`, for the university-acquisition scripts that read via
+ * the raw-REST `PostgrestTarget` convention (`lib/acquisition/paginate.ts`) instead of a
+ * supabase-js client. Unlike `loadSupersessionMap` this does NOT fail open on error —
+ * `fetchAllRowsVerified` throws on a short/failed read, and an acquisition script's own
+ * candidate-pool construction should stop rather than silently proceed as if no university were
+ * ever superseded (an ingestion script writing real data is exactly the case Rule 4/34 — never
+ * silently manufacture or silently drop a value — argues for failing loud, not open).
+ */
+export async function loadSupersessionMapViaRest(target: PostgrestTarget): Promise<SupersessionMap> {
+  const { rows } = await fetchAllRowsVerified<{ id: string; superseded_by_id: string | null }>(
+    target,
+    "universities",
+    "id,superseded_by_id",
+    "duplicate_status=eq.superseded&order=id.asc"
+  );
+  return toMap(rows);
+}
 
 /** True when `id` is a known-duplicate `universities` row that a product surface must not
  * show independently — its data should still be reachable (FKs, history), just not as its
  * own selectable card/result. */
-export function isSupersededUniversityId(id: string): boolean {
-  return id in SUPERSESSIONS;
+export function isSupersededUniversityId(map: SupersessionMap, id: string): boolean {
+  return map.has(id);
 }
 
 /** The id a product surface should actually display for `id` — itself, unless `id` is a known
  * loser, in which case the winner's id. Never throws on an unknown id (most ids aren't
  * duplicates at all, which is the common case, not an error). */
-export function canonicalUniversityId(id: string): string {
-  return SUPERSESSIONS[id]?.winnerId ?? id;
+export function canonicalUniversityId(map: SupersessionMap, id: string): string {
+  return map.get(id)?.winnerId ?? id;
 }
 
 /** Every `universities.id` currently superseded by another row. Use with `.not("id", "in", ...)`
  * (or equivalent) on any query that lists/searches universities directly, so a losing row never
  * reaches a result set in the first place — cheaper and more robust than filtering client-side
  * after the fact. */
-export function getSupersededUniversityIds(): string[] {
-  return Object.keys(SUPERSESSIONS);
+export function getSupersededUniversityIds(map: SupersessionMap): string[] {
+  return [...map.keys()];
 }
 
 /** Drops any row in `rows` whose id is a known-superseded duplicate. For call sites that
@@ -79,18 +143,15 @@ export function getSupersededUniversityIds(): string[] {
  * add a `.not("id", "in", ...)` clause to the original query — prefer filtering in the query
  * itself (`getSupersededUniversityIds()`) when possible; this is the fallback for when the
  * query is out of the caller's control. */
-export function excludeSupersededUniversities<T extends { id: string }>(rows: T[]): T[] {
-  return rows.filter((row) => !isSupersededUniversityId(row.id));
-}
-
-/** All current supersession entries — used by regression tests and the admin/audit surface,
- * not by ordinary product read paths (those want the functions above, not the raw map). */
-export function allSupersessions(): Record<string, SupersessionEntry> {
-  return SUPERSESSIONS;
+export function excludeSupersededUniversities<T extends { id: string }>(map: SupersessionMap, rows: T[]): T[] {
+  return rows.filter((row) => !map.has(row.id));
 }
 
 // ---------------------------------------------------------------------------
-// Winner selection (pure — used by the generation script, unit-tested directly)
+// Winner selection (pure — used by scripts/university-duplicates-audit.ts's --supersede path
+// and unit-tested directly). Out of scope for the live-column read-side refactor above: this
+// is identity/merge-adjacent decision logic (which of two already-confirmed-identical rows a
+// product surface should show), not a read helper, and untouched here per that boundary.
 // ---------------------------------------------------------------------------
 
 export interface DuplicateCandidate {

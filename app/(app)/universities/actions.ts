@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { refreshAdmissionOutlook } from "@/lib/admissions/persist";
 import { logEvent } from "@/lib/analytics/log";
-import { canonicalUniversityId } from "@/lib/universities/canonical";
+import { canonicalUniversityId, loadSupersessionMap } from "@/lib/universities/canonical";
 import type { TargetStatus } from "@/types/database";
 
 /** Ownership-scoped lookup for an existing target, correctly handling the "no specific
@@ -28,7 +28,8 @@ export async function addTargetUniversity(rawUniversityId: string, programId: st
   // whatever id reaches here (an old bookmark, a program search result, a future caller that
   // isn't filtered) gets resolved to its canonical winner before it's ever written, so a loser
   // id can never be permanently saved to a student's profile. See lib/universities/canonical.ts.
-  const universityId = canonicalUniversityId(rawUniversityId);
+  const supersessionMap = await loadSupersessionMap(supabase);
+  const universityId = canonicalUniversityId(supersessionMap, rawUniversityId);
 
   // Deliberately not `.upsert(..., { onConflict: "user_id,university_id,program_id" })`:
   // program_id is nullable, and Postgres never treats NULL as conflicting with NULL for
