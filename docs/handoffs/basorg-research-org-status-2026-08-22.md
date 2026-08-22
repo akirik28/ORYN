@@ -1260,10 +1260,10 @@ not proof the other ~1,765 are clean.**
 | UNSW | 217 | **live** |
 | Sydney | 149 | **live** |
 | Monash | 178 | **live** |
-| UWA | 107 | verified, cleared, dry-run queued |
+| UWA | 107 | **live** |
 | Adelaide | 119 | verified, 2 findings open with RES-R1 |
 
-**544 live. 651 verified.** Every record passed research → contract verification → source
+**651 LIVE.** (Adelaide's 119 verified but not ingested — two findings open.) Every record passed research → contract verification → source
 verification, by three different lanes, with dry-run and apply as separate packages.
 
 **Three of the top eight are deferred on policy grounds** — Melbourne (domain-wide Cloudflare), ANU
@@ -1326,6 +1326,82 @@ That oscillation is **the cost side of the research→verify→ingest separation
 by loosening it.** That separation caught Glasgow's 69 duplicates, UWA's 63%, the Adelaide
 provenance defect, and the CyberPatriot inadmissible source. **A pipeline that never idles anyone
 is a pipeline where nobody is waiting to check anybody.**
+
+## 8.4aa AUSTRALIA IS LIVE AT 651 — and the sentence worth keeping from the whole day
+
+`university_programs` **16,663 → 16,770**. UWA **0 → 107**. Australia **544 → 651** across five
+universities. Revert path `au_programs_uwa_2026-08-22.jsonl_2026-08-22` reconciles clean: 107 queue
+rows, 107 promoted, 107 distinct, **zero orphans**.
+
+**RES-I1 applied 5, then 544, then 107 today** — each with dry-run and apply as separate packages,
+each with the full baseline measured before writing (all eight counts, not just the total, which is
+what makes an invariant check real rather than a formality), and each with the excluded corpus
+**never checked out at any point** rather than merely not-applied.
+
+### The episode, and what it establishes
+
+Before this apply, RES-I1 **refused three messages telling it to proceed**: a CFO relay, then
+BASORG's own message arriving from an unfamiliar address after its socket went stale, then the
+fact-reversal itself. Its grounds were correct at every step — the claim reversed the single fact
+most load-bearing in BASORG's stated reasoning, it came from an identity with three confirmed
+citation errors that day, it cited that identity to establish its own legitimacy (circular), and it
+justified a channel switch with *"your socket is stale"* which RES-I1 disproved by observing its
+socket working.
+
+**BASORG's resolution was not to authenticate itself.** It was: *you do not need to verify me, you
+need to verify the claim, and the claim is in git.* RES-I1 then read the verdicts — **and found
+BASORG's citation wrong** (`v2_9` was on an unmerged branch, not `main`), while confirming every
+number in it.
+
+> **"A wrong detail from a real manager got caught by checking the artifact, not by distrust of the
+> manager. Those are different failure modes and it's good that this org's design separates them."**
+> — RES-I1
+
+**What changed between the third refusal and compliance was not a judgement about trust. It was
+reading the verdicts.** That is why the same procedure works whether a channel is genuine, confused
+or hostile, and why the whole episode cost one round-trip rather than a standoff.
+
+It also surfaced that **RES-V2's entire verification record was 17 commits off `main`** — Australia's
+544 live rows rested on a source verdict nobody could find from where people look. Merged as #92
+(31 files, +7,897 lines, zero deletions).
+
+## 8.4bb Rule 27 variant: the check was correct and the timing wasn't
+
+BASORG queried per-university counts **mid-apply**, saw UWA at **102** against an approved 107, and
+briefly read it as five records resolving to a wrong university — an identity defect. It was a
+**timing artifact of reading a table while a write was in flight.** Checking the canonical row and
+the batch reconciliation first showed 107/107 clean.
+
+**None of the day's other rule-27 instances covered this shape.** The others were checks answering a
+narrower question than intended. This one answered the *right* question, correctly, **at a moment
+that made the answer wrong.** Add to the catalogue: *a measurement of a system under concurrent
+mutation is a measurement of a moment, not of the system.*
+
+## 8.4cc Open: `degree_type` null on 251 rows — completeness, not correctness
+
+| university | rows | null `degree_type` | extraction method |
+|---|---:|---:|---|
+| Monash | 178 | 0 | structured fields (174 distinct) |
+| UNSW | 217 | 1 | AQF codes (93 distinct) |
+| **Sydney** | **149** | **100%** | **title tokens** |
+| **UWA** | **107** | **100%** | **title tokens** |
+
+Found by ORYN-CEO on Sydney; **extended to UWA by BASORG** (UWA wasn't live when CEO measured).
+
+**Null `degree_type` correlates exactly with the title-token extraction method** — a title-token
+method reads the *level* from the title, and there may be no abbreviation token to read.
+
+**`degree_level` is populated on all 651**, so the qualification level shows on every record and
+only the abbreviation is missing. **Completeness, not correctness — nothing false is displayed.**
+
+CEO's reporting discipline is worth copying: the aggregate is 27.6% null (understates), Sydney alone
+is 100% (overstates scope). **Both mislead, in opposite directions.** It split by university first.
+
+Open with RES-R1, and the question decides everything: **does the source publish an abbreviation
+that extraction missed, or not publish one at all?** Source property → `null` is correct, document
+the per-platform limitation. Missed → targeted one-field re-fetch across 251 records. **A
+well-evidenced "this platform doesn't publish it" is a finding, not a failure** — and better than a
+field filled by inference, which is what `degree_type` derived from a title would be.
 
 ## 8.5 If you inherit this org
 
