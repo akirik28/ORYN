@@ -566,6 +566,68 @@ privileged role instead.
 
 ---
 
+## 34. URGENT-ISH — verified work is stranded because no ingester session exists
+
+**Action**: open one ingester session (an RES-I2-shaped lane). It clears most of this in under
+an hour.
+**Why**: six of thirteen sessions ended without warning this afternoon (13 → 8), including
+**both** database-writing lanes. What remains — research and verification — deliberately cannot
+write to the live database, and ORYN-BASORG correctly refused to let verifiers do it: that
+separation is what produced today's real catches, and collapsing it under staffing pressure
+would trade the quality mechanism for a handful of rows.
+
+**What's waiting, all verified, all bounded, all revertible:**
+- **Habitat Derneği's application deadline: 26 August — four days out.** The only item here with
+  a real clock. It needs its PR merged *and* the record applied to reach a student; merging
+  alone isn't enough. If nothing else on this list gets done, do this one.
+- Five `cycle_status` corrections resolved against their own sources (IPPF → open, HOSA →
+  upcoming, Wharton Data Science → closed, CMIMC → closed, BIYSC → upcoming).
+- Glasgow's ~10 single-award `degree_type` records (the ~51 multi-award ones are correctly held
+  pending item 32).
+- Six non-opportunity retirements (a course-catalogue entry, five institution-name titles),
+  already prepped.
+- The 1,429 URL corrections — but those need item 31's apply path built first, so they're
+  blocked twice over.
+
+**Nothing here is harmful while it waits.** Today's live state is honest; an unapplied
+correction is a missing improvement, not a defect. Only Habitat has an expiry.
+
+**Why I didn't just do it myself**: I nearly did, for Habitat specifically, on the reasoning
+that a four-day deadline outranks a territory boundary when the owning lane no longer exists.
+The environment's safety classifier blocked that message, and on reflection it was right to.
+Pressure is exactly when a boundary gets crossed "just this once", and you can open a session
+in minutes — a far better outcome than establishing that the coordinator writes to live data
+whenever staffing thins. ORYN-CFO flagged this same gap independently this afternoon and
+recommended the org doc define it as policy rather than leave it to judgment.
+
+## 35. Product decision: the schema forces one value where reality has several
+
+**Action**: decide whether these fields may hold multiple simultaneous truths, as one modelling
+question rather than four separate schema tickets.
+**Why it's one question**: four lanes hit it independently today, in four different columns,
+without coordinating:
+- `opportunities.cycle_status` must be `closed` **and** `date_not_announced` at once — the
+  current cycle has closed *and* the next genuinely isn't announced. True for **11 of 18**
+  rows examined.
+- `university_programs.degree_type` holds one award where the source page lists 2–4 (item 32).
+- One deadline field for Girl Up's per-region pathways, which have different dates per region.
+- Concord Review's cycle label conflates publication months with deadline months.
+
+**The shape, in ORYN-BASORG's words**: *the schema forces one value where reality has several
+simultaneous truths, and the field's authority does the misleading rather than any false value.*
+Every individual stored value is factually correct. The misleading part is the field's implied
+claim to be complete.
+
+**Why it matters concretely**: a student searching MEng misses a programme recorded as BEng; a
+student filtering for open opportunities can't distinguish "closed for good" from "closed, next
+cycle unannounced". Both are real misses on real searches.
+
+**Depends on**: nothing technical — a schema/product judgment. Deciding the principle once
+settles all four and prevents the next one. ORYN-CFO was asked to weigh in on the `degree_type`
+instance.
+
+---
+
 ## Environment hazard (not a decision, but you should know)
 
 **The primary checkout `/Users/adasarpkirik/Desktop/Founder/ORYN` sits on branch
