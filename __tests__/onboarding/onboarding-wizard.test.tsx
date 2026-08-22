@@ -138,3 +138,24 @@ describe("OnboardingWizard — double-activation guard", () => {
     expect(screen.getByRole("button", { name: /Back/ })).toBeDisabled();
   });
 });
+
+describe("OnboardingWizard — step transition doesn't freeze on the first click", () => {
+  test("both the progress value and the visible heading update after one click, immediately", async () => {
+    render(<OnboardingWizard />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Continue/ }));
+
+    // Regression test for a defect found and confirmed live (getAnimations() on the
+    // step-content element returned zero animations seconds after the click, computed
+    // style fully settled at opacity:1/transform:none -- Motion's AnimatePresence was
+    // waiting on a completion signal from an exit animation it never actually started,
+    // freezing the *visible* step on step 0 forever while `step` state itself had
+    // already advanced). Before the fix, the progress bar and the heading disagreed
+    // about what step it was; asserting both together is what catches that specific
+    // failure mode -- a test that only checked the heading (via findByRole/waitFor,
+    // tolerant of a delay) would eventually pass once the animation timed out on its
+    // own in a real browser, and never actually prove the desync is gone.
+    expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "40");
+    expect(screen.getByRole("heading", { name: "Tell us about your school" })).toBeInTheDocument();
+  });
+});

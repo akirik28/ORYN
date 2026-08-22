@@ -47,10 +47,18 @@ function TogglePill({ selected, onClick, children }: { selected: boolean; onClic
 
 function StepShell({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   return (
+    // No `exit` prop: confirmed via document.getAnimations() in a live browser that
+    // Motion never actually starts an exit animation for this element (zero Animation
+    // objects, computed style fully settled at opacity:1/transform:none seconds after
+    // the triggering click) -- prefers-reduced-motion ruled out separately. AnimatePresence
+    // then waits indefinitely for a completion signal from an animation that was never
+    // created, freezing the step transition on the very first click a student makes.
+    // This was never a working effect being removed -- it never ran. Unverified
+    // hypothesis for a future Motion upgrade to check: a ref-timing interaction between
+    // motion.div and React 19, both bleeding-edge in this repo.
     <motion.div
       initial={{ opacity: 0, x: 16 }}
       animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -16 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
       className="space-y-6"
     >
