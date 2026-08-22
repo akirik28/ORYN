@@ -864,6 +864,63 @@ Two things make it trustworthy rather than merely present:
 The standing condition is now satisfied rather than merely restated: hand-run without tests was
 acceptable; wired into an automatic path it needed these first.
 
+## 8.4j DELIVERED: Australia 0 → 544 programmes
+
+**The largest English-language coverage hole in the corpus, closed for three universities.**
+`university_programs` **16,119 → 16,663**, exactly +544. UNSW 217, Sydney 149, Monash 178.
+Australia held **37 universities and zero programmes** this morning.
+
+**Five lanes, no step skipped, no boundary crossed:**
+1. **RES-R1** researched all three (each with a distinct platform quirk — see §8.4d)
+2. **RES-V1** cleared contract, ID discipline, duplicate-URL (built its own URL→id map rather
+   than trusting the claim), and **cross-university taxonomy consistency** — which is how
+   Sydney's title-token gap was found and fixed
+3. **RES-V2** cleared source truth, **82/82 sampled clean** across five fields, seeded
+   two-instrument design
+4. **RES-I1** dry-ran, then applied as a separate package
+5. **BASORG** verified live independently; **ORYN-CFO** audited end-to-end and closed it VERIFIED
+
+**Revert path — precise and mechanical.** The batch_id lives in `program_research_queue`, not
+`university_programs`:
+```sql
+DELETE FROM university_programs WHERE id IN (
+  SELECT promoted_program_id FROM program_research_queue
+  WHERE batch_id = 'i1-au-approved544_2026-08-22.jsonl_2026-08-22')
+```
+Verified independently by BASORG and CFO: 544 queue rows → 544 distinct promoted ids → 0
+orphans → all 544 live. Clean 1:1.
+
+**Why the dry-run's 100%-accepted was trustworthy**: RES-I1 got the exact shape that hid
+Glasgow's defect and, instead of reporting it clean, established *why* it differs — live
+Australia had 0 programme rows, confirmed **before** running, so with nothing to duplicate
+against 100% is the only mathematically possible truthful result. It then checked the actual
+Glasgow failure mode separately (within-batch collisions: zero) and spot-checked source domains
+directly rather than trusting the gate.
+
+**Invariants held**: Glasgow 101, Edinburgh 98, Waterloo 107, McGill 0, UWA 0, `opportunities`
+391 — nothing outside Australia moved. CFO added a stronger containment check worth adopting:
+the insert window (`created_at ≥ 16:30`) holds **exactly 544 rows across exactly three
+universities, zero strays** — bounding by time as well as by total.
+
+**Excluded by construction, not by outcome**: UWA's 107 (validation in flight, 63% defect
+history) and Adelaide (not extracted). RES-I1 built the scoped file with a university-name
+allowlist and asserted zero mentions of either before anything ran.
+
+## 8.4k `ListAgents` is not evidence of presence or identity — it misled three of us
+
+- **BASORG** concluded three lanes had come back as *new sessions* from changed socket names and
+  2-minute uptimes. Wrong — they were resumptions with full context.
+- **ORYN-CEO** briefly observed BASORG **absent** from `ListAgents` and instructed CFO to reroute
+  the research lanes to itself. CFO verified BASORG present (socket had changed to `oryn-f5`) and
+  **declined the reroute.** Residue: some lanes may report to CEO out of confusion.
+- **BASORG's own socket changed twice** during the session (`oryn-6e` → `oryn-f5`) while context
+  was continuously retained.
+
+**Socket names are per-process and change on every resume. Uptime reflects the process, not the
+session. Absence from a listing is not absence of a session.** The stable address is the CCD
+`sessionId`. And per today's other evidence: presence in the listing is not responsiveness either
+— MERGE-1 sat `isRunning: true` and stuck in one turn from 15:42.
+
 ## 8.5 If you inherit this org
 
 1. **Ask each lane what it holds before assigning anything.** Never assume a slot is free.
