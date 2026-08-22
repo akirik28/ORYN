@@ -9,8 +9,8 @@ where, and how to tell it worked.
 
 - **What happened today**: `docs/ORYN-DAY-REPORT-2026-08-22.md` — read this first if you only
   read one thing.
-- **The complete list of everything needing you**: `docs/founder-blocked-backlog.md` (37 items;
-  this page sequences only the ones that matter tonight).
+- **The complete list of everything needing you**: `docs/founder-blocked-backlog.md` — this page
+  sequences only the ones that matter tonight.
 - **What is actually true right now**: `docs/current-state.md`.
 
 ---
