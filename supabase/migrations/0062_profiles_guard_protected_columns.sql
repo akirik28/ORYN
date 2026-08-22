@@ -39,25 +39,36 @@
 -- profile object (most profile writes touch many columns in one request) should not fail
 -- outright because one field among many was silently ignored.
 --
--- PROTECTED COLUMNS, each justified individually (ORYN-CEO's explicit instruction: be
--- conservative, don't sweep in fields a user legitimately controls):
+-- PROTECTED COLUMNS: `is_admin` only. NOT forgotten -- deliberately narrowed.
 --
---   * `is_admin` -- unambiguous. Grants the service-role-backed admin surface above.
+--   * `is_admin` -- unambiguous. Grants the service-role-backed admin surface above, and
+--     has ZERO legitimate writers on the `authenticated` role: nothing in this codebase
+--     ever sets it from a normal user session. `current_user <> 'service_role'` is
+--     therefore exactly the right test -- it can never collide with a real write.
 --
---   * `profile_strength_score` -- computed and written exclusively by
---     `lib/scoring/persist.ts` (`.update({ profile_strength_score: careerProfile.overallScore,
---     ... })`), never by any student-facing form. Displayed everywhere as an Oryn-computed
---     fact, not a self-reported one: the dashboard header, `MobileNav`'s score badge, the
---     monthly-delta calculation (`app/(app)/layout.tsx`, `app/(app)/dashboard/page.tsx`).
---     Also read cross-user by `lib/benchmarking/cohort.ts` for peer-comparison cohorts --
---     an unguarded write here would let one student's self-inflated score pollute another
---     student's benchmarking view, not just their own.
+-- `profile_strength_score` and `completeness_percent` WERE included in an earlier version
+-- of this migration and were REMOVED before merge -- this is a correction, not an
+-- oversight, and the reasoning matters enough to state in full so nobody re-adds them the
+-- same way. Both columns are written by `lib/scoring/persist.ts`'s
+-- `recomputeCareerProfile()` -- the real, legitimate, runs-on-every-profile-edit
+-- score-recompute path -- via `createClient()` (`lib/supabase/server.ts`, the
+-- publishable-key client bound to the caller's own session), which authenticates as
+-- Postgres role `authenticated`. That is NOT `service_role`. A guard using this
+-- migration's role check would therefore reset those two columns on every legitimate
+-- recompute too -- not just a forged write -- silently freezing every student's
+-- displayed Career Profile score the moment this migration is applied, with no error
+-- anywhere: the write "succeeds" (the guard doesn't reject, it resets), the app reports
+-- success, and the score just never changes again. That is the exact "confident-sounding
+-- claim with nothing behind it" failure class this whole verification package exists to
+-- catch, and this migration would have been the one committing it, in the founder's own
+-- backlog queue, ready to run. Caught before merge by tracing the actual writer instead
+-- of re-reading this file's own reasoning about itself.
 --
---   * `completeness_percent` -- same write-owner (`lib/scoring/persist.ts`), same "presented
---     as computed, not entered" shape. Directly gates a displayed trust signal:
---     `lib/admissions/persist.ts` sets `dataConfidence = completeness_percent >= 60 ?
---     "high" : "medium"` on a student's own admission outlook -- an unguarded write lets a
---     student force their own outlook to display artificial confidence.
+-- Those two columns are picked back up in migration 0063, paired with moving
+-- `recomputeCareerProfile()`'s specific writes to `createAdminClient()` -- at that point
+-- the role check becomes correct, for the same reason it already is for `is_admin`: the
+-- legitimate path no longer arrives as `authenticated`. Guarding them here, alone, without
+-- that companion change, would have been wrong regardless of how the column list read.
 --
 -- Everything else on `profiles` (first_name through show_gpa, the entity-id fields
 -- already guarded by migration 0038 for a different reason, busy_mode*, onboarding_*,
@@ -75,7 +86,15 @@
 -- database itself believes the connection to be, decided before this trigger ever runs.
 -- `pg_trigger_depth() <= 1` is carried over from the same precedent: guards the direct,
 -- top-level update only, so a service-role-initiated cascade or a future trigger that
--- itself updates `profiles` as a nested effect is not blocked by this one.
+-- itself updates `profiles` as a nested effect is not blocked by this one. Called as
+-- `pg_catalog.pg_trigger_depth()` and the function carries `set search_path = ''` --
+-- added on amendment, not in the original merge: unqualified, a function created by a
+-- role with `CREATE` on some earlier schema on the search path could shadow the real
+-- `pg_trigger_depth()` and silently defeat the guard. Checked live that this is not
+-- exploitable today (`has_schema_privilege('authenticated','public','CREATE')` = false,
+-- same for `anon`), but the qualification costs one line and removes the class outright
+-- rather than resting on today's grants staying that way. Supabase's own linter flags the
+-- unqualified form as `function_search_path_mutable`.
 --
 -- WRITTEN BUT NOT APPLIED, per BUG-1's standing package constraint and because this is a
 -- security-critical, founder-gated change. Do not run against a live project without
@@ -84,17 +103,16 @@
 create or replace function public.profiles_guard_protected_columns()
 returns trigger
 language plpgsql
+set search_path = ''
 as $$
 begin
-  if pg_trigger_depth() <= 1 and current_user <> 'service_role' then
+  if pg_catalog.pg_trigger_depth() <= 1 and current_user <> 'service_role' then
     new.is_admin := old.is_admin;
-    new.profile_strength_score := old.profile_strength_score;
-    new.completeness_percent := old.completeness_percent;
   end if;
   return new;
 end;
 $$;
 
 create trigger profiles_00_guard_protected_columns
-  before update of is_admin, profile_strength_score, completeness_percent on public.profiles
+  before update of is_admin on public.profiles
   for each row execute function public.profiles_guard_protected_columns();

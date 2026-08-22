@@ -44,13 +44,24 @@ Migration 0058's `posts_guard_system_columns` (reset-to-`OLD` rather than raisin
 on `current_user <> 'service_role'`) is the closer precedent for the actual fix shape.
 
 **Fix written, not applied**: `supabase/migrations/0062_profiles_guard_protected_columns.sql`
-adds a `BEFORE UPDATE` trigger on `profiles` resetting `is_admin`,
-`profile_strength_score`, and `completeness_percent` to their prior value unless the
-caller is the service role — the latter two share the identical unguarded-column shape
-(computed server-side by `lib/scoring/persist.ts`, displayed as an Oryn-computed fact,
-not user-entered) at much lower severity: self-directed score inflation and a forced
-"high" admissions-outlook confidence label, not cross-user data access. Founder-gated per
-standing rule; do not apply without review.
+adds a `BEFORE UPDATE OF is_admin` trigger on `profiles`, resetting it to its prior value
+unless the caller is the service role. Founder-gated per standing rule; do not apply
+without review. Escalated by ORYN-CEO as founder-blocked-backlog item 36, ranked above
+the `public_profiles` finding below given this one requires no student action at all.
+
+**Self-correction before merge, worth recording**: an earlier version of this migration
+also guarded `profile_strength_score`/`completeness_percent` (the same unguarded-column
+shape, computed by `lib/scoring/persist.ts`). That version was wrong and never applied
+anywhere: those two columns' one legitimate writer (`recomputeCareerProfile()`, the real
+score-recompute path that runs on every profile edit) authenticates as Postgres role
+`authenticated`, not `service_role` — a role-based guard would have reset them on every
+legitimate recompute too, not just a forged write, silently freezing every student's
+displayed Career Profile score the instant this migration was applied, with the write
+itself reporting success throughout. Caught by tracing the actual writer rather than
+re-reading the migration's own stated reasoning. Narrowed to `is_admin` only before
+merge — see the migration's own header for the full account. Those two columns return in
+migration 0063, paired with moving that specific write to the service-role client so the
+same guard mechanism becomes correct for them too.
 
 ## Needs founder decision — live RLS gap: `public_profiles` readable by anonymous callers
 
