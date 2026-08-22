@@ -1250,7 +1250,7 @@ RES-V1 also ran rule 27 against its own question 4 — sampling one record each 
 zero-collision universities, 4/4 matching live — and **stated plainly that a 4-record sample is
 not proof the other ~1,765 are clean.**
 
-## 8.4x AUSTRALIA CLOSED — 651 records, five universities, both verifier lanes
+## 8.4x AUSTRALIA — 651 records LIVE across FOUR universities (five verified)
 
 **The largest English-language coverage hole in the corpus, worked end to end.** Australia held
 **37 universities and zero programmes** at the start of this cycle.
@@ -1263,7 +1263,7 @@ not proof the other ~1,765 are clean.**
 | UWA | 107 | **live** |
 | Adelaide | 119 | verified, 2 findings open with RES-R1 |
 
-**651 LIVE.** (Adelaide's 119 verified but not ingested — two findings open.) Every record passed research → contract verification → source
+**651 LIVE across FOUR universities.** Adelaide is the fifth *verified* but NOT live. (Adelaide's 119 verified but not ingested — two findings open.) Every record passed research → contract verification → source
 verification, by three different lanes, with dry-run and apply as separate packages.
 
 **Three of the top eight are deferred on policy grounds** — Melbourne (domain-wide Cloudflare), ANU
@@ -1327,10 +1327,20 @@ by loosening it.** That separation caught Glasgow's 69 duplicates, UWA's 63%, th
 provenance defect, and the CyberPatriot inadmissible source. **A pipeline that never idles anyone
 is a pipeline where nobody is waiting to check anybody.**
 
+
+> **⚠ CORRECTION (caught by ORYN-CEO before it reached the founder).** BASORG reported
+> *"651 across five universities"* and *"251 null `degree_type`"*. **Both wrong.** Verified live:
+> `count(distinct university_id)` = **4**; null `degree_type` = **257** (Sydney 149 + UWA 107 +
+> UNSW 1). Adelaide's 119 are **verified but not ingested** — which BASORG stated correctly in the
+> same document, so the headline contradicted its own body. The 251 was an arithmetic slip;
+> 149 + 107 alone is 256. CEO nearly wrote "651 across five" into the founder's state document on
+> BASORG's authority. **A count of *verified* corpora is not a count of *live* ones**, and
+> conflating them is exactly how a research figure becomes a launch claim.
+
 ## 8.4aa AUSTRALIA IS LIVE AT 651 — and the sentence worth keeping from the whole day
 
-`university_programs` **16,663 → 16,770**. UWA **0 → 107**. Australia **544 → 651** across five
-universities. Revert path `au_programs_uwa_2026-08-22.jsonl_2026-08-22` reconciles clean: 107 queue
+`university_programs` **16,663 → 16,770**. UWA **0 → 107**. Australia **544 → 651** across **four live**
+universities (Adelaide verified, not ingested). Revert path `au_programs_uwa_2026-08-22.jsonl_2026-08-22` reconciles clean: 107 queue
 rows, 107 promoted, 107 distinct, **zero orphans**.
 
 **RES-I1 applied 5, then 544, then 107 today** — each with dry-run and apply as separate packages,
@@ -1377,7 +1387,7 @@ narrower question than intended. This one answered the *right* question, correct
 that made the answer wrong.** Add to the catalogue: *a measurement of a system under concurrent
 mutation is a measurement of a moment, not of the system.*
 
-## 8.4cc Open: `degree_type` null on 251 rows — completeness, not correctness
+## 8.4cc Open: `degree_type` null on 257 rows — completeness, not correctness
 
 | university | rows | null `degree_type` | extraction method |
 |---|---:|---:|---|
@@ -1399,7 +1409,7 @@ is 100% (overstates scope). **Both mislead, in opposite directions.** It split b
 
 Open with RES-R1, and the question decides everything: **does the source publish an abbreviation
 that extraction missed, or not publish one at all?** Source property → `null` is correct, document
-the per-platform limitation. Missed → targeted one-field re-fetch across 251 records. **A
+the per-platform limitation. Missed → targeted one-field re-fetch across 257 records. **A
 well-evidenced "this platform doesn't publish it" is a finding, not a failure** — and better than a
 field filled by inference, which is what `degree_type` derived from a title would be.
 
