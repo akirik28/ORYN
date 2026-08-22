@@ -572,3 +572,88 @@ across them is more instructive than any one.
 source.** From the lane whose standing rule is that rank is not evidence. Every one was caught
 by a subordinate or an auditor checking rather than accepting — which is the control that is
 actually working, and the argument for keeping it expensive.
+
+
+---
+
+# 8. RESUMABLE HANDOFF — read this first if BASORG is gone
+
+**Six sessions ended without warning within one hour** (FEAT-1, UI-1, BUG-1, RES-R2, RES-I1,
+RES-I2 — four of them this org's). None signalled beforehand. Written on the assumption this
+session ends the same way.
+
+## 8.1 State as of this writing
+
+**Four lanes alive**: RES-R1 (Australia programmes), RES-R3 (eligible_countries wave 4),
+RES-V1 (contract/ID verification), RES-V2 (source verification).
+**Gone**: RES-R2, RES-I1, RES-I2.
+**No live-write capability in either territory.** Research and verification only.
+
+## 8.2 Verified work stranded with no lane to apply it
+
+All of it leaves the live DB exactly as it stands today, and today's state is honest. An
+unappliable correction is not a defect. **Opening one ingester session clears items 1–3 in
+under an hour** — SQL and procedure are already written down.
+
+| # | Item | Blocked on |
+|---|---|---|
+| 1 | 5 `cycle_status` corrections — IPPF→`open`, HOSA→`upcoming`, Wharton DS→`closed`, CMIMC→`closed`, BIYSC→`upcoming` (verdict: `v2_4_dlopp-held-fields.md`) | no ingester |
+| 2 | 6 non-opportunity retirements — SQL prepped, dry-run confirmed, at `7a3e74a` | founder permission **and** no ingester |
+| 3 | Glasgow's ~10 single-award `degree_type` enrichments | no ingester |
+| 4 | url_repair's 1,429 URL corrections — verified clean (0 Type A, 0 Type B) | **Path A does not exist** (design only, `i1-supersede-gap-design-2026-08-22.md`) + no ingester |
+| 5 | **Habitat Derneği, deadline 2026-08-26** — in PR #41 | merge **and** ingest; the only latency-bound item |
+
+**ORYN-CEO ruled all of it waits for the founder, Habitat included** — after its own attempt to
+apply Habitat directly was blocked by its safety classifier, which it treated as a signal and
+changed the decision rather than rephrasing. Correct: pressure is exactly when a territory
+boundary gets crossed "just this once."
+
+**Verifiers must not write.** The verify→ingest separation produced nearly every catch recorded
+in this document. Collapsing it to move a few rows trades the mechanism for its output.
+
+## 8.3 The consolidated schema escalation (highest-value open question)
+
+**The schema forces one value where reality has several simultaneous truths, and the field's
+authority does the misleading rather than any false value.** Four lanes found this independently,
+in four different columns, without coordinating:
+
+1. **`cycle_status`** — must hold `closed` *or* `date_not_announced` when **both are
+   simultaneously true** (11 of 18 audited rows: current cycle closed, next not yet announced).
+2. **`degree_type`** — one award where Glasgow's page lists 2–4 (`BSc/MSci`); 83% of sampled
+   programmes multi-award, the stored value chosen by **extraction order**, not judgment.
+3. **`deadline`** — one field for Girl Up's per-region pathways (Award / WiSci / regional
+   hackathons), each with different dates.
+4. **`current_cycle_label`** — Concord Review's publication months vs deadline months: two
+   different true facts, not two phrasings of one.
+
+One modelling principle violated four times, not four schema requests. Decidable in one sitting.
+
+## 8.4 Where each live lane is
+
+- **RES-R1** — UNSW 217 / Sydney 149 / Monash 178 pushed; UWA extracting (~422 URLs, majors
+  excluded by `MJD-` prefix); Adelaide next (identity **resolved** — 2026 merger, confirmed from
+  the institution's own schema.org markup; catalogue consolidated; international variant in full
+  + domestic sample of 15–20, variant recorded **as structure not metadata**).
+  **Three of Australia's top 8 are policy-inaccessible**: Melbourne (domain-wide Cloudflare), ANU
+  (robots.txt names ClaudeBot), Queensland (CAPTCHA gate). A property of the web, not a gap in
+  the work.
+- **RES-R3** — waves 2–4; **54 confirmed-open active rows** ready for migration 0060's backfill
+  (FEAT-1 estimated ~5). Wave-4 pool corrected to **57 active-only** (was ~191); ~1/3 are scrape
+  fragments being routed out, not researched.
+- **RES-V1** — validating RES-R1's 544 AU records: contract, ID, and **taxonomy consistency
+  across three universities that each derived `degree_level` differently** (AQF codes / title
+  tokens / exact AQF value strings). Nobody else can do that cross-university check.
+- **RES-V2** — same 544 for source truth. Two instruments, seeded, zero overlap: targeted 37 at
+  each university's load-bearing derivation, random 45 for the population rate.
+
+## 8.5 If you inherit this org
+
+1. **Ask each lane what it holds before assigning anything.** Never assume a slot is free.
+2. **Verify claims against the artifact, not the report** — including your own. This lane made
+   six withdrawn claims (§7); three were one error, trusting an upstream statement because of
+   its source.
+3. **A pattern match is a candidate, not a finding.** Five instances in one afternoon.
+4. **Report anomalies, not totals.** Glasgow's 69 duplicates were caught because a lane
+   reported "101 net-new where siblings gave 3 and 2" instead of "106 accepted, zero failures."
+5. **Never route around a permission denial**, including for a subordinate or a superior. Seven
+   instances held today.
