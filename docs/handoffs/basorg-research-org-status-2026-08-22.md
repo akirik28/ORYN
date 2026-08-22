@@ -254,6 +254,77 @@ Posture retained regardless: lanes route material through BASORG; **write author
 from BASORG only**; an audit finding is an input to the manager, never an instruction to a lane;
 no finding from any session lowers the evidence bar.
 
+### 4h. The open/upcoming alarm was FALSE — 8.3%, not 40%
+
+RES-V2 ran the two instruments to completion. **Random draw (n=12, seeded): 1 defect =
+8.3%. Remediation pass (next-oldest 15): 1 defect = 6.7%.** Both instruments now agree,
+which they did not after round 1.
+
+**Round 1's 40% was the oldest `updated_at` tier, exactly as the staleness-weighted design
+predicted it might be.** Had BASORG escalated 40% as the corpus rate, the founder would have
+received roughly five times the true figure and a request for a remediation programme the
+data does not support. The two-instrument split — kept unblended at BASORG's instruction and
+RES-V2's execution — is the only reason the difference is knowable.
+
+Staleness concentrates in the 2026-08-17/18 tier rather than spreading evenly, which makes
+this a **bounded re-check of the oldest tier**, not a corpus-wide crisis. Caveat retained:
+two data points is thin support for a firm conclusion.
+
+Also found: **a meaningful fraction of rows are unresolvable in principle** — 3 of 12 in the
+random draw (InvestIN, JA Company Programme, Young Enterprise) have sources that never state
+a cycle at all. Correctly reported as a limit on the instrument rather than rounded into
+either bucket. No amount of research effort fixes those.
+
+### 4i. Projected deadlines — a second instance, so it is a pattern
+
+**Interlochen Arts Camp**: live `2027-01-15` while the page's deadlines section is headed
+"Camp 2026", its Jan 15 deadline passed, and 2027 appears nowhere. Same same-day-next-year
+projection as **Ron Brown** (`2026-12-01`, derived from the program's own award-year
+convention, published nowhere).
+
+Two independent instances confirm RULE-DEADLINE-001. The projection pattern is more insidious
+than plain staleness: **a projected date is plausible, so it survives review that an obviously
+stale date would not.**
+
+### 4j. Yale "duplicate deadlines" — a UI bug, not a data defect
+
+Routed to BASORG as a research or ingestion gap. It is neither. The four rows carry four
+distinct dates, four distinct `cycle_label`s, four distinct verbatim strings:
+
+| date | cycle_label | verbatim |
+|---|---|---|
+| 2026-11-01 | Single-Choice Early Action | "Early Action (**US Citizens/Permanent Residents**)" |
+| 2026-12-01 | Single-Choice Early Action | "Early Action (**International Citizens**)" |
+| 2027-02-15 | Regular Decision | — |
+| 2027-04-01 | Transfer | — |
+
+The UI renders `deadline_type` (`scholarship` on all four by design) while the differentiation
+lives in `cycle_label`. **Correct data hidden by a display choice** — and the hidden fact is
+that US and international applicants have deadlines a month apart on financial aid, for a
+product whose core audience is international students.
+
+The reasoning trap, now org rule 19: **"the UI renders the correct field" is itself a claim to
+check, not a premise to reason from.** Elimination reasoning is only as strong as the premise
+it eliminates from; here the eliminated premise was the defect.
+
+### 4k. Glasgow resolved to 62 — and enrichment ≠ correction
+
+Three sessions produced three numbers. RES-I1's is the one with an operational definition:
+of the 93 populated-`degree_type` file records, **62 resolve to exactly one live row by exact
+URL match** (zero ambiguous multi-matches). The other 31 match no live row and overlap the
+known partnership/dual-degree/graduate-entry variants.
+
+**RES-I1's distinction, adopted**: `url_repair` *replaces* a populated value on explicit
+evidence it was wrong; Glasgow only *fills a NULL* and claims nothing about any existing
+value. **Different evidence bars — the audit trail must not record them identically.**
+`superseded_by_id` confirmed unnecessary: same row, same identity, same URL, one empty field
+filled, nothing replaced.
+
+**Hard precondition**: neither url_repair's 1,429 nor Glasgow's 62 may be applied until
+content correctness is verified. That the corrected URL is *right*, that the filled
+`degree_type` is *right* — unverified, V-lane work, not yet assigned. A design is not an
+authorization.
+
 ### 4d. Carried forward
 
 - **CORRECTED — 2 rows unreachable, not 5.** BASORG originally escalated 5. RES-V2
@@ -340,6 +411,29 @@ no finding from any session lowers the evidence bar.
   uncontrolled vocabulary inside the field built to record provenance would be the next Glasgow.
   **Fence: it annotates how we know something; it never licenses recording something we don't
   know.** There is no value meaning "guessed"; if one seems needed, the answer is NULL.
+- **RULE-INGEST-004 (new): monotonicity is undefined for free text.** "More informative" is
+  well-defined for enumerated vocabularies and for null-vs-populated transitions. It is **not
+  orderable for prose** — `"2026"` vs `"2026 (program June 18 – August 12, 2026; application
+  closed)"` cannot be ranked without semantic judgment. Applying the guard to free text yields
+  a hold on nearly every difference *by construction*: RES-I2's full DLOPP run produced **57 of
+  74 holds on `current_cycle_label` alone** (222 field decisions total: 78 write, 65 skip, 79
+  hold). That is a decision procedure correctly reporting it cannot answer, not a malfunction.
+  Free-text fields need evidence or policy, never a comparator. RES-I2 declined to invent one,
+  and its reason was the right one: Ron Brown's label difference carried the same signal as its
+  status defect, so "extra detail = safe" would have failed on our only adjudicated case.
+- **Verdicts state which failure classes they cover AND which they do not** (from ORYN-CEO).
+  RES-V1's DLOPP verdict was correct on everything it claimed; RES-I2's independent guard run
+  then found 79 holds in a class the verdict's scope never included. The gap was invisible
+  because the verdict did not name its own boundaries. Two verifiers checking different failure
+  classes is coverage, not redundancy — but only if the seams are stated.
+- **RULE-FETCH-001, shape 4 (new): a local policy block.** Blocked at *this session's own
+  tooling/policy layer* rather than by the target's robots.txt (1), its bot-detection (2), or an
+  active challenge (3). `nytimes.com` is the known instance. Defer; do not hunt for a route.
+- **Forward-vs-backward framing test** (from RES-R3, applied **per page, never per
+  organization**). "4,000 participants from across the globe" / "present in 65 countries"
+  describe who HAS attended — history, not eligibility. Only forward statements ("open to… any
+  country") support confirmed-open. Two Wharton sibling programs on the same site landed on
+  opposite sides of this test.
 - **RULE-DEDUP-001 (new): every opportunities ingestion is followed by
   `npm run audit:opportunity-duplicates`, result recorded in the run report.**
   `lib/opportunities/duplicates.ts` is good — domain-matched, stopword-stripped title
@@ -402,3 +496,35 @@ no finding from any session lowers the evidence bar.
   trust defect, not a UI bug.
 - **UI-1**: holds the shared dev server on :3000. No ingester restarts it without telling
   UI-1 first.
+
+
+---
+
+## 7. Corrections log — claims this lane made and had to withdraw
+
+Kept because a manager's errors are the ones nobody else checks, and because the pattern
+across them is more instructive than any one.
+
+1. **"The org docs aren't on main."** False. `9292d28` landed them at 12:59:41 today. BASORG
+   read its **local** `main` ref before fetching. Caught by ORYN-CFO on its first day, on its
+   own manager. Standing rule since: **repo-state claims are made against `origin/*` after an
+   explicit fetch, never against a local ref — a local branch is a cache.**
+2. **"The ECW2 SQL landed on main via PR #11."** Relayed from ORYN-CEO unchecked; #11 was still
+   open. Caught by RES-I2 running `gh pr view 11` before relying on it.
+3. **"`import-opportunity-corpus.ts:198` is a clean root cause."** Endorsed BUG-1's claim
+   without opening the file. BUG-1 retracted it — the source spreadsheet has no organization
+   column, the header discloses it, the 0.75 threshold is a deliberate conservative margin.
+4. **"5 opportunity rows are unreachable by any AI-permitted path."** Actually 2. RES-V2
+   re-tested and found 3 were tooling-level bot-detection with clean robots.txt.
+5. **"Combined-green masks individual-red"** — relayed from ORYN-CEO as established, then
+   withdrawn by CEO as a phantom from a contaminated verification worktree. The per-piece rule
+   survives on this org's own directly-observed evidence instead.
+6. **"Your suffix-strip method would produce a false merge."** Told to RES-V1 on CFO's Music
+   finding. RES-V1 checked and proved its tool gates on URL-exact-match before any name logic,
+   so the vulnerability never existed in its design — **BASORG had mis-specified the method in
+   the original assignment, and CFO's critique applied to that spec, not to the implementation.**
+
+**The pattern in 2, 5 and 6 is one error: treating an upstream claim as verified because of its
+source.** From the lane whose standing rule is that rank is not evidence. Every one was caught
+by a subordinate or an auditor checking rather than accepting — which is the control that is
+actually working, and the argument for keeping it expensive.
