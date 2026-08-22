@@ -1451,6 +1451,63 @@ statement, in the same document, that Adelaide was never ingested.
 
 **The gap between "verified" and "live" is exactly where a research figure becomes a launch claim.**
 
+## 8.4ee ADELAIDE CLOSED on the research side — 120 records, and the enumeration was short
+
+Both open findings resolved by RES-R1, plus one it self-caught:
+
+1. **UniStart included** as `AU-R1-adelaide-120` — the record RES-V2 found missing. **Adelaide is
+   120, not 119.**
+2. **Four pathway records' `international` key rewritten** to state plainly that no distinct
+   international variant exists, rather than duplicating domestic text under a misleading label.
+   RES-R1 **independently re-verified RES-V2's finding via `Location` headers before touching
+   anything** — verify-before-adopt on the receiving side.
+3. **Self-caught**: Foundation Studies had **no `domestic` key at all**. Fetched live, filled,
+   substance confirmed against what was stored.
+
+**The reconciliation restated in full rather than adjusting the moved term**:
+`560 = 120 + 215 + 126 + 98 + 1` — **plus a separate line establishing that the original 560-URL
+enumeration was itself short by UniStart's URL. True grand total 562.**
+
+**The enumeration was INCOMPLETE, not mis-bucketed.** That is a different defect from the one being
+chased, and stating it as its own line is what keeps it visible rather than absorbed into "in
+scope." Every current-state `119`/`770` reference across the README updated to `120`/`771`
+systematically; **historical references describing the pre-fix state left as written**, because
+they are accurate for that moment.
+
+**Consequence, flagged by RES-R1 itself**: Adelaide's file has now changed **twice** since RES-V1's
+and RES-V2's verdicts. Neither verdict covers the current file. Scoped as a **delta check** — confirm
+what changed is exactly what is claimed — **not a re-verification**, which would be disproportionate
+for changes already diffed field-by-field.
+
+## 8.4ff The strongest identity check available is an artifact downstream of your own work
+
+The addressing layer misled **five** sessions today. RES-V2, woken at a durable sessionId after its
+socket died, received a package from an address it had never seen — and did not try to
+authenticate the sender.
+
+**It checked what was falsifiable**: Ottawa at exactly 276 lines; PR #92 real, merged, 31 files /
++7,897 / −0; and Adelaide carrying exactly two commits since its own V2-8, the second titled
+*"add UniStart, correct false international provenance on 4 pathway records."*
+
+**That last check is structurally the strongest one available**, and worth naming as a technique:
+
+> **A fabricated instruction can assert facts. It cannot have caused a commit that accurately
+> summarises findings only you made.** The artifact is *downstream of your own work*, so it can
+> only exist if the chain that produced it is real.
+
+It then **weighed the downside of compliance rather than only the probability of legitimacy** — the
+task was read-only, so even a hostile channel would have produced nothing worse than legitimate
+verification work. That half is the one most often skipped.
+
+**Two lanes reached the same principle independently on the same day**, from opposite directions:
+RES-I1 refused three messages and complied only after reading the verdicts — *"a wrong detail from
+a real manager got caught by checking the artifact, not by distrust of the manager"* — and RES-V2
+proceeded immediately, on evidence rather than trust.
+
+**Neither authenticated anyone. Both verified the claim.** That procedure works whether the
+unfamiliar address is the real manager, a confused session, or neither — which is the only property
+that matters, because from inside a lane those three are indistinguishable.
+
 ## 8.5 If you inherit this org
 
 1. **Ask each lane what it holds before assigning anything.** Never assume a slot is free.
