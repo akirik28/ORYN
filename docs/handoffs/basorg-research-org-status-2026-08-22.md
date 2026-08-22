@@ -631,8 +631,8 @@ One modelling principle violated four times, not four schema requests. Decidable
 ## 8.4 Where each live lane is
 
 - **RES-R1** — UNSW 217 / Sydney 149 / Monash 178 (contract/ID verified clean by RES-V1);
-  **UWA being rebuilt from scratch after a self-reported ~30% classification defect — see §8.4d**;
-  originally extracting (~422 URLs, majors
+  **UWA rebuilt (289 → 107; the defect was ~63%, not ~30% — see §8.4d)**; Adelaide in stage-1
+  raw fetch with the token census to run *before* any classification (~422 URLs, majors
   excluded by `MJD-` prefix); Adelaide next (identity **resolved** — 2026 merger, confirmed from
   the institution's own schema.org markup; catalogue consolidated; international variant in full
   + domestic sample of 15–20, variant recorded **as structure not metadata**).
@@ -715,7 +715,9 @@ almost entirely noise. The size of the wrong-target-URL population in `opportuni
 
 ## 8.4d DATA-TRUST EVENT: ~30% of UWA's records were wrong, self-reported
 
-**Status: contained, being rebuilt. No verifier or ingester consumed the defective data** — both
+**Status: REBUILT and pushed at `d1f235a`. Final: UWA 289 → 107. The defect was 182 of 289
+(~63%), not the ~30% first estimated — BASORG relayed that estimate upward as though it were a
+measurement and has corrected it. No verifier or ingester consumed the defective data** — both
 verification packages scope to the 544 UNSW/Sydney/Monash records and exclude UWA entirely.
 
 RES-R1 ran the comprehensive token audit BASORG required before Adelaide, and found roughly
@@ -816,6 +818,51 @@ above.
 
 Distinct from the six sessions that exited outright. A lane that is alive and silent looks
 identical in a session list to one that is working.
+
+## 8.4h A reconciliation that closed perfectly on three wrong terms
+
+**BASORG's own error, and the sharpest instance of "a pattern match is a candidate" all day —
+because here the match was arithmetic and it was exact.**
+
+RES-R1 reported UWA's exclusion categories as reconciling against 422. They didn't close from
+the numbers given: 202 excluded + 107 included = 309, leaving 113 unaccounted. BASORG formed a
+hypothesis — the missing 113 are the `MJD-` major pages, excluded by prefix rather than by the
+token classifier — and **113 + 202 + 107 = 422 exactly.** Clean close, no remainder.
+
+**It was wrong.** The actual terms: **108** in scope (pre-dedup) + **106** MJD majors + **202**
+title-excluded + **6 fetch failures** = 422. The guessed 113 silently absorbed the 6 fetch
+failures and the 1-record dedup offset — **three errors that happened to cancel.**
+
+Had the hypothesis been accepted, the wrong model would have been carried forward permanently:
+no fetch-failure term, an inflated major count, and no distinction between raw script output and
+post-dedup total. **It would never have failed a later check, because it closes.**
+
+A number that fits is not a verified number. Distinct from the other pattern-match instances and
+worth keeping separate: those were matches that were *plausible*; this was a reconciliation that
+was *exact*.
+
+The reporting gap that caused it is also worth naming: RES-R1 gave the title-exclusion breakdown
+and the **post-dedup** final, omitting the MJD term — two different problems (an omitted term and
+a stage mismatch) that together looked like one missing category. **Report raw accounting and any
+post-hoc steps as separate stages.**
+
+## 8.4i The validator now has tests, and the tests have been kill-tested
+
+`scripts/validate-research-records.ts` — the artifact with **nine known bugs, all found by RES-V1
+while using it** — now has `__tests__/scripts/validate-research-records.test.ts`, 53 tests,
+weighted toward false positives (the failure mode that nearly cost the url_repair batch and would
+have failed 8 correct records).
+
+Two things make it trustworthy rather than merely present:
+- **The suite was kill-tested**: bug #3 was deliberately reintroduced, the suite run, exactly one
+  test failed and it named the right one, then the file was restored and the suite re-run clean.
+  **A test suite nobody has seen fail is an assertion, not a control.**
+- **The supporting refactor was proven behaviour-preserving** by running the pre-refactor committed
+  script against real P1 data and matching 23 defects / 20 findings exactly — not by typecheck.
+  Extraction refactors are exactly where silent behaviour change hides.
+
+The standing condition is now satisfied rather than merely restated: hand-run without tests was
+acceptable; wired into an automatic path it needed these first.
 
 ## 8.5 If you inherit this org
 
