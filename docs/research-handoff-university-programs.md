@@ -35,6 +35,7 @@ ingestion pipeline with two possible input sources, not two pipelines.
   "source_url": "https://www.tum.de/en/studies/degree-programs/detail/data-engineering-and-analytics-bachelor-of-science-bsc",
   "source_type": "official_primary",
   "verification_status": "Verified - official page fetched and read",
+  "retrieval_method": "live_fetch",
   "language_of_instruction": "English",
   "duration": "3 years",
   "campus": null,
@@ -47,8 +48,10 @@ ingestion pipeline with two possible input sources, not two pipelines.
 ```
 
 Required: `university_name`, `university_country`, `program_name`, `official_program_url`,
-`source_url`, `source_type`, `verification_status`, `researched_at`. Everything else is
-optional — leave a field `null` rather than guessing; the ingestion pipeline never
+`source_url`, `source_type`, `verification_status`, `researched_at`, and — for records
+researched after 2026-08-22 — `retrieval_method` (see below; legacy records without it
+fall back to prose matching and must not be retro-labelled without evidence). Everything
+else is optional — leave a field `null` rather than guessing; the ingestion pipeline never
 interprets a missing field as a negative or default value.
 
 `university_official_domain` is accepted in the contract for a researcher's own record-keeping
@@ -61,15 +64,40 @@ transparent keyword classifier, not a black box — so two researchers' differin
 judgment can never silently disagree with what actually lands in the product. A hint is
 still useful signal when the program name alone is ambiguous.
 
-`verification_status` is free text describing what the researcher actually did, not a
-fixed enum — the ingestion pipeline pattern-matches it, currently on the presence/absence
-of "page fetched"/"page retrieval blocked" language (ported from the Drive-corpus
-vocabulary — see `lib/programs/ingest.ts`'s `looksConfirmed` check). A record whose
-identity was found via search but whose actual page content was never read (e.g. "search
-result only, page unfetched") is accepted into `program_research_queue` for audit but
-never promoted to `university_programs` — a search snippet is discovery evidence, not
-verification, per this product's own evidence rules (`AGENTS.md` Phase 3 /
-non-negotiable #6).
+`retrieval_method` declares HOW the source page's content was actually obtained, as a
+closed enum the gate validates (`lib/acquisition/retrieval-method.ts`):
+
+- `live_fetch` — the page/endpoint was retrieved live from the origin host by a direct
+  HTTP request (curl, fetch, an official JSON feed/API).
+- `browser_render` — the page was retrieved live from the origin host in a browser
+  session (JS-rendered pages, WAF/bot-mitigation challenges cleared by normal navigation).
+- `archived_capture` — the content came from an archive service's capture (Wayback
+  Machine etc.), not from the origin host live. Honest sourcing, but **never promoted**:
+  an archive capture is not a live confirmed fetch of the current page.
+- `search_summary` — only a search result/snippet was seen; the page itself was never
+  read. Never promoted — discovery evidence is not verification.
+
+**New records must declare `retrieval_method`.** The gate routes on this declared fact:
+`live_fetch`/`browser_render` pass the evidence gate, `archived_capture`/`search_summary`
+do not, and a present-but-unrecognized value fails closed (it is never forgiven by prose
+matching). This replaced prose vocabulary-matching after it produced three independent
+waves of false rejections on rigorously-sourced records whose attestations were worded
+differently than the matcher expected — see
+`docs/handoffs/evidence-gate-false-rejections-2026-08-22.md` and
+`docs/handoffs/gate-fix-retrieval-method-2026-08-22.md`.
+
+`verification_status` remains required free text describing what the researcher actually
+did — it is the human-auditable attestation (host, HTTP status, robots.txt posture, how
+the programme was enumerated), and the gate still reads it two ways: (1) **backward
+compatibility** — a record WITHOUT `retrieval_method` (the pre-existing corpus) is judged
+by the legacy prose matcher exactly as before, on the presence/absence of "verified"/
+"page retrieval blocked" language, so the bar never drops for legacy records; (2) a
+**contradiction guard** — a record declaring `live_fetch`/`browser_render` whose own
+prose discloses a blocked or archived retrieval fails as internally inconsistent. A
+record whose identity was found via search but whose actual page content was never read
+is accepted into `program_research_queue` for audit but never promoted to
+`university_programs` — a search snippet is discovery evidence, not verification, per
+this product's own evidence rules (`AGENTS.md` Phase 3 / non-negotiable #6).
 
 ## The verification gate — `VERIFIED_CURRENT`
 
@@ -88,8 +116,11 @@ A candidate is promoted into `university_programs` with `verification_state =
    sources are accepted for *identity* and *population* facts respectively, never for
    programs). A record cannot self-certify `source_type: "official_primary"`; the URL has
    to actually earn it. Failing this is `outcome = 'malformed_source'`.
-3. **`verification_status` indicates the source page was actually read**, not merely found
-   via search (see above). Failing this is `outcome = 'insufficient_evidence'`.
+3. **The record's retrieval actually read the live source page** — `retrieval_method` is
+   `live_fetch` or `browser_render` (with no contradicting disclosure in the record's own
+   `verification_status`); or, for legacy records without the field, `verification_status`
+   prose indicates the page was actually read, not merely found via search (see above).
+   Failing this is `outcome = 'insufficient_evidence'`.
 4. **Not a duplicate** — `(university_id, normalized_name, degree_level)` doesn't already
    exist in `university_programs` (enforced by both the ingestion logic and a DB unique
    index, so a race between two ingestion runs still can't double-insert). Failing this is
