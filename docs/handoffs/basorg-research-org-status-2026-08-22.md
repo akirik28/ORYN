@@ -2268,3 +2268,52 @@ shape**; confirm from the page.
 
 **Stopping at 3 to report was the right call even though the answer was "continue." Correcting an
 over-cautious hold is cheaper than discovering an under-cautious one afterwards.**
+
+## 8.5e DALHOUSIE INCONCLUSIVE — and why it must NOT be filed alongside Calgary
+
+The authorized single 60s attempt also returned `HTTP_STATUS:000`. **RES-R1 stopped at the pre-set
+contingency without asking again** — no third attempt, no URL variation.
+
+**Two deferrals tonight, two DIFFERENT findings, and blurring them would lose both:**
+
+| University | Finding | What a successor must not conclude |
+|---|---|---|
+| **Calgary** | **Gate PASSED**; sustained 429s; **rate limit stopped us** | *not* that source authority failed |
+| **Dalhousie** | robots.txt 404 (**no file, no restrictions stated**); no response in a generous budget; **cause undetermined** | *not* that it was rate-limited or blocked |
+
+> **"Deferred" is not a finding. The reason is the finding.** Calgary's is a *feasibility* verdict
+> with the authority question settled; Dalhousie's is an *undetermined* verdict with nothing settled
+> either way.
+
+**15 Canada targets remain**, all re-queried at zero programmes tonight.
+
+## 8.5f WIND-DOWN — and two stale facts in the instruction itself
+
+ORYN-CEO issued an org-wide wind-down (consolidate, don't start). **Accepted.** Two corrections
+returned, both verified rather than remembered:
+
+**1. Adelaide is 120, not 119.** CEO wrote *"Adelaide's 119"* **in the same paragraph warning that
+this is the single easiest number for a successor to misread.** UniStart was added as record 120
+after RES-V2 found it missing.
+
+> **The number flagged as most likely to be misread was stale in the message flagging it.** The
+> strongest available illustration of CEO's own point.
+
+**2. Ottawa is done, not mid-flight.** CEO asked for its state *"whatever it is when the lane
+stops — mid-fetch is fine."* **It completed hours ago**: V1-12a PASS, V2-11a 72/72, ingested,
+**16,770 → 17,046** verified by BASORG's own `count(*)`.
+
+**3. `degree_type` is more resolved than CEO thinks** — not an open sampling run. **257 null rows**,
+with the finding recorded: **UWA publishes no abbreviation at all** (a source property — the
+well-evidenced *"this platform doesn't publish it"*); **Sydney's `ippCode` is a course code, not a
+post-nominal**, so null is correct; **Adelaide's field held programme codes** (`BCOMP`/`HCOMP`, the
+site labels it "Program code") **and was nulled pre-ingestion.** Both live populations are
+uncorrectable without **Path A**, and **neither is an extraction gap.**
+
+### Day total
+**927 programmes across five universities in two countries** — Australia 651/four, Ottawa 276.
+Australia was **0** this morning.
+
+### Messages crossed
+RES-R1 began deriving Simon Fraser moments before the wind-down reached it. **Stopped immediately** —
+deriving a new target spends the context the handoff needs, on work that cannot finish.
