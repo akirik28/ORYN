@@ -7,6 +7,11 @@ this information; update here first, not in five places.
 
 Each item: **exact action**, **why it's blocking**, **what it depends on**.
 
+> **Numbering is discovery order, not priority.** As of 2026-08-22 evening the two highest-priority
+> items are **[36](#36-critical--any-signed-in-user-can-make-themselves-an-admin)** (privilege
+> escalation, live now) then **[30](#30-launch-blocker--anonymous-users-can-read-any-public-student-profile)**.
+> Everything else can wait, and **nothing on this list expires.**
+
 > Looking for *what to do first*, not *the full list*? **[FOUNDER-START-HERE.md](./FOUNDER-START-HERE.md)**
 > sequences the subset that actually gets the app running, in order, with expected results.
 > This file stays the complete inventory — including the optional and later-stage items
@@ -461,6 +466,262 @@ and "nobody has researched this row yet" — both of which are an empty `eligibl
 today, which is why unresearched rows can read as open to everyone. Once applied, the research
 org can backfill the confirmed-open rows with per-row evidence.
 **Depends on**: nothing technical — your go-ahead.
+
+---
+
+## 30. LAUNCH BLOCKER — anonymous users can read any public student profile
+
+**Action**: authorize the fix. A migration will be written (not applied) — you approve applying
+it, the same as items 26 and 29. This is the one item on this list that must be closed before a
+real student signs up.
+
+**What was found** (BUG-1, 2026-08-22, live RLS verification against `oryn-qa-scratch`, using
+real GoTrue password sign-in rather than simulated tokens): the `public_profiles` view returns a
+row to an **anonymous, unauthenticated caller** for any profile with `is_public = true`.
+
+**Why it happens, since it isn't obvious from reading the migration**: migration 0023 granted
+the view to `authenticated` and its own comment states this was "deliberately more conservative…
+than a fully public, unauthenticated, indexable page." That grant was already redundant —
+Supabase's default project bootstrap grants `anon` SELECT on every table and view in the
+`public` schema. Normally RLS is the real gate on top of that, and it correctly is everywhere
+else (an anonymous caller reading the base `profiles` table gets nothing, verified). But
+`public_profiles` is a security-definer view whose `is_public = true` branch never references
+`auth.uid()` — it's satisfied by the row's own data, regardless of who is asking. **Intent and
+implementation disagree; the intent is documented, so this is a defect, not a decision about
+what we meant.**
+
+**Exposure, measured rather than estimated**: 7 profiles live, **1 currently public**. Only
+fields already in `PUBLIC_PROFILE_SAFE_COLUMNS` are reachable — display name, headline, about,
+country, curriculum, graduation year, looking-for. Private fields (name, birth year, city,
+school, admin flag) all correctly stayed inaccessible, separately verified. Only one profile at
+a time by id; no anonymous enumeration path was found.
+
+**Why it still matters**: this is minor-safety data. A 14–18-year-old's display name,
+curriculum, graduation year and free-text "about", readable by anyone on the internet with no
+account, for a profile the product tells them is visible to other Oryn students.
+`AGENTS.md` Phase 12 names avoiding public-by-default profiles explicitly, and non-negotiable
+minor-safety framing runs through the whole spec. The gap between what the product promises and
+what the database permits is the defect.
+
+**8 of 9 other checks on this surface passed**, including both regressions migration 0024 was
+written to close — so the surrounding design is sound and this is one specific hole, not a
+systemic failure.
+
+**Depends on**: nothing technical — your go-ahead to apply the migration once written. Related
+open thread: whether other security-definer views rest on the same incomplete-grant assumption
+(BUG-1 is checking).
+
+---
+
+## 31. Build the UPDATE-by-id apply path, or 1,429 verified URL corrections stay unapplied
+
+**Action**: decide who builds it — a fresh RES-I1 session, or a code lane tomorrow.
+**The situation**: 1,429 `university_programs.official_program_url` values are known-defective by
+category (pagination links, portal roots, archived cycles). Corrections have been researched
+**and independently verified** — RES-V2 sampled a stratified n=80 with a recorded seed and found
+**zero** failures in either failure mode (doesn't resolve / resolves to the wrong programme).
+Cleared to apply wholesale.
+**Why they can't be applied**: the apply path doesn't exist. `decideIngestion` — the ingestion
+machinery everything else goes through — structurally cannot do an UPDATE by id; it decides
+between insert and skip. RES-I1 delivered a *design* for the missing path
+(`docs/handoffs/i1-supersede-gap-design-2026-08-22.md`, complete and specific, including an
+audit trail distinguishing enrichment from correction) and stated explicitly that it was a
+design and not an implementation. That lane's session has since exited.
+**Why I didn't just assign it**: building a new live-data write path plus an audit table that
+may need its own migration is substantial new machinery, and your standing instruction today was
+not to destabilise the project while you were away. Every lane still running is doing bounded,
+revertible work; this isn't that shape. The research org correctly refused to have its
+opportunities-ingester cross into `university_*` territory to cover the gap.
+**Urgency**: none. These URLs have been wrong for days; another day changes nothing.
+**Depends on**: your call on who builds it.
+
+## 32. Product decision: should `university_programs.degree_type` hold more than one award?
+
+**Action**: decide whether a programme can record multiple qualifications.
+**Why it surfaced**: Glasgow's 62 `degree_type` enrichments were verified 30/30 factually
+correct — and **83% of the sampled programmes are multi-award**. Glasgow's own pages list 2–4
+valid qualifications for one programme (`BSc/MSci`, `BEng/MEng`, `MA(SocSci)/LLB/MA`), and the
+field holds exactly one, **selected by extraction order rather than judgment**. The tell is a
+Politics programme whose `MA/LLB/MA(SocSci)` options resolved to "LLB".
+**The concrete harm, which is what makes this decidable**: a student searching for MEng will
+miss a programme recorded as BEng. That's a real miss on a real search, not an abstraction.
+**Handled correctly in the meantime, no data at risk**: ORYN-BASORG ruled to apply the ~10
+single-award records and hold the ~51 multi-award ones. Its reasoning is worth repeating because
+it names the whole day's theme precisely — *writing "BSc" for a BSc/MSci programme isn't false;
+it presents an extraction artifact as an editorial fact, and the field's authority does the
+misleading.*
+**Depends on**: nothing technical — a schema/product judgment. ORYN-CFO was asked to weigh in.
+
+## 33. Ten `_backup_*`/staging tables in `public`: drop them, or move them out
+
+**Action**: decide to drop them or relocate them to a non-exposed schema.
+**Why it matters, precisely**: they are **not exposed today** — RLS is enabled on all ten with
+zero policies, which denies everything, verified. But they each carry Supabase's default
+schema-wide `anon` grant (SELECT/UPDATE/DELETE). ORYN-BASORG's framing: *a loaded gun with the
+safety on, and the safety is a thing people turn off casually.* A single permissive policy, or
+one `ALTER TABLE … DISABLE ROW LEVEL SECURITY` during an incident, turns it into live anonymous
+CRUD over a copy of real data — and these are exactly the tables where that happens, because
+they're throwaway snapshots nobody owns, documents, or re-reviews.
+**The trade-off**: dropping them loses the rollback safety net they exist to provide. They're
+16–264 kB, so size isn't the issue.
+**Mitigation already in place**: standing rule adopted org-wide — RLS is never disabled on a
+`_backup_*` or staging table for any reason; a lane needing to inspect one queries as a
+privileged role instead.
+**Depends on**: your call. It's destructive DDL against live data, so it waited for you.
+
+---
+
+## 34. URGENT-ISH — verified work is stranded because no ingester session exists
+
+**Action**: open one ingester session (an RES-I2-shaped lane). It clears most of this in under
+an hour.
+**Why**: six of thirteen sessions ended without warning this afternoon (13 → 8), including
+**both** database-writing lanes. What remains — research and verification — deliberately cannot
+write to the live database, and ORYN-BASORG correctly refused to let verifiers do it: that
+separation is what produced today's real catches, and collapsing it under staffing pressure
+would trade the quality mechanism for a handful of rows.
+
+**What's waiting, all verified, all bounded, all revertible:**
+- ~~Habitat Derneği's 26 August deadline~~ — **NOT stranded. Corrected 2026-08-22 evening.**
+  The row is already live, `active`, with `deadline 2026-08-26` matching its source verbatim;
+  a student can see it now. Only `last_verified_at` is null — a provenance stamp, not a
+  student-facing defect. This was escalated all afternoon on a false premise: the research
+  record being unmerged was read as the fact not being live, which conflates the pipeline's
+  state with the database's. Nobody queried the row until ORYN-BASORG did and corrected itself.
+- Five `cycle_status` corrections resolved against their own sources (IPPF → open, HOSA →
+  upcoming, Wharton Data Science → closed, CMIMC → closed, BIYSC → upcoming).
+- Glasgow's ~10 single-award `degree_type` records (the ~51 multi-award ones are correctly held
+  pending item 32).
+- Six non-opportunity retirements (a course-catalogue entry, five institution-name titles),
+  already prepped.
+- The 1,429 URL corrections — but those need item 31's apply path built first, so they're
+  blocked twice over.
+
+**Nothing here is harmful while it waits, and nothing here expires.** Today's live state is
+honest; an unapplied correction is a missing improvement, not a defect.
+
+> ### ⚠️ READ BEFORE INGESTING ANY OF THIS — 325 contract defects are on `main`
+>
+> The **116** records from RES-R2's P2/P3 output — 87 summer-programme plus 27
+> remaining-category, which is 114 *distinct* records, plus 2 correction records for 116 raw —
+> **failed contract validation** and were merged anyway, deliberately. Full verdict:
+> `docs/research/verification/v1-5_dlopp_p2_p3_verdict.md`, which **lives on PR #39's branch,
+> not yet on `main`** — if you're reading this before #39 merges, the file is only reachable
+> from that branch.
+>
+> - **232** missing `record_type`/`lane` fields — systemic, in all 116 records.
+> - **92** `cycle_status_found` format drifts.
+> - **1** logical-consistency defect: the **Interlochen Arts Camp** record's internal year
+>   ambiguity — a live page headed "Camp 2026" carrying `2027-01-15`, the same same-day-
+>   next-year projection pattern found and rejected on the Ron Brown record. Seen three times
+>   independently. **Do not apply this one at all without resolving it first.**
+>
+> **The research itself is sound** — ID discipline passed, `finding_type` 100% clean, the
+> live-status breakdown matches, and a zero-row category was independently confirmed genuine
+> rather than assumed. These are *shape* defects, not truth defects, which is why merging them
+> was the right call: a merged research branch lands proposals, not facts, and the branch was
+> the only durable form that work had after the lane died.
+>
+> **The risk is entirely at ingestion.** An ingester consuming these files unaware either fails
+> loudly on 325 contract violations — fine — or, if the path is lenient, writes malformed
+> records silently, which is not. **Validate against the verdict before ingesting.** Nobody
+> currently owns fixing the field shapes: verifiers don't edit researcher files, RES-R2 is gone,
+> and both ingesters are gone. RES-V1's verdict is the specification for whoever inherits it.
+>
+> *Sequencing note, disclosed: PR #41 was merged by ORYN-CEO before this verdict arrived. PR #32
+> carries the rest of the same batch.*
+
+**Why I didn't just do it myself**: I nearly did, for Habitat specifically, on the reasoning
+that a four-day deadline outranks a territory boundary when the owning lane no longer exists.
+The environment's safety classifier blocked that message, and on reflection it was right to.
+Pressure is exactly when a boundary gets crossed "just this once", and you can open a session
+in minutes — a far better outcome than establishing that the coordinator writes to live data
+whenever staffing thins. ORYN-CFO flagged this same gap independently this afternoon and
+recommended the org doc define it as policy rather than leave it to judgment.
+
+## 35. Product decision: the schema forces one value where reality has several
+
+**Action**: decide whether these fields may hold multiple simultaneous truths, as one modelling
+question rather than four separate schema tickets.
+**Why it's one question**: four lanes hit it independently today, in four different columns,
+without coordinating:
+- `opportunities.cycle_status` must be `closed` **and** `date_not_announced` at once — the
+  current cycle has closed *and* the next genuinely isn't announced. True for **11 of 18**
+  rows examined.
+- `university_programs.degree_type` holds one award where the source page lists 2–4 (item 32).
+- One deadline field for Girl Up's per-region pathways, which have different dates per region.
+- Concord Review's cycle label conflates publication months with deadline months.
+
+**The shape, in ORYN-BASORG's words**: *the schema forces one value where reality has several
+simultaneous truths, and the field's authority does the misleading rather than any false value.*
+Every individual stored value is factually correct. The misleading part is the field's implied
+claim to be complete.
+
+**Why it matters concretely**: a student searching MEng misses a programme recorded as BEng; a
+student filtering for open opportunities can't distinguish "closed for good" from "closed, next
+cycle unannounced". Both are real misses on real searches.
+
+**A fifth instance, found later the same day, with more weight than the other four**:
+`ApplicationStatus` and `TargetStatus` conflate *the institution's decision* with *the student's
+own choice*, so an accepted-then-withdrawn application silently loses the acceptance. Traced to
+its consequence rather than left abstract — `lib/scoring/monthly-review.ts` excludes withdrawn
+from "Applications submitted", which means **a student who got into a university and then chose
+not to go loses their single most positive outcome from their own Monthly Review.** Phase 40
+exists to show a student their progress; this makes the product forget the best thing that
+happened to them.
+
+**THERE IS ALREADY A WORKING ANSWER IN THIS CODEBASE, and it's the recommended shape.**
+`university_deadlines.verification_state` looks like it should have this exact problem — it even
+carries a `CURRENT_CYCLE_NOT_PUBLISHED` value — and doesn't, because it stores **one row per
+dated event**. Two facts that need to coexist become two rows instead of fighting over one
+field. Found by FEAT-2 while auditing for the opposite.
+
+So the question isn't really *"should this field hold multiple values?"* — it's *"when two facts
+must coexist, should they be two rows?"* A precedent that already ships and works beats a design
+proposal, and it answers all five instances at once.
+
+**Depends on**: nothing technical — a schema/product judgment. Deciding the principle once
+settles all five and prevents the next one. ORYN-CFO was asked to weigh in on the `degree_type`
+instance. Full analysis: `docs/feat2-multi-axis-status-audit-2026-08-22.md`.
+
+---
+
+## 36. CRITICAL — any signed-in user can make themselves an admin
+
+**Action**: authorize applying migration `0062`. Same shape as items 26/29/30 — written, not
+applied, needs your go-ahead. This is now the highest-priority item on this list, above item 30.
+
+**What was found** (BUG-1, 2026-08-22, live against `oryn-qa-scratch`; I re-verified the policy
+definitions independently): the QA account `oryn.qa.b@example.com` — an ordinary, non-admin
+student account — **granted itself `is_admin = true` with a single unprivileged API call.** Not a
+theoretical read of the schema. It was executed, it succeeded, and the row changed.
+
+**Why it happens**: the `profiles` UPDATE policy is `USING (id = auth.uid())` with
+`WITH CHECK (id = auth.uid())`. That is exactly right for what it says — *you may update your own
+row* — and it is the whole protection. **RLS policies are row-scoped, not column-scoped.** Postgres
+has no notion here of "this row, but not that column". Nothing anywhere else restricts which
+columns a student may write, so `is_admin` is as writable to them as their own display name.
+
+**Why this is worse than item 30**: item 30 requires a student to opt into a public profile and
+exposes a whitelist of safe columns. This one requires nothing, is available to every account the
+moment it signs up, and grants everything. Admin routes call `requireAdmin()` and then
+`createAdminClient()` — a **service-role client that bypasses RLS entirely**. So the escalation
+doesn't grant a slightly wider view; it grants the key that turns RLS off.
+
+**Two more columns of the same shape**, found by the same sweep: `profile_strength_score` and
+`completeness_percent`. Both are meant to be computed by Oryn from a student's actual record, and
+both are directly writable by the student they describe. Less severe — a student can only inflate
+their own numbers, and the fabrication is invisible to them and to us — but the same defect, and
+the fix covers all three in one place.
+
+**The fix**: a `BEFORE UPDATE` trigger on `profiles` that resets the protected columns to their
+`OLD` values unless the caller is the service role. This is not a new pattern for this codebase —
+it is the same mechanism as `posts_guard_system_columns` in `0058`, and three
+`enforce_canonical_entity_type` triggers already guard other columns on other tables. The pattern
+was known and simply never applied to `profiles`. Legitimate admin grants keep working: they run
+through the service-role client, which the trigger deliberately exempts.
+
+**Depends on**: your approval to run one migration. Written by BUG-1, mechanism reviewed by CEO.
 
 ---
 

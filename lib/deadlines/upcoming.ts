@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { canonicalUniversityId, loadSupersessionMap, type SupersessionMap } from "@/lib/universities/canonical";
 import { NON_ACTIONABLE_VERIFICATION_STATES } from "@/lib/deadlines/ingest";
+import { filterActionableOpportunities } from "@/lib/opportunities/lifecycle";
 
 export type DeadlineSource = "application" | "opportunity" | "university";
 
@@ -56,25 +57,45 @@ async function getUpcomingApplicationDeadlines(supabase: SupabaseClient<Database
   });
 }
 
-async function getUpcomingOpportunityDeadlines(supabase: SupabaseClient<Database>, userId: string, today: string): Promise<UpcomingDeadline[]> {
+/** Exported (only) so __tests__/deadlines/upcoming.test.ts can pin and verify its
+ * cycle_status filtering directly, without also mocking the application/university
+ * sources getUpcomingDeadlines fans out to. No behavior change. */
+export async function getUpcomingOpportunityDeadlines(supabase: SupabaseClient<Database>, userId: string, today: string): Promise<UpcomingDeadline[]> {
   const { data: saved } = await supabase.from("saved_opportunities").select("opportunity_id").eq("user_id", userId).eq("status", "saved");
   if (!saved || saved.length === 0) return [];
 
   const opportunityIds = [...new Set(saved.map((s) => s.opportunity_id))];
   const { data: opportunities } = await supabase
     .from("opportunities")
-    .select("id, title, deadline")
+    .select("id, title, deadline, cycle_status")
     .in("id", opportunityIds)
     .not("deadline", "is", null)
     .gte("deadline", today);
 
-  return (opportunities ?? []).map((opportunity) => ({
+  // A closed/historical/discontinued cycle must never surface as "due soon" even with a
+  // future-dated deadline on file — the same guard the dashboard's opportunity-match
+  // preview already applies (see lib/opportunities/lifecycle.ts's module comment).
+  // Deliberately leaves 'unverified' visible: unconfirmed is not the same claim as wrong.
+  return filterActionableOpportunities(opportunities ?? []).map((opportunity) => ({
     id: `opportunity-${opportunity.id}`,
     source: "opportunity" as const,
     title: opportunity.title,
     date: opportunity.deadline!,
     href: "/opportunities",
   }));
+}
+
+/** `deadline_type` is a coarse category ("scholarship", "application") shared by every cycle
+ * of the same kind at a university — e.g. Yale carries four "scholarship"-typed rows (Early
+ * Action for US/PR citizens, Early Action for international citizens, Regular Decision,
+ * Transfer) that are only distinguishable by the field actually holding that distinction.
+ * `cycle_label` is the structured cycle name where research populated one; it still collides
+ * for the two Early Action rows above (both "Single-Choice Early Action" — the citizenship
+ * split isn't a distinct cycle). `deadline_text_verbatim` is the one field guaranteed to carry
+ * whatever actually differs, because it's the source's own wording rather than a normalized
+ * category — prefer it, falling back only when it's null (both fields are nullable). */
+export function deadlineDetailLabel(deadline: { deadline_text_verbatim: string | null; cycle_label: string | null; deadline_type: string }): string {
+  return deadline.deadline_text_verbatim ?? deadline.cycle_label ?? deadline.deadline_type;
 }
 
 async function getUpcomingUniversityDeadlines(supabase: SupabaseClient<Database>, userId: string, today: string, supersessionMap: SupersessionMap): Promise<UpcomingDeadline[]> {
@@ -90,7 +111,7 @@ async function getUpcomingUniversityDeadlines(supabase: SupabaseClient<Database>
   const [{ data: deadlines }, { data: universities }] = await Promise.all([
     supabase
       .from("university_deadlines")
-      .select("id, university_id, program_id, deadline_type, deadline_date, verification_state")
+      .select("id, university_id, program_id, deadline_type, deadline_date, verification_state, cycle_label, deadline_text_verbatim")
       .in("university_id", universityIds)
       .not("deadline_date", "is", null)
       .gte("deadline_date", today),
@@ -121,7 +142,7 @@ async function getUpcomingUniversityDeadlines(supabase: SupabaseClient<Database>
     result.push({
       id: `university-${deadline.id}`,
       source: "university",
-      title: `${name} — ${deadline.deadline_type}`,
+      title: `${name} — ${deadlineDetailLabel(deadline)}`,
       date: deadline.deadline_date!,
       href: `/universities/${deadline.university_id}`,
     });

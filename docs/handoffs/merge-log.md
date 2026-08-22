@@ -67,6 +67,12 @@ break it. Added on top of the existing lint/typecheck/test/build gate:
 Test baseline reconfirmed unchanged at 122/1,861 through PRs #10, #11, #9 (three merges,
 zero app-code/test files touched by any of them).
 
+## Routed back, round 2
+
+| Date | Branch/PR | Reason | Routed to |
+|---|---|---|---|
+| 2026-08-22 | [#19](https://github.com/akirik28/ORYN/pull/19) `oryn/feat1-outlook-explanation-render` | Conflicts on `docs/ORYN_WORKSTREAMS.md` against main as it stood after #18 — same additive shape as every prior conflict today (main gained rows via merges since the branch pointed to `origin/main`@`85c3d65`). The code file (`app/(app)/universities/[id]/page.tsx`) merges clean; the conflict is isolated to the docs file. **Content independently reviewed in full before routing back** (not deferred until the rebase lands): the preserved-grid claim verified byte-for-byte (the strengths/gaps/unknowns block moved into an `else` branch, unchanged apart from indentation, gated on `notApplicableReason` which is null-by-construction for every holistic target — so holistic rendering is provably unchanged); the estimate-range fix verified as a real, in-scope consistency fix (the badge already preferred fresh `outlook` over the stale `targetRes.data` row pre-PR; the range paragraph didn't, which is the exact false-precision contradiction non-negotiable #5 forbids) rather than unrelated scope creep. When the rebase lands, only re-verification is needed — the deep read is already done. | CEO → FEAT-1, rebase keeping all rows |
+
 ## Declined — permission laundering by proxy (2026-08-22)
 
 CEO queued opening a PR for `oryn/res-i2-opportunity-ingestion` (RES-I2's applied-and-verified

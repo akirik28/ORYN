@@ -152,9 +152,9 @@ export function DashboardView({
                     href={deadline.href}
                     className="flex items-center justify-between gap-3 px-4 py-3 text-sm transition-colors hover:bg-accent"
                   >
-                    <span className="flex items-center gap-2">
-                      <SourceIcon className="size-4 text-muted-foreground" />
-                      {deadline.title}
+                    <span className="flex min-w-0 items-center gap-2">
+                      <SourceIcon className="size-4 shrink-0 text-muted-foreground" />
+                      <span className="truncate">{deadline.title}</span>
                     </span>
                     <DeadlineBadge date={deadline.date} />
                   </Link>

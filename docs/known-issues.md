@@ -11,6 +11,100 @@ dedicated living docs rather than being tracked here — start at
 file's remaining entries (the Drive-doc product-decision conflict, data-readiness gaps,
 scoped-out items) are still current as of the dates on each entry.
 
+## Needs founder decision — CRITICAL: any authenticated user can self-grant admin
+
+**2026-08-22, BUG-1, live RLS verification package, surface 2 (admin gate)**. Full
+evidence: `docs/research/verification/rls-live-verification-2026-08-22.md`. Escalated by
+ORYN-CEO to the founder as the top item in the queue, above the `public_profiles` finding
+below — that one needed a student to opt into "public" and exposed a fixed whitelist;
+this one needs nothing from anyone and grants everything.
+
+**The gap**: `profiles`' RLS policies are exclusively row-scoped (`id = auth.uid()`) —
+they govern which row a caller may touch, never which columns within that row. Verified
+live against `oryn-qa-scratch`: QA account B, an ordinary non-admin student account, ran
+`update profiles set is_admin = true where id = <own id>` through a real authenticated
+session (real GoTrue sign-in, the app's own anon-key client) and it succeeded — no error,
+no rejection. Reverted in the same test, independently re-confirmed reverted via a
+separate admin-access query afterward. `is_admin` is an ordinary `boolean not null
+default false` column (migration 0002) with no protective trigger — checked, not
+assumed, before concluding this was exploitable.
+
+**Blast radius**: `is_admin` is the sole input to `isAdminProfile()`/`requireAdmin()`,
+which gates `/admin` and every export in `app/(app)/admin/actions.ts`. Every one of
+those, once past `requireAdmin()`, switches to the service-role client, bypassing RLS
+entirely. So this isn't "read an admin page" — it's full service-role-backed access to
+the whole schema, self-grantable by any existing account or new signup, one API call, no
+UI needed. Live state confirmed: exactly one admin exists (QA account A, granted
+deliberately by the founder).
+
+**The mechanism already existed in this codebase and was never applied to this column**:
+`profiles` itself already carries three column-scoped `BEFORE UPDATE OF <col>` guard
+triggers (migration 0038, `enforce_canonical_entity_type`) — never extended to `is_admin`.
+Migration 0058's `posts_guard_system_columns` (reset-to-`OLD` rather than raising, gated
+on `current_user <> 'service_role'`) is the closer precedent for the actual fix shape.
+
+**Fix written, not applied**: `supabase/migrations/0062_profiles_guard_protected_columns.sql`
+adds a `BEFORE UPDATE` trigger on `profiles` resetting `is_admin`,
+`profile_strength_score`, and `completeness_percent` to their prior value unless the
+caller is the service role — the latter two share the identical unguarded-column shape
+(computed server-side by `lib/scoring/persist.ts`, displayed as an Oryn-computed fact,
+not user-entered) at much lower severity: self-directed score inflation and a forced
+"high" admissions-outlook confidence label, not cross-user data access. Founder-gated per
+standing rule; do not apply without review.
+
+## Needs founder decision — live RLS gap: `public_profiles` readable by anonymous callers
+
+**2026-08-22, BUG-1, live RLS verification package** (assigned by ORYN-CEO after
+`docs/production-route-audit.md` named real RLS verification as its one remaining
+blocked gap — this session has live Supabase MCP access to a real, hosted project,
+which that audit's environment did not). Full evidence, per-check table, and the
+full-schema sweep this finding triggered:
+`docs/research/verification/rls-live-verification-2026-08-22.md`.
+
+**The gap**: migration 0023's `public_profiles` view was intended to be readable only by
+`authenticated` sessions (its own comment: "a deliberately more conservative reading of
+'optionally shareable' than a fully public, unauthenticated, indexable page"). Verified
+live with a real GoTrue-authenticated (and separately, real anonymous) client against
+`oryn-qa-scratch`: a fully unauthenticated caller with no account **can** read any
+profile a student has marked public — the safe-column set only (display_name, headline,
+about, country, curriculum, graduation_year, looking_for), never private fields, never
+achievement data, confirmed by also testing that the base `profiles` table and portfolio
+tables stay correctly gated. Root cause: this project's schema-wide default ACL grants
+`anon` a baseline privilege on every table/view in `public` (standard Supabase project
+bootstrap, not something any migration here did); `public_profiles` is a security-definer
+view whose `is_public = true` branch never checks caller identity, so once the default
+grant is accounted for, nothing blocks anon from that branch. The base `profiles` table
+is unaffected (its RLS policy has no is_public exception). Live exposure measured: 7
+profiles in the scratch project, 1 currently public.
+
+**Fix written, not applied**: `supabase/migrations/0061_public_profiles_require_authenticated.sql`
+adds an `auth.uid() is not null` guard to the view. Founder-gated per standing rule — do
+not apply without review. Escalated by ORYN-CEO as founder-blocked-backlog item 30.
+
+**Same defect class, caught before shipping**: the sweep this finding triggered found an
+identical pattern in `supabase/migrations/0058_social_posts.sql` (written, not applied,
+ships behind a kill switch + legal-review gate) — its `"read visible posts"` policy had
+no `to authenticated` restriction, which would have let an anonymous caller read full
+post content (not just a safe-column whitelist) once applied. **Fixed in place** in that
+same migration file (not a corrective migration — nothing is deployed to correct), since
+CEO judged an unapplied file with a known hole not worth routing around a scheduling gap
+for the currently-inactive social-posts lane.
+
+**Swept and found clean**: every one of the ~90 live RLS policies in `public` (read
+individually via `pg_policies`, not sampled — including every OR'd branch, not a
+whole-object check for whether `auth.uid()` appears anywhere) is either identity-bound on
+every branch or correctly role-restricted to `authenticated`. Zero tables in `public`
+have RLS disabled (`pg_class.relrowsecurity`, checked directly — no table sits open
+behind the schema-wide default grant with nothing gating it). Only one other view exists
+in the schema, `current_university_student_counts`; initially flagged here as a lesser
+version of the same gap, then verified live and found NOT vulnerable: it is
+`security_invoker = true` (confirmed via `pg_class`/`reloptions`, and empirically — an
+anonymous client queries it and gets zero rows, not data), so the caller's own RLS on the
+underlying `universities`/`university_profile_metrics` tables applies and correctly
+blocks anon there. `public_profiles` is the only security-definer view in the schema
+(`security_invoker` unset, i.e. Postgres's default of `false`) and the only one where a
+missing identity check in the view body actually matters.
+
 ## Needs founder decision — real conflict found in the founder's own Drive doc
 
 While working autonomously, this session found "ORYN Programlama" (a Google Doc in the
