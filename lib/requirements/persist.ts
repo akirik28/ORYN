@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import { assembleRequirementFacts } from "./facts";
 import { evaluateRequirement } from "./evaluate";
 import { INFORMATIONAL_CATEGORIES } from "./types";
@@ -21,10 +21,24 @@ import { INFORMATIONAL_CATEGORIES } from "./types";
  * The final upsert now uses `admin`, paired with a guard trigger on `status` -- the value
  * is fully computed above before either client is touched, so this changes which
  * connection carries it, not what the student can see.
+ *
+ * FIXED 2026-08-22 (regression the change above introduced, caught by ORYN-CEO before it
+ * reached any real user): `createAdminClient()` throws synchronously when
+ * `SUPABASE_SECRET_KEY` is unset, and this function is `await`ed, unguarded, from
+ * /universities/[id]'s own page render. Now uses `tryCreateAdminClient()` and returns
+ * before the (now-pointless) read if the admin client isn't configured, with a loud
+ * server-side log rather than a thrown error — same fix and same reasoning as
+ * lib/opportunities/persist-matches.ts's `refreshOpportunityMatches`; see that file's
+ * comment for the full account, including why `provider_health` isn't the right log
+ * target here (it needs the same admin client to record anything).
  */
 export async function refreshRequirementEvaluations(universityId: string, userId: string, programId?: string | null): Promise<void> {
+  const admin = tryCreateAdminClient();
+  if (!admin) {
+    console.error("[requirement-evaluations] SUPABASE_SECRET_KEY not configured — skipping evaluation refresh, page will render with existing (possibly stale) evaluations");
+    return;
+  }
   const supabase = await createClient();
-  const admin = createAdminClient();
 
   const { data: requirements } = await supabase.from("university_requirements").select("*").eq("university_id", universityId);
   if (!requirements || requirements.length === 0) return;
