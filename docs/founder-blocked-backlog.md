@@ -772,10 +772,16 @@ already asks you to apply half of it (`0060`) without stating the fuller decisio
    passes silently, no confirmation marker exists.
 5. **Citizenship/residency prose** (`citizenship_restrictions`/`residency_restrictions`, free
    text). A *different* failure mode — not a missing marker but a code disagreement:
-   `evaluateOpportunityEligibility` correctly surfaces this prose as an "unknown" warning when
-   present; `computeEligibility` doesn't consult these fields at all. Listed here for completeness
-   only — this is one of the two live defects Package 6 already found, and per CEO it's assigned
-   separately, not part of this decision.
+   ~~`evaluateOpportunityEligibility` correctly surfaces this prose as an "unknown" warning
+   while `computeEligibility` doesn't consult these fields at all.~~ **FIXED 2026-08-22 evening,
+   PR [#116](https://github.com/akirik28/ORYN/pull/116)** — both paths now emit the identical
+   string, pinned by a wording-parity test, so the card and the counselor can no longer disagree
+   about what one row's own text says. **Not part of this decision and no longer a defect.** The
+   same PR also closed the Browse fallback that rendered uncomputed matches as eligible.
+
+   **So this item is narrower than when it was written.** What it still asks — and this part is
+   unchanged and accurate — is the age/grade decision in dimensions 3 and 4, which subsumes
+   item 29.
 
 **What a student sees today**: silence in 4 of 5 cases. Only the counselor's prose handling
 (dimension 5) shows any "unknown" signal — and only on the surface that reads it.
