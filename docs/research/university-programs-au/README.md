@@ -1,5 +1,32 @@
 # Australia Programme Catalogue — RES-R1
 
+**Resumability note (2026-08-22, mid-package): if this document is being read to pick up
+unfinished work, start here.** Sessions in this org have been ending without warning; this file
+is kept current after every sub-batch, not just at close-out, specifically so that's survivable.
+
+- **Done, pushed, corpus-validated:** UNSW (217), Sydney (149), Monash (178) = 544 records.
+- **In progress:** UWA — extraction script `fetch_classify_uwa.py` (this repo's scratch area,
+  not committed; logic is documented in the UWA method section below and is reproducible from
+  this doc alone if the script itself is lost) running against 422 sitemap URLs, classifying by
+  each page's own `Course Code` prefix (`MJD-` = major, excluded; anything else = degree,
+  included). Partial output committed at whatever count was reached — check the file's own line
+  count, not this table, for the true current number.
+- **Investigated, not yet extracted:** Adelaide University — identity question resolved (genuine
+  2026 merger, single settled catalogue, see below), dom/int page-variant structure mapped and
+  invariance-verified on 10 sample programmes, extraction methodology designed and approved by
+  BASORG (fetch international variant for all ~560 URLs, domestic sampled on ~18 for faculty
+  spread, `entry_requirements`/`study_mode` keyed by audience per BASORG's structural ruling — see
+  the Adelaide section below for the full field-extraction pattern). **Also found mid-testing,
+  not yet fixed in a full run**: Adelaide represents major variants of one degree as separate
+  pages sharing the SAME `Program code` (e.g. "Bachelor of Arts", "Bachelor of Arts majoring in
+  Anthropology", "...majoring in Aboriginal Studies" all carry code `BARTS`) — the same
+  majors-vs-degree grain problem UWA had, structured differently (same code, not a different
+  prefix). Must be filtered by title text containing "majoring in" before any bulk run, or the
+  record count will be inflated with near-duplicates. Not yet applied to a full Adelaide extract.
+- **Deferred by policy, not by research effort — a property of the web, not a gap in this
+  lane's work:** Melbourne, ANU, Queensland. See the named section below.
+- **Not started:** none remaining in the top 8 after the above.
+
 ## Why this lane exists
 
 Live-measured 2026-08-22 (project `qtcvcflzxbuagvvwahhu`, read-only): **37 canonical Australian
@@ -294,6 +321,124 @@ records — mapped to the same `degree_level` for corpus consistency rather than
   retrofitted onto UNSW or Sydney — neither platform publishes an equivalent field at all, and
   BASORG's ruling was explicit: don't manufacture one where the source doesn't have it.
 
+## Method: UWA (IN PROGRESS — this section documents the method so it's reproducible even if the script isn't recovered)
+
+`www.uwa.edu.au` is fully permissive (Sitecore-based, `Allow: /` with only technical paths
+disallowed, no bot-mitigation on a live fetch). Catalogue discovered via `robots.txt`'s
+`Sitemap: https://www.uwa.edu.au/sitemap.xml` → `/study/sitemap.xml` (302) →
+`/study/-/media/sitemaps/sitemap-future-students.xml` (637KB, 2,760 URLs), filtered to 422 URLs
+under `/study/courses/*`.
+
+**Sixth platform, sixth structural wrinkle — verified, not assumed:** this URL namespace mixes
+two entity types. Confirmed by fetching samples of both: major/specialisation pages (e.g.
+"Accounting", `Course Code MJD-ACCTG`) and actual applyable degree programmes (e.g. "Bachelor of
+Commerce (Integrated Professional)", `Course Code BW002`, CRICOS code present) — a major page
+explicitly lists which degrees it combines with and links to the real degree page, which carries
+a structurally different code pattern. **Consistent with the UNSW/Sydney/Monash grain (the
+applyable degree, not the major within it) — majors excluded, BASORG-confirmed.** Named as its
+own negative finding, not a silent omission: UWA publishes 175 major/specialisation pages under
+`/study/courses/` alongside 247 degree programmes, distinguished by an `MJD-` course-code prefix;
+excluded here as a different entity type, available if the product ever wants majors as their
+own grain later.
+
+**Classification method: by each page's own `Course Code` prefix, not the URL slug** (a
+"bachelor/master/doctor/diploma"-in-slug heuristic was checked as a sanity cross-check — 3
+non-degree-like slugs spot-fetched and confirmed `MJD-` — but the slug is never trusted as the
+filter itself, same discipline as Monash's `aqf_level`).
+
+**No JSON data blob on this platform** (no `__NEXT_DATA__`; a thin per-page schema.org
+`ld+json` block exists with only name/description/courseCode, not enough for duration/ATAR/
+CRICOS). Facts extracted via consistent labeled HTML card markup:
+`<div class="card-details-label">LABEL</div><div class="card-details-value">...VALUE...</div>`.
+Cards seen: `Minimum ATAR`, `Intake`, `Full time completion`, `Course Code`, `CRICOS CODE`,
+`Annual course fee` (not captured — no fee field in this contract).
+
+**Field mapping:** `degree_type`=null (no clean abbreviation field exists, unlike UNSW's
+`abbreviated_name`/Monash's `post_nominals`/`abbreviated_name`); `faculty_or_school`=null and
+`campus`=null (checked card fields, page prose, and breadcrumb navigation — neither is
+structurally exposed on individual degree pages here, though UWA's separate major pages do carry
+a `Locations` card, out of scope since majors are excluded); `degree_level` from explicit title
+award-tokens (Bachelor/Honours/Master+Doctor-combo/Diploma), same method as Sydney;
+`international_eligible` from CRICOS-code presence, same `regulatory_inference` basis as UNSW/
+Monash; `atar` as the structured `{value, scale: "ATAR", source_field}` object BASORG ruled for
+Monash, reused here since the field recurred a third time.
+
+## Adelaide University: identity resolved, catalogue mapped, extraction methodology approved — not yet run in full
+
+**Identity, resolved from the source's own statement, not from any prior-knowledge lead:**
+`adelaide.edu.au`'s own homepage schema.org organization markup states directly: *"Adelaide
+University is a public Australian university established in 2026 through the merger of the
+University of Adelaide and the University of South Australia."* `foundingDate: 2026`. This
+settles the DB question from this package's very first report — the "Adelaide University" row
+is the genuine new merged entity, and the DB correctly holds no separate "The University of
+Adelaide" or "University of South Australia" row because neither continues to exist. A prior
+recollection that this merger had happened was flagged as a lead at package start and not acted
+on until the source confirmed it independently.
+
+**Catalogue state: settled, not a two-catalogue transition — a conclusion resting on absence of
+signals, named as such rather than asserted bare.** Signals deliberately sought that would have
+falsified this conclusion, and not found: no `unisa.edu.au` references on the homepage or study
+landing page, no "former University of Adelaide" framing, no dual/parallel catalogue listing.
+Positive signals for consolidation: one active `sitemap.xml` (1.27MB, current — lastmod through
+2026-07-31), one unified `/study/degrees/*` namespace, 560 degree URLs including a full spread
+of `bachelor-of-*` slugs. BASORG's record-both fallback (for a genuine two-catalogue transition)
+does not apply — this is a single successor catalogue, not a coexistence.
+
+**A domestic/international page-variant split exists and was mapped before any bulk extraction,
+per BASORG's instruction — this is the trap-shaped finding of this university.** The plain
+sitemap URL (no suffix) resolves to a page titled "...Information for International students" —
+**a bot with no session state receives a variant, not a neutral default.** A parallel `/dom/`
+path serves "...Information for Domestic students." Diffed both directly on 10 sample programmes
+across different faculties (Arts, Agricultural Sciences, Biomedical/Health, Commerce,
+Criminology, International Relations, Mathematics Honours, Pharmaceutical Science, Science
+Honours, Science) rather than reasoning about what should differ:
+
+- **Invariant, verified on all 10 samples:** `Program code` (e.g. "BARTS" on every Bachelor of
+  Arts variant) and the base full-time `Duration` figure (e.g. "3 year(s) full-time" identical
+  on both).
+- **Genuinely different, not just differently phrased:** CRICOS code (present only on the
+  international variant — structurally expected, since CRICOS is specifically the
+  international-enrolment mechanism, not an inconsistency); study mode (international says
+  "Full-time" only, with explicit prose "Part-time study is not available for international
+  students"; domestic says "Full time or part time" — a real difference in what's actually
+  offered, not a phrasing difference); entry requirements (international shows a country-by-
+  country equivalency table; domestic shows a domestic ATAR-cutoff/guaranteed-entry scheme with
+  different admission-cycle years referenced — the underlying Australia-citizen figure is
+  consistent across both presentations, which is a good internal check, but the two are not
+  reducible to one field).
+
+**BASORG's ruling on how to record this: structure, not metadata.** `entry_requirements` and
+`study_mode` are keyed by audience (`{"international": ..., "domestic": ...}`) rather than
+tagged via `field_provenance` (which describes *how* a value was derived, not *which audience*
+it describes — mixing those axes in one closed enum was explicitly rejected as the same
+convention-drift risk that produced a Glasgow duplicate-detection defect elsewhere in this org).
+
+**Cost decision, BASORG-ruled:** fetch the international variant for all ~560 in-scope URLs
+(full coverage of the audience an Oryn user is almost certainly in); fetch the domestic variant
+only for the same ~18-programme faculty-spread sample already used for invariance verification,
+documented explicitly as a sample, not full coverage — a domestic student sees no data rather
+than mislabeled international data, an honest, visible gap rather than a silent wrong one.
+
+**A second majors-vs-degree grain problem, found during small-batch testing before any full run
+— structured differently from UWA's, so a straight ported fix would have missed it.** Adelaide
+represents each major as its own page but does NOT give it a different program code the way UWA
+did: "Bachelor of Arts", "Bachelor of Arts majoring in Anthropology", "...majoring in Aboriginal
+Studies", and every other Arts major variant all carry the identical `Program code BARTS`.
+Filtering by course-code prefix (UWA's method) would not catch this — the code is the same.
+**Detection method: the page's own title text contains "majoring in" for every variant page and
+never for the base degree page** — a title-based exclusion, consistent with reading explicit
+title language rather than inferring from a code, the same principle already applied to
+degree_level derivation on this and other platforms. Caught in a 10-URL test batch before
+running the full ~560-URL extraction; not yet applied to a complete run.
+
+**No JSON data blob** (a site-wide organization-level `ld+json` block exists, not per-course);
+facts extracted via labeled text anchors in the flattened page text: `Program code`, a
+`\d+ year\(s\) full-time` duration pattern, `Campus <list> Duration More info` (campus, bounded
+between those two anchors), `CRICOS code`, `Study as (Full-time|Full time or part time)`, and an
+`Admission criteria`-anchored block for entry requirements (a best-effort verbatim capture of a
+long multi-part admissions page, not a fully structured parse of every sub-component — documented
+as such in each record's `researcher_notes` rather than presented as more complete than it is).
+
 ## ANU: deferred, explicit robots.txt block
 
 `programsandcourses.anu.edu.au` — the only host that actually serves ANU's programme/course
@@ -325,6 +470,45 @@ identified this as the third instance of the same ordering slip across independe
 day and made it structural: the `robots.txt` fetch is now its own isolated tool call, awaited and
 evaluated, before any other request to a new host — never batched with anything else. Applied
 from this point forward in this lane.
+
+## Three of the top eight are structurally inaccessible — a property of the web, not a research gap
+
+Melbourne, ANU, and Queensland — 3 of this package's 8 target universities — could not be
+researched, each blocked by a genuinely different mechanism, and in every case the institution's
+own general/marketing site stays open while the specific host that carries the programme
+catalogue is the one that's gated:
+
+| University | Mechanism | Detail |
+|---|---|---|
+| Melbourne | Domain-wide active bot-mitigation (Cloudflare JS challenge) | Every subdomain tested 403s, including on a standard browser UA — not UA-based, not per-path |
+| ANU | Explicit `robots.txt` policy | `programsandcourses.anu.edu.au` names `ClaudeBot` by name alongside ~a dozen other AI crawlers |
+| Queensland | Active CAPTCHA gate (AWS WAF) | `x-amzn-waf-action: captcha` on the catalogue host's own `robots.txt` response |
+
+These are three different *shapes* of the same underlying fact, not the same block encountered
+three times: a technical bot-mitigation wall (JS challenge — defer per this org's standing
+policy, no tooling exception since routing around it is exactly what "don't route around a
+block" prohibits), a stated crawling policy (robots.txt — honoured as policy, full stop), and an
+explicit CAPTCHA (a harder line than either — solving it is the specifically prohibited act
+itself, under the base operating rules directly, not merely this org's policy; no browser-tooling
+exception exists here the way one might exist for a JS challenge, because a browser that solved a
+CAPTCHA would be doing the forbidden thing more capably, not avoiding it).
+
+Each was investigated for a permitted alternative before being marked deferred, not accepted at
+the first block: main institutional domains checked and found open but not carrying the
+catalogue (the same "permission that exists but doesn't reach the data" shape all three times),
+Wayback checked where a specific page could be tested (Melbourne: a fresh capture exists but is a
+client-rendered SPA shell with zero course data in the raw HTML; ANU: inconclusive due to a
+rate limit, not negative — recorded as unresolved, not as checked-and-doesn't-help, since those
+are different facts). Full technical detail for each is in its own section below.
+
+**This is a real, reportable limit on what this package can deliver for Australia, not a
+shortfall in how it was researched.** A future lane with different tooling will not open
+Melbourne or Queensland — a CAPTCHA and an active bot-mitigation wall are not tooling gaps. Only
+a different relationship with those institutions (a data-sharing agreement, an official API, or
+the institution changing its own posture) would. ANU's case is closer to solvable in principle —
+a `robots.txt`-permitted alternative host, if one is ever found, would be legitimate — but the
+one checked (`study.anu.edu.au`) only links to the blocked host rather than carrying the data
+itself.
 
 ## Melbourne: deferred, full technical basis
 
