@@ -1180,6 +1180,76 @@ pointed rather than the direction the fix moved.
 retained one. An exclusion is a silent deletion — nothing downstream ever notices a record that
 isn't there.**
 
+## 8.4v A label that didn't survive crossing a credential system
+
+BASORG ruled that Ottawa's 119 Major/Minor pages be excluded as **components rather than
+credentials** — consistent with Adelaide's "majoring in" and UWA's `MJD-` majors.
+
+**RES-R1 stopped before building 275 records on it** and reported that Université de Montréal's
+**live** corpus records 86 equivalent units (Majeure 37, Mineure 49) as standalone programmes —
+the exact category the rule excluded. Its framing: *"bears directly on the ruling you just gave,
+not a new topic."*
+
+**Checking the live data inverted the conclusion. The two are genuinely different systems**, and
+RES-R1's own quote shows it:
+- **Ottawa**: *"refer to the Academic Regulations for the Honours bachelor's with major and
+  minor"* — you are **already in** the bachelor's; the major is a field within it.
+- **Montreal**: *"vous pouvez **aussi cumuler** la majeure... pour l'obtention d'un baccalauréat
+  **par cumul**"* — you **accumulate separate programmes** into a degree.
+
+Québec's *cumul* model and Ontario's concentration model are different credential systems. The
+Montreal lane recorded **four** accumulable unit types (Majeure, Mineure, Certificat de 1er cycle,
+Microprogramme de 1er cycle) each with its own Québec-aware `degree_level` — coherent, not an
+oversight. **BASORG's own rule from an hour earlier** — *record the credential system the source
+actually uses; do not force it into a taxonomy built for another* — argues against treating them
+as identical because they share an English gloss.
+
+**The fix was to the rule, not to either corpus.** "Exclude components, include credentials" was a
+**label**, and labels do not survive crossing a credential system. Replaced with a test:
+
+> **Include a unit if it is independently enrolled in and accumulates toward a credential.
+> Exclude it if it is a concentration declared within a credential you are already admitted to.**
+
+Testable in the source's own words; correct in both cases without knowing which country applies.
+
+**No correction item for Montreal — it is not a defect.** But the distinction is recorded in the
+Canada README, because without it someone will "fix" the inconsistency in one direction and
+destroy a true distinction.
+
+**A lane that builds on a manager's rule without checking whether the rule survives contact with
+the data is how a 275-record corpus becomes wrong in one consistent direction** — which is exactly
+what happened to UWA at 63%.
+
+## 8.4w Canada's URL collisions are THREE defects, not one — and Western is recoverable
+
+RES-V1 (V1-11) characterised them and the headline is that **collapsing them would misdirect a
+repair effort in two cases out of three**:
+
+- **Western (231): a real acquisition gap, and genuinely recoverable.** The record's own note is
+  honest — the JSON API it used exposes no per-programme URL, so it fell back to the search tool.
+  But **the same page's HTML embeds 161 `program.cfm?p=N` links** in the very table the researcher
+  describes browsing. RES-V1 fetched `p=8` directly: Anthropology's MA page, exact match to the DB
+  record. **161 live links against 160 collision records is not coincidence.**
+- **Alberta (33): not a defect.** The researcher's note already documents reading the shared
+  page's text verbatim to confirm multiple genuinely distinct degrees. RES-V1 could not
+  independently re-verify — `calendar.ualberta.ca` sits behind an active AWS WAF JS challenge —
+  and **said so plainly rather than forcing a live check or quietly dropping the caveat.**
+- **Toronto (160): genuinely in between.** The SGS directory links by **subject-unit, not by
+  credential** — one Kinesiology page live-confirmed to cover 6 real distinct degrees
+  (PhD/MA/MKin/MProfKin/MSc/MSS). Sharing is consistent with how the source organises itself. A
+  more granular calendar exists but isn't linked from the captured page, so recoverability is
+  weaker and **different in kind** from Western's.
+
+**This is new leverage for Path A**, and it does not contradict V1-10's zero-overlap finding — it
+is a **different mechanism**. The correct Western URLs exist; they sit one level deeper than the
+API-based acquisition looked. Recovering them needs a research pass *and* an UPDATE-by-id write —
+so **Path A gains a second population needing it**, on different grounds than the overlap that was
+correctly ruled out.
+
+RES-V1 also ran rule 27 against its own question 4 — sampling one record each from the four
+zero-collision universities, 4/4 matching live — and **stated plainly that a 4-record sample is
+not proof the other ~1,765 are clean.**
+
 ## 8.5 If you inherit this org
 
 1. **Ask each lane what it holds before assigning anything.** Never assume a slot is free.
