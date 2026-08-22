@@ -15,8 +15,10 @@ scoped-out items) are still current as of the dates on each entry.
 
 **2026-08-22, BUG-1, live RLS verification package, surfaces 3+4 (sendMessage / block /
 report), then the INSERT-forgery inventory that followed it.** Full evidence:
-`docs/research/verification/rls-live-verification-2026-08-22.md`,
-`docs/research/verification/insert-forgery-inventory-2026-08-22.md`.
+`docs/research/verification/insert-forgery-inventory-2026-08-22.md` (surfaces 3+4's own
+per-table findings, plus the six-table INSERT-forgery map — corrected citation, per
+`docs/handoffs/bug1-lane-closeout-2026-08-22.md`: `rls-live-verification-2026-08-22.md`
+only ever covered surfaces 1+2 and was cited here in error).
 
 **The gap**: `message_reports`' `"create own report"` policy only ever checked
 `reporter_id = auth.uid()` — nothing tied `reported_user_id` to `message_id`'s actual
@@ -67,23 +69,25 @@ returning without error** — and must remove leftover rows via admin access, si
 RLS-scoped client structurally cannot delete from either table regardless of whose
 session runs it.
 
-**Six more tables inventoried for the same INSERT-forgery class, not yet fixed** (started
-after `profile_score_snapshots`' own finding in migration 0063 showed a `BEFORE UPDATE`
-guard can be close to inert against the real risk): `profile_scores`,
-`profile_score_snapshots`, `opportunity_matches`, `student_requirement_evaluations`,
-`evidence_files` all share the same shape — this package's guard triggers close
-*overwriting* a row the real engine already computed, but not *inserting* a fresh row for
-a key the engine has never touched, which a student's own RLS-scoped session can still do
+**Six more tables inventoried for the same INSERT-forgery class — resolved, written,
+not applied** (started after `profile_score_snapshots`' own finding in migration 0063
+showed a `BEFORE UPDATE` guard can be close to inert against the real risk):
+`profile_scores`, `profile_score_snapshots`, `opportunity_matches`,
+`student_requirement_evaluations`, `evidence_files`, and `ai_recommendations` (folded
+in — see below, its prior "separate design question" status is resolved, not still
+open) all shared the same shape — this package's guard triggers close *overwriting* a
+row the real engine already computed, but not *inserting* a fresh row for a key the
+engine has never touched, which a student's own RLS-scoped session could still do
 directly. `opportunity_matches` and `profile_score_snapshots` were empirically confirmed
 exploitable live (a fabricated `eligible=true`/`match_score=100` row for a never-matched
 opportunity; a fabricated low-baseline snapshot), then reverted and re-verified reverted.
-`ai_recommendations` shares the shape but is tracked separately below as its own design
-question. Full per-table detail, severity, and why a guard trigger isn't the right tool
-for any of these six: `docs/research/verification/insert-forgery-inventory-2026-08-22.md`.
-**Inventory only — none of these six are fixed by this pass.** Closing the class needs one
-deliberate, INSERT-scoped design decision applied consistently across all six (it changes
-an RLS INSERT grant currently `authenticated`-wide, spanning three feature areas), not six
-separate patches — routed up rather than built ad hoc.
+Full per-table detail, severity, and the design decision (Option A — an RLS policy
+split, not a layered service-role-only policy, since permissive policies OR together):
+`docs/research/verification/insert-forgery-inventory-2026-08-22.md`,
+`docs/handoffs/insert-forgery-design-proposal-2026-08-22.md`. **Fix, written not
+applied**: `supabase/migrations/0065_close_insert_forgery_six_tables.sql`, paired with
+a code change (`app/(app)/documents/actions.ts`, `lib/plan/persist.ts`) already merged
+and live — `#113`. Founder-gated per standing rule, same as `0062`–`0064`.
 
 ## Needs founder decision — same self-write gap on 5 more computed columns (migration 0063)
 
@@ -127,16 +131,19 @@ all in this codebase (pure append log, insert-only), so this migration's guard o
 close to inert against the actual risk of a fabricated improvement history. Included
 because it was named in scope, not because it closes that gap.
 
-**`ai_recommendations` — deliberately NOT included in 0063. A design question, not a
-mechanical fix, tracked here rather than routed around**: the only writer
-(`lib/plan/persist.ts`) is a single INSERT site with no UPDATE path anywhere, so a
-column guard (which only ever fires on UPDATE) provides no protection at all — the same
-INSERT-forgery shape as `profile_score_snapshots` above, but with no update surface to
-even partially guard. The real question this surfaces: **should a student's RLS-scoped
-client be inserting advisor output at all, or should that whole path move to the
-service-role client** — a design decision with real blast radius (it changes who can
-write to a table currently modeled as user-owned), not something to bolt a policy split
-onto without deciding the shape first. Needs routing to whoever owns the plan pipeline.
+**`ai_recommendations` — deliberately NOT included in 0063, but resolved as of 0065, not
+still open.** The only writer (`lib/plan/persist.ts`) is a single INSERT site with no
+UPDATE path anywhere, so a column guard (which only ever fires on UPDATE) provided no
+protection at all — the same INSERT-forgery shape as `profile_score_snapshots` above,
+but with no update surface to even partially guard. This entry previously framed the
+real question as open ("should a student's RLS-scoped client be inserting advisor
+output at all") — tracing the writer answered it rather than needing a separate
+decision: same shape as `evidence_files` (trusted server-derived `user_id`, content
+that's AI-generated or hardcoded, never caller input, no legitimate student-authored
+use of this table today or in the spec), folded into `0065`'s scope with that reasoning.
+See `docs/handoffs/insert-forgery-design-proposal-2026-08-22.md` and
+`docs/handoffs/bug1-lane-closeout-2026-08-22.md`. Do not reopen this as a separate
+question.
 
 **Fixed this session: the paired code change above introduced a live crash on `main`,
 caught by ORYN-CEO before any user hit it.** `createAdminClient()` throws *synchronously*
