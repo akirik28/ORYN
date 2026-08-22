@@ -982,6 +982,111 @@ that holding on everything unverifiable is correct even if it means refusing fur
 **When the coordination layer is uncertain, a lane that keeps working only on what it can verify
 is functioning correctly, not obstructing.**
 
+## 8.4n RULE-IDENTITY-001 REVISED — URL is conditional, not primary
+
+After CFO's Glasgow finding (`Music [BMus]` vs `Music [MA]`), BASORG made binding: *"URL is the
+primary discriminator; stripped-name is corroboration only."* **That is false in at least one
+corpus.** RES-R1 measured Canada's existing 3,030 records before extracting:
+
+| university | programmes | distinct URLs | collisions |
+|---|---|---|---|
+| Montréal / UBC / Queen's / Waterloo | — | — | **0** |
+| Alberta | 179 | 146 | 33 |
+| Toronto | 635 | 475 | **160** |
+| **Western** | 547 | 316 | **231** |
+
+**`grad.uwo.ca/admissions/programs/index.cfm` is shared by 160 different Western programmes** — a
+generic listing page. Applied there, the rule **merges 160 distinct programmes into one**: the
+exact mirror of the name-stripping failure it was written to prevent, and far more destructive.
+
+**REVISED: URL is a strong identity axis only where URLs are per-programme. Check URL cardinality
+against record count, per university, before relying on it.** Neither axis is safe
+unconditionally — name-stripping discards distinguishing information, URL-matching over-merges
+wherever URLs aren't per-programme. RES-V1 has since measured 1.000 across all five Australian
+universities; the failure shape is Canada-specific.
+
+Second correction in RES-V1's favour on this rule: BASORG first told it a URL-gated design was
+*too weak* (against a spec BASORG had written name-first), then told it to elevate an axis with
+an unchecked failure mode.
+
+## 8.4o Canada scoped — and a gate BASORG's own scoping was blind to
+
+Canada holds **3,030** programme records, not the 1,657 quoted. That figure was one ingestion run
+(Montréal 679, Queen's 337, Alberta 96, Western 545), relayed as though it were the corpus.
+**Fourth scope-mismatch of the day.**
+
+**Scope: the 19 genuinely zero-coverage universities.** McGill excluded (gate-blocked).
+
+**Then RES-R1's posture check caught what BASORG's scoping missed.** McMaster's real catalogue is
+`academiccalendars.romcmaster.ca` — and **432 McMaster records already exist on main from that
+exact host**, gate-blocked on `sourceAuthority`. **McMaster shows zero DB coverage precisely
+because its research cannot pass the gate.** Extracting would have duplicated 432 unusable records
+over a 120-second crawl delay — hours of work, unrecoverable.
+
+**NEW GATE: before extracting any university, check both the live DB *and* the research corpus.
+Zero DB rows may mean researched-and-blocked**, which is far worse to duplicate — the duplicate
+inherits the same block.
+
+## 8.4p Adelaide verified — including a false provenance claim a consistency check can't see
+
+**RES-V1 (V1-9)**: contract/ID/duplicate-URL clean corpus-wide, 770 records, 5 universities. It
+fetched Adelaide's **live sitemap** and ran a real classification pass rather than cross-checking
+report against README; Grad Dip/Cert matched **98/98 exactly**, the other two categories landed
+close and were reported as *"corroborating the right order of magnitude, not confirming to the
+digit."*
+
+**RES-V2 (V2-8)** found the labelling defect: three non-award pathway records (ATSIP, CASM
+Foundation Year, Foundation Studies) carry `international`-keyed content **actually sourced from
+Adelaide's domestic-only page.** Bare URL, `/int/` and `/dom/` all return byte-identical domestic
+content.
+
+**Why RES-R1's invariance check was structurally blind to it**: it confirms the `international`
+and `domestic` fields agree *with each other*. Here they agree **trivially, because they're the
+same page.** A consistency check between two values cannot detect a single-source origin.
+
+**Fourth instance today of a well-designed check being blind by construction rather than by
+error** — alongside contract validation passing UWA's 63% defect, blob-hash matching failing to
+recognise a file as its own later revision, and BASORG's reconciliation closing on cancelling
+terms. Practical impact low (`international_eligible` correctly null anyway); the provenance claim
+is still false and routed to RES-R1. Plus **UniStart** — a real programme fitting none of the four
+exclusion rules, confirmed *not* a symptom of a larger miss.
+
+## 8.4q Three lanes intentionally idle — each with its trigger
+
+Org policy (CFO-proposed, CEO-adopted): a lane that correctly reports-and-asks and has no package
+is **declared idle** rather than re-woken every 30 minutes — *re-waking a lane that asked and got
+nothing teaches it that asking doesn't work*, which is the road back to unassigned self-direction.
+Auto-lapses on assignment.
+
+| lane | idle because | lapses when |
+|---|---|---|
+| **RES-I1** | nothing cleared; UWA/Adelaide await source verification, url_repair and Glasgow need Path A | RES-V2 clears UWA/Adelaide **or** founder decides Path A |
+| **RES-R2** | RES-V2's measurement decided against its only candidate (0% defects in 44 non-Drive rows) | founder decides the Drive corpus |
+| **RES-R3** | its product is confirmed-open determinations; **39 already sit unusable** because 0060 is unapplied | **0060 is applied** |
+
+**None are idle for lack of capability.** The founder-action pile is the org's binding constraint.
+
+**Leverage ranking**: **0060 first** — one apply of an already-merged migration releases 39
+finished verified determinations and re-opens a lane. **Drive corpus second** — one decision,
+unblocks a lane, settles a population three independent methods converged on. **Path A third** —
+largest effort, and V1-10 may promote it if `url_repair` turns out to repair ~424 broken Canadian
+identity keys.
+
+## 8.4r Disk: one gauge, not two — and another relay error
+
+BASORG reported RES-V1's ENOSPC as having "recovered on its own." **It didn't.** CFO cleared
+twelve abandoned CEO gate-verification worktrees (~10 GB of `node_modules`), and free space went
+**143 MB → 9.2 GB in that minute.** Not recovery — remediation.
+
+RES-V1's *observation* was accurate; the **causal attribution** was BASORG's relay error, the
+fifth today. That split — accurate observation, wrong causal claim, propagated by a relay — is the
+cleanest statement of the day's dominant error class.
+
+**`/private/tmp` sits on the same volume as `/` on this host.** "tmp at 99%" and "main disk at
+13 GiB" were never two gauges. A lane seeing a healthy main-disk figure has no reason to suspect
+`/tmp` is about to fail under it — and ENOSPC mid-package presents as a lane defect rather than a
+host condition, because a lane's first hypothesis when a write fails is its own code.
+
 ## 8.5 If you inherit this org
 
 1. **Ask each lane what it holds before assigning anything.** Never assume a slot is free.
