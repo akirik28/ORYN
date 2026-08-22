@@ -283,6 +283,54 @@ never carried across to the others. The thinking was right; its blast radius was
 
 ---
 
+### The eligibility question, now measured properly — and one thing to decide
+
+The morning's fix made unresearched *country* eligibility honest. A full live audit this evening
+found the same question is answered **five different ways across five fields**, and one of those
+answers is worse than saying nothing.
+
+**The card and the counselor disagree about the same opportunity.** Where a row has no country
+list but its own text describes a real restriction — *"international students need visa
+documentation"* — the counselor surfaces it, and the opportunity **card stays completely silent**.
+Silence isn't a gap here: it is the signal the morning's fix deliberately reserved to mean *we
+checked, this is open to you*. So the more prominent surface doesn't merely omit the warning, it
+asserts the opposite. Proven by running both code paths against a real live row.
+
+**38 more opportunities default to "eligible" simply because nothing has computed a match for
+them.** Missing data falling back to the most permissive claim — the third instance of that exact
+shape today.
+
+**Age, now measured rather than estimated.** 140 of 271 active opportunities — **52%** — carry no
+usable age or grade signal, and **88% of those are summer programmes and competitions**, the two
+categories where an age gate is close to universal in reality. Yale Young Global Scholars settles
+what kind of gap this is: its own description says *"rising high school juniors and seniors"*, the
+grade field correctly holds 11 and 12, and the age columns are simply empty. **Nobody has
+researched them — it is not that no limit exists.**
+
+**What I'd like from you is one decision, not six.** You currently have five migrations written and
+waiting (`0060` through `0064`). An age fix as specified would make it six. That framing is wrong,
+and it's mine to correct: the real question is **how should Oryn say "we haven't checked this"** —
+once, for every eligibility dimension. Today it says it honestly for countries, silently and
+misleadingly for citizenship prose, and not at all for age. A document stating that question with
+its options and their costs is being written now, so you can settle the principle rather than
+approve migrations one at a time. **Nothing is broken while it waits** — the current live state is
+honest about countries and quiet about the rest, and no student is being told something false
+about a country restriction.
+
+### Onboarding: one bug fixed, one isolated, neither closed by guesswork
+
+A student clicking Continue twice quickly could **skip a screen entirely** — the button had no
+guard, unlike Back and Finish. Fixed and merged.
+
+Underneath it, something stranger: after the first Continue, the wizard's internal state advances
+while the visible heading **stays on the previous step**. Isolated by elimination to a single
+animation property. It may be an artifact of the test environment rather than a real-browser bug,
+and that is stated as an open question rather than resolved by assertion — because the fix, if
+applied wrongly, would degrade what a real student sees to satisfy something no student
+experiences.
+
+---
+
 ### An infrastructure incident, and two failures that disguised themselves
 
 Around 18:10 the machine ran out of disk — **143MB free, 99% full.** Three lanes halted, and my
