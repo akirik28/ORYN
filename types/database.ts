@@ -1407,6 +1407,16 @@ export interface Opportunity {
    * not researched — NEVER assume `direct`, that's an unverified claim, not an absence of a
    * restriction. See docs/handoffs/schema-gaps-design-2026-08-22.md §A5. */
   access_channel: "direct" | "institution_mediated" | null;
+  /** Migration 0060 (unapplied) — research-confirmed "no country/citizenship gate,
+   * genuinely open worldwide." Completes `eligible_countries`' tri-state: array non-empty
+   * = restricted; empty + true = confirmed open (wave 1's "confirmed open stays empty"
+   * convention finally has a structured home); empty + false = NOT researched — the read
+   * paths surface an advisory "not verified yet" note for that case instead of silently
+   * treating it as open (docs/handoffs/opportunities-eligible-countries-gap.md Key
+   * Finding 1). Read defensively (`?? false`) until 0060 is applied everywhere — same
+   * pattern as eligible_citizenships/0047. Never set without an official-source
+   * statement; false is the honest default, not a claim of restriction. */
+  country_eligibility_confirmed_open: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -1437,6 +1447,7 @@ export type OpportunityInsert = Insertable<
   | "organization_entity_id"
   | "country_entity_id"
   | "access_channel"
+  | "country_eligibility_confirmed_open"
 >;
 export type OpportunityUpdate = Updatable<Opportunity, "id" | "created_at" | "updated_at">;
 

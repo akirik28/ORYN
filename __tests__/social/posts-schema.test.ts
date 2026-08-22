@@ -34,7 +34,8 @@ describe("migration numbering", () => {
       .map((f) => f.slice(0, 4));
     expect(numbers.filter((n) => n === "0058")).toHaveLength(1);
     expect(numbers.filter((n) => n === "0059")).toHaveLength(1);
-    expect(Math.max(...numbers.map(Number))).toBe(59);
+    expect(numbers.filter((n) => n === "0060")).toHaveLength(1);
+    expect(Math.max(...numbers.map(Number))).toBe(60);
   });
 });
 

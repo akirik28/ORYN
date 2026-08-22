@@ -27,6 +27,18 @@ export interface OpportunityForMatching {
   /** Structured grade restriction (migration 0041), e.g. ["9","10","11","12"]. Optional
    * for callers that don't fetch it yet. */
   eligibleGrades?: string[];
+  /** Research-confirmed "no country/citizenship gate — open worldwide" (migration 0060,
+   * unapplied; read defensively). Empty eligibleCountries has TWO live meanings —
+   * confirmed-open (deliberately stored empty) and never-researched (~90% of live rows) —
+   * and only this marker distinguishes them. Optional: absent means not confirmed, which
+   * is the honest default, never "restricted." */
+  countryEligibilityConfirmedOpen?: boolean;
+  /** Whether the row carries free-text citizenship/residency restriction prose
+   * (citizenship_restrictions / residency_restrictions) that eligibility code deliberately
+   * never parses. Presence means the row WAS researched and a restriction is known to
+   * exist — so the "not verified yet" note below would be false for it; the prose itself
+   * is already surfaced on the counselor path and the opportunity detail page. */
+  hasUnstructuredEligibilityEvidence?: boolean;
   fields: string[];
   /** The opportunity's own base country (distinct from `eligibleCountries`, which is who
    * may apply — an in-person program based in France could still be open worldwide).
@@ -118,6 +130,20 @@ export function computeEligibility(
     } else if (!opportunity.eligibleCountries.some((eligible) => isSameCountry(eligible, student.country!))) {
       return { eligible: false, notes: `Not currently open to students from ${student.country}.` };
     }
+  } else if (
+    // Empty eligibleCountries has two live meanings: research-confirmed open (deliberately
+    // stored empty) and never-researched (~90% of live rows). Only the first has earned
+    // silence. Without the confirmed-open marker — and with no other eligibility evidence
+    // on the row (a structured citizenship gate, or restriction prose the counselor path
+    // and detail page already surface) — the honest claim is "not verified," said out
+    // loud, not implied openness (Phase 68: know when you don't know). Still an
+    // unknown-note, never an exclusion: absence of research is not evidence of a
+    // restriction either.
+    !(opportunity.countryEligibilityConfirmedOpen ?? false) &&
+    (opportunity.eligibleCitizenships ?? []).length === 0 &&
+    !(opportunity.hasUnstructuredEligibilityEvidence ?? false)
+  ) {
+    unknownNotes.push("Country eligibility not verified yet — check the official page for restrictions.");
   }
 
   const eligibleCitizenships = opportunity.eligibleCitizenships ?? [];

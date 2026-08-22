@@ -2,6 +2,11 @@ import { classifySubjects } from "./subject-taxonomy";
 import { normalizeProgramName } from "./normalize";
 import { resolveIdentity, type LocalUniversity } from "@/lib/acquisition/identity";
 import { sourceAuthority, domainOf } from "@/lib/acquisition/source-authority";
+import { judgeRetrievalEvidence, looksPageConfirmed } from "@/lib/acquisition/retrieval-method";
+
+/** Re-exported for existing consumers/tests — the single implementation now lives in
+ * lib/acquisition/retrieval-method.ts, shared with the opportunities pipeline. */
+export { looksPageConfirmed };
 
 /** One record from the research handoff contract — see
  * docs/research-handoff-university-programs.md for the full field-by-field spec. */
@@ -20,6 +25,12 @@ export interface ResearchProgramRecord {
   source_url: string;
   source_type: string;
   verification_status: string;
+  /** How the source page's content was actually obtained — a closed enum
+   * (lib/acquisition/retrieval-method.ts: live_fetch | browser_render | archived_capture |
+   * search_summary). The evidence gate routes on this declared fact when present; records
+   * without it (the pre-existing corpus) fall back to prose-matching verification_status.
+   * A present-but-unrecognized value fails closed. */
+  retrieval_method?: string | null;
   language_of_instruction?: string | null;
   duration?: string | null;
   campus?: string | null;
@@ -61,17 +72,6 @@ export function resolveUniversity(record: ResearchProgramRecord, universities: r
   );
   if (resolution.status === "matched") return { universityId: resolution.match.universityId, reason: null };
   return { universityId: null, reason: resolution.reason };
-}
-
-/** A researcher-stated verification_status counts as page-confirmed only when it says so
- * explicitly. Mirrors the Drive-corpus vocabulary ("Verified - official ... page" vs
- * "... page retrieval blocked") without hardcoding to that exact phrasing, so a future
- * research process can use its own wording as long as it follows this shape. */
-export function looksPageConfirmed(verificationStatus: string): boolean {
-  const s = verificationStatus.toLowerCase();
-  if (!s.includes("verified")) return false;
-  const blockedMarkers = ["retrieval blocked", "page unfetched", "not fetched", "search result only", "unfetched"];
-  return !blockedMarkers.some((marker) => s.includes(marker));
 }
 
 export type IngestOutcome = "accepted" | "duplicate" | "unresolved_university" | "insufficient_evidence" | "malformed_source" | "conflicting" | "rejected";
@@ -200,13 +200,14 @@ export function judgeEvidence(record: ResearchProgramRecord): { ok: boolean; det
   if (!record.official_program_url?.trim() || !record.source_url?.trim()) {
     return { ok: false, detail: "Missing official_program_url or source_url." };
   }
-  if (!looksPageConfirmed(record.verification_status ?? "")) {
-    return {
-      ok: false,
-      detail: `verification_status "${record.verification_status}" reads as a search result, not a confirmed fetched page.`,
-    };
+  // Routed on the structured retrieval_method when the record declares one; legacy records
+  // (no field) are prose-matched exactly as before — see lib/acquisition/retrieval-method.ts
+  // for the full policy and the backward-compatibility rule.
+  const retrieval = judgeRetrievalEvidence(record.retrieval_method, record.verification_status ?? "");
+  if (!retrieval.ok) {
+    return { ok: false, detail: retrieval.detail };
   }
-  return { ok: true, detail: "official_program_url, source_url and a page-confirmed verification_status are all present." };
+  return { ok: true, detail: `official_program_url and source_url are present; ${retrieval.detail}` };
 }
 
 export function decideIngestion(record: ResearchProgramRecord, universities: readonly UniversityLookupRow[], existingKeys: ReadonlySet<string>): IngestDecision {

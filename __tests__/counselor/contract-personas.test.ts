@@ -70,6 +70,7 @@ function opportunity(id: string, overrides: Partial<Opportunity> = {}): Opportun
     organization_entity_id: null,
     country_entity_id: null,
     access_channel: null,
+    country_eligibility_confirmed_open: false,
     created_at: "2026-01-01T00:00:00Z",
     updated_at: "2026-01-01T00:00:00Z",
     ...overrides,

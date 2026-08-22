@@ -67,6 +67,7 @@ function opportunity(id: string, overrides: Partial<Opportunity> = {}): Opportun
     organization_entity_id: null,
     country_entity_id: null,
     access_channel: null,
+    country_eligibility_confirmed_open: false,
     created_at: "2026-01-01T00:00:00Z",
     updated_at: "2026-01-01T00:00:00Z",
     ...overrides,
@@ -258,7 +259,10 @@ describe("buildCounselorDashboardContract", () => {
   });
 
   test("a recommendation keeps FACT (evidence/sourceUrl), ASSESSMENT (eligibility/confidence), and RECOMMENDATION (recommendationClass/why) as distinct typed fields, never flattened into one string", () => {
-    const opp = opportunity("opp-1", { fields: ["Research"], official_url: "https://example.org/opp-1" });
+    // country_eligibility_confirmed_open: this test's premise is a fully-known row, and
+    // known_eligible now (correctly) requires country eligibility to be research-confirmed,
+    // not just absent — an unconfirmed row is verdict "unknown" with an advisory note.
+    const opp = opportunity("opp-1", { fields: ["Research"], official_url: "https://example.org/opp-1", country_eligibility_confirmed_open: true });
     const state = baseState({ eligibleOpportunityMatches: [{ opportunity: opp, match: match("opp-1", { relevance_score: 90 }) }] });
     const contract = buildCounselorDashboardContract(state, []);
     const rec = contract.thisWeekActions[0] ?? contract.worthConsidering[0];
