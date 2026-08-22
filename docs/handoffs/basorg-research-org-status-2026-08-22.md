@@ -8,7 +8,77 @@ exist — this file is the one that counts.
 
 ---
 
-## 1. Lane map — 5 active, 2 closed out
+## 0. READ THIS FIRST — end-of-day state, 2026-08-22
+
+**Everything below §1 is written in the order it happened and much of it is superseded by
+later sections. This section is the only one guaranteed current. §1's lane map is a MORNING
+snapshot — it is retained as history and is WRONG as a description of now.**
+
+### The live/not-live boundary — the single most misread thing in this org
+| | Count | Status |
+|---|---|---|
+| `university_programs` **total** | **17,046** | live, counted directly |
+| Australia | **651 across FOUR** — UNSW 217, Monash 178, Sydney 149, UWA 107 | **live** |
+| Ottawa (Canada) | **276** | **live** |
+| **Adelaide** | **120** | **VERIFIED AND DELIBERATELY NOT INGESTED** |
+
+**Adelaide is 120, not 119** (UniStart added late). **Verified-and-not-live looks identical to
+overlooked unless someone says otherwise** — this produced a wrong number twice today, in BASORG's
+own report and in ORYN-CEO's wind-down instruction. **Australia was 0 this morning. Day total: 927
+programmes, five universities, two countries.**
+
+**Revert paths**: `batch_id` lives in **`program_research_queue`, NOT `university_programs`** — a
+successor will look in the wrong table. AU batch `au_programs_uwa_2026-08-22.jsonl_2026-08-22`;
+Ottawa `ca_programs_ottawa_2026-08-22.jsonl_2026-08-22`.
+
+### Lane state at close
+| Lane | State | Trigger to resume |
+|---|---|---|
+| RES-R1 | close-out written (`f6cd728`, Canada README) | 15 Canada targets remain, all re-queried at zero tonight |
+| RES-V1 | close-out requested | new corpus needing contract/ID pass |
+| RES-V2 | close-out requested | new corpus needing source verification |
+| RES-I1 | close-out requested; **holding, no pending write** | an approved, verified corpus |
+| RES-R2 | idle | **founder: Drive corpus decision** |
+| RES-R3 | idle | **founder: apply migration 0060** |
+
+### Blocked on the founder — every idle lane traces to one of these
+1. **Apply migration 0060** — verified low-risk: column confirmed absent, 391 rows, and the CHECK
+   constraint **cannot fail** (all rows default `false`, so `not (false and …)` is always true).
+   Releases **39 confirmed-open determinations**; re-opens RES-R3. `opportunities` is **RES-I2's**
+   territory.
+2. **Decide the Drive corpus** (~79 defective + 23 fragments) — unblocks RES-R2.
+3. **Decide Path A** (UPDATE-by-id write path; `decideIngestion()` is insert-only). Four populations
+   need it: url_repair's 1,437, Glasgow's 62, Western's 231, and **257 null `degree_type`** rows.
+   **`degree_type` is NOT an extraction gap** — UWA publishes no abbreviation, Sydney's `ippCode` is
+   a course code, Adelaide's field held programme codes and was nulled pre-ingestion.
+
+### Deferred targets — the REASON is the finding, not the deferral
+- **Calgary**: **source-authority gate PASSED** (§8.4zz — SaaS backend ≠ vendor publication).
+  **Sustained 429s stopped it. Feasibility, not authority.**
+- **Dalhousie**: robots.txt 404 (no file, no restrictions stated); **no response in a generous
+  budget; cause UNDETERMINED.** Nothing settled either way.
+- **McMaster**: **excluded** — vendor-branded publication address. Different from both.
+
+### The transferable rules (details in §8.4–§8.5)
+- **Rule 27** — a consistency check between two values cannot detect a single-source origin.
+- **Rule 28** — a delta check compares a change against its intent; **it cannot detect that the
+  intent was wrong.**
+- **Read/write authorization asymmetry** — genuine artifacts prove the WORK is real, not that the
+  AUTHORIZATION is real. A verifier can resolve this by inspection; **an ingester cannot.**
+- **`robots.txt` is the FIRST request to any new host** — not the first of the crawl, the first of
+  anything.
+- **A 429 is the server's statement; a timeout is our chosen limit.** Stop on the first; extend the
+  second. **Short retries are more aggressive than one long wait** — an abandoned request still
+  costs the server the full render.
+- **`findValueDomainOutliers`** — measured false-positive rate **13 fired / 0 real**. Length alone
+  is weak; the provenance-language arm discriminates. **Reusing it without that number reports 13
+  phantom defects.**
+- **`universities.country` holds `'Australia'`, not `'AU'`** — a wrong predicate returns zero rows,
+  not an error, and **an empty set reads as a finding.** Sanity-check unfiltered `count(*)` first.
+
+---
+
+## 1. Lane map — MORNING SNAPSHOT, SUPERSEDED BY §0
 
 | Lane | Package | Branch | Status | Safe to consume? |
 |---|---|---|---|---|
