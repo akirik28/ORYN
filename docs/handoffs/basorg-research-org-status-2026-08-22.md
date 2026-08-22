@@ -1519,3 +1519,37 @@ that matters, because from inside a lane those three are indistinguishable.
    reported "101 net-new where siblings gave 3 and 2" instead of "106 accepted, zero failures."
 5. **Never route around a permission denial**, including for a subordinate or a superior. Seven
    instances held today.
+
+## 8.4gg LIVE-COUNTED, and the check caught my own instrument
+
+Australia, counted against the live table at close (not restated from the corpus):
+
+| University | Live programs |
+|---|---|
+| UNSW Sydney | 217 |
+| Monash University | 178 |
+| The University of Sydney | 149 | 
+| The University of Western Australia | 107 |
+| **Total** | **651** across **4** universities |
+
+`university_programs` total: **16,770**. **Adelaide does not appear in the result at all** — the live
+table independently confirms its 120 records are verified but not ingested, which is the claim I had
+to correct after telling ORYN-CEO "651 across five universities."
+
+**The check fired in the direction it wasn't written for.** My first query used
+`WHERE u.country = 'AU'` and returned **zero rows**, which read as data loss. It wasn't:
+`universities.country` holds **`'Australia'`**, full country names, not ISO codes. `count(*)` on the
+unfiltered table returned 16,770 and settled it in one query — **the instrument was wrong, not the
+data.**
+
+Two things worth keeping:
+
+1. **`WHERE country = 'AU'` returns zero rows, not an error.** Silent empty results are the worst
+   failure mode for a verification query, because **an empty set reads as a finding.** A lane
+   spot-checking with the wrong predicate would conclude a corpus had vanished and escalate on it.
+2. **Sanity-check `count(*)` unfiltered before trusting a filtered zero.** It distinguishes "my
+   filter is wrong" from "the data is gone" immediately.
+
+The mechanical check was adopted to stop me publishing **corpus** counts as **live** counts. It
+instead caught a phantom outage before I reported one. **A check that only ever confirms what you
+expect is not doing anything.**
