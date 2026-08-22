@@ -1,10 +1,20 @@
 # Programme corpus duplicate audit — re-measured against the grown corpus
 
-**Status: read-only re-measurement.** No corpus file edited, no database write. Reuses the
-existing, unit-tested classifier (`lib/programs/corpus-duplicates.ts`,
-`scripts/audit-program-corpus-duplicates.ts`) exactly as written — no new rules, no code
-changes. Companion to `docs/programme-corpus-duplicate-audit.md` (2026-08-21), which this
-document re-measures against, not replaces.
+**Status: measurement, plus one small corpus-file annotation authorised by the coordinator
+(§2).** No database write. Reuses the existing, unit-tested classifier
+(`lib/programs/corpus-duplicates.ts`, `scripts/audit-program-corpus-duplicates.ts`) exactly as
+written — no new rules, no code changes. Companion to `docs/programme-corpus-duplicate-audit.md`
+(2026-08-21), which this document re-measures against, not replaces.
+
+**Update, same day, after coordinator review:** §3's coverage-gap finding was checked against
+live `university_programs` by the coordinator directly. The programmes flagged as absent from
+the *corpus files* — MIT's EECS majors, Stanford's Computer Science, Oxford's PPE, and (checked
+by the coordinator, not this document) Harvard's 49 AB rows — **are live in the database via a
+route other than these research files.** §3 is corrected below to state this precisely: the
+finding is real and verified at the file level, but it is not a live product defect for the four
+institutions checked. Re-flagged as a research-process risk (a batch that is not what it claims
+to be, trusted as a baseline by the next reader) rather than a data-completeness one. **Do not
+re-research MIT, Stanford, Oxford, or Harvard on the basis of this document** — see §3.
 
 ---
 
@@ -60,9 +70,16 @@ Confirmed directly, not inferred from a URL miss: Frankfurt School holds exactly
 `university_programs` row total ("Computational Business Analytics") — the other two names have
 no live counterpart under any URL.
 
-**Per the assignment's own instruction, these need a note in the corpus file, not a database
-change.** No file has been edited yet — holding for your go-ahead before touching even a
-corpus-file note, since you asked to see the re-measurement before any action.
+**Done, authorised by the coordinator.** Annotated both `reverify_batch3_2026-08-17.jsonl` lines
+(14 and 16) with a `corpus_duplicate_note` field pointing at the sibling record in
+`drive_batch1_2026-08-17.jsonl`, the classification, and the confirmed never-ingested status —
+no data field touched, no line deleted, no database write. One side-effect worth recording: the
+annotated copies are no longer byte-*identical* to their `drive_batch1` siblings (they now carry
+one extra field the other doesn't), so a future re-run of the audit script will report these two
+specific groups as `genuine_duplicate` with `allFieldsIdentical: false` rather than `true` — the
+classification itself is unchanged (still `genuine_duplicate`, `corpus_duplicate_note` is not a
+`DISCRIMINATOR_FIELD`), only that one boolean flips, and it flips because of the annotation
+explaining the duplicate, which is the intended, self-documenting outcome.
 
 ---
 
@@ -105,42 +122,48 @@ whether the new batch is genuinely missing programmes the old one had:
   from the new 48-record batch. PPE and single-honours Computer Science are among Oxford's most
   recognisable courses.
 
-**This is not the hypothesised trap, and it's a more serious problem than that trap would have
-been.** A silent duplicate wastes a row. This is the opposite failure: **the new "comprehensive"
-batches are not supersets of the old batches — each is missing real, major programmes the other
-already had**, at three of the most prominent universities in the corpus, and the zero-overlap
-pattern recurs identically at ten more. The audit's own classifier correctly reports zero
-candidate groups here, because these genuinely are not duplicates of each other — but that
-same correctness is what makes the gap invisible to a duplicate audit. Nothing in either batch
-is wrong on its own terms; the risk is entirely at the *file* level, if anyone treats the new,
-larger per-university batch as replacing the old one. The original audit's own supersession
-recommendation ("keep the later observation... retain the earlier as history") is exactly right
-here and must be read literally: **retain**, not discard. If the old `drive_batch1` (and
-similarly-shaped) records for these ~13 universities are ever dropped on the assumption that a
-newer, bigger batch already covers everything, real, previously-verified major programmes —
-MIT's actual Computer Science, Oxford's PPE, Stanford's Computer Science — would be lost with no
-duplicate-audit signal to catch it, because the audit correctly does not (and should not) treat
-"different programme, both real" as a duplicate.
+**Coordinator correction, same day — this is a file-level finding, not a live product defect,
+for the institutions checked.** The coordinator queried `university_programs` directly:
+MIT's EECS majors, Stanford's Computer Science, Oxford's PPE, and (checked independently by the
+coordinator) Harvard's 49 AB rows **are all live in the database right now.** The measurement
+above is not wrong — the new *corpus files* genuinely do not contain those programmes, verified
+directly rather than inferred, and that absence is real. What was wrong was the inference drawn
+from it: these four universities' programmes reached `university_programs` by some route other
+than the corpus files this document searched, so a student today sees them correctly. **Do not
+re-research MIT, Stanford, Oxford, or Harvard on the strength of this finding** — the gap named
+above is not theirs.
 
-**Not acted on — this is a coverage question, not a duplicate question, and outside this
-assignment's scope.** Flagged here because it's exactly the class of risk asked about, and it
-turned out larger than the one case named. Recommend a dedicated coverage-completeness pass
-(does the new large batch for each of these universities actually reach parity with the old
-small one, program-by-program) rather than folding it into duplicate handling.
+**What the finding actually is, restated precisely.** A research batch labelled comprehensive
+for a university is not a reliable account of what that university has live in the product,
+because rows arrive by more than one path and the corpus files are not the only one. The risk
+this creates is not "students don't see MIT's Computer Science" — they do. The risk is that
+**the next lane to read one of these batches will trust its "comprehensive" framing as a
+baseline**, and reason from a false premise the same way this document's own first pass did,
+before the coordinator caught it. That is a research-process risk, not a data-completeness one,
+and it generalises past the specific 13 universities named above to any batch anyone describes
+as comprehensive without checking against the live table first.
+
+**The other 9 universities in the table (Yale, Cambridge, UCL, KCL, LSE, Warwick, Durham,
+Southampton, NYU, CMU) were not individually re-checked against the live table** — only
+Stanford/MIT/Oxford (this document) and Harvard (the coordinator) were. Whether their old
+records also already reached `university_programs` by the same other route, or genuinely
+haven't yet, is unconfirmed and should not be assumed either way.
+
+**Not acted on.** This connects directly to the new assignment below (§5): the real fix is
+mapping every route by which a row reaches `university_programs`, so "the corpus files" stops
+being treated as if it were the only one.
 
 ---
 
-## 4. Recommendation — awaiting confirmation before any file edit
+## 4. What was done, and what remains open
 
-Nothing in this document has changed a corpus file or the database. Proposed, pending your
-go-ahead:
-
-1. **No action on the 30 already-ingested genuine duplicates** — already safe.
-2. **A note in `drive_batch1_2026-08-17.jsonl` and/or `reverify_batch3_2026-08-17.jsonl`** for
-   the two Frankfurt School records that never landed, recording that they're a known
-   corpus-only duplicate pair, not touching either file's actual data lines.
-3. **No re-minting of the 14 identifier-collision records** performed — the original audit's own
-   recommendation stands, unimplemented, awaiting the same authorisation any corpus-file change
-   needs per this round's instruction.
-4. **The coverage gap in section 3 is reported, not fixed** — recommend a separate pass, scoped
-   and assigned deliberately rather than folded into this one.
+1. **No action on the 30 already-ingested genuine duplicates** — already safe, confirmed.
+2. **Done, authorised.** Corpus-file annotation added for the two Frankfurt School records that
+   never landed — see §2.
+3. **No re-minting of the 14 identifier-collision records performed.** The original audit's own
+   recommendation stands, unimplemented — no authorisation was given for it this round, and it
+   was not asked for.
+4. **The coverage-framing finding in §3 is corrected, not fixed** — it is now recorded as a
+   research-process risk (batches over-claiming their own completeness), not a live-data gap for
+   the four institutions checked. See §5: the actual next step is mapping every route into
+   `university_programs`, not re-researching any of these universities.
