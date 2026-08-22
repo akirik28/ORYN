@@ -1798,3 +1798,64 @@ ways**.
 
 > **A fabricated package can name a file. It cannot populate it with 276 records and two
 > independently-authored verdicts whose specific findings cohere.**
+
+## 8.4pp RULE 28 — a delta check cannot detect that the intent was wrong
+
+RES-V1's own words on why its V1-12b PASS missed the value-domain defect:
+
+> *"My check verified the rewrite matched its own stated purpose and matched the README's
+> description of it, and stopped there. I never asked whether the new text belonged in the field's
+> value domain at all — that's not something a diff-against-intent catches, only a look across the
+> field's own siblings does."*
+
+**Stated as the org's rule:**
+
+> **RULE 28 — A delta check compares a change against its intent. It cannot detect that the intent
+> was wrong.**
+
+**This is the same shape as Rule 27** (*a consistency check between two values cannot detect a
+single-source origin*): **both name a defect class the instrument is constitutionally unable to
+see, no matter how carefully it is run.** Not an effort failure. Not a diligence failure.
+
+RES-V1's general form, recorded verbatim:
+
+> **"A clean, correct-looking answer to the question actually asked can still be sitting right next
+> to the more important question nobody asked yet."**
+
+### All three methods failed, each in its own way
+| Lane | What its instrument could see | Why it missed the defect |
+|---|---|---|
+| RES-V2 | field is **non-uniform** | correctly declined to call a direction from source-side evidence |
+| RES-V1 | change **matches its stated intent** | Rule 28 — never queried the value domain |
+| BASORG | count **merged two populations** | asserted "four rewritten" from its own assignment text |
+
+**The thing that resolved it was opening the file and looking across a field's siblings** — which
+was in no one's method.
+
+### Both verifiers amended their own verdicts rather than leave them standing
+**RES-V2 `d627814`; RES-V1 `20ac5b8`.** Neither was asked to.
+
+> **A verdict that has been overtaken should say so in its own file, not only in a message thread
+> nobody inherits.**
+
+RES-V1's characterization is also stronger than BASORG's spot-check: **110 `"Full-time"` + 6
+`"Full time or part time"` across the other 116 records**, same shape in
+`entry_requirements.international`, **UniStart's key-absent shape matching the 116, not the 3.**
+
+## 8.4qq PACKAGE V1-13 — sweep the class across every delivered corpus
+
+**The question nobody asked yet: is this Adelaide-only, or is it in data already live?**
+
+This defect surfaced because one record happened to be looked at. **Four AU corpora are already in
+the database** (UNSW 217, Monash 178, Sydney 149, UWA 107) and **Ottawa's 276 are ingesting now**.
+
+**Assigned to RES-V1. Read-only; no fixes, no database access.** Deliverables: per-corpus presence
+and counts; a reusable validator check **if** the shape generalizes; and an **explicit split between
+live and not-yet-ingested** — live findings need **Path A** and become founder-decision items,
+corpus findings are fixable at source like Adelaide's.
+
+**Not urgent. A defensible characterization beats a fast one, and "Adelaide-only" is a complete
+answer if that's what it shows.**
+
+**RES-V2 idle with two triggers**: RES-R1's Adelaide fix lands, or V1-13 finds the class somewhere
+needing source verification.
