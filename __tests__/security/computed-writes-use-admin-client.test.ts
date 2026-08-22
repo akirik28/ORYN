@@ -3,15 +3,18 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 /**
- * Regression pin for the paired code change migration 0063 depends on: the guard
- * triggers only work because these three functions' specific writes moved from the
- * caller's RLS-scoped client to the admin client. No live Supabase in this test
- * environment, so this pins the source text -- the same reasoning as every migration
- * text-pin test in this repo, applied to TypeScript instead of SQL. A future edit that
- * quietly reverts one of these writes back to `supabase` re-opens the exact hole
- * docs/research/verification/rls-live-verification-2026-08-22.md documents, silently:
- * the guard trigger would then reset the write on every legitimate call too, the same
- * failure class migration 0062's own self-correction caught before it shipped.
+ * Regression pin for the paired code change migrations 0063 and 0065 depend on: the
+ * guard triggers (0063) and the removed INSERT policy (0065) only work because these
+ * five functions' specific writes moved from the caller's RLS-scoped client to the
+ * admin client. No live Supabase in this test environment, so this pins the source
+ * text -- the same reasoning as every migration text-pin test in this repo, applied to
+ * TypeScript instead of SQL. A future edit that quietly reverts one of these writes
+ * back to `supabase` re-opens the exact hole
+ * docs/research/verification/rls-live-verification-2026-08-22.md documents for 0063's
+ * three tables (the guard trigger would reset the write on every legitimate call too,
+ * the same failure class migration 0062's own self-correction caught before it
+ * shipped) -- and for 0065's two tables, breaks the write outright, since there would
+ * be no INSERT policy left permitting it at all.
  */
 
 function read(relPath: string): string {
@@ -93,5 +96,62 @@ describe("lib/requirements/persist.ts", () => {
 
   test("the file's own header comment no longer claims no admin client is needed", () => {
     expect(src).not.toContain("no admin client needed for either");
+  });
+});
+
+describe("app/(app)/documents/actions.ts", () => {
+  const src = read("app/(app)/documents/actions.ts");
+
+  test("imports and constructs the admin client (tryCreateAdminClient, so a missing secret degrades to a clear error rather than a thrown 500)", () => {
+    expect(src).toContain('import { tryCreateAdminClient } from "@/lib/supabase/admin";');
+    expect(src).toContain("const admin = tryCreateAdminClient();");
+  });
+
+  test("the evidence_files insert uses admin", () => {
+    expect(src).toContain('await admin.from("evidence_files").insert({');
+  });
+
+  test("no write to evidence_files still uses the RLS-scoped client", () => {
+    expect(src).not.toContain('supabase.from("evidence_files").insert(');
+  });
+
+  test("the ownership check, storage upload, evidence_status update, and deleteEvidence all stay RLS-scoped", () => {
+    expect(src).toContain("supabase.from(linkedTable).select(");
+    expect(src).toContain('supabase.storage.from("evidence").upload(');
+    expect(src).toContain("supabase.from(linkedTable).update({ evidence_status:");
+    expect(src).toContain('supabase.from("evidence_files").select("*")');
+    expect(src).toContain('supabase.from("evidence_files").delete()');
+  });
+
+  test("returns a clear error rather than throwing when the admin client is unavailable", () => {
+    expect(src).toContain("if (!admin) {");
+    expect(src).toMatch(/return \{ error: ["'`]Evidence upload is temporarily unavailable/);
+  });
+});
+
+describe("lib/plan/persist.ts", () => {
+  const src = read("lib/plan/persist.ts");
+
+  test("imports tryCreateAdminClient", () => {
+    expect(src).toContain('import { tryCreateAdminClient } from "@/lib/supabase/admin";');
+  });
+
+  test("the ai_recommendations insert uses admin, constructed inside the avoidForNow branch", () => {
+    expect(src).toContain("const admin = tryCreateAdminClient();");
+    expect(src).toContain('await admin.from("ai_recommendations").insert({');
+  });
+
+  test("no write to ai_recommendations still uses the RLS-scoped client", () => {
+    expect(src).not.toContain('supabase.from("ai_recommendations")');
+  });
+
+  test("skips the write with a log rather than failing the whole weekly plan when the admin client is unavailable", () => {
+    expect(src).toContain("[plan] SUPABASE_SECRET_KEY not configured");
+  });
+
+  test("weekly_plans and weekly_actions writes stay RLS-scoped -- only the one guarded table's writer moved", () => {
+    expect(src).toContain('.from("weekly_plans")\n    .upsert(');
+    expect(src).toContain('supabase.from("weekly_actions").delete()');
+    expect(src).toContain('supabase.from("weekly_actions").insert(actionRows)');
   });
 });
