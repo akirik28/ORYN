@@ -12,20 +12,21 @@ land, per BASORG's note.
   V2-5, V2-6, V2-8, V2-9), plus **two** lane-handoff documents (this one and V2-7) — not "ten."
   Same shape of miscount as the "seven" in the V2-7 request (six packages then, corrected the
   same way), off by roughly the same margin again.
-- **The "43" figure — this is the second time, not the first.** BASORG's V2-10 assignment again
-  cites "the 43 false `current_cycle_label` findings chased to zero." V2-7 already addressed
-  this exact claim in the identical phrasing ("43 false label findings you chased to zero"),
-  found zero evidence of it anywhere in the repo, and named the closest real match: V2-4's
-  `current_cycle_label` check flagged 56 candidates, of which most were false positives, resolved
-  to **18 genuine holds — not zero, not 43.** Re-ran the same check just now, including
-  everything V2-8/V2-9 added: still zero hits for "43" anywhere in this lane's verification docs
-  or `ORYN_WORKSTREAMS.md`, other than the NYT record's unrelated `0.43` overlap score and my own
-  prior correction text. **The finding here isn't just "the number is wrong" — it's that an
-  already-corrected, already-pushed correction didn't prevent the same figure from being
-  reasserted verbatim in the next assignment.** Worth BASORG looking into on its own side (a
-  stale cached instruction, a context gap that doesn't carry V2-7's correction forward, or
-  something else) — flagging the pattern rather than quietly re-swatting the number a second
-  time and letting a third instance pass unremarked.
+- **The "43" figure — resolved, and confirmed against the actual source rather than taken on
+  BASORG's trace alone.** BASORG's V2-10 assignment repeated "43 false `current_cycle_label`
+  findings chased to zero" — the same claim V2-7 already addressed once. BASORG has since traced
+  it: the 43 is real, but it's **RES-V1's**, from `docs/research/verification/
+  v1-5_dlopp_p2_p3_verdict.md` on `main` — a `current_cycle_label` monotonicity check RES-V1
+  built during V1-5, ran once, got 43 "findings," read a sample before trusting the count,
+  found 37/43 were paraphrase and the other 6 included a structural mapping-context bug (not a
+  content disagreement), and removed the check rather than ship it. BASORG attributed that
+  package's finding to this lane's V2-4 work, twice, from memory rather than the artifact —
+  **independently confirmed this by reading the V1-5 file directly** (`git show
+  origin/main:docs/research/verification/v1-5_dlopp_p2_p3_verdict.md`) before accepting it,
+  rather than taking a correction on trust the same way the original claim was taken. It checks
+  out exactly as BASORG described. **This lane's own V2-4 near-miss (entry 3 below) was never
+  the 43 and needed no revision — it was already correctly stated as 56 flagged → 18 genuine**,
+  a different package, a different number, a similarly-shaped lesson about the same field.
 
 ## Instrument and tooling near-misses — every one caught before it reached BASORG as a finding
 
