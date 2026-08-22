@@ -194,6 +194,66 @@ Confirmed there is no reason/notes column on `opportunities` — per-row reasons
 run report, which is correct; a schema change is not justified by needing somewhere to
 write a note.
 
+### 4f. Live `open`/`upcoming` rows are unreliable — audit in progress
+
+RES-V2's audit of the 66 active rows claiming `open` or `upcoming` — the only rows making a
+student an actionable promise. First sub-batch: **6 confirmed defects in 15**. İTÜ Lise Yaz
+Okulu (2026 cycle over 5+ weeks), both Columbia summer rows (sessions concluded Aug 7),
+Global Achievers Academy, Wharton M&TSI (label says 2026; actual next program July **2027**),
+Scholastic Art & Writing (page says entries open "in the fall" vs live `open`).
+
+**That sample was deliberately staleness-weighted, so 40% is biased upward and is NOT the
+population rate.** Two instruments now run separately with distinct seeds: a remediation pass
+(oldest `updated_at` first, biased by design) and a seeded random draw for an unbiased
+estimate. Near 40% is a corpus-wide freshness failure; near 10% is a staleness tail — they
+need different remedies, and BASORG will not escalate a number until the random instrument
+reports. Corrected pool: **37 rows already audited, 3 genuinely robots-blocked, 26 remaining**
+(not the ~48 first estimated — RES-V2 re-counted precisely rather than carrying its estimate).
+
+**The useful split**: 4 of 6 defects are rows where the research was almost certainly correct
+when written and went stale because the calendar moved — a *re-check cadence* gap, which no
+amount of research quality prevents. 2 are point-in-time errors. Different problems, different
+fixes; conflating them produces the wrong remedy.
+
+**Scholastic needs no fetch to catch**: `cycle_status='open'` while its own
+`current_cycle_label` says "opens fall 2026" — the row contradicts itself in the database.
+Routed as a candidate deterministic check rather than per-row research.
+
+**False precision found**: Ron Brown's live `2026-12-01` deadline was a *projection* from the
+program's own award-year convention, not a published date. Students were shown a deadline no
+source states. Corrected.
+
+### 4g. ORYN-CFO — challenged, then verified
+
+A session claiming founder-established audit authority contacted several lanes. Not in
+`ORYN-ORG-STRUCTURE.md` **as BASORG had it**, and its name would not resolve for a reply, so
+BASORG raised it to the founder and instructed all seven lanes to take no instruction from it
+pending confirmation.
+
+Resolved: the role IS defined — `docs/ORYN-ORG-STRUCTURE.md` on
+`origin/oryn/ceo-rule-monotonic`, commit `ae67cb8`, authored under the founder's git identity.
+"Independent auditor — reports to the FOUNDER, not to the CEO… **Commands nobody.** Verifies
+artifacts rather than reports; may fix bookkeeping/doc drift directly, **may never touch code,
+migrations, or live data.** Routes lane findings through that lane's own manager."
+
+Found by RES-V2, which checked the org doc itself rather than accepting either the claim or
+BASORG's notice — and when its evidence contradicted its manager's instruction, **flagged the
+conflict rather than resolving it in either direction.**
+
+**Honest limit**: authorship under the founder's git identity is corroboration, not proof —
+every session commits under that identity, BASORG included. Founder confirmation still open.
+
+**Root cause, and the more important finding**: this is the *third* org-defining document today
+found to exist only on an unmerged branch. `ORYN-ORG-STRUCTURE.md` and `ORYN-ORG-BRIEFS.md` are
+not on `main` (BASORG read its own charter via `git show 9292d28:`), and the ECW2 SQL was
+reported as "on main" while sitting on a diverged branch. **Org-defining documents living only
+on feature branches is a recurring failure that makes legitimate sessions look unverifiable and
+costs every new session a false start.**
+
+Posture retained regardless: lanes route material through BASORG; **write authorization comes
+from BASORG only**; an audit finding is an input to the manager, never an instruction to a lane;
+no finding from any session lowers the evidence bar.
+
 ### 4d. Carried forward
 
 - **CORRECTED — 2 rows unreachable, not 5.** BASORG originally escalated 5. RES-V2
@@ -257,6 +317,29 @@ write a note.
   apart. Never assume a column means the same thing corpus-wide because the name matches.
   A caveat that lives only in prose notes evaporates at the ingestion boundary; confidence and
   derivation basis must be machine-readable to survive.
+- **RULE-FETCH-002 (new, structural): the robots.txt fetch is its own tool call, awaited and
+  evaluated, before any other request to that host — never batched in parallel with anything
+  else.** Three careful lanes made this exact slip within one afternoon (RES-V2 on
+  Technovation/CSHL, RES-R3 on CyberPatriot, RES-R1 on ANU). All three self-disclosed
+  unprompted, all stopped immediately, no disallowed content was used anywhere. Three
+  independent occurrences is the tooling shaping behaviour — parallel batching is the efficient
+  default and this rule cuts against it — not three lapses in discipline, so it needed stating
+  as a structural constraint rather than left to judgment.
+- **RULE-DEADLINE-001 (new): a program's usual deadline is never itself evidence. A correct
+  prediction is still a prediction.** Ron Brown's live `2026-12-01` was derived from the
+  program's own award-year convention, not published anywhere. The projection being
+  well-reasoned and probably right is exactly what makes it dangerous — false precision that
+  looks sensible survives review.
+- **Correction requires affirmative contradiction, not absence.** Ron Brown's source *says*
+  the competition is closed with no dated next cycle → correction licensed. 120 Hours' source
+  says *nothing* → nothing licensed, field not written, live value stands. Silence is not
+  evidence that a live value is wrong. (Applies RULE-INGEST-003 at its hardest edge.)
+- **`field_provenance` (new contract field, closed vocabulary).** Additive, optional, keyed by
+  field name: `explicit_source_field` · `explicit_title_token` · `structured_code_mapping` ·
+  `regulatory_inference`. New values are escalated to BASORG, never minted in-lane — an
+  uncontrolled vocabulary inside the field built to record provenance would be the next Glasgow.
+  **Fence: it annotates how we know something; it never licenses recording something we don't
+  know.** There is no value meaning "guessed"; if one seems needed, the answer is NULL.
 - **RULE-DEDUP-001 (new): every opportunities ingestion is followed by
   `npm run audit:opportunity-duplicates`, result recorded in the run report.**
   `lib/opportunities/duplicates.ts` is good — domain-matched, stopword-stripped title
