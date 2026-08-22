@@ -12,6 +12,16 @@ import { join } from "node:path";
  * for the live confirmation this migration fixes (QA account B, a real non-admin session,
  * successfully set its own is_admin=true with no guard in place -- reverted, then
  * independently re-verified reverted).
+ *
+ * AMENDED before this migration was ever applied: an earlier version also guarded
+ * `profile_strength_score`/`completeness_percent`, which was wrong -- their legitimate
+ * writer (`lib/scoring/persist.ts`) authenticates as `authenticated`, not `service_role`,
+ * so that version would have silently frozen every student's score on the first
+ * legitimate recompute after this migration ran. Narrowed to `is_admin` only, which has
+ * no legitimate writer on any role but `service_role`. The two removed columns return in
+ * migration 0063, paired with moving their writer to `createAdminClient()` -- see that
+ * migration and its own tests. The negative test below pins the narrowing itself, so a
+ * future edit can't silently re-add either column without a test failing here first.
  */
 
 const MIGRATION = readFileSync(
@@ -28,17 +38,19 @@ describe("profiles_guard_protected_columns", () => {
     expect(flat).toContain("new.is_admin := old.is_admin;");
   });
 
-  test("also guards profile_strength_score and completeness_percent, and nothing else", () => {
-    // Conservative column list, per ORYN-CEO's explicit instruction: only columns with
-    // their own stated justification in the migration's header comment.
-    expect(flat).toContain("new.profile_strength_score := old.profile_strength_score;");
-    expect(flat).toContain("new.completeness_percent := old.completeness_percent;");
+  test("guards is_admin only -- profile_strength_score/completeness_percent were removed and must stay removed", () => {
     const guardFn = MIGRATION.slice(
       MIGRATION.indexOf("function public.profiles_guard_protected_columns"),
       MIGRATION.indexOf("create trigger profiles_00_guard_protected_columns")
     );
     const assignments = guardFn.match(/new\.\w+ := old\.\w+;/g) ?? [];
-    expect(assignments).toHaveLength(3);
+    expect(assignments).toEqual(["new.is_admin := old.is_admin;"]);
+    // Negative check, not just "exactly one assignment": specifically the two columns
+    // whose legitimate writer authenticates as `authenticated`, not `service_role`. If
+    // either reappears here without their writer also moving to the admin client, this
+    // migration silently breaks the feature it shares a table with.
+    expect(guardFn).not.toContain("profile_strength_score");
+    expect(guardFn).not.toContain("completeness_percent");
   });
 
   test("detects service role by the actual authenticated Postgres role, not a client-set claim", () => {
@@ -49,16 +61,15 @@ describe("profiles_guard_protected_columns", () => {
   });
 
   test("only guards the direct, top-level update (pg_trigger_depth), matching the posts_guard_system_columns precedent", () => {
-    expect(flat).toContain("pg_trigger_depth() <= 1");
+    expect(flat).toContain("pg_catalog.pg_trigger_depth() <= 1");
   });
 
-  test("the trigger fires only when a protected column is actually part of the update", () => {
-    // `before update of is_admin, profile_strength_score, completeness_percent` -- not a
-    // bare `before update` -- so an ordinary profile edit that never touches these three
-    // columns doesn't pay for this trigger at all.
-    expect(flat).toContain(
-      "before update of is_admin, profile_strength_score, completeness_percent on public.profiles"
-    );
+  test("the guard function pins its own search_path, so an earlier-schema function can't shadow pg_trigger_depth", () => {
+    expect(flat).toContain("set search_path = ''");
+  });
+
+  test("the trigger fires only when is_admin is actually part of the update", () => {
+    expect(flat).toContain("before update of is_admin on public.profiles");
   });
 
   test("the migration announces it is not applied", () => {
