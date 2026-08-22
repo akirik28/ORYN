@@ -57,6 +57,7 @@
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
+import type { PostgrestTarget } from "../lib/acquisition/paginate";
 
 export {};
 
@@ -98,15 +99,31 @@ interface LaneContract {
   idField: string;
   idPrefix: string;
   requiredFields: string[];
-  liveTable: string;
-  foreignKeyField: string;
+  /** Set when a lane legitimately has more than one field keyset by design (e.g. an
+   * additive per-university field, or an optional provenance object) — skips the
+   * single-keyset-across-the-batch check, which would otherwise misreport intentional
+   * variation as contract drift. requiredFields is still enforced regardless. */
+  allowKeysetVariation?: boolean;
+  /** Standard shape: verify each record against an EXISTING live row via a foreign key
+   * (DLOPP/ECW — updating/annotating rows that already exist). Both undefined skips the
+   * standard live-identity pass entirely — for a lane whose records propose genuinely
+   * NEW rows with nothing live to reconcile against yet (see customLiveChecks instead). */
+  liveTable?: string;
+  foreignKeyField?: string;
   /** [recordField, liveColumn] pairs that must match exactly. */
-  identityReconciliation: [string, string][];
+  identityReconciliation?: [string, string][];
   requiredLiveVerificationState?: string;
   requiredLiveStatus?: string;
-  enumVocabChecks: EnumVocabCheck[];
+  enumVocabChecks?: EnumVocabCheck[];
   logicalRules: (record: Json, recordId: string) => string[];
-  monotonicityChecks: MonotonicityCheck[];
+  monotonicityChecks?: MonotonicityCheck[];
+  /** Escape hatch for a lane whose live-verification shape isn't "check one existing row
+   * by foreign key" — e.g. AU-R1's records propose programmes with zero live
+   * counterparts yet, so what needs checking is university-name RESOLUTION (via the same
+   * production resolveUniversity() other lanes use) plus corpus-internal consistency
+   * (duplicate URLs, cross-university taxonomy agreement), not row-by-row reconciliation.
+   * Runs in addition to the standard pass when both are configured. */
+  customLiveChecks?: (records: Json[], target: PostgrestTarget) => Promise<{ defects: string[]; findings: string[] }>;
 }
 
 // ---------------------------------------------------------------------------------------
@@ -344,9 +361,197 @@ const ECW_CONTRACT: LaneContract = {
   ],
 };
 
+// ---------------------------------------------------------------------------------------
+// AU-R1 — RES-R1 Australian university programme catalogue, package V1-4
+// ---------------------------------------------------------------------------------------
+
+const AU_R1_FIELD_PROVENANCE_VOCAB = ["explicit_source_field", "explicit_title_token", "structured_code_mapping", "regulatory_inference"] as const;
+
+/** Duplicated from scripts/audit-dedup-convention-drift.ts's loadUniversityCandidates
+ * (same ~25 lines, not worth a shared module for one reused helper this small) — keep the
+ * two in sync if the university-pool-building recipe changes. */
+async function loadUniversityPool(target: PostgrestTarget): Promise<import("../lib/programs/ingest").UniversityLookupRow[]> {
+  const { fetchAllRowsVerified } = await import("../lib/acquisition/paginate");
+  const { excludeSupersededUniversities, loadSupersessionMapViaRest } = await import("../lib/universities/canonical");
+  interface UniversityRow {
+    id: string;
+    name: string;
+    country: string;
+    canonical_entity_id: string | null;
+    website_url: string | null;
+  }
+  interface AliasRow {
+    entity_id: string;
+    alias: string;
+  }
+  interface ExternalIdRow {
+    entity_id: string;
+    id_system: string;
+    external_id: string;
+  }
+  const [{ rows: universities }, { rows: aliases }, { rows: externalIds }] = await Promise.all([
+    fetchAllRowsVerified<UniversityRow>(target, "universities", "id,name,country,canonical_entity_id,website_url", "order=id"),
+    fetchAllRowsVerified<AliasRow>(target, "entity_aliases", "entity_id,alias", "order=id"),
+    fetchAllRowsVerified<ExternalIdRow>(target, "entity_external_ids", "entity_id,id_system,external_id", "order=id"),
+  ]);
+  const aliasesByEntity = new Map<string, string[]>();
+  for (const a of aliases) aliasesByEntity.set(a.entity_id, [...(aliasesByEntity.get(a.entity_id) ?? []), a.alias]);
+  const externalIdsByEntity = new Map<string, Record<string, string>>();
+  for (const e of externalIds) {
+    const existing = externalIdsByEntity.get(e.entity_id) ?? {};
+    existing[e.id_system] = e.external_id;
+    externalIdsByEntity.set(e.entity_id, existing);
+  }
+  const supersessionMap = await loadSupersessionMapViaRest(target);
+  return excludeSupersededUniversities(
+    supersessionMap,
+    universities.map((u) => ({
+      id: u.id,
+      name: u.name,
+      country: u.country,
+      aliases: u.canonical_entity_id ? aliasesByEntity.get(u.canonical_entity_id) : undefined,
+      externalIds: u.canonical_entity_id ? externalIdsByEntity.get(u.canonical_entity_id) : undefined,
+      websiteUrl: u.website_url,
+    }))
+  );
+}
+
+const AU_R1_CONTRACT: LaneContract = {
+  id: "au-r1",
+  description: "RES-R1 — Australian undergraduate programme catalogue (docs/research/university-programs-au/README.md). Records propose NEW programme rows — 0 live university_programs exist for these universities yet — so there is nothing to reconcile against by foreign key; customLiveChecks does university-identity resolution + corpus-internal consistency instead.",
+  idField: "research_program_id",
+  idPrefix: "AU-R1-",
+  // Monash carries one additive field (`atar`) UNSW/Sydney don't — documented, intentional
+  // (README: "Not retrofitted onto UNSW or Sydney — neither platform publishes an
+  // equivalent field at all"), not contract drift.
+  allowKeysetVariation: true,
+  requiredFields: [
+    "research_program_id",
+    "university_name",
+    "university_country",
+    "university_official_domain",
+    "program_name",
+    "degree_level",
+    "degree_type",
+    "faculty_or_school",
+    "subject_hint",
+    "official_program_url",
+    "admissions_url",
+    "source_url",
+    "source_type",
+    "language_of_instruction",
+    "duration",
+    "campus",
+    "delivery_mode",
+    "international_eligible",
+    "researched_at",
+    "researcher_notes",
+    "retrieval_method",
+    "field_provenance",
+    "verification_status",
+  ],
+  logicalRules: (r, id) => {
+    const defects: string[] = [];
+    const fieldProvenance = (r["field_provenance"] as Record<string, unknown>) ?? {};
+
+    // Closed vocabulary (BASORG-owned) — a value outside the 4 is a defect; the object's
+    // total ABSENCE on a field with no special basis is fine (per the README's own fence).
+    for (const [field, basis] of Object.entries(fieldProvenance)) {
+      if (!(AU_R1_FIELD_PROVENANCE_VOCAB as readonly string[]).includes(String(basis))) {
+        defects.push(`${id}: field_provenance.${field}="${String(basis)}" is not in the closed vocabulary [${AU_R1_FIELD_PROVENANCE_VOCAB.join(", ")}]`);
+      }
+    }
+    // The fence itself: a null-valued field must carry no field_provenance entry (nothing
+    // to attribute provenance to on an unknown value) — a populated entry there would mean
+    // provenance is describing a value that doesn't exist.
+    for (const field of ["degree_level", "international_eligible"]) {
+      if (r[field] === null && field in fieldProvenance) {
+        defects.push(`${id}: ${field} is null but field_provenance still has an entry for it ("${String(fieldProvenance[field])}") — provenance on a null value attributes a basis to nothing`);
+      }
+    }
+    if (!String(r["official_program_url"] ?? "").trim()) {
+      defects.push(`${id}: official_program_url is empty`);
+    }
+    if (!String(r["program_name"] ?? "").trim()) {
+      defects.push(`${id}: program_name is empty`);
+    }
+    return defects;
+  },
+  customLiveChecks: async (records, target) => {
+    const defects: string[] = [];
+    const findings: string[] = [];
+
+    // --- 1. University-identity resolution (real production resolveUniversity, same as
+    //        the V1-2 dedup audit) ---
+    const { resolveUniversity } = await import("../lib/programs/ingest");
+    const universities = await loadUniversityPool(target);
+    const byUniversity = new Map<string, Json[]>();
+    for (const r of records) {
+      const record = r as unknown as import("../lib/programs/ingest").ResearchProgramRecord;
+      const { universityId, reason } = resolveUniversity(record, universities);
+      const id = String(r["research_program_id"]);
+      if (!universityId) {
+        defects.push(`${id}: university "${r["university_name"]}" did not resolve — ${reason}`);
+        continue;
+      }
+      if (!byUniversity.has(universityId)) byUniversity.set(universityId, []);
+      byUniversity.get(universityId)!.push(r);
+    }
+
+    // --- 2. Zero duplicate official_program_url, within each file's university AND
+    //        across the whole corpus (R1 claims this; verify independently rather than
+    //        trust the self-report) ---
+    const urlCounts = new Map<string, string[]>();
+    for (const r of records) {
+      const url = String(r["official_program_url"] ?? "");
+      if (!url) continue;
+      if (!urlCounts.has(url)) urlCounts.set(url, []);
+      urlCounts.get(url)!.push(String(r["research_program_id"]));
+    }
+    for (const [url, ids] of urlCounts) {
+      if (ids.length > 1) defects.push(`official_program_url "${url}" appears on ${ids.length} records: ${ids.join(", ")} — duplicate URL, contradicts R1's own zero-duplicate claim`);
+    }
+
+    // --- 3. Taxonomy consistency: does the SAME degree_level label mean the same
+    //        real-world qualification shape across universities? The concrete, checkable
+    //        version: a program whose title itself names a graduate award ("Master of...",
+    //        "Doctor of...") should land in the same taxonomic bucket regardless of which
+    //        university's derivation method produced it. Not a source-truth check (the
+    //        titles/facts are trusted) — a classification-consistency check. ---
+    const GRADUATE_TITLE_TOKEN = /\b(Master of|Doctor of)\b/i;
+    const INTEGRATED_MASTERS_LEVEL = "Bachelor / first-cycle (integrated master's)";
+    for (const r of records) {
+      const title = String(r["program_name"] ?? "");
+      const level = r["degree_level"];
+      if (GRADUATE_TITLE_TOKEN.test(title) && level !== INTEGRATED_MASTERS_LEVEL) {
+        findings.push(
+          `${r["research_program_id"]} (${r["university_name"]}): title "${title}" names a graduate award (Master/Doctor) but degree_level="${String(level)}", not "${INTEGRATED_MASTERS_LEVEL}" — the same real-world combined-degree shape gets a more specific label at other universities in this corpus using an AQF-code-based method; this one used title-token matching that only checks for "Honours"/"Diploma", missing "Master"/"Doctor"`
+        );
+      }
+    }
+
+    // --- 4. Null discipline: scan for postgraduate-credential terms outside the
+    //        already-accounted-for integrated-master's bucket, per university — Monash's
+    //        own corpus correctly excluded 9 such records; confirm nothing equivalent
+    //        slipped into scope elsewhere. ---
+    const POSTGRAD_TERM = /\b(Graduate Certificate|Graduate Diploma|Postgraduate)\b/i;
+    for (const r of records) {
+      const text = `${r["program_name"] ?? ""} ${r["degree_type"] ?? ""}`;
+      if (r["degree_level"] !== INTEGRATED_MASTERS_LEVEL && POSTGRAD_TERM.test(text)) {
+        findings.push(`${r["research_program_id"]} (${r["university_name"]}): "${r["program_name"]}" contains a postgraduate-credential term (Graduate Certificate/Diploma/Postgraduate) — confirm this wasn't meant to be excluded like Monash's 9`);
+      }
+    }
+
+    findings.push(`University resolution: ${byUniversity.size} distinct universities resolved across ${records.length} records, 0 failures` + (defects.some((d) => d.includes("did not resolve")) ? "" : " (all resolved)"));
+
+    return { defects, findings };
+  },
+};
+
 const LANE_CONTRACTS: Record<string, LaneContract> = {
   dlopp: DLOPP_CONTRACT,
   ecw: ECW_CONTRACT,
+  "au-r1": AU_R1_CONTRACT,
 };
 
 // ---------------------------------------------------------------------------------------
@@ -379,7 +584,7 @@ function checkContract(records: Json[], contract: LaneContract): string[] {
     }
     keysets.add(JSON.stringify(Object.keys(r).sort()));
   }
-  if (keysets.size > 1) {
+  if (keysets.size > 1 && !contract.allowKeysetVariation) {
     defects.push(`Batch has ${keysets.size} distinct field keysets across ${records.length} records (expected exactly 1) — the contract drifted mid-batch`);
   }
   return defects;
@@ -393,10 +598,13 @@ function checkIdDiscipline(records: Json[], contract: LaneContract, sourceFiles:
   for (const id of ids) idCounts.set(id, (idCounts.get(id) ?? 0) + 1);
   for (const [id, count] of idCounts) if (count > 1) defects.push(`Record ID "${id}" appears ${count} times within the batch`);
 
-  const fkIds = records.map((r) => String(r[contract.foreignKeyField]));
-  const fkCounts = new Map<string, number>();
-  for (const id of fkIds) fkCounts.set(id, (fkCounts.get(id) ?? 0) + 1);
-  for (const [id, count] of fkCounts) if (count > 1) defects.push(`Foreign key "${contract.foreignKeyField}"="${id}" appears ${count} times within the batch — same live row researched twice`);
+  if (contract.foreignKeyField) {
+    const foreignKeyField = contract.foreignKeyField;
+    const fkIds = records.map((r) => String(r[foreignKeyField]));
+    const fkCounts = new Map<string, number>();
+    for (const id of fkIds) fkCounts.set(id, (fkCounts.get(id) ?? 0) + 1);
+    for (const [id, count] of fkCounts) if (count > 1) defects.push(`Foreign key "${foreignKeyField}"="${id}" appears ${count} times within the batch — same live row researched twice`);
+  }
 
   // Corpus-wide collision check: do any of this batch's own IDs already exist as a
   // DIFFERENT file's ID anywhere else in the corpus? (RULE-CORPUS-ID-001 scoping —
@@ -496,21 +704,28 @@ async function fetchLiveRows(table: string, ids: string[]): Promise<Map<string, 
   return byId;
 }
 
+/** The standard shape: verify each record against an EXISTING live row via a foreign
+ * key. Only meaningful when the contract declares both liveTable and foreignKeyField —
+ * see customLiveChecks for the alternative shape (records proposing new rows). */
 async function checkLiveIdentityAndVocab(records: Json[], contract: LaneContract): Promise<{ defects: string[]; monotonicityFindings: string[] }> {
   const defects: string[] = [];
   const monotonicityFindings: string[] = [];
-  const ids = [...new Set(records.map((r) => String(r[contract.foreignKeyField])))];
-  const live = await fetchLiveRows(contract.liveTable, ids);
+  if (!contract.liveTable || !contract.foreignKeyField) return { defects, monotonicityFindings };
+
+  const foreignKeyField = contract.foreignKeyField;
+  const liveTable = contract.liveTable;
+  const ids = [...new Set(records.map((r) => String(r[foreignKeyField])))];
+  const live = await fetchLiveRows(liveTable, ids);
 
   for (const r of records) {
     const id = String(r[contract.idField]);
-    const fk = String(r[contract.foreignKeyField]);
+    const fk = String(r[foreignKeyField]);
     const row = live.get(fk);
     if (!row) {
-      defects.push(`${id}: ${contract.foreignKeyField}="${fk}" does not exist live in ${contract.liveTable}`);
+      defects.push(`${id}: ${foreignKeyField}="${fk}" does not exist live in ${liveTable}`);
       continue;
     }
-    for (const [recordField, liveColumn] of contract.identityReconciliation) {
+    for (const [recordField, liveColumn] of contract.identityReconciliation ?? []) {
       if (r[recordField] !== row[liveColumn]) {
         defects.push(`${id}: ${recordField}="${String(r[recordField])}" does not match live ${liveColumn}="${String(row[liveColumn])}"`);
       }
@@ -521,7 +736,7 @@ async function checkLiveIdentityAndVocab(records: Json[], contract: LaneContract
     if (contract.requiredLiveStatus && row["status"] !== contract.requiredLiveStatus) {
       defects.push(`${id}: live status="${String(row["status"])}", expected "${contract.requiredLiveStatus}"`);
     }
-    for (const check of contract.enumVocabChecks) {
+    for (const check of contract.enumVocabChecks ?? []) {
       const value = r[check.recordField];
       if (value !== null && value !== undefined && !(check.liveVocab as readonly string[]).includes(String(value))) {
         defects.push(
@@ -529,7 +744,7 @@ async function checkLiveIdentityAndVocab(records: Json[], contract: LaneContract
         );
       }
     }
-    for (const mono of contract.monotonicityChecks) {
+    for (const mono of contract.monotonicityChecks ?? []) {
       const recordValue = r[mono.recordField];
       const liveValue = row[mono.liveColumn];
       if (mono.isRegression(recordValue, liveValue, r)) {
@@ -582,7 +797,21 @@ async function main(): Promise<void> {
   const { defects: liveDefects, monotonicityFindings } = await checkLiveIdentityAndVocab(allRecords, contract);
   const logicalDefects = allRecords.flatMap((r) => contract.logicalRules(r, String(r[contract.idField])));
 
-  const hardDefects = [...allParseErrors, ...contractDefects, ...idDefects, ...liveDefects, ...logicalDefects];
+  let customDefects: string[] = [];
+  let customFindings: string[] = [];
+  if (contract.customLiveChecks) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SECRET_KEY;
+    if (!url || !key) {
+      console.error("Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SECRET_KEY — see API_SETUP.md. customLiveChecks skipped.");
+    } else {
+      const result = await contract.customLiveChecks(allRecords, { url, key });
+      customDefects = result.defects;
+      customFindings = result.findings;
+    }
+  }
+
+  const hardDefects = [...allParseErrors, ...contractDefects, ...idDefects, ...liveDefects, ...logicalDefects, ...customDefects];
 
   const report = {
     lane: contract.id,
@@ -595,6 +824,8 @@ async function main(): Promise<void> {
     liveDefects,
     logicalDefects,
     monotonicityFindings,
+    customDefects,
+    customFindings,
     verdict: hardDefects.length === 0 ? "PASS" : "FAIL",
   };
 
@@ -608,6 +839,12 @@ async function main(): Promise<void> {
   logicalDefects.forEach((d) => console.log("  " + d));
   console.log(`\n--- Monotonicity findings — ingestion-safety, not batch-failing (${monotonicityFindings.length}) ---`);
   monotonicityFindings.forEach((d) => console.log("  " + d));
+  if (contract.customLiveChecks) {
+    console.log(`\n--- Lane-specific checks: defects (${customDefects.length}) ---`);
+    customDefects.forEach((d) => console.log("  " + d));
+    console.log(`\n--- Lane-specific checks: findings/observations (${customFindings.length}) ---`);
+    customFindings.forEach((d) => console.log("  " + d));
+  }
 
   console.log(`\n=== VERDICT: ${report.verdict} ===`);
   console.log(`Hard defects: ${hardDefects.length}. Monotonicity findings: ${monotonicityFindings.length} (these gate ingestion mapping, not the research itself).\n`);
