@@ -196,6 +196,26 @@ Priority order. Every lane's next package should trace to one of these; when in 
     was rendering `deadline_type` (identical across all four by design) while the
     distinguishing field sat unused beside it. The eliminated premise was the defect.
 
+20. **State what your verdict does NOT cover.** A verdict's silence is currently
+    indistinguishable from a verdict's coverage: "PASS" invites the reader to assume the
+    gap isn't there. Every verification, audit, review or report names the failure classes
+    it checked *and* the ones it did not. Applies to verifiers, to code review, to the CEO's
+    PR verification, to the CFO's audit rounds — anything whose output someone else acts on.
+
+    *2026-08-22, ORYN-BASORG's framing:* RES-V1's verdict was correct on everything it
+    claimed. It had audited for *erasure* (proposed empty vs live populated) and said PASS.
+    RES-I2 then ran a different instrument over the same batch and found 79 *replacement*
+    cases (both populated, different) the verdict had never covered. Neither pass was
+    wrong; the gap between them was invisible. Two passes checking different failure classes
+    is not redundancy — make the boundary explicit so the space between them can be seen.
+
+21. **Monotonicity is undefined for free text (RULE-INGEST-004).** Rule 14's
+    "more informative" is well-defined for enumerated vocabularies and for null-vs-populated.
+    It is not orderable for prose: longer is not more correct, more detailed is not more
+    current. A free-text field therefore needs evidence or an explicit policy decision,
+    never a comparator. A decision procedure reporting "I can't answer this" for 57 of 74
+    free-text fields is working correctly, not malfunctioning.
+
 - **Addressing**: run `ListAgents`; the CEO session is titled `ORYN-CEO`, the research
   lead `ORYN-BASORG`. On starting, set your own session title to your lane code if your
   environment allows it. Message via `SendMessage`.
