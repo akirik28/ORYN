@@ -77,6 +77,19 @@ is kept current after every sub-batch, not just at close-out, specifically so th
   majoring-in + 126 standalone-postgraduate + 98 Graduate Diploma/Certificate + 1 blank). See the
   Adelaide section below for the full account, including a genuine (non-duplicate) on-campus/
   online delivery-pathway finding.
+- **Adelaide verification status (2026-08-22, BASORG ruling — read this before assuming Adelaide
+  needs anything further from this lane):** CEO had authorized RES-R1 to self-sample Adelaide as
+  an interim check, explicitly labeled self-verification, not independent verification. RES-R1
+  drew a 20-record random sample (`random.seed(42)`) and had already run it — live re-fetch of
+  each sampled record's `official_program_url`, compared against stored `program_name`,
+  `degree_type`/program code, `duration`, and CRICOS-code presence (proxy for
+  `international_eligible`) — **20/20 clean, zero mismatches** — essentially concurrently with
+  BASORG's ruling arriving. BASORG's ruling: self-verification by the producing lane does not
+  count as independent verification and won't be allowed to read as equivalent (UWA passed this
+  lane's own validation twice and was still 63% wrong at one point). **Adelaide's independent
+  source verification is reassigned to RES-V2; its contract/ID pass to RES-V1, after UWA. RES-R1
+  will not run further verification on Adelaide.** The 20/20 result above is informational only —
+  a data point RES-V2 may or may not find useful — not a substitute for their pass.
 - **This closes all 8 target universities: 5 extracted (UNSW, Sydney, Monash, UWA, Adelaide =
   770 records), 3 deferred by policy (Melbourne, ANU, Queensland) — a property of the web, not a
   gap in this lane's work. See the named deferral section below.**
@@ -110,7 +123,7 @@ University" below.
 | Monash | 31 | **178** | `au_programs_monash_2026-08-22.jsonl` | Complete |
 | Queensland | 40 | 0 | — | **Deferred** — CAPTCHA gate on the catalogue host, see below |
 | UWA | 77 | **107** | `au_programs_uwa_2026-08-22.jsonl` | Complete (two rounds of self-caught fixes — see resumability note above) |
-| Adelaide University | 79 | **119** | `au_programs_adelaide_2026-08-22.jsonl` | Complete |
+| Adelaide University | 79 | **119** | `au_programs_adelaide_2026-08-22.jsonl` | Complete — independent verification assigned to RES-V2 (source) / RES-V1 (contract/ID), not yet run; see resumability note |
 
 Substitution history: Melbourne deferred → Sydney substituted into sub-batch 2 (BASORG-approved).
 ANU deferred → Monash substituted into sub-batch 3 (BASORG-approved).
