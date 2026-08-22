@@ -57,7 +57,9 @@
     "audit:opportunity-duplicates": "tsx scripts/audit-opportunity-duplicates.ts",
     "audit:opportunity-cycle-status": "tsx scripts/audit-opportunity-cycle-status.ts",
     "audit:requirement-program-linkage": "tsx scripts/audit-requirement-program-linkage.ts",
-    "audit:program-corpus-duplicates": "tsx scripts/audit-program-corpus-duplicates.ts"
+    "audit:program-corpus-duplicates": "tsx scripts/audit-program-corpus-duplicates.ts",
+    "audit:dedup-convention-drift": "tsx scripts/audit-dedup-convention-drift.ts",
+    "validate:research": "tsx scripts/validate-research-records.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",

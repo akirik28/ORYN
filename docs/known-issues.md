@@ -105,6 +105,75 @@ blocks anon there. `public_profiles` is the only security-definer view in the sc
 (`security_invoker` unset, i.e. Postgres's default of `false`) and the only one where a
 missing identity check in the view body actually matters.
 
+## Needs founder decision — 85/271 live opportunities (31%) have a defective description
+
+**2026-08-22, BUG-1 triage.** Measured live against `oryn-qa-scratch` (read-only): of the
+271 `opportunities` rows with `status='active'` (i.e. live in Browse —
+`lib/opportunities/browse.ts:43`), **85 (31.4%) carry a description-quality defect** —
+description restates its own title verbatim (77), a raw `http(s)://` URL sitting inside
+the description body (77), truncated mid-word ending in a literal `…` (45), or the title
+itself is an institution name rather than an opportunity (5). Random 8-row sample: 8/8
+genuinely defective, zero false positives. Worst cases: `7aa517a3` is a **UCSC
+course-catalogue entry** ("ECON 1 - 01 Introductory Microeconomics..."), not an
+opportunity at all; `3f7170ba` "AI Scholars" is three separate CMU programmes
+concatenated into one record. Full 85-row inventory (id, title, category, per-row
+signature flags — not corrected values):
+`data/audit/opportunities-description-defects-2026-08-22.md`.
+
+**Root cause, fully traced, not just inferred**: all 214 affected-eligible rows carry
+`source = 'Founder school-counselor Drive corpus...'`. The garbling is **already verbatim
+in the source Google Drive spreadsheet cells** — confirmed by diffing
+`supabase/seed_drive_batch1.sql` against `scripts/drive-import/generate_sql.py`'s own
+1600-char clip (never fires; the ~900-char truncation and ` | `-joined multi-programme
+text are pre-existing in the source, not introduced by any transform in this codebase).
+This is not corruption of previously-good data, and the affected rows have been live
+since the 2026-08-18 import — not new damage, so this was not treated as a
+stop-and-protect event.
+
+**Split into three, per CEO/BASORG (2026-08-22)**:
+- **Tier 1 (6 rows, uncontested — not a judgment call, never valid opportunity records)**:
+  the 5 institution-name-titled rows plus the UCSC course-catalogue row. Routed to
+  RES-I2 to set `status='disabled'` with reason recorded. In flight as of this writing.
+- **Tier 2 (~79 rows)**: re-research-or-retire is a real product-cost tradeoff (a garbled
+  card vs. an empty shelf on ~29% of the live catalogue) touching founder-supplied data —
+  **escalated to the founder by ORYN-CEO, not decided by any lane.** Producing "corrected"
+  titles/descriptions for these from the garbled text was explicitly declined as
+  fabrication — see the inventory doc's own framing. Do not bulk-retire or bulk-rewrite
+  this set without a founder decision.
+- **Ingest-time guard, built this pass** (approved by CEO ahead of the rest of this
+  finding, since BASORG had ~96 records queued behind verification that flow through the
+  same code path): `lib/opportunities/description-quality.ts` +
+  `lib/opportunities/ingest.ts`'s `decideIngestion()`. Deterministic, fail-loud-not-closed
+  per this repo's own precedent (the evidence gate's 2,097 false-rejection episode —
+  `docs/handoffs/evidence-gate-false-rejections-2026-08-22.md`): only the one
+  no-legitimate-form signature (multi-programme `|`-concatenation with a bare-URL
+  segment) is a hard reject (`outcome: "description_defect"`); restates-title,
+  embedded-URL, and trailing-ellipsis are advisory only — surfaced via a new
+  `IngestDecision.warnings` field and folded into `detail` on an otherwise-normal
+  `accepted` outcome, never blocking a correct record. 28 new tests (20 signature-level in
+  `__tests__/opportunities/description-quality.test.ts`, 8 integration-level appended to
+  `__tests__/opportunities/ingest.test.ts`), each signature covered with its negative
+  case. This closes the gate for future ingestion; it does not and cannot retroactively
+  fix the 85 rows already live.
+
+**Investigated and closed, not a defect**: the "Diamond Challenge"/"The Diamond
+Challenge" duplicate pair (`30a605ab`/`cb1ae3e2`, flagged by the
+OPPORTUNITIES-ELIGIBLE-COUNTRIES lane) was checked against the codebase's own dedup
+logic across the full 391-row corpus — this is the *only* same-organization pair above
+threshold in the entire table, so blast radius is 1, not systemic. The purpose-built
+detector for this exact case, `lib/opportunities/duplicates.ts` (domain-matched,
+stopword-stripped title similarity), scores this pair `1.0` similarity /
+`deterministic` confidence, and its own header names Diamond Challenge as one of the
+real pairs it was built from. `cb1ae3e2` is already `status='disabled'` — the live DB
+state is exactly what correctly acting on that tool's output looks like, not a lurking
+bug. (An earlier version of this investigation incorrectly attributed the pair to a
+"hardcoded `organization: null`" bug in `scripts/import-opportunity-corpus.ts` — retracted
+after rereading that file's own header comment in full and re-verifying computationally;
+that script's behavior is deliberate and already disclosed, not a defect. Recorded here
+so the retraction has a durable home, not just a chat message.) No code change made; the
+merge decision on the two rows stays a human/review-queue call, not an automatic one,
+per this org's standing rule against fuzzy-merging entities.
+
 ## Needs founder decision — real conflict found in the founder's own Drive doc
 
 While working autonomously, this session found "ORYN Programlama" (a Google Doc in the
