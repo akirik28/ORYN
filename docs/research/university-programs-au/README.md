@@ -5,9 +5,9 @@ unfinished work, start here.** Sessions in this org have been ending without war
 is kept current after every sub-batch, not just at close-out, specifically so that's survivable.
 
 - **Done, pushed, corpus-validated:** UNSW (217), Sydney (149, degree_level corrected — see fix
-  note below), Monash (178), UWA (**107**, after two rounds of self-caught fixes plus one further duplicate found
-  post-rebuild — see below, this number is the trustworthy one) = **651 records across 4
-  universities.**
+  note below), Monash (178), UWA (**107**, after two rounds of self-caught fixes — see below),
+  Adelaide University (**119**) = **770 records across all 5 extracted universities. All 8 of
+  this package's target universities are now resolved — 5 extracted, 3 deferred by policy.**
 - **UWA went through two rounds of self-caught bugs before landing on a correct, comprehensively
   audited count. Both are recorded here because the first "fix" was itself incomplete, and that
   is the more important lesson than either bug individually.**
@@ -66,21 +66,20 @@ is kept current after every sub-batch, not just at close-out, specifically so th
   first-cycle (integrated master's)`; UNSW and Monash untouched (their basis was already
   correct); `field_provenance` unchanged (`explicit_title_token` — a more complete read, not a
   different kind of evidence).
-- **Investigated, not yet extracted:** Adelaide University — identity question resolved (genuine
-  2026 merger, single settled catalogue, see below), dom/int page-variant structure mapped and
-  invariance-verified on 10 sample programmes, extraction methodology designed and approved by
-  BASORG (fetch international variant for all ~560 URLs, domestic sampled on ~18 for faculty
-  spread, `entry_requirements`/`study_mode` keyed by audience per BASORG's structural ruling — see
-  the Adelaide section below for the full field-extraction pattern). **A majors-vs-degree grain
-  problem already found and designed around, not yet applied to a full run**: Adelaide represents
-  major variants of one degree as separate pages sharing the SAME `Program code` (e.g. "Bachelor
-  of Arts", "Bachelor of Arts majoring in Anthropology" both carry code `BARTS`) — filtered by
-  title text containing "majoring in" (the extraction script is written with this exclusion built
-  in from the start, learning from the UWA experience above rather than repeating it) but the
-  full ~560-URL batch has not yet been run.
-- **Deferred by policy, not by research effort — a property of the web, not a gap in this
-  lane's work:** Melbourne, ANU, Queensland. See the named section below.
-- **Not started:** none remaining in the top 8 after the above.
+- **Adelaide University: complete, 119 records, corpus-wide validated.** Identity resolved
+  (genuine 2026 merger via the institution's own official statement), dom/int page-variant
+  structure mapped and re-verified on a fresh 18-programme sample (title/code/duration: 0
+  mismatches, checked by direct comparison not assumed), the majoring-in grain exclusion designed
+  in from the start this time rather than discovered mid-run — classified in two stages (raw
+  fetch with zero classification decisions, then one classifier built and audited against the
+  complete 559-title census before it ever ran), the same discipline the UWA rebuild established.
+  Every exclusion category reconciled explicitly against the total (559 = 119 in-scope + 215
+  majoring-in + 126 standalone-postgraduate + 98 Graduate Diploma/Certificate + 1 blank). See the
+  Adelaide section below for the full account, including a genuine (non-duplicate) on-campus/
+  online delivery-pathway finding.
+- **This closes all 8 target universities: 5 extracted (UNSW, Sydney, Monash, UWA, Adelaide =
+  770 records), 3 deferred by policy (Melbourne, ANU, Queensland) — a property of the web, not a
+  gap in this lane's work. See the named deferral section below.**
 
 ## Why this lane exists
 
@@ -111,7 +110,7 @@ University" below.
 | Monash | 31 | **178** | `au_programs_monash_2026-08-22.jsonl` | Complete |
 | Queensland | 40 | 0 | — | **Deferred** — CAPTCHA gate on the catalogue host, see below |
 | UWA | 77 | **107** | `au_programs_uwa_2026-08-22.jsonl` | Complete (two rounds of self-caught fixes — see resumability note above) |
-| Adelaide University | 79 | not started | — | Investigated and methodology-approved; not yet extracted — see below |
+| Adelaide University | 79 | **119** | `au_programs_adelaide_2026-08-22.jsonl` | Complete |
 
 Substitution history: Melbourne deferred → Sydney substituted into sub-batch 2 (BASORG-approved).
 ANU deferred → Monash substituted into sub-batch 3 (BASORG-approved).
@@ -441,7 +440,7 @@ award-tokens (Bachelor/Honours/Master+Doctor-combo/Diploma), same method as Sydn
 Monash; `atar` as the structured `{value, scale: "ATAR", source_field}` object BASORG ruled for
 Monash, reused here since the field recurred a third time.
 
-## Adelaide University: identity resolved, catalogue mapped, extraction methodology approved — not yet run in full
+## Adelaide University (119 records, complete)
 
 **Identity, resolved from the source's own statement, not from any prior-knowledge lead:**
 `adelaide.edu.au`'s own homepage schema.org organization markup states directly: *"Adelaide
@@ -497,17 +496,91 @@ only for the same ~18-programme faculty-spread sample already used for invarianc
 documented explicitly as a sample, not full coverage — a domestic student sees no data rather
 than mislabeled international data, an honest, visible gap rather than a silent wrong one.
 
-**A second majors-vs-degree grain problem, found during small-batch testing before any full run
-— structured differently from UWA's, so a straight ported fix would have missed it.** Adelaide
-represents each major as its own page but does NOT give it a different program code the way UWA
-did: "Bachelor of Arts", "Bachelor of Arts majoring in Anthropology", "...majoring in Aboriginal
-Studies", and every other Arts major variant all carry the identical `Program code BARTS`.
-Filtering by course-code prefix (UWA's method) would not catch this — the code is the same.
-**Detection method: the page's own title text contains "majoring in" for every variant page and
-never for the base degree page** — a title-based exclusion, consistent with reading explicit
-title language rather than inferring from a code, the same principle already applied to
-degree_level derivation on this and other platforms. Caught in a 10-URL test batch before
-running the full ~560-URL extraction; not yet applied to a complete run.
+**A second majors-vs-degree grain problem, structured differently from UWA's, so a straight
+ported fix would have missed it — designed around from the start rather than patched after.**
+Adelaide represents each major as its own page but does NOT give it a different program code the
+way UWA did: "Bachelor of Arts", "Bachelor of Arts majoring in Anthropology", "...majoring in
+Aboriginal Studies", and every other Arts major variant all carry the identical `Program code
+BARTS`. Filtering by course-code prefix (UWA's method) would not catch this — the code is the
+same. **Detection method: the page's own title text contains "majoring in" for every variant
+page and never for the base degree page** — a title-based exclusion, built into the classifier
+before the first record was ever written this time, not discovered mid-run.
+
+**Learning directly from the UWA rebuild: classification ran in two stages, and the classifier
+was audited against the complete title census before it was ever applied.** Stage 1 fetched all
+560 sitemap URLs (international variant, 559 succeeded — 1 genuine 404, a stray `/2027/`
+year-navigation URL that shouldn't have been in the degree list) and saved raw facts with **zero
+classification decisions**. Only then was every capitalized token across all 559 titles
+enumerated and every category explicitly assigned before stage 2 ran. This caught a real category
+UWA-style incremental classification would likely have missed until later: **3 genuine non-award
+pathway programmes** — "Aboriginal and Torres Strait Islander Pathway" (code `ATSIP`), "Centre
+for Aboriginal Studies in Music (CASM) Foundation Year" (`FCASM`), "Foundation Studies" (`FNDST`)
+— each individually verified via its own real program code and duration (not assumed from title
+alone), the same category and same verification standard as UNSW's and Monash's non-award
+pathway programmes.
+
+**Full exclusion reconciliation, every term stated (learning from the UWA reconciliation gap —
+BASORG's own reconciliation of that gap fit perfectly and was still wrong, so a number that
+closes is not by itself a verified number; every term here is read directly from the
+classification script's own printed counts, not inferred):**
+
+| Category | Count |
+|---|---|
+| In scope (written) | 119 |
+| Excluded — "majoring in" major-variant pages | 215 |
+| Excluded — standalone postgraduate (Master/Doctor with no Bachelor) | 126 |
+| Excluded — Graduate Diploma/Graduate Certificate | 98 |
+| Excluded — blank title (one `/legacy/` landing page, no real content) | 1 |
+| **Total accounted for** | **559** |
+| Stage-1 fetch failures (the `/2027/` 404) | 1 |
+| **Grand total** | **560** |
+
+**Final distribution:** 69 plain Bachelor, 39 Honours, 5 plain (non-graduate) Diploma
+(`Undergraduate diploma / first-cycle`, a category UWA had zero of — Adelaide genuinely has it:
+Diploma in Building Studies, Legal Studies, Mathematical Studies, Digital Business, Health), 3
+Associate Degree, 3 Non-award pathway. **Zero integrated-master's records** — checked directly
+against the raw fetch (searched for any title containing both "bachelor" and "master"/"doctor")
+rather than assumed absent; Adelaide genuinely has no combined Bachelor+Master/Doctor titles in
+its current undergraduate catalogue, unlike UNSW/Monash/UWA.
+
+**A genuine non-duplicate finding, checked before being mistaken for one:** 7 program names each
+appeared twice with zero duplicate URLs. Investigated each pair rather than assuming — every one
+has a **different `Program code`** and a distinct URL path (`/study/degrees/X/` vs
+`/study/degrees/online/X/`): Adelaide offers the same degree title via two separately-coded
+delivery pathways, on-campus and online, e.g. "Bachelor of Construction Management" is `BCONM`
+on-campus and `XBCMG` online. Not deduplicated — both are genuine, distinct offerings. The
+`delivery_mode` card field didn't populate on either variant, so rather than leave this
+distinction invisible, every one of the 30 records whose URL contains `/degrees/online/` carries
+a `researcher_notes` annotation citing the URL path itself as the source's own structural signal
+for the online-delivery variant.
+
+**Dom/int variant structure, mapped and verified with real comparisons, not assumed —
+BASORG explicitly required checking the domestic-sample title match rather than asserting it
+"by construction," since that exact phrase preceded two of this package's earlier defects.**
+The plain sitemap URL (no suffix) resolves to a page titled "...Information for International
+students" — a bot with no session state receives a variant, not a neutral default. A parallel
+`/dom/` path serves "...Information for Domestic students." Verified on **18 sample programmes**
+spanning every category (plain Bachelor, Honours, Associate Degree, the non-award pathway
+programmes) by fetching both variants and diffing directly:
+
+- **Title, `Program code`, and base `Duration`: 0 mismatches across all 18** — checked by direct
+  string comparison per record, not assumed from the earlier 10-programme check holding.
+- **Genuinely different, not just differently phrased (confirmed again on this fresh sample):**
+  CRICOS code (international-only, structurally expected — CRICOS is specifically the
+  international-enrolment mechanism); study mode (international: "Full-time" only, with explicit
+  prose "Part-time study is not available for international students"; domestic: "Full time or
+  part time" — a real difference in what's actually offered); entry requirements (international:
+  a country-by-country equivalency table; domestic: an ATAR-cutoff/guaranteed-entry scheme with
+  different admission-cycle years referenced).
+
+**BASORG's ruling on how to record the variant split: structure, not metadata.**
+`entry_requirements` and `study_mode` are keyed by audience (`{"international": ...,
+"domestic": ...}`) rather than tagged via `field_provenance` (which describes *how* a value was
+derived, not *which audience* it describes — mixing those axes in one closed enum was rejected as
+the same convention-drift risk that produced a Glasgow-adjacent defect elsewhere in this org).
+Populated for all 119 records on the `international` key; the `domestic` key exists only on the
+18 sampled records, documented explicitly as a sample rather than full coverage — a domestic
+student sees no data rather than mislabeled international data, an honest, visible gap.
 
 **No JSON data blob** (a site-wide organization-level `ld+json` block exists, not per-course);
 facts extracted via labeled text anchors in the flattened page text: `Program code`, a
@@ -671,33 +744,60 @@ both redirect chains to their shared final URL before deciding which to drop, no
 the name match alone) — re-confirmed present after the rebuild rather than assumed carried over,
 since the rebuild re-fetched from the same sitemap and could plausibly have reproduced it.
 
-**Combined corpus check (651 AU records total, UNSW + Sydney + Monash + UWA):** re-ran the
-corpus-wide validator after every retrofit and fix in this package — zero duplicate IDs, zero
-schema failures. Note this validator checks schema/ID uniqueness only, not semantic correctness
-of field values — it would not have caught either UWA classification bug, both of which produced
-well-formed, schema-valid, wrong records. That gap is exactly what the token-census method above
-exists to catch instead, and it's why that method (not just corpus-wide ID validation) is now the
-standard this lane applies before calling any title-token-classified university complete.
+**Adelaide (119):** schema + corpus-wide ID validation clean. Verified with the token-census
+method throughout, not corpus-wide validation alone: the classifier was built and audited against
+the complete 559-title census *before* stage 2 ran (not after, unlike UWA's round 1), so there
+was no incremental-discovery phase to retroactively check. Every exclusion category reconciled
+explicitly against the total (559 = 119 + 215 + 126 + 98 + 1). The 7 duplicate-name pairs were
+investigated individually rather than assumed duplicates and confirmed genuine (different program
+codes, on-campus vs online delivery) — not deduplicated. The dom/int invariance claim was
+re-verified on a fresh 18-programme sample by direct comparison (0 title/code/duration
+mismatches), not re-asserted from the earlier 10-programme check.
+
+**Combined corpus check (770 AU records total, UNSW + Sydney + Monash + UWA + Adelaide):**
+re-ran the corpus-wide validator after every retrofit and fix in this package — zero duplicate
+IDs, zero schema failures. Note this validator checks schema/ID uniqueness only, not semantic
+correctness of field values — it would not have caught either UWA classification bug, both of
+which produced well-formed, schema-valid, wrong records. That gap is exactly what the
+token-census method exists to catch instead, and it's why that method (not just corpus-wide ID
+validation) is now the standard this lane applies before calling any title-token-classified
+university complete — applied to Adelaide from the start, not retrofitted after a defect.
+
+## A verified-but-wrong reconciliation, worth naming next to the platform quirks above
+
+Mid-package, BASORG independently proposed a reconciliation for the UWA exclusion counts (113
+`MJD-` major exclusions, inferred to make 202 + 113 + 107 close to 422) that fit exactly — no
+remainder — and was still wrong. The real terms were 106 major exclusions, 108 pre-dedup in-scope
+(not 107, the post-dedup figure), and 6 fetch failures that weren't in the model at all; three
+separate errors that happened to cancel arithmetically. **A number that fits is not a verified
+number** — the same lesson as every platform-specific assumption in this package, just this time
+applied to an inference about counts rather than about a field's meaning. Recorded here because
+it's a distinct failure shape from the others: a reconciliation that *closes cleanly* is not more
+trustworthy than one that doesn't; it just fails silently instead of loudly.
 
 ## Remaining gaps, in priority order
 
-1. **Adelaide University (rank 79) investigated, methodology approved, not yet extracted** — see
-   above; the largest remaining piece of this package.
-2. **Adelaide University identity question (rank 79) deliberately scheduled last** per BASORG's
-   instruction — the DB holds a "Adelaide University" row (adelaide.edu.au) but no "The
-   University of Adelaide" or "University of South Australia" row; whether this is the newly
-   merged institution or a renamed legacy one is not yet resolved.
-3. **Melbourne and ANU deferred with reason** (see above) — Melbourne pending either a Course
-   Seeker browser-tooling retry or a later robots.txt/WAF-posture recheck; ANU pending either a
-   Wayback retry (rate-limited, not exhausted) or browser tooling against
-   `programsandcourses.anu.edu.au` weighed against its explicit `robots.txt` disallow (that
-   disallow governs regardless of tooling — a browser render would still be crawling a host that
-   named this crawler by name, so this is a policy question for BASORG, not a technical one).
-4. **Monash `M6011`: genuine 404, not resolved.** Unlike UNSW's transient 4511, confirmed on a
+1. **Melbourne, ANU, Queensland deferred with reason** (see the named section above) — Melbourne
+   pending either a Course Seeker browser-tooling retry or a later robots.txt/WAF-posture
+   recheck; ANU pending either a Wayback retry (rate-limited, not exhausted) or a policy decision
+   on `programsandcourses.anu.edu.au`'s explicit `robots.txt` disallow (which governs regardless
+   of tooling); Queensland's CAPTCHA gate has no tooling exception at all under the base operating
+   rules.
+2. **Monash `M6011`: genuine 404, not resolved.** Unlike UNSW's transient 4511, confirmed on a
    manual retry to be a real broken link — the sitemap lists a code that no longer resolves.
    Likely a stale sitemap entry for a retired/renamed program; not investigated further since a
    single missing code out of 503 doesn't warrant more time, but noted rather than silently
-   dropped from the 503-vs-502-vs-178 count chain.
-5. **No postgraduate or research-degree coverage** — out of scope for this package by the original
-   brief (undergraduate only); UNSW's, Sydney's, and Monash's sitemaps/catalogues all index
+   dropped from the count chain.
+3. **Adelaide's domestic entry-requirements/study-mode coverage is a documented 18-programme
+   sample, not full coverage** — a deliberate BASORG-ruled cost decision (see the Adelaide
+   section above), not an oversight. Completing it to full coverage (a second ~560-URL fetch pass
+   against the `/dom/` variant) would be the natural next increment if a future consumer needs
+   domestic-specific data beyond the sample.
+4. **No postgraduate or research-degree coverage** — out of scope for this package by the original
+   brief (undergraduate only); every university's sitemap/catalogue in this package indexes
    postgraduate/research programmes that were not touched here.
+5. **This package's original scope (the top 8 Australian universities by QS 2027 rank) is now
+   fully resolved** — 5 extracted (770 records), 3 deferred by policy. Extending coverage further
+   down the ranking (rank 9+) or to postgraduate levels would be new scope, not a gap in this
+   package, and should come as a new assignment from BASORG rather than this lane's own
+   extension.
