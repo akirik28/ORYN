@@ -592,6 +592,34 @@ would trade the quality mechanism for a handful of rows.
 **Nothing here is harmful while it waits.** Today's live state is honest; an unapplied
 correction is a missing improvement, not a defect. Only Habitat has an expiry.
 
+> ### ⚠️ READ BEFORE INGESTING ANY OF THIS — 325 contract defects are on `main`
+>
+> The 116 records from RES-R2's P2/P3 output (87 summer-programme + 27 remaining-category)
+> **failed contract validation** and were merged anyway, deliberately. Full verdict:
+> `docs/research/verification/v1-5_dlopp_p2_p3_verdict.md`.
+>
+> - **232** missing `record_type`/`lane` fields — systemic, in all 116 records.
+> - **92** `cycle_status_found` format drifts.
+> - **1** logical-consistency defect: the **Interlochen Arts Camp** record's internal year
+>   ambiguity — a live page headed "Camp 2026" carrying `2027-01-15`, the same same-day-
+>   next-year projection pattern found and rejected on the Ron Brown record. Seen three times
+>   independently. **Do not apply this one at all without resolving it first.**
+>
+> **The research itself is sound** — ID discipline passed, `finding_type` 100% clean, the
+> live-status breakdown matches, and a zero-row category was independently confirmed genuine
+> rather than assumed. These are *shape* defects, not truth defects, which is why merging them
+> was the right call: a merged research branch lands proposals, not facts, and the branch was
+> the only durable form that work had after the lane died.
+>
+> **The risk is entirely at ingestion.** An ingester consuming these files unaware either fails
+> loudly on 325 contract violations — fine — or, if the path is lenient, writes malformed
+> records silently, which is not. **Validate against the verdict before ingesting.** Nobody
+> currently owns fixing the field shapes: verifiers don't edit researcher files, RES-R2 is gone,
+> and both ingesters are gone. RES-V1's verdict is the specification for whoever inherits it.
+>
+> *Sequencing note, disclosed: PR #41 was merged by ORYN-CEO before this verdict arrived. PR #32
+> carries the rest of the same batch.*
+
 **Why I didn't just do it myself**: I nearly did, for Habitat specifically, on the reasoning
 that a four-day deadline outranks a territory boundary when the owning lane no longer exists.
 The environment's safety classifier blocked that message, and on reflection it was right to.
