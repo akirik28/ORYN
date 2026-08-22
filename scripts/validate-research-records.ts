@@ -148,6 +148,11 @@ const DLOPP_CONTRACT: LaneContract = {
   description: "RES-R2 — opportunity deadlines & cycle status (docs/research/opportunities-deadlines/README.md)",
   idField: "research_record_id",
   idPrefix: "DLOPP-",
+  // Package V1-5 (P2/P3, RES-R2 now gone): a re-check pass added an additive
+  // `supersedes_record_id` field on 2 of 89 summer_program records — legitimate,
+  // documented correction pattern (not contract drift), same shape as AU-R1's Monash
+  // `atar` field.
+  allowKeysetVariation: true,
   requiredFields: [
     "research_record_id",
     "record_type",
@@ -184,7 +189,11 @@ const DLOPP_CONTRACT: LaneContract = {
     ["category", "category"],
   ],
   requiredLiveVerificationState: "verified_current",
-  requiredLiveStatus: "active",
+  // NOT hard-required (was, for P1) — ORYN-BASORG's later ruling (after the ECW3
+  // under_review finding) scopes research to status='active' as a matter of policy, not
+  // contract; a record referencing a non-active row isn't a contract defect, it's a
+  // reportable scope question. See customLiveChecks below for the breakdown, matching
+  // how the ECW lane reports it.
   enumVocabChecks: [
     {
       recordField: "cycle_status_found",
@@ -262,7 +271,84 @@ const DLOPP_CONTRACT: LaneContract = {
       },
       describe: (_rv, liveValue) => `cycle_label_found is empty but live current_cycle_label already holds real content ("${String(liveValue).slice(0, 70)}...") — a naive full-field overwrite would null it out`,
     },
+    // Replacement-direction check for `deadline`, added for package V1-5 (P2/P3) — the
+    // class RES-I2's guard found 79 holds in on P1 that this contract's erasure-only
+    // checks (above) couldn't see: BOTH sides populated, values DIFFERENT. Safe to check
+    // mechanically here because a date is a structured, exact-comparable value — two
+    // different ISO dates really are a meaningful disagreement, not a paraphrase.
+    {
+      name: "deadline (replacement)",
+      recordField: "found_deadline",
+      liveColumn: "deadline",
+      isRegression: (recordValue, liveValue) => recordValue !== null && recordValue !== undefined && liveValue !== null && liveValue !== undefined && String(recordValue) !== String(liveValue),
+      describe: (recordValue, liveValue) => `found_deadline="${String(recordValue)}" differs from live deadline="${String(liveValue)}" — both populated, not a populate-empty-field case; needs evidence-correctness review (which one is right), not an automatic overwrite either direction`,
+    },
+    // Deliberately NO equivalent "current_cycle_label (replacement)" check — tried one
+    // for this same package, removed it after checking the output, not before. Two
+    // compounding reasons it doesn't work: (1) current_cycle_label is free text —
+    // RULE-INGEST-004 puts free-text content judgments outside this guard's domain, and
+    // exact-string inequality is a bad proxy for "meaningfully different" (37 of the 43
+    // hits were paraphrase — same underlying fact, different wording, e.g.
+    // "2026 (July 13-24, 2026)" vs "2026 session (July 13-24, 2026); registrations
+    // closed"); (2) even a refined "do the leading years disagree" heuristic (7 of 43)
+    // turned out to be a false signal for a structural reason, not just noisy phrasing:
+    // `cycle_label_found` on a closed_historical record describes the HISTORICAL cycle
+    // the record is reporting on, not a proposed replacement value for the live
+    // *current*-cycle label — checked one directly (DLOPP-SP-B2-23): the record's own
+    // `db_state_at_research` already showed live's 2027 label, and its own
+    // `researcher_notes` said so explicitly ("db_state was already correct about 2027
+    // being unannounced"). The record was never proposing an overwrite; a naive
+    // string-diff check couldn't tell the difference. `found_deadline`'s mapping is
+    // simpler (only certain finding_types populate it at all, already enforced in
+    // logicalRules above), which is why the same shape of check is safe for that field
+    // and not for this one.
   ],
+  customLiveChecks: async (records, target) => {
+    const defects: string[] = [];
+    const findings: string[] = [];
+    const ids = [...new Set(records.map((r) => String(r["opportunity_id"])))];
+    const CHUNK = 150;
+    const statusById = new Map<string, string>();
+    for (let i = 0; i < ids.length; i += CHUNK) {
+      const chunk = ids.slice(i, i + CHUNK);
+      const response = await fetch(`${target.url}/rest/v1/opportunities?select=id,status&id=in.(${chunk.join(",")})`, {
+        headers: { apikey: target.key, Authorization: `Bearer ${target.key}` },
+      });
+      if (!response.ok) {
+        findings.push(`Status breakdown check failed: HTTP ${response.status}`);
+        continue;
+      }
+      const rows = (await response.json()) as { id: string; status: string }[];
+      for (const row of rows) statusById.set(row.id, row.status);
+    }
+    const statusCounts = new Map<string, number>();
+    const nonActiveRecords: string[] = [];
+    for (const r of records) {
+      const oid = String(r["opportunity_id"]);
+      const status = statusById.get(oid) ?? "<not found live>";
+      statusCounts.set(status, (statusCounts.get(status) ?? 0) + 1);
+      if (status !== "active") nonActiveRecords.push(`${r["research_record_id"]} (${r["opportunity_title"]}): status="${status}"`);
+    }
+    findings.push(`Status breakdown across ${records.length} records: ${[...statusCounts.entries()].map(([s, c]) => `${s}=${c}`).join(", ")}`);
+    if (nonActiveRecords.length > 0) {
+      findings.push(`${nonActiveRecords.length} records reference non-active opportunities (research is contingent on the row surviving its own review, per ORYN-BASORG's ECW3 ruling):`);
+      for (const line of nonActiveRecords) findings.push(`  ${line}`);
+    }
+
+    // Supersession-awareness: a record with supersedes_record_id is an intentional
+    // correction, not a duplicate researched-twice case — report the pairs so a reader
+    // can see which finding is current without cross-referencing the raw files.
+    for (const r of records) {
+      const supersedes = r["supersedes_record_id"];
+      if (supersedes) {
+        const original = records.find((o) => o["research_record_id"] === supersedes);
+        findings.push(
+          `${r["research_record_id"]} supersedes ${String(supersedes)}${original ? ` (finding_type ${original["finding_type"]} → ${r["finding_type"]})` : " (superseded record not found in this file set)"}`
+        );
+      }
+    }
+    return { defects, findings };
+  },
 };
 
 // ---------------------------------------------------------------------------------------
@@ -600,7 +686,14 @@ function checkIdDiscipline(records: Json[], contract: LaneContract, sourceFiles:
 
   if (contract.foreignKeyField) {
     const foreignKeyField = contract.foreignKeyField;
-    const fkIds = records.map((r) => String(r[foreignKeyField]));
+    // A record carrying `supersedes_record_id` is an intentional, explicit correction of
+    // an earlier record for the same live row — not a duplicate researched-twice case
+    // (the same RULE-CORPUS-ID-001 principle applied to a foreign key instead of an ID:
+    // a real, pointer-declared revision, not an accidental collision). Records that
+    // supersede something are excluded from this count on BOTH sides of the pairing.
+    const supersededIds = new Set(records.map((r) => r["supersedes_record_id"]).filter((v): v is string => typeof v === "string"));
+    const nonSupersessionRecords = records.filter((r) => !r["supersedes_record_id"] && !supersededIds.has(String(r[contract.idField])));
+    const fkIds = nonSupersessionRecords.map((r) => String(r[foreignKeyField]));
     const fkCounts = new Map<string, number>();
     for (const id of fkIds) fkCounts.set(id, (fkCounts.get(id) ?? 0) + 1);
     for (const [id, count] of fkCounts) if (count > 1) defects.push(`Foreign key "${foreignKeyField}"="${id}" appears ${count} times within the batch — same live row researched twice`);
@@ -656,8 +749,28 @@ function checkIdDiscipline(records: Json[], contract: LaneContract, sourceFiles:
         } catch {
           continue;
         }
-        for (const id of uniqueIds) {
-          if (content.includes(id)) defects.push(`ID "${id}" also appears in ${branch}:${path} (different content, blob ${blobHash.slice(0, 12)}) — real corpus collision, not just a shared prefix`);
+        // Parse each line and check the ID against KNOWN id-field VALUES only — never a
+        // raw substring match across the whole file. A raw substring match produces real
+        // false positives: caught live on ECW4-021, cited by its own record_id inside a
+        // *different* record's `notes` field ("...the CTY Residential Program, ECW4-021,
+        // succeeding earlier this wave") — a legitimate cross-reference, not a
+        // duplicate. Substring search can't distinguish "this IS the id" from "this
+        // MENTIONS the id in prose"; field-value equality can.
+        const ID_LIKE_FIELDS = ["research_record_id", "record_id", "research_program_id"];
+        for (const line of content.split("\n")) {
+          if (!line.trim()) continue;
+          let obj: Json;
+          try {
+            obj = JSON.parse(line) as Json;
+          } catch {
+            continue; // not JSONL, or a non-record line in this file — skip rather than false-positive on raw text
+          }
+          for (const field of ID_LIKE_FIELDS) {
+            const value = obj[field];
+            if (typeof value === "string" && uniqueIds.includes(value)) {
+              defects.push(`ID "${value}" also appears as ${branch}:${path}'s own "${field}" (blob ${blobHash.slice(0, 12)}) — real corpus collision, not just a shared prefix or a prose mention`);
+            }
+          }
         }
       }
     }
