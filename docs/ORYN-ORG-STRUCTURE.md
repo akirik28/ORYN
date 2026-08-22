@@ -523,6 +523,31 @@ simplification of the org.
     last. The DOM probe was trusted through multiple retries precisely because it looked more
     rigorous than a screenshot. Sophistication is not evidence.
 
+32. **A fact asserted independently in two documents is a fact that is wrong in one of them.
+    Name the source; don't restate it.** Five instances on 2026-08-22, all in founder-facing
+    docs, all mine:
+
+    - the gate figure drifted to **four different values across three documents**
+    - the backlog item count went **35 → 36 → 37 → 38** in one evening, and the page that
+      restated it was wrong three times — each within minutes of a lane adding an item
+    - `current-state.md` claimed a PR queue of "1 open, 75 merged" when it was empty at 93
+    - two founder-gated migrations (`0063`, `0064`) existed on disk and were **absent entirely**
+      from the page whose only job is to list what needs the founder
+    - the day report's "short version" still described a morning — *~30 PRs, 124 files* — after
+      the day reached 102 PRs and 144 files
+
+    Each individual edit was correct when made. **The drift is structural**: a fact maintained by
+    hand in more than one place has as many chances to be wrong as it has copies, and correcting
+    it in one place makes the others *more* dangerous by making the document look freshly tended.
+
+    **The fix is not vigilance.** Either name the authoritative source (`current-state.md` carries
+    the dated figure) or remove the claim class entirely, as [#83](https://github.com/akirik28/ORYN/pull/83)
+    did for session liveness — it deleted the claim rather than refreshing a number that would rot
+    identically. Refreshing a stale figure buys hours; removing the duplication is permanent.
+
+    Corollary for anything time-bound: **state the moment it describes.** "Verified at `297c220`
+    this morning" ages honestly; "verified" does not.
+
 ## 6. Known founder-pending items no lane may act on unilaterally
 
 - Evidence-gate false rejections (2,097 blocked records) — `docs/handoffs/evidence-gate-false-rejections-2026-08-22.md`
