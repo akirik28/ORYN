@@ -489,6 +489,40 @@ simplification of the org.
     the thing being protected before trusting the claim — not just the caller already in
     front of you.**
 
+31. **A measurement names a moment, not a fact. Prefer observing the result over querying an
+    intermediate.** This was the single most expensive failure mode of 2026-08-22 — **six
+    instances, four sessions, five disguises, in one day** — and it cost the org more than every
+    genuine product defect found that day combined.
+
+    | what was read | read as | actually |
+    |---|---|---|
+    | a `ListAgents` ref | a stable identity | a session that dropped and resumed |
+    | `current-state.md`'s liveness line | current | true when written, false for hours |
+    | React state, immediately after a click | committed | not yet rendered *(twice, one session)* |
+    | a table, mid-apply | the final count | a read during a write |
+    | a session cookie, before a write | this session's identity | already reassigned — **nearly caused a write to another account** |
+    | a DOM probe for a loading attribute | "still loading" | the page had painted; the probe raced it |
+
+    **Every one was a true answer taken at the wrong instant.** Not a wrong tool, not a careless
+    reader — in each case the measurement was correct *about the moment it sampled*, and the
+    error was treating that moment as durable.
+
+    **The remedy that worked, every time it was applied**: check the thing whose state you
+    actually care about, not a proxy that happens to be easier to query.
+
+    - A screenshot shows what a student sees; `querySelector` on a loading flag asks a question
+      whose answer is only meaningful at an instant you don't control.
+    - `git merge-tree --write-tree` computes the merge *result*; both diff forms describe a
+      relationship that squash-merging has already invalidated (rule 27).
+    - A `count(*)` against the live table is the corpus size; a tally of what passed verification
+      is a pipeline state wearing the same clothes (rule 15's sub-rule, which fired twice).
+    - jsdom settled an onboarding defect that a contaminated browser could not, because it is an
+      environment nobody else can write to.
+
+    **Corollary, learned the same day**: reach for the *simplest* available check first, not
+    last. The DOM probe was trusted through multiple retries precisely because it looked more
+    rigorous than a screenshot. Sophistication is not evidence.
+
 ## 6. Known founder-pending items no lane may act on unilaterally
 
 - Evidence-gate false rejections (2,097 blocked records) — `docs/handoffs/evidence-gate-false-rejections-2026-08-22.md`
