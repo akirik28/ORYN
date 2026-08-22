@@ -1,0 +1,73 @@
+[
+  {
+    "file": "data/research/university-programs/ca_programs_alberta_2026-08-22.jsonl",
+    "total": 179,
+    "legacyPass": 83,
+    "classified": {
+      "browser_render": 94,
+      "live_fetch": 2
+    },
+    "unsetStillBlocked": 0,
+    "unsetStillBlockedIds": [],
+    "alreadyHadField": 0
+  },
+  {
+    "file": "data/research/university-programs/ca_programs_mcgill_2026-08-22.jsonl",
+    "total": 288,
+    "legacyPass": 0,
+    "classified": {
+      "archived_capture": 288
+    },
+    "unsetStillBlocked": 0,
+    "unsetStillBlockedIds": [],
+    "alreadyHadField": 0
+  },
+  {
+    "file": "data/research/university-programs/ca_programs_mcmaster_2026-08-22.jsonl",
+    "total": 432,
+    "legacyPass": 0,
+    "classified": {
+      "browser_render": 432
+    },
+    "unsetStillBlocked": 0,
+    "unsetStillBlockedIds": [],
+    "alreadyHadField": 0
+  },
+  {
+    "file": "data/research/university-programs/ca_programs_montreal_2026-08-22.jsonl",
+    "total": 679,
+    "legacyPass": 0,
+    "classified": {
+      "live_fetch": 679
+    },
+    "unsetStillBlocked": 0,
+    "unsetStillBlockedIds": [],
+    "alreadyHadField": 0
+  },
+  {
+    "file": "data/research/university-programs/ca_programs_queens_2026-08-22.jsonl",
+    "total": 337,
+    "legacyPass": 0,
+    "classified": {
+      "live_fetch": 337
+    },
+    "unsetStillBlocked": 0,
+    "unsetStillBlockedIds": [],
+    "alreadyHadField": 0
+  },
+  {
+    "file": "data/research/university-programs/ca_programs_western_2026-08-22.jsonl",
+    "total": 555,
+    "legacyPass": 2,
+    "classified": {
+      "live_fetch": 550
+    },
+    "unsetStillBlocked": 3,
+    "unsetStillBlockedIds": [
+      "PRIO-2026-08-22-2ab23044",
+      "PRIO-2026-08-22-f55e3a84",
+      "PRIO-2026-08-22-51595e4a"
+    ],
+    "alreadyHadField": 0
+  }
+]
