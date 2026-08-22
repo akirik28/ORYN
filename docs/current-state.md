@@ -93,6 +93,34 @@ file is a snapshot, not a live view.
 - `canonical_entities`: **1,172** rows. `entity_verification_queue`: **101** rows still open.
 - `profiles`: **5** — no longer the pre-launch scratch "1", real signups now exist.
 
+## Referential & duplicate integrity (measured 2026-08-22 19:50, ORYN-CEO)
+
+Run directly against live `oryn-qa-scratch` after the day's 96 merges and the Australian
+ingestion. **All clean:**
+
+| check | result |
+|---|---|
+| `university_programs` with a missing university | **0** |
+| `university_requirements` with a missing university | **0** |
+| `university_deadlines` with a missing university | **0** |
+| `university_deadlines.program_id` not in `university_programs` | **0** |
+| `opportunity_matches` with a missing opportunity | **0** |
+| `profile_scores` with a missing profile | **0** |
+| **true duplicate programme rows** | **0 across all 16,770** |
+
+**The duplicate check is worth reading carefully, because a coarser version of it produces a
+false alarm.** 318 `official_program_url` values appear on more than one row, and 120 rows share
+an identical (name, degree_level, url) triple within one university. **Neither is a defect.**
+Many programmes legitimately share one catalogue URL — Turkey's largest group has 391 rows on a
+single YÖK Atlas page, which is expected while those rows have no per-programme identifier
+(backlog item 26). And the identical-triple rows are genuinely distinct programmes: Harvard's two
+"Economics" entries are the **Harvard College `AB`** and the **Extension School `ALB`** — same
+name, same level, same catalogue URL, different school and different degree designation.
+
+Duplicate identity for a programme therefore requires **name + degree_level + degree_type +
+faculty_or_school + campus + url**. Under that definition there are zero duplicates. Under the
+name+level+url definition alone there appear to be 120, and that number is wrong.
+
 ## Migrations
 
 Applied through `20260821184903_requirement_shape_representability` — this **is** migration
