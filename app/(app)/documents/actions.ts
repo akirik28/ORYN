@@ -3,10 +3,21 @@
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
+import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import { isEvidenceLinkableTable } from "@/lib/validation/evidence";
 
 const MAX_EVIDENCE_SIZE_BYTES = 15 * 1024 * 1024;
 
+/**
+ * The evidence_files INSERT below uses the admin client, not the caller's RLS-scoped
+ * one -- migration 0065. `evidence_files`' own RLS policy only ever pinned
+ * `user_id = auth.uid()`, which doesn't stop a direct insert from setting
+ * `verification_status: 'verified'` on a freshly-created row; the ownership check just
+ * below (does `linked_id` in `linked_table` actually belong to this user) is a
+ * separate, still-RLS-scoped check against a *different* table and is unaffected by
+ * this. Every other operation here -- the ownership read, the storage upload, the
+ * evidence_status update, and deleteEvidence below -- stays on `supabase`, unchanged.
+ */
 export async function uploadEvidence(formData: FormData): Promise<{ error?: string }> {
   const session = await requireUser();
   const userId = session.userId!;
@@ -19,6 +30,12 @@ export async function uploadEvidence(formData: FormData): Promise<{ error?: stri
   if (typeof linkedTable !== "string" || !isEvidenceLinkableTable(linkedTable)) return { error: "Invalid item type." };
   if (typeof linkedId !== "string" || !linkedId) return { error: "Choose which item this evidence supports." };
   if (file.size > MAX_EVIDENCE_SIZE_BYTES) return { error: "File is too large (15MB max)." };
+
+  const admin = tryCreateAdminClient();
+  if (!admin) {
+    console.error("[evidence] SUPABASE_SECRET_KEY not configured — cannot record evidence");
+    return { error: "Evidence upload is temporarily unavailable. Please try again shortly." };
+  }
 
   const supabase = await createClient();
 
@@ -33,7 +50,7 @@ export async function uploadEvidence(formData: FormData): Promise<{ error?: stri
   const { error: uploadError } = await supabase.storage.from("evidence").upload(filePath, buffer, { contentType: file.type, upsert: false });
   if (uploadError) return { error: `Upload failed: ${uploadError.message}` };
 
-  const { error: insertError } = await supabase.from("evidence_files").insert({
+  const { error: insertError } = await admin.from("evidence_files").insert({
     user_id: userId,
     linked_table: linkedTable,
     linked_id: linkedId,

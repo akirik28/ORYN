@@ -2,6 +2,7 @@ import "server-only";
 
 import { startOfWeek, formatISO } from "date-fns";
 import { createClient } from "@/lib/supabase/server";
+import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import { generateWeeklyPlan } from "@/lib/ai/weekly-plan";
 import { createNotification } from "@/lib/notifications/create";
 import type { WeeklyAction, WeeklyPlan } from "@/types/database";
@@ -93,14 +94,25 @@ export async function getOrCreateWeeklyPlan(userId: string, opts?: { force?: boo
   }
 
   if (generation.avoidForNow) {
-    await supabase.from("ai_recommendations").insert({
-      user_id: userId,
-      title: generation.avoidForNow.activity,
-      reason: generation.avoidForNow.reason,
-      recommendation_class: "avoid_for_now",
-      category: "weekly_plan",
-      related_dimension: null,
-    });
+    // Migration 0065: ai_recommendations' own RLS policy no longer permits an INSERT
+    // from the caller's RLS-scoped session at all (its content is the advisor's own
+    // voice -- a forged row impersonates Oryn, not just the forger's own metrics). This
+    // is one optional side-effect of plan generation, not its purpose, so an
+    // unconfigured admin client logs and skips this write rather than failing the
+    // whole weekly plan -- same discipline as lib/scoring/persist.ts.
+    const admin = tryCreateAdminClient();
+    if (admin) {
+      await admin.from("ai_recommendations").insert({
+        user_id: userId,
+        title: generation.avoidForNow.activity,
+        reason: generation.avoidForNow.reason,
+        recommendation_class: "avoid_for_now",
+        category: "weekly_plan",
+        related_dimension: null,
+      });
+    } else {
+      console.error("[plan] SUPABASE_SECRET_KEY not configured — skipping avoid-for-now recommendation write");
+    }
   }
 
   await createNotification({
