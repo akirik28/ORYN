@@ -117,8 +117,61 @@ DB row (`canonical_entities.id = c20b9be3-0e60-4509-b008-371668c5f196`) demonstr
 both the mistyped `country_code` and the honest `verification_state` the UI
 contradicts.
 
+### Finding C (ALARMING — escalated live, not held for the final report): onboarding's step transitions desync from what's clicked, silently saving wrong data — reproduced twice under clean conditions
+
+**This is the reason Findings A/B's "wrong school" symptom kept recurring even after I
+thought I'd corrected for it.** Not a search-relevance issue at all — a step-transition
+bug in the wizard itself.
+
+**What was directly observed, under increasingly controlled conditions:**
+
+- A single, verified click on "Continue" from the School screen (step 1, all three
+  fields visibly correct — "United States" / "Lincoln High School" / "AP" — confirmed via
+  screenshot immediately before the click) did not advance the wizard at all, even after
+  a full 3-second wait with no further interaction.
+- The *next* click — after adding a `hover` before the click and a 1.5s wait after,
+  specifically to rule out an automated-click timing artifact — landed **two steps
+  forward**, on Target Geography (step 3), **skipping Interests (step 2) entirely**. Its
+  content never rendered, never appeared in a screenshot, was never consciously
+  interacted with.
+- The same double-step happened in reverse: two "Back" clicks from Target Geography
+  landed on School (step 1), again skipping Interests.
+- Selecting a target geography and clicking "Finish" showed the button label change to
+  "Finish" while the *visible content stayed on Target Geography's screen* — a direct,
+  visible desync between which step's UI is rendered and which step's transition logic
+  is active — immediately before final submission.
+
+**What actually got saved, checked directly against the database, not inferred:**
+
+- `profiles.school_name = "MEF Lisesi"` — **not** "Lincoln High School", the entity I
+  selected, confirmed on screen, immediately before advancing. This is the second time
+  this exact wrong value was saved, the second time under conditions where I never
+  clicked on "MEF Lisesi" myself.
+- `student_interests` has exactly one row: **"Economics"** — a value from the Interests
+  screen's own option set, despite that screen's content never once being visibly
+  rendered to me in this entire pass. Something clicked it, or its default state got
+  committed, on a step I never saw.
+
+**Conclusion**: the wizard's `AnimatePresence`-driven step transitions
+(`features/onboarding/onboarding-wizard.tsx`) are not reliably synchronized with what a
+click actually lands on — a click can affect a different step's state than the one
+currently rendered on screen. The practical, confirmed consequence: a real student
+completing onboarding through the standard forward flow can have **the wrong school**
+and **interests they never chose** silently written to their profile, with
+`onboarding_completed` set `true` and no error, no warning, and nothing in the UI to
+suggest anything went wrong. Every downstream feature that reads `school_name` or
+`student_interests` — scoring, matching, the advisor's own context-building — would be
+reasoning from data the student never actually provided.
+
+**Escalated directly to ORYN-CEO now, per standing instruction, rather than held for the
+end of this audit.** Not fixed — audit scope only, and this specific class of bug (state/
+render desync in a five-step client wizard) needs careful, deliberate diagnosis, not a
+rushed fix mid-audit.
+
 ## Remaining items — not yet reached
 
-Onboarding screens 3-5 (interests, target geography — reached but not completed;
-CV import/manual entry), and checklist items 3-16, are not yet walked. Continuing now
-that the org-wide disk emergency that paused this package is resolved.
+Interrupted a second time by this finding's own investigation, immediately after
+resolving the org-wide disk emergency that caused the first interruption. Checklist
+items 3-16 are not yet walked. Item 2 (onboarding) itself is functionally "works, but
+unsafely" — a student CAN complete it, but cannot trust what gets saved without checking
+their own profile afterward, which is a meaningfully different verdict than "works."
