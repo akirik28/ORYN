@@ -216,6 +216,27 @@ Priority order. Every lane's next package should trace to one of these; when in 
     never a comparator. A decision procedure reporting "I can't answer this" for 57 of 74
     free-text fields is working correctly, not malfunctioning.
 
+22. **A queued PR's branch is frozen.** Once you hand a PR to the merge lane, stop pushing
+    to it. New material goes in a new PR. If you genuinely must amend a queued PR, withdraw
+    it from the queue explicitly first and re-queue it afterwards as a fresh item.
+
+    *2026-08-22:* ORYN-CEO pushed two more rules onto a branch MERGE-1 had already reviewed
+    and was about to merge. `gh pr merge` merges the PR's live HEAD, not the SHA that was
+    tested — so unreviewed commits reached `main` through a gate that never saw them. Benign
+    that time. MERGE-1's fix (re-check the HEAD SHA immediately before merging) is the other
+    half; this rule is the half the author owes.
+
+23. **A rule that depends on remembering it needs a mechanical check.** When a rule is
+    adopted, ask what would catch a violation *without* anyone recalling the rule. If the
+    answer is "nothing", it is a hope rather than a control — write the check.
+
+    *2026-08-22, ORYN-CFO's observation:* the CEO adopted "cite the PR when referencing
+    something not yet on `main`" after CFO caught a dead reference — then produced another
+    dead reference **inside the fix for that very error**, an hour later. Not a discipline
+    failure; evidence that a memory-dependent rule fails under load, which is exactly when
+    it matters. The control: a gate check on every docs PR asking whether each cited item,
+    path or section resolves against `main` *as it will stand after this merge*.
+
 - **Addressing**: run `ListAgents`; the CEO session is titled `ORYN-CEO`, the research
   lead `ORYN-BASORG`. On starting, set your own session title to your lane code if your
   environment allows it. Message via `SendMessage`.
