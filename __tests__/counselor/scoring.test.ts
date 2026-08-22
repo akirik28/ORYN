@@ -234,6 +234,26 @@ describe("rankCandidates — non-opportunity kinds", () => {
     expect(ranked[0].score).toBeGreaterThan(50);
   });
 
+  // Tier 2, docs/handoffs/feat1-territory-audit-2026-08-22.md: this candidate's own backing
+  // requirement isn't in requirementCandidateInputs (state([]) below) — a "should never
+  // happen" case, same shape as scoreOpportunityCandidate's entry-not-found branch, which
+  // honestly defaults to DATA_CONFIDENCE_SCORE.low. This branch used to default to .medium
+  // instead: an absence of data reading as a real, moderate confidence level. Confirms the
+  // fix, not just the pre-existing "still scores/is eligible" assertion above.
+  test("a requirement_action candidate whose backing requirement is missing from state reports low confidence, not medium", () => {
+    const candidate: CandidateAction = {
+      source: { kind: "requirement_action", universityId: "uni-1", requirementId: "req-missing", status: "unknown" },
+      title: "Add the information needed to check: SAT score (Test University)",
+      category: "requirement_action",
+      addressesDimensions: [],
+      verificationState: null,
+      sourceUrl: null,
+      deadline: null,
+    };
+    const ranked = rankCandidates([candidate], [], state([]));
+    expect(ranked[0].confidence).toBe("low");
+  });
+
   test("profile_task candidates score higher when the profile is less complete", () => {
     const candidate: CandidateAction = {
       source: { kind: "profile_task", checklistKey: "Add a career goal" },
