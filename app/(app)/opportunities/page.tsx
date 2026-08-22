@@ -11,6 +11,7 @@ import { OpportunityFilterBar } from "@/features/opportunities/opportunity-filte
 import { integrationStatus } from "@/lib/env";
 import { PageHeader } from "@/components/oryn/page-header";
 import { EmptyState } from "@/components/oryn/empty-state";
+import { ErrorState } from "@/components/oryn/error-state";
 import type { Opportunity, OpportunityCategory } from "@/types/database";
 
 export const metadata = { title: "Opportunities" };
@@ -45,7 +46,7 @@ export default async function OpportunitiesPage({
   const userId = session.userId!;
   const isBrowse = params.view === "browse";
 
-  await refreshOpportunityMatches(userId);
+  const { refreshed: matchesRefreshed } = await refreshOpportunityMatches(userId);
   const supabase = await createClient();
 
   const tabParams = new URLSearchParams();
@@ -59,6 +60,10 @@ export default async function OpportunitiesPage({
   return (
     <div className="space-y-6">
       <PageHeader title="Opportunities" description="Personalized matches — highest-value first." />
+
+      {!matchesRefreshed ? (
+        <ErrorState description="We couldn't refresh your matches just now. Match scores and eligibility below are your last known result, not necessarily current." />
+      ) : null}
 
       <div className="inline-flex gap-1 rounded-xl border bg-card p-1">
         <Link href="/opportunities" className={cn(TAB, !isBrowse ? TAB_ACTIVE : TAB_INACTIVE)}>

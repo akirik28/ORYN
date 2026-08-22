@@ -21,9 +21,9 @@ function read(relPath: string): string {
 describe("lib/scoring/persist.ts", () => {
   const src = read("lib/scoring/persist.ts");
 
-  test("imports and constructs the admin client", () => {
-    expect(src).toContain('import { createAdminClient } from "@/lib/supabase/admin";');
-    expect(src).toContain("const admin = createAdminClient();");
+  test("imports and constructs the admin client (tryCreateAdminClient, not the throwing createAdminClient -- see __tests__/opportunities/refresh-matches-admin-degradation.test.ts and __tests__/scoring/recompute-admin-degradation.test.ts for why)", () => {
+    expect(src).toContain('import { tryCreateAdminClient } from "@/lib/supabase/admin";');
+    expect(src).toContain("const admin = tryCreateAdminClient();");
   });
 
   test("all three guarded writes use admin, not supabase", () => {
@@ -49,9 +49,9 @@ describe("lib/scoring/persist.ts", () => {
 describe("lib/opportunities/persist-matches.ts", () => {
   const src = read("lib/opportunities/persist-matches.ts");
 
-  test("imports and constructs the admin client", () => {
-    expect(src).toContain('import { createAdminClient } from "@/lib/supabase/admin";');
-    expect(src).toContain("const admin = createAdminClient();");
+  test("imports and constructs the admin client (tryCreateAdminClient, not the throwing createAdminClient -- see __tests__/opportunities/refresh-matches-admin-degradation.test.ts and __tests__/scoring/recompute-admin-degradation.test.ts for why)", () => {
+    expect(src).toContain('import { tryCreateAdminClient } from "@/lib/supabase/admin";');
+    expect(src).toContain("const admin = tryCreateAdminClient();");
   });
 
   test("the opportunity_matches upsert uses admin", () => {
@@ -74,9 +74,9 @@ describe("lib/opportunities/persist-matches.ts", () => {
 describe("lib/requirements/persist.ts", () => {
   const src = read("lib/requirements/persist.ts");
 
-  test("imports and constructs the admin client", () => {
-    expect(src).toContain('import { createAdminClient } from "@/lib/supabase/admin";');
-    expect(src).toContain("const admin = createAdminClient();");
+  test("imports and constructs the admin client (tryCreateAdminClient, not the throwing createAdminClient -- see __tests__/opportunities/refresh-matches-admin-degradation.test.ts and __tests__/scoring/recompute-admin-degradation.test.ts for why)", () => {
+    expect(src).toContain('import { tryCreateAdminClient } from "@/lib/supabase/admin";');
+    expect(src).toContain("const admin = tryCreateAdminClient();");
   });
 
   test("the student_requirement_evaluations upsert uses admin", () => {

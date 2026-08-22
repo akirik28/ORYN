@@ -64,6 +64,41 @@ service-role client** — a design decision with real blast radius (it changes w
 write to a table currently modeled as user-owned), not something to bolt a policy split
 onto without deciding the shape first. Needs routing to whoever owns the plan pipeline.
 
+**Fixed this session: the paired code change above introduced a live crash on `main`,
+caught by ORYN-CEO before any user hit it.** `createAdminClient()` throws *synchronously*
+when `SUPABASE_SECRET_KEY` is unset; `refreshOpportunityMatches`/
+`refreshRequirementEvaluations` call it unconditionally at function entry and are
+`await`ed, unguarded, from four page render paths (dashboard, `/opportunities`,
+`/opportunities/[id]`, `/universities/[id]`) — an unconfigured secret key turned "matches
+don't refresh" into "the whole page 500s," violating AGENTS.md non-negotiable #8. Fixed:
+both now use `tryCreateAdminClient()` (already existed in `lib/supabase/admin.ts`,
+written after an earlier, unrelated instance of this exact failure mode) and return
+early with a server-side log instead of throwing. A silent skip alone would have violated
+Rule 4 (presenting possibly-stale matches as current with no signal), so the two
+`/opportunities` surfaces plus the dashboard's opportunity preview now show
+`components/oryn/error-state.tsx`'s existing Phase-45-idiom banner ("We couldn't refresh
+your matches just now...") whenever the refresh was skipped this render — reusing the
+existing skip-vs-refreshed distinction (`{ refreshed: boolean }`, added to
+`refreshOpportunityMatches`'s return value) rather than a new freshness-timestamp feature.
+`student_requirement_evaluations`/`profile_scores` got the crash-fix but not this UI
+treatment — ORYN-CEO's distinction: Rule 4's freshness mandate targets *external* facts
+(an opportunity's own eligibility, which can change independent of the student); these
+two are Oryn's own computation over the student's own data, closer to Phase 41's history
+surface than to a trust requirement, and `student_requirement_evaluations`' one read call
+site doesn't even fetch its timestamp column today (would need its own, small, separate
+change). `recomputeCareerProfile` (the fourth affected function, four Server Action call
+sites — `profile/actions.ts`, `professional-actions.ts`, `skills-actions.ts`,
+`onboarding/actions.ts`) got the same `tryCreateAdminClient()` treatment for consistency,
+though it was never actually crashing anything: all four callers already wrap it in their
+own try/catch. Regression tests: `refreshOpportunityMatches`/`refreshRequirementEvaluations`
+tested empirically (real function call, real env var removed, no live DB needed — both
+check admin availability before touching any client at all) in
+`__tests__/opportunities/refresh-matches-admin-degradation.test.ts`;
+`recomputeCareerProfile` pinned by source text in
+`__tests__/scoring/recompute-admin-degradation.test.ts` (a live-session-dependent
+behavioral test wasn't feasible in this environment — stated as a real gap, not silently
+assumed equivalent).
+
 ## Needs founder decision — CRITICAL: any authenticated user can self-grant admin
 
 **2026-08-22, BUG-1, live RLS verification package, surface 2 (admin gate)**. Full

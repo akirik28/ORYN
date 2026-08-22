@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import { assembleScoringFacts } from "./assemble-facts";
 import { computeCareerProfile } from "./index";
 import { computeCounselingCompleteness } from "./completeness";
@@ -26,10 +26,24 @@ import { computeCounselingCompleteness } from "./completeness";
  * tell a real recompute apart from a forged direct write. Before this change all three
  * writes ran on `supabase` too, which is exactly what let a student overwrite them
  * directly -- see docs/research/verification/rls-live-verification-2026-08-22.md.
+ *
+ * USES `tryCreateAdminClient()`, not `createAdminClient()` -- unlike this function's two
+ * siblings (lib/opportunities/persist-matches.ts, lib/requirements/persist.ts), this one
+ * was NOT actually crashing anything: all four of its call sites (app/(app)/profile/
+ * actions.ts, professional-actions.ts, skills-actions.ts, app/(onboarding)/onboarding/
+ * actions.ts) already wrap it in their own try/catch, logging and continuing on any
+ * thrown error. Fixed here anyway, for the same reason the other two needed it: relying
+ * on every current AND FUTURE caller remembering to wrap this in try/catch is exactly
+ * the kind of convention-only safety this same day already showed can't be trusted
+ * (migration 0062's own self-correction, then this exact regression, both from the
+ * identical "the legitimate path assumed something about who's calling it" root cause).
+ * If the admin client isn't configured, the score/completeness are still computed and
+ * returned (harmless -- computing them needs no admin client at all), but none of the
+ * three writes happen; logged once, not silently.
  */
 export async function recomputeCareerProfile(userId: string, opts?: { snapshotReason?: string }) {
   const supabase = await createClient();
-  const admin = createAdminClient();
+  const admin = tryCreateAdminClient();
   const facts = await assembleScoringFacts(supabase, userId);
 
   const [profileResult, skillsResult, featuredResult, contactResult] = await Promise.all([
@@ -64,6 +78,11 @@ export async function recomputeCareerProfile(userId: string, opts?: { snapshotRe
     featuredCount: featuredResult.count ?? 0,
     hasContactInfo,
   });
+
+  if (!admin) {
+    console.error("[scoring] SUPABASE_SECRET_KEY not configured — computed career profile but skipped persisting it");
+    return { careerProfile, completeness };
+  }
 
   const calculatedAt = new Date().toISOString();
   const { error: scoresError } = await admin.from("profile_scores").upsert(

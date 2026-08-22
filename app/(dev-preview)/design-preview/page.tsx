@@ -50,6 +50,7 @@ export default function DesignPreviewPage() {
         upcomingDeadlines={FIXTURE_DEADLINES}
         targetUniversities={FIXTURE_TARGET_UNIVERSITIES}
         opportunityPreview={FIXTURE_OPPORTUNITIES.map((o) => ({ title: o.opportunity.title, matchScore: o.matchScore }))}
+        opportunityMatchesRefreshed={true}
       />
     </PreviewShell>
   );

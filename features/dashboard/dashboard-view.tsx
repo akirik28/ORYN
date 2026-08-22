@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/oryn/page-header";
 import { SectionHeader } from "@/components/oryn/section-header";
 import { InsightCard } from "@/components/oryn/insight-card";
 import { EmptyState } from "@/components/oryn/empty-state";
+import { ErrorState } from "@/components/oryn/error-state";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
 import { ScoreRing } from "@/features/dashboard/score-ring";
 import { WeeklyFocus } from "@/features/dashboard/weekly-focus";
@@ -40,6 +41,11 @@ export interface DashboardViewProps {
   upcomingDeadlines: Awaited<ReturnType<typeof getUpcomingDeadlines>>;
   targetUniversities: Awaited<ReturnType<typeof getTargetUniversitiesWithDetails>>;
   opportunityPreview: { title: string; matchScore: number }[];
+  /** False only when refreshOpportunityMatches skipped its write this render (the admin
+   * client wasn't configured) -- never for "genuinely zero matches," which is its own,
+   * non-stale outcome. AGENTS.md Phase 45 / Rule 4: never let a page imply this preview
+   * is current when it might not be. */
+  opportunityMatchesRefreshed: boolean;
 }
 
 export function DashboardView({
@@ -56,6 +62,7 @@ export function DashboardView({
   upcomingDeadlines,
   targetUniversities,
   opportunityPreview,
+  opportunityMatchesRefreshed,
 }: DashboardViewProps) {
   const hasAiPlan = Boolean(weeklyPlan && weeklyPlan.actions.length > 0);
   const usingCounselorFallback = !hasAiPlan && counselorThisWeek.length > 0;
@@ -204,6 +211,9 @@ export function DashboardView({
               </Link>
             }
           />
+          {!opportunityMatchesRefreshed ? (
+            <ErrorState description="We couldn't refresh your matches just now. The list below is your last known result, not necessarily current." />
+          ) : null}
           {opportunityPreview.length > 0 ? (
             <ul className="space-y-2">
               {opportunityPreview.map((opp) => (

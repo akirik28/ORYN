@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { refreshOpportunityMatches } from "@/lib/opportunities/persist-matches";
 import { PageHeader } from "@/components/oryn/page-header";
+import { ErrorState } from "@/components/oryn/error-state";
 import { SectionHeader } from "@/components/oryn/section-header";
 import { SourceBadge } from "@/components/oryn/source-badge";
 import { StatusBadge } from "@/components/oryn/status-badge";
@@ -54,7 +55,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
   const { data: opportunity } = await supabase.from("opportunities").select("*").eq("id", id).single();
   if (!opportunity) notFound();
 
-  await refreshOpportunityMatches(userId);
+  const { refreshed: matchRefreshed } = await refreshOpportunityMatches(userId);
   const [matchRes, savedRes, sourcesRes] = await Promise.all([
     supabase.from("opportunity_matches").select("*").eq("user_id", userId).eq("opportunity_id", id).maybeSingle(),
     supabase.from("saved_opportunities").select("status").eq("user_id", userId).eq("opportunity_id", id).maybeSingle(),
@@ -77,6 +78,10 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
           />
         }
       />
+
+      {!matchRefreshed ? (
+        <ErrorState description="We couldn't refresh your match for this opportunity just now. The eligibility and match details below are your last known result, not necessarily current." />
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-2">
         {SELECTIVITY_LABEL[opportunity.selectivity_tier] ? <StatusBadge label={SELECTIVITY_LABEL[opportunity.selectivity_tier]!} tone="neutral" /> : null}

@@ -27,7 +27,7 @@ export default async function DashboardPage() {
   const profile = await getCurrentProfile();
   const supabase = await createClient();
 
-  await refreshOpportunityMatches(userId);
+  const { refreshed: opportunityMatchesRefreshed } = await refreshOpportunityMatches(userId);
 
   // Counselor Core Phase L/B4 — kicked off concurrently with the queries below, isolated
   // from them: an unexpected failure computing Counselor Core's deterministic state must
@@ -157,6 +157,7 @@ export default async function DashboardPage() {
       upcomingDeadlines={upcomingDeadlines}
       targetUniversities={targetUniversities}
       opportunityPreview={opportunityPreview}
+      opportunityMatchesRefreshed={opportunityMatchesRefreshed}
     />
   );
 }
