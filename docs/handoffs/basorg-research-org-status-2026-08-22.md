@@ -761,6 +761,62 @@ Consequence for verification design: RES-V1's contract/ID pass **correctly** cle
 records and would have cleared these too — they are contract-valid. Only a source-truth pass catches
 this class. That is the concrete argument for both verifier lanes existing.
 
+## 8.4e The unvetted tier IS the Drive corpus
+
+Resolving a discrepancy BASORG introduced (relaying "214 Drive-corpus rows" into an
+active-scoped brief without noting the scope) produced a better fact than the correction:
+
+| status | Drive-corpus rows |
+|---|---|
+| `under_review` | **113** |
+| `active` | **96** |
+| `disabled` / `expired` | 5 |
+| **all statuses** | **214** |
+
+Corpus-wide `under_review` is also **113**. **Every row in the unvetted tier came from that one
+import.** The Drive corpus split roughly **96 admitted / 113 held back.**
+
+Two consequences: the quality gate performed considerably better on that import than assumed —
+those 113 are a single provenance deliberately not admitted, not a random backlog. And it
+sharpens the wrong-target-URL measurement: the 271 active rows are 96 Drive-corpus and 175 from
+other provenances, so **a defect rate that differs by provenance is a different finding than a
+uniform one.**
+
+## 8.4f RES-R2's orphaned output FAILS contract conformance — 325 defects, no owner
+
+RES-V1 validated the 116 records (87 summer_program + 27 remaining-category) that RES-R2 left in
+open PRs when its session ended. **FAIL**: 232 missing `record_type`/`lane` fields (systemic,
+all 116 records), 92 `cycle_status_found` format drifts, 1 logical-consistency defect
+(Interlochen's internal year ambiguity).
+
+**The research itself checks out** — ID discipline PASS, `finding_type` 100% clean, live-status
+breakdown matching, `academic_program`'s zero-row absence independently verified. **These are
+shape defects, not truth defects**, and must not be read as a quality indictment of that lane.
+
+**Nobody can fix them**: verifiers never edit researcher files, RES-R2 is gone, both ingesters
+are gone. Unassigned, with `v1-5_dlopp_p2_p3_verdict.md` as the specification, for whoever
+inherits the opportunities research territory.
+
+**#41 was merged carrying these defects** (ORYN-CEO, before the verdict landed, disclosed
+unprompted). The right call regardless: contract defects bite at **ingestion**, not at merge, and
+merging research proposals makes nothing a live fact. Recorded in founder-backlog item 34 — in a
+place a future ingester actually reads, rather than only in a verdict file. **Loud failure on 325
+contract violations is fine; silent acceptance by a lenient path is not.**
+
+**Interlochen now has three independent sightings** — RES-R2's original research, RES-V2's
+browser re-fetch (live `2027-01-15` against a page headed "Camp 2026"), RES-V1's internal
+consistency check. Same projection pattern as Ron Brown. Will not be applied without resolution.
+
+## 8.4g MERGE-1 is alive but unresponsive
+
+Verified in `ListAgents` (2h uptime) — **not gone, not answering.** Three unanswered questions
+across two senders (two from ORYN-CEO, one from BASORG about #41). **Work queued to it should be
+planned on the assumption it will not move.** #32 remains open and carries the rest of the batch
+above.
+
+Distinct from the six sessions that exited outright. A lane that is alive and silent looks
+identical in a session list to one that is working.
+
 ## 8.5 If you inherit this org
 
 1. **Ask each lane what it holds before assigning anything.** Never assume a slot is free.
