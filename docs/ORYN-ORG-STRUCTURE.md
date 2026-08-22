@@ -411,6 +411,22 @@ simplification of the org.
       resulting record is internally inconsistent — the very feature that seems to prove a
       single-writer bug is the signature of two writers.
 
+    **AMENDED, same evening — allocation alone does not work.** Within an hour of this rule
+    being written, a lane holding a correct exclusive allocation still wrote to another lane's
+    account. **Cookies are shared across tabs within one browser instance**, so a session can
+    follow this rule exactly, open a tab for an unrelated reason, and have a write land on a
+    different account with no error, no prompt and nothing visible — it surfaced only because an
+    unexpected redirect happened to expose it. The lane self-reported it, verified the blast
+    radius against the live database before assuming anything, and removed exactly one row.
+
+    **So: verify identity at the point of write, not at login, and by cookie rather than by
+    screen content.** Screen content renders a session that may since have changed; the cookie is
+    what the server will actually act on. "I logged in as X" and "this write will land on X" are
+    different claims, and only the second one matters.
+
+    This is rule 27's timing variant again — **a true answer taken at the wrong instant** — and
+    it is the fifth instance in one day, across four sessions, and the first to cause a write.
+
     Note what did survive: UI-1's independent diagnosis, which rested on **static source code**
     rather than on the live row, and which it had explicitly declined to corroborate against an
     account it noticed was moving under it. When a fixture is shared, the artifact that cannot
