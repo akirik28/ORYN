@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -67,6 +67,11 @@ export function OnboardingWizard() {
   const [step, setStep] = useState(0);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  // Guards goNext/goBack against a second activation before the first has actually
+  // changed `step` — see the effect below. Continue/Back have no `disabled` state of
+  // their own (unlike Finish), so a real double-click or two fast keypresses previously
+  // called setStep's functional updater twice in a row and silently skipped a step.
+  const isAdvancing = useRef(false);
 
   const [goals, setGoals] = useState<string[]>([]);
   const [country, setCountry] = useState("");
@@ -78,21 +83,29 @@ export function OnboardingWizard() {
   const [targetGeographies, setTargetGeographies] = useState<TargetGeography[]>([]);
   const [reviewedItems, setReviewedItems] = useState<ReviewedExtractedItem[]>([]);
 
+  useEffect(() => {
+    isAdvancing.current = false;
+  }, [step]);
+
   function toggle<T>(list: T[], value: T, setter: (v: T[]) => void) {
     setter(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
   }
 
   function goNext() {
+    if (isAdvancing.current) return;
     setError(null);
     if (step === 1 && (!country.trim() || !schoolName.trim() || !curriculum)) {
       setError("Fill in your country, school, and curriculum to continue.");
       return;
     }
+    isAdvancing.current = true;
     setStep((s) => Math.min(s + 1, TOTAL_STEPS - 1));
   }
 
   function goBack() {
+    if (isAdvancing.current) return;
     setError(null);
+    isAdvancing.current = true;
     setStep((s) => Math.max(s - 1, 0));
   }
 
