@@ -508,6 +508,64 @@ open thread: whether other security-definer views rest on the same incomplete-gr
 
 ---
 
+## 31. Build the UPDATE-by-id apply path, or 1,429 verified URL corrections stay unapplied
+
+**Action**: decide who builds it — a fresh RES-I1 session, or a code lane tomorrow.
+**The situation**: 1,429 `university_programs.official_program_url` values are known-defective by
+category (pagination links, portal roots, archived cycles). Corrections have been researched
+**and independently verified** — RES-V2 sampled a stratified n=80 with a recorded seed and found
+**zero** failures in either failure mode (doesn't resolve / resolves to the wrong programme).
+Cleared to apply wholesale.
+**Why they can't be applied**: the apply path doesn't exist. `decideIngestion` — the ingestion
+machinery everything else goes through — structurally cannot do an UPDATE by id; it decides
+between insert and skip. RES-I1 delivered a *design* for the missing path
+(`docs/handoffs/i1-supersede-gap-design-2026-08-22.md`, complete and specific, including an
+audit trail distinguishing enrichment from correction) and stated explicitly that it was a
+design and not an implementation. That lane's session has since exited.
+**Why I didn't just assign it**: building a new live-data write path plus an audit table that
+may need its own migration is substantial new machinery, and your standing instruction today was
+not to destabilise the project while you were away. Every lane still running is doing bounded,
+revertible work; this isn't that shape. The research org correctly refused to have its
+opportunities-ingester cross into `university_*` territory to cover the gap.
+**Urgency**: none. These URLs have been wrong for days; another day changes nothing.
+**Depends on**: your call on who builds it.
+
+## 32. Product decision: should `university_programs.degree_type` hold more than one award?
+
+**Action**: decide whether a programme can record multiple qualifications.
+**Why it surfaced**: Glasgow's 62 `degree_type` enrichments were verified 30/30 factually
+correct — and **83% of the sampled programmes are multi-award**. Glasgow's own pages list 2–4
+valid qualifications for one programme (`BSc/MSci`, `BEng/MEng`, `MA(SocSci)/LLB/MA`), and the
+field holds exactly one, **selected by extraction order rather than judgment**. The tell is a
+Politics programme whose `MA/LLB/MA(SocSci)` options resolved to "LLB".
+**The concrete harm, which is what makes this decidable**: a student searching for MEng will
+miss a programme recorded as BEng. That's a real miss on a real search, not an abstraction.
+**Handled correctly in the meantime, no data at risk**: ORYN-BASORG ruled to apply the ~10
+single-award records and hold the ~51 multi-award ones. Its reasoning is worth repeating because
+it names the whole day's theme precisely — *writing "BSc" for a BSc/MSci programme isn't false;
+it presents an extraction artifact as an editorial fact, and the field's authority does the
+misleading.*
+**Depends on**: nothing technical — a schema/product judgment. ORYN-CFO was asked to weigh in.
+
+## 33. Ten `_backup_*`/staging tables in `public`: drop them, or move them out
+
+**Action**: decide to drop them or relocate them to a non-exposed schema.
+**Why it matters, precisely**: they are **not exposed today** — RLS is enabled on all ten with
+zero policies, which denies everything, verified. But they each carry Supabase's default
+schema-wide `anon` grant (SELECT/UPDATE/DELETE). ORYN-BASORG's framing: *a loaded gun with the
+safety on, and the safety is a thing people turn off casually.* A single permissive policy, or
+one `ALTER TABLE … DISABLE ROW LEVEL SECURITY` during an incident, turns it into live anonymous
+CRUD over a copy of real data — and these are exactly the tables where that happens, because
+they're throwaway snapshots nobody owns, documents, or re-reviews.
+**The trade-off**: dropping them loses the rollback safety net they exist to provide. They're
+16–264 kB, so size isn't the issue.
+**Mitigation already in place**: standing rule adopted org-wide — RLS is never disabled on a
+`_backup_*` or staging table for any reason; a lane needing to inspect one queries as a
+privileged role instead.
+**Depends on**: your call. It's destructive DDL against live data, so it waited for you.
+
+---
+
 ## Environment hazard (not a decision, but you should know)
 
 **The primary checkout `/Users/adasarpkirik/Desktop/Founder/ORYN` sits on branch
