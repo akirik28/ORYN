@@ -325,7 +325,31 @@ approve migrations one at a time. **Nothing is broken while it waits** — the c
 honest about countries and quiet about the rest, and no student is being told something false
 about a country restriction.
 
-### Onboarding: one bug fixed, one isolated, neither closed by guesswork
+### Onboarding: the first click a new student makes appears to do nothing
+
+**Confirmed live at the end of the evening, and it is the defect I'd fix first.**
+
+A student opens onboarding, clicks Continue on the very first screen — and **nothing visibly
+happens.** The wizard's internal state advances correctly; the progress bar moves. The heading
+and the content stay exactly as they were, for five seconds and counting. A screenshot taken
+after the click shows the progress bar further along while the content is pixel-identical to
+before it.
+
+It corrupts nothing. A separate fix, already merged, stopped the second click from skipping a
+screen. But this is **the first interaction anyone ever has with Oryn**, and it looks broken. A
+sixteen-year-old whose first click appears dead doesn't file a bug report — they close the tab.
+Every other defect on tonight's list requires a student to already be using the product.
+
+It was found the hard way, and the path is worth recording because two lanes reached it from
+opposite directions. One noticed the symptom in a browser whose evidence later turned out to be
+contaminated by another session. The other reproduced it in a test environment nobody can
+contaminate, then isolated it by elimination to a single animation property. The obvious
+explanation — that the test environment simply can't complete animations — was the leading
+theory for an hour, and tonight's clean-room reproduction **disproved it**: it happens in a real
+browser too. Diagnosis of the exact production mechanism is in progress; the fix waits on it
+rather than guessing between three plausible shapes.
+
+### Also: one bug fixed, one isolated, neither closed by guesswork
 
 A student clicking Continue twice quickly could **skip a screen entirely** — the button had no
 guard, unlike Back and Finish. Fixed and merged.
