@@ -25,16 +25,18 @@ describe("migration numbering", () => {
   test("0058 is not duplicated, even though a later migration now exists", () => {
     // Two lanes collided on a number once already. This fails loudly if another lane
     // lands a 0058 too, instead of one of them silently never running. This test only
-    // pins 0058's own uniqueness — it does not assert 0058 is the highest number in the
-    // directory forever; migration 0059 (schema-gaps-design, 2026-08-22) legitimately
-    // follows it. Bump the literal below when the next migration lands, the same way this
-    // one did — it is a collision guard, not a permanent ceiling.
+    // pins each landed migration's own uniqueness — it does not assert any of them is the
+    // highest number in the directory forever; migration 0060 (degree_level
+    // canonicalization, 2026-08-22) legitimately follows 0059. Bump the literal below when
+    // the next migration lands, the same way this one did — it is a collision guard, not a
+    // permanent ceiling.
     const numbers = readdirSync(MIGRATIONS_DIR)
       .filter((f) => f.endsWith(".sql"))
       .map((f) => f.slice(0, 4));
     expect(numbers.filter((n) => n === "0058")).toHaveLength(1);
     expect(numbers.filter((n) => n === "0059")).toHaveLength(1);
-    expect(Math.max(...numbers.map(Number))).toBe(59);
+    expect(numbers.filter((n) => n === "0060")).toHaveLength(1);
+    expect(Math.max(...numbers.map(Number))).toBe(60);
   });
 });
 
