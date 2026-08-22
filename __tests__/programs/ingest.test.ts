@@ -183,6 +183,57 @@ describe("decideIngestion", () => {
     expect(decision.programRow).toBeNull();
   });
 
+  describe("structured retrieval_method routes the evidence gate (evidence-gate-false-rejections fix)", () => {
+    // The real attestation shape the prose gate wrongly rejected: a live HTTP 200 fetch of the
+    // institution's own page, stated explicitly, just not in the gate's expected vocabulary.
+    const MONTREAL_STYLE_PROSE = "Retrieved directly from the university's own official admissions site, which returned HTTP 200 with no bot-mitigation gate.";
+
+    test("live_fetch passes the gate even though the prose would fail the legacy matcher", () => {
+      const r = record({ retrieval_method: "live_fetch", verification_status: MONTREAL_STYLE_PROSE });
+      const decision = decideIngestion(r, UNIVERSITIES, new Set());
+      expect(decision.outcome).toBe("accepted");
+      expect(decision.programRow?.verification_state).toBe("verified_current");
+    });
+
+    test("browser_render passes the gate", () => {
+      const r = record({ retrieval_method: "browser_render", verification_status: "Retrieved live via browser after the site's WAF challenge cleared automatically." });
+      expect(decideIngestion(r, UNIVERSITIES, new Set()).outcome).toBe("accepted");
+    });
+
+    test("archived_capture stays out — honest archive sourcing is still not a live confirmed fetch", () => {
+      const r = record({ retrieval_method: "archived_capture", verification_status: "Retrieved from the Internet Archive Wayback Machine's capture of this program's page." });
+      const decision = decideIngestion(r, UNIVERSITIES, new Set());
+      expect(decision.outcome).toBe("insufficient_evidence");
+      expect(decision.detail).toContain("archived_capture");
+    });
+
+    test("search_summary stays out", () => {
+      const r = record({ retrieval_method: "search_summary", verification_status: "Found via search results." });
+      expect(decideIngestion(r, UNIVERSITIES, new Set()).outcome).toBe("insufficient_evidence");
+    });
+
+    test("a malformed retrieval_method fails closed, even with legacy-passing prose", () => {
+      const r = record({ retrieval_method: "direct_fetch", verification_status: "Verified - official page fetched and read" });
+      const decision = decideIngestion(r, UNIVERSITIES, new Set());
+      expect(decision.outcome).toBe("insufficient_evidence");
+      expect(decision.detail).toContain("not a recognized value");
+    });
+
+    test("a legacy record (no retrieval_method) is judged exactly as before — the bar does not drop", () => {
+      // Same Montréal-style prose WITHOUT the structured field: still blocked, because absence
+      // of the field must never widen the gate.
+      const r = record({ verification_status: MONTREAL_STYLE_PROSE });
+      expect(decideIngestion(r, UNIVERSITIES, new Set()).outcome).toBe("insufficient_evidence");
+    });
+
+    test("a declared live_fetch contradicted by the record's own prose fails", () => {
+      const r = record({ retrieval_method: "live_fetch", verification_status: "Verified - official programme result; page retrieval blocked" });
+      const decision = decideIngestion(r, UNIVERSITIES, new Set());
+      expect(decision.outcome).toBe("insufficient_evidence");
+      expect(decision.detail).toContain("contradicts");
+    });
+  });
+
   describe("evidence is judged independently of university resolution", () => {
     // The defect this covers: evidence used to be checked only after a record had resolved to
     // a university, so a record with both problems was audited as `unresolved_university` and

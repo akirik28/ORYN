@@ -67,12 +67,14 @@ Confirmed on this pass — no schema change needed before scaling past the curre
   "source_url": "https://promys.org/apply",
   "source_type": "official_primary",
   "verification_status": "Verified - official page fetched and read",
+  "retrieval_method": "live_fetch",
   "researched_at": "2026-08-17"
 }
 ```
 
 Required: `title`, `organization`, `category`, `official_url`, `source_url`, `source_type`,
-`verification_status`, `researched_at`. `selectivity_evidence` is required whenever
+`verification_status`, `researched_at`, and — for records researched after 2026-08-22 —
+`retrieval_method`. `selectivity_evidence` is required whenever
 `selectivity_tier` would resolve to anything above `open_enrollment` — free text is fine,
 but it must cite the actual mechanism (acceptance rate, nomination, exam), not just assert
 a tier.
@@ -80,8 +82,13 @@ a tier.
 ## Verification gate
 
 Same shape as programs: `official_url`/`source_url` present, `source_type` in the valid
-set, `verification_status` reads as page-confirmed (not a search snippet), not a duplicate
-by `lib/opportunities/dedup.ts`'s rule. A candidate with a real identity but ambiguous
+set, the retrieval actually read the live source page — `retrieval_method` is `live_fetch`
+or `browser_render` (a closed enum shared with the programs pipeline, see
+`lib/acquisition/retrieval-method.ts` and
+`docs/research-handoff-university-programs.md` for the full vocabulary and the
+backward-compatibility rule; legacy records without the field are prose-matched on
+`verification_status` exactly as before, and a malformed value fails closed) — and not a
+duplicate by `lib/opportunities/dedup.ts`'s rule. A candidate with a real identity but ambiguous
 organizer resolution is still insertable (unlike university programs) — `organization` is
 `canonical_preferred_custom_fallback`, not `canonical_required` — but should still resolve
 to an existing canonical entity where one plausibly exists rather than always minting a

@@ -1,5 +1,10 @@
 import { sourceAuthority, domainOf } from "@/lib/acquisition/source-authority";
+import { judgeRetrievalEvidence, looksPageConfirmed } from "@/lib/acquisition/retrieval-method";
 import { isDuplicateOpportunity, normalizeTitle, type DedupCandidate } from "./dedup";
+
+/** Re-exported for existing consumers/tests — the single implementation now lives in
+ * lib/acquisition/retrieval-method.ts, shared with the programs pipeline. */
+export { looksPageConfirmed };
 
 /** One record from the research handoff contract — see
  * docs/research-handoff-opportunities.md for the full field-by-field spec. */
@@ -41,6 +46,12 @@ export interface ResearchOpportunityRecord {
   source_url: string;
   source_type: string;
   verification_status: string;
+  /** How the source page's content was actually obtained — a closed enum
+   * (lib/acquisition/retrieval-method.ts: live_fetch | browser_render | archived_capture |
+   * search_summary). The evidence gate routes on this declared fact when present; records
+   * without it (the pre-existing corpus) fall back to prose-matching verification_status.
+   * A present-but-unrecognized value fails closed. */
+  retrieval_method?: string | null;
   researched_at: string;
 }
 
@@ -64,15 +75,6 @@ const VALID_CYCLE_STATUS = new Set(["open", "upcoming", "closed", "date_not_anno
 const VALID_SELECTIVITY_TIER = new Set(["extremely_selective", "highly_selective", "selective", "competitive_award", "open_enrollment", "unknown"]);
 const VALID_LOCATION_MODE = new Set(["online", "in_person", "hybrid"]);
 const SELECTIVITY_REQUIRING_EVIDENCE = new Set(["extremely_selective", "highly_selective", "selective", "competitive_award"]);
-
-/** Mirrors lib/programs/ingest.ts's looksPageConfirmed — a verification_status counts as
- * page-confirmed only when it explicitly says so, never merely because a URL was found. */
-export function looksPageConfirmed(verificationStatus: string): boolean {
-  const s = verificationStatus.toLowerCase();
-  if (!s.includes("verified")) return false;
-  const blockedMarkers = ["retrieval blocked", "page unfetched", "not fetched", "search result only", "unfetched"];
-  return !blockedMarkers.some((marker) => s.includes(marker));
-}
 
 export type IngestOutcome = "accepted" | "duplicate" | "insufficient_evidence" | "malformed_source" | "malformed_field" | "rejected";
 
@@ -160,10 +162,14 @@ export function decideIngestion(
     };
   }
 
-  if (!looksPageConfirmed(record.verification_status)) {
+  // Routed on the structured retrieval_method when the record declares one; legacy records
+  // (no field) are prose-matched exactly as before — see lib/acquisition/retrieval-method.ts
+  // for the full policy and the backward-compatibility rule.
+  const retrieval = judgeRetrievalEvidence(record.retrieval_method, record.verification_status);
+  if (!retrieval.ok) {
     return {
       outcome: "insufficient_evidence",
-      detail: `verification_status "${record.verification_status}" reads as a search result, not a confirmed fetched page.`,
+      detail: retrieval.detail,
       row: null,
       matchedExistingId: null,
     };

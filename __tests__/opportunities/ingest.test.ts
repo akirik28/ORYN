@@ -83,6 +83,32 @@ describe("decideIngestion", () => {
     expect(decision.row).toBeNull();
   });
 
+  describe("structured retrieval_method routes the evidence gate (shared with the programs pipeline)", () => {
+    test("live_fetch passes even though the prose would fail the legacy matcher", () => {
+      const r = record({ retrieval_method: "live_fetch", verification_status: "Retrieved directly from the organizer's own site, HTTP 200." });
+      expect(decideIngestion(r, []).outcome).toBe("accepted");
+    });
+
+    test("archived_capture stays out", () => {
+      const r = record({ retrieval_method: "archived_capture", verification_status: "Retrieved from the Wayback Machine's capture of the organizer's page." });
+      const decision = decideIngestion(r, []);
+      expect(decision.outcome).toBe("insufficient_evidence");
+      expect(decision.detail).toContain("archived_capture");
+    });
+
+    test("a malformed retrieval_method fails closed, even with legacy-passing prose", () => {
+      const r = record({ retrieval_method: "fetched", verification_status: "Verified - official page fetched and read" });
+      const decision = decideIngestion(r, []);
+      expect(decision.outcome).toBe("insufficient_evidence");
+      expect(decision.detail).toContain("not a recognized value");
+    });
+
+    test("a legacy record (no retrieval_method) is judged exactly as before", () => {
+      const r = record({ verification_status: "Retrieved directly from the organizer's own site, HTTP 200." });
+      expect(decideIngestion(r, []).outcome).toBe("insufficient_evidence");
+    });
+  });
+
   test("requires selectivity_evidence whenever selectivity_tier is above open_enrollment", () => {
     const r = record({ selectivity_tier: "highly_selective" });
     const decision = decideIngestion(r, []);
