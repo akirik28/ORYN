@@ -8,7 +8,77 @@ exist — this file is the one that counts.
 
 ---
 
-## 1. Lane map — 5 active, 2 closed out
+## 0. READ THIS FIRST — end-of-day state, 2026-08-22
+
+**Everything below §1 is written in the order it happened and much of it is superseded by
+later sections. This section is the only one guaranteed current. §1's lane map is a MORNING
+snapshot — it is retained as history and is WRONG as a description of now.**
+
+### The live/not-live boundary — the single most misread thing in this org
+| | Count | Status |
+|---|---|---|
+| `university_programs` **total** | **17,046** | live, counted directly |
+| Australia | **651 across FOUR** — UNSW 217, Monash 178, Sydney 149, UWA 107 | **live** |
+| Ottawa (Canada) | **276** | **live** |
+| **Adelaide** | **120** | **VERIFIED AND DELIBERATELY NOT INGESTED** |
+
+**Adelaide is 120, not 119** (UniStart added late). **Verified-and-not-live looks identical to
+overlooked unless someone says otherwise** — this produced a wrong number twice today, in BASORG's
+own report and in ORYN-CEO's wind-down instruction. **Australia was 0 this morning. Day total: 927
+programmes, five universities, two countries.**
+
+**Revert paths**: `batch_id` lives in **`program_research_queue`, NOT `university_programs`** — a
+successor will look in the wrong table. AU batch `au_programs_uwa_2026-08-22.jsonl_2026-08-22`;
+Ottawa `ca_programs_ottawa_2026-08-22.jsonl_2026-08-22`.
+
+### Lane state at close
+| Lane | State | Trigger to resume |
+|---|---|---|
+| RES-R1 | close-out written (`f6cd728`, Canada README) | 15 Canada targets remain, all re-queried at zero tonight |
+| RES-V1 | close-out requested | new corpus needing contract/ID pass |
+| RES-V2 | close-out requested | new corpus needing source verification |
+| RES-I1 | close-out requested; **holding, no pending write** | an approved, verified corpus |
+| RES-R2 | idle | **founder: Drive corpus decision** |
+| RES-R3 | idle | **founder: apply migration 0060** |
+
+### Blocked on the founder — every idle lane traces to one of these
+1. **Apply migration 0060** — verified low-risk: column confirmed absent, 391 rows, and the CHECK
+   constraint **cannot fail** (all rows default `false`, so `not (false and …)` is always true).
+   Releases **39 confirmed-open determinations**; re-opens RES-R3. `opportunities` is **RES-I2's**
+   territory.
+2. **Decide the Drive corpus** (~79 defective + 23 fragments) — unblocks RES-R2.
+3. **Decide Path A** (UPDATE-by-id write path; `decideIngestion()` is insert-only). Four populations
+   need it: url_repair's 1,437, Glasgow's 62, Western's 231, and **257 null `degree_type`** rows.
+   **`degree_type` is NOT an extraction gap** — UWA publishes no abbreviation, Sydney's `ippCode` is
+   a course code, Adelaide's field held programme codes and was nulled pre-ingestion.
+
+### Deferred targets — the REASON is the finding, not the deferral
+- **Calgary**: **source-authority gate PASSED** (§8.4zz — SaaS backend ≠ vendor publication).
+  **Sustained 429s stopped it. Feasibility, not authority.**
+- **Dalhousie**: robots.txt 404 (no file, no restrictions stated); **no response in a generous
+  budget; cause UNDETERMINED.** Nothing settled either way.
+- **McMaster**: **excluded** — vendor-branded publication address. Different from both.
+
+### The transferable rules (details in §8.4–§8.5)
+- **Rule 27** — a consistency check between two values cannot detect a single-source origin.
+- **Rule 28** — a delta check compares a change against its intent; **it cannot detect that the
+  intent was wrong.**
+- **Read/write authorization asymmetry** — genuine artifacts prove the WORK is real, not that the
+  AUTHORIZATION is real. A verifier can resolve this by inspection; **an ingester cannot.**
+- **`robots.txt` is the FIRST request to any new host** — not the first of the crawl, the first of
+  anything.
+- **A 429 is the server's statement; a timeout is our chosen limit.** Stop on the first; extend the
+  second. **Short retries are more aggressive than one long wait** — an abandoned request still
+  costs the server the full render.
+- **`findValueDomainOutliers`** — measured false-positive rate **13 fired / 0 real**. Length alone
+  is weak; the provenance-language arm discriminates. **Reusing it without that number reports 13
+  phantom defects.**
+- **`universities.country` holds `'Australia'`, not `'AU'`** — a wrong predicate returns zero rows,
+  not an error, and **an empty set reads as a finding.** Sanity-check unfiltered `count(*)` first.
+
+---
+
+## 1. Lane map — MORNING SNAPSHOT, SUPERSEDED BY §0
 
 | Lane | Package | Branch | Status | Safe to consume? |
 |---|---|---|---|---|
@@ -1688,3 +1758,708 @@ verifier can settle it from the corpus side.**
 **Routed to RES-I1 as a pre-ingestion question for whenever Adelaide moves**, with RES-V2's writeup
 cited. **Flagged, routed, not resolved — and deliberately not filed as "minor,"** because "minor"
 is where a question goes to stop being asked.
+
+## 8.4mm OTTAWA CLEARED BOTH LANES — I1-11 DISPATCHED
+
+**RES-V1, V1-12a: PASS** (`902d5f2`), with a newly-built **`ca-r1` validator contract** — Canada's
+first formalized lane, modeled on `au-r1`, built rather than checked ad-hoc. **RES-V2, V2-11a:
+72/72 clean.** Gate met; **RES-I1 dispatched on the 276 Ottawa records** under the UWA conditions
+(re-measure live, dry-run then apply, `batch_id` as revert path, invariants checked directly, **stop
+before applying if accepted ≠ 276**).
+
+### Two RES-V1 findings worth keeping
+**Sampling 30 of the 123 exclusions live** rather than trusting the major/minor pattern from slugs
+is what makes the exclusion defensible — and **major-psychology's own page confirming the exclusion
+logic in its own words** is the strongest form that evidence takes.
+
+**The integrated-master's reframe**: it reused the AU corpus's check, saw it **fire 28 times**, and
+recognised that **Canada has no AQF** — so what it found is an *Ottawa-internal inconsistency*, not a
+mismatch against a label that was never Canada's to match.
+
+> **A check that fires is not the same as a defect that exists.**
+
+Reconciliation re-derived from Ottawa's **own live sitemap** rather than from BASORG's report: 399
+vs 398 claimed, the same drift as every AU sitemap check so far.
+
+## 8.4nn CORRECTION: "four rewritten" was three — and chasing it found a real defect
+
+**BASORG's assignment said four pathway records had their `international` key rewritten. It is
+three.** RES-V1 caught it against the file and Adelaide's own README. **Verified directly in the
+corpus rather than adopted from either lane's report:**
+
+```
+explanatory string present — 3 records: idx0 Aboriginal/TSI Pathway, idx84 CASM, idx88 Foundation Studies
+international key absent  — 1 record:  idx119 UniStart
+```
+
+**Three rewritten; UniStart created in corrected form** — a different edit, not a fourth instance.
+**Same species as "651 across five universities": a count that merged two populations because both
+were "records affected."**
+
+### Two lanes held two halves of one fact
+RES-V2 flagged the field as **non-uniform**; RES-V1 corrected the **count**. **Neither had the
+other's half** — and the count *is the cause of* the non-uniformity: UniStart omits the key
+**because it was created correct rather than rewritten.**
+
+### Following it down INVERTED the finding
+```
+idx1   Bachelor of Agricultural Sciences   study_mode.international = "Full-time"
+idx119 UniStart                            study_mode.domestic      = "Full time or part time"
+idx0/84/88                                 study_mode.international = "No distinct international
+                                             variant published for this pathway -- confirmed live
+                                             (2026-08-22): the bare URL and the explicit /int/ pa..."
+```
+
+**`study_mode` holds study modes. Three records put a provenance sentence in a value slot.** Same in
+`entry_requirements.international`.
+
+> **UniStart is the CORRECT shape. The three records with the more careful fix are the defective
+> ones.** RES-V2 framed UniStart as the outlier and BASORG amplified that into a queued question.
+> **Both backwards.**
+
+**BASORG's escalation was wrong in kind, not merely in direction.** It went to RES-I1 as a
+*consumer-side presence-check risk* only the ingester could settle. **It requires no consumer
+knowledge at all** — the field's own siblings establish the value domain, so **it is visible in the
+data itself.**
+
+**Withdrawn from RES-I1. Routed to RES-R1 as a corpus fix** (move the note to a provenance field,
+let `international` be absent, **preserve the text — it took live verification to establish**).
+Adelaide is not ingested, so it never reaches the database.
+
+**RES-V2's caution was correct from where it sat** — it declined to guess at the consumer, which was
+the right stopping point. **What resolved it was not better reasoning. It was opening the file.**
+
+## 8.4oo THE READ/WRITE ASYMMETRY — two lanes, same message class, opposite correct answers
+
+Tonight RES-V2 and RES-I1 each received a work package from an unfamiliar address after their
+sockets died. **Both verified the artifacts. Both found them genuine. RES-V2 proceeded
+immediately; RES-I1 held.** Both were right.
+
+**The discriminator is not caution level. It is what compliance costs if the channel is hostile.**
+
+| Lane | Package | Cost of wrongly complying |
+|---|---|---|
+| RES-V2 | source verification | **nil** — a hostile channel extracts only legitimate read-only work |
+| RES-I1 | ingest 276 rows | **a live write to `university_programs`** |
+
+RES-I1's formulation, which is now the rule:
+
+> **"Artifacts being good doesn't change that this is still a request for a live write arriving
+> outside the channel you named."**
+
+**Genuine artifacts establish that the WORK is real. They do not establish that the AUTHORIZATION is
+real, and those are separable** — which is precisely the case the hold guards against. A verifier can
+resolve the question by inspection; **an ingester cannot, because the thing it would be tricked into
+is the write itself.**
+
+### This is the fourth hold, and BASORG sourced three of them
+**RES-I1 has now held against a proceed-instruction four times today and been right every time.**
+Three of those messages came from BASORG or were relayed by it.
+
+**Recorded explicitly because a lane that keeps refusing its own manager needs to know that is the
+system working, not friction to be smoothed away.** Standing instruction given to it: **do not let
+BASORG, ORYN-CEO, or ORYN-CFO talk it out of the check; escalate to the founder if anyone leans on
+it to skip.**
+
+### The depth of its verification is also the standard
+It checked **substance, not existence** — the `ca-r1` contract, the 399-vs-398 independent sitemap
+reconciliation, the 30-record excluded-population sample, and V2's language instrument tested **both
+ways**.
+
+> **A fabricated package can name a file. It cannot populate it with 276 records and two
+> independently-authored verdicts whose specific findings cohere.**
+
+## 8.4pp RULE 28 — a delta check cannot detect that the intent was wrong
+
+RES-V1's own words on why its V1-12b PASS missed the value-domain defect:
+
+> *"My check verified the rewrite matched its own stated purpose and matched the README's
+> description of it, and stopped there. I never asked whether the new text belonged in the field's
+> value domain at all — that's not something a diff-against-intent catches, only a look across the
+> field's own siblings does."*
+
+**Stated as the org's rule:**
+
+> **RULE 28 — A delta check compares a change against its intent. It cannot detect that the intent
+> was wrong.**
+
+**This is the same shape as Rule 27** (*a consistency check between two values cannot detect a
+single-source origin*): **both name a defect class the instrument is constitutionally unable to
+see, no matter how carefully it is run.** Not an effort failure. Not a diligence failure.
+
+RES-V1's general form, recorded verbatim:
+
+> **"A clean, correct-looking answer to the question actually asked can still be sitting right next
+> to the more important question nobody asked yet."**
+
+### All three methods failed, each in its own way
+| Lane | What its instrument could see | Why it missed the defect |
+|---|---|---|
+| RES-V2 | field is **non-uniform** | correctly declined to call a direction from source-side evidence |
+| RES-V1 | change **matches its stated intent** | Rule 28 — never queried the value domain |
+| BASORG | count **merged two populations** | asserted "four rewritten" from its own assignment text |
+
+**The thing that resolved it was opening the file and looking across a field's siblings** — which
+was in no one's method.
+
+### Both verifiers amended their own verdicts rather than leave them standing
+**RES-V2 `d627814`; RES-V1 `20ac5b8`.** Neither was asked to.
+
+> **A verdict that has been overtaken should say so in its own file, not only in a message thread
+> nobody inherits.**
+
+RES-V1's characterization is also stronger than BASORG's spot-check: **110 `"Full-time"` + 6
+`"Full time or part time"` across the other 116 records**, same shape in
+`entry_requirements.international`, **UniStart's key-absent shape matching the 116, not the 3.**
+
+## 8.4qq PACKAGE V1-13 — sweep the class across every delivered corpus
+
+**The question nobody asked yet: is this Adelaide-only, or is it in data already live?**
+
+This defect surfaced because one record happened to be looked at. **Four AU corpora are already in
+the database** (UNSW 217, Monash 178, Sydney 149, UWA 107) and **Ottawa's 276 are ingesting now**.
+
+**Assigned to RES-V1. Read-only; no fixes, no database access.** Deliverables: per-corpus presence
+and counts; a reusable validator check **if** the shape generalizes; and an **explicit split between
+live and not-yet-ingested** — live findings need **Path A** and become founder-decision items,
+corpus findings are fixable at source like Adelaide's.
+
+**Not urgent. A defensible characterization beats a fast one, and "Adelaide-only" is a complete
+answer if that's what it shows.**
+
+**RES-V2 idle with two triggers**: RES-R1's Adelaide fix lands, or V1-13 finds the class somewhere
+needing source verification.
+
+## 8.4rr RES-R1 DISPATCHED ON CANADA — and why not to wait for V1-13
+
+**Canada lane confirmed clear** (checked, not assumed: every Canada commit in twelve hours is
+RES-R1's research or RES-V1's verification). **17 of 19 targets remain** — Ottawa done, McMaster
+excluded on the evidence gate.
+
+**Target deliberately NOT named by BASORG.** RES-R1 derives it by its live-QS-rank method and reports
+the resolution before extracting. Naming a university from memory is the pattern-match failure the
+org already has a rule about; its method fetches rank live.
+
+### The sequencing call
+The obvious move is to **hold RES-R1 until V1-13 reports** whether the value-domain class is
+systemic. **Deliberately not doing that.**
+
+**RES-R1 just made this mistake and diagnosed it precisely — *"careful in the wrong dimension."***
+That understanding is freshest now, and **the cheapest place to fix a convention defect is the corpus
+that hasn't been built yet.** Systemic → the new corpus is already clean. Adelaide-only → nothing lost.
+
+**The rule given, to be built into extraction rather than a later review pass:**
+
+> **Before writing a field, look across what that field holds on the records already extracted. If
+> the value doesn't belong to the same domain as its siblings, it goes to a provenance/notes field
+> and the value slot stays absent.**
+
+**Costs nothing at extraction; costs a full verify-fix-reverify cycle afterwards.**
+
+### Context handed over
+RES-V1's **three distinct Canada URL collision defects** (`734aad1`) and **url_repair's 0/1437
+overlap** (`4cb4b15`) — properties of Canadian university sites, not Ottawa-specific. **McMaster stays
+excluded; a similar hosting arrangement on the next target escalates to BASORG as a policy call, not
+a research call.**
+
+## 8.4ss V2-12 — asking a verifier to check BASORG's own proposal
+
+RES-R1's fix (`871bbc9`) was designed **against a shape BASORG proposed**, and RES-R1 confirmed it
+would have argued for the same shape independently. **That is agreement without independent origin —
+Rule 27 — and the shape was generalized from a single record (UniStart).**
+
+**Combined with Rule 28** (*a delta check cannot detect that the intent was wrong*), a
+diff-against-intent would **confirm a wrong proposal perfectly.** So V2-12 asks whether the
+**resulting shape belongs**, not merely whether the change matched the plan:
+
+1. Does `domestic`-only now assert something the live pages don't support?
+2. **Does `researcher_notes` have a value convention of its own that this prose must meet?** If so
+   and it doesn't, **the defect moved rather than got fixed.**
+3. **The README is the live risk** — 56 lines of prose changed against 6 of data. Rewritten prose
+   describing a just-changed state is where a stale or overcorrected description survives.
+4. Provenance text preserved **verbatim** — not paraphrased, not truncated.
+
+**RES-R1 declined to re-check its own fix against live pages**, correctly: *"that's not independent
+verification either, it's the same non-independent-agreement problem one level down."*
+
+## 8.4tt The branch guard earned itself back tonight
+
+The commit for §8.4rr–ss **failed with exit 1**: the shell's working directory had reverted to the
+**primary checkout on `oryn/hide-social-nav`**, and
+`test "$(git branch --show-current)" = "oryn/basorg-org-status" && ...` **short-circuited before
+`cat >>` or `git add` ran.** Primary checkout verified clean afterwards at `0435ef4`.
+
+**This is the exact failure that committed `Claude.pdf` to the founder's branch twice earlier
+tonight**, when the chain was unguarded and a missing `cd` let `git add -A && git commit` run
+anyway. **`cd` persistence between tool calls is not reliable** — the guard, not the `cd`, is what
+makes the chain safe.
+
+## 8.4uu OTTAWA LIVE — 17,046. Canada's first corpus through the full pipeline.
+
+RES-I1 applied I1-11 (`9d8fc27`, `docs/handoffs/i1-ottawa-apply-2026-08-22.md`).
+**Independently counted by BASORG against the table, not taken from the report:**
+
+```
+university_programs total   17,046   (16,770 -> exactly +276)
+University of Ottawa           276
+Australia                      651   unchanged
+```
+
+**Revert path**: `batch_id = ca_programs_ottawa_2026-08-22.jsonl_2026-08-22` — 276 rows, all
+accepted, all promoted, 276 distinct promoted ids, zero orphans.
+
+### Two steps RES-I1 added that nobody asked for
+**Within-batch checks before touching the database** — zero duplicate `research_program_id`, URL
+cardinality 276/276 = 1.000. **Glasgow's 69 duplicates passed a zero-failure dry-run because
+convention drift defeated the exact-match key; checking a batch against *itself* first is what
+catches that class.**
+
+**The dry-run treated as a gate** — `{accepted: 276}` exact-match required before applying, with a
+standing stop condition. **It didn't need to fire, which is not the same as being unnecessary.**
+
+It also **fixed the "5 universities" phrasing in its own commit and the workstreams row**, closing
+CFO's propagation route at the source rather than only correcting it downstream.
+
+## 8.4vv BASORG ERROR — verified lane claims instead of database state, again
+
+**Dispatched RES-R1 on "the next Canada target" after confirming no lane had claimed the list.**
+That confirmation was **true and irrelevant.**
+
+Counting by country after Ottawa's apply: **Canada holds 3,306 rows across EIGHT universities.**
+
+```
+Montréal 679 · Toronto 635 · Western 547 · UBC 546 · Queen's 337 · Ottawa 276 · Alberta 179 · Waterloo 107
+```
+
+**Seven were live before tonight.** By live QS rank, Toronto / UBC / Montréal are exactly what
+RES-R1's method would have resolved to next — **a full extraction cycle on already-ingested data.**
+
+> **No lane needs to CLAIM a university that is already in the database. Recent commits show
+> activity, not state.**
+
+**Fourth instance today of *the pipeline's state is not the database's state*, and the second by
+BASORG** — which wrote the mechanical check for it, applied it to counts, and **then failed to apply
+it to a work assignment.** The check was scoped to the symptom it was born from, not to the class.
+
+**Caught before extraction began**, only because RES-I1's apply prompted a re-count.
+
+**Corrected instruction to RES-R1**: reconcile the remaining-17 list against live data before
+extracting; ask BASORG for live counts (the researcher cannot query the table); **if the next target
+is already live, flag rather than skip silently** — an already-live corpus of unknown provenance may
+predate the evidence gate, and that is a BASORG call.
+
+## 8.4ww V2-12 CLEAN — including the arm designed to catch BASORG's own proposal
+
+RES-V2 (`9be7e53`, `v2_12_adelaide-slot-fix-verification.md`): **the fix holds, nothing routed back.**
+Exhaustive against all 120 records rather than sampled; 3 records/3 fields changed; provenance
+sentences confirmed **verbatim by exact substring match** in the new `researcher_notes`.
+
+**Question 2 is what actually settled it.** BASORG asked whether `researcher_notes` has a convention
+of its own that the moved prose must meet — **because if not, the defect had moved rather than been
+fixed.** RES-V2 didn't reason about it: it found **`DEGREE_TYPE CORRECTION` blocks already present in
+119/120 records** with an identical dated/attributed/labeled structure.
+
+> **Not "the text seems fine there" — evidence that the field's actual job is exactly this,
+> established from the corpus rather than from anyone's judgment.** The same move that found the
+> original defect, pointed at the destination field instead of the source.
+
+**Calibration, applied**: the three records are now the corpus's longest `researcher_notes`
+(3542–3999 chars vs 921–2054). Reported as **the convention's expected additive behavior on a
+thrice-corrected record, not as a symptom.** Naming a real observation without inflating it is the
+half the org has been worse at than catching things.
+
+**Headers re-fetched fresh** rather than cited from V2-11b — *a 301 confirmed hours ago is a claim
+about hours ago.*
+
+**The arm BASORG most wanted tested came back clean.** A verifier that only ever finds problems is
+not calibrated either; **the value is that the answer was determined rather than assumed.**
+
+### Scope reduction to V1-13
+V2's bonus arm swept **all 116 unaffected Adelaide records**: every value is `"Full-time"`,
+`"Full time or part time"`, or ≤1000-char admission prose. **Adelaide is cleared of the class
+independently.** V1-13 rescoped to the rest — **which is now entirely live data** (UNSW/Monash/
+Sydney/UWA + Ottawa), so any finding needs **Path A** and becomes a founder-decision item.
+
+## 8.4xx CALGARY APPROVED — and RES-R1 gated itself before reporting
+
+**Verified by BASORG against the table before approving**, identity confirmed **by domain, not name
+match**:
+
+```
+University of Calgary · https://www.ucalgary.ca · canonical · superseded_by_id null · programs 0
+```
+
+Exactly one matching row. QS 2027 **#249 / Canada #11**, the next rank after Ottawa's #10,
+cross-checked against multiple independent sources.
+
+### RES-R1's list was built correctly — and it re-verified anyway
+BASORG's §8.4vv correction was **aimed at a risk that did not apply**: RES-R1's remaining-17 came
+from BASORG's original **zero-DB-coverage query**, not from git activity, which is why the seven
+already-live universities were never in it — **"already covered," not "unclaimed."**
+
+**The correction was still right to send** (BASORG had no way to know how the list was built, and
+dispatching on an unverified assumption was the error regardless) — **but letting it stand broader
+than the facts would have been the overstatement failure again.**
+
+**What RES-R1 did instead of arguing provenance is the better move**: it declined to lean on *"my
+list was built correctly hours ago"* and **re-queried all 17 live — all zero, including Calgary.**
+
+> **Correct-when-built is exactly the property that stops holding.** Same shape as the README
+> passages that went wrong when the data moved, and the commit still reading "five universities."
+> **Sound construction and re-checking are not alternatives.**
+
+## 8.4yy V1-13 CLOSED — the class is Adelaide-only. No Path A items.
+
+RES-V1 (`345ebdd`): **zero instances outside Adelaide's already-fixed 3 records** across UNSW,
+Sydney, Monash, UWA and Ottawa. **Nothing live is affected; the sweep generated no new
+founder-decision items.**
+
+Shipped as a **standing, unit-tested check** — `findValueDomainOutliers`, 4 tests, wired into both
+`au-r1` and `ca-r1` — not a one-off script. **A defect class discovered once should not depend on
+someone remembering it.**
+
+### The false-positive measurement is the finding, not the zero
+The **length signal fired 13 times and every one was genuine** — Sydney campus ×8, Monash campus ×2,
+`atar.value` ×3: real dual-campus programmes and multi-band ATAR cutoffs. **RES-V1 read every one in
+full before reporting, and measured the rate rather than assuming it.**
+
+> **Length alone is a weak signal — 13 fired, 0 real. The provenance-language regex is the
+> discriminating arm, and it returned zero everywhere.**
+
+**Anyone reusing this check needs that number, or the next run reports 13 defects.** Second time
+tonight a firing check was not a defect, after the integrated-master's 28 hits that Canada's lack of
+an AQF explained. **A check whose false-positive rate is unmeasured produces output nobody can act
+on.**
+
+Length judged against **each field's own corpus median rather than a fixed schema** — the
+sibling-domain logic made numeric.
+
+### The blind-pass / informed-pass control
+RES-V1 re-ran **Ottawa specifically because it had gone live**, since that changed what a finding
+there would mean — and got **the same zero on the deliberate recheck as on the pass that ran before
+it knew the stakes had changed.**
+
+> **That is a control against one's own bias, and the only clean way to answer "would you have
+> looked as hard if it mattered less?"** Nobody asked for it.
+
+### Corroboration declined-to-be-collapsed
+Its Adelaide pass **ran before** BASORG's scope-reduction message arrived, and it reported the result
+as **corroboration of V2-12 rather than as its own find.** **Two independent origins reaching one
+answer is worth strictly more than either alone** — Rule 27 satisfied in the rare direction, by
+someone declining to merge two findings into one.
+
+## 8.4zz RULING — client-side rendering with a vendor backend does NOT fail the gate
+
+RES-R1 stopped before extracting Calgary and escalated: `calendar.ucalgary.ca/programs` is a
+client-rendered Nuxt SPA whose data comes from **`app.coursedog.com`** (path `ucalgary_peoplesoft` —
+Calgary's own SIS). It asked rather than deciding whether this is McMaster-shaped.
+
+**RULING: it is not.**
+
+> **The evidence gate asks WHERE THE UNIVERSITY PUBLISHES, not WHAT INFRASTRUCTURE SITS BEHIND IT.**
+> **Client-side rendering with a vendor backend passes, provided the browsable canonical URL is on
+> the institution's own domain and that URL is what gets recorded. A vendor-hosted PUBLICATION
+> address (McMaster's `romcmaster.ca`) still fails.**
+
+McMaster's *published address* was the contractor's — what a student lands on and cites. **Calgary
+publishes at `calendar.ucalgary.ca/programs/<code>`.** Treating a SaaS-backed calendar as
+third-party-sourced would block most modern universities and make the gate measure **vendor
+procurement rather than source authority.**
+
+**Approved**: browser-render Calgary's own URLs, `retrieval_method: browser_render`, Calgary URLs as
+`source_url`. The page fetching Coursedog while rendering is **how the page loads for any student**.
+
+**Prohibited — and this is the part that matters**: querying the vendor API directly as a data
+source. Recording the **vendor URL** fails authority correctly; recording the **Calgary URL** for
+vendor-fetched data is **a false provenance claim — a `source_url` that was not retrieved.**
+
+**That is precisely the Adelaide defect** (the `international` key sourced from the domestic-only
+page) **and we are not re-introducing it at 493× scale.**
+
+**This ruling TIGHTENS rather than loosens the bar**: `browser_render` already passed and the URL is
+the institution's own; what's prohibited is a shortcut that would have produced unfalsifiable
+provenance.
+
+### Conditions attached
+- **`calendar.ucalgary.ca/robots.txt` must be fetched first** — RES-R1 reported the *vendor's* (429)
+  but not the one that actually governs it. A disallow there is a **hard block, not a cost.**
+- **Throttle**: 493 renders hit a shared multi-tenant backend 493+ times. **Slow is acceptable.**
+- **Pilot 8–10 records and stop**, for RES-V1 contract/ID pass + `findValueDomainOutliers` and
+  RES-V2 spot-check. **A convention defect costs nothing to fix at 10 records and a full
+  verify-fix-reverify cycle at 493.**
+
+**Expected to recur**: Coursedog, Kuali and Modern Campus back a large share of university calendars.
+**A vendor-branded browsable URL is McMaster — escalate, don't decide.**
+
+## 8.5a CALGARY DEFERRED — feasibility, NOT source authority
+
+**The §8.4zz ruling stands unchanged: Calgary is not McMaster-shaped and the gate passes.** Calgary
+was stopped for a **different and simpler reason**, and the distinction must survive into any future
+attempt.
+
+RES-R1 could not clear `calendar.ucalgary.ca/robots.txt` — **429 on 8 attempts over ~3.5 minutes, no
+recovery.** It self-attributed the likely cause to its own **~50 requests in 10–15 minutes** (posture
+check, a full `/programs` render pulling dozens of sub-resources, `.json` probes, the retries) from a
+`ClaudeBot` UA against an AWS-ELB/WAF-fronted host — **rather than implying Calgary was broadly
+down.** The harder and more useful report.
+
+### The deciding arithmetic
+**493 programmes × a full browser render each (dozens of sub-resources) = thousands of requests**
+against a host that began 429-ing at roughly **50 requests in 15 minutes.**
+
+> **Even a clean, fully permissive robots.txt would not make this corpus feasible at a rate this
+> host tolerates. Permission to crawl is not permission to crawl at any volume.** The permission
+> question and the politeness question are separate, and **the politeness question was already
+> answered.**
+
+**Not authorizing thousands of requests to a host that has said our rate is too high.** All requests
+to `ucalgary.ca` stopped — **including further robots.txt attempts**, since that host is the one to
+leave alone.
+
+### Three refusals by RES-R1, each correct
+1. **Did not change the UA.** A `ClaudeBot` UA getting limited and swapped for a browser signature is
+   **evasion, whether or not it works.** Standing instruction: never, and escalate if asked.
+2. **Did not back off silently on its own judgement.**
+3. **Did not fall back to the vendor API** — correctly noting the ruling was about *provenance*, not
+   availability. **An availability problem does not reopen a provenance decision.**
+
+### A correction that was BASORG's fault, not the lane's
+**Polling 8× at 25s against a host already returning 429 adds to the load that caused it.**
+**A 429 is not a failed request to retry — it is the host saying your rate is the problem.** WAF-style
+limiters want backoff in **minutes to tens of minutes, across the whole host, not just the path.**
+BASORG's throttling instruction never specified backoff semantics for a limiter; **the cadence
+followed the instruction as given.**
+
+### Forward
+Next target by live QS rank (RES-R1's earlier research put **Dalhousie #298**, Simon Fraser #312 —
+to be derived properly, not taken from restatement), reported before extraction. All 17 remaining
+already re-queried at **zero programmes**; per-target corpus check still required.
+
+**Calgary recorded as deferred-for-feasibility.** Anyone revisiting must know **the gate passed and
+the rate limit stopped us, not the reverse.**
+
+**If a second host shows the same sustained-429 posture: stop and escalate before probing.** At that
+point it is **a pattern about our request profile, not about one university** — a BASORG question.
+
+## 8.5b THE REAL CALGARY LESSON WAS SEQUENCING — robots.txt goes FIRST
+
+The backoff correction in §8.5a was **the smaller half.** The structural error was **order of
+operations**, and it was BASORG's for never specifying it:
+
+On Calgary, RES-R1 ran the posture check **and a full `/programs` browser render** — dozens of
+sub-resources — **before fetching robots.txt.** By the time it requested the permission artifact, it
+had already spent **~50 requests** on the host.
+
+> **The 429 that blocked robots.txt was substantially caused by requests robots.txt might have told
+> it not to make.**
+
+**RULE: `robots.txt` is the FIRST request to any new host — not the first of the crawl, the first of
+anything.** Nothing else touches the domain until it returns 200 and has been read. **That single
+change would likely have avoided the entire Calgary outcome.**
+
+### Concrete throttling, since "throttle" was not enough
+1. **Request #1 to a new host is `robots.txt`.**
+2. **On ANY 429: full stop, no retry, report.** A 429 states the rate is the problem; **retrying is
+   the one response guaranteed to make it worse.** **Supersedes any earlier BASORG instruction that
+   implied polling.**
+3. After a clean read: **≤1 request / 10s**, entire posture check **under ~15 requests** including
+   sub-resources. **If platform identification needs a full SPA render, that render is the whole
+   budget** — do it last, stop after.
+4. **Report the posture check before anything at volume.**
+
+### Feasibility is now a standing posture-check output
+Calgary established that **for a SaaS-backed SPA, feasibility fails independently of authority.** So
+the posture check must now report **programme count × whether per-programme pages need rendering** —
+**that product decides extractability, and it must be known before extraction, not after 50 records.**
+
+## 8.5c DALHOUSIE APPROVED for posture check
+
+**Verified by BASORG against the table before approving**, identity by domain:
+
+```
+Dalhousie University · https://www.dal.ca · canonical · superseded_by_id null · programs 0
+```
+
+**QS 2027 #298 / Canada #12**, next after Calgary's #11 — derived by RES-R1 from **Dal's own press
+release rather than a third-party aggregator**: the institution's own claim about itself, the same
+source class we hold their programme pages to.
+
+**Gate run per-target rather than inherited** from the earlier 17-wide check. Five incidental corpus
+hits, all in `counseling-intelligence/` — a different data domain — with one **spot-checked directly**
+and confirmed a passing mention in an unrelated proposal, not coverage.
+
+**Standing ruling applies without re-litigation** if Dalhousie is another Coursedog/Kuali SPA:
+institution-domain browsable URL → gate passes; vendor-branded browsable URL → McMaster, escalate.
+
+**If Dalhousie also shows sustained 429s, that is the second host — stop and escalate.** At that
+point it is a pattern about **our request profile**, not about one university, and it is BASORG's
+question.
+
+## 8.5d A TIMEOUT IS NOT A 429 — and a short retry is the AGGRESSIVE choice
+
+RES-R1 halted on Dalhousie at 3 requests: `robots.txt` a clean IIS 404 (**no file, so no restrictions
+stated — permission-neutral**), then two 20s timeouts on
+`academiccalendar.dal.ca/Catalog/ViewCatalog.aspx?...` (curl exit 28, `HTTP_STATUS:000`). It treated a
+non-429 *"with the same weight as a 429."* **Right instinct, over-generalized — and the distinction
+is not pedantic.**
+
+> **A 429 is the SERVER making a statement: your rate is the problem. Retrying defies an explicit
+> instruction.**
+> **A timeout is the expiry of a limit WE chose. The host said nothing at all.**
+
+**Collapsing the two conflates *the host telling you to stop* with *you not having waited long
+enough*. The first is binding; the second is a parameter.**
+
+### Evidence favoured slow over blocked
+- **`robots.txt` answered cleanly on the same host seconds earlier** — reachable, responding. A WAF
+  drop would not typically serve one path and silently blackhole another from the same client.
+- **A server-rendered dynamic `.aspx` building an entire catalogue is genuinely slow** — 20s is short
+  for that class of page.
+
+### The inversion worth keeping
+> **Abandoning a request at 20s does not stop the server working.** It finishes the render and
+> discards it into a closed socket. **Two 20s attempts cost that host TWO full catalogue renders;
+> one 60s attempt costs it ONE.**
+
+**Retrying with a short timeout is the more aggressive choice, not the more polite one. Extending a
+timeout adds zero load** — same single request, waited on longer.
+
+### Authorized
+**One request, `--max-time 60`, then stop regardless.** 200 → report platform and **programme count ×
+whether per-programme pages need rendering** (§8.5b). Second long timeout → **inconclusive, move on;
+no third attempt authorized.** **Any 4xx/5xx, especially 429 → stop immediately** — that rule is
+unchanged and unaffected.
+
+### Possible upside
+**Server-rendered ASP.NET would be materially more feasible than Calgary**: plain HTTP fetches, **one
+request per page instead of dozens** — no JS bundles, analytics beacons, or vendor API calls. The
+difference between hundreds and thousands of requests. **Platform not to be asserted from the URL
+shape**; confirm from the page.
+
+**Stopping at 3 to report was the right call even though the answer was "continue." Correcting an
+over-cautious hold is cheaper than discovering an under-cautious one afterwards.**
+
+## 8.5e DALHOUSIE INCONCLUSIVE — and why it must NOT be filed alongside Calgary
+
+The authorized single 60s attempt also returned `HTTP_STATUS:000`. **RES-R1 stopped at the pre-set
+contingency without asking again** — no third attempt, no URL variation.
+
+**Two deferrals tonight, two DIFFERENT findings, and blurring them would lose both:**
+
+| University | Finding | What a successor must not conclude |
+|---|---|---|
+| **Calgary** | **Gate PASSED**; sustained 429s; **rate limit stopped us** | *not* that source authority failed |
+| **Dalhousie** | robots.txt 404 (**no file, no restrictions stated**); no response in a generous budget; **cause undetermined** | *not* that it was rate-limited or blocked |
+
+> **"Deferred" is not a finding. The reason is the finding.** Calgary's is a *feasibility* verdict
+> with the authority question settled; Dalhousie's is an *undetermined* verdict with nothing settled
+> either way.
+
+**15 Canada targets remain**, all re-queried at zero programmes tonight.
+
+## 8.5f WIND-DOWN — and two stale facts in the instruction itself
+
+ORYN-CEO issued an org-wide wind-down (consolidate, don't start). **Accepted.** Two corrections
+returned, both verified rather than remembered:
+
+**1. Adelaide is 120, not 119.** CEO wrote *"Adelaide's 119"* **in the same paragraph warning that
+this is the single easiest number for a successor to misread.** UniStart was added as record 120
+after RES-V2 found it missing.
+
+> **The number flagged as most likely to be misread was stale in the message flagging it.** The
+> strongest available illustration of CEO's own point.
+
+**2. Ottawa is done, not mid-flight.** CEO asked for its state *"whatever it is when the lane
+stops — mid-fetch is fine."* **It completed hours ago**: V1-12a PASS, V2-11a 72/72, ingested,
+**16,770 → 17,046** verified by BASORG's own `count(*)`.
+
+**3. `degree_type` is more resolved than CEO thinks** — not an open sampling run. **257 null rows**,
+with the finding recorded: **UWA publishes no abbreviation at all** (a source property — the
+well-evidenced *"this platform doesn't publish it"*); **Sydney's `ippCode` is a course code, not a
+post-nominal**, so null is correct; **Adelaide's field held programme codes** (`BCOMP`/`HCOMP`, the
+site labels it "Program code") **and was nulled pre-ingestion.** Both live populations are
+uncorrectable without **Path A**, and **neither is an extraction gap.**
+
+### Day total
+**927 programmes across five universities in two countries** — Australia 651/four, Ottawa 276.
+Australia was **0** this morning.
+
+### Messages crossed
+RES-R1 began deriving Simon Fraser moments before the wind-down reached it. **Stopped immediately** —
+deriving a new target spends the context the handoff needs, on work that cannot finish.
+
+## 8.5g A TRIGGER IS A CLAIM ABOUT THE FUTURE, AND IT GOES STALE
+
+**Twice tonight a lane sat idle on a condition that could no longer occur**, and in both cases the
+lane had no way to know:
+
+1. **RES-V2** idled on *"V1-13 finds the class somewhere needing source verification."* **V1-13 came
+   back zero across all five live corpora** — the trigger became impossible the moment it closed.
+2. **RES-V1** idled on *"the Calgary pilot lands."* **Calgary was deferred and no pilot will ever
+   exist.** It had written the dead trigger into its close-out, where a cold reader would have hunted
+   for a pilot that never happened.
+
+> **A lane waiting on an impossible condition is indistinguishable from a lane waiting correctly** —
+> from outside, from the CFO watch, and in a handoff document.
+>
+> **A trigger is a claim about the future. It goes stale like any other. Whoever sets it owns
+> retracting it.**
+
+**Both were BASORG's errors**: it set both triggers and did not retract them when the world changed.
+**Same species as everything else tonight** — the README describing a field that had moved, the
+commit subject still reading *"five universities,"* §1's morning lane map. **An artifact accurate
+when written, wrong without anyone editing it.**
+
+**Handling adopted**: when a package closes, **check what it was a trigger FOR** before filing it.
+
+## 8.5h §1 OF THIS DOCUMENT WAS THE BIGGEST INSTANCE OF ITS OWN LESSON
+
+This file is ~2,300 lines in happened-order. **§1's lane map described the MORNING** — *"extracting
+sub-batch 1: UNSW + Melbourne," "all seven lanes staffed and working"* — and **a cold reader hits it
+first and takes it as current.**
+
+**§0 added** as the only section guaranteed current: the live/not-live boundary, revert paths **and
+the table they actually live in**, lane states with resume triggers, the three founder decisions with
+0060's risk profile **verified rather than assumed**, the three deferred targets **each with its
+distinct reason**, and the transferable rules.
+
+**§1 relabelled as a superseded morning snapshot rather than deleted.** **Being wrong about the
+morning is only a problem if it claims to describe now** — and the history has value that a
+correction would destroy.
+
+## 8.5i SQUASH-MERGE CONFLICTS — find the boundary, don't resolve the conflict
+
+**#121 conflicted with main on this very file. The cause was not divergent edits — it was the
+same edits twice.**
+
+**#102 was squash-merged** (`3071346`). A squash puts the **content** on main but not the **commit
+identities**, so git saw **22 already-merged commits as unmerged work** and tried to replay changes
+that were already present.
+
+> **Every branch that keeps working after its PR is squash-merged will hit this.** In this org that
+> is most of them.
+
+### The resolution — don't resolve, re-base past the boundary
+**Resolving conflicts by hand risks reintroducing content the squash already landed, and afterwards
+you cannot easily tell whether you did.** Instead:
+
+1. **Find the squash boundary**: walk your commits printing the file's line count at each, looking
+   for the one matching main's.
+2. **Verify byte-identity, not the line count.** `git hash-object` on both blobs — `93efdec` and
+   `origin/main` both gave `b72af8a6…`. **A matching line count is not a matching file**, and
+   treating it as one is the same class of error as every other shortcut logged in this document.
+3. `git rebase --onto origin/main <boundary> HEAD` — replayed 13 commits, **zero conflicts.**
+4. **Confirm the result is byte-identical to pre-rebase** (`944ea7da…`) so the rebase preserved
+   content rather than silently dropping a hunk. **Also verify the branch pointer moved** — the
+   rebase left a detached HEAD.
+
+**Final diff against main: one file, 739 insertions, 1 deletion** — the deletion being the §1
+heading deliberately relabelled in §8.5h.
+
+### The instrument bug ORYN-CEO caught in itself
+Its first mergeability check **read `merge-tree`'s stat output instead of its exit code** — on the
+exact command Rule 27 names — and reported a clean 745-line addition. **The stat was wrong about
+the conflict AND about the shape** (real: 739 + 1, not 745 + 0).
+
+**What made it look again was `gh` reporting `CONFLICTING` — a second instrument disagreeing with
+its own cleaner-looking answer.** That only works because the disagreeing result wasn't discarded.
