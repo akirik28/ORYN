@@ -795,6 +795,14 @@ export interface University {
   data_status: DataStatus;
   last_checked_at: string | null;
   last_changed_at: string | null;
+  /** 'canonical' (default) or 'superseded' — migration 0043. A 'superseded' row is a
+   * confirmed duplicate of superseded_by_id (same real-world institution, kept rather than
+   * deleted so nothing that references it silently loses data) and must be excluded from
+   * listing/search surfaces. See lib/universities/canonical.ts, the sole read path for this
+   * pair of columns. */
+  duplicate_status: "canonical" | "superseded";
+  /** Set only when duplicate_status='superseded' — the surviving canonical row's id. */
+  superseded_by_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -819,6 +827,11 @@ export type UniversityInsert = Insertable<
   | "city_entity_id"
   | "admissions_url"
   | "application_system"
+  // duplicate_status defaults to 'canonical' on the DB side (migration 0043); superseded_by_id
+  // is nullable and only ever set by the dedup audit tooling (scripts/university-duplicates-
+  // audit.ts --supersede), never at ordinary insert time.
+  | "duplicate_status"
+  | "superseded_by_id"
 >;
 export type UniversityUpdate = Updatable<University, "id" | "created_at" | "updated_at">;
 

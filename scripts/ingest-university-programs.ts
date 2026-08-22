@@ -40,7 +40,7 @@
 import { readFileSync } from "node:fs";
 import { applyDecision, decideIngestion, programDedupKey, type IngestDecision, type ProgramWriteClient, type ResearchProgramRecord, type UniversityLookupRow } from "../lib/programs/ingest";
 import { fetchAllRowsVerified, type PostgrestTarget } from "../lib/acquisition/paginate";
-import { excludeSupersededUniversities } from "../lib/universities/canonical";
+import { excludeSupersededUniversities, loadSupersessionMapViaRest } from "../lib/universities/canonical";
 
 try {
   process.loadEnvFile(".env.local");
@@ -116,7 +116,9 @@ async function loadUniversityCandidates(target: PostgrestTarget): Promise<Univer
     externalIdsByEntity.set(e.entity_id, existing);
   }
 
+  const supersessionMap = await loadSupersessionMapViaRest(target);
   return excludeSupersededUniversities(
+    supersessionMap,
     universities.map((u) => ({
       id: u.id,
       name: u.name,

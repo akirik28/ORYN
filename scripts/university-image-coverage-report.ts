@@ -26,7 +26,7 @@ try {
 }
 
 import { fetchAllRowsVerified, type PostgrestTarget } from "../lib/acquisition/paginate";
-import { getSupersededUniversityIds } from "../lib/universities/canonical";
+import { getSupersededUniversityIds, loadSupersessionMapViaRest } from "../lib/universities/canonical";
 import { displayTierOf, categorizeRejection, type DisplayTier, type RejectionCategory } from "../lib/universities/image-coverage";
 
 async function main(): Promise<void> {
@@ -45,7 +45,8 @@ async function main(): Promise<void> {
     "id,name,logo_url",
     "order=id.asc"
   );
-  const supersededIds = new Set(getSupersededUniversityIds());
+  const supersessionMap = await loadSupersessionMapViaRest(target);
+  const supersededIds = new Set(getSupersededUniversityIds(supersessionMap));
   const live = allUniversities.filter((u) => !supersededIds.has(u.id));
 
   const { rows: statusRows } = await fetchAllRowsVerified<{ university_id: string; value_text: string | null; notes: string | null }>(

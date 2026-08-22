@@ -121,7 +121,8 @@ async function searchApplications(supabase: DB, userId: string, term: string): P
   // university_id could be a pre-existing loser id (saved before the write-path fix in
   // app/(app)/universities/actions.ts existed), and this makes that self-healing at read time
   // instead of permanently showing a stale duplicate's name. See lib/universities/canonical.ts.
-  const universityIdByTarget = new Map(targets.map((t) => [t.id, canonicalUniversityId(t.university_id)]));
+  const supersessionMap = await loadSupersessionMap(supabase);
+  const universityIdByTarget = new Map(targets.map((t) => [t.id, canonicalUniversityId(supersessionMap, t.university_id)]));
 
   const universityIds = [...new Set([...universityIdByTarget.values()])];
   const universities = universityIds.length > 0 ? unwrap(await supabase.from("universities").select("id, name").in("id", universityIds)) : [];

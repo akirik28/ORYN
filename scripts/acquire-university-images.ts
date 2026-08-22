@@ -71,7 +71,7 @@ process.on("unhandledRejection", (reason) => {
 });
 
 import { fetchAllRowsVerified, type PostgrestTarget } from "../lib/acquisition/paginate";
-import { getSupersededUniversityIds } from "../lib/universities/canonical";
+import { getSupersededUniversityIds, loadSupersessionMapViaRest } from "../lib/universities/canonical";
 import { domainOf, sourceAuthority } from "../lib/acquisition/source-authority";
 import { fetchWikidataImageClaim, fetchCommonsFileInfo } from "../lib/acquisition/wikimedia";
 import { fetchOpenGraphImage } from "../lib/acquisition/opengraph";
@@ -449,7 +449,8 @@ async function main(): Promise<void> {
     "id,name,country,website_url,canonical_entity_id,logo_url",
     "order=id.asc"
   );
-  const supersededIds = new Set(getSupersededUniversityIds());
+  const supersessionMap = await loadSupersessionMapViaRest(target);
+  const supersededIds = new Set(getSupersededUniversityIds(supersessionMap));
   const liveUniversities = allUniversities.filter((u) => !supersededIds.has(u.id));
 
   const { rows: wikidataIds } = await fetchAllRowsVerified<{ entity_id: string; external_id: string }>(
