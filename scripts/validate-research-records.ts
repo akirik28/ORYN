@@ -646,10 +646,102 @@ export const AU_R1_CONTRACT: LaneContract = {
   },
 };
 
+export const CA_R1_CONTRACT: LaneContract = {
+  id: "ca-r1",
+  description: "RES-R1 — Canadian undergraduate programme catalogue (docs/research/university-programs-au/README.md, despite the -au path). Records propose NEW programme rows for universities not yet fully live — customLiveChecks does university-identity resolution + corpus-internal consistency, same as au-r1.",
+  idField: "research_program_id",
+  idPrefix: "CA-R1-",
+  requiredFields: [
+    "research_program_id",
+    "university_name",
+    "university_country",
+    "university_official_domain",
+    "program_name",
+    "degree_level",
+    "degree_type",
+    "faculty_or_school",
+    "subject_hint",
+    "official_program_url",
+    "admissions_url",
+    "source_url",
+    "source_type",
+    "language_of_instruction",
+    "duration",
+    "campus",
+    "delivery_mode",
+    "international_eligible",
+    "researched_at",
+    "researcher_notes",
+    "retrieval_method",
+    "status_note",
+    "field_provenance",
+    "verification_status",
+  ],
+  logicalRules: (r, id) => {
+    const defects: string[] = [];
+    const fieldProvenance = (r["field_provenance"] as Record<string, unknown>) ?? {};
+
+    for (const [field, basis] of Object.entries(fieldProvenance)) {
+      if (!(AU_R1_FIELD_PROVENANCE_VOCAB as readonly string[]).includes(String(basis))) {
+        defects.push(`${id}: field_provenance.${field}="${String(basis)}" is not in the closed vocabulary [${AU_R1_FIELD_PROVENANCE_VOCAB.join(", ")}]`);
+      }
+    }
+    for (const field of ["degree_level", "international_eligible"]) {
+      if (r[field] === null && field in fieldProvenance) {
+        defects.push(`${id}: ${field} is null but field_provenance still has an entry for it ("${String(fieldProvenance[field])}") — provenance on a null value attributes a basis to nothing`);
+      }
+    }
+    if (!String(r["official_program_url"] ?? "").trim()) {
+      defects.push(`${id}: official_program_url is empty`);
+    }
+    if (!String(r["program_name"] ?? "").trim()) {
+      defects.push(`${id}: program_name is empty`);
+    }
+    return defects;
+  },
+  customLiveChecks: async (records, target) => {
+    const defects: string[] = [];
+    const findings: string[] = [];
+
+    const { resolveUniversity } = await import("../lib/programs/ingest");
+    const universities = await loadUniversityPool(target);
+    const byUniversity = new Map<string, Json[]>();
+    for (const r of records) {
+      const record = r as unknown as import("../lib/programs/ingest").ResearchProgramRecord;
+      const { universityId, reason } = resolveUniversity(record, universities);
+      const id = String(r["research_program_id"]);
+      if (!universityId) {
+        defects.push(`${id}: university "${r["university_name"]}" did not resolve — ${reason}`);
+        continue;
+      }
+      if (!byUniversity.has(universityId)) byUniversity.set(universityId, []);
+      byUniversity.get(universityId)!.push(r);
+    }
+
+    const urlCounts = new Map<string, string[]>();
+    for (const r of records) {
+      const url = String(r["official_program_url"] ?? "");
+      if (!url) continue;
+      if (!urlCounts.has(url)) urlCounts.set(url, []);
+      urlCounts.get(url)!.push(String(r["research_program_id"]));
+    }
+    for (const [url, ids] of urlCounts) {
+      if (ids.length > 1) defects.push(`official_program_url "${url}" appears on ${ids.length} records: ${ids.join(", ")} — duplicate URL, contradicts R1's own zero-duplicate claim`);
+    }
+
+    findings.push(...findTaxonomyConsistencyGaps(records));
+
+    findings.push(`University resolution: ${byUniversity.size} distinct universities resolved across ${records.length} records, 0 failures` + (defects.some((d) => d.includes("did not resolve")) ? "" : " (all resolved)"));
+
+    return { defects, findings };
+  },
+};
+
 export const LANE_CONTRACTS: Record<string, LaneContract> = {
   dlopp: DLOPP_CONTRACT,
   ecw: ECW_CONTRACT,
   "au-r1": AU_R1_CONTRACT,
+  "ca-r1": CA_R1_CONTRACT,
 };
 
 // ---------------------------------------------------------------------------------------
