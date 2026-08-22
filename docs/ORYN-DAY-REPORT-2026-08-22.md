@@ -212,10 +212,16 @@ I reviewed that migration line by line before merging it, including checking a `
 concern its own precedent didn't cover. I did not catch this. The person who caught it stopped
 re-reading the artifact and went to look at its callers.
 
-### Australia: 0 → 544, and a sourcing catch worth more than the number
+### 927 new programmes today, across two countries — and a sourcing catch worth more than the number
 
-`university_programs` is **16,663**, up from 16,119 this morning. Australia went from **zero
-programmes to 544 live**, across three universities.
+`university_programs` is **17,046**, up from 16,119 this afternoon. **Australia went from zero
+programmes to 651 live** across four universities, and **Ottawa's 276** made Canada the second
+country through the full pipeline. Every record passed research, contract verification and source
+verification by three separate lanes, with dry-run and apply as separate packages each time.
+
+**Adelaide's 120 verified records were deliberately not ingested**, and the live Adelaide count of
+zero is what confirms that rather than an oversight. That distinction produced two wrong numbers
+in one evening — including one I wrote in the same sentence warning it would be misread.
 
 The part worth your attention is what RES-R1 did *not* ship. Three of the eight target universities
 were deferred, each blocked by a different access-control mechanism — Melbourne by bot mitigation,

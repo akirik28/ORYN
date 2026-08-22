@@ -60,14 +60,23 @@ file is a snapshot, not a live view.
 
 - `universities`: **1,019** rows — **1,010 `canonical`, 9 `superseded`** (migration 0043's
   data backfill confirmed genuinely live and correct: `duplicate_status` is populated).
-- `university_programs`: **16,770** rows (418 at the 08-20 checkpoint → 14,457 yesterday morning
-  → 16,119 this afternoon → **16,770** now). The last +651 is **Australia, which had zero
-  programme coverage this morning** — now 651 across **four** universities (UNSW 217, Monash 178,
-  Sydney 149, UWA 107). Adelaide's 119 are researched and deliberately **not** applied. Three
-  further universities were deferred, each blocked by a different access-control mechanism. All
-  107 UWA records were re-fetched through a `robots.txt`-permitted path before merge, after the
-  lane caught that its own completed work had used a disallowed one — verified live: zero
-  `/sitecore` URLs remain.
+- `university_programs`: **17,046** rows (418 at the 08-20 checkpoint → 14,457 yesterday morning
+  → 16,119 this afternoon → **17,046** now). Today added **927 programmes across five universities
+  in two countries**, every record through research → contract verification → source verification
+  by three separate lanes, with dry-run and apply as separate packages:
+  - **Australia 0 → 651** across four universities (UNSW 217, Monash 178, Sydney 149, UWA 107).
+    Three further universities deferred, each blocked by a different access-control mechanism.
+    All 107 UWA records were re-fetched through a `robots.txt`-permitted path *before* merge,
+    after the lane caught that its own completed work had used a disallowed one — verified live,
+    zero `/sitecore` URLs remain.
+  - **Ottawa 276**, Canada's first corpus through the full pipeline. Revert path:
+    `batch_id = ca_programs_ottawa_2026-08-22.jsonl_2026-08-22`.
+  - **Adelaide's 120 records are verified by both verifier lanes and deliberately NOT ingested.**
+    Live Adelaide count is **0**, which is what independently confirms the status. This is the
+    single easiest figure in the corpus to misread — verified-and-withheld looks identical to
+    overlooked unless someone says otherwise. It has already produced two wrong numbers in one
+    evening: a "five universities" headline that should have said four, and my own "119" written
+    inside the sentence warning that this number would be misread.
 - **Known completeness gap**: `degree_type` is null on **257 of 651** Australian rows — 100% of
   Sydney and 100% of UWA, versus 1 of 217 at UNSW and 0 of 178 at Monash. The null tracks the
   *extraction method*, not the university: title-token extraction leaves it empty, structured-field
