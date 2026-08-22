@@ -64,7 +64,6 @@ file is a snapshot, not a live view.
   - **only 56/391 carry a deadline.** The deadline research lane has 74 verified records
     moving through verification toward ingestion.
 - `canonical_entities`: **1,172** rows. `entity_verification_queue`: **101** rows still open.
-- `canonical_entities`: **1,172** rows. `entity_verification_queue`: **101** rows still open.
 - `profiles`: **5** — no longer the pre-launch scratch "1", real signups now exist.
 
 ## Migrations
