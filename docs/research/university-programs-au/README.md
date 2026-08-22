@@ -389,13 +389,42 @@ records — mapped to the same `degree_level` for corpus consistency rather than
   retrofitted onto UNSW or Sydney — neither platform publishes an equivalent field at all, and
   BASORG's ruling was explicit: don't manufacture one where the source doesn't have it.
 
-## Method: UWA (107 records, complete — see the resumability note at the top for the two-round fix history)
+## Method: UWA (107 records, complete — see the resumability note at the top for the two-round classification-fix history, and the compliance correction immediately below for a third, different kind of fix)
 
-`www.uwa.edu.au` is fully permissive (Sitecore-based, `Allow: /` with only technical paths
-disallowed, no bot-mitigation on a live fetch). Catalogue discovered via `robots.txt`'s
-`Sitemap: https://www.uwa.edu.au/sitemap.xml` → `/study/sitemap.xml` (302) →
-`/study/-/media/sitemaps/sitemap-future-students.xml` (637KB, 2,760 URLs), filtered to 422 URLs
-under `/study/courses/*`.
+`www.uwa.edu.au` is fully permissive at the domain level (no bot-mitigation on a live fetch) but
+`robots.txt` disallows specific paths, including `Disallow: /sitecore` — a rule this lane
+violated in its first two passes and corrected in a third, described in full below. Catalogue
+discovered via `robots.txt`'s `Sitemap: https://www.uwa.edu.au/sitemap.xml` → `/study/sitemap.xml`
+(302) → `/study/-/media/sitemaps/sitemap-future-students.xml` (637KB, 2,760 URLs), filtered to
+422 URLs. **The sitemap itself publishes these 422 URLs in the disallowed
+`/sitecore/content/uwafs/home/courses/<slug>` form** (not the permitted `/study/courses/<slug>`
+form this document described them as until this correction) — the site's own sitemap and its own
+robots.txt disagree about which form of the URL is the "real" one, a genuine site-configuration
+inconsistency, not a sourcing error a careful crawl could have avoided by reading the sitemap
+correctly.
+
+**Robots.txt compliance correction (2026-08-22), found by RES-V1's independent verification,
+not by this lane, and it matters that this is stated plainly:** every one of the 107 records was
+originally fetched by requesting the sitemap-published `/sitecore/content/...` URL and following
+its 301 redirect to `/study/courses/<slug>`, which served the actual content. **Robots.txt
+governs the requested path, not the destination a redirect lands on** — the disallowed path was
+genuinely requested, even though the content ultimately read came from a permitted one. RES-V1
+found this unprompted while checking the fetch-method claim, verified it (3 samples, a full
+`robots.txt` read, confirmed the permitted path is independently reachable, confirmed UNSW/
+Sydney/Monash don't share this UWA-specific issue), and routed it to founder/CEO level rather
+than resolving it itself, correctly, since a 107-record rewrite is not obviously reversible.
+CEO approved this lane's proposed remediation after independently verifying both the violation
+(`robots.txt` genuinely disallows `/sitecore`) and the fix (the permitted `/study/courses/<slug>`
+form returns HTTP 200 with identical title and card structure, confirmed by direct fetch before
+proposing it): **every one of the 107 records was re-fetched a second time, this time requesting
+the permitted `/study/courses/<slug>` URL directly and never touching `/sitecore/` at all**,
+`official_program_url` and `source_url` updated to the permitted form on every record, re-verified
+(0 fetch failures, 0 title mismatches against the stored `program_name`), and corpus-wide
+re-validated. The underlying data was never wrong — RES-V1 independently confirmed all three
+named classification-defect classes at 0/0/0 against the actual file before finding this separate,
+purely sourcing-compliance issue — only the URL fields and the path used to obtain them needed
+correcting. `official_program_url` on every record now reads `https://www.uwa.edu.au/study/
+courses/<slug>`, confirmed by direct field check across all 107, not sampled.
 
 **Sixth platform, sixth structural wrinkle — verified, not assumed:** this URL namespace mixes
 two entity types. Confirmed by fetching samples of both: major/specialisation pages (e.g.
@@ -404,10 +433,15 @@ Commerce (Integrated Professional)", `Course Code BW002`, CRICOS code present) �
 explicitly lists which degrees it combines with and links to the real degree page, which carries
 a structurally different code pattern. **Consistent with the UNSW/Sydney/Monash grain (the
 applyable degree, not the major within it) — majors excluded, BASORG-confirmed.** Named as its
-own negative finding, not a silent omission: UWA publishes 175 major/specialisation pages under
-`/study/courses/` alongside 247 degree programmes, distinguished by an `MJD-` course-code prefix;
-excluded here as a different entity type, available if the product ever wants majors as their
-own grain later.
+own negative finding, not a silent omission: UWA publishes major/specialisation pages under
+`/study/courses/` distinguished by an `MJD-` course-code prefix, excluded here as a different
+entity type, available if the product ever wants majors as their own grain later. **Correction
+(2026-08-22, caught by RES-V1's independent check, not by this lane): an earlier draft of this
+paragraph stated "175 major pages alongside 247 degree programmes" — the round-1, pre-rebuild
+figures, never updated here after the round-2 rebuild superseded them. The verified, current
+figures are in the reconciliation table below (106 MJD-excluded of 422 total) — this paragraph's
+own stale numbers are the defect, not the underlying data, which RES-V1 independently confirmed
+clean against the actual file.**
 
 **Final classification method (after the two-round fix history in the resumability note at the
 top — read that first for the full account of what went wrong and why a patch wasn't enough).**
