@@ -113,10 +113,10 @@ clears most of it in under an hour. Backlog item 34.
 
 ### 5b. If you un-hang MERGE-1, point it at its resume brief first
 
-MERGE-1's session has been hung since 15:42 — over three hours, holding a "running" slot, which
+MERGE-1's session has been hung since **15:42**, holding a "running" slot, which
 is why nobody could reach it. **Only you can un-hang it, at its terminal.**
 
-Its context predates the entire evening: ~80 merges, a merge-authority change, and twelve new
+Its context predates everything after 15:42 — the whole evening's merges, a merge-authority change, and a dozen new
 standing rules. If it resumes and starts merging on old assumptions, that is a real hazard.
 **Tell it to read `docs/handoffs/merge-1-resume-brief.md` before doing anything** — that file
 exists for exactly this and explains what changed and why it should not start merging on resume.
@@ -166,7 +166,7 @@ unresolved and flagged rather than guessed at.
   and independently reproduced by a second session in its own clean-room checkout. (Figures
   measured 19:40; `docs/current-state.md` carries the authoritative, dated version.)
   (The app was also run against the live database and walked by hand — but that was this
-  morning, ~78 merges ago. A full end-to-end walk is in progress and will be reported
+  morning, before the evening's merges. A full end-to-end walk is in progress and will be reported
   separately; treat the hand-walk as verified for this morning's code, not tonight's.)
 - **The regression noted earlier this evening is fixed.** Tonight's security work had briefly
   made the dashboard depend on `SUPABASE_SECRET_KEY` at page-render time, so a deployment
