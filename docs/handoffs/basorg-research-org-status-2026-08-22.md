@@ -24,7 +24,17 @@ exist — this file is the one that counts.
 failure, not an absence — session titles never propagated to `ListAgents`, so lanes showed
 as `oryn-XX` and could not be addressed by lane code. Resolved by socket-address routing.
 
-## 2. Resolved: the pipeline is running end to end
+## 2. Pipeline running end to end; second batch cleared
+
+**DLOPP (74 deadline records) CLEARED for ingestion 2026-08-22** — both verifier verdicts
+PASS and BASORG moved the batch. RES-V1: 0 contract, 0 ID, 0 live-identity defects, plus a
+21-finding monotonicity audit. RES-V2: 14/14 dated records byte-exact by direct curl
+re-fetch, 34/74 covered across four separately-reported instruments. Conditions on the
+write: monotonicity guard dry-run-proven to fire, all 21 findings handled, guard FAILS and
+reports rather than silently skipping. Two records (DLOPP-B1-01, DLOPP-B5-13/Ron Brown)
+held out in **either** direction pending source verification — where both auto-apply and
+auto-skip are unsafe, the answer is evidence, not a default.
+
 
 The verify→ingest stall is cleared. The org has now run one full
 research → verify → ingest cycle: RES-R3 researched, an independent lane verified
@@ -106,6 +116,46 @@ allowed the identical statements sent individually. That is a workaround of a de
 destroys atomicity — a future multi-statement batch would partially apply. Standing ruling:
 if a transaction block is blocked, STOP and escalate; do not decompose it.
 
+### 4c-bis. BLOCKED: a clean dry-run that would have doubled Glasgow
+
+**The most consequential catch of the day.** RES-I1 dry-ran `acquire-programs-batch2`
+(301 records): 106 accepted, 195 duplicate, **zero gate failures, zero domain-authority
+problems — a clean go.** Glasgow returned 101 net-new / 0 duplicate, anomalous against
+Edinburgh 3/90 and Waterloo 2/105, so BASORG opened the data before assigning the apply.
+
+**Glasgow's 101 are duplicates the dedup key cannot see.** `programDedupKey` is exact-match
+on `universityId|normalizedName|degreeLevel|languageOfInstruction|officialProgramUrl|degreeType`.
+The file mismatches live on **two components at once**:
+
+| | live | file |
+|---|---|---|
+| `degree_type` | NULL on all 101 | BSc 58, BEng 24, LLB 7, BA 1, MBChB 1, BMus 1, BN 1, null 8 |
+| name | degree code stripped | code appended in brackets |
+
+`Anatomy` ←→ `Anatomy [BSc/MSci]` · `Accountancy & Finance` ←→ `Accountancy & Finance [BAcc]`
+
+Stripping the bracketed suffix and comparing against the live name set: **69 of 101 match
+exactly (68.3%).** Applying would have taken Glasgow 101 → 202 with 69 programmes listed
+twice — presenting as a clean run at every stage.
+
+- **Glasgow's 101: BLOCKED.** The other 32 (partnership, dual-degree, graduate-entry,
+  accelerated variants) are plausibly genuine coverage but need adjudication against the
+  official catalogue — research, not ingestion.
+- **Edinburgh 3 + Waterloo 2: APPROVED** after per-name live verification. Edinburgh's 3 have
+  no live rows to compare against at all; Waterloo's 2 are undeclared general BA/BSc against
+  live major-specific "Psychology – BA/BSc" — a different admissions identity, not a naming
+  variant.
+- **The dedup key is NOT to be loosened.** Its own header documents that a looser URL-based
+  check was tried and was wrong 53 times out of 54 (distinct programmes sharing one
+  catalogue-listing page). This is the mirror failure and does not license reversing that
+  decision. A missed duplicate and a false merge are both data-quality failures.
+
+**Systemic, not local**: any university whose live rows were ingested under one
+naming/`degree_type` convention and later re-catalogued under another will produce false
+net-new at 100% rate, silently, presenting as a clean dry-run. Corpus-wide investigation
+assigned to RES-V1 — report only, no fixes, no key changes, name-match after normalization
+is a REVIEW CANDIDATE not a merge (org rule 10).
+
 ### 4d. Live rows making false actionable claims — audit running
 
 RES-V2 found the SIP (Science Internship Program) row (`7aa518f8`) showing
@@ -185,6 +235,28 @@ write a note.
   never coerced**. Vocabulary coercion at the ingestion boundary is how research uncertainty
   gets laundered into database fact. (Supersedes the narrower cycle_status-only RULE-INGEST-002;
   generalized after RES-V1 showed the same failure mode reachable on `current_cycle_label`.)
+- **RULE-FETCH-001, REVISED — three shapes.** (1) robots.txt disallows → POLICY block, defer,
+  never route around. (2) 403/failure with CLEAN robots.txt → TOOLING-level bot-detection; try
+  a real rendered browser, `browser_render` is a passing retrieval method, **not a deferral**.
+  (3) Active challenge-response defense a real browser ALSO hits (Cloudflare "Just a
+  moment...", JS interstitials) → **defer regardless of robots.txt**, including when robots.txt
+  is itself unreadable behind the challenge — solving or evading the challenge is the
+  prohibited action, out of scope by every method; better tooling does not make it permitted.
+  Shapes 1–2 turn on what robots.txt *says*; shape 3 on what we'd have to *do*. Ratified after
+  RES-R2 (Johns Hopkins CTY) and RES-R1 (Melbourne, domain-wide Cloudflare across six
+  subdomains, standard browser UA identically 403'd) hit shape 3 independently within one hour.
+  **When this rule changed, records already deferred under the old rule came back into scope** —
+  RES-R2 re-checked its own and recovered Koç; RES-V2's re-test recovered BSPEE, Ashoka and
+  Girl Up. One verification pass produced four recovered records and corrected a founder
+  escalation from 5 blocked rows to 2.
+- **RULE-PROVENANCE-001 (new): provenance is per-record, never per-field.** A field whose
+  evidentiary basis varies by source must carry that basis with the record. `international_eligible`
+  is the worked case: UNSW's is inferred from CRICOS-code presence (regulatory fact,
+  positive-only, absent → null), Sydney's is read from an explicit `coursecitizenship` DOM/INT
+  field. Both sound, not interchangeable — a consumer seeing `true` on two rows cannot tell them
+  apart. Never assume a column means the same thing corpus-wide because the name matches.
+  A caveat that lives only in prose notes evaporates at the ingestion boundary; confidence and
+  derivation basis must be machine-readable to survive.
 - **RULE-DEDUP-001 (new): every opportunities ingestion is followed by
   `npm run audit:opportunity-duplicates`, result recorded in the run report.**
   `lib/opportunities/duplicates.ts` is good — domain-matched, stopword-stripped title
