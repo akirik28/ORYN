@@ -152,13 +152,15 @@ unresolved and flagged rather than guessed at.
 ## What you do NOT need to do
 
 - **No code fixes tonight.** `main` was independently re-verified at the end of the evening:
-  lint clean, typecheck clean, **139 files / 2,096 tests passing**, production build succeeds.
+  lint clean, typecheck clean, **142 files / 2,108 tests passing**, production build succeeds.
   (The app was also run against the live database and walked by hand — but that was this
   morning, ~78 merges ago. A full end-to-end walk is in progress and will be reported
   separately; treat the hand-walk as verified for this morning's code, not tonight's.)
-- **One known regression, and it does not affect you.** Tonight's own security work made the
-  dashboard depend on `SUPABASE_SECRET_KEY` at page-render time, so a deployment missing that
-  key would return an error page instead of degrading. **Your `.env.local` has the key**, so you
-  will not hit it. A fix is in progress. Flagged because it is live on `main` and I merged it.
+- **The regression noted earlier this evening is fixed.** Tonight's security work had briefly
+  made the dashboard depend on `SUPABASE_SECRET_KEY` at page-render time, so a deployment
+  missing that key would have shown an error page instead of degrading. It now degrades
+  honestly: the page renders, and where data couldn't be refreshed it says so rather than
+  presenting stale results as current. Closed, gated, and merged — nothing for you to do.
+
 - **No hunting.** Everything remaining is in `docs/founder-blocked-backlog.md`, and every item
   there names the exact action, why it blocks, and what it depends on.
