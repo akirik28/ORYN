@@ -622,9 +622,28 @@ claim to be complete.
 student filtering for open opportunities can't distinguish "closed for good" from "closed, next
 cycle unannounced". Both are real misses on real searches.
 
+**A fifth instance, found later the same day, with more weight than the other four**:
+`ApplicationStatus` and `TargetStatus` conflate *the institution's decision* with *the student's
+own choice*, so an accepted-then-withdrawn application silently loses the acceptance. Traced to
+its consequence rather than left abstract — `lib/scoring/monthly-review.ts` excludes withdrawn
+from "Applications submitted", which means **a student who got into a university and then chose
+not to go loses their single most positive outcome from their own Monthly Review.** Phase 40
+exists to show a student their progress; this makes the product forget the best thing that
+happened to them.
+
+**THERE IS ALREADY A WORKING ANSWER IN THIS CODEBASE, and it's the recommended shape.**
+`university_deadlines.verification_state` looks like it should have this exact problem — it even
+carries a `CURRENT_CYCLE_NOT_PUBLISHED` value — and doesn't, because it stores **one row per
+dated event**. Two facts that need to coexist become two rows instead of fighting over one
+field. Found by FEAT-2 while auditing for the opposite.
+
+So the question isn't really *"should this field hold multiple values?"* — it's *"when two facts
+must coexist, should they be two rows?"* A precedent that already ships and works beats a design
+proposal, and it answers all five instances at once.
+
 **Depends on**: nothing technical — a schema/product judgment. Deciding the principle once
-settles all four and prevents the next one. ORYN-CFO was asked to weigh in on the `degree_type`
-instance.
+settles all five and prevents the next one. ORYN-CFO was asked to weigh in on the `degree_type`
+instance. Full analysis: `docs/feat2-multi-axis-status-audit-2026-08-22.md`.
 
 ---
 
