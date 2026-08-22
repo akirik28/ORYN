@@ -277,10 +277,22 @@ records — mapped to the same `degree_level` for corpus consistency rather than
 - `international_eligible`: same `cricos_code`-presence signal and `regulatory_inference`
   provenance as UNSW (Monash exposes the same field, verified present on samples before relying
   on it) — Sydney's `coursecitizenship`-style field does not exist here.
-- `atar`: a real, populated field with actual admission-score text on many records — not a slot
-  in the 21-field contract (no downstream consumer yet, per BASORG), so recorded verbatim in
-  `researcher_notes` rather than forcing a new field for one university. Flagged to BASORG to
-  revisit as a structured field if it recurs across further AU universities.
+- `atar`: **now a structured additive field** (`{value, scale: "ATAR", source_field}`) per
+  BASORG's ruling after this lane flagged its recurrence (161 of 178 in-scope records) —
+  structured in the research contract, deliberately kept out of the live ingestion path pending
+  a founder decision on whether Oryn's schema gets an admission-score column (a product-design
+  question, not a research one). **A near-miss worth recording:** the first patch pass trusted
+  the raw JSON field's *name* (`atar`) rather than checking its *content*, and would have
+  mislabeled 2 records — Diploma of Languages and Diploma of Liberal Arts both hold prerequisite
+  prose in that same field slot ("You must be enrolled in a bachelor's... degree at Monash
+  University") with no ATAR score in it at all, because Monash's platform reuses the field for a
+  different admission-requirement type on some embedded diplomas. Caught by checking all 18
+  non-numeric-leading values individually rather than a blanket rule (most of the 18 *were*
+  genuine ATAR data with a prose lead-in — e.g. "Australian Year 12 equivalent that is 70" — so a
+  cruder "starts with a digit" filter would have wrongly excluded those too); those 2 correctly
+  hold `atar: null`, with the prerequisite text preserved in `researcher_notes` instead. Not
+  retrofitted onto UNSW or Sydney — neither platform publishes an equivalent field at all, and
+  BASORG's ruling was explicit: don't manufacture one where the source doesn't have it.
 
 ## ANU: deferred, explicit robots.txt block
 
