@@ -396,13 +396,25 @@ that were never in question, and lets both placement records land against the on
 programme row. **(b) split the programme** — model two `university_programs` rows (e.g.
 Turkish-medium and English-medium sections of the same İktisadi ve İdari Bilimler Fakültesi
 programme) so the placement data's own two-track reality is reflected one level up, not just
-absorbed by a wider index. **This document recommends (a) now, revisit (b) later**: (a) is
-reversible and unblocks real, currently-stuck data today; (b) is a genuinely bigger data-model
-question — how many of Oryn's existing single-row Turkish programmes are actually silently
-merged two-track programmes, not just these 23 — that deserves its own measurement pass before a
-decision, the same discipline this whole document has tried to hold to rather than guess at a
-population size. Applying either against the live, populated table needs the founder's
-authorization regardless, per that document's own note — this migration only proposes (a).
+absorbed by a wider index.
+
+**Settled, not deferred: measured and resolved on (a).**
+`docs/handoffs/yok-kilavuz-distribution-measurement-2026-08-22.md` ran the population size this
+document originally asked for before deciding — a full distribution across all 779 Turkish
+programmes, not a guess from 23 collided rows. Result: 85/779 (10.9%) carry 2+ codes, but 67 of
+those are scholarship-tier variants at Koç/Bilkent already safe under the *existing* key (`(a)`
+was never even required for them). Only 18 rows (2.3% of the whole population), concentrated at
+two state technical universities, genuinely need this migration. Reviewed by the coordinator: 18
+rows across 2 of 12 universities is not evidence of a modelling error, and a split migration on
+that basis would over-correct from a sample too small to support it. **(a) stands as this
+document's final answer, applied as written below.**
+
+That resolves the mechanical question without resolving what those 18 rows' own composition
+means. The measurement doc records, separately and deliberately not folded into this
+recommendation, that 12 of the 18 differ by language of instruction — a fact this catalogue
+already treats as first-class and row-splitting everywhere else it appears (DE/NL, UK) — which
+is a genuine, if currently too-thin-to-migrate-on, inconsistency worth tracking into any future
+Turkish-catalogue expansion. See that document's own "known inconsistency" section.
 
 **Collapsing note.** This is the fifth confirmed instance of the same underlying shape as Group B's
 other findings: an external system publishes more identity granularity than `university_programs`'
@@ -565,7 +577,7 @@ existing row keeps its current value; nothing is reinterpreted.
 | UCAS course codes | B3 | Gap confirmed (Southampton/QMUL); Manchester's specific citation lives in a different lane's records | Forced column only, NOT dedup key | **Yes — `ucas_code`, plain column** |
 | Wisconsin Individual Major ×3 | B4 | Confirmed, corrected (3 degree_types not 3 schools) | **Already solved by 0054** | No |
 | NYU Nursing parenthetical | B5 | Confirmed — already distinguished two ways | Already representable | No |
-| Turkish dual-admission-tracks | B6 | Confirmed (peer lane, `yok-placement-key-gap-2026-08-22.md`) | Forced (index widening); judgement call on the deeper split-vs-widen question | **Yes — `university_program_placement_cycles_key_idx` widen** |
+| Turkish dual-admission-tracks | B6 | Confirmed + measured (peer lane finding, population distribution in `yok-kilavuz-distribution-measurement-2026-08-22.md`) | **Settled on widening** — 18/779 (2.3%) genuinely need it; language-of-instruction subset (12) recorded as a known inconsistency, not migrated on yet | **Yes — `university_program_placement_cycles_key_idx` widen** |
 | TR-YÖS scale incomparability | C1 | Confirmed | Solved (0056 §1) | No |
 | Italy OFA dual role | C2 | Confirmed, independently sourced | Forced column; policy call on copy | **Yes — `unmet_consequence`** |
 | Harvard/CMU "conflicts" | D1 | Confirmed resolved | Not a gap | No |
@@ -590,10 +602,14 @@ cautious fix it already recommended.
 
 ## What this document deliberately does not do
 
-Does not resolve any of the six product-policy judgement calls this pass surfaced (A1's
+Does not resolve four remaining product-policy judgement calls this pass surfaced (A1's
 ungrouped-exclusion handling, A3's cycle-contingent copy, A5's verdict taxonomy, C2's
-remediation-vs-rejection UI framing, B6's split-vs-widen data-model question) or the judgement
-calls the precedent doc already left open (0056 §2/§7/§8's own three). Does not touch
+remediation-vs-rejection UI framing) or the judgement calls the precedent doc already left open
+(0056 §2/§7/§8's own three). **B6's split-vs-widen question is no longer open** — measured and
+settled on widening, see B6's own section above and
+`docs/handoffs/yok-kilavuz-distribution-measurement-2026-08-22.md`; the language-of-instruction
+inconsistency that measurement surfaced is recorded, not resolved, and is a fifth open item in
+its own right, tracked in that document rather than duplicated here. Does not touch
 `lib/requirements/evaluate.ts`, `shape-audit.ts`, or any ingestion code — every code-only item
 above (A1, A4) is flagged as such precisely so it isn't bundled into "needs a migration" and left
 waiting on one unnecessarily. Does not apply anything.
