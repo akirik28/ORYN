@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { MapPin, Users, DollarSign, GraduationCap, ExternalLink, Trophy, Target, TrendingUp } from "lucide-react";
 import { SUBJECT_LABELS } from "@/lib/programs/subject-labels";
+import { formatProgramDegreeLabel } from "@/lib/universities/program-format";
 import { requireUser, getCurrentProfile } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { refreshAdmissionOutlook } from "@/lib/admissions/persist";
@@ -402,7 +403,11 @@ export default async function UniversityDetailPage({ params }: { params: Promise
                         </a>
                       ) : null}
                     </div>
-                    <p className="text-muted-foreground">{[program.degree_type ?? program.degree_level, program.faculty_or_school].filter(Boolean).join(" · ")}</p>
+                    <p className="text-muted-foreground">
+                      {[formatProgramDegreeLabel({ degreeType: program.degree_type, degreeLevel: program.degree_level }), program.faculty_or_school]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
                   </li>
                 ))}
               </ul>

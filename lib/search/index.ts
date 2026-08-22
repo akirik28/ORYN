@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { rankResults, toIlikePattern } from "./rank";
 import { searchUniversityRows } from "@/lib/universities/alias-search";
 import { canonicalUniversityId } from "@/lib/universities/canonical";
+import { formatProgramDegreeLabel } from "@/lib/universities/program-format";
 import type { SearchResult } from "./types";
 
 type DB = SupabaseClient<Database>;
@@ -40,12 +41,12 @@ async function searchUniversities(supabase: DB, term: string): Promise<SearchRes
 }
 
 async function searchPrograms(supabase: DB, pattern: string): Promise<SearchResult[]> {
-  const result = await supabase.from("university_programs").select("id, university_id, name, field, degree_level").ilike("name", pattern).limit(8);
+  const result = await supabase.from("university_programs").select("id, university_id, name, field, degree_type, degree_level").ilike("name", pattern).limit(8);
   return unwrap(result).map((p) => ({
     type: "program" as const,
     id: p.id,
     title: p.name,
-    subtitle: [p.degree_level, p.field].filter(Boolean).join(" · ") || null,
+    subtitle: [formatProgramDegreeLabel({ degreeType: p.degree_type, degreeLevel: p.degree_level }), p.field].filter(Boolean).join(" · ") || null,
     // Programs have no detail route of their own — link to the parent university, which
     // lists its programs (see app/(app)/universities/[id]/page.tsx). university_programs.
     // university_id is a raw FK that could point at a known-duplicate loser row (none of
