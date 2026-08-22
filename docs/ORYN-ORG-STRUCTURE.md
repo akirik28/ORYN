@@ -462,6 +462,33 @@ simplification of the org.
     of your own actions, suspect the environment before suspecting your reasoning — and report it
     rather than explaining it away.
 
+30. **"No legitimate path does X" is a claim about the whole codebase and needs the same
+    evidence standard as any other claim — checked against every call site, not asserted
+    from the one that prompted the finding.** A negative claim reads as background
+    knowledge rather than something requiring proof, so it doesn't get checked, and it
+    silently becomes the boundary of whatever fix depends on it.
+
+    *2026-08-22, BUG-1:* found and fixed a real gap in `message_reports`' INSERT policy —
+    a student could file a moderation report naming an innocent user as the accused,
+    unconnected to the message actually referenced. The fix's first version closed the
+    `message_id` branch and left `message_id is null` unconstrained, on the stated premise
+    that "no current legitimate path inserts a null-`message_id` row." **That premise was
+    wrong.** The same table has a second reference column, `recommendation_id`, added by an
+    earlier migration specifically so it could also queue reported recommendations — and
+    `reportRecommendation()` inserts through exactly that null-`message_id` branch on every
+    real call. The forgery the fix set out to close was therefore still fully open, one
+    field different, reachable without the attacker ever calling the function the finding
+    was framed around. Caught by ORYN-CEO before the migration was ever applied.
+
+    The first version was correct everywhere its premise held; the premise itself was never
+    tested against the actual call sites, only against the one that produced the finding.
+    Recorded because the same discipline that caught this and several other findings that
+    day — verify claims against artifacts, not against what feels like background
+    knowledge — did not, on its own, catch its own premise, until a second reader checked
+    it directly. **When a fix's scope rests on a negative claim, grep for every caller of
+    the thing being protected before trusting the claim — not just the caller already in
+    front of you.**
+
 ## 6. Known founder-pending items no lane may act on unilaterally
 
 - Evidence-gate false rejections (2,097 blocked records) — `docs/handoffs/evidence-gate-false-rejections-2026-08-22.md`
