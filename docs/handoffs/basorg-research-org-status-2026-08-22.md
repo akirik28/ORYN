@@ -8,7 +8,7 @@ exist — this file is the one that counts.
 
 ---
 
-## 1. Lane map — 7 of 7 staffed
+## 1. Lane map — 5 active, 2 closed out
 
 | Lane | Package | Branch | Status | Safe to consume? |
 |---|---|---|---|---|
@@ -23,6 +23,19 @@ exist — this file is the one that counts.
 **All seven lanes staffed and working.** The earlier "3 of 7" reading was an addressing
 failure, not an absence — session titles never propagated to `ListAgents`, so lanes showed
 as `oryn-XX` and could not be addressed by lane code. Resolved by socket-address routing.
+
+## 1b. Lane closures (2026-08-22)
+
+**RES-I1 and RES-I2 both closed out** — not from exhaustion, but because every item in each
+queue became blocked on someone else. Both produced resumable handoffs
+(`i1-lane-closeout-2026-08-22.md`, `i2-lane-closeout-2026-08-22.md`).
+
+**Closure is reversible.** If verification clears work needing a live write, either lane is
+re-engaged by message. Neither picks anything up on its own initiative in the meantime.
+
+**Known gap this creates**: RES-V2 is verifying url_repair's 1,429 and Glasgow's 62 — both
+`university_*` writes, i.e. RES-I1's territory. A clean verification would arrive with no open
+ingester. Deliberate, and re-openable; recorded so it is not discovered as a surprise.
 
 ## 2. Pipeline running end to end; second batch cleared
 
@@ -434,6 +447,37 @@ authorization.
   describe who HAS attended — history, not eligibility. Only forward statements ("open to… any
   country") support confirmed-open. Two Wharton sibling programs on the same site landed on
   opposite sides of this test.
+- **RULE-DEDUP-002 (new): the survivor of a duplicate pair inherits the best-sourced field
+  values — it does not win by surviving.** Worked case: the *disabled* Conrad Challenge row
+  held the correct deadline `2026-10-30` while the surviving **active** row showed students the
+  wrong `2026-10-29` for five days. Whoever resolved that pair picked a survivor without
+  comparing fields. The discard is invisible precisely because the row holding the good value
+  is now hidden. Compare fields before disabling; record which values came from which row.
+- **RULE-FETCH-005 (new, as amended): a bare `User-agent: *` + `Disallow: /` blocks us —
+  *when it applies to the domain actually fetched*.** Host-scoping must be READ, not
+  regex-matched. `uwc.org` carries a wildcard Disallow scoped by `Host: uwcstaging.co.uk`,
+  saying nothing about the production domain; BASORG's un-amended rule would have purged a
+  validly-sourced record. **A wildcard hit is a candidate; no purge on a pattern match alone.**
+  A purge irreversibly destroys sourced work and carries the same evidence bar as a live write.
+  (Amended by RES-R2, which read the raw file rather than trusting the regex hit.)
+- **RULE-ATTRIBUTION-001 (new): a page may describe several products; language attaches to the
+  product it describes, not to the page it appears on.** Iowa Young Writers' Studio and JHU CTY
+  each pair a residential row with a separate online track carrying more permissive language
+  ("from anywhere in the world") on the same page. One nesting deeper than "per page, not per
+  organization."
+- **A pattern match is a candidate, not a finding.** Four instances in one afternoon, each a
+  mechanical match standing in for an identity judgment: RES-V1's collision check producing 74
+  false positives before deduping on blob hash; a name-strip dedup that would have merged
+  Glasgow's `Music [BMus]` with the MA programme; a wildcard robots regex that would have purged
+  a good record; and RES-R3 crediting an online track's language to a residential row (caught
+  pre-commit).
+- **Security: `_backup_*` and staging tables in `public` inherit a project-level `anon` grant**
+  for SELECT/UPDATE/DELETE. Measured: 9 backup tables + `qs2027_import_staging` all carry it.
+  RLS is enabled with **zero policies**, so access is currently denied — the grant is real and
+  inert. **A loaded gun with the safety on, on exactly the class of object nobody re-reviews.**
+  One permissive policy or one `DISABLE ROW LEVEL SECURITY` makes it live anonymous CRUD over a
+  copy of production data. **RLS is never disabled on such a table, for any reason** — inspect
+  as a privileged role instead. Drop-or-relocate routed to the founder (destructive live DDL).
 - **RULE-DEDUP-001 (new): every opportunities ingestion is followed by
   `npm run audit:opportunity-duplicates`, result recorded in the run report.**
   `lib/opportunities/duplicates.ts` is good — domain-matched, stopword-stripped title
