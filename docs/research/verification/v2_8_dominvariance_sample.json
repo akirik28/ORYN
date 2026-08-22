@@ -1,0 +1,106 @@
+[
+ {
+  "id": "AU-R1-adelaide-031",
+  "program_name": "Bachelor of Information Technology",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-information-technology/",
+  "degree_type": "BINFT",
+  "duration": "3 year(s) full-time",
+  "recorded_study_mode": {
+   "international": "Full-time",
+   "domestic": "Full time or part time"
+  },
+  "recorded_entry_requirements_intl_len": 1000,
+  "recorded_entry_requirements_dom_len": 1000
+ },
+ {
+  "id": "AU-R1-adelaide-013",
+  "program_name": "Bachelor of Criminology and Criminal Justice",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-criminology-and-criminal-justice/",
+  "degree_type": "BCRIM",
+  "duration": "3 year(s) full-time",
+  "recorded_study_mode": {
+   "international": "Full-time",
+   "domestic": "Full time or part time"
+  },
+  "recorded_entry_requirements_intl_len": 1000,
+  "recorded_entry_requirements_dom_len": 1000
+ },
+ {
+  "id": "AU-R1-adelaide-007",
+  "program_name": "Bachelor of Clinical Exercise Physiology (Honours)",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-clinical-exercise-physiology-honours/",
+  "degree_type": "HCEXP",
+  "duration": "4 year(s) full-time",
+  "recorded_study_mode": {
+   "international": "Full-time",
+   "domestic": "Full time or part time"
+  },
+  "recorded_entry_requirements_intl_len": 1000,
+  "recorded_entry_requirements_dom_len": 1000
+ },
+ {
+  "id": "AU-R1-adelaide-025",
+  "program_name": "Bachelor of Film and Television",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-film-and-television/",
+  "degree_type": "BFITV",
+  "duration": "3 year(s) full-time",
+  "recorded_study_mode": {
+   "international": "Full-time",
+   "domestic": "Full time or part time"
+  },
+  "recorded_entry_requirements_intl_len": 1000,
+  "recorded_entry_requirements_dom_len": 1000
+ },
+ {
+  "id": "AU-R1-adelaide-085",
+  "program_name": "Centre for Aboriginal Studies in Music (CASM) Foundation Year",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/centre-for-aboriginal-studies-in-music-casm-foundation-year/",
+  "degree_type": "FCASM",
+  "duration": "1 year(s) full-time",
+  "recorded_study_mode": {
+   "international": "Full time or part time",
+   "domestic": "Full time or part time"
+  },
+  "recorded_entry_requirements_intl_len": 999,
+  "recorded_entry_requirements_dom_len": 999
+ },
+ {
+  "id": "AU-R1-adelaide-061",
+  "program_name": "Bachelor of Podiatry (Honours)",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-podiatry-honours/",
+  "degree_type": "HPODI",
+  "duration": "4 year(s) full-time",
+  "recorded_study_mode": {
+   "international": "Full-time",
+   "domestic": "Full time or part time"
+  },
+  "recorded_entry_requirements_intl_len": 999,
+  "recorded_entry_requirements_dom_len": 1000
+ },
+ {
+  "id": "AU-R1-adelaide-049",
+  "program_name": "Bachelor of Media and Communication",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-media-and-communication/",
+  "degree_type": "BMECO",
+  "duration": "3 year(s) full-time",
+  "recorded_study_mode": {
+   "international": "Full-time",
+   "domestic": "Full time or part time"
+  },
+  "recorded_entry_requirements_intl_len": 1000,
+  "recorded_entry_requirements_dom_len": 1000
+ },
+ {
+  "id": "AU-R1-adelaide-091",
+  "program_name": "Associate Degree in Engineering",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/online/associate-degree-in-engineering/",
+  "degree_type": "XADEN",
+  "duration": "2 year(s) full-time",
+  "recorded_study_mode": {
+   "international": "Full-time",
+   "domestic": "Full time or part time"
+  },
+  "recorded_entry_requirements_intl_len": 999,
+  "recorded_entry_requirements_dom_len": 1000
+ }
+]

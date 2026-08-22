@@ -1,0 +1,492 @@
+[
+  {
+    "id": "c0343703-0b64-48c1-91ce-1907c08a1909",
+    "title": "Northwestern CTD 3-Week Academic Summer Camps",
+    "organization": "Northwestern University",
+    "official_url": "https://www.ctd.northwestern.edu/3-week-academic-summer-camps",
+    "source": "official_primary"
+  },
+  {
+    "id": "abe62a46-56f4-449a-b008-d072b1be5dc4",
+    "title": "Ron Brown Scholar Program",
+    "organization": "Ron Brown Scholar Program",
+    "official_url": "https://ronbrown.org/",
+    "source": "official_primary"
+  },
+  {
+    "id": "c64b7050-75f9-45f8-b2ab-5b6ff14953dc",
+    "title": "Science and Engineering Apprenticeship Program (SEAP)",
+    "organization": "Office of Naval Research",
+    "official_url": "https://www.onr.navy.mil/education-outreach/k-12-programs/seap",
+    "source": "official_primary"
+  },
+  {
+    "id": "eb956520-51c2-43d1-a57b-ec29dd664315",
+    "title": "JAX Summer Student Program",
+    "organization": "The Jackson Laboratory",
+    "official_url": "https://www.jax.org/education-and-learning/high-school-students-and-undergraduates/learn-earn-and-explore",
+    "source": "official_primary"
+  },
+  {
+    "id": "4b9e2c29-c38d-479b-9987-c31501601950",
+    "title": "CyberPatriot - National Youth Cyber Defense Competition",
+    "organization": "Air & Space Forces Association (CyberPatriot Program Office)",
+    "official_url": "https://www.uscyberpatriot.org/",
+    "source": "CyberPatriot official site, verified via direct fetch 2026-08-20"
+  },
+  {
+    "id": "d12506f1-d77e-49c2-9dc8-55fe610da9b0",
+    "title": "Lehigh University",
+    "organization": null,
+    "official_url": "https://global.lehigh.edu/",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "bd187688-b179-42f8-b82b-8c89c40c51d7",
+    "title": "UK Youth Parliament",
+    "organization": "National Youth Agency (NYA), with delivery partners including Regional Youth Work Units in England, the Scottish Youth Parliament, Children in Wales, and consultants in Northern Ireland",
+    "official_url": "https://nya.org.uk/ukyp/",
+    "source": "official_primary"
+  },
+  {
+    "id": "216c88aa-8950-4f45-aea9-62939682be0a",
+    "title": "Nanoteknoloji ve Biyoteknoloji Lise K\u0131\u015f Kamp\u0131",
+    "organization": null,
+    "official_url": "https://ku.edu.tr/highschoolprograms/nanoteknoloji-ve-biyoteknoloji-kis-kampi/basvuru-sureci/",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "4a54159a-58dd-4304-a139-2b76f2a9fe38",
+    "title": "University of Southern California (CA, USA)",
+    "organization": null,
+    "official_url": "https://precollege.usc.edu/summer-programs/",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "031502eb-7a60-43cd-a8c1-8d1c44cac6da",
+    "title": "New York Times Audio Stories Podcast Contest",
+    "organization": null,
+    "official_url": "https://nytimes.com/2026/03/05/learning/our-student-podcast-contest.html",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "f43ddfc3-a800-4a81-9e11-c3dba79b9d73",
+    "title": "King's College London Pre-University Summer School",
+    "organization": "King's College London",
+    "official_url": "https://www.kcl.ac.uk/summer/summer-on-campus/pre-university-summer-school",
+    "source": "official_primary"
+  },
+  {
+    "id": "a5cf4328-7bc1-4ad7-9de5-8bc8b7df9220",
+    "title": "Downing College University of Cambridge - 2026",
+    "organization": null,
+    "official_url": "https://www.dow.cam.ac.uk/",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "f70c6987-d11c-4f0c-87f2-1c11e5dee491",
+    "title": "Penn Pre-College Program (Residential)",
+    "organization": "University of Pennsylvania",
+    "official_url": "https://hs.sas.upenn.edu/summer-programs/pre-college-program",
+    "source": "official_primary"
+  },
+  {
+    "id": "eaabbbee-17f6-4142-b9b4-a49bfa87fa7b",
+    "title": "UCL The Bartlett Summer Schools 2025",
+    "organization": null,
+    "official_url": "https://www.ucl.ac.uk/bartlett/architecture/study/short-courses/bartlett-summer-schools-2026",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "c83420f7-8d0d-48b4-9eee-3659fc39706e",
+    "title": "iGEM High School Competition",
+    "organization": "iGEM Foundation",
+    "official_url": "https://competition.igem.org/high-school",
+    "source": "manual_research"
+  },
+  {
+    "id": "7a422fba-db1a-42a1-b96f-d3bcdf6afa56",
+    "title": "The Gates Scholarship",
+    "organization": "The Gates Scholarship",
+    "official_url": "https://www.thegatesscholarship.org/",
+    "source": "official_primary"
+  },
+  {
+    "id": "0412d94f-8b28-4f37-933c-cf6198914c12",
+    "title": "Breakthrough Junior Challenge",
+    "organization": "Breakthrough Prize Foundation",
+    "official_url": "https://breakthroughjuniorchallenge.org/",
+    "source": "manual_research"
+  },
+  {
+    "id": "40c69cc2-0567-4ac7-bcb0-553dc63770f7",
+    "title": "European Union Contest for Young Scientists (EUCYS)",
+    "organization": "European Commission (Directorate-General for Research and Innovation)",
+    "official_url": "https://research-and-innovation.ec.europa.eu/funding/funding-opportunities/eucys_en",
+    "source": "official_primary"
+  },
+  {
+    "id": "724a375c-fa54-439c-b8d2-c86869fed88d",
+    "title": "Upenn Wharton Hack-AI-thon",
+    "organization": "Wharton AI & Analytics Initiative, University of Pennsylvania",
+    "official_url": "https://ai-analytics.wharton.upenn.edu/for-students/wharton-hack-ai-thon/",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "d5e774ed-68ba-429c-9279-c6e37558a5e6",
+    "title": "Research Science Institute (RSI)",
+    "organization": "Center for Excellence in Education, in partnership with MIT",
+    "official_url": "https://www.cee.org/programs/research-science-institute",
+    "source": "manual_research"
+  },
+  {
+    "id": "ae174625-5ad8-41b7-9c9a-7f00710c168a",
+    "title": "Summer Science Program (SSP)",
+    "organization": "SSP International",
+    "official_url": "https://ssp.org/",
+    "source": "official_primary"
+  },
+  {
+    "id": "255377bc-7564-452d-96e5-b25fb6902aa0",
+    "title": "The Hong Kong Polytechnic University (PolyU)",
+    "organization": null,
+    "official_url": "https://www.polyu.edu.hk/study/pg",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "483c0af4-92e1-4599-a4e9-8ac6eec69a57",
+    "title": "Winchester College - Discover Summer Program",
+    "organization": null,
+    "official_url": "https://www.biltur.com/programlar/discovery-summer-winchester-college/",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "45770aad-075c-4411-8ee7-c86d21236276",
+    "title": "Carnegie Mellon Informatics and Mathematics Competition (CMIMC)",
+    "organization": "Carnegie Mellon University",
+    "official_url": "https://cmimc.math.cmu.edu/",
+    "source": "official_primary"
+  },
+  {
+    "id": "dc762fce-b83a-4217-a610-290ac2f65f17",
+    "title": "Edinburgh Summer School 2024",
+    "organization": null,
+    "official_url": "https://study.ed.ac.uk/summer-school",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "600c8ff6-6712-4126-8939-23116b242a03",
+    "title": "Gen\u00e7 UPSHIFT Sosyal Giri\u015fimcilik Program\u0131",
+    "organization": "Gen\u00e7lik ve Spor Bakanl\u0131\u011f\u0131 \u2014 Gen\u00e7lik Hizmetleri Genel M\u00fcd\u00fcrl\u00fc\u011f\u00fc, jointly with UNICEF T\u00fcrkiye; implementing partners Gen\u00e7 Ba\u015far\u0131 E\u011fitim Vakf\u0131 and Uluslararas\u0131 Gen\u00e7lik Dayan\u0131\u015fma Derne\u011fi",
+    "official_url": "https://genclikhizmetleri.gov.tr/hizmetlerimiz/genclik-merkezleri/upshift-programi/",
+    "source": "official_primary"
+  },
+  {
+    "id": "903962c1-dca6-45c2-9c19-593d3b1e7271",
+    "title": "Girl Up Club (found and lead a chapter)",
+    "organization": "Girl Up (a Global Fund for Children initiative)",
+    "official_url": "https://girlup.org/clubs-community",
+    "source": "official_primary"
+  },
+  {
+    "id": "c00e6c34-e5a7-4013-be39-882cff33ca7a",
+    "title": "American Regions Mathematics League (ARML)",
+    "organization": "American Regions Mathematics League",
+    "official_url": "https://arml3.com/",
+    "source": "official_primary"
+  },
+  {
+    "id": "995daf25-80ab-4e9a-bcd7-2cd2b2d9d18a",
+    "title": "CU Boulder Precollegiate Development Program (PCDP)",
+    "organization": "University of Colorado Boulder, Office of Precollege Outreach and Engagement",
+    "official_url": "https://www.colorado.edu/precollege/precollegiate-development-program",
+    "source": "official_primary"
+  },
+  {
+    "id": "889c580c-dbb6-4490-9078-9faf2a2a2ed0",
+    "title": "Two-week UM Academies (non-credit)",
+    "organization": null,
+    "official_url": "https://precollege.dcie.miami.edu/summer-programs/academies/index.html",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "2f0e0301-5dd4-4d25-91a4-8f73bf5584e9",
+    "title": "\u00d6zye\u011fin University Summer Research Program",
+    "organization": "\u00d6zye\u011fin \u00dcniversitesi",
+    "official_url": "https://hsri.ozyegin.edu.tr/applications/",
+    "source": "official_primary"
+  },
+  {
+    "id": "d9b30fb9-aa85-48ca-ae1b-6c04c5ece736",
+    "title": "Barcelona International Youth Science Challenge (BIYSC)",
+    "organization": "BIYSC",
+    "official_url": "https://biysc.org/",
+    "source": "official_primary"
+  },
+  {
+    "id": "7d573141-bca6-459d-a206-43aebae178c4",
+    "title": "Baltic Sea Philosophy Essay Event (BSPEE)",
+    "organization": "Finnish Association of Philosophy and Ethics Teachers (FETO) / Philosophical Society of Finland",
+    "official_url": "https://bspee.wordpress.com/",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "59f1e29b-e6dc-4de6-9aa2-5a9d26a4f822",
+    "title": "Scholastic Art & Writing Awards",
+    "organization": "Alliance for Young Artists & Writers",
+    "official_url": "https://www.artandwriting.org/awards/how-to-enter/",
+    "source": "official_primary"
+  },
+  {
+    "id": "1d9d3901-b31f-44f8-9147-d6807b04ad3e",
+    "title": "For-Credit Fun-Sized Courses",
+    "organization": null,
+    "official_url": "https://engineering.purdue.edu/CCE/Academics/Undergraduate/Courses/CE299-SummerHS",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "0f466b31-5fc2-4722-8e61-1fd74187909e",
+    "title": "LSE Summer School",
+    "organization": "London School of Economics and Political Science (LSE)",
+    "official_url": "https://www.lse.ac.uk/study-at-lse/summer-schools/summer-school",
+    "source": "official_primary"
+  },
+  {
+    "id": "7f90019e-05c7-4059-ae13-8e285ab3ea38",
+    "title": "Immerse Education Summer School",
+    "organization": "Immerse Education",
+    "official_url": "https://www.immerse.education/summer-schools/",
+    "source": "official_primary"
+  },
+  {
+    "id": "e9c4cd39-b514-4975-b010-1c627d7231c8",
+    "title": "Early College Program (ECP) Courses for High School Students (Ages 14-18)",
+    "organization": null,
+    "official_url": "https://www.saic.edu/high-school-programs",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "c3a98c43-dcfb-42cc-a23f-02a8a8154358",
+    "title": "Yale Young Global Scholars",
+    "organization": "Yale University",
+    "official_url": "https://globalscholars.yale.edu/",
+    "source": "manual_research"
+  },
+  {
+    "id": "0c8e00c1-b2b7-4039-8021-10a310de62e4",
+    "title": "ODT\u00dc (METU) Engineering Summer School (M\u00fchendislik Yaz Okulu)",
+    "organization": "Middle East Technical University (ODT\u00dc); organized by Arber Kongre A.\u015e. with METU faculty (2026 edition to be organized by Radyo ODT\u00dc)",
+    "official_url": "https://metusummerschool.org/",
+    "source": "official_primary"
+  },
+  {
+    "id": "59998106-2a2c-4e35-ba9b-0bdcd5ca586d",
+    "title": "We the People: The Citizen and the Constitution",
+    "organization": "Center for Civic Education",
+    "official_url": "https://www.civiced.org/we-the-people",
+    "source": "Center for Civic Education official site, verified via direct fetch 2026-08-20"
+  },
+  {
+    "id": "de238902-ec8c-469b-921f-5aab113df647",
+    "title": "Rutgers Young Scholars Program in Discrete Mathematics",
+    "organization": "Rutgers University (DIMACS)",
+    "official_url": "https://www.math.rutgers.edu/academics/outreach-activities/2259-rutgers-young-scholars-program-in-discrete-mathematics-2",
+    "source": "official_primary"
+  },
+  {
+    "id": "adce9d5e-c138-49ed-b7ff-370c3828f80e",
+    "title": "Emerging Engineers @ UVA",
+    "organization": "University of Virginia School of Engineering and Applied Science",
+    "official_url": "https://engineering.virginia.edu/about-our-school/community-outreach/emerging-engineers",
+    "source": "official_primary"
+  },
+  {
+    "id": "32b43654-2a63-4135-a91a-b492d1f8b3dc",
+    "title": "Sciences Po Summer School - Pre-College Programme",
+    "organization": "Sciences Po",
+    "official_url": "https://www.sciencespo.fr/summer-school/en/",
+    "source": "official_primary"
+  },
+  {
+    "id": "a0571b4a-8d05-4fe1-bb6b-790b1fed786f",
+    "title": "Canada/USA Mathcamp",
+    "organization": "Canada/USA Mathcamp",
+    "official_url": "https://www.mathcamp.org/",
+    "source": "official_primary"
+  },
+  {
+    "id": "a22bb8af-8c3d-49a3-948b-714a68aed263",
+    "title": "Freie Universit\u00e4t Berlin SommerUNI",
+    "organization": "Freie Universit\u00e4t Berlin",
+    "official_url": "https://www.fu-berlin.de/sites/sommeruni/index.html",
+    "source": "official_primary"
+  },
+  {
+    "id": "570ba029-5c57-41e2-aaef-486777f4d8ea",
+    "title": "Harvard-MIT Mathematics Tournament (HMMT)",
+    "organization": "Harvard-MIT Math Tournament",
+    "official_url": "https://www.hmmt.org/",
+    "source": "manual_research"
+  },
+  {
+    "id": "142a6597-6083-45ba-b9ea-6b92e4a2ab55",
+    "title": "Student Science Training Program",
+    "organization": null,
+    "official_url": "https://www.cpet.ufl.edu/students/uf-cpet-summer-programs/student-science-training-program/",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "4ce6fd8f-5a9b-4399-b168-e38c0f44c7b1",
+    "title": "AMC - AIME",
+    "organization": "Mathematical Association of America (MAA)",
+    "official_url": "https://maa.org/events/mathfest-program/special-sessions/",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "93d45f34-4078-4d15-be6f-d6e157a21943",
+    "title": "The Concord Review - Emerson Prize",
+    "organization": "The Concord Review, Inc.",
+    "official_url": "https://tcr.org/",
+    "source": "The Concord Review official site, verified via direct fetch 2026-08-20"
+  },
+  {
+    "id": "445f2003-1b9c-4cc9-bc63-22e65e7d8f85",
+    "title": "University of Notre Dame Pre-College: Summer Scholars",
+    "organization": "University of Notre Dame",
+    "official_url": "https://precollege.nd.edu/summer-scholars/",
+    "source": "official_primary"
+  },
+  {
+    "id": "7dabbd20-f678-49a3-9cae-5d6e0eb5fbde",
+    "title": "USC Summer Programs 2025 Info Sessions",
+    "organization": null,
+    "official_url": "https://precollege.usc.edu/articles/join-our-usc-summer-programs-2026-info-sessions/",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "24495501-f909-493f-a6ba-06633b184fcf",
+    "title": "Stanford Pre-Collegiate Summer Institutes",
+    "organization": "Stanford University",
+    "official_url": "https://summerinstitutes.spcs.stanford.edu/",
+    "source": "official_primary"
+  },
+  {
+    "id": "4f668b96-af7e-4595-a097-7447a230004c",
+    "title": "Global Issues at Princeton: Grades 10-12",
+    "organization": null,
+    "official_url": "https://cty.jhu.edu/cty-experience/courses",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "eeb768c4-606a-4d28-91cf-a4a6a7693949",
+    "title": "Erasmus+ Youth Exchanges",
+    "organization": "European Commission, under the Erasmus+ programme; applications submitted to and administered by National Agencies in each participating country (in T\u00fcrkiye, the T\u00fcrkiye Ulusal Ajans\u0131)",
+    "official_url": "https://erasmus-plus.ec.europa.eu/programme-guide/part-b/key-action-1/youth-exchanges",
+    "source": "official_primary"
+  },
+  {
+    "id": "690eba7f-0de9-4298-b746-c3456391b9b5",
+    "title": "Coca-Cola Scholars Program",
+    "organization": "Coca-Cola Scholars Foundation",
+    "official_url": "https://www.coca-colascholarsfoundation.org/apply/",
+    "source": "official_primary"
+  },
+  {
+    "id": "ccd1cf71-219d-4ee2-b6c3-47903972f7cf",
+    "title": "Summer at Stanford Program for High School 2025",
+    "organization": null,
+    "official_url": "https://summer.stanford.edu/students/high-school",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "ae5e73f0-43ba-42be-baed-423d3087e7e1",
+    "title": "University of the Arts London - The UAL International Summer School",
+    "organization": null,
+    "official_url": "https://www.arts.ac.uk/study-at-ual/short-courses/summer-short-courses",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "4db17042-5487-4090-9212-0d7243acaa26",
+    "title": "Sabanc\u0131 University Nanotechnology Winter School",
+    "organization": null,
+    "official_url": "https://sunum.sabanciuniv.edu/uploads/egitim/sunum-sabanci-universitesi-nanoteknoloji-arastirma-ve-uygulama-merkezinde-lise-ogrencileri-icin-nanoteknoloji-kis-okulu-basliyor-program.pdf",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "c582f1d9-ec28-4335-acd0-4140893dd23f",
+    "title": "The Harvard Crimson Global Essay Competition",
+    "organization": null,
+    "official_url": "https://www.essaycomp.org/competition-structure-and-dates",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "d35cf54a-1e8c-4ca0-b99c-cdacbacd506d",
+    "title": "European Youth Parliament T\u00fcrkiye (EYP T\u00fcrkiye)",
+    "organization": "Avrupa Gen\u00e7lik Parlamentosu Derne\u011fi \u2014 National Committee of the European Youth Parliament in T\u00fcrkiye (international network under the Schwarzkopf Foundation Young Europe)",
+    "official_url": "https://www.eyp.org.tr/",
+    "source": "official_primary"
+  },
+  {
+    "id": "97da3310-d517-4fea-bdec-2adeb92d3515",
+    "title": "Penn Apps",
+    "organization": "PennApps, University of Pennsylvania",
+    "official_url": "https://pennapps.com/",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "30a605ab-8c51-4f06-9e66-60cc7347c5df",
+    "title": "The Diamond Challenge",
+    "organization": "Horn Entrepreneurship, University of Delaware",
+    "official_url": "https://diamondchallenge.org/competition/",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "bfd946b6-8cfb-4b2b-91b3-fd5523c7551b",
+    "title": "Inspirit AI Scholars Live Online",
+    "organization": "Inspirit AI",
+    "official_url": "https://www.inspiritai.com/liveonline",
+    "source": "official_primary"
+  },
+  {
+    "id": "437963fb-9002-4481-bd67-f40e9fc953f1",
+    "title": "Interlochen Arts Camp",
+    "organization": "Interlochen Center for the Arts",
+    "official_url": "https://www.interlochen.org/art-summer-camp/high-school",
+    "source": "official_primary"
+  },
+  {
+    "id": "4a1ef2dd-ab26-44e0-b6a5-2e49aca13dc0",
+    "title": "Genesys Works",
+    "organization": "Genesys Works",
+    "official_url": "https://genesysworks.org/for-students-and-families/",
+    "source": "official_primary"
+  },
+  {
+    "id": "16b3d6ae-dfcf-4ac7-b1c8-4a038e552bec",
+    "title": "Dive Into Engineering!",
+    "organization": null,
+    "official_url": "https://precollege.usc.edu/usc-viterbi-pre-college-programs/",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "13d9416e-d2a7-4f55-b851-7d76acab2cb3",
+    "title": "World Wildlife Day International Youth Art Contest",
+    "organization": "International Fund for Animal Welfare (IFAW)",
+    "official_url": "https://signup.ifaw.org/en-us/art-contest",
+    "source": "official_primary"
+  },
+  {
+    "id": "2b1886f1-29dd-4014-8044-b6ae04d6fb41",
+    "title": "Nat Geo Slingshot",
+    "organization": null,
+    "official_url": "https://images.nationalgeographic.org/image/upload/v1779814401/NGS%20Main%20Site/Slingshot%20Challenge%20Materials/Espanol/Nat-Geo-Slingshot-7-Tips-2026-Spanish-Draft-2.pdf",
+    "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+  },
+  {
+    "id": "96a437a7-781b-4046-b7ad-baf0069be8e5",
+    "title": "UK Chemistry Olympiad",
+    "organization": "Royal Society of Chemistry",
+    "official_url": "https://edu.rsc.org/enrichment/uk-chemistry-olympiad",
+    "source": "official_primary"
+  }
+]

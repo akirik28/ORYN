@@ -1,0 +1,202 @@
+[
+ {
+  "id": "AU-R1-adelaide-079",
+  "program_name": "Bachelor of Teaching (Early Childhood Education)",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-teaching-early-childhood-education/",
+  "degree_level": "Bachelor / first-cycle",
+  "degree_type": "BTECE",
+  "duration": "3 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-017",
+  "program_name": "Bachelor of Economics",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-economics/",
+  "degree_level": "Bachelor / first-cycle",
+  "degree_type": "BECON",
+  "duration": "3 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-030",
+  "program_name": "Bachelor of Industrial Design",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-industrial-design/",
+  "degree_level": "Bachelor / first-cycle",
+  "degree_type": "BINDE",
+  "duration": "3 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-037",
+  "program_name": "Bachelor of Laws (Honours), Bachelor of Business",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-laws-honours-bachelor-of-business/",
+  "degree_level": "Bachelor / first-cycle (Honours)",
+  "degree_type": "HLABB",
+  "duration": "5 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-041",
+  "program_name": "Bachelor of Laws (Honours), Bachelor of Economics",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-laws-honours-bachelor-of-economics/",
+  "degree_level": "Bachelor / first-cycle (Honours)",
+  "degree_type": "HLABE",
+  "duration": "5 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-071",
+  "program_name": "Bachelor of Science (Honours)",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-science-honours/",
+  "degree_level": "Bachelor / first-cycle (Honours)",
+  "degree_type": "HSCIE",
+  "duration": "4 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-034",
+  "program_name": "Bachelor of Journalism",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-journalism/",
+  "degree_level": "Bachelor / first-cycle",
+  "degree_type": "BJOUR",
+  "duration": "3 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-077",
+  "program_name": "Bachelor of Speech Pathology (Honours)",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-speech-pathology-honours/",
+  "degree_level": "Bachelor / first-cycle (Honours)",
+  "degree_type": "HSPPA",
+  "duration": "4 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-025",
+  "program_name": "Bachelor of Film and Television",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-film-and-television/",
+  "degree_level": "Bachelor / first-cycle",
+  "degree_type": "BFITV",
+  "duration": "3 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-099",
+  "program_name": "Bachelor of Business (Tourism, Events and Hospitality Management)",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/online/bachelor-of-business-tourism-events-and-hospitality-management/",
+  "degree_level": "Bachelor / first-cycle",
+  "degree_type": "XBBTE",
+  "duration": "3 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-115",
+  "program_name": "Bachelor of Psychological Science and Sociology",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/online/bachelor-of-psychological-science-and-sociology/",
+  "degree_level": "Bachelor / first-cycle",
+  "degree_type": "XBPSS",
+  "duration": "3 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-067",
+  "program_name": "Bachelor of Psychology (Honours) (Counselling and Interpersonal Skills)",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-psychology-honours-counselling-and-interpersonal-skills/",
+  "degree_level": "Bachelor / first-cycle (Honours)",
+  "degree_type": "HPSCI",
+  "duration": "4 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-114",
+  "program_name": "Bachelor of Marketing and Communication",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/online/bachelor-of-marketing-and-communication/",
+  "degree_level": "Bachelor / first-cycle",
+  "degree_type": "XBMCO",
+  "duration": "3 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-104",
+  "program_name": "Bachelor of Criminology and Criminal Justice",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/online/bachelor-of-criminology-and-criminal-justice/",
+  "degree_level": "Bachelor / first-cycle",
+  "degree_type": "XBCCJ",
+  "duration": "3 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-004",
+  "program_name": "Bachelor of Arts",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-arts/",
+  "degree_level": "Bachelor / first-cycle",
+  "degree_type": "BARTS",
+  "duration": "3 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-065",
+  "program_name": "Bachelor of Psychology (Honours) 1-year",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-psychology-honours-1-year/",
+  "degree_level": "Bachelor / first-cycle (Honours)",
+  "degree_type": "HBPSY",
+  "duration": "1 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-060",
+  "program_name": "Bachelor of Physiotherapy (Honours)",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-physiotherapy-honours/",
+  "degree_level": "Bachelor / first-cycle (Honours)",
+  "degree_type": "HPHYS",
+  "duration": "4 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-085",
+  "program_name": "Centre for Aboriginal Studies in Music (CASM) Foundation Year",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/centre-for-aboriginal-studies-in-music-casm-foundation-year/",
+  "degree_level": "Non-award enabling/pathway program (pre-bachelor's)",
+  "degree_type": "FCASM",
+  "duration": "1 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-100",
+  "program_name": "Bachelor of Communication",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/online/bachelor-of-communication/",
+  "degree_level": "Bachelor / first-cycle",
+  "degree_type": "XBCOM",
+  "duration": "3 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-108",
+  "program_name": "Bachelor of Health Science (Nutrition and Exercise)",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/online/bachelor-of-health-science-nutrition-and-exercise/",
+  "degree_level": "Bachelor / first-cycle",
+  "degree_type": "XBHSN",
+  "duration": "3 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-057",
+  "program_name": "Bachelor of Pharmaceutical Science",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-pharmaceutical-science/",
+  "degree_level": "Bachelor / first-cycle",
+  "degree_type": "BPHSC",
+  "duration": "3 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-014",
+  "program_name": "Bachelor of Cyber Security",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-cyber-security/",
+  "degree_level": "Bachelor / first-cycle",
+  "degree_type": "BCYSE",
+  "duration": "3 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-089",
+  "program_name": "Foundation Studies",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/foundation-studies/",
+  "degree_level": "Non-award enabling/pathway program (pre-bachelor's)",
+  "degree_type": "FNDST",
+  "duration": "1 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-018",
+  "program_name": "Bachelor of Engineering (Chemical) (Honours)",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-engineering-chemical-honours/",
+  "degree_level": "Bachelor / first-cycle (Honours)",
+  "degree_type": "HENCH",
+  "duration": "4 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-024",
+  "program_name": "Bachelor of Exercise and Sport Science",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-exercise-and-sport-science/",
+  "degree_level": "Bachelor / first-cycle",
+  "degree_type": "BEXSP",
+  "duration": "3 year(s) full-time"
+ }
+]

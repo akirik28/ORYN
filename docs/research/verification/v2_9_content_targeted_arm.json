@@ -1,0 +1,152 @@
+[
+ {
+  "id": "AU-R1-uwa-003",
+  "program_name": "Bachelor of Advanced Computer Science (Honours)",
+  "official_program_url": "https://www.uwa.edu.au/study/courses/bachelor-of-advanced-computer-science",
+  "degree_level": "Bachelor / first-cycle (Honours)"
+ },
+ {
+  "id": "AU-R1-uwa-026",
+  "program_name": "Bachelor of Education (Primary) (Honours)",
+  "official_program_url": "https://www.uwa.edu.au/study/courses/bachelor-of-education-primary-honours",
+  "degree_level": "Bachelor / first-cycle (Honours)"
+ },
+ {
+  "id": "AU-R1-uwa-027",
+  "program_name": "Bachelor of Engineering (Honours)",
+  "official_program_url": "https://www.uwa.edu.au/study/courses/bachelor-of-engineering-honours",
+  "degree_level": "Bachelor / first-cycle (Honours)"
+ },
+ {
+  "id": "AU-R1-uwa-040",
+  "program_name": "Bachelor of Landscape Architecture (Honours)",
+  "official_program_url": "https://www.uwa.edu.au/study/courses/bachelor-of-landscape-architecture-honours",
+  "degree_level": "Bachelor / first-cycle (Honours)"
+ },
+ {
+  "id": "AU-R1-uwa-053",
+  "program_name": "Bachelor of Nursing (Honours)",
+  "official_program_url": "https://www.uwa.edu.au/study/courses/bachelor-of-nursing-honours",
+  "degree_level": "Bachelor / first-cycle (Honours)"
+ },
+ {
+  "id": "AU-R1-uwa-054",
+  "program_name": "Bachelor of Philosophy (Honours)",
+  "official_program_url": "https://www.uwa.edu.au/study/courses/bachelor-of-philosophy",
+  "degree_level": "Bachelor / first-cycle (Honours)"
+ },
+ {
+  "id": "AU-R1-uwa-063",
+  "program_name": "Bachelor of Social Work (Honours)",
+  "official_program_url": "https://www.uwa.edu.au/study/courses/bachelor-of-social-work-honours",
+  "degree_level": "Bachelor / first-cycle (Honours)"
+ },
+ {
+  "id": "AU-R1-uwa-079",
+  "program_name": "Combined Bachelors of Engineering (Honours) and Arts",
+  "official_program_url": "https://www.uwa.edu.au/study/courses/combined-bachelors-of-engineering-and-arts",
+  "degree_level": "Bachelor / first-cycle (Honours)"
+ },
+ {
+  "id": "AU-R1-uwa-080",
+  "program_name": "Combined Bachelors of Engineering (Honours) and Commerce",
+  "official_program_url": "https://www.uwa.edu.au/study/courses/combined-bachelors-of-engineering-and-commerce",
+  "degree_level": "Bachelor / first-cycle (Honours)"
+ },
+ {
+  "id": "AU-R1-uwa-081",
+  "program_name": "Combined Bachelors of Engineering (Honours) and Bachelor of Modern Languages",
+  "official_program_url": "https://www.uwa.edu.au/study/courses/combined-bachelors-of-engineering-and-modern-languages",
+  "degree_level": "Bachelor / first-cycle (Honours)"
+ },
+ {
+  "id": "AU-R1-uwa-082",
+  "program_name": "Combined Bachelors of Engineering (Honours) and Philosophy (Honours)",
+  "official_program_url": "https://www.uwa.edu.au/study/courses/combined-bachelors-of-engineering-and-philosophy",
+  "degree_level": "Bachelor / first-cycle (Honours)"
+ },
+ {
+  "id": "AU-R1-uwa-083",
+  "program_name": "Combined Bachelors of Engineering (Honours) and Science",
+  "official_program_url": "https://www.uwa.edu.au/study/courses/combined-bachelors-of-engineering-and-science",
+  "degree_level": "Bachelor / first-cycle (Honours)"
+ },
+ {
+  "id": "AU-R1-uwa-101",
+  "program_name": "Combined Bachelor's of Philosophy (Honours) and Modern Languages",
+  "official_program_url": "https://www.uwa.edu.au/study/courses/combined-bachelors-of-philosophy-and-modern-languages",
+  "degree_level": "Bachelor / first-cycle (Honours)"
+ },
+ {
+  "id": "AU-R1-uwa-001",
+  "program_name": "Associate Degree in Applied Technologies (Process Sensing)",
+  "official_program_url": "https://www.uwa.edu.au/study/courses/associate-degree-in-applied-technologies",
+  "degree_level": "Associate degree / first-cycle (AQF Level 6, sub-bachelor pathway)"
+ },
+ {
+  "id": "AU-R1-uwa-002",
+  "program_name": "Associate Degree in Applied Technologies (Computer Science)",
+  "official_program_url": "https://www.uwa.edu.au/study/courses/associate-degree-in-applied-technologies-computer-science",
+  "degree_level": "Associate degree / first-cycle (AQF Level 6, sub-bachelor pathway)"
+ },
+ {
+  "id": "AU-R1-uwa-005",
+  "program_name": "Bachelor of Agribusiness and Master of Agricultural Economics",
+  "official_program_url": "https://www.uwa.edu.au/study/courses/bachelor-of-agribusiness-and-master-of-agricultural-economics",
+  "degree_level": "Bachelor / first-cycle (integrated master's)"
+ },
+ {
+  "id": "AU-R1-uwa-043",
+  "program_name": "Bachelor of Marine Science and Master of Marine Biology",
+  "official_program_url": "https://www.uwa.edu.au/study/courses/bachelor-of-marine-science-and-master-of-marine-biology",
+  "degree_level": "Bachelor / first-cycle (integrated master's)"
+ },
+ {
+  "id": "AU-R1-uwa-059",
+  "program_name": "Bachelor of Science (Frontier Physics) and Master of Physics",
+  "official_program_url": "https://www.uwa.edu.au/study/courses/bachelor-of-science-frontier-physics-and-master-of-physics",
+  "degree_level": "Bachelor / first-cycle (integrated master's)"
+ },
+ {
+  "id": "AU-R1-uwa-037",
+  "program_name": "Bachelor of Human Sciences and Master of Biomedical Science",
+  "official_program_url": "https://www.uwa.edu.au/study/courses/bachelor-of-human-sciences-and-master-of-biomedical-science",
+  "degree_level": "Bachelor / first-cycle (integrated master's)"
+ },
+ {
+  "id": "AU-R1-uwa-042",
+  "program_name": "Bachelor of Marine Science and Master of Environmental Science",
+  "official_program_url": "https://www.uwa.edu.au/study/courses/bachelor-of-marine-science-and-master-of-environmental-science",
+  "degree_level": "Bachelor / first-cycle (integrated master's)"
+ },
+ {
+  "id": "AU-R1-uwa-060",
+  "program_name": "Bachelor of Science (Frontier Physics) and Master of Physics - Medical Physics",
+  "official_program_url": "https://www.uwa.edu.au/study/courses/bachelor-of-science-frontier-physics-and-master-of-physics---medical-physics",
+  "degree_level": "Bachelor / first-cycle (integrated master's)"
+ },
+ {
+  "id": "AU-R1-uwa-013",
+  "program_name": "Bachelor of Biological Science and Master of Biological Science",
+  "official_program_url": "https://www.uwa.edu.au/study/courses/bachelor-of-biological-science-and-master-of-biological-science",
+  "degree_level": "Bachelor / first-cycle (integrated master's)"
+ },
+ {
+  "id": "AU-R1-uwa-049",
+  "program_name": "Bachelor of Molecular Sciences and Master of Bioinformatics",
+  "official_program_url": "https://www.uwa.edu.au/study/courses/bachelor-of-molecular-sciences-and-master-of-bioinformatics",
+  "degree_level": "Bachelor / first-cycle (integrated master's)"
+ },
+ {
+  "id": "AU-R1-uwa-023",
+  "program_name": "Bachelor of Earth Sciences and Master of Oceanography",
+  "official_program_url": "https://www.uwa.edu.au/study/courses/bachelor-of-earth-sciences-and-master-of-oceanography",
+  "degree_level": "Bachelor / first-cycle (integrated master's)"
+ },
+ {
+  "id": "AU-R1-uwa-025",
+  "program_name": "Bachelor of Economics and Master of Economics",
+  "official_program_url": "https://www.uwa.edu.au/study/courses/bachelor-of-economics-and-master-of-economics",
+  "degree_level": "Bachelor / first-cycle (integrated master's)"
+ }
+]

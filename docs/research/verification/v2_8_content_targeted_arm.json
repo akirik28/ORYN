@@ -1,0 +1,154 @@
+[
+ {
+  "id": "AU-R1-adelaide-001",
+  "program_name": "Aboriginal and Torres Strait Islander Pathway",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/aboriginal-and-torres-strait-islander-pathway/",
+  "degree_level": "Non-award enabling/pathway program (pre-bachelor's)",
+  "degree_type": "ATSIP",
+  "duration": "1 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-085",
+  "program_name": "Centre for Aboriginal Studies in Music (CASM) Foundation Year",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/centre-for-aboriginal-studies-in-music-casm-foundation-year/",
+  "degree_level": "Non-award enabling/pathway program (pre-bachelor's)",
+  "degree_type": "FCASM",
+  "duration": "1 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-089",
+  "program_name": "Foundation Studies",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/foundation-studies/",
+  "degree_level": "Non-award enabling/pathway program (pre-bachelor's)",
+  "degree_type": "FNDST",
+  "duration": "1 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-086",
+  "program_name": "Diploma in Building Studies",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/diploma-in-building-studies/",
+  "degree_level": "Undergraduate diploma / first-cycle (AQF Level 5, sub-bachelor pathway)",
+  "degree_type": "DBLDS",
+  "duration": "1 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-087",
+  "program_name": "Diploma in Legal Studies",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/diploma-in-legal-studies/",
+  "degree_level": "Undergraduate diploma / first-cycle (AQF Level 5, sub-bachelor pathway)",
+  "degree_type": "DLEGS",
+  "duration": "1 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-088",
+  "program_name": "Diploma in Mathematical Studies",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/diploma-in-mathematical-studies/",
+  "degree_level": "Undergraduate diploma / first-cycle (AQF Level 5, sub-bachelor pathway)",
+  "degree_type": "DMATH",
+  "duration": "1 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-118",
+  "program_name": "Diploma in Digital Business",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/online/diploma-in-digital-business/",
+  "degree_level": "Undergraduate diploma / first-cycle (AQF Level 5, sub-bachelor pathway)",
+  "degree_type": "XDDBU",
+  "duration": "1 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-119",
+  "program_name": "Diploma in Health",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/online/diploma-in-health/",
+  "degree_level": "Undergraduate diploma / first-cycle (AQF Level 5, sub-bachelor pathway)",
+  "degree_type": "XDHEA",
+  "duration": "1 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-090",
+  "program_name": "Associate Degree in Data Analytics",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/online/associate-degree-in-data-analytics/",
+  "degree_level": "Associate degree / first-cycle (AQF Level 6, sub-bachelor pathway)",
+  "degree_type": "XADDA",
+  "duration": "2 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-091",
+  "program_name": "Associate Degree in Engineering",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/online/associate-degree-in-engineering/",
+  "degree_level": "Associate degree / first-cycle (AQF Level 6, sub-bachelor pathway)",
+  "degree_type": "XADEN",
+  "duration": "2 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-092",
+  "program_name": "Associate Degree in Information Technology",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/online/associate-degree-in-information-technology/",
+  "degree_level": "Associate degree / first-cycle (AQF Level 6, sub-bachelor pathway)",
+  "degree_type": "XADIT",
+  "duration": "2 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-013",
+  "program_name": "Bachelor of Criminology and Criminal Justice",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-criminology-and-criminal-justice/",
+  "degree_level": "Bachelor / first-cycle",
+  "degree_type": "BCRIM",
+  "duration": "3 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-104",
+  "program_name": "Bachelor of Criminology and Criminal Justice",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/online/bachelor-of-criminology-and-criminal-justice/",
+  "degree_level": "Bachelor / first-cycle",
+  "degree_type": "XBCCJ",
+  "duration": "3 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-011",
+  "program_name": "Bachelor of Construction Management",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-construction-management/",
+  "degree_level": "Bachelor / first-cycle",
+  "degree_type": "BCONM",
+  "duration": "3 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-103",
+  "program_name": "Bachelor of Construction Management",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/online/bachelor-of-construction-management/",
+  "degree_level": "Bachelor / first-cycle",
+  "degree_type": "XBCMG",
+  "duration": "3 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-031",
+  "program_name": "Bachelor of Information Technology",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-information-technology/",
+  "degree_level": "Bachelor / first-cycle",
+  "degree_type": "BINFT",
+  "duration": "3 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-111",
+  "program_name": "Bachelor of Information Technology",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/online/bachelor-of-information-technology/",
+  "degree_level": "Bachelor / first-cycle",
+  "degree_type": "XBITE",
+  "duration": "3 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-010",
+  "program_name": "Bachelor of Construction Management (Honours)",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/bachelor-of-construction-management-honours/",
+  "degree_level": "Bachelor / first-cycle (Honours)",
+  "degree_type": "HCONM",
+  "duration": "4 year(s) full-time"
+ },
+ {
+  "id": "AU-R1-adelaide-102",
+  "program_name": "Bachelor of Construction Management (Honours)",
+  "official_program_url": "https://adelaide.edu.au/study/degrees/online/bachelor-of-construction-management-honours/",
+  "degree_level": "Bachelor / first-cycle (Honours)",
+  "degree_type": "XBCMH",
+  "duration": "4 year(s) full-time"
+ }
+]
