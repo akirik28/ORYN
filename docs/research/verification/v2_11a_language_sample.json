@@ -1,0 +1,104 @@
+[
+ {
+  "id": "CA-R1-ottawa-004",
+  "program_name": "Baccalaur\u00e9at sp\u00e9cialis\u00e9 en sciences de l'activit\u00e9 physique - \u00e9ducation et coaching et Formation \u00e0 l'enseignement - cycles interm\u00e9diaire/sup\u00e9rieur",
+  "official_program_url": "https://catalogue.uottawa.ca/en/undergrad/baccalaureat-specialise-sciences-activite-physique-education-coaching-formation-enseignement-cycles-intermediaire-superieur/",
+  "language_of_instruction": null
+ },
+ {
+  "id": "CA-R1-ottawa-005",
+  "program_name": "Baccalaur\u00e9at sp\u00e9cialis\u00e9 en sciences de l'activit\u00e9 physique - \u00e9ducation et coaching et Formation \u00e0 l'enseignement - cycles moyen/interm\u00e9diaire",
+  "official_program_url": "https://catalogue.uottawa.ca/en/undergrad/baccalaureat-specialise-sciences-activite-physique-education-coaching-formation-enseignement-cycles-moyen-intermediaire/",
+  "language_of_instruction": null
+ },
+ {
+  "id": "CA-R1-ottawa-006",
+  "program_name": "Baccalaur\u00e9at sp\u00e9cialis\u00e9 en sciences de l'activit\u00e9 physique - \u00e9ducation et coaching et Formation \u00e0 l'enseignement - cycles primaire/moyen",
+  "official_program_url": "https://catalogue.uottawa.ca/en/undergrad/baccalaureat-specialise-sciences-activite-physique-education-coaching-formation-enseignement-cycles-primaire-moyen/",
+  "language_of_instruction": null
+ },
+ {
+  "id": "CA-R1-ottawa-046",
+  "program_name": "Certificat/Baccalaur\u00e9at en \u00e9ducation - \u00c9ducation technologique",
+  "official_program_url": "https://catalogue.uottawa.ca/en/undergrad/certificat-baccalaureat-education-education-technologique/",
+  "language_of_instruction": null
+ },
+ {
+  "id": "CA-R1-ottawa-063",
+  "program_name": "Formation \u00e0 l'enseignement - Cycles interm\u00e9diaire/sup\u00e9rieur",
+  "official_program_url": "https://catalogue.uottawa.ca/en/undergrad/formation-a-lenseignement-cycles-intermediaire-superieur/",
+  "language_of_instruction": null
+ },
+ {
+  "id": "CA-R1-ottawa-064",
+  "program_name": "Formation \u00e0 l'enseignement - Cycles moyen/interm\u00e9diaire",
+  "official_program_url": "https://catalogue.uottawa.ca/en/undergrad/formation-a-lenseignement-cycles-moyen-intermediaire/",
+  "language_of_instruction": null
+ },
+ {
+  "id": "CA-R1-ottawa-065",
+  "program_name": "Formation \u00e0 l'enseignement - Cycles primaire/moyen",
+  "official_program_url": "https://catalogue.uottawa.ca/en/undergrad/formation-a-lenseignement-cycles-primaire-moyen/",
+  "language_of_instruction": null
+ },
+ {
+  "id": "CA-R1-ottawa-066",
+  "program_name": "Formation \u00e0 l'enseignement en mode alternatif - B.\u00c9d. (\u00e0 temps partiel) - Cycles moyen/interm\u00e9diaire",
+  "official_program_url": "https://catalogue.uottawa.ca/en/undergrad/formation-a-lenseignement-mode-alternatif-bed-a-temps-partiel-cycles-moyen-intermediaire/",
+  "language_of_instruction": null
+ },
+ {
+  "id": "CA-R1-ottawa-067",
+  "program_name": "Formation \u00e0 l'enseignement en mode alternatif - B.\u00c9d. (\u00e0 temps partiel) - Cycles primaire/moyen",
+  "official_program_url": "https://catalogue.uottawa.ca/en/undergrad/formation-a-lenseignement-mode-alternatif-bed-a-temps-partiel-cycles-primaire-moyen/",
+  "language_of_instruction": null
+ },
+ {
+  "id": "CA-R1-ottawa-045",
+  "program_name": "B.Sc. sp\u00e9cialis\u00e9 Sciences et Baccalaur\u00e9at en \u00e9ducation - Cycles interm\u00e9diaire/sup\u00e9rieur",
+  "official_program_url": "https://catalogue.uottawa.ca/en/undergrad/bsc-specialise-sciences-baccalaureat-education-cycles-intermediaire-superieur/",
+  "language_of_instruction": "in French only"
+ },
+ {
+  "id": "CA-R1-ottawa-231",
+  "program_name": "Licentiate in Law (LLL) and Honours BSocSc in International Development and Globalization",
+  "official_program_url": "https://catalogue.uottawa.ca/en/undergrad/licentiate-law-lll-honours-bsocsc-international-development-globalization/",
+  "language_of_instruction": "in French only"
+ },
+ {
+  "id": "CA-R1-ottawa-123",
+  "program_name": "Honours Bachelor of Human Kinetics and Master of Health Sciences Occupational Therapy",
+  "official_program_url": "https://catalogue.uottawa.ca/en/undergrad/honours-bachelor-human-kinetics-master-health-sciences-occupational-therapy/",
+  "language_of_instruction": "in French"
+ },
+ {
+  "id": "CA-R1-ottawa-047",
+  "program_name": "Certificat R\u00e9daction professionnelle et \u00e9dition",
+  "official_program_url": "https://catalogue.uottawa.ca/en/undergrad/certificat-redaction-professionnelle-edition/",
+  "language_of_instruction": "in French only"
+ },
+ {
+  "id": "CA-R1-ottawa-253",
+  "program_name": "Microprogram French as a Second Language (FLS)",
+  "official_program_url": "https://catalogue.uottawa.ca/en/undergrad/microprogram-french-second-language/",
+  "language_of_instruction": "in French only to non-Francophones"
+ },
+ {
+  "id": "CA-R1-ottawa-124",
+  "program_name": "Honours Bachelor of Human Kinetics and Master of Health Sciences Physiotherapy",
+  "official_program_url": "https://catalogue.uottawa.ca/en/undergrad/honours-bachelor-human-kinetics-master-health-sciences-physiotherapy/",
+  "language_of_instruction": "in French"
+ },
+ {
+  "id": "CA-R1-ottawa-202",
+  "program_name": "Honours BSocSc Social Work - In-depth Experiential Learning Stream (IELS)",
+  "official_program_url": "https://catalogue.uottawa.ca/en/undergrad/honours-bsocsc-social-work-iels/",
+  "language_of_instruction": "in French only"
+ },
+ {
+  "id": "CA-R1-ottawa-072",
+  "program_name": "Honours BA French Studies",
+  "official_program_url": "https://catalogue.uottawa.ca/en/undergrad/honours-ba-french-studies/",
+  "language_of_instruction": "in French only to non-Francophones"
+ }
+]
