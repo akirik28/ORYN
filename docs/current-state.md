@@ -118,24 +118,23 @@ Only items no Claude session can do unilaterally. Full detail:
 
 ## Next phase
 
-1. ~~Canonical identity correctness (P1)~~ — **done, pending merge**: all 23 real consumers
-   (not 16 — corrected during the work) of `lib/universities/canonical.ts` now query the live
+1. ~~Canonical identity correctness (P1)~~ — **done, merged to `main`** ([PR #2](https://github.com/akirik28/ORYN/pull/2),
+   `b36214b`, merged by the founder 2026-08-22 09:38 UTC). All 23 real consumers (not 16 —
+   corrected during the work) of `lib/universities/canonical.ts` now query the live
    `duplicate_status`/`superseded_by_id` columns directly; the static JSON snapshot and its
-   generation script are deleted. Independently re-verified (not just trusted): lint/typecheck
-   clean, 121 files/1824 tests pass, build succeeds, live DB state unchanged before/after
-   (canonical=1010/superseded=9). Direct push to `main` was blocked by the auto-mode
-   classifier (expected — a shared branch push should go through review, not be forced), so
-   this is [PR #2](https://github.com/akirik28/ORYN/pull/2), not yet merged. Full detail:
-   `docs/handoffs/canonical-live-column-refactor-2026-08-22.md` (on that branch).
-2. ~~Opportunity eligibility gap (P3)~~ — **first pass done, pending merge**: `eligible_countries`
-   moved from 366/391 null (93.6%) to 352/391 (90.0%) — [PR #3](https://github.com/akirik28/ORYN/pull/3),
-   pure data/docs, no app code. **Real finding, not just a completeness one**: confirmed directly
-   in `lib/opportunities/matching.ts`/`lib/counselor/eligibility.ts` that an empty array already
+   generation script are deleted. Independently re-verified before merge: lint/typecheck clean,
+   121 files/1824 tests pass, build succeeds, live DB state unchanged (canonical=1010/
+   superseded=9). Full detail: `docs/handoffs/canonical-live-column-refactor-2026-08-22.md`.
+2. ~~Opportunity eligibility gap (P3)~~ — **first pass done, merged to `main`** ([PR #3](https://github.com/akirik28/ORYN/pull/3),
+   `8f0b145`, merged 2026-08-22 09:38 UTC). `eligible_countries` moved from 366/391 null (93.6%)
+   to 352/391 (90.0%). **Real finding, not just a completeness one**: confirmed directly in
+   `lib/opportunities/matching.ts`/`lib/counselor/eligibility.ts` that an empty array already
    means "not restricted," not "unknown" — a genuinely restricted program with no data is shown
    as eligible to everyone today with no warning (e.g. MIT PRIMES, QuestBridge, both closed by
    this pass). Worth counselor/PROD-B attention independent of finishing the backfill. Scoped
    5-wave plan for the remaining 352 in `docs/research/opportunities-eligible-countries/README.md`
-   (on that branch) — Wave 2 (research/scholarship/fellowship/internship, ~20 records) is next.
+   — Wave 2 (research/scholarship/fellowship/internship, ~20 records) is next, see the research
+   queue below.
 3. **Branch/worktree integration audit**: 80+ branches, ~85 worktrees, several
    idle-pending-assignment research lanes with real uningested output — worth a dedicated
    reconciliation pass rather than continuing to accumulate more parallel lanes.
