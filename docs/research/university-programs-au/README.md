@@ -637,20 +637,34 @@ rest of this section describe this lane's original *enumeration*, not the true t
 559 to 560; true grand total from 560 to 562** (the original enumeration's 561, plus the one URL
 that was never in it at all).
 
-**Non-award pathway provenance, corrected (2026-08-22, RES-V2 finding, BASORG-ruled):** all 3
-original non-award pathway records (ATSIP, CASM Foundation Year, Foundation Studies) had their
-`entry_requirements.international` / `study_mode.international` values wrongly presenting
-duplicated domestic content as if it were an independently-sourced international variant.
-Confirmed live by this lane, not just RES-V2: bare URL and the explicit `/int/` path both
-301-redirect to `/dom/` on all three, byte-for-byte identical destination. There is no
-international variant for this category — the `international` key on all 3 (and on UniStart,
-added in the same category) now states that explicitly rather than duplicating `domestic`'s
-text. Self-caught while applying this fix, not part of RES-V2's original two findings: Foundation
-Studies' `entry_requirements`/`study_mode` had no `domestic` key at all in the original
-extraction (the other two had both) — fetched live and filled in, confirmed identical in
-substance to the content already stored, consistent with there being one real content source for
-this page rather than two. `international_eligible` required no change on any of the four — it
-was already `null` on the correct independent basis (no CRICOS code found).
+**Non-award pathway provenance, corrected in two passes (2026-08-22) — the second pass corrects a
+mistake made fixing the first:**
+
+*Pass 1 (RES-V2 finding, BASORG-ruled):* all 3 original non-award pathway records (ATSIP, CASM
+Foundation Year, Foundation Studies) had their `entry_requirements.international` /
+`study_mode.international` values wrongly presenting duplicated domestic content as if it were an
+independently-sourced international variant. Confirmed live by this lane, not just RES-V2: bare
+URL and the explicit `/int/` path both 301-redirect to `/dom/` on all three, byte-for-byte
+identical destination. Fixed by setting the `international` value to an explanatory sentence
+stating no distinct variant exists. Self-caught in the same pass, not part of RES-V2's original
+two findings: Foundation Studies' `entry_requirements`/`study_mode` had no `domestic` key at all
+in the original extraction (the other two had both) — fetched live and filled in, confirmed
+identical in substance to the content already stored.
+
+*Pass 2 (BASORG-found, correcting pass 1):* pass 1's fix was itself wrong in a new way — it put a
+**provenance sentence into a value slot whose domain is a value in that field's own terms**
+(`study_mode` holds "Full-time"/"Full time or part time"; `entry_requirements` holds admission
+criteria — neither holds a paragraph about URL-redirect verification). The siblings define the
+domain: every other record's `study_mode` values are short structured facts, and UniStart, added
+after pass 1, already had the correct shape — no `international` key at all when no international
+variant exists, `domestic` only. **Pass 2 removes the `international` key from
+`entry_requirements`/`study_mode` on all 3 records, matching UniStart exactly, and moves pass 1's
+explanatory text into `researcher_notes` verbatim rather than deleting it** — the evidence took
+live verification to establish and stays, just in the slot that holds provenance rather than the
+slot that holds a study mode. All 4 non-award pathway records now share one shape: `domestic` key
+only, no `international` key, the "why" living in `researcher_notes`. `international_eligible`
+required no change across either pass on any of the four — it was already `null` on the correct
+independent basis (no CRICOS code found).
 
 **Final distribution:** 69 plain Bachelor, 39 Honours, 5 plain (non-graduate) Diploma
 (`Undergraduate diploma / first-cycle`, a category UWA had zero of — Adelaide genuinely has it:
@@ -696,13 +710,13 @@ programmes) by fetching both variants and diffing directly:
 "domestic": ...}`) rather than tagged via `field_provenance` (which describes *how* a value was
 derived, not *which audience* it describes — mixing those axes in one closed enum was rejected as
 the same convention-drift risk that produced a Glasgow-adjacent defect elsewhere in this org).
-Populated for all 120 records on the `international` key **except UniStart, which has no
-`international` key at all** — the one non-award pathway record added after this section was
-first written has no international variant to key, so it carries `domestic` only rather than a
-key that would misleadingly imply one was checked and found absent. The other 3 non-award
-pathway records still carry an `international` key, but as of the 2026-08-22 provenance
-correction above, its value states plainly that no distinct international variant exists rather
-than duplicating `domestic`'s content under a misleading label. The `domestic` key beyond the
+Populated for all 116 non-pathway records on the `international` key. **All 4 non-award pathway
+records (ATSIP, CASM Foundation Year, Foundation Studies, UniStart) carry no `international` key
+at all** — none has a distinct international variant, so none carries a key that would either
+duplicate `domestic` under a misleading label (the first fix, corrected) or hold an explanation
+of its own absence in a slot meant for a value (the second fix, see the provenance section above
+for both passes). `domestic` only, on all four, matching the shape every other record uses when a
+key is genuinely inapplicable rather than merely unchecked. The `domestic` key beyond the
 non-award pathway category exists only on the 18 sampled records, documented explicitly as a
 sample rather than full coverage — a domestic student sees no data rather than mislabeled
 international data, an honest, visible gap.
