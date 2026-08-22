@@ -200,25 +200,47 @@ way `allowKeysetVariation` and `customLiveChecks` were added) — not as an `if 
 distinction is the whole reason three structurally different lanes (FK-reconcile ×2,
 new-rows ×1) have shared one engine without engine code forking.
 
-**Standing condition, unresolved as of this writing — confirmed directly, not assumed:**
-`find . -iname "*validate-research*" -not -path "*/node_modules/*"` returns only the
-script itself. **This tool has no unit tests of its own.** Every validation to date has
-been "run it, manually inspect a sample of the actual output before trusting a count,
-calibrate against at least one known case" — a real discipline (it caught 4 of the 9 bugs
-in §3 before they shipped), but one that depends on whoever runs the tool doing it by
-hand, every time, correctly. §3's bug list is the concrete argument for why that's a real
-risk and not a formality: this session hit two variants of the exact same failure shape —
-a matching rule too loose or too strict — on three separate features (name-stripping
-depth, `found_deadline`'s finding-type gate, the ID-collision substring match) despite
-deliberate calibration each time. **Do not wire this script into any automatic path (a CI
-gate, an auto-ingestion precondition, a scheduled re-run that acts on its output without a
-human reading it) before it has its own test suite** — at minimum: the blob-hash
-dedupe + JSON-field-value matching in `checkIdDiscipline` (already fixed twice for
-different reasons, see §3.1/§3.8), the supersession-exclusion logic, one `isRegression`
-test per existing `monotonicityCheck` per lane (the discarded `current_cycle_label`
-check, §3.9, is exactly the failure class a test would have caught before it ever produced
-43 findings), and `allowKeysetVariation`'s interaction with `requiredFields` (that a
-relaxed keyset check still enforces required-field presence).
+**Standing condition — was unresolved when this document was first written, resolved by
+package V1-7 (`__tests__/scripts/validate-research-records.test.ts`, 53 tests, pushed
+`6cf57d9`).** The precondition below is now satisfied, not lifted — the reasoning still
+holds, and it's what the test suite exists to answer:
+
+Every validation before V1-7 relied on "run it, manually inspect a sample of the actual
+output before trusting a count, calibrate against at least one known case" — a real
+discipline (it caught 4 of the 9 bugs in §3 before they shipped), but one that depended on
+whoever ran the tool doing it by hand, every time, correctly. §3's bug list was the
+concrete argument for why that was a real risk and not a formality: this session hit two
+variants of the exact same failure shape — a matching rule too loose or too strict — on
+three separate features despite deliberate calibration each time. V1-7's suite covers, by
+name: `checkContract` (required fields, keyset drift, `allowKeysetVariation`'s interaction
+with `requiredFields`); `filterRealBranches` (bug #1); `checkWithinBatchIdDiscipline`,
+including the exact V1-5 supersession shape; `findIdCollisionsInFileContent` with
+ECW4-021's real prose-citation text as a named regression case (bug #8);
+`checkLiveIdentityAndVocab` end-to-end with `fetch` mocked (FK existence,
+`identityReconciliation`, `requiredLiveVerificationState`/`requiredLiveStatus`,
+`enumVocabChecks`, and that monotonicity hits land in findings, never defects);
+`DLOPP_CONTRACT.logicalRules`'s `found_deadline` gate (bug #3 — the 8-record false
+positive); every `monotonicityCheck` on both `DLOPP_CONTRACT` and `ECW_CONTRACT` by name,
+`isRegression` called directly; `DLOPP_CONTRACT.customLiveChecks` end-to-end (status
+breakdown, non-active flagging, supersession-pair reporting including the
+"not found in this file set" branch); and `findTaxonomyConsistencyGaps`, extracted from
+`AU_R1_CONTRACT.customLiveChecks`, against the real Sydney gap shape from V1-4. Kill-tested
+before shipping — bug #3 was temporarily reintroduced and confirmed to fail exactly the
+one test meant to catch it, nothing else, before being reverted (the same "check your
+instrument" discipline every other package in this session used, applied to the tests
+themselves this time). The refactor that made these functions importable was verified
+behavior-preserving by running the pre-refactor committed script against the real P1 batch
+and confirming an identical defect count before and after.
+
+**Still not covered, by design, stated in the suite's own header:** `main()` (thin
+orchestration over what's tested); the git-process orchestration inside `checkIdDiscipline`
+itself (branch enumeration, blob hashing) — real I/O, not logic, left as an integration
+concern now that the two places bugs actually lived inside that loop (`filterRealBranches`,
+`findIdCollisionsInFileContent`) are extracted and covered; and
+`AU_R1_CONTRACT.customLiveChecks`'s university-resolution step, already covered by
+`__tests__/programs/ingest.test.ts`, plus its low-risk duplicate-URL and
+postgraduate-leakage sub-checks. Wiring this tool into an automatic path is a reasonable
+next step now, not before.
 
 ```bash
 npm run validate:research -- --lane=<dlopp|ecw|au-r1> <file1.jsonl> [file2.jsonl ...]
@@ -317,8 +339,12 @@ independent of which lane is being checked.
 too loose (4, 6, 7, 8 — treated two different things as the same) or too strict (3 — treated
 one legitimate thing as two different things), and every one was caught only by reading a
 sample of actual output before trusting a count, never by the rule looking correct on
-paper. That discipline is exactly what §2's "no unit tests yet" gap is asking to stop
-depending on any one person doing by hand.
+paper. §2's now-resolved standing condition, and V1-7's suite, exist to stop that being
+the only line of defense — a fast, repeatable test in place of one person's by-hand
+discipline every time the tool runs. For the five bugs in this file's own scope
+(`validate-research-records.ts`: #1, #2, #3, #8, and #9's discarded check), that suite now
+exists; #4–7 live in `audit-dedup-convention-drift.ts`, out of V1-7's scope, and remain
+covered only by the calibration discipline described here.
 
 ---
 
