@@ -201,6 +201,20 @@ next reader doesn't have to wonder whether 216 vs. 217 was a silent short-count.
 
 ## Method: Sydney (live_fetch, official primary source, different platform from UNSW)
 
+**Reproducibility caveat, added 2026-08-22 after RES-V2's independent verification pass:** the
+`.model.json` method documented below extracted all 149 records successfully the morning this
+lane ran it. Hours later the same day, RES-V2 attempting to source-verify a sample of those same
+URLs got HTTP 400 on every one — ruled out the obvious explanations first (a fresh URL outside
+the original sample also failed, robots.txt was unchanged, and it wasn't rate-limiting, since
+varying user agent/headers/HTTP version made no difference) before concluding the endpoint itself
+had broken intraday. V2 worked around it with rendered-DOM extraction (same underlying JS, same
+facts, a different path in) rather than treating it as a data problem, and Sydney's 149 records
+verified clean regardless. **Anyone re-running this method should verify the `.model.json`
+endpoint is currently responding before assuming the steps below still work as documented** — a
+documented method that has silently stopped working is worse than an undocumented one, since it
+costs a debugging session before anyone thinks to question the method itself rather than their
+own execution of it.
+
 `sydney.edu.au` is NOT bot-mitigated — `robots.txt` is permissive (`Allow: /`, only unrelated
 admin/search/archive paths disallowed; confirmed no `json`/`model`/`api` path exclusion before
 relying on the method below). But it is a different platform from UNSW's Callista/Next.js
