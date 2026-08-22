@@ -53,3 +53,24 @@ commit message's word: the false-provenance labeling defect is fixed with an hon
 representation (not a duplicate-under-a-new-label), and UniStart is sourced correctly. One minor
 schema-shape inconsistency (UniStart's missing vs. present `international` key) noted for
 whoever next touches this category, not blocking.
+
+## Addendum — the schema note above had a direction, and it was the opposite of what I flagged
+
+RES-V1's V1-12 check on this same field, cross-referenced with BASORG, resolved which of the two
+shapes is actually correct — and independently re-confirmed here rather than taken on report.
+`AU-R1-adelaide-002` ("Bachelor of Agricultural Sciences," an ordinary record) carries
+`study_mode: {"international": "Full-time"}` — a short, enum-like value, the field's real
+domain. **The three pathway records carry a full provenance paragraph in that same slot**
+(`"No distinct international variant published for this pathway -- confirmed live
+(2026-08-22)..."`) — a narrative explanation, not a study-mode value, sitting where
+`"Full-time"` or `"Full time or part time"` belongs. **UniStart's shape — omitting the key
+entirely when there is nothing to report — is the one consistent with every other record in the
+corpus.** The three "more thoroughly fixed" records are the ones that actually don't fit the
+field's own contract; the explanation belongs in `researcher_notes`, where it already,
+separately, correctly lives.
+
+Restating this plainly since I flagged the asymmetry but declined to call a direction: I had the
+observation right and the direction backwards. The check that resolved it was the same one this
+whole session keeps landing on — read the field's own ordinary values before judging one of its
+edge cases, rather than treating two internally-consistent-looking shapes as equally plausible
+candidates.
