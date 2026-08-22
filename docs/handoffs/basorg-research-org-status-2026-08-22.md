@@ -1977,3 +1977,63 @@ it to a work assignment.** The check was scoped to the symptom it was born from,
 extracting; ask BASORG for live counts (the researcher cannot query the table); **if the next target
 is already live, flag rather than skip silently** — an already-live corpus of unknown provenance may
 predate the evidence gate, and that is a BASORG call.
+
+## 8.4ww V2-12 CLEAN — including the arm designed to catch BASORG's own proposal
+
+RES-V2 (`9be7e53`, `v2_12_adelaide-slot-fix-verification.md`): **the fix holds, nothing routed back.**
+Exhaustive against all 120 records rather than sampled; 3 records/3 fields changed; provenance
+sentences confirmed **verbatim by exact substring match** in the new `researcher_notes`.
+
+**Question 2 is what actually settled it.** BASORG asked whether `researcher_notes` has a convention
+of its own that the moved prose must meet — **because if not, the defect had moved rather than been
+fixed.** RES-V2 didn't reason about it: it found **`DEGREE_TYPE CORRECTION` blocks already present in
+119/120 records** with an identical dated/attributed/labeled structure.
+
+> **Not "the text seems fine there" — evidence that the field's actual job is exactly this,
+> established from the corpus rather than from anyone's judgment.** The same move that found the
+> original defect, pointed at the destination field instead of the source.
+
+**Calibration, applied**: the three records are now the corpus's longest `researcher_notes`
+(3542–3999 chars vs 921–2054). Reported as **the convention's expected additive behavior on a
+thrice-corrected record, not as a symptom.** Naming a real observation without inflating it is the
+half the org has been worse at than catching things.
+
+**Headers re-fetched fresh** rather than cited from V2-11b — *a 301 confirmed hours ago is a claim
+about hours ago.*
+
+**The arm BASORG most wanted tested came back clean.** A verifier that only ever finds problems is
+not calibrated either; **the value is that the answer was determined rather than assumed.**
+
+### Scope reduction to V1-13
+V2's bonus arm swept **all 116 unaffected Adelaide records**: every value is `"Full-time"`,
+`"Full time or part time"`, or ≤1000-char admission prose. **Adelaide is cleared of the class
+independently.** V1-13 rescoped to the rest — **which is now entirely live data** (UNSW/Monash/
+Sydney/UWA + Ottawa), so any finding needs **Path A** and becomes a founder-decision item.
+
+## 8.4xx CALGARY APPROVED — and RES-R1 gated itself before reporting
+
+**Verified by BASORG against the table before approving**, identity confirmed **by domain, not name
+match**:
+
+```
+University of Calgary · https://www.ucalgary.ca · canonical · superseded_by_id null · programs 0
+```
+
+Exactly one matching row. QS 2027 **#249 / Canada #11**, the next rank after Ottawa's #10,
+cross-checked against multiple independent sources.
+
+### RES-R1's list was built correctly — and it re-verified anyway
+BASORG's §8.4vv correction was **aimed at a risk that did not apply**: RES-R1's remaining-17 came
+from BASORG's original **zero-DB-coverage query**, not from git activity, which is why the seven
+already-live universities were never in it — **"already covered," not "unclaimed."**
+
+**The correction was still right to send** (BASORG had no way to know how the list was built, and
+dispatching on an unverified assumption was the error regardless) — **but letting it stand broader
+than the facts would have been the overstatement failure again.**
+
+**What RES-R1 did instead of arguing provenance is the better move**: it declined to lean on *"my
+list was built correctly hours ago"* and **re-queried all 17 live — all zero, including Calgary.**
+
+> **Correct-when-built is exactly the property that stops holding.** Same shape as the README
+> passages that went wrong when the data moved, and the commit still reading "five universities."
+> **Sound construction and re-checking are not alternatives.**
