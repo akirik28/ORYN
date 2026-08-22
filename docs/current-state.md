@@ -117,9 +117,24 @@ single YÖK Atlas page, which is expected while those rows have no per-programme
 "Economics" entries are the **Harvard College `AB`** and the **Extension School `ALB`** — same
 name, same level, same catalogue URL, different school and different degree designation.
 
-Duplicate identity for a programme therefore requires **name + degree_level + degree_type +
-faculty_or_school + campus + url**. Under that definition there are zero duplicates. Under the
-name+level+url definition alone there appear to be 120, and that number is wrong.
+Duplicate identity for a programme therefore requires **degree_type** as well as name, level and
+url. Under that definition there are zero duplicates; under name+level+url alone there appear to
+be 120, and that number is wrong.
+
+**And this is enforced, not merely observed.** The live schema carries a UNIQUE index —
+`university_programs_dedup_idx`, added 2026-08-21 by `program_dedup_index_degree_type`:
+
+```sql
+UNIQUE (university_id, normalized_name, COALESCE(degree_level,''),
+        COALESCE(language_of_instruction,''), official_program_url,
+        COALESCE(degree_type,''))
+```
+
+So the database **cannot** hold a duplicate under that definition — the measured zero is a
+consequence of an enforced constraint rather than a lucky state, and it will stay zero through
+future ingestion without anyone re-checking. The schema had already encoded `degree_type` as part
+of programme identity before this evening's check derived the same thing empirically; anyone
+reasoning about duplicates should read this index rather than inventing a definition, as I did.
 
 ## Migrations
 
