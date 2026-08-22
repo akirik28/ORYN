@@ -2426,3 +2426,40 @@ distinct reason**, and the transferable rules.
 **§1 relabelled as a superseded morning snapshot rather than deleted.** **Being wrong about the
 morning is only a problem if it claims to describe now** — and the history has value that a
 correction would destroy.
+
+## 8.5i SQUASH-MERGE CONFLICTS — find the boundary, don't resolve the conflict
+
+**#121 conflicted with main on this very file. The cause was not divergent edits — it was the
+same edits twice.**
+
+**#102 was squash-merged** (`3071346`). A squash puts the **content** on main but not the **commit
+identities**, so git saw **22 already-merged commits as unmerged work** and tried to replay changes
+that were already present.
+
+> **Every branch that keeps working after its PR is squash-merged will hit this.** In this org that
+> is most of them.
+
+### The resolution — don't resolve, re-base past the boundary
+**Resolving conflicts by hand risks reintroducing content the squash already landed, and afterwards
+you cannot easily tell whether you did.** Instead:
+
+1. **Find the squash boundary**: walk your commits printing the file's line count at each, looking
+   for the one matching main's.
+2. **Verify byte-identity, not the line count.** `git hash-object` on both blobs — `93efdec` and
+   `origin/main` both gave `b72af8a6…`. **A matching line count is not a matching file**, and
+   treating it as one is the same class of error as every other shortcut logged in this document.
+3. `git rebase --onto origin/main <boundary> HEAD` — replayed 13 commits, **zero conflicts.**
+4. **Confirm the result is byte-identical to pre-rebase** (`944ea7da…`) so the rebase preserved
+   content rather than silently dropping a hunk. **Also verify the branch pointer moved** — the
+   rebase left a detached HEAD.
+
+**Final diff against main: one file, 739 insertions, 1 deletion** — the deletion being the §1
+heading deliberately relabelled in §8.5h.
+
+### The instrument bug ORYN-CEO caught in itself
+Its first mergeability check **read `merge-tree`'s stat output instead of its exit code** — on the
+exact command Rule 27 names — and reported a clean 745-line addition. **The stat was wrong about
+the conflict AND about the shape** (real: 739 + 1, not 745 + 0).
+
+**What made it look again was `gh` reporting `CONFLICTING` — a second instrument disagreeing with
+its own cleaner-looking answer.** That only works because the disagreeing result wasn't discarded.
