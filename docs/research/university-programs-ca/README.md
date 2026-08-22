@@ -1,4 +1,11 @@
-# Canada Programme Catalogue — Eight Universities
+# Canada Programme Catalogue — Nine Universities
+
+**Note (2026-08-22): a ninth university, Ottawa, was added after this document's original eight
+by a separate lane (RES-R1) under a separate mandate — BASORG-scoped "zero DB coverage AND zero
+research corpus" targeting by live QS 2027 rank, not the coordinator's originally-named eight.
+The body text below through "Remaining gaps" describes the original eight lane's own work exactly
+as that lane wrote it; Ottawa's own method is documented in its own section near the end, clearly
+separated rather than blended into the eight-university narrative it wasn't part of.**
 
 ## Why this lane exists
 
@@ -30,7 +37,16 @@ see below.
 | Alberta | 179 | `ca_programs_alberta_2026-08-22.jsonl` | `a6f8a3a` |
 | McMaster | 432 | `ca_programs_mcmaster_2026-08-22.jsonl` | `f2d5dfc` |
 | Western | 555 | `ca_programs_western_2026-08-22.jsonl` | `68c58d7` |
-| **Total** | **3,651** | `data/research/university-programs/ca_programs_*.jsonl` | branch `oryn/ca-programmes` |
+| **Subtotal (original eight)** | **3,651** | `data/research/university-programs/ca_programs_*.jsonl` | branch `oryn/ca-programmes` |
+| Ottawa (RES-R1, separate lane/mandate — see its own section below) | 276 | `ca_programs_ottawa_2026-08-22.jsonl` | branch `oryn/res-r1-au-programmes` |
+| **Total (nine)** | **3,927** | | |
+
+Note on McMaster's 432 (original eight, table above): sourced correctly per this lane's own
+robots.txt finding below (calendar host is unblocked), but BASORG separately determined the
+calendar host fails a *source-authority* gate unrelated to crawl-permission — a different check
+from the one this document verifies. McMaster's 432 exist as research but are not DB-eligible
+pending a founder decision on that gate. Not this lane's finding; recorded here because a reader
+of the table above would otherwise reasonably assume "researched cleanly" means "ingestion-ready."
 
 Schema: the same 21-field research record used across the entire DE/NL/UK/US/Turkey/priority-country
 corpus (`research_program_id, university_name, university_country, university_official_domain,
@@ -146,6 +162,13 @@ robots.txt on both the marketing-facing "future students" domain and the separat
 domain before assuming either is representative of the other — McMaster alone shows they can
 disagree.
 
+**Ottawa (added later, RES-R1 lane): clean, no block found.** `catalogue.uottawa.ca`'s robots.txt
+disallows only administrative/infrastructure paths (`/admin/`, `/en/search/`, `/en/archives/`,
+etc.) — nothing touching `/en/undergrad/` content, no AI-crawler-specific rules, no crawl-delay.
+Extends this section's running count to 4 of 9 Canadian universities checked with a
+crawler-blocking posture (McGill, McMaster's marketing host, Western) against 5 clean (the
+original eight's other five, plus Ottawa).
+
 ## Agent stalls: three of eight dispatches, zero output, one fix that held
 
 Three of the eight research dispatches in this lane — Alberta, McMaster, Western, each on first
@@ -207,6 +230,96 @@ pointing at a closed cycle's archive"). The co-op-taxonomy and crawler-posture c
 document were re-verified directly against the committed JSONL files while writing this handoff,
 not reproduced from memory of the original research passes.
 
+## Method: Ottawa (276 records, RES-R1 lane, separate mandate — see the note at the top)
+
+Picked by live QS World University Rankings 2027 verification (4 independent corroborating
+fetches, same discipline as the AU package's top-8), among universities with **zero DB rows AND
+zero research-corpus files** — a gate added specifically because McMaster's zero-DB-rows turned
+out to mean "researched and gate-blocked," not "unresearched," which the naive zero-coverage
+check in this lane's own original scoping missed. Ottawa: zero DB rows, zero corpus mentions
+outside `university-programs/` (confirmed by grep before starting), clean robots.txt (see above).
+
+**The concentration-component question, and why the answer isn't "exclude Minor/Major":**
+398 URLs fetched from `catalogue.uottawa.ca/en/undergrad/` (sitemap-derived, zero classification
+decisions in stage 1, per this project's now-standard fetch-then-classify discipline). Census
+found 119 titled "Minor in X" / "Major in X" / "Advanced Minor in X" (67 + 50 + 2) — the
+Indigenous Studies Major page states outright: *"Please refer to the Academic Regulations for
+information on the Honours bachelor's with double major and the Honours bachelor's with major and
+minor."* Neither confers a credential alone; both attach to a base Honours Bachelor's.
+
+**This looked, at first, like it should generalize to Montréal's `Majeure`/`Mineure`** (86 records
+in the original eight's table above, each with its own `degree_type`/`degree_level` row) — same
+English gloss, same surface shape. **It doesn't, and the distinction is worth carrying forward
+explicitly because the next lane will hit the same surface shape and reach for the same wrong
+generalization:**
+
+- **Ottawa (Ontario concentration model):** *"...information on the Honours bachelor's **with**
+  major and minor."* You are already admitted to the bachelor's; the major/minor is a field
+  declared within it. Not independently enrolled in.
+- **Montréal (Québec *cumul* model):** *"Vous pouvez **aussi cumuler** la majeure avec un ou
+  plusieurs programmes... pour l'obtention d'un baccalauréat **par cumul**."* ("You can **also
+  accumulate** the major with one or more programs... for a bachelor's **by accumulation**.") You
+  enrol in the majeure as its own unit and accumulate separate units toward a degree. The *"aussi"*
+  is load-bearing — it is a thing you enrol in, which can *also* be combined with others.
+
+**The working rule, tested per source rather than assumed from an English gloss: include a unit
+if it is independently enrolled in and accumulates toward a credential; exclude it if it is a
+concentration declared within a credential you are already admitted to.** Applied to all 119 of
+Ottawa's individually (not sampled) — 109 hit the concentration-signal language directly in full
+text; the remaining 10 got individual review, 9 confirmed by structural identity (bare
+compulsory/optional course-list pages, no admission section — same template as the 109, just
+missing that exact sentence in the crawled text), and **1 failed the test and was reclassified**:
+`Majeure en lettres françaises et Baccalauréat en éducation` states admission to *that combined
+unit itself* is suspended — i.e., there is a direct admission pathway to it, unlike a bare Major
+or Minor page. It stays, as a combined credential. Final: **118 excluded, not 119** — caught only
+by reviewing the excluded population individually; a prefix-based classifier had silently filed
+it under "Major" without surfacing it. **Neither Ottawa's exclusion nor Montréal's inclusion is a
+defect. Do not "fix" this into consistency in either direction** — a future lane normalizing
+Montréal's 86 into exclusions, or Ottawa's 118 into inclusions, would destroy a true distinction
+between two different credential systems to make two numbers rhyme.
+
+**Other exclusions:** 2 more URLs collapsed as aliases (`bachelor-social-sciences-major/` and
+`bachelor-social-sciences-interdisciplinary-studies/` both redirect-equivalent in content to
+`bachelor-social-sciences/`, kept as canonical — UWA alias-pair precedent). 2 more
+(`certificate-law/`, `certificate-indigenous-laws/`) are the *same* hub/overview page (byte-
+identical opening text) listing several *other* named credentials rather than describing
+themselves — neither is a real, distinct credential. One of the credentials that hub page names,
+**"General Certificate in Law," has no page of its own anywhere in the 398-URL sitemap** — recorded
+here as a documented gap (same shape as RES-V2's UniStart finding on Adelaide), not silently
+dropped. Reconciliation: **398 = 118 (components, enrollability-tested) + 2 (alias) + 2 (hub) +
+276 (included).**
+
+**French-medium programmes, not forced into an English taxonomy:** Ottawa is bilingual at the
+programme level, not just the catalogue UI — a fully French-titled programme
+(`Baccalauréat spécialisé en sciences de l'activité physique...`) sits under the `/en/undergrad/`
+URL path, so **the URL path is not evidence of language; language_of_instruction is read per
+record.** 299 of 398 fetched pages carry an explicit source statement ("This program is offered
+in English and in French" / "in French only" / "in English only," etc., 11 distinct observed
+phrasings) — recorded verbatim, `field_provenance: explicit_source_field`, left `null` on the 99
+without one rather than inferred. Two credentials had no clean equivalent anywhere in the existing
+Canada corpus's vocabulary and were **escalated to BASORG rather than minted in-lane**, per the
+closed-vocabulary rule: `Licentiate in Law (LLL)` and `Licentiate in Law (LLL) and Honours BSocSc
+in International Development and Globalization` — `degree_type` recorded as the source states it;
+`degree_level` left `null` pending a ruling.
+
+**Status caveats, structured rather than buried in prose:** a new field, `status_note` (verbatim
+source statement, `null` when absent — no enum, since only three shapes have been observed across
+this whole package so far and this repo already has two founder-pending items caused by fixing a
+vocabulary before the real distribution was known: migration 0057's flat column can't represent
+`kilavuz_codes`' one-to-many shape, and `cycle_status` has no slot for the `unknown` 41 records
+need). 22 of 276 included records carry one — mostly *"admission... is suspended until further
+notice,"* one *"Coming in 2027."* A student browsing a suspended programme with no signal would
+see it as open; this field exists so that's queryable rather than only discoverable by reading
+`researcher_notes` prose.
+
+**Validation on this lane's own output, not assumed clean:** corpus-wide `research_program_id`
+uniqueness — PASS, 276/276 unique, zero collisions against the rest of the corpus. URL
+cardinality — **276 records, 276 distinct `official_program_url` values, ratio 1.0, zero
+collisions** — checked specifically because Toronto and Western (this same document, "AI-crawler-
+blocking posture" section context and the live-DB overlap check that preceded this lane) both
+have real URL collisions in their already-ingested data (Western: up to 160 programmes sharing one
+generic listing URL) that would have broken a URL-as-identity assumption if reproduced here.
+
 ## Remaining gaps, in priority order
 
 1. **Not yet ingested.** All 3,651 records exist only as committed JSONL on `oryn/ca-programmes`;
@@ -226,3 +339,11 @@ not reproduced from memory of the original research passes.
 5. **No graduate-vs-undergraduate coverage audit was performed across the eight files.** This
    lane did not track the split, and no claim is made here about relative completeness between
    levels.
+6. **Ottawa: `Licentiate in Law (LLL)` and its combined BSocSc variant have no `degree_level`**,
+   escalated to BASORG rather than mapped in-lane — no clean existing-corpus equivalent found.
+   Awaiting a ruling before either record can carry a populated value.
+7. **Ottawa: "General Certificate in Law" is a documented gap, not a missing record** — named on
+   `certificate-law/`'s hub page, no dedicated page exists anywhere in the 398-URL sitemap. If a
+   future crawl of `catalogue.uottawa.ca` finds one, this is the credential it would belong to.
+8. **Ottawa: postgraduate coverage was out of scope**, same as every other university in this
+   corpus and the AU package before it — the sitemap's 305 `/en/graduate/` URLs were never fetched.
