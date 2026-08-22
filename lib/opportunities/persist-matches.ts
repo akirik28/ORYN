@@ -117,10 +117,12 @@ export async function refreshOpportunityMatches(userId: string): Promise<{ refre
       // ?? false: migration 0060 may not be applied on this environment yet — an absent
       // column means "not confirmed open," which is also the honest live default.
       countryEligibilityConfirmedOpen: opportunity.country_eligibility_confirmed_open ?? false,
-      // Restriction prose suppresses the "not verified yet" note — the row WAS researched
-      // and its restriction evidence is already surfaced (counselor advisory notes, the
-      // opportunity detail page's Eligibility notes section).
-      hasUnstructuredEligibilityEvidence: Boolean(opportunity.citizenship_restrictions || opportunity.residency_restrictions),
+      // Package 8 fix: previously reduced to a boolean here (only used to suppress the
+      // "not verified yet" note, never to say what the prose actually says). Passing the
+      // raw text lets computeEligibility surface the same restriction note
+      // lib/counselor/eligibility.ts already does, in the same words.
+      citizenshipRestrictions: opportunity.citizenship_restrictions,
+      residencyRestrictions: opportunity.residency_restrictions,
       fields: opportunity.fields,
       country: opportunity.country,
     };

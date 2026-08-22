@@ -33,12 +33,18 @@ export interface OpportunityForMatching {
    * and only this marker distinguishes them. Optional: absent means not confirmed, which
    * is the honest default, never "restricted." */
   countryEligibilityConfirmedOpen?: boolean;
-  /** Whether the row carries free-text citizenship/residency restriction prose
-   * (citizenship_restrictions / residency_restrictions) that eligibility code deliberately
-   * never parses. Presence means the row WAS researched and a restriction is known to
-   * exist — so the "not verified yet" note below would be false for it; the prose itself
-   * is already surfaced on the counselor path and the opportunity detail page. */
-  hasUnstructuredEligibilityEvidence?: boolean;
+  /** Free-text citizenship/residency restriction prose (opportunities.citizenship_restrictions
+   * / residency_restrictions) — too unstructured for the allow-list checks above to parse, but
+   * real evidence a student should see. Surfaced below with the exact wording lib/counselor/
+   * eligibility.ts's evaluateOpportunityEligibility already uses for the same two columns, so
+   * the card and the Advisor never disagree about what one row's own text says. Package 8 fix:
+   * this function previously received only a boolean summary of "prose exists" here, and used
+   * it solely to suppress the generic "not verified yet" note below — going completely silent
+   * (eligible: true, notes: null) on a row whose own text describes a real restriction, live-
+   * confirmed on Garcia Summer Research Program. Optional/null: no prose on file, never
+   * "confirmed unrestricted." */
+  citizenshipRestrictions?: string | null;
+  residencyRestrictions?: string | null;
   fields: string[];
   /** The opportunity's own base country (distinct from `eligibleCountries`, which is who
    * may apply — an in-person program based in France could still be open worldwide).
@@ -124,36 +130,57 @@ export function computeEligibility(
     }
   }
 
-  if (opportunity.eligibleCountries.length > 0) {
+  const hasCountryRestriction = opportunity.eligibleCountries.length > 0;
+  if (hasCountryRestriction) {
     if (!student.country) {
       unknownNotes.push("Restricted by country — add your country to check.");
     } else if (!opportunity.eligibleCountries.some((eligible) => isSameCountry(eligible, student.country!))) {
       return { eligible: false, notes: `Not currently open to students from ${student.country}.` };
     }
-  } else if (
-    // Empty eligibleCountries has two live meanings: research-confirmed open (deliberately
-    // stored empty) and never-researched (~90% of live rows). Only the first has earned
-    // silence. Without the confirmed-open marker — and with no other eligibility evidence
-    // on the row (a structured citizenship gate, or restriction prose the counselor path
-    // and detail page already surface) — the honest claim is "not verified," said out
-    // loud, not implied openness (Phase 68: know when you don't know). Still an
-    // unknown-note, never an exclusion: absence of research is not evidence of a
-    // restriction either.
-    !(opportunity.countryEligibilityConfirmedOpen ?? false) &&
-    (opportunity.eligibleCitizenships ?? []).length === 0 &&
-    !(opportunity.hasUnstructuredEligibilityEvidence ?? false)
-  ) {
-    unknownNotes.push("Country eligibility not verified yet — check the official page for restrictions.");
   }
 
   const eligibleCitizenships = opportunity.eligibleCitizenships ?? [];
-  if (eligibleCitizenships.length > 0) {
+  const hasCitizenshipRestriction = eligibleCitizenships.length > 0;
+  if (hasCitizenshipRestriction) {
     const citizenshipCountries = student.citizenshipCountries ?? [];
     if (citizenshipCountries.length === 0) {
       unknownNotes.push("Requires a specific citizenship — add yours in Settings to check.");
     } else if (!citizenshipCountries.some((c) => eligibleCitizenships.some((e) => isSameCountry(c, e)))) {
       return { eligible: false, notes: `Requires citizenship in ${eligibleCitizenships.join(", ")}.` };
     }
+  }
+
+  // Free-text citizenship/residency evidence — same wording and same gating (only surfaced
+  // when the structured column above didn't already resolve the same question) as
+  // lib/counselor/eligibility.ts's evaluateOpportunityEligibility, so the card and the
+  // Advisor never disagree about what one row's own text says. THE FIX (Package 8): before
+  // this, the row went completely silent whenever a structured allow-list was absent but
+  // prose existed — the counselor surfaced it, this function didn't, live-confirmed on
+  // Garcia Summer Research Program. 39 of 199 currently-actionable live rows carry prose
+  // this now surfaces that previously produced no note at all (verified against
+  // oryn-qa-scratch, 2026-08-22).
+  if (opportunity.citizenshipRestrictions && !hasCitizenshipRestriction) {
+    unknownNotes.push(`Citizenship restriction on file (not automatically verified): ${opportunity.citizenshipRestrictions}`);
+  }
+  if (opportunity.residencyRestrictions && !hasCountryRestriction) {
+    unknownNotes.push(`Residency restriction on file (not automatically verified): ${opportunity.residencyRestrictions}`);
+  }
+
+  // Empty eligibleCountries has two live meanings: research-confirmed open (deliberately
+  // stored empty) and never-researched (~90% of live rows). Only the first has earned
+  // silence. Without the confirmed-open marker — and with no other eligibility evidence on
+  // the row (a structured citizenship gate, or the restriction prose just surfaced above) —
+  // the honest claim is "not verified," said out loud, not implied openness (Phase 68: know
+  // when you don't know). Still an unknown-note, never an exclusion: absence of research is
+  // not evidence of a restriction either.
+  const hasUnstructuredRestrictionEvidence = Boolean(opportunity.citizenshipRestrictions || opportunity.residencyRestrictions);
+  if (
+    !hasCountryRestriction &&
+    !hasCitizenshipRestriction &&
+    !hasUnstructuredRestrictionEvidence &&
+    !(opportunity.countryEligibilityConfirmedOpen ?? false)
+  ) {
+    unknownNotes.push("Country eligibility not verified yet — check the official page for restrictions.");
   }
 
   const eligibleGrades = opportunity.eligibleGrades ?? [];
