@@ -9,7 +9,7 @@ where, and how to tell it worked.
 
 - **What happened today**: `docs/ORYN-DAY-REPORT-2026-08-22.md` — read this first if you only
   read one thing.
-- **The complete list of everything needing you**: `docs/founder-blocked-backlog.md` (35 items;
+- **The complete list of everything needing you**: `docs/founder-blocked-backlog.md` (36 items;
   this page sequences only the ones that matter tonight).
 - **What is actually true right now**: `docs/current-state.md`.
 
@@ -47,12 +47,13 @@ unprivileged call. This was executed live, not inferred from reading the schema.
 UPDATE policy says *you may update your own row*, which is correct — but **RLS is row-scoped, not
 column-scoped**, so `is_admin` is as writable to a student as their own display name. Admin routes
 then use a service-role client that bypasses RLS entirely, so this doesn't widen a view — it hands
-over the key that switches RLS off. Two computed columns, `profile_strength_score` and
-`completeness_percent`, have the same defect and the same fix.
+over the key that switches RLS off.
 
-**Note, if you saw the earlier warning on this item**: `0062` was briefly defective and has been
-corrected. It now guards `is_admin` alone — the version that would have frozen score recompute
-never reached the database. Details in backlog item 36.
+**`0062` guards `is_admin` and nothing else** — that alone closes the escalation, and it is safe
+to apply as it now stands. If you saw an earlier warning on this item: the first version also
+guarded two computed score columns, which would have silently frozen score recompute. It was
+caught and narrowed before anything ran against the database. Those two columns moved to `0063`,
+which is merged, unapplied, and **not urgent** — it needs no decision from you tonight.
 
 **How**: Supabase dashboard → SQL Editor → paste
 `supabase/migrations/0062_*.sql` → Run. Then confirm a non-admin account can no longer change
@@ -138,8 +139,14 @@ unresolved and flagged rather than guessed at.
 
 ## What you do NOT need to do
 
-- **No code fixes.** `main` was independently verified today: lint clean, typecheck clean,
-  124 files / 1,888 tests passing, production build succeeds. The app was also run against the
-  live database and walked by hand.
+- **No code fixes tonight.** `main` was independently re-verified at the end of the evening:
+  lint clean, typecheck clean, **139 files / 2,096 tests passing**, production build succeeds.
+  (The app was also run against the live database and walked by hand — but that was this
+  morning, ~78 merges ago. A full end-to-end walk is in progress and will be reported
+  separately; treat the hand-walk as verified for this morning's code, not tonight's.)
+- **One known regression, and it does not affect you.** Tonight's own security work made the
+  dashboard depend on `SUPABASE_SECRET_KEY` at page-render time, so a deployment missing that
+  key would return an error page instead of degrading. **Your `.env.local` has the key**, so you
+  will not hit it. A fix is in progress. Flagged because it is live on `main` and I merged it.
 - **No hunting.** Everything remaining is in `docs/founder-blocked-backlog.md`, and every item
   there names the exact action, why it blocks, and what it depends on.
