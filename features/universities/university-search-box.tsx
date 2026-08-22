@@ -100,6 +100,7 @@ export function UniversitySearchBox({ defaultValue, country }: { defaultValue?: 
           aria-expanded={open}
           aria-controls={listboxId}
           aria-autocomplete="list"
+          aria-label="Search universities"
           className="pl-7 sm:w-72"
           value={query}
           placeholder="Search by university name…"

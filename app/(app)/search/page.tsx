@@ -24,7 +24,13 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
       />
 
       <form action="/search" className="flex gap-2">
-        <Input name="q" defaultValue={query} placeholder="Search Oryn... (or press ⌘K anywhere)" autoFocus />
+        <Input
+          name="q"
+          defaultValue={query}
+          placeholder="Search Oryn... (or press ⌘K anywhere)"
+          aria-label="Search Oryn"
+          autoFocus
+        />
         <Button type="submit">Search</Button>
       </form>
 
