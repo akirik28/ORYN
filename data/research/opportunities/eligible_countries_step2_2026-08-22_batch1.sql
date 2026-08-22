@@ -1,0 +1,159 @@
+-- Step 2, batch 1: real per-record research against 24 opportunities.eligible_countries
+-- null/empty rows, official-source-first, applied 2026-08-22 against qtcvcflzxbuagvvwahhu.
+--
+-- Full findings, sourcing, and per-row reasoning for all 24: see the companion report
+-- docs/research/opportunities-eligible-countries/README.md (section "Step 2 batch 1").
+--
+-- Net structured yield: 1 row populated. This is a deliberate, expected outcome of the
+-- methodology, not a shortfall -- the other 23 resolved to one of three legitimate
+-- non-write outcomes: (a) explicitly confirmed open/no-restriction (5 programs -- correct
+-- to stay empty, since empty eligible_countries already means "not restricted by country"
+-- per lib/opportunities/matching.ts computeEligibility and lib/counselor/eligibility.ts
+-- evaluateOpportunityEligibility, both confirmed by direct code read before this batch
+-- started), (b) checked against a real official page and no citizenship/residency statement
+-- was found (15 programs -- a genuine negative finding, not a failed search), or
+-- (c) conflicting evidence found and recorded rather than guessed (1 program, HOSA).
+--
+-- UWC Türkiye (97fa39ad) is the one write: a specific, compound citizenship/residency rule
+-- (Turkish citizenship, OR a Turkish-citizen parent, OR 5+ years of Turkey residency) found
+-- via WebSearch-indexed excerpts of UWC Türkiye's own official pages -- direct fetch of
+-- tr.uwc.org returned HTTP 403 (bot-blocked) on 2 independent attempts, consistent with this
+-- project's prior documented experience with Turkish .org.tr sites (see
+-- docs/research/opportunities-turkey/README.md's "Known gate not yet fixed" section and
+-- docs/research/university-requirements/de-nl-requirements-deadlines-summary.md's D3 finding
+-- for the general pattern of official sources that are real but currently un-fetchable).
+-- source_confidence recorded as 'medium', not 'high', specifically because of this --
+-- flagged for a future pass to attempt a direct-fetch reconfirmation if the block lifts.
+
+BEGIN;
+
+UPDATE public.opportunities
+SET eligible_countries = ARRAY['Türkiye'],
+    citizenship_restrictions = 'Requires Turkish citizenship; if the candidate is not a Turkish citizen, at least one parent must be a Turkish citizen, or the candidate must have resided in Turkey for at least 5 years (selected students represent Turkey at UWC and are expected to be fluent in Turkish). Sourced via WebSearch-indexed excerpts of UWC Turkiye''s own official pages (basvuru/uygunluk-kriterleri, secim-kriterleri) -- direct fetch of tr.uwc.org returned HTTP 403 (bot-blocked) on 2 attempts 2026-08-22, consistent with this project''s prior experience with Turkish .org.tr sites; not independently re-confirmed via a raw page fetch.',
+    source_confidence = 'medium',
+    updated_at = now()
+WHERE id = '97fa39ad-8c65-4603-a07d-c88fe22982ef'
+  AND (eligible_countries IS NULL OR eligible_countries = '{}');
+
+COMMIT;
+
+-- ============================================================================
+-- Every other row in this batch is a documented non-write. Recorded here (not as SQL,
+-- since there is nothing to execute) so the full 24-row batch is traceable from one file:
+--
+-- CONFIRMED EXPLICITLY OPEN (no restriction -- correct to stay empty, no fabricated list):
+--   c3a98c43 Yale Young Global Scholars -- official /eligibility page: "YYGS accepts
+--     applications from ALL countries, and offers the opportunity for students to apply for
+--     need-based financial aid to students from ALL countries."
+--   30a605ab + cb1ae3e2 The Diamond Challenge / Diamond Challenge (DUPLICATE PAIR -- same
+--     organization "Horn Entrepreneurship, University of Delaware", same official_url domain
+--     diamondchallenge.org, different category rows [competition vs entrepreneurship] --
+--     flagged for a dedup/merge pass, not resolved by this lane) -- official page motto
+--     "Any Idea, Any Team, Any Country"; named international pitch-event partners across
+--     Armenia, Canada, China, Japan, Nigeria, Panama, Sweden, USA and others.
+--   db25d327 FIRST Robotics Competition -- checked firstinspires.org/programs/frc/ and 2
+--     dedicated eligibility/championship subpages; no citizenship/nationality restriction
+--     found on any of the 3; the international-teams-and-regions listing (California,
+--     Michigan, Texas, Israel, Ontario, etc.) describes competition venues, not an
+--     eligibility gate. ~35 countries participate per the organizer's own figures.
+--   50392e5e LaunchX -- launchx.com/admissions checked directly, no citizenship/nationality
+--     language found; online vs in-person (San Diego) tracks not distinguished by
+--     citizenship on the page.
+--   f43ddfc3 King's College London Pre-University Summer School -- eligibility criteria on
+--     the official page are age/academic-readiness only ("aged 16 or 17", "turn 16 before
+--     arrival", "18th birthday must be after the last day of the programme"); no
+--     citizenship/nationality/residency language present.
+--
+-- CONFLICTING EVIDENCE -- recorded, not resolved:
+--   aa64db8b HOSA Future Health Professionals -- two independent WebSearch queries against
+--     hosa.org content returned two different international-chapter country lists for the
+--     same claimed "current" set: one gave American Samoa/Canada/Germany/Italy/Puerto Rico
+--     (this row's own pre-existing description text), the other gave American Samoa/Canada/
+--     China/Korea/Puerto Rico/Turkey/Vietnam (from a 2026 50th-Anniversary-ILC search hit).
+--     Both a direct hosa.org/join fetch and a hosa.org/whatishosa fetch (404) failed to
+--     surface HOSA's own authoritative current chapter list. Left null rather than picking
+--     either list -- a genuine unresolved conflict, not a research gap to paper over.
+--
+-- CHECKED AGAINST A REAL OFFICIAL PAGE, NO CITIZENSHIP/RESIDENCY STATEMENT FOUND (genuine
+-- negative findings -- these pages were actually reached and read, not just unsearched):
+--   2f0e0301 Ozyegin University Summer Research Program -- hsri.ozyegin.edu.tr/applications/
+--     : "All high school levels can apply." No geographic language at all.
+--   96557dbb Bilkent University Summer Camp -- FAQ page (sikca-sorulan-sorular) specifically
+--     checked; only criterion stated is grade level (completed 9th-12th by June 2026).
+--   d780bc55 Istanbul Bilgi University HS Summer School -- application page asks for
+--     "province where the applicant attends high school" (a mild structural signal of
+--     Turkey-based schooling, but NOT an explicit eligibility statement -- not treated as
+--     sufficient evidence per RULE-ELIGIBILITY-010's "only an explicit affirmative
+--     statement" bar). Also separately confirmed the institution itself is open and
+--     operating (a search-summary claim it had been "closed by decree" was checked
+--     against the live homepage and found false -- recorded as a negative finding worth
+--     keeping, per this project's own discipline, even though it isn't an eligibility fact).
+--   973b3bdd ITU Lise Yaz Okulu 2026 -- no citizenship/nationality language on the official
+--     page; confirmed current 2026 session dates (July 6-17 and July 20-31) and a
+--     registration deadline (July 16) as an incidental finding, not applied to any column
+--     by this lane (out of eligible_countries scope).
+--   1d4f5e60 Sabanci University Summer School -- no citizenship/nationality language found;
+--     page states the program aims for a "multicultural environment," which is suggestive
+--     but not an explicit eligibility statement either way.
+--   ae702f36 IBB Genc Gonullu Programi -- application page asks for province/district of
+--     residence and states age ranges (15-25 / 18-25), but does not explicitly require
+--     Turkish citizenship or Istanbul residency.
+--   d5790a1c Genclik Merkezleri (Youth Centres) e-Genc -- official FAQ states only an age
+--     criterion ("12-29 yas arasindaki genclerimiz uye olabilir") -- no citizenship/
+--     residency language.
+--   4d2e55b3 Istanbul Kent Konseyi Genclik Meclisi -- direct fetch failed (TLS certificate
+--     error); WebSearch of the same official domain surfaced only an age/location
+--     description (16-28, "Istanbul'da yasayan") in third-party paraphrase, not an
+--     applicant-facing citizenship rule -- left null rather than promoting a paraphrased,
+--     non-verbatim age/location description into a country array.
+--   4b4881e4 American Legion Boys State -- checked 2 official pages (main youth-programs
+--     page, state-eligibility-dates page); neither states a citizenship/residency
+--     requirement. WebSearch surfaced a genuinely important counter-signal against the
+--     obvious assumption: an official legion.org article titled "Non-citizens have special
+--     role in Ohio Boys State" confirms at least one state's program explicitly welcomes
+--     non-citizen participants -- directly disproving what would otherwise have been a
+--     reasonable-looking "US civic program = US citizens only" inference. Left null.
+--   0804bd36 DECA (already in Step 1's bucket 1, not re-fetched this batch -- residency_
+--     restrictions already recorded "does not state whether non-U.S. schools may charter";
+--     listed here only for completeness of the negative-finding set, not a new fetch).
+--   eb956520 JAX Summer Student Program (Jackson Laboratory) -- jax.org page states the
+--     program "brings together students from all over the United States" but does not
+--     state this as an eligibility restriction (could be descriptive of past cohorts, not
+--     a rule) and directs eligibility detail to a separate Admissions page not fetched this
+--     pass. Left null rather than treat descriptive cohort language as a stated rule.
+--   1d28dd20 BRI Student Fellowship (Bill of Rights Institute) -- billofrightsinstitute.org
+--     : only stated criterion is "15-18 year old's who are currently Juniors or Seniors (or
+--     equivalent)" -- no citizenship/nationality/residency language despite the US-civics
+--     subject matter.
+--   41db7ecc Colorado School of Mines Engineering Design Summer Camp -- ces.mines.edu: only
+--     stated criterion is grade level for fall 2026; no geographic restriction.
+--   309451b7 Barrett Summer Scholars (Arizona State University) -- access.asu.edu: only
+--     stated criteria are grade level and GPA (3.0/3.25); no citizenship/nationality/
+--     residency language.
+--   c0a4433d UT Austin Women in STEM (WiSTEM) High School Camps -- womeninstem.utexas.edu:
+--     "open to any current high school student of any gender enrolled in the 9th, 10th, or
+--     11th grade" -- no citizenship/residency language.
+--
+-- RESEARCHED, GENUINE OFFICIAL EVIDENCE FOUND BUT NOT SAFELY ENUMERABLE THIS PASS (well
+-- scoped for a focused single-fetch follow-up, not guessed at here):
+--   7081b03a TechGirls (fellowship, active) -- official apply page confirms "111 young
+--     women from 37 eligible countries/territories" for the 2026 cycle and explicitly names
+--     Turkiye as one of them, but the full 37-country enumeration lives on a specific
+--     Eligibility & Application subpage this pass could not successfully fetch (2 attempts,
+--     1 returned partial nav-only content, 1 returned 404 on a guessed URL). A single
+--     correctly-targeted fetch of techgirlsglobal.org's actual eligibility subpage would
+--     likely close this cleanly.
+--   eeb768c4 Erasmus+ Youth Exchanges -- official Programme Guide fetched successfully and
+--     confirmed a detailed, genuinely non-flat structure: full EU27 membership, plus named
+--     "Third Countries Associated to the Programme" (North Macedonia, Republic of Turkiye,
+--     Republic of Serbia, Norway, Iceland, Liechtenstein), plus conditionally-eligible
+--     "Partner Countries" admitted "in duly justified cases," plus current EU-policy
+--     restrictions on Russia, Belarus and (recently) Georgia. Left null deliberately, not
+--     for lack of evidence -- RULE-ELIGIBILITY-009 (docs/research/opportunity-eligibility/
+--     README.md) is exactly on point: a flat eligible_countries list would misrepresent a
+--     structure where "Programme countries" have full eligibility and a much larger
+--     "Partner countries" set has conditional eligibility. The existing citizenship_
+--     restrictions text was independently confirmed accurate by this fetch; a future pass
+--     could usefully tighten its wording with the specific named Programme-country list
+--     above, which is a citizenship_restrictions edit, not an eligible_countries one.
+-- ============================================================================
