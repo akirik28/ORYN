@@ -62,6 +62,7 @@ function rec(overrides: Partial<CounselorRecommendation> = {}): CounselorRecomme
     effort: "high",
     urgency: "medium",
     deadline: null,
+    costOnFile: null,
     eligibility: { verdict: "known_eligible", notes: [] },
     confidence: "high",
     evidence: [{ sourceType: "opportunity", sourceId: "opp-1", sourceUrl: "https://example.org", verificationState: "verified_current" }],

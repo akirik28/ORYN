@@ -83,6 +83,10 @@ export interface CandidateAction {
   verificationState: string | null;
   sourceUrl: string | null;
   deadline: { date: string; sourceLabel: string } | null;
+  /** `opportunities.cost` verbatim, or null for candidate kinds that cannot cost money.
+   * Carries no currency because the column has no companion currency field — see
+   * lib/ai/fee-text.ts, the only place this is rendered. */
+  costOnFile: number | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -133,6 +137,7 @@ export interface CounselorRecommendation {
   effort: BoundedLevel;
   urgency: BoundedLevel;
   deadline: { date: string; sourceLabel: string } | null;
+  costOnFile: number | null;
   eligibility: EligibilityResult;
   confidence: BoundedLevel;
   evidence: { sourceType: CandidateSource["kind"]; sourceId: string; sourceUrl: string | null; verificationState: string | null }[];

@@ -3,6 +3,7 @@ import "server-only";
 import { getCounselorRecommendations } from "@/lib/counselor";
 import type { CounselorRecommendation } from "@/lib/counselor";
 import { formatEligibilityCaveat } from "./eligibility-text";
+import { formatFeeCaveat } from "./fee-text";
 
 /** Bounds how many opportunities enter the prompt — grounding, not the full catalogue
  * (spec Phase 27, context trimming). Counselor Core has already ranked these by gap
@@ -30,6 +31,10 @@ function formatOne(recommendation: CounselorRecommendation): string {
   const eligibilityCaveat = formatEligibilityCaveat(recommendation.eligibility);
   if (eligibilityCaveat) {
     parts.push(eligibilityCaveat);
+  }
+  const feeCaveat = formatFeeCaveat(recommendation.costOnFile);
+  if (feeCaveat) {
+    parts.push(feeCaveat);
   }
   return `- ${parts.join(" — ")}`;
 }
