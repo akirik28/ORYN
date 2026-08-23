@@ -14,14 +14,28 @@
  *   3. ID MATCHING BY REAL id-FIELD VALUES, NEVER SUBSTRING — with ECW4-021's
  *      prose-citation case as a named regression test.
  *
+ * A tenth bug landed after this suite first shipped, found by a researcher using the
+ * tool rather than by this suite: gatherSourceBlobHashes (formerly an inline one-liner
+ * in checkIdDiscipline) compared a source file's CURRENT content hash only — editing an
+ * already-merged file in place (e.g. backfilling record_type/lane to fix a contract
+ * defect) changes the hash, so the file's own unedited past self on whatever ref it was
+ * originally merged to stopped being recognized as "mine," producing a false corpus
+ * collision for every ID in the file. Reproduced independently in an isolated repo before
+ * trusting the report (commit a file to a base branch, edit it in place on a branch
+ * descended from that commit, confirm the false positive) — the fix generalizes the
+ * comparison to the source file's own path history from HEAD, not just its current
+ * content, and IS given a real regression test below (a real, disposable temp git repo,
+ * not a mock — this logic is inherently git-native and a mock would only test the mock).
+ *
  * WHAT THIS SUITE DOES NOT COVER — the standing condition from the closeout doc is still
  * true after these tests exist, not superseded by them:
- *   - checkIdDiscipline's git-plumbing loop itself (branch enumeration via `git branch
- *     -r`, blob hashing via `git hash-object`/`git rev-parse`/`git show`) is real process
- *     orchestration, not logic — deliberately left untested here as an integration
- *     concern. What WAS extracted and IS tested is the two places real bugs actually
- *     lived inside that loop: the origin/HEAD branch filter (filterRealBranches) and the
- *     substring-vs-JSON id matching (findIdCollisionsInFileContent).
+ *   - checkIdDiscipline's remaining git-plumbing (branch enumeration via `git branch -r`,
+ *     `git grep`/`git show` for candidate content) is real process orchestration, not
+ *     logic — deliberately left untested here as an integration concern. What WAS
+ *     extracted and IS tested is the three places real bugs actually lived inside that
+ *     loop: the origin/HEAD branch filter (filterRealBranches), the substring-vs-JSON id
+ *     matching (findIdCollisionsInFileContent), and the same-file-at-an-earlier-revision
+ *     comparison (gatherSourceBlobHashes).
  *   - main() (the CLI entry) is thin orchestration over the pieces tested here — not
  *     separately covered.
  *   - AU_R1_CONTRACT.customLiveChecks's university-RESOLUTION step (resolveUniversity)
@@ -36,6 +50,10 @@
  *     re-run) — this suite is what that precondition requires, not a replacement for
  *     continuing to read a sample of real output by hand.
  */
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import {
   AU_R1_CONTRACT,
@@ -47,6 +65,8 @@ import {
   filterRealBranches,
   findIdCollisionsInFileContent,
   findTaxonomyConsistencyGaps,
+  findValueDomainOutliers,
+  gatherSourceBlobHashes,
   type Json,
   type LaneContract,
 } from "@/scripts/validate-research-records";
@@ -258,6 +278,84 @@ describe("findIdCollisionsInFileContent", () => {
   test("does not match an id that isn't in the batch's own unique-id set at all", () => {
     const content = JSON.stringify({ record_id: "ECW4-999" });
     expect(findIdCollisionsInFileContent(content, uniqueIds)).toEqual([]);
+  });
+});
+
+// -----------------------------------------------------------------------------------
+// gatherSourceBlobHashes — bug #10 regression: a same-content-only comparison mistook a
+// file's own unedited past self (still present on the ref it was merged to) for a
+// different file colliding on IDs, whenever an already-merged file was edited in place.
+// Real, disposable temp git repo — this logic is inherently git-native; a mocked
+// execFileSync would only prove the mock agrees with itself, not that the git plumbing
+// is actually correct.
+// -----------------------------------------------------------------------------------
+
+describe("gatherSourceBlobHashes", () => {
+  let repoDir: string;
+  const originalCwd = process.cwd();
+
+  function git(...args: string[]): string {
+    return execFileSync("git", args, { encoding: "utf8", cwd: repoDir }).trim();
+  }
+
+  function setUpRepo() {
+    repoDir = mkdtempSync(join(tmpdir(), "gather-source-blob-hashes-test-"));
+    git("init", "-q");
+    git("config", "user.email", "test@test.local");
+    git("config", "user.name", "Test");
+  }
+
+  afterEach(() => {
+    process.chdir(originalCwd);
+    if (repoDir) rmSync(repoDir, { recursive: true, force: true });
+  });
+
+  test("recognizes a file's own prior commit on the same path as itself, not a collision", () => {
+    setUpRepo();
+    const relPath = "data/research/opportunities/dlopp_sp_batch1.jsonl";
+    execFileSync("mkdir", ["-p", join(repoDir, "data/research/opportunities")]);
+    writeFileSync(join(repoDir, relPath), '{"research_record_id":"DLOPP-SP-B1-01"}\n');
+    git("add", "-A");
+    git("commit", "-q", "-m", "original merged version");
+    git("branch", "-M", "main");
+    git("checkout", "-q", "-b", "fix-branch");
+    // In-place edit — same path, different content, same ID (exactly what backfilling
+    // record_type/lane on an already-merged file looks like).
+    writeFileSync(join(repoDir, relPath), '{"research_record_id":"DLOPP-SP-B1-01","record_type":"x","lane":"RES-R2"}\n');
+    git("add", "-A");
+    git("commit", "-q", "-m", "backfill record_type/lane");
+
+    process.chdir(repoDir);
+    const hashes = gatherSourceBlobHashes([relPath]);
+    const mainBlobHash = execFileSync("git", ["rev-parse", `main:${relPath}`], { encoding: "utf8", cwd: repoDir }).trim();
+
+    expect(hashes.has(mainBlobHash)).toBe(true);
+  });
+
+  test("still includes the current working-tree hash for a file with no commit history yet", () => {
+    setUpRepo();
+    const relPath = "brand-new-file.jsonl";
+    execFileSync("mkdir", ["-p", repoDir]);
+    writeFileSync(join(repoDir, relPath), '{"research_record_id":"NEW-01"}\n');
+
+    process.chdir(repoDir);
+    expect(() => gatherSourceBlobHashes([relPath])).not.toThrow();
+    const hashes = gatherSourceBlobHashes([relPath]);
+    const currentHash = execFileSync("git", ["hash-object", relPath], { encoding: "utf8", cwd: repoDir }).trim();
+    expect(hashes.has(currentHash)).toBe(true);
+  });
+
+  test("does not include an unrelated file's blob just because it happens to be a different path", () => {
+    setUpRepo();
+    writeFileSync(join(repoDir, "file-a.jsonl"), '{"id":"A"}\n');
+    writeFileSync(join(repoDir, "file-b.jsonl"), '{"id":"B"}\n');
+    git("add", "-A");
+    git("commit", "-q", "-m", "two unrelated files");
+
+    process.chdir(repoDir);
+    const hashesForA = gatherSourceBlobHashes(["file-a.jsonl"]);
+    const bHash = execFileSync("git", ["hash-object", "file-b.jsonl"], { encoding: "utf8", cwd: repoDir }).trim();
+    expect(hashesForA.has(bHash)).toBe(false);
   });
 });
 
@@ -614,5 +712,77 @@ describe("findTaxonomyConsistencyGaps", () => {
       },
     ]);
     expect(findings).toEqual([]);
+  });
+});
+
+// -----------------------------------------------------------------------------------
+// findValueDomainOutliers — the mechanism from V1-13's sweep, calibrated on the real
+// Adelaide finding (BASORG + RES-V2, 2026-08-22): a provenance sentence sitting in
+// study_mode/entry_requirements where every sibling record held a genuine value.
+// -----------------------------------------------------------------------------------
+
+describe("findValueDomainOutliers", () => {
+  function corpusOf(intlValue: string): Json[] {
+    const records: Json[] = [];
+    for (let i = 1; i <= 6; i++) {
+      records.push({
+        research_program_id: `TEST-${i}`,
+        study_mode: { international: "Full-time", domestic: "Full-time" },
+      });
+    }
+    records.push({
+      research_program_id: "TEST-defect",
+      study_mode: { international: intlValue, domestic: "Full-time" },
+    });
+    return records;
+  }
+
+  test("flags the real Adelaide shape — a provenance sentence where every sibling holds a genuine study-mode value", () => {
+    const findings = findValueDomainOutliers(
+      corpusOf(
+        "No distinct international variant published for this pathway -- confirmed live (2026-08-22): the bare URL and the explicit /int/ path both 301-redirect to the /dom/ variant, returning byte-identical content."
+      )
+    );
+    // This synthetic value is both a length outlier AND carries provenance language —
+    // same as the real Adelaide case — so both signals should independently fire on it.
+    const defectFindings = findings.filter((f) => f.includes("TEST-defect"));
+    expect(defectFindings.some((f) => f.includes("provenance/derivation language"))).toBe(true);
+    expect(defectFindings.some((f) => f.includes("this field's own corpus median"))).toBe(true);
+  });
+
+  test("flags a length outlier even without provenance language — the lead-generation signal, not a verdict", () => {
+    const findings = findValueDomainOutliers(
+      corpusOf(
+        "Clayton for Bachelor of Engineering (Honours), Parkville for Bachelor of Pharmaceutical Science — dual-campus double degree, both components mandatory."
+      )
+    );
+    const hit = findings.find((f) => f.includes("TEST-defect"));
+    expect(hit).toBeDefined();
+    expect(hit).toContain("this field's own corpus median");
+  });
+
+  test("does NOT flag a uniform corpus where every value is genuinely the same shape", () => {
+    const records: Json[] = [];
+    for (let i = 1; i <= 8; i++) {
+      records.push({
+        research_program_id: `TEST-${i}`,
+        study_mode: { international: "Full-time", domestic: "Full-time" },
+        degree_level: "Bachelor / first-cycle (Honours)",
+      });
+    }
+    expect(findValueDomainOutliers(records)).toEqual([]);
+  });
+
+  test("does NOT scan researcher_notes or verification_status — expected long free text, not a value slot", () => {
+    const records: Json[] = [];
+    for (let i = 1; i <= 6; i++) {
+      records.push({ research_program_id: `TEST-${i}`, researcher_notes: "short" });
+    }
+    records.push({
+      research_program_id: "TEST-long-notes",
+      researcher_notes:
+        "This is a much longer researcher note explaining program_code='XYZ' and other context that is expected to be long free text and must never be flagged as a value-domain violation regardless of length.",
+    });
+    expect(findValueDomainOutliers(records)).toEqual([]);
   });
 });
