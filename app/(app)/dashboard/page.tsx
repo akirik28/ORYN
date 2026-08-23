@@ -152,6 +152,16 @@ export default async function DashboardPage() {
         // it fails typecheck rather than quietly hiding opportunities from the homepage.
         .select("id, title, cycle_status, deadline, last_verified_at, verified_at, cost, selectivity_tier")
         .in("id", opportunityIds)
+        // The enum, not just the timestamps. isOpportunitySufficientlyVerified below asks
+        // "did any pipeline ever touch this row", which is a different question from "has a
+        // human confirmed it" — so unverified rows kept reaching the one surface whose own
+        // comment says it must be the strictest, because it renders a bare title and a match
+        // percentage with nowhere to put a caveat. Counselor Core already filters on this
+        // (lib/counselor/state.ts); the homepage was the weaker gate of the two. Live before
+        // this: 4 of 14 top-2 slots were unverified, among them a row titled "Earn college
+        // credit that may transfer to any college you attend" and one titled "University of
+        // California, Santa Barbara, CA, USA".
+        .eq("verification_state", "verified_current")
     : { data: [] };
   // Defense in depth (lib/opportunities/lifecycle.ts): same stale-match-row risk as the
   // opportunities page's "For you" view — a match upserted before its cycle closed must not
