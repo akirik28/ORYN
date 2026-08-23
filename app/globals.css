@@ -7,13 +7,13 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-manrope);
   --font-mono: var(--font-geist-mono);
   /* Editorial display face. `--font-heading` is kept as an alias so any call site that
      predates UI-V3 degrades to the display face rather than to a bare serif fallback;
      new code should use `font-display`. */
-  --font-display: var(--font-instrument-serif);
-  --font-heading: var(--font-instrument-serif);
+  --font-display: var(--font-fraunces);
+  --font-heading: var(--font-fraunces);
   /* Editorial ink ramp — four deliberate text weights instead of foreground/muted only.
      ink-2 is the workhorse for body prose that isn't a heading and isn't secondary. */
   --color-ink-1: var(--ink-1);
@@ -24,6 +24,20 @@
      it's just --background. Only 2 and 3 are containers. */
   --color-surface-tint: var(--surface-tint);
   --color-surface-panel: var(--surface-panel);
+  /* Module tones (UI-V3-0b). Each kind of Oryn utterance gets its own quiet ground, so a
+     reader can tell an interpretation from a piece of evidence from a directive without
+     reading a label. Backgrounds only — never for text. */
+  --color-module-insight: var(--module-insight);
+  --color-module-insight-fg: var(--module-insight-fg);
+  --color-module-evidence: var(--module-evidence);
+  --color-module-evidence-fg: var(--module-evidence-fg);
+  --color-module-recommendation: var(--module-recommendation);
+  --color-module-recommendation-fg: var(--module-recommendation-fg);
+  --color-module-action: var(--module-action);
+  --color-module-action-fg: var(--module-action-fg);
+  --color-accent-sand: var(--accent-sand);
+  --color-accent-clay: var(--accent-clay);
+  --color-verified: var(--verified);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-info: var(--info);
@@ -34,14 +48,6 @@
   --color-brand-primary-soft: var(--brand-primary-soft);
   --color-brand-primary-subtle: var(--brand-primary-subtle);
   --color-brand-primary-border: var(--brand-primary-border);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
@@ -74,24 +80,39 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.16 0.01 272);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.16 0.01 272);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.16 0.01 272);
+  /* Warm paper ground, cool ink (UI-V3-0b, from the Magic Patterns reference). This
+     pairing is the single biggest reason the product reads editorial rather than SaaS:
+     surfaces sit at hue ~84 (paper/sand) while text sits at hue ~294 (cool blue-violet),
+     the way ink actually looks printed on stock. A pure-white background with pure-grey
+     text is the generic-dashboard default this deliberately leaves behind.
+     Do not "simplify" these to a single hue — the warm/cool split is the point. */
+  --background: oklch(0.983 0.006 84.6);
+  --foreground: oklch(0.216 0.02 294);
+  /* Panels are lighter than the canvas, not darker — a contained module lifts off the
+     paper rather than being cut into it. */
+  --card: oklch(0.998 0.002 84.6);
+  --card-foreground: oklch(0.216 0.02 294);
+  --popover: oklch(0.998 0.002 84.6);
+  --popover-foreground: oklch(0.216 0.02 294);
   --brand: oklch(0.477 0.29 272);
   --primary: oklch(0.46 0.22 272);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.54 0.01 272);
-  --accent: oklch(0.95 0.05 272);
+  /* Warmed to match the paper. A zero-chroma grey surface on a warm ground reads dirty,
+     not neutral — this was the first thing that looked wrong when the background changed. */
+  --secondary: oklch(0.963 0.009 78.3);
+  --secondary-foreground: oklch(0.378 0.026 297);
+  --muted: oklch(0.963 0.009 78.3);
+  /* 0.538, not the reference palette's 0.571: measured against this theme's own grounds,
+     0.571 gave 4.28:1 on paper and 4.03:1 on the tint — both under AA for body text, and
+     this token is the product's workhorse for supporting copy. Solved for the lightest
+     value that still clears 4.6:1 on the tint (the tighter of the two grounds), so it
+     stays visually secondary without failing. */
+  --muted-foreground: oklch(0.538 0.028 300.7);
+  --accent: oklch(0.936 0.015 294.5);
   --accent-foreground: oklch(0.35 0.2 272);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
+  --destructive: oklch(0.505 0.17 25);
+  --border: oklch(0.902 0.017 84.6);
+  --input: oklch(0.902 0.017 84.6);
   --ring: oklch(0.6 0.2 272);
   --chart-1: oklch(0.54 0.22 272);
   --chart-2: oklch(0.71 0.13 200);
@@ -118,33 +139,49 @@
      (both AA on --background at body size); ink-4 is decorative only — eyebrows, rule
      labels, disabled affordances — and must never carry meaning on its own. */
   --ink-1: var(--foreground);
-  --ink-2: oklch(0.34 0.012 272);
+  --ink-2: oklch(0.378 0.026 297.4);
   --ink-3: var(--muted-foreground);
-  /* 0.64, not the 0.68 this started at: measured against --background that rendered
-     2.89:1, under even WCAG's 3:1 non-text floor, so it wasn't safe for the icons and
-     hairlines it's meant for — let alone text. 0.64 clears 3:1 on --surface-tint too,
-     which is the tighter of the two grounds it sits on. */
-  --ink-4: oklch(0.64 0.012 272);
+  /* Decorative only — hairlines, icon strokes, disabled affordances. Re-measured against
+     the warm paper ground after UI-V3-0b (paper is darker than white, so every ratio
+     shifted); holds above WCAG's 3:1 non-text floor and nothing more. Never let this be
+     the only thing carrying meaning. */
+  --ink-4: oklch(0.62 0.026 300);
 
   /* Surface levels. Level 2 (tint) groups a section without drawing a box around it —
      this is what replaces most of the product's bordered cards. Level 3 (panel) is only
      for a genuinely contained interactive module, where containment carries meaning. */
-  --surface-tint: oklch(0.978 0.004 272);
+  --surface-tint: oklch(0.963 0.009 78.3);
   --surface-panel: var(--card);
-  --sidebar: oklch(0.99 0.002 272);
-  --sidebar-foreground: oklch(0.16 0.01 272);
-  --sidebar-primary: oklch(0.46 0.22 272);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.95 0.05 272);
-  --sidebar-accent-foreground: oklch(0.35 0.2 272);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.6 0.2 272);
+
+  /* Module tones. Insight is cool (an interpretation stands back from the page), evidence
+     and action are warm (a fact and a directive sit in it). Recommendation is the only one
+     carrying brand indigo, which is the whole reason indigo stays rare elsewhere. */
+  --module-insight: oklch(0.96 0.008 253.9);
+  --module-insight-fg: oklch(0.47 0.043 253);
+  --module-evidence: oklch(0.956 0.014 84.6);
+  --module-evidence-fg: oklch(0.47 0.045 84);
+  --module-recommendation: oklch(0.963 0.017 293.1);
+  --module-recommendation-fg: var(--brand-primary);
+  --module-action: oklch(0.958 0.021 67.6);
+  --module-action-fg: oklch(0.5 0.11 45);
+
+  /* Selective accents. The brief is explicit that the sand/clay surface may carry an
+     important recommendation but must not become the product's dominant surface. */
+  --accent-sand: oklch(0.811 0.07 80.4);
+  --accent-clay: oklch(0.634 0.093 55);
 
   /* Status. Deliberately no *-foreground pair — same convention as --destructive:
      used as text color directly, or as a soft /10-/20 opacity fill. */
-  --success: oklch(0.52 0.14 152);
-  --warning: oklch(0.6 0.16 75);
-  --info: oklch(0.55 0.17 240);
+  /* Desaturated on purpose. Bright semantic colors are what make a product look like a
+     dashboard; these read as considered rather than alarmed, which matches an advisor's
+     voice. --verified is a distinct teal so "we checked this" never reads as "this is
+     good news". */
+  /* Lightness solved per-hue against --surface-tint for >=4.6:1; the reference palette's
+     own values landed at 4.40-4.54 there, which reads fine on white and fails on paper. */
+  --success: oklch(0.528 0.079 160.2);
+  --warning: oklch(0.541 0.105 76);
+  --info: oklch(0.529 0.078 216.3);
+  --verified: oklch(0.529 0.078 216.3);
   --error: var(--destructive);
 
   /* Motion. --ease-emphasized is a decelerate curve (fast start, gentle settle) —
@@ -192,18 +229,10 @@
   --chart-3: oklch(0.75 0.15 85);
   --chart-4: oklch(0.65 0.19 25);
   --chart-5: oklch(0.74 0.02 272);
-  --sidebar: oklch(0.075 0.02 272);
-  --sidebar-foreground: oklch(0.97 0.005 272);
-  --sidebar-primary: oklch(0.7 0.17 272);
-  --sidebar-primary-foreground: oklch(0.09 0.01 272);
-  --sidebar-accent: oklch(0.2 0.055 272);
-  --sidebar-accent-foreground: oklch(0.93 0.05 272);
-  --sidebar-border: oklch(0.32 0.045 272);
-  --sidebar-ring: oklch(0.68 0.19 272);
-
   --success: oklch(0.72 0.15 152);
   --warning: oklch(0.78 0.14 80);
   --info: oklch(0.75 0.13 240);
+  --verified: oklch(0.75 0.11 216);
 
   /* Ink and surfaces invert direction in dark, so unlike the --brand-primary ramp above
      these cannot be a single color-mix definition shared with :root — the stops run
@@ -211,6 +240,22 @@
   --ink-2: oklch(0.86 0.012 272);
   --ink-4: oklch(0.55 0.02 272);
   --surface-tint: oklch(0.115 0.02 272);
+
+  /* Module tones invert to low-lightness washes. The warm/cool split that carries the
+     light theme survives here as chroma direction only — at these lightnesses a warm
+     "paper" ground would just read muddy, so dark keeps the blue-black base and lets the
+     module hue do the distinguishing. */
+  --module-insight: oklch(0.19 0.025 253.9);
+  --module-insight-fg: oklch(0.78 0.06 253);
+  --module-evidence: oklch(0.19 0.022 84.6);
+  --module-evidence-fg: oklch(0.8 0.06 84);
+  --module-recommendation: oklch(0.2 0.045 293.1);
+  --module-recommendation-fg: oklch(0.78 0.13 272);
+  --module-action: oklch(0.2 0.03 67.6);
+  --module-action-fg: oklch(0.78 0.09 55);
+
+  --accent-sand: oklch(0.72 0.06 80.4);
+  --accent-clay: oklch(0.66 0.09 55);
 }
 
 @layer base {

@@ -50,31 +50,60 @@ and `app/(app)/applications/page.tsx`'s `APPLICATION_STATUS_TONE` for worked exa
 
 ## Typography
 
-**Updated by UI-V3-0 (2026-08-23). Newsreader is gone; the rules below supersede the
-previous "every heading is serif" arrangement.**
+**Updated by UI-V3-0b (2026-08-24). Geist and Instrument Serif are both gone — see
+"Where the palette comes from" below for why. The role split is unchanged.**
 
 Two families, with a hard split by *role* rather than by heading level:
 
-- **`--font-sans` (Geist)** — all product UI: nav, buttons, form labels, table/list
+- **`--font-sans` (Manrope)** — all product UI: nav, buttons, form labels, table/list
   content, badges, **and card/dialog/sheet titles**.
-- **`--font-display` (Instrument Serif)** — only where Oryn is making a statement *to*
-  the student: page `<h1>`s (via `PageHeader`), the dashboard greeting, the score number,
-  an `InsightCard` headline, the acceptance moment, auth/onboarding titles.
+- **`--font-display` (Fraunces)** — only where Oryn is making a statement *to* the
+  student: page `<h1>`s (via `PageHeader`), the dashboard greeting, the score number, an
+  `InsightCard` headline, an `EvidenceSignal` value, the acceptance moment,
+  auth/onboarding titles.
 
 The question to ask is unchanged — *is this Oryn talking to the student, or is this a UI
 label?* — but the answer moved. Previously `CardTitle`, `DialogTitle` and `SheetTitle`
 inherited the serif, which meant a busy page rendered ten serif sub-headings and the face
 stopped signifying anything. Those are sans now.
 
-**Instrument Serif ships one weight (400).** This is the single most important thing to
-know before touching a `font-display` call site: pairing it with `font-medium` or
-`font-semibold` makes the browser synthesize a faux bold, which thickens and smears the
-high-contrast stems the face was chosen for. **Set size and tracking, never weight.** Every
-`font-display` site in the product is currently weight-class-free; keep it that way.
+Fraunces is variable, so unlike the Instrument Serif it replaced it *does* have real
+weights. Display sites are nonetheless set at 400 with tight negative tracking
+(`tracking-[-0.02em]`, `leading-[1.1]`) — that combination is what reads editorial. A bold
+serif headline reads as a document title, which is the opposite of the intent. Prefer
+scale over weight.
 
 `--font-heading` still resolves (aliased to the same face) so that a call site predating
-this pass degrades to the display face rather than an unstyled serif fallback. It has no
+UI-V3 degrades to the display face rather than an unstyled serif fallback. It has no
 remaining users — prefer `font-display` in anything new.
+
+## Where the palette comes from
+
+UI-V3-0b adopted the visual language of the founder-supplied Magic Patterns reference
+("ORYN V3 Editorial Intelligence"), which is the authority for *visual* decisions —
+typography, whitespace, surface restraint — while this repo stays the authority for
+architecture, data and behavior. Three things were taken, and three were deliberately not.
+
+**Taken:** the warm-paper/cool-ink pairing, the module tone system, and the component
+language (`Eyebrow`, `EvidenceSignal`, the borderless `InsightCard`, the railed `ActionCard`).
+
+**Not taken:**
+
+- **The wordmark.** The reference renders "ORYN" as letterspaced type because its own logo
+  asset ships empty (0 bytes). The canonical logo is non-negotiable — `public/brand/logo-full.png`
+  stays, and `--brand` remains an exact OKLCH match of the logo's own pixels
+  (`oklch(0.477 0.29 272)` vs. the logo's `oklch(0.477 0.294 272.2)`), *not* the
+  reference's slightly softer indigo.
+- **Percentage profile strength.** The reference's `ProfileStrengthMeter` shows "62%".
+  Founder direction is explicit: qualitative evidence states only — Strong / Developing /
+  Limited evidence / Needs attention. Do not reintroduce a single blended percentage.
+- **Its text colors, as authored.** Measured against this theme's own grounds, the
+  reference's `text-muted` gave 4.28:1 on paper and 4.03:1 on the tint — under AA for
+  body copy, and that token is the product's workhorse for supporting text. Same for
+  three status tones (4.40-4.54 on tint). Every one was re-solved per-hue for >=4.6:1 on
+  `--surface-tint`, the tighter of the two grounds. **Measure against the real ground
+  before importing a color from any reference** — paper is darker than white and every
+  ratio shifts.
 
 ## Color: the ink ramp
 
@@ -82,20 +111,20 @@ remaining users — prefer `font-display` in anything new.
 "secondary grey". Four steps now, all at hue 272 so text never drifts neutral-grey against
 the blue-black brand:
 
+Measured on paper / on tint (both grounds, since text sits on each):
+
 ```
---ink-1   = --foreground        19.4:1 on white   headings, primary text
---ink-2   oklch(0.34 0.012 272) 11.7:1            body prose that isn't a heading
---ink-3   = --muted-foreground   5.1:1            secondary/supporting text (AA)
---ink-4   oklch(0.64 0.012 272)  3.4:1            DECORATIVE ONLY
+--ink-1   = --foreground   16.7 / 15.7   headings, primary text
+--ink-2   0.378 0.026 297   9.7 /  9.1   body prose that isn't a heading
+--ink-3   = --muted-fg      4.9 /  4.6   secondary/supporting text (AA)
+--ink-4   0.62  0.026 300   3.5 /  3.3   DECORATIVE ONLY (3:1 non-text floor)
 ```
 
 Each step is a real lightness stop, **not an opacity of the one above** — opacity-faded
 text over a tinted surface picks up the tint and stops being the color you specified.
 
-`--ink-4` is for eyebrows, hairlines, icon strokes and disabled affordances, and must never
-be the only thing carrying meaning: it clears WCAG's 3:1 non-text floor and nothing more.
-It was authored at 0.68, measured at 2.89:1, and darkened to 0.64 — measure, don't eyeball,
-if you add a step.
+`--ink-4` is for eyebrows' rules, hairlines, icon strokes and disabled affordances, and
+must never be the only thing carrying meaning.
 
 ## Surface levels
 
@@ -109,6 +138,18 @@ Three levels, replacing "everything is a bordered white card":
 
 Before reaching for a border + radius + shadow, check whether whitespace and a type change
 already do the job. See the shape/radius rules below, which still apply to level 3.
+
+### Module tones
+
+Four grounds, one per kind of Oryn utterance, so a reader can tell an interpretation from a
+fact from a directive without reading a label: `module-insight` (cool — an interpretation
+stands back from the page), `module-evidence` and `module-action` (warm — a fact and a
+directive sit in it), and `module-recommendation` (the only one carrying brand indigo,
+which is exactly why indigo stays rare everywhere else). Backgrounds only, never text.
+
+The warm sand/clay accents (`accent-sand`, `accent-clay`) are for a *selectively*
+important recommendation. Founder direction: they must not become the dominant surface. If
+two recommendation surfaces are visible on one screen, one of them is wrong.
 
 ## Motion (`lib/motion.ts`, `app/layout.tsx`)
 
@@ -160,14 +201,17 @@ one-off `<div className="rounded-xl border p-4">` copies:
 
 - **`PageHeader`** — page-level title (serif) + description + optional action slot.
 - **`SectionHeader`** — in-page section divider (sans, dense).
-- **`InsightCard`** — the "Oryn is telling you something" card. Variants `gap` / `avoid`
-  / `strength` / `neutral`. `avoid` is deliberately styled *identically calm* to `gap` —
-  a muted icon chip, not red/amber — because a deprioritization is a strategic call, not
-  a warning (see the master spec's Phase 39 and the dashboard's "One thing not to do").
-- **`ActionCard`** — a recommended action: impact meter (4-dot, not a 4-color badge —
-  magnitude isn't a status), optional time estimate, optional leading slot (used for the
-  numbered-priority treatment on the weekly plan) and trailing `meta` slot (a
-  `DeadlineBadge`, etc).
+- **`InsightCard`** — the "Oryn is telling you something" statement. UI-V3-0b removed its
+  border, fill and icon chip: an interpretation should distinguish itself through scale,
+  voice and hierarchy, and boxing it made it look like one more data card in a stack of
+  data cards. Variants now tint only the eyebrow rule. `avoid` stays deliberately calm —
+  a deprioritization is a strategic call, not a warning (master spec Phase 39). Its
+  `surface` prop is the one sanctioned use of the warm recommendation ground.
+- **`ActionCard`** — a recommended action. The bordered box became a left priority rail
+  plus an optional zero-padded index: the rail groups a stack into a sequence and gives
+  the leading move weight without drawing four identical boxes down the page. Keeps the
+  4-dot impact meter (magnitude isn't a status, so it isn't a colored badge), the time
+  estimate, a `leading` slot and a trailing `meta` slot.
 - **`StatusBadge`** — see the tone table above. Every colored pill in the product should
   render through this.
 - **`ConfidenceIndicator`** — a lit/unlit 3-bar meter, not a colored word — Phase 68's
@@ -179,6 +223,14 @@ one-off `<div className="rounded-xl border p-4">` copies:
   and applications.
 - **`SourceBadge`** — Phase 36. Source name, "checked N ago", optional
   `ConfidenceIndicator`, optional "View source" link.
+- **`Eyebrow`** — the atom of the editorial voice: a 32px hairline rule plus an 11px
+  uppercase label at `tracking-[0.18em]`. That tracking *is* the signature; `tracking-widest`
+  is 0.1em and reads as a different product. Tone colors the rule only — never the headline
+  beneath it, or an interpretation becomes an alert.
+- **`EvidenceSignal`** — one supporting fact, citation-style (`<figure>`/`<figcaption>`,
+  `tabular-nums`). Displays a fact; `InsightCard` interprets one. Its `missing` tone matters:
+  absent evidence ("0 verified research projects") is real signal here and should read as
+  noted, not failed.
 - **`MediaImage`** — the product's one image surface. Photo → logo → designed monogram,
   each tier falling through on a failed load. The monogram tier is the point: "no broken
   placeholders" must not be solved with generic stock imagery, which would imply we have a

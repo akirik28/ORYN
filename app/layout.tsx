@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { Manrope, Geist_Mono, Fraunces } from "next/font/google";
 import { MotionConfig } from "motion/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Body/UI face. Manrope over a neutral grotesk: it carries a little warmth and a wide
+// aperture that sits with the warm paper ground below, and reads as a consumer product
+// rather than a dashboard. Variable, so weights are real rather than synthesized.
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
 });
 
@@ -15,21 +18,20 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Editorial display face (UI-V3). Used *selectively* — only where Oryn is making a
-// statement to the student (page titles, the greeting, a Next Move headline, the score
-// number), never for UI chrome. Card/dialog/sheet titles are deliberately sans; a
-// product where every heading is serif reads as a template, not as editorial.
+// Editorial display face. Used *selectively* — only where Oryn is making a statement to
+// the student (page titles, the greeting, the score, a Next Move headline), never for UI
+// chrome. Card/dialog/sheet titles are deliberately sans; a product where every heading is
+// serif reads as a template, not as editorial.
 //
-// Instrument Serif ships a single weight (400) by design — it's a display face, not a
-// text family. That's why `font-display` call sites carry no `font-medium`/`font-semibold`:
-// asking for a weight the family doesn't have makes the browser synthesize a faux bold,
-// which smears the high-contrast stems this face is chosen for. Set size and tracking
-// instead. See /docs/design-system.md § Typography.
-const instrumentSerif = Instrument_Serif({
-  variable: "--font-instrument-serif",
-  weight: "400",
-  style: ["normal", "italic"],
+// Fraunces rather than a high-contrast Didone: it has warmth and a soft-serif character
+// that keeps the product from reading austere or consulting-report-like, which is the
+// stated risk for this direction. Being variable, it also has real weights — display
+// headlines are set at 400 with tight tracking on purpose, not because the family lacks
+// anything heavier. See /docs/design-system.md § Typography.
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
+  axes: ["SOFT", "WONK", "opsz"],
 });
 
 export const metadata: Metadata = {
@@ -59,7 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     // just defaulting the other direction now).
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} h-full antialiased`}
+      className={`${manrope.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
         {/* Global prefers-reduced-motion gate — every `motion.*` element in the app
