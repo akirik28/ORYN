@@ -217,8 +217,16 @@ describe("Test J (spec Part R) — deadline urgency", () => {
   });
 });
 
-describe("Test K (spec Part R) — historical/past deadline never contributes current urgency", () => {
-  test("a deadline in the past scores exactly the same urgency as no deadline at all (zero)", () => {
+/**
+ * Test K originally asserted that a past deadline scores the same *urgency* as no deadline
+ * (zero) while still appearing in rankCandidates output. That weaker guarantee was exactly the
+ * bug: zeroed urgency is not exclusion, so an expired row still scored on its other axes and
+ * occupied a recommendation slot. The counselor now excludes it outright (see the regression
+ * block at the end of this file), which strictly supersedes the old assertion — so K keeps its
+ * subject (a stale deadline must never look actionable) and asserts the stronger contract.
+ */
+describe("Test K (spec Part R) — a past deadline excludes an opportunity outright, not just its urgency", () => {
+  test("a past-deadline opportunity is dropped from ranked output, while a no-deadline one survives with zero urgency", () => {
     const referenceDate = new Date("2026-08-20T00:00:00Z");
     const pastDeadline = opportunity("stale-deadline", { deadline: "2025-01-15", cycle_status: "open" });
     const noDeadline = opportunity("no-deadline", { deadline: null, cycle_status: "open" });
@@ -238,11 +246,95 @@ describe("Test K (spec Part R) — historical/past deadline never contributes cu
     const candidates = generateCandidateActions(state);
     const ranked = rankCandidates(candidates, [], state, referenceDate);
 
-    const pastRanked = ranked.find((r) => r.candidate.source.kind === "opportunity" && r.candidate.source.opportunityId === "stale-deadline")!;
+    const pastRanked = ranked.find((r) => r.candidate.source.kind === "opportunity" && r.candidate.source.opportunityId === "stale-deadline");
     const noneRanked = ranked.find((r) => r.candidate.source.kind === "opportunity" && r.candidate.source.opportunityId === "no-deadline")!;
 
-    expect(pastRanked.urgency).toBe("low");
-    expect(pastRanked.scoreBreakdown.urgency).toBe(0);
-    expect(pastRanked.scoreBreakdown.urgency).toBe(noneRanked.scoreBreakdown.urgency);
+    expect(pastRanked).toBeUndefined();
+
+    // The still-valid half of the original contract: a *missing* deadline is not a passed one.
+    // It contributes no urgency, but must never be excluded — absence of a published date is
+    // not evidence the cycle has closed.
+    expect(noneRanked.urgency).toBe("low");
+    expect(noneRanked.scoreBreakdown.urgency).toBe(0);
+  });
+});
+
+/**
+ * Regression — a past application deadline must exclude an opportunity from the counselor's
+ * recommendations, not merely zero its urgency.
+ *
+ * Verified live (2026-08-23): GENIUS Olympiad (27274e04-50f4-4e82-9b7e-c5dbaace4bbe) sat at
+ * `deadline = 2026-03-07`, `status = 'active'`, `verification_state = 'verified_current'`,
+ * `cycle_status = 'date_not_announced'`, with four `eligible = true` opportunity_matches rows
+ * covering every user — and rendered in the dashboard's "this week" block and the advisor's
+ * priorities with a "Past due" badge. `date_not_announced` is correctly NOT in
+ * NON_ACTIONABLE_OPPORTUNITY_CYCLE_STATUSES, so the counselor's cycle-status-only guard was
+ * the only check standing and it passed.
+ *
+ * The read-time deadline rule already existed in lib/opportunities/lifecycle.ts
+ * (isOpportunityActionable); the counselor path simply never applied it. Test K below covers
+ * the urgency half — zeroed urgency was never exclusion, which is exactly how an expired row
+ * still occupied a recommendation slot.
+ */
+describe("Regression — expired opportunities never reach counselor recommendations", () => {
+  const referenceDate = new Date("2026-08-23T00:00:00Z");
+
+  function stateWith(opps: Opportunity[]): CounselorState {
+    return {
+      userId: "user-1",
+      advisor: {
+        student: { birthYear: 2009, country: "Turkey", citizenshipCountries: [], graduationYear: 2028 },
+        completenessPercent: 80,
+      } as unknown as CounselorState["advisor"],
+      dimensionScores: toDimensionScoreRows(DIMENSIONS.map((d) => ({ dimension: d, score: 60, confidence: "high" as const, reason_codes: [] }))),
+      completenessChecklist: [],
+      eligibleOpportunityMatches: opps.map((o) => ({ opportunity: o, match: match(o.id) })),
+      requirementCandidateInputs: [],
+    };
+  }
+
+  const geniusOlympiadShape = {
+    deadline: "2026-03-07",
+    status: "active" as const,
+    verification_state: "verified_current" as const,
+    cycle_status: "date_not_announced" as const,
+  };
+
+  test("the exact live shape is classified known_ineligible, with the passed deadline named as the reason", () => {
+    const expired = opportunity("genius-olympiad", geniusOlympiadShape);
+    const state = stateWith([expired]);
+
+    const result = evaluateCandidateEligibility(candidateFor(expired, state), state, referenceDate);
+
+    expect(result.verdict).toBe("known_ineligible");
+    expect(result.notes.join(" ")).toMatch(/deadline/i);
+  });
+
+  test("it never appears in rankCandidates output — the single list feeding the dashboard, advisor priorities and the weekly-plan prompt", () => {
+    const expired = opportunity("genius-olympiad", geniusOlympiadShape);
+    const live = opportunity("still-open", { deadline: "2026-12-01", cycle_status: "open" });
+    const state = stateWith([expired, live]);
+
+    const ranked = rankCandidates(generateCandidateActions(state), [], state, referenceDate);
+    const ids = ranked.flatMap((r) => (r.candidate.source.kind === "opportunity" ? [r.candidate.source.opportunityId] : []));
+
+    expect(ids).not.toContain("genius-olympiad");
+    expect(ids).toContain("still-open");
+  });
+
+  test("matches lifecycle.ts's boundary exactly: a deadline that falls today is still actionable, the day after is not", () => {
+    const closingToday = opportunity("closes-today", { deadline: "2026-08-23", cycle_status: "open" });
+    const stateToday = stateWith([closingToday]);
+    expect(evaluateCandidateEligibility(candidateFor(closingToday, stateToday), stateToday, referenceDate).verdict).not.toBe("known_ineligible");
+
+    const dayAfter = new Date("2026-08-24T00:00:00Z");
+    expect(evaluateCandidateEligibility(candidateFor(closingToday, stateToday), stateToday, dayAfter).verdict).toBe("known_ineligible");
+  });
+
+  test("an opportunity with no deadline on file is untouched — absence of a date is not evidence of closure", () => {
+    const noDeadline = opportunity("no-deadline-on-file", { deadline: null, cycle_status: "open", country_eligibility_confirmed_open: true });
+    const state = stateWith([noDeadline]);
+
+    expect(evaluateCandidateEligibility(candidateFor(noDeadline, state), state, referenceDate).verdict).toBe("known_eligible");
   });
 });

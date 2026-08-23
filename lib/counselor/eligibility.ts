@@ -1,13 +1,22 @@
+import { isOpportunityActionable, NON_ACTIONABLE_OPPORTUNITY_CYCLE_STATUSES } from "@/lib/opportunities/lifecycle";
 import { isSameCountry } from "@/lib/opportunities/matching";
 import { currentGradeLevel, gradeMatchesEligibility } from "@/lib/profile/grade-level";
+import type { Opportunity } from "@/types/database";
 import type { CandidateAction, CounselorState, EligibilityResult, EligibilityVerdict } from "./types";
-
-/** Exported for lib/opportunities/readiness.ts's data-quality audit to reuse — one
- * definition of "not currently actionable," not a second copy of the same rule. */
-export const INACTIVE_CYCLE_STATUSES = new Set(["closed", "historical", "discontinued"]);
 
 function matchesAnyKnownCountry(known: readonly string[], allowed: readonly string[]): boolean {
   return known.some((k) => allowed.some((a) => isSameCountry(k, a)));
+}
+
+/** The two ways isOpportunityActionable returns false need different wording — a row whose
+ * cycle_status is still e.g. "open" or "date_not_announced" but whose deadline has quietly
+ * passed must never be described by its cycle status, which would tell the student nothing
+ * about why they can't act on it. Mirrors lib/opportunities/browse.ts's identical split. */
+function nonActionableReason(opportunity: Pick<Opportunity, "cycle_status" | "deadline">): string {
+  if (NON_ACTIONABLE_OPPORTUNITY_CYCLE_STATUSES.has(opportunity.cycle_status)) {
+    return `This opportunity's current cycle is ${opportunity.cycle_status.replace(/_/g, " ")}.`;
+  }
+  return "This opportunity's application deadline has passed.";
 }
 
 /**
@@ -24,7 +33,11 @@ function matchesAnyKnownCountry(known: readonly string[], allowed: readonly stri
  * structured mismatch must become known_ineligible, not just an unresolved warning — the
  * data-quality sprint's own Part G decision matrix).
  */
-function evaluateOpportunityEligibility(candidate: CandidateAction & { source: { kind: "opportunity" } }, state: CounselorState): EligibilityResult {
+function evaluateOpportunityEligibility(
+  candidate: CandidateAction & { source: { kind: "opportunity" } },
+  state: CounselorState,
+  referenceDate: Date
+): EligibilityResult {
   const entry = state.eligibleOpportunityMatches.find((e) => e.opportunity.id === candidate.source.opportunityId);
   if (!entry) {
     return { verdict: "unknown", notes: ["This opportunity's current data couldn't be found."] };
@@ -40,10 +53,16 @@ function evaluateOpportunityEligibility(candidate: CandidateAction & { source: {
     return { verdict: "known_ineligible", notes: ["This opportunity is not currently verified."] };
   }
 
-  // A hard, structured "not actionable right now" check — independent of matching.ts,
-  // which never looks at cycle_status at all.
-  if (INACTIVE_CYCLE_STATUSES.has(opportunity.cycle_status)) {
-    return { verdict: "known_ineligible", notes: [`This opportunity's current cycle is ${opportunity.cycle_status.replace(/_/g, " ")}.`] };
+  // A hard, structured "not actionable right now" check — independent of matching.ts, which
+  // looks at neither cycle_status nor deadline. Delegates to lib/opportunities/lifecycle.ts so
+  // this path enforces BOTH halves of that rule (closed cycle AND passed deadline) rather than
+  // a local copy of one half: this file previously kept its own INACTIVE_CYCLE_STATUSES set
+  // and checked only the cycle, so a row whose deadline had passed while its cycle_status
+  // stayed a legitimately-actionable value (`date_not_announced`, `open`) was recommended as a
+  // next action no student could take. Read-time by design — it self-heals the moment
+  // ingestion refreshes `deadline` to a real next-cycle date, with no write or backfill.
+  if (!isOpportunityActionable(opportunity, referenceDate)) {
+    return { verdict: "known_ineligible", notes: [nonActionableReason(opportunity)] };
   }
 
   const notes: string[] = [];
@@ -149,10 +168,18 @@ function evaluateOpportunityEligibility(candidate: CandidateAction & { source: {
  * Counselor Core Phase F. Non-opportunity candidates (requirement_action, profile_task) are
  * always known_eligible — both are generated only from the student's own already-active
  * targets/profile, so no external eligibility gate applies to them at all.
+ *
+ * `referenceDate` defaults to now so existing callers keep working; lib/counselor/scoring.ts
+ * passes the same reference date it already threads through rankCandidates, so a caller
+ * evaluating "as of" some other date gets one consistent answer across eligibility and urgency.
  */
-export function evaluateCandidateEligibility(candidate: CandidateAction, state: CounselorState): EligibilityResult {
+export function evaluateCandidateEligibility(
+  candidate: CandidateAction,
+  state: CounselorState,
+  referenceDate: Date = new Date()
+): EligibilityResult {
   if (candidate.source.kind === "opportunity") {
-    return evaluateOpportunityEligibility(candidate as CandidateAction & { source: { kind: "opportunity" } }, state);
+    return evaluateOpportunityEligibility(candidate as CandidateAction & { source: { kind: "opportunity" } }, state, referenceDate);
   }
   return { verdict: "known_eligible" as EligibilityVerdict, notes: [] };
 }
