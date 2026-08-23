@@ -95,7 +95,10 @@ export function ProfileSignal({
   return (
     <section aria-label={heading} className="@container">
       <Eyebrow>{heading}</Eyebrow>
-      <ul className="mt-5 grid gap-x-10 gap-y-3.5 @md:grid-cols-2">
+      {/* Single column in the detail view: it renders full dimension names ("Intellectual
+          Curiosity") inside a half-width slot, where two ~280px columns truncated every
+          label. The summary variant uses short names and can afford two columns. */}
+      <ul className={cn("mt-5 grid gap-x-10 gap-y-3.5", !showScores && "@md:grid-cols-2")}>
         {signal.map((row) => (
           <li key={row.dimension} className="flex items-center justify-between gap-4 border-b border-border/60 pb-3">
             <span className="min-w-0 truncate text-sm text-ink-2">

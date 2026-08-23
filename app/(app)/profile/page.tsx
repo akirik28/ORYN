@@ -8,6 +8,8 @@ import { ScoreRadar } from "@/features/profile/score-radar";
 import { ProfileSignal } from "@/features/dashboard/profile-signal";
 import { buildProfileSignal, hasConfidentSignal } from "@/lib/scoring/signal";
 import { InsightCard } from "@/components/oryn/insight-card";
+import { JourneyTimeline } from "@/features/profile/journey-timeline";
+import { buildJourney } from "@/lib/profile/build-journey";
 import { DIMENSION_LABELS } from "@/lib/scoring/labels";
 import { PeerBenchmark } from "@/features/profile/peer-benchmark";
 import { getPeerBenchmarks } from "@/lib/benchmarking";
@@ -177,6 +179,22 @@ export default async function ProfilePage() {
     (scoresRes.data ?? []).map((s) => [s.dimension, { score: s.score, confidence: s.confidence }])
   ) as Partial<Record<ProfileDimension, { score: number; confidence: "high" | "medium" | "low" }>>;
   const radarScores = Object.fromEntries(Object.entries(scoreMap).map(([k, v]) => [k, v!.score]));
+  // One spine over the ten achievement tables (UI-V3 § 16). Reuses the rows already
+  // fetched above — no extra queries.
+  const journeyEntries = buildJourney({
+    activities: activitiesRes.data ?? [],
+    projects: projectsRes.data ?? [],
+    research: researchRes.data ?? [],
+    work: workRes.data ?? [],
+    volunteering: volunteeringRes.data ?? [],
+    sports: sportsRes.data ?? [],
+    awards: awardsRes.data ?? [],
+    certifications: certificationsRes.data ?? [],
+    courses: coursesRes.data ?? [],
+    testScores: testScoresRes.data ?? [],
+    education: educationRes.data ?? [],
+  });
+
   const profileSignal = buildProfileSignal(
     (scoresRes.data ?? []).map((row) => ({ dimension: row.dimension, score: row.score, confidence: row.confidence })),
   );
@@ -322,6 +340,14 @@ export default async function ProfilePage() {
           {journeyNote.body}
         </InsightCard>
       ) : null}
+
+      <section className="space-y-6">
+        <SectionHeader
+          title="Your journey"
+          description="Everything on one timeline, newest first. The sections below are where you add and edit — this is how it reads."
+        />
+        <JourneyTimeline entries={journeyEntries} />
+      </section>
 
       <section className="space-y-3">
         <SectionHeader title="Peer comparison" />
