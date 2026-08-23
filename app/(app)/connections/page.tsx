@@ -24,8 +24,9 @@ export default async function ConnectionsPage() {
   return (
     <div className="space-y-10">
       <PageHeader
-        title="Connections"
-        description="Other students you've connected with on Oryn — found through their shared public profile."
+        eyebrow="Connections"
+        title="People on a similar path."
+        description="Students whose record overlaps with yours. Oryn shows you why before you connect — and only ever surfaces someone who has chosen to make their profile public."
       />
 
       {isEmpty ? (
@@ -75,10 +76,19 @@ export default async function ConnectionsPage() {
 
       {suggestions.length > 0 ? (
         <section className="space-y-3">
-          <SectionHeader title="People you may know" description="Based on mutual connections, school, interests, and skills." />
+          <SectionHeader
+            title="People on a similar path"
+            description="Ranked by real overlap with your record — mutual connections, school, interests and skills. Every reason is shown."
+          />
           <div className="grid gap-3 sm:grid-cols-2">
             {suggestions.map((person) => (
-              <PeopleYouMayKnowRow key={person.id} id={person.id} displayName={person.displayName} reasons={person.reasons} />
+              <PeopleYouMayKnowRow
+                key={person.id}
+                id={person.id}
+                displayName={person.displayName}
+                headline={person.headline}
+                reasons={person.reasons}
+              />
             ))}
           </div>
         </section>
