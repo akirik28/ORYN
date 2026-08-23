@@ -21,6 +21,17 @@ function greeting() {
   return "Good evening";
 }
 
+/** Opportunities shown in the homepage preview (spec Phase 7, Block 4 — a short preview, not
+ * the catalogue). */
+const OPPORTUNITY_PREVIEW_SIZE = 2;
+
+/** How many eligible matches to consider before filtering down to OPPORTUNITY_PREVIEW_SIZE.
+ * Needs enough headroom that a run of closed-cycle rows at the top of a student's ranking
+ * cannot empty the block — measured worst case today was 2 unrecommendable rows ahead of the
+ * first good one, and this leaves an order of magnitude of slack without fetching the whole
+ * match table. */
+const OPPORTUNITY_PREVIEW_CANDIDATE_POOL = 20;
+
 export default async function DashboardPage() {
   const session = await requireUser();
   const userId = session.userId!;
@@ -60,7 +71,19 @@ export default async function DashboardPage() {
       .maybeSingle(),
     getTargetUniversitiesWithDetails(supabase, userId, 3),
     getUpcomingDeadlines(supabase, userId, 4),
-    supabase.from("opportunity_matches").select("opportunity_id, match_score").eq("user_id", userId).eq("eligible", true).order("match_score", { ascending: false }).limit(2),
+    // Over-fetch, then narrow to OPPORTUNITY_PREVIEW_SIZE after isOpportunityRecommendable has
+    // run below. Taking the top 2 here and filtering afterwards silently shrank the block to
+    // whatever survived — and emptied it entirely when a student's two highest-scoring matches
+    // were both closed-cycle, which is common because a stale cycle_status does not lower
+    // match_score. Live 2026-08-24: one user rendered an empty Opportunities block while holding
+    // 174 eligible, recommendable matches.
+    supabase
+      .from("opportunity_matches")
+      .select("opportunity_id, match_score")
+      .eq("user_id", userId)
+      .eq("eligible", true)
+      .order("match_score", { ascending: false })
+      .limit(OPPORTUNITY_PREVIEW_CANDIDATE_POOL),
   ]);
 
   const scores = scoresRes.data ?? [];
@@ -142,7 +165,10 @@ export default async function DashboardPage() {
   );
   const opportunityPreview = opportunityMatches
     .map((m) => ({ title: opportunityById.get(m.opportunity_id)?.title, matchScore: m.match_score }))
-    .filter((o): o is { title: string; matchScore: number } => Boolean(o.title));
+    .filter((o): o is { title: string; matchScore: number } => Boolean(o.title))
+    // Cut to size only now that unrecommendable rows are gone, so the block shows the best
+    // rows a student can actually act on rather than whatever survived the top two.
+    .slice(0, OPPORTUNITY_PREVIEW_SIZE);
 
   const displayName = profile?.display_name || profile?.first_name || "there";
 
