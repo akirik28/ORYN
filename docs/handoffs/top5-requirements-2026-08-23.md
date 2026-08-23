@@ -46,16 +46,20 @@ All Warwick records in this batch target the canonical id only.
   change found in a table footnote) + 1 deadline record (UCAS equal-consideration, national
   2027 date via `ucas.com` since Durham's own page states it in evergreen terms without a
   year).
-- **Ankara Üniversitesi — not yet written up.** Research was in progress when this
-  checkpoint was written (confirmed `TRYÖS`, Ankara's own foreign-student exam
-  administered via ÖSYM/`osym.gov.tr`, and located the official
-  `iso.ankara.edu.tr`/`isoidb.ankara.edu.tr` international-admission pages) but no record
-  met this corpus's verbatim-quote bar yet — the specific exam-score table and the
-  2026-2027 application window appear to be served as an embedded PDF/JS widget rather than
-  static HTML on every page fetched so far (`isoidb.ankara.edu.tr` static fetches
-  consistently missed the actual score tables). **Continuing this after this commit, not
-  blocked** — next step is fetching the linked PDF announcement directly rather than the
-  HTML wrapper page.
+- **Ankara Üniversitesi — done at this pass's depth, all 5 universities in scope now
+  covered.** The exam-score table and application announcement were genuinely served as
+  linked PDFs, not static HTML (as flagged at the prior checkpoint) — located both PDF URLs
+  in the wrapper pages' raw HTML and extracted them directly with `pypdf`. 3 requirement
+  records (general TR-YÖS/IB/ABITUR/A-Level/TQDK-DİM/WASSCE-WAEC/SAT/Kyrgyzstan-ORT exam
+  equivalency table with per-exam minimum scores; a second, structurally distinct
+  elevated-threshold TR-YÖS-only table for 21 named competitive programmes — Medicine,
+  Dentistry, Computer Engineering, Law, etc., minimums 275–440 depending on programme tier;
+  a Turkish-language-proficiency requirement that applies even to English-medium
+  programmes, TÖMER/Yunus Emre certificate or a 2-year grace period) + 1 deadline record
+  (2026-2027 international-student application window, 22 May 2026 09:30 – 26 June 2026
+  17:00, results/registration dates explicitly "to be announced later" by the university
+  itself — recorded as unknown, not estimated). All `official_primary`
+  (`isoidb.ankara.edu.tr` PDFs).
 
 ## Two defect classes recurring across this batch, worth flagging generally
 
@@ -91,7 +95,14 @@ All Warwick records in this batch target the canonical id only.
   (2 USC, 1 Warwick, 2 Purdue, 2 Durham).
 - `data/research/university-requirements/top5_deadlines_2026-08-23.jsonl` — 8 records
   (3 USC, 2 Warwick, 2 Purdue, 1 Durham).
+- `data/research/university-requirements/top5_requirements_ankara_2026-08-23.jsonl` — 3
+  records (Ankara Üniversitesi).
+- `data/research/university-requirements/top5_deadlines_ankara_2026-08-23.jsonl` — 1
+  record (Ankara Üniversitesi).
 
-Not yet ingested — this is the research handoff only, per this lane's `RESEARCH`
-mandate (no live-DB writes). Follows the existing JSONL contract in
-`docs/research-handoff-university-requirements.md`.
+**All 5 universities in scope now have at least one requirement and one deadline record.**
+10 requirement + 9 deadline records total, all `official_primary`, all with `source_url` +
+`retrieved_at` + `confidence`. Not yet ingested — this is the research handoff only, per
+this lane's `RESEARCH` mandate (no live-DB writes). Follows the existing JSONL contract in
+`docs/research-handoff-university-requirements.md`. Scope held to exactly the 5 named
+universities per the CEO's package definition — no expansion attempted.
