@@ -348,11 +348,27 @@ export default async function UniversitiesPage({
     return qs ? `/universities?${qs}` : "/universities";
   }
 
-  /** Selects a country on the map from a result row. */
+  /**
+   * Selects a country on the map from a result row.
+   *
+   * Preserves every other filter, matching what `WorldMapExplorer.selectCountry` already
+   * does when the same selection is made by clicking the map itself (it rebuilds from the
+   * existing search params). An earlier version rebuilt the URL from scratch and silently
+   * dropped region, sort, cost, type, size and rank — so a student who had narrowed to
+   * "under $20k, large" lost all of it by clicking a country in the results, while doing
+   * the identical thing on the map kept it. Two paths to one action must not disagree.
+   * Page is deliberately not carried over: the result set just changed.
+   */
   function buildCountryHref(name: string): string {
     const params = new URLSearchParams();
     params.set("country", name);
+    if (region) params.set("region", region.id);
     if (q) params.set("q", q);
+    if (sort !== "ranking") params.set("sort", sort);
+    if (cost.length > 0) params.set("cost", cost.join(","));
+    if (type) params.set("type", type);
+    if (size.length > 0) params.set("size", size.join(","));
+    if (rank) params.set("rank", rank);
     if (isListView) params.set("view", "list");
     return `/universities?${params.toString()}`;
   }
