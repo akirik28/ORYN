@@ -79,7 +79,11 @@ export function MobileNav({
               /* min-h-14: a 44pt-plus touch target, per the same rule the overflow
                  button below follows. */
               className={cn(
-                "flex min-h-14 flex-col items-center justify-center gap-1 px-1 py-2 text-[10px] transition-colors",
+                // 9px with tight tracking below 360: six columns at 320px leave ~53px each,
+                // where "Universities" ellipsised at 10px. The icon carries recognition and
+                // the full label is always the link's accessible name, so this trades a
+                // little legibility at the narrowest width for a complete word.
+                "flex min-h-14 flex-col items-center justify-center gap-1 px-0.5 py-2 text-[9px] tracking-tight transition-colors min-[360px]:px-1 min-[360px]:text-[10px] min-[360px]:tracking-normal",
                 "focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none focus-visible:-outline-offset-2",
                 active ? "text-brand-primary" : "text-ink-3",
               )}
@@ -98,7 +102,7 @@ export function MobileNav({
           aria-label="More destinations"
           aria-expanded={open}
           className={cn(
-            "flex min-h-14 flex-col items-center justify-center gap-1 px-1 py-2 text-[10px] transition-colors",
+            "flex min-h-14 flex-col items-center justify-center gap-1 px-0.5 py-2 text-[9px] tracking-tight transition-colors min-[360px]:px-1 min-[360px]:text-[10px] min-[360px]:tracking-normal",
             "focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none focus-visible:-outline-offset-2",
             overflowActive ? "text-brand-primary" : "text-ink-3",
           )}
