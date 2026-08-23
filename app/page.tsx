@@ -36,7 +36,11 @@ export default function LandingPage() {
         <section className="relative overflow-hidden border-b bg-gradient-to-b from-brand-primary-subtle via-background to-background">
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,var(--brand-primary-soft),transparent_60%)]"
+            /* `--brand-primary-subtle` (6% indigo), not `-soft` (15%): against UI-V3-0b's warm
+               paper ground the stronger wash turned the whole hero cool and left a visible
+               seam where it met the warm sections below. The brief asks for limited use of
+               ORYN indigo, and a full-bleed lavender slab is the opposite of that. */
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,var(--brand-primary-subtle),transparent_60%)]"
           />
           {/* No opacity in the entrance animation (Y-offset only) — found live-testing
               this pass that this motion.div's `animate` can get stuck at its `initial`
