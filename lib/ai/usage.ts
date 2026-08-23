@@ -3,6 +3,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { env } from "@/lib/env";
 import type { AIUsage } from "./provider";
+import { estimateCostUsd } from "./pricing";
 
 /**
  * Records token usage for cost tracking and per-feature monitoring (Phase 27). Best-effort
@@ -32,6 +33,7 @@ export async function logAIUsage(params: {
       model: env.anthropic.model,
       input_tokens: params.usage.inputTokens,
       output_tokens: params.usage.outputTokens,
+      estimated_cost: estimateCostUsd(env.anthropic.model, params.usage.inputTokens, params.usage.outputTokens),
     });
   } catch (error) {
     console.warn("[ai_usage] failed to log usage", { feature: params.feature, error });
