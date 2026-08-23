@@ -1,11 +1,18 @@
 import { CATEGORY_DIMENSIONS } from "@/lib/opportunities/matching";
+import { competesInCoreRecommendations } from "@/lib/opportunities/commercial";
 import { REQUIREMENT_CATEGORY_LABELS } from "@/lib/requirements/types";
 import type { CandidateAction, CounselorState, RequirementCandidateInput } from "./types";
 
 const ACTIONABLE_REQUIREMENT_STATUSES = new Set(["not_met", "unknown"]);
 
 function opportunityCandidates(state: CounselorState): CandidateAction[] {
-  return state.eligibleOpportunityMatches.map(({ opportunity }) => ({
+  return state.eligibleOpportunityMatches
+    // Pay-to-enroll programmes stay in Browse but do not compete for a core recommendation
+    // slot (lib/opportunities/commercial.ts). Filtered here rather than down-ranked in
+    // scoring.ts because the ruling is categorical: a programme gated on ability to pay
+    // should not appear among "what to do next" at all, however well it scores on gap fit.
+    .filter(({ opportunity }) => competesInCoreRecommendations(opportunity))
+    .map(({ opportunity }) => ({
     source: { kind: "opportunity", opportunityId: opportunity.id },
     title: opportunity.title,
     category: opportunity.category,
