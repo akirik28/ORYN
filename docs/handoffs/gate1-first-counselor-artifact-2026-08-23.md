@@ -154,14 +154,30 @@ DE-NL-REQUIREMENTS research lane's documented convention for undated recurring d
 
 ## 8. Time-budget reasoning
 
-Not observable this session — `weekly_time_budget` was never set on this account (Settings
-page unreachable, environment fault, not an app bug — see below), so there is no live
-example of the advisor adjusting its recommendation volume to a stated time budget (Phase
-64's requirement: "Do not recommend 15 hours of extracurricular work to a student with 3
-free hours"). This is a real gap in this artifact, not a claim that the feature doesn't
-work — it simply wasn't exercisable this pass. Flagged for whoever picks this up next: set
-`weekly_time_budget` on a test account first, then re-run an advisor query, to actually
-observe this behavior rather than assume it.
+**Addendum (2026-08-23, later the same session, after the Browser-pane environment fault
+below resolved itself):** closed the gap. Set `weekly_time_budget = "5_10h"` on this account
+via Settings (`updateTimeBudget("5_10h")`, confirmed live in `profiles`), then asked the
+advisor directly: *"Given my actual weekly time budget, is doing an internship this
+semester realistic, or should I focus only on the research project?"*
+
+The reply used the number correctly, with real arithmetic, not just a restatement:
+
+> *"You have 5-10h/week total. You're already Economics Club President, which — even
+> conservatively — eats 2-4h/week. That leaves roughly 3-6h/week for everything else. A
+> real internship (search, applications, interviews, then actual work) doesn't fit in that
+> remainder without your research project or club leadership degrading. You don't have
+> slack to add a third commitment."*
+
+It went on to recommend concentrating the remaining hours on finishing the research project
+to an actual deliverable, tied explicitly to the Yale Young Global Scholars deadline saved
+earlier in §6 — evidence-grounded, time-aware, and correctly against adding a new
+commitment (Phase 39's "avoid for now" pattern, applied to a *new* scenario, not just
+repeated from Exchange 1). This response also completed naturally (930 output tokens, under
+the 1024 cap) rather than truncating — see F1's status note below.
+
+Phase 64's requirement — "do not recommend more than a time-poor student can realistically
+do" — is now directly demonstrated, not just asserted as untested. §8 in the original
+version of this artifact is superseded by this addendum.
 
 ## 9. Ranking rationale
 
@@ -218,14 +234,16 @@ thresholds cannot currently be enforced automatically by anything in the codebas
 would need to wire real per-model pricing into `logAIUsage()` before that budget gate is
 real rather than aspirational.
 
-## Findings surfaced while producing this artifact (backlog, not fixed here)
+## Findings surfaced while producing this artifact
 
 - **F1 — Advisor replies are cut off mid-sentence.** Both real replies captured above hit
   exactly `output_tokens = 1024` and end mid-clause. `maxTokens: 1024` in
   `lib/ai/advisor-chat.ts` is too low for the multi-point, evidence-citing response style
   the system prompt asks for. Already flagged to ORYN-CEO earlier this session; reproduced
   a second time here with different content, same exact cutoff, which strengthens rather
-  than just repeats the finding.
+  than just repeats the finding. **Still open** — the §8 addendum's exchange happened to
+  finish naturally at 930 tokens (under the cap), which is a data point that the cap isn't
+  hit on *every* call, not evidence the cap itself was raised. Not fixed.
 - **F2 — Advisor UI does not auto-refresh after sending.** Already flagged; not re-tested
   this pass (this artifact was built by reading `advisor_messages` directly rather than
   waiting on the UI, specifically to route around F2 while it's still open).
@@ -239,12 +257,15 @@ real rather than aspirational.
 - **F5 — Onboarding is re-runnable on an already-onboarded account and does not upsert.**
   This account's `goals`/`education_records` carry 4-5 duplicate rows from repeated test
   runs today. Already flagged as an idempotency gap.
-- **F6 — `ai_usage.estimated_cost` is never computed.** New observation (§12). Blocks the
-  founder's stated $5/$10 cost-gate from being automatically enforceable.
+- **F6 — `ai_usage.estimated_cost` is never computed.** New observation (§12). Blocked the
+  founder's stated $5/$10 cost-gate from being automatically enforceable. **Fixed**: PR #135
+  (`lib/ai/pricing.ts` + wired into `logAIUsage()`), live-verified — the §8 addendum's
+  advisor call landed with `estimated_cost = 0.0209`.
 
-None of the above were fixed as part of producing this artifact — per the standing
-"analysis and reporting only, no new scope during recovery" instruction from ORYN-CEO this
-session.
+F1-F5 were documented, not fixed, per the standing "analysis and reporting only, no new
+scope during recovery" instruction from ORYN-CEO this session. F6 was picked up as its own
+bounded package afterward and is now fixed; the §8 time-budget gap was closed the same way,
+as a bounded addendum to this same artifact rather than a new one.
 
 ## Environment note (not a product finding)
 
