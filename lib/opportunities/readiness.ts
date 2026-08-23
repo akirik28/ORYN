@@ -1,4 +1,4 @@
-import { INACTIVE_CYCLE_STATUSES } from "@/lib/counselor/eligibility";
+import { NON_ACTIONABLE_OPPORTUNITY_CYCLE_STATUSES } from "./lifecycle";
 import type { Opportunity } from "@/types/database";
 
 export type ReadinessTier = "recommendation_ready" | "needs_verification" | "not_ready";
@@ -7,9 +7,11 @@ export interface RecommendationReadinessReport {
   opportunityId: string;
   title: string;
   tier: ReadinessTier;
-  /** Hard reasons the record cannot be recommended at all — matches
-   * lib/counselor/eligibility.ts's own known_ineligible rules, so this audit never disagrees
-   * with what the runtime engine will actually do. */
+  /** Hard reasons the record cannot be recommended at all — drawn from the same
+   * lib/opportunities/lifecycle.ts rule the runtime engine enforces
+   * (lib/counselor/eligibility.ts). Note this audit applies only the date-independent half:
+   * it deliberately takes no reference date, so a row whose deadline has already passed is
+   * still reported recommendation_ready here while the counselor excludes it at read time. */
   blockers: string[];
   /** Informational only — never blocks a recommendation. Unknown eligibility stays unknown
    * (spec: never infer citizenship/age/grade eligibility, never fabricate a deadline) — these
@@ -19,9 +21,11 @@ export interface RecommendationReadinessReport {
 
 /**
  * Counselor Core data-quality workstream, Phase 9 (docs/counselor-core-plan.md's follow-on).
- * Deterministic, reuses existing columns only (no parallel schema) and the same
- * "not currently actionable" rule lib/counselor/eligibility.ts already enforces at runtime —
- * this is the research-time equivalent of that same check, not a second, drifting copy of it.
+ * Deterministic, reuses existing columns only (no parallel schema) and the canonical
+ * NON_ACTIONABLE_OPPORTUNITY_CYCLE_STATUSES set from lib/opportunities/lifecycle.ts rather
+ * than a second, drifting copy of it — the research-time equivalent of the cycle-status half
+ * of the check the counselor enforces at runtime. Stays deliberately date-independent so a
+ * report is reproducible for a given row; see `blockers` above for what that trades away.
  *
  * Tells a researcher WHY a record isn't yet high-confidence recommendable, without ever
  * treating a missing fact as a reason to invent one (spec §29/§34): a genuinely unpublished
@@ -46,7 +50,7 @@ export function evaluateRecommendationReadiness(opportunity: Opportunity): Recom
   }
 
   // --- Current status ---
-  if (INACTIVE_CYCLE_STATUSES.has(opportunity.cycle_status)) {
+  if (NON_ACTIONABLE_OPPORTUNITY_CYCLE_STATUSES.has(opportunity.cycle_status)) {
     blockers.push(`cycle_status is '${opportunity.cycle_status}' — not currently actionable.`);
   }
 

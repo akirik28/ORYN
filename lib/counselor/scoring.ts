@@ -51,7 +51,7 @@ function scoreOpportunityCandidate(candidate: CandidateAction, gaps: ProfileGap[
   const matchedGaps = matchedGapsFor(candidate, gaps);
   const source = candidate.source as { kind: "opportunity"; opportunityId: string };
   const entry = state.eligibleOpportunityMatches.find((e) => e.opportunity.id === source.opportunityId);
-  const eligibility = evaluateCandidateEligibility(candidate, state);
+  const eligibility = evaluateCandidateEligibility(candidate, state, referenceDate);
 
   const gapRelevance = gapRelevanceComponent(matchedGaps);
   const fieldAlignment = entry?.match.relevance_score ?? 0;
@@ -119,7 +119,7 @@ function scoreProfileTaskCandidate(candidate: CandidateAction, state: CounselorS
 }
 
 function scoreCandidate(candidate: CandidateAction, gaps: ProfileGap[], state: CounselorState, referenceDate: Date): ScoredCandidate {
-  const eligibility = evaluateCandidateEligibility(candidate, state);
+  const eligibility = evaluateCandidateEligibility(candidate, state, referenceDate);
   if (candidate.source.kind === "opportunity") {
     return { ...scoreOpportunityCandidate(candidate, gaps, state, referenceDate), eligibility };
   }
