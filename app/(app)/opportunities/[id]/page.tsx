@@ -13,7 +13,7 @@ import { ErrorState } from "@/components/oryn/error-state";
 import { SectionHeader } from "@/components/oryn/section-header";
 import { SourceBadge } from "@/components/oryn/source-badge";
 import { StatusBadge } from "@/components/oryn/status-badge";
-import { Eyebrow } from "@/components/oryn/eyebrow";
+import { NextMove } from "@/components/oryn/next-move";
 import { differenceInCalendarDays } from "date-fns";
 import { OpportunityActions } from "@/features/opportunities/opportunity-actions";
 import { formatMoney } from "@/lib/i18n/format";
@@ -133,53 +133,46 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
       />
 
       {/* UI-V3 § 20: personalization before the catalogue facts. The student's question is
-          "is this for me", and the page used to answer it last. */}
+          "is this for me", and the page used to answer it last. Rendered through the shared
+          NextMove component rather than bespoke markup — it is the same anatomy Home uses
+          (eyebrow, claim, reasoning, labelled facts), and a second copy here would drift. */}
       {canGiveTake && match ? (
-        <section aria-label="Oryn's take" className="rounded-2xl bg-module-recommendation p-6 md:p-8">
-          <Eyebrow tone="brand">Oryn&apos;s take</Eyebrow>
-          <p className="mt-4 font-display text-2xl leading-[1.15] tracking-[-0.02em] text-balance md:text-3xl">
-            {fitLabel(match.match_score)}
-          </p>
-          {takeReasons.length > 0 ? (
-            <div className="mt-4 max-w-2xl space-y-2.5 leading-relaxed text-ink-2">
-              {takeReasons.map((line) => (
-                <p key={line}>{line}</p>
-              ))}
-            </div>
-          ) : null}
-          <dl className="mt-7 flex flex-wrap gap-x-12 gap-y-4">
-            <div>
-              <dt className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-3 uppercase">Fit</dt>
-              <dd className="mt-1.5 text-sm text-ink-1">{fitLabel(match.match_score)}</dd>
-            </div>
-            {SELECTIVITY_LABEL[opportunity.selectivity_tier] ? (
-              <div>
-                <dt className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-3 uppercase">Selectivity</dt>
-                <dd className="mt-1.5 text-sm text-ink-1">{SELECTIVITY_LABEL[opportunity.selectivity_tier]}</dd>
+        <NextMove
+          surface
+          eyebrow="Oryn's take"
+          headline={fitLabel(match.match_score)}
+          why={
+            takeReasons.length > 0 ? (
+              <div className="space-y-2.5">
+                {takeReasons.map((line) => (
+                  <p key={line}>{line}</p>
+                ))}
               </div>
-            ) : null}
-            {daysUntilDeadline !== null && daysUntilDeadline >= 0 ? (
-              <div>
-                <dt className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-3 uppercase">Urgency</dt>
-                <dd className="mt-1.5 text-sm text-ink-1">
-                  {daysUntilDeadline === 0 ? "Closes today" : `${daysUntilDeadline} days left`}
-                </dd>
-              </div>
-            ) : null}
-          </dl>
-          {/* The qualification lives inside the claim, not below it. "Strong fit" printed
-              above a separate note reading "country eligibility not verified yet" lets a
-              student read the verdict and never reach the caveat — the same false-certainty
-              shape the dashboard's canClaimGap guard exists to prevent. Oryn can say this
-              looks like a strong fit *and* that it hasn't confirmed the student qualifies;
-              it just has to say both in one breath. */}
-          {eligibility?.notes ? (
-            <p className="mt-6 border-t border-brand-primary-border/50 pt-4 text-sm leading-relaxed text-ink-2">
-              <span className="font-medium text-ink-1">One thing Oryn can&apos;t confirm: </span>
-              {eligibility.notes}
-            </p>
-          ) : null}
-        </section>
+            ) : undefined
+          }
+          facts={[
+            { term: "Fit", value: fitLabel(match.match_score) },
+            ...(SELECTIVITY_LABEL[opportunity.selectivity_tier]
+              ? [{ term: "Selectivity", value: SELECTIVITY_LABEL[opportunity.selectivity_tier]! }]
+              : []),
+            ...(daysUntilDeadline !== null && daysUntilDeadline >= 0
+              ? [
+                  {
+                    term: "Urgency",
+                    value: daysUntilDeadline === 0 ? "Closes today" : `${daysUntilDeadline} days left`,
+                  },
+                ]
+              : []),
+          ]}
+          footnote={
+            eligibility?.notes ? (
+              <>
+                <span className="font-medium text-ink-1">One thing Oryn can&apos;t confirm: </span>
+                {eligibility.notes}
+              </>
+            ) : undefined
+          }
+        />
       ) : null}
 
       {!matchRefreshed ? (

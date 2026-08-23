@@ -79,6 +79,23 @@ export function DashboardView({
   const gapLabel = claimableGap ? DIMENSION_LABELS[claimableGap.dimension] : null;
   const hasRead = hasConfidentSignal(profileSignal);
 
+  // "What Oryn is reading" (UI-V3 § 9) — the evidence behind the claim above it, so the
+  // recommendation can be argued with rather than only accepted. Every figure is counted
+  // from the same signal the Profile Signal block renders, including the dimensions Oryn
+  // has no read on: that absence is the honest reason its advice is hedged, and hiding it
+  // would make the confident half look better supported than it is.
+  const strongCount = profileSignal.filter((row) => row.state === "strong").length;
+  const unknownCount = profileSignal.filter((row) => row.state === "limited_evidence").length;
+  const heroEvidence = claimableGap
+    ? [
+        { label: "Areas assessed", value: profileSignal.length - unknownCount },
+        { label: "Already strong", value: strongCount, tone: strongCount > 0 ? ("positive" as const) : undefined },
+        ...(unknownCount > 0
+          ? [{ label: "No evidence yet", value: unknownCount, tone: "missing" as const }]
+          : []),
+      ]
+    : undefined;
+
   return (
     <div className="space-y-20 md:space-y-24">
       {/* Opening. Not a card, and not a stat block — the first thing a student reads is a
@@ -122,6 +139,7 @@ export function DashboardView({
                 it&apos;s where the same hours of work change your profile most.
               </>
             }
+            evidence={heroEvidence}
             action={
               <>
                 <ButtonLink href="/advisor">

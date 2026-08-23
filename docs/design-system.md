@@ -231,6 +231,12 @@ one-off `<div className="rounded-xl border p-4">` copies:
   `tabular-nums`). Displays a fact; `InsightCard` interprets one. Its `missing` tone matters:
   absent evidence ("0 verified research projects") is real signal here and should read as
   noted, not failed.
+- **`NextMove`** — Oryn's signature argument: eyebrow, claim, reasoning, the evidence it
+  used, labelled facts, an action, and an optional footnote for a qualification that must
+  travel *with* the claim rather than sit loose beneath it. It is the only component that
+  carries the warm recommendation ground (`surface`), which is what makes the brief's
+  "at most one per screen" something you can actually check. Home and the opportunity
+  detail's "Oryn's take" are the same anatomy through this one component, not two copies.
 - **`MediaImage`** — the product's one image surface. Photo → logo → designed monogram,
   each tier falling through on a failed load. The monogram tier is the point: "no broken
   placeholders" must not be solved with generic stock imagery, which would imply we have a

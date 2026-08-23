@@ -30,9 +30,10 @@ export function NextMove({
   headline,
   why,
   evidence,
-  impact,
-  horizon,
+  facts,
   action,
+  footnote,
+  surface = false,
   size = "default",
   as: Heading = "h2",
   className,
@@ -42,9 +43,13 @@ export function NextMove({
   /** The "why now" argument. One short paragraph — this is reasoning, not an article. */
   why?: ReactNode;
   evidence?: NextMoveEvidence[];
-  impact?: string;
-  horizon?: string;
+  /** Short labelled values under the argument — "Impact / High", "Urgency / 12 days". */
+  facts?: { term: string; value: ReactNode }[];
   action?: ReactNode;
+  /** A qualification that must travel with the claim rather than sit loose beneath it. */
+  footnote?: ReactNode;
+  /** Lift onto the warm recommendation ground. At most one per screen. */
+  surface?: boolean;
   size?: "default" | "hero";
   /** Heading level, so the page outline stays correct. When this is the statement that
    *  opens a page — Home's hero — it is the page's `h1`, not an `h2` under nothing. */
@@ -54,7 +59,7 @@ export function NextMove({
   const hero = size === "hero";
 
   return (
-    <section className={cn(className)}>
+    <section className={cn(surface && "rounded-2xl bg-module-recommendation p-6 md:p-8", className)}>
       <Eyebrow tone="brand">{eyebrow}</Eyebrow>
 
       <Heading
@@ -87,27 +92,29 @@ export function NextMove({
         </div>
       ) : null}
 
-      {impact || horizon ? (
-        // A description list, not two loose spans: "High" is meaningless without "Impact"
+      {facts && facts.length > 0 ? (
+        // A description list, not loose spans: "High" is meaningless without "Impact"
         // attached to it, and a screen reader reading the row out of order would get
         // exactly that. Terms are visible here because they're short enough to earn it.
         <dl className="mt-7 flex flex-wrap gap-x-10 gap-y-3">
-          {impact ? (
-            <div>
-              <dt className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-3 uppercase">Impact</dt>
-              <dd className="mt-1 text-sm text-ink-1">{impact}</dd>
+          {facts.map((fact) => (
+            <div key={fact.term}>
+              <dt className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-3 uppercase">{fact.term}</dt>
+              <dd className="mt-1 text-sm text-ink-1">{fact.value}</dd>
             </div>
-          ) : null}
-          {horizon ? (
-            <div>
-              <dt className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-3 uppercase">Time horizon</dt>
-              <dd className="mt-1 text-sm text-ink-1">{horizon}</dd>
-            </div>
-          ) : null}
+          ))}
         </dl>
       ) : null}
 
       {action ? <div className="mt-7 flex flex-wrap items-center gap-3">{action}</div> : null}
+
+      {/* Inside the block, never below it: a qualification a reader can take the verdict
+          without reaching is the false-certainty shape this product must not produce. */}
+      {footnote ? (
+        <div className="mt-6 border-t border-brand-primary-border/50 pt-4 text-sm leading-relaxed text-ink-2">
+          {footnote}
+        </div>
+      ) : null}
     </section>
   );
 }
