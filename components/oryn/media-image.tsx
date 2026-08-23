@@ -84,10 +84,14 @@ export function MediaImage({
           onError={() => setPhotoFailed(true)}
         />
       ) : showLogo ? (
+        // alt="" deliberately, rather than inheriting `alt`: that string describes the
+        // photo ("Campus of X"), and reusing it here would announce a fallback logo as a
+        // photograph of the place. The surrounding card always states the name in text, so
+        // the logo is decorative at this tier.
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={fallbackSrc!}
-          alt={alt}
+          alt=""
           className="max-h-[70%] max-w-[70%] object-contain"
           onError={() => setLogoFailed(true)}
         />

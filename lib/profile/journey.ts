@@ -67,17 +67,43 @@ export function weightFor(kind: JourneyKind): JourneyWeight {
   return WEIGHT_BY_KIND[kind];
 }
 
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/**
+ * These columns hold *calendar dates* ("2025-01-01"), not instants.
+ *
+ * `new Date("2025-01-01")` parses that as UTC midnight, so `getFullYear()` and
+ * `toLocaleDateString()` both read it back in local time and shift it a day earlier
+ * anywhere west of UTC: in New York that date reports year 2024 and formats as
+ * "Dec 2024". A student in the US would see January records filed under the previous
+ * year. Parsing the calendar parts out of the string keeps the value the student
+ * entered, and makes these functions timezone-independent by construction.
+ */
+function parseCalendarDate(iso: string): { year: number; month: number } | null {
+  const match = /^(\d{4})-(\d{2})/.exec(iso.trim());
+  if (!match) {
+    // Not a plain calendar date — fall back to real parsing, in UTC, so a full timestamp
+    // still resolves rather than being dropped.
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return null;
+    return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1 };
+  }
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  if (month < 1 || month > 12) return null;
+  return { year, month };
+}
+
 /** The year a record belongs to. Undated records group under `null`, never under today. */
 export function yearOf(entry: JourneyEntry): number | null {
   if (!entry.sortDate) return null;
-  const year = new Date(entry.sortDate).getFullYear();
-  return Number.isFinite(year) ? year : null;
+  return parseCalendarDate(entry.sortDate)?.year ?? null;
 }
 
 function formatMonthYear(iso: string): string | null {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+  const parts = parseCalendarDate(iso);
+  if (!parts) return null;
+  return `${MONTHS[parts.month - 1]} ${parts.year}`;
 }
 
 /**

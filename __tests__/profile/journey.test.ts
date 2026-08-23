@@ -66,6 +66,13 @@ describe("spanLabel", () => {
   test("no dates at all yields no label rather than a guess", () => {
     expect(spanLabel({ start: null, end: null, ongoing: false })).toBeNull();
   });
+
+  // Same UTC-midnight trap as yearOf: `toLocaleDateString` on "2025-01-01" renders
+  // "Dec 2024" west of UTC.
+  test("a January date labels as January in every timezone", () => {
+    expect(spanLabel({ start: "2025-01-01", end: null, ongoing: false })).toBe("Jan 2025");
+    expect(spanLabel({ start: "2024-01-01", end: "2025-01-01", ongoing: false })).toBe("Jan 2024 — Jan 2025");
+  });
 });
 
 describe("yearOf", () => {
@@ -77,6 +84,24 @@ describe("yearOf", () => {
   // student never gave.
   test("an undated record has no year, not this year", () => {
     expect(yearOf(entry({ id: "a", kind: "award", sortDate: null }))).toBeNull();
+  });
+
+  // Regression: these columns hold calendar dates, and `new Date("2025-01-01")` is UTC
+  // midnight — read back with getFullYear() it reports 2024 anywhere west of UTC, filing a
+  // US student's January records under the previous year. This suite runs in the machine's
+  // own zone, so assert the boundary explicitly rather than relying on where CI happens to
+  // live; run with `TZ=America/New_York` to see the old implementation fail.
+  test("January 1st belongs to its own year in every timezone", () => {
+    expect(yearOf(entry({ id: "a", kind: "award", sortDate: "2025-01-01" }))).toBe(2025);
+    expect(yearOf(entry({ id: "b", kind: "award", sortDate: "2025-12-31" }))).toBe(2025);
+  });
+
+  test("a full timestamp still resolves", () => {
+    expect(yearOf(entry({ id: "a", kind: "award", sortDate: "2025-06-04T10:00:00.000Z" }))).toBe(2025);
+  });
+
+  test("an unparseable date yields no year rather than NaN", () => {
+    expect(yearOf(entry({ id: "a", kind: "award", sortDate: "not a date" }))).toBeNull();
   });
 });
 

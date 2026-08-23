@@ -83,10 +83,13 @@ export function buildJourney(sources: JourneySources): JourneyEntry[] {
   for (const w of sources.work) pushSpan("work", w);
   for (const v of sources.volunteering) pushSpan("volunteering", v);
   for (const s of sources.sports) {
+    // The team goes in the title *or* the organization line, never both — passing
+    // `organization: s.team_name` alongside a title that already contains it rendered
+    // "Football — Varsity" with "Varsity" repeated directly underneath.
     pushSpan("sport", {
       ...s,
       title: s.team_name ? `${s.sport} — ${s.team_name}` : s.sport,
-      organization: s.team_name,
+      organization: s.position ?? s.level ?? null,
     });
   }
   for (const e of sources.education) {
