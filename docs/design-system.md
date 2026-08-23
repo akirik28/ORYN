@@ -318,6 +318,15 @@ not a UI one.
   `UniversityResultRow` exists because `UniversityCard` is the wrong shape at 42% width —
   its image band and three metadata rows fit about four results into the panel, which
   defeats the point of pairing a list with a map.
+- **The shell's breakpoint is `lg` (1024), not `md`.** The desktop header carries a logo,
+  seven nav items, a search field, notifications and an avatar; below about 1100px that
+  does not fit. Measured at 1024 with the old `md` boundary, the utilities cluster ran 44px
+  past the header's right edge and the document scrolled horizontally. Tablets get the
+  mobile shell, which is the better experience there anyway. The search affordance is
+  *also* responsive — one trigger that collapses to its icon between `lg` and `xl`, because
+  `lg` alone still left the labelled 208px field competing with seven nav items. It must
+  stay one element: `CommandPalette` registers a global ⌘K listener on mount, so two
+  breakpoint-swapped instances would open the dialog twice.
 - **The desktop sidebar is gone (UI-V3-0).** Navigation is a single top bar
   (`features/app-shell/top-nav.tsx`) inside a 1360px header; page content sits in a
   1200px column. `SidebarNav` and `CareerProfileBadge` were deleted — the score moved

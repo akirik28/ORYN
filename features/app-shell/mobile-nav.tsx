@@ -17,10 +17,16 @@ const BOTTOM_NAV = PRIMARY_NAV.filter((item) => item.mobilePrimary);
 const OVERFLOW_NAV = [...PRIMARY_NAV.filter((item) => !item.mobilePrimary), ...SECONDARY_NAV];
 
 /**
- * Mobile shell (UI-V3 § 32). Deliberately not the desktop chrome at a smaller width: a
- * compact header for identity and utilities, and a thumb-reachable bottom bar for the
- * five destinations a student actually moves between. Everything else is one tap away
+ * Mobile and tablet shell (UI-V3 § 32). Deliberately not the desktop chrome at a smaller
+ * width: a compact header for identity and utilities, and a thumb-reachable bottom bar for
+ * the five destinations a student actually moves between. Everything else is one tap away
  * under "More" — hidden from the bar, not from the product.
+ *
+ * The boundary is `lg` (1024), not `md`. The desktop header carries a logo, seven nav
+ * items, a 208px search field, notifications and an avatar, which does not fit below about
+ * 1100px — measured at 1024 the utilities cluster ran 44px past the header's right edge and
+ * the document scrolled horizontally. A tablet gets this shell rather than a cramped
+ * desktop one.
  *
  * Renders as two fixed elements rather than a scroll container, so the page body keeps
  * the document's own scrolling (and with it iOS address-bar collapse, scroll restoration,
@@ -47,7 +53,7 @@ export function MobileNav({
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background/90 px-4 py-3 backdrop-blur-sm md:hidden">
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background/90 px-4 py-3 backdrop-blur-sm lg:hidden">
         <Link href="/dashboard" aria-label="Oryn — home">
           <Image src="/brand/logo-full.png" alt="Oryn" width={92} height={31} className="h-7 w-auto" />
         </Link>
@@ -60,7 +66,7 @@ export function MobileNav({
 
       <nav
         aria-label="Primary"
-        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm lg:hidden"
       >
         {BOTTOM_NAV.map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);

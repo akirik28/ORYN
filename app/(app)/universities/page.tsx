@@ -414,7 +414,7 @@ export default async function UniversitiesPage({
         />
         {/* Desktop-only: below md the map is never mounted, so a Map/List choice there would
             offer a view that can't render. */}
-        <div className="hidden gap-6 border-b border-border md:flex">
+        <div className="hidden gap-6 border-b border-border lg:flex">
           <Link
             href={buildViewHref(false)}
             aria-current={!isListView ? "page" : undefined}

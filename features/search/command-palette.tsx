@@ -121,21 +121,26 @@ export function CommandPalette({ variant = "icon" }: { variant?: "icon" | "bar" 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       {variant === "bar" ? (
+        /* One trigger, responsive content — not two triggers behind breakpoint classes.
+           This component registers a global ⌘K listener on mount, so a second mounted
+           instance would open the dialog twice. Between the shell's lg breakpoint and xl
+           the labelled 208px field doesn't fit beside seven nav items, so it collapses to
+           the icon and expands again at xl. */
         <DialogPrimitive.Trigger
           render={
             <button
               type="button"
-              className="inline-flex h-8 w-52 items-center gap-2 rounded-lg border border-border/70 bg-surface-tint px-2.5 text-ink-3 transition-colors hover:border-border hover:text-ink-2 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+              className="inline-flex h-8 w-8 items-center justify-center gap-2 rounded-lg border border-transparent px-0 text-ink-3 transition-colors hover:bg-muted hover:text-ink-1 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none xl:w-52 xl:justify-start xl:border-border/70 xl:bg-surface-tint xl:px-2.5 xl:hover:border-border xl:hover:bg-surface-tint xl:hover:text-ink-2"
             />
           }
         >
           <Search className="size-4 shrink-0" />
-          <span className="text-sm">Search</span>
+          <span className="hidden text-sm xl:inline">Search</span>
           {/* Decorative: the shortcut is announced by the button's own accessible name
               below, so leaving this in the a11y tree would just read "K" twice. */}
           <kbd
             aria-hidden="true"
-            className="ml-auto rounded border border-border/70 px-1 font-sans text-[10px] leading-4 text-ink-4"
+            className="ml-auto hidden rounded border border-border/70 px-1 font-sans text-[10px] leading-4 text-ink-4 xl:inline"
           >
             ⌘K
           </kbd>

@@ -192,8 +192,8 @@ export function AdvisorChat({
         }}
         /* Clears the fixed mobile bottom bar (56px + safe area). A plain `bottom-0` sticks the
            composer to the viewport floor, which is exactly where the nav already is — the send
-           button ends up underneath "Journey". Desktop has no bottom bar, so it returns to 0. */
-        className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] flex items-end gap-2 border-t border-border bg-background/95 py-4 backdrop-blur-sm md:bottom-0"
+           button ends up underneath "Journey". Desktop (lg and up) has no bottom bar, so it returns to 0. */
+        className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] flex items-end gap-2 border-t border-border bg-background/95 py-4 backdrop-blur-sm lg:bottom-0"
       >
         <Textarea
           value={input}

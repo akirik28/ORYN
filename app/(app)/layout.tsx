@@ -58,7 +58,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         notifications={notifications ?? []}
       />
 
-      <header className="sticky top-0 z-30 hidden border-b bg-background/85 backdrop-blur-md md:block">
+      <header className="sticky top-0 z-30 hidden border-b bg-background/85 backdrop-blur-md lg:block">
         <div className="mx-auto flex h-16 w-full max-w-[1360px] items-center gap-6 px-8">
           <Link href="/dashboard" aria-label="Oryn — home" className="shrink-0">
             <Image src="/brand/logo-full.png" alt="Oryn" width={92} height={31} priority className="h-7 w-auto" />
@@ -78,7 +78,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             rather than boxed in with the prose. Pages that want the full bleed — the
             university map, in particular — opt out with their own wrapper rather than
             fighting a container here. */}
-        <div className="mx-auto w-full max-w-[1200px] px-4 pt-8 pb-24 md:px-8 md:pt-12 md:pb-12">{children}</div>
+        <div className="mx-auto w-full max-w-[1200px] px-4 pt-8 pb-24 md:px-8 md:pt-12 lg:pb-12">{children}</div>
       </main>
     </div>
   );
