@@ -87,6 +87,9 @@ export interface CandidateAction {
    * Carries no currency because the column has no companion currency field — see
    * lib/ai/fee-text.ts, the only place this is rendered. */
   costOnFile: number | null;
+  /** `opportunities.application_requirements` verbatim, or empty for candidate kinds that
+   * have no such column. Rendered only by lib/ai/requirements-text.ts. */
+  applicationRequirements: readonly string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -138,6 +141,7 @@ export interface CounselorRecommendation {
   urgency: BoundedLevel;
   deadline: { date: string; sourceLabel: string } | null;
   costOnFile: number | null;
+  applicationRequirements: readonly string[];
   eligibility: EligibilityResult;
   confidence: BoundedLevel;
   evidence: { sourceType: CandidateSource["kind"]; sourceId: string; sourceUrl: string | null; verificationState: string | null }[];

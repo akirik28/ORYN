@@ -7,6 +7,7 @@ import { ADVISOR_SYSTEM_PROMPT } from "./advisor-prompt";
 import { buildStudentAdvisorContext, formatContextForPrompt } from "./student-context";
 import { formatEligibilityCaveat } from "./eligibility-text";
 import { formatFeeCaveat } from "./fee-text";
+import { formatRequirementsCaveat } from "./requirements-text";
 import { getCounselorRecommendations } from "@/lib/counselor";
 import type { CounselorRecommendation, RecommendationClass } from "@/lib/counselor/types";
 
@@ -60,6 +61,10 @@ function formatOne(recommendation: CounselorRecommendation): string {
   const feeCaveat = formatFeeCaveat(recommendation.costOnFile);
   if (feeCaveat) {
     parts.push(feeCaveat);
+  }
+  const requirementsCaveat = formatRequirementsCaveat(recommendation.applicationRequirements);
+  if (requirementsCaveat) {
+    parts.push(requirementsCaveat);
   }
   return `- ${parts.join(" — ")}`;
 }

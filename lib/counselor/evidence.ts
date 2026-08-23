@@ -91,6 +91,7 @@ export function buildRecommendation(ranked: RankedCandidate, state: CounselorSta
     urgency: ranked.urgency,
     deadline: candidate.deadline,
     costOnFile: candidate.costOnFile,
+    applicationRequirements: candidate.applicationRequirements,
     eligibility: ranked.eligibility,
     confidence: ranked.confidence,
     evidence: [{ sourceType: candidate.source.kind, sourceId: sourceId(candidate), sourceUrl: candidate.sourceUrl, verificationState: candidate.verificationState }],

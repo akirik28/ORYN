@@ -85,6 +85,7 @@ function opportunityCandidate(id: string, dimensions: ProfileDimension[], overri
     sourceUrl: null,
     deadline: null,
     costOnFile: null,
+    applicationRequirements: [],
     ...overrides,
   };
 }
@@ -235,6 +236,7 @@ describe("rankCandidates — non-opportunity kinds", () => {
       sourceUrl: null,
       deadline: null,
       costOnFile: null,
+      applicationRequirements: [],
     };
     const ranked = rankCandidates([candidate], [], state([]));
     expect(ranked).toHaveLength(1);
@@ -258,6 +260,7 @@ describe("rankCandidates — non-opportunity kinds", () => {
       sourceUrl: null,
       deadline: null,
       costOnFile: null,
+      applicationRequirements: [],
     };
     const ranked = rankCandidates([candidate], [], state([]));
     expect(ranked[0].confidence).toBe("low");
@@ -273,6 +276,7 @@ describe("rankCandidates — non-opportunity kinds", () => {
       sourceUrl: null,
       deadline: null,
       costOnFile: null,
+      applicationRequirements: [],
     };
     const lowCompleteness = rankCandidates(
       [candidate],

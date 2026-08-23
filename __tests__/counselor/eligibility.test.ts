@@ -85,6 +85,7 @@ function opportunityCandidate(id = "opp-1"): CandidateAction {
     sourceUrl: null,
     deadline: null,
     costOnFile: null,
+    applicationRequirements: [],
   };
 }
 
@@ -240,6 +241,7 @@ describe("evaluateCandidateEligibility — non-opportunity candidates", () => {
       sourceUrl: null,
       deadline: null,
       costOnFile: null,
+      applicationRequirements: [],
     };
     const result = evaluateCandidateEligibility(candidate, state(opportunity(), 2009, { eligibleOpportunityMatches: [] }));
     expect(result.verdict).toBe("known_eligible");
@@ -255,6 +257,7 @@ describe("evaluateCandidateEligibility — non-opportunity candidates", () => {
       sourceUrl: null,
       deadline: null,
       costOnFile: null,
+      applicationRequirements: [],
     };
     const result = evaluateCandidateEligibility(candidate, state(opportunity(), 2009, { eligibleOpportunityMatches: [] }));
     expect(result.verdict).toBe("known_eligible");
