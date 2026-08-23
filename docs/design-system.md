@@ -296,6 +296,15 @@ not a UI one.
   keyboard/screen-reader-accessible alternative to the (aria-hidden, mouse-only) map —
   this was Chat 1's architecture already and it's correct; don't collapse it into "just
   hide the map on mobile and show nothing."
+- **University explorer (UI-V3-5).** Desktop pairs a sticky map (~58%) with a scrolling
+  results column (~42%); `?view=list` switches to the conventional card grid and every
+  other filter survives the switch. The two panels synchronise through the URL in both
+  directions — the map writes `?country=`, and each result row's country links back to the
+  same param. Below `md` the map still never mounts (see below), so the Map/List toggle is
+  desktop-only chrome and a phone always gets the list without needing the param.
+  `UniversityResultRow` exists because `UniversityCard` is the wrong shape at 42% width —
+  its image band and three metadata rows fit about four results into the panel, which
+  defeats the point of pairing a list with a map.
 - **The desktop sidebar is gone (UI-V3-0).** Navigation is a single top bar
   (`features/app-shell/top-nav.tsx`) inside a 1360px header; page content sits in a
   1200px column. `SidebarNav` and `CareerProfileBadge` were deleted — the score moved

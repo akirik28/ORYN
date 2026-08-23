@@ -293,77 +293,10 @@ export default async function UniversityDetailPage({ params }: { params: Promise
         </div>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard
-          icon={Users}
-          label="Student size"
-          value={university.student_size ? formatNumber(university.student_size) : (qsSizeLabel ?? "Unavailable")}
-          caption={
-            university.student_size && undergradCount != null && postgradCount != null
-              ? `${formatNumber(undergradCount)} undergrad · ${formatNumber(postgradCount)} postgrad`
-              : !university.student_size && qsSizeLabel
-                ? "QS size band, not an exact count"
-                : undefined
-          }
-        />
-        <StatCard icon={GraduationCap} label="Admission rate" value={stats?.admission_rate != null ? `${Math.round(stats.admission_rate * 100)}%` : "Unavailable"} />
-        {/* These read two genuinely different concepts — US `cost_of_attendance` (an IPEDS
-            all-in sticker-price estimate) vs a UK-and-onward `tuition_international_annual`
-            (tuition only, official-university-page-sourced, often a range) — and are never
-            shown under the same label, per the founder's explicit "never collapse different
-            cost concepts" rule. Only one of the two is ever populated for a given university
-            today (US vs non-US acquisition pipelines don't overlap), so at most one StatCard
-            renders real data; if that ever changes, this still can't silently blend them. */}
-        {stats?.cost_of_attendance ? (
-          <StatCard icon={DollarSign} label="Cost of attendance" value={formatCurrency(stats.cost_of_attendance)} />
-        ) : internationalTuition != null ? (
-          (() => {
-            // Each figure's own precision_state governs its own prefix — international being
-            // a range (or income-based) does not mean domestic is too, and vice versa. A prior
-            // version of this block reused international's qualifier for both figures, which
-            // silently mislabelled a UK domestic exact figure ("£9,790/yr") as "From £9,790/yr"
-            // whenever the international side happened to be a range — caught live 2026-08-18
-            // re-verifying Edinburgh right after adding the Italy upper_bound case.
-            const q = tuitionQualifier(internationalTuitionMetric!.precision_state);
-            const domesticQ = domesticTuitionMetric ? tuitionQualifier(domesticTuitionMetric.precision_state) : null;
-            return (
-              <StatCard
-                icon={DollarSign}
-                label="International tuition"
-                value={`${q.valuePrefix}${formatTuition(internationalTuition, internationalTuitionMetric!.unit)}`}
-                caption={
-                  domesticTuition != null
-                    ? `${q.note}Domestic rate: ${domesticQ!.valuePrefix}${formatTuition(domesticTuition, domesticTuitionMetric!.unit)}`
-                    : q.note
-                      ? `${q.note}— see university for your exact fee`
-                      : undefined
-                }
-              />
-            );
-          })()
-        ) : domesticTuition != null ? (
-          // International tuition genuinely isn't published as a single figure at this
-          // university (see acquire-university-statistics-uk.ts's header) — the domestic
-          // rate is real, verified data too, just clearly labeled as NOT what most of this
-          // product's international-applicant audience would actually pay.
-          (() => {
-            const q = tuitionQualifier(domesticTuitionMetric!.precision_state);
-            return (
-              <StatCard
-                icon={DollarSign}
-                label="Domestic tuition"
-                value={`${q.valuePrefix}${formatTuition(domesticTuition, domesticTuitionMetric!.unit)}`}
-                caption={q.note ? `${q.note}International fee not separately published` : "International fee not published as a single figure — varies by course"}
-              />
-            );
-          })()
-        ) : (
-          <StatCard icon={DollarSign} label="Cost of attendance" value="Unavailable" />
-        )}
-        <StatCard icon={Target} label="Test scores" value={testScoreRangeLabel(stats)} />
-        <StatCard icon={TrendingUp} label="Graduation rate" value={stats?.graduation_rate != null ? `${Math.round(stats.graduation_rate * 100)}%` : "Unavailable"} />
-      </div>
-
+      {/* UI-V3 § 26: the student's positioning comes before the institution's own
+          statistics. This block was previously below the stat grid, rankings and
+          description, so a page about whether *you* could go here opened with student
+          counts. Same computation, same freshness comments — only its position moved. */}
       {targetRes.data ? (
         <section className="space-y-4 rounded-2xl border border-brand-primary-border bg-brand-primary-subtle p-6">
           <div className="flex items-center justify-between">
@@ -441,6 +374,78 @@ export default async function UniversityDetailPage({ params }: { params: Promise
           )}
         </section>
       ) : null}
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard
+          icon={Users}
+          label="Student size"
+          value={university.student_size ? formatNumber(university.student_size) : (qsSizeLabel ?? "Unavailable")}
+          caption={
+            university.student_size && undergradCount != null && postgradCount != null
+              ? `${formatNumber(undergradCount)} undergrad · ${formatNumber(postgradCount)} postgrad`
+              : !university.student_size && qsSizeLabel
+                ? "QS size band, not an exact count"
+                : undefined
+          }
+        />
+        <StatCard icon={GraduationCap} label="Admission rate" value={stats?.admission_rate != null ? `${Math.round(stats.admission_rate * 100)}%` : "Unavailable"} />
+        {/* These read two genuinely different concepts — US `cost_of_attendance` (an IPEDS
+            all-in sticker-price estimate) vs a UK-and-onward `tuition_international_annual`
+            (tuition only, official-university-page-sourced, often a range) — and are never
+            shown under the same label, per the founder's explicit "never collapse different
+            cost concepts" rule. Only one of the two is ever populated for a given university
+            today (US vs non-US acquisition pipelines don't overlap), so at most one StatCard
+            renders real data; if that ever changes, this still can't silently blend them. */}
+        {stats?.cost_of_attendance ? (
+          <StatCard icon={DollarSign} label="Cost of attendance" value={formatCurrency(stats.cost_of_attendance)} />
+        ) : internationalTuition != null ? (
+          (() => {
+            // Each figure's own precision_state governs its own prefix — international being
+            // a range (or income-based) does not mean domestic is too, and vice versa. A prior
+            // version of this block reused international's qualifier for both figures, which
+            // silently mislabelled a UK domestic exact figure ("£9,790/yr") as "From £9,790/yr"
+            // whenever the international side happened to be a range — caught live 2026-08-18
+            // re-verifying Edinburgh right after adding the Italy upper_bound case.
+            const q = tuitionQualifier(internationalTuitionMetric!.precision_state);
+            const domesticQ = domesticTuitionMetric ? tuitionQualifier(domesticTuitionMetric.precision_state) : null;
+            return (
+              <StatCard
+                icon={DollarSign}
+                label="International tuition"
+                value={`${q.valuePrefix}${formatTuition(internationalTuition, internationalTuitionMetric!.unit)}`}
+                caption={
+                  domesticTuition != null
+                    ? `${q.note}Domestic rate: ${domesticQ!.valuePrefix}${formatTuition(domesticTuition, domesticTuitionMetric!.unit)}`
+                    : q.note
+                      ? `${q.note}— see university for your exact fee`
+                      : undefined
+                }
+              />
+            );
+          })()
+        ) : domesticTuition != null ? (
+          // International tuition genuinely isn't published as a single figure at this
+          // university (see acquire-university-statistics-uk.ts's header) — the domestic
+          // rate is real, verified data too, just clearly labeled as NOT what most of this
+          // product's international-applicant audience would actually pay.
+          (() => {
+            const q = tuitionQualifier(domesticTuitionMetric!.precision_state);
+            return (
+              <StatCard
+                icon={DollarSign}
+                label="Domestic tuition"
+                value={`${q.valuePrefix}${formatTuition(domesticTuition, domesticTuitionMetric!.unit)}`}
+                caption={q.note ? `${q.note}International fee not separately published` : "International fee not published as a single figure — varies by course"}
+              />
+            );
+          })()
+        ) : (
+          <StatCard icon={DollarSign} label="Cost of attendance" value="Unavailable" />
+        )}
+        <StatCard icon={Target} label="Test scores" value={testScoreRangeLabel(stats)} />
+        <StatCard icon={TrendingUp} label="Graduation rate" value={stats?.graduation_rate != null ? `${Math.round(stats.graduation_rate * 100)}%` : "Unavailable"} />
+      </div>
+
 
       {programsRes.data && programsRes.data.length > 0 ? (
         <section className="space-y-5">

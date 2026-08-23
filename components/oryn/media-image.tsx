@@ -64,7 +64,11 @@ export function MediaImage({
   return (
     <div
       className={cn(
-        "relative flex items-center justify-center overflow-hidden",
+        // @container so the monogram below can size itself against this box rather than a
+        // fixed step: the same component renders a 48px result-row thumbnail and a 128px
+        // card band, and a single font-size can't serve both (30px in a 48px box nearly
+        // touched the edges).
+        "@container relative flex items-center justify-center overflow-hidden",
         "bg-gradient-to-br from-brand-primary-subtle to-brand-primary-soft",
         className,
       )}
@@ -91,11 +95,17 @@ export function MediaImage({
         // aria-hidden: the monogram is a visual stand-in for a name the surrounding card
         // already states in full. Announcing "LS" before "London School of Economics"
         // is noise, not information.
-        <span aria-hidden="true" className="font-display text-3xl text-brand-primary-strong/45 select-none">
+        <span
+          aria-hidden="true"
+          className="font-display text-[clamp(0.8rem,30cqmin,2.5rem)] leading-none text-brand-primary-strong/55 select-none"
+        >
           {initials}
         </span>
       ) : Icon ? (
-        <Icon className="size-8 text-brand-primary-strong/45" aria-hidden="true" />
+        <Icon
+          className="size-[clamp(1rem,32cqmin,2rem)] text-brand-primary-strong/55"
+          aria-hidden="true"
+        />
       ) : null}
     </div>
   );
