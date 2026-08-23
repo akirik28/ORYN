@@ -267,6 +267,27 @@ drift out of sync.
   visual design here (Chat 3, or beyond) has the exact same "no live backend" problem
   in this sandbox, and a from-scratch equivalent would cost real time to rebuild.
 
+## Known data dependencies (surfaced by UI-V3, not owned by it)
+
+**Opportunity imagery.** UI-V3 § 19/30 asks for meaningful programme/institution imagery on
+opportunity cards and a designed fallback where it's missing. The fallback exists
+(`MediaImage`); the imagery does not. `opportunities` has no image column and no acquisition
+pipeline, where universities have both (`university_profile_metrics.primary_image_url`,
+`universities.logo_url`, `scripts/acquire-university-images.ts`).
+
+What was tried and rejected: rendering `MediaImage`'s monogram tier unconditionally. With
+zero rows carrying imagery, every card became an identical ~250px empty tinted band —
+strictly worse than no image — and monograms cut from arbitrary organizer strings were
+meaningless ("Middle East Technical University" → "MI"). The card now renders its media band
+only when a real source exists, and `OpportunityCard` already accepts `imageUrl`, so the
+surface lights up the moment the data arrives. **Nothing in the UI should invent one in the
+meantime** — stock photography is banned by the brief and by Rule 4.
+
+The likely honest source when someone picks this up: `opportunities.organization_entity_id`
+already links to `canonical_entities`, and many organizers are universities that have a
+verified re-hosted campus photo. That's a data-lane job (acquisition + linkage coverage),
+not a UI one.
+
 ## Responsive principles
 
 - Mobile isn't a shrunk desktop: the university explorer's world map is desktop-only

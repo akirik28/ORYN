@@ -13,6 +13,8 @@ import { ErrorState } from "@/components/oryn/error-state";
 import { SectionHeader } from "@/components/oryn/section-header";
 import { SourceBadge } from "@/components/oryn/source-badge";
 import { StatusBadge } from "@/components/oryn/status-badge";
+import { Eyebrow } from "@/components/oryn/eyebrow";
+import { differenceInCalendarDays } from "date-fns";
 import { OpportunityActions } from "@/features/opportunities/opportunity-actions";
 import { formatMoney } from "@/lib/i18n/format";
 import type { ConfidenceLevel } from "@/components/oryn/confidence-indicator";
@@ -39,6 +41,28 @@ const SELECTIVITY_LABEL: Partial<Record<string, string>> = {
   competitive_award: "Competitive award",
   open_enrollment: "Open enrollment",
 };
+
+function fitLabel(score: number): string {
+  if (score >= 80) return "Exceptional fit";
+  if (score >= 60) return "Strong fit";
+  if (score >= 40) return "Worth a look";
+  return "Low priority";
+}
+
+/** Same reason vocabulary as the card, written long-form for the detail page. */
+function takeSentences(reasonCodes: string[]): string[] {
+  const out: string[] = [];
+  if (reasonCodes.includes("addresses_a_current_gap")) {
+    out.push("It targets an area where your profile currently has the least supporting evidence, so the same effort here moves your profile further than it would elsewhere.");
+  }
+  if (reasonCodes.includes("matches_your_interests")) {
+    out.push("It sits in a field you've told Oryn you're pursuing, which makes it easier to sustain and more coherent alongside the rest of your record.");
+  }
+  if (reasonCodes.includes("near_you")) {
+    out.push("It's based in your country, which usually means fewer travel, cost and visa obstacles than an equivalent programme abroad.");
+  }
+  return out;
+}
 
 const CYCLE_STATUS_LABEL: Partial<Record<string, string>> = {
   open: "Open now",
@@ -83,9 +107,19 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
   const needsVerification =
     !isOpportunitySufficientlyVerified(opportunity) && (!eligibility || (eligibility.eligible && !eligibility.notActionable));
 
+  const daysUntilDeadline = opportunity.deadline
+    ? differenceInCalendarDays(new Date(opportunity.deadline), new Date())
+    : null;
+  // Oryn only offers a take on a row it can vouch for; otherwise the caveats below speak
+  // for themselves and a confident-sounding verdict on top of them would be the exact
+  // false certainty this product is not allowed to manufacture.
+  const canGiveTake = Boolean(match) && (eligibility?.eligible ?? true) && !needsVerification;
+  const takeReasons = match ? takeSentences((match.reason_codes as string[]) ?? []) : [];
+
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="max-w-3xl space-y-10">
       <PageHeader
+        eyebrow={humanize(opportunity.category)}
         title={opportunity.title}
         description={opportunity.organization}
         action={
@@ -97,6 +131,56 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
           />
         }
       />
+
+      {/* UI-V3 § 20: personalization before the catalogue facts. The student's question is
+          "is this for me", and the page used to answer it last. */}
+      {canGiveTake && match ? (
+        <section aria-label="Oryn's take" className="rounded-2xl bg-module-recommendation p-6 md:p-8">
+          <Eyebrow tone="brand">Oryn&apos;s take</Eyebrow>
+          <p className="mt-4 font-display text-2xl leading-[1.15] tracking-[-0.02em] text-balance md:text-3xl">
+            {fitLabel(match.match_score)}
+          </p>
+          {takeReasons.length > 0 ? (
+            <div className="mt-4 max-w-2xl space-y-2.5 leading-relaxed text-ink-2">
+              {takeReasons.map((line) => (
+                <p key={line}>{line}</p>
+              ))}
+            </div>
+          ) : null}
+          <dl className="mt-7 flex flex-wrap gap-x-12 gap-y-4">
+            <div>
+              <dt className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-3 uppercase">Fit</dt>
+              <dd className="mt-1.5 text-sm text-ink-1">{fitLabel(match.match_score)}</dd>
+            </div>
+            {SELECTIVITY_LABEL[opportunity.selectivity_tier] ? (
+              <div>
+                <dt className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-3 uppercase">Selectivity</dt>
+                <dd className="mt-1.5 text-sm text-ink-1">{SELECTIVITY_LABEL[opportunity.selectivity_tier]}</dd>
+              </div>
+            ) : null}
+            {daysUntilDeadline !== null && daysUntilDeadline >= 0 ? (
+              <div>
+                <dt className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-3 uppercase">Urgency</dt>
+                <dd className="mt-1.5 text-sm text-ink-1">
+                  {daysUntilDeadline === 0 ? "Closes today" : `${daysUntilDeadline} days left`}
+                </dd>
+              </div>
+            ) : null}
+          </dl>
+          {/* The qualification lives inside the claim, not below it. "Strong fit" printed
+              above a separate note reading "country eligibility not verified yet" lets a
+              student read the verdict and never reach the caveat — the same false-certainty
+              shape the dashboard's canClaimGap guard exists to prevent. Oryn can say this
+              looks like a strong fit *and* that it hasn't confirmed the student qualifies;
+              it just has to say both in one breath. */}
+          {eligibility?.notes ? (
+            <p className="mt-6 border-t border-brand-primary-border/50 pt-4 text-sm leading-relaxed text-ink-2">
+              <span className="font-medium text-ink-1">One thing Oryn can&apos;t confirm: </span>
+              {eligibility.notes}
+            </p>
+          ) : null}
+        </section>
+      ) : null}
 
       {!matchRefreshed ? (
         <ErrorState description="We couldn't refresh your match for this opportunity just now. The eligibility and match details below are your last known result, not necessarily current." />
@@ -118,11 +202,13 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
         {eligibility && eligibility.eligible && eligibility.notes ? <StatusBadge label="Eligibility unknown" tone="warning" /> : null}
       </div>
 
-      {eligibility?.notes ? (
-        <p className="rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">{eligibility.notes}</p>
+      {/* Only when the take didn't already carry it (an ineligible or unverifiable row has
+          no take block, and still needs the note). */}
+      {eligibility?.notes && !canGiveTake ? (
+        <p className="rounded-lg bg-surface-tint px-4 py-3 text-sm leading-relaxed text-ink-2">{eligibility.notes}</p>
       ) : null}
       {needsVerification ? (
-        <p className="rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">{INSUFFICIENT_VERIFICATION_REASON}</p>
+        <p className="rounded-lg bg-surface-tint px-4 py-3 text-sm leading-relaxed text-ink-2">{INSUFFICIENT_VERIFICATION_REASON}</p>
       ) : null}
 
       {opportunity.description ? <p className="text-muted-foreground">{opportunity.description}</p> : null}
