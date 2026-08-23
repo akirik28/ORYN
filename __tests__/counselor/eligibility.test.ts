@@ -84,6 +84,7 @@ function opportunityCandidate(id = "opp-1"): CandidateAction {
     verificationState: "verified_current",
     sourceUrl: null,
     deadline: null,
+    costOnFile: null,
   };
 }
 
@@ -238,6 +239,7 @@ describe("evaluateCandidateEligibility — non-opportunity candidates", () => {
       verificationState: null,
       sourceUrl: null,
       deadline: null,
+      costOnFile: null,
     };
     const result = evaluateCandidateEligibility(candidate, state(opportunity(), 2009, { eligibleOpportunityMatches: [] }));
     expect(result.verdict).toBe("known_eligible");
@@ -252,6 +254,7 @@ describe("evaluateCandidateEligibility — non-opportunity candidates", () => {
       verificationState: null,
       sourceUrl: null,
       deadline: null,
+      costOnFile: null,
     };
     const result = evaluateCandidateEligibility(candidate, state(opportunity(), 2009, { eligibleOpportunityMatches: [] }));
     expect(result.verdict).toBe("known_eligible");

@@ -13,6 +13,7 @@ function opportunityRec(overrides: Partial<CounselorRecommendation> = {}): Couns
     effort: "medium",
     urgency: "medium",
     deadline: null,
+    costOnFile: null,
     eligibility: { verdict: "known_eligible", notes: [] },
     confidence: "medium",
     evidence: [{ sourceType: "opportunity", sourceId: "opp-1", sourceUrl: "https://example.com", verificationState: "verified_current" }],
@@ -43,6 +44,17 @@ describe("formatOpportunityContext", () => {
     expect(text).toContain("Yale Young Global Scholars");
     expect(text).not.toContain("ELIGIBILITY UNKNOWN");
     expect(text).not.toContain("NOT ELIGIBLE");
+  });
+
+  test("a fee on file reaches the prompt — the advisor must never recommend a paid programme unaware it costs money", () => {
+    const text = formatOpportunityContext([opportunityRec({ title: "Pioneer Research Institute", costOnFile: 7465 })]);
+    expect(text).toContain("HAS A FEE");
+    expect(text).toContain("7465");
+  });
+
+  test("a free or unpriced opportunity adds no fee line", () => {
+    expect(formatOpportunityContext([opportunityRec({ costOnFile: 0 })])).not.toContain("HAS A FEE");
+    expect(formatOpportunityContext([opportunityRec({ costOnFile: null })])).not.toContain("HAS A FEE");
   });
 
   test("filters out non-opportunity recommendations (requirement_action, profile_task) — only the catalogue enters this context", () => {
