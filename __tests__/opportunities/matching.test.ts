@@ -296,6 +296,27 @@ describe("computeOpportunityMatch", () => {
     expect(match.relevanceScore).toBeGreaterThan(0);
   });
 
+  // `opportunities.fields` is uncontrolled free text and does not share a vocabulary with
+  // onboarding's INTEREST_SUGGESTIONS. Live 2026-08-23: `computer_science` on 6 actionable rows
+  // and `computer science` on 5, plus `environmental_science` against onboarding's
+  // "Environmental Science". Under bare toLowerCase() a student who picked Computer Science
+  // scored zero against more than half the CS catalogue.
+  test("matches the same field stored with an underscore separator", () => {
+    const match = computeOpportunityMatch(student({ interests: ["Computer Science"] }), opportunity({ fields: ["computer_science"] }));
+    expect(match.relevanceScore).toBeGreaterThan(0);
+  });
+
+  test("matches a hyphenated field spelling too", () => {
+    const match = computeOpportunityMatch(student({ interests: ["Environmental Science"] }), opportunity({ fields: ["environmental-science"] }));
+    expect(match.relevanceScore).toBeGreaterThan(0);
+  });
+
+  test("separator normalization does not reopen the substring false positive", () => {
+    // The whole point: separators are normalized, tokens are not.
+    const match = computeOpportunityMatch(student({ interests: ["Computer Science"] }), opportunity({ fields: ["science", "data_science"] }));
+    expect(match.relevanceScore).toBe(0);
+  });
+
   test("does not cross-match two different 'X Science' interests/fields via the shared word 'science'", () => {
     const match = computeOpportunityMatch(student({ interests: ["Environmental Science"] }), opportunity({ fields: ["Political Science"] }));
     expect(match.relevanceScore).toBe(0);

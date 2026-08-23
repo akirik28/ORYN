@@ -227,14 +227,32 @@ export function isNearStudent(student: StudentMatchProfile, opportunity: Pick<Op
 
 const PROXIMITY_BOOST = 15;
 
+/**
+ * `opportunities.fields` is uncontrolled free text and does not share a vocabulary with the
+ * onboarding interest list (lib/validation/onboarding.ts's INTEREST_SUGGESTIONS). The same
+ * concept is stored under several spellings — live today: `computer_science` on 6 actionable
+ * rows and `computer science` on 5, plus `Mathematics` alongside `mathematics` and
+ * `environmental_science` against onboarding's "Environmental Science".
+ *
+ * Under bare `toLowerCase()` those never matched, so a student who picked "Computer Science"
+ * scored zero relevance against more than half the computer-science opportunities in the
+ * catalogue. Treating `_` and `-` as spaces, and collapsing runs of whitespace, fixes that.
+ *
+ * This does NOT reintroduce the substring bug the exact-equality rule below exists to prevent:
+ * separators are normalized, tokens are not. "science" still does not equal "computer science".
+ */
+function normalizeFieldLabel(value: string): string {
+  return value.trim().toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ");
+}
+
 function computeRelevanceScore(student: StudentMatchProfile, opportunity: OpportunityForMatching): number {
   const near = isNearStudent(student, opportunity);
   if (opportunity.fields.length === 0 || student.interests.length === 0) {
     return clampScore(40 + (near ? PROXIMITY_BOOST : 0));
   }
 
-  const fields = opportunity.fields.map((f) => f.trim().toLowerCase());
-  const interests = student.interests.map((i) => i.trim().toLowerCase());
+  const fields = opportunity.fields.map(normalizeFieldLabel);
+  const interests = student.interests.map(normalizeFieldLabel);
   // counselor-loop QA defect #3 (docs/handoffs/counselor-loop-qa-report.md): substring
   // containment (field.includes(interest) / interest.includes(field)) treats "computer
   // science" as matching a field merely called "science" — the shorter string being a
