@@ -1,17 +1,20 @@
 import Link from "next/link";
-import { ArrowRight, Compass, TrendingUp, FileText, Landmark } from "lucide-react";
-import { PageHeader } from "@/components/oryn/page-header";
+import { ArrowRight, Compass, FileText, Landmark, TrendingUp } from "lucide-react";
+import { Eyebrow } from "@/components/oryn/eyebrow";
 import { SectionHeader } from "@/components/oryn/section-header";
 import { InsightCard } from "@/components/oryn/insight-card";
+import { NextMove } from "@/components/oryn/next-move";
 import { EmptyState } from "@/components/oryn/empty-state";
 import { ErrorState } from "@/components/oryn/error-state";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
-import { ScoreRing } from "@/features/dashboard/score-ring";
+import { ButtonLink } from "@/components/ui/button-link";
 import { WeeklyFocus } from "@/features/dashboard/weekly-focus";
 import { CounselorWeekFallback } from "@/features/dashboard/counselor-week-fallback";
 import { GeneratePlanButton } from "@/features/dashboard/generate-plan-button";
+import { ProfileSignal } from "@/features/dashboard/profile-signal";
 import { OutlookBadge } from "@/features/universities/outlook-badge";
 import { DIMENSION_LABELS } from "@/lib/scoring/labels";
+import { canClaimGap, hasConfidentSignal, type DimensionSignal } from "@/lib/scoring/signal";
 import type { getTargetUniversitiesWithDetails } from "@/lib/universities/queries";
 import type { getUpcomingDeadlines, DeadlineSource } from "@/lib/deadlines/upcoming";
 import type { WeeklyPlanWithActions } from "@/lib/plan/persist";
@@ -31,6 +34,8 @@ export interface DashboardViewProps {
   trend: number | null;
   biggestGap: { dimension: ProfileDimension; score: number } | null;
   biggestImprovement: { dimension: ProfileDimension; delta: number } | null;
+  /** Qualitative per-dimension read (lib/scoring/signal.ts). Never rendered as percentages. */
+  profileSignal: DimensionSignal[];
   weeklyPlan: WeeklyPlanWithActions | null;
   planError: "not_configured" | "failed" | null;
   /** Counselor Core's deterministic "do" candidates (B4) — rendered in place of the AI
@@ -40,7 +45,7 @@ export interface DashboardViewProps {
   avoidRecommendation: { title: string; reason: string } | null;
   upcomingDeadlines: Awaited<ReturnType<typeof getUpcomingDeadlines>>;
   targetUniversities: Awaited<ReturnType<typeof getTargetUniversitiesWithDetails>>;
-  opportunityPreview: { title: string; matchScore: number }[];
+  opportunityPreview: { title: string; matchScore: number; deadline: string | null }[];
   /** False only when refreshOpportunityMatches skipped its write this render (the admin
    * client wasn't configured) -- never for "genuinely zero matches," which is its own,
    * non-stale outcome. AGENTS.md Phase 45 / Rule 4: never let a page imply this preview
@@ -55,6 +60,7 @@ export function DashboardView({
   trend,
   biggestGap,
   biggestImprovement,
+  profileSignal,
   weeklyPlan,
   planError,
   counselorThisWeek,
@@ -66,80 +72,162 @@ export function DashboardView({
 }: DashboardViewProps) {
   const hasAiPlan = Boolean(weeklyPlan && weeklyPlan.actions.length > 0);
   const usingCounselorFallback = !hasAiPlan && counselorThisWeek.length > 0;
+  // `rankDimensionGaps` returns the lowest-scoring dimension whether or not Oryn has any
+  // confidence in that score, so the headline has to ask separately whether the gap is a
+  // finding or just silence. See canClaimGap — this was live on an empty profile.
+  const claimableGap = biggestGap && canClaimGap(profileSignal, biggestGap.dimension) ? biggestGap : null;
+  const gapLabel = claimableGap ? DIMENSION_LABELS[claimableGap.dimension] : null;
+  const hasRead = hasConfidentSignal(profileSignal);
 
   return (
-    <div className="space-y-10">
-      <PageHeader title={`${greeting}, ${displayName}.`} description="Here's what matters most right now." />
-
-      <section className="relative overflow-hidden rounded-3xl border border-brand-primary-border bg-gradient-to-br from-brand-primary-subtle via-card to-card p-6 md:p-8">
-        <div className="grid gap-8 md:grid-cols-[auto_1fr] md:items-center">
-          <ScoreRing score={score} trend={trend} />
-          <div className="space-y-4">
-            {biggestGap ? (
-              <div>
-                <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Biggest gap</p>
-                <p className="font-display text-xl text-balance">
-                  {DIMENSION_LABELS[biggestGap.dimension]} — {biggestGap.score}/100
-                </p>
-                <p className="mt-0.5 text-sm text-muted-foreground">
-                  This is currently your least-developed area relative to the rest of your profile.
-                </p>
-              </div>
-            ) : (
-              <div>
-                <p className="font-display text-xl">Your Career Profile is waiting for data.</p>
-                <p className="mt-0.5 text-sm text-muted-foreground">
-                  Add a few activities, grades, or projects and Oryn will tell you where you stand.
-                </p>
-              </div>
-            )}
-            {biggestImprovement ? (
-              <div className="flex items-center gap-2 text-sm font-medium text-success">
-                <TrendingUp className="size-4" />
-                <span>
-                  {DIMENSION_LABELS[biggestImprovement.dimension]} improved by {biggestImprovement.delta} this month.
+    <div className="space-y-20 md:space-y-24">
+      {/* Opening. Not a card, and not a stat block — the first thing a student reads is a
+          sentence about what to do, in Oryn's own voice. The greeting is deliberately
+          small: it's an address, not the headline. */}
+      <header>
+        {/* The overall Career Profile score still appears (master spec Phase 7 asks for it,
+            with its month-over-month trend) but deliberately as quiet metadata rather than
+            a hero ring. UI-V3 § 11's objection is to *leading* with a number: a two-digit
+            score invites a student to treat 42 vs 44 as meaningful and to optimise the
+            figure instead of the evidence behind it. The qualitative Profile Signal below
+            is the real reading; this is a footnote to it. */}
+        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+          <p className="text-sm text-ink-3">
+            {greeting}, {displayName}.
+          </p>
+          {score !== null && hasRead ? (
+            <p className="text-sm text-ink-3">
+              Career profile <span className="text-ink-2 tabular-nums">{score}</span>
+              {trend !== null && trend !== 0 ? (
+                <span className={trend > 0 ? "text-success" : "text-ink-3"}>
+                  {" "}
+                  {trend > 0 ? "+" : ""}
+                  {trend} this month
                 </span>
-              </div>
-            ) : null}
-            <Link href="/profile" className="inline-flex items-center gap-1 text-sm text-brand-primary hover:underline">
-              View your full profile <ArrowRight className="size-3.5" />
-            </Link>
-          </div>
+              ) : null}
+            </p>
+          ) : null}
         </div>
-      </section>
-
-      <section className="space-y-4">
-        <SectionHeader
-          title="Your focus this week"
-          description={
-            weeklyPlan?.plan.summary ?? (usingCounselorFallback ? "Based on your verified profile data — no AI required." : undefined)
-          }
-        />
-        {hasAiPlan ? (
-          <WeeklyFocus actions={weeklyPlan!.actions} />
-        ) : usingCounselorFallback ? (
-          <CounselorWeekFallback actions={counselorThisWeek} />
+        {gapLabel ? (
+          <NextMove
+            className="mt-6"
+            size="hero"
+            as="h1"
+            eyebrow="Your next move"
+            headline={<>Your clearest gap right now is {gapLabel.toLowerCase()}.</>}
+            why={
+              <>
+                Oryn compares your dimensions against each other, not against other students. Across
+                everything you&apos;ve recorded, this is the area with the least supporting evidence — so
+                it&apos;s where the same hours of work change your profile most.
+              </>
+            }
+            action={
+              <>
+                <ButtonLink href="/advisor">
+                  Build a plan for this <ArrowRight className="size-4" />
+                </ButtonLink>
+                <ButtonLink href="/profile" variant="outline">
+                  See the full picture
+                </ButtonLink>
+              </>
+            }
+          />
         ) : (
-          <EmptyState
-            icon={Compass}
-            title={
-              planError === "not_configured"
-                ? "The AI Advisor isn't configured yet"
-                : planError === "failed"
-                  ? "We couldn't generate this week's plan"
-                  : "No weekly plan yet"
+          <NextMove
+            className="mt-6"
+            size="hero"
+            as="h1"
+            eyebrow="Getting started"
+            headline="Tell Oryn what you've done, and it will tell you what to do next."
+            why="Oryn reads your courses, activities, projects and awards to find where your profile is thinnest. Right now there isn't enough recorded for it to say anything it could stand behind — that's a gap in what Oryn knows, not a judgement about you."
+            action={
+              <ButtonLink href="/profile">
+                Start your journey <ArrowRight className="size-4" />
+              </ButtonLink>
             }
-            description={
-              planError === "not_configured"
-                ? "Add ANTHROPIC_API_KEY to enable weekly plans — see API_SETUP.md."
-                : planError === "failed"
-                  ? "Please try again."
-                  : "Add a few things to your profile and Oryn will generate your first weekly plan."
-            }
-            action={planError !== "not_configured" ? <GeneratePlanButton /> : undefined}
           />
         )}
-      </section>
+        {biggestImprovement ? (
+          <p className="mt-8 flex items-center gap-2 text-sm text-success">
+            <TrendingUp className="size-4 shrink-0" aria-hidden="true" />
+            <span>
+              {DIMENSION_LABELS[biggestImprovement.dimension]} improved by {biggestImprovement.delta} this
+              month.
+            </span>
+          </p>
+        ) : null}
+      </header>
+
+      {/* Asymmetric split: the week's work is the wide column and carries the reading
+          measure; the standing read on the profile and what's due sit beside it as
+          reference. Stacks on mobile with the same priority order. */}
+      <div className="grid gap-16 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] lg:gap-20">
+        <section className="min-w-0 space-y-6">
+          <SectionHeader
+            title="Your focus this week"
+            description={
+              weeklyPlan?.plan.summary ??
+              (usingCounselorFallback ? "Based on your verified profile data — no AI required." : undefined)
+            }
+          />
+          {hasAiPlan ? (
+            <WeeklyFocus actions={weeklyPlan!.actions} />
+          ) : usingCounselorFallback ? (
+            <CounselorWeekFallback actions={counselorThisWeek} />
+          ) : (
+            <EmptyState
+              icon={Compass}
+              title={
+                planError === "not_configured"
+                  ? "The AI Advisor isn't configured yet"
+                  : planError === "failed"
+                    ? "We couldn't generate this week's plan"
+                    : "No weekly plan yet"
+              }
+              description={
+                planError === "not_configured"
+                  ? "Add ANTHROPIC_API_KEY to enable weekly plans — see API_SETUP.md."
+                  : planError === "failed"
+                    ? "Please try again."
+                    : "Add a few things to your profile and Oryn will generate your first weekly plan."
+              }
+              action={planError !== "not_configured" ? <GeneratePlanButton /> : undefined}
+            />
+          )}
+        </section>
+
+        <aside className="min-w-0 space-y-14">
+          <ProfileSignal signal={profileSignal} />
+
+          {upcomingDeadlines.length > 0 ? (
+            <section aria-label="Due soon">
+              <Eyebrow>Due soon</Eyebrow>
+              <ul className="mt-5 space-y-0">
+                {upcomingDeadlines.map((deadline) => {
+                  const SourceIcon = DEADLINE_SOURCE_ICONS[deadline.source];
+                  return (
+                    <li key={deadline.id} className="border-b border-border/60 last:border-0">
+                      <Link
+                        href={deadline.href}
+                        className="group flex items-start justify-between gap-3 py-3 transition-colors hover:text-brand-primary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                      >
+                        <span className="flex min-w-0 items-start gap-2.5">
+                          <SourceIcon className="mt-0.5 size-3.5 shrink-0 text-ink-4" aria-hidden="true" />
+                          <span className="min-w-0 text-sm leading-snug text-ink-2 group-hover:text-brand-primary">
+                            {deadline.title}
+                          </span>
+                        </span>
+                        <DeadlineBadge date={deadline.date} />
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ) : null}
+        </aside>
+      </div>
 
       {avoidRecommendation ? (
         <InsightCard variant="avoid" eyebrow="One thing not to do" title={avoidRecommendation.title}>
@@ -147,87 +235,78 @@ export function DashboardView({
         </InsightCard>
       ) : null}
 
-      {upcomingDeadlines.length > 0 ? (
-        <section className="space-y-3">
-          <SectionHeader title="Due soon" />
-          <ul className="divide-y rounded-xl border">
-            {upcomingDeadlines.map((deadline) => {
-              const SourceIcon = DEADLINE_SOURCE_ICONS[deadline.source];
-              return (
-                <li key={deadline.id}>
-                  <Link
-                    href={deadline.href}
-                    className="flex items-center justify-between gap-3 px-4 py-3 text-sm transition-colors hover:bg-accent"
-                  >
-                    <span className="flex min-w-0 items-center gap-2">
-                      <SourceIcon className="size-4 shrink-0 text-muted-foreground" />
-                      <span className="truncate">{deadline.title}</span>
-                    </span>
-                    <DeadlineBadge date={deadline.date} />
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      ) : null}
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <section className="space-y-3 rounded-xl border p-5">
+      <div className="grid gap-16 md:grid-cols-2 md:gap-20">
+        <section>
           <SectionHeader
             title="University outlook"
             action={
-              <Link href="/universities" className="text-sm text-brand-primary hover:underline">
+              <Link
+                href="/universities"
+                className="text-sm text-brand-primary underline-offset-4 hover:underline"
+              >
                 Explore
               </Link>
             }
           />
           {targetUniversities.length > 0 ? (
-            <ul className="space-y-2">
+            <ul className="mt-5">
               {targetUniversities.map((target) => (
-                <li key={target.id} className="flex items-center justify-between text-sm">
-                  <span className="truncate pr-2">{target.university?.name ?? "Unknown university"}</span>
+                <li
+                  key={target.id}
+                  className="flex items-center justify-between gap-3 border-b border-border/60 py-3 last:border-0"
+                >
+                  <span className="min-w-0 truncate text-sm text-ink-2">
+                    {target.university?.name ?? "Unknown university"}
+                  </span>
                   <OutlookBadge outlook={target.outlook} />
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-muted-foreground">
+            <p className="mt-5 max-w-md text-sm leading-relaxed text-ink-2">
               No target universities yet.{" "}
-              <Link href="/universities" className="text-brand-primary hover:underline">
+              <Link href="/universities" className="text-brand-primary underline-offset-4 hover:underline">
                 Explore universities
               </Link>{" "}
-              to add your first.
+              to add your first — Oryn will start showing you where you stand.
             </p>
           )}
         </section>
 
-        <section className="space-y-3 rounded-xl border p-5">
+        <section>
           <SectionHeader
             title="Opportunities"
             action={
-              <Link href="/opportunities" className="text-sm text-brand-primary hover:underline">
+              <Link
+                href="/opportunities"
+                className="text-sm text-brand-primary underline-offset-4 hover:underline"
+              >
                 Browse
               </Link>
             }
           />
           {!opportunityMatchesRefreshed ? (
-            <ErrorState description="We couldn't refresh your matches just now. The list below is your last known result, not necessarily current." />
+            <div className="mt-5">
+              <ErrorState description="We couldn't refresh your matches just now. The list below is your last known result, not necessarily current." />
+            </div>
           ) : null}
           {opportunityPreview.length > 0 ? (
-            <ul className="space-y-2">
+            <ul className="mt-5">
               {opportunityPreview.map((opp) => (
-                <li key={opp.title} className="flex items-center justify-between text-sm">
-                  <span className="truncate pr-2">{opp.title}</span>
-                  <span className="shrink-0 text-xs text-muted-foreground">{opp.matchScore}% match</span>
+                <li key={opp.title} className="border-b border-border/60 py-3 last:border-0">
+                  <p className="text-sm leading-snug text-ink-2">{opp.title}</p>
+                  <p className="mt-1.5 flex items-center gap-3">
+                    <span className="text-xs text-ink-3 tabular-nums">{opp.matchScore}% match</span>
+                    {opp.deadline ? <DeadlineBadge date={opp.deadline} /> : null}
+                  </p>
                 </li>
               ))}
             </ul>
           ) : (
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              <Compass className="size-5 text-brand-primary" />
-              <span>Personalized matches appear here once your profile has enough signal.</span>
-            </div>
+            <p className="mt-5 max-w-md text-sm leading-relaxed text-ink-2">
+              Personalized matches appear here once your profile has enough signal for Oryn to rank
+              them honestly.
+            </p>
           )}
         </section>
       </div>
