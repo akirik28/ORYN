@@ -17,6 +17,7 @@ import { logEvent } from "@/lib/analytics/log";
 import { toFriendlyDbErrorMessage } from "@/lib/errors/friendly-db-error";
 import { resolveEntity } from "@/lib/entities/resolve";
 import { CompleteOnboardingSchema, INTEREST_SUGGESTIONS, type CompleteOnboardingInput } from "@/lib/validation/onboarding";
+import { shouldRunOnboardingSecondaryWrites, writeStudentInterests } from "@/lib/onboarding/complete-onboarding";
 
 const KNOWN_INTERESTS = new Set<string>(INTEREST_SUGGESTIONS);
 
@@ -99,6 +100,14 @@ export async function completeOnboarding(input: CompleteOnboardingInput): Promis
   const data = parsed.data;
   const supabase = await createClient();
 
+  // Idempotency guard: re-derived from the profile row actually on file, never from
+  // client-submitted state — a stale tab, a double form submit, or a network retry must
+  // not re-append the one-time writes below. See lib/onboarding/complete-onboarding.ts's
+  // own comment for the live bug this closes (5 duplicate rows in career_goals and
+  // education_records from a single account being onboarded more than once).
+  const { data: existingProfile } = await supabase.from("profiles").select("onboarding_completed").eq("id", userId).single();
+  const runSecondaryWrites = shouldRunOnboardingSecondaryWrites({ onboarding_completed: existingProfile?.onboarding_completed ?? null });
+
   // Canonical Entity Autocomplete System: an id the client sent is re-verified against
   // the canonical registry (entity_type='school') before it's persisted — never trusted
   // blindly, so nothing but a school can be smuggled into school_entity_id. A verified
@@ -136,86 +145,86 @@ export async function completeOnboarding(input: CompleteOnboardingInput): Promis
 
   // Best-effort: the student's core profile + onboarding_completed above is the critical
   // path. If any of these secondary inserts fail, log and continue rather than stranding
-  // the student on the onboarding screen.
-  try {
-    if (data.goals.length > 0) {
-      await supabase
-        .from("career_goals")
-        .insert(data.goals.map((title) => ({ user_id: userId, title, category: "onboarding", target_date: null })));
-    }
-    if (data.interests.length > 0) {
-      await supabase
-        .from("student_interests")
-        .insert(data.interests.map((label) => ({ user_id: userId, label, is_custom: !KNOWN_INTERESTS.has(label) })));
-    }
-    // profiles above stores this same school/curriculum/country for quick reads, but
-    // education_records is what completeness checks and the Advisor's nudges actually
-    // query — without this insert, a student was told "Add an education record" about
-    // the school they'd just entered two steps earlier. schoolName/schoolId are already
-    // server-verified above; graduationYear isn't a real date, so it isn't forced into
-    // start_date/end_date rather than guessed.
-    await supabase.from("education_records").insert({
-      user_id: userId,
-      school_name: schoolName,
-      school_entity_id: schoolId,
-      country: data.country,
-      curriculum: data.curriculum,
-      start_date: null,
-      end_date: null,
-      overall_gpa: null,
-      gpa_scale: null,
-      notes: null,
-    });
-    if (data.extractedItems && data.extractedItems.length > 0) {
-      const byCategory = new Map<string, typeof data.extractedItems>();
-      for (const item of data.extractedItems) {
-        byCategory.set(item.category, [...(byCategory.get(item.category) ?? []), item]);
+  // the student on the onboarding screen. Guarded by runSecondaryWrites above — these are
+  // one-time appends, not safe to repeat if onboarding was already completed before this
+  // call (see the idempotency-guard comment above).
+  if (runSecondaryWrites) {
+    try {
+      if (data.goals.length > 0) {
+        await supabase
+          .from("career_goals")
+          .insert(data.goals.map((title) => ({ user_id: userId, title, category: "onboarding", target_date: null })));
       }
-      for (const [category, items] of byCategory) {
-        const table = CATEGORY_TABLE[category as keyof typeof CATEGORY_TABLE];
-        const rows = items.map((item) =>
-          category === "education"
-            ? {
-                user_id: userId,
-                school_name: item.organization || item.title,
-                school_entity_id: item.organizationEntityId,
-                start_date: item.startDate,
-                end_date: item.endDate,
-                notes: item.description,
-                is_current: !item.endDate,
-              }
-            : category === "workExperience"
+      await writeStudentInterests(supabase, userId, data.interests, KNOWN_INTERESTS);
+      // profiles above stores this same school/curriculum/country for quick reads, but
+      // education_records is what completeness checks and the Advisor's nudges actually
+      // query — without this insert, a student was told "Add an education record" about
+      // the school they'd just entered two steps earlier. schoolName/schoolId are already
+      // server-verified above; graduationYear isn't a real date, so it isn't forced into
+      // start_date/end_date rather than guessed.
+      await supabase.from("education_records").insert({
+        user_id: userId,
+        school_name: schoolName,
+        school_entity_id: schoolId,
+        country: data.country,
+        curriculum: data.curriculum,
+        start_date: null,
+        end_date: null,
+        overall_gpa: null,
+        gpa_scale: null,
+        notes: null,
+      });
+      if (data.extractedItems && data.extractedItems.length > 0) {
+        const byCategory = new Map<string, typeof data.extractedItems>();
+        for (const item of data.extractedItems) {
+          byCategory.set(item.category, [...(byCategory.get(item.category) ?? []), item]);
+        }
+        for (const [category, items] of byCategory) {
+          const table = CATEGORY_TABLE[category as keyof typeof CATEGORY_TABLE];
+          const rows = items.map((item) =>
+            category === "education"
               ? {
                   user_id: userId,
-                  title: item.title,
-                  organization: item.organization || "Unknown",
-                  organization_entity_id: item.organizationEntityId,
-                  description: item.description,
+                  school_name: item.organization || item.title,
+                  school_entity_id: item.organizationEntityId,
                   start_date: item.startDate,
                   end_date: item.endDate,
-                  source: "cv_import",
+                  notes: item.description,
+                  is_current: !item.endDate,
                 }
-              : {
-                  user_id: userId,
-                  title: item.title,
-                  organization: item.organization,
-                  organization_entity_id: item.organizationEntityId,
-                  description: item.description,
-                  start_date: item.startDate,
-                  end_date: item.endDate,
-                  source: "cv_import",
-                }
-        );
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- table name is dynamic across differently-shaped tables
-        await (supabase.from(table as any) as any).insert(rows);
+              : category === "workExperience"
+                ? {
+                    user_id: userId,
+                    title: item.title,
+                    organization: item.organization || "Unknown",
+                    organization_entity_id: item.organizationEntityId,
+                    description: item.description,
+                    start_date: item.startDate,
+                    end_date: item.endDate,
+                    source: "cv_import",
+                  }
+                : {
+                    user_id: userId,
+                    title: item.title,
+                    organization: item.organization,
+                    organization_entity_id: item.organizationEntityId,
+                    description: item.description,
+                    start_date: item.startDate,
+                    end_date: item.endDate,
+                    source: "cv_import",
+                  }
+          );
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- table name is dynamic across differently-shaped tables
+          await (supabase.from(table as any) as any).insert(rows);
+        }
       }
-    }
 
-    await recomputeCareerProfile(userId, { snapshotReason: "onboarding_completed" });
-  } catch (error) {
-    console.error("[onboarding] secondary data save failed", error);
+      await recomputeCareerProfile(userId, { snapshotReason: "onboarding_completed" });
+    } catch (error) {
+      console.error("[onboarding] secondary data save failed", error);
+    }
+    await logEvent(userId, "onboarding_completed");
   }
 
-  await logEvent(userId, "onboarding_completed");
   redirect("/dashboard");
 }
