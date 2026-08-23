@@ -27,10 +27,18 @@ const MATERIALLY_SELECTIVE_TIERS = new Set<Opportunity["selectivity_tier"]>([
  * Fees at or below this are entry fees, not enrolment fees, and do not trigger the gate.
  *
  * Without it the rule would demote CMIMC — a real Carnegie Mellon mathematics competition
- * charging 5 per competitor — which is plainly not what "pay-to-enroll" means. The exact
- * number is not load-bearing: today's priced, non-selective rows sit at 5 and then jump
- * straight to 350, a 70x gap, so every threshold from 6 to 350 produces an identical result.
- * 100 sits in the middle of that gap and reads as nominal in any currency the corpus holds.
+ * charging 5 per competitor — which is plainly not what "pay-to-enroll" means.
+ *
+ * When this was written the number was not load-bearing: priced, non-selective rows sat at 5
+ * and then jumped straight to 350, so every threshold from 6 to 350 partitioned the corpus
+ * identically, and 100 was simply the middle of that gap. **That justification expires as the
+ * gap fills.** It was empty because prices were missing, not because nothing is priced there,
+ * and a price-backfill pass is closing it — the first arrival is UT Austin WiSTEM at 200/350, a
+ * public university's high-school access camp, which this constant would demote on exactly the
+ * same terms as a 12,000 commercial residential. Whether that is right is a product judgment
+ * the founder has to make; it is not a judgment this constant should keep making silently by
+ * inheriting a rationale that no longer holds. Re-read the threshold against the real
+ * distribution once the backfill lands.
  *
  * Currency-blind by necessity — `opportunities.cost` has no companion currency column (see
  * lib/ai/fee-text.ts). At this magnitude that is tolerable: 5 is nominal and 350 is not, in
