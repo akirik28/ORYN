@@ -2,7 +2,7 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { env } from "@/lib/env";
-import type { AIUsage } from "./provider";
+import { AIResponseIncompleteError, type AIUsage } from "./provider";
 import { estimateCostUsd } from "./pricing";
 
 /**
@@ -38,4 +38,36 @@ export async function logAIUsage(params: {
   } catch (error) {
     console.warn("[ai_usage] failed to log usage", { feature: params.feature, error });
   }
+}
+
+/**
+ * Runs an AI call and records its token usage exactly once, whether it succeeds or fails
+ * with tokens already spent.
+ *
+ * Why this exists (SEV-1, 2026-08-23): callers used to `await provider.generateX(...)` and
+ * then `await logAIUsage(...)` on the next line. When the provider threw, the log line was
+ * never reached — so the *most* expensive failure mode (budget fully consumed by thinking,
+ * no answer produced, ~$0.021 a turn) was the one case that never appeared in `ai_usage`.
+ * The founder's $5 soft / $10 hard spend gates read that table, so those turns were
+ * spending real money off the books.
+ *
+ * Exactly-once by construction: the success and failure branches are mutually exclusive,
+ * and only failures that actually carry usage (AIResponseIncompleteError) are recorded —
+ * a connection error that never reached the model has no tokens to account for.
+ */
+export async function withUsageLogging<T extends { usage: AIUsage }>(
+  meta: { userId: string | null; feature: string },
+  run: () => Promise<T>,
+): Promise<T> {
+  let result: T;
+  try {
+    result = await run();
+  } catch (error) {
+    if (error instanceof AIResponseIncompleteError) {
+      await logAIUsage({ ...meta, usage: error.usage });
+    }
+    throw error;
+  }
+  await logAIUsage({ ...meta, usage: result.usage });
+  return result;
 }
