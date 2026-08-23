@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { refreshOpportunityMatches } from "@/lib/opportunities/persist-matches";
 import { browseOpportunities, getOpportunityFacets } from "@/lib/opportunities/browse";
-import { isOpportunityActionable } from "@/lib/opportunities/lifecycle";
+import { isOpportunityActionable, isOpportunitySufficientlyVerified } from "@/lib/opportunities/lifecycle";
 import { OpportunityCard } from "@/features/opportunities/opportunity-card";
 import { OpportunityFilterBar } from "@/features/opportunities/opportunity-filter-bar";
 import { integrationStatus } from "@/lib/env";
@@ -123,6 +123,12 @@ async function ForYouView({
     .map((match) => ({ match, opportunity: opportunityById.get(match.opportunity_id) }))
     .filter((c): c is { match: (typeof matches)[number]; opportunity: NonNullable<typeof c.opportunity> } =>
       Boolean(c.opportunity && isOpportunityActionable(c.opportunity))
+    )
+    // Same demotion Browse applies: a row Oryn can't vouch for sorts below every row it can,
+    // whatever its score. The DB already ordered by match_score, so this is a stable partition
+    // on top of that ordering rather than a re-sort.
+    .sort(
+      (a, b) => Number(!isOpportunitySufficientlyVerified(a.opportunity)) - Number(!isOpportunitySufficientlyVerified(b.opportunity))
     );
 
   if (cards.length === 0) {
@@ -149,6 +155,11 @@ async function ForYouView({
           reasonCodes={match.reason_codes as string[]}
           eligible={match.eligible}
           eligibilityNotes={match.eligibility_notes}
+          // "For you" is a curated slice, but it still shows the whole card, so it labels
+          // rather than hides — an unverified row keeps its place and loses its match tier.
+          // The counselor's ranked top-3 is the surface that excludes; see
+          // lib/counselor/eligibility.ts for why the two differ.
+          needsVerification={!isOpportunitySufficientlyVerified(opportunity!)}
           initialStatus={statusById.get(match.opportunity_id) ?? null}
         />
       ))}
@@ -219,7 +230,7 @@ async function BrowseAllView({
             {total} opportunit{total === 1 ? "y" : "ies"} match{total === 1 ? "es" : ""}
           </p>
           <div className="grid gap-4 md:grid-cols-2">
-            {rows.map(({ opportunity, matchScore, eligible, eligibilityNotes, notActionable, reasonCodes }) => (
+            {rows.map(({ opportunity, matchScore, eligible, eligibilityNotes, notActionable, needsVerification, reasonCodes }) => (
               <OpportunityCard
                 key={opportunity.id}
                 opportunity={opportunity}
@@ -228,6 +239,7 @@ async function BrowseAllView({
                 eligible={eligible}
                 eligibilityNotes={eligibilityNotes}
                 notActionable={notActionable}
+                needsVerification={needsVerification}
                 initialStatus={statusById.get(opportunity.id) ?? null}
               />
             ))}

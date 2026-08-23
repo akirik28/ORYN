@@ -4,7 +4,7 @@ import { getCurrentWeeklyPlan, getOrCreateWeeklyPlan } from "@/lib/plan/persist"
 import { getTargetUniversitiesWithDetails } from "@/lib/universities/queries";
 import { getUpcomingDeadlines } from "@/lib/deadlines/upcoming";
 import { refreshOpportunityMatches } from "@/lib/opportunities/persist-matches";
-import { isOpportunityActionable } from "@/lib/opportunities/lifecycle";
+import { isOpportunityRecommendable } from "@/lib/opportunities/lifecycle";
 import { AIProviderNotConfiguredError } from "@/lib/ai";
 import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
 import { getCounselorState } from "@/lib/counselor/state";
@@ -118,13 +118,18 @@ export default async function DashboardPage() {
   const opportunityMatches = matchesRes.data ?? [];
   const opportunityIds = opportunityMatches.map((m) => m.opportunity_id);
   const { data: matchedOpportunities } = opportunityIds.length
-    ? await supabase.from("opportunities").select("id, title, cycle_status, deadline").in("id", opportunityIds)
+    ? await supabase.from("opportunities").select("id, title, cycle_status, deadline, last_verified_at").in("id", opportunityIds)
     : { data: [] };
   // Defense in depth (lib/opportunities/lifecycle.ts): same stale-match-row risk as the
   // opportunities page's "For you" view — a match upserted before its cycle closed must not
   // keep surfacing on the homepage just because refreshOpportunityMatches hasn't re-run.
+  //
+  // isOpportunityRecommendable, not isOpportunityActionable: this preview renders a bare title
+  // and "N% match" with nowhere to put a caveat, so unlike Browse and the detail page it can't
+  // label an unverified row honestly — it can only show a confidence number Oryn can't stand
+  // behind. Browse remains the complete catalogue; nothing is hidden from the student there.
   const opportunityById = new Map(
-    (matchedOpportunities ?? []).filter((o) => isOpportunityActionable(o)).map((o) => [o.id, o])
+    (matchedOpportunities ?? []).filter((o) => isOpportunityRecommendable(o)).map((o) => [o.id, o])
   );
   const opportunityPreview = opportunityMatches
     .map((m) => ({ title: opportunityById.get(m.opportunity_id)?.title, matchScore: m.match_score }))

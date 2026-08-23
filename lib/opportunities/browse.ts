@@ -3,7 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Opportunity, OpportunityCategory } from "@/types/database";
 import { canonicalCountryKey, isSameCountry } from "./matching";
-import { resolveStoredEligibility } from "./lifecycle";
+import { INSUFFICIENT_VERIFICATION_REASON, isOpportunitySufficientlyVerified, resolveStoredEligibility } from "./lifecycle";
 
 export interface OpportunityBrowseFilters {
   q?: string;
@@ -22,6 +22,11 @@ export interface OpportunityBrowseRow {
   /** Distinguishes "this cycle isn't open" from "you don't qualify" — see ResolvedEligibility
    * in lib/opportunities/lifecycle.ts for why the card must not conflate the two. */
   notActionable: boolean;
+  /** A third, distinct state: Oryn has no evidence either way (no deadline on file and no
+   * record of ever verifying it). Never an eligibility claim and never a closure claim — see
+   * isOpportunitySufficientlyVerified. Drives the card's "Needs verification" badge and the
+   * demotion below, but never hides the row. */
+  needsVerification: boolean;
   reasonCodes: string[];
 }
 
@@ -124,19 +129,39 @@ export async function browseOpportunities(
       : { eligible: true, notes: "Eligibility hasn't been checked for this opportunity yet." };
     const { eligible, notes, notActionable } = resolveStoredEligibility(opportunity, stored);
 
+    // The freshness gate DEMOTES here rather than excluding, unlike the counselor's ranked
+    // recommendations. Browse is the "see everything" surface and deliberately keeps even
+    // ineligible rows visible (see this function's docstring) — hiding a row would tell a
+    // student the opportunity doesn't exist, a worse claim than the one being fixed, and the
+    // student may well know more about it than Oryn does. So the row keeps its place in the
+    // catalogue, loses its confidence tier on the card, and sorts below every confident row.
+    //
+    // Deliberately does NOT touch `eligible`: that column drives "Not eligible" wording, and
+    // this is a fact about Oryn's evidence, not about the student. Only annotated when the row
+    // is otherwise fine — a closed cycle or passed deadline is a stronger, more specific fact
+    // and keeps its own #140/#141 wording rather than being described as merely unverified.
+    const needsVerification = eligible && !notActionable && !isOpportunitySufficientlyVerified(opportunity);
+
     return {
       opportunity,
       matchScore: match?.match_score ?? 0,
       eligible,
-      eligibilityNotes: notes,
+      // Appended, not substituted, when a stored note already exists: the two say different
+      // things (that one is about this student, this one is about our data), and a card badged
+      // "Needs verification" whose only prose is "Restricted by country" leaves the badge
+      // unexplained.
+      eligibilityNotes: needsVerification ? [notes, INSUFFICIENT_VERIFICATION_REASON].filter(Boolean).join(" ") : notes,
       notActionable,
+      needsVerification,
       reasonCodes: (match?.reason_codes as string[] | null) ?? [],
     };
   });
 
   // Sorted in application code, not SQL: match_score lives on a separate per-user table
-  // joined in above, not a column `opportunities` itself can `.order()` by.
-  rows.sort((a, b) => b.matchScore - a.matchScore);
+  // joined in above, not a column `opportunities` itself can `.order()` by. Rows Oryn can't
+  // vouch for sort below every row it can, regardless of score — a 95% match on a record
+  // nobody has verified shouldn't outrank a 40% match on one that's confirmed current.
+  rows.sort((a, b) => Number(a.needsVerification) - Number(b.needsVerification) || b.matchScore - a.matchScore);
 
   const start = (page - 1) * PAGE_SIZE;
   return { rows: rows.slice(start, start + PAGE_SIZE), total, pageSize: PAGE_SIZE };

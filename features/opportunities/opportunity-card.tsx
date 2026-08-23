@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { StatusBadge, type StatusTone } from "@/components/oryn/status-badge";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
+import { OpportunityStandingBadge } from "./standing-badge";
 import { setOpportunityStatus } from "@/app/(app)/opportunities/actions";
 import type { Opportunity, SavedOpportunityStatus } from "@/types/database";
 
@@ -67,6 +68,7 @@ export function OpportunityCard({
   eligible = true,
   eligibilityNotes = null,
   notActionable = false,
+  needsVerification = false,
 }: {
   opportunity: Opportunity;
   matchScore: number;
@@ -83,6 +85,10 @@ export function OpportunityCard({
    * they don't qualify for something nobody can currently apply to. Defaults false, so the
    * "For you" call site (which pre-filters to actionable) is unaffected. */
   notActionable?: boolean;
+  /** Set when Oryn has no evidence either way — no deadline on file and no record of ever
+   * verifying it (lib/opportunities/lifecycle.ts). Suppresses the match tier and shows a
+   * "Needs verification" caveat instead. Neither a closure claim nor an eligibility claim. */
+  needsVerification?: boolean;
 }) {
   const [status, setStatus] = useState(initialStatus);
   const [isPending, startTransition] = useTransition();
@@ -113,11 +119,17 @@ export function OpportunityCard({
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="mb-1 flex flex-wrap items-center gap-2">
-            {eligible ? (
-              <StatusBadge label={tier.label} tone={tier.tone} icon={Sparkles} />
-            ) : (
-              <StatusBadge label={notActionable ? "Not open right now" : "Not eligible"} tone="neutral" />
-            )}
+            {/* The confidence tier is a claim ("Exceptional match") Oryn can only make about a
+                row it can vouch for. An unverified, deadline-less opportunity keeps its place
+                in Browse but not its tier — it gets the standing badge's honest caveat
+                instead. */}
+            {eligible && !needsVerification ? <StatusBadge label={tier.label} tone={tier.tone} icon={Sparkles} /> : null}
+            <OpportunityStandingBadge
+              eligible={eligible}
+              notActionable={notActionable}
+              needsVerification={needsVerification}
+              ineligibleLabel="Not eligible"
+            />
             {/* Eligible-but-unverified is not the same claim as eligible-and-confirmed — a
                 restriction exists but Oryn is missing the fact needed to check it (see
                 computeEligibility's unknownNotes). Never silently badge that as a plain

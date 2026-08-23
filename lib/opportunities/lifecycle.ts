@@ -152,6 +152,137 @@ export function deriveCycleStatusForPassedDeadline(
   return null;
 }
 
+/* ------------------------------------------------------------------------------------------
+ * The third gate: evidence, not dates.
+ *
+ * isOpportunityActionable's own comment above names the case it structurally cannot catch — an
+ * opportunity that closed quietly with no deadline ever recorded. Stanford Anesthesia Summer
+ * Institute remains the confirmed live example: `active`, `cycle_status='upcoming'`, `deadline`
+ * null, while its own page says applications are closed. No date-based rule can see that,
+ * because there is no date.
+ *
+ * What CAN be seen is the absence of evidence. Measured on the live catalogue 2026-08-23: 50
+ * distinct opportunities are simultaneously counselor-recommendable, deadline-less and never
+ * verified (`last_verified_at IS NULL`) — 301 eligible (user, opportunity) pairs across all 7
+ * users, ~18% of the 271 active rows.
+ *
+ * Worth naming the data contradiction that lets them through every existing guard: all 50 carry
+ * `verification_state = 'verified_current'` (so lib/counselor/eligibility.ts's verification
+ * check passes) while `last_verified_at` is null — the enum claims a verification the timestamp
+ * says never happened. The timestamp is the honest discriminator; the enum is not.
+ *
+ * Three things this gate deliberately does NOT say, because each would replace one product lie
+ * with a different one:
+ *   1. It does not say the opportunity is CLOSED. Nothing has told us that. `cycle_status` is
+ *      never set or implied here, and no closure is fabricated.
+ *   2. It does not say the STUDENT is ineligible. This is a fact about Oryn's evidence, and a
+ *      16-year-old must never be told they don't qualify because we didn't do our homework.
+ *   3. It does not claim staleness. See MAX_VERIFICATION_AGE_DAYS — an age rule would exclude
+ *      nothing at all today, and shipping one would be a guard that looks like it works.
+ * ------------------------------------------------------------------------------------------ */
+
+/**
+ * The rolling seam.
+ *
+ * A `deadline` is one way a row can carry a dated commitment about intake. An explicit "there
+ * is no single date, by design" declaration is the other, and rolling admission is the case
+ * that matters: without it, a genuinely rolling programme would look identical to one nobody
+ * ever researched, and the gate below would hold it down forever.
+ *
+ * `deadline_mode` is approved in principle and deliberately NOT implemented — there is no such
+ * column on `opportunities` and this package adds no migration. It is read defensively as an
+ * optional key, the same way lib/counselor/eligibility.ts already reads `eligible_citizenships`
+ * and `country_eligibility_confirmed_open` ("a real row fetched from a live DB that predates
+ * the migration genuinely has no key at all despite the type saying otherwise"). So this
+ * predicate is correct today (no row has the key, so no row is rescued by it) and becomes
+ * correct for real rows the moment the column lands — with no rewrite of this function or of
+ * any call site, which is the whole point of putting the seam here rather than in a caller.
+ *
+ * Unrecognized values are not commitments: an unparsed string must never read as a positive
+ * declaration.
+ */
+export const DEADLINE_MODES_WITHOUT_A_FIXED_DATE: ReadonlySet<string> = new Set([
+  "rolling",
+  "continuous",
+  "always_open",
+]);
+
+export type OpportunityVerificationFacts = Pick<Opportunity, "deadline" | "last_verified_at"> & {
+  /** Not yet a column — see DEADLINE_MODES_WITHOUT_A_FIXED_DATE. Optional on purpose. */
+  readonly deadline_mode?: string | null;
+};
+
+export function hasDeadlineCommitment(opportunity: OpportunityVerificationFacts): boolean {
+  if (opportunity.deadline) return true;
+  const mode = opportunity.deadline_mode;
+  return typeof mode === "string" && DEADLINE_MODES_WITHOUT_A_FIXED_DATE.has(mode);
+}
+
+/**
+ * Deliberately null: no maximum verification age is enforced.
+ *
+ * Measured 2026-08-23 across the whole corpus — the oldest `last_verified_at` is 2026-08-15 and
+ * there are zero rows older than 30 days. Any age threshold worth writing down would exclude
+ * exactly nothing, so shipping one would add a guard that reads as protective while proving
+ * nothing, and would silently start excluding rows later at whatever arbitrary number was
+ * picked today. The discriminator that actually does work right now is the ABSENCE of
+ * verification, not its age.
+ *
+ * The seam is here rather than in a caller: when Phase 30's Job B/E re-verification job exists
+ * and verification age becomes meaningful, set this to a real number of days and every
+ * recommendation path already routes through the function below.
+ */
+export const MAX_VERIFICATION_AGE_DAYS: number | null = null;
+
+/**
+ * The rule, in its smallest fail-closed form: an opportunity with no deadline commitment on
+ * file AND no record of ever having been verified is not confidently actionable.
+ *
+ * Both absences are required. Either signal alone is enough to pass — a deadline is a dated
+ * statement about this cycle, and a verification timestamp means something actually read the
+ * source page — which keeps the gate narrow and keeps it self-healing: it stops firing the
+ * moment ingestion writes either one, with no reactivation step, exactly like the rest of this
+ * module.
+ */
+export function isOpportunitySufficientlyVerified(
+  opportunity: OpportunityVerificationFacts,
+  referenceDate: Date = new Date()
+): boolean {
+  if (hasDeadlineCommitment(opportunity)) return true;
+
+  const lastVerifiedAt = opportunity.last_verified_at;
+  if (!lastVerifiedAt) return false;
+  if (MAX_VERIFICATION_AGE_DAYS === null) return true;
+
+  const verifiedAtMs = Date.parse(lastVerifiedAt);
+  if (Number.isNaN(verifiedAtMs)) return false;
+  return referenceDate.getTime() - verifiedAtMs <= MAX_VERIFICATION_AGE_DAYS * 24 * 60 * 60 * 1000;
+}
+
+/**
+ * Student-facing wording. Kept as constants beside the rule for the same reason
+ * `nonActionableOpportunityReason` is a shared export rather than a string in each surface: two
+ * files phrasing one rule differently is how #140 and #141 started.
+ *
+ * Neither string may claim closure or ineligibility — see the three distinctions above.
+ */
+export const NEEDS_VERIFICATION_LABEL = "Needs verification";
+export const INSUFFICIENT_VERIFICATION_REASON =
+  "Oryn hasn't verified this opportunity's current status and has no application dates on file, so it isn't recommended as a confident next step. Check the official page before relying on it.";
+
+/**
+ * The composed gate every recommendation-critical path calls: actionable AND supported by
+ * enough evidence to present with confidence. The two halves stay separate functions on
+ * purpose — Browse and the detail page need the freshness half alone, because they label rather
+ * than exclude, and they must be able to tell a student WHICH of the three things is true.
+ */
+export function isOpportunityRecommendable(
+  opportunity: Pick<Opportunity, "cycle_status" | "deadline"> & OpportunityVerificationFacts,
+  referenceDate: Date = new Date()
+): boolean {
+  return isOpportunityActionable(opportunity, referenceDate) && isOpportunitySufficientlyVerified(opportunity, referenceDate);
+}
+
 /**
  * Shared filter for every matching/recommendation/urgency read path — see the module comment
  * above for why this excludes on cycle_status and deadline but leaves `status` and direct-by-

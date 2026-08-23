@@ -26,7 +26,13 @@ function opportunity(overrides: Partial<Opportunity> = {}): Opportunity {
     source: null,
     source_url: null,
     source_confidence: "high",
-    last_verified_at: null,
+    // Verified by default, consistent with this fixture's own `verification_state:
+    // "verified_current"` below. The two contradicted each other, which is the live data
+    // shape lib/opportunities/lifecycle.ts's freshness gate exists to catch (50 rows claim
+    // verified_current while last_verified_at is null). Left null, every fixture in this file
+    // would sit in the gated shape, and tests about country, citizenship, grade or scoring
+    // would be asserting against an exclusion unrelated to their subject.
+    last_verified_at: "2026-08-20T00:00:00Z",
     status: "active",
     normalized_title: "test opportunity",
     cycle_status: "open",

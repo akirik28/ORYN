@@ -1,4 +1,9 @@
-import { isOpportunityActionable, nonActionableOpportunityReason } from "@/lib/opportunities/lifecycle";
+import {
+  INSUFFICIENT_VERIFICATION_REASON,
+  isOpportunityActionable,
+  isOpportunitySufficientlyVerified,
+  nonActionableOpportunityReason,
+} from "@/lib/opportunities/lifecycle";
 import { isSameCountry } from "@/lib/opportunities/matching";
 import { currentGradeLevel, gradeMatchesEligibility } from "@/lib/profile/grade-level";
 import type { CandidateAction, CounselorState, EligibilityResult, EligibilityVerdict } from "./types";
@@ -51,6 +56,28 @@ function evaluateOpportunityEligibility(
   // ingestion refreshes `deadline` to a real next-cycle date, with no write or backfill.
   if (!isOpportunityActionable(opportunity, referenceDate)) {
     return { verdict: "known_ineligible", notes: [nonActionableOpportunityReason(opportunity)] };
+  }
+
+  // The third lifecycle gate (lib/opportunities/lifecycle.ts), and the one the two above
+  // structurally cannot cover: an opportunity that closed quietly with no deadline ever
+  // recorded. Checked AFTER the two date rules deliberately, so a genuinely closed or expired
+  // row keeps its specific, more informative reason rather than being described as merely
+  // unverified.
+  //
+  // EXCLUDED here rather than demoted, unlike Browse and the detail page which label it. This
+  // is the ranked-recommendation chokepoint: rankCandidates filters on known_ineligible, and
+  // its output is the hard top-3 behind the dashboard's "this week" block, the advisor's
+  // priorities, and lib/ai/weekly-plan.ts — which hands these to the model described as
+  // verified, eligible candidate actions. Demoting inside a three-slot list is
+  // indistinguishable from exclusion for ranks 4+, and for ranks 1-3 it would still present an
+  // unevidenced row as a priority. Measured 2026-08-23: per-user candidate pools drop from
+  // 91-105 to 49-62, so no student comes near the three-recommendation floor.
+  //
+  // Note the check above this one reads `verification_state`, which is NOT sufficient: all 50
+  // live rows in this shape carry verification_state = 'verified_current' while
+  // last_verified_at is null. The enum claims a verification the timestamp says never happened.
+  if (!isOpportunitySufficientlyVerified(opportunity, referenceDate)) {
+    return { verdict: "known_ineligible", notes: [INSUFFICIENT_VERIFICATION_REASON] };
   }
 
   const notes: string[] = [];
