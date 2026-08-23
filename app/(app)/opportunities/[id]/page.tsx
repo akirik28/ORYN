@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { ExternalLink, MapPin, DollarSign, Calendar, Users2 } from "lucide-react";
+// Wallet, not DollarSign: the icon sits beside a figure whose currency is not recorded, so a
+// dollar glyph asserts the same thing the "$" prefix used to.
+import { ExternalLink, MapPin, Wallet, Calendar, Users2 } from "lucide-react";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { refreshOpportunityMatches } from "@/lib/opportunities/persist-matches";
@@ -12,7 +14,7 @@ import { SectionHeader } from "@/components/oryn/section-header";
 import { SourceBadge } from "@/components/oryn/source-badge";
 import { StatusBadge } from "@/components/oryn/status-badge";
 import { OpportunityActions } from "@/features/opportunities/opportunity-actions";
-import { formatCurrency } from "@/lib/i18n/format";
+import { formatMoney } from "@/lib/i18n/format";
 import type { ConfidenceLevel } from "@/components/oryn/confidence-indicator";
 
 // Was a static "Opportunity" title on every one of these pages — technically present, but
@@ -143,15 +145,18 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
         ) : null}
         {opportunity.cost != null ? (
           <div className="flex items-center gap-2">
-            <DollarSign className="size-4 shrink-0 text-muted-foreground" />
+            <Wallet className="size-4 shrink-0 text-muted-foreground" />
             <span>
-              {formatCurrency(opportunity.cost)}
+              {/* null currency, not a guess: `opportunities` has no currency column, and live
+                  rows hold GBP/EUR/CHF/TRY in this field. See lib/i18n/format.ts. */}
+              {formatMoney(opportunity.cost, null)}
+              <span className="text-muted-foreground"> · currency not recorded, check the official page</span>
               {opportunity.financial_aid_available ? " · Financial aid available" : ""}
             </span>
           </div>
         ) : opportunity.financial_aid_available ? (
           <div className="flex items-center gap-2">
-            <DollarSign className="size-4 shrink-0 text-muted-foreground" />
+            <Wallet className="size-4 shrink-0 text-muted-foreground" />
             <span>Financial aid available</span>
           </div>
         ) : null}
