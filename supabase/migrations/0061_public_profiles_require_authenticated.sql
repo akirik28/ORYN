@@ -46,9 +46,18 @@
 -- WRITTEN BUT NOT APPLIED, per BUG-1's standing package constraint: read-only
 -- verification is not the same session that patches a policy with no independent check on
 -- it. Founder-gated. Do not run against a live project without that review.
+--
+-- CORRECTED (2026-08-23, ORYN-PRODUCT recovery pass): the version below originally omitted
+-- `headline` and `about`, two columns the live view already carries (added after this
+-- migration was first drafted, before it was applied). `create or replace view` cannot
+-- drop columns from an existing view -- confirmed live via a rolled-back transaction:
+-- `ERROR: 42P16: cannot drop columns from view`. The column list below now matches the
+-- live view's actual 9 columns and order exactly (verified against
+-- `information_schema.columns` and `pg_get_viewdef`), with only the `auth.uid() is not
+-- null` guard added -- re-tested the same way (rolled-back transaction), applies cleanly.
 
 create or replace view public.public_profiles as
-  select id, display_name, country, curriculum, graduation_year, looking_for, created_at
+  select id, display_name, headline, about, country, curriculum, graduation_year, looking_for, created_at
   from public.profiles
   where auth.uid() is not null
     and (
