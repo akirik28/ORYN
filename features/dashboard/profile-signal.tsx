@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { Eyebrow } from "@/components/oryn/eyebrow";
 // Short forms: this block is a scan-and-compare read, and the full
 // "Execution / Project Depth" wraps to two lines in every column width it renders in.
-import { DIMENSION_LABELS_SHORT } from "@/lib/scoring/labels";
+import { DIMENSION_LABELS, DIMENSION_LABELS_SHORT } from "@/lib/scoring/labels";
 import { EVIDENCE_STATE_LABELS, type DimensionSignal, type EvidenceState } from "@/lib/scoring/signal";
 
 /**
@@ -59,11 +59,23 @@ function Spectrum({ state }: { state: EvidenceState }) {
   );
 }
 
-export function ProfileSignal({ signal }: { signal: DimensionSignal[] }) {
+export function ProfileSignal({
+  signal,
+  showScores = false,
+  heading = "Profile signal",
+}: {
+  signal: DimensionSignal[];
+  /** The detail view (the profile page) may show the underlying 0-100 figure as quiet
+   *  metadata beside the qualitative state. Home never does: a number in the summary
+   *  invites optimising the number. Even here the word is the reading and the score is
+   *  the footnote, never the reverse. */
+  showScores?: boolean;
+  heading?: string;
+}) {
   if (signal.length === 0) {
     return (
-      <section aria-label="Profile signal">
-        <Eyebrow>Profile signal</Eyebrow>
+      <section aria-label={heading}>
+        <Eyebrow>{heading}</Eyebrow>
         <p className="mt-4 max-w-xl leading-relaxed text-ink-2">
           Oryn hasn&apos;t read your profile yet. Add a few courses, activities or projects and this
           becomes a picture of where you actually stand.{" "}
@@ -81,13 +93,18 @@ export function ProfileSignal({ signal }: { signal: DimensionSignal[] }) {
   // inside the aside and truncated every label to "Le…"/"Ac…"; keyed to its own container
   // it lays out correctly wherever it's placed.
   return (
-    <section aria-label="Profile signal" className="@container">
-      <Eyebrow>Profile signal</Eyebrow>
+    <section aria-label={heading} className="@container">
+      <Eyebrow>{heading}</Eyebrow>
       <ul className="mt-5 grid gap-x-10 gap-y-3.5 @md:grid-cols-2">
         {signal.map((row) => (
           <li key={row.dimension} className="flex items-center justify-between gap-4 border-b border-border/60 pb-3">
-            <span className="min-w-0 truncate text-sm text-ink-2">{DIMENSION_LABELS_SHORT[row.dimension]}</span>
+            <span className="min-w-0 truncate text-sm text-ink-2">
+              {showScores ? DIMENSION_LABELS[row.dimension] : DIMENSION_LABELS_SHORT[row.dimension]}
+            </span>
             <span className="flex shrink-0 items-center gap-2.5">
+              {showScores && row.state !== "limited_evidence" ? (
+                <span className="text-xs text-ink-4 tabular-nums">{row.score}</span>
+              ) : null}
               <span className={cn("text-xs whitespace-nowrap", STATE_TEXT[row.state])}>
                 {EVIDENCE_STATE_LABELS[row.state]}
               </span>
