@@ -2,6 +2,7 @@ import "server-only";
 
 import { getCounselorRecommendations } from "@/lib/counselor";
 import type { CounselorRecommendation } from "@/lib/counselor";
+import { formatEligibilityCaveat } from "./eligibility-text";
 
 /** Bounds how many opportunities enter the prompt — grounding, not the full catalogue
  * (spec Phase 27, context trimming). Counselor Core has already ranked these by gap
@@ -13,13 +14,11 @@ function isOpportunityRecommendation(recommendation: CounselorRecommendation): b
   return recommendation.evidence.some((e) => e.sourceType === "opportunity");
 }
 
-/** Eligibility must never go unstated: `known_eligible` renders silently (the "no news is
- * good news" default already used by student-context.ts's own evidence tags), but
- * `unknown` and `known_ineligible` each get their own explicit line pulled straight from
- * eligibility.notes -- the same notes a student sees on the opportunity's own card, so the
- * advisor can't say something a human-facing surface wouldn't also say. An empty
- * `eligible_countries` is "unknown," never "open to everyone" -- that distinction is made
- * upstream in lib/counselor/eligibility.ts and preserved here, not re-derived. */
+/** Eligibility must never go unstated -- the rendering rules, and why `known_eligible` is
+ * deliberately silent while `unknown` never is, now live in lib/ai/eligibility-text.ts, which
+ * lib/ai/weekly-plan.ts shares. The notes it renders are the same ones a student sees on the
+ * opportunity's own card, so the advisor can't say something a human-facing surface
+ * wouldn't also say. */
 function formatOne(recommendation: CounselorRecommendation): string {
   const parts = [recommendation.title];
   if (recommendation.deadline) {
@@ -28,10 +27,9 @@ function formatOne(recommendation: CounselorRecommendation): string {
   if (recommendation.why[0]) {
     parts.push(recommendation.why[0]);
   }
-  if (recommendation.eligibility.verdict === "known_ineligible") {
-    parts.push(`NOT ELIGIBLE: ${recommendation.eligibility.notes.join(" ")}`);
-  } else if (recommendation.eligibility.verdict === "unknown") {
-    parts.push(`ELIGIBILITY UNKNOWN: ${recommendation.eligibility.notes.join(" ") || "not enough information on file to check."}`);
+  const eligibilityCaveat = formatEligibilityCaveat(recommendation.eligibility);
+  if (eligibilityCaveat) {
+    parts.push(eligibilityCaveat);
   }
   return `- ${parts.join(" — ")}`;
 }
