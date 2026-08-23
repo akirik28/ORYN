@@ -28,7 +28,7 @@ function NumeralToggle({ index, done, pending, onToggle }: { index: number; done
       aria-pressed={done}
       aria-label={done ? "Mark as not started" : "Mark as complete"}
       className={cn(
-        "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full font-heading text-sm font-medium transition-colors duration-(--duration-fast)",
+        "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-medium transition-colors duration-(--duration-fast)",
         done
           ? "bg-brand-primary text-primary-foreground"
           : "bg-brand-primary-soft text-brand-primary-strong hover:bg-brand-primary-border"

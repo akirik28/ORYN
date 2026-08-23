@@ -367,7 +367,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
       {targetRes.data ? (
         <section className="space-y-4 rounded-2xl border border-brand-primary-border bg-brand-primary-subtle p-6">
           <div className="flex items-center justify-between">
-            <h2 className="font-heading text-lg font-medium">Your outlook</h2>
+            <h2 className="text-lg font-medium">Your outlook</h2>
             {/* The freshly computed label, not the row's — `targetRes.data` was read before
                 the refresh above wrote to it, so the persisted value here is one render
                 stale, and pairing a stale label with a fresh reason could show the reason
@@ -588,7 +588,7 @@ function StatCard({ icon: Icon, label, value, caption }: { icon: typeof Users; l
       </span>
       <div>
         <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="font-heading text-lg font-medium">{value}</p>
+        <p className="text-lg font-medium">{value}</p>
         {caption ? <p className="text-xs text-muted-foreground">{caption}</p> : null}
       </div>
     </div>

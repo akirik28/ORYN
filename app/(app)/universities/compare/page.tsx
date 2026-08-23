@@ -128,7 +128,7 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
               <th className="w-40 shrink-0 p-3 text-left font-medium text-muted-foreground">&nbsp;</th>
               {ordered.map((u) => (
                 <th key={u.id} className="p-3 text-left">
-                  <Link href={`/universities/${u.id}`} className="font-heading font-medium hover:underline">
+                  <Link href={`/universities/${u.id}`} className="font-medium hover:underline">
                     {u.name}
                   </Link>
                 </th>

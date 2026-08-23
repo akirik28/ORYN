@@ -2,22 +2,21 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { MapPin, Bookmark, BookmarkCheck, Landmark, Users, Trophy, DollarSign, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { addTargetUniversity } from "@/app/(app)/universities/actions";
 import { useCompare } from "@/features/universities/compare-context";
 import { formatNumber } from "@/lib/i18n/format";
+import { MediaImage } from "@/components/oryn/media-image";
 import type { University } from "@/types/database";
 
 // Larger, calmer card (founder direction: "fewer larger cards ... not a dense database
 // row") — a visual identity band up top instead of packing every field into a small row.
-// Three tiers, in order, never a fabricated photo when none of them apply (Rule 4 forbids
-// inventing imagery this product has no actual source for): a verified campus photo
-// (`imageUrl`, acquired via lib/acquisition/wikimedia.ts / opengraph.ts and re-hosted on our
-// own storage — see scripts/acquire-university-images.ts), then the real `logo_url` when one
-// exists, then a plain gradient + Landmark mark. Each tier falls through to the next on a
-// broken/failed load rather than showing a broken-image icon (P0 "broken image protection").
+// The identity band's three tiers — verified campus photo (`imageUrl`, acquired via
+// lib/acquisition/wikimedia.ts / opengraph.ts and re-hosted on our own storage, see
+// scripts/acquire-university-images.ts), then the real `logo_url`, then a monogram — are
+// MediaImage's job now; this card just supplies the sources. Never a fabricated photo when
+// none apply (Rule 4 forbids inventing imagery this product has no source for).
 export function UniversityCard({
   university,
   isSaved,
@@ -47,39 +46,24 @@ export function UniversityCard({
 }) {
   const [saved, setSaved] = useState(isSaved);
   const [isPending, startTransition] = useTransition();
-  const [photoFailed, setPhotoFailed] = useState(false);
-  const [logoFailed, setLogoFailed] = useState(false);
   const compare = useCompare();
   const isComparing = compare.isSelected(university.id);
 
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border bg-card">
-      <div className="relative flex h-32 items-center justify-center overflow-hidden bg-gradient-to-br from-brand-primary-subtle to-brand-primary-soft">
-        {imageUrl && !photoFailed ? (
-          <Image
-            src={imageUrl}
-            alt={`Campus of ${university.name}`}
-            fill
-            sizes="(min-width: 1024px) 360px, (min-width: 640px) 50vw, 100vw"
-            className="object-cover"
-            onError={() => setPhotoFailed(true)}
-          />
-        ) : university.logo_url && !logoFailed ? (
-          // Plain <img>, not next/image: logo_url can still point at an arbitrary official
-          // university domain in principle — Next's <Image> requires every remote hostname
-          // allow-listed in next.config.ts ahead of time, which doesn't fit a source this
-          // open-ended without an overly broad wildcard. A plain <img> has no such
-          // restriction and still renders the real logo when one exists.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={university.logo_url} alt="" className="max-h-full max-w-full object-contain p-6" onError={() => setLogoFailed(true)} />
-        ) : (
-          <Landmark className="size-9 text-brand-primary-strong/60" aria-hidden />
-        )}
-      </div>
+      <MediaImage
+        className="h-32 w-full"
+        src={imageUrl}
+        fallbackSrc={university.logo_url}
+        alt={`Campus of ${university.name}`}
+        monogram={university.name}
+        icon={Landmark}
+        sizes="(min-width: 1024px) 360px, (min-width: 640px) 50vw, 100vw"
+      />
 
       <div className="flex flex-1 flex-col gap-3 p-6">
         <div className="space-y-1">
-          <Link href={`/universities/${university.id}`} className="font-heading text-lg font-medium leading-snug hover:underline">
+          <Link href={`/universities/${university.id}`} className="text-lg font-medium leading-snug hover:underline">
             {university.name}
           </Link>
           {(university.city || university.country) && (

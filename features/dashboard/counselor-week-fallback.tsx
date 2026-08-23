@@ -25,7 +25,7 @@ export function CounselorWeekFallback({ actions }: { actions: CounselorRecommend
         <ActionCard
           key={action.id}
           leading={
-            <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-primary-soft font-heading text-sm font-medium text-brand-primary-strong">
+            <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-primary-soft text-sm font-medium text-brand-primary-strong">
               {index + 1}
             </span>
           }

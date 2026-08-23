@@ -37,7 +37,7 @@ export default async function ProgressPage() {
         <Link href="/profile" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="size-3.5" /> Back to profile
         </Link>
-        <h1 className="mt-2 font-heading text-2xl font-medium tracking-tight md:text-3xl">Progress</h1>
+        <h1 className="mt-2 font-display text-2xl tracking-tight md:text-3xl">Progress</h1>
         <p className="mt-1 text-muted-foreground">How your profile has changed over the last {review.windowDays} days.</p>
       </div>
 
@@ -52,7 +52,7 @@ export default async function ProgressPage() {
           <section className="rounded-2xl border border-brand-primary-border bg-brand-primary-subtle p-6">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Overall Career Profile</p>
             <div className="mt-1 flex items-baseline gap-3">
-              <span className="font-heading text-3xl font-medium tracking-tight">{review.overallAfter}</span>
+              <span className="font-display text-3xl tracking-tight">{review.overallAfter}</span>
               <span className="text-sm text-muted-foreground">was {review.overallBefore}</span>
               {review.overallDelta !== null ? <DeltaBadge delta={review.overallDelta} /> : null}
             </div>

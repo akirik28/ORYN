@@ -19,7 +19,7 @@ export default async function CVPage() {
         <Link href="/profile" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="size-3.5" /> Back to profile
         </Link>
-        <h1 className="mt-2 font-heading text-2xl font-medium tracking-tight md:text-3xl">CV Generator</h1>
+        <h1 className="mt-2 font-display text-2xl tracking-tight md:text-3xl">CV Generator</h1>
         <p className="mt-1 text-muted-foreground">
           Built entirely from your structured profile — choose what to include, then print or save as PDF. Nothing
           is invented; polish wording for any entry from the Profile page&apos;s &quot;Improve with AI&quot; first.

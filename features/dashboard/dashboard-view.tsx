@@ -78,7 +78,7 @@ export function DashboardView({
             {biggestGap ? (
               <div>
                 <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Biggest gap</p>
-                <p className="font-heading text-xl font-medium text-balance">
+                <p className="font-display text-xl text-balance">
                   {DIMENSION_LABELS[biggestGap.dimension]} — {biggestGap.score}/100
                 </p>
                 <p className="mt-0.5 text-sm text-muted-foreground">
@@ -87,7 +87,7 @@ export function DashboardView({
               </div>
             ) : (
               <div>
-                <p className="font-heading text-xl font-medium">Your Career Profile is waiting for data.</p>
+                <p className="font-display text-xl">Your Career Profile is waiting for data.</p>
                 <p className="mt-0.5 text-sm text-muted-foreground">
                   Add a few activities, grades, or projects and Oryn will tell you where you stand.
                 </p>

@@ -56,7 +56,7 @@ export function AcceptanceMoment({ universityName }: { universityName: string })
           <GraduationCap className="size-7" />
         </motion.span>
       </div>
-      <p className="mt-4 font-heading text-xl font-medium">You&apos;re in.</p>
+      <p className="mt-4 font-display text-xl">You&apos;re in.</p>
       <p className="mt-1 text-sm text-muted-foreground">
         Accepted to {universityName}. Whatever came before this moment worked — well done.
       </p>

@@ -18,7 +18,7 @@ export function NotConfiguredNotice({
         <span className="mx-auto flex size-11 items-center justify-center rounded-full bg-warning/10 text-warning">
           <AlertTriangle className="size-5" />
         </span>
-        <h1 className="font-heading text-lg font-medium">{title}</h1>
+        <h1 className="text-lg font-medium">{title}</h1>
         <p className="text-sm text-muted-foreground">{description}</p>
       </div>
     </div>

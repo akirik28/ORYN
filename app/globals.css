@@ -9,7 +9,21 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-newsreader);
+  /* Editorial display face. `--font-heading` is kept as an alias so any call site that
+     predates UI-V3 degrades to the display face rather than to a bare serif fallback;
+     new code should use `font-display`. */
+  --font-display: var(--font-instrument-serif);
+  --font-heading: var(--font-instrument-serif);
+  /* Editorial ink ramp — four deliberate text weights instead of foreground/muted only.
+     ink-2 is the workhorse for body prose that isn't a heading and isn't secondary. */
+  --color-ink-1: var(--ink-1);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-4: var(--ink-4);
+  /* Three surface levels (UI-V3 § 8). Level 1 is the open canvas and needs no token —
+     it's just --background. Only 2 and 3 are containers. */
+  --color-surface-tint: var(--surface-tint);
+  --color-surface-panel: var(--surface-panel);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-info: var(--info);
@@ -96,6 +110,27 @@
   --brand-primary-soft: color-mix(in oklch, var(--brand-primary), var(--background) 85%);
   --brand-primary-subtle: color-mix(in oklch, var(--brand-primary), var(--background) 94%);
   --brand-primary-border: color-mix(in oklch, var(--brand-primary), var(--border) 60%);
+
+  /* Editorial ink ramp. Same hue (272) as --foreground so text never drifts neutral-gray
+     against the blue-black brand; each step is a real lightness stop, not an opacity of
+     the one above — opacity-faded text over a tinted surface picks up the tint and stops
+     being the color you specified. ink-3 is deliberately identical to --muted-foreground
+     (both AA on --background at body size); ink-4 is decorative only — eyebrows, rule
+     labels, disabled affordances — and must never carry meaning on its own. */
+  --ink-1: var(--foreground);
+  --ink-2: oklch(0.34 0.012 272);
+  --ink-3: var(--muted-foreground);
+  /* 0.64, not the 0.68 this started at: measured against --background that rendered
+     2.89:1, under even WCAG's 3:1 non-text floor, so it wasn't safe for the icons and
+     hairlines it's meant for — let alone text. 0.64 clears 3:1 on --surface-tint too,
+     which is the tighter of the two grounds it sits on. */
+  --ink-4: oklch(0.64 0.012 272);
+
+  /* Surface levels. Level 2 (tint) groups a section without drawing a box around it —
+     this is what replaces most of the product's bordered cards. Level 3 (panel) is only
+     for a genuinely contained interactive module, where containment carries meaning. */
+  --surface-tint: oklch(0.978 0.004 272);
+  --surface-panel: var(--card);
   --sidebar: oklch(0.99 0.002 272);
   --sidebar-foreground: oklch(0.16 0.01 272);
   --sidebar-primary: oklch(0.46 0.22 272);
@@ -169,6 +204,13 @@
   --success: oklch(0.72 0.15 152);
   --warning: oklch(0.78 0.14 80);
   --info: oklch(0.75 0.13 240);
+
+  /* Ink and surfaces invert direction in dark, so unlike the --brand-primary ramp above
+     these cannot be a single color-mix definition shared with :root — the stops run
+     light-to-dark there and dark-to-light here. */
+  --ink-2: oklch(0.86 0.012 272);
+  --ink-4: oklch(0.55 0.02 272);
+  --surface-tint: oklch(0.115 0.02 272);
 }
 
 @layer base {

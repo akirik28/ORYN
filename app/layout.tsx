@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Newsreader } from "next/font/google";
+import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { MotionConfig } from "motion/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
@@ -15,12 +15,20 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Display/heading face — deliberately not the same grotesk sans as the UI body copy.
-// Used wherever Oryn is making a statement about the student (greetings, the score
-// number, hero headlines) rather than just presenting a UI. See CardTitle and
-// /docs/design-system.md for where --font-heading is (and isn't) applied.
-const newsreader = Newsreader({
-  variable: "--font-newsreader",
+// Editorial display face (UI-V3). Used *selectively* — only where Oryn is making a
+// statement to the student (page titles, the greeting, a Next Move headline, the score
+// number), never for UI chrome. Card/dialog/sheet titles are deliberately sans; a
+// product where every heading is serif reads as a template, not as editorial.
+//
+// Instrument Serif ships a single weight (400) by design — it's a display face, not a
+// text family. That's why `font-display` call sites carry no `font-medium`/`font-semibold`:
+// asking for a weight the family doesn't have makes the browser synthesize a faux bold,
+// which smears the high-contrast stems this face is chosen for. Set size and tracking
+// instead. See /docs/design-system.md § Typography.
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-instrument-serif",
+  weight: "400",
+  style: ["normal", "italic"],
   subsets: ["latin"],
 });
 
@@ -51,7 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     // just defaulting the other direction now).
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
         {/* Global prefers-reduced-motion gate — every `motion.*` element in the app

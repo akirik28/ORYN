@@ -36,7 +36,7 @@ export function ScoreRing({ score, trend }: { score: number | null; trend?: numb
       <div className="absolute flex flex-col items-center">
         {score !== null ? (
           <>
-            <span className="font-heading text-5xl leading-none font-medium tracking-tight">{score}</span>
+            <span className="font-display text-5xl leading-none tracking-tight">{score}</span>
             {typeof trend === "number" && trend !== 0 ? (
               <span
                 className={`mt-2 inline-flex items-center gap-1 text-sm font-medium ${trend > 0 ? "text-success" : "text-muted-foreground"}`}

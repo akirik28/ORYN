@@ -56,7 +56,7 @@ export default function LandingPage() {
             className="relative mx-auto w-full max-w-4xl px-4 py-24 text-center md:px-8 md:py-32"
           >
             <p className="mb-4 text-sm font-medium tracking-wide text-brand-primary-strong">A Personal Career Operating System</p>
-            <h1 className="font-heading text-balance text-4xl font-medium leading-tight tracking-tight md:text-6xl">
+            <h1 className="font-display text-balance text-4xl leading-tight tracking-tight md:text-6xl">
               What should I do next to improve my future opportunities?
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-balance text-lg text-muted-foreground">
@@ -93,7 +93,7 @@ export default function LandingPage() {
                 <span className="flex size-10 items-center justify-center rounded-full bg-brand-primary-soft text-brand-primary-strong">
                   <step.icon className="size-5" />
                 </span>
-                <h3 className="font-heading text-lg font-medium">{step.title}</h3>
+                <h3 className="text-lg font-medium">{step.title}</h3>
                 <p className="text-sm text-muted-foreground">{step.body}</p>
               </motion.div>
             ))}
@@ -102,7 +102,7 @@ export default function LandingPage() {
 
         <section className="border-t bg-muted/30">
           <div className="mx-auto w-full max-w-4xl px-4 py-20 text-center md:px-8">
-            <h2 className="font-heading text-2xl font-medium tracking-tight md:text-3xl">
+            <h2 className="font-display text-2xl tracking-tight md:text-3xl">
               Not a CV builder. Not a ranking site. Not a chatbot.
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">

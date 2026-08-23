@@ -118,7 +118,7 @@ export function CVBuilder({
 
       <div className="cv-print-area rounded-2xl border bg-card p-8 print:rounded-none print:border-0 print:p-0 print:shadow-none">
         <header className="border-b pb-4">
-          <h1 className="font-heading text-2xl font-semibold">{studentName}</h1>
+          <h1 className="font-display text-2xl">{studentName}</h1>
           <p className="text-sm text-muted-foreground">
             {[schoolName, country, graduationYear ? `Class of ${graduationYear}` : null].filter(Boolean).join(" · ")}
           </p>

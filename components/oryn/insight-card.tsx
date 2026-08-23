@@ -57,7 +57,7 @@ export function InsightCard({
         </span>
         <div className="min-w-0 flex-1 space-y-1">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{eyebrow}</p>
-          <p className="font-heading text-lg leading-snug font-medium text-balance">{title}</p>
+          <p className="font-display text-lg leading-snug text-balance">{title}</p>
           {children ? <div className="text-sm text-muted-foreground">{children}</div> : null}
           {action ? <div className="pt-1">{action}</div> : null}
         </div>

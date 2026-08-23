@@ -50,34 +50,65 @@ and `app/(app)/applications/page.tsx`'s `APPLICATION_STATUS_TONE` for worked exa
 
 ## Typography
 
-Two type families, deliberately not one:
+**Updated by UI-V3-0 (2026-08-23). Newsreader is gone; the rules below supersede the
+previous "every heading is serif" arrangement.**
 
-- **`--font-sans` (Geist)** — everything functional: nav, buttons, form labels, table/list
-  content, badges. Unchanged from Chat 1.
-- **`--font-heading` (Newsreader, serif)** — wherever Oryn is making a statement *to* the
-  student rather than presenting UI chrome: page `<h1>`s (via `PageHeader`), the score
-  ring's number, dashboard/hero greetings, `CardTitle`, `DialogTitle`, empty-state
-  headlines, the landing hero. **`SectionHeader`** (in-page section dividers — "Your
-  focus this week", "Requirement check") stays sans-serif on purpose: it's structural,
-  not a statement, and a page with ten serif sub-headings stops feeling premium and
-  starts feeling like a wedding invitation. When in doubt, ask: *is this Oryn talking to
-  the student, or is this a UI label?*
+Two families, with a hard split by *role* rather than by heading level:
 
-  `CardTitle` already had a `font-heading` class before this pass (aliased to sans); it
-  now inherits the real serif. That's one token change quietly re-skinning every card
-  title in the product — verified this reads well at card-title sizes (14–18px) rather
-  than only at hero scale before relying on it everywhere.
+- **`--font-sans` (Geist)** — all product UI: nav, buttons, form labels, table/list
+  content, badges, **and card/dialog/sheet titles**.
+- **`--font-display` (Instrument Serif)** — only where Oryn is making a statement *to*
+  the student: page `<h1>`s (via `PageHeader`), the dashboard greeting, the score number,
+  an `InsightCard` headline, the acceptance moment, auth/onboarding titles.
 
-  **Sandbox caveat**: `next/font/google` fetches Newsreader from Google Fonts at
-  dev-server boot. In this sandbox that fetch is intermittently unreachable from the
-  `next dev` process specifically (not from the shell — `curl` to fonts.googleapis.com
-  succeeds every time; see `/docs/known-issues.md`), which throws a build-time "module
-  not found" until the dev server restarts clean (`rm -rf .next`, restart). Every
-  screenshot in this handoff was taken after a clean restart with the font loading
-  correctly. A real deployment (Vercel etc.) has stable outbound network access and
-  self-hosts the fetched font at build time same as Geist already does — this is a
-  sandbox-only flakiness, not a code issue, but worth knowing if Chat 3 sees a fallback
-  system-serif in a screenshot and wonders why.
+The question to ask is unchanged — *is this Oryn talking to the student, or is this a UI
+label?* — but the answer moved. Previously `CardTitle`, `DialogTitle` and `SheetTitle`
+inherited the serif, which meant a busy page rendered ten serif sub-headings and the face
+stopped signifying anything. Those are sans now.
+
+**Instrument Serif ships one weight (400).** This is the single most important thing to
+know before touching a `font-display` call site: pairing it with `font-medium` or
+`font-semibold` makes the browser synthesize a faux bold, which thickens and smears the
+high-contrast stems the face was chosen for. **Set size and tracking, never weight.** Every
+`font-display` site in the product is currently weight-class-free; keep it that way.
+
+`--font-heading` still resolves (aliased to the same face) so that a call site predating
+this pass degrades to the display face rather than an unstyled serif fallback. It has no
+remaining users — prefer `font-display` in anything new.
+
+## Color: the ink ramp
+
+`--foreground` / `--muted-foreground` alone forced a binary choice between "full black" and
+"secondary grey". Four steps now, all at hue 272 so text never drifts neutral-grey against
+the blue-black brand:
+
+```
+--ink-1   = --foreground        19.4:1 on white   headings, primary text
+--ink-2   oklch(0.34 0.012 272) 11.7:1            body prose that isn't a heading
+--ink-3   = --muted-foreground   5.1:1            secondary/supporting text (AA)
+--ink-4   oklch(0.64 0.012 272)  3.4:1            DECORATIVE ONLY
+```
+
+Each step is a real lightness stop, **not an opacity of the one above** — opacity-faded
+text over a tinted surface picks up the tint and stops being the color you specified.
+
+`--ink-4` is for eyebrows, hairlines, icon strokes and disabled affordances, and must never
+be the only thing carrying meaning: it clears WCAG's 3:1 non-text floor and nothing more.
+It was authored at 0.68, measured at 2.89:1, and darkened to 0.64 — measure, don't eyeball,
+if you add a step.
+
+## Surface levels
+
+Three levels, replacing "everything is a bordered white card":
+
+1. **Canvas** — `--background`, no token needed. The default. Most content belongs here.
+2. **Tint** — `bg-surface-tint`. Groups a section *without* drawing a box around it. This
+   is what most former cards should become.
+3. **Panel** — `bg-surface-panel` (= `--card`). Only for a genuinely contained interactive
+   module, where containment carries meaning.
+
+Before reaching for a border + radius + shadow, check whether whitespace and a type change
+already do the job. See the shape/radius rules below, which still apply to level 3.
 
 ## Motion (`lib/motion.ts`, `app/layout.tsx`)
 
@@ -148,6 +179,10 @@ one-off `<div className="rounded-xl border p-4">` copies:
   and applications.
 - **`SourceBadge`** — Phase 36. Source name, "checked N ago", optional
   `ConfidenceIndicator`, optional "View source" link.
+- **`MediaImage`** — the product's one image surface. Photo → logo → designed monogram,
+  each tier falling through on a failed load. The monogram tier is the point: "no broken
+  placeholders" must not be solved with generic stock imagery, which would imply we have a
+  picture of a thing we don't. Callers set aspect ratio via `className`.
 - **`EmptyState`** / **`ErrorState`** — every meaningful empty/degraded state in the
   product should use these rather than a bespoke `<p className="text-muted-foreground">`.
   `EmptyState` forces an icon + title + description shape, which makes the lazy "No
@@ -188,11 +223,18 @@ drift out of sync.
   keyboard/screen-reader-accessible alternative to the (aria-hidden, mouse-only) map —
   this was Chat 1's architecture already and it's correct; don't collapse it into "just
   hide the map on mobile and show nothing."
-- `MobileNav` (a `Sheet`) and the desktop `<aside>` render two separate `SidebarNav`
-  instances; each gets its own `layoutId` prefix (`idPrefix="desktop"` / `"mobile"`) for
-  the active-item sliding pill so Motion never tries to animate a shared `layoutId`
-  between two simultaneously-mounted trees (the desktop sidebar is `hidden` via CSS, not
-  unmounted, while the mobile sheet is open).
+- **The desktop sidebar is gone (UI-V3-0).** Navigation is a single top bar
+  (`features/app-shell/top-nav.tsx`) inside a 1360px header; page content sits in a
+  1200px column. `SidebarNav` and `CareerProfileBadge` were deleted — the score moved
+  into the account menu, and Documents/Settings moved there with it.
+- Mobile is a compact sticky header plus a fixed six-slot bottom bar
+  (`features/app-shell/mobile-nav.tsx`), not the desktop chrome at a smaller width. Two
+  things that bit during implementation and will bite again: clearance for the fixed bar
+  is **bottom padding on the content container**, never a spacer div inside `MobileNav`
+  (a spacer there renders beside the `<nav>`, i.e. at the *top* of the flow, adding a gap
+  under the header and clearing nothing); and a 62px bottom-bar column ellipsises anything
+  longer than ~9 characters, which is what `NavItem.shortLabel` exists for — the full
+  `label` stays as the link's accessible name via an `sr-only` span.
 - Verified at 375px (mobile) and native desktop width via the preview harness: landing
   page, university region-pill fallback, acceptance moment, dashboard hero. Not
   individually re-verified at 375px: every remaining authenticated page — they reuse the
