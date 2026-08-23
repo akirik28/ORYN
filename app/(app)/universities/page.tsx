@@ -424,12 +424,15 @@ export default async function UniversitiesPage({
             {scopeLabel ? `Filtered to ${scopeLabel}` : "Across all supported regions"} · {totalUniversities.toLocaleString("en-US")} universities total
           </p>
         </div>
-        <div className="flex gap-2">
-          <form className="flex gap-2" action="/universities" method="GET">
+        {/* At 375px all three controls fitted on one row *exactly*, so nothing wrapped and
+            the field was squeezed to 134px — "Search by un…". Giving the form the full row
+            on mobile pushes Filters onto its own line and leaves the input ~220px. */}
+        <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:flex-nowrap">
+          <form className="flex w-full min-w-0 gap-2 sm:w-auto" action="/universities" method="GET">
             {country ? <input type="hidden" name="country" value={country} /> : null}
             {region ? <input type="hidden" name="region" value={region.id} /> : null}
             <UniversitySearchBox defaultValue={q} country={country ?? null} />
-            <Button type="submit" variant="outline" size="sm">
+            <Button type="submit" variant="outline" size="sm" className="shrink-0">
               <Search className="size-3.5" /> Search
             </Button>
           </form>
