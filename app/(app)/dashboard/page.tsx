@@ -118,7 +118,16 @@ export default async function DashboardPage() {
   const opportunityMatches = matchesRes.data ?? [];
   const opportunityIds = opportunityMatches.map((m) => m.opportunity_id);
   const { data: matchedOpportunities } = opportunityIds.length
-    ? await supabase.from("opportunities").select("id, title, cycle_status, deadline, last_verified_at").in("id", opportunityIds)
+    ? await supabase
+        .from("opportunities")
+        // Both verification timestamps, deliberately. They record which pipeline generation
+        // wrote the row rather than anything about freshness, and isOpportunityRecommendable
+        // needs both to tell "no evidence at all" from "written by the other pipeline" — the
+        // distinction #143 got wrong. Omitting `verified_at` here would silently re-create that
+        // bug for this surface alone; OpportunityVerificationFacts requires it so that omitting
+        // it fails typecheck rather than quietly hiding opportunities from the homepage.
+        .select("id, title, cycle_status, deadline, last_verified_at, verified_at")
+        .in("id", opportunityIds)
     : { data: [] };
   // Defense in depth (lib/opportunities/lifecycle.ts): same stale-match-row risk as the
   // opportunities page's "For you" view — a match upserted before its cycle closed must not

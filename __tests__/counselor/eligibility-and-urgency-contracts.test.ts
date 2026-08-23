@@ -455,3 +455,90 @@ describe("Regression — never-verified, deadline-less opportunities never reach
     expect(result.notes.join(" ")).toMatch(/current cycle is closed/i);
   });
 });
+
+/**
+ * Regression (#143 follow-up) — the counselor must not exclude a row for pipeline lineage.
+ *
+ * The ranked top-3 is the highest-stakes surface: it feeds the dashboard's "this week" block,
+ * the advisor's priorities and lib/ai/weekly-plan.ts. #143 excluded 51 opportunities from it on
+ * the strength of `last_verified_at IS NULL` — which, measured live, records which pipeline
+ * generation wrote the row and nothing about verification. All 51 are `verified_current`,
+ * `source_confidence='high'`, and carry a `verified_at` from the preceding week.
+ *
+ * Exclusion (rather than Browse's demote-and-label) is retained for the case where it is
+ * warranted: inside a three-slot list, demotion is indistinguishable from exclusion for ranks
+ * 4+, and for ranks 1-3 it would still present an unevidenced row as a priority.
+ */
+describe("Regression — a legacy-generation opportunity reaches counselor recommendations", () => {
+  const referenceDate = new Date("2026-08-23T00:00:00Z");
+
+  function stateWith(opps: Opportunity[]): CounselorState {
+    return {
+      userId: "user-1",
+      advisor: {
+        student: { birthYear: 2009, country: "Turkey", citizenshipCountries: [], graduationYear: 2028 },
+        completenessPercent: 80,
+      } as unknown as CounselorState["advisor"],
+      dimensionScores: toDimensionScoreRows(DIMENSIONS.map((d) => ({ dimension: d, score: 60, confidence: "high" as const, reason_codes: [] }))),
+      completenessChecklist: [],
+      eligibleOpportunityMatches: opps.map((o) => ({ opportunity: o, match: match(o.id) })),
+      requirementCandidateInputs: [],
+    };
+  }
+
+  // The real live shape of the 51: verified through the 0041-era column only.
+  const legacyGeneration = {
+    deadline: null,
+    last_verified_at: null,
+    verified_at: "2026-08-18T00:00:00Z",
+    status: "active" as const,
+    verification_state: "verified_current" as const,
+    cycle_status: "upcoming" as const,
+    country_eligibility_confirmed_open: true,
+  };
+
+  test("it is eligible -- not excluded because an older column happens to be empty", () => {
+    const legacy = opportunity("ja-company-programme", legacyGeneration);
+    const state = stateWith([legacy]);
+
+    expect(evaluateCandidateEligibility(candidateFor(legacy, state), state, referenceDate).verdict).toBe("known_eligible");
+  });
+
+  test("it appears in rankCandidates output -- the 51 are back in the recommendable pool", () => {
+    const legacy = opportunity("ja-company-programme", legacyGeneration);
+    const state = stateWith([legacy]);
+
+    const ranked = rankCandidates(generateCandidateActions(state), [], state, referenceDate);
+    const ids = ranked.flatMap((r) => (r.candidate.source.kind === "opportunity" ? [r.candidate.source.opportunityId] : []));
+
+    expect(ids).toContain("ja-company-programme");
+  });
+
+  test("a rescued row is still excluded by a closed cycle or a passed deadline -- #140/#141 intact", () => {
+    const closed = opportunity("legacy-but-closed", { ...legacyGeneration, cycle_status: "closed" });
+    const closedState = stateWith([closed]);
+    const closedResult = evaluateCandidateEligibility(candidateFor(closed, closedState), closedState, referenceDate);
+    expect(closedResult.verdict).toBe("known_ineligible");
+    expect(closedResult.notes.join(" ")).toMatch(/current cycle is closed/i);
+
+    const expired = opportunity("legacy-but-expired", { ...legacyGeneration, cycle_status: "open", deadline: "2026-01-01" });
+    const expiredState = stateWith([expired]);
+    const expiredResult = evaluateCandidateEligibility(candidateFor(expired, expiredState), expiredState, referenceDate);
+    expect(expiredResult.verdict).toBe("known_ineligible");
+    expect(expiredResult.notes.join(" ")).toMatch(/deadline has passed/i);
+  });
+
+  test("a row with no verification evidence at all is still excluded, still worded truthfully", () => {
+    // The preserved half of #143 at the chokepoint where exclusion is warranted.
+    const noEvidence = opportunity("no-evidence-at-all", { ...legacyGeneration, verified_at: null });
+    const state = stateWith([noEvidence]);
+
+    const result = evaluateCandidateEligibility(candidateFor(noEvidence, state), state, referenceDate);
+    const note = result.notes.join(" ");
+
+    expect(result.verdict).toBe("known_ineligible");
+    expect(note).toMatch(/verif/i);
+    expect(note).not.toMatch(/closed|deadline has passed|no longer running/i);
+    expect(note).not.toMatch(/not eligible|ineligible|don't qualify/i);
+  });
+});

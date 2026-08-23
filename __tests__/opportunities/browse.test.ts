@@ -407,3 +407,62 @@ describe("browseOpportunities — a stored eligibility note and the verification
     expect(rows[0].eligibilityNotes).toMatch(/verif/i);
   });
 });
+
+/**
+ * Regression (#143 follow-up) — Browse must not caveat a row for pipeline lineage.
+ *
+ * 51 live rows had no `last_verified_at` purely because the 0041-era pipeline recorded into
+ * `verified_at` instead; all 51 are `verification_state='verified_current'` and
+ * `source_confidence='high'`. Browse demoted and badged every one of them "Needs verification",
+ * which told a student Oryn couldn't vouch for the most carefully researched records it has.
+ *
+ * The demote-and-label treatment itself is kept exactly as #143 shipped it — it is the right
+ * response to a genuine absence of evidence, and the wording below is still pinned. Only the
+ * signal that triggers it changed.
+ */
+describe("browseOpportunities — a legacy-generation row is neither demoted nor badged", () => {
+  const legacyGeneration = { cycle_status: "open" as const, deadline: null, last_verified_at: null, verified_at: "2026-08-18T00:00:00Z" };
+
+  test("verified through `verified_at` alone: not flagged, not caveated", async () => {
+    const supabase = makeSupabase({
+      opportunities: [opportunity("opp-legacy", legacyGeneration)],
+      opportunity_matches: [match({ opportunity_id: "opp-legacy", eligible: true, eligibility_notes: null, match_score: 82 })],
+    });
+
+    const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
+    expect(rows[0].needsVerification).toBe(false);
+    expect(rows[0].eligible).toBe(true);
+    expect(rows[0].eligibilityNotes).toBeNull();
+  });
+
+  test("it keeps its ranking -- no longer sorted below a lower-scoring row", async () => {
+    const supabase = makeSupabase({
+      opportunities: [
+        opportunity("opp-legacy", legacyGeneration),
+        opportunity("opp-confident", { cycle_status: "open", deadline: "2026-12-01", last_verified_at: "2026-08-20T00:00:00Z" }),
+      ],
+      opportunity_matches: [
+        match({ opportunity_id: "opp-legacy", match_score: 95 }),
+        match({ opportunity_id: "opp-confident", match_score: 40 }),
+      ],
+    });
+
+    const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
+    expect(rows.map((r) => r.opportunity.id)).toEqual(["opp-legacy", "opp-confident"]);
+  });
+
+  test("a row with no evidence at all is still demoted and still badged truthfully", async () => {
+    // The preserved half: #143's product language and treatment are intact where the gate
+    // genuinely applies. Never "closed", never "not eligible".
+    const supabase = makeSupabase({
+      opportunities: [opportunity("opp-no-evidence", { cycle_status: "upcoming", deadline: null, last_verified_at: null, verified_at: null })],
+      opportunity_matches: [match({ opportunity_id: "opp-no-evidence", eligible: true, eligibility_notes: null, match_score: 82 })],
+    });
+
+    const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
+    expect(rows[0].needsVerification).toBe(true);
+    expect(rows[0].eligible).toBe(true);
+    expect(rows[0].eligibilityNotes).toMatch(/verif/i);
+    expect(rows[0].eligibilityNotes ?? "").not.toMatch(/not eligible|ineligible|closed/i);
+  });
+});

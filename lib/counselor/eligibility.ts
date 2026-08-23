@@ -70,12 +70,17 @@ function evaluateOpportunityEligibility(
   // priorities, and lib/ai/weekly-plan.ts — which hands these to the model described as
   // verified, eligible candidate actions. Demoting inside a three-slot list is
   // indistinguishable from exclusion for ranks 4+, and for ranks 1-3 it would still present an
-  // unevidenced row as a priority. Measured 2026-08-23: per-user candidate pools drop from
-  // 91-105 to 49-62, so no student comes near the three-recommendation floor.
+  // unevidenced row as a priority. Exclusion stays the right severity HERE; the demote-and-label
+  // treatment stays right on Browse, which has somewhere to put a caveat.
   //
-  // Note the check above this one reads `verification_state`, which is NOT sufficient: all 50
-  // live rows in this shape carry verification_state = 'verified_current' while
-  // last_verified_at is null. The enum claims a verification the timestamp says never happened.
+  // What this no longer does is fire on pipeline lineage. It first shipped keyed on
+  // `last_verified_at IS NULL`, described as "never verified" — but `opportunities` carries two
+  // verification timestamps, no row has both null, and the 51 rows excluded here were the
+  // highest-provenance records in the catalogue (all `verified_current`, all high confidence,
+  // all with a `verified_at` from the preceding week). The gate now requires the absence of
+  // BOTH, which is the honest reading and which excludes zero rows today. See the extended
+  // discussion in lib/opportunities/lifecycle.ts — including why `verified_at` is used only as
+  // a floor against total absence of evidence and never as a freshness measurement.
   if (!isOpportunitySufficientlyVerified(opportunity, referenceDate)) {
     return { verdict: "known_ineligible", notes: [INSUFFICIENT_VERIFICATION_REASON] };
   }
