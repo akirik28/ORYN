@@ -5,6 +5,7 @@ import { z } from "zod";
 import { env } from "@/lib/env";
 import {
   AIProviderNotConfiguredError,
+  AIResponseIncompleteError,
   type AIProvider,
   type AIRequest,
   type AIStructuredRequest,
@@ -12,7 +13,20 @@ import {
   type AITextResult,
 } from "./provider";
 
-const DEFAULT_MAX_TOKENS = 2048;
+/**
+ * `max_tokens` is a ceiling, not a reservation — an unused budget costs nothing, while too
+ * small a budget is a hard failure. Current Claude models run adaptive thinking when a
+ * request omits a `thinking` parameter (as every call here does), and thinking is drawn
+ * from this same budget, so the floor has to clear the model's reasoning before any of it
+ * is available for the answer.
+ *
+ * Raised from 2048 after the 2026-08-23 advisor benchmark: on a rich student profile that
+ * value produced *truncated* text (1736 thinking tokens, stop_reason max_tokens), so it was
+ * already below the working floor for a thinking model. Every current caller passes an
+ * explicit maxTokens, so this only governs future ones — and it should not hand them a
+ * value already measured as insufficient.
+ */
+const DEFAULT_MAX_TOKENS = 8192;
 
 function getClient(): Anthropic {
   if (!env.anthropic.apiKey) {
@@ -67,15 +81,18 @@ export class AnthropicProvider implements AIProvider {
       messages: buildMessages(request),
     });
 
+    const usage = { inputTokens: message.usage.input_tokens, outputTokens: message.usage.output_tokens };
+
+    // Note `.find` rather than `content[0]`: on a thinking model the text block is not
+    // first — a thinking block precedes it — so the answer must be located by type.
     const textBlock = message.content.find((block) => block.type === "text");
     if (!textBlock || textBlock.type !== "text") {
-      throw new Error("Anthropic response contained no text content.");
+      // Carries stop_reason and usage so the caller can distinguish an exhausted budget
+      // from a real API failure, and can still record tokens this turn actually burned.
+      throw new AIResponseIncompleteError({ stopReason: message.stop_reason, usage });
     }
 
-    return {
-      text: textBlock.text,
-      usage: { inputTokens: message.usage.input_tokens, outputTokens: message.usage.output_tokens },
-    };
+    return { text: textBlock.text, usage };
   }
 
   async generateStructured<T>(request: AIStructuredRequest<T>): Promise<AIStructuredResult<T>> {
