@@ -14,6 +14,7 @@ function opportunityRec(overrides: Partial<CounselorRecommendation> = {}): Couns
     urgency: "medium",
     deadline: null,
     costOnFile: null,
+    applicationRequirements: [],
     eligibility: { verdict: "known_eligible", notes: [] },
     confidence: "medium",
     evidence: [{ sourceType: "opportunity", sourceId: "opp-1", sourceUrl: "https://example.com", verificationState: "verified_current" }],
@@ -55,6 +56,18 @@ describe("formatOpportunityContext", () => {
   test("a free or unpriced opportunity adds no fee line", () => {
     expect(formatOpportunityContext([opportunityRec({ costOnFile: 0 })])).not.toContain("HAS A FEE");
     expect(formatOpportunityContext([opportunityRec({ costOnFile: null })])).not.toContain("HAS A FEE");
+  });
+
+  test("an application requirement reaches the prompt — the advisor must know a team competition needs teammates before it recommends one", () => {
+    const text = formatOpportunityContext([
+      opportunityRec({ title: "Wharton Investment Competition", applicationRequirements: ["Team of 4 to 6 students plus a teacher advisor"] }),
+    ]);
+    expect(text).toContain("ENTRY REQUIRES");
+    expect(text).toContain("Team of 4 to 6 students");
+  });
+
+  test("no requirements on file adds no ENTRY REQUIRES line", () => {
+    expect(formatOpportunityContext([opportunityRec({ applicationRequirements: [] })])).not.toContain("ENTRY REQUIRES");
   });
 
   test("filters out non-opportunity recommendations (requirement_action, profile_task) — only the catalogue enters this context", () => {

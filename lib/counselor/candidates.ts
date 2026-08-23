@@ -21,6 +21,7 @@ function opportunityCandidates(state: CounselorState): CandidateAction[] {
     sourceUrl: opportunity.official_url ?? opportunity.source_url,
     deadline: opportunity.deadline ? { date: opportunity.deadline, sourceLabel: opportunity.title } : null,
     costOnFile: opportunity.cost,
+    applicationRequirements: opportunity.application_requirements,
   }));
 }
 
@@ -43,6 +44,7 @@ function requirementCandidates(state: CounselorState): CandidateAction[] {
         sourceUrl: input.requirement.source_url,
         deadline: null,
         costOnFile: null,
+        applicationRequirements: [],
       };
     });
 }
@@ -59,6 +61,7 @@ function profileTaskCandidates(state: CounselorState): CandidateAction[] {
       sourceUrl: null,
       deadline: null,
       costOnFile: null,
+      applicationRequirements: [],
     }));
 }
 
