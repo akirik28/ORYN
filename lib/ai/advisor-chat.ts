@@ -4,6 +4,7 @@ import { getAIProvider } from "./index";
 import { withUsageLogging } from "./usage";
 import { ADVISOR_SYSTEM_PROMPT } from "./advisor-prompt";
 import { buildStudentAdvisorContext, formatContextForPrompt } from "./student-context";
+import { buildOpportunityContextText } from "./opportunity-context";
 import type { AIMessage } from "./provider";
 
 export async function generateAdvisorReply(params: {
@@ -12,9 +13,10 @@ export async function generateAdvisorReply(params: {
   newMessage: string;
 }): Promise<string> {
   const context = await buildStudentAdvisorContext(params.userId);
+  const opportunityContext = await buildOpportunityContextText(params.userId);
   const provider = getAIProvider();
 
-  const system = `${ADVISOR_SYSTEM_PROMPT}\n\nCurrent student context:\n${formatContextForPrompt(context)}`;
+  const system = `${ADVISOR_SYSTEM_PROMPT}\n\nCurrent student context:\n${formatContextForPrompt(context)}${opportunityContext}`;
 
   const result = await withUsageLogging({ userId: params.userId, feature: "advisor_chat" }, () =>
     provider.generateText({
