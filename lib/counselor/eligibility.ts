@@ -1,22 +1,10 @@
-import { isOpportunityActionable, NON_ACTIONABLE_OPPORTUNITY_CYCLE_STATUSES } from "@/lib/opportunities/lifecycle";
+import { isOpportunityActionable, nonActionableOpportunityReason } from "@/lib/opportunities/lifecycle";
 import { isSameCountry } from "@/lib/opportunities/matching";
 import { currentGradeLevel, gradeMatchesEligibility } from "@/lib/profile/grade-level";
-import type { Opportunity } from "@/types/database";
 import type { CandidateAction, CounselorState, EligibilityResult, EligibilityVerdict } from "./types";
 
 function matchesAnyKnownCountry(known: readonly string[], allowed: readonly string[]): boolean {
   return known.some((k) => allowed.some((a) => isSameCountry(k, a)));
-}
-
-/** The two ways isOpportunityActionable returns false need different wording — a row whose
- * cycle_status is still e.g. "open" or "date_not_announced" but whose deadline has quietly
- * passed must never be described by its cycle status, which would tell the student nothing
- * about why they can't act on it. Mirrors lib/opportunities/browse.ts's identical split. */
-function nonActionableReason(opportunity: Pick<Opportunity, "cycle_status" | "deadline">): string {
-  if (NON_ACTIONABLE_OPPORTUNITY_CYCLE_STATUSES.has(opportunity.cycle_status)) {
-    return `This opportunity's current cycle is ${opportunity.cycle_status.replace(/_/g, " ")}.`;
-  }
-  return "This opportunity's application deadline has passed.";
 }
 
 /**
@@ -62,7 +50,7 @@ function evaluateOpportunityEligibility(
   // next action no student could take. Read-time by design — it self-heals the moment
   // ingestion refreshes `deadline` to a real next-cycle date, with no write or backfill.
   if (!isOpportunityActionable(opportunity, referenceDate)) {
-    return { verdict: "known_ineligible", notes: [nonActionableReason(opportunity)] };
+    return { verdict: "known_ineligible", notes: [nonActionableOpportunityReason(opportunity)] };
   }
 
   const notes: string[] = [];

@@ -61,6 +61,72 @@ export function isOpportunityActionable(
 }
 
 /**
+ * Why the two ways `isOpportunityActionable` returns false need different wording, and why the
+ * split is not cosmetic: a row whose `cycle_status` is still a legitimately-actionable value
+ * ("open", "date_not_announced") but whose deadline has quietly passed must never be explained
+ * by its cycle status, which would tell the student nothing about why they can't act. Live
+ * example (2026-08-23), GENIUS Olympiad: `cycle_status='date_not_announced'` with a deadline
+ * five months gone — "next dates not announced" is perfectly true and completely beside the
+ * point.
+ *
+ * One shared implementation on purpose. lib/opportunities/browse.ts and lib/counselor/
+ * eligibility.ts each carried a byte-identical private copy of this, and a duplicated
+ * lifecycle rule drifting out of sync between those same two files is exactly what #140 had to
+ * fix (eligibility.ts kept its own cycle-only `INACTIVE_CYCLE_STATUSES` and never learned the
+ * deadline half of the rule).
+ */
+export function nonActionableOpportunityReason(opportunity: Pick<Opportunity, "cycle_status" | "deadline">): string {
+  if (NON_ACTIONABLE_OPPORTUNITY_CYCLE_STATUSES.has(opportunity.cycle_status)) {
+    return `This opportunity's current cycle is ${opportunity.cycle_status.replace(/_/g, " ")}.`;
+  }
+  return "This opportunity's application deadline has passed.";
+}
+
+export interface StoredEligibility {
+  eligible: boolean;
+  notes: string | null;
+}
+
+export interface ResolvedEligibility extends StoredEligibility {
+  /**
+   * True when `eligible` is false *only* because the opportunity isn't actionable right now.
+   * That's a fact about the opportunity's cycle, not about this student, and surfaces need to
+   * tell the two apart: rendering a closed cycle as "Not eligible" wrongly informs a student
+   * they don't qualify for something nobody can currently apply to.
+   */
+  notActionable: boolean;
+}
+
+/**
+ * Re-applies the lifecycle gate to an eligibility verdict that was computed earlier and read
+ * back from `opportunity_matches`.
+ *
+ * A stored match row is a snapshot, and refreshOpportunityMatches deliberately never deletes
+ * one when its opportunity later stops being actionable (lib/opportunities/persist-matches.ts
+ * documents that choice) — it simply stops computing new ones. So `eligible: true` written
+ * before a cycle closed survives indefinitely, and any surface that trusts the column verbatim
+ * presents a closed or past-deadline opportunity as a live match. Verified live 2026-08-23: 74
+ * distinct opportunities across 259 (student, opportunity) pairs carried exactly that stale
+ * flag.
+ *
+ * Read-time by design, matching this module's whole approach: nothing is written or backfilled,
+ * and the gate stops firing on its own the moment ingestion refreshes `deadline` to a genuine
+ * next-cycle date. Note this only ever *removes* an eligibility claim — an actionable
+ * opportunity's stored verdict, in either direction, is passed through untouched, so a real
+ * per-student mismatch is never overwritten with a cheerier answer.
+ */
+export function resolveStoredEligibility(
+  opportunity: Pick<Opportunity, "cycle_status" | "deadline">,
+  stored: StoredEligibility,
+  referenceDate: Date = new Date()
+): ResolvedEligibility {
+  if (isOpportunityActionable(opportunity, referenceDate)) {
+    return { ...stored, notActionable: false };
+  }
+  return { eligible: false, notes: nonActionableOpportunityReason(opportunity), notActionable: true };
+}
+
+/**
  * Write-time derivation for a backfill/maintenance pass (scripts/derive-opportunity-cycle-
  * status.ts) — never called from a request path. Returns the `cycle_status` a row should have
  * once its deadline has passed with no newer one on file, or `null` when no change is

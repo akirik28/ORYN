@@ -66,6 +66,7 @@ export function OpportunityCard({
   initialStatus,
   eligible = true,
   eligibilityNotes = null,
+  notActionable = false,
 }: {
   opportunity: Opportunity;
   matchScore: number;
@@ -77,6 +78,11 @@ export function OpportunityCard({
    * today isn't a defect in the opportunity. */
   eligible?: boolean;
   eligibilityNotes?: string | null;
+  /** Set when `eligible` is false purely because this cycle is closed or its deadline has
+   * passed — true of everyone, not of this student. Keeps the card from telling a 16-year-old
+   * they don't qualify for something nobody can currently apply to. Defaults false, so the
+   * "For you" call site (which pre-filters to actionable) is unaffected. */
+  notActionable?: boolean;
 }) {
   const [status, setStatus] = useState(initialStatus);
   const [isPending, startTransition] = useTransition();
@@ -110,7 +116,7 @@ export function OpportunityCard({
             {eligible ? (
               <StatusBadge label={tier.label} tone={tier.tone} icon={Sparkles} />
             ) : (
-              <StatusBadge label="Not eligible" tone="neutral" />
+              <StatusBadge label={notActionable ? "Not open right now" : "Not eligible"} tone="neutral" />
             )}
             {/* Eligible-but-unverified is not the same claim as eligible-and-confirmed — a
                 restriction exists but Oryn is missing the fact needed to check it (see

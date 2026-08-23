@@ -134,6 +134,98 @@ describe("browseOpportunities — pinned current behavior", () => {
   });
 });
 
+/**
+ * A stored opportunity_matches row is a snapshot of an eligibility answer computed at some
+ * earlier moment, and lib/opportunities/persist-matches.ts deliberately never deletes one when
+ * the opportunity later stops being actionable. Browse therefore has to re-apply the lifecycle
+ * gate at read time to whatever the row says, exactly as the no-match branch below already
+ * does — otherwise a cycle that closed (or a deadline that passed) after the row was written
+ * keeps rendering as a live, eligible match.
+ */
+describe("browseOpportunities — stale match row on a non-actionable opportunity", () => {
+  test("a match row saying eligible: true does not survive its opportunity's cycle closing", async () => {
+    const supabase = makeSupabase({
+      opportunities: [opportunity("opp-closed", { cycle_status: "closed" })],
+      opportunity_matches: [match({ opportunity_id: "opp-closed", eligible: true, eligibility_notes: null, match_score: 77 })],
+    });
+
+    const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
+
+    expect(rows[0].eligible).toBe(false);
+    expect(rows[0].eligibilityNotes).toMatch(/current cycle is closed/i);
+  });
+
+  // The live worst case (2026-08-23): opportunity 27274e04-50f4-4e82-9b7e-c5dbaace4bbe,
+  // "GENIUS Olympiad" — cycle_status 'date_not_announced' with a deadline five months gone,
+  // carrying eligible = true in opportunity_matches. It rendered as "Strong match" with no
+  // closure signal at all: the cycle badge said "Next dates not announced" (true, and entirely
+  // beside the point) and the deadline badge is suppressed for a negative days-until. The note
+  // must name the passed deadline, never the cycle status, which here would tell the student
+  // nothing about why they can't act.
+  test("a stale eligible row on a past-deadline opportunity is caught even when cycle_status is still a legitimately-actionable value", async () => {
+    const supabase = makeSupabase({
+      opportunities: [opportunity("opp-genius", { cycle_status: "date_not_announced", deadline: "2026-03-07" })],
+      opportunity_matches: [match({ opportunity_id: "opp-genius", eligible: true, eligibility_notes: null, match_score: 68 })],
+    });
+
+    const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
+
+    expect(rows[0].eligible).toBe(false);
+    expect(rows[0].eligibilityNotes).toMatch(/deadline has passed/i);
+    expect(rows[0].eligibilityNotes).not.toMatch(/date not announced/i);
+  });
+
+  test("a stale row's own eligibility note is replaced by the lifecycle reason, not shown alongside a false eligible: true", async () => {
+    const supabase = makeSupabase({
+      opportunities: [opportunity("opp-historical", { cycle_status: "historical" })],
+      opportunity_matches: [
+        match({ opportunity_id: "opp-historical", eligible: true, eligibility_notes: "Restricted by country — add your country to check." }),
+      ],
+    });
+
+    const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
+
+    expect(rows[0].eligible).toBe(false);
+    expect(rows[0].eligibilityNotes).toMatch(/current cycle is historical/i);
+  });
+
+  test("a match row saying eligible: false on a non-actionable opportunity stays ineligible", async () => {
+    const supabase = makeSupabase({
+      opportunities: [opportunity("opp-discontinued", { cycle_status: "discontinued" })],
+      opportunity_matches: [match({ opportunity_id: "opp-discontinued", eligible: false, eligibility_notes: "Not currently open to students in Turkey." })],
+    });
+
+    const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
+
+    expect(rows[0].eligible).toBe(false);
+    expect(rows[0].eligibilityNotes).toMatch(/current cycle is discontinued/i);
+  });
+
+  // The guard must not over-fire: an opportunity that is still actionable keeps whatever the
+  // stored row computed, including a genuine eligible: false for a real per-student mismatch.
+  test("an actionable opportunity's stored verdict is passed through untouched, in both directions", async () => {
+    const supabase = makeSupabase({
+      opportunities: [
+        opportunity("opp-open-eligible", { cycle_status: "open", deadline: "2099-01-01" }),
+        opportunity("opp-open-ineligible", { cycle_status: "upcoming", deadline: null }),
+      ],
+      opportunity_matches: [
+        match({ id: "m1", opportunity_id: "opp-open-eligible", eligible: true, eligibility_notes: null, match_score: 90 }),
+        match({ id: "m2", opportunity_id: "opp-open-ineligible", eligible: false, eligibility_notes: "Not currently open to students in Turkey.", match_score: 10 }),
+      ],
+    });
+
+    const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
+    const open = rows.find((r) => r.opportunity.id === "opp-open-eligible")!;
+    const ineligible = rows.find((r) => r.opportunity.id === "opp-open-ineligible")!;
+
+    expect(open.eligible).toBe(true);
+    expect(open.eligibilityNotes).toBeNull();
+    expect(ineligible.eligible).toBe(false);
+    expect(ineligible.eligibilityNotes).toBe("Not currently open to students in Turkey.");
+  });
+});
+
 describe("browseOpportunities — missing match row (Package 8 fix)", () => {
   test("a closed-cycle opportunity with no match row is never defaulted to eligible: true", async () => {
     const supabase = makeSupabase({

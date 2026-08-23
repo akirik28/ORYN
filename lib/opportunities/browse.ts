@@ -3,18 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Opportunity, OpportunityCategory } from "@/types/database";
 import { canonicalCountryKey, isSameCountry } from "./matching";
-import { isOpportunityActionable, NON_ACTIONABLE_OPPORTUNITY_CYCLE_STATUSES } from "./lifecycle";
-
-/** Package 8: the two ways isOpportunityActionable returns false need different wording — a
- * row whose cycle_status is still e.g. "open" but whose deadline has quietly passed must
- * never be described as "current cycle is open", which would flatly contradict the
- * eligible: false this same branch sets right alongside it. */
-function nonActionableEligibilityNote(opportunity: Pick<Opportunity, "cycle_status" | "deadline">): string {
-  if (NON_ACTIONABLE_OPPORTUNITY_CYCLE_STATUSES.has(opportunity.cycle_status)) {
-    return `This opportunity's current cycle is ${opportunity.cycle_status.replace(/_/g, " ")}.`;
-  }
-  return "This opportunity's application deadline has passed.";
-}
+import { resolveStoredEligibility } from "./lifecycle";
 
 export interface OpportunityBrowseFilters {
   q?: string;
@@ -30,6 +19,9 @@ export interface OpportunityBrowseRow {
   matchScore: number;
   eligible: boolean;
   eligibilityNotes: string | null;
+  /** Distinguishes "this cycle isn't open" from "you don't qualify" — see ResolvedEligibility
+   * in lib/opportunities/lifecycle.ts for why the card must not conflate the two. */
+  notActionable: boolean;
   reasonCodes: string[];
 }
 
@@ -101,41 +93,44 @@ export async function browseOpportunities(
 
   const rows: OpportunityBrowseRow[] = opportunities.map((opportunity) => {
     const match = matchByOpportunityId.get(opportunity.id);
-    if (match) {
-      return {
-        opportunity,
-        matchScore: match.match_score,
-        eligible: match.eligible,
-        eligibilityNotes: match.eligibility_notes,
-        reasonCodes: (match.reason_codes as string[] | null) ?? [],
-      };
-    }
 
-    // Package 8 fix: no opportunity_matches row exists for this student/opportunity pair.
-    // The previous fallback (eligible: true, notes: null) asserted a confirmed match that
-    // was never actually computed — "absence of a computed answer" rendering as "eligible,
-    // no restrictions" is exactly the failure this product can't afford (AGENTS.md Phase 68).
-    // A missing row has one of two causes, and they're different facts:
-    //  - the opportunity isn't currently actionable (cycle_status closed/historical/
-    //    discontinued, or its deadline has passed) — refreshOpportunityMatches deliberately
-    //    never computes a match for these (lib/opportunities/lifecycle.ts), so no future
-    //    refresh creates one either. This is a KNOWN fact already on the row, matching
-    //    lib/counselor/eligibility.ts's own classification of the identical case as
-    //    known_ineligible, not "unknown".
-    //  - the match genuinely hasn't been computed yet (e.g. refreshOpportunityMatches
-    //    couldn't run this render — SUPABASE_SECRET_KEY unset, see its own docstring).
-    //    Verified against oryn-qa-scratch (2026-08-22): 0 of 271 active opportunities hit
-    //    this case for a student who has loaded the page at least once — the live gap
-    //    (72 rows) is entirely the first case — but the code must not assume that stays true.
-    const actionable = isOpportunityActionable(opportunity);
+    // Both branches below run through the same read-time lifecycle gate, because both can
+    // assert eligibility that the opportunity's own current state contradicts:
+    //
+    //  - A STORED row (Package 9 fix). Its `eligible` was computed at some earlier moment and
+    //    refreshOpportunityMatches deliberately never deletes it once the opportunity stops
+    //    being actionable (lib/opportunities/persist-matches.ts), so `eligible: true` written
+    //    before a cycle closed simply persists. Reading it verbatim is what let a closed or
+    //    long-past-deadline opportunity render as a "Strong match" — 74 opportunities across
+    //    259 pairs live on 2026-08-23. This branch previously had no lifecycle check at all
+    //    while the no-match branch below did, which is precisely why the stale flag won.
+    //
+    //  - A MISSING row (Package 8 fix). The original fallback (eligible: true, notes: null)
+    //    asserted a confirmed match that was never computed — "absence of a computed answer"
+    //    rendering as "eligible, no restrictions" is the failure this product can't afford
+    //    (AGENTS.md Phase 68). A missing row has two causes: the opportunity isn't actionable
+    //    (refreshOpportunityMatches never computes a match for these, so no future refresh
+    //    creates one either — a KNOWN fact, matching lib/counselor/eligibility.ts's own
+    //    known_ineligible classification), or the match genuinely hasn't been computed yet
+    //    (e.g. the admin client was unavailable this render — see refreshOpportunityMatches's
+    //    docstring). Verified against oryn-qa-scratch (2026-08-22): 0 of 271 active
+    //    opportunities hit the second case for a student who has loaded the page at least
+    //    once, but the code must not assume that stays true.
+    //
+    // Expressing both through resolveStoredEligibility keeps one lifecycle rule in this file
+    // rather than two that can drift — the drift that caused this bug and #140's.
+    const stored = match
+      ? { eligible: match.eligible, notes: match.eligibility_notes }
+      : { eligible: true, notes: "Eligibility hasn't been checked for this opportunity yet." };
+    const { eligible, notes, notActionable } = resolveStoredEligibility(opportunity, stored);
+
     return {
       opportunity,
-      matchScore: 0,
-      eligible: actionable,
-      eligibilityNotes: actionable
-        ? "Eligibility hasn't been checked for this opportunity yet."
-        : nonActionableEligibilityNote(opportunity),
-      reasonCodes: [],
+      matchScore: match?.match_score ?? 0,
+      eligible,
+      eligibilityNotes: notes,
+      notActionable,
+      reasonCodes: (match?.reason_codes as string[] | null) ?? [],
     };
   });
 
