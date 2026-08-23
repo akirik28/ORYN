@@ -125,9 +125,22 @@ export async function getCounselorState(userId: string): Promise<CounselorState>
 
   const matches: OpportunityMatch[] = matchesRes.data ?? [];
   const opportunityIds = [...new Set(matches.map((m) => m.opportunity_id))];
+  // `status` must be re-checked here, not only `verification_state`. refreshOpportunityMatches
+  // recomputes over `status = 'active'` rows only (persist-matches.ts) but never deletes match
+  // rows for an opportunity that has since left active, so an `eligible = true` row outlives the
+  // moderation decision that was supposed to retire it. Counselor Core is the third reader of
+  // opportunity_matches and the only one that lacked the defensive re-filter persist-matches.ts
+  // documents; without this, pulling a record to `under_review` silently fails to stop it being
+  // recommended (live 2026-08-23: Wharton Hack-AI-thon, under_review + verified_current, still
+  // matched eligible for all 7 users).
   const { data: opportunities } =
     opportunityIds.length > 0
-      ? await supabase.from("opportunities").select("*").in("id", opportunityIds).eq("verification_state", "verified_current")
+      ? await supabase
+          .from("opportunities")
+          .select("*")
+          .in("id", opportunityIds)
+          .eq("status", "active")
+          .eq("verification_state", "verified_current")
       : { data: [] as Opportunity[] };
   const opportunityById = new Map((opportunities ?? []).map((o) => [o.id, o]));
 
