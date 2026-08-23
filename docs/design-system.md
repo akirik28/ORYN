@@ -147,9 +147,16 @@ stands back from the page), `module-evidence` and `module-action` (warm — a fa
 directive sit in it), and `module-recommendation` (the only one carrying brand indigo,
 which is exactly why indigo stays rare everywhere else). Backgrounds only, never text.
 
-The warm sand/clay accents (`accent-sand`, `accent-clay`) are for a *selectively*
-important recommendation. Founder direction: they must not become the dominant surface. If
-two recommendation surfaces are visible on one screen, one of them is wrong.
+**Only `module-recommendation` is in use today** (`NextMove`'s `surface`, on Home's hero and
+the opportunity detail's "Oryn's take"). `module-insight`, `module-evidence`,
+`module-action` and the warm `accent-sand`/`accent-clay` accents are defined and unused —
+they exist so the four utterance types have somewhere consistent to land as later surfaces
+adopt the language, in the same spirit as the fully-defined-but-unused `.dark` block.
+Don't read their presence as evidence the system is already applied.
+
+Founder direction on the accents: they may carry a *selectively* important recommendation
+but must not become the dominant surface. If two recommendation surfaces are visible on one
+screen, one of them is wrong — which is why `surface` lives on exactly one component.
 
 ## Motion (`lib/motion.ts`, `app/layout.tsx`)
 
