@@ -6,14 +6,23 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/oryn/empty-state";
+import { spanLabel } from "@/lib/profile/journey";
 import { PORTFOLIO_CATEGORY_LABELS, type PortfolioCategory, type PortfolioItem } from "@/lib/portfolio/types";
 
 /** Student's own words only — bullets come straight from `description`/`meta` already on
  * the record (the same fields Profile's "Improve with AI" already helps sharpen). No AI
  * call happens here: this view organizes and formats existing facts, never invents new
  * ones, matching the founder's own "AI improves wording, never invents facts" CV principle. */
+// Shares the Journey timeline's formatter rather than joining raw column values: this
+// was printing "2025-09-01 – Present" into a document students hand to people. spanLabel
+// is also timezone-safe, which a naive `new Date(...)` here would not have been.
 function dateRange(item: PortfolioItem) {
-  return [item.startDate, item.ongoing ? "Present" : item.endDate].filter(Boolean).join(" – ");
+  return spanLabel({
+    start: item.startDate,
+    end: item.endDate,
+    ongoing: item.ongoing,
+    ongoingLabel: "Present",
+  });
 }
 
 export function CVBuilder({

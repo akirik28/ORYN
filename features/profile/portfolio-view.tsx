@@ -1,13 +1,20 @@
 "use client";
 
 import { FolderOpen } from "lucide-react";
+import { spanLabel } from "@/lib/profile/journey";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/oryn/empty-state";
 import { PORTFOLIO_CATEGORY_LABELS, type PortfolioItem, type PortfolioCategory } from "@/lib/portfolio/types";
 
 function ItemCard({ item }: { item: PortfolioItem }) {
-  const dateRange = [item.startDate, item.ongoing ? "Present" : item.endDate].filter(Boolean).join(" — ");
+  // Same formatter as the CV and the Journey timeline — see cv-builder's note.
+  const dateRange = spanLabel({
+    start: item.startDate,
+    end: item.endDate,
+    ongoing: item.ongoing,
+    ongoingLabel: "Present",
+  });
   return (
     <div className="space-y-1 rounded-xl border p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">

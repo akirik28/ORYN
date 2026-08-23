@@ -116,13 +116,16 @@ export function spanLabel({
   start,
   end,
   ongoing,
+  ongoingLabel = "now",
 }: {
   start: string | null;
   end: string | null;
   ongoing: boolean;
+  /** "now" reads naturally in the product; a CV or portfolio wants "Present". */
+  ongoingLabel?: string;
 }): string | null {
   const from = start ? formatMonthYear(start) : null;
-  if (ongoing) return from ? `${from} — now` : "Ongoing";
+  if (ongoing) return from ? `${from} — ${ongoingLabel}` : ongoingLabel === "now" ? "Ongoing" : ongoingLabel;
   const to = end ? formatMonthYear(end) : null;
   if (from && to) return from === to ? from : `${from} — ${to}`;
   return from ?? to;

@@ -152,3 +152,24 @@ describe("groupJourneyByYear", () => {
     expect(groupJourneyByYear([])).toEqual([]);
   });
 });
+
+describe("spanLabel ongoingLabel", () => {
+  // The CV and portfolio are documents a student hands to people, where "Present" is the
+  // convention; the product UI reads better as "now".
+  test("a CV-style span says Present", () => {
+    expect(spanLabel({ start: "2025-09-01", end: null, ongoing: true, ongoingLabel: "Present" })).toBe(
+      "Sep 2025 — Present",
+    );
+  });
+
+  test("an undated ongoing record still says something useful in each register", () => {
+    expect(spanLabel({ start: null, end: null, ongoing: true })).toBe("Ongoing");
+    expect(spanLabel({ start: null, end: null, ongoing: true, ongoingLabel: "Present" })).toBe("Present");
+  });
+
+  test("ongoingLabel does not leak into closed spans", () => {
+    expect(spanLabel({ start: "2024-09-01", end: "2025-06-30", ongoing: false, ongoingLabel: "Present" })).toBe(
+      "Sep 2024 — Jun 2025",
+    );
+  });
+});
