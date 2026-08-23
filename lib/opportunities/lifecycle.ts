@@ -34,15 +34,21 @@ export const NON_ACTIONABLE_OPPORTUNITY_CYCLE_STATUSES = new Set<Opportunity["cy
  * rather than a write that mutates `status`: it self-heals the moment ingestion refreshes
  * `deadline` to a genuine next-cycle date, with no separate "reactivate" step needed.
  *
- * What this function cannot do: an opportunity can be closed with a *null* deadline. Confirmed
- * live: Stanford Anesthesia Summer Institute is `active`, `cycle_status='upcoming'`,
- * `deadline` null, while its own page says all three 2026 tracks are "APPLICATIONS NOW
- * CLOSED." No date-only rule can catch that — it requires either a researcher reading the
- * source page, or a scheduled re-verification job that re-fetches `source_url` and checks for
- * closure language (AGENTS.md Phase 30's "Job B: Upcoming deadline validation" / "Job E: Stale
- * data detection" describe exactly this; neither is built yet). The same live pass found 100
- * `active` rows with a null deadline and `cycle_status='unverified'` — genuinely undetectable
- * from stored data alone, not a gap this function can close.
+ * What this function cannot do: an opportunity can be closed with a *null* deadline. The
+ * canonical example was Stanford Anesthesia Summer Institute — `active`,
+ * `cycle_status='upcoming'`, `deadline` null, while its own page said all three 2026 tracks were
+ * "APPLICATIONS NOW CLOSED." As of 2026-08-23 that row is correctly `cycle_status='closed'`: a
+ * researcher read the page and fixed it, which is exactly the manual labour that does not scale
+ * to 272 active rows. No date-only rule can catch the shape — it requires either a researcher
+ * reading the source page, or a scheduled re-verification job that re-fetches `source_url` and
+ * checks for closure language (AGENTS.md Phase 30's "Job B: Upcoming deadline validation" /
+ * "Job E: Stale data detection" describe exactly this; the job is designed in
+ * docs/opportunity-reverification-job-design-2026-08-23.md but not built). There is currently no
+ * *confirmed* instance of the shape live, which is a statement about our detection ability
+ * rather than about the corpus — the shape is undetectable from stored data by construction. A
+ * live pass on 2026-08-23 found 86 `active` rows with a null deadline and
+ * `cycle_status='unverified'` — genuinely undetectable from stored data alone, not a gap this
+ * function can close.
  */
 export function isOpportunityActionable(
   opportunity: Pick<Opportunity, "cycle_status" | "deadline">,
@@ -153,23 +159,50 @@ export function deriveCycleStatusForPassedDeadline(
 }
 
 /* ------------------------------------------------------------------------------------------
- * The third gate: evidence, not dates.
+ * The third gate: evidence, not dates — and evidence, not lineage.
  *
  * isOpportunityActionable's own comment above names the case it structurally cannot catch — an
- * opportunity that closed quietly with no deadline ever recorded. Stanford Anesthesia Summer
- * Institute remains the confirmed live example: `active`, `cycle_status='upcoming'`, `deadline`
- * null, while its own page says applications are closed. No date-based rule can see that,
- * because there is no date.
+ * opportunity that closed quietly with no deadline ever recorded. No date-based rule can see
+ * that, because there is no date. What CAN be seen is the absence of evidence.
  *
- * What CAN be seen is the absence of evidence. Measured on the live catalogue 2026-08-23: 50
- * distinct opportunities are simultaneously counselor-recommendable, deadline-less and never
- * verified (`last_verified_at IS NULL`) — 301 eligible (user, opportunity) pairs across all 7
- * users, ~18% of the 271 active rows.
+ * WHAT #143 GOT WRONG, AND WHY THIS READS BOTH COLUMNS
  *
- * Worth naming the data contradiction that lets them through every existing guard: all 50 carry
- * `verification_state = 'verified_current'` (so lib/counselor/eligibility.ts's verification
- * check passes) while `last_verified_at` is null — the enum claims a verification the timestamp
- * says never happened. The timestamp is the honest discriminator; the enum is not.
+ * This gate first shipped reading `last_verified_at IS NULL` as "Oryn has never verified this."
+ * That premise was false. `opportunities` carries TWO verification timestamps:
+ * `last_verified_at` (migration 0008, the original Phase 29 freshness column) and `verified_at`
+ * (migration 0041, added alongside `verification_state`). Different generations of the ingest
+ * pipeline wrote different ones.
+ *
+ * Measured live 2026-08-23 across all 392 rows:
+ *   - rows with BOTH timestamps null ........................ 0
+ *   - rows with `last_verified_at` null, `verified_at` set .. 85, all `verified_current`
+ *   - rows excluded by the gate as first shipped ............ 51
+ *
+ * Every one of those 51 was `verification_state='verified_current'`, `source_confidence='high'`,
+ * with a `verified_at` from the preceding week. They are almost exactly the
+ * `source='official_primary'` set — the corpus's highest-provenance pipeline. Meanwhile 199 rows
+ * that DO carry `last_verified_at` are not `verified_current` at all, and
+ * lib/opportunities/discover.ts stamps `last_verified_at` at insert time straight from a Tavily
+ * web search. So the original predicate was not merely mis-targeted: it was anti-correlated with
+ * provenance quality, blocking hand-researched records while passing unattended search results.
+ * `last_verified_at IS NULL` records WHICH PIPELINE WROTE THE ROW, not whether anyone verified it.
+ *
+ * WHAT THIS GATE DOES NOT CLAIM
+ *
+ * Reading both columns is deliberately NOT the same as trusting either as a freshness signal.
+ * Neither means "we checked the official source recently enough to recommend this":
+ *   - 138 of 201 `verified_at` values and 214 of 307 `last_verified_at` values are exactly
+ *     midnight UTC — hand-entered dates, not machine fetches.
+ *   - A row once carried a fresh `verified_at` while its own page said applications were closed.
+ * So their presence is used here as a floor against the TOTAL absence of evidence, and for
+ * nothing else. No age arithmetic is ever performed on either — see MAX_VERIFICATION_AGE_DAYS.
+ * Copying one column into the other, or preferring one as "the" verification time, would convert
+ * a bookkeeping artifact into a verification claim; docs/opportunity-reverification-job-design-
+ * 2026-08-23.md §1.2/§12 argues that case at length and rules it out.
+ *
+ * The honest predicate therefore fires on zero rows today. That is a true statement about this
+ * corpus, not a dead rule: both columns are nullable with NULL defaults, so the shape is
+ * constructible, and Phase 30's re-verification job is what gives this seam a real signal.
  *
  * Three things this gate deliberately does NOT say, because each would replace one product lie
  * with a different one:
@@ -177,8 +210,7 @@ export function deriveCycleStatusForPassedDeadline(
  *      never set or implied here, and no closure is fabricated.
  *   2. It does not say the STUDENT is ineligible. This is a fact about Oryn's evidence, and a
  *      16-year-old must never be told they don't qualify because we didn't do our homework.
- *   3. It does not claim staleness. See MAX_VERIFICATION_AGE_DAYS — an age rule would exclude
- *      nothing at all today, and shipping one would be a guard that looks like it works.
+ *   3. It does not claim staleness. See MAX_VERIFICATION_AGE_DAYS.
  * ------------------------------------------------------------------------------------------ */
 
 /**
@@ -207,9 +239,26 @@ export const DEADLINE_MODES_WITHOUT_A_FIXED_DATE: ReadonlySet<string> = new Set(
   "always_open",
 ]);
 
-export type OpportunityVerificationFacts = Pick<Opportunity, "deadline" | "last_verified_at"> & {
+/**
+ * `verified_at` is REQUIRED here, not optional like `deadline_mode`, and the difference is
+ * load-bearing. `deadline_mode` has no column at all, so a row genuinely cannot carry it.
+ * `verified_at` has existed since migration 0041 — the only way a caller lacks it is by writing
+ * a narrowed `.select()` that leaves it out, and a row missing it would read as "no evidence"
+ * and be silently excluded. That is this very bug arriving through a different door (a select
+ * list instead of a pipeline generation). Requiring it turns that mistake into a compile error:
+ * app/(app)/dashboard/page.tsx is the one narrowed select on this path, and it must list both.
+ */
+export type OpportunityVerificationFacts = Pick<Opportunity, "deadline" | "last_verified_at" | "verified_at"> & {
   /** Not yet a column — see DEADLINE_MODES_WITHOUT_A_FIXED_DATE. Optional on purpose. */
   readonly deadline_mode?: string | null;
+  /**
+   * Phase 30's seam, and the ONLY field an age threshold may ever be measured against. Not a
+   * column and deliberately not proposed as one — docs/opportunity-reverification-job-design-
+   * 2026-08-23.md §8.4 keeps machine-check recency in the runs table and warns specifically
+   * against a third overlapping timestamp on `opportunities`. Supplied by a join when that job
+   * exists; absent today, so no row is age-gated.
+   */
+  readonly machine_checked_at?: string | null;
 };
 
 export function hasDeadlineCommitment(opportunity: OpportunityVerificationFacts): boolean {
@@ -219,44 +268,74 @@ export function hasDeadlineCommitment(opportunity: OpportunityVerificationFacts)
 }
 
 /**
+ * Is there any record at all that something once verified this row?
+ *
+ * A pure existence check across both verification timestamps, with no preference between them
+ * and no arithmetic on either — the two columns differ by pipeline generation, not by
+ * trustworthiness, so ranking them would be inventing a distinction the data does not support.
+ *
+ * lib/opportunities/readiness.ts already draws the absence-of-evidence line in exactly this
+ * place (`!verified_at && !last_verified_at`), and treats it as a quality signal rather than a
+ * blocker. This is the runtime counterpart of that same judgment.
+ *
+ * Truthiness rather than a null check, deliberately: it treats an absent key, an explicit null
+ * and an empty string alike. A row fetched from an environment whose migration hasn't run has no
+ * key at all whatever the type says — the same defensive reading eligibility.ts applies to
+ * `eligible_citizenships` — and an empty-string timestamp is not evidence of anything either.
+ */
+export function hasAnyVerificationRecord(opportunity: OpportunityVerificationFacts): boolean {
+  return Boolean(opportunity.last_verified_at) || Boolean(opportunity.verified_at);
+}
+
+/**
  * Deliberately null: no maximum verification age is enforced.
  *
  * Measured 2026-08-23 across the whole corpus — the oldest `last_verified_at` is 2026-08-15 and
  * there are zero rows older than 30 days. Any age threshold worth writing down would exclude
  * exactly nothing, so shipping one would add a guard that reads as protective while proving
  * nothing, and would silently start excluding rows later at whatever arbitrary number was
- * picked today. The discriminator that actually does work right now is the ABSENCE of
- * verification, not its age.
+ * picked today.
  *
- * The seam is here rather than in a caller: when Phase 30's Job B/E re-verification job exists
- * and verification age becomes meaningful, set this to a real number of days and every
- * recommendation path already routes through the function below.
+ * Read this together with the constraint below it: when this IS eventually set, it is measured
+ * against `machine_checked_at` and never against `last_verified_at` or `verified_at`. Those two
+ * are majority hand-entered midnight dates; running date arithmetic over them would manufacture
+ * precisely the certainty the corrected gate exists to avoid. Phase 30's design says the same
+ * (§3.3): turn this on only after the re-verification job has made two full corpus passes, so a
+ * stale timestamp means "the job tried and could not confirm" rather than "the job hasn't
+ * reached this row yet."
  */
 export const MAX_VERIFICATION_AGE_DAYS: number | null = null;
 
 /**
  * The rule, in its smallest fail-closed form: an opportunity with no deadline commitment on
- * file AND no record of ever having been verified is not confidently actionable.
+ * file AND no verification record of any kind is not confidently actionable.
  *
- * Both absences are required. Either signal alone is enough to pass — a deadline is a dated
- * statement about this cycle, and a verification timestamp means something actually read the
- * source page — which keeps the gate narrow and keeps it self-healing: it stops firing the
- * moment ingestion writes either one, with no reactivation step, exactly like the rest of this
- * module.
+ * Both absences are required, and the second means "neither verification timestamp is set" —
+ * not "the older of the two happens to be empty," which is what this checked before and which
+ * measured only pipeline lineage. Either signal alone is enough to pass, which keeps the gate
+ * narrow and self-healing: it stops firing the moment ingestion writes any of them, with no
+ * reactivation step, exactly like the rest of this module.
+ *
+ * On today's corpus this excludes nothing (zero rows have both timestamps null). That is the
+ * honest answer for this corpus rather than a reason to delete the rule — see the block above.
  */
 export function isOpportunitySufficientlyVerified(
   opportunity: OpportunityVerificationFacts,
   referenceDate: Date = new Date()
 ): boolean {
   if (hasDeadlineCommitment(opportunity)) return true;
-
-  const lastVerifiedAt = opportunity.last_verified_at;
-  if (!lastVerifiedAt) return false;
+  if (!hasAnyVerificationRecord(opportunity)) return false;
   if (MAX_VERIFICATION_AGE_DAYS === null) return true;
 
-  const verifiedAtMs = Date.parse(lastVerifiedAt);
-  if (Number.isNaN(verifiedAtMs)) return false;
-  return referenceDate.getTime() - verifiedAtMs <= MAX_VERIFICATION_AGE_DAYS * 24 * 60 * 60 * 1000;
+  // Age is measured ONLY against a real machine check. A row the job has never reached has no
+  // such timestamp and must not be excluded for it — otherwise enabling the threshold would
+  // mass-exclude the catalogue for the sole reason that the job is young.
+  const machineCheckedAt = opportunity.machine_checked_at;
+  if (!machineCheckedAt) return true;
+
+  const checkedAtMs = Date.parse(machineCheckedAt);
+  if (Number.isNaN(checkedAtMs)) return true;
+  return referenceDate.getTime() - checkedAtMs <= MAX_VERIFICATION_AGE_DAYS * 24 * 60 * 60 * 1000;
 }
 
 /**

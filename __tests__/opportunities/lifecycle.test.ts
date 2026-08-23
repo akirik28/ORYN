@@ -7,6 +7,7 @@ import {
   type OpportunityVerificationFacts,
   deriveCycleStatusForPassedDeadline,
   filterActionableOpportunities,
+  hasAnyVerificationRecord,
   hasDeadlineCommitment,
   isOpportunityActionable,
   isOpportunityRecommendable,
@@ -248,20 +249,25 @@ describe("filterActionableOpportunities", () => {
  *
  * `isOpportunityActionable` can only see what a date tells it, and lifecycle.ts's own comment
  * names the blind spot it cannot close — an opportunity that quietly closed with no deadline
- * ever recorded. Confirmed live: Stanford Anesthesia Summer Institute is `active`,
- * `cycle_status='upcoming'`, `deadline` null, while its own page says applications are closed.
+ * ever recorded.
  *
- * Measured on the live catalogue 2026-08-23: 50 distinct opportunities are simultaneously
- * counselor-recommendable, deadline-less and never verified (`last_verified_at IS NULL`),
- * across 301 eligible (user, opportunity) pairs and all 7 users.
+ * The gate as first shipped (#143) read `last_verified_at IS NULL` as "never verified." That
+ * premise was false. `opportunities` carries TWO verification timestamps — `last_verified_at`
+ * (migration 0008) and `verified_at` (migration 0041) — and measured across all 392 rows on
+ * 2026-08-23, the number with BOTH null is zero. `last_verified_at IS NULL` selected the 85 rows
+ * written by the 0041-era research pipeline, which recorded into `verified_at` instead; all 85
+ * carry `verification_state='verified_current'`. So the gate excluded 51 verified, high-confidence
+ * opportunities on the basis of which pipeline generation wrote them.
  *
- * These tests pin the three distinctions that make the gate honest rather than a new lie:
- * the row is NOT closed, the student is NOT ineligible, the evidence is insufficient.
+ * These tests pin both halves of the corrected rule: a legacy-generation row is NOT gated, and
+ * a row with genuinely no evidence of any kind still is — plus the three distinctions that make
+ * the gate honest rather than a new lie: the row is NOT closed, the student is NOT ineligible,
+ * the evidence is insufficient.
  */
 function freshnessRow(
   overrides: Partial<OpportunityVerificationFacts> = {}
 ): OpportunityVerificationFacts {
-  return { deadline: null, last_verified_at: null, ...overrides };
+  return { deadline: null, last_verified_at: null, verified_at: null, ...overrides };
 }
 
 describe("isOpportunitySufficientlyVerified", () => {
@@ -272,9 +278,12 @@ describe("isOpportunitySufficientlyVerified", () => {
     ).toBe(true);
   });
 
-  // Coverage requirement 2 — null deadline AND null verification is the gated shape.
-  test("the live Stanford shape -- no deadline on file and never verified -- is NOT sufficiently verified", () => {
-    expect(isOpportunitySufficientlyVerified(freshnessRow({ deadline: null, last_verified_at: null }))).toBe(false);
+  // Coverage requirement 2 — no deadline AND no verification record of ANY kind is the gated
+  // shape. Note both timestamps must be absent: `freshnessRow` defaults `verified_at` to null.
+  test("a row with no deadline and no verification record of any kind is NOT sufficiently verified", () => {
+    expect(
+      isOpportunitySufficientlyVerified(freshnessRow({ deadline: null, last_verified_at: null, verified_at: null }))
+    ).toBe(false);
   });
 
   test("either leg alone is enough to pass -- the gate needs BOTH absences, so it stays narrow", () => {
@@ -284,7 +293,7 @@ describe("isOpportunitySufficientlyVerified", () => {
     expect(isOpportunitySufficientlyVerified(freshnessRow({ deadline: null, last_verified_at: "2026-08-15T00:00:00Z" }))).toBe(true);
   });
 
-  test("an undefined last_verified_at is treated the same as null -- a row predating the column is not evidence", () => {
+  test("undefined timestamps are treated the same as null -- a row predating a column is not evidence", () => {
     // Read defensively, the same way eligibility.ts reads eligible_citizenships: a row fetched
     // from an environment whose migration hasn't run genuinely has no key at all.
     const legacy = { deadline: null } as OpportunityVerificationFacts;
@@ -298,6 +307,134 @@ describe("isOpportunitySufficientlyVerified", () => {
     expect(MAX_VERIFICATION_AGE_DAYS).toBeNull();
     const ancient = freshnessRow({ deadline: null, last_verified_at: "2019-01-01T00:00:00Z" });
     expect(isOpportunitySufficientlyVerified(ancient)).toBe(true);
+  });
+});
+
+/**
+ * Regression (#143 follow-up) — the gate must fire on absence of evidence, never on which
+ * pipeline generation wrote the row.
+ *
+ * `opportunities` carries two verification timestamps. `last_verified_at` arrived in migration
+ * 0008 (Phase 29 freshness); `verified_at` arrived in migration 0041 alongside
+ * `verification_state`. Different generations of the ingest pipeline wrote different ones.
+ *
+ * Measured live 2026-08-23 across all 392 rows:
+ *   - both timestamps null ............................. 0
+ *   - `last_verified_at` null, `verified_at` set ....... 85  (all `verified_current`)
+ *   - excluded by the gate as first shipped ............ 51  (all `verified_current`, all
+ *                                                            `source_confidence='high'`,
+ *                                                            all verified 2026-08-15..08-21)
+ *
+ * The 85 are precisely `source='official_primary'` rows — the corpus's highest-provenance
+ * pipeline (156 rows, 156 `verified_current`). Meanwhile 199 rows that DO carry
+ * `last_verified_at` are not `verified_current` at all, and `lib/opportunities/discover.ts`
+ * stamps `last_verified_at` at insert time straight from a Tavily web search. So the original
+ * predicate was not merely mis-targeted, it was anti-correlated with provenance quality:
+ * it blocked hand-researched rows and waved through unattended search results.
+ *
+ * These tests would all have passed a `verified_at ?? last_verified_at` substitution too, so
+ * they are deliberately paired with the age tests below: `verified_at` is weak provenance
+ * (138 of its 201 values are exactly midnight UTC — hand-entered dates) and must never be
+ * treated as a freshness measurement. Its presence is used here as a floor against total
+ * absence of evidence, and for nothing else.
+ */
+describe("Regression -- a legacy-generation row is not gated on pipeline lineage", () => {
+  // The exact live shape: no deadline, no `last_verified_at`, but a real `verified_at` and
+  // `verification_state='verified_current'`. 51 rows in the catalogue looked like this.
+  const legacyGeneration = { deadline: null, last_verified_at: null, verified_at: "2026-08-18T00:00:00Z" };
+
+  test("a row verified through `verified_at` alone is sufficiently verified", () => {
+    expect(isOpportunitySufficientlyVerified(legacyGeneration)).toBe(true);
+  });
+
+  test("it is recommendable when its cycle is otherwise fine -- the 51 stop being excluded", () => {
+    expect(isOpportunityRecommendable({ ...legacyGeneration, cycle_status: "upcoming" }, REFERENCE_DATE)).toBe(true);
+    expect(isOpportunityRecommendable({ ...legacyGeneration, cycle_status: "open" }, REFERENCE_DATE)).toBe(true);
+    expect(
+      isOpportunityRecommendable({ ...legacyGeneration, cycle_status: "date_not_announced" }, REFERENCE_DATE)
+    ).toBe(true);
+  });
+
+  test("the gate still fires when there is genuinely no evidence at all -- the mechanism survives", () => {
+    // Zero rows in today's corpus, which is the truth about this corpus rather than a reason to
+    // delete the rule. Both columns are nullable with NULL defaults, so the shape is
+    // constructible, and Phase 30 (docs/opportunity-reverification-job-design-2026-08-23.md)
+    // is what gives this seam a real signal.
+    expect(
+      isOpportunityRecommendable(
+        { cycle_status: "upcoming", deadline: null, last_verified_at: null, verified_at: null },
+        REFERENCE_DATE
+      )
+    ).toBe(false);
+  });
+
+  test("lineage is not freshness: an ANCIENT `verified_at` is still not excluded on age", () => {
+    // The guard against re-introducing the same bug in the other direction. `verified_at` is
+    // hand-entered midnight data; turning it into an age measurement would manufacture the
+    // certainty this fix exists to remove. No age rule may run against either legacy column.
+    expect(MAX_VERIFICATION_AGE_DAYS).toBeNull();
+    expect(
+      isOpportunitySufficientlyVerified({ deadline: null, last_verified_at: null, verified_at: "2019-01-01T00:00:00Z" })
+    ).toBe(true);
+  });
+
+  test("#140/#141 still exclude a legacy-generation row -- the older rules are untouched", () => {
+    // A rescued row is rescued only from the FRESHNESS gate. A closed cycle or a passed
+    // deadline must still exclude it, or this fix would have widened the hole #140/#141 closed.
+    expect(isOpportunityRecommendable({ ...legacyGeneration, cycle_status: "closed" }, REFERENCE_DATE)).toBe(false);
+    expect(isOpportunityRecommendable({ ...legacyGeneration, cycle_status: "historical" }, REFERENCE_DATE)).toBe(false);
+    expect(isOpportunityRecommendable({ ...legacyGeneration, cycle_status: "discontinued" }, REFERENCE_DATE)).toBe(false);
+    expect(
+      isOpportunityRecommendable(
+        { ...legacyGeneration, cycle_status: "open", deadline: "2026-01-01" },
+        REFERENCE_DATE
+      )
+    ).toBe(false);
+  });
+});
+
+/**
+ * The existence check itself, kept honest: neither timestamp outranks the other, and neither is
+ * ever measured. They differ by which pipeline generation wrote the row, not by trustworthiness.
+ */
+describe("hasAnyVerificationRecord", () => {
+  test("either timestamp alone counts as a record, and both-absent does not", () => {
+    expect(hasAnyVerificationRecord(freshnessRow({ last_verified_at: "2026-08-20T00:00:00Z" }))).toBe(true);
+    expect(hasAnyVerificationRecord(freshnessRow({ verified_at: "2026-08-18T00:00:00Z" }))).toBe(true);
+    expect(hasAnyVerificationRecord(freshnessRow({ last_verified_at: null, verified_at: null }))).toBe(false);
+  });
+
+  test("a row missing the keys entirely is not evidence -- read defensively, not type-trustingly", () => {
+    // A row fetched from an environment whose migration hasn't run has no key at all.
+    expect(hasAnyVerificationRecord({ deadline: null } as OpportunityVerificationFacts)).toBe(false);
+  });
+});
+
+/**
+ * The Phase 30 seam. `MAX_VERIFICATION_AGE_DAYS` is null today, so these pin the CONTRACT rather
+ * than live behaviour: when a real number is eventually set, it must be measured against a
+ * machine check and never against the two legacy columns, and it must not mass-exclude rows the
+ * job simply hasn't reached yet (docs/opportunity-reverification-job-design-2026-08-23.md §3.3).
+ */
+describe("the age threshold is wired to a machine check, not to the legacy columns", () => {
+  test("no age gating happens at all while the threshold is off", () => {
+    expect(MAX_VERIFICATION_AGE_DAYS).toBeNull();
+    expect(
+      isOpportunitySufficientlyVerified({
+        deadline: null,
+        last_verified_at: null,
+        verified_at: "2019-01-01T00:00:00Z",
+        machine_checked_at: "2019-01-01T00:00:00Z",
+      })
+    ).toBe(true);
+  });
+
+  test("`machine_checked_at` is absent on every row today, so the seam is inert", () => {
+    // Not a column and deliberately not proposed as one (§8.4). It arrives by join when the
+    // re-verification job exists; until then no row can be age-excluded.
+    const row: OpportunityVerificationFacts = { deadline: null, last_verified_at: null, verified_at: "2026-08-18T00:00:00Z" };
+    expect(row.machine_checked_at).toBeUndefined();
+    expect(isOpportunitySufficientlyVerified(row)).toBe(true);
   });
 });
 
@@ -324,23 +461,41 @@ describe("hasDeadlineCommitment -- the rolling seam", () => {
   test("an explicit rolling declaration is a commitment even with a null deadline", () => {
     // The distinction the seam exists to draw: "no deadline because there isn't one" is a
     // researched fact; "no deadline because nobody looked" is the absence of one.
-    expect(hasDeadlineCommitment({ deadline: null, last_verified_at: null, deadline_mode: "rolling" })).toBe(true);
+    expect(hasDeadlineCommitment({ deadline: null, last_verified_at: null, verified_at: null, deadline_mode: "rolling" })).toBe(true);
   });
 
   test("a verified rolling opportunity passes the freshness gate", () => {
     expect(
-      isOpportunitySufficientlyVerified({ deadline: null, last_verified_at: "2026-08-20T00:00:00Z", deadline_mode: "rolling" })
+      isOpportunitySufficientlyVerified({
+        deadline: null,
+        last_verified_at: "2026-08-20T00:00:00Z",
+        verified_at: null,
+        deadline_mode: "rolling",
+      })
+    ).toBe(true);
+  });
+
+  test("a rolling declaration rescues a row even with no verification record at all", () => {
+    // The two legs are independent: an explicit "there is no single date, by design" is itself
+    // a researched commitment, so it passes without either timestamp.
+    expect(
+      isOpportunitySufficientlyVerified({ deadline: null, last_verified_at: null, verified_at: null, deadline_mode: "rolling" })
     ).toBe(true);
   });
 
   test("an unrecognized deadline_mode is not silently treated as a commitment", () => {
-    expect(hasDeadlineCommitment({ deadline: null, last_verified_at: null, deadline_mode: "sometime" })).toBe(false);
-    expect(hasDeadlineCommitment({ deadline: null, last_verified_at: null, deadline_mode: null })).toBe(false);
+    expect(hasDeadlineCommitment({ deadline: null, last_verified_at: null, verified_at: null, deadline_mode: "sometime" })).toBe(false);
+    expect(hasDeadlineCommitment({ deadline: null, last_verified_at: null, verified_at: null, deadline_mode: null })).toBe(false);
   });
 });
 
 describe("isOpportunityRecommendable -- the composed gate every recommendation path calls", () => {
-  const verifiedAndOpen = { cycle_status: "open" as const, deadline: "2026-09-15", last_verified_at: "2026-08-20T00:00:00Z" };
+  const verifiedAndOpen = {
+    cycle_status: "open" as const,
+    deadline: "2026-09-15",
+    last_verified_at: "2026-08-20T00:00:00Z",
+    verified_at: null,
+  };
 
   test("a verified, current opportunity is recommendable", () => {
     expect(isOpportunityRecommendable(verifiedAndOpen, REFERENCE_DATE)).toBe(true);
@@ -351,7 +506,10 @@ describe("isOpportunityRecommendable -- the composed gate every recommendation p
     expect(isOpportunityRecommendable({ ...verifiedAndOpen, cycle_status: "closed" }, REFERENCE_DATE)).toBe(false);
     expect(isOpportunityRecommendable({ ...verifiedAndOpen, deadline: "2026-01-01" }, REFERENCE_DATE)).toBe(false);
     expect(
-      isOpportunityRecommendable({ cycle_status: "upcoming", deadline: null, last_verified_at: null }, REFERENCE_DATE)
+      isOpportunityRecommendable(
+        { cycle_status: "upcoming", deadline: null, last_verified_at: null, verified_at: null },
+        REFERENCE_DATE
+      )
     ).toBe(false);
   });
 });
