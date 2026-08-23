@@ -48,7 +48,13 @@ function opportunity(id: string, overrides: Partial<Opportunity> = {}): Opportun
     source: null,
     source_url: null,
     source_confidence: "high",
-    last_verified_at: null,
+    // Verified by default, matching this fixture's own `verification_state: "verified_current"`
+    // below — the two were inconsistent, which is exactly the live contradiction the freshness
+    // gate catches (50 rows claim verified_current while last_verified_at is null). Left null,
+    // every fixture here would sit in the gated shape and the country/citizenship/grade tests
+    // would be asserting against an exclusion that has nothing to do with their subject. The
+    // freshness regression block at the bottom overrides it back to null explicitly.
+    last_verified_at: "2026-08-20T00:00:00Z",
     status: "active",
     normalized_title: id,
     cycle_status: "open",
@@ -331,10 +337,121 @@ describe("Regression — expired opportunities never reach counselor recommendat
     expect(evaluateCandidateEligibility(candidateFor(closingToday, stateToday), stateToday, dayAfter).verdict).toBe("known_ineligible");
   });
 
-  test("an opportunity with no deadline on file is untouched — absence of a date is not evidence of closure", () => {
-    const noDeadline = opportunity("no-deadline-on-file", { deadline: null, cycle_status: "open", country_eligibility_confirmed_open: true });
+  test("a VERIFIED opportunity with no deadline on file is untouched — absence of a date is not evidence of closure", () => {
+    // Subject unchanged from the original #140 test; the fixture now carries the
+    // `last_verified_at` it always implied. A missing deadline still never excludes on its
+    // own — see the freshness suite below for the case where nothing at all is on file.
+    const noDeadline = opportunity("no-deadline-on-file", {
+      deadline: null,
+      cycle_status: "open",
+      country_eligibility_confirmed_open: true,
+      last_verified_at: "2026-08-20T00:00:00Z",
+    });
     const state = stateWith([noDeadline]);
 
     expect(evaluateCandidateEligibility(candidateFor(noDeadline, state), state, referenceDate).verdict).toBe("known_eligible");
+  });
+});
+
+/**
+ * Regression — an opportunity Oryn has never verified, with no deadline on file, must not be
+ * presented as a high-confidence next action.
+ *
+ * The gap lib/opportunities/lifecycle.ts documents but cannot close with a date rule: an
+ * opportunity can close quietly with no deadline ever recorded. Confirmed live, Stanford
+ * Anesthesia Summer Institute — `status='active'`, `verification_state='verified_current'`,
+ * `cycle_status='upcoming'`, `deadline` null, `last_verified_at` null — while its own page says
+ * applications are closed. Measured 2026-08-23: 50 such opportunities across 301 eligible
+ * (user, opportunity) pairs and all 7 users, ~18% of the active catalogue.
+ *
+ * Note the data contradiction driving it: these rows claim `verification_state =
+ * 'verified_current'` (so the counselor's existing verification check at eligibility.ts passes)
+ * while `last_verified_at` says no verification ever happened. The timestamp is the honest
+ * discriminator; the enum is not.
+ *
+ * EXCLUDED rather than demoted here, because this is the ranked-recommendation path: a hard
+ * top-3 whose whole claim is "these are your highest-value next actions", and whose output is
+ * handed to lib/ai/weekly-plan.ts labelled to the model as verified, eligible candidates.
+ * Measured, exclusion is safe: per-user candidate pools drop from 91–105 to 49–62, so no
+ * student falls anywhere near the three-recommendation floor.
+ */
+describe("Regression — never-verified, deadline-less opportunities never reach counselor recommendations", () => {
+  const referenceDate = new Date("2026-08-23T00:00:00Z");
+
+  function stateWith(opps: Opportunity[]): CounselorState {
+    return {
+      userId: "user-1",
+      advisor: {
+        student: { birthYear: 2009, country: "Turkey", citizenshipCountries: [], graduationYear: 2028 },
+        completenessPercent: 80,
+      } as unknown as CounselorState["advisor"],
+      dimensionScores: toDimensionScoreRows(DIMENSIONS.map((d) => ({ dimension: d, score: 60, confidence: "high" as const, reason_codes: [] }))),
+      completenessChecklist: [],
+      eligibleOpportunityMatches: opps.map((o) => ({ opportunity: o, match: match(o.id) })),
+      requirementCandidateInputs: [],
+    };
+  }
+
+  // The exact live row shape, including the verification_state/last_verified_at contradiction.
+  const stanfordShape = {
+    deadline: null,
+    last_verified_at: null,
+    status: "active" as const,
+    verification_state: "verified_current" as const,
+    cycle_status: "upcoming" as const,
+    country_eligibility_confirmed_open: true,
+  };
+
+  test("the live shape is excluded, and the reason names verification -- not closure, not the student", () => {
+    const unverified = opportunity("stanford-anesthesia", stanfordShape);
+    const state = stateWith([unverified]);
+
+    const result = evaluateCandidateEligibility(candidateFor(unverified, state), state, referenceDate);
+    const note = result.notes.join(" ");
+
+    expect(result.verdict).toBe("known_ineligible");
+    expect(note).toMatch(/verif/i);
+    // Must not fabricate a closure the source never stated...
+    expect(note).not.toMatch(/closed|deadline has passed|no longer running/i);
+    // ...and must not tell a 16-year-old they personally don't qualify.
+    expect(note).not.toMatch(/not eligible|ineligible|don't qualify/i);
+  });
+
+  test("it never appears in rankCandidates output -- the list feeding the dashboard, advisor priorities and the weekly-plan prompt", () => {
+    const unverified = opportunity("stanford-anesthesia", stanfordShape);
+    const verified = opportunity("wharton-investment", {
+      deadline: null,
+      last_verified_at: "2026-08-20T00:00:00Z",
+      cycle_status: "upcoming",
+      country_eligibility_confirmed_open: true,
+    });
+    const state = stateWith([unverified, verified]);
+
+    const ranked = rankCandidates(generateCandidateActions(state), [], state, referenceDate);
+    const ids = ranked.flatMap((r) => (r.candidate.source.kind === "opportunity" ? [r.candidate.source.opportunityId] : []));
+
+    expect(ids).not.toContain("stanford-anesthesia");
+    expect(ids).toContain("wharton-investment");
+  });
+
+  test("a deadline on file rescues an unverified row -- the gate needs both absences, not either", () => {
+    const hasDeadline = opportunity("has-a-deadline", {
+      deadline: "2026-12-01",
+      last_verified_at: null,
+      cycle_status: "open",
+      country_eligibility_confirmed_open: true,
+    });
+    const state = stateWith([hasDeadline]);
+
+    expect(evaluateCandidateEligibility(candidateFor(hasDeadline, state), state, referenceDate).verdict).toBe("known_eligible");
+  });
+
+  test("an existing closed-cycle row is still explained by its cycle, not by verification -- #140/#141 wording is unregressed", () => {
+    const closed = opportunity("closed-cycle", { cycle_status: "closed", deadline: null, last_verified_at: null });
+    const state = stateWith([closed]);
+
+    const result = evaluateCandidateEligibility(candidateFor(closed, state), state, referenceDate);
+    expect(result.verdict).toBe("known_ineligible");
+    expect(result.notes.join(" ")).toMatch(/current cycle is closed/i);
   });
 });

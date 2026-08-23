@@ -35,7 +35,13 @@ function opportunity(id: string, overrides: Partial<Opportunity> = {}): Opportun
     source: null,
     source_url: null,
     source_confidence: "high",
-    last_verified_at: null,
+    // Verified by default, matching this fixture's own `verification_state: "verified_current"`
+    // two lines down. The two were inconsistent — the enum claimed a verification the timestamp
+    // said never happened, which is precisely the live data contradiction the freshness gate
+    // (lib/opportunities/lifecycle.ts) exists to catch. Left as null, every fixture here would
+    // silently be in the gated shape and no test could say anything about anything else. The
+    // freshness suite at the bottom of this file overrides it back to null explicitly.
+    last_verified_at: "2026-08-20T00:00:00Z",
     status: "active",
     normalized_title: id,
     cycle_status: "open",
@@ -306,5 +312,98 @@ describe("browseOpportunities — missing match row (Package 8 fix)", () => {
     expect(matched.eligibilityNotes).toBeNull();
     expect(closed.eligible).toBe(false);
     expect(closed.eligibilityNotes).toMatch(/closed/i);
+  });
+});
+
+/**
+ * Freshness gate — Browse DEMOTES and LABELS rather than excluding.
+ *
+ * Browse is the "see everything" surface and deliberately keeps ineligible rows visible
+ * (browse.ts's own docstring): hiding a row here would tell a student the opportunity does not
+ * exist, which is a worse lie than the one being fixed. So the gate here only (a) marks the row
+ * `needsVerification`, so the card can drop its confidence tier for an honest "Needs
+ * verification" badge, and (b) sorts it below every confident row at the same score.
+ *
+ * Critically it must NOT flip `eligible` to false. That column drives "Not eligible" wording,
+ * and this is a fact about Oryn's evidence, not about the student.
+ */
+describe("browseOpportunities — insufficient verification is labelled, never hidden and never called ineligible", () => {
+  test("a never-verified, deadline-less opportunity is flagged needsVerification but stays visible and eligible", async () => {
+    const supabase = makeSupabase({
+      opportunities: [opportunity("opp-stanford", { cycle_status: "upcoming", deadline: null, last_verified_at: null })],
+      opportunity_matches: [match({ opportunity_id: "opp-stanford", eligible: true, eligibility_notes: null, match_score: 82 })],
+    });
+
+    const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].needsVerification).toBe(true);
+    // Not an eligibility claim about the student, and not a closure claim about the cycle.
+    expect(rows[0].eligible).toBe(true);
+    expect(rows[0].eligibilityNotes ?? "").not.toMatch(/not eligible|ineligible|closed/i);
+  });
+
+  test("the note it carries names verification as the reason", async () => {
+    const supabase = makeSupabase({
+      opportunities: [opportunity("opp-stanford", { cycle_status: "upcoming", deadline: null, last_verified_at: null })],
+      opportunity_matches: [match({ opportunity_id: "opp-stanford", eligible: true, eligibility_notes: null })],
+    });
+
+    const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
+    expect(rows[0].eligibilityNotes).toMatch(/verif/i);
+  });
+
+  test("a verified opportunity is not flagged, and its stored note is untouched", async () => {
+    const supabase = makeSupabase({
+      opportunities: [opportunity("opp-verified", { cycle_status: "open", deadline: null, last_verified_at: "2026-08-20T00:00:00Z" })],
+      opportunity_matches: [match({ opportunity_id: "opp-verified", eligible: true, eligibility_notes: null, match_score: 60 })],
+    });
+
+    const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
+    expect(rows[0].needsVerification).toBe(false);
+    expect(rows[0].eligible).toBe(true);
+    expect(rows[0].eligibilityNotes).toBeNull();
+  });
+
+  test("an unverified row sorts below a confident row that scored lower", async () => {
+    const supabase = makeSupabase({
+      opportunities: [
+        opportunity("opp-unverified", { cycle_status: "upcoming", deadline: null, last_verified_at: null }),
+        opportunity("opp-confident", { cycle_status: "open", deadline: "2026-12-01", last_verified_at: "2026-08-20T00:00:00Z" }),
+      ],
+      opportunity_matches: [
+        match({ opportunity_id: "opp-unverified", match_score: 95 }),
+        match({ opportunity_id: "opp-confident", match_score: 40 }),
+      ],
+    });
+
+    const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
+    expect(rows.map((r) => r.opportunity.id)).toEqual(["opp-confident", "opp-unverified"]);
+  });
+
+  test("a closed cycle still wins the explanation -- the freshness note never displaces #140/#141 wording", async () => {
+    const supabase = makeSupabase({
+      opportunities: [opportunity("opp-closed", { cycle_status: "closed", deadline: null, last_verified_at: null })],
+      opportunity_matches: [match({ opportunity_id: "opp-closed", eligible: true, eligibility_notes: null })],
+    });
+
+    const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
+    expect(rows[0].eligible).toBe(false);
+    expect(rows[0].eligibilityNotes).toMatch(/current cycle is closed/i);
+  });
+});
+
+describe("browseOpportunities — a stored eligibility note and the verification caveat coexist", () => {
+  test("both are shown: they answer different questions and the badge would otherwise be unexplained", async () => {
+    const supabase = makeSupabase({
+      opportunities: [opportunity("opp-both", { cycle_status: "open", deadline: null, last_verified_at: null })],
+      opportunity_matches: [
+        match({ opportunity_id: "opp-both", eligible: true, eligibility_notes: "Restricted by country — add your country to check." }),
+      ],
+    });
+
+    const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
+    expect(rows[0].eligibilityNotes).toMatch(/Restricted by country/);
+    expect(rows[0].eligibilityNotes).toMatch(/verif/i);
   });
 });

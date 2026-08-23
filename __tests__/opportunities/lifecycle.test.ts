@@ -1,9 +1,16 @@
 import { describe, expect, test } from "vitest";
 import {
+  INSUFFICIENT_VERIFICATION_REASON,
+  MAX_VERIFICATION_AGE_DAYS,
+  NEEDS_VERIFICATION_LABEL,
   NON_ACTIONABLE_OPPORTUNITY_CYCLE_STATUSES,
+  type OpportunityVerificationFacts,
   deriveCycleStatusForPassedDeadline,
   filterActionableOpportunities,
+  hasDeadlineCommitment,
   isOpportunityActionable,
+  isOpportunityRecommendable,
+  isOpportunitySufficientlyVerified,
   nonActionableOpportunityReason,
   resolveStoredEligibility,
 } from "@/lib/opportunities/lifecycle";
@@ -233,5 +240,146 @@ describe("filterActionableOpportunities", () => {
 
   test("returns an empty array unchanged", () => {
     expect(filterActionableOpportunities([], REFERENCE_DATE)).toEqual([]);
+  });
+});
+
+/**
+ * The third lifecycle gate: evidence, not dates.
+ *
+ * `isOpportunityActionable` can only see what a date tells it, and lifecycle.ts's own comment
+ * names the blind spot it cannot close — an opportunity that quietly closed with no deadline
+ * ever recorded. Confirmed live: Stanford Anesthesia Summer Institute is `active`,
+ * `cycle_status='upcoming'`, `deadline` null, while its own page says applications are closed.
+ *
+ * Measured on the live catalogue 2026-08-23: 50 distinct opportunities are simultaneously
+ * counselor-recommendable, deadline-less and never verified (`last_verified_at IS NULL`),
+ * across 301 eligible (user, opportunity) pairs and all 7 users.
+ *
+ * These tests pin the three distinctions that make the gate honest rather than a new lie:
+ * the row is NOT closed, the student is NOT ineligible, the evidence is insufficient.
+ */
+function freshnessRow(
+  overrides: Partial<OpportunityVerificationFacts> = {}
+): OpportunityVerificationFacts {
+  return { deadline: null, last_verified_at: null, ...overrides };
+}
+
+describe("isOpportunitySufficientlyVerified", () => {
+  // Coverage requirement 1 — a verified, current opportunity still surfaces normally.
+  test("a verified opportunity with a real deadline is sufficiently verified", () => {
+    expect(
+      isOpportunitySufficientlyVerified(freshnessRow({ deadline: "2026-09-15", last_verified_at: "2026-08-20T00:00:00Z" }))
+    ).toBe(true);
+  });
+
+  // Coverage requirement 2 — null deadline AND null verification is the gated shape.
+  test("the live Stanford shape -- no deadline on file and never verified -- is NOT sufficiently verified", () => {
+    expect(isOpportunitySufficientlyVerified(freshnessRow({ deadline: null, last_verified_at: null }))).toBe(false);
+  });
+
+  test("either leg alone is enough to pass -- the gate needs BOTH absences, so it stays narrow", () => {
+    // A deadline on file is a dated commitment about this cycle, verified or not.
+    expect(isOpportunitySufficientlyVerified(freshnessRow({ deadline: "2026-12-01", last_verified_at: null }))).toBe(true);
+    // A verification timestamp means a human or job actually looked at the source page.
+    expect(isOpportunitySufficientlyVerified(freshnessRow({ deadline: null, last_verified_at: "2026-08-15T00:00:00Z" }))).toBe(true);
+  });
+
+  test("an undefined last_verified_at is treated the same as null -- a row predating the column is not evidence", () => {
+    // Read defensively, the same way eligibility.ts reads eligible_citizenships: a row fetched
+    // from an environment whose migration hasn't run genuinely has no key at all.
+    const legacy = { deadline: null } as OpportunityVerificationFacts;
+    expect(isOpportunitySufficientlyVerified(legacy)).toBe(false);
+  });
+
+  test("no maximum verification age is enforced today, and the corpus proves an age rule would be a no-op", () => {
+    // Measured 2026-08-23: oldest last_verified_at across the whole corpus is 2026-08-15 and
+    // zero rows are older than 30 days. Shipping an age threshold now would look like a
+    // working guard while excluding nothing. The seam exists; the threshold is explicitly off.
+    expect(MAX_VERIFICATION_AGE_DAYS).toBeNull();
+    const ancient = freshnessRow({ deadline: null, last_verified_at: "2019-01-01T00:00:00Z" });
+    expect(isOpportunitySufficientlyVerified(ancient)).toBe(true);
+  });
+});
+
+/**
+ * Coverage requirement 4 — a verified ROLLING opportunity can pass, written against the seam
+ * rather than against a schema concept that does not exist yet.
+ *
+ * `deadline_mode` is approved in principle and deliberately not implemented, so `Opportunity`
+ * has no such column. `hasDeadlineCommitment` is the seam: it asks "is there a dated
+ * commitment about intake on file?", of which a `deadline` is one form and an explicit
+ * no-single-date declaration is the other. It reads `deadline_mode` defensively (optional key,
+ * same pattern eligibility.ts already uses for eligible_citizenships), so these assertions hold
+ * today and keep holding, unchanged, once the column is real.
+ */
+describe("hasDeadlineCommitment -- the rolling seam", () => {
+  test("a concrete deadline is a commitment", () => {
+    expect(hasDeadlineCommitment(freshnessRow({ deadline: "2026-11-01" }))).toBe(true);
+  });
+
+  test("no deadline and no declared mode is NOT a commitment -- this is the gap the gate detects", () => {
+    expect(hasDeadlineCommitment(freshnessRow({ deadline: null }))).toBe(false);
+  });
+
+  test("an explicit rolling declaration is a commitment even with a null deadline", () => {
+    // The distinction the seam exists to draw: "no deadline because there isn't one" is a
+    // researched fact; "no deadline because nobody looked" is the absence of one.
+    expect(hasDeadlineCommitment({ deadline: null, last_verified_at: null, deadline_mode: "rolling" })).toBe(true);
+  });
+
+  test("a verified rolling opportunity passes the freshness gate", () => {
+    expect(
+      isOpportunitySufficientlyVerified({ deadline: null, last_verified_at: "2026-08-20T00:00:00Z", deadline_mode: "rolling" })
+    ).toBe(true);
+  });
+
+  test("an unrecognized deadline_mode is not silently treated as a commitment", () => {
+    expect(hasDeadlineCommitment({ deadline: null, last_verified_at: null, deadline_mode: "sometime" })).toBe(false);
+    expect(hasDeadlineCommitment({ deadline: null, last_verified_at: null, deadline_mode: null })).toBe(false);
+  });
+});
+
+describe("isOpportunityRecommendable -- the composed gate every recommendation path calls", () => {
+  const verifiedAndOpen = { cycle_status: "open" as const, deadline: "2026-09-15", last_verified_at: "2026-08-20T00:00:00Z" };
+
+  test("a verified, current opportunity is recommendable", () => {
+    expect(isOpportunityRecommendable(verifiedAndOpen, REFERENCE_DATE)).toBe(true);
+  });
+
+  test("the freshness gate composes with -- never replaces -- the two existing rules", () => {
+    // Regression guard for #140/#141: each existing rule must still exclude on its own.
+    expect(isOpportunityRecommendable({ ...verifiedAndOpen, cycle_status: "closed" }, REFERENCE_DATE)).toBe(false);
+    expect(isOpportunityRecommendable({ ...verifiedAndOpen, deadline: "2026-01-01" }, REFERENCE_DATE)).toBe(false);
+    expect(
+      isOpportunityRecommendable({ cycle_status: "upcoming", deadline: null, last_verified_at: null }, REFERENCE_DATE)
+    ).toBe(false);
+  });
+});
+
+/**
+ * Coverage requirement 5 (the shared half) — the wording. A gated opportunity is not closed and
+ * the student is not ineligible; saying either would replace one product lie with another.
+ */
+describe("insufficient-verification wording", () => {
+  test('the badge reads "Needs verification"', () => {
+    expect(NEEDS_VERIFICATION_LABEL).toBe("Needs verification");
+  });
+
+  test("neither the label nor the note claims the opportunity is closed", () => {
+    for (const copy of [NEEDS_VERIFICATION_LABEL, INSUFFICIENT_VERIFICATION_REASON]) {
+      expect(copy).not.toMatch(/closed|no longer|expired|deadline has passed/i);
+    }
+  });
+
+  test("neither the label nor the note tells the student they are ineligible", () => {
+    for (const copy of [NEEDS_VERIFICATION_LABEL, INSUFFICIENT_VERIFICATION_REASON]) {
+      expect(copy).not.toMatch(/not eligible|ineligible|don't qualify|do not qualify/i);
+    }
+  });
+
+  test("the note is distinct from the two non-actionable reasons, so surfaces can't conflate them", () => {
+    expect(INSUFFICIENT_VERIFICATION_REASON).not.toBe(nonActionableOpportunityReason(row({ cycle_status: "closed" })));
+    expect(INSUFFICIENT_VERIFICATION_REASON).not.toBe(nonActionableOpportunityReason(row({ cycle_status: "open", deadline: "2020-01-01" })));
+    expect(INSUFFICIENT_VERIFICATION_REASON).toMatch(/verif/i);
   });
 });
