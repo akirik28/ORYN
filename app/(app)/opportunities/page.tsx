@@ -219,7 +219,7 @@ async function BrowseAllView({
             {total} opportunit{total === 1 ? "y" : "ies"} match{total === 1 ? "es" : ""}
           </p>
           <div className="grid gap-4 md:grid-cols-2">
-            {rows.map(({ opportunity, matchScore, eligible, eligibilityNotes, reasonCodes }) => (
+            {rows.map(({ opportunity, matchScore, eligible, eligibilityNotes, notActionable, reasonCodes }) => (
               <OpportunityCard
                 key={opportunity.id}
                 opportunity={opportunity}
@@ -227,6 +227,7 @@ async function BrowseAllView({
                 reasonCodes={reasonCodes}
                 eligible={eligible}
                 eligibilityNotes={eligibilityNotes}
+                notActionable={notActionable}
                 initialStatus={statusById.get(opportunity.id) ?? null}
               />
             ))}

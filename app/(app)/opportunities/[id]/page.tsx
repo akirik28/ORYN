@@ -4,6 +4,7 @@ import { ExternalLink, MapPin, DollarSign, Calendar, Users2 } from "lucide-react
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { refreshOpportunityMatches } from "@/lib/opportunities/persist-matches";
+import { resolveStoredEligibility } from "@/lib/opportunities/lifecycle";
 import { PageHeader } from "@/components/oryn/page-header";
 import { ErrorState } from "@/components/oryn/error-state";
 import { SectionHeader } from "@/components/oryn/section-header";
@@ -64,6 +65,13 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
 
   const match = matchRes.data;
 
+  // Same read-time lifecycle gate Browse applies (lib/opportunities/browse.ts), for the same
+  // reason: this row's `eligible` was computed at some earlier moment and is never deleted
+  // when the opportunity's cycle closes or its deadline passes, so trusting it verbatim badges
+  // a long-closed opportunity as a live match. Reusing resolveStoredEligibility rather than
+  // re-deriving the rule here keeps this page from becoming a third copy that can drift.
+  const eligibility = match ? resolveStoredEligibility(opportunity, { eligible: match.eligible, notes: match.eligibility_notes }) : null;
+
   return (
     <div className="max-w-2xl space-y-6">
       <PageHeader
@@ -87,12 +95,17 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
         {SELECTIVITY_LABEL[opportunity.selectivity_tier] ? <StatusBadge label={SELECTIVITY_LABEL[opportunity.selectivity_tier]!} tone="neutral" /> : null}
         {CYCLE_STATUS_LABEL[opportunity.cycle_status] ? <StatusBadge label={CYCLE_STATUS_LABEL[opportunity.cycle_status]!} tone="info" /> : null}
         <StatusBadge label={humanize(opportunity.category)} tone="brand" />
-        {match && !match.eligible ? <StatusBadge label="Not eligible for you" tone="neutral" /> : null}
-        {match && match.eligible && match.eligibility_notes ? <StatusBadge label="Eligibility unknown" tone="warning" /> : null}
+        {/* "Not eligible for you" is a claim about the student and must not be used for a
+            closed cycle or a passed deadline, which are facts about the opportunity that
+            apply to everyone — see ResolvedEligibility.notActionable. */}
+        {eligibility && !eligibility.eligible ? (
+          <StatusBadge label={eligibility.notActionable ? "Not open right now" : "Not eligible for you"} tone="neutral" />
+        ) : null}
+        {eligibility && eligibility.eligible && eligibility.notes ? <StatusBadge label="Eligibility unknown" tone="warning" /> : null}
       </div>
 
-      {match && match.eligibility_notes ? (
-        <p className="rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">{match.eligibility_notes}</p>
+      {eligibility && eligibility.notes ? (
+        <p className="rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">{eligibility.notes}</p>
       ) : null}
 
       {opportunity.description ? <p className="text-muted-foreground">{opportunity.description}</p> : null}
