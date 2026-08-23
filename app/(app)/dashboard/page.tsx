@@ -5,6 +5,7 @@ import { getTargetUniversitiesWithDetails } from "@/lib/universities/queries";
 import { getUpcomingDeadlines } from "@/lib/deadlines/upcoming";
 import { refreshOpportunityMatches } from "@/lib/opportunities/persist-matches";
 import { isOpportunityRecommendable } from "@/lib/opportunities/lifecycle";
+import { competesInCoreRecommendations } from "@/lib/opportunities/commercial";
 import { AIProviderNotConfiguredError } from "@/lib/ai";
 import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
 import { getCounselorState } from "@/lib/counselor/state";
@@ -149,7 +150,7 @@ export default async function DashboardPage() {
         // distinction #143 got wrong. Omitting `verified_at` here would silently re-create that
         // bug for this surface alone; OpportunityVerificationFacts requires it so that omitting
         // it fails typecheck rather than quietly hiding opportunities from the homepage.
-        .select("id, title, cycle_status, deadline, last_verified_at, verified_at")
+        .select("id, title, cycle_status, deadline, last_verified_at, verified_at, cost, selectivity_tier")
         .in("id", opportunityIds)
     : { data: [] };
   // Defense in depth (lib/opportunities/lifecycle.ts): same stale-match-row risk as the
@@ -160,8 +161,16 @@ export default async function DashboardPage() {
   // and "N% match" with nowhere to put a caveat, so unlike Browse and the detail page it can't
   // label an unverified row honestly — it can only show a confidence number Oryn can't stand
   // behind. Browse remains the complete catalogue; nothing is hidden from the student there.
+  //
+  // competesInCoreRecommendations too: this block is a core recommendation surface, but it
+  // reads opportunity_matches directly rather than through Counselor Core, so the pay-to-enroll
+  // filter in lib/counselor/candidates.ts does not cover it. Without this line the homepage
+  // would keep proposing exactly the programmes the ruling retired from the weekly plan and
+  // the advisor — measured live: AJSR, JRHS and IJHSR were still surfacing here.
   const opportunityById = new Map(
-    (matchedOpportunities ?? []).filter((o) => isOpportunityRecommendable(o)).map((o) => [o.id, o])
+    (matchedOpportunities ?? [])
+      .filter((o) => isOpportunityRecommendable(o) && competesInCoreRecommendations(o))
+      .map((o) => [o.id, o])
   );
   const opportunityPreview = opportunityMatches
     .map((m) => ({ title: opportunityById.get(m.opportunity_id)?.title, matchScore: m.match_score }))
