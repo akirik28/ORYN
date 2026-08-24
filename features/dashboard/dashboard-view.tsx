@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Compass, FileText, Landmark, TrendingUp } from "lucide-react";
+import { ArrowRight, Compass, FileText, Landmark, Minus, TrendingUp } from "lucide-react";
 import { Eyebrow } from "@/components/oryn/eyebrow";
 import { SectionHeader } from "@/components/oryn/section-header";
 import { InsightCard } from "@/components/oryn/insight-card";
@@ -14,7 +14,8 @@ import { GeneratePlanButton } from "@/features/dashboard/generate-plan-button";
 import { ProfileSignal } from "@/features/dashboard/profile-signal";
 import { OutlookBadge } from "@/features/universities/outlook-badge";
 import { DIMENSION_LABELS } from "@/lib/scoring/labels";
-import { canClaimGap, hasConfidentSignal, type DimensionSignal } from "@/lib/scoring/signal";
+import { canClaimGap, type DimensionSignal } from "@/lib/scoring/signal";
+import { describeProfileChange, type ProfileChange } from "@/lib/scoring/change";
 import type { getTargetUniversitiesWithDetails } from "@/lib/universities/queries";
 import type { getUpcomingDeadlines, DeadlineSource } from "@/lib/deadlines/upcoming";
 import type { WeeklyPlanWithActions } from "@/lib/plan/persist";
@@ -30,10 +31,10 @@ const DEADLINE_SOURCE_ICONS: Record<DeadlineSource, typeof FileText> = {
 export interface DashboardViewProps {
   displayName: string;
   greeting: string;
-  score: number | null;
-  trend: number | null;
   biggestGap: { dimension: ProfileDimension; score: number } | null;
-  biggestImprovement: { dimension: ProfileDimension; delta: number } | null;
+  /** Per-dimension movement since the last snapshot. Replaced the single aggregate delta —
+   * see lib/scoring/change.ts for why a mean of nine dimensions isn't something to act on. */
+  profileChange: ProfileChange;
   /** Qualitative per-dimension read (lib/scoring/signal.ts). Never rendered as percentages. */
   profileSignal: DimensionSignal[];
   weeklyPlan: WeeklyPlanWithActions | null;
@@ -56,10 +57,8 @@ export interface DashboardViewProps {
 export function DashboardView({
   displayName,
   greeting,
-  score,
-  trend,
   biggestGap,
-  biggestImprovement,
+  profileChange,
   profileSignal,
   weeklyPlan,
   planError,
@@ -77,7 +76,7 @@ export function DashboardView({
   // finding or just silence. See canClaimGap — this was live on an empty profile.
   const claimableGap = biggestGap && canClaimGap(profileSignal, biggestGap.dimension) ? biggestGap : null;
   const gapLabel = claimableGap ? DIMENSION_LABELS[claimableGap.dimension] : null;
-  const hasRead = hasConfidentSignal(profileSignal);
+  const changeSentence = describeProfileChange(profileChange);
 
   // "What Oryn is reading" (UI-V3 § 9) — the evidence behind the claim above it, so the
   // recommendation can be argued with rather than only accepted. Every figure is counted
@@ -102,29 +101,16 @@ export function DashboardView({
           sentence about what to do, in Oryn's own voice. The greeting is deliberately
           small: it's an address, not the headline. */}
       <header>
-        {/* The overall Career Profile score still appears (master spec Phase 7 asks for it,
-            with its month-over-month trend) but deliberately as quiet metadata rather than
-            a hero ring. UI-V3 § 11's objection is to *leading* with a number: a two-digit
-            score invites a student to treat 42 vs 44 as meaningful and to optimise the
-            figure instead of the evidence behind it. The qualitative Profile Signal below
-            is the real reading; this is a footnote to it. */}
-        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-          <p className="text-sm text-ink-3">
-            {greeting}, {displayName}.
-          </p>
-          {score !== null && hasRead ? (
-            <p className="text-sm text-ink-3">
-              Career profile <span className="text-ink-2 tabular-nums">{score}</span>
-              {trend !== null && trend !== 0 ? (
-                <span className={trend > 0 ? "text-success" : "text-ink-3"}>
-                  {" "}
-                  {trend > 0 ? "+" : ""}
-                  {trend} this month
-                </span>
-              ) : null}
-            </p>
-          ) : null}
-        </div>
+        {/* No aggregate score here. It is still computed and stored — ranking, snapshots and
+            trend logic all read `profiles.profile_strength_score` — but a student was being
+            shown a mean of nine dimensions as though it were a reading of them. It is not
+            interpretable (two very different months produce the same 69), not actionable
+            (nothing you can do maps to it), and it invites optimising the figure instead of
+            the evidence underneath. What replaces it is everything below: the area to
+            strengthen next, the per-dimension signal, and what actually moved. */}
+        <p className="text-sm text-ink-3">
+          {greeting}, {displayName}.
+        </p>
         {gapLabel ? (
           <NextMove
             className="mt-6"
@@ -166,13 +152,21 @@ export function DashboardView({
             }
           />
         )}
-        {biggestImprovement ? (
-          <p className="mt-8 flex items-center gap-2 text-sm text-success">
-            <TrendingUp className="size-4 shrink-0" aria-hidden="true" />
-            <span>
-              {DIMENSION_LABELS[biggestImprovement.dimension]} improved by {biggestImprovement.delta} this
-              month.
-            </span>
+        {/* Change since the previous review. Previously this only appeared when something had
+            improved, so a flat month and a month with no history looked identical — and the
+            only other signal of movement was the aggregate delta that used to sit above. */}
+        {changeSentence ? (
+          <p
+            className={`mt-8 flex items-center gap-2 text-sm ${
+              profileChange.improved.length > 0 ? "text-success" : "text-ink-3"
+            }`}
+          >
+            {profileChange.improved.length > 0 ? (
+              <TrendingUp className="size-4 shrink-0" aria-hidden="true" />
+            ) : (
+              <Minus className="size-4 shrink-0" aria-hidden="true" />
+            )}
+            <span>{changeSentence}</span>
           </p>
         ) : null}
       </header>

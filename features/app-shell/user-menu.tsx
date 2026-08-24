@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { signalCoverage, type DimensionSignal } from "@/lib/scoring/signal";
 import { SECONDARY_NAV } from "./nav-items";
 
 function initialsFor(name: string) {
@@ -21,20 +22,30 @@ function initialsFor(name: string) {
 
 /**
  * Account menu. In UI-V3 this is the only chrome the sidebar's lower half left behind, so
- * it absorbs what lived there: the Career Profile score and the secondary nav (Documents,
- * Settings). The score stays visible in chrome deliberately — Oryn's read on the student
- * should feel ambient, not something you go to one page to look up — but it's a reading,
- * not a button, so it sits as the menu's header rather than competing as another item.
+ * it absorbs what lived there: Oryn's standing read on the student, and the secondary nav
+ * (Documents, Settings).
+ *
+ * That read used to be the aggregate score — a bare "69" sitting in the chrome of every
+ * page. It is now a count of what Oryn can actually stand behind, which is the same
+ * ambient reassurance without asking a student to treat a mean of nine dimensions as a
+ * verdict on themselves. The number is still stored; it is just not a thing to look at.
  */
 export function UserMenu({
   displayName,
   email,
-  score,
+  signal,
 }: {
   displayName: string;
   email: string | null;
-  score: number | null;
+  signal: DimensionSignal[];
 }) {
+  const coverage = signalCoverage(signal);
+  const summary =
+    coverage.assessed === 0
+      ? "Add what you've done"
+      : coverage.strong > 0
+        ? `${coverage.strong} area${coverage.strong === 1 ? "" : "s"} strong`
+        : `${coverage.assessed} area${coverage.assessed === 1 ? "" : "s"} assessed`;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -57,10 +68,8 @@ export function UserMenu({
           href="/profile"
           className="flex items-center justify-between gap-2 rounded-md px-1.5 py-1.5 transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
         >
-          <span className="text-sm text-ink-2">Career Profile</span>
-          <span className="font-display text-lg leading-none">
-            {score === null ? <span className="text-sm text-ink-3">Not scored yet</span> : score}
-          </span>
+          <span className="text-sm text-ink-2">Career profile</span>
+          <span className="text-sm text-ink-3">{summary}</span>
         </Link>
         <DropdownMenuSeparator />
         {SECONDARY_NAV.map((item) => {

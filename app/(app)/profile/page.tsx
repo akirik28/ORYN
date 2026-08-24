@@ -6,7 +6,7 @@ import { SectionHeader } from "@/components/oryn/section-header";
 import { createClient } from "@/lib/supabase/server";
 import { ScoreRadar } from "@/features/profile/score-radar";
 import { ProfileSignal } from "@/features/dashboard/profile-signal";
-import { buildProfileSignal, hasConfidentSignal, signalCoverage } from "@/lib/scoring/signal";
+import { toProfileSignal, hasConfidentSignal, signalCoverage } from "@/lib/scoring/signal";
 import { InsightCard } from "@/components/oryn/insight-card";
 import { JourneyTimeline } from "@/features/profile/journey-timeline";
 import { buildJourney } from "@/lib/profile/build-journey";
@@ -200,14 +200,7 @@ export default async function ProfilePage() {
     education: educationRes.data ?? [],
   });
 
-  const profileSignal = buildProfileSignal(
-    (scoresRes.data ?? []).map((row) => ({
-      dimension: row.dimension,
-      score: row.score,
-      confidence: row.confidence,
-      reasonCodes: row.reason_codes,
-    })),
-  );
+  const profileSignal = toProfileSignal(scoresRes.data ?? []);
 
   // Oryn's own note on the record. Ordered so the honest case wins: with nothing confidently
   // scored it asks for evidence rather than diagnosing (Phase 68); then it names a real

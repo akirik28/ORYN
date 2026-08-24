@@ -9,6 +9,7 @@ import {
   signalStateFor,
   EVIDENCE_STATE_LABELS,
   EVIDENCE_STATE_SHORT_LABELS,
+  type DimensionScoreRow,
 } from "@/lib/scoring/signal";
 import type { DataConfidence, ProfileDimension } from "@/types/database";
 
@@ -117,9 +118,15 @@ describe("buildProfileSignal", () => {
     expect(first).toMatchObject({ dimension: "academics", score: 88, confidence: "medium", state: "strong" });
   });
 
-  test("a missing reasonCodes field is treated as no evidence, not as evidence", () => {
-    const [first] = buildProfileSignal([{ dimension: "research", score: 0, confidence: "low" }]);
-    expect(first.state).toBe("not_assessed");
+  // Omitting the evidence field used to compile, and silently meant "no evidence" — a
+  // scored student rendered as if their profile were empty. It is now a type error, and
+  // this @ts-expect-error is the assertion: if the field ever goes optional again, the
+  // directive becomes unused and `npm run typecheck` fails on this line.
+  test("the evidence field cannot be omitted by a caller", () => {
+    // @ts-expect-error reasonCodes is required — omission must not compile.
+    const bad: DimensionScoreRow = { dimension: "research", score: 80, confidence: "high" };
+    // Still exercise the runtime path so the fixture isn't dead code.
+    expect(buildProfileSignal([{ ...bad, reasonCodes: [] }])[0].state).toBe("not_assessed");
   });
 
   test("empty input yields an empty signal rather than throwing", () => {
