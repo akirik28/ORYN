@@ -13,7 +13,7 @@ import type { AIMessage } from "@/lib/ai/provider";
 export async function sendAdvisorMessage(
   conversationId: string | null,
   content: string
-): Promise<{ conversationId: string; assistantMessageId?: string; error?: string }> {
+): Promise<{ conversationId: string; assistantMessageId?: string; content?: string; error?: string }> {
   const session = await requireUser();
   const userId = session.userId!;
   const trimmed = content.trim();
@@ -82,7 +82,7 @@ export async function sendAdvisorMessage(
       .select("id")
       .single();
     revalidatePath("/advisor");
-    return { conversationId: convId, assistantMessageId: assistantMessage?.id };
+    return { conversationId: convId, assistantMessageId: assistantMessage?.id, content: reply };
   } catch (error) {
     // P0 fix: previously nothing was written here at all — the user's message stayed
     // saved with no reply and no persisted failure signal, only an ephemeral client-side
