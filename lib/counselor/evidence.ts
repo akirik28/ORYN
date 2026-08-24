@@ -1,4 +1,5 @@
 import { DIMENSION_LABELS } from "@/lib/scoring/labels";
+import { GAP_CLAIM_SCORE_CEILING } from "./config";
 import type { CounselorRecommendation, CounselorState, NextActionType, ProfileGap, RankedCandidate } from "./types";
 
 const SEVERITY_LABEL: Record<ProfileGap["severity"], string> = {
@@ -42,10 +43,29 @@ function nextActionFor(candidate: RankedCandidate["candidate"]): { label: string
   }
 }
 
+/**
+ * Same ceiling as gapRelevanceComponent (scoring.ts) — a dimension already this strong is
+ * never described as a *gap*. Found live: Academics at 94/100 (labelled "Strong" on the
+ * same page's profile-signal panel) rendered as "Addresses Academics, a minor current gap
+ * (94/100)" — a candidate the student was actively told to avoid for touching nothing but
+ * an already-strong dimension, explained with copy that called that dimension a weakness.
+ *
+ * Deliberately not a blanket omission: `deprioritize`/`avoid_for_now` exist specifically
+ * *because* every matched dimension is already strong (scoring.ts's deprioritizeEligible/
+ * avoidEligible) — for those classes, saying so plainly is the actual reason to show, not
+ * something to hide. Only `do`/`consider` copy should never cite a strength as a reason to
+ * act; a mixed candidate (e.g. a real Awards gap alongside an already-strong Academics
+ * match) keeps its genuine reason and drops only the false one.
+ */
 function whyForOpportunity(ranked: RankedCandidate): string[] {
-  const lines = ranked.matchedGaps.map(
-    (g) => `Addresses ${DIMENSION_LABELS[g.dimension]}, ${SEVERITY_LABEL[g.severity]} (${g.score}/100).`
-  );
+  const isDeprioritized = ranked.recommendationClass === "deprioritize" || ranked.recommendationClass === "avoid_for_now";
+  const lines = ranked.matchedGaps
+    .filter((g) => isDeprioritized || g.score < GAP_CLAIM_SCORE_CEILING)
+    .map((g) =>
+      g.score >= GAP_CLAIM_SCORE_CEILING
+        ? `Addresses ${DIMENSION_LABELS[g.dimension]}, already strong (${g.score}/100) — not a reason to prioritize this.`
+        : `Addresses ${DIMENSION_LABELS[g.dimension]}, ${SEVERITY_LABEL[g.severity]} (${g.score}/100).`
+    );
   if (ranked.candidate.verificationState === "verified_current") {
     lines.push("Verified as currently active.");
   }

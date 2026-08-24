@@ -69,6 +69,28 @@ export const RANKING_THRESHOLDS = {
   strongDimensionScore: 75,
 } as const;
 
+/**
+ * A matched dimension at or above this score is never treated as a gap for scoring/copy
+ * purposes, even though `rankDimensionGaps` still assigns it some `GapSeverity` (that
+ * function ranks all 9 dimensions relative to each other, which is legitimate for
+ * `RANKING_THRESHOLDS.strongDimensionScore`'s deprioritize check above — but "ranked below
+ * the strongest dimension" is not the same claim as "this is a gap").
+ *
+ * Found live: a candidate addressing Academics at 94/100 was scored with real gapRelevance
+ * credit and rendered "Addresses Academics, a minor current gap (94/100)" — on the same
+ * page as the profile-signal panel calling that same dimension "Strong". `severityFor`
+ * (gaps.ts) only ever compares a dimension to the single strongest one, so anything short
+ * of a tie gets *some* GapSeverity no matter how high its own absolute score is.
+ *
+ * Sourced from `lib/scoring/signal.ts`'s `evidenceStateFor` — 70 is the exact score that
+ * produces the "Strong" label a student sees elsewhere on this same profile, so this is the
+ * one number that actually closes the contradiction rather than merely narrowing it.
+ * Deliberately not unified with `strongDimensionScore` above (75, Counselor Core's own
+ * pre-existing threshold for a different decision) — changing that one could shift which
+ * candidates get deprioritized/avoided, a product-tuning call out of scope for this fix.
+ */
+export const GAP_CLAIM_SCORE_CEILING = 70;
+
 /** Spec §16 — "do not overrecommend". `do` is already capped at doSlots by construction
  * (scoring.ts); this caps the secondary "consider" bucket the same way at the pipeline
  * layer (lib/counselor/pipeline.ts), so the rule lives with the other ranking config

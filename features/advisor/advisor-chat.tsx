@@ -89,10 +89,16 @@ export function AdvisorChat({
         return;
       }
 
-      // Server persisted the reply; re-fetch is unnecessary for a snappy feel — just
-      // trust the round trip completed and drop the optimistic placeholder. The page
-      // revalidates on next navigation, so history stays consistent.
-      setMessages((prev) => prev.filter((m) => m.id !== "thinking"));
+      // Swap the thinking placeholder for the real reply directly, rather than only
+      // dropping it: revalidatePath() on the server invalidates the route for the *next*
+      // render, but this component's `messages` is local useState seeded once from
+      // `initialMessages` — a prop change alone never flows back in without a remount, so
+      // the reply would otherwise stay invisible until a manual reload (found live-testing
+      // this exact path — the server had already persisted and returned the reply while
+      // the chat kept showing nothing).
+      setMessages((prev) =>
+        prev.map((m) => (m.id === "thinking" ? { id: result.assistantMessageId ?? "thinking", role: "assistant", content: result.content ?? "" } : m))
+      );
     });
   }
 
