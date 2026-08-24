@@ -6,7 +6,7 @@ import { SectionHeader } from "@/components/oryn/section-header";
 import { createClient } from "@/lib/supabase/server";
 import { ScoreRadar } from "@/features/profile/score-radar";
 import { ProfileSignal } from "@/features/dashboard/profile-signal";
-import { buildProfileSignal, hasConfidentSignal } from "@/lib/scoring/signal";
+import { buildProfileSignal, hasConfidentSignal, signalCoverage } from "@/lib/scoring/signal";
 import { InsightCard } from "@/components/oryn/insight-card";
 import { JourneyTimeline } from "@/features/profile/journey-timeline";
 import { buildJourney } from "@/lib/profile/build-journey";
@@ -196,34 +196,39 @@ export default async function ProfilePage() {
   });
 
   const profileSignal = buildProfileSignal(
-    (scoresRes.data ?? []).map((row) => ({ dimension: row.dimension, score: row.score, confidence: row.confidence })),
+    (scoresRes.data ?? []).map((row) => ({
+      dimension: row.dimension,
+      score: row.score,
+      confidence: row.confidence,
+      reasonCodes: row.reason_codes,
+    })),
   );
 
   // Oryn's own note on the record. Ordered so the honest case wins: with nothing confidently
   // scored it asks for evidence rather than diagnosing (Phase 68); then it names a real
   // missing area; then, when there's nothing to flag, it names the strongest area, which is
   // what makes a later "you don't need more of this" believable.
-  const unknownDimensions = profileSignal.filter((row) => row.state === "limited_evidence");
-  const weakest = profileSignal.filter((row) => row.state === "needs_attention").at(-1) ?? null;
+  const coverage = signalCoverage(profileSignal);
+  const weakest = profileSignal.filter((row) => row.state === "emerging").at(-1) ?? null;
   const strongest = profileSignal.find((row) => row.state === "strong") ?? null;
   const journeyNote: { variant: "gap" | "strength"; eyebrow: string; title: string; body: string } | null =
     !hasConfidentSignal(profileSignal)
       ? {
           variant: "gap",
-          eyebrow: "Missing evidence",
-          title: "Oryn can't read your profile yet.",
+          eyebrow: "Nothing to read yet",
+          title: "Add a few things and this page starts working.",
           body:
-            "Every dimension is still marked limited evidence, which means the record is thin — not that the work isn't there. Add your courses, activities and projects below and this page starts telling you something.",
+            "Oryn hasn't been given enough to assess any area yet. That's a gap in the record, not a judgement about you — add your courses, activities and projects below and it will start telling you where you actually stand.",
         }
       : weakest
         ? {
             variant: "gap",
-            eyebrow: "Missing evidence",
-            title: `${DIMENSION_LABELS[weakest.dimension]} is the thinnest part of your record.`,
+            eyebrow: "Where the leverage is",
+            title: `${DIMENSION_LABELS[weakest.dimension]} is where your next effort counts most.`,
             body:
-              unknownDimensions.length > 0
-                ? `It has the least supporting evidence of anything Oryn can assess. ${unknownDimensions.length} other ${unknownDimensions.length === 1 ? "dimension is" : "dimensions are"} still unscored, so this reading may change as you add more.`
-                : "It has the least supporting evidence of anything Oryn can assess, which makes it where the same effort moves your profile furthest.",
+              coverage.awaitingEvidence > 0
+                ? `Of the ${coverage.assessed} area${coverage.assessed === 1 ? "" : "s"} Oryn can currently assess, this one has the least behind it — so the same hours move your profile furthest here. ${coverage.awaitingEvidence} other area${coverage.awaitingEvidence === 1 ? " has" : "s have"} nothing recorded yet, so this reading may change as you add more.`
+                : "Of everything Oryn can assess, this area has the least behind it — which makes it where the same hours move your profile furthest.",
           }
         : strongest
           ? {
@@ -250,6 +255,9 @@ export default async function ProfilePage() {
         description="Your record of academics, leadership, research and execution. This is Oryn's development assessment — not an admissions score, and not visible to universities."
         action={
           <div className="flex flex-col items-end gap-1 text-sm">
+            <Link href="/profile/import" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
+              Scan a CV <ArrowRight className="size-3.5" />
+            </Link>
             <Link href="/profile/portfolio" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
               View portfolio <ArrowRight className="size-3.5" />
             </Link>

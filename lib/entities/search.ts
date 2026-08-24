@@ -140,9 +140,27 @@ async function searchUniversities(
 /**
  * Opportunities are not in the canonical registry — they are catalogue records with a
  * deadline, eligibility and a source URL, produced by the discovery pipeline. Their
- * search is a plain name match ranked in TS over a bounded fetch, with no aliases:
- * nothing stores alternate names for an opportunity today, and inventing them from the
- * title would be fabricated data.
+ * search is a name match ranked in TS, with no aliases: nothing stores alternate names for
+ * an opportunity today, and inventing them from the title would be fabricated data.
+ *
+ * Two bugs lived here, and together they made most of the catalogue unreachable from the
+ * Journey/profile comboboxes even though Browse listed it happily:
+ *
+ * 1. **`.eq("country", context.country)` was a hard exclusion.** `opportunities.country` is
+ *    null for anything international or online — 243 of 421 rows live — so every one of
+ *    those disappeared for any student who had a country on their profile. That is how
+ *    "Purple Comet! Math Meet" (status active, country null) was visible in Opportunities
+ *    and unfindable from Journey. Raw `.eq` also ignored the spelling problem Browse
+ *    already solves with `isSameCountry`: the live data contains both "Turkey" and
+ *    "Türkiye". Country is now a *ranking* input only, which is what
+ *    `rankEntityCandidates` already does with it (a +10 boost on an exact match) — Browse
+ *    treats country as a filter the student chooses, and search should not silently apply
+ *    a stricter rule than the surface the student just came from.
+ *
+ * 2. **The candidate fetch was an unordered `.limit(300)` with no name predicate**, so
+ *    ranking ran over an arbitrary 300 of 421 rows and would only get worse as the
+ *    catalogue grows. The name filter now runs in SQL, so the rows fetched are the rows
+ *    that could actually match.
  */
 async function searchOpportunities(
   supabase: SupabaseClient<Database>,
@@ -150,8 +168,20 @@ async function searchOpportunities(
   context: EntitySearchContext
 ): Promise<EntitySearchResult[]> {
   const OPPORTUNITY_CANDIDATE_LIMIT = 300;
-  let candidateQuery = supabase.from("opportunities").select("id, title, category, organization, country").eq("status", "active");
-  if (context.country) candidateQuery = candidateQuery.eq("country", context.country);
+  const trimmed = query.trim();
+
+  let candidateQuery = supabase
+    .from("opportunities")
+    .select("id, title, category, organization, country")
+    .eq("status", "active");
+
+  if (trimmed.length > 0) {
+    // Escape PostgREST's own wildcards so a literal % or _ in a title search doesn't
+    // silently widen the pattern.
+    const pattern = `%${trimmed.replace(/[%_]/g, (c) => `\\${c}`)}%`;
+    candidateQuery = candidateQuery.ilike("title", pattern);
+  }
+
   const { data } = await candidateQuery.limit(OPPORTUNITY_CANDIDATE_LIMIT);
 
   const rows = data ?? [];

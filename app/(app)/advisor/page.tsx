@@ -41,7 +41,12 @@ export default async function AdvisorPage() {
   const biggestGap = rankDimensionGaps(toDimensionScoreRows(scores))[0] ?? null;
 
   const profileSignal = buildProfileSignal(
-    scores.map((s) => ({ dimension: s.dimension, score: s.score, confidence: s.confidence })),
+    scores.map((s) => ({
+      dimension: s.dimension,
+      score: s.score,
+      confidence: s.confidence,
+      reasonCodes: s.reason_codes,
+    })),
   );
   // Same honesty guard the dashboard applies: don't state a focus Oryn can't actually
   // support from the data. The strategy panel simply omits the row instead.

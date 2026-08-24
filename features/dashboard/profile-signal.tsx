@@ -4,7 +4,12 @@ import { Eyebrow } from "@/components/oryn/eyebrow";
 // Short forms: this block is a scan-and-compare read, and the full
 // "Execution / Project Depth" wraps to two lines in every column width it renders in.
 import { DIMENSION_LABELS, DIMENSION_LABELS_SHORT } from "@/lib/scoring/labels";
-import { EVIDENCE_STATE_LABELS, type DimensionSignal, type EvidenceState } from "@/lib/scoring/signal";
+import {
+  EVIDENCE_STATE_LABELS,
+  EVIDENCE_STATE_SHORT_LABELS,
+  type DimensionSignal,
+  type EvidenceState,
+} from "@/lib/scoring/signal";
 
 /**
  * Profile Signal (UI-V3 § 11) — how Oryn reads the shape of a student's profile.
@@ -20,24 +25,30 @@ import { EVIDENCE_STATE_LABELS, type DimensionSignal, type EvidenceState } from 
  * to place this dimension at all. Showing it as a low fill would be a quiet lie.
  */
 const STATE_STEP: Record<EvidenceState, number> = {
-  needs_attention: 1,
+  emerging: 1,
   developing: 2,
   strong: 4,
+  // Neither of these is a position on the scale — see the outlined-track note below.
   limited_evidence: 0,
+  not_assessed: 0,
 };
 
 const STATE_TONE: Record<EvidenceState, string> = {
   strong: "bg-success",
   developing: "bg-brand-primary",
-  needs_attention: "bg-warning",
+  // Brand, not warning: "a good next area to strengthen" is a direction, not an alarm.
+  // Amber here is what turned a thin profile into a page of red flags.
+  emerging: "bg-brand-primary/60",
   limited_evidence: "bg-transparent",
+  not_assessed: "bg-transparent",
 };
 
 const STATE_TEXT: Record<EvidenceState, string> = {
   strong: "text-success",
   developing: "text-ink-2",
-  needs_attention: "text-warning",
+  emerging: "text-ink-2",
   limited_evidence: "text-ink-4",
+  not_assessed: "text-ink-4",
 };
 
 function Spectrum({ state }: { state: EvidenceState }) {
@@ -51,7 +62,8 @@ function Spectrum({ state }: { state: EvidenceState }) {
             "h-1 w-3.5 rounded-full",
             step <= lit ? STATE_TONE[state] : "bg-ink-4/20",
             // Unknown reads as an outlined track, not a filled one — see the note above.
-            state === "limited_evidence" && "border border-dashed border-ink-4/50 bg-transparent",
+            (state === "limited_evidence" || state === "not_assessed") &&
+              "border border-dashed border-ink-4/50 bg-transparent",
           )}
         />
       ))}
@@ -109,7 +121,7 @@ export function ProfileSignal({
                 <span className="text-xs text-ink-4 tabular-nums">{row.score}</span>
               ) : null}
               <span className={cn("text-xs whitespace-nowrap", STATE_TEXT[row.state])}>
-                {EVIDENCE_STATE_LABELS[row.state]}
+                {showScores ? EVIDENCE_STATE_LABELS[row.state] : EVIDENCE_STATE_SHORT_LABELS[row.state]}
               </span>
               <Spectrum state={row.state} />
             </span>

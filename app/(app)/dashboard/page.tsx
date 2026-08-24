@@ -103,7 +103,14 @@ export default async function DashboardPage() {
   // rows, but carries `confidence` through as well — the signal must be able to say
   // "limited evidence" rather than reporting an unknown dimension as a weak one.
   const profileSignal = buildProfileSignal(
-    scores.map((s) => ({ dimension: s.dimension, score: s.score, confidence: s.confidence })),
+    scores.map((s) => ({
+      dimension: s.dimension,
+      score: s.score,
+      confidence: s.confidence,
+      // Empty reason_codes means the dimension found nothing to score — the signal needs
+      // that to tell "nothing recorded" apart from "assessed and weak".
+      reasonCodes: s.reason_codes,
+    })),
   );
 
   let biggestImprovement: { dimension: ProfileDimension; delta: number } | null = null;

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { recomputeCareerProfile } from "@/lib/scoring/persist";
+import { insertCvImportItems } from "@/lib/profile/cv-import";
 import {
   extractCVData,
   SUPPORTED_CV_MIME_TYPES,
@@ -78,15 +79,6 @@ export async function uploadAndExtractCV(formData: FormData): Promise<CVUploadRe
     return { success: false, error: "We couldn't fully read this document. You can retry or add the information manually." };
   }
 }
-
-const CATEGORY_TABLE = {
-  education: "education_records",
-  activities: "activities",
-  awards: "awards",
-  projects: "projects",
-  research: "research_experiences",
-  workExperience: "work_experiences",
-} as const;
 
 export async function completeOnboarding(input: CompleteOnboardingInput): Promise<{ error?: string }> {
   const session = await requireUser();
@@ -175,48 +167,11 @@ export async function completeOnboarding(input: CompleteOnboardingInput): Promis
         notes: null,
       });
       if (data.extractedItems && data.extractedItems.length > 0) {
-        const byCategory = new Map<string, typeof data.extractedItems>();
-        for (const item of data.extractedItems) {
-          byCategory.set(item.category, [...(byCategory.get(item.category) ?? []), item]);
-        }
-        for (const [category, items] of byCategory) {
-          const table = CATEGORY_TABLE[category as keyof typeof CATEGORY_TABLE];
-          const rows = items.map((item) =>
-            category === "education"
-              ? {
-                  user_id: userId,
-                  school_name: item.organization || item.title,
-                  school_entity_id: item.organizationEntityId,
-                  start_date: item.startDate,
-                  end_date: item.endDate,
-                  notes: item.description,
-                  is_current: !item.endDate,
-                }
-              : category === "workExperience"
-                ? {
-                    user_id: userId,
-                    title: item.title,
-                    organization: item.organization || "Unknown",
-                    organization_entity_id: item.organizationEntityId,
-                    description: item.description,
-                    start_date: item.startDate,
-                    end_date: item.endDate,
-                    source: "cv_import",
-                  }
-                : {
-                    user_id: userId,
-                    title: item.title,
-                    organization: item.organization,
-                    organization_entity_id: item.organizationEntityId,
-                    description: item.description,
-                    start_date: item.startDate,
-                    end_date: item.endDate,
-                    source: "cv_import",
-                  }
-          );
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- table name is dynamic across differently-shaped tables
-          await (supabase.from(table as any) as any).insert(rows);
-        }
+        // Shared with the post-onboarding importer at /profile/import — see
+        // lib/profile/cv-import.ts. The per-table shape differences (education has no
+        // title; work_experiences.organization is NOT NULL) live there rather than being
+        // written out twice.
+        await insertCvImportItems(supabase, userId, data.extractedItems);
       }
 
       await recomputeCareerProfile(userId, { snapshotReason: "onboarding_completed" });

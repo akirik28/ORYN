@@ -4,60 +4,105 @@ import {
   canClaimGap,
   evidenceStateFor,
   hasConfidentSignal,
+  isAssessed,
+  signalCoverage,
   signalStateFor,
   EVIDENCE_STATE_LABELS,
+  EVIDENCE_STATE_SHORT_LABELS,
 } from "@/lib/scoring/signal";
 import type { DataConfidence, ProfileDimension } from "@/types/database";
 
+/** A dimension that produced reason codes — i.e. it actually found records to score. */
+const WITH_EVIDENCE = true;
+const NO_EVIDENCE = false;
+
 describe("evidenceStateFor", () => {
-  test("bands a confident score", () => {
-    expect(evidenceStateFor(85, "high")).toBe("strong");
-    expect(evidenceStateFor(55, "high")).toBe("developing");
-    expect(evidenceStateFor(20, "high")).toBe("needs_attention");
+  test("bands a confidently-assessed dimension", () => {
+    expect(evidenceStateFor(85, "high", WITH_EVIDENCE)).toBe("strong");
+    expect(evidenceStateFor(55, "high", WITH_EVIDENCE)).toBe("developing");
+    expect(evidenceStateFor(20, "high", WITH_EVIDENCE)).toBe("emerging");
   });
 
   test("band boundaries are inclusive at the lower edge", () => {
-    expect(evidenceStateFor(70, "high")).toBe("strong");
-    expect(evidenceStateFor(69, "high")).toBe("developing");
-    expect(evidenceStateFor(40, "high")).toBe("developing");
-    expect(evidenceStateFor(39, "high")).toBe("needs_attention");
+    expect(evidenceStateFor(70, "high", WITH_EVIDENCE)).toBe("strong");
+    expect(evidenceStateFor(69, "high", WITH_EVIDENCE)).toBe("developing");
+    expect(evidenceStateFor(40, "high", WITH_EVIDENCE)).toBe("developing");
+    expect(evidenceStateFor(39, "high", WITH_EVIDENCE)).toBe("emerging");
   });
 
-  test("medium confidence still bands by score", () => {
-    expect(evidenceStateFor(85, "medium")).toBe("strong");
-    expect(evidenceStateFor(10, "medium")).toBe("needs_attention");
+  // The core fix. A dimension with no records scores 0 by construction; reporting that 0
+  // as weakness is the thing that made a 90%-complete profile look like a failing one.
+  test("no records is never reported as weakness, whatever the score says", () => {
+    expect(evidenceStateFor(0, "low", NO_EVIDENCE)).toBe("not_assessed");
+    expect(evidenceStateFor(0, "high", NO_EVIDENCE)).toBe("not_assessed");
+    expect(evidenceStateFor(95, "high", NO_EVIDENCE)).toBe("not_assessed");
   });
 
-  // The behaviour this module exists for: a dimension Oryn knows little about must not be
-  // reported as weak. Low confidence wins over every band, including a high score.
-  test("low confidence reports limited evidence, never a judgement", () => {
-    expect(evidenceStateFor(0, "low")).toBe("limited_evidence");
-    expect(evidenceStateFor(35, "low")).toBe("limited_evidence");
-    expect(evidenceStateFor(95, "low")).toBe("limited_evidence");
+  test("records but low confidence is limited evidence, not a verdict", () => {
+    expect(evidenceStateFor(35, "low", WITH_EVIDENCE)).toBe("limited_evidence");
+    expect(evidenceStateFor(90, "low", WITH_EVIDENCE)).toBe("limited_evidence");
   });
 
-  test("a zero score is only 'needs attention' when Oryn is confident about it", () => {
-    expect(evidenceStateFor(0, "low")).toBe("limited_evidence");
-    expect(evidenceStateFor(0, "high")).toBe("needs_attention");
+  test("a zero score is only 'emerging' when Oryn actually assessed it", () => {
+    expect(evidenceStateFor(0, "high", NO_EVIDENCE)).toBe("not_assessed");
+    expect(evidenceStateFor(0, "high", WITH_EVIDENCE)).toBe("emerging");
+  });
+});
+
+describe("isAssessed", () => {
+  test("only the three judgement states count as assessed", () => {
+    expect(isAssessed("strong")).toBe(true);
+    expect(isAssessed("developing")).toBe(true);
+    expect(isAssessed("emerging")).toBe(true);
+    expect(isAssessed("limited_evidence")).toBe(false);
+    expect(isAssessed("not_assessed")).toBe(false);
+  });
+});
+
+describe("labels", () => {
+  test("every state has a full and a short label", () => {
+    for (const state of ["strong", "developing", "emerging", "limited_evidence", "not_assessed"] as const) {
+      expect(EVIDENCE_STATE_LABELS[state]).toBeTruthy();
+      expect(EVIDENCE_STATE_SHORT_LABELS[state]).toBeTruthy();
+    }
+  });
+
+  // Tone guard: the states a student sees most often when their profile is thin must not
+  // read as verdicts on them. This is a deliberate product decision, so it gets a test.
+  test("the low-end labels are framed as next steps, not failures", () => {
+    expect(EVIDENCE_STATE_LABELS.emerging).toBe("A good next area to strengthen");
+    expect(EVIDENCE_STATE_LABELS.not_assessed).toBe("Not enough evidence yet");
+    for (const label of Object.values(EVIDENCE_STATE_LABELS)) {
+      expect(label.toLowerCase()).not.toContain("weak");
+      expect(label.toLowerCase()).not.toContain("poor");
+      expect(label.toLowerCase()).not.toContain("needs attention");
+    }
   });
 });
 
 describe("buildProfileSignal", () => {
-  function row(dimension: ProfileDimension, score: number, confidence: DataConfidence = "high") {
-    return { dimension, score, confidence };
+  function row(
+    dimension: ProfileDimension,
+    score: number,
+    confidence: DataConfidence = "high",
+    hasEvidence = true,
+  ) {
+    return { dimension, score, confidence, reasonCodes: hasEvidence ? [{ code: "x" }] : [] };
   }
 
-  test("orders strong first and limited-evidence last", () => {
+  test("assessed states lead, unassessed sink to the bottom", () => {
     const signal = buildProfileSignal([
       row("research", 20),
       row("academics", 88),
       row("leadership", 55),
-      row("entrepreneurship", 90, "low"),
+      row("entrepreneurship", 0, "high", false),
+      row("awards_distinction", 40, "low"),
     ]);
     expect(signal.map((s) => s.dimension)).toEqual([
       "academics",
       "leadership",
       "research",
+      "awards_distinction",
       "entrepreneurship",
     ]);
   });
@@ -72,27 +117,31 @@ describe("buildProfileSignal", () => {
     expect(first).toMatchObject({ dimension: "academics", score: 88, confidence: "medium", state: "strong" });
   });
 
-  test("empty input yields an empty signal rather than throwing", () => {
-    expect(buildProfileSignal([])).toEqual([]);
+  test("a missing reasonCodes field is treated as no evidence, not as evidence", () => {
+    const [first] = buildProfileSignal([{ dimension: "research", score: 0, confidence: "low" }]);
+    expect(first.state).toBe("not_assessed");
   });
 
-  test("every state has a human label", () => {
-    for (const state of ["strong", "developing", "limited_evidence", "needs_attention"] as const) {
-      expect(EVIDENCE_STATE_LABELS[state]).toBeTruthy();
-    }
+  test("empty input yields an empty signal rather than throwing", () => {
+    expect(buildProfileSignal([])).toEqual([]);
   });
 });
 
 describe("honesty guards", () => {
-  function row(dimension: ProfileDimension, score: number, confidence: DataConfidence = "high") {
-    return { dimension, score, confidence };
+  function row(
+    dimension: ProfileDimension,
+    score: number,
+    confidence: DataConfidence = "high",
+    hasEvidence = true,
+  ) {
+    return { dimension, score, confidence, reasonCodes: hasEvidence ? [{ code: "x" }] : [] };
   }
 
-  test("an entirely unscored profile supports no confident claim", () => {
+  test("a profile with nothing recorded supports no confident claim", () => {
     const signal = buildProfileSignal([
-      row("academics", 0, "low"),
-      row("research", 0, "low"),
-      row("leadership", 0, "low"),
+      row("academics", 0, "low", false),
+      row("research", 0, "low", false),
+      row("leadership", 0, "low", false),
     ]);
     expect(hasConfidentSignal(signal)).toBe(false);
     // The exact case caught live: the gap ranker still returns `academics`, and the
@@ -100,19 +149,19 @@ describe("honesty guards", () => {
     expect(canClaimGap(signal, "academics")).toBe(false);
   });
 
-  test("one confident dimension is enough to have a read on the profile", () => {
-    const signal = buildProfileSignal([row("academics", 80, "high"), row("research", 0, "low")]);
+  test("one assessed dimension is enough to have a read on the profile", () => {
+    const signal = buildProfileSignal([row("academics", 80), row("research", 0, "low", false)]);
     expect(hasConfidentSignal(signal)).toBe(true);
   });
 
-  test("but a gap still can't be named in the dimension that is itself unknown", () => {
-    const signal = buildProfileSignal([row("academics", 80, "high"), row("research", 0, "low")]);
+  test("but a gap still can't be named in a dimension Oryn hasn't assessed", () => {
+    const signal = buildProfileSignal([row("academics", 80), row("research", 0, "low", false)]);
     expect(canClaimGap(signal, "research")).toBe(false);
     expect(canClaimGap(signal, "academics")).toBe(true);
   });
 
-  test("a genuinely weak, confidently-measured dimension can be named", () => {
-    const signal = buildProfileSignal([row("academics", 85, "high"), row("research", 18, "high")]);
+  test("a genuinely thin but measured dimension can be named", () => {
+    const signal = buildProfileSignal([row("academics", 85), row("research", 18)]);
     expect(canClaimGap(signal, "research")).toBe(true);
   });
 
@@ -120,5 +169,27 @@ describe("honesty guards", () => {
     expect(hasConfidentSignal([])).toBe(false);
     expect(canClaimGap([], "research")).toBe(false);
     expect(signalStateFor([], "research")).toBeNull();
+  });
+});
+
+describe("signalCoverage", () => {
+  function row(
+    dimension: ProfileDimension,
+    score: number,
+    confidence: DataConfidence = "high",
+    hasEvidence = true,
+  ) {
+    return { dimension, score, confidence, reasonCodes: hasEvidence ? [{ code: "x" }] : [] };
+  }
+
+  test("separates what Oryn assessed from what it is still waiting on", () => {
+    const signal = buildProfileSignal([
+      row("academics", 85),
+      row("leadership", 72),
+      row("research", 30),
+      row("awards_distinction", 20, "low"),
+      row("entrepreneurship", 0, "low", false),
+    ]);
+    expect(signalCoverage(signal)).toEqual({ assessed: 3, awaitingEvidence: 2, strong: 2, total: 5 });
   });
 });

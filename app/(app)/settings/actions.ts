@@ -5,7 +5,38 @@ import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { UpdatePasswordSchema } from "@/lib/validation/auth";
 import type { TimeBudget } from "@/types/database";
+
+/**
+ * Change the password of the already-signed-in student.
+ *
+ * Separate from `(auth)/actions.ts`'s `updatePassword` even though both end in the same
+ * Supabase call, because that one redirects to /dashboard on success — correct when the
+ * student arrived from a reset link and has nowhere else to be, wrong when they are on
+ * Settings and expect to stay there. Same `UpdatePasswordSchema`, so the strength rules
+ * cannot drift between the two entry points.
+ *
+ * No current-password field: Supabase's `updateUser` acts on the session, and this route
+ * is already behind `requireUser()`. Re-authentication would be a real hardening step but
+ * it belongs with a session-freshness policy, not bolted onto one form.
+ */
+export async function changePassword(password: string): Promise<{ error?: string }> {
+  await requireUser();
+
+  const parsed = UpdatePasswordSchema.safeParse({ password });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "That password can't be used." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+  if (error) {
+    return { error: error.message };
+  }
+
+  return {};
+}
 
 export async function updateDisplayName(displayName: string): Promise<{ error?: string }> {
   const session = await requireUser();
@@ -120,3 +151,4 @@ export async function deleteMyAccount(): Promise<{ error?: string }> {
   await supabase.auth.signOut();
   redirect("/");
 }
+
