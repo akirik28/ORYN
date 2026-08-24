@@ -13,6 +13,8 @@ import { ErrorState } from "@/components/oryn/error-state";
 import { SectionHeader } from "@/components/oryn/section-header";
 import { SourceBadge } from "@/components/oryn/source-badge";
 import { StatusBadge } from "@/components/oryn/status-badge";
+import { NextMove } from "@/components/oryn/next-move";
+import { differenceInCalendarDays } from "date-fns";
 import { OpportunityActions } from "@/features/opportunities/opportunity-actions";
 import { formatMoney } from "@/lib/i18n/format";
 import type { ConfidenceLevel } from "@/components/oryn/confidence-indicator";
@@ -39,6 +41,28 @@ const SELECTIVITY_LABEL: Partial<Record<string, string>> = {
   competitive_award: "Competitive award",
   open_enrollment: "Open enrollment",
 };
+
+function fitLabel(score: number): string {
+  if (score >= 80) return "Exceptional fit";
+  if (score >= 60) return "Strong fit";
+  if (score >= 40) return "Worth a look";
+  return "Low priority";
+}
+
+/** Same reason vocabulary as the card, written long-form for the detail page. */
+function takeSentences(reasonCodes: string[]): string[] {
+  const out: string[] = [];
+  if (reasonCodes.includes("addresses_a_current_gap")) {
+    out.push("It targets an area where your profile currently has the least supporting evidence, so the same effort here moves your profile further than it would elsewhere.");
+  }
+  if (reasonCodes.includes("matches_your_interests")) {
+    out.push("It sits in a field you've told Oryn you're pursuing, which makes it easier to sustain and more coherent alongside the rest of your record.");
+  }
+  if (reasonCodes.includes("near_you")) {
+    out.push("It's based in your country, which usually means fewer travel, cost and visa obstacles than an equivalent programme abroad.");
+  }
+  return out;
+}
 
 const CYCLE_STATUS_LABEL: Partial<Record<string, string>> = {
   open: "Open now",
@@ -83,9 +107,19 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
   const needsVerification =
     !isOpportunitySufficientlyVerified(opportunity) && (!eligibility || (eligibility.eligible && !eligibility.notActionable));
 
+  const daysUntilDeadline = opportunity.deadline
+    ? differenceInCalendarDays(new Date(opportunity.deadline), new Date())
+    : null;
+  // Oryn only offers a take on a row it can vouch for; otherwise the caveats below speak
+  // for themselves and a confident-sounding verdict on top of them would be the exact
+  // false certainty this product is not allowed to manufacture.
+  const canGiveTake = Boolean(match) && (eligibility?.eligible ?? true) && !needsVerification;
+  const takeReasons = match ? takeSentences((match.reason_codes as string[]) ?? []) : [];
+
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="max-w-3xl space-y-10">
       <PageHeader
+        eyebrow={humanize(opportunity.category)}
         title={opportunity.title}
         description={opportunity.organization}
         action={
@@ -97,6 +131,49 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
           />
         }
       />
+
+      {/* UI-V3 § 20: personalization before the catalogue facts. The student's question is
+          "is this for me", and the page used to answer it last. Rendered through the shared
+          NextMove component rather than bespoke markup — it is the same anatomy Home uses
+          (eyebrow, claim, reasoning, labelled facts), and a second copy here would drift. */}
+      {canGiveTake && match ? (
+        <NextMove
+          surface
+          eyebrow="Oryn's take"
+          headline={fitLabel(match.match_score)}
+          why={
+            takeReasons.length > 0 ? (
+              <div className="space-y-2.5">
+                {takeReasons.map((line) => (
+                  <p key={line}>{line}</p>
+                ))}
+              </div>
+            ) : undefined
+          }
+          facts={[
+            { term: "Fit", value: fitLabel(match.match_score) },
+            ...(SELECTIVITY_LABEL[opportunity.selectivity_tier]
+              ? [{ term: "Selectivity", value: SELECTIVITY_LABEL[opportunity.selectivity_tier]! }]
+              : []),
+            ...(daysUntilDeadline !== null && daysUntilDeadline >= 0
+              ? [
+                  {
+                    term: "Urgency",
+                    value: daysUntilDeadline === 0 ? "Closes today" : `${daysUntilDeadline} days left`,
+                  },
+                ]
+              : []),
+          ]}
+          footnote={
+            eligibility?.notes ? (
+              <>
+                <span className="font-medium text-ink-1">One thing Oryn can&apos;t confirm: </span>
+                {eligibility.notes}
+              </>
+            ) : undefined
+          }
+        />
+      ) : null}
 
       {!matchRefreshed ? (
         <ErrorState description="We couldn't refresh your match for this opportunity just now. The eligibility and match details below are your last known result, not necessarily current." />
@@ -118,11 +195,13 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
         {eligibility && eligibility.eligible && eligibility.notes ? <StatusBadge label="Eligibility unknown" tone="warning" /> : null}
       </div>
 
-      {eligibility?.notes ? (
-        <p className="rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">{eligibility.notes}</p>
+      {/* Only when the take didn't already carry it (an ineligible or unverifiable row has
+          no take block, and still needs the note). */}
+      {eligibility?.notes && !canGiveTake ? (
+        <p className="rounded-lg bg-surface-tint px-4 py-3 text-sm leading-relaxed text-ink-2">{eligibility.notes}</p>
       ) : null}
       {needsVerification ? (
-        <p className="rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">{INSUFFICIENT_VERIFICATION_REASON}</p>
+        <p className="rounded-lg bg-surface-tint px-4 py-3 text-sm leading-relaxed text-ink-2">{INSUFFICIENT_VERIFICATION_REASON}</p>
       ) : null}
 
       {opportunity.description ? <p className="text-muted-foreground">{opportunity.description}</p> : null}

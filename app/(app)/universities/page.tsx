@@ -1,8 +1,11 @@
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { Landmark, Search } from "lucide-react";
 import { UniversityExplorerHero } from "@/features/universities/university-explorer-hero";
 import { UniversityCard } from "@/features/universities/university-card";
+import { UniversityResultRow } from "@/features/universities/university-result-row";
 import { categorizeAndDedupeResearchTopics } from "@/lib/universities/research-taxonomy";
 import { UniversitySearchBox } from "@/features/universities/university-search-box";
 import { SUPPORTED_COUNTRIES } from "@/lib/data/country-geo";
@@ -32,6 +35,11 @@ import type { University } from "@/types/database";
 
 export const metadata = { title: "Universities" };
 
+const VIEW_TAB =
+  "border-b-2 pb-2 text-sm transition-colors duration-(--duration-fast) focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none";
+const VIEW_TAB_ACTIVE = "border-brand-primary font-medium text-ink-1";
+const VIEW_TAB_INACTIVE = "border-transparent text-ink-3 hover:text-ink-1";
+
 const PAGE_SIZE = 48;
 
 type SortOption = "ranking" | "name" | "students";
@@ -54,6 +62,7 @@ export default async function UniversitiesPage({
     type?: string;
     size?: string;
     rank?: string;
+    view?: string;
   }>;
 }) {
   const {
@@ -66,7 +75,14 @@ export default async function UniversitiesPage({
     type: typeParam,
     size: sizeParam,
     rank: rankParam,
+    view: viewParam,
   } = await searchParams;
+  // Map is the default exploration mode (UI-V3 § 21 makes the map a core feature, not an
+  // optional extra); List is the conventional catalogue for when a student already knows
+  // what they're looking for. Below `md` the map never mounts at all — see
+  // UniversityExplorerHero — so the toggle is desktop-only chrome and List is what a phone
+  // always gets, without needing a separate param.
+  const isListView = viewParam === "list";
   const region = regionId ? regionById.get(regionId) : undefined;
   const page = Math.max(1, Number(pageParam) || 1);
   // "Recommended" isn't offered: there's no real personalization engine behind this browse
@@ -296,6 +312,7 @@ export default async function UniversitiesPage({
     if (country) params.set("country", country);
     if (region) params.set("region", region.id);
     if (q) params.set("q", q);
+    if (isListView) params.set("view", "list");
     const nextSort = overrides.sort ?? sort;
     if (nextSort !== "ranking") params.set("sort", nextSort);
     const nextCost = overrides.cost ?? cost;
@@ -312,6 +329,48 @@ export default async function UniversitiesPage({
     if (nextPage > 1) params.set("page", String(nextPage));
     const qs = params.toString();
     return qs ? `/universities?${qs}` : "/universities";
+  }
+
+  /** Switches view while preserving every other filter — a student who found their way to
+   *  "Germany, under $20k, large" shouldn't lose it by looking at a list. */
+  function buildViewHref(list: boolean): string {
+    const params = new URLSearchParams();
+    if (country) params.set("country", country);
+    if (region) params.set("region", region.id);
+    if (q) params.set("q", q);
+    if (sort !== "ranking") params.set("sort", sort);
+    if (cost.length > 0) params.set("cost", cost.join(","));
+    if (type) params.set("type", type);
+    if (size.length > 0) params.set("size", size.join(","));
+    if (rank) params.set("rank", rank);
+    if (list) params.set("view", "list");
+    const qs = params.toString();
+    return qs ? `/universities?${qs}` : "/universities";
+  }
+
+  /**
+   * Selects a country on the map from a result row.
+   *
+   * Preserves every other filter, matching what `WorldMapExplorer.selectCountry` already
+   * does when the same selection is made by clicking the map itself (it rebuilds from the
+   * existing search params). An earlier version rebuilt the URL from scratch and silently
+   * dropped region, sort, cost, type, size and rank — so a student who had narrowed to
+   * "under $20k, large" lost all of it by clicking a country in the results, while doing
+   * the identical thing on the map kept it. Two paths to one action must not disagree.
+   * Page is deliberately not carried over: the result set just changed.
+   */
+  function buildCountryHref(name: string): string {
+    const params = new URLSearchParams();
+    params.set("country", name);
+    if (region) params.set("region", region.id);
+    if (q) params.set("q", q);
+    if (sort !== "ranking") params.set("sort", sort);
+    if (cost.length > 0) params.set("cost", cost.join(","));
+    if (type) params.set("type", type);
+    if (size.length > 0) params.set("size", size.join(","));
+    if (rank) params.set("rank", rank);
+    if (isListView) params.set("view", "list");
+    return `/universities?${params.toString()}`;
   }
 
   const buildPageHref = (targetPage: number) => buildHref({ page: targetPage });
@@ -347,9 +406,32 @@ export default async function UniversitiesPage({
 
   return (
     <div className="space-y-8">
-      <PageHeader title="Explore universities" description="A world of programs — start with a region, or search directly." />
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <PageHeader
+          eyebrow="Universities"
+          title="Where you could go."
+          description="Start from the map, or search directly."
+        />
+        {/* Desktop-only: below md the map is never mounted, so a Map/List choice there would
+            offer a view that can't render. */}
+        <div className="hidden gap-6 border-b border-border lg:flex">
+          <Link
+            href={buildViewHref(false)}
+            aria-current={!isListView ? "page" : undefined}
+            className={cn(VIEW_TAB, !isListView ? VIEW_TAB_ACTIVE : VIEW_TAB_INACTIVE)}
+          >
+            Map
+          </Link>
+          <Link
+            href={buildViewHref(true)}
+            aria-current={isListView ? "page" : undefined}
+            className={cn(VIEW_TAB, isListView ? VIEW_TAB_ACTIVE : VIEW_TAB_INACTIVE)}
+          >
+            List
+          </Link>
+        </div>
+      </div>
 
-      <UniversityExplorerHero countryCounts={countryCounts} selected={country ?? null} selectedRegion={region?.id ?? null} />
 
       <div className="flex flex-col gap-3 rounded-2xl border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -358,12 +440,15 @@ export default async function UniversitiesPage({
             {scopeLabel ? `Filtered to ${scopeLabel}` : "Across all supported regions"} · {totalUniversities.toLocaleString("en-US")} universities total
           </p>
         </div>
-        <div className="flex gap-2">
-          <form className="flex gap-2" action="/universities" method="GET">
+        {/* At 375px all three controls fitted on one row *exactly*, so nothing wrapped and
+            the field was squeezed to 134px — "Search by un…". Giving the form the full row
+            on mobile pushes Filters onto its own line and leaves the input ~220px. */}
+        <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:flex-nowrap">
+          <form className="flex w-full min-w-0 gap-2 sm:w-auto" action="/universities" method="GET">
             {country ? <input type="hidden" name="country" value={country} /> : null}
             {region ? <input type="hidden" name="region" value={region.id} /> : null}
             <UniversitySearchBox defaultValue={q} country={country ?? null} />
-            <Button type="submit" variant="outline" size="sm">
+            <Button type="submit" variant="outline" size="sm" className="shrink-0">
               <Search className="size-3.5" /> Search
             </Button>
           </form>
@@ -396,19 +481,51 @@ export default async function UniversitiesPage({
               {sizeUnknownCount ? `${sizeUnknownCount.toLocaleString("en-US")} additional ${sizeUnknownCount === 1 ? "university is" : "universities are"} excluded because student population data is unavailable.` : ""}
             </p>
           ) : null}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {universities.map((university) => (
-              <UniversityCard
-                key={university.id}
-                university={university}
-                isSaved={savedIds.has(university.id)}
-                qsRank={qsRankByUniId.get(university.id)}
-                cost={costByUniId.get(university.id)}
-                researchTopics={researchTopicsByUniId.get(university.id)}
-                imageUrl={imageUrlByUniId.get(university.id)}
-              />
-            ))}
-          </div>
+          {isListView ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {universities.map((university) => (
+                <UniversityCard
+                  key={university.id}
+                  university={university}
+                  isSaved={savedIds.has(university.id)}
+                  qsRank={qsRankByUniId.get(university.id)}
+                  cost={costByUniId.get(university.id)}
+                  researchTopics={researchTopicsByUniId.get(university.id)}
+                  imageUrl={imageUrlByUniId.get(university.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            // UI-V3 § 22: roughly 58/42. The map is sticky so it stays in view while the
+            // results column scrolls — the whole point of pairing them is being able to read
+            // a result and glance at where it is without losing either.
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+              <div className="lg:sticky lg:top-24 lg:self-start">
+                <UniversityExplorerHero
+                  countryCounts={countryCounts}
+                  selected={country ?? null}
+                  selectedRegion={region?.id ?? null}
+                />
+              </div>
+              <div className="min-w-0">
+                <ul className="lg:max-h-[calc(100svh-12rem)] lg:overflow-y-auto lg:pr-2">
+                  {universities.map((university) => (
+                    <UniversityResultRow
+                      key={university.id}
+                      university={university}
+                      qsRank={qsRankByUniId.get(university.id)}
+                      imageUrl={imageUrlByUniId.get(university.id)}
+                      countryHref={
+                        university.country && university.country !== country
+                          ? buildCountryHref(university.country)
+                          : null
+                      }
+                    />
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
           <CompareBar />
           {!q ? <Pagination currentPage={page} totalPages={totalPages} buildHref={buildPageHref} /> : null}
         </>

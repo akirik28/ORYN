@@ -18,7 +18,7 @@ export default async function StoryBankPage() {
         <Link href="/profile" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="size-3.5" /> Back to profile
         </Link>
-        <h1 className="mt-2 font-heading text-2xl font-medium tracking-tight md:text-3xl">Essay Story Bank</h1>
+        <h1 className="mt-2 font-display text-2xl tracking-tight md:text-3xl">Essay Story Bank</h1>
         <p className="mt-1 max-w-2xl text-muted-foreground">
           Find which of your real experiences carry an essay-worthy story, and how you might structure it. Oryn
           organizes what you&apos;ve recorded — it never invents an event and never writes the essay for you.

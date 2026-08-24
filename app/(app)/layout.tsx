@@ -3,9 +3,8 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 import { requireProfile, verifySession } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
-import { SidebarNav } from "@/features/app-shell/sidebar-nav";
+import { TopNav } from "@/features/app-shell/top-nav";
 import { UserMenu } from "@/features/app-shell/user-menu";
-import { CareerProfileBadge } from "@/features/app-shell/career-profile-badge";
 import { MobileNav } from "@/features/app-shell/mobile-nav";
 import { NotificationBell } from "@/features/app-shell/notification-bell";
 import { NotConfiguredNotice } from "@/features/system/not-configured-notice";
@@ -42,30 +41,44 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     .limit(20);
 
   return (
-    <div className="flex min-h-svh flex-col md:flex-row">
-      <MobileNav score={profile.profile_strength_score} displayName={displayName} email={session.email} notifications={notifications ?? []} />
+    <div className="flex min-h-svh flex-col">
+      {/* Keyboard users land here first; without it, reaching page content past the seven
+          nav items costs eight tabs on every navigation. */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-brand-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground"
+      >
+        Skip to content
+      </a>
 
-      <aside className="hidden md:flex md:w-64 md:shrink-0 md:flex-col md:border-r md:border-sidebar-border md:bg-sidebar md:text-sidebar-foreground">
-        <div className="flex h-16 items-center justify-between px-5">
-          <Link href="/dashboard">
+      <MobileNav
+        score={profile.profile_strength_score}
+        displayName={displayName}
+        email={session.email}
+        notifications={notifications ?? []}
+      />
+
+      <header className="sticky top-0 z-30 hidden border-b bg-background/85 backdrop-blur-md lg:block">
+        <div className="mx-auto flex h-16 w-full max-w-[1360px] items-center gap-6 px-8">
+          <Link href="/dashboard" aria-label="Oryn — home" className="shrink-0">
             <Image src="/brand/logo-full.png" alt="Oryn" width={92} height={31} priority className="h-7 w-auto" />
           </Link>
-          <div className="flex items-center gap-1">
-            <CommandPalette />
+          <TopNav />
+          <div className="ml-auto flex shrink-0 items-center gap-2">
+            <CommandPalette variant="bar" />
             <NotificationBell notifications={notifications ?? []} />
+            <UserMenu displayName={displayName} email={session.email} score={profile.profile_strength_score} />
           </div>
         </div>
-        <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-3 pb-4">
-          <CareerProfileBadge score={profile.profile_strength_score} />
-          <SidebarNav />
-        </div>
-        <div className="border-t border-sidebar-border p-3">
-          <UserMenu displayName={displayName} email={session.email} />
-        </div>
-      </aside>
+      </header>
 
-      <main className="min-w-0 flex-1 overflow-x-hidden">
-        <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-10">{children}</div>
+      <main id="main-content" className="min-w-0 flex-1 overflow-x-hidden">
+        {/* max-w-[1200px] is the reading/composition measure (UI-V3 § 6); the header above
+            is deliberately 160px wider so nav and utilities sit at the viewport's edges
+            rather than boxed in with the prose. Pages that want the full bleed — the
+            university map, in particular — opt out with their own wrapper rather than
+            fighting a container here. */}
+        <div className="mx-auto w-full max-w-[1200px] px-4 pt-8 pb-24 md:px-8 md:pt-12 lg:pb-12">{children}</div>
       </main>
     </div>
   );

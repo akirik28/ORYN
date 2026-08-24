@@ -8,6 +8,7 @@ import { isOpportunityRecommendable } from "@/lib/opportunities/lifecycle";
 import { competesInCoreRecommendations } from "@/lib/opportunities/commercial";
 import { AIProviderNotConfiguredError } from "@/lib/ai";
 import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
+import { buildProfileSignal } from "@/lib/scoring/signal";
 import { getCounselorState } from "@/lib/counselor/state";
 import { buildCounselorDashboardContract, type CounselorDashboardContract } from "@/lib/counselor/dashboard-contract";
 import { DashboardView } from "@/features/dashboard/dashboard-view";
@@ -98,6 +99,13 @@ export default async function DashboardPage() {
   // duplicated one-liners across this page, the advisor page, and persist-matches.ts).
   const biggestGap = rankDimensionGaps(toDimensionScoreRows(scores))[0] ?? null;
 
+  // Qualitative per-dimension read for the Profile Signal block. Derived from the same
+  // rows, but carries `confidence` through as well — the signal must be able to say
+  // "limited evidence" rather than reporting an unknown dimension as a weak one.
+  const profileSignal = buildProfileSignal(
+    scores.map((s) => ({ dimension: s.dimension, score: s.score, confidence: s.confidence })),
+  );
+
   let biggestImprovement: { dimension: ProfileDimension; delta: number } | null = null;
   if (previousSnapshot) {
     const deltas = scores
@@ -183,8 +191,14 @@ export default async function DashboardPage() {
       .map((o) => [o.id, o])
   );
   const opportunityPreview = opportunityMatches
-    .map((m) => ({ title: opportunityById.get(m.opportunity_id)?.title, matchScore: m.match_score }))
-    .filter((o): o is { title: string; matchScore: number } => Boolean(o.title))
+    .map((m) => {
+      const opportunity = opportunityById.get(m.opportunity_id);
+      // `deadline` comes from the same row, past the same verification_state and
+      // recommendability gates as the title — so surfacing it adds urgency without
+      // widening what this block is willing to vouch for.
+      return { title: opportunity?.title, matchScore: m.match_score, deadline: opportunity?.deadline ?? null };
+    })
+    .filter((o): o is { title: string; matchScore: number; deadline: string | null } => Boolean(o.title))
     // Cut to size only now that unrecommendable rows are gone, so the block shows the best
     // rows a student can actually act on rather than whatever survived the top two.
     .slice(0, OPPORTUNITY_PREVIEW_SIZE);
@@ -209,6 +223,7 @@ export default async function DashboardPage() {
       trend={trend}
       biggestGap={biggestGap ? { dimension: biggestGap.dimension, score: biggestGap.score } : null}
       biggestImprovement={biggestImprovement}
+      profileSignal={profileSignal}
       weeklyPlan={weeklyPlan}
       planError={planError}
       counselorThisWeek={counselorContract?.thisWeekActions ?? []}

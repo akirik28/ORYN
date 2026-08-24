@@ -28,7 +28,7 @@ function NumeralToggle({ index, done, pending, onToggle }: { index: number; done
       aria-pressed={done}
       aria-label={done ? "Mark as not started" : "Mark as complete"}
       className={cn(
-        "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full font-heading text-sm font-medium transition-colors duration-(--duration-fast)",
+        "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-medium transition-colors duration-(--duration-fast)",
         done
           ? "bg-brand-primary text-primary-foreground"
           : "bg-brand-primary-soft text-brand-primary-strong hover:bg-brand-primary-border"
@@ -81,11 +81,12 @@ function ActionRow({ action, index }: { action: WeeklyAction; index: number }) {
         impact={action.impact_level}
         estimatedMinutes={action.estimated_minutes}
         done={isDone}
+        emphasis={index === 0}
         meta={action.deadline ? <DeadlineBadge date={action.deadline} /> : null}
       >
         {showReflection ? (
           <div className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3">
-            <span className="text-xs text-muted-foreground">What happened?</span>
+            <span className="text-xs text-ink-3">What happened?</span>
             {REFLECTION_OPTIONS.map((option) => (
               <Button key={option.value} variant="outline" size="xs" onClick={() => saveReflection(option.value)}>
                 <Check className="size-3" /> {option.label}
@@ -100,7 +101,7 @@ function ActionRow({ action, index }: { action: WeeklyAction; index: number }) {
 
 export function WeeklyFocus({ actions }: { actions: WeeklyAction[] }) {
   if (actions.length === 0) {
-    return <p className="text-sm text-muted-foreground">No actions in this week&apos;s plan yet.</p>;
+    return <p className="text-sm text-ink-3">No actions in this week&apos;s plan yet.</p>;
   }
 
   return (

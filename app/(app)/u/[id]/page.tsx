@@ -159,7 +159,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             </AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="font-heading text-2xl font-medium tracking-tight">{display.display_name ?? "Oryn student"}</h1>
+            <h1 className="font-display text-2xl tracking-tight">{display.display_name ?? "Oryn student"}</h1>
             {display.headline ? <p className="text-sm font-medium text-foreground/90">{display.headline}</p> : null}
             <p className="text-sm text-muted-foreground">
               {[display.curriculum, display.country, display.graduation_year ? `Class of ${display.graduation_year}` : null]

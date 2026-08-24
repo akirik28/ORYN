@@ -10,15 +10,17 @@ import { OpportunityCard } from "@/features/opportunities/opportunity-card";
 import { OpportunityFilterBar } from "@/features/opportunities/opportunity-filter-bar";
 import { integrationStatus } from "@/lib/env";
 import { PageHeader } from "@/components/oryn/page-header";
+import { SectionHeader } from "@/components/oryn/section-header";
 import { EmptyState } from "@/components/oryn/empty-state";
 import { ErrorState } from "@/components/oryn/error-state";
 import type { Opportunity, OpportunityCategory } from "@/types/database";
 
 export const metadata = { title: "Opportunities" };
 
-const TAB = "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors duration-(--duration-fast)";
-const TAB_ACTIVE = "bg-brand-primary text-primary-foreground";
-const TAB_INACTIVE = "text-muted-foreground hover:bg-muted hover:text-foreground";
+const TAB =
+  "border-b-2 pb-2 text-sm transition-colors duration-(--duration-fast) focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none";
+const TAB_ACTIVE = "border-brand-primary font-medium text-ink-1";
+const TAB_INACTIVE = "border-transparent text-ink-3 hover:text-ink-1";
 
 function pageHref(params: URLSearchParams, page: number): string {
   const next = new URLSearchParams(params);
@@ -59,18 +61,23 @@ export default async function OpportunitiesPage({
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Opportunities" description="Personalized matches — highest-value first." />
+      <PageHeader
+        eyebrow="Opportunities"
+        title="Chosen for where you are now."
+        description="Ranked by what each one could add to your profile — not by prestige or popularity."
+      />
 
       {!matchesRefreshed ? (
         <ErrorState description="We couldn't refresh your matches just now. Match scores and eligibility below are your last known result, not necessarily current." />
       ) : null}
 
-      <div className="inline-flex gap-1 rounded-xl border bg-card p-1">
-        <Link href="/opportunities" className={cn(TAB, !isBrowse ? TAB_ACTIVE : TAB_INACTIVE)}>
+      <div className="flex gap-6 border-b border-border">
+        <Link href="/opportunities" aria-current={!isBrowse ? "page" : undefined} className={cn(TAB, !isBrowse ? TAB_ACTIVE : TAB_INACTIVE)}>
           For you
         </Link>
         <Link
           href={`/opportunities?${new URLSearchParams({ view: "browse", ...Object.fromEntries(tabParams) }).toString()}`}
+          aria-current={isBrowse ? "page" : undefined}
           className={cn(TAB, isBrowse ? TAB_ACTIVE : TAB_INACTIVE)}
         >
           Browse all
@@ -145,24 +152,51 @@ async function ForYouView({
     );
   }
 
+  // "For you" is a curated slice, but it still shows the whole card, so it labels rather
+  // than hides — an unverified row keeps its place and loses its match tier. The
+  // counselor's ranked top-3 is the surface that excludes; see lib/counselor/eligibility.ts
+  // for why the two differ.
+  const renderCard = (
+    { match, opportunity }: (typeof cards)[number],
+    featured: boolean,
+  ) => (
+    <OpportunityCard
+      key={match.opportunity_id}
+      opportunity={opportunity!}
+      matchScore={match.match_score}
+      reasonCodes={match.reason_codes as string[]}
+      eligible={match.eligible}
+      eligibilityNotes={match.eligibility_notes}
+      needsVerification={!isOpportunitySufficientlyVerified(opportunity!)}
+      initialStatus={statusById.get(match.opportunity_id) ?? null}
+      featured={featured}
+    />
+  );
+
+  // The lead is only promoted when Oryn can actually vouch for it. Cards are already
+  // partitioned verified-first above, so if the top row still isn't verifiable there is
+  // nothing here worth making dominant — fall back to an even grid rather than giving a
+  // caveated row the largest treatment on the page.
+  const [lead, ...rest] = cards;
+  const leadIsVouchable = lead && isOpportunitySufficientlyVerified(lead.opportunity!) && lead.match.eligible;
+
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      {cards.map(({ match, opportunity }) => (
-        <OpportunityCard
-          key={match.opportunity_id}
-          opportunity={opportunity!}
-          matchScore={match.match_score}
-          reasonCodes={match.reason_codes as string[]}
-          eligible={match.eligible}
-          eligibilityNotes={match.eligibility_notes}
-          // "For you" is a curated slice, but it still shows the whole card, so it labels
-          // rather than hides — an unverified row keeps its place and loses its match tier.
-          // The counselor's ranked top-3 is the surface that excludes; see
-          // lib/counselor/eligibility.ts for why the two differ.
-          needsVerification={!isOpportunitySufficientlyVerified(opportunity!)}
-          initialStatus={statusById.get(match.opportunity_id) ?? null}
-        />
-      ))}
+    <div className="space-y-10">
+      {leadIsVouchable ? (
+        <section>
+          <SectionHeader title="Best next move" description="The single opportunity that would add most to your profile right now." />
+          <div className="mt-4">{renderCard(lead, true)}</div>
+        </section>
+      ) : null}
+
+      {(leadIsVouchable ? rest : cards).length > 0 ? (
+        <section>
+          {leadIsVouchable ? <SectionHeader title="Also worth your time" className="mb-4" /> : null}
+          <div className="grid gap-4 md:grid-cols-2">
+            {(leadIsVouchable ? rest : cards).map((card) => renderCard(card, false))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

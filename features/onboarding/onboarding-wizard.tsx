@@ -63,7 +63,7 @@ function StepShell({ title, subtitle, children }: { title: string; subtitle?: st
       className="space-y-6"
     >
       <div className="space-y-1.5">
-        <h1 className="font-heading text-2xl font-medium tracking-tight">{title}</h1>
+        <h1 className="font-display text-2xl tracking-tight">{title}</h1>
         {subtitle ? <p className="text-muted-foreground">{subtitle}</p> : null}
       </div>
       {children}

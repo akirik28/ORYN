@@ -50,34 +50,113 @@ and `app/(app)/applications/page.tsx`'s `APPLICATION_STATUS_TONE` for worked exa
 
 ## Typography
 
-Two type families, deliberately not one:
+**Updated by UI-V3-0b (2026-08-24). Geist and Instrument Serif are both gone — see
+"Where the palette comes from" below for why. The role split is unchanged.**
 
-- **`--font-sans` (Geist)** — everything functional: nav, buttons, form labels, table/list
-  content, badges. Unchanged from Chat 1.
-- **`--font-heading` (Newsreader, serif)** — wherever Oryn is making a statement *to* the
-  student rather than presenting UI chrome: page `<h1>`s (via `PageHeader`), the score
-  ring's number, dashboard/hero greetings, `CardTitle`, `DialogTitle`, empty-state
-  headlines, the landing hero. **`SectionHeader`** (in-page section dividers — "Your
-  focus this week", "Requirement check") stays sans-serif on purpose: it's structural,
-  not a statement, and a page with ten serif sub-headings stops feeling premium and
-  starts feeling like a wedding invitation. When in doubt, ask: *is this Oryn talking to
-  the student, or is this a UI label?*
+Two families, with a hard split by *role* rather than by heading level:
 
-  `CardTitle` already had a `font-heading` class before this pass (aliased to sans); it
-  now inherits the real serif. That's one token change quietly re-skinning every card
-  title in the product — verified this reads well at card-title sizes (14–18px) rather
-  than only at hero scale before relying on it everywhere.
+- **`--font-sans` (Manrope)** — all product UI: nav, buttons, form labels, table/list
+  content, badges, **and card/dialog/sheet titles**.
+- **`--font-display` (Fraunces)** — only where Oryn is making a statement *to* the
+  student: page `<h1>`s (via `PageHeader`), the dashboard greeting, the score number, an
+  `InsightCard` headline, an `EvidenceSignal` value, the acceptance moment,
+  auth/onboarding titles.
 
-  **Sandbox caveat**: `next/font/google` fetches Newsreader from Google Fonts at
-  dev-server boot. In this sandbox that fetch is intermittently unreachable from the
-  `next dev` process specifically (not from the shell — `curl` to fonts.googleapis.com
-  succeeds every time; see `/docs/known-issues.md`), which throws a build-time "module
-  not found" until the dev server restarts clean (`rm -rf .next`, restart). Every
-  screenshot in this handoff was taken after a clean restart with the font loading
-  correctly. A real deployment (Vercel etc.) has stable outbound network access and
-  self-hosts the fetched font at build time same as Geist already does — this is a
-  sandbox-only flakiness, not a code issue, but worth knowing if Chat 3 sees a fallback
-  system-serif in a screenshot and wonders why.
+The question to ask is unchanged — *is this Oryn talking to the student, or is this a UI
+label?* — but the answer moved. Previously `CardTitle`, `DialogTitle` and `SheetTitle`
+inherited the serif, which meant a busy page rendered ten serif sub-headings and the face
+stopped signifying anything. Those are sans now.
+
+Fraunces is variable, so unlike the Instrument Serif it replaced it *does* have real
+weights. Display sites are nonetheless set at 400 with tight negative tracking
+(`tracking-[-0.02em]`, `leading-[1.1]`) — that combination is what reads editorial. A bold
+serif headline reads as a document title, which is the opposite of the intent. Prefer
+scale over weight.
+
+`--font-heading` still resolves (aliased to the same face) so that a call site predating
+UI-V3 degrades to the display face rather than an unstyled serif fallback. It has no
+remaining users — prefer `font-display` in anything new.
+
+## Where the palette comes from
+
+UI-V3-0b adopted the visual language of the founder-supplied Magic Patterns reference
+("ORYN V3 Editorial Intelligence"), which is the authority for *visual* decisions —
+typography, whitespace, surface restraint — while this repo stays the authority for
+architecture, data and behavior. Three things were taken, and three were deliberately not.
+
+**Taken:** the warm-paper/cool-ink pairing, the module tone system, and the component
+language (`Eyebrow`, `EvidenceSignal`, the borderless `InsightCard`, the railed `ActionCard`).
+
+**Not taken:**
+
+- **The wordmark.** The reference renders "ORYN" as letterspaced type because its own logo
+  asset ships empty (0 bytes). The canonical logo is non-negotiable — `public/brand/logo-full.png`
+  stays, and `--brand` remains an exact OKLCH match of the logo's own pixels
+  (`oklch(0.477 0.29 272)` vs. the logo's `oklch(0.477 0.294 272.2)`), *not* the
+  reference's slightly softer indigo.
+- **Percentage profile strength.** The reference's `ProfileStrengthMeter` shows "62%".
+  Founder direction is explicit: qualitative evidence states only — Strong / Developing /
+  Limited evidence / Needs attention. Do not reintroduce a single blended percentage.
+- **Its text colors, as authored.** Measured against this theme's own grounds, the
+  reference's `text-muted` gave 4.28:1 on paper and 4.03:1 on the tint — under AA for
+  body copy, and that token is the product's workhorse for supporting text. Same for
+  three status tones (4.40-4.54 on tint). Every one was re-solved per-hue for >=4.6:1 on
+  `--surface-tint`, the tighter of the two grounds. **Measure against the real ground
+  before importing a color from any reference** — paper is darker than white and every
+  ratio shifts.
+
+## Color: the ink ramp
+
+`--foreground` / `--muted-foreground` alone forced a binary choice between "full black" and
+"secondary grey". Four steps now, all at hue 272 so text never drifts neutral-grey against
+the blue-black brand:
+
+Measured on paper / on tint (both grounds, since text sits on each):
+
+```
+--ink-1   = --foreground   16.7 / 15.7   headings, primary text
+--ink-2   0.378 0.026 297   9.7 /  9.1   body prose that isn't a heading
+--ink-3   = --muted-fg      4.9 /  4.6   secondary/supporting text (AA)
+--ink-4   0.62  0.026 300   3.5 /  3.3   DECORATIVE ONLY (3:1 non-text floor)
+```
+
+Each step is a real lightness stop, **not an opacity of the one above** — opacity-faded
+text over a tinted surface picks up the tint and stops being the color you specified.
+
+`--ink-4` is for eyebrows' rules, hairlines, icon strokes and disabled affordances, and
+must never be the only thing carrying meaning.
+
+## Surface levels
+
+Three levels, replacing "everything is a bordered white card":
+
+1. **Canvas** — `--background`, no token needed. The default. Most content belongs here.
+2. **Tint** — `bg-surface-tint`. Groups a section *without* drawing a box around it. This
+   is what most former cards should become.
+3. **Panel** — `bg-surface-panel` (= `--card`). Only for a genuinely contained interactive
+   module, where containment carries meaning.
+
+Before reaching for a border + radius + shadow, check whether whitespace and a type change
+already do the job. See the shape/radius rules below, which still apply to level 3.
+
+### Module tones
+
+Four grounds, one per kind of Oryn utterance, so a reader can tell an interpretation from a
+fact from a directive without reading a label: `module-insight` (cool — an interpretation
+stands back from the page), `module-evidence` and `module-action` (warm — a fact and a
+directive sit in it), and `module-recommendation` (the only one carrying brand indigo,
+which is exactly why indigo stays rare everywhere else). Backgrounds only, never text.
+
+**Only `module-recommendation` is in use today** (`NextMove`'s `surface`, on Home's hero and
+the opportunity detail's "Oryn's take"). `module-insight`, `module-evidence`,
+`module-action` and the warm `accent-sand`/`accent-clay` accents are defined and unused —
+they exist so the four utterance types have somewhere consistent to land as later surfaces
+adopt the language, in the same spirit as the fully-defined-but-unused `.dark` block.
+Don't read their presence as evidence the system is already applied.
+
+Founder direction on the accents: they may carry a *selectively* important recommendation
+but must not become the dominant surface. If two recommendation surfaces are visible on one
+screen, one of them is wrong — which is why `surface` lives on exactly one component.
 
 ## Motion (`lib/motion.ts`, `app/layout.tsx`)
 
@@ -129,14 +208,17 @@ one-off `<div className="rounded-xl border p-4">` copies:
 
 - **`PageHeader`** — page-level title (serif) + description + optional action slot.
 - **`SectionHeader`** — in-page section divider (sans, dense).
-- **`InsightCard`** — the "Oryn is telling you something" card. Variants `gap` / `avoid`
-  / `strength` / `neutral`. `avoid` is deliberately styled *identically calm* to `gap` —
-  a muted icon chip, not red/amber — because a deprioritization is a strategic call, not
-  a warning (see the master spec's Phase 39 and the dashboard's "One thing not to do").
-- **`ActionCard`** — a recommended action: impact meter (4-dot, not a 4-color badge —
-  magnitude isn't a status), optional time estimate, optional leading slot (used for the
-  numbered-priority treatment on the weekly plan) and trailing `meta` slot (a
-  `DeadlineBadge`, etc).
+- **`InsightCard`** — the "Oryn is telling you something" statement. UI-V3-0b removed its
+  border, fill and icon chip: an interpretation should distinguish itself through scale,
+  voice and hierarchy, and boxing it made it look like one more data card in a stack of
+  data cards. Variants now tint only the eyebrow rule. `avoid` stays deliberately calm —
+  a deprioritization is a strategic call, not a warning (master spec Phase 39). Its
+  `surface` prop is the one sanctioned use of the warm recommendation ground.
+- **`ActionCard`** — a recommended action. The bordered box became a left priority rail
+  plus an optional zero-padded index: the rail groups a stack into a sequence and gives
+  the leading move weight without drawing four identical boxes down the page. Keeps the
+  4-dot impact meter (magnitude isn't a status, so it isn't a colored badge), the time
+  estimate, a `leading` slot and a trailing `meta` slot.
 - **`StatusBadge`** — see the tone table above. Every colored pill in the product should
   render through this.
 - **`ConfidenceIndicator`** — a lit/unlit 3-bar meter, not a colored word — Phase 68's
@@ -148,6 +230,24 @@ one-off `<div className="rounded-xl border p-4">` copies:
   and applications.
 - **`SourceBadge`** — Phase 36. Source name, "checked N ago", optional
   `ConfidenceIndicator`, optional "View source" link.
+- **`Eyebrow`** — the atom of the editorial voice: a 32px hairline rule plus an 11px
+  uppercase label at `tracking-[0.18em]`. That tracking *is* the signature; `tracking-widest`
+  is 0.1em and reads as a different product. Tone colors the rule only — never the headline
+  beneath it, or an interpretation becomes an alert.
+- **`EvidenceSignal`** — one supporting fact, citation-style (`<figure>`/`<figcaption>`,
+  `tabular-nums`). Displays a fact; `InsightCard` interprets one. Its `missing` tone matters:
+  absent evidence ("0 verified research projects") is real signal here and should read as
+  noted, not failed.
+- **`NextMove`** — Oryn's signature argument: eyebrow, claim, reasoning, the evidence it
+  used, labelled facts, an action, and an optional footnote for a qualification that must
+  travel *with* the claim rather than sit loose beneath it. It is the only component that
+  carries the warm recommendation ground (`surface`), which is what makes the brief's
+  "at most one per screen" something you can actually check. Home and the opportunity
+  detail's "Oryn's take" are the same anatomy through this one component, not two copies.
+- **`MediaImage`** — the product's one image surface. Photo → logo → designed monogram,
+  each tier falling through on a failed load. The monogram tier is the point: "no broken
+  placeholders" must not be solved with generic stock imagery, which would imply we have a
+  picture of a thing we don't. Callers set aspect ratio via `className`.
 - **`EmptyState`** / **`ErrorState`** — every meaningful empty/degraded state in the
   product should use these rather than a bespoke `<p className="text-muted-foreground">`.
   `EmptyState` forces an icon + title + description shape, which makes the lazy "No
@@ -180,6 +280,27 @@ drift out of sync.
   visual design here (Chat 3, or beyond) has the exact same "no live backend" problem
   in this sandbox, and a from-scratch equivalent would cost real time to rebuild.
 
+## Known data dependencies (surfaced by UI-V3, not owned by it)
+
+**Opportunity imagery.** UI-V3 § 19/30 asks for meaningful programme/institution imagery on
+opportunity cards and a designed fallback where it's missing. The fallback exists
+(`MediaImage`); the imagery does not. `opportunities` has no image column and no acquisition
+pipeline, where universities have both (`university_profile_metrics.primary_image_url`,
+`universities.logo_url`, `scripts/acquire-university-images.ts`).
+
+What was tried and rejected: rendering `MediaImage`'s monogram tier unconditionally. With
+zero rows carrying imagery, every card became an identical ~250px empty tinted band —
+strictly worse than no image — and monograms cut from arbitrary organizer strings were
+meaningless ("Middle East Technical University" → "MI"). The card now renders its media band
+only when a real source exists, and `OpportunityCard` already accepts `imageUrl`, so the
+surface lights up the moment the data arrives. **Nothing in the UI should invent one in the
+meantime** — stock photography is banned by the brief and by Rule 4.
+
+The likely honest source when someone picks this up: `opportunities.organization_entity_id`
+already links to `canonical_entities`, and many organizers are universities that have a
+verified re-hosted campus photo. That's a data-lane job (acquisition + linkage coverage),
+not a UI one.
+
 ## Responsive principles
 
 - Mobile isn't a shrunk desktop: the university explorer's world map is desktop-only
@@ -188,11 +309,36 @@ drift out of sync.
   keyboard/screen-reader-accessible alternative to the (aria-hidden, mouse-only) map —
   this was Chat 1's architecture already and it's correct; don't collapse it into "just
   hide the map on mobile and show nothing."
-- `MobileNav` (a `Sheet`) and the desktop `<aside>` render two separate `SidebarNav`
-  instances; each gets its own `layoutId` prefix (`idPrefix="desktop"` / `"mobile"`) for
-  the active-item sliding pill so Motion never tries to animate a shared `layoutId`
-  between two simultaneously-mounted trees (the desktop sidebar is `hidden` via CSS, not
-  unmounted, while the mobile sheet is open).
+- **University explorer (UI-V3-5).** Desktop pairs a sticky map (~58%) with a scrolling
+  results column (~42%); `?view=list` switches to the conventional card grid and every
+  other filter survives the switch. The two panels synchronise through the URL in both
+  directions — the map writes `?country=`, and each result row's country links back to the
+  same param. Below `md` the map still never mounts (see below), so the Map/List toggle is
+  desktop-only chrome and a phone always gets the list without needing the param.
+  `UniversityResultRow` exists because `UniversityCard` is the wrong shape at 42% width —
+  its image band and three metadata rows fit about four results into the panel, which
+  defeats the point of pairing a list with a map.
+- **The shell's breakpoint is `lg` (1024), not `md`.** The desktop header carries a logo,
+  seven nav items, a search field, notifications and an avatar; below about 1100px that
+  does not fit. Measured at 1024 with the old `md` boundary, the utilities cluster ran 44px
+  past the header's right edge and the document scrolled horizontally. Tablets get the
+  mobile shell, which is the better experience there anyway. The search affordance is
+  *also* responsive — one trigger that collapses to its icon between `lg` and `xl`, because
+  `lg` alone still left the labelled 208px field competing with seven nav items. It must
+  stay one element: `CommandPalette` registers a global ⌘K listener on mount, so two
+  breakpoint-swapped instances would open the dialog twice.
+- **The desktop sidebar is gone (UI-V3-0).** Navigation is a single top bar
+  (`features/app-shell/top-nav.tsx`) inside a 1360px header; page content sits in a
+  1200px column. `SidebarNav` and `CareerProfileBadge` were deleted — the score moved
+  into the account menu, and Documents/Settings moved there with it.
+- Mobile is a compact sticky header plus a fixed six-slot bottom bar
+  (`features/app-shell/mobile-nav.tsx`), not the desktop chrome at a smaller width. Two
+  things that bit during implementation and will bite again: clearance for the fixed bar
+  is **bottom padding on the content container**, never a spacer div inside `MobileNav`
+  (a spacer there renders beside the `<nav>`, i.e. at the *top* of the flow, adding a gap
+  under the header and clearing nothing); and a 62px bottom-bar column ellipsises anything
+  longer than ~9 characters, which is what `NavItem.shortLabel` exists for — the full
+  `label` stays as the link's accessible name via an `sr-only` span.
 - Verified at 375px (mobile) and native desktop width via the preview harness: landing
   page, university region-pill fallback, acceptance moment, dashboard hero. Not
   individually re-verified at 375px: every remaining authenticated page — they reuse the

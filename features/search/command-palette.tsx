@@ -26,7 +26,13 @@ const GROUP_ORDER: SearchResultType[] = [
   "test_score",
 ];
 
-export function CommandPalette() {
+/**
+ * `variant="bar"` renders the compact labelled affordance the desktop top bar uses
+ * (UI-V3 § 29: a discoverable target, not a search box occupying the header). `"icon"`
+ * stays the mobile//dense form. Both open the same dialog, and ⌘K still works regardless
+ * of which trigger is mounted.
+ */
+export function CommandPalette({ variant = "icon" }: { variant?: "icon" | "bar" } = {}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -114,17 +120,45 @@ export function CommandPalette() {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogPrimitive.Trigger
-        render={
-          <button
-            type="button"
-            aria-label="Search"
-            className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          />
-        }
-      >
-        <Search className="size-4" />
-      </DialogPrimitive.Trigger>
+      {variant === "bar" ? (
+        /* One trigger, responsive content — not two triggers behind breakpoint classes.
+           This component registers a global ⌘K listener on mount, so a second mounted
+           instance would open the dialog twice. Between the shell's lg breakpoint and xl
+           the labelled 208px field doesn't fit beside seven nav items, so it collapses to
+           the icon and expands again at xl. */
+        <DialogPrimitive.Trigger
+          render={
+            <button
+              type="button"
+              className="inline-flex h-8 w-8 items-center justify-center gap-2 rounded-lg border border-transparent px-0 text-ink-3 transition-colors hover:bg-muted hover:text-ink-1 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none xl:w-52 xl:justify-start xl:border-border/70 xl:bg-surface-tint xl:px-2.5 xl:hover:border-border xl:hover:bg-surface-tint xl:hover:text-ink-2"
+            />
+          }
+        >
+          <Search className="size-4 shrink-0" />
+          <span className="hidden text-sm xl:inline">Search</span>
+          {/* Decorative: the shortcut is announced by the button's own accessible name
+              below, so leaving this in the a11y tree would just read "K" twice. */}
+          <kbd
+            aria-hidden="true"
+            className="ml-auto hidden rounded border border-border/70 px-1 font-sans text-[10px] leading-4 text-ink-4 xl:inline"
+          >
+            ⌘K
+          </kbd>
+          <span className="sr-only">Search Oryn. Shortcut: Command K</span>
+        </DialogPrimitive.Trigger>
+      ) : (
+        <DialogPrimitive.Trigger
+          render={
+            <button
+              type="button"
+              aria-label="Search"
+              className="inline-flex size-8 items-center justify-center rounded-lg text-ink-3 transition-colors hover:bg-muted hover:text-ink-1 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+            />
+          }
+        >
+          <Search className="size-4" />
+        </DialogPrimitive.Trigger>
+      )}
       <DialogPortal>
         <DialogOverlay />
         <DialogPrimitive.Popup

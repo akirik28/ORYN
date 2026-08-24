@@ -7,7 +7,7 @@ export default function SignUpPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-1 text-center">
-        <h1 className="font-heading text-2xl font-medium tracking-tight">Create your account</h1>
+        <h1 className="font-display text-2xl tracking-tight">Create your account</h1>
         <p className="text-sm text-muted-foreground">Start mapping what to do next.</p>
       </div>
       <SignUpForm />

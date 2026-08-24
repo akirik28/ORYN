@@ -3,6 +3,7 @@ import { DashboardView } from "@/features/dashboard/dashboard-view";
 import { UniversityExplorerHero } from "@/features/universities/university-explorer-hero";
 import { AcceptanceMoment } from "@/features/applications/status-control";
 import { SUPPORTED_COUNTRIES } from "@/lib/data/country-geo";
+import { buildProfileSignal } from "@/lib/scoring/signal";
 import { PreviewShell } from "./preview-shell";
 import {
   FIXTURE_STUDENT,
@@ -20,6 +21,17 @@ import {
 // mounts real presentational components with fixture data instead of a second, drifting
 // copy of the markup. Hard 404s outside development regardless of env vars, so it can
 // never ship. See /docs/design-system.md.
+// Mirrors the spec's own worked example (research weakest, leadership strongest) so the
+// harness doubles as a check that the Profile Signal renders the shape the brief describes.
+const FIXTURE_PROFILE_SIGNAL = buildProfileSignal([
+  { dimension: "academics", score: 82, confidence: "high" },
+  { dimension: "leadership", score: 91, confidence: "high" },
+  { dimension: "intellectual_curiosity", score: 58, confidence: "medium" },
+  { dimension: "research", score: 42, confidence: "high" },
+  { dimension: "community_impact", score: 54, confidence: "medium" },
+  { dimension: "career_exploration", score: 55, confidence: "low" },
+]);
+
 const FIXTURE_COUNTRY_COUNTS = SUPPORTED_COUNTRIES.map((c, i) => ({ country: c.name, count: [12, 8, 5, 4, 3][i % 5] ?? 1 }));
 
 export default function DesignPreviewPage() {
@@ -43,13 +55,18 @@ export default function DesignPreviewPage() {
         trend={FIXTURE_STUDENT.trend}
         biggestGap={FIXTURE_BIGGEST_GAP}
         biggestImprovement={FIXTURE_BIGGEST_IMPROVEMENT}
+        profileSignal={FIXTURE_PROFILE_SIGNAL}
         weeklyPlan={FIXTURE_WEEKLY_PLAN}
         planError={null}
         counselorThisWeek={[]}
         avoidRecommendation={FIXTURE_AVOID_RECOMMENDATION}
         upcomingDeadlines={FIXTURE_DEADLINES}
         targetUniversities={FIXTURE_TARGET_UNIVERSITIES}
-        opportunityPreview={FIXTURE_OPPORTUNITIES.map((o) => ({ title: o.opportunity.title, matchScore: o.matchScore }))}
+        opportunityPreview={FIXTURE_OPPORTUNITIES.map((o) => ({
+          title: o.opportunity.title,
+          matchScore: o.matchScore,
+          deadline: o.opportunity.deadline ?? null,
+        }))}
         opportunityMatchesRefreshed={true}
       />
     </PreviewShell>

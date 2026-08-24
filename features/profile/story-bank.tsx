@@ -122,7 +122,7 @@ export function StoryBank({ experiences }: { experiences: StoryBankItem[] }) {
           {result.candidates.map((candidate, ci) => (
             <section key={ci} className="space-y-4 rounded-2xl border bg-card p-5">
               <div>
-                <h2 className="font-heading text-lg font-medium">{candidate.experienceTitle}</h2>
+                <h2 className="text-lg font-medium">{candidate.experienceTitle}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{candidate.whyThisStory}</p>
                 {candidate.missingDetail ? (
                   <p className="mt-2 text-sm text-brand-primary">Worth adding to your story notes: {candidate.missingDetail}</p>

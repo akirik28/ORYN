@@ -91,7 +91,7 @@ export function UniversitySearchBox({ defaultValue, country }: { defaultValue?: 
   }
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="relative min-w-0 flex-1 sm:flex-none">
       <div className="relative">
         <Search className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
         <Input

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Compass, TriangleAlert } from "lucide-react";
 import { SectionHeader } from "@/components/oryn/section-header";
+import { Eyebrow } from "@/components/oryn/eyebrow";
 import { InsightCard } from "@/components/oryn/insight-card";
 import { EmptyState } from "@/components/oryn/empty-state";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
@@ -10,28 +11,49 @@ import type { CounselorRecommendation, CounselorResult } from "@/lib/counselor";
 
 const LEVEL_LABEL = { low: "Low", medium: "Medium", high: "High" } as const;
 
-function RecommendationCard({ recommendation }: { recommendation: CounselorRecommendation }) {
+/**
+ * One recommendation, argued rather than listed. UI-V3 § 14 asks the counselor to show its
+ * reasoning structure, so `why` — the evidence the deterministic pipeline actually
+ * attached — is given its own labelled block rather than being greyed-out subtext under
+ * the title. A left rail replaces the bordered box for the same reason as `ActionCard`:
+ * a stack of these should read as a ranked argument, not as four identical panels.
+ */
+function RecommendationCard({ recommendation, index }: { recommendation: CounselorRecommendation; index: number }) {
   const unknownEligibility = recommendation.eligibility.verdict === "unknown";
   return (
-    <li className="space-y-2.5 rounded-xl border p-4">
+    <li className="relative py-5 pl-5 before:absolute before:inset-y-0 before:left-0 before:w-px before:rounded-full before:bg-border before:content-['']">
       <div className="flex items-start justify-between gap-3">
-        <p className="font-medium text-balance">{recommendation.title}</p>
+        <p className="flex items-baseline gap-2.5 text-balance">
+          <span aria-hidden="true" className="shrink-0 text-xs text-ink-4 tabular-nums">
+            {String(index).padStart(2, "0")}
+          </span>
+          <span className="font-medium text-ink-1">{recommendation.title}</span>
+        </p>
         {recommendation.deadline ? <DeadlineBadge date={recommendation.deadline.date} className="shrink-0" /> : null}
       </div>
+
       {recommendation.why.length > 0 ? (
-        <ul className="space-y-1 text-sm text-muted-foreground">
-          {recommendation.why.map((line) => (
-            <li key={line}>{line}</li>
-          ))}
-        </ul>
+        <div className="mt-3.5">
+          <Eyebrow rule={false}>Why this</Eyebrow>
+          <ul className="mt-2 max-w-2xl space-y-1.5 text-sm leading-relaxed text-ink-2">
+            {recommendation.why.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </div>
       ) : null}
-      <p className="text-xs text-muted-foreground">
+
+      <p className="mt-3 text-xs text-ink-3">
         {LEVEL_LABEL[recommendation.impact]} impact · {LEVEL_LABEL[recommendation.effort]} effort
       </p>
+
       {unknownEligibility && recommendation.warnings[0] ? (
-        <StatusBadge label={recommendation.warnings[0]} tone="warning" icon={TriangleAlert} />
+        <p className="mt-2.5">
+          <StatusBadge label={recommendation.warnings[0]} tone="warning" icon={TriangleAlert} />
+        </p>
       ) : null}
-      <div className="pt-1">
+
+      <div className="mt-4">
         <Button variant="outline" size="sm" render={<Link href={recommendation.nextAction.href} />} nativeButton={false}>
           {recommendation.nextAction.label}
         </Button>
@@ -65,9 +87,9 @@ export function CounselorPriorities({ result }: { result: CounselorResult }) {
           }
         />
         {doItems.length > 0 ? (
-          <ul className="space-y-3">
-            {doItems.map((r) => (
-              <RecommendationCard key={r.id} recommendation={r} />
+          <ul>
+            {doItems.map((r, i) => (
+              <RecommendationCard key={r.id} recommendation={r} index={i + 1} />
             ))}
           </ul>
         ) : null}
@@ -90,9 +112,9 @@ export function CounselorPriorities({ result }: { result: CounselorResult }) {
       {doItems.length > 0 ? (
         <section className="space-y-3">
           <SectionHeader title="Your priorities" />
-          <ul className="space-y-3">
-            {doItems.map((r) => (
-              <RecommendationCard key={r.id} recommendation={r} />
+          <ul>
+            {doItems.map((r, i) => (
+              <RecommendationCard key={r.id} recommendation={r} index={i + 1} />
             ))}
           </ul>
         </section>
@@ -107,9 +129,9 @@ export function CounselorPriorities({ result }: { result: CounselorResult }) {
       {considerItems.length > 0 ? (
         <section className="space-y-3">
           <SectionHeader title="Worth considering" />
-          <ul className="space-y-3">
-            {considerItems.map((r) => (
-              <RecommendationCard key={r.id} recommendation={r} />
+          <ul>
+            {considerItems.map((r, i) => (
+              <RecommendationCard key={r.id} recommendation={r} index={i + 1} />
             ))}
           </ul>
         </section>

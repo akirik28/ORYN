@@ -7,6 +7,9 @@ import { normalizeEntitySearchText } from "@/lib/entities/normalize";
 export interface PYMKResult {
   id: string;
   displayName: string | null;
+  /** The student's own public one-liner. Already visible on their public profile, so this
+   *  surfaces nothing new — it's what makes a suggestion a person rather than a row. */
+  headline: string | null;
   reasons: string[];
 }
 
@@ -92,7 +95,7 @@ export async function getPeopleYouMayKnow(userId: string, limit = 10): Promise<P
   const idsArr = [...candidateIds].slice(0, CANDIDATE_POOL_CAP);
 
   const [profilesRes, candidateConnRes, candidateInterestsRes, candidateSkillsRes] = await Promise.all([
-    admin.from("profiles").select("id, display_name, school_name, school_entity_id, is_public").in("id", idsArr),
+    admin.from("profiles").select("id, display_name, headline, school_name, school_entity_id, is_public").in("id", idsArr),
     admin.from("connections").select("requester_id, recipient_id, status").eq("status", "accepted").or(`${orInList("requester_id", idsArr)},${orInList("recipient_id", idsArr)}`),
     admin.from("student_interests").select("user_id, label").in("user_id", idsArr),
     admin.from("skills").select("user_id, name").in("user_id", idsArr),
@@ -147,11 +150,11 @@ export async function getPeopleYouMayKnow(userId: string, limit = 10): Promise<P
     const score = scorePeopleYouMayKnowCandidate({ mutualConnectionCount, sameSchool, overlappingInterests, overlappingSkills });
     if (!hasAnyPeopleYouMayKnowSignal(score)) continue;
 
-    results.push({ id: profile.id, displayName: profile.display_name, reasons: score.reasons, score: score.score });
+    results.push({ id: profile.id, displayName: profile.display_name, headline: profile.headline, reasons: score.reasons, score: score.score });
   }
 
   return results
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
-    .map(({ id, displayName, reasons }) => ({ id, displayName, reasons }));
+    .map(({ id, displayName, headline, reasons }) => ({ id, displayName, headline, reasons }));
 }

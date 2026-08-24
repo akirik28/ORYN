@@ -5,7 +5,12 @@ import { PageHeader } from "@/components/oryn/page-header";
 import { SectionHeader } from "@/components/oryn/section-header";
 import { createClient } from "@/lib/supabase/server";
 import { ScoreRadar } from "@/features/profile/score-radar";
-import { DimensionBars } from "@/features/profile/dimension-bars";
+import { ProfileSignal } from "@/features/dashboard/profile-signal";
+import { buildProfileSignal, hasConfidentSignal } from "@/lib/scoring/signal";
+import { InsightCard } from "@/components/oryn/insight-card";
+import { JourneyTimeline } from "@/features/profile/journey-timeline";
+import { buildJourney } from "@/lib/profile/build-journey";
+import { DIMENSION_LABELS } from "@/lib/scoring/labels";
 import { PeerBenchmark } from "@/features/profile/peer-benchmark";
 import { getPeerBenchmarks } from "@/lib/benchmarking";
 import { AchievementSection } from "@/features/profile/achievement-section";
@@ -174,6 +179,61 @@ export default async function ProfilePage() {
     (scoresRes.data ?? []).map((s) => [s.dimension, { score: s.score, confidence: s.confidence }])
   ) as Partial<Record<ProfileDimension, { score: number; confidence: "high" | "medium" | "low" }>>;
   const radarScores = Object.fromEntries(Object.entries(scoreMap).map(([k, v]) => [k, v!.score]));
+  // One spine over the ten achievement tables (UI-V3 § 16). Reuses the rows already
+  // fetched above — no extra queries.
+  const journeyEntries = buildJourney({
+    activities: activitiesRes.data ?? [],
+    projects: projectsRes.data ?? [],
+    research: researchRes.data ?? [],
+    work: workRes.data ?? [],
+    volunteering: volunteeringRes.data ?? [],
+    sports: sportsRes.data ?? [],
+    awards: awardsRes.data ?? [],
+    certifications: certificationsRes.data ?? [],
+    courses: coursesRes.data ?? [],
+    testScores: testScoresRes.data ?? [],
+    education: educationRes.data ?? [],
+  });
+
+  const profileSignal = buildProfileSignal(
+    (scoresRes.data ?? []).map((row) => ({ dimension: row.dimension, score: row.score, confidence: row.confidence })),
+  );
+
+  // Oryn's own note on the record. Ordered so the honest case wins: with nothing confidently
+  // scored it asks for evidence rather than diagnosing (Phase 68); then it names a real
+  // missing area; then, when there's nothing to flag, it names the strongest area, which is
+  // what makes a later "you don't need more of this" believable.
+  const unknownDimensions = profileSignal.filter((row) => row.state === "limited_evidence");
+  const weakest = profileSignal.filter((row) => row.state === "needs_attention").at(-1) ?? null;
+  const strongest = profileSignal.find((row) => row.state === "strong") ?? null;
+  const journeyNote: { variant: "gap" | "strength"; eyebrow: string; title: string; body: string } | null =
+    !hasConfidentSignal(profileSignal)
+      ? {
+          variant: "gap",
+          eyebrow: "Missing evidence",
+          title: "Oryn can't read your profile yet.",
+          body:
+            "Every dimension is still marked limited evidence, which means the record is thin — not that the work isn't there. Add your courses, activities and projects below and this page starts telling you something.",
+        }
+      : weakest
+        ? {
+            variant: "gap",
+            eyebrow: "Missing evidence",
+            title: `${DIMENSION_LABELS[weakest.dimension]} is the thinnest part of your record.`,
+            body:
+              unknownDimensions.length > 0
+                ? `It has the least supporting evidence of anything Oryn can assess. ${unknownDimensions.length} other ${unknownDimensions.length === 1 ? "dimension is" : "dimensions are"} still unscored, so this reading may change as you add more.`
+                : "It has the least supporting evidence of anything Oryn can assess, which makes it where the same effort moves your profile furthest.",
+          }
+        : strongest
+          ? {
+              variant: "strength",
+              eyebrow: "Oryn noticed a pattern",
+              title: `${DIMENSION_LABELS[strongest.dimension]} is becoming a consistent strength.`,
+              body:
+                "It's the best-evidenced part of your record. Adding more of the same is unlikely to change how your profile reads — the leverage is elsewhere.",
+            }
+          : null;
 
   // AchievementSection is a Client Component; a plain function prop like the old
   // `renderSummary={(item) => ({...})}` can't cross the Server->Client boundary (only a
@@ -185,8 +245,9 @@ export default async function ProfilePage() {
   return (
     <div className="space-y-10">
       <PageHeader
-        title="Your Career Profile"
-        description="A living picture of your academics, leadership, research, and execution — this is Oryn's development assessment, not an admissions score."
+        eyebrow="Journey"
+        title="Everything you've built so far."
+        description="Your record of academics, leadership, research and execution. This is Oryn's development assessment — not an admissions score, and not visible to universities."
         action={
           <div className="flex flex-col items-end gap-1 text-sm">
             <Link href="/profile/portfolio" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
@@ -208,7 +269,7 @@ export default async function ProfilePage() {
         }
       />
 
-      <section className="space-y-6 rounded-3xl border p-6 md:p-8">
+      <section className="space-y-6 rounded-2xl bg-surface-tint p-6 md:p-8">
         <SectionHeader title="Professional profile" description="What other Oryn students see on your public profile." />
         <ProfessionalIdentityForm
           initialHeadline={profile?.headline ?? null}
@@ -224,12 +285,12 @@ export default async function ProfilePage() {
         </div>
       </section>
 
-      <section className="space-y-3 rounded-3xl border p-6 md:p-8">
+      <section className="space-y-3">
         <SectionHeader title="Featured" description="Pin your best 3-5 items to the top of your public profile." />
         <FeaturedManager initialItems={featuredManagerItems} candidates={featuredCandidates} />
       </section>
 
-      <section className="grid gap-6 rounded-3xl border p-6 md:grid-cols-[1fr_auto] md:items-start md:p-8">
+      <section className="grid gap-6 md:grid-cols-[1fr_auto] md:items-start">
         <div className="space-y-3">
           <SectionHeader
             title="Profile Strength"
@@ -254,11 +315,38 @@ export default async function ProfilePage() {
         </div>
       </section>
 
-      <section className="grid gap-8 rounded-3xl border border-brand-primary-border bg-gradient-to-br from-brand-primary-subtle via-card to-card p-6 md:grid-cols-2 md:p-8">
+      {/* The one deliberately contained module on this page — it's the page's single
+          "this is the point" surface, which is what rounded-3xl is reserved for.
+          `DimensionBars` (a 0-100 fill per dimension) was replaced by the same qualitative
+          ProfileSignal the dashboard uses: a bar implies a track you're meant to fill, and
+          founder direction is explicit that evidence states beat percentages. The score is
+          still shown here, as quiet metadata beside the word rather than as the reading —
+          this is the detail view, so the figure earns a place it hasn't earned on Home. */}
+      <section className="grid gap-8 rounded-3xl border border-brand-primary-border bg-brand-primary-subtle p-6 md:grid-cols-2 md:p-8">
         <ScoreRadar scores={radarScores} />
         <div className="flex flex-col justify-center">
-          <DimensionBars scores={scoreMap} />
+          <ProfileSignal signal={profileSignal} showScores heading="Where you stand" />
         </div>
+      </section>
+
+      {/* UI-V3 § 17 — Oryn annotating the record rather than only storing it. Both branches
+          are derived from the same signal the block above renders, so the annotation can
+          never contradict what the student just read. Strengths are named as well as gaps:
+          a page that only ever points at what's missing reads as a scold, and the master
+          spec's Phase 39 is explicit that recognising an existing strength is itself
+          advice — it's what makes "you don't need more of this" credible. */}
+      {journeyNote ? (
+        <InsightCard variant={journeyNote.variant} eyebrow={journeyNote.eyebrow} title={journeyNote.title}>
+          {journeyNote.body}
+        </InsightCard>
+      ) : null}
+
+      <section className="space-y-6">
+        <SectionHeader
+          title="Your journey"
+          description="Everything on one timeline, newest first. The sections below are where you add and edit — this is how it reads."
+        />
+        <JourneyTimeline entries={journeyEntries} />
       </section>
 
       <section className="space-y-3">
