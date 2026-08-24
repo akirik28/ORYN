@@ -93,8 +93,18 @@ export interface DimensionScoreRow {
   dimension: ProfileDimension;
   score: number;
   confidence: DataConfidence;
-  /** `profile_scores.reason_codes` — empty means the dimension found nothing to score. */
-  reasonCodes?: unknown[] | null;
+  /**
+   * `profile_scores.reason_codes`. Required, and deliberately so: an empty array is a
+   * real claim ("this dimension found nothing to score") that puts the student in the
+   * "Getting started" state, so a caller must say it rather than fall into it.
+   *
+   * It was optional until 2026-08-24, and the dev-preview fixture omitted it — which
+   * silently rendered a student with academics 82 and leadership 91 as having no evidence
+   * at all. Every reader of this type is a student-facing surface, so the failure mode of
+   * a forgotten field is telling someone their profile is empty when it isn't. Prefer
+   * `toProfileSignal`, which reads the DB row directly and leaves nothing to forget.
+   */
+  reasonCodes: readonly unknown[];
 }
 
 /**
@@ -112,11 +122,33 @@ export function buildProfileSignal(scores: DimensionScoreRow[]): DimensionSignal
   return scores
     .map((s) => ({
       dimension: s.dimension,
-      state: evidenceStateFor(s.score, s.confidence, (s.reasonCodes?.length ?? 0) > 0),
+      state: evidenceStateFor(s.score, s.confidence, s.reasonCodes.length > 0),
       score: s.score,
       confidence: s.confidence,
     }))
     .sort((a, b) => rank[a.state] - rank[b.state] || b.score - a.score);
+}
+
+/**
+ * Builds the signal straight from `profile_scores` rows as Supabase returns them
+ * (snake_case, jsonb `reason_codes` typed `unknown`).
+ *
+ * This is the entry point every product surface should use. `buildProfileSignal` takes an
+ * already-mapped shape, and three pages were each writing that mapping by hand — three
+ * chances to drop `reasonCodes` and turn a scored profile into "Getting started". Passing
+ * the row itself removes the field a caller could forget.
+ */
+export function toProfileSignal(
+  rows: readonly { dimension: ProfileDimension; score: number; confidence: DataConfidence; reason_codes: unknown }[],
+): DimensionSignal[] {
+  return buildProfileSignal(
+    rows.map((row) => ({
+      dimension: row.dimension,
+      score: row.score,
+      confidence: row.confidence,
+      reasonCodes: Array.isArray(row.reason_codes) ? row.reason_codes : [],
+    })),
+  );
 }
 
 /**

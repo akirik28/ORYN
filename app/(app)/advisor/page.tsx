@@ -7,7 +7,7 @@ import { CounselorPriorities } from "@/features/advisor/counselor-priorities";
 import { PageHeader } from "@/components/oryn/page-header";
 import { isAIConfigured } from "@/lib/ai";
 import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
-import { buildProfileSignal, canClaimGap } from "@/lib/scoring/signal";
+import { toProfileSignal, canClaimGap } from "@/lib/scoring/signal";
 import { DIMENSION_LABELS } from "@/lib/scoring/labels";
 import { getCounselorRecommendations } from "@/lib/counselor";
 
@@ -40,14 +40,7 @@ export default async function AdvisorPage() {
   // Counselor Core Phase D — see app/(app)/dashboard/page.tsx's identical usage.
   const biggestGap = rankDimensionGaps(toDimensionScoreRows(scores))[0] ?? null;
 
-  const profileSignal = buildProfileSignal(
-    scores.map((s) => ({
-      dimension: s.dimension,
-      score: s.score,
-      confidence: s.confidence,
-      reasonCodes: s.reason_codes,
-    })),
-  );
+  const profileSignal = toProfileSignal(scores);
   // Same honesty guard the dashboard applies: don't state a focus Oryn can't actually
   // support from the data. The strategy panel simply omits the row instead.
   const focusLabel =

@@ -6,6 +6,9 @@
 import type { ImpactLevel, OutlookLabel, Opportunity, ProfileDimension, University, WeeklyAction } from "@/types/database";
 import type { TargetUniversityWithDetails } from "@/lib/universities/queries";
 import type { WeeklyPlanWithActions } from "@/lib/plan/persist";
+import { toProfileSignal } from "@/lib/scoring/signal";
+import type { ProfileChange } from "@/lib/scoring/change";
+import type { MonthlyReview } from "@/lib/scoring/monthly-review";
 
 export const FIXTURE_STUDENT = {
   displayName: "Ada",
@@ -25,6 +28,15 @@ const DIMENSION_SCORES: Record<ProfileDimension, number> = {
   execution_project_depth: 76,
 };
 
+/**
+ * Scored-student fixture, shaped exactly like a `profile_scores` row.
+ *
+ * `reason_codes` is populated on purpose. A real scored dimension always carries at least
+ * one, and an empty array is how the signal layer represents "this dimension found nothing
+ * to score" — so a fixture that left it empty described a student with no evidence at all,
+ * regardless of the scores sitting next to it. That is precisely the bug this fixture
+ * shipped with: the preview rendered academics 82 / leadership 91 as "Getting started".
+ */
 export const FIXTURE_SCORES = (Object.entries(DIMENSION_SCORES) as [ProfileDimension, number][]).map(([dimension, score], index) => ({
   id: `score-${index}`,
   user_id: "fixture-user",
@@ -32,12 +44,44 @@ export const FIXTURE_SCORES = (Object.entries(DIMENSION_SCORES) as [ProfileDimen
   score,
   confidence: "high" as const,
   calculation_version: "career_profile_v1",
-  reason_codes: [],
+  reason_codes: [{ code: `${dimension}_fixture`, detail: "Fixture evidence" }],
   calculated_at: new Date().toISOString(),
 }));
 
+/** The signal the preview renders, derived from the same rows rather than a parallel list. */
+export const FIXTURE_PROFILE_SIGNAL = toProfileSignal(FIXTURE_SCORES);
+
+/** A month with history, so the harness renders Progress's populated branch. */
+export const FIXTURE_MONTHLY_REVIEW: MonthlyReview = {
+  hasHistory: true,
+  windowDays: 30,
+  // Retained on the type for internal consumers; Progress no longer renders any of these.
+  overallBefore: 74,
+  overallAfter: 77,
+  overallDelta: 3,
+  dimensionDeltas: [
+    { dimension: "research", before: 34, after: 42, delta: 8 },
+    { dimension: "community_impact", before: 56, after: 59, delta: 3 },
+    { dimension: "entrepreneurship", before: 70, after: 68, delta: -2 },
+    { dimension: "academics", before: 82, after: 82, delta: 0 },
+    { dimension: "leadership", before: 91, after: 91, delta: 0 },
+  ],
+  signal: FIXTURE_PROFILE_SIGNAL,
+  projectsCompletedRecently: 1,
+  applicationsSubmittedRecently: 2,
+};
+
 export const FIXTURE_BIGGEST_GAP = { dimension: "research" as ProfileDimension, score: 42 };
-export const FIXTURE_BIGGEST_IMPROVEMENT = { dimension: "research" as ProfileDimension, delta: 8 };
+/** A month with real movement, so the preview exercises the populated branch. */
+export const FIXTURE_PROFILE_CHANGE: ProfileChange = {
+  hasHistory: true,
+  improved: [
+    { dimension: "research", delta: 8 },
+    { dimension: "community_impact", delta: 3 },
+  ],
+  declined: [],
+  steady: 7,
+};
 
 export const FIXTURE_AVOID_RECOMMENDATION = {
   title: "Starting another entrepreneurship club",

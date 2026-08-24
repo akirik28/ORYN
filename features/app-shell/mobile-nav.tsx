@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import type { DimensionSignal } from "@/lib/scoring/signal";
 import { UserMenu } from "./user-menu";
 import { NotificationBell } from "./notification-bell";
 import { CommandPalette } from "@/features/search/command-palette";
@@ -35,12 +36,12 @@ const OVERFLOW_NAV = [...PRIMARY_NAV.filter((item) => !item.mobilePrimary), ...S
  * beside the nav, which puts it at the top of the flow where it does nothing.
  */
 export function MobileNav({
-  score,
+  signal,
   displayName,
   email,
   notifications,
 }: {
-  score: number | null;
+  signal: DimensionSignal[];
   displayName: string;
   email: string | null;
   notifications: Notification[];
@@ -60,7 +61,7 @@ export function MobileNav({
         <div className="flex items-center gap-1">
           <CommandPalette />
           <NotificationBell notifications={notifications} />
-          <UserMenu displayName={displayName} email={email} score={score} />
+          <UserMenu displayName={displayName} email={email} signal={signal} />
         </div>
       </header>
 
