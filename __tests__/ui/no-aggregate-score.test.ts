@@ -68,6 +68,10 @@ describe("student-facing surfaces do not render the aggregate score", () => {
     expect(progress).toContain("Next area to strengthen");
     const home = read("features/dashboard/dashboard-view.tsx");
     expect(home).toContain("Your clearest gap right now is");
-    expect(home).toContain("No evidence yet");
+    // "No evidence yet" moved into lib/scoring/dashboard-hero.ts (2026-08-24, Gate 2
+    // integration fix) when the claimable/unclaimable/empty three-way hero state was
+    // extracted out of this component for testability — see that file's own header
+    // comment. Still rendered on Home, just computed one level away now.
+    expect(read("lib/scoring/dashboard-hero.ts")).toContain("No evidence yet");
   });
 });
