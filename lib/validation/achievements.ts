@@ -200,3 +200,17 @@ export const SkillSchema = z.object({
   proficiency: optionalText,
 });
 export type SkillFormInput = z.infer<typeof SkillSchema>;
+
+/**
+ * Proficiency is a closed set, not free text: CEFR is what European universities state
+ * their language requirements in, so a stored "c1" is comparable against a requirement
+ * while "pretty good" never is. `native` and `bilingual` sit outside the A1-C2 ladder
+ * deliberately — see lib/vocabularies/languages.ts.
+ */
+export const LanguageSchema = z.object({
+  name: z.string().min(1, { error: "Language is required." }).max(60, { error: "Keep it under 60 characters." }),
+  proficiency: z
+    .enum(["native", "bilingual", "c2", "c1", "b2", "b1", "a2", "a1"], { error: "Choose a proficiency level." })
+    .nullable(),
+});
+export type LanguageFormInput = z.infer<typeof LanguageSchema>;

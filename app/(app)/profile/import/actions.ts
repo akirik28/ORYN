@@ -7,8 +7,11 @@ import { recomputeCareerProfile } from "@/lib/scoring/persist";
 import { insertCvImportItems, type CvImportItem } from "@/lib/profile/cv-import";
 import { logEvent } from "@/lib/analytics/log";
 
-export type { CVUploadResult } from "@/app/(onboarding)/onboarding/actions";
-export { uploadAndExtractCV } from "@/app/(onboarding)/onboarding/actions";
+// No re-export of `uploadAndExtractCV` here, deliberately. A "use server" module may only
+// export async functions — a re-export (or a type export) makes Turbopack reject the file
+// and it ends up with *no* exports at all, which typecheck happily accepts and the
+// production build does not. The client imports the upload action straight from the
+// onboarding module instead; it is the same server action either way.
 
 /**
  * Save reviewed CV items into the profile, after onboarding.

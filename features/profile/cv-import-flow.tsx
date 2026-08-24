@@ -8,7 +8,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Eyebrow } from "@/components/oryn/eyebrow";
 import { EmptyState } from "@/components/oryn/empty-state";
 import { cn } from "@/lib/utils";
-import { uploadAndExtractCV, importReviewedCvItems } from "@/app/(app)/profile/import/actions";
+// Two modules on purpose — see the note in profile/import/actions.ts about why the
+// upload action is not re-exported through it.
+import { uploadAndExtractCV } from "@/app/(onboarding)/onboarding/actions";
+import { importReviewedCvItems } from "@/app/(app)/profile/import/actions";
 import type { CvImportCategory, CvImportItem } from "@/lib/profile/cv-import";
 import type { CVExtractionResult } from "@/lib/ai/cv-extraction";
 

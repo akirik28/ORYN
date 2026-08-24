@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { addTargetUniversity } from "@/app/(app)/universities/actions";
 import { useCompare } from "@/features/universities/compare-context";
 import { formatNumber } from "@/lib/i18n/format";
+import { cn } from "@/lib/utils";
 import { MediaImage } from "@/components/oryn/media-image";
 import type { University } from "@/types/database";
 
@@ -24,6 +25,8 @@ export function UniversityCard({
   cost,
   researchTopics,
   imageUrl,
+  compact = false,
+  countryHref,
 }: {
   university: University;
   isSaved: boolean;
@@ -43,6 +46,14 @@ export function UniversityCard({
    * on our own Supabase Storage bucket. Absent for most universities today; falls back to
    * `logo_url` then a plain icon, never to a placeholder pretending to be a real photo. */
   imageUrl?: string | null;
+  /** Denser variant for the map view's ~42% results panel, where the full card's padding
+   *  and 128px image band fit about four results on screen. Same content, tighter frame —
+   *  not a different card, so the two views can't drift apart. */
+  compact?: boolean;
+  /** Selects this card's country on the map. Given only in the map view, and omitted when
+   *  the country is already the active filter — this is the results→map half of the
+   *  synchronisation, so dropping it would make the pairing one-directional. */
+  countryHref?: string | null;
 }) {
   const [saved, setSaved] = useState(isSaved);
   const [isPending, startTransition] = useTransition();
@@ -52,7 +63,7 @@ export function UniversityCard({
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border bg-card">
       <MediaImage
-        className="h-32 w-full"
+        className={cn("w-full", compact ? "h-24" : "h-32")}
         src={imageUrl}
         fallbackSrc={university.logo_url}
         alt={`Campus of ${university.name}`}
@@ -61,15 +72,28 @@ export function UniversityCard({
         sizes="(min-width: 1024px) 360px, (min-width: 640px) 50vw, 100vw"
       />
 
-      <div className="flex flex-1 flex-col gap-3 p-6">
+      <div className={cn("flex flex-1 flex-col", compact ? "gap-2 p-4" : "gap-3 p-6")}>
         <div className="space-y-1">
-          <Link href={`/universities/${university.id}`} className="text-lg font-medium leading-snug hover:underline">
+          <Link
+            href={`/universities/${university.id}`}
+            className={cn("font-medium leading-snug hover:underline", compact ? "text-sm" : "text-lg")}
+          >
             {university.name}
           </Link>
           {(university.city || university.country) && (
-            <p className="flex items-center gap-1 text-sm text-muted-foreground">
+            <p className={cn("flex items-center gap-1 text-muted-foreground", compact ? "text-xs" : "text-sm")}>
               <MapPin className="size-3.5 shrink-0" />
-              {[university.city, university.country].filter(Boolean).join(", ")}
+              {university.city ? `${university.city}, ` : ""}
+              {countryHref && university.country ? (
+                <Link
+                  href={countryHref}
+                  className="underline-offset-2 hover:text-brand-primary hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                >
+                  {university.country}
+                </Link>
+              ) : (
+                university.country
+              )}
             </p>
           )}
         </div>

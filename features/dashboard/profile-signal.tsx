@@ -7,6 +7,7 @@ import { DIMENSION_LABELS, DIMENSION_LABELS_SHORT } from "@/lib/scoring/labels";
 import {
   EVIDENCE_STATE_LABELS,
   EVIDENCE_STATE_SHORT_LABELS,
+  isAssessed,
   type DimensionSignal,
   type EvidenceState,
 } from "@/lib/scoring/signal";
@@ -117,7 +118,10 @@ export function ProfileSignal({
               {showScores ? DIMENSION_LABELS[row.dimension] : DIMENSION_LABELS_SHORT[row.dimension]}
             </span>
             <span className="flex shrink-0 items-center gap-2.5">
-              {showScores && row.state !== "limited_evidence" ? (
+              {/* Only for states Oryn actually assessed. Printing "0" beside "Not enough
+                  evidence yet" asserts a measurement that never happened — the same
+                  confusion between absence and weakness this whole model exists to end. */}
+              {showScores && isAssessed(row.state) ? (
                 <span className="text-xs text-ink-4 tabular-nums">{row.score}</span>
               ) : null}
               <span className={cn("text-xs whitespace-nowrap", STATE_TEXT[row.state])}>

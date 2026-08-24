@@ -5,6 +5,7 @@ import { TEST_NAME_SUGGESTIONS } from "@/lib/vocabularies/tests";
 import { COUNTRY_SUGGESTIONS } from "@/lib/vocabularies/countries";
 import { AWARD_LEVEL_SUGGESTIONS, CAUSE_AREA_SUGGESTIONS, PROFICIENCY_SUGGESTIONS } from "@/lib/vocabularies/profile-fields";
 import { SKILL_NAME_SUGGESTIONS } from "@/lib/vocabularies/skills";
+import { LANGUAGE_NAME_SUGGESTIONS, LANGUAGE_PROFICIENCY_OPTIONS } from "@/lib/vocabularies/languages";
 import { SPORT_NAME_SUGGESTIONS } from "@/lib/vocabularies/sports";
 
 // Essay Story Bank (founder-confirmed MVP scope) reads this field as candidate material —
@@ -370,6 +371,13 @@ export const SKILL_CATEGORY_OPTIONS = [
  * app/(app)/profile/skills-actions.ts, not just by leaving this list short. Self-declared,
  * so a weak Digital Twin signal on its own (spec: Digital Twin rules) — endorsements from
  * accepted connections add real context on top, but neither becomes a quantitative score. */
+export const LANGUAGE_FIELDS: FieldConfig[] = [
+  { type: "suggest", name: "name", label: "Language", suggestions: LANGUAGE_NAME_SUGGESTIONS, placeholder: "e.g. English, Turkish", span: "half" },
+  // A select, not a suggest: the whole reason this column holds CEFR values is that they
+  // are comparable against a stated university requirement, which free text isn't.
+  { type: "select", name: "proficiency", label: "Proficiency", options: LANGUAGE_PROFICIENCY_OPTIONS, span: "half" },
+];
+
 export const SKILL_FIELDS: FieldConfig[] = [
   { type: "suggest", name: "name", label: "Skill", suggestions: SKILL_NAME_SUGGESTIONS, placeholder: "e.g. Python, Public speaking", span: "half" },
   { type: "select", name: "category", label: "Category", options: SKILL_CATEGORY_OPTIONS, span: "half" },
