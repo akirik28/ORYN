@@ -13,8 +13,8 @@ import { CounselorWeekFallback } from "@/features/dashboard/counselor-week-fallb
 import { GeneratePlanButton } from "@/features/dashboard/generate-plan-button";
 import { ProfileSignal } from "@/features/dashboard/profile-signal";
 import { OutlookBadge } from "@/features/universities/outlook-badge";
-import { DIMENSION_LABELS } from "@/lib/scoring/labels";
-import { canClaimGap, type DimensionSignal } from "@/lib/scoring/signal";
+import { computeDashboardHeroState } from "@/lib/scoring/dashboard-hero";
+import type { DimensionSignal } from "@/lib/scoring/signal";
 import { describeProfileChange, type ProfileChange } from "@/lib/scoring/change";
 import type { getTargetUniversitiesWithDetails } from "@/lib/universities/queries";
 import type { getUpcomingDeadlines, DeadlineSource } from "@/lib/deadlines/upcoming";
@@ -71,29 +71,12 @@ export function DashboardView({
 }: DashboardViewProps) {
   const hasAiPlan = Boolean(weeklyPlan && weeklyPlan.actions.length > 0);
   const usingCounselorFallback = !hasAiPlan && counselorThisWeek.length > 0;
-  // `rankDimensionGaps` returns the lowest-scoring dimension whether or not Oryn has any
-  // confidence in that score, so the headline has to ask separately whether the gap is a
-  // finding or just silence. See canClaimGap — this was live on an empty profile.
-  const claimableGap = biggestGap && canClaimGap(profileSignal, biggestGap.dimension) ? biggestGap : null;
-  const gapLabel = claimableGap ? DIMENSION_LABELS[claimableGap.dimension] : null;
+  // See lib/scoring/dashboard-hero.ts for why this needs three states, not two — a rich
+  // profile whose literal weakest dimension happens to be unassessed used to render the
+  // same "nothing recorded" copy as a genuinely empty profile (live Gate 2 finding,
+  // 2026-08-24, docs/handoffs/gate2-ai-counselor-report-2026-08-24.md §18).
+  const heroState = computeDashboardHeroState(profileSignal, biggestGap);
   const changeSentence = describeProfileChange(profileChange);
-
-  // "What Oryn is reading" (UI-V3 § 9) — the evidence behind the claim above it, so the
-  // recommendation can be argued with rather than only accepted. Every figure is counted
-  // from the same signal the Profile Signal block renders, including the dimensions Oryn
-  // has no read on: that absence is the honest reason its advice is hedged, and hiding it
-  // would make the confident half look better supported than it is.
-  const strongCount = profileSignal.filter((row) => row.state === "strong").length;
-  const unknownCount = profileSignal.filter((row) => row.state === "limited_evidence").length;
-  const heroEvidence = claimableGap
-    ? [
-        { label: "Areas assessed", value: profileSignal.length - unknownCount },
-        { label: "Already strong", value: strongCount, tone: strongCount > 0 ? ("positive" as const) : undefined },
-        ...(unknownCount > 0
-          ? [{ label: "No evidence yet", value: unknownCount, tone: "missing" as const }]
-          : []),
-      ]
-    : undefined;
 
   return (
     <div className="space-y-20 md:space-y-24">
@@ -111,13 +94,13 @@ export function DashboardView({
         <p className="text-sm text-ink-3">
           {greeting}, {displayName}.
         </p>
-        {gapLabel ? (
+        {heroState.kind === "claimable" ? (
           <NextMove
             className="mt-6"
             size="hero"
             as="h1"
             eyebrow="Your next move"
-            headline={<>Your clearest gap right now is {gapLabel.toLowerCase()}.</>}
+            headline={<>Your clearest gap right now is {heroState.gapLabel!.toLowerCase()}.</>}
             why={
               <>
                 Oryn compares your dimensions against each other, not against other students. Across
@@ -125,11 +108,31 @@ export function DashboardView({
                 it&apos;s where the same hours of work change your profile most.
               </>
             }
-            evidence={heroEvidence}
+            evidence={heroState.evidence}
             action={
               <>
                 <ButtonLink href="/advisor">
                   Build a plan for this <ArrowRight className="size-4" />
+                </ButtonLink>
+                <ButtonLink href="/profile" variant="outline">
+                  See the full picture
+                </ButtonLink>
+              </>
+            }
+          />
+        ) : heroState.kind === "rich_unclaimable" ? (
+          <NextMove
+            className="mt-6"
+            size="hero"
+            as="h1"
+            eyebrow="Where you stand"
+            headline="No single dimension stands out as your clearest gap right now."
+            why="Oryn compares your dimensions against each other, not against other students, and right now none of them is clearly behind the rest — that's a good sign, not a gap in what Oryn knows."
+            evidence={heroState.evidence}
+            action={
+              <>
+                <ButtonLink href="/advisor">
+                  Talk to your counselor <ArrowRight className="size-4" />
                 </ButtonLink>
                 <ButtonLink href="/profile" variant="outline">
                   See the full picture
