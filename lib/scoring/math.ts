@@ -81,3 +81,48 @@ export function scoreCommitments(items: CommitmentItem[], opts: CommitmentOption
   const points = breakdown.reduce((sum, item) => sum + item.weightedPoints, 0);
   return { points, breakdown };
 }
+
+export interface RankedDistinctionOptions {
+  /** Ceiling on any single item's contribution, applied before rank weighting. */
+  perItemCap: number;
+  /** Each successive rank counts at this fraction of the previous rank's weight. */
+  decay: number;
+  /** Floor on the rank weight, so a long tail still counts for something rather than nothing. */
+  minWeight: number;
+}
+
+/**
+ * Aggregates items whose worth is carried by a discrete *tier* rather than by accumulated
+ * effort — awards being the case that motivated it.
+ *
+ * `scoreCommitments` weights the strongest N items in full and then applies one flat
+ * factor. That shape is right for time-based commitments, where a second sustained
+ * activity really is worth about as much as the first. It is wrong for distinctions: with
+ * `diminishingAfter: 3` a student could stack eight school prizes past one national medal
+ * purely on count, which is the inverse of what the product claims to reward.
+ *
+ * Here the weight decays geometrically from the very first item, so the single best piece
+ * of evidence dominates and each additional one is worth markedly less than the one above
+ * it. Eight school-level awards land below a single regional award; nothing a student can
+ * accumulate at a low tier reaches what one nationally significant result is worth.
+ */
+export function scoreRankedDistinctions(
+  items: CommitmentItem[],
+  opts: RankedDistinctionOptions,
+): CommitmentResult {
+  const capped = items
+    .map((item) => ({ label: item.label, cappedPoints: Math.min(item.basePoints, opts.perItemCap) }))
+    .sort((a, b) => b.cappedPoints - a.cappedPoints);
+
+  const breakdown: CommitmentBreakdownEntry[] = capped.map((item, index) => {
+    const weight = Math.max(opts.minWeight, opts.decay ** index);
+    return {
+      ...item,
+      weightedPoints: item.cappedPoints * weight,
+      diminished: index > 0,
+    };
+  });
+
+  const points = breakdown.reduce((sum, item) => sum + item.weightedPoints, 0);
+  return { points, breakdown };
+}
