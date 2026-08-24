@@ -10,6 +10,7 @@ import { NotificationBell } from "@/features/app-shell/notification-bell";
 import { NotConfiguredNotice } from "@/features/system/not-configured-notice";
 import { CommandPalette } from "@/features/search/command-palette";
 import { integrationStatus } from "@/lib/env";
+import { toProfileSignal } from "@/lib/scoring/signal";
 
 // Every route under this layout is per-user and auth-gated — never a candidate for
 // static prerendering. Also sidesteps a real build failure: without this, `next build`
@@ -33,12 +34,24 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const displayName = profile.display_name || profile.first_name || "Student";
 
   const supabase = await createClient();
-  const { data: notifications } = await supabase
-    .from("notifications")
-    .select("*")
-    .eq("user_id", session.userId!)
-    .order("created_at", { ascending: false })
-    .limit(20);
+  // The account menu used to render `profiles.profile_strength_score` straight from the
+  // row above. It now renders a qualitative read instead, which needs the per-dimension
+  // rows — at most nine, indexed on user_id, fetched alongside the notifications that were
+  // already being loaded here.
+  const [notificationsRes, scoresRes] = await Promise.all([
+    supabase
+      .from("notifications")
+      .select("*")
+      .eq("user_id", session.userId!)
+      .order("created_at", { ascending: false })
+      .limit(20),
+    supabase
+      .from("profile_scores")
+      .select("dimension, score, confidence, reason_codes")
+      .eq("user_id", session.userId!),
+  ]);
+  const notifications = notificationsRes.data;
+  const profileSignal = toProfileSignal(scoresRes.data ?? []);
 
   return (
     <div className="flex min-h-svh flex-col">
@@ -52,7 +65,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </a>
 
       <MobileNav
-        score={profile.profile_strength_score}
+        signal={profileSignal}
         displayName={displayName}
         email={session.email}
         notifications={notifications ?? []}
@@ -67,7 +80,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <div className="ml-auto flex shrink-0 items-center gap-2">
             <CommandPalette variant="bar" />
             <NotificationBell notifications={notifications ?? []} />
-            <UserMenu displayName={displayName} email={session.email} score={profile.profile_strength_score} />
+            <UserMenu displayName={displayName} email={session.email} signal={profileSignal} />
           </div>
         </div>
       </header>

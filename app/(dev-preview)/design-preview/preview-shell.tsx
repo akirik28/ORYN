@@ -6,10 +6,11 @@ import type { ReactNode } from "react";
 import { TopNav } from "@/features/app-shell/top-nav";
 import { UserMenu } from "@/features/app-shell/user-menu";
 import { CommandPalette } from "@/features/search/command-palette";
+import type { DimensionSignal } from "@/lib/scoring/signal";
 
 // Mirrors app/(app)/layout.tsx's structure with fixture data — real nav/header
 // components, no auth/data-fetching. See app/(dev-preview)/design-preview/page.tsx.
-export function PreviewShell({ children, score = 77 }: { children: ReactNode; score?: number | null }) {
+export function PreviewShell({ children, signal }: { children: ReactNode; signal: DimensionSignal[] }) {
   return (
     <div className="flex min-h-svh flex-col">
       <header className="sticky top-0 z-30 border-b bg-background/85 backdrop-blur-md">
@@ -20,7 +21,7 @@ export function PreviewShell({ children, score = 77 }: { children: ReactNode; sc
           <TopNav />
           <div className="ml-auto flex shrink-0 items-center gap-2">
             <CommandPalette variant="bar" />
-            <UserMenu displayName="Ada" email="ada@example.com" score={score} />
+            <UserMenu displayName="Ada" email="ada@example.com" signal={signal} />
           </div>
         </div>
       </header>

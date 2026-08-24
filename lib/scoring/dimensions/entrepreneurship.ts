@@ -15,17 +15,17 @@ export function scoreEntrepreneurship(facts: ScoringFacts): DimensionResult {
   }
 
   const items = ventures.map((project) => {
-    const foundedBonus = 8;
+    const foundedBonus = 20;
     const months = project.start_date ? monthsBetween(project.start_date, project.end_date, referenceDate) : 0;
-    const durationBonus = Math.min(months, 8);
-    const revenueBonus = project.revenue_amount ? Math.min(Math.log10(project.revenue_amount + 1) * 4, 15) : 0;
-    const usersBonus = project.users_reached ? Math.min(Math.log10(project.users_reached + 1) * 3, 8) : 0;
+    const durationBonus = Math.min(months * 1.1, 18);
+    const revenueBonus = project.revenue_amount ? Math.min(Math.log10(project.revenue_amount + 1) * 7, 26) : 0;
+    const usersBonus = project.users_reached ? Math.min(Math.log10(project.users_reached + 1) * 5, 18) : 0;
 
     return { label: project.title, basePoints: foundedBonus + durationBonus + revenueBonus + usersBonus };
   });
 
   const { points, breakdown } = scoreCommitments(items, {
-    perItemCap: 30,
+    perItemCap: 70,
     diminishingAfter: 2,
     diminishingFactor: 0.4,
   });

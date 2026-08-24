@@ -2,6 +2,7 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, ProfileDimension } from "@/types/database";
+import { toProfileSignal, type DimensionSignal } from "./signal";
 
 const REVIEW_WINDOW_DAYS = 30;
 
@@ -15,10 +16,16 @@ export interface DimensionDelta {
 export interface MonthlyReview {
   hasHistory: boolean;
   windowDays: number;
+  /**
+   * The aggregate, kept for internal consumers (trend logic, snapshots, ranking). It is
+   * deliberately not rendered to students any more — see lib/scoring/change.ts.
+   */
   overallBefore: number | null;
   overallAfter: number | null;
   overallDelta: number | null;
   dimensionDeltas: DimensionDelta[];
+  /** Current qualitative read, so Progress can name strengths and the next area to work on. */
+  signal: DimensionSignal[];
   projectsCompletedRecently: number;
   applicationsSubmittedRecently: number;
 }
@@ -35,7 +42,7 @@ export async function getMonthlyReview(supabase: SupabaseClient<Database>, userI
   const since = new Date(Date.now() - REVIEW_WINDOW_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
   const [scoresRes, baselineSnapshotRes, projectsRes, applicationsRes] = await Promise.all([
-    supabase.from("profile_scores").select("dimension, score").eq("user_id", userId),
+    supabase.from("profile_scores").select("dimension, score, confidence, reason_codes").eq("user_id", userId),
     supabase
       .from("profile_score_snapshots")
       .select("overall_score, dimension_scores, created_at")
@@ -51,6 +58,8 @@ export async function getMonthlyReview(supabase: SupabaseClient<Database>, userI
   const currentScores = scoresRes.data ?? [];
   const overallAfter = currentScores.length > 0 ? Math.round(currentScores.reduce((sum, s) => sum + s.score, 0) / currentScores.length) : null;
 
+  const signal = toProfileSignal(currentScores);
+
   const baseline = baselineSnapshotRes.data;
   if (!baseline) {
     return {
@@ -60,6 +69,7 @@ export async function getMonthlyReview(supabase: SupabaseClient<Database>, userI
       overallAfter,
       overallDelta: null,
       dimensionDeltas: [],
+      signal,
       projectsCompletedRecently: projectsRes.count ?? 0,
       applicationsSubmittedRecently: applicationsRes.count ?? 0,
     };
@@ -82,6 +92,7 @@ export async function getMonthlyReview(supabase: SupabaseClient<Database>, userI
     overallAfter,
     overallDelta: overallAfter !== null ? overallAfter - baseline.overall_score : null,
     dimensionDeltas,
+    signal,
     projectsCompletedRecently: projectsRes.count ?? 0,
     applicationsSubmittedRecently: applicationsRes.count ?? 0,
   };

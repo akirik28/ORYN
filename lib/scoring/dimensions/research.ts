@@ -4,12 +4,12 @@ import { clampScore, monthsBetween, scoreCommitments } from "../math";
 
 const OUTPUT_BONUS: Record<ResearchOutputType, number> = {
   none: 0,
-  presentation: 5,
-  poster: 6,
-  school_journal: 7,
-  preprint: 9,
-  peer_reviewed_publication: 10,
-  other: 4,
+  presentation: 10,
+  poster: 12,
+  school_journal: 14,
+  preprint: 18,
+  peer_reviewed_publication: 22,
+  other: 8,
 };
 
 /**
@@ -28,10 +28,10 @@ export function scoreResearch(facts: ScoringFacts): DimensionResult {
     const months = experience.start_date
       ? monthsBetween(experience.start_date, experience.end_date, referenceDate)
       : 0;
-    const durationBonus = Math.min(months * 1.3, 10);
-    const methodologyBonus = experience.methodology && experience.methodology.trim().length > 10 ? 7 : 0;
-    const mentorBonus = experience.mentor_name ? 5 : 0;
-    const independenceBonus = experience.independence_level ? 4 : 0;
+    const durationBonus = Math.min(months * 1.6, 20);
+    const methodologyBonus = experience.methodology && experience.methodology.trim().length > 10 ? 14 : 0;
+    const mentorBonus = experience.mentor_name ? 10 : 0;
+    const independenceBonus = experience.independence_level ? 9 : 0;
     const outputBonus = OUTPUT_BONUS[experience.output_type];
 
     return {
@@ -41,7 +41,7 @@ export function scoreResearch(facts: ScoringFacts): DimensionResult {
   });
 
   const { points, breakdown } = scoreCommitments(items, {
-    perItemCap: 30,
+    perItemCap: 65,
     diminishingAfter: 2,
     diminishingFactor: 0.4,
   });

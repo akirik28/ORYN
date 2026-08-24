@@ -15,13 +15,13 @@ export function scoreExecution(facts: ScoringFacts): DimensionResult {
   }
 
   const items = facts.projects.map((project) => {
-    const ideaBasePoints = 2;
+    const ideaBasePoints = 4;
     const months = project.start_date ? monthsBetween(project.start_date, project.end_date, referenceDate) : 0;
-    const durationBonus = Math.min(months * 1.2, 10);
-    const outcomeBonus = project.outcome_summary && project.outcome_summary.trim().length > 15 ? 6 : 0;
-    const usersBonus = project.users_reached ? Math.min(Math.log10(project.users_reached + 1) * 4, 10) : 0;
-    const revenueBonus = project.revenue_amount ? Math.min(Math.log10(project.revenue_amount + 1) * 3, 8) : 0;
-    const shippedBonus = project.repo_url || project.live_url ? 6 : 0;
+    const durationBonus = Math.min(months * 1.3, 20);
+    const outcomeBonus = project.outcome_summary && project.outcome_summary.trim().length > 15 ? 12 : 0;
+    const usersBonus = project.users_reached ? Math.min(Math.log10(project.users_reached + 1) * 6, 20) : 0;
+    const revenueBonus = project.revenue_amount ? Math.min(Math.log10(project.revenue_amount + 1) * 4, 14) : 0;
+    const shippedBonus = project.repo_url || project.live_url ? 14 : 0;
 
     return {
       label: project.title,
@@ -30,7 +30,7 @@ export function scoreExecution(facts: ScoringFacts): DimensionResult {
   });
 
   const { points, breakdown } = scoreCommitments(items, {
-    perItemCap: 35,
+    perItemCap: 70,
     diminishingAfter: 2,
     diminishingFactor: 0.4,
   });

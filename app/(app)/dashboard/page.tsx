@@ -8,11 +8,11 @@ import { isOpportunityRecommendable } from "@/lib/opportunities/lifecycle";
 import { competesInCoreRecommendations } from "@/lib/opportunities/commercial";
 import { AIProviderNotConfiguredError } from "@/lib/ai";
 import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
-import { buildProfileSignal } from "@/lib/scoring/signal";
+import { toProfileSignal } from "@/lib/scoring/signal";
+import { buildProfileChange } from "@/lib/scoring/change";
 import { getCounselorState } from "@/lib/counselor/state";
 import { buildCounselorDashboardContract, type CounselorDashboardContract } from "@/lib/counselor/dashboard-contract";
 import { DashboardView } from "@/features/dashboard/dashboard-view";
-import type { ProfileDimension } from "@/types/database";
 
 export const metadata = { title: "Home" };
 
@@ -90,10 +90,6 @@ export default async function DashboardPage() {
 
   const scores = scoresRes.data ?? [];
   const previousSnapshot = snapshotsRes.data?.[1] ?? null;
-  const trend =
-    previousSnapshot && profile?.profile_strength_score != null
-      ? profile.profile_strength_score - previousSnapshot.overall_score
-      : null;
 
   // Counselor Core Phase D — single source of truth for "weakest dimension" (was three
   // duplicated one-liners across this page, the advisor page, and persist-matches.ts).
@@ -102,21 +98,14 @@ export default async function DashboardPage() {
   // Qualitative per-dimension read for the Profile Signal block. Derived from the same
   // rows, but carries `confidence` through as well — the signal must be able to say
   // "limited evidence" rather than reporting an unknown dimension as a weak one.
-  const profileSignal = buildProfileSignal(
-    scores.map((s) => ({ dimension: s.dimension, score: s.score, confidence: s.confidence })),
-  );
+  const profileSignal = toProfileSignal(scores);
 
-  let biggestImprovement: { dimension: ProfileDimension; delta: number } | null = null;
-  if (previousSnapshot) {
-    const deltas = scores
-      .map((s) => ({
-        dimension: s.dimension,
-        delta: s.score - ((previousSnapshot.dimension_scores as Record<string, number>)[s.dimension] ?? s.score),
-      }))
-      .filter((d) => d.delta > 0)
-      .sort((a, b) => b.delta - a.delta);
-    biggestImprovement = deltas[0] ?? null;
-  }
+  // What actually moved, per dimension. The aggregate `profile_strength_score` is still
+  // maintained and still drives ranking/snapshots — it is simply not what Home shows.
+  const profileChange = buildProfileChange(
+    scores,
+    previousSnapshot ? (previousSnapshot.dimension_scores as Record<string, number>) : null,
+  );
 
   let weeklyPlan = await getCurrentWeeklyPlan(userId);
   let planError: "not_configured" | "failed" | null = null;
@@ -219,10 +208,8 @@ export default async function DashboardPage() {
     <DashboardView
       displayName={displayName}
       greeting={greeting()}
-      score={profile?.profile_strength_score ?? null}
-      trend={trend}
       biggestGap={biggestGap ? { dimension: biggestGap.dimension, score: biggestGap.score } : null}
-      biggestImprovement={biggestImprovement}
+      profileChange={profileChange}
       profileSignal={profileSignal}
       weeklyPlan={weeklyPlan}
       planError={planError}

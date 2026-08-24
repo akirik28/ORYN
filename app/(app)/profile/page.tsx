@@ -6,7 +6,7 @@ import { SectionHeader } from "@/components/oryn/section-header";
 import { createClient } from "@/lib/supabase/server";
 import { ScoreRadar } from "@/features/profile/score-radar";
 import { ProfileSignal } from "@/features/dashboard/profile-signal";
-import { buildProfileSignal, hasConfidentSignal } from "@/lib/scoring/signal";
+import { toProfileSignal, hasConfidentSignal, signalCoverage } from "@/lib/scoring/signal";
 import { InsightCard } from "@/components/oryn/insight-card";
 import { JourneyTimeline } from "@/features/profile/journey-timeline";
 import { buildJourney } from "@/lib/profile/build-journey";
@@ -42,6 +42,7 @@ import {
   GOAL_FIELDS,
   SPORTS_FIELDS,
   SKILL_FIELDS,
+  LANGUAGE_FIELDS,
 } from "@/features/profile/field-config";
 import {
   createActivity,
@@ -82,6 +83,8 @@ import {
   deleteSportsExperience,
 } from "./actions";
 import { createSkill, updateSkill, deleteSkill } from "./skills-actions";
+import { createLanguage, updateLanguage, deleteLanguage } from "./languages-actions";
+import { languageProficiencyLabel } from "@/lib/vocabularies/languages";
 import type { FormValues } from "@/features/profile/dynamic-form-fields";
 import type { ProfileDimension } from "@/types/database";
 
@@ -110,6 +113,7 @@ export default async function ProfilePage() {
     benchmarkSummary,
     contactInfo,
     skillsRes,
+    languagesRes,
     featuredItems,
     profileViewCounts,
     scoringFacts,
@@ -130,6 +134,7 @@ export default async function ProfilePage() {
     getPeerBenchmarks(userId),
     getOwnContactInfo(supabase, userId),
     supabase.from("skills").select("*").eq("user_id", userId).order("category").order("name"),
+    supabase.from("languages").select("*").eq("user_id", userId).order("name"),
     getFeaturedItems(userId, { isSelf: true, isPublic: false }),
     getProfileViewCounts(supabase, userId),
     assembleScoringFacts(supabase, userId),
@@ -195,35 +200,33 @@ export default async function ProfilePage() {
     education: educationRes.data ?? [],
   });
 
-  const profileSignal = buildProfileSignal(
-    (scoresRes.data ?? []).map((row) => ({ dimension: row.dimension, score: row.score, confidence: row.confidence })),
-  );
+  const profileSignal = toProfileSignal(scoresRes.data ?? []);
 
   // Oryn's own note on the record. Ordered so the honest case wins: with nothing confidently
   // scored it asks for evidence rather than diagnosing (Phase 68); then it names a real
   // missing area; then, when there's nothing to flag, it names the strongest area, which is
   // what makes a later "you don't need more of this" believable.
-  const unknownDimensions = profileSignal.filter((row) => row.state === "limited_evidence");
-  const weakest = profileSignal.filter((row) => row.state === "needs_attention").at(-1) ?? null;
+  const coverage = signalCoverage(profileSignal);
+  const weakest = profileSignal.filter((row) => row.state === "emerging").at(-1) ?? null;
   const strongest = profileSignal.find((row) => row.state === "strong") ?? null;
   const journeyNote: { variant: "gap" | "strength"; eyebrow: string; title: string; body: string } | null =
     !hasConfidentSignal(profileSignal)
       ? {
           variant: "gap",
-          eyebrow: "Missing evidence",
-          title: "Oryn can't read your profile yet.",
+          eyebrow: "Nothing to read yet",
+          title: "Add a few things and this page starts working.",
           body:
-            "Every dimension is still marked limited evidence, which means the record is thin — not that the work isn't there. Add your courses, activities and projects below and this page starts telling you something.",
+            "Oryn hasn't been given enough to assess any area yet. That's a gap in the record, not a judgement about you — add your courses, activities and projects below and it will start telling you where you actually stand.",
         }
       : weakest
         ? {
             variant: "gap",
-            eyebrow: "Missing evidence",
-            title: `${DIMENSION_LABELS[weakest.dimension]} is the thinnest part of your record.`,
+            eyebrow: "Where the leverage is",
+            title: `${DIMENSION_LABELS[weakest.dimension]} is where your next effort counts most.`,
             body:
-              unknownDimensions.length > 0
-                ? `It has the least supporting evidence of anything Oryn can assess. ${unknownDimensions.length} other ${unknownDimensions.length === 1 ? "dimension is" : "dimensions are"} still unscored, so this reading may change as you add more.`
-                : "It has the least supporting evidence of anything Oryn can assess, which makes it where the same effort moves your profile furthest.",
+              coverage.awaitingEvidence > 0
+                ? `Of the ${coverage.assessed} area${coverage.assessed === 1 ? "" : "s"} Oryn can currently assess, this one has the least behind it — so the same hours move your profile furthest here. ${coverage.awaitingEvidence} other area${coverage.awaitingEvidence === 1 ? " has" : "s have"} nothing recorded yet, so this reading may change as you add more.`
+                : "Of everything Oryn can assess, this area has the least behind it — which makes it where the same hours move your profile furthest.",
           }
         : strongest
           ? {
@@ -250,6 +253,9 @@ export default async function ProfilePage() {
         description="Your record of academics, leadership, research and execution. This is Oryn's development assessment — not an admissions score, and not visible to universities."
         action={
           <div className="flex flex-col items-end gap-1 text-sm">
+            <Link href="/profile/import" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
+              Scan a CV <ArrowRight className="size-3.5" />
+            </Link>
             <Link href="/profile/portfolio" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
               View portfolio <ArrowRight className="size-3.5" />
             </Link>
@@ -550,6 +556,27 @@ export default async function ProfilePage() {
         onUpdate={updateSkill as (id: string, v: FormValues) => Promise<{ error?: string }>}
         onDelete={deleteSkill}
         emptyStateText="No skills yet. Add up to 15 — technical, creative, analytical, or otherwise."
+      />
+
+      {/* The `languages` table has existed since the initial schema but was never surfaced,
+          so a bilingual student had nowhere to record it — which matters for a product
+          whose users apply internationally and where language level is a real admissions
+          gate. Certificates (IELTS, TOEFL, DELF…) go in Certifications above, which already
+          carries an issuer and a date; duplicating that here would be a worse model. */}
+      <AchievementSection
+        title="Languages"
+        description="Levels use CEFR, the scale most universities state their requirements in. Add language certificates under Certifications."
+        items={languagesRes.data ?? []}
+        summaries={summaryMap(languagesRes.data ?? [], (item) => ({
+          title: item.name,
+          subtitle: languageProficiencyLabel(item.proficiency) ?? undefined,
+        }))}
+        fields={LANGUAGE_FIELDS}
+        defaultValues={{ name: "", proficiency: null }}
+        onCreate={createLanguage as (v: FormValues) => Promise<{ error?: string }>}
+        onUpdate={updateLanguage as (id: string, v: FormValues) => Promise<{ error?: string }>}
+        onDelete={deleteLanguage}
+        emptyStateText="No languages yet. Add the ones you speak, including your first language."
       />
     </div>
   );
