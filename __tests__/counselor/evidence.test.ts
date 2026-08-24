@@ -124,6 +124,44 @@ describe("buildRecommendation — opportunity", () => {
   });
 });
 
+describe("buildRecommendation — a matched dimension already strong is never called a gap", () => {
+  // Found live (Gate 2, 2026-08-24): a candidate matching Academics at 94/100 — the same
+  // page's profile-signal panel calls that dimension "Strong" — rendered "Addresses
+  // Academics, a minor current gap (94/100)". rankDimensionGaps (gaps.ts) assigns every
+  // non-strongest dimension *some* GapSeverity regardless of its own absolute score; the
+  // fix is in what evidence.ts does with that, not in gaps.ts's relative ranking itself.
+  const strongMatch = gap({ dimension: "academics", score: 94, severity: "minor", confidence: "high" });
+  const realGap = gap({ dimension: "awards_distinction", score: 33, severity: "moderate", confidence: "high" });
+
+  test("a 'do' candidate matching only an already-strong dimension never claims a gap", () => {
+    const rec = buildRecommendation(
+      rankedOpportunity({ matchedGaps: [strongMatch], recommendationClass: "do" }),
+      state()
+    );
+    expect(rec.why.join(" ")).not.toMatch(/gap/i);
+    expect(rec.why.join(" ")).not.toMatch(/94/);
+  });
+
+  test("a mixed 'do' candidate keeps the genuine gap and drops the false one", () => {
+    const rec = buildRecommendation(
+      rankedOpportunity({ matchedGaps: [realGap, strongMatch], recommendationClass: "do" }),
+      state()
+    );
+    expect(rec.why.join(" ")).toMatch(/awards.*33/i);
+    expect(rec.why.join(" ")).not.toMatch(/academics.*gap/i);
+  });
+
+  test("an avoid_for_now candidate explains the strong dimension honestly, not with 'a minor current gap' — and not with silence either", () => {
+    const rec = buildRecommendation(
+      rankedOpportunity({ matchedGaps: [strongMatch], recommendationClass: "avoid_for_now" }),
+      state()
+    );
+    expect(rec.why.join(" ")).toMatch(/academics/i);
+    expect(rec.why.join(" ")).toMatch(/already strong/i);
+    expect(rec.why.join(" ")).not.toMatch(/a minor current gap/i);
+  });
+});
+
 describe("buildRecommendation — requirement_action", () => {
   const input: RequirementCandidateInput = {
     universityId: "uni-1",

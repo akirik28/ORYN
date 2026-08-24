@@ -161,6 +161,35 @@ describe("rankCandidates — gap relevance", () => {
     const irrelevantIndex = ranked.findIndex((r) => r.candidate.source.kind === "opportunity" && r.candidate.source.opportunityId === "opp-irrelevant");
     expect(criticalIndex).toBeLessThan(irrelevantIndex);
   });
+
+  // Found live (Gate 2, 2026-08-24): rankDimensionGaps (gaps.ts) assigns a GapSeverity to
+  // every dimension short of the single strongest one, so a 94/100 dimension still comes
+  // back "minor" — real, non-zero GAP_SEVERITY_SCORE credit for a candidate that touches a
+  // strength, not a weakness. Confirmed on a real profile: a candidate whose only matched
+  // dimension was Academics at 94/100 scored and ranked as if it addressed a genuine gap.
+  test("a candidate matching only an already-strong dimension (>=70) gets zero gap-relevance credit", () => {
+    const strongOnlyOpp = opportunity({ id: "opp-strong-only" });
+    const noMatchOpp = opportunity({ id: "opp-no-match", category: "volunteering" });
+    const candidates = [
+      opportunityCandidate("opp-strong-only", ["academics"]),
+      opportunityCandidate("opp-no-match", [], { category: "volunteering" }),
+    ];
+    // rankDimensionGaps would call this "minor" (it isn't the single strongest dimension),
+    // exactly the shape that reproduced the live bug.
+    const gaps = [gap("academics", 94, "minor", 8), gap("research", 100, "insufficient_data", 9)];
+    const ranked = rankCandidates(
+      candidates,
+      gaps,
+      state([
+        { opp: strongOnlyOpp, match: match({ opportunity_id: "opp-strong-only" }) },
+        { opp: noMatchOpp, match: match({ opportunity_id: "opp-no-match" }) },
+      ])
+    );
+    const strongOnly = ranked.find((r) => r.candidate.source.kind === "opportunity" && r.candidate.source.opportunityId === "opp-strong-only")!;
+    const noMatch = ranked.find((r) => r.candidate.source.kind === "opportunity" && r.candidate.source.opportunityId === "opp-no-match")!;
+    expect(strongOnly.scoreBreakdown.gapRelevance).toBe(0);
+    expect(strongOnly.score).toBe(noMatch.score);
+  });
 });
 
 describe("rankCandidates — recommendation class", () => {

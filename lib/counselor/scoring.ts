@@ -3,6 +3,7 @@ import { evaluateCandidateEligibility } from "./eligibility";
 import {
   DATA_CONFIDENCE_SCORE,
   EFFORT_BY_CATEGORY,
+  GAP_CLAIM_SCORE_CEILING,
   GAP_SEVERITY_SCORE,
   OPPORTUNITY_SCORE_WEIGHTS,
   RANKING_THRESHOLDS,
@@ -22,8 +23,13 @@ function matchedGapsFor(candidate: CandidateAction, gaps: ProfileGap[]): Profile
 }
 
 function gapRelevanceComponent(matchedGaps: ProfileGap[]): number {
-  if (matchedGaps.length === 0) return 0;
-  return Math.max(...matchedGaps.map((g) => GAP_SEVERITY_SCORE[g.severity]));
+  // A dimension already at/above GAP_CLAIM_SCORE_CEILING earns no gap-relevance credit —
+  // matchedGapsFor still lists it (deprioritizeEligible/avoidEligible below need to see it
+  // to catch "every matched dimension is already strong"), but a candidate must not be
+  // *ranked up* for touching a strength.
+  const claimable = matchedGaps.filter((g) => g.score < GAP_CLAIM_SCORE_CEILING);
+  if (claimable.length === 0) return 0;
+  return Math.max(...claimable.map((g) => GAP_SEVERITY_SCORE[g.severity]));
 }
 
 function urgencyComponent(deadline: CandidateAction["deadline"], referenceDate: Date): number {
