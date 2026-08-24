@@ -13,15 +13,21 @@ export function scoreCommunityImpact(facts: ScoringFacts): DimensionResult {
     const months = experience.start_date
       ? monthsBetween(experience.start_date, experience.end_date, referenceDate)
       : 0;
-    const durationBonus = Math.min(months, 10);
-    const hoursBonus = experience.hours_per_week ? Math.min(experience.hours_per_week * 0.5, 6) : 0;
-    const causeAreaBonus = experience.cause_area ? 3 : 0;
+    const durationBonus = Math.min(months * 1.1, 30);
+    const hoursBonus = experience.hours_per_week ? Math.min(experience.hours_per_week * 1.6, 16) : 0;
+    const causeAreaBonus = experience.cause_area ? 9 : 0;
+    // `weeks_per_year` was being collected and then ignored: a commitment sustained across
+    // 40 weeks is a materially different thing from one that ran for a single term, and
+    // duration-in-months alone cannot tell them apart.
+    const consistencyBonus = experience.weeks_per_year
+      ? Math.min((experience.weeks_per_year / 40) * 12, 12)
+      : 0;
 
-    return { label: experience.title, basePoints: durationBonus + hoursBonus + causeAreaBonus };
+    return { label: experience.title, basePoints: durationBonus + hoursBonus + causeAreaBonus + consistencyBonus };
   });
 
   const { points, breakdown } = scoreCommitments(items, {
-    perItemCap: 25,
+    perItemCap: 55,
     diminishingAfter: 3,
     diminishingFactor: 0.5,
   });

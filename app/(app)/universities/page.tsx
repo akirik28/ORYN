@@ -5,7 +5,6 @@ import { createClient } from "@/lib/supabase/server";
 import { Landmark, Search } from "lucide-react";
 import { UniversityExplorerHero } from "@/features/universities/university-explorer-hero";
 import { UniversityCard } from "@/features/universities/university-card";
-import { UniversityResultRow } from "@/features/universities/university-result-row";
 import { categorizeAndDedupeResearchTopics } from "@/lib/universities/research-taxonomy";
 import { UniversitySearchBox } from "@/features/universities/university-search-box";
 import { SUPPORTED_COUNTRIES } from "@/lib/data/country-geo";
@@ -507,14 +506,27 @@ export default async function UniversitiesPage({
                   selectedRegion={region?.id ?? null}
                 />
               </div>
-              <div className="min-w-0">
-                <ul className="lg:max-h-[calc(100svh-12rem)] lg:overflow-y-auto lg:pr-2">
+              {/* Cards beside the map, not a text list (founder request): a university is
+                  a place, and a row of names next to a map of places gives the eye nothing
+                  to connect. Two columns of compact cards fit the ~42% panel; the cards
+                  carry the same campus imagery the full grid does. */}
+              {/* One column, not two. The results panel is ~42% of a 1200px measure, so a
+                  two-up grid gave each card 223px — the action row overflowed and the
+                  cost line wrapped to three lines. A container query rather than a
+                  viewport one, because this panel's width is set by the split, not the
+                  screen: it goes two-up only if the panel itself ever gets wide enough. */}
+              <div className="@container min-w-0">
+                <div className="grid gap-4 @2xl:grid-cols-2 lg:max-h-[calc(100svh-12rem)] lg:overflow-y-auto lg:pr-2">
                   {universities.map((university) => (
-                    <UniversityResultRow
+                    <UniversityCard
                       key={university.id}
                       university={university}
+                      isSaved={savedIds.has(university.id)}
                       qsRank={qsRankByUniId.get(university.id)}
+                      cost={costByUniId.get(university.id)}
+                      researchTopics={researchTopicsByUniId.get(university.id)}
                       imageUrl={imageUrlByUniId.get(university.id)}
+                      compact
                       countryHref={
                         university.country && university.country !== country
                           ? buildCountryHref(university.country)
@@ -522,7 +534,7 @@ export default async function UniversitiesPage({
                       }
                     />
                   ))}
-                </ul>
+                </div>
               </div>
             </div>
           )}

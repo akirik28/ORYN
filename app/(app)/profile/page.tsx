@@ -42,6 +42,7 @@ import {
   GOAL_FIELDS,
   SPORTS_FIELDS,
   SKILL_FIELDS,
+  LANGUAGE_FIELDS,
 } from "@/features/profile/field-config";
 import {
   createActivity,
@@ -82,6 +83,8 @@ import {
   deleteSportsExperience,
 } from "./actions";
 import { createSkill, updateSkill, deleteSkill } from "./skills-actions";
+import { createLanguage, updateLanguage, deleteLanguage } from "./languages-actions";
+import { languageProficiencyLabel } from "@/lib/vocabularies/languages";
 import type { FormValues } from "@/features/profile/dynamic-form-fields";
 import type { ProfileDimension } from "@/types/database";
 
@@ -110,6 +113,7 @@ export default async function ProfilePage() {
     benchmarkSummary,
     contactInfo,
     skillsRes,
+    languagesRes,
     featuredItems,
     profileViewCounts,
     scoringFacts,
@@ -130,6 +134,7 @@ export default async function ProfilePage() {
     getPeerBenchmarks(userId),
     getOwnContactInfo(supabase, userId),
     supabase.from("skills").select("*").eq("user_id", userId).order("category").order("name"),
+    supabase.from("languages").select("*").eq("user_id", userId).order("name"),
     getFeaturedItems(userId, { isSelf: true, isPublic: false }),
     getProfileViewCounts(supabase, userId),
     assembleScoringFacts(supabase, userId),
@@ -558,6 +563,27 @@ export default async function ProfilePage() {
         onUpdate={updateSkill as (id: string, v: FormValues) => Promise<{ error?: string }>}
         onDelete={deleteSkill}
         emptyStateText="No skills yet. Add up to 15 — technical, creative, analytical, or otherwise."
+      />
+
+      {/* The `languages` table has existed since the initial schema but was never surfaced,
+          so a bilingual student had nowhere to record it — which matters for a product
+          whose users apply internationally and where language level is a real admissions
+          gate. Certificates (IELTS, TOEFL, DELF…) go in Certifications above, which already
+          carries an issuer and a date; duplicating that here would be a worse model. */}
+      <AchievementSection
+        title="Languages"
+        description="Levels use CEFR, the scale most universities state their requirements in. Add language certificates under Certifications."
+        items={languagesRes.data ?? []}
+        summaries={summaryMap(languagesRes.data ?? [], (item) => ({
+          title: item.name,
+          subtitle: languageProficiencyLabel(item.proficiency) ?? undefined,
+        }))}
+        fields={LANGUAGE_FIELDS}
+        defaultValues={{ name: "", proficiency: null }}
+        onCreate={createLanguage as (v: FormValues) => Promise<{ error?: string }>}
+        onUpdate={updateLanguage as (id: string, v: FormValues) => Promise<{ error?: string }>}
+        onDelete={deleteLanguage}
+        emptyStateText="No languages yet. Add the ones you speak, including your first language."
       />
     </div>
   );
