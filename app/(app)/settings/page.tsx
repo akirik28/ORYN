@@ -1,4 +1,4 @@
-import { Download, LogOut } from "lucide-react";
+import { Download, FileUp, LogOut } from "lucide-react";
 import { getCurrentProfile, requireUser } from "@/lib/security/dal";
 import { signOut } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,8 @@ import { CitizenshipForm } from "@/features/settings/citizenship-form";
 import { CapacityForm } from "@/features/settings/capacity-form";
 import { VisibilityForm } from "@/features/settings/visibility-form";
 import { DeleteAccountDialog } from "@/features/settings/delete-account-dialog";
+import { PasswordForm } from "@/features/settings/password-form";
+import { ButtonLink } from "@/components/ui/button-link";
 
 export const metadata = { title: "Settings" };
 
@@ -25,15 +27,42 @@ export default async function SettingsPage() {
     <div className="max-w-xl space-y-10">
       <PageHeader title="Settings" />
 
-      <section className="space-y-4">
+      <section className="space-y-5">
         <h2 className="font-semibold">Account</h2>
-        <p className="text-sm text-muted-foreground">{session.email}</p>
+
+        {/* The email was previously an unlabelled grey line, which reads as decoration.
+            A student needs to be able to answer "which account am I actually in?" —
+            especially after switching between a school and a personal address. */}
+        <div className="rounded-xl bg-surface-tint px-4 py-3">
+          <p className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-3 uppercase">Signed in as</p>
+          <p className="mt-1 text-sm break-all text-ink-1">{session.email}</p>
+        </div>
+
         <DisplayNameForm initialName={profile?.display_name ?? ""} />
+
+        <div className="space-y-1.5">
+          <h3 className="text-sm font-medium">Password</h3>
+          <PasswordForm />
+        </div>
+
         <form action={signOut}>
           <Button type="submit" variant="outline">
             <LogOut className="size-4" /> Sign out
           </Button>
         </form>
+      </section>
+
+      <section className="space-y-3">
+        <div>
+          <h2 className="font-semibold">Your record</h2>
+          <p className="mt-1 text-sm leading-relaxed text-ink-2">
+            Import from a CV instead of typing everything in. Oryn shows you what it found and
+            adds only what you confirm.
+          </p>
+        </div>
+        <ButtonLink href="/profile/import" variant="outline">
+          <FileUp className="size-4" /> Scan a CV
+        </ButtonLink>
       </section>
 
       <section className="space-y-4">
