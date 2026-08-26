@@ -732,3 +732,47 @@ searched-and-empty or not-yet-attempted with an honest reason recorded for each.
 **Files this checkpoint**: `s6a_photo_pass_batch2.jsonl` (28 lines), `claims_s6a.jsonl` (+28
 lines, generated programmatically from the batch2 file to avoid transcription drift between the
 two). Reporting back to S9/CEO now — full 36-record photo pass complete for this lane.
+
+---
+
+## S6-B (Business/Humanities/Creative) — 2026-08-27, cross-category dedup check follow-up
+
+**CEO-dispatched check, prompted by an S8/CFO finding**: category-scoped dedup queries (like the
+one behind this lane's own baseline doc, `category='competition'` only) can miss a same-family
+entity already live under a *different* category. The CEO ran this against all of S6-B's net-new
+proposals and found one genuine near-miss: **GençBizz** (S6B-0026, my proposal) vs. a live row,
+**GençBizzTech** (`5d5a5f4d-3314-48b4-927b-383402161f70`, `category=entrepreneurship` — invisible
+to a `category='competition'`-scoped check), organized by "Genç Başarı Eğitim Vakfı (JA Türkiye)
+in partnership with Türkiye İş Bankası," domain `gencbizztech.org`.
+
+**Resolved: confirmed genuinely distinct sibling programmes, not a duplicate.** Checked directly
+against both organizations' own sites (not inferred). gencbasari.org's own top navigation lists
+'GençBizz' and 'GençBizzTech' as two separate links, and its programmes section names GençBizz
+alongside two other distinct siblings (JuniorBizz, JA Startup Türkiye). gencbizztech.org's own
+homepage states explicitly: *"GençBizzTech, Genç Başarı Eğitim Vakfı ve Türkiye İş Bankası iş
+birliğiyle **devlet fen lisesi öğrencileri**..."* — restricted to **state science high school
+students specifically**, a materially narrower population than GençBizz's open-to-any-secondary-
+school reach. Different domain, different named co-sponsor, different focus (general
+entrepreneurship vs. explicitly science/technology-based, with named 2026 winning prototypes —
+an AR/VR lab platform, an AI skin-lesion analysis tool, an agri-tech project), and different named
+2026 Turkey Final winners (GençBizz: Quareka GençBizz Şirketi; GençBizzTech: LABORATUV-AR) —
+confirming two separate competition cycles, not one event double-counted. The shared GEN-E
+(Latvia) endpoint that created the conflation risk is explained by both being sibling GBEV/JA
+Türkiye programmes feeding the same larger JA Europe festival, not evidence of identity.
+**S6B-0026 stands as a genuine new-record proposal**, not converted to an enrichment of the
+GençBizzTech row — with the sibling relationship now explicitly documented so neither record gets
+merged into the other later on the strength of the shared foundation name alone.
+
+**Also checked, per the CEO's request**: the other 5 net-new S6-B proposals (Jane Austen Society
+Essay Contest, Columbia Undergraduate Law Review HS Essay Contest, Harvard Political Review Essay
+Competition, Eurasian Schools Debating Championship, Dunedin International Film Festival) against
+the full `opportunities` table with no category filter. **All 5 confirmed clean — zero hits under
+any category.** The Columbia search did surface several unrelated Columbia University pre-college
+programmes already live (summer_program/online_program/research categories, all on
+`precollege.sps.columbia.edu` domains) — correctly not conflated with the Law Review's
+`culawreview.org` essay contest, a different entity entirely.
+
+**Files this follow-up**: `data/research/opportunities/s6b_dedup_check_followup.jsonl` (2 entries),
+`data/research/registry/claims_s6b.jsonl` (2 new lines appended), this TRACKER.md entry. Photo
+pass was not blocked on this per the CEO's own framing — both checkpoints of that work are already
+complete and reported separately above. Reporting this dedup-check result back to the CEO now.
