@@ -9,41 +9,31 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `CONTROL_TOWER_
 (CEO's consolidated fleet report). On a 5-minute recurring check (`/loop`, per founder
 instruction).
 
-## Checkpoint 23 — 2026-08-27, ~01:00
+## Checkpoint 24 — 2026-08-27, ~01:05
 
-### S5 fully closed — both A and B pushed final handoffs this tick
+### CEO has now crossed 2 hours of silence — flagging directly, as said I would at this mark
 
-S5A: "lane complete for this pass, final numbers in workstreams map." S5B: final handoff pushed
-4 minutes prior. Combined with S6 and S7's earlier closeouts, **three of the four
-opportunity-research lanes (S5, S6, S7) are now fully done** — only S5B's sibling-scope work and
-the university-photo lanes (S1-S4) remain actively producing.
+No new push, no reply to any of the three check-ins sent over the last ~2 hours. This is
+materially longer than the ~1hr mark first flagged (checkpoint 15) — surfacing again per that
+checkpoint's own stated criterion ("if the silence stretches meaningfully longer... worth a
+second, more direct flag"). Still not claiming anything is definitively wrong — but 2 hours of
+total silence from a session that was answering within minutes for the first several hours of
+this freeze is now a large enough gap that it's worth your direct attention rather than another
+automated note. Genuinely useful for you to know either way: if you're mid-conversation with
+CEO in another window, this is just noise; if you haven't been, their session may be worth
+checking directly.
 
-### Roster change: S6 and S7's sessions have exited (7 peers now, was 9)
+### Otherwise: completely stable — no new commits on any of the 10 branches this tick
 
-`ListAgents` no longer lists `oryn-71` (S6) or `oryn-4d` (S7) — both sessions appear to have
-ended after pushing their final, clean closeout commits. Reading this as graceful completion,
-not a problem: both had just finished substantial, well-documented work with no open blockers or
-distress signals in their last messages. Not attempting to re-contact either — nothing pending
-needs them, and their output is fully committed. Current live roster: S1, S2, S3, S4, S5A, CEO
-(7 sessions total per ListAgents — S5's two sub-lanes may share one underlying session slot,
-consistent with how S5A/S5B have operated as one coordinating session's two internal sub-lanes
-throughout, similar to S1-A/S1-B etc.).
+Live-harm rows re-verified: unchanged. Roster stable at 7 (S1-S4, S5A, S8, CEO — S6/S7/S5B
+sessions closed out and exited in recent checkpoints).
 
-### CEO: 86 minutes silent, unchanged. Live-harm rows: unchanged.
+### Unchanged open items
 
-### Reallocation
-
-None forced, but worth CEO's attention once reachable: with S5/S6/S7 all closed, the fleet's
-remaining active capacity is entirely on university photos (S1-S4) plus S8's review queue —
-worth deciding whether any of that freed capacity should be redirected once CEO can make that
-call, per the standing model (not mine to redirect unilaterally).
-
-### Open items
-
-1. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, 86min unreachable.
+1. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, now 2hr+ unreachable.
 2. `turkey_student_access` / `selectivity_evidence` still have no live columns.
 3. ~12-15% university-photo false-accept rate — still pending CEO/DATA visibility.
-4. Now 3 of 4 opportunity lanes closed — worth CEO deciding on capacity redirection once back.
+4. Capacity redirection decision (3 of 4 opportunity lanes closed) — pending CEO's return.
 
 ## How these numbers were produced (re-run to refresh)
 
@@ -64,4 +54,4 @@ where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f7
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-27 ~01:00.
+`origin`, 2026-08-27 ~01:05.
