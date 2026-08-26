@@ -28,8 +28,19 @@ the fix.
 | — of which `official` | **194** |
 | — of which `verified` | **2** |
 | — of which `needs_review` (candidate rejected, reason logged) | **180** |
-| "Accepted" total (wikimedia_verified + official + verified) | **721 / 1,010 (71%)** |
+| "Accepted" total (wikimedia_verified + official + verified) — **pipeline-accepted, not visually verified, see below** | **721 / 1,010 (71%)** |
 | Have `primary_image_license` recorded (CC BY-SA/CC BY/Public Domain/CC0 variants, 28 distinct license strings) | Present for the large majority of accepted rows |
+
+**UPDATE 2026-08-26 ~10:35, from S3 — read this before treating 721 as "done."** S3 didn't just
+query status, they downloaded and looked at 3 sample images from their own shard: **Bristol**
+(a stone sign dominated by the university's own crest/wordmark — an outright §10 fail), **Stanford**
+(a generic graduation-crowd photo with nothing identifiably Stanford in it — identity
+unverifiable), **Heidelberg** (genuinely compliant — 1 of 3). n=3 is too small to extrapolate a
+fleet-wide failure rate from, but it proves the point in the paragraph below with concrete cases:
+**"721 accepted" means "passed a dimension/aspect-ratio check," not "passed the actual photo
+standard."** Real semantic-verification status of the 721 is currently **unknown**, not good.
+S1-S4: audit-first on every row in your shard, including the ones marked accepted — do not
+skip straight to the 289 needs_review/no-candidate rows and assume the 721 are fine.
 
 **Real infrastructure, confirmed by reading the code directly, not just the DB**:
 `lib/acquisition/image-storage.ts` (Supabase Storage upload/optimize, bucket `university-images`,
@@ -58,14 +69,27 @@ with no candidate at all and re-attempts on the 180 `needs_review`. Prioritize t
 nothing and highest-exposure universities first; ask CEO for a `target_universities`/match-count
 join if you need a ranked list rather than guessing.
 
-**Founder escalation #1 also revised**: likely does **not** need a migration. New provenance
-facts (`image_depicts`, `no_logo_verified`, `correct_entity_verified`, `rights_status`, etc.)
-can plausibly land as new `metric_code` values in the *same* `university_profile_metrics` EAV
-table — it already accepts writes today, no DDL required (S2's finding, sound reasoning: EAV
-tables absorb new "columns" as data). CEO is not confirming this alone before it's acted on —
-whoever owns the acquisition pipeline's read side (does `lib/universities/image-coverage.ts` or
-its consumers actually read arbitrary new `metric_code`s, or a hardcoded allowlist?) should
-confirm before S1-S4 relies on it. Flagging as *likely resolved*, not *fully closed*.
+**Founder escalation #1 — now fully resolved, closing it, not just downgrading it.** S2 checked
+the actual read side directly: `app/(app)/universities/page.tsx:289` and `.../[id]/page.tsx:120-
+129` both query `university_profile_metrics` with an explicit `.in("metric_code", [...])`
+allowlist. So: (a) **write side needs no migration** — `acquire-university-images.ts` already
+writes 5 distinct metric_codes today, a new one is just another write; (b) **surfacing a new
+metric_code in the UI needs a small, explicit code change** (add it to those two `.in()` lists)
+when promotion actually happens — not a migration, but not silently automatic either. No founder
+action needed for S1-S4 to keep working now.
+
+**New flag from S8, unconfirmed pending their own re-check**: of the 194 `official`-sourced
+images, S8's first pass found no captured `primary_image_license` on that subset. If that holds,
+§10 requires those be marked `RIGHTS_REVIEW_REQUIRED`, not silently treated as fine because
+`status='official'`. S8-B is verifying the exact count before this is asserted as fact — treat
+as **provisional** until S8 confirms.
+
+**Minor denominator note**: S8 independently measured against 1,019 total university rows (901
+touched / 118 none) rather than 1,010 *canonical* rows (901 touched / 109 none) used elsewhere in
+this doc. 1,010-canonical is the right denominator for "how many need their own photo" — the 9
+superseded rows shouldn't need independent coverage. Both measurements are real and consistent
+with each other once you account for the 9-row difference; noting so nobody reads it as a
+conflict.
 
 ## 2. Opportunities, by category (S5-S7 scope) — live counts, all statuses
 

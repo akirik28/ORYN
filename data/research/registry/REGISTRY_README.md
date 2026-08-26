@@ -125,9 +125,47 @@ sourcing from zero. New provenance fields likely fit as new `metric_code` values
 EAV table, probably **without** a migration — see `GAP_MAP.md` for the one open confirmation
 still needed before relying on that.
 
+## S1-S4 canonical shard boundaries (settled 2026-08-26 ~10:30)
+
+1,010 canonical universities, id-ascending, using `scripts/acquire-university-images.ts`'s own
+`--range <start>-<end>` flag (added by S4, reuses the script's existing `order=id.asc`) so all
+four shards derive from one shared, reproducible definition instead of four independent SQL
+queries that could silently drift apart:
+
+| Shard | Range | Owner |
+|---|---|---|
+| S1 | 1-253 | confirmed |
+| S2 | 254-506 | confirmed (moved off an initial accidental overlap with S1 — see below) |
+| S3 | 507-759 | confirmed (corrected from an initial self-claimed 506-757, which overlapped S2 by 1 row at 506 and left 758-759 unclaimed) |
+| S4 | 760-1010 | confirmed |
+
+**Real collision caught and resolved this checkpoint, recorded so the pattern is visible**: S1
+and S2 independently landed on the identical first shard (both reporting the same 177-accepted/
+253-total numbers) before either had seen the other's claim. S3 separately self-derived a
+boundary one row off from S2/S4's. Both caught by CEO cross-checking exact numbers peers reported
+against each other, not by either peer noticing on their own — **if your shard's counts look
+suspiciously round or your boundary was self-derived rather than pulled from this table, re-check
+it against this table before spending real research time.**
+
+## Consolidation model — lanes don't push to the CEO's branch
+
+Each S1-S8 lane keeps its own `claims_S<n>.jsonl` on its **own** branch/worktree (already the
+convention — nobody needs push access to `oryn/research-freeze-ceo-control-tower`). CEO pulls
+from each lane's own pushed branch (`git show <branch>:data/research/registry/claims_S<n>.jsonl`
+or an equivalent fetch) to build `MASTER_REGISTRY.jsonl`, rather than lanes pushing into a shared
+branch. If your shard file isn't picked up in a checkpoint, it's because CEO hasn't pulled your
+branch yet, not because the convention is wrong — ping if it's been more than a few hours.
+
 ## Non-negotiables (from the Common Operating Contract, restated here for this mechanism)
 
 - No production writes from any S1-S8 worker. Dry-run proposals only; CEO/DATA promotes.
 - `UNCLEAR` Turkey-access and `RIGHTS_REVIEW_REQUIRED` images are not `PRODUCTION_READY`.
 - Do not count duplicates, ineligible, unclear, historical, or missing-second-review records
   toward any coverage target.
+
+## Do not use as source material: `Claude.pdf`
+
+Flagged by S6: `Claude.pdf` (untracked, sits in the primary checkout root) is **not** a research
+seed document — it's an unrelated ORYN profile export naming a real minor student. Do not open
+it for research purposes, do not treat it as opportunity/university source material, do not copy
+anything from it into any shard. This is a privacy matter, not a coverage one.
