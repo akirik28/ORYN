@@ -9,45 +9,41 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `CONTROL_TOWER_
 (CEO's consolidated fleet report). On a 5-minute recurring check (`/loop`, per founder
 instruction).
 
-## Checkpoint 19 — 2026-08-27, ~00:35
+## Checkpoint 20 — 2026-08-27, ~00:45
 
-### Multiple closeouts this tick — healthy, productive fleet regardless of CEO's continued silence
+### The dedup-blind-spot finding just closed its own loop — caught 3 already-issued verdicts
 
-- **S1-A complete**: 127/127 universities, 116 VERIFIED, 11 BLOCKED. S1-B still running.
-- **S5A fully closed**, confirmed final: 28 production-ready / 2 candidate, unchanged after its
-  own post-completion dedup re-check (all 3 new candidates came back clean — PROMYS Europe
-  genuinely distinct from the existing Boston University PROMYS row, different
-  institution/country same model; Amsterdam/St. Stephen's Rome have no match under any
-  category). Worth noting how S5 handled a real hiccup: the sub-agent doing this check turned
-  out to be unresumable (transcript gone) — rather than stall or skip the check, S5 ran it
-  directly itself. Also arranged S5A/S5B mutual cross-review to close out the mission's stated
-  reciprocal-review requirement.
-- **S6-A's photo-sourcing pass complete**: all 36 of its own records covered.
-- **S7**: updated its lane claim with the cross-category dedup findings (GençBizz/GençBizzTech
-  routing, etc.) — propagation from checkpoint 16-18 continuing to close out cleanly.
+The full cascade, worth seeing end to end: S5B found the blind spot (category-scoped dedup
+misses cross-category duplicates) → relayed to S6/S5A/S7 → **S7 applied the same methodology to
+its own already-QA'd output and found 5 records that duplicate pre-existing live rows** → 3 of
+those had already been marked `PRODUCTION_READY` in S8's Wave 1 report (checkpoint 13). S8
+corrected its own report immediately rather than let the wrong verdict stand, and named the real
+lesson precisely: **"fact-verification and duplicate-detection are distinct checks" — a record
+can be perfectly accurate and still be a duplicate that shouldn't exist.** Corrected count: S7
+Wave 1's real production-ready tally is **26, not 29** (checkpoint 13's number). This is the
+clearest example this session of one relayed finding compounding in value as it propagates —
+not just avoiding new duplicate work, but retroactively catching an already-closed defect.
 
-### CEO: ~1h20min silence, unchanged
+### Other closeouts this tick
 
-No new information. Fleet remains fully self-sufficient without CEO; only the founder-gated
-items are actually stalled.
+**S6 fully closed on every front** (competitions + photo-sourcing pass + cross-category dedup
+sweep). S5B addressed S5A's cross-review feedback (mutual review working as designed). S1-A
+holds at 127/127 complete.
 
-### Unchanged: 5-row fix, live-harm rows
-
-All 5 rows re-verified: unchanged.
+### CEO: ~1h30min silence, unchanged. Live-harm rows: unchanged.
 
 ### Reallocation
 
-None forced. With S1-A, S5A, and S6-A's photo work all closed this tick, watch next few ticks
-for S1-B/S3/S4's remaining halves and whether S8's review queue needs to expand to cover the
-newly-closed material.
+None forced. Fleet is now producing corrections on its own already-completed work, which is a
+sign of real quality-control depth, not something to redirect capacity away from.
 
 ### Open items
 
-1. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, ~1h20min unreachable.
-2. GençBizz/GençBizzTech — S6 update suggests this is resolving; confirm status next tick.
+1. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, ~1h30min unreachable.
+2. S7's other 2 of the 5 newly-found duplicates (not previously marked PRODUCTION_READY) — worth
+   confirming they're excluded from any future promotion, not just the 3 that needed correcting.
 3. `turkey_student_access` / `selectivity_evidence` still have no live columns.
-4. ~12-15% university-photo false-accept rate (checkpoint 18) — still the number worth CEO/DATA
-   seeing once reachable.
+4. ~12-15% university-photo false-accept rate (checkpoint 18) — still pending CEO/DATA visibility.
 
 ## How these numbers were produced (re-run to refresh)
 
@@ -68,4 +64,4 @@ where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f7
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-27 ~00:35.
+`origin`, 2026-08-27 ~00:45.
