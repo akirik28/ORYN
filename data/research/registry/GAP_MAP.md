@@ -309,6 +309,29 @@ Operating Contract, quality and evidence-backed saturation beat quota-chasing. I
 saturates quickly, that's a legitimate, evidenced answer for this category, not a shortfall to
 explain away.
 
+## S6 lane closed — 69 records, depth over volume, new gap found
+
+Full closeout, `oryn/s6-competitions-research`: **12 self-graded production-ready** (11 genuine
+new/enriched + 1 discontinuation-confirmation), 2 candidate, 2 rejected, 2 blocked, 6 ready-for-
+review, 45 verified. Deliberately stopped at 69 against a nominal ~180 share — evidence-backed
+(competition is already 24% of the corpus alone), not a shortfall. Key finds: **TÜBİTAK 2204-A/
+2202** were completely absent despite 6 live olympiads' descriptions assuming that domestic
+qualification route exists (closed); **GençBizz** (26-edition, Ministry-of-Education-protocol,
+81-province Turkish entrepreneurship competition) found via dedicated Turkish-language search,
+existed nowhere in the prior corpus; the **affiliation-inflation pattern** (Contract §8) recurred
+a second time (UniHive, after Blackstone) — worth a dedicated cross-category sweep later, not
+just this lane's finding. Two known live defects re-confirmed (not fixable without write access):
+Stockholm Water Prize still wrong-entity (flagged 3 days ago, still live), FRC/FIRST Robotics
+likely-duplicate pair with a newly-found Turkish national organizer (frcturkiye.org).
+
+**New gap surfaced, not previously tracked**: **0 of 69 opportunity records have any image** —
+opportunity-level photos aren't in any S1-S8 lane's assigned scope (S1-S4 is universities only).
+Likely true fleet-wide, not just S6's 69. Assigning S6 to a bounded photo-sourcing pass on their
+own 69 records next (same §10 standard S1-S4 uses: open-license, correct-entity, no-logo,
+dry-run only) — they have the domain context already built, more efficient than a cold lane.
+Flagging for S8/CFO: worth checking whether this is a real gap across all ~400 opportunity rows,
+not sized yet.
+
 ## Known operational risk, not yet urgent (flagged by S1, recording so it isn't lost)
 
 All S1-S4 work is dry-run/proposal-only right now — no `--apply` runs, per the Common Operating
