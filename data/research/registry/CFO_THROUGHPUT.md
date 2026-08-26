@@ -9,41 +9,26 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `CONTROL_TOWER_
 (CEO's consolidated fleet report). On a 5-minute recurring check (`/loop`, per founder
 instruction).
 
-## Checkpoint 20 — 2026-08-27, ~00:45
+## Checkpoint 21 — 2026-08-27, ~00:50
 
-### The dedup-blind-spot finding just closed its own loop — caught 3 already-issued verdicts
+**Genuinely quiet tick — same 10 HEADs as checkpoint 20, no new commits anywhere.** After a
+dense run of closeouts (S1-A, S5A, S6, and the dedup-cascade correction), a lull here reads as
+normal digestion time, not a stall — most lanes just delivered substantial output and plausibly
+need real time before the next batch. Live-harm rows re-verified: unchanged. CEO: 77 minutes
+silent, no material change from the ~1hr mark already flagged directly — not re-escalating for
+a 15-minute increment, will note materially if it crosses toward 2 hours.
 
-The full cascade, worth seeing end to end: S5B found the blind spot (category-scoped dedup
-misses cross-category duplicates) → relayed to S6/S5A/S7 → **S7 applied the same methodology to
-its own already-QA'd output and found 5 records that duplicate pre-existing live rows** → 3 of
-those had already been marked `PRODUCTION_READY` in S8's Wave 1 report (checkpoint 13). S8
-corrected its own report immediately rather than let the wrong verdict stand, and named the real
-lesson precisely: **"fact-verification and duplicate-detection are distinct checks" — a record
-can be perfectly accurate and still be a duplicate that shouldn't exist.** Corrected count: S7
-Wave 1's real production-ready tally is **26, not 29** (checkpoint 13's number). This is the
-clearest example this session of one relayed finding compounding in value as it propagates —
-not just avoiding new duplicate work, but retroactively catching an already-closed defect.
+### Status snapshot (unchanged from checkpoint 20, restated briefly for continuity)
 
-### Other closeouts this tick
+Closed this freeze: S5A (28 production-ready), S6 (69 records + full photo pass + dedup sweep),
+S1-A (127/127). S7's real production-ready count corrected to 26 (from 29) after the dedup-
+cascade catch. Active: S1-B, S2 (A+B), S3 (A+B), S4 (A+B), S5B, S8.
 
-**S6 fully closed on every front** (competitions + photo-sourcing pass + cross-category dedup
-sweep). S5B addressed S5A's cross-review feedback (mutual review working as designed). S1-A
-holds at 127/127 complete.
+### Unchanged open items
 
-### CEO: ~1h30min silence, unchanged. Live-harm rows: unchanged.
-
-### Reallocation
-
-None forced. Fleet is now producing corrections on its own already-completed work, which is a
-sign of real quality-control depth, not something to redirect capacity away from.
-
-### Open items
-
-1. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, ~1h30min unreachable.
-2. S7's other 2 of the 5 newly-found duplicates (not previously marked PRODUCTION_READY) — worth
-   confirming they're excluded from any future promotion, not just the 3 that needed correcting.
-3. `turkey_student_access` / `selectivity_evidence` still have no live columns.
-4. ~12-15% university-photo false-accept rate (checkpoint 18) — still pending CEO/DATA visibility.
+1. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, 77min unreachable.
+2. `turkey_student_access` / `selectivity_evidence` still have no live columns.
+3. ~12-15% university-photo false-accept rate — still pending CEO/DATA visibility.
 
 ## How these numbers were produced (re-run to refresh)
 
@@ -64,4 +49,4 @@ where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f7
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-27 ~00:45.
+`origin`, 2026-08-27 ~00:50.
