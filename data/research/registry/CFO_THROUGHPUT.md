@@ -4,73 +4,84 @@
 each checkpoint, not appended to. I do not research opportunity facts, source photos, alter
 records, or override evidence — this file tracks fleet capacity and flags backlogs/
 misallocations only. Cross-reference: `GAP_MAP.md` (coverage/content state, maintained by CEO)
-and `CONTROL_TOWER_REPORT_*.md` (CEO's own consolidated fleet report) — read all three together,
-not this one alone. On a 5-minute recurring check (`/loop`, per founder instruction).
+and `CONTROL_TOWER_REPORT_*.md` (CEO's own consolidated fleet report). On a 5-minute recurring
+check (`/loop`, per founder instruction).
 
-## Checkpoint 5 — 2026-08-26, freeze day 1, ~11:20 (T+~2h10min from fleet dispatch)
+## Checkpoint 6 — 2026-08-26, freeze day 1, ~11:35 (T+~2h25min from fleet dispatch)
 
-### Correction, same tick: the 5-row fix is NOT "authorized, pending execution" — reverting my own record
+### Still open: 5-row fix, correctly gated on CEO's own direct founder confirmation
 
-CEO pushed back on my authorization-relay, correctly: a peer relaying "the founder told me X" is
-not the same as the founder confirming X to the actual executor, no matter how confident the
-relay or how many parties converge on it — the identical principle from the overnight-protocol
-episode, applied consistently, including to me. CEO is right and I was wrong to log this as
-"authorized" based on my own relay. CEO is now asking the founder directly, in CEO's own
-conversation, for an unambiguous confirmation before writing anything. **Correct status: still
-pending, direct-channel-only, not executed** — all 5 rows independently re-verified unchanged
-again this tick. Not a stuck-agent problem; this is the system working correctly by refusing to
-cascade an unverified authorization claim into a production write. Watching for CEO's own
-direct confirmation, not mine.
+Unchanged again this tick — all 5 rows still exactly as wrong, `updated_at` unchanged. Correctly
+tracked as *pending*, not *authorized*: CEO is right that a peer-relayed authorization claim
+(mine, last checkpoint) isn't the same as first-hand confirmation, and is asking the founder
+directly in CEO's own conversation before writing anything. Not a stall — the system correctly
+refusing to cascade an unverified claim into a production write. Watching for CEO's own
+confirmation, next tick or the one after.
 
-### Closed this tick: `Claude.pdf`
+### New this tick: a second genuinely-zero infrastructure gap, confirmed directly
 
-Moved from the repo root to outside the working tree entirely (never opened by CFO or CEO).
-Disposition based on S6's original characterization ("possibly a minor's personal data"),
-relayed by CEO without independent verification and disclosed as such — moved rather than
-deleted specifically because neither of us confirmed the content, so nothing is destroyed if
-it turns out to matter. Founder had delegated this decision to CFO with CEO's input.
+CEO's S6 closeout surfaced that **0 of 69 competition records have any image**, and asked
+whether this is fleet-wide. Checked myself: `opportunities` has no image-adjacent column and no
+EAV-sibling table (unlike `universities`, which had a hidden `university_profile_metrics` table
+nobody's schema-grep caught). **This one really is a cold start — confirmed, not assumed** — all
+~421 rows, not just S6's 69. CEO has assigned S6 (freed up after closing their lane) to a bounded
+photo-sourcing pass on their own 69 records, reusing domain context rather than starting a fresh
+lane cold. Reasonable allocation; not something I'd change.
 
-### Real progress since checkpoint 4
+### S8 status resolved: not blocked, was mid-pass — and a real routing gap found and fixed
 
-| Lane | What changed | Note |
-|---|---|---|
-| S1-S4 | No new pushes this tick | Consistent with doing full-shard semantic audits, which take longer than a quick pass — not a concern yet |
-| S5A | +1 commit — batch 3: net-new discovery from seed PDFs (PROMYS Europe, UvA, St. Stephen's Rome) + a gap-closure fix | Still mixing new-discovery with gap-closure per CEO's directive |
-| S5B | +1 commit — batch 2: 8 more mentored-research/internship candidates | Steady pace, ~2min old at last check |
-| S6 | **Lane closed.** Final synthesis: 69 records total, cross-review complete. S6-A alone: 28 `PRODUCTION_READY` (2 net-new TÜBİTAK records, 6 Turkey-access enrichments on live olympiads, 3 net-new math-tournament finds, 17 corrections to already-live rows), stopped at genuine saturation of high-value gaps rather than chasing a nominal target | First lane to fully close this freeze — worth CEO/S8 prioritizing its final review given it's furthest along |
-| S7 | +1 commit — **actively applying S8's QA corrections** (Blue Marble deadline framing, Foyle upgrade) | The review loop (S8 finds → S7 fixes) is working end-to-end, not just producing findings that sit unused |
-| S8 | No new push in 26+ minutes | Not flagged as blocked — no blocker reported, consistent with a long audit pass (Track A/B were each substantial). Worth a direct check next tick if still silent |
-| CEO | No new push since the authorization relay | See top item above |
+31 minutes without a push looked worth a check; turned out S8 was deep in a live fact-
+verification pass on S7's 41 `VERIFIED`-tier records (re-fetching every official source), on top
+of having already resolved all 8 of S7's previously-blocked URLs and caught 2 real content errors
+(both already fixed on S7's branch). **Real finding: S8 had only received a handoff from S7 —
+nothing routed from S5 or S6**, and was about to spend time searching for their branches/files
+rather than being told directly. Sent S8 the exact branch names and file paths for S5A/S5B/S6
+just now — a small thing, but avoided a duplicate-search cost across two sessions doing the same
+lookup independently. Exactly the kind of routing gap this role exists to catch before it costs
+real time, not just a nice-to-have.
+
+### S6 full closeout detail (69 records, depth over volume, stopped at genuine saturation)
+
+**12 self-graded production-ready**, 45 verified, 6 ready-for-review, 2 candidate, 2 rejected, 2
+blocked. Deliberately stopped short of a nominal ~180 share since competition is already 24% of
+the corpus alone — evidenced, not a shortfall. Key finds beyond the TÜBİTAK gap (checkpoint 4):
+**GençBizz** — a real, 26-edition, government-protocol, 81-province Turkish entrepreneurship
+competition — existed nowhere in the prior corpus until this pass found it via Turkish-language
+search. A **second instance of the affiliation-inflation pattern** (UniHive, after Blackstone) —
+CEO flagged this as worth a dedicated cross-category sweep later, agree that's right, not
+something to fix ad hoc per-instance. Two known live defects re-confirmed but still unfixed
+(Stockholm Water Prize wrong-entity, flagged 3 days ago; FRC/FIRST Robotics likely-duplicate
+pair) — both blocked on the same write-authority question as the 5-row item, not new research
+gaps.
+
+### Real throughput this tick
+
+S5A: +1 batch (5 more gap-closure records). S5B, S6, S7: no new pushes since last tick (S6
+because it's closed; S5B/S7 plausibly mid-batch). CEO: +1 substantive push (S6 closeout + new
+gap). No new opportunities/universities baseline movement (421 total unchanged, as expected —
+no production writes from any lane yet).
 
 ### Backlog read
 
-**Verification backlog is now visibly the real constraint, as checkpoint 4 anticipated.** S5A
-(3 batches) + S5B (2 batches) + S6 (69, self-reviewed and closed) + S7 (continuing, now
-incorporating fixes) have produced well over 100 combined candidates/corrections this session.
-S8 has been silent for 26+ minutes — plausibly deep in a review pass rather than idle, but this
-is exactly the ratio the CFO brief's "reduce discovery, redirect to verification" rule is about.
-Not calling for reallocation yet (one silent tick isn't a pattern), but this is the first
-checkpoint where the numbers would support it if S8 doesn't surface soon.
-
-**Duplicate/near-miss backlog**: unchanged, 0 new duplicates. S6's closure explicitly resolved
-one live duplicate-pair question (FRC Türkiye) along the way rather than leaving it open.
-
-**Image backlog**: unchanged this tick (S1-S4 still auditing, no new push).
+Verification backlog (S8's real workload) is now precisely scoped rather than a vague concern:
+S7's 41 VERIFIED records mid-review, S6's 69 closed records now formally handed off, S5A/S5B's
+combined ~5 batches still unrouted until S8 picks them up from the paths just sent. This is a
+real, sizeable queue — worth watching whether S8 needs a second reviewer rather than working
+through it alone, but not calling for that yet; one tick of data isn't a trend.
 
 ### Reallocation
 
-**None forced yet.** S6 closing out is the first real signal of a lane finishing ahead of others
-— worth CEO's attention for whether S6's freed capacity should shift to S8 (review backlog) or
-S7 (still CEO's named highest-leverage category), but that's CEO's call per the standing model,
-not mine to redirect unilaterally.
+S6 → opportunity-photo sourcing (CEO's call, already made, agree with it). Otherwise none forced.
 
 ### Open items
 
-1. 5-row fix: pending direct founder confirmation to CEO — not authorized until CEO has it
-   first-hand. Tracking every tick.
-2. S8 silence (26+ min, not yet a blocker) — watching, not escalating yet.
-3. ~~`Claude.pdf`~~ — closed, moved outside the repo this tick.
-4. `turkey_student_access` / `selectivity_evidence` still have no live columns.
+1. 5-row fix — pending CEO's direct founder confirmation. Tracking every tick.
+2. Stockholm Water Prize (wrong-entity) + FRC/FIRST duplicate pair — same write-authority
+   blocker as #1, not separate research gaps. Worth bundling into the same founder decision
+   rather than three separate asks.
+3. `turkey_student_access` / `selectivity_evidence` still have no live columns.
+4. Opportunity-photo schema — same shape as the university-photo schema gap (checkpoint 3):
+   research/verify now, production promotion needs a migration later. Not urgent tonight.
 
 ## How these numbers were produced (re-run to refresh)
 
@@ -85,16 +96,13 @@ for b in oryn/s1-university-photos oryn/university-photos-s2 oryn/s3-university-
 done
 ```
 ```sql
-select count(*) total, count(*) filter (where status='active') active,
-  count(*) filter (where verification_state='verified_current') verified_current,
-  count(*) filter (where eligible_countries is not null and array_length(eligible_countries,1)>0) has_eligible_countries,
-  count(*) filter (where deadline is not null) has_deadline
-from opportunities;
-
 select id, title, cycle_status, deadline, cost, updated_at from opportunities
 where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f73bf5584e9',
   'd780bc55-41e0-444b-8bcc-3f927b28c4b7','8a7c89e4-e63a-4f64-a76d-4bae1b31e889',
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
+
+select table_name, column_name from information_schema.columns
+where table_schema='public' and (column_name ilike '%image%' or column_name ilike '%photo%');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-26 ~11:20.
+`origin`, 2026-08-26 ~11:35.
