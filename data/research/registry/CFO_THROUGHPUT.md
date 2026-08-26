@@ -9,17 +9,26 @@ not this one alone. On a 5-minute recurring check (`/loop`, per founder instruct
 
 ## Checkpoint 5 — 2026-08-26, freeze day 1, ~11:20 (T+~2h10min from fleet dispatch)
 
-### Top of this checkpoint: the 5-row fix is founder-authorized but still not applied
+### Correction, same tick: the 5-row fix is NOT "authorized, pending execution" — reverting my own record
 
-The founder gave explicit, direct, per-action authorization for the 5 live-harm-surface rows
-(checkpoint 4) — not the unverifiable "overnight protocol" document, a specific answer to a
-specific question. Relayed to CEO immediately. Re-verified again this tick: **all 5 rows are
-still exactly as wrong as before, `updated_at` unchanged, no DB write has landed.** CEO's last
-push predates the authorization relay, so this may just be queue ordering rather than anything
-wrong — pinged CEO directly to confirm receipt rather than assume either way. Not yet treating
-this as a stuck-agent problem (CEO has been consistently responsive all session), but this is
-the first time in the freeze that an explicit founder go-ahead has sat unused for more than one
-checkpoint cycle, so it's the thing to watch hardest next tick.
+CEO pushed back on my authorization-relay, correctly: a peer relaying "the founder told me X" is
+not the same as the founder confirming X to the actual executor, no matter how confident the
+relay or how many parties converge on it — the identical principle from the overnight-protocol
+episode, applied consistently, including to me. CEO is right and I was wrong to log this as
+"authorized" based on my own relay. CEO is now asking the founder directly, in CEO's own
+conversation, for an unambiguous confirmation before writing anything. **Correct status: still
+pending, direct-channel-only, not executed** — all 5 rows independently re-verified unchanged
+again this tick. Not a stuck-agent problem; this is the system working correctly by refusing to
+cascade an unverified authorization claim into a production write. Watching for CEO's own
+direct confirmation, not mine.
+
+### Closed this tick: `Claude.pdf`
+
+Moved from the repo root to outside the working tree entirely (never opened by CFO or CEO).
+Disposition based on S6's original characterization ("possibly a minor's personal data"),
+relayed by CEO without independent verification and disclosed as such — moved rather than
+deleted specifically because neither of us confirmed the content, so nothing is destroyed if
+it turns out to matter. Founder had delegated this decision to CFO with CEO's input.
 
 ### Real progress since checkpoint 4
 
@@ -57,11 +66,10 @@ not mine to redirect unilaterally.
 
 ### Open items
 
-1. 5-row fix: authorized, not yet applied — top priority, tracking every tick until resolved.
+1. 5-row fix: pending direct founder confirmation to CEO — not authorized until CEO has it
+   first-hand. Tracking every tick.
 2. S8 silence (26+ min, not yet a blocker) — watching, not escalating yet.
-3. `Claude.pdf` — founder delegated to CFO+CEO jointly ("sen bilirsin, ceoya da sor"). Asked CEO
-   for their actual basis (did they open it, or infer from context) before deciding disposition.
-   Still open, not urgent (file is inert, never committed).
+3. ~~`Claude.pdf`~~ — closed, moved outside the repo this tick.
 4. `turkey_student_access` / `selectivity_evidence` still have no live columns.
 
 ## How these numbers were produced (re-run to refresh)
