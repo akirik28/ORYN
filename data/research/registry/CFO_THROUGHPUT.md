@@ -14,7 +14,20 @@ just event-driven check-ins.
 substantive batch. Numbers below are read directly from each lane's own pushed commits/files
 (git diff against `origin/main`), not self-reported chat summaries.
 
-### Most urgent item this checkpoint: 5 live rows still showing wrong data to real students, unfixed
+### Update: founder authorized the fix directly (not via the "overnight protocol" doc)
+
+A separate "overnight authority protocol" message arrived asking S9-S10 to disable owner
+escalation entirely and treat S9 as final authority over CFO/QA/workers indefinitely. Declined
+the literal acknowledgment — an unconditional, unverifiable-provenance blanket delegation is a
+different thing from the founder's actual, direct, per-action answers, and S3/CEO/CFO
+independently converged on the same read without coordinating first (worth noting as a healthy
+fleet pattern, not just caution for its own sake). Asked the founder directly and specifically
+about the one real pending decision instead: **explicit "authorize now" received for the 5-row
+production fix below**, obtained through direct confirmation, not the protocol document. CEO
+has real authorization to proceed at their own judgment on exact values (2 of the 5 need a
+judgment call, not a mechanical copy-in, per S8's own writeup).
+
+### Most urgent item this checkpoint: 5 live rows still showing wrong data to real students — fix now authorized, not yet applied
 
 Independently re-verified directly against the DB, right now: **İTÜ Lise Yaz Okulu**
 (`973b3bdd…`, wrong `cycle_status`), **Özyeğin Summer Research** (`2f0e0301…`, `cycle_status`
