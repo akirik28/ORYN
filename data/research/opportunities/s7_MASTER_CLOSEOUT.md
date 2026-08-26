@@ -1,14 +1,22 @@
 # S7 — Other High-Value Turkey-Accessible Opportunities — Master Closeout
 
 Per the ORYN Research Freeze Common Operating Contract §15 final handoff format.
+Updated after Wave 2 (approved by S9/CEO, scoped to named leads from Wave 1's own closeouts).
 
 ## STATUS
 
-Wave 1 complete: 4 sub-lanes dispatched (S7-A1 scholarships/awards, S7-A2 publications/
-journals, S7-B1 leadership/fellowships/social-impact, S7-B2 online/year-round/Türkiye-based),
-each independently cross-reviewed by S7 (parent session), cross-lane deduped, and consistency-
-normalized into one consolidated file. **Below target (67 vs ≥140)** — see Key Gaps for why,
-and the recommendation to CEO on a possible Wave 2 sent separately via SendMessage.
+**Wave 1 + Wave 2 complete.** Wave 1: 4 sub-lanes (A1/A2/B1/B2). Wave 2 (CEO-approved, scoped
+to specifically-named unexplored leads, not blind volume-chasing, per S9's explicit direction
+to "stop when the leads are exhausted even if that's still under 140"): 3 sub-lanes
+(A1-wave2, A2-wave2, B1-wave2 — B2-wave2 skipped, CEO agreed B2's shortfall was genuine
+saturation). All 7 sub-agent runs independently cross-reviewed by S7 (parent session,
+including re-fetching flagged URLs myself), cross-lane deduped, consistency-normalized.
+Additionally incorporated S8 (Research QA)'s first-pass findings: a real factual correction
+(Blue Marble Review's deadline framing), one upgrade (Foyle Young Poets), one resolved
+naming-collision check (JHSS vs JRHS).
+
+**Final: 77 unique records — still below the nominal ≥140 target, now via CEO-confirmed
+genuine saturation, not an open question.** See Key Gaps for the full per-lane accounting.
 
 ## ASSIGNED SCOPE
 
@@ -22,28 +30,34 @@ student based in Türkiye applying to universities abroad.
 
 **0, by design.** Per the contract, `PRODUCTION_READY` requires (among other things) an S8/
 second-agent review this session did not perform on behalf of S8 — S7's own cross-review is a
-first pass, not that independent second review. The closest honest analog: **41 of 67 records
+first pass, not that independent second review. The closest honest analog: **47 of 77 records
 are `verification_state: VERIFIED` with `turkey_student_access` resolved to either
 `VERIFIED_ELIGIBLE` or `ELIGIBLE_WITH_CONDITIONS`** — i.e., ready for S8 to review toward
-`PRODUCTION_READY`, pending S8's own independent pass and an image pass (see Image Complete
-Count).
+`PRODUCTION_READY` (S8 has already started this pass — see Wave 2 Addendum). Image pass still
+outstanding fleet-wide (see Image Complete Count).
 
 ## CANDIDATE COUNT
 
-**26** — `verification_state: CANDIDATE` (real, evidence-backed, but at least one material fact
+**30** — `verification_state: CANDIDATE` (real, evidence-backed, but at least one material fact
 could not be confirmed via a direct fetch of the organizer's own official page this session;
 each record's `notes_uncertainties` states exactly what's unconfirmed and why).
 
 ## REJECTED COUNT
 
-**74** substantive rejections across all 4 sub-lanes (A1: 27, A2: 3, B1: 27, B2: 17), each with
-cited reasoning and a source URL — logged specifically so no future lane re-researches them.
-Plus 1 non-rejection traceability note (A2: an old domain superseded by a new one for the same
-already-accepted entity). Rejection reasons span: citizenship/country-restricted (several,
-including a caught aggregator-vs-official-source discrepancy on a Czech government scholarship),
-graduate-only, not-a-distinct-opportunity, defunct/dormant, redundant with existing DB/corpus
-coverage, access-blocked-not-yet-confirmed (flagged for retry, not a quality rejection), and one
-documented conflict-of-interest finding (Scholar Launch, via ProPublica).
+**112** substantive rejections across all 7 sub-agent runs (Wave 1 — A1: 27, A2: 3, B1: 27,
+B2: 17; Wave 2 — A1w2: 19, A2w2: 3, B1w2: 16), each with cited reasoning and a source URL —
+logged specifically so no future lane re-researches them. Plus 1 non-rejection traceability
+note (A2: an old domain superseded by a new one for the same already-accepted entity).
+Rejection reasons span: citizenship/country-restricted (several, including a caught
+aggregator-vs-official-source discrepancy on a Czech government scholarship, and a
+comprehensive Wave 2 sweep confirming Greece/Norway/Sweden/Denmark/Finland/Estonia/Latvia/
+Lithuania/Iceland all lack a usable general undergraduate government scholarship for this
+eligibility gate), graduate-only, not-a-distinct-opportunity, defunct/dormant (including
+Interlochen's Blue Pencil Online, confirmed on indefinite hiatus), redundant with existing
+DB/corpus coverage, access-blocked-not-yet-confirmed (flagged for retry, not a quality
+rejection), unverifiable/misattributed (an aggregator-claimed "Young Economists Journal" that
+doesn't actually exist under that description), and one documented conflict-of-interest
+finding (Scholar Launch, via ProPublica).
 
 ## BLOCKED / UNCLEAR COUNT
 
@@ -99,29 +113,73 @@ lanes' self-assessed output too**, not just this one — the failure mode (a res
 subjective confidence in a field outrunning what was actually fetched) seems structural to how
 the sub-agent prompts were written, not specific to S7.
 
+## WAVE 2 ADDENDUM
+
+CEO-approved, scoped to the specific named leads in each Wave 1 closeout (not blind
+volume-chasing). 3 sub-agents (A1w2, A2w2, B1w2 — B2w2 skipped per CEO agreement that B2's
+shortfall was genuine saturation). Result: **10 net-new unique records, 38 further rejections,
+plus 5 corrections/refinements to existing Wave 1 records.** Zero duplicates found (against
+Wave 1 or internally across the 3 Wave 2 lanes) — the dedup discipline held under a second
+pass.
+
+**Headline finding**: Wave 1's biggest structural claim — "essentially no multi-month
+fellowship in this space is Turkey-accessible" — was **directionally confirmed, not
+overturned, but not absolute either**. B1w2 systematically checked all 5 named Turkish
+corporate foundations (Koç, Sabancı, Vodafone, Garanti BBVA, TÜSİAD): 4 confirmed no
+qualifying program, but **Vodafone Türkiye Vakfı's "AI Startup Studio"** (with Habitat
+Derneği) is real — ages 14-18, 3-month duration, genuine mentorship and selection (119
+applicants → 25 in the latest cohort). Recorded as CANDIDATE (its own application page
+403-blocked every attempt; evidence rests on a co-organizer's page plus a press-agency
+article) rather than overclaimed.
+
+**Other Wave 2 highlights**: Üçok Family Scholarship Fund (VERIFIED, up to $50k/year for 4
+years, Turkish-citizen women, no US-residency requirement); Global Korea Scholarship upgraded
+to VERIFIED/VERIFIED_ELIGIBLE after directly reading the official quota PDF (Turkey: 2 of 150
+Embassy Track scholars); an important **correction, not just a refinement**, to UWC Türkiye —
+originally implied residency/schooling-based eligibility, actually citizenship-gated (Turkish
+citizen or Turkish-citizen parent), corrected in the record without changing its
+still-CANDIDATE state; The Pollination Project's Daily Seed Grant (VERIFIED, $500 rolling
+worldwide social-entrepreneurship micro-grant, no institutional gatekeeping); a Computer
+Science-specific student journal (IJSCAR, VERIFIED, named editorial board, steep $450 fee
+honestly disclosed) closing part of A2's STEM-diversity gap, while a chemistry-specific
+equivalent was confirmed genuinely absent after three differently-worded search rounds, not
+just unfound. One live, time-sensitive item surfaced: **Global Youth Awards' 2026 deadline is
+2026-09-01** — 6 days out at research time, worth surfacing promptly if this data ships soon.
+
+**S8 (Research QA) findings incorporated in the same pass** (from S8's independent, real-
+browser check of Wave 1's persistently-blocked URLs): Blue Marble Review's deadline framing
+was **actually wrong** (recorded as rolling/no-deadline; corrected to closed/reopens-Sept-1,
+per S8's direct quote) — a genuine factual fix, not just a confidence upgrade. Foyle Young
+Poets upgraded to VERIFIED on S8's independent confirmation. JHSS vs JRHS naming-collision
+resolved as genuinely distinct entities via a live DB check. 7 of Wave 1's 8 persistently-
+blocked URLs turned out to be tooling limitations, not real unavailability (S8's browser tool
+loaded them fine); only `jsr.org/hs` is a confirmed real outage (Cloudflare 523).
+
 ## KEY GAPS
 
-1. **Landed at 67 net-new unique records vs. the ≥140 target.** Every sub-lane closeout
-   attributes this to genuine, specific, non-corner-cutting causes: (a) real category
-   thinness for Turkey-eligible study-abroad scholarships (Turkish foundations largely don't
-   fund it; most famous international scholarship names are citizenship-restricted or
-   graduate-only — A1); (b) a real structural finding that essentially no multi-month
-   fellowship in this space is Turkey-accessible (B1); (c) B2 discovering ~200+ already-
-   covered titles in this same directory before spending search budget, correctly avoiding
-   padding (B2); (d) WebSearch tool-call budget (200/session) exhausted before full category
-   coverage in A1/A2/B1, each with specific named unexplored leads recorded in their own
-   closeouts. **This reads as genuine partial saturation + a real tool constraint, not
-   corner-cutting** — recommending a scoped Wave 2 to CEO separately (see message sent via
-   SendMessage) rather than deciding unilaterally to pad or to stop.
-2. **8 URLs remain blocked to every fetch attempt tried so far** (both the sub-agents' and
-   my own independent re-attempts): `jsr.org/hs`, `youthmedicaljournal.com`, `theschola.org`,
-   `foyleyoungpoets.org`, `hangingloosepress.com`, `bluemarblereview.com`,
-   `jhss.scholasticahq.com` (JS-rendering, not a block), `wwf.org.tr`. A human/real-browser
-   check is needed before any of these can move past CANDIDATE.
+1. **Landed at 77 net-new unique records vs. the nominal ≥140 target — now a CEO-confirmed
+   genuine ceiling, not an open question.** Wave 1 causes (per-lane, unchanged from the
+   original assessment): real category thinness for Turkey-eligible study-abroad scholarships
+   (A1), a real structural fellowship-access finding (B1, since partially but not fully offset
+   by Wave 2's Vodafone find), B2 correctly declining to pad against ~200 already-covered
+   titles, and a hard 200-call WebSearch ceiling per sub-agent session across A1/A2/B1. Wave 2
+   was CEO-approved specifically to chase the named leads this produced — 10 more real records
+   resulted, and S9 explicitly directed "stop when the leads are exhausted even if that's still
+   under 140" rather than manufacturing volume. This gap is closed as an open question, even
+   though the number itself remains below nominal target.
+2. **1 URL remains genuinely unavailable**: `jsr.org/hs` (Cloudflare 523, origin unreachable,
+   confirmed by S8 via network-request inspection — not a tooling gap). 5 more URLs are
+   confirmed loadable (by S8) but not yet fact-checked against their specific recorded claims:
+   `theschola.org`, `hangingloosepress.com`, `jhss.scholasticahq.com`, `wwf.org.tr`,
+   `youthmedicaljournal.com` — S8's substantive re-verification pass on these is in progress.
+   `tr.uwc.org`/`uwc.org` and `zonta.org` remain blocked across 9 and 4 cumulative attempts
+   respectively (two independent research passes each) — looks like a site-wide bot block;
+   flagged for a human/different-tool check rather than further automated attempts.
 3. **Grade-band/subject-family coverage not measured** (matches GAP_MAP.md's own open item
    #4) — this batch wasn't organized to guarantee even coverage across STEM/humanities/arts/
    grade-9-vs-12, though A2 in particular deliberately chased diversity across science/
-   humanities/creative-writing.
+   humanities/creative-writing, and Wave 2 closed part of the STEM gap (CS journal found,
+   chemistry confirmed absent rather than just unfound).
 
 ## KEY UNCERTAINTIES
 
@@ -154,15 +212,23 @@ All under `data/research/opportunities/` unless noted:
 - `s7a2_batch1-3.jsonl`, `s7a2_rejected.jsonl`, `s7a2_CLOSEOUT.md`, `s7a2_S7_CROSSREVIEW.md`
 - `s7b1_batch1-2.jsonl`, `s7b1_rejected.jsonl`, `s7b1_CLOSEOUT.md`, `s7b1_S7_CROSSREVIEW.md`
 - `s7b2_batch1.jsonl`, `s7b2_rejected.jsonl`, `s7b2_CLOSEOUT.md`, `s7b2_S7_CROSSREVIEW.md`
-- `s7_MASTER_consolidated.jsonl` (67 deduped, normalized records — the actual deliverable)
+- `s7a1w2_batch1.jsonl`, `s7a1w2_corrections.jsonl`, `s7a1w2_rejected.jsonl`, `s7a1w2_CLOSEOUT.md`
+- `s7a2w2_batch1.jsonl`, `s7a2w2_rejected.jsonl`, `s7a2w2_CLOSEOUT.md`
+- `s7b1w2_batch1.jsonl`, `s7b1w2_rejected.jsonl`, `s7b1w2_CLOSEOUT.md`
+- `s7_MASTER_consolidated.jsonl` (77 deduped, normalized, S8-corrected records — the actual
+  deliverable)
 - `s7_MASTER_CLOSEOUT.md` (this file)
+- `claims_S7.jsonl` (registry shard, kept on this branch per S9's pull-only convention — not
+  pushed directly to the control-tower branch after the first push)
 - `docs/handoffs/s7-other-high-value-opportunities-claim.md` (lane claim + pre-dispatch dedup
   baseline, written before research began)
 
 ## COMMITS
 
-On branch `oryn/s7-other-high-value-opportunities`: lane claim commit, A1+A2 batch commit
-(`fa340b2`), and this consolidation commit (see git log on the branch for the current HEAD).
+On branch `oryn/s7-other-high-value-opportunities`: lane claim, Wave 1 A1+A2 batch (`fa340b2`),
+Wave 1 B1+B2 + full consolidation (`bce0d16`), claim doc final-status update (`8191518`), S8
+QA corrections (`045b963`), and this Wave 2 consolidation commit (see git log on the branch for
+current HEAD).
 
 ## BRANCH
 
@@ -171,19 +237,26 @@ Not merged — held for CEO/S8/DATA review per contract (no research lane merges
 
 ## WHAT THE NEXT OWNER SHOULD DO
 
-1. **S8**: independent QA pass on all 67, prioritizing the 41 already at VERIFIED+resolved-
-   Turkey-access (closest to `PRODUCTION_READY`) before the 26 CANDIDATE/7 UNCLEAR tier.
-2. **A human with an unrestricted browser**: resolve the 8 persistently-blocked URLs listed
-   under Key Gaps #2, and directly confirm `youthmedicaljournal.com` and `cogitojournal.org`
-   (Key Uncertainties #1-2) before either is ever surfaced to a student.
-3. **CEO**: decide on the Wave 2 proposal (sent separately) — each sub-lane closeout names
-   specific, already-identified unexplored leads rather than requiring blind re-search, so a
-   scoped Wave 2 should be efficient if capacity allows.
+1. **S8**: continuing independent QA pass on all 77 (already delivered one round of findings,
+   incorporated above) — prioritize the 47 at VERIFIED+resolved-Turkey-access (closest to
+   `PRODUCTION_READY`) before the 30 CANDIDATE/UNCLEAR tier. Substantive fact-check of the 5
+   now-loadable-but-unconfirmed URLs (Key Gaps #2) is the named next step S8 already committed
+   to.
+2. **A human with an unrestricted browser or different tool**: `tr.uwc.org`/`uwc.org` and
+   `zonta.org` remain blocked across many cumulative attempts from two different tools — worth
+   a genuinely different approach (real browser session) rather than more automated retries.
+   Directly confirm `youthmedicaljournal.com` and `cogitojournal.org` (Key Uncertainties #1-2)
+   before either is ever surfaced to a student.
+3. **CEO**: Wave 2 complete and reported (final numbers above) — no further S7 wave planned
+   unless CEO identifies new capacity/priority for it.
 4. **DATA/founder**: the `turkey_student_access` and opportunity-image columns still don't
    exist live (matches GAP_MAP.md's founder-escalation items #1-2) — this batch's research is
    ready to backfill both the moment schema exists.
-5. **Whoever ingests this**: `category_hint` values are all valid against the live enum, but
-   "award"/"publication"/"leadership" as distinct concepts have no enum value of their own —
-   confirm the `category_hint` mapping (scholarship/research/student_program/volunteering/
-   entrepreneurship/online_program/academic_program) is the right compromise before writing,
-   or raise the enum-expansion question to DATA/founder first.
+5. **Whoever ingests this**: `category_hint` values are all valid against the live enum
+   (checked on every record, both waves), but "award"/"publication"/"leadership" as distinct
+   concepts have no enum value of their own — confirm the `category_hint` mapping is the right
+   compromise before writing, or raise the enum-expansion question to DATA/founder first. Also
+   confirm the GençBizz-as-separate-from-JA-Company-Programme precedent (Key Uncertainties #4)
+   before ingestion.
+6. **Time-sensitive**: Global Youth Awards' 2026 deadline is 2026-09-01 — if this data ships
+   before then, surface it promptly; otherwise note it'll need a next-cycle refresh.
