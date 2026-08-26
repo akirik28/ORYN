@@ -59,3 +59,94 @@ image-sourcing pass on the highest-value records, then HANDOFF.md.
 **Not yet touched this session**: environment/sustainability beyond what cr1 already found,
 medicine/biomedical beyond HOSA/Brain Bee, data-science-specific beyond Wharton. Flagging as
 remaining scope rather than silently dropping.
+
+---
+
+## S6-B (Business/Humanities/Creative) — 2026-08-26 checkpoint 1
+
+**Orientation completed**: read the S6 README and EXISTING_COMPETITION_BASELINE.md in full; the
+full cr1_2026-08-23/24 corpus relevant to this scope (tracker, handoff, research_batch1-2,
+finding1_journals, commercial_tier, do_not_add, active_unverified_fixes, verified_depth_fixes,
+interlochen_review_eval, turkey_routes, us_country_tag_audit, research_category_decision — 14
+files); the fleet CEO's REGISTRY_README.md and GAP_MAP.md from the CEO branch (confirmed steer:
+competition+summer_program already 84% of corpus, depth over volume this checkpoint); the seed
+PDF (both content pages, full table, read natively). Re-ran the live baseline SQL query fresh
+(2026-08-26 ~19:03 UTC) — 101 competition rows, unchanged from the orchestrator's snapshot.
+
+**Method**: mined cr1's prior research first for anything in my scope before researching cold —
+recovered rich, reusable P1 evidence on ~8 already-live rows (Concord Review, Princeton Play
+Contest, Wharton Investment's team+teacher gate, Blue Ocean, DECA's missing-Turkey finding,
+National History Day's wrong-country-tag finding, Earth Prize, IEO's and Stockholm Junior Water
+Prize's Turkey routes) that only needed this week's `turkey_student_access` taxonomy applied, not
+re-derivation. Then verified/enriched a further ~14 already-live rows cold (Marshall Society, IPO,
+BSPEE, Blackstone Junior Division, Harvard Crimson, Diamond Challenge, Conrad Challenge, HPEC,
+YIS Stock Pitch, IPPF, World Scholar's Cup, 120 Hours), then researched 5 genuinely new candidates
+(Jane Austen Society Essay Contest, Columbia Undergraduate Law Review HS Essay Contest, Harvard
+Political Review Essay Competition, GençBizz — a Turkey-native national entrepreneurship
+programme found via dedicated search, Eurasian Schools Debating Championship — Istanbul-hosted
+debate tournament), confirmed one HOLD (RISE for the World — status genuinely unconfirmable,
+matches the brief's own expectation) and one non-competition finding (Young Guru Academy — a
+real, highly selective Turkish fellowship programme, not a competition; flagged for whichever
+lane owns fellowship/student_program categories).
+
+**Biggest single finding**: the strongest Turkey-access evidence found all session was not an
+international body's country list but **direct first-party accounts from Turkish/Istanbul-based
+schools of their own real participation** — Özel Saint Benoît Fransız Lisesi (Istanbul) at BSPEE
+with a prize win, and MEF International Schools (Istanbul) at World Scholar's Cup's Izmir regional
+round, qualifying for Global Rounds. Neither fact was in the prior corpus. This is a stronger
+evidence class than a generic "open worldwide" statement, and worth other lanes watching for —
+a school's own account of having actually competed beats any organizer's eligibility prose.
+
+**Second finding worth flagging**: GençBizz Lise Girişimcilik Programı — a 26-edition-running
+national Turkish high-school entrepreneurship programme (Genç Başarı Eğitim Vakfı / Junior
+Achievement Turkey), run under a direct Ministry of National Education protocol across all 81
+provinces, culminating in a national final whose winner represents Türkiye at GEN-E, a major
+European entrepreneurship festival. This is the closest business/entrepreneurship analogue to how
+TÜBİTAK anchors the STEM olympiad routes, and it did not exist anywhere in the prior corpus or
+seed PDF — found via a dedicated Turkish-language search per the brief's explicit instruction to
+look for exactly this shape of record.
+
+**Corrections proposed to existing rows** (not new records, data-quality fixes): DECA and National
+Economics Challenge both resolve to `NOT_ELIGIBLE` for a Türkiye-based student (DECA's chartered-
+association list names 14 non-US countries, Türkiye is not among them, confirmed again this
+session; National Economics Challenge is structurally US-state-gated with only a narrow, unverified
+China-specific exception found). Both are currently shown to all 7 test users with `eligible_
+countries=[]`, i.e. no signal against recommending them to a Turkish student — a `NOT_ELIGIBLE`
+classification is itself a valuable resolved fact, not a gap.
+
+**Deliberately held back from VERIFIED/PRODUCTION_READY**: Harvard Political Review Essay
+Competition (real, but no stated country-eligibility rule found and a materially higher fee tier
+than comparable records — $45-85 vs $0-25 elsewhere in this batch); Eurasian Schools Debating
+Championship (Istanbul-hosted, structurally Turkey-favourable, but governing organization,
+eligibility rule, fee and team structure are all genuinely unknown, not merely unresearched —
+next edition's registration has not opened); 120 Hours (worldwide country access confirmed, but a
+genuine, unresolved conflict between "any student" and "enrolled architecture-degree student"
+readings across sources — flagged prominently rather than defaulted to the flattering reading);
+The Earth Prize and HPEC and National History Day (`UNCLEAR` — real, repeated attempts made, no
+eligibility-by-country statement exists to find on the operator's own pages as of this session).
+
+**Deliverables this checkpoint**: `s6b_essay_humanities_batch1.jsonl` (S6B-0001–0010),
+`s6b_business_batch1.jsonl` (S6B-0011–0018), `s6b_turkey_and_mixed_batch1.jsonl` (S6B-0019–0028),
+`claims_s6b.jsonl` (29 lines, S6B-0001–0029 including the YGA rejection). 22 already-live rows
+touched (enrichment or correction), 5 genuinely new candidates proposed, 1 formal HOLD, 1
+out-of-category rejection. None yet carries a rights-cleared photo — several have a specific
+candidate source identified (Wharton news posts, UDaily/Diamond Challenge, World Scholar's Cup
+school write-ups, GençBizz national press coverage) and are marked `RIGHTS_REVIEW_REQUIRED`;
+others (pure online/written-submission competitions with no physical event — most of the essay
+competitions) are reasoned to have no photo to find at all, which is itself a resolved state, not
+a gap, and is noted as such per record rather than left ambiguous.
+
+**Time-critical flag for whoever reviews next**: The Marshall Society Essay Competition's deadline
+is **2026-08-30 — 4 days from this checkpoint.** If this record is going to reach a student in
+time to be useful, it needs review priority over everything else in this batch. Wharton Global HS
+Investment Competition's deadline (2026-09-11, 19 days out) is the second most time-sensitive, and
+per cr1's CR1-155 the team-of-4-6-plus-teacher requirement — now confirmed independently this
+session too — needs to reach a student well before that date, not after.
+
+**Next**: cross-review S6-A's STEM-side records per the Contract's mandated pairing once both
+lanes report substantial batches; possible further new-candidate search in architecture/film
+(both still thin per the baseline doc — 120 Hours is the only architecture row in the whole
+corpus and its audience-fit is itself unresolved; film has zero rows found in either the baseline
+or the seed PDF); assess whether continuing past this checkpoint's ~28 records is warranted given
+the CEO's explicit depth-over-volume steer for an already-saturated category, or whether to move
+toward HANDOFF.md.
