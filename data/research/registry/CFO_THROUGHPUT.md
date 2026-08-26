@@ -9,47 +9,63 @@ backlogs/misallocations only. Cross-reference: `GAP_MAP.md` (CEO's coverage/cont
 `CONTROL_TOWER_REPORT_*.md` (CEO's consolidated fleet report). On a 5-minute recurring check
 (`/loop`, per founder instruction).
 
-## Checkpoint 12 — 2026-08-26, freeze day 1, ~12:50 (T+~3h40min from fleet dispatch)
+## Checkpoint 13 — 2026-08-26, freeze day 1, ~13:00 (T+~3h50min from fleet dispatch)
 
-### Steady real progress, review loop still working
+### S8's long-running pass finished — high-quality real output, exactly the review loop working
 
-S5A batch6 (+2), S5B batch4 (+3 strong candidates, and — worth noting as a good sign, not a
-gap — **1 confirmed do-not-add**, i.e. real rejection discipline, not just accumulation). S7
-reopened briefly to directly browser-verify UWC Türkiye and Zonta (both upgraded as a result) —
-consistent with the S8-finds → S7-fixes loop that's been working all session, not a sign S7's
-closeout was premature. Live-harm rows re-verified again: all 5 unchanged.
+The 41-record subagent from checkpoints 11-12 returned. Full independent re-verification of
+S7's 67-record Wave 1: **29 PRODUCTION_READY, 21 VERIFIED, 3 REJECTED, 0 BLOCKED** (of 53
+actually checked this pass — 41/41 VERIFIED-tier plus a 12-record CANDIDATE sample). Method
+held to standard throughout: live re-fetch of the official source for every record, no
+file-content-only passes.
 
-### S8: 63 minutes since last push — not re-pinging, applying my own checkpoint-11 lesson
+**The 3 rejections are worth knowing about, not just counting**: The Curieux Review's own
+peer-review claim was reversed (record said the venue avoids "peer review" language; the live
+page uses the phrase twice — narrow fix, one field). Türkiye Öğrenci Meclisi appears genuinely
+defunct — its founding 2004 directive was repealed in 2019 per two independent Turkish news
+sources, and its last remaining regulatory hook was repealed 28 July 2026, one month before this
+research, independently confirmed via direct browser render of the primary notice. S8 flagged
+provincial-successor uncertainty honestly rather than guessing either way. Blue Marble Review
+(pre-flagged, included for tally completeness).
 
-Got a full, clear explanation one tick ago (long-running 41-record verification subagent, no
-ETA, correctly not polled mid-run). Nothing has changed that would make re-asking now anything
-but a repeat of the same question with a less patient tone. Holding until either the subagent's
-completion notification surfaces or a materially longer gap (not just one more tick) passes.
+**A real, generalizable pattern, not just three isolated misses**: 4 of the 41 VERIFIED records
+(~10%) had a materially wrong or conflated `cost`/`cost_notes` figure while every other field
+checked out — Concord Review's print price sourcing was backwards, John Locke conflated two
+different fees (a $10 late-*registration* fee vs. a £25/£75 extension fee), Polyphony Lit
+overclaimed "all submissions free" when three seasonal contests charge past 200 entries. Worth
+S7/S8 treating `cost` fields as a standing extra-scrutiny category going forward, not something
+for me to re-litigate here — already in S8's own published report for the fleet to act on.
 
-### CEO: two consecutive status-check nudges now unanswered — noting, not alarmed
+Since none of S7's 67 records are live/production yet (contract: dry-run only), this is the
+system catching real defects before they could ever reach a student, not a live-harm item —
+noting it as a quality-loop success, not escalating.
 
-~30 minutes since the first "have you heard back" check, ~10 since the follow-up "are you stuck
-on something else." Neither has drawn a reply, which is a genuine change from CEO's pattern all
-session (every other message got a response within minutes). Most likely explanation: heads-down
-on the consolidated report the founder asked for, or genuinely still waiting with nothing new to
-say. Not treating this as broken — CEO set a correct, deliberate bar (direct founder
-confirmation only) and going quiet while waiting on that is consistent, not alarming on its own.
-Flagging the pattern explicitly for the founder's own visibility rather than pinging a third
-time with no new information to add.
+### Also active this tick: S6-B started the opportunity-photo pass CEO assigned
 
-### Still open: 5-row fix, Stockholm Water Prize, FRC/FIRST duplicate pair
+Checkpoint 1: 4 verified photos + 4 confirmed no-candidate, on their own 69 records. Reasonable
+early pace for a cold-start category.
 
-All three genuinely blocked on the same founder decision, no movement this tick.
+### Unchanged: 5-row fix, CEO silence, live-harm rows
+
+All 5 rows re-verified again: unchanged. CEO: still no reply to either status-check nudge
+(~40 minutes and ~20 minutes respectively) — not pinging a third time with nothing new to add,
+per checkpoint 12's own reasoning. Continuing to note the pattern for founder visibility rather
+than repeat the ask.
 
 ### Reallocation
 
-None forced.
+None forced. Fleet capacity looks well-utilized this tick: two research lanes producing
+(S5A/S5B), one closed-but-active-on-photos (S6), one closed-and-under-QA (S7), QA itself
+productive (S8), university-photo lanes presumably still auditing (S1-S4, no new pushes but no
+stated blockers either).
 
 ### Open items
 
-1. 5-row fix + 2 related defects — pending CEO's direct founder confirmation.
+1. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO's direct founder
+   confirmation, unchanged.
 2. `turkey_student_access` / `selectivity_evidence` still have no live columns.
-3. Opportunity-photo schema gap (confirmed genuinely zero, checkpoint 10) — not urgent tonight.
+3. Opportunity-photo schema gap — not urgent tonight, S6 already producing verified candidates
+   against it regardless of the schema question.
 
 ## How these numbers were produced (re-run to refresh)
 
@@ -70,4 +86,4 @@ where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f7
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-26 ~12:50.
+`origin`, 2026-08-26 ~13:00.
