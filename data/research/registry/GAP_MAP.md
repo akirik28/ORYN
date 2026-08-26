@@ -78,11 +78,22 @@ metric_code in the UI needs a small, explicit code change** (add it to those two
 when promotion actually happens — not a migration, but not silently automatic either. No founder
 action needed for S1-S4 to keep working now.
 
-**New flag from S8, unconfirmed pending their own re-check**: of the 194 `official`-sourced
-images, S8's first pass found no captured `primary_image_license` on that subset. If that holds,
-§10 requires those be marked `RIGHTS_REVIEW_REQUIRED`, not silently treated as fine because
-`status='official'`. S8-B is verifying the exact count before this is asserted as fact — treat
-as **provisional** until S8 confirms.
+**CONFIRMED 2026-08-26 ~11:40, no longer provisional**: 0 of 194 `official`-sourced images have
+any captured usage right — 100%, control-checked against the wikimedia path (which does capture
+license reliably) to rule out a query artifact. All 194 are `RIGHTS_REVIEW_REQUIRED` per §10
+until someone establishes usage rights.
+
+**Bigger finding underneath it, from S8's Track B (20 images visually inspected, non-overlapping
+with S3's 3)**: `status='official'` is not a reliable photo-quality signal at all — 3-4 of 7
+`official` rows are a flat logo/crest/mascot image, not campus photography. `wikimedia_verified`
+fared much better: 13 of 13 inspected passed clean. Combined with S3's earlier 2/3 failure (23
+total non-overlapping spot-checks across two independent lanes), the pattern is: **don't treat
+`official`-status rows as photo-ready without a human visual check; `wikimedia_verified` can be
+leaned on with lighter-touch spot-checking.** Prioritize S1-S4 audit effort on `official`-tagged
+rows first. Also confirmed: the `needs_review` gate is purely dimensional (resolution/aspect-
+ratio only) — a real campus photo (King Faisal University) sits stuck there over an 8%-narrow
+width shortfall while a real logo (Alfaisal) slipped past it into `needs_review` by accident, not
+by any content check. Don't fully trust `needs_review` either direction without looking.
 
 **Minor denominator note**: S8 independently measured against 1,019 total university rows (901
 touched / 118 none) rather than 1,010 *canonical* rows (901 touched / 109 none) used elsewhere in
@@ -152,6 +163,51 @@ not `opportunities`), a dedicated Turkey-opportunities pass (2026-08-21, 24 reco
 national-route resolution for 6 flagship olympiads. Asia (beyond a few named competitions) and
 "Online/year-round, geography-agnostic" as an explicit opportunity shape are both thin on
 first read — not yet quantified.
+
+## S8's QA gate — first full pass complete, 2026-08-26 ~11:40
+
+Both tracks pushed to `oryn/s8-qa-gate` (`bdd7dce`): `data/research/qa/s8_qa_track_a_2026-08-26.md`
+(facts/eligibility/currentness, 459 lines) and `s8_qa_track_b_2026-08-26.md` (images/duplicates/
+link-integrity, 453 lines). This is the first checkpoint with findings on the **live, real-user
+harm surface**, not just research/coverage gaps — escalated to the founder directly rather than
+held for an end-of-week rollup. Summary (full citations in S8's own docs):
+
+**7 live defects on the actual 203-row recommendation surface (real students, right now):**
+İTÜ Lise Yaz Okulu 2026 (cycle_status wrongly "upcoming," deadline 41 days past) · Özyeğin Summer
+Research Program (cycle_status contradicts its own description — the same institution-banner
+conflict CR1 flagged 3 days ago, still unreconciled) · Istanbul Bilgi University Summer School
+(deadline 14+ months stale, still `verified_current`) · Interlochen Review (CR1's proposed
+recategorize+close fix from 2026-08-23/24 never applied) · JEI/THIMUN/InvestIN (all three have
+live-confirmed real mandatory fees; DB shows `cost=null` on all three — THIMUN's is a quotable
+€340+/person).
+
+**Broader punch list (Browse-surface, not the harm-surface 7)**: 1 fully-dead record (both URLs
+404, UWC Short Courses) + 5 more 404s + 1 reproducibly-unreliable (522 ×3, Genç UPSHIFT); CJSJ's
+domain still doesn't resolve (flagged 2026-08-24, never fixed); 5 unresolved duplicate clusters
+(Belin-Blank SSTP, UCSB Research Mentorship, Lehigh, Phillips Exeter, Sabancı Summer School — same
+disable-the-weaker-row fix already proven on 8 others); `opportunities.official_url` has no
+unique constraint (schema note, not urgent — 3 of 11 URL-collision clusters found were legitimate
+one-URL-many-programs cases a naive constraint would wrongly block). Lower-priority, still open:
+HMMT deadline null, AMC-AIME wrong/merged official_url, Stockholm Water Prize wrong-entity — all
+three flagged in the 2026-08-23/24 corpus and never fixed.
+
+**Process-integrity finding, worth a standing convention**: `GAP_CLOSURE_5RECORD_DRYRUN_2026-08-
+24.md` and `TUBITAK_6OLYMPIAD_DRYRUN_2026-08-24.md` both still read "awaiting review" in their own
+closing lines, but all 11 proposed records were actually written to production hours before
+either file was saved — nearly caused this very audit to wrongly report already-shipped work as
+a gap. Recommend a one-line `APPLIED [timestamp]` stamp convention on every dry-run doc once its
+proposals are promoted, going forward.
+
+**Also worth knowing — reassuring, not just bad news**: the BU/SAIC duplicate-row fixes and
+Mathworks/Fordham URL fixes from the prior corpus are all confirmed still holding. The harder
+eligibility/citizenship/age judgment calls (Breakthrough Junior Challenge, Wharton, Coca-Cola
+Scholars, TechGirls) all checked out accurate on live re-fetch. The real defect surface clusters
+narrowly around **stale Turkish-institution banners and missing fee amounts**, not the
+higher-stakes eligibility category — worth knowing precisely rather than reading this as "the
+corpus is broadly untrustworthy."
+
+S8 has no write access to `opportunities`/`university_profile_metrics` (correct, by design) — all
+of the above is routed to the founder for a promotion decision, not applied by any research lane.
 
 ## Known operational risk, not yet urgent (flagged by S1, recording so it isn't lost)
 
