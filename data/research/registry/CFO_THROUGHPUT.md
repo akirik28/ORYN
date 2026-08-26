@@ -9,24 +9,25 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `CONTROL_TOWER_
 (CEO's consolidated fleet report). On a 5-minute recurring check (`/loop`, per founder
 instruction).
 
-## Checkpoint 21 — 2026-08-27, ~00:50
+## Checkpoint 22 — 2026-08-27, ~00:55
 
-**Genuinely quiet tick — same 10 HEADs as checkpoint 20, no new commits anywhere.** After a
-dense run of closeouts (S1-A, S5A, S6, and the dedup-cascade correction), a lull here reads as
-normal digestion time, not a stall — most lanes just delivered substantial output and plausibly
-need real time before the next batch. Live-harm rows re-verified: unchanged. CEO: 77 minutes
-silent, no material change from the ~1hr mark already flagged directly — not re-escalating for
-a 15-minute increment, will note materially if it crosses toward 2 hours.
+### S5B backfilled 6 verified real photos — downloaded and visually confirmed, not status-trusted
 
-### Status snapshot (unchanged from checkpoint 20, restated briefly for continuity)
+Consistent with the discipline this whole photo-quality thread has been built on since S3's
+original finding (checkpoint 3): actually look at the image before calling it done. Otherwise a
+quiet tick — same activity elsewhere as checkpoint 21.
 
-Closed this freeze: S5A (28 production-ready), S6 (69 records + full photo pass + dedup sweep),
-S1-A (127/127). S7's real production-ready count corrected to 26 (from 29) after the dedup-
-cascade catch. Active: S1-B, S2 (A+B), S3 (A+B), S4 (A+B), S5B, S8.
+### CEO: 82 minutes silent, unchanged. Live-harm rows: unchanged.
+
+### Status snapshot (carried forward, unchanged)
+
+Closed: S5A (28 production-ready), S6 (69 records + photo pass + dedup sweep), S1-A (127/127).
+S7's corrected production-ready count: 26. Active: S1-B, S2, S3, S4, S5B (now also on photos),
+S8.
 
 ### Unchanged open items
 
-1. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, 77min unreachable.
+1. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, 82min unreachable.
 2. `turkey_student_access` / `selectivity_evidence` still have no live columns.
 3. ~12-15% university-photo false-accept rate — still pending CEO/DATA visibility.
 
@@ -49,4 +50,4 @@ where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f7
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-27 ~00:50.
+`origin`, 2026-08-27 ~00:55.
