@@ -573,3 +573,74 @@ photo-status regrade files and S6-B's two follow-up files), `claims_s6a.jsonl` (
    category. If more competitions volume is wanted later, film and architecture remain genuinely
    thin (S6-B's Key Gaps), and a further environment/medicine pass was flagged as not exhaustive
    by S6-A.
+
+---
+
+## S6 Orchestrator — LANE CLOSE-OUT, 2026-08-27 (photo pass + cross-category dedup sweep)
+
+Both lanes completed a full photo-sourcing pass (assigned by S9 as follow-on work — no other lane
+covers opportunity images) plus a cross-category dedup sweep (prompted by S10/CFO relaying an S8
+finding: a dedup check scoped to one's own category can miss an entity already live under a
+*different* one). Both are now genuinely closed out — this is the final update to this document.
+
+### PHOTO PASS — final counts (62 photo-verification entries across 69 records)
+
+| Outcome | Count |
+|---|---:|
+| Real open-license/explicitly-permitted photo found, browser-verified | 9 |
+| Real photo found, `RIGHTS_REVIEW_REQUIRED` (all-rights-reserved or unconfirmed license) | 8 |
+| `NOT_YET_RESOLVED` — a specific lead identified but not yet fully chased down | 14 |
+| `NO_CANDIDATE_FOUND` — genuine search, honest negative (many are legitimately online-only, no event to photograph) | 29 |
+
+**Every entry was visually confirmed via the Browser pane before being marked verified** — per
+S9's explicit "actually look at it, don't trust a caption" standard, both lanes screenshot the
+candidate before setting `correct_entity_verified`/`no_logo_verified`. One entry was correctly
+**declined despite being technically licensed**: a GENIUS Olympiad candidate turned out to be a
+named minor's personal portrait, not an event photo — S6-A flagged and excluded it rather than
+use a technically-available image that both misrepresents the competition and raises its own
+concern. The clean open-license set (Wikimedia Commons, mostly CC BY-SA 4.0, one public domain)
+covers 5 of the 6 flagship olympiads (IMO, IChO, IPhO — specifically depicting Team Türkiye —
+IBO, IOI), Stockholm Junior Water Prize, iGEM HS, and Marshall Society's host institution.
+A real, mid-session **cross-tab interference defect** in the shared Browser pane (screenshots
+occasionally landing on the wrong session's tab) was independently caught by both lanes — S6-B
+first, then S6-A independently before even receiving the relay — and both re-verified their
+highest-value claims afterward on a fresh tab. No claim in the final set rests on a
+possibly-contaminated screenshot.
+
+### CROSS-CATEGORY DEDUP SWEEP — one real hit, resolved as genuinely distinct
+
+S10/CFO relayed an S8 finding (from a sibling lane, S5B) that a category-scoped dedup check can
+miss an entity already live under a different category — exactly the shape of check my own
+baseline doc never ran, since it only queried `category='competition'`. Checked all 6 of this
+lane's genuinely net-new proposals against the full `opportunities` table, no category filter:
+
+- **GençBizz (S6B-0026) vs. a live row "GençBizzTech"** (`5d5a5f4d`, `category='entrepreneurship'`,
+  `active`/`verified_current`) — the one real hit. **Resolved as genuinely distinct sibling
+  programmes, not a duplicate**, verified directly against both organizations' own pages: the
+  parent foundation's own site (gencbasari.org) lists GençBizz and GençBizzTech as two separate
+  programmes among four parallel tracks; GençBizzTech's own homepage restricts eligibility to
+  *state science high school students specifically* (GençBizz is open to any MEB-protocol
+  school); different domain, different named co-sponsor (İş Bankası, GençBizzTech only), and
+  different named 2026 national-final winners (Quareka vs. LABORATUV-AR) confirm two separate
+  competition cycles, not one event counted twice. The shared GEN-E (Latvia) endpoint that
+  created the conflation risk is explained by both being sibling JA Türkiye programmes feeding
+  the same larger JA Europe festival. `S6B-0026` stands as originally proposed; the sibling
+  relationship is now documented on the record so nobody merges the two later on the strength of
+  the shared foundation name alone.
+- **The other 5 net-new proposals** (Jane Austen Society Essay Contest, Columbia Undergraduate
+  Law Review HS Essay Contest, Harvard Political Review Essay Competition, Eurasian Schools
+  Debating Championship, Dunedin Film Festival) — checked against the full table, **zero hits**.
+  One near-miss correctly avoided: Columbia University runs several unrelated pre-college
+  programs already live in the corpus; none were conflated with the Law Review's essay contest.
+
+**Worth generalizing, not just noting here**: this lane's own baseline/dedup methodology (query
+scoped to the assigned category) was itself an instance of the exact blind spot S5B found
+elsewhere. Any future research lane inheriting this baseline-doc pattern should run its final
+dedup pass against the full `opportunities` table, not just its own category, before treating a
+"genuinely new" finding as confirmed.
+
+### LANE STATUS: CLOSED
+
+Both S6-A and S6-B report standing by for S9's next assignment. This document, `TRACKER.md`, and
+`EXISTING_COMPETITION_BASELINE.md` together are the complete record of this lane's work. All
+commits pushed to `oryn/s6-competitions-research`.
