@@ -462,3 +462,72 @@ which was correct under the bar I was applying at the time but is now stale.
 `data/research/opportunities/s6b_photo_status_regrade.jsonl` (new), `data/research/registry/
 claims_s6b.jsonl` (6 new lines appended across this follow-up), this TRACKER.md entry. Reporting
 back to the orchestrator directly, not S6-A, per instruction.
+
+---
+
+## S6-B (Business/Humanities/Creative) — 2026-08-26, photo-sourcing/verification pass (checkpoint 1)
+
+**New assignment from the fleet CEO**, responding to the "0/69 photo gap" noted in the
+orchestrator's final synthesis: a dedicated photo-sourcing/verification pass on S6-B's own 33
+records, using the Browser pane to actually look at candidate images (not caption/filename alone)
+before confirming `correct_entity_verified`/`no_logo_verified`. Dry-run only, no production
+writes. Checkpoint 1 covers 8 of 33 records — the priority list the CEO specified (the 4
+self-graded `PRODUCTION_READY` records, plus Wharton/Diamond Challenge/World Scholar's Cup/Marshall
+Society, all of which already had a candidate source identified).
+
+**Result: 4 confirmed `NO_CANDIDATE_FOUND`, 4 found and visually verified.**
+
+**Confirmed `NO_CANDIDATE_FOUND` (genuine, bounded searches, not exhaustive hunting)**: Blackstone
+Law Review Junior Division, Harvard Crimson Global Essay Competition, and Princeton Ten-Minute
+Play Contest — all confirmed to have no physical/live event by construction (closed-universe essay
+format, fully virtual competition, and privately-judged script submission respectively). The
+Concord Review/Emerson Prize turned up a historical 2004 ceremony (Horace Mann School) but nothing
+current — not treating a 20-year-old event as a usable current photo. All four match `mode=online`
+and their photo status was already correctly reasoned as resolved-absent in the prior regrade; this
+pass converts that reasoning into an actual documented search attempt per record.
+
+**Found and visually verified, via the Browser pane**:
+- **Marshall Society** — a fresh, targeted Wikimedia Commons search (as the CEO specifically
+  requested) found "Sidgwick Site - Faculty of Economics," a genuine campus courtyard photo of the
+  Faculty of Economics building at Cambridge, **CC BY-SA 2.0** — a real open license, the strongest
+  rights outcome of this whole pass. Honestly labeled as a host-institution photo, not the Society
+  or a Society event, per the same discipline already applied once before on this exact record
+  (declining to substitute the adjacent Law Faculty building).
+- **Wharton Investment Competition** — the Wharton Global Youth Program's own article on the 2025
+  Global Finale carries three real, named-photographer-credited event photos (a team group shot
+  plus two individual student presentation photos with captions naming the students). Visually
+  confirmed one directly: a student presenting at a podium with a finance-themed slide behind him,
+  no dominant logo.
+- **Diamond Challenge** — UDaily's (University of Delaware's own news outlet) 2024 Summit coverage
+  has a genuine crowd photo of finalist students at Clayton Hall, named photographer credit,
+  visually confirmed via screenshot.
+- **World Scholar's Cup** — MEF International Schools Istanbul's own post has a real photo of
+  students on stage at a Team Debate round (screen reads "That teenagers make good diplomats").
+  Visually confirmed. Dated 21/12/2018 — honestly flagged as not-recent rather than implied current.
+  Doubles as visual corroboration of this lane's original Turkish-participation finding for this
+  record.
+
+All four found photos are marked `rights_status=RIGHTS_REVIEW_REQUIRED` (institutional/commissioned
+photography, named photographers, no open license found) except Marshall Society's genuinely open
+CC BY-SA 2.0 license.
+
+**Significant environmental finding, worth flagging beyond just this record set**: this Browser
+pane session experienced repeated, thematically-consistent cross-tab interference — `screenshot`
+and `computer` input actions intermittently landed on unrelated STEM/Olympiad content (IMO, IChO,
+IPhO, IBO tabs I never created) despite specifying this session's own `tabId`, strongly suggesting
+a shared underlying browser window/process across concurrent agent sessions (almost certainly
+S6-A's own parallel photo-sourcing pass, running at the same time). `read_page` and `get_page_text`
+consistently and correctly respected `tabId` throughout and were used as the primary, reliable
+verification tools; `screenshot` was made reliable by explicitly calling `tabs_select` to front the
+target tab immediately before every screenshot attempt — this pattern worked consistently once
+adopted. Flagging this so S6-A (or whoever runs Browser-pane-dependent work next in this fleet)
+isn't caught by surprise by the same issue, and so a future session knows the `tabs_select`-before-
+`screenshot` workaround.
+
+**Files this checkpoint**: `data/research/opportunities/s6b_photo_pass_batch1.jsonl` (8 records),
+`data/research/registry/claims_s6b.jsonl` (8 new lines appended), this TRACKER.md entry.
+
+**Not yet covered this pass**: the remaining 25 of 33 records (IPO, BSPEE, GençBizz's already-
+identified candidate, Conrad Challenge, YIS Stock Pitch, IPPF, IEO, Stockholm Junior Water Prize,
+International Greenwich Olympiad, and others without a source yet identified). Reporting back to
+the CEO now per instruction to checkpoint rather than push through all 33 in one pass.
