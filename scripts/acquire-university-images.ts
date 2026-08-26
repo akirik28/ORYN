@@ -429,6 +429,14 @@ async function main(): Promise<void> {
   const only = onlyIndex >= 0 ? argv[onlyIndex + 1] : null;
   const limitIndex = argv.indexOf("--limit");
   const limit = limitIndex >= 0 ? Number(argv[limitIndex + 1]) : null;
+  // 1-based inclusive position range over the id-ascending live-university list, e.g.
+  // "--range 760-1010". Added for the research-freeze fleet's quarter-sharding (S1-S4, one
+  // quarter of the canonical registry each) so each shard is defined by *position in this
+  // script's own id.asc ordering* rather than a separately-invented boundary — the same
+  // ordering the rest of this file already uses for supersession/dedup lookups, so two shards
+  // computed this way cannot disagree about where the registry's boundary falls.
+  const rangeIndex = argv.indexOf("--range");
+  const rangeArg = rangeIndex >= 0 ? argv[rangeIndex + 1] : null;
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const secretKey = process.env.SUPABASE_SECRET_KEY;
@@ -486,6 +494,18 @@ async function main(): Promise<void> {
   for (const r of existingChecksums) if (r.value_text) checksumOwner.set(r.value_text, r.university_id);
 
   let targetSet = liveUniversities;
+  if (rangeArg) {
+    const match = /^(\d+)-(\d+)$/.exec(rangeArg);
+    if (!match) {
+      console.error(`--range must look like "760-1010" (1-based, inclusive), got "${rangeArg}".`);
+      process.exitCode = 1;
+      return;
+    }
+    const start = Number(match[1]);
+    const end = Number(match[2]);
+    targetSet = targetSet.slice(start - 1, end);
+    console.log(`--range ${rangeArg}: ${targetSet.length} universities (positions ${start}-${end} of ${liveUniversities.length} live, id.asc order).`);
+  }
   if (only) targetSet = targetSet.filter((u) => u.name.toLowerCase().includes(only.toLowerCase()));
   else if (pilotOnly) targetSet = targetSet.filter((u) => PILOT_PATTERNS.some((p) => u.name.toLowerCase().includes(p.toLowerCase())));
   if (limit && Number.isFinite(limit)) targetSet = targetSet.slice(0, limit);
