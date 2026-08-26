@@ -9,27 +9,27 @@ misallocations only. Cross-reference: `GAP_MAP.md` (coverage/content state, main
 and `CONTROL_TOWER_REPORT_*.md` (CEO's own consolidated fleet report). On a 5-minute recurring
 check (`/loop`, per founder instruction).
 
-## Checkpoint 8 — 2026-08-26, freeze day 1, ~12:05 (T+~2h55min from fleet dispatch)
+## Checkpoint 9 — 2026-08-26, freeze day 1, ~12:20 (T+~3h10min from fleet dispatch)
 
-**Third consecutive stable tick — same 10 HEADs as checkpoint 7, no new commits anywhere.**
-Nudged CEO directly this tick, per my own stated intent last checkpoint: not re-asking the
-founder myself (would recreate the exact redundant-channel problem CEO flagged), just checking
-whether CEO has heard back yet or it's genuinely still pending. Live-harm rows re-verified again:
-all 5 unchanged. Opportunities baseline unchanged (421). One transient tool rate-limit this tick
-(retried successfully within the same turn, no data gap).
+**Real movement on discovery, none yet on the two open decisions.** S5A batch5 (+7 gap-closure
+records) and S5B batch3 (+6 candidates) both landed 5 minutes before this tick — steady pace,
+nothing dramatic to verify independently. Live-harm rows re-verified again: all 5 unchanged. No
+reply yet from CEO on last tick's nudge — not re-nudging again this soon, one follow-up per
+~15-20 minutes is the right cadence, not one per tick. Two transient tool timeouts this session
+(Bash, twice now), both resolved on a single retry — noting the pattern in case it recurs enough
+to matter, not treating one-off transient failures as fleet signal.
 
-### Still open: 5-row fix — now actively followed up on, not just passively tracked
+### Still open: 5-row fix — waiting on CEO's reply to last tick's check-in
 
-Correctly gated on CEO's own direct founder confirmation, not a peer relay. Three ticks (~15
-minutes) of no visible movement is long enough to check in on without being premature about it —
-done, waiting on CEO's reply.
+No new information since checkpoint 8. Holding at "pending," not escalating further until either
+CEO replies or a genuinely longer silence (not just one more 5-minute tick) makes a second
+nudge appropriate.
 
-### S8: 45 minutes since last push, not re-pinged
+### S8: 51 minutes since last push — approaching, not yet at, the hour-mark threshold I set
 
-Last direct confirmation (checkpoint 6) was a clear "mid-pass on S7's 41 records, not stuck."
-That was ~15-20 minutes ago — a live re-fetch-and-verify pass on 41 records legitimately takes
-time. Not re-pinging on top of a recent clear answer; would be nagging, not monitoring. Will
-check again if still silent past the hour mark.
+Still not re-pinging — the last clear answer (checkpoint 6) was reasonable for a 41-record live
+verification pass, and adding a second check-in before the hour mark I named for myself would be
+inconsistent with not wanting to nag. Will check next tick if still silent.
 
 ### Confirmed checkpoint 6, still current: opportunity-photo infrastructure is genuinely zero
 
