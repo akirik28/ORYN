@@ -19,10 +19,22 @@
 Of the 126: 96 had an existing `campus.webp` in the pre-freeze acquisition pipeline
 (Supabase Storage, `university-images` bucket); all 96 were downloaded and visually
 inspected (not just status-checked) against the real/correct-entity/no-logo standard.
-**37 of those 96 failed the visual audit** and were replaced with a fresh Wikimedia
+**20 of those 96 failed the visual audit** and were replaced with a fresh Wikimedia
 Commons find. The remaining 30 had no existing photo and were sourced fresh from
 Commons directly. 3 fresh searches (existing photo absent or failed) turned up nothing
 usable after a reasonable search and are honestly `NOT_FOUND`.
+
+**Correction 2026-08-27 (orchestrator/S3):** this section originally read "37 of those 96
+failed" — verified against the actual committed output two independent ways (grep for this
+doc's own `AUDIT_FAIL` note-tag: 20 matches; comparing each record's final `image_url`
+against the manifest's `existing_campus_photo_url` for all 96 `has_existing_campus_photo`
+records: 75 kept / 21 changed, of which 20 are genuine audit failures and 1 is the UNLP
+cross-shard relocation, not a failure). The correct figure is **20/96 (20.8%)**, which
+brings this in line with S3-B's 12/92 (13.0%), S1's 12/82 (14.6%), and S4's ~13/88 (~14.8%)
+instead of sitting as a 3x outlier. The underlying 126 records and the "worth surfacing"
+list below are unaffected — this was a summary-count error, not a data error. The agent
+that produced this doc had already completed and its session could not be resumed to make
+this fix itself, so it's applied directly here rather than left uncorrected.
 
 ## Why 75 records are `RIGHTS_REVIEW_REQUIRED`/`CANDIDATE` rather than `VERIFIED`
 
