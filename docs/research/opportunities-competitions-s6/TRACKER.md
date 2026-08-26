@@ -200,3 +200,48 @@ highest-value records (TÜBİTAK 2204-A/2202, AMC, HMMT, Breakthrough), then HAN
 CEO's depth-over-volume steer and the strength of this batch (32 well-evidenced records, several
 with genuinely time-critical fixes), assessing real saturation is now a live question for the next
 checkpoint rather than pushing toward the nominal ~90-record share.
+
+---
+
+## S6-A (STEM) — 2026-08-26 checkpoint 3 (session close)
+
+**Deliverable**: `s6a_medicine_robotics_other.jsonl` (S6A-0033–0036, 4 records). Running total:
+**36 records** (S6A-0001–0036).
+
+**HOSA (S6A-0033)**: resolved cr1's open question with a definitive fresh check — Türkiye is
+confirmed NOT among HOSA's 57 chartered associations (checked the full published list today). This
+converts a "genuinely unknown" from 3 days ago into a resolved `ELIGIBLE_WITH_CONDITIONS` (the
+condition being: a Turkish school would need to found a new chapter from scratch).
+
+**FRC Türkiye (S6A-0036)**: the strongest single find of this closing batch. Confirmed
+frcturkiye.org (Fikret Yüksel Foundation) as a currently-active, well-structured Turkish national
+FRC organizer — 8 regional competitions across Türkiye, March-April 2026, ages 14-18/grades 9-12.
+This also resolves the open duplicate-pair question the baseline doc flagged (`FIRST Robotics
+Competition` db25d327 active vs `FRC (FIRST® Robotics Competition)` dfb94075 under_review) — FRC
+IS the standard abbreviation for FIRST Robotics Competition, almost certainly the same underlying
+competition; flagging for DATA/CEO to merge rather than writing a third, separate record.
+
+**Microsoft Imagine Cup Junior (S6A-0035)**: fresh check supports the live DB's existing
+`discontinued`/`conflicting` flag rather than contradicting it — the seed PDF's own cited URL
+(category/34) now shows only the general adult Imagine Cup, no Junior content found anywhere.
+
+**Image-sourcing pass**: attempted on the 2 highest-value records (TÜBİTAK 2204-A via a TÜBİTAK
+Bilim Genç award-announcement page; AMC via its Wikipedia article) — both genuine negative results
+(only generic stock photos / no images at all), recorded so the next researcher doesn't re-check
+the same dead ends. Given the volume of well-evidenced factual work in this session and the
+photo requirement's own note that no `image_url` column exists yet (proposal field only, not
+blocking a future migration), did not exhaustively image-search all 36 records — this is the one
+genuine gap across the batch and is named honestly in the handoff rather than papered over.
+
+**Session assessment against the CEO's depth-over-volume steer**: 36 records is well below the
+nominal ~90-record share, and that is a deliberate choice, not a shortfall. The category was
+already 101 rows deep with real structural gaps (missing Turkey-access data, wrong URLs, deadline-
+ownership errors, one entirely-missing national infrastructure layer) rather than missing rows —
+the CEO's own gap map said exactly this before I started. 36 genuinely fresh-verified, evidence-
+cited records (2 major net-new government-run competitions, 6 Turkey-access enrichments on
+already-live flagship olympiads, 5 net-new university math tournaments, and 23 corrections/
+enrichments to existing live rows including 3 records with sub-30-day deadlines that were
+previously missing critical data) represents real depth. Stopping here rather than padding toward
+90 with thinner finds, per Contract §13.
+
+**Proceeding to write HANDOFF.md** — STEM research pass for this session considered complete.
