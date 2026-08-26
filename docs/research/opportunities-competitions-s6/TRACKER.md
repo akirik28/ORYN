@@ -310,3 +310,79 @@ opinion on 1-2 of S6-A's held-back STEM items if time allows; S6-A gives a docum
 opinion on S6-B's two flagged "closer call" judgments (Blue Ocean Competition, 120 Hours) and
 re-grades its own in-person-competition records' photo status per the ruling above. Both report
 back to the orchestrator, not each other directly, to avoid a third HANDOFF.md write race.
+
+---
+
+## S6-A (STEM) — 2026-08-26, bounded follow-up (photo regrade + second opinions)
+
+**Task 1 complete — photo-status regrade.** Went through all 28 self-graded `PRODUCTION_READY`
+records and applied the orchestrator's ruling mechanically: used each record's own already-
+researched `mode` field (established during original research, not a new determination) as the
+objective test — `mode` containing "in-person" or "hybrid" (with a real in-person component) =
+photo plausibly exists somewhere, `NOT_YET_RESOLVED` blocks promotion; `mode` = "online" with no
+physical gathering = legitimately resolved-absent, does not block promotion.
+
+**Result**: 20 of 28 regraded from `PRODUCTION_READY` to `VERIFIED` (TÜBİTAK 2204-A, TÜBİTAK 2202,
+IMO, IBO, IChO, IPhO, IOI, IOAI, AMC, HMMT, Waterloo, CMIMC, BMT in-person, GENIUS Olympiad,
+EUCYS, Brain Bee, FIRST Global Challenge, Stockholm Junior Water Prize, HOSA, FRC Türkiye) — every
+one has a real in-person/ceremonial component per its own `mode` field. **8 correctly remain
+`PRODUCTION_READY`** with photo legitimately resolved-absent: USACO, Purple Comet, BmMT, SMT
+Online, Breakthrough Junior Challenge, Nat Geo Slingshot, IEnvO (all genuinely online/video-
+submission, no gathering to photograph) plus Microsoft Imagine Cup Junior as a distinct special
+case (the record's substance is "this competition no longer runs," so photo applicability is moot
+rather than resolved-absent in the online-competition sense — flagged as a different reason, not
+conflated with the other 7). Written as append-only corrections in
+`s6a_photo_status_regrade.jsonl` (21 lines: 20 individual regrades + 1 summary note) and mirrored
+as new status lines in `claims_s6a.jsonl` (20 new lines, `PRODUCTION_READY` → `VERIFIED`) — no
+original lines rewritten in either file.
+
+**This lane's honest self-graded count is now**: 8 `PRODUCTION_READY` / 28 `VERIFIED` / 1
+`BLOCKED` (IYPT) = 36 unique records, unchanged total, corrected grading. Per Contract §11 and the
+orchestrator's own point, none of the 8 are FORMALLY `PRODUCTION_READY` until second-agent/S8
+review passes — flagging that this 8 is still a self-grade, not a closed number.
+
+**Task 2 complete — second opinions on S6-B's two flagged closer calls.**
+
+**Blue Ocean Competition (S6B's record, `cb4a1030`)**: S6-B classified `VERIFIED_ELIGIBLE` at
+"medium-high" confidence from the FAQ's own phrase "high school students around the world,"
+explicitly self-flagging it as a closer call than most of their batch. **My read**: this is
+genuinely borderline, and applying the exact bar I used on my own similarly-shaped records — I
+held Technovation Girls, Nat Geo Slingshot's "expanded globally," and Earth Prize's 160-vs-169-
+country claims all to `ELIGIBLE_WITH_CONDITIONS` or `UNCLEAR` specifically because "X students
+around the world" / "expanded globally" framing is descriptive audience-positioning language, not
+a dedicated eligibility RULE naming a condition or a registration mechanism (contrast with SMT
+Online, where the eligibility sentence sits in a dedicated "who can register" answer AND names the
+actual mechanism for international participants: "as long as they are able to take the tests in
+PDT time"). Blue Ocean's FAQ phrase has neither a named condition nor a stated mechanism for a
+non-US entrant. **I would have landed one notch more conservative — `ELIGIBLE_WITH_CONDITIONS`,
+not `VERIFIED_ELIGIBLE`** — for internal consistency across the whole S6 corpus, not because I
+think S6-B's reasoning is unsound; their own "medium-high not top-tier" self-grading shows they
+already saw the same tension. Documented as a difference of calibration on a genuinely close call,
+not an error — S6-B's record, S6-B's call to revise or not.
+
+**120 Hours (S6B's record, live row `345f64dd-f6f4-4f29-9341-75743c39a7d1`, S6-B's proposal in
+`s6b_turkey_and_mixed_batch1.jsonl`)**: attempted one
+more direct source per the orchestrator's invitation. Re-fetched 120hours.no's homepage (WebFetch),
+tried `/faq` directly (WebFetch: 404 — same result S6-B got), then independently confirmed the
+same 404 via the Browser pane (not just a WebFetch-specific limit), and read the rendered homepage
+in full via the browser (screenshot + page text) — confirms the site's real footer nav shows
+`Information` / `Terms and conditions` / `FAQ` as items but the underlying `/faq` route itself does
+not resolve; did not have time within this bounded task to work out the site's actual client-side
+routing to reach that content by another path. **The ambiguity is NOT resolved.** Rendering the
+documented opinion the task allows for instead: S6-B's own quoted operator eligibility text is "you
+must be affiliated to a university or a school on student level" — read plainly, a high school
+*is* "a school," and a high schooler *is* a student "at student level," so the operator's own
+words plausibly already include high schoolers without needing the third-party gloss at all. The
+countervailing evidence (ArchDaily/Bustler/Competitions.archi consistently framing it as an
+architecture/design-student competition) may simply reflect who typically enters rather than a
+hard restriction — professional architecture-competition aggregators would naturally describe the
+typical entrant, not necessarily the full eligibility rule. **My lean is that high-school
+eligibility is more likely than not**, but I agree with S6-B's decision to hold at
+`ELIGIBLE_WITH_CONDITIONS` rather than `VERIFIED_ELIGIBLE` given the operator's own primary
+eligibility/FAQ page could not be independently confirmed by either of us — this is exactly the
+kind of case where the conservative reading is the right one to publish even if a more permissive
+reading is plausible.
+
+**Files this follow-up**: `data/research/opportunities/s6a_photo_status_regrade.jsonl` (new),
+`data/research/registry/claims_s6a.jsonl` (20 new lines appended), this TRACKER.md entry.
+Reporting back to the orchestrator directly, not S6-B, per instruction.
