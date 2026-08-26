@@ -11,11 +11,12 @@ instruction).
 
 ## Checkpoint 18 — 2026-08-27, ~00:25
 
-### S1, S2, S4 all confirmed active, not stalled — and a real, triangulated finding emerges
+### All four photo shards (S1-S4) confirmed active, not stalled
 
-All three replied to this tick's direct check with substantial, high-quality output — the
-2-hour git silence was genuinely long visual-audit work (per-university image download-and-view,
-not a quick metadata check), same shape as S8's earlier false alarm.
+All replied to this tick's direct check with substantial, high-quality output — the 2-hour git
+silence was genuinely long visual-audit work (per-university image download-and-view, not a
+quick metadata check), same shape as S8's earlier false alarm. S3: sub-agents at 96/126 and
+77/127, both healthy, no blockers.
 
 **The finding, now backed by three independent samples totaling ~263 records**: the existing
 pipeline's own "already accepted" bucket (`official`/`wikimedia_verified`/`verified` status) has
