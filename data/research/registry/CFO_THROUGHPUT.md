@@ -9,27 +9,28 @@ misallocations only. Cross-reference: `GAP_MAP.md` (coverage/content state, main
 and `CONTROL_TOWER_REPORT_*.md` (CEO's own consolidated fleet report). On a 5-minute recurring
 check (`/loop`, per founder instruction).
 
-## Checkpoint 9 — 2026-08-26, freeze day 1, ~12:20 (T+~3h10min from fleet dispatch)
+## Checkpoint 10 — 2026-08-26, freeze day 1, ~12:30 (T+~3h20min from fleet dispatch)
 
-**Real movement on discovery, none yet on the two open decisions.** S5A batch5 (+7 gap-closure
-records) and S5B batch3 (+6 candidates) both landed 5 minutes before this tick — steady pace,
-nothing dramatic to verify independently. Live-harm rows re-verified again: all 5 unchanged. No
-reply yet from CEO on last tick's nudge — not re-nudging again this soon, one follow-up per
-~15-20 minutes is the right cadence, not one per tick. Two transient tool timeouts this session
-(Bash, twice now), both resolved on a single retry — noting the pattern in case it recurs enough
-to matter, not treating one-off transient failures as fleet signal.
+**A second full lane closed: S7 done, 77 reviewed records, 0 cross-lane duplicates.** Pushed
+20 seconds before this tick's fetch. Final accounting: 47 VERIFIED+Turkey-access-resolved ready
+for S8's sign-off, 30 CANDIDATE/UNCLEAR, 112 rejected + 1 note. S7 explicitly did its own dedup
+sweep against both the live DB and ~110 pre-existing uncommitted research files before starting
+(listed by name in its claim doc) — no Wave 3 requested, considers itself complete pending S8.
+S5A (+7) and S5B (+6, "two of the strongest finds" per their own commit message, not yet
+independently reviewed by me — that's S8's job, not mine to pre-judge) both still producing at a
+steady pace. Live-harm rows re-verified again: all 5 unchanged, still nothing from CEO on last
+tick's nudge — holding off a second nudge for now (10 minutes since the first; my own stated
+cadence is 15-20 minutes between follow-ups, not every tick).
 
-### Still open: 5-row fix — waiting on CEO's reply to last tick's check-in
+### S8's real backlog is now two fully-closed lanes plus two in-progress ones
 
-No new information since checkpoint 8. Holding at "pending," not escalating further until either
-CEO replies or a genuinely longer silence (not just one more 5-minute tick) makes a second
-nudge appropriate.
+S6 (69, closed) and S7 (77, closed, 47 explicitly ready for sign-off) are both formally done and
+waiting. S5A/S5B continue producing. **54 minutes since S8's last push** — close to, not yet at,
+the hour-mark I set for myself as the next check-in trigger. Given two full lanes are now
+stacked waiting on S8 specifically, this is worth watching closely next tick rather than treating
+the hour-mark as an arbitrary line I won't move up if warranted — but not there yet, holding.
 
-### S8: 51 minutes since last push — approaching, not yet at, the hour-mark threshold I set
-
-Still not re-pinging — the last clear answer (checkpoint 6) was reasonable for a 41-record live
-verification pass, and adding a second check-in before the hour mark I named for myself would be
-inconsistent with not wanting to nag. Will check next tick if still silent.
+### Still open: 5-row fix — no new information
 
 ### Confirmed checkpoint 6, still current: opportunity-photo infrastructure is genuinely zero
 
