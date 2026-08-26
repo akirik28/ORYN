@@ -3,83 +3,67 @@
 **Maintained by: CFO (S10, capacity/throughput/bottleneck control).** Rewritten in place at
 each checkpoint, not appended to — prior checkpoints live in this file's own git history
 (`git log -p -- data/research/registry/CFO_THROUGHPUT.md` on `oryn/research-freeze-cfo-
-throughput`), not stacked below. I do not research opportunity facts, source photos, alter
-records, or override evidence — this file tracks fleet capacity and flags backlogs/
-misallocations only. Cross-reference: `GAP_MAP.md` (coverage/content state, maintained by CEO)
-and `CONTROL_TOWER_REPORT_*.md` (CEO's own consolidated fleet report). On a 5-minute recurring
-check (`/loop`, per founder instruction).
+throughput`), never stacked below in the live file. (Two ticks in a row I drifted from this —
+Edit-inserted a new section above the old one instead of replacing it. Fixed both times by
+consolidating with a full rewrite. Noting the pattern here so it doesn't happen a third time:
+default to reading the current file and replacing its checkpoint section wholesale, not
+Edit-prepending.) I do not research opportunity facts, source photos, alter records, or
+override evidence — this file tracks fleet capacity and flags backlogs/misallocations only.
+Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `CONTROL_TOWER_REPORT_*.md`
+(CEO's consolidated fleet report). On a 5-minute recurring check (`/loop`, per founder
+instruction).
 
-## Checkpoint 10 — 2026-08-26, freeze day 1, ~12:30 (T+~3h20min from fleet dispatch)
+## Checkpoint 11 — 2026-08-26, freeze day 1, ~12:40 (T+~3h30min from fleet dispatch)
 
-**A second full lane closed: S7 done, 77 reviewed records, 0 cross-lane duplicates.** Pushed
-20 seconds before this tick's fetch. Final accounting: 47 VERIFIED+Turkey-access-resolved ready
-for S8's sign-off, 30 CANDIDATE/UNCLEAR, 112 rejected + 1 note. S7 explicitly did its own dedup
-sweep against both the live DB and ~110 pre-existing uncommitted research files before starting
-(listed by name in its claim doc) — no Wave 3 requested, considers itself complete pending S8.
-S5A (+7) and S5B (+6, "two of the strongest finds" per their own commit message, not yet
-independently reviewed by me — that's S8's job, not mine to pre-judge) both still producing at a
-steady pace. Live-harm rows re-verified again: all 5 unchanged, still nothing from CEO on last
-tick's nudge — holding off a second nudge for now (10 minutes since the first; my own stated
-cadence is 15-20 minutes between follow-ups, not every tick).
+### Self-correction: S8 was never behind, and S6 was never S8's backlog
 
-### S8's real backlog is now two fully-closed lanes plus two in-progress ones
+Checked in directly with S8 rather than keep extrapolating from push-silence, and my checkpoint
+10 read was wrong. Actual picture, from S8 themselves: **S6's 69 records were already reviewed
+and reported to CEO** (confirms/closes 2 of S8's own earlier Track A defects, no new problems
+beyond S6's own internal cross-review) — I had inferred "closed lane = backlog for S8" without
+checking, and that inference was wrong. The one long-running thread is a live fact-verification
+subagent on S7's 41 `VERIFIED`-tier records, still going with no ETA — S8 correctly doesn't poll
+it mid-run and will know exactly when it returns via completion notification. Sized against
+S8's own precedent (Track A: ~26min/73 tool calls for 38 records; this one is 41 records plus a
+Turkey-access dimension), a longer runtime isn't surprising on its own. S7 Wave 2's just-landed
+77-total delta is noted, folding in once the current pass returns. S5A/S5B got a light spot-check
+(good quality on a small sample), full pass deliberately deferred while they're still producing.
 
-S6 (69, closed) and S7 (77, closed, 47 explicitly ready for sign-off) are both formally done and
-waiting. S5A/S5B continue producing. **54 minutes since S8's last push** — close to, not yet at,
-the hour-mark I set for myself as the next check-in trigger. Given two full lanes are now
-stacked waiting on S8 specifically, this is worth watching closely next tick rather than treating
-the hour-mark as an arbitrary line I won't move up if warranted — but not there yet, holding.
+**Standing lesson for this role**: "minutes since last push" is a proxy for throughput, not a
+measurement of it, especially for a review-type function where the real output is a decision,
+not a commit. Checking directly beats extrapolating from git activity alone — apply this before
+flagging silence as backlog again, not just this once.
 
-### Still open: 5-row fix — no new information
+### Still open: 5-row fix
 
-### Confirmed checkpoint 6, still current: opportunity-photo infrastructure is genuinely zero
+Pinged CEO a second time after ~20 minutes of silence on the first check-in — status-only, not
+pressure on the actual decision, which is genuinely the founder's timing to set. No new
+information as of this tick. Same for the two lower-stakes items riding on the same
+write-authority blocker: Stockholm Water Prize (wrong-entity, live) and the FRC/FIRST duplicate
+pair — worth bundling into the same founder decision rather than three separate asks.
 
-CEO's S6 closeout surfaced 0/69 competition records with any image; checked myself —
-`opportunities` has no image-adjacent column and no EAV-sibling table (unlike `universities`,
-which had a hidden `university_profile_metrics` table). Real cold start, confirmed not assumed,
-fleet-wide (~421 rows). CEO assigned S6 (freed up after closing) to a bounded photo-sourcing
-pass on their own 69 — reasonable, reusing domain context already built.
+### Recent context still current (fuller detail in git history, commit `9f6d4cb` and earlier)
 
-### Confirmed checkpoint 6, still current: S8 not blocked, real routing gap found and fixed
-
-S8's 31-minute silence resolved as mid-pass, not stuck (live fact-verification on S7's 41
-`VERIFIED` records, on top of resolving all 8 of S7's previously-blocked URLs and catching 2 real
-content errors already fixed on S7's branch). Real finding: S8 had only received a handoff from
-S7, nothing routed from S5/S6, and was about to spend time searching rather than being told
-directly — sent exact branch/file paths, avoiding duplicate-search cost across two sessions.
-
-### S6 full closeout detail (69 records, depth over volume, genuine saturation)
-
-12 self-graded production-ready, 45 verified, 6 ready-for-review, 2 candidate, 2 rejected, 2
-blocked — deliberately stopped short of a nominal ~180 share since competition is already 24% of
-the corpus alone. Key finds: **GençBizz** (26-edition, government-protocol, 81-province Turkish
-entrepreneurship competition, absent from the prior corpus entirely, found via Turkish-language
-search) and a **second affiliation-inflation instance** (UniHive, after Blackstone — CEO flagged
-for a later cross-category sweep, agreed). Two known live defects re-confirmed but still unfixed
-(Stockholm Water Prize wrong-entity, FRC/FIRST duplicate pair) — same write-authority blocker as
-the 5-row item, not new research gaps.
-
-### Backlog read
-
-S8's real workload is now precisely scoped: S7's 41 records mid-review, S6's 69 closed records
-just handed off, S5A/S5B's combined batches still unrouted until S8 reaches them. A real,
-sizeable queue — worth watching whether S8 needs a second reviewer, not calling for that yet on
-one tick of data.
+- **Opportunity-photo infrastructure confirmed genuinely zero** (checked directly: no column,
+  no EAV-sibling table, unlike universities) — fleet-wide, ~421 rows. CEO assigned S6 (freed up
+  after closing) to a bounded photo-sourcing pass on their own 69, reusing domain context.
+- **S6 closeout**: 69 records, 12 self-graded production-ready, 45 verified. Found GençBizz
+  (26-edition Turkish entrepreneurship competition, absent from the prior corpus entirely) and a
+  second affiliation-inflation instance (UniHive, after Blackstone — flagged for a later
+  cross-category sweep).
+- **S7 closeout**: 77 reviewed records, 47 ready for S8 sign-off, 0 cross-lane duplicates,
+  explicit dedup sweep against ~110 pre-existing uncommitted research files before starting.
 
 ### Reallocation
 
-S6 → opportunity-photo sourcing (CEO's call, agree). Otherwise none forced.
+None forced. S6 → opportunity-photos (CEO's call, agree) is the only live reallocation.
 
 ### Open items
 
-1. 5-row fix — pending CEO's direct founder confirmation. Two consecutive stable ticks with no
-   movement on this specifically; a third would be worth a direct nudge rather than passive
-   waiting.
-2. Stockholm Water Prize + FRC/FIRST duplicate pair — same write-authority blocker as #1, worth
-   bundling into the same founder decision rather than three separate asks.
+1. 5-row fix — pending CEO's direct founder confirmation, now with a status-check nudge in.
+2. Stockholm Water Prize + FRC/FIRST duplicate pair — same blocker as #1, bundle together.
 3. `turkey_student_access` / `selectivity_evidence` still have no live columns.
-4. Opportunity-photo schema — same shape as the university-photo gap: research/verify now,
-   production promotion needs a migration later. Not urgent tonight.
+4. Opportunity-photo schema — same shape as the university-photo gap, not urgent tonight.
 
 ## How these numbers were produced (re-run to refresh)
 
@@ -98,9 +82,6 @@ select id, title, cycle_status, deadline, cost, updated_at from opportunities
 where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f73bf5584e9',
   'd780bc55-41e0-444b-8bcc-3f927b28c4b7','8a7c89e4-e63a-4f64-a76d-4bae1b31e889',
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
-
-select table_name, column_name from information_schema.columns
-where table_schema='public' and (column_name ilike '%image%' or column_name ilike '%photo%');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-26 ~11:50.
+`origin`, 2026-08-26 ~12:40.
