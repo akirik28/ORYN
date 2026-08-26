@@ -172,14 +172,39 @@ link-integrity, 453 lines). This is the first checkpoint with findings on the **
 harm surface**, not just research/coverage gaps — escalated to the founder directly rather than
 held for an end-of-week rollup. Summary (full citations in S8's own docs):
 
-**7 live defects on the actual 203-row recommendation surface (real students, right now):**
-İTÜ Lise Yaz Okulu 2026 (cycle_status wrongly "upcoming," deadline 41 days past) · Özyeğin Summer
-Research Program (cycle_status contradicts its own description — the same institution-banner
-conflict CR1 flagged 3 days ago, still unreconciled) · Istanbul Bilgi University Summer School
-(deadline 14+ months stale, still `verified_current`) · Interlochen Review (CR1's proposed
-recategorize+close fix from 2026-08-23/24 never applied) · JEI/THIMUN/InvestIN (all three have
-live-confirmed real mandatory fees; DB shows `cost=null` on all three — THIMUN's is a quotable
-€340+/person).
+**5 live defects on the actual recommendation surface (real students, right now) — corrected
+2026-08-26 ~12:10.** Originally reported as 7; S8 caught their own error before it reached
+anyone consequential (re-verifying for the founder-bound copy-paste list, they found their
+subagent's completion summary didn't match its own underlying evidence for 2 of the 7).
+**Interlochen Review and JEI are Browse-only** (`unverified`/`under_review`, same tier as HMMT/
+AMC/Stockholm Water Prize below) — not on the real harm surface, removed. All 5 remaining
+independently re-verified via direct SQL immediately before this write, each with a row id and
+a live-refetch citation:
+
+1. **İTÜ Lise Yaz Okulu 2026** (`973b3bdd-59c2-4e99-a76b-2006b365d63a`) — `cycle_status=
+   "upcoming"`, deadline `2026-07-16` is 41 days past today. Institution's own page still shows
+   "SON KAYIT: 16 TEMMUZ," matching our stored deadline exactly — `cycle_status` was simply never
+   updated once it passed. Should read `closed`/`historical`.
+2. **Özyeğin University Summer Research Program** (`2f0e0301-5dd4-4d25-91a4-8f73bf5584e9`) —
+   `cycle_status="closed"` directly contradicts our own `description` ("2026 applications are
+   open"). Live re-fetch today: the institution's own banner still reads "APPLICATIONS FOR 2026
+   ARE NOW OPENED!" — needs human reconciliation (stale banner vs. genuinely rolling admission),
+   not a simple flip. Same conflict flagged 2026-08-23, still untouched.
+3. **Istanbul Bilgi University High School Summer School** (`d780bc55-41e0-444b-8bcc-
+   3f927b28c4b7`) — `deadline=2025-06-12` (14+ months stale) on a row marked `verified_current`.
+   The row's own `description` already hedges this ("no 2026 dates/pricing published") but the
+   structured `deadline` field doesn't reflect that hedge — anything reading `deadline` directly
+   sees a year-plus-old date presented as current.
+4. **THIMUN The Hague Conference** (`960dcf4d-322c-4e72-8c99-0a1d3368b2ea`) — `cost=null`;
+   live re-fetch confirms €340.00/person plus €190.00/school delegation fee (pre-payment packages
+   €1,210–€5,290). Separate issue on the same row: registration is school-routed ("only students
+   from participating schools can apply for an individual student position"), not stated anywhere
+   in the description.
+5. **InvestIN — Immersive Career Experiences** (`8a7c89e4-e63a-4f64-a76d-4bae1b31e889`) —
+   `cost=null`; not free — exact figure not yet pinned down, but the program's own dedicated
+   "Scholarship Scheme" is strong evidence of a paid model (a financial-aid mechanism wouldn't
+   exist for a genuinely free program). Recommend "confirmed non-free, figure pending" rather
+   than a blank unknown.
 
 **Broader punch list (Browse-surface, not the harm-surface 7)**: 1 fully-dead record (both URLs
 404, UWC Short Courses) + 5 more 404s + 1 reproducibly-unreliable (522 ×3, Genç UPSHIFT); CJSJ's
