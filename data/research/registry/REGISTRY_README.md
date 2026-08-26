@@ -1,0 +1,116 @@
+# ORYN Research Freeze — Claim / Coverage Registry
+
+**Owner of this mechanism: CEO (control tower).** This file and its companion ledger exist so
+S1-S8 workers never research the same canonical entity twice and so gaps are visible in one
+place instead of scattered across chat. CEO maintains the consolidated view; CEO does not
+research records, source photos, or edit evidence.
+
+## Why append-only, per-worker shard files
+
+Eleven-plus sessions are running concurrently. A single shared file that everyone edits in
+place is a guaranteed conflict generator. Instead:
+
+1. **Each worker owns exactly one shard file**: `claims_<owner_agent>.jsonl` in this directory
+   (e.g. `claims_oryn-88.jsonl`). Append-only — one JSON object per line, never rewrite a
+   previous line. If a record's status changes, append a NEW line with the same `research_id`
+   and the updated `status`/`last_activity` — the ledger is a log, not a table.
+2. **CEO alone regenerates `MASTER_REGISTRY.jsonl`** (the consolidated, deduplicated,
+   latest-status-per-`research_id` view) by scanning every `claims_*.jsonl` shard. Workers
+   should treat `MASTER_REGISTRY.jsonl` as read-only and re-pull it before claiming new
+   candidates, but write their own claims only to their own shard.
+3. This mirrors the convention already proven in this repo (`cr1_*.jsonl`, `summer_*.jsonl`,
+   `turkey_*.jsonl`, `de_nl_*.jsonl` — one prefix per lane in a shared directory).
+
+## Before you research any candidate
+
+1. Pull latest: `git -C <your worktree> fetch origin oryn/research-freeze-ceo-control-tower && git show origin/oryn/research-freeze-ceo-control-tower:data/research/registry/MASTER_REGISTRY.jsonl`
+   (or just read the file if you're on a branch that has merged it).
+2. Check the **live DB directly** too — the registry tracks in-flight research; the DB is the
+   ground truth for what's already `PRODUCTION_READY`. A candidate can be absent from the
+   registry but already live (shipped by a prior session, e.g. the 2026-08-23/24 overnight
+   corpus — see "Prior coverage" below).
+3. Normalize the candidate name (strip year suffixes, resolve organizer/official domain) before
+   checking — "X Competition 2026" and "X Competition" are the same canonical entity unless
+   materially different (separate application, eligibility, or outcome).
+4. If found (anywhere: registry, DB, or a prior handoff doc) — do not re-research. If it's
+   assigned to a different S-category, hand off rather than duplicate (see Common Operating
+   Contract, "Category Ownership").
+5. If genuinely new — append a `CLAIMED` line to your own shard, then proceed.
+
+## Schema (one JSON object per line)
+
+```json
+{
+  "research_id":        "S6-0001",
+  "canonical_candidate": "International Chemistry Olympiad (IChO)",
+  "entity_type":        "opportunity",
+  "category":           "competition",
+  "subcategory":        "science_olympiad",
+  "owner_server":       "local-machine-1",
+  "owner_agent":        "oryn-88",
+  "status":             "CLAIMED",
+  "official_domain":    "ichosc.org",
+  "claimed_at":         "2026-08-26T09:00:00Z",
+  "last_activity":      "2026-08-26T09:00:00Z",
+  "turkey_access":      "UNCLEAR",
+  "duplicate_of":       null,
+  "notes":              ""
+}
+```
+
+`entity_type`: `opportunity` | `university_photo` | `opportunity_photo` | `university_fact`
+(only use this ledger for photos and net-new opportunity/fact candidates — routine field-level
+research on an already-`PRODUCTION_READY` row doesn't need its own `research_id`, just note it
+in your own handoff).
+
+`status` (per Common Operating Contract §11, extended with the two working states from the
+CEO brief):
+`UNCLAIMED -> CLAIMED -> RESEARCHING -> READY_FOR_REVIEW -> VERIFIED -> PRODUCTION_READY`,
+or `BLOCKED` / `REJECTED` at any point. `duplicate_of` set + status `REJECTED` for confirmed dupes.
+
+`research_id` prefix = your category slot (S1-S4 photos, S5 summer/precollege/research/
+internships, S6 competitions, S7 scholarships/awards/publications/leadership/online/Türkiye-
+global, S8 QA). Number sequentially within your own shard; global uniqueness comes from the
+`S<n>-####` prefix + your `owner_agent` id, so two workers in the same slot should also put
+their agent id in the id, e.g. `S6-oryn88-0001`, to avoid collision if more than one session
+ever shares a slot.
+
+## Prior coverage — read before claiming S5/S6/S7 candidates
+
+A full overnight multi-agent research pass ran **2026-08-23 -> 2026-08-24**, before this
+week's freeze, covering exactly the S5 (summer/precollege/research/internships) and S6
+(competitions) categories in significant depth. It is **not yet reflected in this registry**
+(CEO is backfilling summary entries now) but it is real, already-live-in-production in large
+part, and re-researching it from scratch would be wasted capacity. Read these first:
+
+- `data/research/opportunities/cr1_2026-08-23_TRACKER.md` — competitions/olympiads + research
+  category. 100+ records researched, **11 written to production** including all 6 TÜBİTAK-route
+  flagship olympiads (IMO/IBO/IChO/IPhO/IOI/IOAI) with verified Türkiye national routes.
+- `data/research/opportunities/summer_CHECKPOINT_2026-08-23.md` — summer/pre-college programmes.
+  390+ findings, 200+ dry-run proposals, ~150 active rows individually verified.
+- `docs/handoffs/ceo-morning-report-2026-08-24.md` — consolidated summary of what got written to
+  production that night, plus one **still-open founder decision** (write-ownership on
+  `opportunities*`) worth checking hasn't recurred with this week's larger fleet.
+- Both files above are still **uncommitted in the primary checkout** as of this freeze's start
+  (2026-08-26) — verify they're still there / ask CEO before assuming they've been lost or
+  superseded.
+
+**Practical read for S5/S6/S7 this week**: treat competitions+research+summer as
+*deepen-and-fill-gaps*, not *start from zero*. S7 (scholarships/awards/publications/leadership/
+online/Türkiye-global) has comparatively little prior coverage — the overnight corpus was
+scoped to only two of the four S5-S7 categories.
+
+**S1-S4 (university photos)**: zero prior coverage confirmed (no `image_url`-equivalent column
+exists in `universities` or `opportunities`, no prior data/docs found anywhere in the repo as of
+2026-08-26). This is genuinely greenfield — no dedup risk against prior work, but also no schema
+to write into yet. Photo `research_id`s in this ledger track *candidate images found and
+verified*, pending a schema decision (CEO will raise this as a founder question if S1-S4
+confirms real production-ready volume — research lanes cannot create migrations themselves per
+the Common Operating Contract).
+
+## Non-negotiables (from the Common Operating Contract, restated here for this mechanism)
+
+- No production writes from any S1-S8 worker. Dry-run proposals only; CEO/DATA promotes.
+- `UNCLEAR` Turkey-access and `RIGHTS_REVIEW_REQUIRED` images are not `PRODUCTION_READY`.
+- Do not count duplicates, ineligible, unclear, historical, or missing-second-review records
+  toward any coverage target.
