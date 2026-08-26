@@ -9,20 +9,29 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `CONTROL_TOWER_
 (CEO's consolidated fleet report). On a 5-minute recurring check (`/loop`, per founder
 instruction).
 
-## Checkpoint 29 — 2026-08-27, ~01:30
+## Checkpoint 30 — 2026-08-27, ~01:35
 
-**No change since checkpoint 28.** Still 2 peers (S8, CEO); S1/S2/S3/S4 have not returned.
-Recovered work from checkpoint 27 remains safely committed. No reply yet from CEO on the
-incident report (~10 minutes since sent — not yet long enough to read into, distinct from CEO's
-separate ~2h25min silence on the 5-row item, which remains the longer-running concern). Live-
-harm rows re-verified: unchanged.
+### Checked in with S8 — the fleet is down to 2 sessions, its health matters more now
 
-### Open items (unchanged)
+77 minutes since S8's last push, with the fleet reduced to just S8 and CEO after the S1/S2/S4
+incident. Not assuming anything's wrong (S8 has a clean track record of long, legitimate silent
+stretches during real review work), but the stakes of S8 specifically going quiet are higher
+now than they were with a fuller fleet — pinged directly rather than continuing to assume based
+on precedent alone. No reply yet as of this checkpoint.
 
-1. S1/S2/S4 session loss — awaiting CEO/founder decision on resuming. Recovered work safe.
-2. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, ~2h25min unreachable.
-3. `turkey_student_access` / `selectivity_evidence` still have no live columns.
-4. ~12-15% university-photo false-accept rate — still pending CEO/DATA visibility.
+### Otherwise unchanged
+
+Still 2 peers in `ListAgents`. S1/S2/S3/S4 have not returned. No reply from CEO on either the
+incident report or the original 5-row check-ins. Live-harm rows re-verified: unchanged.
+Recovered work from checkpoint 27 remains safely committed.
+
+### Open items
+
+1. S8 status — pinged this tick, awaiting reply.
+2. S1/S2/S4 session loss — awaiting CEO/founder decision on resuming. Recovered work safe.
+3. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, ~2h30min unreachable.
+4. `turkey_student_access` / `selectivity_evidence` still have no live columns.
+5. ~12-15% university-photo false-accept rate — still pending CEO/DATA visibility.
 
 ## How these numbers were produced (re-run to refresh)
 
@@ -43,4 +52,4 @@ where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f7
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-27 ~01:30.
+`origin`, 2026-08-27 ~01:35.
