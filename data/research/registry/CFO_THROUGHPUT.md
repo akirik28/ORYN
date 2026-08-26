@@ -23,7 +23,11 @@ neither I nor CEO had done before writing anything down. Result: University of B
 is a stone entrance sign dominated by the institution's own crest/wordmark (an outright
 Common Operating Contract §10 reject), Stanford's is a generic graduation-crowd photo with
 nothing identifiably Stanford in it (unverifiable identity), and only Heidelberg (1 of 3)
-looked genuinely compliant. I independently confirmed the quantitative substrate directly
+looked genuinely compliant. **Update**: S3's full-shard audit has since turned up a third,
+differently-shaped defect (a color-graded photo of the wrong building) — three distinct failure
+modes now confirmed (wrong-entity-dominant, generic-unidentifiable, wrong-building), which
+argues against treating any of them as a one-off fluke worth a quick patch; this is a real,
+recurring category of defect the "accepted" bucket needs genuine per-photo review to catch. I independently confirmed the quantitative substrate directly
 against `storage.objects` (721 `campus.webp` + 338 `logo.webp` = 1,059 total objects, matching
 the metrics-table "accepted" count exactly) — so the *count* was never wrong. What was wrong
 was my own chat-message shorthand ("901/1010 already resolved... don't start from zero"),
@@ -68,7 +72,7 @@ is fully closed, not just downgraded.
 | CEO | oryn-e2 | Control tower — registry, gap-map, founder escalations | ACTIVE | Registry + gap-map pushed and corrected twice (`b72b77f`, `044d324`) |
 | S1 | oryn-c8 | University photos, ids 1-253 | ACTIVE, researching | 0 new — recon (177 candidate/52 needs_review/24 no_candidate); converged on S4's `--range` tool after the boundary near-miss |
 | S2 | oryn-c0 | University photos, ids 254-506 | ACTIVE, researching | 0 new — recon (177 accepted/47 needs_review/29 none); self-reported the boundary root cause to CEO |
-| S3 | oryn-85 | University photos, ids 507-759 (rn 506-757 by their own count — worth a 1-row confirm against S4's canonical split, not yet urgent) | ACTIVE — was heads-down verifying before reporting, not blocked | 0 new; the Bristol/Stanford/Heidelberg spot-check above is this shard's real output so far, and it's a genuine, valuable one |
+| S3 | oryn-85 | University photos, ids 507-759 (boundary confirmed exact — see below) | ACTIVE — was heads-down verifying before reporting, not blocked | 0 new; the Bristol/Stanford/Heidelberg spot-check (now a 3rd instance found mid-audit) is this shard's real output so far, and it's a genuine, valuable one |
 | S4 | oryn-88 | University photos, ids 760-1010 | ACTIVE, researching | 0 new — recon; authored the shared `--range` flag now used fleet-wide; running a structural audit across all 1,010 in parallel with its own shard's work |
 | S5 | oryn-83 | Turkey-accessible academic opportunities — S5A summer/pre-college/enrichment, S5B research/mentored-research/internships | ACTIVE, dispatched | 0 — confirmed prior overnight corpus is additive not duplicate before starting |
 | S6 | oryn-71 | Competitions — S6-A STEM, S6-B business/humanities/creative | ACTIVE, dispatching | 0 new — baseline 101 existing rows, ~89 reusable never-applied candidates identified from the 2026-08-23/24 corpus |
@@ -103,12 +107,15 @@ S7-favoring directive; (c) whether S8's backlog builds faster than it clears onc
 
 ### Open items
 
-1. S3's own shard-boundary description (rn 506-757) vs. S4's canonical split (507-759) — a
-   2-row difference, not yet confirmed reconciled. Low stakes (both numbers are close, and S3
-   already indicated convergence toward shared tooling) — flagging so it doesn't quietly become
-   a 3rd instance of Finding B if left unchecked.
+1. ~~S3's shard-boundary description vs. S4's canonical split~~ — **closed.** CEO verified S3's
+   docs, registry row, and all 3 worktree manifests now uniformly read 507-759.
 2. `turkey_student_access` / `selectivity_evidence` still have no live columns — every
    `PRODUCTION_READY` claim this week means "ready for DATA/CEO to promote," not "already live."
+3. **Not a fleet/capacity matter, escalated directly to the founder rather than handled here**:
+   an untracked `Claude.pdf` in the checkout root, flagged in CEO's checkpoint-1 report as
+   possibly containing a minor's personal data. Confirmed independently (metadata only,
+   deliberately not opened): real 1-page PDF, 48KB, created 2026-08-18, never committed to git
+   on any branch — no leak has occurred. Founder's call on disposition, not this fleet's.
 
 ## How these numbers were produced (re-run to refresh)
 
