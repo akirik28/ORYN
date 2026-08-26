@@ -135,6 +135,20 @@ resolved by disabling the weaker row, 5 more still unresolved). 362 URLs live-ch
 confirmed **still** broken (never fixed despite being flagged 2026-08-24), Mathworks and Fordham
 confirmed fixed. `opportunities.official_url` has no unique constraint, unlike `university_programs`.
 
+## Methodology note, 2026-08-26 (cross-lane, from S4/S9)
+
+S4's photo-audit lane found its own initial concurrent-HEAD-check burst produced 22 false-positive
+"broken" URLs on `universities` — a connection-limit artifact, not real breaks; a slower
+one-at-a-time recheck found 0. S9 flagged this as relevant since Track B's link sweep used 16-way
+parallel checks. Re-ran the 3 ambiguous "connection failure" URLs from Track B's report myself,
+sequentially with no concurrency at all: all 3 reproduced cleanly (Harvard CURE, Girl Up Club,
+Rockefeller SSRP — see Track B report §6.3 for original detail). Not a concurrency artifact in
+this case — the 404s and the one 522 were never at risk either, since both are genuine server
+responses rather than connection-level failures. Worth keeping as standing practice: a bulk/parallel
+sweep is fine for finding candidates, but any specific "broken" claim that will be acted on should
+get an isolated, sequential re-check before being reported as confirmed, not just repeated at the
+same concurrency level.
+
 ## Standing rules this lane follows
 
 - Never fixes a fact by guessing. A downgrade recommendation always cites the evidence that
