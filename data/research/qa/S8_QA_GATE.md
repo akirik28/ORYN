@@ -75,12 +75,23 @@ Full report: [`s8_qa_track_a_2026-08-26.md`](./s8_qa_track_a_2026-08-26.md). 38 
 (live SQL + live re-fetch on every verdict, none pattern-matched from a prior doc without
 independent re-check): **17 `PRODUCTION_READY`, 11 `VERIFIED`, 10 `REJECTED`, 0 `BLOCKED`.**
 
-**Most important finding**: 7 of the 10 `REJECTED` rows are on live `status='active' AND
+**Most important finding**: 5 of the 10 `REJECTED` rows are on live `status='active' AND
 verification_state='verified_current'` records — the actual 203-row recommendation harm surface,
 not just Browse. İTÜ Lise Yaz Okulu 2026, Özyeğin Summer Research Program, Istanbul Bilgi
-University Summer School, Interlochen Review, JEI, THIMUN, InvestIN — real students are being
-shown wrong deadlines/cycle status or a false "no cost information" on a confirmed-paid program,
-right now. Reported to S9 for routing to whichever lane can apply the fix.
+University Summer School, THIMUN, InvestIN — real students are being shown wrong deadlines/cycle
+status or a false "no cost information" on a confirmed-paid program, right now. Reported to S9
+for routing to whichever lane can apply the fix, including the exact row ids and citations in a
+copy-paste-ready format for founder escalation.
+
+**Self-correction, logged for the record**: the report originally said 7, naming Interlochen
+Review and JEI alongside the 5 above — sourced from the subagent's own completion summary rather
+than its written file. Before finalizing the founder-bound list, re-verified all 6 candidates
+directly via live SQL and found both are actually `unverified`/`under_review` — Browse-only, not
+harm-surface. Corrected in the source report and re-sent to S9 before it reached the founder in
+the wrong form; S9 confirmed the correction landed in time. Standing lesson for this lane: a
+subagent's own spoken summary is not the artifact — re-check the written file, and for anything
+founder-bound, re-verify the specific claim directly regardless of how well-evidenced the rest of
+the report is.
 
 **Second finding, structural not per-row**: two 2026-08-24 dry-run documents
 (`GAP_CLOSURE_5RECORD_DRYRUN_2026-08-24.md`, `TUBITAK_6OLYMPIAD_DRYRUN_2026-08-24.md`) still read
