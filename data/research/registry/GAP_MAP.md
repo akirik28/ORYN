@@ -234,6 +234,28 @@ corpus is broadly untrustworthy."
 S8 has no write access to `opportunities`/`university_profile_metrics` (correct, by design) — all
 of the above is routed to the founder for a promotion decision, not applied by any research lane.
 
+## S4's full-registry structural audit — third independent confirmation of the rights gap
+
+`docs/research/university-photos-s4/STRUCTURAL_AUDIT.md` on `origin/oryn/s4-university-photos` —
+a DB/HTTP-level pass (not visual) across all 1,010 universities, explicitly scoped for S8/CEO to
+route, not a re-judgment of other shards' work. Clean plumbing confirmed: **zero broken image
+links** across all 714 live `primary_image_url` rows (a first automated pass flagged 22 as dead —
+a connection-burst false alarm, all 22 confirmed HTTP 200 on individual slower recheck — worth
+relaying as a general lesson: verify a "broken link" claim with a slow, one-at-a-time recheck
+before asserting it, concurrent HEAD-check bursts produce false positives), **zero** cross-
+institution checksum collisions, **zero** accepted rows with a missing URL or checksum.
+
+**Sharpens the rights-gap finding, doesn't just repeat it**: license completeness is exactly
+inverted by status — `wikimedia_verified` is **525/525 (100%)** license-complete, `official` is
+**0/194 (0%)** — confirming (a third independent way, after CEO's own count and S8's) that the
+rights gap is a systemic property of the `official` acquisition path specifically, not a random
+per-row gap. Minor, low-priority addition: **17 `wikimedia_verified` rows have a populated
+license but no attribution** (Commons "artist" field empty — likely older/bulk-imported files,
+not an extraction bug): Aarhus, Central South University, Coventry, Florida State, Graz TU,
+KU Leuven, NTHU, Novosibirsk State, Salzburg, Politecnico di Torino, Bucharest, UCLA, Florida,
+Missouri-Columbia, St Andrews, Wisconsin-Madison, Utrecht. Not blocking — flag only if attribution
+is ever surfaced next to the image in-product.
+
 ## Known operational risk, not yet urgent (flagged by S1, recording so it isn't lost)
 
 All S1-S4 work is dry-run/proposal-only right now — no `--apply` runs, per the Common Operating

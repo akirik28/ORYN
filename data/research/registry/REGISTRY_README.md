@@ -127,10 +127,15 @@ still needed before relying on that.
 
 ## S1-S4 canonical shard boundaries (settled 2026-08-26 ~10:30)
 
-1,010 canonical universities, id-ascending, using `scripts/acquire-university-images.ts`'s own
-`--range <start>-<end>` flag (added by S4, reuses the script's existing `order=id.asc`) so all
-four shards derive from one shared, reproducible definition instead of four independent SQL
-queries that could silently drift apart:
+1,010 canonical universities, id-ascending. **Precision correction, 2026-08-26 ~12:20 (S3):** the
+`--range <start>-<end>` flag lives only on S4's own unmerged branch right now, not a tool the
+other three shards actually invoke — describing it as something "S1/S2/S4 standardized on" was
+imprecise. What's actually true, verified directly against all 3 pushed manifests: the
+**ordering** (id-ascending) is genuinely convergent across S1/S2/S3's independently-run queries —
+S1's range ends exactly where S2's begins, S2's ends exactly where S3's corrected range begins.
+So the boundaries hold in practice, just not via one shared invoked script yet. Worth adopting
+S4's flag as the actual shared tool once it merges, rather than relying on independent queries
+continuing to agree:
 
 | Shard | Range | Owner |
 |---|---|---|
