@@ -406,3 +406,170 @@ commit.
    saturating well below the nominal ~90-record share, is a deliberate choice consistent with the
    fleet CEO's own steer — the category is already 84% of the live corpus, and a smaller set of
    genuinely well-evidenced records was judged more valuable than padding toward the target.
+
+---
+
+## S6 Orchestrator — FINAL SYNTHESIS, 2026-08-26
+
+Both lanes' primary passes, both lanes' bounded cross-review follow-ups, and this orchestrator's
+own reconciliation are complete. Counts below are computed directly from
+`data/research/registry/claims_s6a.jsonl` + `claims_s6b.jsonl` (last-status-per-`research_id`,
+append-only ledger — not copied from either lane's own prose summary, which each self-reported
+slightly differently; the ledger is the source of truth).
+
+### STATUS
+
+Lane complete. Both sub-agents finished primary research and a bounded cross-review round;
+orchestrator reconciliation done; escalations sent where the clock mattered.
+
+### ASSIGNED SCOPE
+
+All Turkey-accessible high-school competitions (STEM: S6-A; business/humanities/creative: S6-B)
+for a student currently in Türkiye targeting universities abroad.
+
+### FINAL COUNTS (69 unique research_ids: 36 S6-A + 33 S6-B)
+
+| Status | S6-A | S6-B | Total |
+|---|---:|---:|---:|
+| `PRODUCTION_READY` (self-graded by researching lane) | 8 | 4 | **12** |
+| `VERIFIED` | 27 | 18 | **45** |
+| `READY_FOR_REVIEW` | 0 | 6 | **6** |
+| `CANDIDATE` | 0 | 2 | **2** |
+| `BLOCKED` | 1 | 1 | **2** |
+| `REJECTED` | 0 | 2 | **2** |
+
+**Read the `PRODUCTION_READY` count carefully — it is self-graded, not formally certified.**
+Contract §11 defines `PRODUCTION_READY` as requiring, among other things, **second-agent/S8
+review passed**. A real cross-review did happen this session (below), but it touched specific
+flagged items, not all 12 individually. Treat these 12 as "this lane's strongest, most complete
+records, ready for a promotion decision" rather than "already fully certified" — CEO/DATA/S8
+should make the actual promotion call, this lane cannot self-certify past that bar.
+
+**One entry needs a read, not a promotion**: `S6A-0035` (Microsoft Imagine Cup Junior) is
+self-graded `PRODUCTION_READY` but the underlying finding is **confirmation that the competition
+is discontinued** — matching, not contradicting, the live DB's existing `discontinued`/
+`conflicting` flags. "Production ready" here means "this discontinuation-finding is fully
+evidenced and ready to inform a decision," not "ready to show students as a live opportunity."
+Don't count it toward a live-opportunity total without reading the record.
+
+### CROSS-REVIEW OUTCOMES (the actual second-agent review that happened)
+
+1. **Stockholm Junior Water Prize** (S6A-0030 / S6B-0025) — reviewed both, **no conflict**,
+   independently converged on the same DSİ-routed `ELIGIBLE_WITH_CONDITIONS` finding. Treat
+   S6A-0030 as canonical (more complete fields), S6B-0025 as corroboration.
+2. **The Earth Prize** (S6A-0031 / S6B-0021) — reviewed both, **no conflict**, independently
+   converged on `UNCLEAR` with the same missing-deadline gap and the same 160-vs-169-country
+   discrepancy caught by both. One canonical record needed, not two.
+3. **International Greenwich Olympiad + UniHive Research Proposal Competition — a real gap, not
+   an assumption.** Both already live/`under_review`; both lanes' original assignment named them
+   as "genuinely mixed, the other lane's first look" — confirmed by direct grep that **neither
+   lane had actually researched either one**. Assigned to S6-B as a bounded follow-up:
+   - **IGO** (`1ba4bf99`, now `S6B-0032`): `VERIFIED_ELIGIBLE`, medium-high confidence — real,
+     MILSET-recognized, 53 countries. Caveat: rests on Wikipedia/search-index evidence, not a
+     direct official fetch (igolondon.co.uk 403'd every attempt).
+   - **UniHive** (`55dd21cd`, now `S6B-0033`): held at `UNCLEAR`. **Real finding**: UniHive's own
+     disclaimer states "no formal connection with the University of Cambridge" despite marketing
+     itself with Cambridge-venue framing — the same affiliation-inflation pattern already caught
+     on Blackstone Law Review (Contract §8's provider/host distinction, working as intended).
+4. **PennApps** (`S6A-0016`) — S6-A held it at `VERIFIED` with two open questions (high-school-
+   appropriate? US-only?). S6-B's cross-review directly fetched a source S6-A hadn't reached
+   (2024f.pennapps.com) and found: *"you must be a high school or undergraduate student in the US
+   or abroad to apply"* — closes both questions at once. Applied as an orchestrator-appended
+   upgrade in `claims_s6a.jsonl` (append-only, S6-A's original record untouched) — recommend
+   whoever promotes this record incorporate the fresh evidence.
+5. **Battlecode and IYPT** — S6-B independently re-attempted both and confirmed S6-A's holds are
+   genuine dead ends (Battlecode's non-US high-school eligibility truly isn't published anywhere;
+   IYPT's country list exists only as an unreadable PNG, current-cycle URL 404s), not
+   under-research. No change.
+6. **Blue Ocean Competition — resolved by orchestrator ruling, as flagged to the fleet CEO.**
+   S6-B self-graded `VERIFIED_ELIGIBLE` at "medium-high, not top" confidence from the FAQ's
+   descriptive "high school students around the world" phrasing. S6-A's second opinion: this is
+   the same *descriptive-audience-framing, not a stated rule* shape both lanes correctly treated
+   as insufficient for `VERIFIED_ELIGIBLE` elsewhere in their own batches (Technovation Girls, Nat
+   Geo Slingshot, Earth Prize all held at a lower confidence for the identical reason). **Ruling:
+   read this record's `turkey_student_access` as `UNCLEAR`, not `VERIFIED_ELIGIBLE`, until a
+   stronger source is found** — for corpus-wide consistency, not because the finding is wrong.
+   S6-B's own follow-up already declined to promote it to `PRODUCTION_READY` on exactly this
+   basis, so no live-DB action is affected by this ruling; it only corrects the record's own
+   stored classification field.
+7. **120 Hours** — both lanes independently hit the same dead end (operator's own `/faq` 404s on
+   every attempt). Genuinely unresolved after real effort from both sides; `ELIGIBLE_WITH_
+   CONDITIONS` is the correct, conservative resting state. No further action recommended without
+   a different source (e.g. direct contact with the organizer).
+
+### PHOTO STATUS
+
+**0 of 69 records carry a rights-cleared, sourced image.** This is the single largest gap across
+the whole S6 lane, flagged independently by both original handoffs and unchanged by cross-review.
+A handful have a specific candidate identified with a rights read (GençBizz —
+`RIGHTS_REVIEW_REQUIRED`, all-rights-reserved; a few more `CANDIDATE_IDENTIFIED` with rights
+unverified — Wharton, Diamond Challenge, World Scholar's Cup). No `image_url` column exists in
+the schema yet regardless (confirmed by the fleet CEO — proposal field only). A dedicated
+photo-sourcing pass (Wikimedia Commons for the flagship olympiads and university-hosted
+tournaments in particular — TÜBİTAK's own Bilim Genç galleries, individual olympiad national-
+delegation photo sets) is the highest-leverage next step for converting `VERIFIED` records to
+genuinely complete ones.
+
+### KEY FINDINGS WORTH THE FOUNDER'S ATTENTION BEYOND ANY SINGLE RECORD
+
+1. **TÜBİTAK 2204-A and 2202 were completely absent from production** despite 6 already-live
+   international olympiads silently depending on this national ladder to exist — the single
+   highest-leverage gap either lane closed this week for ORYN's actual core user (S6A-0001/0002).
+2. **GençBizz** — a real, 26-edition, Ministry-of-Education-protocol national Turkish
+   entrepreneurship competition across all 81 provinces — is the closest business-side analogue
+   to TÜBİTAK's role, and did not exist anywhere in the prior corpus or the seed PDF. Found via a
+   dedicated Turkish-language search, per the brief's explicit instruction to look for exactly
+   this shape of record.
+3. **A stronger evidence class than organizer eligibility prose**: S6-B found direct first-party
+   accounts of real Turkish/Istanbul-based schools already competing (Saint Benoît at BSPEE with a
+   prize win; MEF International Schools at World Scholar's Cup's Izmir round, qualifying for
+   Global Rounds) — a school's own record of having competed is stronger evidence than any
+   organizer's "open worldwide" marketing language, and worth other lanes watching for.
+4. **The affiliation-inflation pattern (Contract §8) is real and recurring**, not a one-off:
+   Blackstone Law Review and now UniHive both market a Cambridge/prestige-adjacent framing while
+   explicitly disclaiming formal university affiliation. Worth a dedicated sweep across the wider
+   corpus, not just this category.
+5. **Two known live-DB defects this lane cannot fix (research-only, no write access)**, both
+   re-confirmed multiple times now:
+   - **Stockholm Water Prize** (`c8eb3d40`) is the WRONG entity (a professional career-achievement
+     award) and is still `active`/student-facing, three days after cr1 first flagged it and with
+     the correct youth prize (`17aeb772`) now fully enriched and ready to replace it.
+   - **FRC (`dfb94075`, `under_review`) and FIRST Robotics Competition (`db25d327`, `active`)** —
+     S6-A confirmed FRC is the standard abbreviation for the same competition, plus found a live
+     Turkish national organizer (frcturkiye.org, Fikret Yüksel Foundation, 8 regional events) —
+     recommend merging rather than leaving as two rows.
+
+### TIME-CRITICAL — escalated to S9/CEO separately, repeating here so it isn't lost in a long doc
+
+**Marshall Society Essay Competition**, deadline **2026-08-30 (4 days from this synthesis)**.
+Per this week's overnight-authority protocol, queued as `OWNER REVIEW AFTER RETURN` — not
+executed by this lane or by CEO tonight regardless of the deadline, since it requires a
+production write. Full evidence: `S6B-0001`.
+
+### FILES / COMMITS / BRANCH
+
+All on `oryn/s6-competitions-research`, pushed. 14 JSONL data files (`s6a_*`/`s6b_*`, incl. both
+photo-status regrade files and S6-B's two follow-up files), `claims_s6a.jsonl` (38 lines) +
+`claims_s6b.jsonl` (33 lines) in the registry, this `HANDOFF.md`, `TRACKER.md` (6 dated entries),
+`EXISTING_COMPETITION_BASELINE.md`, `README.md`, plus the `ORYN_WORKSTREAMS.md` claim row.
+
+### WHAT THE NEXT OWNER (CEO/DATA/S8) SHOULD DO
+
+1. Decide promotion for the 12 self-graded `PRODUCTION_READY` records (11 genuine new/enriched
+   opportunities + 1 discontinuation-confirmation — see caveat above) — this lane cannot write to
+   production itself.
+2. Marshall Society (4-day deadline) and Wharton Investment (19-day deadline, team-formation
+   requirement stuck in `description` and not reaching the AI advisor's context — a code-level
+   fix, not a research one) need review priority over the rest.
+3. Fix the two known live-DB defects above (wrong-entity Stockholm Water Prize; FRC/FIRST
+   Robotics duplicate) — both independently re-confirmed multiple times across two research
+   passes now.
+4. A dedicated photo-sourcing pass is the highest-leverage remaining gap across all 69 records.
+5. Sync `claims_s6a.jsonl`/`claims_s6b.jsonl` into the fleet CEO's `MASTER_REGISTRY.jsonl` (kept
+   on this lane's own branch per S9's stated convention — CEO pulls from here, this lane does not
+   push to the control-tower branch directly).
+6. Both lanes stopped meaningfully below their nominal ~90-record share (36 + 33 = 69, not 180) —
+   deliberately, per the fleet CEO's depth-over-volume steer for an already-84%-of-corpus
+   category. If more competitions volume is wanted later, film and architecture remain genuinely
+   thin (S6-B's Key Gaps), and a further environment/medicine pass was flagged as not exhaustive
+   by S6-A.
