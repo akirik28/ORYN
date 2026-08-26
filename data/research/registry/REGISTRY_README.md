@@ -10,10 +10,20 @@ research records, source photos, or edit evidence.
 Eleven-plus sessions are running concurrently. A single shared file that everyone edits in
 place is a guaranteed conflict generator. Instead:
 
-1. **Each worker owns exactly one shard file**: `claims_<owner_agent>.jsonl` in this directory
-   (e.g. `claims_oryn-88.jsonl`). Append-only — one JSON object per line, never rewrite a
-   previous line. If a record's status changes, append a NEW line with the same `research_id`
-   and the updated `status`/`last_activity` — the ledger is a log, not a table.
+1. **Each worker owns exactly one shard file, named by role, not by session id**:
+   `claims_S1.jsonl` … `claims_S8.jsonl`, `claims_S10.jsonl` (CFO). **Decided 2026-08-26 ~10:05**
+   after S1 flagged the ambiguity — role-based names are the standard (S-numbers are the stable
+   fleet identity per the session-naming protocol; session ids like `oryn-c8` are not). Append-
+   only — one JSON object per line, never rewrite a previous line. If a record's status changes,
+   append a NEW line with the same `research_id` and the updated `status`/`last_activity` — the
+   ledger is a log, not a table.
+2. **S8 (QA) is the one role that doesn't discover candidates, so its shard holds verdicts, not
+   claims.** `claims_S8.jsonl` entries use `entity_type: "qa_verdict"`, reference the original
+   `research_id` they're auditing, and carry a `recommended_status` field (e.g.
+   `PRODUCTION_READY`, `REJECTED`, `BLOCKED`) plus `notes` with the evidence. **S8 does not edit
+   another shard's file directly** — the owning worker (or CEO, if the owning worker is
+   unresponsive or the row predates this registry) applies the actual status transition in
+   their own shard after reading S8's verdict. This preserves one-writer-per-shard.
 2. **CEO alone regenerates `MASTER_REGISTRY.jsonl`** (the consolidated, deduplicated,
    latest-status-per-`research_id` view) by scanning every `claims_*.jsonl` shard. Workers
    should treat `MASTER_REGISTRY.jsonl` as read-only and re-pull it before claiming new
@@ -100,13 +110,20 @@ part, and re-researching it from scratch would be wasted capacity. Read these fi
 online/Türkiye-global) has comparatively little prior coverage — the overnight corpus was
 scoped to only two of the four S5-S7 categories.
 
-**S1-S4 (university photos)**: zero prior coverage confirmed (no `image_url`-equivalent column
-exists in `universities` or `opportunities`, no prior data/docs found anywhere in the repo as of
-2026-08-26). This is genuinely greenfield — no dedup risk against prior work, but also no schema
-to write into yet. Photo `research_id`s in this ledger track *candidate images found and
-verified*, pending a schema decision (CEO will raise this as a founder question if S1-S4
-confirms real production-ready volume — research lanes cannot create migrations themselves per
-the Common Operating Contract).
+**S1-S4 (university photos) — CORRECTED, see `GAP_MAP.md` §1 for full detail.** This was
+originally (wrongly) written up here as greenfield/zero-coverage. It is not: 901/1,010
+universities already have a `primary_image_status` row in the `university_profile_metrics` EAV
+table (525 `wikimedia_verified`, 194 `official`, 2 `verified`, 180 `needs_review`), backed by a
+real Supabase Storage pipeline (`lib/acquisition/image-storage.ts` + `image-validation.ts` +
+`opengraph.ts`, `scripts/acquire-university-images.ts`). Caught by S10 (CFO) ~15 minutes after
+this file first posted, independently confirmed by S2 and S8. Root cause of the original miss:
+the data lives in an EAV table (`metric_code`/`value_text`), not a dedicated column, so a
+migration/column grep for `image_url` structurally cannot see it. **S1-S4's real job is
+verify-and-fill** (the existing pipeline only checks image dimensions/aspect ratio — zero
+semantic check for wrong-campus or a crest that slipped past the logo split), not first-pass
+sourcing from zero. New provenance fields likely fit as new `metric_code` values in the same
+EAV table, probably **without** a migration — see `GAP_MAP.md` for the one open confirmation
+still needed before relying on that.
 
 ## Non-negotiables (from the Common Operating Contract, restated here for this mechanism)
 

@@ -9,19 +9,63 @@ trusting this beyond same-day use.
 
 ## 1. University photos (S1-S4 scope)
 
+**CORRECTED 2026-08-26 ~09:50 — my first pass here was wrong, not just incomplete.** Original
+text below this line said "0 image infrastructure, genuine cold start." Flagged independently
+by S10 (CFO) within ~15 minutes, then independently confirmed by S2 (own live query) and S8
+(own `information_schema` check found the same column-level absence I did). Root cause: I
+grepped migration files for a literal `image_url`/`photo_url` column and found nothing real —
+but the actual data lives in a generic EAV table (`metric_code`/`value_text` pairs), which a
+column grep structurally cannot see. Same blind spot hit S8 independently via a different
+method (schema introspection, still column-based). Leaving the wrong version struck through
+above rather than deleting it — the methodology miss is worth other sessions seeing, not just
+the fix.
+
 | | Count |
 |---|---|
 | Canonical universities needing a photo | **1,010** |
-| Currently have any image infrastructure | **0** — confirmed by grep across all migrations, no `image_url`/`photo_url`/equivalent column exists on `universities` or `opportunities` anywhere in the schema history (0001-0065). |
-| Prior research/data on this | **None found** anywhere in the repo as of freeze start. |
+| Have a `primary_image_status` row in `university_profile_metrics` | **901** (109 have none) |
+| — of which `wikimedia_verified` | **525** |
+| — of which `official` | **194** |
+| — of which `verified` | **2** |
+| — of which `needs_review` (candidate rejected, reason logged) | **180** |
+| "Accepted" total (wikimedia_verified + official + verified) | **721 / 1,010 (71%)** |
+| Have `primary_image_license` recorded (CC BY-SA/CC BY/Public Domain/CC0 variants, 28 distinct license strings) | Present for the large majority of accepted rows |
 
-**Read**: this is not a partially-covered category needing depth — it is a cold start. No
-duplicate-work risk yet, but also no schema to write real image URLs into. **S1-S4 should
-research and verify candidate images now** (Wikimedia Commons and other open-license sources
-per the Common Operating Contract §10) and log them to the registry as `VERIFIED`, but actual
-`PRODUCTION_READY` promotion is blocked on a schema decision — see Founder Escalations below.
-Prioritize by real exposure, not alphabetically: request a `target_universities`/match-count
-join from CEO if you need a priority-ordered list rather than guessing.
+**Real infrastructure, confirmed by reading the code directly, not just the DB**:
+`lib/acquisition/image-storage.ts` (Supabase Storage upload/optimize, bucket `university-images`,
+real uploaded webp files — per S2), `lib/acquisition/image-validation.ts` (read directly by CEO:
+separate dimension/aspect-ratio gates for campus photos — min 800x450, aspect 1.15-2.6 — vs.
+logos — min 150px side, deliberately permissive on aspect), `lib/acquisition/opengraph.ts`,
+`lib/universities/image-coverage.ts`, plus `scripts/acquire-university-images.ts` (624 lines) and
+`scripts/university-image-coverage-report.ts` (130 lines). Git history: `f8a9b9c` "final
+university image coverage — 708/1019 (69.5%) after rate-limit fix (round 2)" and refactor
+`0b78387` (2026-08-22), both real, both on `main`.
+
+**Separately, `universities.logo_url` exists as its own thing** (referenced in
+`image-validation.ts`'s own doc comment) — **the Common Operating Contract §10 explicitly
+disqualifies logos/crests/seals/wordmarks as a real photo**, so a populated `logo_url` does
+**not** count toward photo coverage under this week's standard, regardless of how the pipeline
+uses that column internally.
+
+**What this changes for S1-S4**: this is a **verify-and-fill-gaps mission, not a cold start.**
+The real, still-open gap — confirmed by reading `image-validation.ts` directly — is that the
+existing pipeline only checks image *dimensions/aspect ratio*. **There is zero semantic check**:
+nothing verifies the photo actually depicts the correct university (not a sister campus, not a
+similarly-named institution), isn't a crest/seal that slipped past the campus-vs-logo split, and
+isn't a generic city/stock photo. That gap — §10's `correct_entity_verified`/`no_logo_verified`
+fields — is the real S1-S4 job on the 721 "accepted" rows, plus first-pass sourcing on the 109
+with no candidate at all and re-attempts on the 180 `needs_review`. Prioritize the 109-with-
+nothing and highest-exposure universities first; ask CEO for a `target_universities`/match-count
+join if you need a ranked list rather than guessing.
+
+**Founder escalation #1 also revised**: likely does **not** need a migration. New provenance
+facts (`image_depicts`, `no_logo_verified`, `correct_entity_verified`, `rights_status`, etc.)
+can plausibly land as new `metric_code` values in the *same* `university_profile_metrics` EAV
+table — it already accepts writes today, no DDL required (S2's finding, sound reasoning: EAV
+tables absorb new "columns" as data). CEO is not confirming this alone before it's acted on —
+whoever owns the acquisition pipeline's read side (does `lib/universities/image-coverage.ts` or
+its consumers actually read arbitrary new `metric_code`s, or a hardcoded allowlist?) should
+confirm before S1-S4 relies on it. Flagging as *likely resolved*, not *fully closed*.
 
 ## 2. Opportunities, by category (S5-S7 scope) — live counts, all statuses
 
@@ -84,6 +128,15 @@ not `opportunities`), a dedicated Turkey-opportunities pass (2026-08-21, 24 reco
 national-route resolution for 6 flagship olympiads. Asia (beyond a few named competitions) and
 "Online/year-round, geography-agnostic" as an explicit opportunity shape are both thin on
 first read — not yet quantified.
+
+## Known operational risk, not yet urgent (flagged by S1, recording so it isn't lost)
+
+All S1-S4 work is dry-run/proposal-only right now — no `--apply` runs, per the Common Operating
+Contract. `scripts/acquire-university-images.ts` has checksum dedup so the same photo can't land
+on two universities, but **has no protection against two concurrent `--apply` runs racing on the
+same Storage bucket.** Not a problem today (nobody is applying). Whoever on DATA/CEO eventually
+promotes S1-S4's verified batch to production should serialize that step rather than let multiple
+sessions run `--apply` in parallel.
 
 ## Founder escalations queued (not yet sent — batching for one message, not one per finding)
 
