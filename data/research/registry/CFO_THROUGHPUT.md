@@ -9,18 +9,17 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `CONTROL_TOWER_
 (CEO's consolidated fleet report). On a 5-minute recurring check (`/loop`, per founder
 instruction).
 
-## Checkpoint 31 — 2026-08-27, ~01:40
+## Checkpoint 32 — 2026-08-27, ~01:45
 
-**No change.** Still 2 peers (S8, CEO). S1/S2/S3/S4 have not returned. S8's own subagent (the
-one running anomalously long, checkpoint 30) hasn't surfaced yet — S8 said they'd report either
-way, not yet due for a re-check. No reply from CEO on any of the three open items. Live-harm
-rows re-verified: unchanged.
+**No change — second consecutive quiet tick.** Same 10 branch HEADs as checkpoint 31. Still 2
+peers (S8, CEO). Live-harm rows re-verified: unchanged. No new information on S8's long-running
+subagent or CEO's silence (now ~2h40min).
 
 ### Open items (unchanged)
 
-1. S8's long-running subagent — awaiting S8's own report, not yet re-checking myself.
+1. S8's long-running subagent — awaiting S8's own report.
 2. S1/S2/S4 session loss — awaiting CEO/founder decision on resuming. Recovered work safe.
-3. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, ~2h35min unreachable.
+3. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, ~2h40min unreachable.
 4. `turkey_student_access` / `selectivity_evidence` still have no live columns.
 5. ~12-15% university-photo false-accept rate — still pending CEO/DATA visibility.
 
@@ -43,4 +42,4 @@ where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f7
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-27 ~01:40.
+`origin`, 2026-08-27 ~01:45.
