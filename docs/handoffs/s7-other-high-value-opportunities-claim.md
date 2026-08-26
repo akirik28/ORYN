@@ -56,10 +56,13 @@ for prefix collision (none of `s7a1_/s7a2_/s7b1_/s7b2_` in use).
 
 ## Status
 
-**Wave 1 complete.** 67 unique S7-reviewed records (41 VERIFIED+resolved-Turkey-access ready
-for S8, 26 CANDIDATE/UNCLEAR), 74 rejected + 1 note, 0 cross-lane duplicates remaining (3
-found and resolved). Full accounting, gaps, and next-owner instructions in
+**Wave 1 + CEO-approved Wave 2 complete.** 77 unique S7-reviewed records (47
+VERIFIED+resolved-Turkey-access ready for S8, 30 CANDIDATE/UNCLEAR), 112 rejected + 1 note, 0
+cross-lane duplicates remaining. Full accounting, gaps, and next-owner instructions in
 `data/research/opportunities/s7_MASTER_CLOSEOUT.md` (contract §15 format). Registry shard
-pushed to `oryn/research-freeze-ceo-control-tower` as `data/research/registry/claims_S7.jsonl`.
-Handed off to S8 (Research QA) for independent review; Wave 2 (to close the gap toward the
-≥140 target) proposed to S9 (CEO), pending their decision — see message log, not repeated here.
+(`claims_S7.jsonl`, 190 entries) kept on this branch for S9 to pull, per S9's corrected
+convention (not pushed directly to the control-tower branch after the first round). S8
+(Research QA) has already delivered and had one round of findings incorporated (a real
+correction, an upgrade, a resolved naming-collision); their substantive fact pass on the
+remaining CANDIDATE tier is in progress. S7 lane considered complete pending that sign-off —
+no Wave 3 requested.
