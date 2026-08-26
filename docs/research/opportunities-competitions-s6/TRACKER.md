@@ -245,3 +245,68 @@ previously missing critical data) represents real depth. Stopping here rather th
 90 with thinner finds, per Contract §13.
 
 **Proceeding to write HANDOFF.md** — STEM research pass for this session considered complete.
+
+---
+
+## S6 Orchestrator — cross-review reconciliation, 2026-08-26
+
+Both HANDOFF.md sections read in full; both lanes' JSONL files grepped directly (not taken on
+their self-reports alone) for the two items each handoff flagged as needing reconciliation.
+
+**Stockholm Junior Water Prize (S6A-0030 / S6B-0025, live row `17aeb772`) — no factual conflict
+found.** Both independently confirm `ELIGIBLE_WITH_CONDITIONS` via DSİ (State Hydraulic Works
+General Directorate, Ankara), both confirm `national_delegation_required: true`, both trace to the
+same underlying cr1 CR1-036 evidence. S6A-0030 is the more complete record (fuller
+`individual_or_team`/`age_range`/`subjects` detail) — treat it as canonical, with S6B-0025 as
+independent corroboration, not a second record to apply. Both correctly re-flag that the
+wrong-entity "Stockholm Water Prize" (`c8eb3d40`) is still live and student-facing — this is now a
+three-times-confirmed finding (cr1, S6-A, S6-B) with no correction landed in production yet.
+
+**The Earth Prize (S6A-0031 / S6B-0021, live row `00aaf965`) — no factual conflict found.** Both
+independently reached `UNCLEAR` (a participation count, not a stated eligibility rule — the 160-
+vs-169-country discrepancy on the operator's own site was independently caught by both), both name
+the missing deadline as the blocking gap, both correctly held at `VERIFIED` rather than
+`PRODUCTION_READY` for the same reason. Treat as one record, independently converged twice — a
+genuine confidence signal, not redundant work to discard.
+
+**Confirmed gap, not assumption**: grepped every `s6a_*.jsonl`/`s6b_*.jsonl` file directly for
+"genius olympiad", "greenwich", "unihive". GENIUS Olympiad was researched (S6A-0023, S6-A took
+first pass as its own notes state). **International Greenwich Olympiad and UniHive Research
+Proposal Competition were not researched by either lane** — both handoffs described these as "left
+for the other's first look," and neither actually took it. Both are already live/`under_review` in
+the baseline. Assigning to S6-B now in a bounded follow-up (S6-A already spent its first-pass turn
+on GENIUS Olympiad).
+
+**PRODUCTION_READY bar reconciliation — the two lanes graded themselves on different bars for the
+same brief language.** S6-A treated "attempted an image search, found nothing" as a resolved photo
+state sufficient for `PRODUCTION_READY` (28 records so labeled, including TÜBİTAK 2204-A and AMC —
+both competitions with a real physical/ceremonial component where a photo plausibly exists
+somewhere, just not yet found). S6-B treated only an affirmative "no physical event exists to
+photograph" (pure online/written-submission competitions) as a resolved-absent state, and left
+everything else — including several of its own strongest records — at `VERIFIED`, reporting **0**
+`PRODUCTION_READY` by that stricter reading. **Ruling, applied going forward**: "searched, found
+nothing yet" on a competition with a real physical/ceremonial component (TÜBİTAK, AMC, any
+in-person olympiad or event) is `NOT_YET_RESOLVED`, not resolved-absent — S6-B's bar is the correct
+one for those. "No physical event exists" on a genuinely online-only/written-submission competition
+is a legitimate resolved-absent state and does not block `PRODUCTION_READY` on its own. Separately,
+and more fundamentally: Contract §11 defines `PRODUCTION_READY` as requiring **second-agent/S8
+review passed** — that has not happened for any record from either lane yet, so the procedurally
+honest count for this entire S6 lane right now is **0 formally `PRODUCTION_READY`**, not S6-A's 28.
+S6-A's self-labeled 28 and S6-B's 21 `VERIFIED` are both real, well-evidenced progress — asking
+S6-A to re-grade its own in-person-competition records' photo status against this ruling as part of
+the bounded cross-review follow-up below, rather than the orchestrator silently editing another
+lane's files.
+
+**Escalated outside this doc, given the clock**: Marshall Society Essay Competition (`5f7ef5d4`,
+S6B-0001) has a **2026-08-30 deadline — 4 days from this reconciliation**. Sent directly to S9/CEO
+now rather than held for the full lane close-out, since a 4-day window won't survive a normal
+review cycle. Full evidence in S6B-0001; nothing about this changes the finding's own noted caveat
+(the linked full-rules Google Doc was never opened, so treat as medium-high confidence, not
+certain).
+
+**Dispatched now**: a bounded follow-up to each lane (not a full second research pass) —
+S6-B takes International Greenwich Olympiad + UniHive Research Proposal Competition, plus a second
+opinion on 1-2 of S6-A's held-back STEM items if time allows; S6-A gives a documented second
+opinion on S6-B's two flagged "closer call" judgments (Blue Ocean Competition, 120 Hours) and
+re-grades its own in-person-competition records' photo status per the ruling above. Both report
+back to the orchestrator, not each other directly, to avoid a third HANDOFF.md write race.
