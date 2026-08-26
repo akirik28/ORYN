@@ -9,27 +9,41 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `CONTROL_TOWER_
 (CEO's consolidated fleet report). On a 5-minute recurring check (`/loop`, per founder
 instruction).
 
-## Checkpoint 22 — 2026-08-27, ~00:55
+## Checkpoint 23 — 2026-08-27, ~01:00
 
-### S5B backfilled 6 verified real photos — downloaded and visually confirmed, not status-trusted
+### S5 fully closed — both A and B pushed final handoffs this tick
 
-Consistent with the discipline this whole photo-quality thread has been built on since S3's
-original finding (checkpoint 3): actually look at the image before calling it done. Otherwise a
-quiet tick — same activity elsewhere as checkpoint 21.
+S5A: "lane complete for this pass, final numbers in workstreams map." S5B: final handoff pushed
+4 minutes prior. Combined with S6 and S7's earlier closeouts, **three of the four
+opportunity-research lanes (S5, S6, S7) are now fully done** — only S5B's sibling-scope work and
+the university-photo lanes (S1-S4) remain actively producing.
 
-### CEO: 82 minutes silent, unchanged. Live-harm rows: unchanged.
+### Roster change: S6 and S7's sessions have exited (7 peers now, was 9)
 
-### Status snapshot (carried forward, unchanged)
+`ListAgents` no longer lists `oryn-71` (S6) or `oryn-4d` (S7) — both sessions appear to have
+ended after pushing their final, clean closeout commits. Reading this as graceful completion,
+not a problem: both had just finished substantial, well-documented work with no open blockers or
+distress signals in their last messages. Not attempting to re-contact either — nothing pending
+needs them, and their output is fully committed. Current live roster: S1, S2, S3, S4, S5A, CEO
+(7 sessions total per ListAgents — S5's two sub-lanes may share one underlying session slot,
+consistent with how S5A/S5B have operated as one coordinating session's two internal sub-lanes
+throughout, similar to S1-A/S1-B etc.).
 
-Closed: S5A (28 production-ready), S6 (69 records + photo pass + dedup sweep), S1-A (127/127).
-S7's corrected production-ready count: 26. Active: S1-B, S2, S3, S4, S5B (now also on photos),
-S8.
+### CEO: 86 minutes silent, unchanged. Live-harm rows: unchanged.
 
-### Unchanged open items
+### Reallocation
 
-1. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, 82min unreachable.
+None forced, but worth CEO's attention once reachable: with S5/S6/S7 all closed, the fleet's
+remaining active capacity is entirely on university photos (S1-S4) plus S8's review queue —
+worth deciding whether any of that freed capacity should be redirected once CEO can make that
+call, per the standing model (not mine to redirect unilaterally).
+
+### Open items
+
+1. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, 86min unreachable.
 2. `turkey_student_access` / `selectivity_evidence` still have no live columns.
 3. ~12-15% university-photo false-accept rate — still pending CEO/DATA visibility.
+4. Now 3 of 4 opportunity lanes closed — worth CEO deciding on capacity redirection once back.
 
 ## How these numbers were produced (re-run to refresh)
 
@@ -50,4 +64,4 @@ where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f7
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-27 ~00:55.
+`origin`, 2026-08-27 ~01:00.
