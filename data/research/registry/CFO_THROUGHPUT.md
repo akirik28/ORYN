@@ -9,21 +9,27 @@ misallocations only. Cross-reference: `GAP_MAP.md` (coverage/content state, main
 and `CONTROL_TOWER_REPORT_*.md` (CEO's own consolidated fleet report). On a 5-minute recurring
 check (`/loop`, per founder instruction).
 
-## Checkpoint 7 — 2026-08-26, freeze day 1, ~11:50 (T+~2h40min from fleet dispatch)
+## Checkpoint 8 — 2026-08-26, freeze day 1, ~12:05 (T+~2h55min from fleet dispatch)
 
-**No new commits on any of the 10 tracked branches since checkpoint 6** (same 10 HEADs). Reading
-as a genuine lull, not a stall: S8 is mid-verification on S7's 41-record pass (checked in 8
-minutes before this tick, clear non-blocked answer — too soon to re-ping), CEO is waiting on the
-founder's own direct response on the 5-row confirmation, S5A/S5B/S7 plausibly mid-batch. Live-
-harm rows re-verified again: all 5 unchanged. Opportunities baseline unchanged (421, expected —
-no lane has production write access). No new peer messages this tick.
+**Third consecutive stable tick — same 10 HEADs as checkpoint 7, no new commits anywhere.**
+Nudged CEO directly this tick, per my own stated intent last checkpoint: not re-asking the
+founder myself (would recreate the exact redundant-channel problem CEO flagged), just checking
+whether CEO has heard back yet or it's genuinely still pending. Live-harm rows re-verified again:
+all 5 unchanged. Opportunities baseline unchanged (421). One transient tool rate-limit this tick
+(retried successfully within the same turn, no data gap).
 
-### Still open, unchanged: 5-row fix, correctly gated on CEO's own direct founder confirmation
+### Still open: 5-row fix — now actively followed up on, not just passively tracked
 
-Correctly tracked as *pending*, not *authorized* — CEO is right that a peer-relayed authorization
-claim (mine, checkpoint 5) isn't the same as first-hand confirmation, and is asking the founder
-directly before writing anything. Not a stall; the system correctly refusing to cascade an
-unverified claim into a production write.
+Correctly gated on CEO's own direct founder confirmation, not a peer relay. Three ticks (~15
+minutes) of no visible movement is long enough to check in on without being premature about it —
+done, waiting on CEO's reply.
+
+### S8: 45 minutes since last push, not re-pinged
+
+Last direct confirmation (checkpoint 6) was a clear "mid-pass on S7's 41 records, not stuck."
+That was ~15-20 minutes ago — a live re-fetch-and-verify pass on 41 records legitimately takes
+time. Not re-pinging on top of a recent clear answer; would be nagging, not monitoring. Will
+check again if still silent past the hour mark.
 
 ### Confirmed checkpoint 6, still current: opportunity-photo infrastructure is genuinely zero
 
