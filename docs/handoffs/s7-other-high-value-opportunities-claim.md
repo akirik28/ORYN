@@ -56,13 +56,14 @@ for prefix collision (none of `s7a1_/s7a2_/s7b1_/s7b2_` in use).
 
 ## Status
 
-**Wave 1 + CEO-approved Wave 2 complete.** 77 unique S7-reviewed records (47
-VERIFIED+resolved-Turkey-access ready for S8, 30 CANDIDATE/UNCLEAR), 112 rejected + 1 note, 0
-cross-lane duplicates remaining. Full accounting, gaps, and next-owner instructions in
-`data/research/opportunities/s7_MASTER_CLOSEOUT.md` (contract §15 format). Registry shard
-(`claims_S7.jsonl`, 190 entries) kept on this branch for S9 to pull, per S9's corrected
-convention (not pushed directly to the control-tower branch after the first round). S8
-(Research QA) has already delivered and had one round of findings incorporated (a real
-correction, an upgrade, a resolved naming-collision); their substantive fact pass on the
-remaining CANDIDATE tier is in progress. S7 lane considered complete pending that sign-off —
-no Wave 3 requested.
+**Wave 1 + CEO-approved Wave 2 + S8 QA pass + cross-category dedup pass complete.** 71 unique
+records (49 VERIFIED-with-Turkey-access-resolved, 26 PRODUCTION_READY within that per S8's
+independent review), 117 rejected across all passes (including 5 confirmed live-DB
+duplicates found by a whole-table cross-category check prompted by S5B's finding — 3 of
+which had already been marked PRODUCTION_READY before the check caught them). Full
+accounting in `data/research/opportunities/s7_MASTER_CLOSEOUT.md`, including a dedicated
+"Cross-Category Duplicate Addendum" documenting the root cause (per-sub-agent dedup lists
+scoped by category let one sub-agent recreate an entity only a DIFFERENT sub-agent had been
+told to exclude) and the fix template for any future wave. Registry shard (`claims_S7.jsonl`)
+kept on this branch for S9 to pull. S7 lane considered complete pending S8's continued QA
+pass on Wave 2 records — no Wave 3 requested.
