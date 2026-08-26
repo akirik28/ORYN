@@ -9,69 +9,23 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `CONTROL_TOWER_
 (CEO's consolidated fleet report). On a 5-minute recurring check (`/loop`, per founder
 instruction).
 
-## Checkpoint 35 — 2026-08-27, ~02:00
+## Checkpoint 36 — 2026-08-27, ~02:05
 
-**No branch-git change this tick, but S8 delivered real output via direct verification** —
-3 PRODUCTION_READY, 5 VERIFIED, 1 REJECTED, 2 BLOCKED (`e8bc550`). The rejection is worth
-knowing: **Üçok Family Scholarship**'s "no US residency requirement" framing hid the actual
-gate — enrollment at a California university specifically, a materially different (and much
-narrower) eligibility bar than the framing implied. Same shape as prior findings this session:
-a technically-true statement obscuring the real restriction. Of the 2 BLOCKED, one is genuinely
-unreachable, one needs a source pointer from S7 rather than more searching (routing item, not
-a dead end).
+**No new developments beyond checkpoint 35's confirmed content.** S8's `e8bc550` (S7 Wave 2
+delta, 3 PRODUCTION_READY/5 VERIFIED/1 REJECTED/2 BLOCKED) is now visible on `oryn/s8-qa-gate`,
+consistent with what was already reported. Still 2 peers. Live-harm rows re-verified: unchanged.
+S8 agreed with the staggered-natural-limit reframing and confirmed their own working pattern
+(commit/push frequently) already makes that theory low-stakes rather than high-stakes for them.
+CEO's silence continues, now ~3h.
 
-**New operational pattern, worth keeping**: S8's first parallel WebFetch batch (5-way) failed
-5/5 with "socket hang up" — identical shape to yesterday's curl-burst artifact (the S4/S9
-finding), but this time on `WebFetch`, not `curl`. Sequential/paired retries worked fine, and
-where a failure persisted alone it correctly distinguished a real block from the burst artifact.
-**Generalizes the lesson beyond one tool**: a wall of simultaneous request failures on this
-shared environment is more likely a concurrency artifact than the target sites actually being
-down — worth remembering if anyone else hits this. S8's original stuck subagent: still no word,
-not blocking on it.
+### Open items (unchanged from checkpoint 35)
 
-### Correcting checkpoint 23: S6/S7 did NOT gracefully exit — reassessing the whole incident
-
-**S7 just went dark mid-conversation with S8** — S8 was actively exchanging messages with it
-(delivering Wave 2 findings) and got the same "no agent... is reachable" response S1/S2/S4
-gave earlier. This means S7 was alive and reachable well past checkpoint 23, where I concluded
-"gracefully exited" from a `ListAgents` count drop alone — **I never actually tested reachability
-for S6/S7 the way I later did for S1/S2/S4. That conclusion was an unverified assumption, not a
-confirmed fact, and it was wrong.** Correcting the record rather than letting it stand.
-
-This reframes the incident's shape. Real timeline: S1/S2/S4 went dark ~00:15-00:45, S7 just went
-dark ~02:00+ — **staggered by 75+ minutes, not simultaneous.** A shared-resource crash (disk
-fill, OOM) would more plausibly hit several sessions at once; a long stagger fits a different,
-less alarming hypothesis better: each session naturally reaching a length/context limit after
-many hours of continuous heavy tool use, roughly in order of how much work it did — S1/S2/S4 ran
-the heaviest continuous work (concurrent per-university image downloads) and died first; S7 was
-doing lighter, intermittent QA-response work and lasted much longer. S8's own subagent, still
-`running` at 2h+ with no completion, fits the same shape. **Not certain — flagging as the more
-likely alternative to "crash," not a replacement conclusion.** Whichever it is, the practical
-response is unchanged: recover uncommitted work when found, don't treat it as urgent-unless-new-
-evidence-says-otherwise.
-
-**Also new**: S8 delivered real output via direct verification (unblocked from its own stuck
-subagent) — 3 PRODUCTION_READY, 5 VERIFIED, 1 REJECTED, 2 BLOCKED (`e8bc550`). The rejection:
-**Üçok Family Scholarship**'s "no US residency requirement" framing hid the actual gate —
-enrollment at a California university specifically, a materially narrower bar than the framing
-implied. Same shape as prior findings: a technically-true statement obscuring the real
-restriction. New operational pattern: S8's first parallel WebFetch batch (5-way) failed 5/5 with
-"socket hang up" — identical to yesterday's curl-burst artifact (S4/S9 finding), now confirmed
-on a second tool. Sequential/paired retries worked fine. **Generalized lesson**: a wall of
-simultaneous request failures on this shared environment is more likely a concurrency artifact
-than the target sites being down.
-
-Live-harm rows re-verified: unchanged. CEO's silence continues, now ~2h55min.
-
-### Open items
-
-1. S7 also gone (correcting checkpoint 23) — same open question as S1/S2/S4: resume or accept
-   as done-for-now, pending CEO/founder. S7's own branch is unaffected and intact either way;
-   S8's Wave 2 findings for it just sit undelivered until S7 resurfaces or someone else picks
-   up that thread.
-2. S8's original subagent — still unresurfaced, will reconcile if it ever returns. Not blocking.
+1. S7 confirmed gone (not gracefully exited, per checkpoint 35's correction) — resume-or-accept
+   decision pending CEO/founder. S7's own branch intact; S8's Wave 2 findings undelivered but
+   safe on S8's branch.
+2. S8's original stuck subagent — unresurfaced, not blocking, will reconcile if it returns.
 3. S1/S2/S4 session loss — awaiting CEO/founder decision on resuming. Recovered work safe.
-4. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, ~2h55min unreachable.
+4. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, ~3h unreachable.
 5. `turkey_student_access` / `selectivity_evidence` still have no live columns.
 6. ~12-15% university-photo false-accept rate — still pending CEO/DATA visibility.
 
@@ -94,4 +48,4 @@ where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f7
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-27 ~02:00.
+`origin`, 2026-08-27 ~02:05.
