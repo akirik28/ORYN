@@ -9,28 +9,18 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `CONTROL_TOWER_
 (CEO's consolidated fleet report). On a 5-minute recurring check (`/loop`, per founder
 instruction).
 
-## Checkpoint 24 — 2026-08-27, ~01:05
+## Checkpoint 25 — 2026-08-27, ~01:10
 
-### CEO has now crossed 2 hours of silence — flagging directly, as said I would at this mark
-
-No new push, no reply to any of the three check-ins sent over the last ~2 hours. This is
-materially longer than the ~1hr mark first flagged (checkpoint 15) — surfacing again per that
-checkpoint's own stated criterion ("if the silence stretches meaningfully longer... worth a
-second, more direct flag"). Still not claiming anything is definitively wrong — but 2 hours of
-total silence from a session that was answering within minutes for the first several hours of
-this freeze is now a large enough gap that it's worth your direct attention rather than another
-automated note. Genuinely useful for you to know either way: if you're mid-conversation with
-CEO in another window, this is just noise; if you haven't been, their session may be worth
-checking directly.
-
-### Otherwise: completely stable — no new commits on any of the 10 branches this tick
-
-Live-harm rows re-verified: unchanged. Roster stable at 7 (S1-S4, S5A, S8, CEO — S6/S7/S5B
-sessions closed out and exited in recent checkpoints).
+**Second consecutive quiet tick — same 10 HEADs as checkpoint 24, no new commits anywhere.**
+Live-harm rows re-verified: unchanged. Roster stable at 7. CEO: still silent, now ~2h05min —
+no new information beyond checkpoint 24's flag, not repeating it at the same intensity again
+without something new to add. Reading the fleet's quiet as: S1-S4 mid-audit (long visual-review
+work, consistent with their established pattern), S8 plausibly reviewing the recent closeout
+batches (S5/S6/S7), nothing indicating a problem.
 
 ### Unchanged open items
 
-1. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, now 2hr+ unreachable.
+1. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, ~2h05min unreachable.
 2. `turkey_student_access` / `selectivity_evidence` still have no live columns.
 3. ~12-15% university-photo false-accept rate — still pending CEO/DATA visibility.
 4. Capacity redirection decision (3 of 4 opportunity lanes closed) — pending CEO's return.
@@ -54,4 +44,4 @@ where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f7
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-27 ~01:05.
+`origin`, 2026-08-27 ~01:10.
