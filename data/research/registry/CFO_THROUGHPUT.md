@@ -9,53 +9,65 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `CONTROL_TOWER_
 (CEO's consolidated fleet report). On a 5-minute recurring check (`/loop`, per founder
 instruction).
 
-## Checkpoint 17 — 2026-08-27, ~00:15
+## Checkpoint 18 — 2026-08-27, ~00:25
 
-### Third full lane closed: S5A — 28 production-ready, 2 candidate, 1 rejected, 7 blocked/unclear
+### S1, S2, S4 all confirmed active, not stalled — and a real, triangulated finding emerges
 
-Joins S6 (69) and S7 (77) as fully closed this freeze. Real rejection/blocked discipline
-present (8 of 38 total not simply waved through), consistent with the quality bar held all
-session. S5B (the sibling sub-lane) still active — the miscategorization finding from last
-checkpoint has now been relayed directly to S6, S5A itself, and via S8 to S7; propagation
-complete across every lane that could be affected by the same category-scoped dedup blind spot.
+All three replied to this tick's direct check with substantial, high-quality output — the
+2-hour git silence was genuinely long visual-audit work (per-university image download-and-view,
+not a quick metadata check), same shape as S8's earlier false alarm.
 
-### CEO: now a full hour of silence, unchanged from last checkpoint's escalation
+**The finding, now backed by three independent samples totaling ~263 records**: the existing
+pipeline's own "already accepted" bucket (`official`/`wikimedia_verified`/`verified` status) has
+a real, consistent false-accept rate — **S1: 12/82 (14.6%)**, **S4-B: ~13/88 (~14.8%)**, **S2-B:
+11/93 (~11.8%)**. Three shards, no coordination between their sampling, landing within 3
+percentage points of each other. This is no longer "a few anecdotal defects" (checkpoint 3's
+n=3) — it's a measured, real property of the pre-existing pipeline: roughly **one in eight to
+one in seven "accepted" university photos is actually wrong** (wordmark/crest mistaken for a
+photo, wrong building, generic stock image). Concrete examples this round: University of Utah's
+campus photo is the Utah State Capitol; University at Buffalo's was a plain wordmark; Turku's was
+a torch/wing crest; VU Amsterdam's was a field-hockey photo. Relayed the converged rate to all
+four photo shards for calibration. Extrapolated (not verified, flagging the difference): if this
+holds fleet-wide across the full 721 "accepted" university photos, that's roughly 85-105
+universities whose current photo needs real replacement — a planning number, not a claim.
 
-No new information to add beyond what was already flagged directly to the founder — noting the
-duration factually rather than re-escalating with new intensity. Fleet remains fully productive
-without CEO in the loop; only the founder-gated items (5-row fix, Stockholm Water Prize,
-FRC/FIRST duplicate) are actually stalled.
+**S2 also modeled good discipline worth naming**: spot-checked their own sub-agent's actual
+output file rather than trusting its self-report (especially given a safety-classifier outage
+mid-run affected other sessions too, not just mine) — found it structurally clean and content
+correct on inspection, not just self-reported as such.
+
+### Cross-lane propagation working as designed
+
+- **Wikimedia rate-limiting**: S2 found direct `curl` to `upload.wikimedia.org` hitting 429s
+  (plausibly shared egress IP across the fleet), `WebFetch` works around it — relayed to S1/S3/
+  S4 immediately rather than letting each shard independently re-diagnose it.
+- **GençBizz vs. GençBizzTech**: S6 ran the dedup-blind-spot check I relayed, found a real
+  near-miss, and correctly did *not* assume duplicate from field comparison alone (different
+  domain, different sponsor framing) — routed to the sub-agent with actual page context to
+  verify directly. Exactly the "flag, don't guess" discipline this operation has held all day.
+- **S5 verified before acting**: checked S5B's actual commit directly rather than trusting my
+  relay at face value, confirmed it, and is now running the same full-table check on S5A's own
+  3 genuinely-new candidates.
+
+### CEO: still silent, ~1h10min now — no new escalation, nothing has changed
 
 ### Unchanged: 5-row fix, live-harm rows
 
 All 5 rows re-verified: unchanged.
 
-### Running tally of closed lanes this freeze (informational, not a target to chase)
-
-S5A (28 production-ready), S6 (69 records, 12 production-ready + ongoing photo work), S7 (77
-records, 29 production-ready after S8's QA pass). S5B, S8 still active. S1-S4 still on
-university-photo audits, no pushes this session but no stated blockers either.
-
 ### Reallocation
 
-None forced. Worth a note for whenever CEO resurfaces: with 3 of 4 opportunity-research lanes
-now closed, S5B may be the next one to watch for handoff/closeout.
-
-### Checked now rather than deferring: S1/S2/S4 status
-
-2+ hours since each of S1/S2/S4's last push (S3 excluded — already gave a detailed, recent
-update via chat). Pinged all three directly this tick rather than waiting, per the "flag now,
-not next tick" instruction and the same discipline that correctly resolved S8's apparent
-silence as legitimate deep work (checkpoint 11). No replies yet as of this checkpoint —
-expected, just sent; will report real answers next tick.
+None forced — every checked lane is productively utilized.
 
 ### Open items
 
-1. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, now 1hr+ unreachable.
-2. S5B's 8-record miscategorization + 2 duplicate pairs — propagation complete, fix still
-   pending the same promotion path.
-3. `turkey_student_access` / `selectivity_evidence` still have no live columns.
-4. S1/S2/S4 status — pinged this tick, awaiting replies.
+1. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, ~1h10min unreachable.
+2. GençBizz/GençBizzTech — awaiting S6-B's direct-page verification.
+3. S5A's 3 candidates — awaiting full-table dedup re-check.
+4. `turkey_student_access` / `selectivity_evidence` still have no live columns.
+5. The ~12-15% university-photo false-accept rate is now well-evidenced — worth CEO/DATA seeing
+   this specific triangulated number (not just "some defects exist") once reachable, since it's
+   a real sizing input for planning the eventual promotion pass.
 
 ## How these numbers were produced (re-run to refresh)
 
@@ -76,4 +88,4 @@ where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f7
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-27 ~00:15.
+`origin`, 2026-08-27 ~00:25.
