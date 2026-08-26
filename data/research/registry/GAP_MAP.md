@@ -256,6 +256,26 @@ KU Leuven, NTHU, Novosibirsk State, Salzburg, Politecnico di Torino, Bucharest, 
 Missouri-Columbia, St Andrews, Wisconsin-Madison, Utrecht. Not blocking — flag only if attribution
 is ever surfaced next to the image in-product.
 
+## Time-sensitive founder item — deadline in 4 days, from S6
+
+**Marshall Society Essay Competition** (`5f7ef5d4`, live/`verified_current`) has zero Turkey-
+eligibility data recorded and a **2026-08-30 deadline (4 days out)**. S6-B researched fresh
+today: "open to all students who have not yet begun university," no geographic restriction found
+on the operator's own page (2 direct fetches), corroborated by a long-running third-party UK
+econ-teaching resource. Proposed `VERIFIED_ELIGIBLE`, medium-high (not top) confidence — the
+linked full-rules Google Doc was never opened and could contain an unseen restriction. This is an
+enrichment opportunity with a real expiry, not a standing item — worth a promotion decision before
+Saturday specifically, unlike the rest of this week's normal-priority queue. Full record:
+`S6B-0001` in `data/research/opportunities/s6b_essay_humanities_batch1.jsonl` on
+`oryn/s6-competitions-research`.
+
+**Separately, lower urgency, a real code-level gap not fixable by any research lane**: Wharton
+Global HS Investment Competition's team-size requirement (4-6 students + teacher advisor) is
+correctly stored in the row's `description` but never reaches the AI advisor's context assembly —
+confirmed independently twice (the 2026-08-23/24 corpus, then S6-B today). Worth a PRODUCT/
+engineering look at why `description` content doesn't flow into advisor context generally, since
+this is likely one instance of a broader pattern, not a single-row bug.
+
 ## Known operational risk, not yet urgent (flagged by S1, recording so it isn't lost)
 
 All S1-S4 work is dry-run/proposal-only right now — no `--apply` runs, per the Common Operating
