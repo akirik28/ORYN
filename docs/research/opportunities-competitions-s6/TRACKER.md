@@ -150,3 +150,53 @@ corpus and its audience-fit is itself unresolved; film has zero rows found in ei
 or the seed PDF); assess whether continuing past this checkpoint's ~28 records is warranted given
 the CEO's explicit depth-over-volume steer for an already-saturated category, or whether to move
 toward HANDOFF.md.
+
+---
+
+## S6-A (STEM) — 2026-08-26 checkpoint 2
+
+**Deliverables this checkpoint**: `s6a_math_cs_batch1.jsonl` (S6A-0009–0016, 8 records — Turkey-
+access + corrections for AMC-AIME, HMMT, USACO, Purple Comet, Waterloo, CMIMC, Battlecode,
+PennApps), `s6a_berkeley_stanford_math.jsonl` (S6A-0017–0021, 5 net-new records — Berkeley's 3
+formats + Stanford's 2), `s6a_science_env_batch1.jsonl` (S6A-0022–0032, 11 records — Breakthrough
+Junior Challenge, GENIUS Olympiad, Nat Geo Slingshot, iGEM HS, EUCYS, Brain Bee, FIRST Global
+Challenge, IEnvO, Stockholm Junior Water Prize, Earth Prize, IYPT). Running total: 32 records
+(S6A-0001–0032).
+
+**Two most time-critical fixes found**: HMMT's registration deadline (2026-09-20, ~25 days out at
+this checkpoint) was completely absent from a live row matched to every user — fresh-confirmed
+today, unchanged from cr1's finding 3 days ago. Breakthrough Junior Challenge's deadline
+(2026-09-15, ~20 days out) was correctly stored but carried zero age/country/English-language
+data — also fresh-confirmed. Flagging both for review priority, same urgency class S6-B flagged
+for Marshall Society/Wharton Investment on their side.
+
+**Discipline notes on what did NOT get promoted to PRODUCTION_READY**: Battlecode and PennApps
+held at `VERIFIED` — Battlecode's High-School-track eligibility for non-US students exists only in
+a search-corroborated claim, not a primary-source page found this session; PennApps may be a
+college-only event misfiled into a high-school-facing category, not independently resolved. IYPT
+held at `BLOCKED` — genuine attempt made (found 2019 participation via Galatasaray Eğitim Vakfı, a
+2022 results page, but could not confirm current-cycle 2025/2026 Turkish participation), recorded
+per Contract's explicit instruction to mark `UNCLEAR`/say-what-was-tried rather than guess by
+analogy to the TÜBİTAK-routed olympiads. iGEM HS and The Earth Prize held at `VERIFIED` — each has
+one specific, named, unresolved-after-two-passes gap (iGEM's team fee; Earth Prize's deadline)
+that I judged should block PRODUCTION_READY status rather than be smoothed over.
+
+**Cross-lane flag for S6-B / DATA / CEO**: the WRONG-entity "Stockholm Water Prize" row (c8eb3d40,
+a professional career-achievement award for established researchers) is **still `active` and
+student-facing in the live DB as of this checkpoint**, three days after cr1 first flagged it and
+proposed the correct youth-prize replacement (which IS already `under_review`, `17aeb772`, and
+which I've now enriched with full Turkey-access data — S6A-0030). Not my call to remove a live row,
+but flagging again since it remains live and I don't want it lost between two research passes.
+
+**Also flagged this checkpoint**: GENIUS Olympiad (S6A-0023) is genuinely mixed STEM+arts per its
+own 9-category structure (AI/Coding/Robotics/Science alongside Art/Music/Short Film/Speech/
+Entrepreneurship) — taking first pass per the assignment's instruction, flagging for S6-B
+cross-review rather than silently deciding it's "mine."
+
+**Next**: medicine/health-adjacent (HOSA, Technovation Girls), Microsoft Imagine Cup Junior status
+resolution, FRC Türkiye national-route record (resolves the FRC/FIRST Robotics Competition
+duplicate-pair question), Zero Robotics HS-division check, then a light image-sourcing pass on the
+highest-value records (TÜBİTAK 2204-A/2202, AMC, HMMT, Breakthrough), then HANDOFF.md. Given the
+CEO's depth-over-volume steer and the strength of this batch (32 well-evidenced records, several
+with genuinely time-critical fixes), assessing real saturation is now a live question for the next
+checkpoint rather than pushing toward the nominal ~90-record share.
