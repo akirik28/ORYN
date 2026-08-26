@@ -56,6 +56,10 @@ for prefix collision (none of `s7a1_/s7a2_/s7b1_/s7b2_` in use).
 
 ## Status
 
-ACTIVE — dispatching 4 research sub-agents now (A1/A2/B1/B2 split of Agent A / Agent B for
-tractable batch sizes). Will update this file at close-out with final counts per the
-contract's handoff format.
+**Wave 1 complete.** 67 unique S7-reviewed records (41 VERIFIED+resolved-Turkey-access ready
+for S8, 26 CANDIDATE/UNCLEAR), 74 rejected + 1 note, 0 cross-lane duplicates remaining (3
+found and resolved). Full accounting, gaps, and next-owner instructions in
+`data/research/opportunities/s7_MASTER_CLOSEOUT.md` (contract §15 format). Registry shard
+pushed to `oryn/research-freeze-ceo-control-tower` as `data/research/registry/claims_S7.jsonl`.
+Handed off to S8 (Research QA) for independent review; Wave 2 (to close the gap toward the
+≥140 target) proposed to S9 (CEO), pending their decision — see message log, not repeated here.
