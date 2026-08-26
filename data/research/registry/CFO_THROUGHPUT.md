@@ -9,18 +9,18 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `CONTROL_TOWER_
 (CEO's consolidated fleet report). On a 5-minute recurring check (`/loop`, per founder
 instruction).
 
-## Checkpoint 25 — 2026-08-27, ~01:10
+## Checkpoint 26 — 2026-08-27, ~01:15
 
-**Second consecutive quiet tick — same 10 HEADs as checkpoint 24, no new commits anywhere.**
-Live-harm rows re-verified: unchanged. Roster stable at 7. CEO: still silent, now ~2h05min —
-no new information beyond checkpoint 24's flag, not repeating it at the same intensity again
-without something new to add. Reading the fleet's quiet as: S1-S4 mid-audit (long visual-review
-work, consistent with their established pattern), S8 plausibly reviewing the recent closeout
-batches (S5/S6/S7), nothing indicating a problem.
+**Third consecutive quiet tick, same 10 HEADs.** Not yet re-checking S1-S4 individually — each
+gave a detailed, credible "long visual audit in progress" answer within the last ~20-25 minutes
+(checkpoints 17-19), and their stated remaining work (S1-B running, S3 at 96-126/77-127, etc.)
+is consistent with needing more time than has passed since. Would reconsider if this stretches
+to 4-5 consecutive quiet ticks with zero fleet-wide activity, not just CEO's. Live-harm rows
+re-verified: unchanged. CEO: ~2h10min silent, unchanged, not re-flagging without new information.
 
 ### Unchanged open items
 
-1. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, ~2h05min unreachable.
+1. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, ~2h10min unreachable.
 2. `turkey_student_access` / `selectivity_evidence` still have no live columns.
 3. ~12-15% university-photo false-accept rate — still pending CEO/DATA visibility.
 4. Capacity redirection decision (3 of 4 opportunity lanes closed) — pending CEO's return.
@@ -44,4 +44,4 @@ where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f7
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-27 ~01:10.
+`origin`, 2026-08-27 ~01:15.
