@@ -602,3 +602,133 @@ Browser-pane tab TITLE checked against the intended filename at verification tim
 navigate call's return value), which is the same signal that caught the one actual mixup — a
 reasonable, if not absolute, safeguard against this specific failure mode. Adopting
 `tabs_select`-before-every-`screenshot` as standard practice for the remainder of this pass.
+
+---
+
+## S6-B (Business/Humanities/Creative) — 2026-08-27, photo-sourcing/verification pass (checkpoint 2)
+
+Continuing through the remaining 25 of 33 records per the CEO's instruction. Covered all of them
+this checkpoint — 16 researched directly, 8 explicitly documented as deliberately skipped with a
+stated reason (not silently dropped), 1 already covered in checkpoint 1's count.
+
+**4 more found and visually verified**: Conrad Challenge (Innovation Summit venue signage at Space
+Center Houston — a real 'CONRAD SUMMIT 2025' marquee, spacecraft replica, and Award Ceremony
+screen visible), YIS Stock Pitch Competition (a genuine award-ceremony photo, students holding
+'FIRST PLACE' certificates), and GençBizz (upgraded from an earlier text-only/WebFetch finding to
+full Browser-pane visual confirmation — matches what was originally described). **One found with
+an honest caveat rather than a clean pass**: International Greenwich Olympiad — a real,
+organizer-supplied press photo of the 2026 ceremony stage exists (published in a real local outlet,
+London Now, captioned 'Image: Supplied'), but the IGO crest is prominently displayed on the venue's
+own screen within the frame, so `no_logo_verified` is recorded as **false**, not forced to a clean
+pass — flagged for a second attempt at a less branding-dominant photo from the same event (362
+finalists attended; a crowd shot almost certainly exists elsewhere).
+
+**6 confirmed `NO_CANDIDATE_FOUND`** (genuine searches, real absence): BSPEE (structurally
+distributed across schools, no central venue — also caught and flagged that the specific Saint
+Benoît URL cited in this record's original eligibility research has since 404'd, a page-rot note
+distinct from the underlying finding, which was corroborated by a second source at the time),
+Jane Austen Society, Columbia Law Review, Harvard Political Review, Blue Ocean (confirmed by
+search as "the world's largest **virtual** pitch competition"), and The Earth Prize (confirmed
+both 2022 and 2023 ceremonies were held **virtually**).
+
+**6 `NOT_YET_RESOLVED`** — genuine real in-person/hybrid events confirmed to exist, real attempts
+made, no accessible photo reached this pass (per the ratified ruling, these do not count as
+resolved-absent): IPO (checked FISP's own regulations page, the official IPO 2025 site, and a
+national delegation's own report — real event, no photo surfaced), IPPF (found a genuine official
+multi-year photo gallery at ippfdebate.com/photos but could not navigate into a specific image —
+JS-driven gallery, a direct URL guess 404'd), IEO (official event site has no photos on the pages
+reached; an opening-ceremony video and an official Final Report PDF were located but not opened),
+120 Hours (confirmed a real public exhibition at Oslo's old Munch Museum exists; deprioritized
+given this record's own unresolved audience-fit question), National History Day (confirmed a real
+~3,000-student National Contest at the University of Maryland and located NHD's own 2026 winners
+page; deprioritized given this record's own UNCLEAR turkey_access), and Stockholm Junior Water
+Prize (confirmed a real, prestigious ceremony at Stockholm City Hall exists; a specific SIWI page
+404'd — **flagging possible overlap with S6-A's own parallel photo pass on the same live row,
+17aeb772, per the orchestrator's earlier cross-review note that S6A-0030 is the more complete
+version of this record** — deliberately not over-investing further search time here).
+
+**8 deliberately skipped, with reasons recorded rather than silently dropped**: HPEC (2026-27
+rules not yet published by the operator — nothing to photograph a not-yet-announced cycle of),
+DECA and National Economics Challenge (both resolved `NOT_ELIGIBLE` — corrections steering away
+from the record, not positive proposals needing a photo), ESDC/Dunedin Film/UniHive (all still
+`CANDIDATE`-tier with core facts like eligibility, fee, and cycle timing unresolved — a photo
+would not be the limiting factor for any of these reaching a usable state), RISE for the World
+(formally `BLOCKED` on application status), Young Guru Academy (`REJECTED` for this category
+entirely — a fellowship, not a competition).
+
+**This completes a full pass through all 33 of this lane's records** (8 in checkpoint 1 + 25 here).
+Running photo-status tally across both checkpoints: **8 found and visually verified** (7 clean +
+1 with the IGO logo caveat), **10 confirmed `NO_CANDIDATE_FOUND`/resolved-absent**, **6
+`NOT_YET_RESOLVED`** (real events, photo not yet reached), **9 deliberately not pursued** (4
+online-only-and-already-covered-in-checkpoint-1 batch overlap avoided by not re-counting, plus the
+8 skip-with-reason records above — see `s6b_photo_pass_batch2.jsonl`'s final entry for the itemized
+list).
+
+**Files this checkpoint**: `data/research/opportunities/s6b_photo_pass_batch2.jsonl` (17 entries),
+`data/research/registry/claims_s6b.jsonl` (16 new lines appended), this TRACKER.md entry.
+
+**For whoever picks up the `NOT_YET_RESOLVED` six next**: the highest-leverage next steps are
+narrow, not open-ended — IPPF just needs the gallery's JS navigation solved (or a direct-URL
+pattern found) to reach an already-confirmed-real photo source; IEO has a specific PDF and video
+already identified, just not opened; IPO's most promising unexplored lead is its own Instagram
+handle (@ipo.2023). None of these six need more searching to find a source — they need a different
+access method to an already-found one.
+
+---
+
+## S6-A (STEM) — 2026-08-27, photo-sourcing pass complete — all 36 records covered
+
+Continued through the remaining ~27 records per S9's instruction. **All 36 records in this lane
+now have a photo-verification entry** (`s6a_photo_pass_batch1.jsonl` + `s6a_photo_pass_batch2.jsonl`,
+37 lines total covering every `research_id` S6A-0001 through S6A-0036 — programmatically checked
+for full coverage, 0 gaps). Registry updated (`claims_s6a.jsonl`, now 95 lines).
+
+**3 more real, browser-verified photos found this checkpoint** (using `tabs_select` immediately
+before every `screenshot`, per the corrected sequencing established last checkpoint):
+- **Stockholm Junior Water Prize** — the 2024 winners on stage with Crown Princess Victoria of
+  Sweden (the prize's Patron), CC BY-SA 4.0.
+- **iGEM High School Competition** — a genuine 2025 Grand Jamboree venue photo (Paris, 28 Oct
+  2025) from the official iGEM Foundation Flickr account, with the organizer's own explicit
+  reuse/attribution instruction.
+- **GENIUS Olympiad** — found a real, correctly-licensed (CC BY-SA 4.0) photo, but flagged it as
+  a **weak match worth declining**: it's a personal portrait of one named student (a minor at the
+  2016 time of the photo) against a repeated step-and-repeat backdrop, not a depiction of the
+  competition/event itself. Recorded the finding honestly with an explicit
+  recommendation NOT to use it as the primary candidate, consistent with this corpus's general
+  minor-data-minimization caution even though the image is voluntarily public.
+
+**2 records confirmed to have real photos that exist but weren't successfully extracted** (a
+different, more useful state than a plain search failure): **FRC Türkiye** (its own 2026 İstanbul
+Regional page explicitly links an "Etkinlik Fotoğrafları"/Event Photos section, alongside a full
+results table naming 20+ real current Turkish teams — the page's lower content didn't render
+visually in the Browser pane this session despite repeated attempts) and **HOSA** (its own 2025
+ILC highlights page confirmed real, rich, current conference content including a "View 2025
+Winners Gallery" link — same rendering problem, different specific page). Both recorded with a
+concrete next step rather than a generic "try again."
+
+**Remaining ~19 records**: mostly resolved to `NO_CANDIDATE_FOUND` after a genuine site-restricted
+Wikimedia Commons search each (HMMT, Waterloo/CEMC, CMIMC, Battlecode, PennApps, Brain Bee, Earth
+Prize, Technovation Girls, IYPT — the last one notable because a Commons *category* exists but on
+inspection every file in it is a small logo graphic or a generic physics-phenomenon photo, not an
+event photo; checked the actual contents rather than stopping at "a category exists"). The 8
+genuinely-online `PRODUCTION_READY` competitions (USACO, Purple Comet, BmMT, SMT Online,
+Breakthrough Junior Challenge, Nat Geo Slingshot, IEnvO, plus Imagine Cup Junior as a distinct
+discontinued-competition case) were resolved on the same structural `mode`-based reasoning
+established during the earlier photo-status regrade task, not re-searched individually — each has
+no physical/ceremonial event by its own format. EUCYS, FIRST Global Challenge, BMT in-person, SMT
+in-person: confirmed real off-Commons leads exist (EUCYS's own Instagram/yearly event sites; FIRST
+Global's own press page; university-newspaper coverage for the Berkeley/Stanford tournaments) but
+not opened this session — recorded as `NOT_YET_RESOLVED` with the specific next step rather than
+folded into the `NO_CANDIDATE_FOUND` bucket, since "found a real lead, didn't open it" and
+"searched and found nothing" are different states worth keeping distinct.
+
+**Running photo-pass tally across both checkpoints**: 7 competitions with a fully browser-verified
+real photo (IMO, IChO, IPhO, IBO, IOI, Stockholm Junior Water Prize, iGEM HS — the last two this
+checkpoint), 1 more found but recommended against (GENIUS Olympiad), 1 found with a rights
+question still open (TÜBİTAK 2202, via AA wire), 2 confirmed-exists-not-extracted (FRC Türkiye,
+HOSA), 1 confirmed-absent-despite-a-plausible-category (IYPT), remainder genuinely
+searched-and-empty or not-yet-attempted with an honest reason recorded for each.
+
+**Files this checkpoint**: `s6a_photo_pass_batch2.jsonl` (28 lines), `claims_s6a.jsonl` (+28
+lines, generated programmatically from the batch2 file to avoid transcription drift between the
+two). Reporting back to S9/CEO now — full 36-record photo pass complete for this lane.
