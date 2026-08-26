@@ -531,3 +531,74 @@ isn't caught by surprise by the same issue, and so a future session knows the `t
 identified candidate, Conrad Challenge, YIS Stock Pitch, IPPF, IEO, Stockholm Junior Water Prize,
 International Greenwich Olympiad, and others without a source yet identified). Reporting back to
 the CEO now per instruction to checkpoint rather than push through all 33 in one pass.
+
+---
+
+## S6-A (STEM) — 2026-08-26/27, photo-sourcing pass checkpoint 1
+
+**New assignment from S9/CEO**: photo-sourcing/verification on this lane's own 36 STEM records,
+priority order self-graded `PRODUCTION_READY` then highest-value `VERIFIED` (TÜBİTAK 2204-A/2202,
+the 6 flagship olympiads). Dry-run only. Per the strict verification method required — actually
+viewing the candidate via the Browser pane before setting `correct_entity_verified`/
+`no_logo_verified`, never from a caption/filename alone — this checkpoint covers 8 of 36 records.
+
+**8 records covered, written to `s6a_photo_pass_batch1.jsonl`**:
+
+- **5 flagship olympiads, fully browser-verified with real Wikimedia Commons event photos**: IMO
+  (2015 closing ceremony, CC BY-SA 4.0), IChO (2017 bronze medal ceremony, CC BY-SA 4.0), IPhO
+  (**2019 Team Türkiye at the opening ceremony** — the single best find of this pass, directly
+  depicting the actual Turkish national delegation this lane's own record documents a TÜBİTAK
+  route to; CC BY-SA 4.0), IBO (a past inauguration-ceremony stage photo, CC BY-SA 4.0), IOI (2006
+  competition room, **public domain** — the most permissive license found).
+- **TÜBİTAK 2202** (the national olympiad ladder): found a real ceremony photo via Anadolu Ajansı
+  (Turkey's state news wire) covering the 32nd Bilim Olimpiyatları award ceremony (Feb 2025),
+  browser-verified as the correct entity with no dominant logo — but recorded `rights_status:
+  RIGHTS_REVIEW_REQUIRED` since AA's own photojournalism is not openly licensed and this lane has
+  no basis to treat it as freely reusable. While on that research thread, also fresh-confirmed
+  (via TÜBİTAK's own newsroom) that the 33rd cycle's ceremony already happened Feb 2026 with
+  concrete numbers (18,463 first-stage applicants, 225 medalists) — noted as a supplementary
+  finding for a future enrichment pass, out of scope for this photo-focused task itself.
+- **TÜBİTAK 2204-A**: NOT resolved — 3 attempts (the already-known negative Bilim Genç stock-photo
+  page, a search that surfaced cycle-timing detail but no photo, one dead school-website link).
+  Explicitly did NOT substitute S6A-0002's TÜBİTAK photo here — 2204-A (research projects) and
+  2202 (science olympiads) are different competitions and the AA photo depicts 2202's ceremony
+  specifically.
+- **IOAI and AMC**: both genuinely searched and confirmed `NO_CANDIDATE_FOUND` rather than left
+  unattempted — IOAI is too new (est. 2024) for Commons coverage yet; AMC's format (school-
+  administered written exam, no delegation ceremony) plausibly explains its total absence from
+  Commons, confirmed via a site-restricted search returning zero results.
+
+**Process note on tooling**: the Browser pane's rendering intermittently went stale mid-session
+(screenshots returning blank or timing out with "pane is not displayed") — resolved each time by
+re-opening via `preview_start` rather than retrying the same dead tab. One navigation also landed
+silently on a completely unrelated file (a Cambridge University building photo, not the intended
+IPhO Turkey image) — caught only because the screenshot was actually looked at rather than trusted
+on the strength of the navigation call succeeding; re-navigated on a fresh tab and confirmed the
+tab title matched before re-verifying. Recording both as a caution for whoever continues this pass:
+verify the tab is actually showing the intended page, not just that the navigate call returned ok.
+
+**Next**: TÜBİTAK 2204-A photo (try TÜBİTAK's own X/Instagram archives, or a different province's
+MEB news page, rather than the already-dead links tried here), then the remaining ~28 VERIFIED
+records in rough priority order (the other online-format `PRODUCTION_READY` 8 should mostly resolve
+as legitimate `NO_CANDIDATE_FOUND`/no-event-exists rather than need active searching, per this
+lane's own earlier `mode`-based reasoning — worth confirming rather than assuming). Files:
+`s6a_photo_pass_batch1.jsonl` (9 lines), `claims_s6a.jsonl` (9 new lines). Reporting back to S9/CEO
+now per the checkpoint-don't-be-exhaustive instruction.
+
+**Post-checkpoint addendum — cross-tab interference confirmed, two highest-value claims re-verified
+clean.** S9 flagged (after this checkpoint was drafted) that S6-B independently hit intermittent
+cross-tab interference in the shared Browser pane — screenshots landing on a tab other than the one
+specified — and fixed it by calling `tabs_select` to front the intended tab immediately before every
+screenshot. Checked `tabs_context` afterward and found direct confirmation this affects this lane
+too: `tab-2`, which I had used earlier for a Wikimedia Commons file, now shows origin
+`mefis.k12.tr` — reused/contaminated by something else entirely, not the tab I left it as. This
+matches exactly what happened during the IPhO-Turkey verification above (the wrong-file incident
+already recorded as NOT counted). Re-verified the two highest-value photo claims from this
+checkpoint (IPhO Team Türkiye, IMO 2015 closing ceremony) on a fresh tab using the
+`tabs_select`-immediately-before-`screenshot` discipline — both independently reconfirmed identical
+to what was originally recorded; no change needed to either record. Did not re-verify all 5 flagship
+photos given time budget, but note for whoever continues: every record in this checkpoint had its
+Browser-pane tab TITLE checked against the intended filename at verification time (not just the
+navigate call's return value), which is the same signal that caught the one actual mixup — a
+reasonable, if not absolute, safeguard against this specific failure mode. Adopting
+`tabs_select`-before-every-`screenshot` as standard practice for the remainder of this pass.
