@@ -9,52 +9,53 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `CONTROL_TOWER_
 (CEO's consolidated fleet report). On a 5-minute recurring check (`/loop`, per founder
 instruction).
 
-## Checkpoint 16 — 2026-08-27, ~00:05 (crossed midnight; fleet dispatch was 2026-08-26 ~09:00)
+## Checkpoint 17 — 2026-08-27, ~00:15
 
-### Real methodology finding: a dedup blind spot, relayed to S8 for fleet-wide use
+### Third full lane closed: S5A — 28 production-ready, 2 candidate, 1 rejected, 7 blocked/unclear
 
-S5B found that scoping a dedup check to your own assigned categories (as their brief specified:
-`research`/`internship`) misses entities that already exist live under a *different, wrong*
-category. Concretely: **8 real programs — Polygence, Lumiere Education, UC Santa Barbara
-Research Mentorship, Summer Science Program, Rockefeller SSRP, Iowa SSTP, Venture & Tech Summer
-Program, International Research Institute of NC — are already live, all filed under
-`summer_program`** instead of research/internship. Likely part of the real explanation for why
-research/internship read as thin categories at all — some supply already exists, just
-miscategorized. Handled well: reused already-gathered evidence for recategorization proposals
-rather than discarding it, append-only correction convention, didn't rewrite already-pushed
-batches. Separately, found incidentally: **UC Santa Barbara's and Iowa SSTP's programs each
-already have two duplicate rows live in production** — pre-existing, not created by this
-research. Relayed the whole finding to S8 directly (actionable for their own methodology
-regardless of CEO's availability) rather than waiting to route it through CEO.
+Joins S6 (69) and S7 (77) as fully closed this freeze. Real rejection/blocked discipline
+present (8 of 38 total not simply waved through), consistent with the quality bar held all
+session. S5B (the sibling sub-lane) still active — the miscategorization finding from last
+checkpoint has now been relayed directly to S6, S5A itself, and via S8 to S7; propagation
+complete across every lane that could be affected by the same category-scoped dedup blind spot.
 
-### CEO: still silent, ~1hr+ now, no material change since last checkpoint's escalation
+### CEO: now a full hour of silence, unchanged from last checkpoint's escalation
 
-No new push, no reply. Already surfaced directly to the founder last checkpoint — not repeating
-the same escalation at the same intensity without new information. If it resurfaces active,
-will note; if the silence stretches meaningfully longer (not just this one more tick), worth a
-second, more direct flag.
-
-### Steady progress elsewhere, unaffected
-
-S5A's 18-record image backfill, S6's photo-sourcing pass, S7's QA-corrected 29 production-ready
-records, S8's active review work — none of this depends on CEO being reachable right now.
+No new information to add beyond what was already flagged directly to the founder — noting the
+duration factually rather than re-escalating with new intensity. Fleet remains fully productive
+without CEO in the loop; only the founder-gated items (5-row fix, Stockholm Water Prize,
+FRC/FIRST duplicate) are actually stalled.
 
 ### Unchanged: 5-row fix, live-harm rows
 
 All 5 rows re-verified: unchanged.
 
+### Running tally of closed lanes this freeze (informational, not a target to chase)
+
+S5A (28 production-ready), S6 (69 records, 12 production-ready + ongoing photo work), S7 (77
+records, 29 production-ready after S8's QA pass). S5B, S8 still active. S1-S4 still on
+university-photo audits, no pushes this session but no stated blockers either.
+
 ### Reallocation
 
-None forced.
+None forced. Worth a note for whenever CEO resurfaces: with 3 of 4 opportunity-research lanes
+now closed, S5B may be the next one to watch for handoff/closeout.
+
+### Checked now rather than deferring: S1/S2/S4 status
+
+2+ hours since each of S1/S2/S4's last push (S3 excluded — already gave a detailed, recent
+update via chat). Pinged all three directly this tick rather than waiting, per the "flag now,
+not next tick" instruction and the same discipline that correctly resolved S8's apparent
+silence as legitimate deep work (checkpoint 11). No replies yet as of this checkpoint —
+expected, just sent; will report real answers next tick.
 
 ### Open items
 
-1. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO's direct founder
-   confirmation, and now also on CEO's session being reachable.
-2. New: S5B's 8-record miscategorization + 2 pre-existing duplicate pairs (UCSB, Iowa SSTP) —
-   real, evidence-ready fixes waiting on the same promotion path as everything else this week.
+1. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, now 1hr+ unreachable.
+2. S5B's 8-record miscategorization + 2 duplicate pairs — propagation complete, fix still
+   pending the same promotion path.
 3. `turkey_student_access` / `selectivity_evidence` still have no live columns.
-4. Opportunity-photo schema gap — not urgent; S5A/S6 producing verified candidates regardless.
+4. S1/S2/S4 status — pinged this tick, awaiting replies.
 
 ## How these numbers were produced (re-run to refresh)
 
@@ -75,4 +76,4 @@ where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f7
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-27 ~00:05.
+`origin`, 2026-08-27 ~00:15.
