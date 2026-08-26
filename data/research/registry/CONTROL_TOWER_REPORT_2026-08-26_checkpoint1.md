@@ -91,9 +91,14 @@ rows; (B) link-integrity + duplicate-cluster sweep on `opportunities`, re-checki
 - **S8**: continue both tracks; began appropriately (didn't sit idle waiting for S1-S7 to push).
 
 ## QUALITY INCIDENTS
-- **Wrong image (this checkpoint's one confirmed instance)**: Bristol's `primary_image_url` is a
-  crest/wordmark-dominated sign, not a campus photo — passed the pipeline's dimension check,
-  fails §10. Stanford's is a generic, unidentifiable crowd photo — same shape.
+- **Wrong image, now 3 confirmed instances across 2 distinct failure modes**: Bristol's
+  `primary_image_url` is a crest/wordmark-dominated sign, Stanford's is a generic unidentifiable
+  crowd photo (both S3's original sample — passed the pipeline's dimension check, fail §10). A
+  third, from S3-B mid-audit: a heavily color-graded, likely-wrong-building stock-style image,
+  caught and replaced with a properly Commons-traced Public Domain photo. The third is a
+  *different* failure shape than the first two (plausible-looking but wrong, vs. obviously a
+  crest or obviously generic) — evidence this is a real, varied defect class recurring under
+  audit, not a one-off 3-sample fluke.
 - **Stale/unresolved from prior corpus, not yet re-verified this checkpoint**: IE University
   Pre-University Summer Program tier conflict (open_enrollment vs. fresh evidence suggesting
   selective), flagged 2026-08-24, status unknown — on S8's Track A list to re-check.
