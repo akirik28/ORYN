@@ -3,144 +3,112 @@
 **Maintained by: CFO (S10, capacity/throughput/bottleneck control).** Rewritten in place at
 each checkpoint, not appended to. I do not research opportunity facts, source photos, alter
 records, or override evidence — this file tracks fleet capacity and flags backlogs/
-misallocations only.
+misallocations only. Cross-reference: `GAP_MAP.md` (coverage/content state, maintained by CEO)
+and `CONTROL_TOWER_REPORT_*.md` (CEO's own consolidated fleet report) — read all three together,
+not this one alone. Now on a 5-minute recurring check (`/loop`, per founder instruction), not
+just event-driven check-ins.
 
-## Checkpoint 3 — 2026-08-26, freeze day 1, ~10:20 (T+~70min from fleet dispatch)
+## Checkpoint 4 — 2026-08-26, freeze day 1, ~11:10 (T+~2h from fleet dispatch)
 
-**Coverage**: full roster now confirmed directly — S1-S8 + S9 (CEO) + S10 (this file), all
-9 shards + control tower identified by name. No unresolved identities.
+**First checkpoint with real throughput to report.** Every S-lane has now pushed at least one
+substantive batch. Numbers below are read directly from each lane's own pushed commits/files
+(git diff against `origin/main`), not self-reported chat summaries.
 
-### This checkpoint's real content: two verified findings, not throughput numbers yet
+### Most urgent item this checkpoint: 5 live rows still showing wrong data to real students, unfixed
 
-Fleet is still ~70 minutes old; every S-lane remains in setup/first-dispatch. Nothing below is
-a "we're behind schedule" signal — it's exactly the kind of process-quality finding this role
-exists to catch before it compounds into wasted capacity.
+Independently re-verified directly against the DB, right now: **İTÜ Lise Yaz Okulu**
+(`973b3bdd…`, wrong `cycle_status`), **Özyeğin Summer Research** (`2f0e0301…`, `cycle_status`
+self-contradicts its own description), **Istanbul Bilgi Summer School** (`d780bc55…`, deadline
+14+ months stale), **InvestIN** (`8a7c89e4…`, `cost=null` on a confirmed-paid program), **THIMUN**
+(`960dcf4d…`, `cost=null` when a live page quotes €340+/person) — all `status='active'`,
+`verification_state='verified_current'` (the actual recommendation-reaching set, not just
+Browse), all `updated_at` from **before today** (2026-08-21 to 2026-08-23), confirming none has
+been touched since S8 found them. Found by S8's Track A audit, each value re-confirmed against a
+live official source today. Flagged to CEO with exact IDs and an offer to hand over ready-to-run
+UPDATE statements. This is not a research gap — it's a known-correct fix blocked purely on
+write-authority (contract reserves `opportunities*` writes to CEO/DATA). Watching for
+resolution; will escalate to the founder directly if still unfixed by the next checkpoint or two.
 
-**Finding A — "pipeline-accepted" is not "compliant"; my own "901/1010 resolved" framing was
-imprecise, corrected.** S3 (university photos, quarter 3) sample-checked 3 of the 721
-pipeline-"accepted" `campus.webp` files by actually opening and viewing them — something
-neither I nor CEO had done before writing anything down. Result: University of Bristol's file
-is a stone entrance sign dominated by the institution's own crest/wordmark (an outright
-Common Operating Contract §10 reject), Stanford's is a generic graduation-crowd photo with
-nothing identifiably Stanford in it (unverifiable identity), and only Heidelberg (1 of 3)
-looked genuinely compliant. **Update**: S3's full-shard audit has since turned up a third,
-differently-shaped defect (a color-graded photo of the wrong building) — three distinct failure
-modes now confirmed (wrong-entity-dominant, generic-unidentifiable, wrong-building), which
-argues against treating any of them as a one-off fluke worth a quick patch; this is a real,
-recurring category of defect the "accepted" bucket needs genuine per-photo review to catch. I independently confirmed the quantitative substrate directly
-against `storage.objects` (721 `campus.webp` + 338 `logo.webp` = 1,059 total objects, matching
-the metrics-table "accepted" count exactly) — so the *count* was never wrong. What was wrong
-was my own chat-message shorthand ("901/1010 already resolved... don't start from zero"),
-which dropped nuance my own written checkpoint had already correctly hedged ("real remaining
-gap is semantic"). Corrected directly with S3, CEO, and the affected shards. CEO reframed
-GAP_MAP.md's "721 accepted" language from implied-done to explicitly-unverified as a result.
-**Lesson for the rest of this freeze, stated plainly so it doesn't need re-learning**: a
-database status field or an automated pipeline's own pass/fail is evidence that a process ran,
-not evidence the artifact meets this week's real standard. Only opening the actual file (or
-reading the actual source page) closes that gap — and that discipline caught a real defect on
-the first try here, at n=3.
+### Real throughput, by lane (first batches, all still dry-run/proposal per contract — no
+production writes from any S1-S8 worker)
 
-**Finding B — independently-derived boundary math is a reproducible collision risk.** Per
-CEO: S1 and S2's university-photo quartile boundaries were each computed independently via a
-`floor(N·k/4)`-style formula and landed one row apart from each other (not a one-off typo —
-the same shape of error either could reproduce on any future N-way split done this way). S4
-resolved it going forward by adding a `--range` flag to `scripts/acquire-university-images.ts`
-(canonical split: 1-253 / 254-506 / 507-759 / 760-1010), which S1-S3 have now converged on.
-**Lesson**: when N parallel workers need non-overlapping partitions of the same set, a single
-shared, tested tool beats N independent re-derivations of the same math, even when each
-derivation looks correct in isolation — the failure mode is specifically the *disagreement*
-between two independently-"correct" answers, not an obviously-wrong one either side could have
-caught alone.
+| Lane | Output this session | Headline finding |
+|---|---|---|
+| S1 | Shard 1-253: recon complete, corrected fleet gap-map premise, converged on S4's `--range` tool | — |
+| S2 | Shard 254-506: recon complete, self-corrected an independent-formula boundary error | Root cause of the S1/S2 near-collision (Finding B, checkpoint 3) |
+| S3 | Shard 507-759: **3 confirmed image-defect instances** (Bristol crest, Stanford generic crowd, a color-graded wrong-building photo) | Triggered Finding A (checkpoint 3) — "accepted" ≠ compliant |
+| S4 | Shard 760-1010: authored the shared `--range` flag now used fleet-wide; running a structural audit across all 1,010 | Shared tooling adopted by S1-S3 |
+| S5A | 2 batches, ~20 `summer_program` gap-closure records (deadline/eligibility/cost completion on already-live rows, per CEO's depth-over-volume directive) | On-directive: closing gaps, not padding volume |
+| S5B | 1 batch, 12 mentored-research/internship candidates | — |
+| S6 | ~70 claim-log entries (S6-A 37, S6-B 33) across 8+ pushed files. **Headline finding: TÜBİTAK 2204-A and 2202 — the actual national on-ramp for the 6 already-live international olympiad rows (IMO/IBO/IChO/IPhO/IOI/IOAI) — are completely absent from production.** A Turkish student today sees the destinations with no visible path there. 2 net-new + 6 Turkey-access enrichments produced, cycle correctly recorded as closed/not-yet-announced (not guessed) | Real completeness gap in the corpus's most Türkiye-relevant competition family |
+| S7 | **67 accepted / 75 rejected**, consolidated by CEO across 4 sub-lanes (scholarships/journals/essay venues, leadership/social-impact, year-round/online/Türkiye-based). Correctly distinguishes `VERIFIED` (direct official fetch) from `CANDIDATE` (real but fetch-blocked, e.g. bot-protection) — 0 self-assigned `PRODUCTION_READY`, deferring that call to second review as instructed | Rigorous under real tool-budget constraints (WebSearch quota hit, handled by stopping cleanly rather than padding) |
+| S8 | Track A: 38 rows audited, **17 PRODUCTION_READY / 11 VERIFIED / 10 REJECTED** (5 of the 10 on live harm-surface rows, see above). Track B: **0 of 194 "official"-sourced university images have any captured usage right — confirmed by a control check, not a query bug.** New generalization of Finding A: `status='official'` is *also* not a reliable quality signal (3-4 of 7 sampled are a flat logo/crest, not a real photo) — the defect isn't confined to `wikimedia_verified` | Two structural findings, not just per-row QA |
+| CEO | Consolidated checkpoint-1 Control Tower Report, corrected harm-surface count 7→5 after re-verification, flagged Marshall Society's 4-day deadline separately | Same rigor pattern (re-verify before finalizing a founder-bound number) as S8's own self-correction this round |
 
-Both findings are now closed (CEO fixed the docs, `044d324` also fixed a related internal
-inconsistency in the founder-escalations text I'd flagged). Recording them here as **named,
-reusable patterns** for the rest of this freeze and any future one — not reopening either as
-an open item.
+### Backlog read — the first real one, not "too early"
 
-### Status: escalation #1 (photo-schema migration) fully resolved, no longer queued
+**Verification backlog is now the visible bottleneck, and this is expected, not a problem yet.**
+S5A+S5B+S6+S7 combined have produced on the order of 100+ new accepted candidates this session;
+S8's Track A/B numbers above are from auditing the *pre-existing* corpus (S8 started before any
+S1-S7 output existed, correctly used the wait productively) — **today's new output has not yet
+had any second review.** S8's own plan already anticipated pivoting to this once real S1-S7
+output existed, which it now does — flagging as confirmation the timing is right, not as a
+criticism. Watch next checkpoint: does S8's throughput on *new* candidates keep pace with S5-S7's
+combined input rate, or does the gap widen. If it widens, that's the first real case for
+reallocating idle capacity toward review per the CFO brief's own "reduce discovery, redirect to
+verification" rule — not yet, but close.
 
-CEO confirmed via S2's direct read of the consumer code: the read side uses a hardcoded
-`metric_code` allowlist in two page components (not an open-ended read), so adding new
-provenance `metric_code`s (`image_depicts`, `no_logo_verified`, etc.) needs a small, explicit
-code change to extend that allowlist — but genuinely no migration/DDL. Founder escalation #1
-is fully closed, not just downgraded.
+**Image backlog**: unchanged in count (721 pipeline-accepted / 109 no-candidate / 180
+needs_review out of 1,010), but its *meaning* has changed twice this session — first from "0
+done" to "721 done" (wrong), now to "721 unverified, real defect rate confirmed non-trivial via
+3+ independent sample failures across two different status categories" (accurate). S1-S4 are
+correctly now doing full-shard semantic audits, not fast re-confirms.
 
-### Roster (9 of 9 shards + CEO, all confirmed directly)
+**Duplicate/near-miss backlog**: 2 real near-misses caught and resolved before they became actual
+duplicate work (S1/S2 boundary math, S3's own boundary), plus a 3rd pocket of prior uncommitted
+research (`leadership_batch*`/`thincat_*`/`discovery_*`) found by S7 beyond the two already known
+(`cr1_*`/`summer_*`). Zero actual duplicate *records* reported yet.
 
-| Slot | Session | Mission | Status | Output so far |
-|---|---|---|---|---|
-| CEO | oryn-e2 | Control tower — registry, gap-map, founder escalations | ACTIVE | Registry + gap-map pushed and corrected twice (`b72b77f`, `044d324`) |
-| S1 | oryn-c8 | University photos, ids 1-253 | ACTIVE, researching | 0 new — recon (177 candidate/52 needs_review/24 no_candidate); converged on S4's `--range` tool after the boundary near-miss |
-| S2 | oryn-c0 | University photos, ids 254-506 | ACTIVE, researching | 0 new — recon (177 accepted/47 needs_review/29 none); self-reported the boundary root cause to CEO |
-| S3 | oryn-85 | University photos, ids 507-759 (boundary confirmed exact — see below) | ACTIVE — was heads-down verifying before reporting, not blocked | 0 new; the Bristol/Stanford/Heidelberg spot-check (now a 3rd instance found mid-audit) is this shard's real output so far, and it's a genuine, valuable one |
-| S4 | oryn-88 | University photos, ids 760-1010 | ACTIVE, researching | 0 new — recon; authored the shared `--range` flag now used fleet-wide; running a structural audit across all 1,010 in parallel with its own shard's work |
-| S5 | oryn-83 | Turkey-accessible academic opportunities — S5A summer/pre-college/enrichment, S5B research/mentored-research/internships | ACTIVE, dispatched | 0 — confirmed prior overnight corpus is additive not duplicate before starting |
-| S6 | oryn-71 | Competitions — S6-A STEM, S6-B business/humanities/creative | ACTIVE, dispatching | 0 new — baseline 101 existing rows, ~89 reusable never-applied candidates identified from the 2026-08-23/24 corpus |
-| S7 | oryn-4d | Other high-value opportunities — Agent A (scholarships/awards/publications), Agent B (leadership/social-impact/fellowships/online) | ACTIVE, dispatching | 0 — just started |
-| S8 | oryn-53 | Independent QA gate — Track A (fact/eligibility/currentness), Track B (image/duplicate/canonicalization/link-integrity) | ACTIVE | 0 reviewed (nothing from S1-S7 has landed); baseline-auditing the existing live corpus while it waits |
+**QA backlog**: see above — 0 of today's new output reviewed yet, expected to be the first real
+number worth watching.
 
-No session BLOCKED. No agent silent past 30 minutes.
+### Roster — unchanged from checkpoint 3, all 9 shards + CEO active, none blocked >30min
 
-### Backlogs — still a legitimate zero across the board
-
-Verification / production-ready / images-completed-this-week / duplicate / blocked-source / QA
-backlogs are all 0 reported. Fleet is 70 minutes old; first real batches are the next
-meaningful signal, not yet due. Pre-existing 2026-08-23/24 corpus (~100 competition/research
-records, ~390 summer-program findings, still uncommitted in the primary checkout — confirmed
-present) remains correctly treated as deepen-and-fill material by S5/S6, not this week's
-output.
-
-### New operational risk, confirmed directly, not urgent
-
-**Disk**: S3 flagged 94% used / 13GB free on the data volume; verified myself via `df -h` —
-exact match. Not critical at 13GB, but this repo has hit `ENOSPC` from worktree sprawl before
-(50+ worktrees, prior incident). ~12 worktrees active for this freeze alone plus several
-pre-existing ones. Mitigations already informally in place (S3 and I both skipped `npm install`
-in research-only worktrees) — worth CEO reinforcing fleet-wide if worktree count keeps growing.
+Full detail in checkpoint 3 (preserved in git history, `eb2f590`/`c933773`) — not re-listing
+identical role/branch info here to keep this checkpoint focused on what changed.
 
 ### Reallocation
 
-**Still none needed.** Every shard is legitimately active. Watching for the next checkpoint:
-(a) S1-S4 should now be doing real semantic verification, not a quick re-confirm of pipeline
-status, given Finding A; (b) S5/S6 gap-closing vs. new-volume balance per CEO's standing
-S7-favoring directive; (c) whether S8's backlog builds faster than it clears once output lands.
+**Still none forced.** Everyone is producing real output on-mission. The one thing worth a
+founder/CEO decision, not mine to make: whether the 5 live-harm-surface rows get fixed now
+(cheap, evidenced, ready) or wait for a batch with more findings — I'd lean toward now, given
+real students are affected, but this is explicitly outside CFO's remit (no production writes,
+no overriding CEO's prioritization).
 
 ### Open items
 
-1. ~~S3's shard-boundary description vs. S4's canonical split~~ — **closed.** CEO verified S3's
-   docs, registry row, and all 3 worktree manifests now uniformly read 507-759.
-2. `turkey_student_access` / `selectivity_evidence` still have no live columns — every
-   `PRODUCTION_READY` claim this week means "ready for DATA/CEO to promote," not "already live."
-3. **Not a fleet/capacity matter, escalated directly to the founder rather than handled here**:
-   an untracked `Claude.pdf` in the checkout root, flagged in CEO's checkpoint-1 report as
-   possibly containing a minor's personal data. Confirmed independently (metadata only,
-   deliberately not opened): real 1-page PDF, 48KB, created 2026-08-18, never committed to git
-   on any branch — no leak has occurred. Founder's call on disposition, not this fleet's.
+1. Live-harm-surface fix — tracking until resolved (see above).
+2. `turkey_student_access` / `selectivity_evidence` still have no live columns.
+3. `Claude.pdf` privacy item — escalated to the founder directly (see checkpoint 3 detail),
+   founder's call, not re-raising unless it changes state.
 
 ## How these numbers were produced (re-run to refresh)
 
-```sql
-select count(*) total,
-  count(*) filter (where status='active') active,
-  count(*) filter (where status='under_review') under_review,
-  count(*) filter (where verification_state='verified_current') verified_current,
-  count(*) filter (where eligible_countries is not null and array_length(eligible_countries,1)>0) has_eligible_countries,
-  count(*) filter (where deadline is not null) has_deadline
-from opportunities;
-
-select count(distinct u.id) canonical_total,
-  count(distinct m.university_id) filter (where m.metric_code ilike '%image%') canonical_with_image_metric
-from universities u
-left join university_profile_metrics m on m.university_id = u.id and m.metric_code ilike '%image%'
-where u.duplicate_status <> 'superseded';
-
-select metric_code, value_text, count(*) from university_profile_metrics
-where metric_code = 'primary_image_status' group by 1,2 order by 3 desc;
-
-select count(*) filter (where o.name ilike '%campus%') campus_files,
-       count(*) filter (where o.name ilike '%logo%') logo_files
-from storage.objects o join storage.buckets b on b.id=o.bucket_id
-where b.name='university-images';
+```bash
+git fetch origin
+for b in oryn/s1-university-photos oryn/university-photos-s2 oryn/s3-university-photos \
+         oryn/s4-university-photos oryn/s5a-summer-academic-enrichment \
+         oryn/s5b-research-mentored-internships oryn/s6-competitions-research \
+         oryn/s7-other-high-value-opportunities oryn/s8-qa-gate \
+         oryn/research-freeze-ceo-control-tower; do
+  git rev-list --count origin/main.."origin/$b"; git log -1 --format='%h %ar: %s' "origin/$b"
+done
 ```
-Run against Supabase project `qtcvcflzxbuagvvwahhu` via `execute_sql`, 2026-08-26 ~09:20-10:20.
-Disk: `df -h /Users/adasarpkirik/Desktop/Founder/ORYN`.
+```sql
+select id, title, status, verification_state, cycle_status, deadline, cost, updated_at
+from opportunities where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a',
+  '2f0e0301-5dd4-4d25-91a4-8f73bf5584e9','d780bc55-41e0-444b-8bcc-3f927b28c4b7',
+  '8a7c89e4-e63a-4f64-a76d-4bae1b31e889','960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
+```
+Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/`git diff --stat` against
+`origin`, 2026-08-26 ~10:45-11:10.
