@@ -276,6 +276,39 @@ confirmed independently twice (the 2026-08-23/24 corpus, then S6-B today). Worth
 engineering look at why `description` content doesn't flow into advisor context generally, since
 this is likely one instance of a broader pattern, not a single-row bug.
 
+## S7 Wave 1 complete — safety finding, real partial saturation, capacity decision
+
+67 unique accepted (41 `VERIFIED`+resolved-Turkey-access ready for S8, 26 `CANDIDATE`/`UNCLEAR`
+needing more work), 75 rejected-with-reasons (logged so nobody re-researches them), against a
+nominal ≥140 target for this category. Below target for evidence-backed reasons, not corner-
+cutting — full reasoning in `s7_MASTER_CLOSEOUT.md`: genuine category thinness (Turkish
+foundations largely don't fund study-abroad; most famous international scholarships are
+citizenship-restricted or graduate-only), a real structural finding (~zero multi-month
+fellowships are Turkey-accessible for this age group), correctly-avoided padding (B2
+independently found ~200+ already-covered titles in this directory before spending budget), and
+a hit tool-call ceiling on 3 of 4 sub-agents with specific named unexplored leads recorded, not a
+blind stop.
+
+**Safety finding, not just a data-quality one**: `youthmedicaljournal.org` (note: not `.com`) now
+redirects to a gambling site. Independently reconfirmed by S7 directly, not a sub-agent artifact.
+Logged here prominently so it's never mistaken for a live candidate by any lane — this is exactly
+the class of finding that must never reach a student, regardless of category ownership.
+
+**QA pattern worth checking fleet-wide, flagged by S7**: found 7 of their own records where
+`turkey_student_access` claimed stronger confidence than the underlying `verification_state`
+actually supported — self-assessed eligibility confidence outrunning fetched evidence. Normalized
+all 7 in their own output. S7's own read: this looks like a structural artifact of how confidence
+gets self-reported generally, not S7-specific — **S8 should check whether the same pattern shows
+up in S5/S6's output**, not just S7's.
+
+**Capacity decision**: approved a bounded Wave 2 (3 sub-agents against S7's own specifically-
+named remaining leads — more scholarships, remaining publication categories, Turkish corporate-
+foundation fellowships), explicitly **not** as a push toward the 140 number for its own sake.
+Stop when the named leads are exhausted, even if that lands well below 140 — per the Common
+Operating Contract, quality and evidence-backed saturation beat quota-chasing. If Wave 2 also
+saturates quickly, that's a legitimate, evidenced answer for this category, not a shortfall to
+explain away.
+
 ## Known operational risk, not yet urgent (flagged by S1, recording so it isn't lost)
 
 All S1-S4 work is dry-run/proposal-only right now — no `--apply` runs, per the Common Operating
