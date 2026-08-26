@@ -386,3 +386,79 @@ reading is plausible.
 **Files this follow-up**: `data/research/opportunities/s6a_photo_status_regrade.jsonl` (new),
 `data/research/registry/claims_s6a.jsonl` (20 new lines appended), this TRACKER.md entry.
 Reporting back to the orchestrator directly, not S6-B, per instruction.
+
+---
+
+## S6-B (Business/Humanities/Creative) — 2026-08-26, bounded follow-up (Task 1 + Task 2 + photo regrade)
+
+**Task 1 complete — the confirmed gap.** International Greenwich Olympiad (`1ba4bf99`) and UniHive
+Research Proposal Competition (`55dd21cd`) researched from scratch, per the orchestrator's direct
+grep confirming neither lane had actually touched either despite both handoffs claiming to have
+left them for the other.
+
+**IGO (S6B-0032)**: `VERIFIED_ELIGIBLE`, medium-high confidence — real, MILSET-recognised, 53-
+country STEAM competition run by North London Grammar School (£35 fee, 15 categories spanning
+AI/engineering through creative writing/art/performing arts, individual or team-of-3). Evidence
+tier flagged explicitly as weaker than this lane's norm: igolondon.co.uk 403'd on every direct
+WebFetch attempt (homepage, FAQs, registration), so the record rests on Wikipedia + search-index
+evidence rather than a directly-fetched official page. Photo `NOT_YET_RESOLVED` per the ratified
+ruling below (real in-person finalist event exists).
+
+**UniHive (S6B-0033)**: held at `UNCLEAR`/`READY_FOR_REVIEW`, deliberately not accepted at the
+seed PDF's promotional face value. Key finding: UniHive Education's own disclaimer states it has
+**"no formal connection with the University of Cambridge"** despite Cambridge-venue framing —
+second independent instance in this corpus of exactly the affiliation-inflation pattern the brief
+warns against (after the already-live Blackstone Law Review row). Fee, complete eligibility, and
+prize structure (cash vs. a funnel toward UniHive's own paid Advanced Research Programme — the
+same shape cr1's CR1-113 found for Immerse/Horizon) all genuinely unresolved after 5 attempts
+across 3 official pages.
+
+**Task 2 complete — second opinions on S6-A's Battlecode/PennApps/IYPT.**
+
+**PennApps (S6A-0016) — RESOLVED, upgrade recommended.** S6-A's own record explicitly flagged two
+open questions left unresolved for lack of time: is this genuinely open to high-schoolers at all
+(vs. college-only), and is it US-restricted. Directly fetched the current PennApps XXIV site
+(2024f.pennapps.com) — a source S6A-0016 hadn't reached — and found: **"you must be a high school
+or undergraduate student in the US or abroad to apply."** Answers both questions in the positive at
+once. Recommending S6-A apply the upgrade to their own record (not editing it myself, per file-
+ownership rules) — `turkey_student_access` from `UNCLEAR` to `VERIFIED_ELIGIBLE`.
+
+**Battlecode (S6A-0015) — corroborated, not resolved.** Independent re-fetch of battlecode.org
+plus a targeted search reached the identical wall S6-A found: the High School Tournament's only
+published rule is "teams must consist entirely of high school students," with no country-
+eligibility statement anywhere findable, unlike the College tracks' explicit US/International
+qualifier language. A second independent attempt reaching the same limit is itself a useful
+signal — this is a real gap in Battlecode's own published information, not under-research on
+either side. Direct contact (battlecode@mit.edu) remains the only path to close it.
+
+**IYPT (S6A-0032) — corroborated via a different route, specific technical barrier identified.**
+IYPT's own 2026 announcement page does publish a registered-countries list, but it's embedded as a
+static PNG image with no extractable text — genuinely unreadable, not merely unfound. The
+`cc.iypt.org/iypt2026/team/...` URL pattern that worked for S6-A's 2022 finding 404s for 2026
+(the host may have moved to `iypt.ch` for the ETH-Zurich-hosted edition). Recorded precisely for
+whoever attempts this next with an OCR-capable tool.
+
+**Photo-status regrade — applying the orchestrator's ratified ruling to my own records.** The
+ruling ("online-only = legitimately resolved-absent and doesn't block `PRODUCTION_READY`; in-
+person/hybrid = photo plausibly exists, stays `NOT_YET_RESOLVED`") validated the exact bar I was
+already reasoning through in my original HANDOFF.md but had not formally applied as a status
+change. Mirroring S6-A's own regrade pass for consistency: **4 records promoted from `VERIFIED` to
+a genuine self-graded `PRODUCTION_READY`** (mode=online, no other unresolved critical field) —
+Blackstone Law Review Junior Division, Harvard Crimson Global Essay Competition, The Concord
+Review Emerson Prize, Princeton Ten-Minute Play Contest. 3 records deliberately held back despite
+mode=online for record-specific reasons (Marshall Society's unopened T&Cs doc; Jane Austen Society
+and Columbia Law Review both still resting on search-index evidence rather than a direct fetch);
+Blue Ocean Competition also held back given S6-A's independent second opinion that its eligibility
+classification itself may need to move to `ELIGIBLE_WITH_CONDITIONS` — a live open question the
+photo ruling shouldn't paper over.
+
+**This lane's honest count is now**: 4 `PRODUCTION_READY` (self-graded, Contract §11 formal S8
+review still pending) / 17 `VERIFIED` / 5 `READY_FOR_REVIEW` / 4 `CANDIDATE` / 1 `BLOCKED` / 2
+`REJECTED` across 33 research_ids — superseding the "0" figure in my original HANDOFF.md section,
+which was correct under the bar I was applying at the time but is now stale.
+
+**Files this follow-up**: `data/research/opportunities/s6b_mixed_scope_followup1.jsonl` (S6B-0032,
+0033), `data/research/opportunities/s6b_second_opinion_s6a_items.jsonl` (S6B-0034–0036),
+`data/research/opportunities/s6b_photo_status_regrade.jsonl` (new), `data/research/registry/
+claims_s6b.jsonl` (6 new lines appended across this follow-up), this TRACKER.md entry. Reporting
+back to the orchestrator directly, not S6-A, per instruction.
