@@ -9,38 +9,43 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `CONTROL_TOWER_
 (CEO's consolidated fleet report). On a 5-minute recurring check (`/loop`, per founder
 instruction).
 
-## Checkpoint 14 — 2026-08-26, freeze day 1, ~13:15 (T+~4h05min from fleet dispatch)
+## Checkpoint 15 — 2026-08-26, freeze day 1, ~13:25 (T+~4h15min from fleet dispatch)
 
-### The S8→S7 review loop closed end to end
+### Escalating, for the first time this session: CEO has gone fully silent for ~an hour
 
-S7 applied S8's full 67-record QA pass: 1 rejection accepted, 6 field-level corrections applied
-(the cost-figure pattern and peer-review reversal from checkpoint 13), **29 records now stand
-at `PRODUCTION_READY`**. This is the cleanest full cycle of the freeze so far — research →
-independent re-verification → corrections applied → ready for promotion — with nothing skipped
-and no defect swept under a deadline. Still dry-run, no live writes (per contract), but this is
-exactly the shape of output CEO/DATA can promote with confidence when that's authorized.
+Not just no new commits (51+ minutes) — no reply to either of my two direct check-in messages
+either (~1hr and ~35min old respectively), on ANY topic, right after CEO said "asking the
+founder directly, right now." This is a genuine break from CEO's pattern all session (every
+other message answered within minutes, often seconds). Raised directly to the founder this
+tick rather than continuing to note it passively — a full hour of total silence from a
+previously highly-responsive session, immediately after saying they were about to have a
+specific conversation, is worth a human check rather than a fourth automated ping from me.
+Not claiming anything is actually wrong — could be a long, legitimate conversation, could be
+the session compacting/idle, could be something else entirely. Just surfacing the fact pattern.
 
-### S6-A also active on the photo assignment: 5 flagship olympiads verified this checkpoint
+### Real progress continues elsewhere, unaffected by CEO's silence
 
-Steady pace, no issues reported.
+S5A backfilled verified images for 18 of its own production-ready records (batches 2-6) — a
+sensible self-directed extension using the same §10 standard S1-S6 are using, not a scope
+conflict (their own records, their own domain context). S6-A continuing photo work (5 olympiads
+verified last tick). S7's QA-corrected 29 production-ready records stand. S8 productive. None of
+S1-S8 appear to need CEO in the loop for their current work — the silence is only blocking the
+5-row fix + 2 related defects, not fleet throughput generally.
 
-### Unchanged: 5-row fix, live-harm rows, CEO silence
+### Unchanged: 5-row fix, live-harm rows
 
-All 5 rows re-verified: unchanged. CEO: 46 minutes since last push, no reply to either nudge
-(now ~55 and ~35 minutes old respectively) — holding at "noted for founder visibility," not
-re-pinging a third time absent new information, consistent with checkpoints 12-13.
+All 5 rows re-verified: unchanged, ~2 hours now since first flagged.
 
 ### Reallocation
 
-None forced. S5A/S5B steady, S6 productive on two fronts (competitions closed, photos active),
-S7 fully cycled through QA, S8 productive, S1-S4 quiet but with no stated blocker.
+None forced — fleet is self-sufficient right now, only the founder-gated items are stalled.
 
 ### Open items
 
 1. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO's direct founder
-   confirmation, unchanged for several ticks now.
+   confirmation. Now also gated on CEO's own session being reachable at all.
 2. `turkey_student_access` / `selectivity_evidence` still have no live columns.
-3. Opportunity-photo schema gap — not urgent; S6 producing verified candidates regardless.
+3. Opportunity-photo schema gap — not urgent; S5A/S6 producing verified candidates regardless.
 
 ## How these numbers were produced (re-run to refresh)
 
@@ -61,4 +66,4 @@ where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f7
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-26 ~13:15.
+`origin`, 2026-08-26 ~13:25.
