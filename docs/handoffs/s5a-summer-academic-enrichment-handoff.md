@@ -153,6 +153,39 @@ if S5B or CEO want to do so.
   low-leverage. Only 3 genuinely new candidates emerged from ~146+32+20 pages of seed material (PROMYS
   Europe, University of Amsterdam, St. Stephen's Rome) plus 1 flagged umbrella (BRAND-ED).
 
+## POST-COMPLETION DEDUP FOLLOW-UP (added by S5 parent, 2026-08-27)
+
+S10/CFO relayed a methodology finding from S5B (verified against their commit `d030afb` before
+acting on it): a dedup check scoped to a single category can miss an entity that already exists
+live under a *different* category — S5B's own check, scoped to `category IN ('research',
+'internship')`, missed 8 candidates already live under `summer_program`. The same blind-spot risk
+applies here in principle, though S5A's exposure is much smaller since 26 of 28 production-ready
+records are gap-closures on rows already correctly filed under `summer_program` by construction —
+only the 3 genuinely new candidates were at risk (they'd only been checked against
+`summer_program` specifically).
+
+The original S5A sub-agent's session was no longer resumable (transcript unavailable) by the time
+this follow-up was requested, so the S5 parent ran it directly: a full-table (no category filter)
+`ILIKE` search against `title`/`organization` for each candidate's distinctive terms.
+
+- **PROMYS Europe** — searched `promys`/`amsterdam`/`stephen`/`honours`/`honors` across the full
+  `opportunities` table. One hit: `PROMYS (Program in Mathematics for Young Scientists)`,
+  organization Boston University, `category='summer_program'`, `status='active'`
+  (`6a56a106-64c3-40c3-a58c-563cc9b6ec69`). **Confirmed genuinely distinct, not a duplicate** —
+  this is the original US program at Boston University; PROMYS Europe is a separate, Oxford/
+  Wadham-hosted sister program (consistent with this handoff's own IMAGE COMPLETE COUNT note that
+  PROMYS Europe's photo is Oxford-based). Same pedagogical model, different institution, country,
+  and presumably application pool — a legitimate separate canonical entity per Contract §7, not a
+  cross-category miscategorization.
+- **University of Amsterdam Pre-University Honours Programmes** — no match under any searched
+  term. Not already live under any category. Clean.
+- **St. Stephen's School Rome Arts and Humanities Summer Program** — no match for `stephen`
+  anywhere in the table. Not already live under any category. Clean.
+
+**Result: all 3 candidates confirmed clean, no cross-category duplicates found, no corrections
+needed.** Nothing in the 28 PRODUCTION_READY count or the 2 CANDIDATE records changes as a result
+of this follow-up.
+
 ## KEY GAPS
 
 - **Volume remaining**: of the 236 active/under_review `summer_program` rows missing
