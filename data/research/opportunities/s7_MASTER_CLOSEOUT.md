@@ -113,6 +113,48 @@ lanes' self-assessed output too**, not just this one — the failure mode (a res
 subjective confidence in a field outrunning what was actually fetched) seems structural to how
 the sub-agent prompts were written, not specific to S7.
 
+## CROSS-CATEGORY DUPLICATE ADDENDUM (2026-08-26, post-S8-QA)
+
+S8 relayed a finding from S5B: dedup checks scoped to one's own assigned category miss
+entities that already exist live under a **different, wrong category** (S5B found 8
+summer_program rows that should be research/internship). Ran the equivalent check against
+S7's own output — a whole-table, category-agnostic domain match of all 76 accepted records'
+`organizer_domain` values against every row in `opportunities` regardless of category.
+
+**Result: 5 confirmed duplicates, 3 of which were already marked `PRODUCTION_READY`.**
+Removed: The International Award for Young People/Duke of Edinburgh (0001 — duplicate of the
+live "Duke of Edinburgh's International Award — Türkiye"), Three Dot Dash (0006), The Diana
+Award (0044), John Locke Institute Essay Competition (0024 — identical `official_url` to the
+live "JLI Global Essay Competition," filed under `competition`), USACO (0061). Full detail and
+original records preserved in `s7_livedb_crosscategory_dupes.jsonl`.
+
+**Root cause, stated plainly**: each Wave 1 sub-agent's prompt included a "do not
+re-research" list scoped to what seemed relevant to *that sub-agent's own category* (e.g.
+B1's leadership/fellowship prompt listed "Duke of Edinburgh Türkiye" and "Three Dot Dash,"
+A1's scholarship/award prompt did not) rather than the full ~45-entity cross-category
+baseline built pre-dispatch. A1 independently rediscovered two B1-excluded entities under a
+plausible "award" framing, because A1 was never told they were already spoken for. **This
+is exactly the failure mode S5B/S8 described, just manifesting through prompt-scoping rather
+than DB-category-scoping** — the fix for any future multi-agent research wave is the same
+either way: give every sub-agent the FULL do-not-duplicate list, not a category-filtered
+subset, and run a whole-table domain/title check before finalizing, not just a
+category-filtered one.
+
+**3 further records flagged, not removed** (real ambiguity, decision needs a human/DATA
+call, not a unilateral merge or deletion by a research lane): UWC Türkiye (0008 — live DB
+has a thin, `organization: null`, wrongly-`summer_program`-categorized stub for the same
+entity; this record is a far richer verified replacement, arguably should supersede the
+stub rather than be discarded — flagging for DATA to reconcile, not deciding this myself);
+The Concord Review (0021 — live DB's "Emerson Prize" entry is very likely the same
+underlying entity under a `competition` framing rather than `research`); CTY Online
+Programs (0062 — likely the same CTY-online offering as a live `academic_program` row,
+different specific URL path, not confirmed identical). All 3 demoted to `CANDIDATE`
+pending that review rather than left at their prior (higher) state.
+
+**Net effect: 71 unique records (was 76), 26 PRODUCTION_READY (was 29).** Full per-record
+detail in `s7_livedb_crosscategory_dupes.jsonl`. This check should be treated as the
+template for any future wave, not a one-time fix — see What The Next Owner Should Do.
+
 ## WAVE 2 ADDENDUM
 
 CEO-approved, scoped to the specific named leads in each Wave 1 closeout (not blind
