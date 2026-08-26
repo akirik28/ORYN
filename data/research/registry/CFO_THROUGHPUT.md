@@ -14,12 +14,16 @@ instruction).
 **No branch changes — fourth consecutive quiet tick.** Same 10 HEADs. Still 2 peers. Live-harm
 rows re-verified: unchanged. Checked back with S8 given enough time has passed since their
 "will report either way" message that their subagent (already anomalously long at last report)
-should be well past that now — no reply yet as of this checkpoint. CEO's silence continues,
-now ~2h50min.
+should be well past that now. **S8's reply**: subagent still shows `running` with no completion
+notification and no response to their own check-in — correctly recognizing they can't
+distinguish "slow" from "stuck" from outside, S8 is doing the 11-record verification themselves
+directly rather than keep waiting, and will reconcile against the subagent's output if it ever
+returns rather than waste it. Right call — unblocking beats indefinite uncertainty on a job
+small enough to just do. CEO's silence continues, now ~2h50min.
 
 ### Open items (unchanged)
 
-1. S8's long-running subagent — re-checked this tick, awaiting reply.
+1. S8's subagent — S8 unblocked itself, doing the verification directly. Awaiting real numbers.
 2. S1/S2/S4 session loss — awaiting CEO/founder decision on resuming. Recovered work safe.
 3. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, ~2h50min unreachable.
 4. `turkey_student_access` / `selectivity_evidence` still have no live columns.
