@@ -10,19 +10,28 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `SESSION_CLOSEO
 founder instruction) — fleet is under dynamic reassignment (P0-P7), not stopping; watching
 for dead sessions per founder's explicit ask at checkpoint 139.
 
-## Checkpoint 153 — 2026-08-27, ~11:45
+## Checkpoint 154 — 2026-08-27, ~11:50
 
 **No dead servers.** Same 9 peers, relaunched sessions ~1h old, originals 12h.
 
-**New pending-fix item — not yet confirmed applied.** `oryn/s5a-summer-academic-enrichment`
-advanced +18 → +19, 3 minutes ago: "docs(s5): precise fix list for CEO — currency, deadline,
-umbrella rows." This is a *prepared handoff*, same pattern as the earlier Stockholm/FRC fix
-package (checkpoint 140) — S5A has identified specific currency/deadline/umbrella-row issues
-and written them up for CEO to action, but nothing here confirms they've been applied to the
-live DB yet. Not treating this as resolved; watching for CEO to either action it or relay
-confirmation.
+**Both of last tick's pending items resolved — one independently verified.**
+- `oryn/research-freeze-ceo-control-tower`: +15 → +16, 4 minutes ago — "S5 fix package applied
+  (12 writes) + UNO grade fix." Read the actual commit content rather than trusting the
+  headline number: **12 writes** = 2 currency-label clarifications (values were already
+  correct, only USD-ambiguity text fixed), 8 category recategorizations into `research`/
+  `internship`, 2 duplicate pairs retired (found incidentally, unrelated to what S5 was
+  asked to do). **Deliberately not resolved**: Penn Medicine's deadline (no clean source —
+  flagged, not guessed) and 3 umbrella-row structural calls (WYSE/BRAND-ED/Johns Hopkins CTY)
+  — held as genuine product decisions rather than rushed. **Independently verified the UNO fix
+  directly**: `31856863` (UNO - United Nations Online) now shows `eligible_grades: [10, 11,
+  12]`, matching the described correction (was wrongly excluding 10th graders), fresh
+  `updated_at` (07:07:02, distinct from the earlier fix batches).
+- `oryn/s4-university-photos`: +2 → +3, 4 minutes ago — "S4: reciprocal review complete — 25
+  real defects confirmed, 1 correction, 5 disputes resolved." The "25" matches the retraction
+  S4 reported at checkpoint 135 (26→25 after the University of Utah correction) — consistent,
+  no new discrepancy.
 
-All other branches unchanged since checkpoint 152. Live-harm-surface rows re-verified: still
+All other branches unchanged since checkpoint 153. Live-harm-surface rows re-verified: still
 all correct.
 
 ### Open items (updated)
@@ -32,7 +41,8 @@ all correct.
 2. University-photo false-accept rate — S2's ~16% vs. my earlier ~12-15%, not yet reconciled.
 3. Browser-pane contention risk — only S4's exposure remains unconfirmed; CEO handling
    directly.
-4. New: S5A's currency/deadline/umbrella-row fix list — prepared, not yet confirmed applied.
+4. Penn Medicine deadline + 3 umbrella-row structural decisions — deliberately deferred by
+   CEO/S5 rather than guessed; genuinely open, not a backlog failure.
 
 ## How these numbers were produced (re-run to refresh — as separate calls, not batched)
 
@@ -56,8 +66,11 @@ select id, title, status, verification_state, updated_at from opportunities
 where id::text like 'c8eb3d40%' or id::text like '17aeb772%'
    or id::text like 'dfb94075%' or id::text like 'db25d327%';
 
+select id, title, eligible_grades, updated_at from opportunities
+where id::text like '31856863%';
+
 select column_name from information_schema.columns
 where table_name = 'opportunities' and column_name in ('turkey_student_access', 'selectivity_evidence');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql` (as separate calls), and `git fetch`/
-branch diff against `origin`, 2026-08-27 ~11:45.
+branch diff against `origin`, 2026-08-27 ~11:50.
