@@ -983,3 +983,46 @@ eligibility is solid, current-cycle application timing is not independently conf
 **Files this task**: `data/research/opportunities/s6b_turkeyelig_batch1.jsonl` (15 entries, all
 completed in one pass), `data/research/registry/claims_s6b.jsonl` (15 new lines appended), this
 TRACKER.md entry.
+
+---
+
+## S6-A (STEM) — 2026-08-27, CEO fleet-wide Turkey-eligibility task (16 rows)
+
+Same CEO reassignment as S6-B, own 16 rows across fellowship/volunteering/entrepreneurship. All
+16 completed in one pass, written to `s6a_turkeyelig_batch1.jsonl`.
+
+**Verdicts**: 9 `VERIFIED_ELIGIBLE`, 3 `ELIGIBLE_WITH_CONDITIONS`, 3 `NOT_ELIGIBLE`, 3 `UNCLEAR`.
+
+**Notable findings beyond a plain yes/no**:
+- **Ashoka Young Changemakers**: confirmed the CEO's suspicion directly — the operator's own
+  page states the country list is exhaustive ('You can apply to AYC only in the country that you
+  are a resident of') and Türkiye is absent from both the core list and the separate European
+  track's named countries. `NOT_ELIGIBLE`.
+- **GençBizzTech**: confirmed the CEO's own flagged condition — state (devlet) Fen Lisesi
+  enrollment specifically, not any Turkish high school. `ELIGIBLE_WITH_CONDITIONS`.
+- **Genç UPSHIFT**: eligibility explicitly extends beyond Turkish citizens to foreign nationals
+  holding Turkish ID (including Syrian/Ukrainian/Afghan and other '99'-prefixed-ID holders) —
+  genuinely relevant to Türkiye's refugee/foreign-resident youth population, a nuance worth
+  surfacing beyond a bare eligible/not-eligible call.
+- **JA Company Programme Europe**: resolved by confirming Türkiye's actual JA member
+  organization — Genç Başarı Eğitim Vakfı, the same foundation independently confirmed elsewhere
+  in this fleet's research as running GençBizz/GençBizzTech.
+- **İBB Genç Gönüllü Programı**: genuinely `UNCLEAR`, contrary to the CEO's expectation of a
+  quick close — checked the program's own FAQ page directly for a residency statement and found
+  none; age (15-25) confirmed but the Istanbul-residency question the CEO flagged remains open.
+- **Duke of Edinburgh's International Award — Türkiye**: confirmed via TİKAV (license-holder
+  since 2013, now operating under the name 'Uluslararası Gençlik Ödülü – Türkiye' since 2020,
+  same program) — `VERIFIED_ELIGIBLE` but requires an annual paid 'Participation Donation', not
+  free as one might assume.
+- **TechGirls**: freshly re-verified for the 2026 cycle specifically (not carried forward from a
+  possibly-stale prior confirmation) — Türkiye is explicitly named in the current dated list.
+- **Girl Up Project Awards**: `ELIGIBLE_WITH_CONDITIONS` — WebFetch was blocked (403) so verified
+  via the Browser pane directly; confirmed a live 'Europe' track exists and Türkiye has real
+  historical participation (2023 class), but the current cycle's exact country-to-track mapping
+  wasn't found published.
+- **Three Dot Dash**: resolved the CEO's specific nomination-gate question (it's a genuinely open
+  pre-application process, not closed/invitation-only) while leaving the country-list question
+  itself `UNCLEAR` — two different questions, only one fully closed.
+
+**Files**: `s6a_turkeyelig_batch1.jsonl` (16 lines), `claims_s6a.jsonl` (+16 lines). Committing and
+pushing now.
