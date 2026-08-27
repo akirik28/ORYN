@@ -32,6 +32,23 @@ continuing S5's QA backlog then a systematic URL-health sweep (P6).
   Global Connect, is a separate for-profit company). Kept `PRODUCTION_READY`; country eligibility
   honestly left `unknown` — S8 explicitly declined to infer open eligibility from silence.
 
+## Further writes — S6 and S5 fix packages, same standard throughout
+
+- **UNO - United Nations Online** (`31856863`): eligible_grades wrongly excluded 10th graders vs.
+  the operator's own page ("rising 10th to 12th graders") — corrected, found during S6's Turkey-
+  access sweep.
+- **S5 fix package, 12 writes**: 2 currency-label clarifications (ETH Zurich CHF 500, St Andrews
+  GBP 6,850 — numeric values were already correct, only the implicit-USD ambiguity needed fixing);
+  8 category recategorizations (Polygence/Lumiere/UCSB Research Mentorship/Summer Science Program/
+  Rockefeller SSRP/SSTP/International Research Institute of NC → `research`; Venture & Tech Summer
+  Program → `internship`, not research — it's a real internship placement, not a taught course);
+  2 pre-existing internal duplicate pairs retired (Research Mentorship Program into UCSB's row,
+  SSTP's empty duplicate into the populated one) — both surfaced incidentally by S5's own research,
+  unrelated to what it was asked to find. **Deliberately not resolved**: Penn Medicine's deadline
+  discrepancy (no clean source for the current stored value — flagged, not guessed) and 3 umbrella-
+  row structural decisions (WYSE/BRAND-ED/Johns Hopkins CTY — genuine product/data-model calls, not
+  quick fixes, held rather than rushed).
+
 ## Production writes made (the only writes any research lane made all session)
 
 5 factual corrections to `opportunities`, executed by CEO after **direct, explicit, first-hand
