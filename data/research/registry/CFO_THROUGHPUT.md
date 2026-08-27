@@ -10,11 +10,18 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `SESSION_CLOSEO
 founder instruction) — fleet is under dynamic reassignment (P0-P7), not stopping; watching
 for dead sessions per founder's explicit ask at checkpoint 139.
 
-## Checkpoint 150 — 2026-08-27, ~11:30
+## Checkpoint 151 — 2026-08-27, ~11:35
 
-**No change — 150th checkpoint of the session.** Same 10 branch HEADs as checkpoint 149. No
-dead servers — same 9 peers, relaunched sessions ~1h old, originals 12h. Live-harm-surface
-rows re-verified: still all correct, unchanged.
+**No dead servers.** Same 9 peers, relaunched sessions ~1h old, originals 12h.
+
+**S5A appears to have finished its gap-closure work.** `oryn/s5a-summer-academic-enrichment`
+advanced +15 → +16, 2 minutes ago: "S5A batch10: gap-closure for final 11 verified_current
+summer_program rows" — labeled "final," following batches 7-9 (checkpoints 142, 147, 149).
+Across those four batches: 14 + 9 + 9 + 11 = 43 rows closed. Watching next tick for whether
+S5A picks up a new P0-P7 assignment or goes idle/reassigned.
+
+All other branches unchanged since checkpoint 150. Live-harm-surface rows re-verified: still
+all correct.
 
 ### Open items (unchanged)
 
@@ -50,4 +57,4 @@ select column_name from information_schema.columns
 where table_name = 'opportunities' and column_name in ('turkey_student_access', 'selectivity_evidence');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql` (as separate calls), and `git fetch`/
-branch diff against `origin`, 2026-08-27 ~11:30.
+branch diff against `origin`, 2026-08-27 ~11:35.
