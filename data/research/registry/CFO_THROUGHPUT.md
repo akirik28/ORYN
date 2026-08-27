@@ -10,12 +10,11 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `SESSION_CLOSEO
 founder instruction) — fleet is under dynamic reassignment (P0-P7), not stopping; watching
 for dead sessions per founder's explicit ask at checkpoint 139.
 
-## Checkpoint 170 — 2026-08-27, ~13:10
+## Checkpoint 171 — 2026-08-27, ~13:15
 
-**No change — 170th checkpoint.** Same 10 branch HEADs as checkpoint 168. S5A's "final
-numbers" commit stands 5 minutes on with no further activity — looks like a genuine stand-down
-this time, not another reassignment yet. No dead servers — same 9 peers, relaunched sessions
-~2h old, originals 14h. Live-harm-surface rows re-verified: still all correct.
+**No change.** Same 10 branch HEADs as checkpoint 170. No dead servers — same 9 peers,
+relaunched sessions ~2h old, originals 14h. Live-harm-surface rows re-verified: still all
+correct.
 
 ### Open items (unchanged)
 
@@ -57,4 +56,4 @@ select column_name from information_schema.columns
 where table_name = 'opportunities' and column_name in ('turkey_student_access', 'selectivity_evidence');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql` (as separate calls), and `git fetch`/
-branch diff against `origin`, 2026-08-27 ~13:10.
+branch diff against `origin`, 2026-08-27 ~13:15.
