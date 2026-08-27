@@ -10,18 +10,19 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `SESSION_CLOSEO
 founder instruction) — fleet is under dynamic reassignment (P0-P7), not stopping; watching
 for dead sessions per founder's explicit ask at checkpoint 139.
 
-## Checkpoint 155 — 2026-08-27, ~11:55
+## Checkpoint 156 — 2026-08-27, ~12:00
 
-**No dead servers.** Same 9 peers, relaunched sessions ~1h old, originals 12h.
+**No dead servers.** Same 9 peers, relaunched sessions ~1h old, originals 13h.
 
-**S1 has finished its shard.** `oryn/s1-university-photos` advanced +3 → +4, 3 minutes ago —
-"S1-B complete: 126/126 universities, 123 VERIFIED, 3 BLOCKED." Full shard coverage; 3 rows
-blocked (presumably needing more access/info — not detailed here, not guessing why). This is
-the first of the relaunched-fleet lanes to report full completion of a defined shard, as
-opposed to an open-ended continuation pass. Watching for whether S1 gets a new P0-P7
-assignment next.
+**Dynamic reassignment visibly working, capacity moving to where it's needed.**
+`oryn/s7-other-high-value-opportunities` advanced +13 → +14, 3 minutes ago — "photo-gap-fill
+for S5A/S5B (CEO reassignment) — 9 verified." S7 finished its own photo pass earlier
+(checkpoint 147/153) and has now been reassigned by CEO to fill photo gaps for S5A/S5B's newly
+gap-closed records, rather than sitting idle. This is the P0-P7 directive from checkpoint 142
+functioning as described — completed lanes picking up the highest-value unowned work instead
+of stopping.
 
-All other branches unchanged since checkpoint 154. Live-harm-surface rows re-verified: still
+All other branches unchanged since checkpoint 155. Live-harm-surface rows re-verified: still
 all correct.
 
 ### Open items (unchanged)
@@ -61,4 +62,4 @@ select column_name from information_schema.columns
 where table_name = 'opportunities' and column_name in ('turkey_student_access', 'selectivity_evidence');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql` (as separate calls), and `git fetch`/
-branch diff against `origin`, 2026-08-27 ~11:55.
+branch diff against `origin`, 2026-08-27 ~12:00.
