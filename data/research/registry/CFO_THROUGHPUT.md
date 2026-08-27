@@ -10,51 +10,33 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `SESSION_CLOSEO
 founder instruction) — fleet is under dynamic reassignment (P0-P7), not stopping; watching
 for dead sessions per founder's explicit ask at checkpoint 139.
 
-## Checkpoint 159 — 2026-08-27, ~12:15
+## Checkpoint 160 — 2026-08-27, ~12:20
 
-**Significant quality finding — the photo-defect rate was materially understated, now
-corrected. Flagging this prominently, not folding it quietly into a routine update.**
-
-`oryn/research-freeze-ceo-control-tower` advanced +16 → +17, 4 minutes ago: "refine
-official-tier photo defect rate 16%->42%, S2 finding." Read the actual `GAP_MAP.md` diff
-rather than trusting the commit title alone:
-
-- S2 independently cross-checked S1/S3/S4's **official-tier** images directly against the
-  actual files (147 universities, not self-reports). True defect rate on that tier:
-  **~42% (85 pass / 62 fail)** — consistent across all three shards (S1 41.8%, S3 40.5%,
-  S4 44.0%).
-- **The earlier ~12-16% figure was not wrong data, it was a misleading blend**: it mixed the
-  bad `official` tier with the near-0%-defect `wikimedia_verified` tier, diluting the real
-  severity. The `official`-tier acquisition path is defective on **close to half its output,
-  not a sixth of it.**
-- `wikimedia_verified` remains genuinely trustworthy — confirmed near-0% failure a third
-  independent way tonight (after CEO's own count and S8's).
-- Related, equally serious: license completeness is **exactly inverted by tier** —
-  `wikimedia_verified` is 525/525 (100%) license-complete; `official` is **0/194 (0%)**.
-
-This is a real, well-evidenced quality problem on the `official` photo tier specifically —
-not a false alarm, not resolved, and worse than my own earlier open-item note ("S2's ~16% vs.
-my earlier ~12-15%") suggested. Superseding that note with the precise figure. CEO has already
-documented this formally in `GAP_MAP.md` with a full handoff
-(`docs/handoffs/s2-crosscheck-official-tier-2026-08-27.md` on `oryn/s2-crosscheck-official-
-tier`) — not re-escalating to CEO since they authored the finding, but flagging directly to
-the founder in chat this tick given the magnitude.
+**Fast response to checkpoint 159's finding.** `oryn/s4-university-photos` advanced +3 → +4,
+4 minutes ago: "S4/P2: classify reuse rights for all 194 fleet-wide official-tier images."
+This directly addresses the 0/194 license-completeness gap on the `official` tier flagged last
+tick — S4 has been reassigned (P2 = image rights, per the P0-P7 order) to close it fleet-wide,
+not just within its own shard. The 42%-defect-rate finding itself (content correctness, not
+rights) is separate and not yet addressed by this commit — noting the distinction rather than
+treating one fix as covering both problems.
 
 **No dead servers.** Same 9 peers, relaunched sessions ~2h old, originals 13h. All other
-branches unchanged since checkpoint 158. Live-harm-surface rows re-verified: still all
+branches unchanged since checkpoint 159. Live-harm-surface rows re-verified: still all
 correct.
 
 ### Open items (updated)
 
-1. **`official`-tier photo defect rate: ~42%, license-complete 0/194** — real, quantified,
-   `wikimedia_verified` tier unaffected and trustworthy. Superseding the earlier ~12-16% note.
-2. `turkey_student_access` / `selectivity_evidence` — research double-checked, DB columns
+1. `official`-tier photo **defect rate (~42%, content correctness)** — no remediation work
+   observed yet; separate from the rights-classification work below.
+2. `official`-tier **license/reuse-rights (0/194)** — now being worked, S4/P2 fleet-wide
+   classification pass just started.
+3. `turkey_student_access` / `selectivity_evidence` — research double-checked, DB columns
    still don't exist.
-3. Browser-pane contention risk — only S4's exposure remains unconfirmed; CEO handling
+4. Browser-pane contention risk — only S4's exposure remains unconfirmed; CEO handling
    directly.
-4. Penn Medicine deadline + 3 umbrella-row structural decisions — deliberately deferred,
+5. Penn Medicine deadline + 3 umbrella-row structural decisions — deliberately deferred,
    genuinely open.
-5. S1's 3 BLOCKED university rows — not yet detailed; watching for follow-up.
+6. S1's 3 BLOCKED university rows — not yet detailed; watching for follow-up.
 
 ## How these numbers were produced (re-run to refresh — as separate calls, not batched)
 
@@ -82,4 +64,4 @@ select column_name from information_schema.columns
 where table_name = 'opportunities' and column_name in ('turkey_student_access', 'selectivity_evidence');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql` (as separate calls), and `git fetch`/
-branch diff against `origin`, 2026-08-27 ~12:15.
+branch diff against `origin`, 2026-08-27 ~12:20.
