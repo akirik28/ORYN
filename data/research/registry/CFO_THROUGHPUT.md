@@ -10,27 +10,26 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `SESSION_CLOSEO
 founder instruction) — fleet is under dynamic reassignment (P0-P7), not stopping; watching
 for dead sessions per founder's explicit ask at checkpoint 139.
 
-## Checkpoint 166 — 2026-08-27, ~12:50
+## Checkpoint 167 — 2026-08-27, ~12:55
 
 **No dead servers.** Same 9 peers, relaunched sessions ~2h old, originals 13h.
 
-**S3 finished its full shard.** `oryn/s3-university-photos` advanced +2 → +3, 2 minutes ago —
-"research(s3): FINAL — 253/253 university photos, second-reviewed, consolidated." Full
-coverage with second review, matching S1's earlier full-shard close (checkpoint 155). Watching
-for whether S3 gets a new P0-P7 assignment.
+**S3 picked up cross-check work tied to open item #2.** `oryn/s3-university-photos` advanced
++3 → +4, 84 seconds ago: "research(s3): cross-check final dataset against S4's fleet-wide
+rights classification." S3 finished its own shard last tick and has now been assigned to
+independently verify S4's P2 rights-classification pass (194 official-tier images) — second-
+review discipline applied to that work too, not just self-reported.
 
-**S5A continues.** `oryn/s5a-summer-academic-enrichment` advanced +23 → +24, 85 seconds ago:
-"S5A batch15: 7 PRODUCTION_READY, 2 REJECTED, 5 structural/technical flags" — fifth
-consecutive batch since checkpoint 161.
-
-All other branches unchanged since checkpoint 165. No remediation activity yet on the 42%
-official-tier content-defect rate. Live-harm-surface rows re-verified: still all correct.
+All other branches unchanged since checkpoint 166. No remediation activity yet on the 42%
+official-tier content-defect rate specifically. Live-harm-surface rows re-verified: still all
+correct.
 
 ### Open items (unchanged)
 
 1. `official`-tier photo **defect rate (~42%, content correctness)** — no remediation work
    observed yet.
-2. `official`-tier **license/reuse-rights (0/194)** — S4/P2 classification pass in progress.
+2. `official`-tier **license/reuse-rights (0/194)** — S4/P2 classification pass in progress,
+   now getting a second-review cross-check from S3.
 3. `turkey_student_access` / `selectivity_evidence` — DB columns still don't exist.
 4. Browser-pane contention risk — only S4's exposure remains unconfirmed; CEO handling
    directly.
@@ -64,4 +63,4 @@ select column_name from information_schema.columns
 where table_name = 'opportunities' and column_name in ('turkey_student_access', 'selectivity_evidence');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql` (as separate calls), and `git fetch`/
-branch diff against `origin`, 2026-08-27 ~12:50.
+branch diff against `origin`, 2026-08-27 ~12:55.
