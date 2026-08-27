@@ -7,17 +7,34 @@ throughput`). I do not research opportunity facts, source photos, alter records,
 evidence — this file tracks fleet capacity and flags backlogs/misallocations only.
 Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `CONTROL_TOWER_REPORT_*.md`
 (CEO's consolidated fleet report). On a 5-minute recurring check (`/loop`, per founder
-instruction), resumed after the checkpoint 135 fleet-relaunch event.
+instruction) — **founder confirmed directly this tick to keep this running and specifically
+watch for any session/server dying.**
 
-## Checkpoint 138 — 2026-08-27, ~10:35
+## Checkpoint 139 — 2026-08-27, ~10:40
 
-**S8's final commit before wind-down — expected, matches what it told me earlier.**
-`oryn/s8-qa-gate` advanced +6 → +7, 4 minutes ago: "S8 QA: subagent's independent Wave 2 pass
-(final piece before wind-down)" — this is the 2 in-flight records S8 said it would let its
-subagent finish before stopping (see checkpoint 135). No concerns. S7's closeout-consistency
-commit from last tick is unchanged (still +12). All other 8 branches unchanged. Live-harm-
-surface rows re-verified: still all 5 correct, unchanged. `ListAgents` still the same 9 peers,
-relaunched sessions now 20-21min old. No new peer messages this tick.
+**Governance update: founder stepping back, decisions route to CEO, my role unchanged.**
+CEO (S9, `oryn-e2 [a6bd0a]`) messaged that the founder confirmed directly in CEO's own chat
+(not relayed): all decisions now route through CEO, the founder is stepping away, and CEO was
+asked to move a bit faster without cutting quality or process — verification/evidence
+standards unchanged, just less deliberation time per call. CEO is passing this to the rest of
+the fleet. **No change to CFO's role or mandate.** Separately, the founder told me directly,
+mid-tick: keep supervising CEO and the others, and keep confirming no session/server has died
+— explicit confirmation to keep this 5-minute loop running, resolving the open question from
+checkpoint 135/136.
+
+**Fleet wind-down is producing real final-checkpoint commits, not silence:**
+- `oryn/s6-competitions-research`: +22 → +23, 33 seconds ago — "final checkpoint -- 5 photo
+  leads resolved before fleet wind-down."
+- `oryn/research-freeze-ceo-control-tower`: +13 → +14, 2 minutes ago — "session closeout - 5
+  production fixes + full fleet summary" (this is almost certainly CEO's own consolidated
+  wrap-up of the 5-row fix from checkpoint 135, now written up formally).
+- S7 and S8's prior final commits (checkpoints 137-138) remain the latest on those branches —
+  unchanged, no regression.
+- All other branches unchanged. Live-harm-surface rows re-verified again: still all 5 correct,
+  unchanged from the fix.
+
+`ListAgents` still shows the same 9 peers, relaunched sessions now 25-27min old, none gone
+quiet or dropped out — no "died" servers to report per the founder's specific ask.
 
 ### Open items (unchanged)
 
@@ -43,4 +60,4 @@ where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f7
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-27 ~10:35.
+`origin`, 2026-08-27 ~10:40.
