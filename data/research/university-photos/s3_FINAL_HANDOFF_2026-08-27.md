@@ -95,6 +95,42 @@ already passed one careful researcher's own audit — a concrete demonstration t
 single-pass verification, however careful, has a residual error rate independent review
 catches. Zero wrong-institution or hidden-logo findings beyond what's listed above.
 
+## CROSS-CHECK AGAINST S4'S FLEET-WIDE RIGHTS CLASSIFICATION (added 2026-08-27, post-completion)
+
+S9 flagged that S4 completed a follow-on task (P2) classifying rights for all 194
+fleet-wide `official`-status images and asked whether it affected this shard's 155
+`RIGHTS_REVIEW_REQUIRED` rows. Checked directly rather than assumed either way
+(`docs/handoffs/s4-p2-rights-classification-2026-08-27.md` and its two data files on
+`origin/oryn/s4-university-photos`, independently confirmed real and substantive before
+relying on it): **42 of this shard's 253 universities also appear in S4's 194-record set.**
+Of those 42, two needed action:
+
+- **rn 572, UC San Diego — corrected.** This record still uses the original pipeline
+  `campus.webp` (never replaced), previously `RIGHTS_REVIEW_REQUIRED` (generic "unknown").
+  S4 independently found and verbatim-confirmed UCSD's own Terms of Use: *"No material from
+  any official UC San Diego website may be copied, reproduced, republished... without
+  explicit permission."* Updated to a new, more precise status, **`NOT_SUITABLE_FOR_REUSE`**
+  (adopting S4's category — this dataset's original three-state schema didn't have a
+  "checked and found restrictive" state, only "checked and clear" vs. "never checked"; worth
+  the schema question going to whoever owns the eventual production migration). Real photo,
+  correct institution, confirmed identity — purely a rights blocker, and now a *known* one
+  instead of an *unknown* one.
+- **rn 636, Tecnológico de Monterrey — flagged, not downgraded.** This record's photo was
+  already replaced with an independently-sourced Commons photo (the original pipeline image
+  was a pure logo graphic, rejected during research). S4 found Tec de Monterrey's own legal
+  notice requires "express written authorization" to reproduce *site* content — which doesn't
+  directly govern a third party's own photograph. But given this dataset already downgraded
+  Bocconi over a comparable indirect signal (Italy's lack of freedom-of-panorama for
+  copyrighted architecture, despite a clean-looking photographer license), consistency calls
+  for the same caution here: Mexico's freedom-of-panorama status for this specific building
+  was not verified before this record reached `VERIFIED`. Flagged in the record's own notes
+  for a targeted check, not silently left as-is and not force-downgraded on an inference this
+  dataset can't confirm either way.
+
+The other 40 overlapping records needed no change — both this dataset and S4's classification
+independently landed on "rights unknown" for the same universities, which is corroboration,
+not new information.
+
 ## DUPLICATES FOUND
 
 **Zero** — full-shard `rn`/`university_id` uniqueness verified programmatically (see
