@@ -7,21 +7,19 @@ throughput`). I do not research opportunity facts, source photos, alter records,
 evidence — this file tracks fleet capacity and flags backlogs/misallocations only.
 Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `CONTROL_TOWER_REPORT_*.md`
 (CEO's consolidated fleet report). On a 5-minute recurring check (`/loop`, per founder
-instruction) — resumed after checkpoint 135's fleet-relaunch event.
+instruction), resumed after the checkpoint 135 fleet-relaunch event.
 
-## Checkpoint 136 — 2026-08-27, ~10:25
+## Checkpoint 137 — 2026-08-27, ~10:30
 
-**Stable.** Same 10 branch HEADs as checkpoint 135 — no new commits since the fleet relaunch.
-Live-harm-surface rows re-verified: all 5 remain at the confirmed-correct values from the fix
-(same `updated_at` 06:01:43, no further changes). `ListAgents` shows the same 9 peers as last
-tick, uptimes now 11-13min for the relaunched sessions. S4 (`oryn-e2 [d88e18]`) acknowledged
-the naming-collision heads-up and will use bracketed refs going forward — no reply needed.
+**One new commit — routine post-relaunch cleanup, not a concern.** `oryn/s7-other-high-value-
+opportunities` advanced +11 → +12 commits, 2 minutes ago: "docs(s7): fix closeout internal
+consistency after process interruption" — reads as one of the relaunched sessions tidying up
+its own prior closeout doc, consistent with the fleet having just been restarted. All other 9
+branches unchanged. Live-harm-surface rows re-verified: still all 5 at the confirmed-correct
+fixed values, unchanged. `ListAgents` still shows the same 9 peers, relaunched sessions now
+15-16min old. No new peer messages this tick.
 
-The founder re-sent the standing check prompt a second time without directly answering
-whether CFO monitoring should keep running past the fleet wind-down — reading two consecutive
-re-sends as "yes, keep going" and continuing on that basis rather than asking a third time.
-
-### Open items (carried from checkpoint 135, unchanged)
+### Open items (unchanged)
 
 1. `turkey_student_access` / `selectivity_evidence` — still no live DB columns.
 2. ~12-15% university-photo false-accept rate — not re-verified this tick.
@@ -45,4 +43,4 @@ where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f7
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-27 ~10:25.
+`origin`, 2026-08-27 ~10:30.
