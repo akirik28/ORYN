@@ -7,39 +7,37 @@ throughput`). I do not research opportunity facts, source photos, alter records,
 evidence — this file tracks fleet capacity and flags backlogs/misallocations only.
 Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `CONTROL_TOWER_REPORT_*.md`
 (CEO's consolidated fleet report). On a 5-minute recurring check (`/loop`, per founder
-instruction) — **founder confirmed directly this tick to keep this running and specifically
-watch for any session/server dying.**
+instruction — explicitly reconfirmed at checkpoint 139 to keep watching for dead sessions).
 
-## Checkpoint 139 — 2026-08-27, ~10:40
+## Checkpoint 140 — 2026-08-27, ~10:45
 
-**Governance update: founder stepping back, decisions route to CEO, my role unchanged.**
-CEO (S9, `oryn-e2 [a6bd0a]`) messaged that the founder confirmed directly in CEO's own chat
-(not relayed): all decisions now route through CEO, the founder is stepping away, and CEO was
-asked to move a bit faster without cutting quality or process — verification/evidence
-standards unchanged, just less deliberation time per call. CEO is passing this to the rest of
-the fleet. **No change to CFO's role or mandate.** Separately, the founder told me directly,
-mid-tick: keep supervising CEO and the others, and keep confirming no session/server has died
-— explicit confirmation to keep this 5-minute loop running, resolving the open question from
-checkpoint 135/136.
+**No dead servers.** All 9 peers from `ListAgents` still present and active — relaunched
+sessions now 29-31min old, the two originals (S8, old CEO) still 11h — nothing has dropped
+out or gone quiet.
 
-**Fleet wind-down is producing real final-checkpoint commits, not silence:**
-- `oryn/s6-competitions-research`: +22 → +23, 33 seconds ago — "final checkpoint -- 5 photo
-  leads resolved before fleet wind-down."
-- `oryn/research-freeze-ceo-control-tower`: +13 → +14, 2 minutes ago — "session closeout - 5
-  production fixes + full fleet summary" (this is almost certainly CEO's own consolidated
-  wrap-up of the 5-row fix from checkpoint 135, now written up formally).
-- S7 and S8's prior final commits (checkpoints 137-138) remain the latest on those branches —
-  unchanged, no regression.
-- All other branches unchanged. Live-harm-surface rows re-verified again: still all 5 correct,
-  unchanged from the fix.
+**Two more wind-down commits, one of them addresses a long-standing open item — with a caveat:**
+- `oryn/university-photos-s2`: +2 → +3, 6 minutes ago — "S2: final handoff and closeout for
+  the night." S2 (`oryn-35`) has wrapped up, consistent with the earlier founder decision to
+  accept its recovered work as final.
+- `oryn/s6-competitions-research`: +23 → +25 (two commits), 40 seconds ago — "docs(s6): fix
+  package for 2 confirmed live defects (Stockholm Water Prize, FRC dup)." **This is the
+  Stockholm Water Prize + FRC/FIRST Robotics duplicate that has sat on this file's open-items
+  list since early in the session.** Important distinction: this is a *fix package* committed
+  to the S6 branch — I have not verified it has been applied to the live database yet (my
+  standing SQL check only covers the original 5-row IDs, not these two). Treating this as
+  "prepared, not yet confirmed live" rather than declaring it resolved, consistent with how
+  the 5-row fix was handled — it didn't count as done until CEO confirmed direct execution
+  against the live DB.
 
-`ListAgents` still shows the same 9 peers, relaunched sessions now 25-27min old, none gone
-quiet or dropped out — no "died" servers to report per the founder's specific ask.
+All other branches unchanged (S7, S8, CEO control-tower same commits as last tick). Live-harm-
+surface rows (the original 5) re-verified again: still all correct, unchanged.
 
-### Open items (unchanged)
+### Open items (updated)
 
-1. `turkey_student_access` / `selectivity_evidence` — still no live DB columns.
-2. ~12-15% university-photo false-accept rate — not re-verified this tick.
+1. **Stockholm Water Prize + FRC/FIRST duplicate** — fix package now exists on S6's branch;
+   still needs confirmation it's been applied live before this can be called resolved.
+2. `turkey_student_access` / `selectivity_evidence` — still no live DB columns.
+3. ~12-15% university-photo false-accept rate — not re-verified this tick.
 
 ## How these numbers were produced (re-run to refresh)
 
@@ -60,4 +58,4 @@ where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f7
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-27 ~10:40.
+`origin`, 2026-08-27 ~10:45.
