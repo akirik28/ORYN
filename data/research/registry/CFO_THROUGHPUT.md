@@ -10,27 +10,14 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `SESSION_CLOSEO
 founder instruction) — fleet is under dynamic reassignment (P0-P7), not stopping; watching
 for dead sessions per founder's explicit ask at checkpoint 139.
 
-## Checkpoint 169 — 2026-08-27, ~13:05 (peer-message triggered, not a scheduled tick)
+## Checkpoint 170 — 2026-08-27, ~13:10
 
-**New operational note to watch for: subagent watchdog stalls.** CEO relayed from S5: both of
-tonight's dispatched continuation subagents hit an early 600-second watchdog stall before
-making progress, needed a manual resume — both recovered cleanly, no work lost. CEO asked me
-to watch whether this pattern shows up elsewhere in the fleet, same category as the earlier
-disk-space and Browser-pane-contention risks.
+**No change — 170th checkpoint.** Same 10 branch HEADs as checkpoint 168. S5A's "final
+numbers" commit stands 5 minutes on with no further activity — looks like a genuine stand-down
+this time, not another reassignment yet. No dead servers — same 9 peers, relaunched sessions
+~2h old, originals 14h. Live-harm-surface rows re-verified: still all correct.
 
-**Honest limitation on what I can actually verify here**: I don't have direct visibility into
-any session's internal subagent dispatch/watchdog behavior — my only signal is branch-level
-commit cadence from the outside. A genuine stall-and-resume wouldn't necessarily show up as
-anything unusual in commit timing (a session can stall, resume, and still commit on a normal
-schedule) — so I can't confirm or rule this out fleet-wide from where I sit. Recording the ask
-and will mention it if I see anything that looks like it (e.g., a branch going unusually quiet
-mid-batch relative to its own recent cadence), but this is a much weaker check than the direct
-DB/git verification I can do for data fixes.
-
-No new branch/DB state checked this tick (peer-message triggered) — last full check at
-checkpoint 168, 2026-08-27 ~13:00, all stable then.
-
-### Open items (updated)
+### Open items (unchanged)
 
 1. `official`-tier photo **defect rate (~42%, content correctness)** — no remediation work
    observed yet.
@@ -42,8 +29,7 @@ checkpoint 168, 2026-08-27 ~13:00, all stable then.
 5. Penn Medicine deadline + 3 umbrella-row structural decisions — deliberately deferred.
 6. S1's 3 BLOCKED + S5A's accumulated BLOCKED/REJECTED/structural-flag counts — not yet
    detailed.
-7. New: subagent watchdog stalls (600s) reported by S5 — watching for the same pattern
-   elsewhere, with the caveat above about what I can actually detect from outside.
+7. Subagent watchdog stalls (600s) reported by S5 — watching, limited external visibility.
 
 ## How these numbers were produced (re-run to refresh — as separate calls, not batched)
 
@@ -71,5 +57,4 @@ select column_name from information_schema.columns
 where table_name = 'opportunities' and column_name in ('turkey_student_access', 'selectivity_evidence');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql` (as separate calls), and `git fetch`/
-branch diff against `origin`. Last full re-run 2026-08-27 ~13:00 (checkpoint 168), all
-confirmed stable.
+branch diff against `origin`, 2026-08-27 ~13:10.
