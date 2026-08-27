@@ -10,32 +10,32 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `SESSION_CLOSEO
 founder instruction) — fleet is under dynamic reassignment (P0-P7), not stopping; watching
 for dead sessions per founder's explicit ask at checkpoint 139.
 
-## Checkpoint 167 — 2026-08-27, ~12:55
+## Checkpoint 168 — 2026-08-27, ~13:00
 
 **No dead servers.** Same 9 peers, relaunched sessions ~2h old, originals 13h.
 
-**S3 picked up cross-check work tied to open item #2.** `oryn/s3-university-photos` advanced
-+3 → +4, 84 seconds ago: "research(s3): cross-check final dataset against S4's fleet-wide
-rights classification." S3 finished its own shard last tick and has now been assigned to
-independently verify S4's P2 rights-classification pass (194 official-tier images) — second-
-review discipline applied to that work too, not just self-reported.
+**S5A's genuine final close.** `oryn/s5a-summer-academic-enrichment` advanced +24 → +27
+(three commits), moments ago: "docs: S5 final numbers — **135 production-ready across all
+passes tonight**." Unlike checkpoint 152's "final numbers" (which covered gap-closure
+specifically and was followed by 5 more from-scratch batches), this reads as the comprehensive
+close across everything S5A did this session. Watching for whether it gets a further
+reassignment or genuinely stands down.
 
-All other branches unchanged since checkpoint 166. No remediation activity yet on the 42%
-official-tier content-defect rate specifically. Live-harm-surface rows re-verified: still all
-correct.
+All other branches unchanged since checkpoint 167. No remediation activity yet on the 42%
+official-tier content-defect rate. Live-harm-surface rows re-verified: still all correct.
 
 ### Open items (unchanged)
 
 1. `official`-tier photo **defect rate (~42%, content correctness)** — no remediation work
    observed yet.
-2. `official`-tier **license/reuse-rights (0/194)** — S4/P2 classification pass in progress,
-   now getting a second-review cross-check from S3.
+2. `official`-tier **license/reuse-rights (0/194)** — S4/P2 pass in progress, S3 cross-
+   checking.
 3. `turkey_student_access` / `selectivity_evidence` — DB columns still don't exist.
 4. Browser-pane contention risk — only S4's exposure remains unconfirmed; CEO handling
    directly.
 5. Penn Medicine deadline + 3 umbrella-row structural decisions — deliberately deferred.
-6. S1's 3 BLOCKED + S5A's accumulating BLOCKED/REJECTED/structural-flag counts — not yet
-   detailed; watching for a consolidated follow-up.
+6. S1's 3 BLOCKED + S5A's accumulated BLOCKED/REJECTED/structural-flag counts across all
+   batches — not yet detailed; watching for a consolidated follow-up.
 
 ## How these numbers were produced (re-run to refresh — as separate calls, not batched)
 
@@ -63,4 +63,4 @@ select column_name from information_schema.columns
 where table_name = 'opportunities' and column_name in ('turkey_student_access', 'selectivity_evidence');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql` (as separate calls), and `git fetch`/
-branch diff against `origin`, 2026-08-27 ~12:55.
+branch diff against `origin`, 2026-08-27 ~13:00.
