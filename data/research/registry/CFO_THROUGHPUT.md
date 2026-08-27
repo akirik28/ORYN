@@ -9,33 +9,27 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `CONTROL_TOWER_
 (CEO's consolidated fleet report). On a 5-minute recurring check (`/loop`, per founder
 instruction — explicitly reconfirmed at checkpoint 139 to keep watching for dead sessions).
 
-## Checkpoint 140 — 2026-08-27, ~10:45
+## Checkpoint 141 — 2026-08-27, ~10:50
 
-**No dead servers.** All 9 peers from `ListAgents` still present and active — relaunched
-sessions now 29-31min old, the two originals (S8, old CEO) still 11h — nothing has dropped
-out or gone quiet.
+**No dead servers.** All 9 peers still present, relaunched sessions now 34-35min old, the two
+originals (S8, old CEO) still 11h — nothing dropped out.
 
-**Two more wind-down commits, one of them addresses a long-standing open item — with a caveat:**
-- `oryn/university-photos-s2`: +2 → +3, 6 minutes ago — "S2: final handoff and closeout for
-  the night." S2 (`oryn-35`) has wrapped up, consistent with the earlier founder decision to
-  accept its recovered work as final.
-- `oryn/s6-competitions-research`: +23 → +25 (two commits), 40 seconds ago — "docs(s6): fix
-  package for 2 confirmed live defects (Stockholm Water Prize, FRC dup)." **This is the
-  Stockholm Water Prize + FRC/FIRST Robotics duplicate that has sat on this file's open-items
-  list since early in the session.** Important distinction: this is a *fix package* committed
-  to the S6 branch — I have not verified it has been applied to the live database yet (my
-  standing SQL check only covers the original 5-row IDs, not these two). Treating this as
-  "prepared, not yet confirmed live" rather than declaring it resolved, consistent with how
-  the 5-row fix was handled — it didn't count as done until CEO confirmed direct execution
-  against the live DB.
+**S5B is still doing real research work, not just closing out.** `oryn/s5b-research-
+mentored-internships` advanced +9 → +10, 26 seconds ago: "S5B continuation: close 8 of 13
+CANDIDATE gaps via re-fetch/proxy re-verification" — substantive verification work, not a
+closeout doc. Worth noting since most branches this hour have been posting closing summaries
+rather than new findings; this is a genuine exception and reads as healthy, not concerning.
 
-All other branches unchanged (S7, S8, CEO control-tower same commits as last tick). Live-harm-
-surface rows (the original 5) re-verified again: still all correct, unchanged.
+All other branches unchanged from checkpoint 140 (S2, S6, S7, S8, CEO control-tower all same
+commits). Live-harm-surface rows re-verified again: still all correct, unchanged. Stockholm
+Water Prize / FRC fix package (S6, previous tick) still not independently confirmed applied to
+the live DB — not re-checked this tick since it's outside my standing 5-row query, no new
+information either way.
 
-### Open items (updated)
+### Open items (unchanged)
 
-1. **Stockholm Water Prize + FRC/FIRST duplicate** — fix package now exists on S6's branch;
-   still needs confirmation it's been applied live before this can be called resolved.
+1. Stockholm Water Prize + FRC/FIRST duplicate — fix package exists on S6's branch; live
+   application still unconfirmed on my end.
 2. `turkey_student_access` / `selectivity_evidence` — still no live DB columns.
 3. ~12-15% university-photo false-accept rate — not re-verified this tick.
 
@@ -58,4 +52,4 @@ where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f7
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-27 ~10:45.
+`origin`, 2026-08-27 ~10:50.
