@@ -933,3 +933,53 @@ checkpoints), photo-status regrade, second opinions on S6-B's items. Files this 
 `claims_s6a.jsonl` (+7 lines). Committing and pushing now, then pivoting to a new CEO-assigned
 fleet-wide Turkey-eligibility task outside this lane's original competitions scope (fellowship/
 volunteering/entrepreneurship categories) — reported separately.
+
+---
+
+## S6-B (Business/Humanities/Creative) — 2026-08-27, fleet-wide Turkey-eligibility sweep (new CEO mandate)
+
+**New mandate, outside this lane's original competitions scope**: fleet-wide `turkey_student_access`
+classification on active/verified_current opportunities in `conference` + `student_program` +
+`online_program` categories (categories not already deeply covered by other lanes). Assigned 15
+specific rows, pulled live and re-verified per instruction rather than trusted from the snapshot.
+**All 15 completed** with direct citations, not inferred from participation statistics.
+
+**Key findings, briefly** (full detail with verbatim quotes in `s6b_turkeyelig_batch1.jsonl`):
+
+- **`VERIFIED_ELIGIBLE` (11 of 15)**: European Youth Event (Türkiye explicitly named as one of 8
+  eligible candidate countries — not the '160 nationalities' stat), Erasmus+ Youth Exchanges
+  (Türkiye holds full **Programme Country** status, the strongest tier — upgrades the CEO's own
+  framing of 'associated third country'), EYP Türkiye (two live, currently-open delegate calls
+  confirmed), Gençlik Merkezleri/e-Genç (Turkish government domain, self-evidencing), Girl Up Club
+  (a real, named, existing chapter in Diyarbakır found — not inferred from the '155 countries'
+  stat), Girl Up Global Teen Advisor Board (Türkiye named in the 2023-24 cohort), Columbia
+  Pre-College Online, Coursera (an active Coursera-Turkcell partnership plus 46,000+ Turkish
+  learners cited on Coursera's own blog — ruled out the sanctioned-country restriction class
+  first), Inspirit AI Scholars Live Online (a **dedicated Turkey landing page** naming 5 real
+  participating Turkish schools — the strongest evidence class found this sweep), Stanford ULO
+  (direct policy quote: no visa needed, international students welcomed), Wall Street 101 Virtual
+  (confirmed dedicated timezone slots that actually work for Türkiye's UTC+3, with clock times
+  cited, not just an 'international' label).
+- **`ELIGIBLE_WITH_CONDITIONS` (3 of 15)**: THIMUN (school-routed only, but Türkiye has a real
+  decades-deep base — ACI İzmir 27+ years, three THIMUN-affiliated conferences hosted inside
+  Türkiye), İstanbul Kent Konseyi Gençlik Meclisi (explicit **Istanbul-residency** requirement
+  found, ages 16-28 — not accessible to a student living elsewhere in Türkiye, a materially
+  narrower gate than the record's country-level framing might imply), UNO/United Nations Online
+  (genuinely worldwide, but real academic gates apply — TOEFL 90+ and GPA 3.5+ for non-US
+  students; also caught and flagged a grade-range discrepancy against the previously-stored
+  description).
+- **`NOT_ELIGIBLE` (1 of 15)**: UK Youth Parliament — confirmed (not merely assumed from the
+  already-stored `eligible_countries` tag) that the actual gate is UK residency/schooling within
+  a specific electoral constituency, not citizenship; a Türkiye-resident student cannot qualify
+  regardless.
+
+**Discipline notes for the record**: two findings were deliberately NOT taken at face value from a
+participation count alone — EYE's '160 nationalities' and Girl Up's '155 countries' — both were
+instead confirmed via an actual stated eligibility rule (EYE) or a real named existing chapter
+(Girl Up), per this fleet's standing 'a global claim isn't automatically VERIFIED_ELIGIBLE' rule.
+One medium-confidence item (Girl Up Teen Advisor Board) is flagged rather than rounded up — country
+eligibility is solid, current-cycle application timing is not independently confirmed.
+
+**Files this task**: `data/research/opportunities/s6b_turkeyelig_batch1.jsonl` (15 entries, all
+completed in one pass), `data/research/registry/claims_s6b.jsonl` (15 new lines appended), this
+TRACKER.md entry.
