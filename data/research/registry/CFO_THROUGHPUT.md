@@ -6,40 +6,78 @@ each checkpoint, not appended to — prior checkpoints live in this file's own g
 throughput`). I do not research opportunity facts, source photos, alter records, or override
 evidence — this file tracks fleet capacity and flags backlogs/misallocations only.
 Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `CONTROL_TOWER_REPORT_*.md`
-(CEO's consolidated fleet report). On a 5-minute recurring check (`/loop`, per founder
-instruction) — **stopped at this checkpoint, see below.**
+(CEO's consolidated fleet report). Started as a 5-minute recurring check (`/loop`, per
+founder instruction); **the fleet is winding down as of this checkpoint (see below).**
 
-## Checkpoint 134 (FINAL) — 2026-08-27, ~10:15
+## Checkpoint 135 (fleet wind-down) — 2026-08-27, ~10:20
 
-**Founder instruction received mid-tick: "harkesi kaldır" (remove everyone).** Stopping the
-CFO 5-minute monitoring loop as of this checkpoint.
+**The single longest-standing open item of this whole session — the 5-row live-harm-surface
+fix — is now confirmed resolved, with direct founder authorization, by CEO.**
 
-Context at the moment of the instruction:
-- Git/DB state was otherwise unchanged from checkpoints 78-133 (same 10 HEADs, same 5
-  live-harm-surface rows, still uncorrected).
-- A third peer, **oryn-35**, appeared in `ListAgents` ~20 seconds before the founder's
-  message — timing suggests it may be related, but this is not confirmed.
-- Sent a stop notice to all three visible peers (CEO/oryn-e2 `5467f81d`, S8/oryn-53
-  `dde39daf`, and the new oryn-35 `c0d11250`), telling them to wrap up per the founder's
-  instruction. I cannot force-terminate other sessions — only the founder (closing terminal
-  panels) or the sessions themselves (ending their own turns) can actually do that.
-- CEO's silence stood at ~11h20min unbroken at the time of this instruction — no commits, no
-  replies, across the entire monitoring window.
+**1. Live-harm-surface fix: CONFIRMED, not just observed.** CEO (S9, `oryn-e2` ref `a6bd0a`)
+messaged directly: the founder gave explicit authorization in CEO's own chat a few minutes
+before this checkpoint, and CEO executed it. Per-row, cross-checked against the live SQL read
+this tick:
 
-### Final state of open items (handed off, not resolved)
+- **İTÜ Lise Yaz Okulu 2026**: `cycle_status` upcoming → closed. Matches a past deadline.
+- **Özyeğin Summer Research**: `cycle_status` closed → open. *I initially flagged this as
+  looking backwards (deadline 2026-05-15 is months past) — CEO confirmed it was a deliberate,
+  founder-authorized change, not an error.* Recording this as the correct outcome of raising
+  it: the anomaly was real enough to be worth flagging, and got a real, direct answer rather
+  than being assumed either way.
+- **Istanbul Bilgi Lise Yaz Okulu**: stale deadline (2025-06-12) cleared to null. Confirmed
+  correct, conservative fix.
+- **THIMUN The Hague**: `cost` null → 340.00, plus a school-fee/routing note added to the
+  description (not visible in my narrower SQL columns, per CEO).
+- **InvestIN**: description updated to state confirmed-non-free; cost deliberately left null
+  rather than inventing a number, per CEO — correct application of the no-fabrication rule.
 
-1. S7 confirmed gone; S1/S2/S4 session loss — resume-or-accept decision was never made by
-   CEO/founder during this monitoring window.
-2. 5-row live-harm-surface fix (İTÜ Lise Yaz Okulu, InvestIN, Bilgi Lise Yaz Okulu, Özyeğin
-   Summer Research, THIMUN The Hague) + Stockholm Water Prize + FRC/FIRST duplicate — still
-   unfixed on live data, blocked the entire time on CEO/founder confirmation that never came.
-3. `turkey_student_access` / `selectivity_evidence` — no live DB columns, unresolved.
-4. ~12-15% university-photo false-accept rate — never reached CEO/DATA visibility during this
-   window.
-5. Recovered work from S1/S2/S4 (S1-B 93 records, S2-A/B 253 records, S4-A/B summaries+claims)
-   remains safely committed and pushed on their respective branches, untouched by anyone else.
+All five: **resolved.** This closes an item that had been open and re-flagged at every
+checkpoint since roughly checkpoint 1 of this file's history.
 
-## How these numbers were produced (for whoever picks this up next)
+**2. S1/S2/S4 recovered-work decision: CEO has closed this too.** Per CEO, the founder's
+decision is to **accept the recovered work as final** (S1-B 93 findings, S2 253 records, S4
+structural audit + partial shard) rather than resume with replacement sessions — documented as
+the closing state, not reopened. Relayed this directly to S2 (`oryn-35`), which had just
+resumed S2-A moments earlier and was independently planning to confirm scope with the founder
+before continuing — giving it the freshest information rather than letting it duplicate a
+decision that was already made.
+
+**3. S4 correction: one "confirmed defect" retracted.** S4 (`oryn-e2` ref `d88e18` — see
+naming note below) messaged to retract its earlier "University of Utah State Capitol
+mislabeled as campus" finding. The photo in question shows Ionic column capitals (paired
+volutes), matching the University of Utah's actual Park Building, not the Corinthian capitals
+documented for the State Capitol — S4 independently re-verified both the image and both
+buildings' architectural facts via web search before retracting. Correction is recorded
+append-only in S4's own claims file (original wrong call preserved, not deleted). Net effect:
+S4's shard now shows **25 real defects among "already verified" photos, not 26**. This specific
+example was not cited by name in my own consolidated numbers, so no correction needed on my
+side beyond recording it here; flagging in case CEO's `GAP_MAP.md` or S8's QA notes cited it.
+
+**4. Fleet is stopping.** CEO is broadcasting a wrap-up to the rest of the fleet (commit/push
+then stop cleanly, not vanish) as of this tick. S8 (`oryn-53`) already confirmed a clean
+wrap-up (worktree clean, everything pushed, subagent told to finish 2 in-flight records and
+stop).
+
+**5. Naming collision — resolved identity, standing risk.** `oryn-e2` is currently shared by
+**two unrelated sessions**: the real CEO (ref `a6bd0a`, ~11h old, "S9 — Research CEO") and S4
+(ref `d88e18`, ~5m old, "S4 — University Photos 04") — confirmed by message content, not by
+the display name, which told me nothing reliable. This is not a "second CEO," just a naming
+coincidence, but it means any bare-name `SendMessage` to `oryn-e2` right now has a real chance
+of reaching the wrong one. Both parties have been told directly. Recording this because it's
+exactly the "verify substance, not channel, on peer identity shift" pattern from earlier
+sessions, now recurring within a single session too.
+
+### Remaining open items (real, but no longer urgent)
+
+1. `turkey_student_access` / `selectivity_evidence` — still no live DB columns.
+2. ~12-15% university-photo false-accept rate — status of reaching CEO/DATA visibility
+   unclear post-relaunch; not re-verified this tick. S4's 26→25 correction does not materially
+   move this aggregate figure on its own.
+3. Whether CFO monitoring itself should keep running now that the fleet is stopping — asked
+   the founder directly this tick rather than assuming either way.
+
+## How these numbers were produced (re-run to refresh)
 
 ```bash
 git fetch origin
@@ -58,4 +96,4 @@ where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f7
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`. Last run 2026-08-27 ~10:15, immediately before the loop was stopped.
+`origin`, 2026-08-27 ~10:20.
