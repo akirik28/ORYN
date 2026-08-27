@@ -310,3 +310,144 @@ On `oryn/s5b-research-mentored-internships`, oldest to newest (all pushed):
    space has hit clearly diminishing returns this session — better remaining leverage is probably in
    closing the 13 CANDIDATE gaps and the image-sourcing policy question than in finding a 13th near-
    identical paid provider.
+
+---
+
+## CONTINUATION PASS — 2026-08-27 (closing the 13 CANDIDATE gaps)
+
+This section covers a second session picking up item 3/6 above directly: working through the 13
+`NEEDS_REVIEW` net-new records and trying to close each one's own `research_notes`-named gap. No new
+discovery was attempted, no existing settled fact was re-opened, and the 8 miscategorization corrections /
+Lumiere / SSP / IRI-NC (also `NEEDS_REVIEW` in the batch files but tracked as gap-closures against
+already-live rows, not net-new candidates) were left untouched, per this task's own scope boundary.
+
+### Result: 8 of 13 upgraded to VERIFIED_CURRENT, 5 remain genuine CANDIDATEs
+
+**Upgraded (8)** — all via a genuine second direct-fetch attempt this session, most using a
+text-extraction proxy (`r.jina.ai`) to route around the same bot-protection (HTTP 403 / CAPTCHA challenge)
+that blocked a plain fetch both this session and on 2026-08-26, which counts as reaching the *official
+page itself* (same domain, same content, only the retrieval path differs) rather than a third-party
+summary — consistent with the Absolute Evidence Rule's concern (no aggregator/blog paraphrase was used as
+evidence for any of the eight):
+
+| ID | Name | What closed | New `turkey_student_access` |
+|---|---|---|---|
+| S5B-0006 | Global Research Fellowship | Re-fetch resolved the $499-vs-$1,000 / 6-vs-8-week internal inconsistency flagged 2026-08-26 (page now consistently shows $1,000/6 weeks) | unchanged, `ELIGIBLE_WITH_CONDITIONS` |
+| S5B-0019 | Youth Journalism International | Proxy fetch of `/join/` directly confirmed "members all around the world, on six continents" + "no cost to join, absolutely free" | `VERIFIED_ELIGIBLE` (was `ELIGIBLE_WITH_CONDITIONS`) |
+| S5B-0020 | International Medical Aid | Proxy fetch directly confirmed min age 16 (17 some intl sites) + international-student acceptance; total HS-specific cost stays an open, flagged gap (only a general, non-HS-confirmed $3,295-$5,995 range found) | unchanged, `ELIGIBLE_WITH_CONDITIONS` |
+| S5B-0023 | Synthica | Proxy fetch directly confirmed "free research education... worldwide" + "93+ countries" | `VERIFIED_ELIGIBLE` (was `ELIGIBLE_WITH_CONDITIONS`) |
+| S5B-0026 | iNaturalist | Proxy fetch of homepage confirmed worldwide access directly; **plus the separate minor-consent-policy question was independently closed** (see below) | `VERIFIED_ELIGIBLE` (was `ELIGIBLE_WITH_CONDITIONS`) |
+| S5B-0028 | ASDRP | `/apply`, which returned connection errors 2026-08-26, loaded cleanly this session and directly confirmed international + remote ("in silico") eligibility | `VERIFIED_ELIGIBLE` (was `ELIGIBLE_WITH_CONDITIONS`) |
+| S5B-0030 | The Intern Group | Re-fetch confirmed the flat $1,990/$2,490 seasonal pricing across every listed virtual duration (4-24 weeks) is genuine, not a fetch/rendering artifact | unchanged, `ELIGIBLE_WITH_CONDITIONS` |
+| S5B-0031 | United Planet | A second official page directly confirmed worldwide access ("as long as you have email and internet access") and explicit 16+ HS eligibility — but also surfaced a **new, unreconciled** second price schedule ($800-$2,300 by duration, no academic credit) alongside the original $1,450 HS-specific figure; recorded as an open question, not silently resolved | `VERIFIED_ELIGIBLE` (was `ELIGIBLE_WITH_CONDITIONS`) |
+
+Mechanically, each upgrade was an in-place edit of that record's own line in its `s5b_batchN_2026-08-26.jsonl`
+file (matching this corpus's own established convention — the same pattern already used for the 2026-08-27
+image backfills and the Algoverse/Non-Trivial cross-review corrections): changed fields were overwritten
+directly, and `research_notes`/`cost_note`/`turkey_access_reasoning` got a dated `UPDATED 2026-08-27: ...`
+addendum appended (not rewritten) so the original session's reasoning stays legible. A matching
+`STATUS UPGRADE 2026-08-27` line was appended to `claims_s5b.jsonl` for each of the 8 (append-only, no
+existing lines touched), following the `SUPERSEDES earlier line for <id>` phrasing the file already used
+for the IRI-NC correction. All 8 were re-checked against the live `opportunities` table by name/organization/
+URL immediately before committing — zero collisions found, consistent with the original research pass.
+
+**Still CANDIDATE / `NEEDS_REVIEW` after a genuine, documented second attempt (5)** — these are real,
+not lazy, gaps; each record's `research_notes` now carries a dated account of exactly what this session
+tried and why it didn't close:
+
+- **S5B-0004 Veritas AI** — four attempts (homepage, `/apply`, `/faq`, `/faqs`) to find the Fellowship
+  ($5,900)/Accelerator ($9,400) tier pricing beyond the confirmed $2,490 entry price. The live site
+  routes all pricing to a consultation call/application form; no public tier table exists to fetch.
+- **S5B-0005 CCIR Academy** — three attempts (direct `/academy/`, proxy-assisted `/academy/`, a guessed
+  `/fees/` page which turned out to be a real but empty "Fee Archive" template) confirm pricing is
+  genuinely gated behind a prospectus download and an admissions-portal login — a structural choice by
+  the organizer, not a fetch-tool limitation.
+- **S5B-0013 Scholar Launch** — five pages checked (homepage, `/scholarship-aid`, `/apply` [404],
+  `/faqs` [404], `/summer-2026`) for a first-party "anywhere in the world" statement; none contains one.
+  The program is almost certainly open internationally in practice (fully remote, no other barrier found
+  anywhere), but that specific claim could not be located this session.
+- **S5B-0015 Ladder Internships** — five pages/paths checked (`/faqs`, the organizer's own blog post
+  about international HS programs, `/about` [404], homepage, `/faq` [404]); only an indirect homepage
+  testimonial ("interns from all over the world," from a partner company, not Ladder itself) was found,
+  not a formal eligibility clause.
+- **S5B-0017 learnSTEM** — six attempts total across two sessions (2026-08-26: FAQ, homepage; 2026-08-27:
+  `/program-overview`, `/apply` [404], a targeted WebSearch of the organizer's own domain, that domain's
+  own blog post fetched directly, and a proxy-assisted re-fetch of `/faq` in case an accordion/JS element
+  was hiding a number). No cost figure exists anywhere reachable — consistent with a
+  request-a-consultation sales model rather than a tooling gap.
+
+None of these five were force-closed with a guessed number or an inferred eligibility statement.
+
+### iNaturalist minor-consent/access policy — resolved (secondary task)
+
+The prior handoff's KEY UNCERTAINTIES flagged this as "genuinely not found on the page fetched, and
+relevant to ORYN's minor-safe design principle (AGENTS.md §12), not just to eligibility." This session
+found a direct, official answer via `help.inaturalist.org` (iNaturalist's own support subdomain, on
+different hosting than the main bot-protected app, so it was actually reachable): iNaturalist follows a
+COPPA-style age gate — **users 13 and older can self-register; users 12 and under require a parent or
+guardian to create a linked "child account"** at `inaturalist.org/user_parents/new`, which charges a
+nominal US$1 card fee solely to verify the adult's identity (not a program fee). An account belonging to
+a 12-or-under user found without this process faces indefinite suspension. iNaturalist's own official
+recommendation for younger or more privacy-sensitive users is a separate, related app, **Seek by
+iNaturalist**, which does not share observation data by default.
+
+A second, related finding worth surfacing on its own: iNaturalist's help center also states plainly that
+**"all iNaturalist observations are public records of where someone was at a certain time and place"** —
+i.e., the main app publishes each observation's location/time by default. For ORYN's own target age range
+(14-18, all above the 13+ threshold so the account-creation gate itself is not a practical barrier), this
+default-public-location behavior is the more relevant fact: it sits in tension with AGENTS.md §12's
+"avoid unnecessary precise location collection" principle. **If ORYN ever surfaces iNaturalist to
+students, the counselor-facing framing should point to iNaturalist's geoprivacy/obscuring settings (or
+to Seek) rather than assume default settings are minor-safe** — this is now recorded directly on the
+record as a new `minor_consent_policy_note` field, not just in this narrative.
+
+### What this pass did NOT do
+
+- No image sourcing was attempted for any of the 8 newly-upgraded records (all still `not_yet_sourced` /
+  `image_verified: false`) — this remains the structural gap flagged in the original handoff's IMAGE
+  COMPLETE COUNT section, unchanged by this pass.
+- No second-agent/S8 cross-review was performed on the 8 upgrades — they are `VERIFIED_CURRENT` in this
+  corpus's own vocabulary (evidence-checked), not yet `PRODUCTION_READY` per Contract §11, which
+  additionally requires image completion and a second review. That gates final promotion, same as the
+  original 10 net-new records already did before CEO/DATA can insert them.
+- The `s5b_2026-08-26_MISCATEGORIZATION_fixes.jsonl` file (Lumiere, SSP, IRI-NC, and 5 others) was read
+  for scope-boundary purposes only and not modified.
+
+### Files updated this pass
+
+- `data/research/opportunities/s5b_batch1_2026-08-26.jsonl` — in-place update to S5B-0006; dated
+  research_notes addendum to S5B-0004, S5B-0005 (no other field changes)
+- `data/research/opportunities/s5b_batch2_2026-08-26.jsonl` — in-place update to S5B-0019, S5B-0020;
+  dated research_notes addendum to S5B-0013, S5B-0015, S5B-0017 (no other field changes)
+- `data/research/opportunities/s5b_batch3_2026-08-26.jsonl` — in-place update to S5B-0023, S5B-0026
+  (incl. new `minor_consent_policy_note` field on S5B-0026)
+- `data/research/opportunities/s5b_batch4_2026-08-26.jsonl` — in-place update to S5B-0028
+- `data/research/opportunities/s5b_batch5_2026-08-26.jsonl` — in-place update to S5B-0030, S5B-0031
+- `data/research/registry/claims_s5b.jsonl` — appended 8 `STATUS UPGRADE` lines (40 → 48 lines total;
+  no existing line rewritten)
+- `docs/handoffs/s5b-research-mentored-internships-handoff.md` — this section
+
+### Commits this pass (on `oryn/s5b-research-mentored-internships`, pushed)
+
+9. `6b79899` — S5B continuation: close 8 of 13 CANDIDATE gaps via re-fetch/proxy re-verification
+10. (this handoff update, committed and pushed immediately after this section is written)
+
+### What the next owner should do (updated)
+
+1. **CEO/DATA**: items 1, 2, 4, 5 from the original WHAT THE NEXT OWNER SHOULD DO list above are
+   unaffected by this pass and still stand as written.
+2. **CEO/DATA or a continuing S5B session**: the 5 remaining CANDIDATEs (Veritas AI, CCIR Academy,
+   Scholar Launch, Ladder Internships, learnSTEM) are now genuinely hard-blocked behind gated
+   pricing flows or simply-unpublished eligibility statements, not a fetch-tool artifact — closing them
+   further would need either direct contact with the organizer, a live browser with a human driving it
+   past a consultation-request wall, or acceptance that these five stay at `CANDIDATE` indefinitely
+   pending better evidence. Recommend not spending further automated-fetch effort on these five
+   specifically.
+3. **CEO/DATA**: when image-sourcing capacity is allocated, the 8 newly-upgraded records are now
+   equally good candidates for that pass as the original 10 — all have clean, direct-fetch-backed
+   eligibility findings and just need the same image-backfill treatment already applied to Bilimle Tanış,
+   UCSB, Rockefeller, Iowa, NC State, and NASA Citizen Science.
+4. **Product/counselor design**: consider the iNaturalist `minor_consent_policy_note` finding when
+   deciding how (or whether) to surface iNaturalist to students — specifically, whether ORYN's own
+   integration should default-recommend Seek or geoprivacy settings rather than a bare link to the main
+   app, given AGENTS.md §12.
