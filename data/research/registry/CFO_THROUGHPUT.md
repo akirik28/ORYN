@@ -10,15 +10,20 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `SESSION_CLOSEO
 founder instruction) — fleet is under dynamic reassignment (P0-P7), not stopping; watching
 for dead sessions per founder's explicit ask at checkpoint 139.
 
-## Checkpoint 165 — 2026-08-27, ~12:45
+## Checkpoint 166 — 2026-08-27, ~12:50
 
 **No dead servers.** Same 9 peers, relaunched sessions ~2h old, originals 13h.
 
-**S5A's batch cadence continues.** `oryn/s5a-summer-academic-enrichment` advanced +22 → +23,
-2 minutes ago: "S5A batch14: 9 PRODUCTION_READY, 3 structural flags." Fourth consecutive batch
-since picking up new work at checkpoint 161 (batches 11-14).
+**S3 finished its full shard.** `oryn/s3-university-photos` advanced +2 → +3, 2 minutes ago —
+"research(s3): FINAL — 253/253 university photos, second-reviewed, consolidated." Full
+coverage with second review, matching S1's earlier full-shard close (checkpoint 155). Watching
+for whether S3 gets a new P0-P7 assignment.
 
-All other branches unchanged since checkpoint 164. No remediation activity yet on the 42%
+**S5A continues.** `oryn/s5a-summer-academic-enrichment` advanced +23 → +24, 85 seconds ago:
+"S5A batch15: 7 PRODUCTION_READY, 2 REJECTED, 5 structural/technical flags" — fifth
+consecutive batch since checkpoint 161.
+
+All other branches unchanged since checkpoint 165. No remediation activity yet on the 42%
 official-tier content-defect rate. Live-harm-surface rows re-verified: still all correct.
 
 ### Open items (unchanged)
@@ -59,4 +64,4 @@ select column_name from information_schema.columns
 where table_name = 'opportunities' and column_name in ('turkey_student_access', 'selectivity_evidence');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql` (as separate calls), and `git fetch`/
-branch diff against `origin`, 2026-08-27 ~12:45.
+branch diff against `origin`, 2026-08-27 ~12:50.
