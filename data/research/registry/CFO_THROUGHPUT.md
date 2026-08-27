@@ -10,37 +10,33 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `SESSION_CLOSEO
 founder instruction) — fleet is under dynamic reassignment (P0-P7); watching for dead sessions
 per founder's explicit ask at checkpoint 139.
 
-## Checkpoint 172 — 2026-08-27, ~13:20
+## Checkpoint 173 — 2026-08-27, ~13:22
 
-**First confirmed session drop since the relaunch. Flagging immediately, not waiting for the
-next tick, per the founder's specific ask.**
+**`oryn-d5` resolved: confirmed clean, deliberate stop — not a drop.** CEO confirmed directly:
+`oryn-d5` was S3. It finished its shard (253/253, 89 production-ready — matches the "FINAL"
+commit at checkpoint 166), did two rounds of bounded verification checks after (matches the
+cross-check-S4 commit at checkpoint 167), then deliberately chose to stop rather than take
+open-ended new work — explicitly reasoned through with CEO across several exchanges, last
+message "nothing further from me tonight." A real, considered close. Correctly flagged and
+correctly resolved: worth checking directly rather than assuming either way, exactly as this
+turned out — this time it was fine, but the only way to know that was to ask rather than guess
+from a roster-count drop alone.
 
-`ListAgents` dropped from 9 peers to 8 — `oryn-d5` is missing. **Verified this is real, not a
-snapshot artifact**: attempted `SendMessage` to `oryn-d5` directly and got back "No agent named
-'oryn-d5' is reachable" — confirmed unreachable, not just absent from one listing. What I don't
-know: which role it held (never got a confirmed self-identification from that name, unlike
-S2/S4), and whether this was a clean completion-and-exit or an actual failure. Not guessing
-either way — reporting exactly what's verified: **one session that was alive at checkpoint 171
-is gone at checkpoint 172, cause unconfirmed.**
+Now 8 peers is the expected count, not a concern. All 10 branches unchanged since checkpoint
+172. Live-harm-surface rows re-verified: still all correct.
 
-All 10 branches unchanged since checkpoint 171 (no commit activity to indicate which shard
-`oryn-d5` may have owned, or that anything was left mid-write). Live-harm-surface rows
-re-verified: still all correct.
+### Open items (updated — oryn-d5/S3 item resolved, removed)
 
-### Open items (updated)
-
-1. **`oryn-d5` unreachable, role and cause unknown** — flagging to CEO/founder now.
-2. `official`-tier photo **defect rate (~42%, content correctness)** — no remediation work
+1. `official`-tier photo **defect rate (~42%, content correctness)** — no remediation work
    observed yet.
-3. `official`-tier **license/reuse-rights (0/194)** — S4/P2 pass in progress, S3 cross-
-   checking.
-4. `turkey_student_access` / `selectivity_evidence` — DB columns still don't exist.
-5. Browser-pane contention risk — only S4's exposure remains unconfirmed; CEO handling
+2. `official`-tier **license/reuse-rights (0/194)** — S4/P2 pass in progress.
+3. `turkey_student_access` / `selectivity_evidence` — DB columns still don't exist.
+4. Browser-pane contention risk — only S4's exposure remains unconfirmed; CEO handling
    directly.
-6. Penn Medicine deadline + 3 umbrella-row structural decisions — deliberately deferred.
-7. S1's 3 BLOCKED + S5A's accumulated BLOCKED/REJECTED/structural-flag counts — not yet
+5. Penn Medicine deadline + 3 umbrella-row structural decisions — deliberately deferred.
+6. S1's 3 BLOCKED + S5A's accumulated BLOCKED/REJECTED/structural-flag counts — not yet
    detailed.
-8. Subagent watchdog stalls (600s) reported by S5 — watching, limited external visibility.
+7. Subagent watchdog stalls (600s) reported by S5 — watching, limited external visibility.
 
 ## How these numbers were produced (re-run to refresh — as separate calls, not batched)
 
@@ -68,5 +64,4 @@ select column_name from information_schema.columns
 where table_name = 'opportunities' and column_name in ('turkey_student_access', 'selectivity_evidence');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql` (as separate calls), and `git fetch`/
-branch diff against `origin`, 2026-08-27 ~13:20. `oryn-d5` reachability tested directly via
-`SendMessage`, not inferred from `ListAgents` alone.
+branch diff against `origin`, 2026-08-27 ~13:22.
