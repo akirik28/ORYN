@@ -1049,3 +1049,122 @@ includes them. Everything else in the stored description (GPA 3.5, TOEFL 90+ for
 matches the direct source exactly — this is a one-field grade-range fix, not a broader accuracy
 problem with the record. Not corrected in place here (S6-B's mandate this task was classification,
 not editing other batches' source records) — flagging for whoever owns a write pass on this row.
+
+---
+
+## S6-A (STEM) — 2026-08-27, cross-review of S6-B's `s6b_turkeyelig_batch1.jsonl` (15 records)
+
+**Assignment**: bounded cross-review task, picked up cold from a prior S6-A instance's session
+(expired but fully committed). Re-verify S6-B's 15 `turkey_student_access` classifications in
+`data/research/opportunities/s6b_turkeyelig_batch1.jsonl` (European Youth Event, THIMUN, Erasmus+
+Youth Exchanges, EYP Türkiye, Gençlik Merkezleri/e-Genç, Girl Up Club, Girl Up Global Teen Advisor
+Board, İstanbul Kent Konseyi Gençlik Meclisi, UK Youth Parliament, Columbia Pre-College Online,
+Coursera, Inspirit AI, Stanford ULO, UNO/Stanley Prep, Wall Street 101 Virtual) — check the citation
+actually supports the verdict, don't rubber-stamp, re-fetch anything close/single-sourced/
+stat-vs-rule. Method: independently re-fetched every cited URL myself this session (direct
+WebFetch where it succeeded, live Browser-pane render where WebFetch hit a TLS/403/socket error,
+and a fresh independently-worded WebSearch as a second check on several), rather than trusting the
+record's own quote at face value. Full per-record evidence and reasoning in
+`data/research/opportunities/s6a_review_s6b_turkeyelig_batch1.jsonl` (15 lines); mirrored to
+`data/research/registry/claims_s6a.jsonl` (+15 lines, `entity_type:
+opportunity_turkey_classification_review`). **Result: all 15 verdicts confirmed correct. One
+citation-text inaccuracy found and logged (verdict unaffected). One taxonomy judgment call flagged
+as a documented tension, not changed.** No rubber-stamping — every line below reflects my own fresh
+evidence, not a repeat of S6-B's citation.
+
+**The 3 flagged priority items (`ELIGIBLE_WITH_CONDITIONS` calls), one line each**:
+- **THIMUN** (`960dcf4d`) — confirmed and *strengthened*. Direct fetch of both of S6-B's own cited
+  URLs: `thehague.thimun.org` confirms the school-gate in its own words ("Only students from
+  participating schools can apply for an individual student position... no pathway for independent
+  student registration"); `foundation.thimun.org`'s affiliated-conferences list actually shows
+  **six** Türkiye-based THIMUN-affiliated conferences, not the three S6-B cited (TIMUN, MFINUE,
+  ENIMUN, plus MUNESCO/Ankara, RCIMUN, MUNDP found by me) — S6-B understated its own evidence.
+  `ELIGIBLE_WITH_CONDITIONS` unambiguously correct.
+- **İstanbul Kent Konseyi Gençlik Meclisi** (`4d2e55b3`) — verdict confirmed, **citation text
+  corrected**. Live-rendered the page myself via the Browser pane (WebFetch hit a TLS cert error
+  S6-B apparently didn't hit, or the page changed — unclear which). The actual current text reads
+  *"Gençlik Katılım Ağı, İstanbul'da yaşayan **16-29** yaş aralığında gençlerin içerisinde yer
+  aldığı... İstanbul Kent Konseyi Gençlik Meclisi bünyesindeki gençlik platformudur."* S6-B's
+  citation_quote says **16-28** and attributes the sentence directly to "Gençlik Meclisi" — the
+  live text's actual subject is "Gençlik Katılım Ağı" (the participation-network platform *within*
+  the Meclisi). Both are minor: a one-year age-range slip and a sub-entity misattribution, in a
+  string presented in quotation marks as an exact quote. **The Istanbul-residency finding itself is
+  fully correct and independently reconfirmed** (browser render + a separate WebSearch) —
+  `ELIGIBLE_WITH_CONDITIONS` stands, no change to `turkey_student_access`. Recommending only the
+  citation_quote's age figure and subject be corrected by whoever owns a write pass on this file;
+  not editing S6-B's file myself per the file-ownership rule.
+- **UNO / United Nations Online** (`31856863`) — confirmed exactly, word-for-word, via my own
+  direct fetch of `stanleyprep.com/united-nations-online/`: "Rising 10th to 12th graders. Minimum
+  high school GPA of 3.5 (Unweighted). English Proficiency: TOEFL 90 or above for non-US students."
+  `ELIGIBLE_WITH_CONDITIONS` correct — genuinely open to any country, real academic gates apply
+  regardless of geography. This record's own 10th-12th figure is itself accurate, which is what
+  correctly exposed the separate stored-DB-description staleness S6-B flagged in the addendum
+  immediately above this entry (11th/12th vs. actual 10th-12th) — that's a database fix, not an
+  issue with this classification record.
+
+**`VERIFIED_ELIGIBLE` records I was not immediately convinced by, checked in depth**:
+- **Girl Up Global Teen Advisor Board** (`6fdf9578`) — quote reconfirmed word-for-word via an
+  independent WebSearch (which itself surfaced a second independent outlet, a PRWeb syndication,
+  carrying the identical 2023-24 roster naming Turkey). Flagging a genuine **taxonomy tension**, not
+  an error: this is an extremely selective, appointed process (24 seats/year globally), and S6-B's
+  own `condition` field already says so candidly — yet the verdict is `VERIFIED_ELIGIBLE` rather
+  than `ELIGIBLE_WITH_CONDITIONS`, a different call than this same batch made for UNO's academic
+  gates. My own reasoned view: `VERIFIED_ELIGIBLE` is defensible and I would not change it, because
+  the selectivity bar here is nationality-blind (a Turkish applicant faces the identical bar as a US
+  applicant, unlike UNO's TOEFL/GPA gate which specifically targets non-US applicants) — but
+  recording this as a considered judgment call rather than silently passing over the tension.
+- **Coursera** (`6c9d8973`) — S6-B self-flagged "medium-high not high" confidence because only one
+  Coursera blog post was reached. I found the same Turkcell-partnership and 46,000+-learner facts
+  independently corroborated via Campus Technology, Turkcell's own official FAQ page, and Dünya
+  Gazetesi — none of which is the original blog.coursera.org citation. This resolves S6-B's own
+  self-flagged gap; confidence is arguably upgradable to high. Verdict confirmed.
+- **Girl Up Club** (`903962c1`) — independently re-confirmed the named Diyarbakır chapter via a
+  fresh WebSearch query, but flagging honestly that this still rests on essentially one underlying
+  source (Girl Up's own login-gated community platform) even after my own check — noted as
+  single-sourced per the task's instruction, though the claim itself (does a specific named chapter
+  exist) is narrow and directly checkable rather than interpretive, so I judge one first-party
+  source adequate here. Verdict confirmed.
+- **European Youth Event** (`1acee3b0`) — S6-B's own citation_url flagged itself as
+  "search-indexed" rather than a direct fetch. I closed that gap: an independently-worded WebSearch
+  landed on the identical "residents in the EU, UK and candidate countries (Albania, Georgia,
+  Moldova, Montenegro, North Macedonia, Serbia, **Turkey**, and Ukraine)" quote, corroborated across
+  JEF Europe/European Youth Portal/euneighbourseast.eu, and I directly fetched EYE's own
+  youth.europa.eu call page myself (confirms "16-30, regardless of nationality," non-contradictory).
+  Verdict confirmed; the record correctly declined to treat the "160 nationalities" homepage framing
+  as an eligibility rule, per this fleet's standing discipline — confirmed that discipline was
+  actually applied, not just claimed.
+- **Erasmus+ Youth Exchanges** (`eeb768c4`) — S6-B's specific cited URL socket-errored twice for me
+  (noted as a fetch failure on my end, not a claim the citation is bad). Independently confirmed the
+  substance via a sibling official erasmus-plus.ec.europa.eu page instead: Türkiye is listed under
+  "Third countries associated to the Programme," the official EU terminology for full Programme
+  Country status. Verdict confirmed.
+
+**Remaining 8 records — direct fetch of the record's own cited URL, quote matched exactly, no
+issues found**: EYP Türkiye (`d35cf54a`, live "Delegates Call is OPEN" banners for İstanbul 2026 and
+Eskişehir 2026 reconfirmed verbatim), Gençlik Merkezleri/e-Genç (`d5790a1c`, confirmed live
+.gov.tr Ministry of Youth and Sports portal), UK Youth Parliament (`bd187688`, the "does not need
+to be a citizen... must go to school or live in the LAA constituency" quote reconfirmed word-for-
+word via a second independent source, Wikipedia, since nya.org.uk itself was blocked from direct
+fetch on my end this session), Columbia Pre-College Online (`79117533`, English-fluency and
+synchronous-Eastern-Time facts both directly reconfirmed; one of the record's two quoted sentences
+turned out to live on a sibling Columbia admissions page rather than the single FAQ URL cited — a
+minor citation-locator note, not a factual error), Inspirit AI (`bfd946b6`, exact word-for-word
+match on the five named Turkish schools), Stanford ULO (`54e6953d`, exact word-for-word match on
+the no-visa-needed policy quote), Wall Street 101 Virtual (`574ab33a`, exact match on the dedicated
+international session times, and I independently checked the timezone math — 6am EST/EDT lands in
+early-to-mid afternoon in Türkiye's UTC+3, a genuinely workable slot).
+
+**Bottom line**: this batch holds up well under independent re-verification — 15 for 15 on the
+verdict itself, no country-access classification was wrong. The real value of this pass was the one
+genuine citation-text correction (İstanbul Kent Konseyi's age figure/subject) and the documented
+taxonomy judgment call (Girl Up Teen Advisor Board) — both are now on the record precisely rather
+than smoothed into a blanket "looks right." Not manufacturing disagreement where none was found:
+S6-B's discipline of preferring a stated eligibility rule over a participation statistic (explicitly
+named in the task as this fleet's standing concern) was checked directly on every record where it
+was relevant and held up every time.
+
+**Files this task**: `data/research/opportunities/s6a_review_s6b_turkeyelig_batch1.jsonl` (15
+lines, new), `data/research/registry/claims_s6a.jsonl` (+15 lines), this TRACKER.md entry. Not
+touching `s6b_turkeyelig_batch1.jsonl` itself, per the append-only cross-review convention
+established earlier this session (photo-status regrade). Committing and pushing to
+`oryn/s6-competitions-research` now.
