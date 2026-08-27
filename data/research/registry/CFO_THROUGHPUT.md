@@ -9,17 +9,20 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `CONTROL_TOWER_
 (CEO's consolidated fleet report). On a 5-minute recurring check (`/loop`, per founder
 instruction). See checkpoint 50 (git history) for a full session retrospective.
 
-## Checkpoint 81 — 2026-08-27, ~05:50
+## Checkpoint 82 — 2026-08-27, ~05:55
 
-**No change.** Same 10 HEADs as checkpoints 78-80. Still 2 peers (S8, CEO). Live-harm rows
-re-verified: unchanged. CEO's silence continues, now ~6h45min — the 7h mark will fall around
-the next tick or two.
+**No git/DB change.** Same 10 HEADs as checkpoints 78-81. Still 2 peers (S8, CEO). Live-harm
+rows re-verified: unchanged. **CEO silence hit the 7h milestone this tick** — sent a
+SendMessage to oryn-e2 flagging it and re-listing the 5 open items (msg_id `524b37ec`),
+consistent with the hourly-milestone escalation pattern used at 1/2/3/4/5/6h. Framed as a log
+entry, not a page — no new information, just the standing protocol's hourly ping. No reply
+expected immediately; will report here if one arrives.
 
 ### Open items (unchanged)
 
 1. S7 confirmed gone — resume-or-accept decision pending CEO/founder.
 2. S1/S2/S4 session loss — awaiting CEO/founder decision on resuming. Recovered work safe.
-3. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, ~6h45min unreachable.
+3. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, ~7h unreachable.
 4. `turkey_student_access` / `selectivity_evidence` still have no live columns.
 5. ~12-15% university-photo false-accept rate — still pending CEO/DATA visibility.
 
@@ -42,4 +45,4 @@ where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f7
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-27 ~05:50.
+`origin`, 2026-08-27 ~05:55.
