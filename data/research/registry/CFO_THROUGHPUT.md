@@ -9,15 +9,15 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `CONTROL_TOWER_
 (CEO's consolidated fleet report). On a 5-minute recurring check (`/loop`, per founder
 instruction), resumed after the checkpoint 135 fleet-relaunch event.
 
-## Checkpoint 137 — 2026-08-27, ~10:30
+## Checkpoint 138 — 2026-08-27, ~10:35
 
-**One new commit — routine post-relaunch cleanup, not a concern.** `oryn/s7-other-high-value-
-opportunities` advanced +11 → +12 commits, 2 minutes ago: "docs(s7): fix closeout internal
-consistency after process interruption" — reads as one of the relaunched sessions tidying up
-its own prior closeout doc, consistent with the fleet having just been restarted. All other 9
-branches unchanged. Live-harm-surface rows re-verified: still all 5 at the confirmed-correct
-fixed values, unchanged. `ListAgents` still shows the same 9 peers, relaunched sessions now
-15-16min old. No new peer messages this tick.
+**S8's final commit before wind-down — expected, matches what it told me earlier.**
+`oryn/s8-qa-gate` advanced +6 → +7, 4 minutes ago: "S8 QA: subagent's independent Wave 2 pass
+(final piece before wind-down)" — this is the 2 in-flight records S8 said it would let its
+subagent finish before stopping (see checkpoint 135). No concerns. S7's closeout-consistency
+commit from last tick is unchanged (still +12). All other 8 branches unchanged. Live-harm-
+surface rows re-verified: still all 5 correct, unchanged. `ListAgents` still the same 9 peers,
+relaunched sessions now 20-21min old. No new peer messages this tick.
 
 ### Open items (unchanged)
 
@@ -43,4 +43,4 @@ where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f7
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-27 ~10:30.
+`origin`, 2026-08-27 ~10:35.
