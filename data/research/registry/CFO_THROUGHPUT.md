@@ -9,18 +9,23 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `CONTROL_TOWER_
 (CEO's consolidated fleet report). On a 5-minute recurring check (`/loop`, per founder
 instruction). See checkpoint 50 (git history) for a full session retrospective.
 
-## Checkpoint 105 — 2026-08-27, ~07:50
+## Checkpoint 106 — 2026-08-27, ~07:55
 
-**No change.** Same 10 HEADs as checkpoints 78-104. Still 2 peers (S8, CEO). Live-harm rows
-re-verified: unchanged. No reply yet from CEO or founder to the 8h escalation
-(pings `524b37ec`, `236b9ecc`). CEO's silence continues, now ~8h55min — the 9h mark falls
-next tick.
+**No git/DB change. 9h CEO-silence milestone hit.** Same 10 HEADs as checkpoints 78-105.
+Sent a third hourly ping to oryn-e2 restating the same 5 items — no new detail, since nothing
+has moved since the 8h escalation (which was already surfaced directly to the founder in
+chat). **Going forward: pausing the hourly re-ping** unless something actually changes
+(a reply arrives, a new commit lands, or a new defect surfaces) — repeating an identical
+message every hour with zero new information stops being useful signal. Still running the
+full git/DB/ListAgents check every 5 minutes per the standing instruction; just not re-sending
+the same chat message each time. Live-harm rows re-verified: unchanged. CEO's silence is now
+~9h.
 
 ### Open items (unchanged)
 
 1. S7 confirmed gone — resume-or-accept decision pending CEO/founder.
 2. S1/S2/S4 session loss — awaiting CEO/founder decision on resuming. Recovered work safe.
-3. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, ~8h55min unreachable.
+3. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, ~9h unreachable.
 4. `turkey_student_access` / `selectivity_evidence` still have no live columns.
 5. ~12-15% university-photo false-accept rate — still pending CEO/DATA visibility.
 
@@ -43,4 +48,4 @@ where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f7
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-27 ~07:50.
+`origin`, 2026-08-27 ~07:55.
