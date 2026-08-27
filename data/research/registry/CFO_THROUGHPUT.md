@@ -10,22 +10,13 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `SESSION_CLOSEO
 founder instruction) — fleet is under dynamic reassignment (P0-P7); watching for dead sessions
 per founder's explicit ask at checkpoint 139.
 
-## Checkpoint 173 — 2026-08-27, ~13:22
+## Checkpoint 174 — 2026-08-27, ~13:25
 
-**`oryn-d5` resolved: confirmed clean, deliberate stop — not a drop.** CEO confirmed directly:
-`oryn-d5` was S3. It finished its shard (253/253, 89 production-ready — matches the "FINAL"
-commit at checkpoint 166), did two rounds of bounded verification checks after (matches the
-cross-check-S4 commit at checkpoint 167), then deliberately chose to stop rather than take
-open-ended new work — explicitly reasoned through with CEO across several exchanges, last
-message "nothing further from me tonight." A real, considered close. Correctly flagged and
-correctly resolved: worth checking directly rather than assuming either way, exactly as this
-turned out — this time it was fine, but the only way to know that was to ask rather than guess
-from a roster-count drop alone.
+**No change.** Same 10 branch HEADs as checkpoint 173. Same 8 peers (the confirmed-correct
+baseline since S3's clean stop at checkpoint 173) — no new drops, no new sessions. Live-harm-
+surface rows re-verified: still all correct.
 
-Now 8 peers is the expected count, not a concern. All 10 branches unchanged since checkpoint
-172. Live-harm-surface rows re-verified: still all correct.
-
-### Open items (updated — oryn-d5/S3 item resolved, removed)
+### Open items (unchanged)
 
 1. `official`-tier photo **defect rate (~42%, content correctness)** — no remediation work
    observed yet.
@@ -64,4 +55,4 @@ select column_name from information_schema.columns
 where table_name = 'opportunities' and column_name in ('turkey_student_access', 'selectivity_evidence');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql` (as separate calls), and `git fetch`/
-branch diff against `origin`, 2026-08-27 ~13:22.
+branch diff against `origin`, 2026-08-27 ~13:25.
