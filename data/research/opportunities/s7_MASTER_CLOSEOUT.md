@@ -15,8 +15,14 @@ Additionally incorporated S8 (Research QA)'s first-pass findings: a real factual
 (Blue Marble Review's deadline framing), one upgrade (Foyle Young Poets), one resolved
 naming-collision check (JHSS vs JRHS).
 
-**Final: 77 unique records — still below the nominal ≥140 target, now via CEO-confirmed
-genuine saturation, not an open question.** See Key Gaps for the full per-lane accounting.
+**Update 2026-08-26 (later): S8's full independent QA pass landed and was applied in full**
+(53/77 records live-re-fetched against their own official sources — not file inspection),
+followed by an S7 cross-category duplicate check prompted by a fleet-wide finding (S5B/S8).
+**Final: 71 unique records** (77 minus 5 confirmed live-DB duplicates the cross-category check
+caught, 3 of which had been marked PRODUCTION_READY before the check ran) — still below the
+nominal ≥140 target, via CEO-confirmed genuine saturation, not an open question. See Key Gaps
+for the full per-lane accounting, and the Cross-Category Duplicate Addendum + S8 QA Addendum
+below for what changed after this section was first written.
 
 ## ASSIGNED SCOPE
 
@@ -28,26 +34,40 @@ student based in Türkiye applying to universities abroad.
 
 ## PRODUCTION-READY COUNT
 
-**0, by design.** Per the contract, `PRODUCTION_READY` requires (among other things) an S8/
-second-agent review this session did not perform on behalf of S8 — S7's own cross-review is a
-first pass, not that independent second review. The closest honest analog: **47 of 77 records
-are `verification_state: VERIFIED` with `turkey_student_access` resolved to either
-`VERIFIED_ELIGIBLE` or `ELIGIBLE_WITH_CONDITIONS`** — i.e., ready for S8 to review toward
-`PRODUCTION_READY` (S8 has already started this pass — see Wave 2 Addendum). Image pass still
-outstanding fleet-wide (see Image Complete Count).
+**UPDATED (superseding the paragraph below, which was accurate only until S8's full pass
+landed): 26**, per S8 (Research QA)'s completed independent re-verification — 53/71 records
+live-re-fetched against their own official sources, not file inspection. This is the actual
+`PRODUCTION_READY` count, assigned by S8, not self-declared by S7.
+
+*(Original text, kept for the audit trail of how this closeout evolved: "0, by design. Per the
+contract, `PRODUCTION_READY` requires an S8/second-agent review this session did not perform
+on behalf of S8 — S7's own cross-review is a first pass, not that independent second review.
+The closest honest analog: 47 of 77 records are `verification_state: VERIFIED` with
+`turkey_student_access` resolved... ready for S8 to review." That review has since happened —
+see S8 QA Addendum below.)*
+
+A further **16 records** are `VERIFIED` with Turkey-access resolved but not yet individually
+cleared by S8 (S8's pass prioritized the original 41 VERIFIED-tier + a 12-record CANDIDATE
+sample; newer Wave 2 additions and the post-dedup delta are still in S8's queue per their own
+message). **3 records** that would otherwise be in this tier are deliberately demoted to
+CANDIDATE pending a human/DATA judgment call — see Cross-Category Duplicate Addendum. Image
+pass still outstanding fleet-wide (see Image Complete Count).
 
 ## CANDIDATE COUNT
 
-**30** — `verification_state: CANDIDATE` (real, evidence-backed, but at least one material fact
-could not be confirmed via a direct fetch of the organizer's own official page this session;
-each record's `notes_uncertainties` states exactly what's unconfirmed and why).
+**29** — `verification_state: CANDIDATE` (includes both records where a material fact
+couldn't be confirmed via direct fetch, and 3 records demoted from VERIFIED pending
+resolution of a possible live-DB overlap — see Cross-Category Duplicate Addendum). Each
+record's `notes_uncertainties` states exactly what's unconfirmed and why.
 
 ## REJECTED COUNT
 
-**112** substantive rejections across all 7 sub-agent runs (Wave 1 — A1: 27, A2: 3, B1: 27,
-B2: 17; Wave 2 — A1w2: 19, A2w2: 3, B1w2: 16), each with cited reasoning and a source URL —
-logged specifically so no future lane re-researches them. Plus 1 non-rejection traceability
-note (A2: an old domain superseded by a new one for the same already-accepted entity).
+**119** substantive rejections across all passes (Wave 1 — A1: 27, A2: 3, B1: 27, B2: 17;
+Wave 2 — A1w2: 19, A2w2: 3, B1w2: 16; S8 QA: 1 [Türkiye Öğrenci Meclisi, program confirmed
+defunct]; S7 cross-category dedup: 5 [confirmed live-DB duplicates]), each with cited
+reasoning and a source URL — logged specifically so no future lane re-researches them. Plus 1
+non-rejection traceability note (A2: an old domain superseded by a new one for the same
+already-accepted entity).
 Rejection reasons span: citizenship/country-restricted (several, including a caught
 aggregator-vs-official-source discrepancy on a Czech government scholarship, and a
 comprehensive Wave 2 sweep confirming Greece/Norway/Sweden/Denmark/Finland/Estonia/Latvia/
@@ -79,17 +99,55 @@ Deferred until the schema question S1-S4/CEO are already escalating to the found
 
 ## SECOND REVIEW COUNT
 
-**67 of 67 (100%)** reviewed by S7 (parent session) — this satisfies my own mission brief's
-"cross-review 100%" instruction, but is explicitly *not* the same as S8's independent QA pass
-per the fleet's own role division (S8 = Research QA). S7's review included: file/JSONL validity
-checks on all 4 sub-lanes; independent re-fetching of A1's flagged aggregator-vs-official
-discrepancy and A2's two safety findings (both confirmed real, not sub-agent artifacts);
-independent re-attempts of all 11 of A2's blocked CANDIDATE URLs (8 confirmed still blocked,
-1 partially upgraded); full-file reads of B1's 17 records; resolution of one flagged duplicate-
-risk record (GençBizz vs. GençBizzTech/JA Company Programme); a full cross-lane duplicate scan
-(script-based, canonical-name normalized); and a consistency normalization pass (see Duplicates
-Found). **S8's independent review has not yet happened — that is the literal next step, not
-something this closeout is claiming to substitute for.**
+**S7 self-review: 77 of 77 (100%)** — satisfies my own mission brief's "cross-review 100%"
+instruction. Included: file/JSONL validity checks on all 7 sub-lane runs; independent
+re-fetching of A1's flagged aggregator-vs-official discrepancy and A2's two safety findings
+(both confirmed real); independent re-attempts of all 11 of A2's blocked CANDIDATE URLs (8
+confirmed still blocked, 1 partially upgraded); full-file reads of B1's records; resolution of
+one flagged duplicate-risk record (GençBizz vs. GençBizzTech/JA Company Programme); a full
+cross-lane duplicate scan; a consistency normalization pass; and, after Wave 2, a whole-table
+cross-category live-DB duplicate check (see Cross-Category Duplicate Addendum).
+
+**S8 (Research QA) independent review: 53 of 71 done, in progress on the rest.** This is the
+fleet's actual second-reviewer role, distinct from S7's own self-review above. Full report:
+`data/research/qa/s8_qa_s7-wave1_2026-08-26.md` on branch `oryn/s8-qa-gate`. Result: 26
+PRODUCTION_READY, 21 VERIFIED (7 with a discrepancy S8 found and S7 corrected — see S8 QA
+Addendum), 3 REJECTED (1 applied here — Türkiye Öğrenci Meclisi; 1 pre-checked by S8 as part
+of an earlier round — Blue Marble Review, already corrected; 1 — Curieux Review — corrected
+rather than removed, since the underlying opportunity is real and the fix was narrow), 0
+BLOCKED. S8 continuing on Wave 2's 10 new records + the CANDIDATE→VERIFIED delta next.
+
+## S8 QA ADDENDUM (2026-08-26, full pass)
+
+S8 independently re-fetched every VERIFIED-tier record's own cited official source (not file
+inspection) plus a 12-record CANDIDATE sample. All findings applied by S7, pushed:
+
+**1 rejection applied**: Türkiye Öğrenci Meclisi (S7's own most-touted find) — the record
+presented a 2004 national directive as live evidence for an elected national student-council
+system. S8 found, via 3 independent sources including a direct Official Gazette read, that the
+founding directive was repealed in 2019 and the remaining regulatory hook was repealed 28 July
+2026 — one month before this research. The specific national mechanism is genuinely defunct. A
+possible provincial successor (İstanbul Öğrenci Meclisleri Projesi) was found but NOT
+substituted in — that needs its own independent research, not an assumption. Kept honest over
+keeping a headline finding.
+
+**6 corrections applied**: Curieux Review (`peer_review_explicit` was wrongly `false` — the
+record's own cited source explicitly uses "peer review" language twice, direct misreading now
+fixed); Concord Review, John Locke Institute, Polyphony Lit, TKS (general) — cost/fee fields
+corrected, the single most error-prone field type S8 found (~10% of VERIFIED records, twice
+specifically because S7 mislabeled a live-confirmed figure as "secondary" and trusted the wrong
+number as "official"); Taiwan Scholarship — added a nationality restriction on the specific
+Turkey-accessible application channel that the generic eligibility text didn't surface,
+downgraded `turkey_student_access` accordingly.
+
+**4 reinforced** (existing caution flags, S8 independently found supporting detail): Genç
+Kızılay's youth-branch age-gate ambiguity, Skipping Stones' per-sub-program age range, Youth
+Medical Journal's post-currency gap (.com legitimate but most recent visible post July 2024),
+Voices of Youth's lean toward discontinued/absorbed (redirect reproduced independently).
+
+**Process lesson, worth generalizing beyond S7**: the cost-field error pattern (mislabeling
+which of two figures is the "official" one without re-verifying which source is actually live)
+looks structural, not one-off — flagged to S9/S8 as worth checking on other lanes' output too.
 
 ## DUPLICATES FOUND
 
@@ -99,9 +157,13 @@ International Young Eco-Hero Awards, International Children's Peace Prize. Resol
 the more complete copy in each case (B1's copy in all three — strictly better evidence on the
 Peace Prize, equal on the other two) and dropping the other; both original copies remain in the
 per-lane batch files for audit trail, only `s7_MASTER_consolidated.jsonl` reflects the
-dedup. **Zero duplicates found against the live DB** (all 67 were checked against the ~45-entity
-dedup baseline built pre-dispatch, documented in `docs/handoffs/s7-other-high-value-
-opportunities-claim.md`) or against the ~200+ pre-existing-corpus titles S7-B2 independently
+dedup. **UPDATE — this claim was wrong, corrected by the Cross-Category Duplicate Addendum
+below: 5 live-DB duplicates were later found.** The ~45-entity category-scoped baseline this
+sentence describes genuinely found zero matches — the miss was structural (category-scoped
+checking can't catch a match filed under a different category), not a failure to check what
+it checked. Kept here, not deleted, so this closeout shows how the finding actually evolved
+rather than silently rewriting history. Also checked against the ~200+ pre-existing-corpus
+titles S7-B2 independently
 discovered inside `dlopp_*`/`ecw2/3/4_*` files already in this directory.
 
 **One labeling-consistency issue found and fixed fleet-relevant beyond just S7**: 7 records
@@ -199,7 +261,7 @@ loaded them fine); only `jsr.org/hs` is a confirmed real outage (Cloudflare 523)
 
 ## KEY GAPS
 
-1. **Landed at 77 net-new unique records vs. the nominal ≥140 target — now a CEO-confirmed
+1. **Landed at 71 net-new unique records (77 before the cross-category dedup fix) vs. the nominal ≥140 target — now a CEO-confirmed
    genuine ceiling, not an open question.** Wave 1 causes (per-lane, unchanged from the
    original assessment): real category thinness for Turkey-eligible study-abroad scholarships
    (A1), a real structural fellowship-access finding (B1, since partially but not fully offset
@@ -257,7 +319,7 @@ All under `data/research/opportunities/` unless noted:
 - `s7a1w2_batch1.jsonl`, `s7a1w2_corrections.jsonl`, `s7a1w2_rejected.jsonl`, `s7a1w2_CLOSEOUT.md`
 - `s7a2w2_batch1.jsonl`, `s7a2w2_rejected.jsonl`, `s7a2w2_CLOSEOUT.md`
 - `s7b1w2_batch1.jsonl`, `s7b1w2_rejected.jsonl`, `s7b1w2_CLOSEOUT.md`
-- `s7_MASTER_consolidated.jsonl` (77 deduped, normalized, S8-corrected records — the actual
+- `s7_MASTER_consolidated.jsonl` (71 deduped, normalized, S8-corrected records — the actual
   deliverable)
 - `s7_MASTER_CLOSEOUT.md` (this file)
 - `claims_S7.jsonl` (registry shard, kept on this branch per S9's pull-only convention — not
@@ -279,9 +341,11 @@ Not merged — held for CEO/S8/DATA review per contract (no research lane merges
 
 ## WHAT THE NEXT OWNER SHOULD DO
 
-1. **S8**: continuing independent QA pass on all 77 (already delivered one round of findings,
-   incorporated above) — prioritize the 47 at VERIFIED+resolved-Turkey-access (closest to
-   `PRODUCTION_READY`) before the 30 CANDIDATE/UNCLEAR tier. Substantive fact-check of the 5
+1. **S8**: continuing independent QA pass on the remaining ~18 unreviewed of 71 plus Wave 2's
+   10 net-new records (26 already PRODUCTION_READY, full first pass delivered and applied —
+   incorporated above) — prioritize the remaining 16 VERIFIED+resolved-Turkey-access records
+   not yet individually cleared (closest to `PRODUCTION_READY`) before the 29 CANDIDATE tier,
+   and the 3 flagged-possible-live-DB-overlap records once DATA weighs in. Substantive fact-check of the 5
    now-loadable-but-unconfirmed URLs (Key Gaps #2) is the named next step S8 already committed
    to.
 2. **A human with an unrestricted browser or different tool**: `tr.uwc.org`/`uwc.org` and
