@@ -4,6 +4,34 @@
 of this session's run — `GAP_MAP.md`/`REGISTRY_README.md` remain the live mechanism for whenever
 the freeze resumes; this file is the historical close.
 
+## UPDATE — fleet did not stop, continuing under CEO dynamic reassignment (founder directive)
+
+Founder confirmed direct decision authority to CEO and issued a dynamic-backlog directive:
+completed lanes get reassigned to the highest-value unowned gap rather than going idle, priority
+order P0 (live defects) → P1 (photo verification) → P2 (image rights) → P3 (category balance) →
+P4 (Turkey-access) → P5 (time-sensitive, e.g. Marshall Society) → P6 (URL health) → P7 (opportunity
+images). Current assignments: S1/S3/S4 finishing in-flight shard work then continuing own-shard
+depth; S2 cross-checking S1/S3/S4's official-tier images against its own ~16%-defect-rate
+methodology; S5 continuing its own in-flight batches; **S6 reassigned to fleet-wide Turkey-access
+verification (P4) after closing its own lane**; S7 finishing an in-flight photo pass; S8
+continuing S5's QA backlog then a systematic URL-health sweep (P6).
+
+## Two more production writes since the first 5 — same authorization standard, well-evidenced
+
+- **Stockholm Water Prize / Stockholm Junior Water Prize**: retired the wrong-entity row
+  (`c8eb3d40`, a professional career award, not a youth competition), promoted the correct youth
+  prize (`17aeb772`) to active/verified_current with full Türkiye-route enrichment (DSİ national
+  organizer). 4-times independently confirmed across cr1, S8, and two S6 sub-agents before write.
+- **FRC / FIRST Robotics Competition**: retired the empty duplicate stub (`dfb94075`), kept the
+  canonical row (`db25d327`) active, added the Türkiye national-organizer data S6-A found
+  (frcturkiye.org).
+- **Marshall Society Essay Competition**: S8 did the full first-party verification this deadline
+  needed (opened the linked rules document, not just the landing page) — confirmed individual
+  direct-submission route, exact deadline (30 Aug 2026 23:59 BST), and corrected an affiliation
+  overclaim risk (the Society is a genuine Cambridge student society; the sponsor, Cambridge
+  Global Connect, is a separate for-profit company). Kept `PRODUCTION_READY`; country eligibility
+  honestly left `unknown` — S8 explicitly declined to infer open eligibility from silence.
+
 ## Production writes made (the only writes any research lane made all session)
 
 5 factual corrections to `opportunities`, executed by CEO after **direct, explicit, first-hand
