@@ -132,3 +132,28 @@ pushed to origin. **Not merged to main.**
 4. **Promotion**: same as the S2 handoff — these become new `university_profile_metrics` rows via
    the existing EAV pattern (no migration needed) once second-reviewed, applied by CEO/DATA, not
    this lane.
+
+## APPLY-READY PROPOSAL (added 2026-08-27, CEO-approved follow-on)
+
+`data/research/universities/crosscheck-official-tier/manual_image_overrides_proposal.ts` packages
+all 61 sourced replacements (everything above except UAEU) in the exact shape
+`scripts/acquire-university-images.ts`'s own `MANUAL_IMAGE_OVERRIDES` mechanism already expects —
+this script has a purpose-built hand-verified-override path (`ManualOverride` interface,
+`handVerified` flag driving a distinct `'verified'` status label) that was the better fit than a
+raw SQL UPDATE: writing external Wikimedia/official URLs directly into `primary_image_url` via
+SQL would bypass the same download/optimize/re-host/checksum/verify-serves pipeline every other
+image in this table went through. Generated programmatically from the verified JSONL (not
+hand-transcribed), then independently validated: 61/61 unique entries, every key matches
+`universities.name` exactly, balanced structure, all required fields present.
+
+**To apply**: merge these 61 entries into the real `MANUAL_IMAGE_OVERRIDES` object in
+`scripts/acquire-university-images.ts`, then run `npm run acquire:university-images -- --apply --force`
+(`--force` is required — these universities already have a `primary_image_status`, so the script's
+own `already_done` skip would otherwise leave them untouched). This session did not edit that
+script file directly — it's production tooling code, outside a research lane's write territory
+per the standing single-writer-per-territory model.
+
+**One entry needs attention before merging**: Southern Cross University's replacement was sourced
+from the institution's own site (scu.edu.au), not Wikimedia, so it has no clean open license —
+`license: null` with `RIGHTS_REVIEW_REQUIRED` explicit in its `notes`. Every other entry has a
+real CC BY / CC BY-SA / Public Domain license from its Commons source page.
