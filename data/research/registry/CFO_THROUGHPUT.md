@@ -10,17 +10,11 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `SESSION_CLOSEO
 founder instruction) — fleet is under dynamic reassignment (P0-P7), not stopping; watching
 for dead sessions per founder's explicit ask at checkpoint 139.
 
-## Checkpoint 162 — 2026-08-27, ~12:30
+## Checkpoint 163 — 2026-08-27, ~12:35
 
-**No dead servers.** Same 9 peers, relaunched sessions ~2h old, originals 13h.
-
-**S5A's new from-scratch batch continuing, with a real rejection.**
-`oryn/s5a-summer-academic-enrichment` advanced +20 → +21, moments ago: "S5A batch12: 11 more
-PRODUCTION_READY, 2 BLOCKED, 1 REJECTED." A genuine reject in the mix, not just pass-everything
-— the quality gate is functioning.
-
-All other branches unchanged since checkpoint 161. No remediation activity yet on the 42%
-official-tier content-defect rate. Live-harm-surface rows re-verified: still all correct.
+**No change.** Same 10 branch HEADs as checkpoint 162. No dead servers — same 9 peers,
+relaunched sessions ~2h old, originals 13h. Live-harm-surface rows re-verified: still all
+correct.
 
 ### Open items (unchanged)
 
@@ -59,4 +53,4 @@ select column_name from information_schema.columns
 where table_name = 'opportunities' and column_name in ('turkey_student_access', 'selectivity_evidence');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql` (as separate calls), and `git fetch`/
-branch diff against `origin`, 2026-08-27 ~12:30.
+branch diff against `origin`, 2026-08-27 ~12:35.
