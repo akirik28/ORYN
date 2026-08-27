@@ -445,3 +445,215 @@ time available).
    session's 28 have been reviewed by S5B or S8 yet. S5B's own final handoff indicates their
    continuation is complete too, so both lanes' full output is now stable and ready for that review to
    actually happen.
+
+## SECOND CONTINUATION PASS — 2026-08-27/28 (fresh session, `unverified`-tier assignment from Research CEO)
+
+Written by a new S5A session assigned explicitly to the `unverified` bucket (the much larger, genuinely
+from-scratch tier the prior two passes correctly identified but did not touch, since they were scoped to
+the higher-priority `verified_current` tier). Prior sections above are left untouched. No production
+writes were made at any point, same contract as before.
+
+### STATUS
+
+Stopping at a natural checkpoint after six pushed batches (91 records) — a substantial, real first pass
+on the `unverified` bucket, not full coverage. Quality and honest per-row verdicts were prioritized over
+raw count throughout, per Contract §13/§14 and the task's explicit instruction to prefer breadth of
+honest verdicts over perfecting a handful.
+
+### METHODOLOGY THIS PASS
+
+1. **Re-measured the live bucket rather than trusting the prior session's "~147+" estimate**, per
+   instruction. Found: `status` has no `unverified` enum value at all — the actual verification tier
+   lives in a separate `verification_state` text column. Cross-tabulating `category='summer_program'`
+   by `status` × `verification_state` gave: `active`+`unverified` 58, `under_review`+`unverified` 83,
+   `disabled`+`unverified` 18, `expired`+`unverified` 1. The `disabled` and `expired` rows were sampled
+   and confirmed to be either already-known-duplicate rows or clearly malformed ingestion artifacts
+   (e.g. a row titled "Time: 4:30pm – 5:30pm (Hong Kong time)", another titled "USC Summer Programs 2025
+   Info Sessions") — correctly out of scope, not researched. **Real worklist: 141 rows**
+   (`active`+`under_review`, both `unverified`), close to but not exactly the prior estimate, exactly as
+   the task anticipated needing re-measurement.
+2. **Applied the S5B exclusion list precisely rather than approximately.** The task's dispatch named "8"
+   rows from `s5b_2026-08-26_MISCATEGORIZATION_fixes.jsonl` but that file actually lists 10 distinct IDs
+   (Polygence, Lumiere Education, Research Mentorship Program, UCSB Research Mentorship Programs, Summer
+   Science Program (SSP), Rockefeller SSRP, SSTP ×2, Venture & Tech Summer Program, International
+   Research Institute of NC). Live-DB spot-checks found CEO/DATA has **already actioned most of these**
+   — SSP, Venture & Tech, UCSB RMP, Rockefeller SSRP, and SSTP now show `category='research'` or
+   `'internship'` live, and Polygence and IRI are already `category='research'` too (explaining why they
+   didn't appear in this session's `summer_program`-scoped query at all — no manual exclusion needed).
+   Combined this with the prior session's own separately-documented 6-row self-exclusion (MIT PRIMES,
+   Simons SRP, Garcia SRP, Caltech SRC, Clark Scholars, Rockefeller SSRP) and confirmed via live query
+   that none of those 6 titles appear in the `unverified` worklist by that exact name — except one new
+   wrinkle found independently this session (see KEY FINDINGS #1 below).
+3. **Applied the cross-category and cross-tier dedup lesson from the task instructions throughout**, not
+   as a one-time pass: every candidate with an ambiguous or generic title was checked against the live
+   DB (full-table, not category-scoped) before being written up. This caught real, previously-unflagged
+   duplicates (see KEY FINDINGS #2).
+4. Worked six batches, front-loading the confusing "bare institution name" cluster (roughly a third of
+   the 141-row bucket turned out to be exactly this shape — see KEY FINDINGS #3) since it required the
+   most judgment calls and benefited from being resolved while full context was fresh.
+
+### COUNTS THIS PASS (`S5A-0082` through `S5A-0172`, 91 records)
+
+- **58 PRODUCTION_READY** — 53 `VERIFIED_ELIGIBLE`, 5 `ELIGIBLE_WITH_CONDITIONS` (HKUST I·ELITE:
+  school-nomination-only; UChicago Pre-College: online-only for students not already enrolled at a US
+  institution, confirmed via UChicago's own international-students page; Harvard SSP: I-20 visa holders
+  restricted to the residential track; Kode With Klossy: virtual-only for non-US participants; Phillips
+  Exeter: no financial aid for international applicants).
+- **4 REJECTED** (`NOT_ELIGIBLE`) — each a clean, first-party-confirmed structural or citizenship bar,
+  not an ambiguous call: BETA Camp/Prequel (own page: "open to students in grades 9-11 in North
+  America"), Stanford SIMR (own page: "International students are not eligible"), Carnegie Mellon AI
+  Scholars (own page: "a U.S. citizen or permanent resident with a current U.S. green card"), NYU High
+  School Law Institute (structural — free, in-person, Saturday academic-year program in NYC, not
+  practically accessible to a Türkiye-based student and not a summer program at all).
+- **29 BLOCKED/UNCLEAR** — a mix of genuine evidence-exhausted ambiguities (e.g. ISSYP's status dispute,
+  Vesalius College's institutional-succession confusion, several umbrella-index rows) and pure tooling
+  failures (repeated 403s/socket errors on specific domains — JHU's `cty.jhu.edu`/`ei.jhu.edu`,
+  `ringling.edu`, `tufts.edu`, `fordham.edu`'s CAS login wall, `gwu.edu`). Every BLOCKED record states
+  explicitly which kind of blocker it is, so a future researcher knows whether to re-attempt (technical)
+  or dig deeper (genuine ambiguity) — see each record's own `notes` field.
+
+### REMAINING
+
+**39 of the 141 live-measured `unverified` rows are still untouched** after this pass (102 of 141
+touched: 91 researched/flagged + 11 pre-excluded for S5B-territory/winter-camp/duplicate reasons — see
+below). The untouched rows are recoverable by re-running this session's own SQL query
+(`category='summer_program' AND verification_state='unverified' AND status IN ('active','under_review')`)
+and excluding the opportunity_ids now present in `s5a_batch11` through `s5a_batch16`. At a glance, most
+of the remainder is more of the same "bare institution name" cluster this pass was already working
+through (American University, Google Computer Science Institute, Hochschule Bremen, Hong Kong Baptist
+University, Hong Kong Polytechnic, Lehigh University ×2, University of Maastricht, Purdue University,
+SAIC ×2, Trinity College London/Ireland, Universidad de Navarra, University of Pennsylvania, USC, University
+of Toronto, Woodstock School, Athena Summer Innovation Institute) plus a handful of standalone programs
+not yet attempted (Dive Into Engineering!/USC, RIBS, SPINWIP, Stanley Prep, Summer at Stanford HS 2025,
+Summer Discovery, UChicago Pathway Economics, Wharton Global Youth generic, Wharton Sports Analytics —
+the latter's own URL is `wharton-data-competition`, suggesting it may actually be a `competition`-category
+row, not `summer_program`, and should be checked against S6's territory before further work). None of
+these were found broken or dead-ended in a way that would make them unresearchable — they simply weren't
+reached in this pass's six batches.
+
+**Pre-exclusions applied (11 rows, not counted in the 91), all still exactly as flagged by the task and
+prior sessions, not independently re-verified as new findings**:
+- 6 Turkish winter-camp rows (kış kampı/kış okulu) miscategorized as `summer_program` — the already-known
+  pattern from the prior session's `summer_FINAL_SUMMARY`, this pass found 6 more specific instances:
+  Sabancı Nanotechnology Winter School, Kadir Has Kış Okulu, Koç Nanoteknoloji ve Biyoteknoloji Lise Kış
+  Kampı, Acıbadem Kış Bilim Kampı, Koç Lise Kış Tıp Okulu, Acıbadem Uygulamalı Moleküler Biyoloji ve
+  Genetik Kampı (Kış).
+- 2 Koç University "KUSRP" rows (`Koç University Research Program KUSRP`, `Research Program KUSRP 2026`)
+  — S5B's mentored-research territory (Koç University Summer Research Program), already researched per
+  `turkey_batch1_2026-08-21.jsonl` referenced in the operating brief.
+- 1 "Garcia Summer Scholars" row — a likely duplicate of the already-`verified_current`, already-S5B-flagged
+  "Garcia Summer Research Program" (see KEY FINDINGS #1).
+
+### KEY FINDINGS WORTH FLAGGING TO CEO/DATA
+
+1. **A new duplicate pair the prior session's self-exclusion list didn't catch**: "Garcia Summer
+   Scholars" (`d83d7048-537b-4450-8dfa-69e709cdb48f`, `active`/`unverified`) appears to be the same
+   Stony Brook program family as the already-`verified_current`, already-S5B-flagged "Garcia Summer
+   Research Program" (`a37fa810-d142-4c07-b272-b3d58a6e6ea5`) — two DB rows, two different titles, same
+   organizer/domain pattern. Excluded from this pass's worklist on that basis rather than independently
+   researched; not fully confirmed as a duplicate (title alone, not a name+organizer+URL triple match).
+2. **At least six more umbrella-row / bare-institution-index cases**, the same failure mode as the
+   already-known CTY/BRAND-ED/WYSE trio, now confirmed a structural pattern rather than isolated
+   incidents: Carnegie Mellon University (PA, USA) (`b4091e25` — confirmed at least one sub-track, AI
+   Scholars, is US-citizen-only, while the portfolio's other tracks are unverified), Brown University
+   (RI, USA) (`c2444f7f` — lists 8 distinct named products), Bentley University Pre-College Programs
+   (`9e601648` — one real product, Wall Street 101, buried inside a contentless landing page), Columbia
+   University: New York, NY (`17d177de` — general admissions portal for the whole Columbia precollege
+   family), and four more Johns Hopkins CTY sub-tracks found as their OWN separate DB rows (Intensive
+   Studies for 7th Graders and Above, Civic Leadership Institute, Global Issues at Princeton, Institute
+   for Advanced Critical and Cultural Studies) — meaning the CTY umbrella problem is not just "one row
+   representing many programs" but now also "many rows for sub-programs of one umbrella," a mirror-image
+   version of the same underlying data-model gap.
+3. **The "bare institution name" pattern is large and systemic, not anecdotal**: roughly a third of the
+   141-row bucket consists of rows titled just `[University Name]` or `[University Name]: [City, State]`
+   pointing to a generic admissions/index/homepage URL rather than a specific named program — several
+   turned out to point to entirely wrong content (Lehigh University: Bethlehem PA → graduate admissions
+   event schedule; University of Exeter → a random professor's individual faculty profile page;
+   Universidad de Navarra → a Philosophy-faculty pilgrimage-walking page; Google Computer Science
+   Institute → a different institution's (NEIU) Bachelor's degree program page; Hong Kong Polytechnic
+   University → postgraduate study page; Trinity College London, Ireland → conflates two unrelated real
+   institutions, Trinity College Dublin and the separate London exam board "Trinity College London",
+   into one row pointing at Dublin's homepage). This looks like a pipeline/ingestion defect from an
+   earlier scrape (each institution mentioned in a seed document got its own row, regardless of whether
+   a specific program name or URL was actually captured) rather than isolated bad data points — worth a
+   dedicated data-quality pass rather than continued one-by-one gap-closure once the pattern is this
+   confirmed.
+4. **Two more provider-type corrections** in the same vein as the prior session's Oxford Scholastica
+   finding: Oxford Royale ("does not operate under the aegis of the University of Oxford... operates
+   independently as Oxford Programs Limited") and Discovery Summer at Winchester College (an independent
+   English-language-course operator using the school's campus, not a Winchester College program) — both
+   corrected to `provider_type=independent_provider` rather than implying institutional affiliation.
+5. **A positive Turkey-specific finding worth highlighting rather than just noting**: two records this
+   pass had unusually direct, specific evidence of actual Turkish access rather than a mere absence of
+   restriction — Discovery Summer/Winchester College's own official_url in the DB is a Turkish-language
+   Biltur (a Türkiye-based study-abroad consultancy) enrollment page, and Horizon Inspires' own published
+   historical cohort breakdown names Türkiye by name (4% of a reported cohort, alongside China, India,
+   Canada, UAE). Both are stronger evidence than the "no stated restriction" pattern that make up most
+   `VERIFIED_ELIGIBLE` calls in this corpus.
+6. **A likely reversal of a previously "confirmed" fact, flagged rather than silently overwritten**:
+   ISSYP (International Summer School for Young Physicists, Perimeter Institute) is listed in this
+   lane's own `cr1_do_not_add.jsonl` (2026-08-23) as "confirmed discontinued." This session's reverify
+   found the opposite signal — multiple 2025/2026-dated secondary sources (AoPS wiki, summer-program
+   aggregators) describing it as a currently-running two-week online program with 900+ alumni from 60
+   countries — but could not get a first-party fetch through (`perimeterinstitute.ca` returned 403
+   Forbidden, `insidetheperimeter.ca` hit a domain-verification block) to settle it either way. Recorded
+   as `BLOCKED`/`conflicting` rather than either accepting the old verdict or the new signal uncritically
+   — per this lane's own standing lesson to report drift honestly rather than smooth it over.
+7. **A recurring category-mismatch failure mode, now confirmed across four independent cases**: rows
+   correctly named and pointing to a real, real program, but one that isn't actually a *summer* program
+   at all — Juilliard Pre-College (a Saturday, academic-year Sept-May program), NYU High School Law
+   Institute (free, yearlong, Saturday), UC San Diego Futures Programs (explicitly runs "in line with a
+   traditional academic year... September to June"), and Columbia's "Spring Immersion Program" (its own
+   URL path is `academic-year/academic-year-weekend`). Recommend a systematic recheck of any
+   `summer_program`-categorized row whose own official page describes academic-year, not summer,
+   programming.
+8. **A persistent tooling pattern, not a content finding**: direct `WebFetch` calls to `cty.jhu.edu`,
+   `ei.jhu.edu` (both Johns Hopkins), `ringling.edu`, `tufts.edu`, and a `fordham.edu` page behind a CAS
+   login wall all failed with 403s or connection errors across this entire session, while `WebSearch`
+   summaries of the same domains' content generally succeeded. Future researchers hitting these same
+   domains should go straight to `WebSearch`-sourced evidence rather than repeatedly retrying direct
+   fetches.
+
+### FILES CREATED/UPDATED
+
+- `data/research/opportunities/s5a_batch11_2026-08-27.jsonl` through `s5a_batch16_2026-08-27.jsonl` — 6
+  new files, 91 total records.
+- `data/research/registry/claims_s5a.jsonl` — 91 more append-only entries (`S5A-0082` through
+  `S5A-0172`); 172 total in the file now.
+- This handoff file (this section only — everything above is prior sessions' untouched record).
+
+### COMMITS THIS PASS (oldest to newest, all pushed to `oryn/s5a-summer-academic-enrichment`)
+
+1. `f1391e7` — S5A batch11: from-scratch research on 17 unverified summer_program rows + 5 BLOCKED
+2. `fe01991` — S5A batch12: 11 more PRODUCTION_READY, 2 BLOCKED, 1 REJECTED
+3. `7fc6191` — S5A batch13: 9 PRODUCTION_READY, 1 REJECTED, 5 structural flags
+4. `69a0b7b` — S5A batch14: 9 PRODUCTION_READY, 3 structural flags
+5. `c56a994` — S5A batch15: 7 PRODUCTION_READY, 2 REJECTED, 5 structural/technical flags
+6. `ee011fa` — S5A batch16: 7 PRODUCTION_READY, 8 structural/technical flags
+7. (plus this handoff commit, pushed immediately after)
+
+### CUMULATIVE PRODUCTION-READY COUNT (all three sessions combined)
+
+**117** (28 + 31 + 58). All still dry-run proposals in JSONL — none of this is live in production.
+
+### WHAT THE NEXT OWNER SHOULD DO
+
+1. **CEO/DATA**: review and promote the 58 new PRODUCTION_READY records the same way as the prior 59
+   (117 cumulative) — same not-yet-live-schema caveat applies to `turkey_student_access` and image
+   provenance fields.
+2. **CEO/DATA**: the "bare institution name" data-quality pattern (KEY FINDINGS #3) is large enough now
+   (roughly a dozen confirmed-bad rows found this session alone, several pointing to entirely wrong
+   content) to warrant a dedicated ingestion-quality pass across the full `summer_program` category
+   rather than continued one-by-one discovery — it likely extends into the untouched 39 rows too.
+3. **CEO/DATA**: resolve the six-plus umbrella-row cases surfaced this session (KEY FINDINGS #2),
+   ideally as one schema/process decision rather than case-by-case, since the pattern is now confirmed
+   systemic (CTY alone has both an umbrella row AND now four independently-discovered sub-track rows).
+4. **CEO/DATA**: decide on the ISSYP drift finding (KEY FINDINGS #6) — needs a first-party fetch this
+   session couldn't get through on either `perimeterinstitute.ca` or `insidetheperimeter.ca`.
+5. **Whoever continues S5A's `unverified`-tier gap-closure**: 39 rows remain untouched (see REMAINING
+   above) — re-run this session's SQL query, exclude the IDs now in `s5a_batch11`-`s5a_batch16`, and
+   continue. Consider addressing Wharton Sports Analytics and Business Initiative's likely
+   miscategorization (URL is `wharton-data-competition`) with S6 before researching it as a
+   `summer_program`.
+6. **Whoever runs the fleet-wide second-review pass**: this pass's 91 records have not yet been reviewed
+   by S5B or S8, same open item as the prior two passes noted for their own output.
