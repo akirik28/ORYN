@@ -9,17 +9,20 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `CONTROL_TOWER_
 (CEO's consolidated fleet report). On a 5-minute recurring check (`/loop`, per founder
 instruction). See checkpoint 50 (git history) for a full session retrospective.
 
-## Checkpoint 116 — 2026-08-27, ~08:45
+## Checkpoint 117 — 2026-08-27, ~08:50
 
-**No change.** Same 10 HEADs as checkpoints 78-115. Still 2 peers (S8, CEO). Live-harm rows
-re-verified: unchanged. No reply yet from CEO or founder. CEO's silence continues, now
-~9h50min.
+**No change — 10h CEO-silence milestone.** Same 10 HEADs as checkpoints 78-116. Still 2 peers
+(S8, CEO). Live-harm rows re-verified: unchanged. Not sending a 10h ping — per checkpoint 106,
+hourly re-pings are paused since they carry no new information; the founder was already given
+the full picture directly in chat at the 8h mark. Still checking every 5 minutes per the
+standing instruction. CEO's silence is now ~10h with zero commits or replies across that
+entire span.
 
 ### Open items (unchanged)
 
 1. S7 confirmed gone — resume-or-accept decision pending CEO/founder.
 2. S1/S2/S4 session loss — awaiting CEO/founder decision on resuming. Recovered work safe.
-3. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, ~9h50min unreachable.
+3. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, ~10h unreachable.
 4. `turkey_student_access` / `selectivity_evidence` still have no live columns.
 5. ~12-15% university-photo false-accept rate — still pending CEO/DATA visibility.
 
@@ -42,4 +45,4 @@ where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f7
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-27 ~08:45.
+`origin`, 2026-08-27 ~08:50.
