@@ -776,3 +776,51 @@ programmes already live (summer_program/online_program/research categories, all 
 `data/research/registry/claims_s6b.jsonl` (2 new lines appended), this TRACKER.md entry. Photo
 pass was not blocked on this per the CEO's own framing — both checkpoints of that work are already
 complete and reported separately above. Reporting this dedup-check result back to the CEO now.
+
+---
+
+## S6-A (STEM) — 2026-08-27, final partial checkpoint — fleet winding down
+
+S9 asked for a bounded continuation (chase specific unresolved photo leads; look for genuine new
+environment/medicine competitions). Resolved 5 of the identified photo leads before S9 signaled
+the fleet is winding down for real and asked to stop, commit what exists, and not start anything
+further. The environment/medicine discovery task was not started — 0 new competition candidates
+from that half of the assignment.
+
+**5 photo leads resolved this checkpoint** (`s6a_photo_pass_batch3.jsonl`), each moving a prior
+`NOT_YET_RESOLVED`/confirmed-exists-not-extracted record to a real, browser-verified find:
+- **TÜBİTAK 2204-A** — finally resolved after 3 prior misses: an Aydın provincial MEB news page
+  with an official photo of the 55th regional exhibition's ribbon-cutting opening.
+- **FRC Türkiye** — the "Etkinlik Fotoğrafları" link's actual target (a Google Photos album,
+  extracted via WebFetch on the raw page since the Browser pane's accessibility tree hadn't
+  surfaced it) — a genuine 2026 İstanbul Regional crowd photo.
+- **EUCYS** — official eucys2025.eu photos page, a genuinely striking Opening Ceremony shot.
+  Caught and excluded one more cross-tab contamination incident along the way (landed briefly on
+  an unrelated film-festival site) before re-verifying clean on a fresh tab.
+- **FIRST Global Challenge** — a 2024 Athens Opening Ceremony drone shot at the Panathenaic
+  Olympic Stadium, found immediately once the search moved off Wikimedia Commons to first.global's
+  own site directly.
+- **HOSA** — a real 2025 ILC Winners photo via the official Flickr account's specific album
+  (found via WebFetch extracting the exact album URLs). Judged this one differently from the
+  declined GENIUS Olympiad photo: a group of unnamed students, not a personal portrait of one
+  identified individual, so recorded as verified rather than declined — but its Flickr license is
+  explicitly "All rights reserved" (stronger restriction than iGEM's "some rights reserved"),
+  flagged plainly.
+
+All 5 are `RIGHTS_REVIEW_REQUIRED` — genuine, correctly-entity-verified, real event photos, but
+none carries an explicit open license; each would need direct permission from its source
+(a Turkish provincial ministry page, a Google Photos share, an EU-funded event site, FIRST
+Global's own press assets, and HOSA's Flickr) before any production use.
+
+**Not attempted**: BMT/SMT in-person photos (navigated to Berkeley Math Tournament's Instagram,
+stopped before verifying when the wind-down instruction arrived), and the entire environment/
+medicine new-competition-discovery task. Recording both as genuinely not started rather than
+silently dropped.
+
+**Stopping here per S9's explicit instruction.** This lane's STEM competitions research is now
+closed out at: 36 competition records (2 net-new TÜBİTAK, 6 Turkey-access olympiad upgrades, 5
+net-new Berkeley/Stanford tournaments, 23 corrections/enrichments to existing rows), a completed
+photo-status regrade, documented second opinions on S6-B's flagged items, and a full 36-record
+photo pass with 14 real verified photos found across all checkpoints (9 from the main pass + 5
+this checkpoint). Files this checkpoint: `s6a_photo_pass_batch3.jsonl` (5 lines), `claims_s6a.jsonl`
+(+5 lines). Committing and pushing now; no further work follows.
