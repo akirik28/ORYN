@@ -888,3 +888,48 @@ rather than a generic "try again." Nothing in this checkpoint was fabricated or 
 appear more complete than it is — every record states plainly what was and wasn't reached before
 the session stopped. Committing and pushing now; no further work follows per the CEO's explicit
 instruction to stop.
+
+---
+
+## S6-A (STEM) — 2026-08-27, environment/medicine discovery pass complete
+
+Founder said keep going. Completed the environment/medicine new-competition discovery task
+(`s6a_environment_medicine_batch1.jsonl`, `s6a_do_not_add.jsonl`) and finished the BMT/SMT photo
+lead (Instagram requires login — genuine dead end, not pursued further; berkeley.mt's own site
+confirmed to have no embedded event photos, only logos/sponsors).
+
+**3 net-new environment records, all real and verified**:
+- **Zayed Sustainability Prize — Global High Schools (Europe & Central Asia)**: the single
+  strongest new find — not merely theoretically eligible but **Bodrum Anatolian High School
+  (Türkiye) won the 2026 edition**, confirmed both on the Prize's own official announcement page
+  and independent news wires (Business Wire, Zawya). `PRODUCTION_READY`.
+- **TÜBİTAK 2204-D (TEKNOFEST climate-change research competition)**: a genuine sibling to 2204-A
+  — same Türkiye/KKTC enrollment-based access — directly resolving this lane's own originally-
+  flagged gap ("any real Turkish national STEM competition infrastructure analogous to TÜBİTAK's
+  role, for fields TÜBİTAK doesn't cover"). Administered by TEKNOFEST/T3 Vakfı rather than TÜBİTAK
+  directly — flagged as an organizational nuance, `provider_type: foundation` not `government`.
+  `PRODUCTION_READY`.
+- **TÜBİTAK Enerji Verimliliği Proje Yarışması** (energy efficiency): same access model, held at
+  `VERIFIED` — more open fields (age range, travel-cost coverage, photo) than the other two.
+
+**4 documented negatives** (`s6a_do_not_add.jsonl`), each a genuine, evidence-based finding worth
+recording so a future pass doesn't rediscover the same dead end: IMDO (national-delegation model,
+confirmed partner list of 5 countries, no Türkiye), NCF-Envirothon (explicit 4-country list,
+Türkiye not included), BIOTech Futures (chapter-gated, no confirmed Turkish chapter but not
+explicitly excluded either — held `UNCLEAR`), Young Medical Innovators Challenge (rejected on
+organizer-credibility grounds — Gmail-only contact, no named institution, undisclosed fee — same
+caution class as this project's commercial-tier findings elsewhere, not a Turkey-access issue).
+
+**Photos**: Zayed Sustainability Prize and the TÜBİTAK Energy Efficiency competition both
+`NOT_YET_RESOLVED` (genuine attempts made, nothing found). TÜBİTAK 2204-D's photo deliberately
+NOT resolved with a generic TEKNOFEST photo — Commons' TEKNOFEST coverage is entirely aviation/
+defense hardware (Baykar drones), which would misrepresent this specific youth research
+sub-program if used.
+
+**Total this lane, all tasks**: 39 competition records (36 original + 3 new environment
+records) + 4 documented rejections, full photo pass (14 real photos found across all
+checkpoints), photo-status regrade, second opinions on S6-B's items. Files this checkpoint:
+`s6a_environment_medicine_batch1.jsonl` (3 lines), `s6a_do_not_add.jsonl` (4 lines),
+`claims_s6a.jsonl` (+7 lines). Committing and pushing now, then pivoting to a new CEO-assigned
+fleet-wide Turkey-eligibility task outside this lane's original competitions scope (fellowship/
+volunteering/entrepreneurship categories) — reported separately.
