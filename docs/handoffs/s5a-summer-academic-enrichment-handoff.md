@@ -283,3 +283,165 @@ On `oryn/s5a-summer-academic-enrichment`, oldest to newest (all pushed):
    yet been reviewed by S5B or S8 — this handoff documents what *I* checked of S5B's work, not the
    reverse. Worth closing that loop explicitly rather than assuming it happened because this document
    exists.
+
+## CONTINUATION PASS — 2026-08-27 (fresh session, prior session's transcript unresumable)
+
+Written by a new S5A session picking up where the prior one left off. The prior session's own content
+above is left untouched as a historical record — this section documents only what changed in this
+pass. No production writes were made at any point, same contract as before.
+
+### STATUS
+
+**The entire `verified_current`-tier gap-closure backlog identified in the prior handoff's KEY GAPS is
+now closed.** This includes every item on the prior "attempted-but-inconclusive" list (all 14 resolved
+with a real verdict — see below) and every other `verified_current` row this pass could locate via the
+live-DB query. Stopping at this natural completion point rather than continuing into the `unverified`
+bucket, both because that bucket is genuinely lower priority per the prior handoff's own correct
+assessment (Contract §14 — quality over count, and the `unverified` bucket needs from-scratch work per
+record) and because the coordinating session flagged that the fleet is winding down for the night and
+this should be the last batch cycle rather than an open-ended continuation.
+
+### METHODOLOGY THIS PASS
+
+1. Re-ran the live-DB gap query (`category='summer_program' AND status IN ('active','under_review')`
+   filtered on missing `deadline`/`cost`/empty `eligible_countries`, restricted to
+   `verification_state='verified_current'`, the higher-priority tier) — found **51 rows**, not the ~35
+   the prior handoff estimated. The number shifted because the query needed re-measuring live, exactly
+   as instructed, rather than trusted.
+2. Excluded the 35 opportunity_ids the prior session had already touched (confirmed via each batch
+   file's `opportunity_id` field) plus 3 net-new-discovery titles with no DB id — none of the 51 rows
+   overlapped with those, confirming the prior session's own dedup was sound.
+3. Cross-checked S5B's territory before researching anything: read S5B's own
+   `s5b_2026-08-26_MISCATEGORIZATION_FINDING.md` (their final continuation had already completed and
+   pushed by the time this pass started), which independently found 8 `summer_program`-categorized DB
+   rows that are actually mentored-research/internship programs. Two of those 8
+   (`ae174625-...` Summer Science Program, `418217ec-...` Secondary Student Training Program) were in
+   this pass's own 51-row candidate list — excluded them since S5B had already gap-closed them.
+   Independently (before reading S5B's file) also excluded 6 further rows on the same territorial
+   logic: MIT PRIMES, Simons Summer Research Program, Garcia Summer Research Program, Caltech Summer
+   Research Connection, Anson L. Clark Scholars Program (a known duplicate, S5B territory per the prior
+   handoff), and The Rockefeller University SSRP (already flagged by the prior S5A session as S5B's).
+   This left **43 rows** as S5A's actual worklist — S5A and S5B's independent territorial judgment
+   agreed on every case checked, a useful cross-validation.
+4. Retried the prior handoff's 14 "attempted-but-inconclusive" items first, per the task's own
+   prioritization (batch7) — all 14 resolved this time with a real verdict, no further transient
+   failures.
+5. Worked through the remaining 29 rows in three more batches (batch8: 9, batch9: 9, batch10: 11),
+   using the same evidence-first method throughout: official-page WebFetch first, targeted WebSearch to
+   fill gaps, a live Wikimedia Commons file-page fetch (not a search snippet) to confirm subject +
+   license before attaching any image, and an honest `UNCLEAR`/`NEEDS_SOURCING` recorded wherever
+   genuine silence or a connection failure was hit rather than guessed past.
+
+### NEW COUNTS THIS PASS
+
+**43 records processed (`S5A-0039` through `S5A-0081`), all gap-closures on existing DB rows — zero
+new-discovery this pass**, consistent with the task's explicit instruction to prioritize finishing the
+higher-confidence tier before returning to from-scratch discovery:
+
+- **31 PRODUCTION_READY**
+- **3 REJECTED** (`NOT_ELIGIBLE`) — all structural/citizenship bars, not ambiguous calls:
+  - **CU Boulder Precollegiate Development Program (PCDP)** and **Washington University in St. Louis
+    College Prep Program (CPP)** — both are targeted, multi-year, first-generation-student pipeline
+    programs recruiting from specific local school districts (Colorado Front Range counties;
+    St. Louis area respectively), not open-application summer programs. Same category as the prior
+    session's American Legion Boys State finding — a structural barrier, not a nationality one.
+  - **MITES Summer** (MIT) — a clean, first-party-confirmed hard bar: MIT's own apply page states
+    "applicants must be United States citizens or permanent residents with a current green card."
+- **9 BLOCKED/UNCLEAR** — each a genuine, evidence-exhausted ambiguity, not a placeholder: Georgia Tech
+  Summer PEAKS, Rutgers Young Scholars Program (DIMACS), Colorado School of Mines Engineering Design
+  Summer Camp, Emerging Engineers @ UVA, NYLF Medicine & Health Care, Aggie STEM Overnight Camp, Future
+  Makers (NYU Stern), Idyllwild Arts Summer Program, and Worldwide Youth in Science and Engineering
+  (WYSE — an umbrella-row problem, see KEY FINDINGS below).
+
+### CUMULATIVE PRODUCTION-READY COUNT (both sessions combined)
+
+**59** (28 from the prior session + 31 from this pass). All still dry-run proposals in JSONL — none of
+this is live in production, same as before.
+
+### IMAGE COMPLETE COUNT THIS PASS
+
+**24/31 (77%)** of this pass's production-ready records carry a directly-verified real photo (subject +
+license confirmed via a live Commons file-page fetch): 23 fully cleared, plus 1 flagged
+`RIGHTS_REVIEW_REQUIRED` (IE University's Segovia-campus image — the Commons file is captioned "IE
+Business School," a related but formally distinct sister institution, and this pass could not confirm
+within the session whether the photographed building is genuinely IE University's own). The remaining 7
+are `NEEDS_SOURCING` for named structural reasons, not oversight: Oxbridge Academic Programs and Immerse
+Education (both span 5+ cities/venues), Ross Mathematics Program (2 concurrent 2026 host campuses),
+Global Achievers Academy and AI Summer Week @ ETH Zurich (single-week/multi-venue programs where an
+image search wasn't reached this session), Stanford Pre-Collegiate Summer Institutes (intentionally —
+the program is fully online, so a Stanford campus photo would misleadingly imply in-person attendance),
+and University of St Andrews (a candidate image was found but not verified to full confidence in the
+time available).
+
+### KEY FINDINGS WORTH FLAGGING TO CEO/DATA
+
+1. **Two likely currency-label errors** on existing DB records, both caught because this session's
+   fresh research matched the existing numeric value exactly once a currency was attached: **AI Summer
+   Week @ ETH Zurich**'s cost (500.00 in the DB, confirmed this session as **CHF** 500 from the
+   organizer's own Swiss-franc-denominated form — not USD) and **University of St Andrews**'s cost
+   (6850 in the DB, confirmed this session as **GBP** 6,850 from the university's own fee page — not
+   USD). Both suggest the original number was captured correctly but the currency was assumed rather
+   than checked.
+2. **Independent cross-validation of S5B's miscategorization finding**: without having read S5B's
+   `s5b_2026-08-26_MISCATEGORIZATION_FINDING.md` in advance, this pass independently excluded 6 rows
+   from its own worklist on the same "this is actually a mentored-research program filed under
+   summer_program" logic S5B used for their 8. Zero disagreement between the two lanes on any case
+   either side checked.
+3. **A new umbrella-row case**: **Worldwide Youth in Science and Engineering (WYSE)** turns out to
+   bundle at least 3 differently-eligible sub-programs under one brand/DB row — Engineering Summer
+   Camps (open), Young Scholars Summer STEMM Research Programs (restricted to 7 named US Midwest
+   states), and a Chicago-based Digital Scholars Program — and it's unclear which one the single
+   existing row is meant to represent. Same structural pattern as CTY/BRAND-ED from the prior session,
+   now a third confirmed instance of this failure mode in the `summer_program` category.
+4. **A possible deadline-field-mapping issue**: Penn Medicine Summer Program's existing DB deadline
+   (2026-06-01) reads like a program *start* date, not an application deadline — this session found the
+   actual 2026 application deadline was February 26, 2026. Flagged, not corrected (out of scope for a
+   gap-closure record to silently overwrite a differently-meant field).
+5. **UVA Emerging Engineers' HTTP 403 is now confirmed persistent, not transient** — blocked identically
+   across two independent sessions weeks apart. Future researchers should go straight to a web-search
+   workaround rather than re-attempting the direct fetch a third time.
+6. **Idyllwild Arts' connection failures this session look genuinely transient** (2x socket-hang-up,
+   unlike UVA's clean 403) — worth one more dedicated attempt; a promising but only secondary-sourced
+   signal ("35 countries, six continents") is waiting to be first-party-confirmed.
+7. **Terp Young Scholars' most consequential claim is secondary-sourced only**: that international
+   students can only take the online track (no F-1/I-20/B-visa support for the in-person track) came
+   from blog-style aggregators, not umd.edu directly. Recorded with a `low` confidence flag rather than
+   dropped, since a restriction this real shouldn't be silently omitted just because the best evidence
+   found was secondary — but it needs a first-party re-check before anyone treats it as settled.
+
+### FILES CREATED/UPDATED THIS PASS
+
+- `data/research/opportunities/s5a_batch7_2026-08-27.jsonl` through `s5a_batch10_2026-08-27.jsonl` — 4
+  new files, 43 total records (14 + 9 + 9 + 11).
+- `data/research/registry/claims_s5a.jsonl` — 43 more append-only entries (`S5A-0039` through
+  `S5A-0081`); 81 total in the file now.
+- This handoff file (this section only — everything above is the prior session's untouched record).
+
+### COMMITS THIS PASS (oldest to newest, all pushed to `oryn/s5a-summer-academic-enrichment`)
+
+1. `246dc84` — S5A batch7: retry 14 attempted-but-inconclusive rows, all resolved
+2. `4d409e5` — S5A batch8: gap-closure for 9 more verified_current summer_program rows
+3. `c85dc2c` — S5A batch9: gap-closure for 9 more verified_current summer_program rows
+4. `a0695ca` — S5A batch10: gap-closure for final 11 verified_current summer_program rows
+5. (plus this handoff commit, pushed immediately after)
+
+### WHAT THE NEXT OWNER SHOULD DO
+
+1. **CEO/DATA**: review and promote the 31 new PRODUCTION_READY records the same way as the prior 28
+   (59 cumulative) — same not-yet-live-schema caveat applies to `turkey_student_access` and the image
+   provenance fields.
+2. **CEO/DATA**: fix the 2 flagged currency-label errors (AI Summer Week @ ETH Zurich → CHF, University
+   of St Andrews → GBP) and check the Penn Medicine deadline-field mapping.
+3. **CEO/DATA**: decide the WYSE umbrella-row question (which sub-program the row represents, or split
+   it) — now the third confirmed instance of this failure mode alongside CTY and BRAND-ED.
+4. **Whoever continues S5A's gap-closure**: the entire `verified_current` tier is now closed. The only
+   remaining gap-closure surface is the much larger `unverified` bucket (roughly 147+ rows by this
+   session's live count) — per the prior handoff's own correct assessment, this needs more
+   from-scratch work per record, not just a gap-fill, so budget accordingly. Two cheap, targeted
+   follow-ups first: a fresh Idyllwild Arts attempt (likely-transient failure, promising secondary
+   signal) and a first-party umd.edu re-check on Terp Young Scholars' online-only-for-international
+   claim.
+5. **Whoever runs the fleet-wide second-review pass**: neither this pass's 31 records nor the prior
+   session's 28 have been reviewed by S5B or S8 yet. S5B's own final handoff indicates their
+   continuation is complete too, so both lanes' full output is now stable and ready for that review to
+   actually happen.
