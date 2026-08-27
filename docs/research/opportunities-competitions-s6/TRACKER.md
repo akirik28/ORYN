@@ -1026,3 +1026,26 @@ Same CEO reassignment as S6-B, own 16 rows across fellowship/volunteering/entrep
 
 **Files**: `s6a_turkeyelig_batch1.jsonl` (16 lines), `claims_s6a.jsonl` (+16 lines). Committing and
 pushing now.
+
+---
+
+## S6-B — data correction flagged (2026-08-27, addendum to the turkeyelig_batch1 entry above)
+
+Pulling this out on its own so it doesn't get lost inside the batch notes when the Turkey-eligibility
+work gets reported up, per coordinator feedback.
+
+**Record**: `UNO - United Nations Online` (entity_id `31856863-be50-440d-8ccc-229812277425`,
+`online_program`, Stanley Prep / WFUNA).
+
+**Stored `description` field currently says**: "...for rising 11th/12th graders (min. 3.5
+unweighted GPA)..."
+
+**Direct official source** (`https://stanleyprep.com/united-nations-online/`, fetched 2026-08-27)
+**actually says**: "Rising 10th to 12th graders. Minimum high school GPA of 3.5 (Unweighted).
+English Proficiency: TOEFL 90 or above for non-US students."
+
+**The gap**: the stored record excludes rising 10th graders as eligible; the operator's own page
+includes them. Everything else in the stored description (GPA 3.5, TOEFL 90+ for non-US students)
+matches the direct source exactly — this is a one-field grade-range fix, not a broader accuracy
+problem with the record. Not corrected in place here (S6-B's mandate this task was classification,
+not editing other batches' source records) — flagging for whoever owns a write pass on this row.
