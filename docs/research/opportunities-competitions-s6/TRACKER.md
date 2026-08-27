@@ -824,3 +824,67 @@ photo-status regrade, documented second opinions on S6-B's flagged items, and a 
 photo pass with 14 real verified photos found across all checkpoints (9 from the main pass + 5
 this checkpoint). Files this checkpoint: `s6a_photo_pass_batch3.jsonl` (5 lines), `claims_s6a.jsonl`
 (+5 lines). Committing and pushing now; no further work follows.
+
+---
+
+## S6-B (Business/Humanities/Creative) — 2026-08-27, final partial checkpoint (fleet wind-down)
+
+**Stopped mid-task per the CEO/founder's fleet-wind-down instruction.** Was working through two
+assigned follow-ups (remaining `NOT_YET_RESOLVED` photo records; the flagged film/architecture
+gap) when the stop instruction arrived. Recording genuine progress made before stopping, at the
+actual confidence level reached — nothing rounded up to look more finished than it is.
+
+**Task 2 (film/architecture gap) — substantially resolved before the stop:**
+- **ImagiNation International Student Film Festival** (S6B-0037, new record): the 403 that
+  blocked this lane's earlier attempt is resolved — the Browser pane reached it directly where
+  WebFetch could not. Organizer confirmed: Dhruv Global School, Pune, India (Festival Director
+  Ritesh Taksande). Explicit worldwide eligibility. First-ever edition (2026), entries now closed,
+  medium confidence given zero track record beyond two genuine attendee reviews.
+- **Dunedin International Film Festival** (S6B-0030, upgrade): both originally-flagged open
+  questions fully resolved. Confirmed **Dunedin, Florida, USA** (not New Zealand) via the
+  festival's own text ("Florida Film Maker Community," "Pinellas County, Dunedin, Florida, USA")
+  plus a street address found independently. Confirmed the **current cycle is open** — DIFF 2027,
+  9th Annual, 14-17 January 2027, "Best High School Short" a real standing award category, $10 fee
+  confirmed for the high-school track specifically. Recommend promoting to `VERIFIED`.
+- **Suseong International Architecture & Landscape Visual Artwork Competition** (S6B-0038, new
+  candidate): found a genuinely international, age-appropriate (10-18) architecture-adjacent
+  competition, worldwide, real cash prizes, deadline **11 September 2026 — time-sensitive**.
+  Deliberately held at `CANDIDATE` rather than `VERIFIED`: this rests on an aggregator source
+  (competitions.archi) — the official organizing page was not directly reached before the session
+  ended, and per this lane's own standing discipline an aggregator alone doesn't clear the bar for
+  `VERIFIED`. This is nonetheless the answer to this lane's own flagged "genuinely thin, only
+  120 Hours found, and that one has an unresolved audience-fit question" architecture gap.
+
+**Task 1 (remaining `NOT_YET_RESOLVED` photo records) — partial, three records progressed, three
+not reached:**
+- **IPPF**: sharper finding than the previous checkpoint — successfully navigated into two real,
+  correctly-titled year-gallery pages (2023-24, 2024-25), but both render **text-only with no
+  images displaying** despite being labeled "photo gallery." A genuine site-behavior finding
+  (broken or unrendered gallery), not a failure to locate the source.
+- **IPO**: reached the previously-identified `@ipo.2023` Instagram account, confirmed real (138
+  followers, correctly describes the 31st IPO, Olympia Greece 2023) but did not extract a usable
+  photo, and the account is edition-specific/non-current.
+- **Stockholm Junior Water Prize**: found a new, real, dated (12 Sept 2025) SIWI article vividly
+  describing the actual 2025 ceremony at Stockholm City Hall — a better lead than the stale URL
+  the previous checkpoint had — but no image was confirmed in the sections reached before the
+  session ended.
+- **Conrad Challenge and YIS Stock Pitch** were NOT re-touched this round because both were
+  already fully found and verified in the prior checkpoint — nothing further was needed.
+- **International Greenwich Olympiad and BSPEE were NOT re-attempted this round at all** — both
+  remain at whatever status the previous checkpoint left them (Greenwich: a real photo found but
+  honestly flagged for a dominant crest in-frame; BSPEE: confirmed `NO_CANDIDATE_FOUND`,
+  distributed format).
+
+**Files this final checkpoint**: `data/research/opportunities/s6b_film_architecture_batch2.jsonl`
+(3 entries), `data/research/opportunities/s6b_photo_pass_batch3_partial.jsonl` (4 entries,
+including an explicit session-end status note), `data/research/registry/claims_s6b.jsonl` (6 new
+lines appended), this TRACKER.md entry.
+
+**Handoff for whoever continues this lane, if anyone does**: the two new/upgraded records
+(ImagiNation, Dunedin) and the new architecture candidate (Suseong) are the highest-value
+immediate next steps — Suseong specifically has a 2-week-out deadline. The three partial photo
+leads (IPPF, IPO, SJWP) each have a specific, concrete next action recorded in their own entries
+rather than a generic "try again." Nothing in this checkpoint was fabricated or rounded up to
+appear more complete than it is — every record states plainly what was and wasn't reached before
+the session stopped. Committing and pushing now; no further work follows per the CEO's explicit
+instruction to stop.
