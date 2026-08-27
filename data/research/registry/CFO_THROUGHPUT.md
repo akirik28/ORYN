@@ -10,23 +10,27 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `SESSION_CLOSEO
 founder instruction) — fleet is under dynamic reassignment (P0-P7), not stopping; watching
 for dead sessions per founder's explicit ask at checkpoint 139.
 
-## Checkpoint 151 — 2026-08-27, ~11:35
+## Checkpoint 152 — 2026-08-27, ~11:40
 
 **No dead servers.** Same 9 peers, relaunched sessions ~1h old, originals 12h.
 
-**S5A appears to have finished its gap-closure work.** `oryn/s5a-summer-academic-enrichment`
-advanced +15 → +16, 2 minutes ago: "S5A batch10: gap-closure for final 11 verified_current
-summer_program rows" — labeled "final," following batches 7-9 (checkpoints 142, 147, 149).
-Across those four batches: 14 + 9 + 9 + 11 = 43 rows closed. Watching next tick for whether
-S5A picks up a new P0-P7 assignment or goes idle/reassigned.
+**S5 confirms final numbers; S6's Turkey-eligibility sweep got its second review.**
+- `oryn/s5a-summer-academic-enrichment`: +16 → +18 (two commits), 2 minutes ago — "docs: S5
+  final numbers after continuation pass — **77 production-ready**" total for this session's S5
+  work. Matches the batch7-10 pattern (checkpoints 142, 147, 149, 151); this looks like the
+  genuine close of S5A's lane.
+- `oryn/s6-competitions-research`: +29 → +30, 3 minutes ago — "S6-A: cross-review of S6-B's
+  turkeyelig_batch1 **(15/15 verdicts confirmed)**." Second-review discipline applied to the
+  Turkey-eligibility sweep from checkpoint 147 — independently confirmed, not just
+  self-reported. Directly relevant to open item #1.
 
-All other branches unchanged since checkpoint 150. Live-harm-surface rows re-verified: still
+All other branches unchanged since checkpoint 151. Live-harm-surface rows re-verified: still
 all correct.
 
 ### Open items (unchanged)
 
-1. `turkey_student_access` / `selectivity_evidence` — research complete, DB columns still
-   don't exist.
+1. `turkey_student_access` / `selectivity_evidence` — research now double-checked (S6-A/B,
+   15/15 confirmed both ways), DB columns still don't exist.
 2. University-photo false-accept rate — S2's ~16% vs. my earlier ~12-15%, not yet reconciled.
 3. Browser-pane contention risk — only S4's exposure remains unconfirmed; CEO handling
    directly.
@@ -57,4 +61,4 @@ select column_name from information_schema.columns
 where table_name = 'opportunities' and column_name in ('turkey_student_access', 'selectivity_evidence');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql` (as separate calls), and `git fetch`/
-branch diff against `origin`, 2026-08-27 ~11:35.
+branch diff against `origin`, 2026-08-27 ~11:40.
