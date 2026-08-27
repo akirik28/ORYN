@@ -6,53 +6,30 @@ each checkpoint, not appended to — prior checkpoints live in this file's own g
 throughput`). I do not research opportunity facts, source photos, alter records, or override
 evidence — this file tracks fleet capacity and flags backlogs/misallocations only.
 Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `SESSION_CLOSEOUT_2026-08-
-26_to_27.md` (CEO's consolidated fleet report, now updated in place — the fleet did not fully
-stop). On a 5-minute recurring check (`/loop`, per founder instruction — reconfirmed at
-checkpoint 139 to keep watching for dead sessions).
+26_to_27.md` (CEO's consolidated fleet report). On a 5-minute recurring check (`/loop`, per
+founder instruction) — fleet is under dynamic reassignment (P0-P7), not stopping; watching
+for dead sessions per founder's explicit ask at checkpoint 139.
 
-## Checkpoint 142 — 2026-08-27, ~10:55
+## Checkpoint 143 — 2026-08-27, ~11:00
 
-**Founder directive: dynamic backlog reassignment — the fleet does not go idle on shard
-completion.** Per CEO's latest control-tower commit: priority order **P0 (live defects) → P1
-(photo verification) → P2 (image rights) → P3 (category balance) → P4 (Turkey-access) → P5
-(time-sensitive) → P6 (URL health) → P7 (opportunity images)**. Current assignments: S1/S3/S4
-finishing in-flight shard work then own-shard depth; **S2 cross-checking S1/S3/S4's official-
-tier images against its own methodology (S2 cites ~16% defect rate — close to, slightly above,
-my earlier ~12-15% figure; not yet reconciled into one number)**; S5 continuing in-flight
-batches; **S6 reassigned to fleet-wide Turkey-access verification (P4) — directly relevant to
-this file's long-standing `turkey_student_access`/`selectivity_evidence` open item**; S7
-finishing an in-flight photo pass; S8 continuing S5's QA backlog then a URL-health sweep (P6).
+**No dead servers.** All 9 peers still present, relaunched sessions now 56-57min old, the two
+originals (S8, old CEO) still 12h — nothing dropped out.
 
-**3 more production writes — independently verified against live DB, not just trusted from
-the doc:**
+**New commit:** `oryn/s6-competitions-research` advanced +25 → +26, 33 seconds ago —
+"research(s6a): environment/medicine discovery -- 3 new records, 4 documented negatives." Real
+new-candidate discovery work, not a closeout doc. Not yet clear whether this is S6 finishing
+its own lane before shifting fully to the fleet-wide Turkey-access reassignment (P4) from last
+tick's directive, or work already folded into that reassignment — not guessing which.
 
-```
-FIRST Robotics Competition   (db25d327) status=active,   verification_state=verified_current
-FRC (duplicate stub)          (dfb94075) status=disabled, verification_state=unverified
-Stockholm Junior Water Prize  (17aeb772) status=active,   verification_state=verified_current
-Stockholm Water Prize (wrong) (c8eb3d40) status=disabled, verification_state=unverified
-```
+All other branches unchanged from checkpoint 142. Both fix sets re-verified again: the
+original 5 live-harm-surface rows and the 4 Stockholm/FRC rows all remain at their confirmed-
+correct values, no regressions.
 
-All 4 match CEO's description exactly: the wrong-entity Stockholm Water Prize row and the
-empty FRC duplicate stub are correctly retired (disabled/unverified); the real youth
-competition and canonical FRC row are active/verified. **This closes the Stockholm/FRC open
-item — confirmed live, not just a fix package.** A third item, Marshall Society Essay
-Competition, was a first-party-verified correction (exact deadline, corrected a sponsor-vs-
-society affiliation overclaim, country eligibility honestly left unknown) that didn't require
-a status change — no separate row check needed. Adding the 4 IDs above to my standing re-run
-query going forward.
+### Open items (unchanged)
 
-**No dead servers.** All 9 peers still present and active. Real work continuing across the
-fleet, not just closeout docs: S5A resolved 14 previously-inconclusive rows; S8 is actively
-QA-sampling S5A/S5B's new output (38 + 31 + 8 records) rather than rubber-stamping it.
-
-### Open items (updated)
-
-1. `turkey_student_access` / `selectivity_evidence` — still no live DB columns, but S6 is now
-   assigned to fleet-wide Turkey-access verification (P4); watching for progress.
-2. University-photo false-accept rate — S2's own methodology cites ~16%; my earlier figure was
-   ~12-15%. Not yet reconciled to one number; will use whichever is more current once S2's
-   cross-check work lands.
+1. `turkey_student_access` / `selectivity_evidence` — still no live DB columns; S6 assigned to
+   fleet-wide Turkey-access verification (P4), progress not yet visible in a way I can verify.
+2. University-photo false-accept rate — S2's ~16% vs. my earlier ~12-15%, not yet reconciled.
 
 ## How these numbers were produced (re-run to refresh)
 
@@ -77,4 +54,4 @@ where id::text like 'c8eb3d40%' or id::text like '17aeb772%'
    or id::text like 'dfb94075%' or id::text like 'db25d327%';
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-27 ~10:55.
+`origin`, 2026-08-27 ~11:00.
