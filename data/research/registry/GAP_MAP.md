@@ -245,6 +245,17 @@ relaying as a general lesson: verify a "broken link" claim with a slow, one-at-a
 before asserting it, concurrent HEAD-check bursts produce false positives), **zero** cross-
 institution checksum collisions, **zero** accepted rows with a missing URL or checksum.
 
+**REFINED 2026-08-27, supersedes the ~12-16% figure cited earlier in this doc.** S2 cross-
+checked S1/S3/S4's official-tier images directly (147 universities, independently re-verified
+against the actual files, not self-reports) and found the true official-tier-ONLY defect rate is
+**~42%** (85 pass / 62 fail), remarkably consistent across all three shards (S1 41.8%, S3 40.5%,
+S4 44.0%). The earlier ~12-16% figure blended the official tier with the ~0%-defect
+`wikimedia_verified` tier, which diluted the real severity. **Read this precisely**: the photo
+pipeline's `official`-tier acquisition path is defective on closer to half its output, not a
+sixth of it — `wikimedia_verified` remains the trustworthy tier (near-0% failure across every
+independent check tonight). Full detail: `docs/handoffs/s2-crosscheck-official-tier-2026-08-27.md`
+on `oryn/s2-crosscheck-official-tier`.
+
 **Sharpens the rights-gap finding, doesn't just repeat it**: license completeness is exactly
 inverted by status — `wikimedia_verified` is **525/525 (100%)** license-complete, `official` is
 **0/194 (0%)** — confirming (a third independent way, after CEO's own count and S8's) that the
