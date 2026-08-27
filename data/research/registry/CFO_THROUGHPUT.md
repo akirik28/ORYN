@@ -10,11 +10,16 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `SESSION_CLOSEO
 founder instruction) — fleet is under dynamic reassignment (P0-P7), not stopping; watching
 for dead sessions per founder's explicit ask at checkpoint 139.
 
-## Checkpoint 163 — 2026-08-27, ~12:35
+## Checkpoint 164 — 2026-08-27, ~12:40
 
-**No change.** Same 10 branch HEADs as checkpoint 162. No dead servers — same 9 peers,
-relaunched sessions ~2h old, originals 13h. Live-harm-surface rows re-verified: still all
-correct.
+**No dead servers.** Same 9 peers, relaunched sessions ~2h old, originals 13h.
+
+**S5A continues its batch cadence.** `oryn/s5a-summer-academic-enrichment` advanced +21 → +22,
+3 minutes ago: "S5A batch13: 9 PRODUCTION_READY, 1 REJECTED, 5 structural flags." Consistent
+with batches 11-12 — real throughput, real rejections, nothing rubber-stamped.
+
+All other branches unchanged since checkpoint 163. No remediation activity yet on the 42%
+official-tier content-defect rate. Live-harm-surface rows re-verified: still all correct.
 
 ### Open items (unchanged)
 
@@ -25,7 +30,8 @@ correct.
 4. Browser-pane contention risk — only S4's exposure remains unconfirmed; CEO handling
    directly.
 5. Penn Medicine deadline + 3 umbrella-row structural decisions — deliberately deferred.
-6. S1's 3 BLOCKED + S5A's growing BLOCKED/REJECTED counts — not yet detailed; watching.
+6. S1's 3 BLOCKED + S5A's accumulating BLOCKED/REJECTED/structural-flag counts — not yet
+   detailed; watching for a consolidated follow-up.
 
 ## How these numbers were produced (re-run to refresh — as separate calls, not batched)
 
@@ -53,4 +59,4 @@ select column_name from information_schema.columns
 where table_name = 'opportunities' and column_name in ('turkey_student_access', 'selectivity_evidence');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql` (as separate calls), and `git fetch`/
-branch diff against `origin`, 2026-08-27 ~12:35.
+branch diff against `origin`, 2026-08-27 ~12:40.
