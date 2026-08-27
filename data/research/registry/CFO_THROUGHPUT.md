@@ -10,30 +10,29 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `SESSION_CLOSEO
 founder instruction) — fleet is under dynamic reassignment (P0-P7), not stopping; watching
 for dead sessions per founder's explicit ask at checkpoint 139.
 
-## Checkpoint 152 — 2026-08-27, ~11:40
+## Checkpoint 153 — 2026-08-27, ~11:45
 
 **No dead servers.** Same 9 peers, relaunched sessions ~1h old, originals 12h.
 
-**S5 confirms final numbers; S6's Turkey-eligibility sweep got its second review.**
-- `oryn/s5a-summer-academic-enrichment`: +16 → +18 (two commits), 2 minutes ago — "docs: S5
-  final numbers after continuation pass — **77 production-ready**" total for this session's S5
-  work. Matches the batch7-10 pattern (checkpoints 142, 147, 149, 151); this looks like the
-  genuine close of S5A's lane.
-- `oryn/s6-competitions-research`: +29 → +30, 3 minutes ago — "S6-A: cross-review of S6-B's
-  turkeyelig_batch1 **(15/15 verdicts confirmed)**." Second-review discipline applied to the
-  Turkey-eligibility sweep from checkpoint 147 — independently confirmed, not just
-  self-reported. Directly relevant to open item #1.
+**New pending-fix item — not yet confirmed applied.** `oryn/s5a-summer-academic-enrichment`
+advanced +18 → +19, 3 minutes ago: "docs(s5): precise fix list for CEO — currency, deadline,
+umbrella rows." This is a *prepared handoff*, same pattern as the earlier Stockholm/FRC fix
+package (checkpoint 140) — S5A has identified specific currency/deadline/umbrella-row issues
+and written them up for CEO to action, but nothing here confirms they've been applied to the
+live DB yet. Not treating this as resolved; watching for CEO to either action it or relay
+confirmation.
 
-All other branches unchanged since checkpoint 151. Live-harm-surface rows re-verified: still
+All other branches unchanged since checkpoint 152. Live-harm-surface rows re-verified: still
 all correct.
 
-### Open items (unchanged)
+### Open items (updated)
 
-1. `turkey_student_access` / `selectivity_evidence` — research now double-checked (S6-A/B,
-   15/15 confirmed both ways), DB columns still don't exist.
+1. `turkey_student_access` / `selectivity_evidence` — research double-checked, DB columns
+   still don't exist.
 2. University-photo false-accept rate — S2's ~16% vs. my earlier ~12-15%, not yet reconciled.
 3. Browser-pane contention risk — only S4's exposure remains unconfirmed; CEO handling
    directly.
+4. New: S5A's currency/deadline/umbrella-row fix list — prepared, not yet confirmed applied.
 
 ## How these numbers were produced (re-run to refresh — as separate calls, not batched)
 
@@ -61,4 +60,4 @@ select column_name from information_schema.columns
 where table_name = 'opportunities' and column_name in ('turkey_student_access', 'selectivity_evidence');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql` (as separate calls), and `git fetch`/
-branch diff against `origin`, 2026-08-27 ~11:40.
+branch diff against `origin`, 2026-08-27 ~11:45.
