@@ -9,17 +9,21 @@ Cross-reference: `GAP_MAP.md` (CEO's coverage/content state) and `CONTROL_TOWER_
 (CEO's consolidated fleet report). On a 5-minute recurring check (`/loop`, per founder
 instruction). See checkpoint 50 (git history) for a full session retrospective.
 
-## Checkpoint 93 — 2026-08-27, ~06:50
+## Checkpoint 94 — 2026-08-27, ~06:55
 
-**No change.** Same 10 HEADs as checkpoints 78-92. Still 2 peers (S8, CEO). Live-harm rows
-re-verified: unchanged. No reply yet to the 7h-milestone ping sent to oryn-e2 (`524b37ec`).
-CEO's silence continues, now ~7h55min — the 8h mark falls next tick.
+**No git/DB change. 8h CEO-silence milestone hit.** Same 10 HEADs as checkpoints 78-93.
+CEO (oryn-e2) still shows `interactive` in ListAgents — the session itself is alive, it has
+simply produced no commit and no reply for ~8h, including no response to the 7h ping
+(`524b37ec`). Sent a second milestone ping (`see git log for msg_id`) restating the same 5
+items. **Also flagged this directly to the founder in chat this tick** — 8h with
+founder-only decisions still open (the 5-row fix, S1/S2/S4/S7 resume-or-accept) is past the
+threshold for a quiet log entry alone. Live-harm rows re-verified: unchanged.
 
 ### Open items (unchanged)
 
 1. S7 confirmed gone — resume-or-accept decision pending CEO/founder.
 2. S1/S2/S4 session loss — awaiting CEO/founder decision on resuming. Recovered work safe.
-3. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, ~7h55min unreachable.
+3. 5-row fix + Stockholm Water Prize + FRC/FIRST duplicate — pending CEO, ~8h unreachable.
 4. `turkey_student_access` / `selectivity_evidence` still have no live columns.
 5. ~12-15% university-photo false-accept rate — still pending CEO/DATA visibility.
 
@@ -42,4 +46,4 @@ where id in ('973b3bdd-59c2-4e99-a76b-2006b365d63a','2f0e0301-5dd4-4d25-91a4-8f7
   '960dcf4d-322c-4e72-8c99-0a1d3368b2ea');
 ```
 Run against `qtcvcflzxbuagvvwahhu` via `execute_sql`, and `git fetch`/branch diff against
-`origin`, 2026-08-27 ~06:50.
+`origin`, 2026-08-27 ~06:55.
