@@ -146,12 +146,50 @@ export const CourseSchema = z.object({
 });
 export type CourseFormInput = z.infer<typeof CourseSchema>;
 
-export const TestScoreSchema = z.object({
-  test_name: z.string().min(1, { error: "Test name is required." }),
-  score: z.string().min(1, { error: "Score is required." }),
-  max_score: optionalText,
-  test_date: dateField,
-});
+/**
+ * True only for a value that is unambiguously a plain number — "38", "1450", "5.5", "-5".
+ * The leading `-?` matters: a negative value must still parse as numeric so the "can't be
+ * negative" refinements below actually catch it, rather than a bare `\d+` treating "-5" as
+ * non-numeric and silently skipping the check it exists to run. Deliberately returns null
+ * (not 0, not an error) for "C1", "Pass", "5/7" and similar: those are legitimate score
+ * formats (CEFR bands, pass/fail, IB predicted grades) that a numeric comparison can't
+ * meaningfully validate, so the checks below simply don't apply to them rather than
+ * misparsing or rejecting a genuinely valid entry.
+ */
+function asPlainNumber(value: string): number | null {
+  const trimmed = value.trim();
+  if (!/^-?\d+(\.\d+)?$/.test(trimmed)) return null;
+  return Number(trimmed);
+}
+
+export const TestScoreSchema = z
+  .object({
+    test_name: z.string().min(1, { error: "Test name is required." }),
+    score: z.string().min(1, { error: "Score is required." }),
+    max_score: optionalText,
+    test_date: dateField,
+  })
+  // Three separate refinements (not one combined check) so a student seeing a rejected save
+  // gets the specific reason — "can't be higher than the max" reads very differently from
+  // "can't be negative" — rather than one generic "invalid score" message.
+  .refine((data) => { const n = asPlainNumber(data.score); return n === null || n >= 0; }, {
+    error: "Score can't be negative.",
+    path: ["score"],
+  })
+  .refine((data) => { const n = data.max_score ? asPlainNumber(data.max_score) : null; return n === null || n >= 0; }, {
+    error: "Max score can't be negative.",
+    path: ["max_score"],
+  })
+  .refine(
+    (data) => {
+      if (!data.max_score) return true;
+      const score = asPlainNumber(data.score);
+      const maxScore = asPlainNumber(data.max_score);
+      if (score === null || maxScore === null) return true; // only compare when both are plain numbers
+      return score <= maxScore;
+    },
+    { error: "Score can't be higher than the max score.", path: ["score"] },
+  );
 export type TestScoreFormInput = z.infer<typeof TestScoreSchema>;
 
 export const CertificationSchema = z.object({
