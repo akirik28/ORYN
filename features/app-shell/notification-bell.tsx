@@ -55,32 +55,46 @@ export function NotificationBell({ notifications }: { notifications: Notificatio
           {notifications.length === 0 ? (
             <p className="px-3 py-6 text-center text-sm text-muted-foreground">You&apos;re all caught up.</p>
           ) : (
-            notifications.map((notification) => (
-              <Link
-                key={notification.id}
-                href={notification.link ?? "#"}
-                onClick={() => {
-                  setOpen(false);
-                  if (!notification.read_at) {
-                    startTransition(async () => {
-                      const result = await markNotificationRead(notification.id);
-                      if (result.error) toast.error(result.error);
-                    });
-                  }
-                }}
-                className={cn(
-                  "block border-b px-3 py-2.5 text-sm transition-colors last:border-b-0 hover:bg-accent",
-                  !notification.read_at && "bg-accent/40"
-                )}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <p className="font-medium leading-snug">{notification.title}</p>
-                  {!notification.read_at ? <span className="mt-1 size-1.5 shrink-0 rounded-full bg-primary" /> : null}
-                </div>
-                {notification.body ? <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{notification.body}</p> : null}
-                <p className="mt-1 text-xs text-muted-foreground">{formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}</p>
-              </Link>
-            ))
+            notifications.map((notification) => {
+              const rowClassName = cn(
+                "block w-full border-b px-3 py-2.5 text-left text-sm transition-colors last:border-b-0 hover:bg-accent",
+                !notification.read_at && "bg-accent/40"
+              );
+              const rowContent = (
+                <>
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-medium leading-snug">{notification.title}</p>
+                    {!notification.read_at ? <span className="mt-1 size-1.5 shrink-0 rounded-full bg-primary" /> : null}
+                  </div>
+                  {notification.body ? <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{notification.body}</p> : null}
+                  <p className="mt-1 text-xs text-muted-foreground">{formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}</p>
+                </>
+              );
+              const onActivate = () => {
+                setOpen(false);
+                if (!notification.read_at) {
+                  startTransition(async () => {
+                    const result = await markNotificationRead(notification.id);
+                    if (result.error) toast.error(result.error);
+                  });
+                }
+              };
+
+              // A notification with no `link` previously still rendered as a Link, falling
+              // back to `href="#"` — a tap dutifully marked it read but visibly went
+              // nowhere, indistinguishable from a dead control. Rendered as a real button
+              // instead when there's nothing to navigate to, so the affordance matches what
+              // actually happens on click.
+              return notification.link ? (
+                <Link key={notification.id} href={notification.link} onClick={onActivate} className={rowClassName}>
+                  {rowContent}
+                </Link>
+              ) : (
+                <button key={notification.id} type="button" onClick={onActivate} className={rowClassName}>
+                  {rowContent}
+                </button>
+              );
+            })
           )}
         </div>
       </PopoverContent>

@@ -21,7 +21,7 @@ export function DisplayNameForm({ initialName }: { initialName: string }) {
       </div>
       <Button
         variant="outline"
-        disabled={isPending || name.trim() === initialName}
+        disabled={isPending || !name.trim() || name.trim() === initialName}
         onClick={() =>
           startTransition(async () => {
             const result = await updateDisplayName(name);

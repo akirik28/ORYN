@@ -1,11 +1,20 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Check, X, UserMinus, MessageCircle } from "lucide-react";
+import { Check, X, UserMinus, MessageCircle, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { respondToConnectionRequest, removeConnection } from "@/app/(app)/connections/actions";
 import type { ConnectionWithProfile } from "@/lib/social/connections";
 
@@ -89,6 +98,20 @@ export function PendingRequestRow({ connection }: { connection: ConnectionWithPr
 
 export function ConnectionRow({ connection, pending = false }: { connection: ConnectionWithProfile; pending?: boolean }) {
   const [isPending, startTransition] = useTransition();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const label = pending ? "Withdraw request" : "Remove connection";
+  const name = connection.otherProfile?.display_name ?? "this student";
+
+  function confirmRemove() {
+    startTransition(async () => {
+      const result = await removeConnection(connection.id);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      setConfirmOpen(false);
+    });
+  }
 
   return (
     <div className="flex items-center justify-between gap-3 rounded-xl border p-3">
@@ -103,19 +126,33 @@ export function ConnectionRow({ connection, pending = false }: { connection: Con
         <Button
           size="icon-sm"
           variant="ghost"
-          aria-label={pending ? "Withdraw request" : "Remove connection"}
-          disabled={isPending}
-          onClick={() =>
-            startTransition(async () => {
-              const result = await removeConnection(connection.id);
-              if (result.error) toast.error(result.error);
-            })
-          }
+          aria-label={label}
+          onClick={() => setConfirmOpen(true)}
           className="text-muted-foreground hover:text-destructive"
         >
           <UserMinus className="size-3.5" />
         </Button>
       </div>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{label}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pending
+                ? `Your connection request to ${name} will be withdrawn. You can send a new one later.`
+                : `You'll no longer be connected to ${name}. They won't be notified, and you can reconnect later.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel render={<Button variant="outline" disabled={isPending} />}>Cancel</AlertDialogCancel>
+            <Button variant="destructive" onClick={confirmRemove} disabled={isPending}>
+              {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+              {label}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

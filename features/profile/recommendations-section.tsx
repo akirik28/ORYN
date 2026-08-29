@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 import { Eye, EyeOff, Flag, Loader2, Plus, Quote, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/oryn/empty-state";
@@ -20,6 +21,15 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { SectionHeader } from "@/components/oryn/section-header";
 import {
   writeRecommendation,
@@ -78,6 +88,8 @@ export function RecommendationsSection({
   );
   const [reportReason, setReportReason] = useState("");
 
+  const [deleteTarget, setDeleteTarget] = useState<RecommendationItem | null>(null);
+
   const [isPending, startTransition] = useTransition();
 
   if (items.length === 0 && !canWrite) return null;
@@ -98,13 +110,29 @@ export function RecommendationsSection({
   function submitReport() {
     if (!reportTarget || !reportReason.trim()) return;
     startTransition(async () => {
-      await reportRecommendation(
+      const result = await reportRecommendation(
         reportTarget.id,
         reportTarget.authorId,
         reportReason,
       );
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
       setReportTarget(null);
       setReportReason("");
+    });
+  }
+
+  function confirmDelete() {
+    if (!deleteTarget) return;
+    startTransition(async () => {
+      const result = await deleteRecommendation(deleteTarget.id);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      setDeleteTarget(null);
     });
   }
 
@@ -180,12 +208,7 @@ export function RecommendationsSection({
                   <Button
                     variant="ghost"
                     size="xs"
-                    disabled={isPending}
-                    onClick={() =>
-                      startTransition(async () => {
-                        await deleteRecommendation(item.id);
-                      })
-                    }
+                    onClick={() => setDeleteTarget(item)}
                   >
                     <Trash2 className="size-3" /> Delete
                   </Button>
@@ -283,6 +306,24 @@ export function RecommendationsSection({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this recommendation?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes the recommendation you wrote — it can&apos;t be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel render={<Button variant="outline" disabled={isPending} />}>Cancel</AlertDialogCancel>
+            <Button variant="destructive" onClick={confirmDelete} disabled={isPending}>
+              {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+              Delete
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

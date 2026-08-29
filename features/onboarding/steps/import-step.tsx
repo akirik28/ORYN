@@ -52,17 +52,29 @@ const CATEGORY_TO_ORGANIZATION_SCOPE: Record<ExtractedCategory, EntityScope> = {
   workExperience: "work_organization",
 };
 
-function flatten(result: CVExtractionResult): ReviewedExtractedItem[] {
+// Exported (only) so the school-name fix below has a direct unit test — every other caller
+// in this file still just uses it locally.
+export function flatten(result: CVExtractionResult): ReviewedExtractedItem[] {
   let counter = 0;
   const items: ReviewedExtractedItem[] = [];
   (Object.keys(CATEGORY_LABELS) as ExtractedCategory[]).forEach((category) => {
     for (const raw of result[category]) {
       counter += 1;
+      // Education items carry a dedicated `schoolName` (lib/ai/cv-extraction.ts's schema
+      // extends the shared item shape with it, specifically for this category) — preferred
+      // over `organization` here because it's the field the extraction schema names for
+      // exactly this purpose; `organization` is kept as a fallback in case the model puts
+      // the school there instead. Every other category has no `schoolName` at all, so `raw`
+      // there is never anything but the base shape. Read once here, into the same
+      // `organization` field the "School" EntityCombobox below already edits and
+      // lib/profile/cv-import.ts's `cvItemToRow` already persists — no new field to thread
+      // through the rest of this flow.
+      const schoolName = "schoolName" in raw ? raw.schoolName : null;
       items.push({
         id: `${category}-${counter}`,
         category,
         title: raw.title,
-        organization: raw.organization,
+        organization: schoolName ?? raw.organization,
         organizationEntityId: null,
         description: raw.description,
         startDate: raw.startDate,

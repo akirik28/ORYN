@@ -19,6 +19,17 @@ function isHttpUrl(value: string): boolean {
   return /^https?:\/\/.+/i.test(value);
 }
 
+// Deliberately loose (no length/TLD/quoted-string edge-case rigor) — this is a contact
+// field a student re-reads themselves and connections might message, not an address mail
+// actually gets sent to (Oryn never emails it). The bar is "did they typo something with no
+// @ in it," not full RFC 5322 compliance. The three URL fields right above already reject
+// an obviously-wrong contact value here (the ContactInfoForm's `type="email"` input implies
+// this is validated, but that HTML attribute never actually runs — this form has no native
+// submit event — so nothing server-side was checking either).
+function isPlausibleEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
 async function afterProfessionalWrite(userId: string) {
   try {
     await recomputeCareerProfile(userId);
@@ -156,14 +167,16 @@ export async function updateContactInfo(input: ContactInfoFormInput): Promise<{ 
   const linkedinUrl = input.linkedinUrl.trim();
   const githubUrl = input.githubUrl.trim();
   const websiteUrl = input.websiteUrl.trim();
+  const email = input.email.trim();
   if (linkedinUrl && !isHttpUrl(linkedinUrl)) return { error: "LinkedIn URL must start with http:// or https://." };
   if (githubUrl && !isHttpUrl(githubUrl)) return { error: "GitHub URL must start with http:// or https://." };
   if (websiteUrl && !isHttpUrl(websiteUrl)) return { error: "Website URL must start with http:// or https://." };
+  if (email && !isPlausibleEmail(email)) return { error: "Enter a valid email address." };
 
   const result = await upsertContactInfoPatch(supabase, session.userId!, {
     phone: input.phone.trim() || null,
     phone_visibility: input.phoneVisibility,
-    email: input.email.trim() || null,
+    email: email || null,
     email_visibility: input.emailVisibility,
     linkedin_url: linkedinUrl || null,
     linkedin_visibility: input.linkedinVisibility,

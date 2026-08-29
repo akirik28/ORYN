@@ -9,6 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { sendMessage, markConversationRead, blockUser, unblockUser, reportMessage } from "@/app/(app)/messages/actions";
 import { resolveBlockUiState } from "@/lib/messaging/authorization";
@@ -55,6 +64,7 @@ export function ConversationThread({
   const [reportOpen, setReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [reportTarget, setReportTarget] = useState<Message | null>(null);
+  const [blockConfirmOpen, setBlockConfirmOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const bottomRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -128,7 +138,19 @@ export function ConversationThread({
         return;
       }
       setBlocked((prev) => !prev);
+      setBlockConfirmOpen(false);
     });
+  }
+
+  /** Only blocking is confirmed — it cuts off messaging both ways. Unblocking restores
+   *  access rather than removing it, so it fires immediately like the rest of this
+   *  component's reversible toggles. */
+  function handleBlockMenuClick() {
+    if (blocked) {
+      toggleBlock();
+    } else {
+      setBlockConfirmOpen(true);
+    }
   }
 
   function submitReport() {
@@ -174,7 +196,7 @@ export function ConversationThread({
                 Blocking stays available even when disconnected or already blocked by the
                 other party (harmless, and gives every user full control of their own
                 block relationship). */}
-            <DropdownMenuItem onClick={toggleBlock}>
+            <DropdownMenuItem onClick={handleBlockMenuClick}>
               {blocked ? <ShieldCheck className="size-3.5" /> : <ShieldOff className="size-3.5" />}
               {blocked ? "Unblock" : "Block"} {otherDisplayName}
             </DropdownMenuItem>
@@ -201,9 +223,12 @@ export function ConversationThread({
                 <div className="mt-1 flex items-center gap-2 px-1 text-xs text-muted-foreground">
                   <span>{formatDistanceToNow(new Date(m.created_at), { addSuffix: true })}</span>
                   {!mine && !m.id.startsWith("optimistic-") ? (
+                    // Always visible, not hover-revealed — a hover-only affordance has no
+                    // touch equivalent, and Report is a moderation action that must stay
+                    // reachable on mobile, not just on a device with a mouse.
                     <button
                       type="button"
-                      className="opacity-0 hover:underline group-hover:opacity-100"
+                      className="text-ink-3 underline-offset-2 hover:underline focus-visible:underline"
                       onClick={() => {
                         setReportTarget(m);
                         setReportOpen(true);
@@ -268,6 +293,23 @@ export function ConversationThread({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={blockConfirmOpen} onOpenChange={setBlockConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Block {otherDisplayName}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Neither of you will be able to send messages to the other until you unblock them.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel render={<Button variant="outline" disabled={isPending} />}>Cancel</AlertDialogCancel>
+            <Button variant="destructive" onClick={toggleBlock} disabled={isPending}>
+              Block
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
