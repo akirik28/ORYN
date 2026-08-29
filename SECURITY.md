@@ -228,8 +228,12 @@ not being available in this sandbox — see this pass's own closing report for e
   and — added 2026-08-29, Security Gate 1, after an audit found it silently missing —
   separately enumerates and removes the student's objects from both Storage buckets
   (`evidence`, `cv-uploads`) by their own `{userId}/` prefix, since no DB cascade reaches
-  Storage. Storage cleanup is best-effort: a failure there is logged for follow-up but does
-  not block the account/auth deletion itself (matching this app's existing convention for
+  Storage. The auth/DB delete runs first, Storage cleanup after — reordered during this
+  same pass's own adversarial second-pass review, which is why: a Storage failure after a
+  successful account deletion only orphans unreachable bytes, while the reverse order's
+  failure case would leave a live account with permanently broken evidence/CV links.
+  Storage cleanup is best-effort: a failure there is logged for follow-up but does not
+  block the account/auth deletion itself (matching this app's existing convention for
   single-file evidence deletion), and there is currently no user-facing surface for a
   partial-Storage-failure case — the confirmation dialog's promise to delete evidence files
   now matches what the code actually attempts, but not every failure mode is user-visible.
@@ -287,5 +291,15 @@ admin Server Action, not just the page.
   own infrastructure limits apply, but there's no per-user request cap on them yet. Auth
   endpoints (signup/login/password reset) rely on Supabase Auth's own built-in
   throttling, not this app's code.
+- **`checkRateLimit` (`lib/security/rate-limit-core.ts`) has the identical non-atomic
+  count-then-record pattern the AI limiter's own entry above already discloses** — it was
+  verified directly during Security Gate 1's second-pass review, not assumed to be
+  different just because it backs a different set of actions. `countSince` and `record`
+  are two separate, unlocked database calls; a tight-enough burst of truly concurrent
+  requests from the same user could all read the same pre-increment count and all proceed,
+  exceeding the nominal cap by roughly the burst's own width. This applies to every action
+  in `rate-limit-config.ts`, `report_message`/`report_recommendation` included — it is a
+  soft abuse-throttle, not a hard, provably-enforced ceiling, and RLS (not rate limiting)
+  remains the actual authorization boundary against unauthorized data access.
 - **No content moderation** on free-text fields (activity descriptions, advisor
   messages) beyond what the AI system prompt discourages.

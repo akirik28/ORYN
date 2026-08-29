@@ -9,9 +9,16 @@ import { join } from "node:path";
  * rather than exercising the function. Before this fix, `deleteMyAccount` never touched
  * Storage at all — every evidence/CV object survived account deletion while the
  * confirmation dialog (features/settings/delete-account-dialog.tsx) told the student the
- * opposite. A future edit that removes the Storage loop, or moves it after
- * `deleteUser` in a way that early-returns before reaching it, would silently reopen that
- * gap without any live-Supabase test ever catching it — this file is what catches it instead.
+ * opposite. A future edit that removes the Storage loop, or that early-returns before
+ * reaching it, would silently reopen that gap without any live-Supabase test ever catching
+ * it — this file is what catches it instead.
+ *
+ * Ordering (Security Gate 1 second-pass review, 2026-08-29): deleteUser runs BEFORE Storage
+ * cleanup, not after — an earlier version of this fix had it backwards. If deleteUser were
+ * to fail AFTER Storage cleanup already succeeded, the student would be left with a live
+ * account and permanently broken evidence/CV links; with deleteUser first, a Storage
+ * failure after a successful account deletion only orphans bytes nothing can reference
+ * again. See the function's own doc comment for the full failure-mode reasoning.
  */
 
 function read(relPath: string): string {
@@ -51,16 +58,30 @@ describe("app/(app)/settings/actions.ts — deleteMyAccount", () => {
     expect(src).toContain("orphaned files may remain and need manual follow-up");
   });
 
-  test("Storage cleanup runs BEFORE the auth.users delete, and a Storage failure does not block it (best-effort, matching deleteEvidence's own convention elsewhere in this codebase)", () => {
-    const storageLoopIndex = src.indexOf("for (const bucket of ACCOUNT_DELETION_STORAGE_BUCKETS)");
+  test("the auth.users delete runs BEFORE Storage cleanup, not after (failure-mode reasoning in the doc comment)", () => {
     const deleteUserIndex = src.indexOf("admin.auth.admin.deleteUser(userId)");
-    expect(storageLoopIndex).toBeGreaterThan(-1);
+    const storageLoopIndex = src.indexOf("for (const bucket of ACCOUNT_DELETION_STORAGE_BUCKETS)");
     expect(deleteUserIndex).toBeGreaterThan(-1);
-    expect(storageLoopIndex).toBeLessThan(deleteUserIndex);
-    // No `return` between the storage-failure log and the deleteUser call — a Storage
-    // failure must fall through to the account deletion, not short-circuit before it.
-    const betweenStorageAndDelete = src.slice(src.indexOf("if (storageFailures.length > 0) {"), deleteUserIndex);
-    expect(betweenStorageAndDelete).not.toContain("return {");
+    expect(storageLoopIndex).toBeGreaterThan(-1);
+    expect(deleteUserIndex).toBeLessThan(storageLoopIndex);
+  });
+
+  test("a failed deleteUser call returns early, before Storage cleanup is attempted at all", () => {
+    const deleteUserCallIndex = src.indexOf("const { error } = await admin.auth.admin.deleteUser(userId);");
+    const errorReturnIndex = src.indexOf('if (error) return { error: "Couldn\'t delete your account', deleteUserCallIndex);
+    const storageLoopIndex = src.indexOf("for (const bucket of ACCOUNT_DELETION_STORAGE_BUCKETS)");
+    expect(deleteUserCallIndex).toBeGreaterThan(-1);
+    expect(errorReturnIndex).toBeGreaterThan(deleteUserCallIndex);
+    expect(errorReturnIndex).toBeLessThan(storageLoopIndex);
+  });
+
+  test("a Storage failure after a successful deleteUser does not throw or return an error — it falls through to sign-out", () => {
+    const storageFailureLogIndex = src.indexOf("if (storageFailures.length > 0) {");
+    const signOutIndex = src.indexOf("supabase.auth.signOut()");
+    expect(storageFailureLogIndex).toBeGreaterThan(-1);
+    expect(signOutIndex).toBeGreaterThan(storageFailureLogIndex);
+    const betweenFailureLogAndSignOut = src.slice(storageFailureLogIndex, signOutIndex);
+    expect(betweenFailureLogAndSignOut).not.toContain("return {");
   });
 
   test("still deletes the auth.users row, which cascades every DB table", () => {

@@ -5,9 +5,11 @@
 -- the admin client), and ordinary student-owned columns on the same rows remain freely
 -- editable. This is a genuine, automated, locally-run pgTAP suite -- unlike the three
 -- existing `*_manual.sql` files in this directory (written when the pgtap extension had
--- never been confirmed available anywhere this repo had run), this session confirmed `supabase
--- start` + `supabase test db` work locally with Docker available, so this is real coverage,
--- not another manual checklist.
+-- never been confirmed available anywhere this repo had run), this session confirmed pgTAP
+-- actually runs against a real, fully-migrated local Postgres database (built from source
+-- against Homebrew PostgreSQL 17 -- `supabase start`/Docker was unavailable in this
+-- sandbox, hung indefinitely on every probe), so this is real coverage, not another manual
+-- checklist.
 --
 -- Two students, fixed ids for readability, wrapped in one ROLLBACK transaction (pgTAP's own
 -- convention, confirmed via `supabase test new --template pgtap`) so nothing here persists
@@ -22,9 +24,21 @@
 -- proportionate given all eight attach the identical shared function,
 -- `guard_achievement_evidence_status()`, verified once above rather than re-verified in full
 -- eight times.
+--
+-- Second-pass additions (2026-08-29, adversarial review of this same gate before Codex
+-- review): the original version of this file never actually tested a single UPDATE
+-- statement that sets a protected column AND an ordinary column together -- every prior
+-- proof used two separate statements, which cannot rule out the trigger clobbering the
+-- whole row or interacting badly with RLS's WITH CHECK on a trigger-modified NEW row. Added
+-- for `target_universities` and `activities`: one combined-statement test each, plus an
+-- explicit NULL -> attempted-value -> NULL case (target_universities.outlook_confidence)
+-- and an explicit value -> attempted-NULL -> unchanged case (profile_scores.score). A
+-- "same-value rewrite" case (SET x = x) was considered and deliberately not added: the
+-- guard functions reset unconditionally regardless of what value was attempted, so that
+-- case exercises no code path the other assertions don't already cover.
 
 BEGIN;
-SELECT plan(40);
+SELECT plan(44);
 
 -- ---------------------------------------------------------------------------
 -- Setup: two students + one target university + one opportunity + one university
@@ -134,6 +148,17 @@ reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"a0000000-0000-0000-0000-00000000000a","role":"authenticated"}', true);
+
+-- value -> attempted NULL -> stays at the real value (the reverse direction from the
+-- INSERT-side NULL-sanitization tests below, and from 0066's NULL -> attempted value ->
+-- NULL test): score is currently a real, non-null 78, set by service_role just above.
+update public.profile_scores set score = null where id = '50000000-0000-0000-0000-000000000001';
+SELECT is(
+  (select score from public.profile_scores where id = '50000000-0000-0000-0000-000000000001'),
+  78,
+  'a protected column with a real non-null value cannot be nulled out via UPDATE either (value -> attempted NULL -> unchanged)'
+);
+
 SELECT throws_ok(
   $$insert into public.profile_score_snapshots (user_id, score_version, overall_score, dimension_scores, snapshot_reason) values ('a0000000-0000-0000-0000-00000000000a', 'career_profile_v1', 100, '{}'::jsonb, 'security_gate_1_test')$$,
   null,
@@ -229,31 +254,53 @@ SELECT is(
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"a0000000-0000-0000-0000-00000000000a","role":"authenticated"}', true);
 
+-- Second-pass addition (2026-08-29): a genuinely COMBINED single-statement UPDATE --
+-- one protected column and one ordinary column, set together in the SAME SET clause, not
+-- two separate statements. This is the one real blind spot the adversarial review found:
+-- every prior assertion here proved forgery-denied and ordinary-field-still-editable as two
+-- separate UPDATEs, which cannot distinguish "the trigger only resets what it should" from
+-- "the trigger accidentally clobbers the whole row" or "RLS WITH CHECK interacts badly with
+-- a trigger-modified NEW row" -- both real hypotheses this single combined statement rules
+-- out directly, in one round trip, the same way a real forged request would actually be
+-- shaped (nobody sends two separate UPDATEs to hide one forged column).
 update public.target_universities
-  set outlook = 'likely', estimate_range_low = 0.9, estimate_range_high = 0.99, academic_fit_score = 100
+  set outlook = 'likely', estimate_range_low = 0.9, estimate_range_high = 0.99, academic_fit_score = 100,
+      status = 'target', notes = 'my own notes'
   where id = 'd0000000-0000-0000-0000-000000000001';
 SELECT is(
   (select outlook from public.target_universities where id = 'd0000000-0000-0000-0000-000000000001'),
   null,
-  'authenticated user cannot forge target_universities.outlook via UPDATE (reset to OLD/NULL)'
+  'combined statement: the protected outlook column is still reset to OLD/NULL even when set alongside an ordinary column'
 );
 SELECT is(
   (select estimate_range_high from public.target_universities where id = 'd0000000-0000-0000-0000-000000000001'),
   null,
-  'authenticated user cannot forge target_universities.estimate_range_high via UPDATE'
+  'combined statement: estimate_range_high is still reset to OLD/NULL in the same statement'
 );
-
--- ordinary student-owned columns on the SAME row remain freely editable
-update public.target_universities set status = 'target', notes = 'my own notes' where id = 'd0000000-0000-0000-0000-000000000001';
 SELECT is(
   (select status::text from public.target_universities where id = 'd0000000-0000-0000-0000-000000000001'),
   'target',
-  'authenticated user CAN still update target_universities.status (ordinary field, same row as the guarded columns)'
+  'combined statement: the SAME statement''s ordinary status column is NOT clobbered by the trigger -- it takes the new value exactly as if the trigger were not there'
 );
 SELECT is(
   (select notes from public.target_universities where id = 'd0000000-0000-0000-0000-000000000001'),
   'my own notes',
-  'authenticated user CAN still update target_universities.notes (ordinary field)'
+  'combined statement: the SAME statement''s ordinary notes column is NOT clobbered either'
+);
+
+-- NULL -> attempted value -> stays NULL: outlook_confidence has never been touched by any
+-- statement above, so OLD.outlook_confidence is still a genuine SQL NULL here, not a
+-- previously-set value that merely looks unset.
+SELECT is(
+  (select outlook_confidence::text from public.target_universities where id = 'd0000000-0000-0000-0000-000000000001'),
+  null,
+  'sanity check: outlook_confidence is still genuinely NULL before this next assertion (not previously touched)'
+);
+update public.target_universities set outlook_confidence = 'high' where id = 'd0000000-0000-0000-0000-000000000001';
+SELECT is(
+  (select outlook_confidence::text from public.target_universities where id = 'd0000000-0000-0000-0000-000000000001'),
+  null,
+  'a protected column whose OLD value is NULL stays NULL after an UPDATE attempt (NULL -> attempted value -> NULL)'
 );
 
 -- a fresh INSERT trying to pre-set the outlook columns is sanitized to NULL, not rejected
@@ -288,18 +335,24 @@ reset role;
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"a0000000-0000-0000-0000-00000000000a","role":"authenticated"}', true);
 
-update public.activities set evidence_status = 'verified' where id = '30000000-0000-0000-0000-000000000001';
+-- Second-pass addition (2026-08-29): same combined-single-statement proof as
+-- target_universities above, for the shared achievement-table trigger -- evidence_status
+-- forged alongside title/category in ONE UPDATE, not two.
+update public.activities set evidence_status = 'verified', title = 'Updated title', category = 'student_government' where id = '30000000-0000-0000-0000-000000000001';
 SELECT is(
   (select evidence_status::text from public.activities where id = '30000000-0000-0000-0000-000000000001'),
   'self_reported',
-  'authenticated user cannot forge activities.evidence_status to verified via UPDATE'
+  'combined statement: activities.evidence_status is still reset to self_reported even when set alongside ordinary columns'
 );
-
-update public.activities set title = 'Updated title', category = 'student_government' where id = '30000000-0000-0000-0000-000000000001';
 SELECT is(
   (select title from public.activities where id = '30000000-0000-0000-0000-000000000001'),
   'Updated title',
-  'authenticated user CAN still edit ordinary activities fields (title) on the same row'
+  'combined statement: the SAME statement''s ordinary title column is NOT clobbered by the shared evidence_status trigger'
+);
+SELECT is(
+  (select category::text from public.activities where id = '30000000-0000-0000-0000-000000000001'),
+  'student_government',
+  'combined statement: the SAME statement''s ordinary category column is NOT clobbered either'
 );
 
 insert into public.activities (id, user_id, title, category, evidence_status)
