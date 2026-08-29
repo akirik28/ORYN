@@ -105,8 +105,9 @@ export async function reportRecommendation(recommendationId: string, reportedUse
   const trimmedReason = reason.trim().slice(0, 1000);
   if (!trimmedReason) return { error: "Please describe the issue." };
 
+  // Security Gate 1 (2026-08-29): own key, not report_message — see rate-limit-config.ts.
   try {
-    await assertWithinRateLimit(session.userId!, "report_message", RATE_LIMITS.report_message);
+    await assertWithinRateLimit(session.userId!, "report_recommendation", RATE_LIMITS.report_recommendation);
   } catch (error) {
     if (error instanceof RateLimitExceededError) return { error: error.message };
     throw error;

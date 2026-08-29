@@ -115,10 +115,9 @@ describe("app/(app)/documents/actions.ts", () => {
     expect(src).not.toContain('supabase.from("evidence_files").insert(');
   });
 
-  test("the ownership check, storage upload, evidence_status update, and deleteEvidence all stay RLS-scoped", () => {
+  test("the ownership check, storage upload, and deleteEvidence stay RLS-scoped", () => {
     expect(src).toContain("supabase.from(linkedTable).select(");
     expect(src).toContain('supabase.storage.from("evidence").upload(');
-    expect(src).toContain("supabase.from(linkedTable).update({ evidence_status:");
     expect(src).toContain('supabase.from("evidence_files").select("*")');
     expect(src).toContain('supabase.from("evidence_files").delete()');
   });
@@ -126,6 +125,49 @@ describe("app/(app)/documents/actions.ts", () => {
   test("returns a clear error rather than throwing when the admin client is unavailable", () => {
     expect(src).toContain("if (!admin) {");
     expect(src).toMatch(/return \{ error: ["'`]Evidence upload is temporarily unavailable/);
+  });
+
+  test("Security Gate 1 (migration 0067): the linked achievement's evidence_status update also uses admin, not supabase", () => {
+    expect(src).toContain('await admin.from(linkedTable).update({ evidence_status: "evidence_added" })');
+    expect(src).not.toContain('await supabase.from(linkedTable).update({ evidence_status:');
+  });
+});
+
+describe("lib/admissions/persist.ts", () => {
+  const src = read("lib/admissions/persist.ts");
+
+  test("imports and constructs the admin client (tryCreateAdminClient, so a missing secret degrades to a clear result rather than a thrown 500)", () => {
+    expect(src).toContain('import { tryCreateAdminClient } from "@/lib/supabase/admin";');
+    expect(src).toContain("const admin = tryCreateAdminClient();");
+  });
+
+  test("Security Gate 1 (migration 0066): the target_universities outlook-cache update uses admin", () => {
+    expect(src).toContain('await admin\n    .from("target_universities")\n    .update({');
+    expect(src).toContain("academic_fit_score: outlook.compositeScore,");
+    expect(src).toContain("outlook: outlook.outlook,");
+    expect(src).toContain("estimate_range_low:");
+    expect(src).toContain("estimate_range_high:");
+    expect(src).toContain("outlook_confidence: outlook.estimateConfidence,");
+    expect(src).toContain("outlook_model_version: outlook.modelVersion,");
+    expect(src).toContain("outlook_calculated_at:");
+  });
+
+  test("no write to target_universities still uses the RLS-scoped client", () => {
+    expect(src).not.toContain('supabase\n    .from("target_universities")\n    .update(');
+  });
+
+  test("every read (target_universities, profiles, university_statistics, universities, university_programs) stays RLS-scoped", () => {
+    expect(src).toContain('supabase\n    .from("target_universities")\n    .select(');
+    expect(src).toContain('supabase.from("profiles").select(');
+    expect(src).toContain('supabase\n      .from("university_statistics")');
+    expect(src).toContain('supabase.from("universities").select(');
+    expect(src).toContain('supabase.from("university_programs").select(');
+  });
+
+  test("computes and returns the outlook even when the admin client is unavailable, but skips persisting it", () => {
+    expect(src).toContain("if (!admin) {");
+    expect(src).toContain("[admissions] SUPABASE_SECRET_KEY not configured");
+    expect(src).toContain("return outlook;");
   });
 });
 

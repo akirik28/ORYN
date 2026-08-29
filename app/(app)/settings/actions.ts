@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import { UpdatePasswordSchema } from "@/lib/validation/auth";
 import type { TimeBudget } from "@/types/database";
 
@@ -133,18 +133,72 @@ export async function updateVisibility(isPublic: boolean, lookingFor: string | n
   return {};
 }
 
+const ACCOUNT_DELETION_STORAGE_BUCKETS = ["evidence", "cv-uploads"] as const;
+
 /**
- * Permanently deletes the student's account (Phase 12 minor-safe requirement). Uses the
- * admin client to delete the auth.users row directly — every other table cascades via
- * `references auth.users(id) on delete cascade` (profiles) and `references
- * profiles(id) on delete cascade` (everything else), so this one call removes all of the
- * student's data. Irreversible; the confirmation happens in the UI before this is called.
+ * Permanently deletes the student's account (Phase 12 minor-safe requirement). The
+ * `auth.users` delete below cascades every DB table — `references auth.users(id) on delete
+ * cascade` (profiles) and `references profiles(id) on delete cascade` (everything else) — so
+ * that one call removes all of the student's *database* rows. It does nothing about
+ * `evidence`/`cv-uploads` Storage objects, which are addressed by path (`{userId}/...`, see
+ * migration 0015), not by foreign key — no DB cascade reaches them. Before this fix, this
+ * function silently left every evidence/CV file behind while the confirmation dialog
+ * (features/settings/delete-account-dialog.tsx) told the student the opposite: "This
+ * permanently deletes your profile, achievements, evidence files, conversations, and
+ * everything else." Security Gate 1 (2026-08-29), found during an account-deletion audit.
+ *
+ * Storage cleanup enumerates each bucket's `{userId}/` prefix directly (`storage.list`)
+ * rather than going by `evidence_files.file_path` rows — the same reasoning as this file's
+ * own upload path (documents/actions.ts): a DB reference can be incomplete or stale, an
+ * object listing can't be. Runs BEFORE the auth.users delete, not after: if deletion fails
+ * below, the student keeps their account and can retry, and a retry re-lists whatever is
+ * still there rather than needing the (by-then-deleted) DB rows to know what to remove.
+ *
+ * Best-effort, not blocking: a Storage failure is logged (never silently dropped, never
+ * reported as success) but does not stop the account/auth deletion the student explicitly
+ * requested — this app already treats Storage cleanup as best-effort elsewhere
+ * (documents/actions.ts's own deleteEvidence does not block the DB delete on a storage
+ * error either). What this fix guarantees is that a failure is at least recorded for
+ * follow-up instead of never attempted at all. Uses `tryCreateAdminClient()`, not the
+ * throwing `createAdminClient()`, so a missing `SUPABASE_SECRET_KEY` returns a clear error
+ * instead of an uncaught exception — this was the one real gap a credential-failure-handling
+ * sweep found across the whole codebase; every other direct `createAdminClient()` call site
+ * is either already caught by its caller or reachable only from admin/cron-gated code, not a
+ * plain signed-in student action like this one.
  */
 export async function deleteMyAccount(): Promise<{ error?: string }> {
   const session = await requireUser();
-  const admin = createAdminClient();
+  const userId = session.userId!;
+  const admin = tryCreateAdminClient();
+  if (!admin) {
+    console.error("[account-deletion] SUPABASE_SECRET_KEY not configured — cannot delete account");
+    return { error: "Account deletion is temporarily unavailable. Please try again shortly." };
+  }
 
-  const { error } = await admin.auth.admin.deleteUser(session.userId!);
+  const storageFailures: string[] = [];
+  for (const bucket of ACCOUNT_DELETION_STORAGE_BUCKETS) {
+    const { data: objects, error: listError } = await admin.storage.from(bucket).list(userId);
+    if (listError) {
+      storageFailures.push(bucket);
+      console.error(`[account-deletion] couldn't list ${bucket}/${userId}: ${listError.message}`);
+      continue;
+    }
+    if (objects && objects.length > 0) {
+      const paths = objects.map((object) => `${userId}/${object.name}`);
+      const { error: removeError } = await admin.storage.from(bucket).remove(paths);
+      if (removeError) {
+        storageFailures.push(bucket);
+        console.error(`[account-deletion] couldn't remove objects from ${bucket}/${userId}: ${removeError.message}`);
+      }
+    }
+  }
+  if (storageFailures.length > 0) {
+    console.error(
+      `[account-deletion] proceeding with account deletion for ${userId} despite incomplete Storage cleanup in: ${storageFailures.join(", ")} — orphaned files may remain and need manual follow-up`
+    );
+  }
+
+  const { error } = await admin.auth.admin.deleteUser(userId);
   if (error) return { error: "Couldn't delete your account. Please try again or contact support." };
 
   const supabase = await createClient();

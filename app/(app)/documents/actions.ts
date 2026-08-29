@@ -15,8 +15,17 @@ const MAX_EVIDENCE_SIZE_BYTES = 15 * 1024 * 1024;
  * `verification_status: 'verified'` on a freshly-created row; the ownership check just
  * below (does `linked_id` in `linked_table` actually belong to this user) is a
  * separate, still-RLS-scoped check against a *different* table and is unaffected by
- * this. Every other operation here -- the ownership read, the storage upload, the
- * evidence_status update, and deleteEvidence below -- stays on `supabase`, unchanged.
+ * this. The linked achievement's own `evidence_status` update ALSO now uses the same
+ * admin client -- Security Gate 1 (2026-08-29), migration
+ * 0067_guard_achievement_evidence_status.sql: that column had the identical gap
+ * (settable to `'verified'` directly on `activities`/`awards`/etc., not just on
+ * `evidence_files`), and this call was still on `supabase` before this change -- exactly
+ * the failure class 0066/0067 both exist to close. The ownership check above still runs
+ * on the RLS-scoped client and still gates the update (an attacker cannot use this path
+ * to mark evidence against a row they don't own -- that check decides whether the update
+ * is attempted at all, not the achievement table's own RLS). Every other operation here
+ * -- the ownership read, the storage upload, and deleteEvidence below -- stays on
+ * `supabase`, unchanged.
  */
 export async function uploadEvidence(formData: FormData): Promise<{ error?: string }> {
   const session = await requireUser();
@@ -61,7 +70,7 @@ export async function uploadEvidence(formData: FormData): Promise<{ error?: stri
   });
   if (insertError) return { error: `Couldn't save evidence record: ${insertError.message}` };
 
-  await supabase.from(linkedTable).update({ evidence_status: "evidence_added" }).eq("id", linkedId).eq("user_id", userId);
+  await admin.from(linkedTable).update({ evidence_status: "evidence_added" }).eq("id", linkedId).eq("user_id", userId);
 
   revalidatePath("/documents");
   revalidatePath("/profile");

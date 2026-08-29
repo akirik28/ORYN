@@ -15,6 +15,13 @@ export const RATE_LIMITS = {
   /** Reporting is rare under normal use; bounds report-spam (including using false
    * reports themselves as a harassment vector) without limiting a genuine run of reports. */
   report_message: { maxCalls: 20, windowMinutes: 60 },
+  /** Security Gate 1 (2026-08-29): split from report_message, which reportRecommendation()
+   * incorrectly reused. Same bug class report_post's own comment already warns against —
+   * two unrelated report surfaces sharing one key meant a student who reported several
+   * recommendations could find themselves unable to report an unrelated abusive message
+   * (or vice versa) for the rest of the window, though neither action was actually
+   * excessive on its own. */
+  report_recommendation: { maxCalls: 20, windowMinutes: 60 },
   /** A student genuinely endorsing several connections' skills in one sitting stays well
    * under this; guards against scripted mass-endorsement. */
   endorse_skill: { maxCalls: 40, windowMinutes: 60 },

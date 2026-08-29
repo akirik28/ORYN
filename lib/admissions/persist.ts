@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import { checkUndergraduateFieldAvailability } from "./field-availability";
 import { computeAdmissionOutlook, type AdmissionOutlookResult } from "./outlook";
 import { resolveAdmissionSystem } from "./system-shape";
@@ -15,9 +16,26 @@ import { resolveAdmissionSystem } from "./system-shape";
  * admissions-system input since migration 0049, but this function never passed one, so a
  * student targeting a Turkish or German university got the same US-style
  * reach/competitive/likely framing as one targeting Yale.
+ *
+ * THE FINAL WRITE below (the 8 cached columns) goes through `admin`, the service-role
+ * client — added as part of Security Gate 1 (2026-08-29), migration
+ * 0066_guard_target_university_outlook_columns.sql. Before this change the write ran on
+ * `supabase`, the caller's own RLS-scoped session, which is exactly what let a direct
+ * client call (bypassing this function entirely) set these columns to an arbitrary value —
+ * see that migration's own comment. EVERY READ above stays on `supabase`, unchanged: this
+ * function reads exactly what the caller is already allowed to see, and widening a client
+ * to fix a write must never widen what it reads too. Not a privilege widening for the
+ * student — every value written here is already fully computed, server-side, above, before
+ * either client is touched; this only changes which connection carries them the last few
+ * lines to the database, so migration 0066's guard trigger can tell a real recompute apart
+ * from a forged direct write. If the admin client isn't configured, the outlook is still
+ * computed and returned to the caller (harmless — computing it needs no admin client), but
+ * the cache columns are not updated; logged once, not silently, matching
+ * `lib/scoring/persist.ts::recomputeCareerProfile`'s identical, already-established pattern.
  */
 export async function refreshAdmissionOutlook(targetUniversityId: string, userId: string): Promise<AdmissionOutlookResult | null> {
   const supabase = await createClient();
+  const admin = tryCreateAdminClient();
 
   const { data: target } = await supabase
     .from("target_universities")
@@ -81,7 +99,12 @@ export async function refreshAdmissionOutlook(targetUniversityId: string, userId
   // return value, which is why it returns the result rather than void: `not_applicable` is
   // one enum member covering several unrelated reasons, and a badge that renders the label
   // without the kind can only describe one of them correctly (see OutlookBadge).
-  await supabase
+  if (!admin) {
+    console.error("[admissions] SUPABASE_SECRET_KEY not configured — computed outlook but skipped persisting it");
+    return outlook;
+  }
+
+  const { error: cacheError } = await admin
     .from("target_universities")
     .update({
       academic_fit_score: outlook.compositeScore,
@@ -94,6 +117,7 @@ export async function refreshAdmissionOutlook(targetUniversityId: string, userId
       outlook_calculated_at: new Date().toISOString(),
     })
     .eq("id", targetUniversityId);
+  if (cacheError) console.error(`[admissions] failed to persist outlook cache: ${cacheError.message}`);
 
   return outlook;
 }
