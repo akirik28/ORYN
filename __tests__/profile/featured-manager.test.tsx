@@ -52,13 +52,20 @@ afterEach(() => {
 // leaves the dialog (and the Select's still-showing "My Research Tool" value inside it) in
 // the DOM until then, which otherwise makes later `getByText("My Research Tool")` queries
 // ambiguous against the real list item just added.
+// Timeouts bumped above testing-library's 1000ms default throughout this file — this
+// component chains a Server Action await inside startTransition with a Base UI portal/
+// animation-driven dialog unmount, comfortably fast in isolation but occasionally slower
+// than 1000ms under the full suite's parallel worker load (observed flaking there, never
+// in isolation, across otherwise-identical runs).
+const WAIT_OPTS = { timeout: 3000 };
+
 async function addFeaturedCandidate() {
   fireEvent.click(screen.getByRole("button", { name: /Feature something/ }));
   const combobox = (await screen.findAllByRole("combobox"))[1];
   fireEvent.click(combobox);
   fireEvent.click(await screen.findByRole("option", { name: "My Research Tool" }));
   fireEvent.click(screen.getByRole("button", { name: "Feature it" }));
-  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument(), WAIT_OPTS);
 }
 
 describe("FeaturedManager — real id, not a phantom one", () => {
@@ -72,7 +79,7 @@ describe("FeaturedManager — real id, not a phantom one", () => {
     expect(screen.getByText("My Research Tool")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Remove" }));
 
-    await waitFor(() => expect(removeFeaturedItem).toHaveBeenCalledWith("real-server-id-123"));
+    await waitFor(() => expect(removeFeaturedItem).toHaveBeenCalledWith("real-server-id-123"), WAIT_OPTS);
   });
 
   test("a failed add surfaces an error and never appends a real item (dialog stays open, so 'Remove' never appears)", async () => {
@@ -85,7 +92,7 @@ describe("FeaturedManager — real id, not a phantom one", () => {
     fireEvent.click(await screen.findByRole("option", { name: "My Research Tool" }));
     fireEvent.click(screen.getByRole("button", { name: "Feature it" }));
 
-    await waitFor(() => expect(screen.getByText(/Remove one before adding another/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Remove one before adding another/)).toBeInTheDocument(), WAIT_OPTS);
     // Distinguishes "the Select still shows its chosen value" (expected, dialog stayed
     // open on failure) from "a real list item was appended" (the actual regression this
     // guards against) — a plain queryByText("My Research Tool") would find the former too.
@@ -102,7 +109,7 @@ describe("FeaturedManager — real id, not a phantom one", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Remove" }));
 
-    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Couldn't remove that."));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Couldn't remove that."), WAIT_OPTS);
     expect(screen.getByText("My Research Tool")).toBeInTheDocument();
   });
 });
