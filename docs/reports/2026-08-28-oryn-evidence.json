@@ -1,0 +1,1861 @@
+{
+  "reportDate": "2026-08-28",
+  "timezone": "Europe/Istanbul",
+  "repo": "akirik28/ORYN",
+  "commit": "f7af9140f1255b2436217f1bf8d8fa5a80abd037",
+  "method": "Read-only live Supabase metadata/aggregate queries; local code/document review; GitHub read-only status; minimal integration probes. No student record mutation, schema change, deployment, or new browser E2E.",
+  "liveCounts": {
+    "counts": {
+      "profiles": 11,
+      "programs": 17046,
+      "deadlines": 438,
+      "requirements": 1280,
+      "universities": 1019,
+      "opportunities": 421,
+      "canonical_entities": 1174,
+      "onboarded_profiles": 8,
+      "canonical_universities": 1010
+    },
+    "measured_at": "2026-08-28T10:18:17.294055+00:00",
+    "opportunity_statuses": [
+      {
+        "count": 72,
+        "status": "active",
+        "verification_state": "unverified"
+      },
+      {
+        "count": 204,
+        "status": "active",
+        "verification_state": "verified_current"
+      },
+      {
+        "count": 1,
+        "status": "expired",
+        "verification_state": "unverified"
+      },
+      {
+        "count": 1,
+        "status": "under_review",
+        "verification_state": "conflicting"
+      },
+      {
+        "count": 119,
+        "status": "under_review",
+        "verification_state": "unverified"
+      },
+      {
+        "count": 2,
+        "status": "under_review",
+        "verification_state": "verified_current"
+      },
+      {
+        "count": 21,
+        "status": "disabled",
+        "verification_state": "unverified"
+      },
+      {
+        "count": 1,
+        "status": "disabled",
+        "verification_state": "verified_current"
+      }
+    ],
+    "opportunity_categories": [
+      {
+        "total": 245,
+        "category": "summer_program",
+        "date_status_verified_subset": 38
+      },
+      {
+        "total": 101,
+        "category": "competition",
+        "date_status_verified_subset": 50
+      },
+      {
+        "total": 20,
+        "category": "research",
+        "date_status_verified_subset": 6
+      },
+      {
+        "total": 9,
+        "category": "internship",
+        "date_status_verified_subset": 5
+      },
+      {
+        "total": 9,
+        "category": "scholarship",
+        "date_status_verified_subset": 7
+      },
+      {
+        "total": 7,
+        "category": "student_program",
+        "date_status_verified_subset": 6
+      },
+      {
+        "total": 7,
+        "category": "volunteering",
+        "date_status_verified_subset": 5
+      },
+      {
+        "total": 7,
+        "category": "entrepreneurship",
+        "date_status_verified_subset": 3
+      },
+      {
+        "total": 6,
+        "category": "online_program",
+        "date_status_verified_subset": 5
+      },
+      {
+        "total": 5,
+        "category": "fellowship",
+        "date_status_verified_subset": 5
+      },
+      {
+        "total": 3,
+        "category": "academic_program",
+        "date_status_verified_subset": 0
+      },
+      {
+        "total": 2,
+        "category": "conference",
+        "date_status_verified_subset": 2
+      }
+    ]
+  },
+  "dataQuality": {
+    "coverage": {
+      "countries": 89,
+      "program_verified": 17046,
+      "program_universities": 150,
+      "deadline_universities": 87,
+      "deadlines_program_linked": 0,
+      "requirement_universities": 104,
+      "program_missing_degree_type": 3655,
+      "requirements_program_linked": 88
+    },
+    "integrity": {
+      "orphan_program_universities": 0,
+      "orphan_requirement_universities": 0,
+      "mismatched_deadline_program_owner": 0,
+      "mismatched_requirement_program_owner": 0
+    },
+    "program_countries": [
+      {
+        "country": "United States",
+        "programs": 3722,
+        "universities": 37
+      },
+      {
+        "country": "United Kingdom",
+        "programs": 3355,
+        "universities": 24
+      },
+      {
+        "country": "Canada",
+        "programs": 3306,
+        "universities": 8
+      },
+      {
+        "country": "Germany",
+        "programs": 2317,
+        "universities": 17
+      },
+      {
+        "country": "Netherlands",
+        "programs": 1227,
+        "universities": 13
+      },
+      {
+        "country": "Turkey",
+        "programs": 779,
+        "universities": 12
+      },
+      {
+        "country": "Ireland",
+        "programs": 748,
+        "universities": 8
+      },
+      {
+        "country": "Australia",
+        "programs": 651,
+        "universities": 4
+      },
+      {
+        "country": "Italy",
+        "programs": 370,
+        "universities": 7
+      },
+      {
+        "country": "Spain",
+        "programs": 241,
+        "universities": 3
+      },
+      {
+        "country": "France",
+        "programs": 126,
+        "universities": 9
+      },
+      {
+        "country": "Switzerland",
+        "programs": 78,
+        "universities": 6
+      },
+      {
+        "country": "Singapore",
+        "programs": 65,
+        "universities": 1
+      },
+      {
+        "country": "Malaysia",
+        "programs": 61,
+        "universities": 1
+      }
+    ]
+  },
+  "extendedCounts": {
+    "joint_coverage": 80,
+    "engagement_counts": {
+      "messages": 0,
+      "connections": 0,
+      "applications": 3,
+      "weekly_plans": 7,
+      "evidence_files": 1,
+      "weekly_actions": 19,
+      "advisor_messages": 26,
+      "saved_opportunities": 3
+    },
+    "requirement_status": [
+      {
+        "count": 1280,
+        "data_status": "fresh"
+      }
+    ],
+    "university_completeness": {
+      "with_logo_url": 338,
+      "with_coordinates": 984,
+      "with_student_size": 378,
+      "with_admissions_url": 630
+    }
+  },
+  "otherChecks": {
+    "live_sources": [
+      {
+        "count": 214,
+        "source": "Founder school-counselor Drive corpus, cross-checked against official/provider pages 2026-08-15"
+      },
+      {
+        "count": 170,
+        "source": "official_primary"
+      },
+      {
+        "count": 14,
+        "source": "UK Mathematics Trust (direct fetch)"
+      },
+      {
+        "count": 10,
+        "source": "manual_research"
+      },
+      {
+        "count": 1,
+        "source": "National History Day official site, verified via direct fetch 2026-08-20"
+      },
+      {
+        "count": 1,
+        "source": "USACO official site, verified via direct fetch 2026-08-20"
+      },
+      {
+        "count": 1,
+        "source": "CyberPatriot official site, verified via direct fetch 2026-08-20"
+      },
+      {
+        "count": 1,
+        "source": "Technovation Girls official site, verified via direct fetch 2026-08-20"
+      },
+      {
+        "count": 1,
+        "source": "NFTE official site, verified via direct fetch 2026-08-20"
+      },
+      {
+        "count": 1,
+        "source": "DSI Genel Mudurlugu (dsi.gov.tr), direct fetch"
+      },
+      {
+        "count": 1,
+        "source": "The Concord Review official site, verified via direct fetch 2026-08-20"
+      },
+      {
+        "count": 1,
+        "source": "Center for Civic Education official site, verified via direct fetch 2026-08-20"
+      },
+      {
+        "count": 1,
+        "source": "National High School Ethics Bowl official site, verified via direct fetch 2026-08-20"
+      },
+      {
+        "count": 1,
+        "source": "International Public Policy Forum official site, verified via direct fetch 2026-08-20"
+      },
+      {
+        "count": 1,
+        "source": "Congressional App Challenge official site, verified via direct fetch 2026-08-20"
+      },
+      {
+        "count": 1,
+        "source": "Barnard Athena Center for Leadership + Barnard Pre-College Programs (direct fetch)"
+      },
+      {
+        "count": 1,
+        "source": "International Psychology Olympiad official site, verified via direct fetch 2026-08-20"
+      }
+    ],
+    "university_statistics": 128,
+    "target_estimate_ranges": 4,
+    "profiles_with_birth_year": 4,
+    "statistics_with_admission_rate": 126,
+    "opportunity_both_timestamps_null": 15
+  },
+  "opportunityCompleteness": {
+    "has_country_list": 40,
+    "explicitly_open": 16,
+    "has_deadline": 82,
+    "has_cost": 111,
+    "missing_verified_at": 206,
+    "linked_organizer": 0
+  },
+  "securityMetadata": {
+    "guards": [
+      {
+        "trigger_name": "evidence_files_set_updated_at",
+        "action_timing": "BEFORE",
+        "event_manipulation": "UPDATE",
+        "event_object_table": "evidence_files"
+      },
+      {
+        "trigger_name": "profiles_00_guard_protected_columns",
+        "action_timing": "BEFORE",
+        "event_manipulation": "UPDATE",
+        "event_object_table": "profiles"
+      },
+      {
+        "trigger_name": "profiles_set_updated_at",
+        "action_timing": "BEFORE",
+        "event_manipulation": "UPDATE",
+        "event_object_table": "profiles"
+      },
+      {
+        "trigger_name": "trg_profiles_city_entity_type",
+        "action_timing": "BEFORE",
+        "event_manipulation": "INSERT",
+        "event_object_table": "profiles"
+      },
+      {
+        "trigger_name": "trg_profiles_city_entity_type",
+        "action_timing": "BEFORE",
+        "event_manipulation": "UPDATE",
+        "event_object_table": "profiles"
+      },
+      {
+        "trigger_name": "trg_profiles_country_entity_type",
+        "action_timing": "BEFORE",
+        "event_manipulation": "INSERT",
+        "event_object_table": "profiles"
+      },
+      {
+        "trigger_name": "trg_profiles_country_entity_type",
+        "action_timing": "BEFORE",
+        "event_manipulation": "UPDATE",
+        "event_object_table": "profiles"
+      },
+      {
+        "trigger_name": "trg_profiles_school_entity_type",
+        "action_timing": "BEFORE",
+        "event_manipulation": "INSERT",
+        "event_object_table": "profiles"
+      },
+      {
+        "trigger_name": "trg_profiles_school_entity_type",
+        "action_timing": "BEFORE",
+        "event_manipulation": "UPDATE",
+        "event_object_table": "profiles"
+      },
+      {
+        "trigger_name": "student_requirement_evaluations_set_updated_at",
+        "action_timing": "BEFORE",
+        "event_manipulation": "UPDATE",
+        "event_object_table": "student_requirement_evaluations"
+      }
+    ],
+    "tables": [
+      {
+        "relname": "_backup_edinburgh_osr_2026_08_22",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "_backup_eligible_countries_2026_08_21",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "_backup_eligible_countries_2026_08_22b",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "_backup_language_metu_2026_08_21",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "_backup_language_of_instruction_2026_08_21",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "_backup_opportunity_fixes_2026_08_22",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "_backup_university_deadlines_2026_08_21",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "_backup_university_requirements_2026_08_21",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "_backup_yokatlas_confidence_2026_08_22",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "activities",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "advisor_conversations",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "advisor_messages",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "ai_recommendations",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "ai_usage",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "application_requirements",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "applications",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "awards",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "blocked_users",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "canonical_entities",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "canonical_entity_merges",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "canonical_field_policies",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "career_goals",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "certifications",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "connections",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "contact_info",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "courses",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "deadline_research_queue",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "education_records",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "entity_aliases",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "entity_evidence",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "entity_external_ids",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "entity_locations",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "entity_record_links",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "entity_relationships",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "entity_verification_queue",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "evidence_files",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "external_sync_jobs",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "featured_items",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "global_university_discovery_queue",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "languages",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "message_reports",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "messages",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "notifications",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "opportunities",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "opportunity_matches",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "opportunity_sources",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "product_events",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "profile_score_snapshots",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "profile_scores",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "profile_views",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "profiles",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "program_research_queue",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "projects",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "provider_health",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "qs2027_import_staging",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "rate_limit_events",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "recommendations",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "requirement_groups",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "requirement_research_queue",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "requirement_source_conflicts",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "research_experiences",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "saved_opportunities",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "school_credentials",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "school_outcome_metrics",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "school_profiles",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "school_university_outcomes",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "skill_endorsements",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "skills",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "sports_experiences",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "student_interests",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "student_requirement_evaluations",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "target_universities",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "test_scores",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "universities",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "university_deadlines",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "university_profile_metrics",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "university_profile_verification_queue",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "university_program_placement_cycles",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "university_programs",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "university_rankings",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "university_requirements",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "university_sources",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "university_statistics",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "volunteering_experiences",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "weekly_actions",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "weekly_plans",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "work_experiences",
+        "relrowsecurity": true
+      }
+    ],
+    "policies": [
+      {
+        "cmd": "ALL",
+        "qual": "(user_id = auth.uid())",
+        "roles": [
+          "public"
+        ],
+        "tablename": "ai_recommendations",
+        "policyname": "owner full access",
+        "with_check": "(user_id = auth.uid())"
+      },
+      {
+        "cmd": "ALL",
+        "qual": "(user_id = auth.uid())",
+        "roles": [
+          "public"
+        ],
+        "tablename": "evidence_files",
+        "policyname": "owner full access",
+        "with_check": "(user_id = auth.uid())"
+      },
+      {
+        "cmd": "INSERT",
+        "qual": null,
+        "roles": [
+          "public"
+        ],
+        "tablename": "message_reports",
+        "policyname": "create own report",
+        "with_check": "(reporter_id = auth.uid())"
+      },
+      {
+        "cmd": "SELECT",
+        "qual": "(reporter_id = auth.uid())",
+        "roles": [
+          "public"
+        ],
+        "tablename": "message_reports",
+        "policyname": "select own filed reports",
+        "with_check": null
+      },
+      {
+        "cmd": "ALL",
+        "qual": "(user_id = auth.uid())",
+        "roles": [
+          "public"
+        ],
+        "tablename": "opportunity_matches",
+        "policyname": "owner full access",
+        "with_check": "(user_id = auth.uid())"
+      },
+      {
+        "cmd": "ALL",
+        "qual": "(user_id = auth.uid())",
+        "roles": [
+          "public"
+        ],
+        "tablename": "profile_score_snapshots",
+        "policyname": "owner full access",
+        "with_check": "(user_id = auth.uid())"
+      },
+      {
+        "cmd": "ALL",
+        "qual": "(user_id = auth.uid())",
+        "roles": [
+          "public"
+        ],
+        "tablename": "profile_scores",
+        "policyname": "owner full access",
+        "with_check": "(user_id = auth.uid())"
+      },
+      {
+        "cmd": "SELECT",
+        "qual": "(id = auth.uid())",
+        "roles": [
+          "public"
+        ],
+        "tablename": "profiles",
+        "policyname": "select own profile",
+        "with_check": null
+      },
+      {
+        "cmd": "UPDATE",
+        "qual": "(id = auth.uid())",
+        "roles": [
+          "public"
+        ],
+        "tablename": "profiles",
+        "policyname": "update own profile",
+        "with_check": "(id = auth.uid())"
+      },
+      {
+        "cmd": "ALL",
+        "qual": "(user_id = auth.uid())",
+        "roles": [
+          "public"
+        ],
+        "tablename": "student_requirement_evaluations",
+        "policyname": "owner full access",
+        "with_check": "(user_id = auth.uid())"
+      }
+    ],
+    "view_grants": [
+      {
+        "grantee": "postgres",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "postgres",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "postgres",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "postgres",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "postgres",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "postgres",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "postgres",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "anon",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "anon",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "anon",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "authenticated",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "authenticated",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "authenticated",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "service_role",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "service_role",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "service_role",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "service_role",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "service_role",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "service_role",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "service_role",
+        "privilege_type": "TRIGGER"
+      }
+    ]
+  },
+  "securityChecks": {
+    "storage": [
+      {
+        "id": "evidence",
+        "public": false,
+        "file_size_limit": null
+      },
+      {
+        "id": "cv-uploads",
+        "public": false,
+        "file_size_limit": null
+      },
+      {
+        "id": "university-images",
+        "public": true,
+        "file_size_limit": 5000000
+      }
+    ],
+    "rls_counts": {
+      "tables": 87,
+      "rls_disabled": 0
+    },
+    "trigger_defs": [
+      "CREATE TRIGGER profiles_00_guard_protected_columns BEFORE UPDATE OF is_admin ON public.profiles FOR EACH ROW EXECUTE FUNCTION profiles_guard_protected_columns()"
+    ],
+    "schema_presence": null,
+    "guard_definition": null
+  },
+  "operations": {
+    "jobs": [
+      {
+        "runs": 2,
+        "items": 0,
+        "status": "succeeded",
+        "job_name": "deadline_reminders",
+        "latest_run": "2026-08-22T11:44:45.64372+00:00"
+      }
+    ],
+    "ai_usage": [
+      {
+        "calls": 13,
+        "model": "claude-sonnet-5",
+        "feature": "weekly_plan",
+        "provider": "anthropic",
+        "cost_rows": 12,
+        "last_call": "2026-08-24T14:06:34.866699+00:00",
+        "input_tokens": 48791,
+        "output_tokens": 10853,
+        "recorded_estimated_cost": 0.2881
+      },
+      {
+        "calls": 10,
+        "model": "claude-sonnet-5",
+        "feature": "advisor_chat",
+        "provider": "anthropic",
+        "cost_rows": 8,
+        "last_call": "2026-08-24T20:37:58.385069+00:00",
+        "input_tokens": 34748,
+        "output_tokens": 11653,
+        "recorded_estimated_cost": 0.2366
+      },
+      {
+        "calls": 3,
+        "model": "test-model",
+        "feature": "advisor_chat",
+        "provider": "anthropic",
+        "cost_rows": 0,
+        "last_call": "2026-08-15T12:51:15.085589+00:00",
+        "input_tokens": 300,
+        "output_tokens": 150,
+        "recorded_estimated_cost": null
+      },
+      {
+        "calls": 1,
+        "model": "claude-sonnet-5",
+        "feature": "cv_extraction",
+        "provider": "anthropic",
+        "cost_rows": 1,
+        "last_call": "2026-08-24T06:40:58.207623+00:00",
+        "input_tokens": 5047,
+        "output_tokens": 3172,
+        "recorded_estimated_cost": 0.0627
+      },
+      {
+        "calls": 1,
+        "model": "claude-sonnet-5",
+        "feature": "achievement_refinement",
+        "provider": "anthropic",
+        "cost_rows": 1,
+        "last_call": "2026-08-24T06:45:38.26708+00:00",
+        "input_tokens": 1131,
+        "output_tokens": 140,
+        "recorded_estimated_cost": 0.0055
+      }
+    ],
+    "profile_guard": "CREATE OR REPLACE FUNCTION public.profiles_guard_protected_columns()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\nbegin\n  if pg_catalog.pg_trigger_depth() <= 1 and current_user <> 'service_role' then\n    new.is_admin := old.is_admin;\n  end if;\n  return new;\nend;\n$function$\n",
+    "cron_available": false,
+    "provider_health": [
+      {
+        "status": "degraded",
+        "provider": "openalex",
+        "last_failure_at": "2026-08-17T22:26:12.736+00:00",
+        "last_success_at": null
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "version": "20260815123947",
+      "name": "full_schema_through_0024"
+    },
+    {
+      "version": "20260815124001",
+      "name": "fix_connection_privacy_leak"
+    },
+    {
+      "version": "20260815124459",
+      "name": "function_search_path_hardening"
+    },
+    {
+      "version": "20260815143405",
+      "name": "sports_experiences"
+    },
+    {
+      "version": "20260815143424",
+      "name": "messaging"
+    },
+    {
+      "version": "20260816122558",
+      "name": "0029_story_notes"
+    },
+    {
+      "version": "20260816140539",
+      "name": "add_canonical_entity_registry"
+    },
+    {
+      "version": "20260816141033",
+      "name": "add_canonical_entity_search"
+    },
+    {
+      "version": "20260816141733",
+      "name": "add_entity_verification_queue"
+    },
+    {
+      "version": "20260816150552",
+      "name": "canonical_entity_references_across_profile_fields"
+    },
+    {
+      "version": "20260816150740",
+      "name": "canonical_entity_relationships_and_locations"
+    },
+    {
+      "version": "20260816151010",
+      "name": "canonical_entity_user_submitted_and_merge_workflow"
+    },
+    {
+      "version": "20260816214041",
+      "name": "university_rankings_and_profile_metrics"
+    },
+    {
+      "version": "20260816215404",
+      "name": "current_university_student_counts_view"
+    },
+    {
+      "version": "20260816215952",
+      "name": "global_university_discovery_queue"
+    },
+    {
+      "version": "20260816232633",
+      "name": "enable_pg_net_for_verified_dataset_ingest"
+    },
+    {
+      "version": "20260816232748",
+      "name": "qs2027_top1000_staging_and_csv_parser"
+    },
+    {
+      "version": "20260816234651",
+      "name": "0028_program_requirement_dedup_indexes"
+    },
+    {
+      "version": "20260816234702",
+      "name": "0030_moderation"
+    },
+    {
+      "version": "20260816234754",
+      "name": "0031_messages_realtime"
+    },
+    {
+      "version": "20260816234837",
+      "name": "0032_ingestion_dedup_and_unknown_fields"
+    },
+    {
+      "version": "20260816234942",
+      "name": "0033_professional_profile_core"
+    },
+    {
+      "version": "20260816234959",
+      "name": "0034_skill_endorsements"
+    },
+    {
+      "version": "20260816235015",
+      "name": "0035_recommendations"
+    },
+    {
+      "version": "20260816235027",
+      "name": "0036_profile_views"
+    },
+    {
+      "version": "20260816235243",
+      "name": "0037_public_profile_headline_about"
+    },
+    {
+      "version": "20260817000011",
+      "name": "0038_canonical_entity_registry"
+    },
+    {
+      "version": "20260817000243",
+      "name": "0039_canonical_registry_reconciliation"
+    },
+    {
+      "version": "20260817002349",
+      "name": "0040_post_reconciliation_security"
+    },
+    {
+      "version": "20260817084004",
+      "name": "opportunity_verification_taxonomy"
+    },
+    {
+      "version": "20260817103356",
+      "name": "university_programs_enrichment"
+    },
+    {
+      "version": "20260817135504",
+      "name": "acquisition_targets_and_idempotency"
+    },
+    {
+      "version": "20260818131825",
+      "name": "opportunity_online_program_category"
+    },
+    {
+      "version": "20260819213343",
+      "name": "0043_university_duplicate_supersession"
+    },
+    {
+      "version": "20260819213358",
+      "name": "0046_advisor_message_failure_state"
+    },
+    {
+      "version": "20260821091455",
+      "name": "outlook_not_applicable"
+    },
+    {
+      "version": "20260821100448",
+      "name": "program_dedup_index_language"
+    },
+    {
+      "version": "20260821105716",
+      "name": "requirement_deadline_research_queue"
+    },
+    {
+      "version": "20260821121459",
+      "name": "requirement_alternatives_and_exclusions"
+    },
+    {
+      "version": "20260821124024",
+      "name": "program_dedup_index_url"
+    },
+    {
+      "version": "20260821131650",
+      "name": "program_dedup_index_degree_type"
+    },
+    {
+      "version": "20260821174017",
+      "name": "university_program_placement_cycles"
+    },
+    {
+      "version": "20260821184903",
+      "name": "requirement_shape_representability"
+    },
+    {
+      "version": "20260823145833",
+      "name": "0047_structured_eligibility_facts"
+    },
+    {
+      "version": "20260823145900",
+      "name": "0060_opportunity_country_eligibility_confirmed_open"
+    }
+  ],
+  "securityAdvisors": [
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`public._backup_edinburgh_osr_2026_08_22\\` has RLS enabled, but no policies exist",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "metadata": {
+        "name": "_backup_edinburgh_osr_2026_08_22",
+        "type": "table",
+        "schema": "public"
+      },
+      "cache_key": "rls_enabled_no_policy_public__backup_edinburgh_osr_2026_08_22",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`public._backup_eligible_countries_2026_08_21\\` has RLS enabled, but no policies exist",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "metadata": {
+        "name": "_backup_eligible_countries_2026_08_21",
+        "type": "table",
+        "schema": "public"
+      },
+      "cache_key": "rls_enabled_no_policy_public__backup_eligible_countries_2026_08_21",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`public._backup_eligible_countries_2026_08_22b\\` has RLS enabled, but no policies exist",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "metadata": {
+        "name": "_backup_eligible_countries_2026_08_22b",
+        "type": "table",
+        "schema": "public"
+      },
+      "cache_key": "rls_enabled_no_policy_public__backup_eligible_countries_2026_08_22b",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`public._backup_language_metu_2026_08_21\\` has RLS enabled, but no policies exist",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "metadata": {
+        "name": "_backup_language_metu_2026_08_21",
+        "type": "table",
+        "schema": "public"
+      },
+      "cache_key": "rls_enabled_no_policy_public__backup_language_metu_2026_08_21",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`public._backup_language_of_instruction_2026_08_21\\` has RLS enabled, but no policies exist",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "metadata": {
+        "name": "_backup_language_of_instruction_2026_08_21",
+        "type": "table",
+        "schema": "public"
+      },
+      "cache_key": "rls_enabled_no_policy_public__backup_language_of_instruction_2026_08_21",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`public._backup_opportunity_fixes_2026_08_22\\` has RLS enabled, but no policies exist",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "metadata": {
+        "name": "_backup_opportunity_fixes_2026_08_22",
+        "type": "table",
+        "schema": "public"
+      },
+      "cache_key": "rls_enabled_no_policy_public__backup_opportunity_fixes_2026_08_22",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`public._backup_university_deadlines_2026_08_21\\` has RLS enabled, but no policies exist",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "metadata": {
+        "name": "_backup_university_deadlines_2026_08_21",
+        "type": "table",
+        "schema": "public"
+      },
+      "cache_key": "rls_enabled_no_policy_public__backup_university_deadlines_2026_08_21",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`public._backup_university_requirements_2026_08_21\\` has RLS enabled, but no policies exist",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "metadata": {
+        "name": "_backup_university_requirements_2026_08_21",
+        "type": "table",
+        "schema": "public"
+      },
+      "cache_key": "rls_enabled_no_policy_public__backup_university_requirements_2026_08_21",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`public._backup_yokatlas_confidence_2026_08_22\\` has RLS enabled, but no policies exist",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "metadata": {
+        "name": "_backup_yokatlas_confidence_2026_08_22",
+        "type": "table",
+        "schema": "public"
+      },
+      "cache_key": "rls_enabled_no_policy_public__backup_yokatlas_confidence_2026_08_22",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`public.canonical_entity_merges\\` has RLS enabled, but no policies exist",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "metadata": {
+        "name": "canonical_entity_merges",
+        "type": "table",
+        "schema": "public"
+      },
+      "cache_key": "rls_enabled_no_policy_public_canonical_entity_merges",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`public.canonical_field_policies\\` has RLS enabled, but no policies exist",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "metadata": {
+        "name": "canonical_field_policies",
+        "type": "table",
+        "schema": "public"
+      },
+      "cache_key": "rls_enabled_no_policy_public_canonical_field_policies",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`public.deadline_research_queue\\` has RLS enabled, but no policies exist",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "metadata": {
+        "name": "deadline_research_queue",
+        "type": "table",
+        "schema": "public"
+      },
+      "cache_key": "rls_enabled_no_policy_public_deadline_research_queue",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`public.entity_locations\\` has RLS enabled, but no policies exist",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "metadata": {
+        "name": "entity_locations",
+        "type": "table",
+        "schema": "public"
+      },
+      "cache_key": "rls_enabled_no_policy_public_entity_locations",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`public.entity_relationships\\` has RLS enabled, but no policies exist",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "metadata": {
+        "name": "entity_relationships",
+        "type": "table",
+        "schema": "public"
+      },
+      "cache_key": "rls_enabled_no_policy_public_entity_relationships",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`public.entity_verification_queue\\` has RLS enabled, but no policies exist",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "metadata": {
+        "name": "entity_verification_queue",
+        "type": "table",
+        "schema": "public"
+      },
+      "cache_key": "rls_enabled_no_policy_public_entity_verification_queue",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`public.external_sync_jobs\\` has RLS enabled, but no policies exist",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "metadata": {
+        "name": "external_sync_jobs",
+        "type": "table",
+        "schema": "public"
+      },
+      "cache_key": "rls_enabled_no_policy_public_external_sync_jobs",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`public.global_university_discovery_queue\\` has RLS enabled, but no policies exist",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "metadata": {
+        "name": "global_university_discovery_queue",
+        "type": "table",
+        "schema": "public"
+      },
+      "cache_key": "rls_enabled_no_policy_public_global_university_discovery_queue",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`public.product_events\\` has RLS enabled, but no policies exist",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "metadata": {
+        "name": "product_events",
+        "type": "table",
+        "schema": "public"
+      },
+      "cache_key": "rls_enabled_no_policy_public_product_events",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`public.program_research_queue\\` has RLS enabled, but no policies exist",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "metadata": {
+        "name": "program_research_queue",
+        "type": "table",
+        "schema": "public"
+      },
+      "cache_key": "rls_enabled_no_policy_public_program_research_queue",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`public.provider_health\\` has RLS enabled, but no policies exist",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "metadata": {
+        "name": "provider_health",
+        "type": "table",
+        "schema": "public"
+      },
+      "cache_key": "rls_enabled_no_policy_public_provider_health",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`public.qs2027_import_staging\\` has RLS enabled, but no policies exist",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "metadata": {
+        "name": "qs2027_import_staging",
+        "type": "table",
+        "schema": "public"
+      },
+      "cache_key": "rls_enabled_no_policy_public_qs2027_import_staging",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`public.requirement_research_queue\\` has RLS enabled, but no policies exist",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "metadata": {
+        "name": "requirement_research_queue",
+        "type": "table",
+        "schema": "public"
+      },
+      "cache_key": "rls_enabled_no_policy_public_requirement_research_queue",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "detail": "Table \\`public.university_profile_verification_queue\\` has RLS enabled, but no policies exist",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "metadata": {
+        "name": "university_profile_verification_queue",
+        "type": "table",
+        "schema": "public"
+      },
+      "cache_key": "rls_enabled_no_policy_public_university_profile_verification_queue",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "security_definer_view",
+      "title": "Security Definer View",
+      "level": "ERROR",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects views defined with the SECURITY DEFINER property. These views enforce Postgres permissions and row level security policies (RLS) of the view creator, rather than that of the querying user",
+      "detail": "View \\`public.public_profiles\\` is defined with the SECURITY DEFINER property",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0010_security_definer_view",
+      "metadata": {
+        "name": "public_profiles",
+        "type": "view",
+        "schema": "public"
+      },
+      "cache_key": "security_definer_view_public_public_profiles",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "extension_in_public",
+      "title": "Extension in Public",
+      "level": "WARN",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects extensions installed in the \\`public\\` schema.",
+      "detail": "Extension \\`pg_trgm\\` is installed in the public schema. Move it to another schema.",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0014_extension_in_public",
+      "metadata": {
+        "name": "pg_trgm",
+        "type": "extension",
+        "schema": "public"
+      },
+      "cache_key": "extension_in_public_pg_trgm",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "extension_in_public",
+      "title": "Extension in Public",
+      "level": "WARN",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects extensions installed in the \\`public\\` schema.",
+      "detail": "Extension \\`unaccent\\` is installed in the public schema. Move it to another schema.",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0014_extension_in_public",
+      "metadata": {
+        "name": "unaccent",
+        "type": "extension",
+        "schema": "public"
+      },
+      "cache_key": "extension_in_public_unaccent",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "anon_security_definer_function_executable",
+      "title": "Public Can Execute SECURITY DEFINER Function",
+      "level": "WARN",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects `SECURITY DEFINER` functions that are callable without signing in. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if it is not meant to be public.",
+      "detail": "Function `public.is_blocked_between(user_a uuid, user_b uuid)` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/is_blocked_between`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable",
+      "metadata": {
+        "name": "is_blocked_between",
+        "schema": "public",
+        "language": "sql",
+        "arguments": "user_a uuid, user_b uuid",
+        "security_definer": true
+      },
+      "cache_key": "anon_security_definer_function_executable_public_is_blocked_between_user_a uuid, user_b uuid",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "authenticated_security_definer_function_executable",
+      "title": "Signed-In Users Can Execute SECURITY DEFINER Function",
+      "level": "WARN",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects `SECURITY DEFINER` functions that are callable by signed-in users. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if signed-in users should not call it.",
+      "detail": "Function `public.create_or_resolve_user_submitted_entity(p_entity_type text, p_display_name text, p_country_code text, p_city text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/create_or_resolve_user_submitted_entity`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable",
+      "metadata": {
+        "name": "create_or_resolve_user_submitted_entity",
+        "schema": "public",
+        "language": "plpgsql",
+        "arguments": "p_entity_type text, p_display_name text, p_country_code text, p_city text",
+        "security_definer": true
+      },
+      "cache_key": "authenticated_security_definer_function_executable_public_create_or_resolve_user_submitted_entity_p_entity_type text, p_display_name text, p_country_code text, p_city text",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "authenticated_security_definer_function_executable",
+      "title": "Signed-In Users Can Execute SECURITY DEFINER Function",
+      "level": "WARN",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects `SECURITY DEFINER` functions that are callable by signed-in users. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if signed-in users should not call it.",
+      "detail": "Function `public.is_blocked_between(user_a uuid, user_b uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/is_blocked_between`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable",
+      "metadata": {
+        "name": "is_blocked_between",
+        "schema": "public",
+        "language": "sql",
+        "arguments": "user_a uuid, user_b uuid",
+        "security_definer": true
+      },
+      "cache_key": "authenticated_security_definer_function_executable_public_is_blocked_between_user_a uuid, user_b uuid",
+      "observed_at": "2026-08-28T10:19:37.440Z"
+    },
+    {
+      "name": "auth_leaked_password_protection",
+      "title": "Leaked Password Protection Disabled",
+      "level": "WARN",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Leaked password protection is currently disabled.",
+      "detail": "Supabase Auth prevents the use of compromised passwords by checking against HaveIBeenPwned.org. Enable this feature to enhance security.",
+      "cache_key": "auth_leaked_password_protection",
+      "remediation": "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection",
+      "metadata": {
+        "type": "auth",
+        "entity": "Auth"
+      }
+    }
+  ],
+  "verification": {
+    "lint": "PASS",
+    "typecheck": "PASS",
+    "workingTreeTests": {
+      "filesPassed": 166,
+      "filesFailed": 1,
+      "testsPassed": 2476,
+      "testsFailed": 3,
+      "cause": "Untracked retrieved_at_backfill_2026-08-23.sql in JSONL-only university-requirements corpus directory"
+    },
+    "cleanGitCloneTests": {
+      "filesPassed": 167,
+      "testsPassed": 2479
+    },
+    "build": "NOT VERIFIED LOCALLY: Google Fonts network failure on first run; subsequent escalation runs hit Turbopack EPERM binding local process port.",
+    "githubCI": {
+      "runId": 32774560018,
+      "conclusion": "success",
+      "createdAt": "2026-08-24T20:33:29Z"
+    },
+    "integrations": {
+      "Supabase": "OK",
+      "SupabaseSecret": "OK",
+      "Anthropic": "OK",
+      "Tavily": "Missing credential in this checkout",
+      "CollegeScorecard": "Missing credential in this checkout",
+      "OpenAlex": "OK"
+    }
+  },
+  "git": {
+    "localBranches": 26,
+    "localWorktrees": 23,
+    "historyCommits": 1338,
+    "preexistingUntrackedFiles": 51,
+    "repoPublic": true,
+    "openPullRequests": [
+      150,
+      155,
+      157
+    ]
+  },
+  "vercel": "No Oryn-named or akirik28/ORYN-linked project found among the 10 projects returned for the connected team; other hosts/accounts not excluded."
+}

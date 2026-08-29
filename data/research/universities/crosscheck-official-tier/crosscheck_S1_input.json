@@ -1,0 +1,497 @@
+[
+  {
+    "rn": 9,
+    "id": "0230f735-c2a9-484c-b03e-d694448ec529",
+    "name": "Universidad Panamericana (UP)",
+    "country": "Mexico",
+    "website_url": "https://www.up.edu.mx",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/0230f735-c2a9-484c-b03e-d694448ec529/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 16,
+    "id": "03c8faf1-4b30-47fe-b09e-8851b96c1f6e",
+    "name": "University College London",
+    "country": "United Kingdom",
+    "website_url": "https://www.ucl.ac.uk",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/03c8faf1-4b30-47fe-b09e-8851b96c1f6e/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 37,
+    "id": "0a6ddc6d-8213-4fb1-91a7-c21c5f88c721",
+    "name": "Osaka Metropolitan University",
+    "country": "Japan",
+    "website_url": "https://www.omu.ac.jp",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/0a6ddc6d-8213-4fb1-91a7-c21c5f88c721/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 38,
+    "id": "0a746401-b1e5-4ec7-af9b-5d3f142400f8",
+    "name": "Nagasaki University",
+    "country": "Japan",
+    "website_url": "http://www.nagasaki-u.ac.jp/en/",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/0a746401-b1e5-4ec7-af9b-5d3f142400f8/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 43,
+    "id": "0c122f49-3047-43c9-8ee9-e5a2ecf390a6",
+    "name": "Indian Institute of Technology Kanpur (IITK)",
+    "country": "India",
+    "website_url": "https://www.iitk.ac.in",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/0c122f49-3047-43c9-8ee9-e5a2ecf390a6/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 50,
+    "id": "0e23c5e5-a5ad-4912-b4a7-ef2e403dda68",
+    "name": "University of Bordeaux",
+    "country": "France",
+    "website_url": "https://www.u-bordeaux.fr",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/0e23c5e5-a5ad-4912-b4a7-ef2e403dda68/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 51,
+    "id": "0ec8f351-4380-4073-8dd9-7a7ea49f63d7",
+    "name": "Victoria University",
+    "country": "Australia",
+    "website_url": "https://www.vu.edu.au",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/0ec8f351-4380-4073-8dd9-7a7ea49f63d7/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 52,
+    "id": "0f69e2a1-bc59-4674-ba60-a78fcf759afd",
+    "name": "University of Groningen",
+    "country": "Netherlands",
+    "website_url": "https://www.rug.nl",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/0f69e2a1-bc59-4674-ba60-a78fcf759afd/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 54,
+    "id": "0fa9ed93-9712-43f0-8af4-6c00402e4652",
+    "name": "The University of Tennessee, Knoxville",
+    "country": "United States",
+    "website_url": "https://www.utk.edu",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/0fa9ed93-9712-43f0-8af4-6c00402e4652/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 55,
+    "id": "0fd60c92-ea8d-41f4-ac81-ee1b8eed09c9",
+    "name": "City University of New York",
+    "country": "United States",
+    "website_url": "http://www.cuny.edu/index.html",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/0fd60c92-ea8d-41f4-ac81-ee1b8eed09c9/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 59,
+    "id": "117c7d03-7af9-44e9-a14e-d656a876a149",
+    "name": "Northumbria University at Newcastle",
+    "country": "United Kingdom",
+    "website_url": "https://www.northumbria.ac.uk/",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/117c7d03-7af9-44e9-a14e-d656a876a149/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 60,
+    "id": "1185e720-36d4-4bbc-b4bb-fced79b73532",
+    "name": "University of Pennsylvania",
+    "country": "United States",
+    "website_url": "https://www.upenn.edu",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/1185e720-36d4-4bbc-b4bb-fced79b73532/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 63,
+    "id": "126d7147-0a13-48bf-9044-d0e0b3591ed1",
+    "name": "Wake Forest University",
+    "country": "United States",
+    "website_url": "https://www.wfu.edu",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/126d7147-0a13-48bf-9044-d0e0b3591ed1/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 70,
+    "id": "1396b081-4f9a-40d6-8792-0c7f5590d63a",
+    "name": "Vrije Universiteit Amsterdam",
+    "country": "Netherlands",
+    "website_url": "https://vu.nl/",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/1396b081-4f9a-40d6-8792-0c7f5590d63a/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 71,
+    "id": "139b1db0-bf2e-45f7-877e-7153a8fb9e28",
+    "name": "University of Saskatchewan",
+    "country": "Canada",
+    "website_url": "https://www.usask.ca/",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/139b1db0-bf2e-45f7-877e-7153a8fb9e28/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 78,
+    "id": "15081154-74b1-4329-8f7d-1a380c75de27",
+    "name": "Erasmus University Rotterdam",
+    "country": "Netherlands",
+    "website_url": "https://www.eur.nl",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/15081154-74b1-4329-8f7d-1a380c75de27/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 83,
+    "id": "15acf1d1-d232-407d-9206-b18dda4b444a",
+    "name": "University of Jyv\u00e4skyl\u00e4",
+    "country": "Finland",
+    "website_url": "https://www.jyu.fi",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/15acf1d1-d232-407d-9206-b18dda4b444a/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 89,
+    "id": "18a8ad38-0e8b-436d-96bd-251a3c71cc2b",
+    "name": "Oregon State University",
+    "country": "United States",
+    "website_url": "https://oregonstate.edu",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/18a8ad38-0e8b-436d-96bd-251a3c71cc2b/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 93,
+    "id": "19736cb1-ad3f-48ba-b99f-ef56b2eb89ae",
+    "name": "University of Ljubljana",
+    "country": "Slovenia",
+    "website_url": "http://www.uni-lj.si/",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/19736cb1-ad3f-48ba-b99f-ef56b2eb89ae/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 101,
+    "id": "1babbe78-e0bf-4311-92f8-b5f22d4d67d2",
+    "name": "National Taiwan University (NTU)",
+    "country": "Taiwan",
+    "website_url": "http://www.ntu.edu.tw/english/",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/1babbe78-e0bf-4311-92f8-b5f22d4d67d2/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 103,
+    "id": "1d5141d0-fc17-497e-83bd-710817846b1e",
+    "name": "Sunway University",
+    "country": "Malaysia",
+    "website_url": "https://sunwayuniversity.edu.my",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/1d5141d0-fc17-497e-83bd-710817846b1e/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 112,
+    "id": "1f49df7e-3641-4ea5-b22d-61a750bc7466",
+    "name": "University at Buffalo SUNY",
+    "country": "United States",
+    "website_url": "https://www.buffalo.edu/",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/1f49df7e-3641-4ea5-b22d-61a750bc7466/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 115,
+    "id": "202a12e6-8cf5-4f09-8209-3b76a06a2889",
+    "name": "University of Turku",
+    "country": "Finland",
+    "website_url": "https://www.utu.fi",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/202a12e6-8cf5-4f09-8209-3b76a06a2889/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 124,
+    "id": "22795b09-b3eb-411e-9541-2b7a284e3d45",
+    "name": "University of Connecticut",
+    "country": "United States",
+    "website_url": "http://uconn.edu/",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/22795b09-b3eb-411e-9541-2b7a284e3d45/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 129,
+    "id": "23c7ea1f-9751-4da3-8f1c-af1379c3c6c1",
+    "name": "National Research Tomsk Polytechnic University",
+    "country": "Russia",
+    "website_url": "https://tpu.ru",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/23c7ea1f-9751-4da3-8f1c-af1379c3c6c1/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 131,
+    "id": "24835807-025b-4c93-ac2a-400f8c492603",
+    "name": "TUHH Hamburg University of Technology",
+    "country": "Germany",
+    "website_url": "https://www.tuhh.de",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/24835807-025b-4c93-ac2a-400f8c492603/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 132,
+    "id": "24c16add-3d39-47ea-8619-84fd1b8302ac",
+    "name": "University of Guelph",
+    "country": "Canada",
+    "website_url": "https://www.uoguelph.ca",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/24c16add-3d39-47ea-8619-84fd1b8302ac/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 143,
+    "id": "28292c7a-c7a6-4e4e-88ba-9e12da72fc84",
+    "name": "United Arab Emirates University",
+    "country": "United Arab Emirates",
+    "website_url": "https://www.uaeu.ac.ae",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/28292c7a-c7a6-4e4e-88ba-9e12da72fc84/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 147,
+    "id": "295ca3b6-4128-4f1c-a350-a94a0f6fd4b5",
+    "name": "Tokyo University of Agriculture and Technology",
+    "country": "Japan",
+    "website_url": "http://www.tuat.ac.jp/en/",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/295ca3b6-4128-4f1c-a350-a94a0f6fd4b5/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 149,
+    "id": "2971e4b4-b748-47de-b1cb-7d615b22e90d",
+    "name": "Mendel University in Brno",
+    "country": "Czechia",
+    "website_url": "https://mendelu.cz",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/2971e4b4-b748-47de-b1cb-7d615b22e90d/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 154,
+    "id": "2ad44419-3d50-43c8-beaa-fa0ab9c17ffd",
+    "name": "Radboud University",
+    "country": "Netherlands",
+    "website_url": "https://www.ru.nl",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/2ad44419-3d50-43c8-beaa-fa0ab9c17ffd/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 155,
+    "id": "2adb063f-32fc-4bfd-829e-8c25109bf2ab",
+    "name": "Indian Institute of Technology (Indian School of Mines), Dhanbad",
+    "country": "India",
+    "website_url": "https://www.iitism.ac.in/",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/2adb063f-32fc-4bfd-829e-8c25109bf2ab/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 156,
+    "id": "2ae11944-eb0a-4521-9854-bdebf85e435c",
+    "name": "The University of Manchester",
+    "country": "United Kingdom",
+    "website_url": "http://www.manchester.ac.uk/",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/2ae11944-eb0a-4521-9854-bdebf85e435c/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 159,
+    "id": "2b960c60-3be0-42f2-ace6-d4ba9a66f153",
+    "name": "Eindhoven University of Technology",
+    "country": "Netherlands",
+    "website_url": "https://www.tue.nl",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/2b960c60-3be0-42f2-ace6-d4ba9a66f153/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 164,
+    "id": "2c6a5e51-acb4-436d-bac1-1cdf486ef17e",
+    "name": "Vilnius University",
+    "country": "Lithuania",
+    "website_url": "https://vu.lt",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/2c6a5e51-acb4-436d-bac1-1cdf486ef17e/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 166,
+    "id": "2c85e2ff-58b0-4ece-a245-776b69bb4cc0",
+    "name": "University of Hull",
+    "country": "United Kingdom",
+    "website_url": "https://www.hull.ac.uk",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/2c85e2ff-58b0-4ece-a245-776b69bb4cc0/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 172,
+    "id": "2f3536ee-884e-4fed-a36f-1d7ad6ab25e3",
+    "name": "Pontificia Universidad Cat\u00f3lica de Valpara\u00edso",
+    "country": "Chile",
+    "website_url": "http://www.ucv.cl",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/2f3536ee-884e-4fed-a36f-1d7ad6ab25e3/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 174,
+    "id": "307ba676-a87c-4baf-926f-e7488ac6562e",
+    "name": "University of North Carolina at Chapel Hill",
+    "country": "United States",
+    "website_url": "https://www.unc.edu",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/307ba676-a87c-4baf-926f-e7488ac6562e/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 179,
+    "id": "3150a1a8-9e51-4573-a0db-8744f9b5a756",
+    "name": "Norwegian University of Life Sciences",
+    "country": "Norway",
+    "website_url": "https://www.nmbu.no",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/3150a1a8-9e51-4573-a0db-8744f9b5a756/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 186,
+    "id": "3302ff29-8bb3-44cc-94bb-636948ada241",
+    "name": "Rochester Institute of Technology (RIT)",
+    "country": "United States",
+    "website_url": "http://www.rit.edu/",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/3302ff29-8bb3-44cc-94bb-636948ada241/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 187,
+    "id": "33a00c4b-04ae-47e3-ac94-6dee4f67e029",
+    "name": "Hokkaido University",
+    "country": "Japan",
+    "website_url": "https://www.global.hokudai.ac.jp/",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/33a00c4b-04ae-47e3-ac94-6dee4f67e029/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 200,
+    "id": "3629d0fc-5c35-4c84-aba1-5fb38ba02d20",
+    "name": "University of Maryland, Baltimore County",
+    "country": "United States",
+    "website_url": "https://umbc.edu",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/3629d0fc-5c35-4c84-aba1-5fb38ba02d20/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 206,
+    "id": "38fd2c0e-e7d2-417e-92b6-919b023281e1",
+    "name": "Drexel University",
+    "country": "United States",
+    "website_url": "https://drexel.edu",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/38fd2c0e-e7d2-417e-92b6-919b023281e1/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 211,
+    "id": "3b78156d-f40b-43e8-8ed7-873baeea0f73",
+    "name": "University of Texas at Austin",
+    "country": "United States",
+    "website_url": "https://www.utexas.edu/",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/3b78156d-f40b-43e8-8ed7-873baeea0f73/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 212,
+    "id": "3be9964a-8f60-4e36-a15f-40e2fbb302b8",
+    "name": "De Montfort University",
+    "country": "United Kingdom",
+    "website_url": "https://www.dmu.ac.uk",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/3be9964a-8f60-4e36-a15f-40e2fbb302b8/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 215,
+    "id": "3c266a0f-c53c-4f42-a210-5b99f58ca720",
+    "name": "Vellore Institute of Technology (VIT), Vellore, India",
+    "country": "India",
+    "website_url": "https://vit.ac.in",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/3c266a0f-c53c-4f42-a210-5b99f58ca720/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 221,
+    "id": "3eb19352-ea80-4404-a224-5db2009a839f",
+    "name": "Palack\u00fd University Olomouc",
+    "country": "Czechia",
+    "website_url": "https://www.upol.cz",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/3eb19352-ea80-4404-a224-5db2009a839f/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 225,
+    "id": "3effd351-e0fa-4bf3-a36a-d5f2dca3558d",
+    "name": "University of Delaware",
+    "country": "United States",
+    "website_url": "https://www.udel.edu",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/3effd351-e0fa-4bf3-a36a-d5f2dca3558d/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 228,
+    "id": "3fb515de-786f-4fdd-ae4a-4f960e95364a",
+    "name": "Universidad Esp\u00edritu Santo (UEES), Ecuador",
+    "country": "Ecuador",
+    "website_url": "https://uees.edu.ec",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/3fb515de-786f-4fdd-ae4a-4f960e95364a/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 230,
+    "id": "3ffb2fe9-a7cf-41f4-b798-ab3160835e22",
+    "name": "Universit\u00e0 degli Studi della Tuscia (University of Tuscia)",
+    "country": "Italy",
+    "website_url": "http://www.unitus.it",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/3ffb2fe9-a7cf-41f4-b798-ab3160835e22/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 243,
+    "id": "42a2cc3c-ee6b-42e7-8812-822718f68094",
+    "name": "Princeton University",
+    "country": "United States",
+    "website_url": "https://www.princeton.edu",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/42a2cc3c-ee6b-42e7-8812-822718f68094/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 244,
+    "id": "42eed32b-a3a1-42fe-9462-60f93d8c80ba",
+    "name": "Universiti Tenaga Nasional (UNITEN)",
+    "country": "Malaysia",
+    "website_url": "http://www.uniten.edu.my/",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/42eed32b-a3a1-42fe-9462-60f93d8c80ba/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 250,
+    "id": "45d43495-4a64-4702-8b1c-d0d1a2ac20fa",
+    "name": "RMIT University",
+    "country": "Australia",
+    "website_url": "https://www.rmit.edu.au/",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/45d43495-4a64-4702-8b1c-d0d1a2ac20fa/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 252,
+    "id": "45de887d-ddba-4680-bdc5-f78d5fb33d49",
+    "name": "Tohoku University",
+    "country": "Japan",
+    "website_url": "http://www.tohoku.ac.jp/en/",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/45de887d-ddba-4680-bdc5-f78d5fb33d49/campus.webp",
+    "shard": "S1"
+  },
+  {
+    "rn": 253,
+    "id": "4605f354-e608-4cc3-b290-ad2362fe2316",
+    "name": "University of Hohenheim",
+    "country": "Germany",
+    "website_url": "https://www.uni-hohenheim.de",
+    "image_url": "https://qtcvcflzxbuagvvwahhu.supabase.co/storage/v1/object/public/university-images/4605f354-e608-4cc3-b290-ad2362fe2316/campus.webp",
+    "shard": "S1"
+  }
+]

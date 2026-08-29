@@ -1,0 +1,422 @@
+[
+  {
+    "rn": 760,
+    "id": "c28dd7ef-f8bd-4565-a959-031068ed8d21",
+    "name": "The University of Melbourne",
+    "country": "Australia",
+    "website_url": "https://www.unimelb.edu.au",
+    "notes": "resolution 498x421 is below the 800x450 minimum",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 762,
+    "id": "c34fbe4c-b16b-4b97-a059-c61a503c763b",
+    "name": "China Medical University",
+    "country": "Taiwan",
+    "website_url": "http://english.cmu.edu.tw/",
+    "notes": "aspect ratio 0.75 is portrait or near-square, not a usable landscape campus photo",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 764,
+    "id": "c3c2ef9a-3e25-4ab0-a553-6ce1280ae139",
+    "name": "Universidade de Santiago de Compostela",
+    "country": "Spain",
+    "website_url": "https://www.usc.gal",
+    "notes": "aspect ratio 0.75 is portrait or near-square, not a usable landscape campus photo",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 779,
+    "id": "c84cdfd9-a607-4272-9e04-85c79852762e",
+    "name": "Kazakh National Agrarian Research University (KazNARU)",
+    "country": "Kazakhstan",
+    "website_url": "https://www.kaznaru.edu.kz",
+    "notes": "2 candidates tried, all failed. Last reason: Candidate found but download failed or exceeded the size cap.",
+    "shard": "S4",
+    "miss_category": "download_fail"
+  },
+  {
+    "rn": 805,
+    "id": "cf4b2b8a-d840-4c5c-bdd5-4a778208e753",
+    "name": "Universit\u00e9 Paris-Est Cr\u00e9teil Val de Marne",
+    "country": "France",
+    "website_url": "https://www.u-pec.fr",
+    "notes": "2 candidates tried, all failed. Last reason: resolution 246x120 is below the 800x450 minimum",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 806,
+    "id": "cf5a77ee-314b-4f15-bf0c-374afbba11f9",
+    "name": "Zurich University of Applied Sciences (ZHAW)",
+    "country": "Switzerland",
+    "website_url": "https://www.zhaw.ch",
+    "notes": "2 candidates tried, all failed. Last reason: resolution 750x750 is below the 800x450 minimum",
+    "shard": "S4",
+    "miss_category": "narrow_miss_resolution"
+  },
+  {
+    "rn": 807,
+    "id": "cf6219b4-efb2-453b-8a7d-2c11e3f5685a",
+    "name": "University of California, Irvine",
+    "country": "United States",
+    "website_url": "http://uci.edu/",
+    "notes": "aspect ratio 1.00 is portrait or near-square, not a usable landscape campus photo",
+    "shard": "S4",
+    "miss_category": "narrow_miss_portrait"
+  },
+  {
+    "rn": 811,
+    "id": "d035525c-7f32-4f59-915a-8856824e6745",
+    "name": "Beirut Arab University",
+    "country": "Lebanon",
+    "website_url": "http://www.bau.edu.lb/Home",
+    "notes": "resolution 688x359 is below the 800x450 minimum",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 820,
+    "id": "d1830bd6-6f7f-4e8f-8511-015b47dba53b",
+    "name": "University of Stavanger",
+    "country": "Norway",
+    "website_url": "https://www.uis.no",
+    "notes": "resolution 594x396 is below the 800x450 minimum",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 840,
+    "id": "d60c0154-e241-49e3-954d-5c86975ec82c",
+    "name": "Aristotle University of Thessaloniki",
+    "country": "Greece",
+    "website_url": "https://www.auth.gr",
+    "notes": "aspect ratio 0.67 is portrait or near-square, not a usable landscape campus photo",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 846,
+    "id": "d6fe8e8f-749f-462d-88b3-b22dfdc11a4c",
+    "name": "California Institute of Technology (Caltech)",
+    "country": "United States",
+    "website_url": "https://www.caltech.edu",
+    "notes": "2 candidates tried, all failed. Last reason: Candidate found but download failed or exceeded the size cap.",
+    "shard": "S4",
+    "miss_category": "download_fail"
+  },
+  {
+    "rn": 851,
+    "id": "d7817c8e-6f29-4bbf-b21d-a127cf12ea2f",
+    "name": "Universidad de Zaragoza",
+    "country": "Spain",
+    "website_url": "https://www.unizar.es",
+    "notes": "aspect ratio 0.75 is portrait or near-square, not a usable landscape campus photo",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 855,
+    "id": "d883e170-741f-4b22-8da1-c3220d60b7b0",
+    "name": "Amirkabir University of Technology",
+    "country": "Iran",
+    "website_url": "http://aut.ac.ir/www/aut/main/?l=3",
+    "notes": "resolution 500x375 is below the 800x450 minimum",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 862,
+    "id": "d9c1ee6a-ee4f-4625-ae73-54ffecb6ece6",
+    "name": "Qassim University",
+    "country": "Saudi Arabia",
+    "website_url": "https://www.qu.edu.sa",
+    "notes": "resolution 768x432 is below the 800x450 minimum",
+    "shard": "S4",
+    "miss_category": "narrow_miss_resolution"
+  },
+  {
+    "rn": 872,
+    "id": "dc1438d3-0749-4c63-bdd3-c3d838de77b9",
+    "name": "Stockholm University",
+    "country": "Sweden",
+    "website_url": "https://www.su.se",
+    "notes": "resolution 768x512 is below the 800x450 minimum",
+    "shard": "S4",
+    "miss_category": "narrow_miss_resolution"
+  },
+  {
+    "rn": 881,
+    "id": "ddc4c7eb-b89b-4916-ba22-fff06fad0f64",
+    "name": "Universit\u00e9 de Montpellier",
+    "country": "France",
+    "website_url": "https://umontpellier.fr",
+    "notes": "resolution 640x480 is below the 800x450 minimum",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 897,
+    "id": "e11ce78d-f6f3-410e-b5f9-46d13072cc43",
+    "name": "Universit\u00e0 Cattolica del Sacro Cuore",
+    "country": "Italy",
+    "website_url": "https://www.unicatt.eu",
+    "notes": "2 candidates tried, all failed. Last reason: resolution 513x315 is below the 800x450 minimum",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 900,
+    "id": "e1b6d768-d36c-4c7a-956a-241b2f2ede58",
+    "name": "Indian Institute of Technology Indore",
+    "country": "India",
+    "website_url": "http://www.iiti.ac.in/",
+    "notes": "Candidate found but download failed or exceeded the size cap.",
+    "shard": "S4",
+    "miss_category": "download_fail"
+  },
+  {
+    "rn": 906,
+    "id": "e35abf98-4855-408a-9e0a-de31253b9906",
+    "name": "Universidade Federal de S\u00e3o Paulo",
+    "country": "Brazil",
+    "website_url": "http://www.unifesp.br/",
+    "notes": "resolution 782x462 is below the 800x450 minimum",
+    "shard": "S4",
+    "miss_category": "narrow_miss_resolution"
+  },
+  {
+    "rn": 916,
+    "id": "e60df6fe-8d07-417d-b324-1c67d4c3e305",
+    "name": "Brunel University of London",
+    "country": "United Kingdom",
+    "website_url": "https://www.brunel.ac.uk",
+    "notes": "2 candidates tried, all failed. Last reason: Candidate found but download failed or exceeded the size cap.",
+    "shard": "S4",
+    "miss_category": "download_fail"
+  },
+  {
+    "rn": 927,
+    "id": "e9dc6d39-be4c-40f1-a680-446dcabc2f07",
+    "name": "Lancaster University",
+    "country": "United Kingdom",
+    "website_url": "https://www.lancaster.ac.uk",
+    "notes": "2 candidates tried, all failed. Last reason: aspect ratio 3.20 is an extreme panorama, unsuitable for a card/hero crop",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 929,
+    "id": "eaf2b11c-e8ce-4a34-8392-fe5f61e08f3e",
+    "name": "University of Strathclyde",
+    "country": "United Kingdom",
+    "website_url": "https://www.strath.ac.uk",
+    "notes": "resolution 720x540 is below the 800x450 minimum",
+    "shard": "S4",
+    "miss_category": "narrow_miss_resolution"
+  },
+  {
+    "rn": 932,
+    "id": "ec277711-4708-497c-ba13-919746848c42",
+    "name": "Auburn University",
+    "country": "United States",
+    "website_url": "https://auburn.edu",
+    "notes": "2 candidates tried, all failed. Last reason: resolution 600x400 is below the 800x450 minimum",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 936,
+    "id": "ecf57a6b-f377-4b40-8260-3f39566b077f",
+    "name": "Universidad de Montevideo (UM)",
+    "country": "Uruguay",
+    "website_url": "https://www.um.edu.uy/",
+    "notes": "aspect ratio 0.66 is portrait or near-square, not a usable landscape campus photo",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 939,
+    "id": "ee404647-916f-450f-8886-60aad5a96490",
+    "name": "INTI International University",
+    "country": "Malaysia",
+    "website_url": "https://newinti.edu.my/",
+    "notes": "resolution 704x528 is below the 800x450 minimum",
+    "shard": "S4",
+    "miss_category": "narrow_miss_resolution"
+  },
+  {
+    "rn": 942,
+    "id": "eeae39bf-c5be-41ef-981b-d1240a581418",
+    "name": "Chang Gung University",
+    "country": "Taiwan",
+    "website_url": "http://www.cgu.edu.tw/",
+    "notes": "resolution 640x480 is below the 800x450 minimum",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 952,
+    "id": "f0a78363-a3b4-4719-afdf-f5418e8b94c0",
+    "name": "Griffith University",
+    "country": "Australia",
+    "website_url": "https://www.griffith.edu.au",
+    "notes": "resolution 735x1024 is below the 800x450 minimum",
+    "shard": "S4",
+    "miss_category": "narrow_miss_resolution"
+  },
+  {
+    "rn": 954,
+    "id": "f0db4548-d270-4a43-9909-b7ef225e2540",
+    "name": "Ewha Womans University",
+    "country": "South Korea",
+    "website_url": "http://www.ewha.ac.kr/mbs/ewhaen/",
+    "notes": "aspect ratio 0.75 is portrait or near-square, not a usable landscape campus photo",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 956,
+    "id": "f12ba3d3-2a19-43a6-95b2-985419ead2e8",
+    "name": "Aix-Marseille University",
+    "country": "France",
+    "website_url": "http://www.univ-amu.fr/",
+    "notes": "aspect ratio 0.75 is portrait or near-square, not a usable landscape campus photo",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 968,
+    "id": "f4dfb6f4-7f7c-4627-8c55-00ff11e13571",
+    "name": "Fudan University",
+    "country": "China",
+    "website_url": "https://fudan.edu.cn",
+    "notes": "resolution 448x336 is below the 800x450 minimum",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 970,
+    "id": "f5efa138-d319-46e6-93c1-317189f07585",
+    "name": "University of Trento",
+    "country": "Italy",
+    "website_url": "https://unitn.it",
+    "notes": "aspect ratio 0.67 is portrait or near-square, not a usable landscape campus photo",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 973,
+    "id": "f7001cf8-3889-468c-ab65-5b8fedf93580",
+    "name": "Diponegoro University",
+    "country": "Indonesia",
+    "website_url": "http://www.undip.ac.id/",
+    "notes": "resolution 1303x369 is below the 800x450 minimum",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 974,
+    "id": "f74ab3bd-97a0-4d65-91bd-973cc6a7f4de",
+    "name": "Universit\u00e9 libre de Bruxelles",
+    "country": "Belgium",
+    "website_url": "https://www.ulb.be",
+    "notes": "2 candidates tried, all failed. Last reason: resolution 314x77 is below the 800x450 minimum",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 978,
+    "id": "f81cf7ff-6cba-4559-b7a2-0aac06bb529f",
+    "name": "Savitribai Phule Pune University",
+    "country": "India",
+    "website_url": "http://www.unipune.ac.in/",
+    "notes": "aspect ratio 0.75 is portrait or near-square, not a usable landscape campus photo",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 982,
+    "id": "f886592f-2d63-4e3a-b65b-2de16915e96d",
+    "name": "Lund University",
+    "country": "Sweden",
+    "website_url": "https://www.lu.se",
+    "notes": "resolution 640x480 is below the 800x450 minimum",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 992,
+    "id": "faad0712-fea4-4897-9f2c-63eb49e2e3ff",
+    "name": "Otto-von-Guericke-Universit\u00e4t Magdeburg",
+    "country": "Germany",
+    "website_url": "https://www.ovgu.de",
+    "notes": "resolution 225x225 is below the 800x450 minimum",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 994,
+    "id": "fb2a3ebf-41f4-4a79-8bbb-fdff8d75e544",
+    "name": "UWE Bristol (University of the West of England)",
+    "country": "United Kingdom",
+    "website_url": "https://www.uwe.ac.uk",
+    "notes": "2 candidates tried, all failed. Last reason: resolution 410x230 is below the 800x450 minimum",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 996,
+    "id": "fb7243be-4a54-411a-94ae-04261dec71b9",
+    "name": "Universitat Aut\u00f2noma de Barcelona",
+    "country": "Spain",
+    "website_url": "https://www.uab.cat",
+    "notes": "aspect ratio 0.85 is portrait or near-square, not a usable landscape campus photo",
+    "shard": "S4",
+    "miss_category": "narrow_miss_portrait"
+  },
+  {
+    "rn": 999,
+    "id": "fd61318c-882e-4d5d-a431-1ae057d88b29",
+    "name": "Heriot-Watt University",
+    "country": "United Kingdom",
+    "website_url": "http://www.hw.ac.uk/",
+    "notes": "2 candidates tried, all failed. Last reason: aspect ratio 2.86 is an extreme panorama, unsuitable for a card/hero crop",
+    "shard": "S4",
+    "miss_category": "narrow_miss_panorama"
+  },
+  {
+    "rn": 1001,
+    "id": "fd9f4dfe-e65c-4ad1-b6b7-7446cc1a90a3",
+    "name": "University of Aberdeen",
+    "country": "United Kingdom",
+    "website_url": "https://www.abdn.ac.uk",
+    "notes": "resolution 640x480 is below the 800x450 minimum",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 1006,
+    "id": "fe9f9181-8756-4343-b641-9abb82843abf",
+    "name": "Alfaisal University",
+    "country": "Saudi Arabia",
+    "website_url": "https://www.alfaisal.edu",
+    "notes": "resolution 251x100 is below the 800x450 minimum",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  },
+  {
+    "rn": 1008,
+    "id": "ff465e34-8a69-463f-9842-65245be3099c",
+    "name": "Cyprus University of Technology",
+    "country": "Cyprus",
+    "website_url": "https://www.cut.ac.cy",
+    "notes": "resolution 200x200 is below the 800x450 minimum",
+    "shard": "S4",
+    "miss_category": "wide_miss"
+  }
+]
