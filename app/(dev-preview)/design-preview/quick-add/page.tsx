@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { Sparkles, Trophy, Medal, FlaskConical, Briefcase, HandHeart, BookOpen, ClipboardCheck, Hammer, BadgeCheck, Dumbbell, GraduationCap } from "lucide-react";
 import { PreviewShell } from "../preview-shell";
+import { SectionHeader } from "@/components/oryn/section-header";
 import { FIXTURE_PROFILE_SIGNAL } from "@/lib/dev/fixtures";
 import { QuickAddEntry, type QuickAddType } from "@/features/profile/quick-add-entry";
 import {
@@ -65,12 +66,15 @@ export default function QuickAddPreviewPage() {
     <PreviewShell signal={FIXTURE_PROFILE_SIGNAL}>
       <div className="max-w-2xl space-y-3">
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Journey — quick add (package 1)</p>
-        <div className="flex items-center justify-between rounded-2xl border p-6">
-          <div>
-            <h2 className="font-display text-2xl">Your journey</h2>
-            <p className="text-sm text-muted-foreground">Everything on one timeline, newest first.</p>
-          </div>
-          <QuickAddEntry types={PREVIEW_TYPES} />
+        {/* The real SectionHeader (components/oryn/section-header.tsx), not an ad-hoc
+            wrapper — this is exactly how app/(app)/profile/page.tsx places QuickAddEntry,
+            so a layout check here reflects production. */}
+        <div className="rounded-2xl border p-6">
+          <SectionHeader
+            title="Your journey"
+            description="Everything on one timeline, newest first."
+            action={<QuickAddEntry types={PREVIEW_TYPES} />}
+          />
         </div>
       </div>
     </PreviewShell>
