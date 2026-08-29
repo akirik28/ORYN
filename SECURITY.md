@@ -106,6 +106,62 @@ observed fact, not just a code-reading conclusion.
   the recipient is currently public before creating a `pending` row — a Server Action is
   directly callable with any argument regardless of what the UI shows, so the "Connect"
   button only appearing on a public profile page is not itself a security boundary.
+- **`public_profiles` required `auth.uid() is not null` as of `0061_public_profiles_require_authenticated.sql`.**
+  Before that migration the view's WHERE clause never checked the caller was signed in at
+  all, so an anonymous request could read any `is_public = true` row's six whitelisted
+  columns. Re-verified live in this pass (Security Gate 1, 2026-08-29,
+  `supabase/tests/security_gate_1_anonymous_and_isolation.sql`): `anon` reads zero rows
+  from the view even for a row with `is_public = true`, while a signed-in, unconnected,
+  non-owner user correctly still sees it.
+
+## Column-level forgery guards (`0062`–`0067`)
+
+RLS answers "which rows can this caller touch," not "which *columns* of a row it already
+owns can it set to anything it wants." A table like `profile_scores` or
+`target_universities` is owner-writable by design (the student legitimately edits other
+fields on the same row), which means a plain owner-scoped RLS policy alone cannot stop
+that same student from directly setting a system-computed column — `score`, `is_admin`,
+`outlook`, `evidence_status` — to whatever value they like in the same request.
+
+The fix is a `BEFORE INSERT OR UPDATE OF <protected columns>` trigger per protected table
+(first established in `0062_profiles_guard_protected_columns.sql` for `profiles.is_admin`,
+extended by `0063` to the two scoring tables plus `opportunity_matches` and
+`student_requirement_evaluations`, and by `0066`/`0067` — Security Gate 1, 2026-08-29 — to
+`target_universities`' outlook/estimate columns and `evidence_status` across all eight
+achievement tables that carry it). On UPDATE it silently resets the protected column(s) back
+to their prior value; on a fresh INSERT it sanitizes them to `NULL` (or a safe default) —
+never `RAISE`, deliberately: an error would reveal exactly which column is guarded and would
+break a legitimate multi-column UPDATE that happens to also touch an ordinary field on the
+same row. The guard checks `current_user <> 'service_role'`
+(`pg_catalog.pg_trigger_depth() <= 1` guards against a trigger re-entering itself), so the
+one intended writer — this app's own background/scoring code, via the admin client — still
+works.
+
+`0065_close_insert_forgery_six_tables.sql` closes a narrower but sharper version of the same
+problem for six tables where *no* legitimate student INSERT exists at all: it removes the
+INSERT policy outright rather than adding a trigger, so a direct insert is rejected, not
+silently sanitized.
+
+None of this introduces a `SECURITY DEFINER` function — every fix here is either a trigger
+scoped to `current_user`, or a `WITH CHECK` subquery that relies on the *caller's own* RLS
+visibility into a referenced table (`0064_message_reports_verify_reported_user.sql`, closing
+message/recommendation report accused-party forgery — a report can only name the actual
+sender/author of the thing it references, verified independently for both the `message_id`
+and `recommendation_id` branches).
+
+Each guarded write has a paired application-side change moving that specific write from the
+RLS-scoped client to the admin client (`lib/scoring/persist.ts`,
+`lib/opportunities/persist-matches.ts`, `lib/requirements/persist.ts`,
+`app/(app)/documents/actions.ts`, `lib/plan/persist.ts`, `lib/admissions/persist.ts`) — pinned
+by `__tests__/security/computed-writes-use-admin-client.test.ts` so a future edit can't
+quietly move a write back onto the caller's own client and silently reopen the exact gap the
+trigger exists to close (the trigger would then reset the legitimate write too, not just a
+forged one). Database-level proof — both the forgery being blocked and the legitimate
+service-role write still working, for every table above, plus anonymous access and two-user
+isolation — lives in `supabase/tests/security_gate_1_self_forgery.sql`,
+`security_gate_1_anonymous_and_isolation.sql`, and `security_gate_1_report_integrity.sql`
+(81 pgTAP assertions total, run via a locally-built Postgres + pgTAP, `supabase start`/Docker
+not being available in this sandbox — see this pass's own closing report for exact commands).
 
 ## Secrets
 
@@ -113,9 +169,18 @@ observed fact, not just a code-reading conclusion.
   `import "server-only"` at the top — Next.js's bundler throws a build error if a
   server-only module is ever imported into client-bundled code, so this is enforced, not
   just a convention.
-- The service-role Supabase client (`lib/supabase/admin.ts`) is only ever constructed in
-  background jobs and admin-verified routes — never to serve a normal user request. Every
-  normal request uses `lib/supabase/server.ts`, which is RLS-scoped to the caller.
+- The service-role Supabase client (`lib/supabase/admin.ts`) is constructed in background
+  jobs and admin-verified routes, and — a deliberate, narrower exception, not an oversight —
+  in a specific set of ordinary student-facing Server Actions that must write a
+  system-computed value the student must not be able to set directly (career-profile
+  scores, opportunity match percentages, requirement evaluations, admission outlook,
+  evidence verification status, account deletion's Storage cleanup). See "Column-level
+  forgery guards" below for the full list and why RLS alone can't close this gap. In every
+  one of these, the *read* side and the caller's own authorization/ownership check stay on
+  `lib/supabase/server.ts` (RLS-scoped) — only the specific write of the protected value
+  moves to the admin client, verified by `__tests__/security/computed-writes-use-admin-client.test.ts`
+  and `__tests__/security/account-deletion.test.ts`. Every other normal request uses
+  `lib/supabase/server.ts` throughout.
 - `.gitignore` excludes `.env*` except `.env.example` (explicitly re-allowed — see the
   `!.env.example` line — since a plain `.env*` glob would otherwise also hide the
   example file from git, defeating its purpose).
@@ -158,9 +223,17 @@ observed fact, not just a code-reading conclusion.
 - No public-by-default profiles, no student-to-student messaging, no public search of
   other students.
 - Full data export (`GET /api/export-data`) and full account deletion
-  (`app/(app)/settings/actions.ts`'s `deleteMyAccount`, admin-client
-  `auth.admin.deleteUser`) are both implemented and reachable from Settings. Deletion
-  cascades through every table via `references ... on delete cascade`.
+  (`app/(app)/settings/actions.ts`'s `deleteMyAccount`) are both implemented and reachable
+  from Settings. Deletion cascades every DB table via `references ... on delete cascade`,
+  and — added 2026-08-29, Security Gate 1, after an audit found it silently missing —
+  separately enumerates and removes the student's objects from both Storage buckets
+  (`evidence`, `cv-uploads`) by their own `{userId}/` prefix, since no DB cascade reaches
+  Storage. Storage cleanup is best-effort: a failure there is logged for follow-up but does
+  not block the account/auth deletion itself (matching this app's existing convention for
+  single-file evidence deletion), and there is currently no user-facing surface for a
+  partial-Storage-failure case — the confirmation dialog's promise to delete evidence files
+  now matches what the code actually attempts, but not every failure mode is user-visible.
+  See `__tests__/security/account-deletion.test.ts`.
 
 ## AI safety
 
@@ -205,8 +278,10 @@ admin Server Action, not just the page.
   `__tests__/security/rate-limit-core.test.ts`), backed by its own `rate_limit_events`
   table. Applied to `/api/export-data` (a repeatable full-account-data dump), and — added
   2026-08-16, for a product where minors message each other — `sendMessage`,
-  `sendConnectionRequest`, and `reportMessage` (thresholds in
-  `lib/security/rate-limit-config.ts`). Ordinary CRUD Server Actions (adding an
+  `sendConnectionRequest`, `reportMessage`, and `reportRecommendation` (thresholds in
+  `lib/security/rate-limit-config.ts`; the latter two were sharing one action key,
+  `report_message`, until Security Gate 1 (2026-08-29) split them — see that file's own
+  comment on `report_recommendation`). Ordinary CRUD Server Actions (adding an
   achievement, updating a field) and `blockUser`/`removeConnection` are still *not*
   individually throttled — they're scoped to the caller's own rows by RLS, and Supabase's
   own infrastructure limits apply, but there's no per-user request cap on them yet. Auth
