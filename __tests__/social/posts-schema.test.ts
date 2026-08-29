@@ -26,12 +26,14 @@ describe("migration numbering", () => {
     // Two lanes collided on a number once already. This fails loudly if another lane
     // lands a 0058 too, instead of one of them silently never running. This test only
     // pins 0058's own uniqueness — it does not assert 0058 is the highest number in the
-    // directory forever; migrations 0061-0065 (the RLS verification package's own fixes,
+    // directory forever; migrations 0061-0067 (the RLS verification package's own fixes,
     // all unapplied like 0058 — public_profiles_require_authenticated,
     // profiles_guard_protected_columns, guard_computed_score_columns,
-    // message_reports_verify_reported_user, close_insert_forgery_six_tables) are what
-    // currently follow it. Bump the literal below when the next migration lands, the
-    // same way this one did — it is a collision guard, not a permanent ceiling.
+    // message_reports_verify_reported_user, close_insert_forgery_six_tables, and — Security
+    // Gate 1, 2026-08-29 — guard_target_university_outlook_columns,
+    // guard_achievement_evidence_status) are what currently follow it. Bump the literal
+    // below when the next migration lands, the same way this one did — it is a collision
+    // guard, not a permanent ceiling.
     const numbers = readdirSync(MIGRATIONS_DIR)
       .filter((f) => f.endsWith(".sql"))
       .map((f) => f.slice(0, 4));
@@ -43,7 +45,9 @@ describe("migration numbering", () => {
     expect(numbers.filter((n) => n === "0063")).toHaveLength(1);
     expect(numbers.filter((n) => n === "0064")).toHaveLength(1);
     expect(numbers.filter((n) => n === "0065")).toHaveLength(1);
-    expect(Math.max(...numbers.map(Number))).toBe(65);
+    expect(numbers.filter((n) => n === "0066")).toHaveLength(1);
+    expect(numbers.filter((n) => n === "0067")).toHaveLength(1);
+    expect(Math.max(...numbers.map(Number))).toBe(67);
   });
 });
 
