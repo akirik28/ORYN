@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LoginForm } from "../_components/login-form";
+import { instrumentSerif } from "@/lib/fonts";
 
 export const metadata = { title: "Sign in" };
 
@@ -13,8 +14,10 @@ export default async function LoginPage({
   return (
     <div className="space-y-6">
       <div className="space-y-1 text-center">
-        <h1 className="font-display text-2xl tracking-tight">Welcome back</h1>
-        <p className="text-sm text-muted-foreground">Sign in to continue building your profile.</p>
+        <h1 style={{ fontFamily: instrumentSerif.style.fontFamily, fontSize: 28, fontWeight: 400, color: "#111118" }}>
+          Welcome back
+        </h1>
+        <p className="text-sm" style={{ color: "#7A7A8A" }}>Sign in to continue.</p>
       </div>
       {error === "invalid_confirmation_link" ? (
         <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -22,10 +25,10 @@ export default async function LoginPage({
         </p>
       ) : null}
       <LoginForm next={next} />
-      <p className="text-center text-sm text-muted-foreground">
-        Don&apos;t have an account?{" "}
-        <Link href="/signup" className="text-primary underline-offset-4 hover:underline">
-          Sign up
+      <p className="text-center text-[13px]" style={{ color: "#AAAABC" }}>
+        New to ORYN?{" "}
+        <Link href="/signup" className="font-semibold" style={{ color: "#3D35E8" }}>
+          Create an account
         </Link>
       </p>
     </div>
