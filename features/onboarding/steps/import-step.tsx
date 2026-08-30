@@ -255,14 +255,20 @@ export function ImportStep({
                 />
               </div>
             </div>
-            <button
+            {/* icon-sm (28px), not a bare icon-only <button> — the old version's hit area
+                was just the size-4 (16px) icon itself, undersized for a touch target in
+                this dense, repeated review-card list. Matches the same delete action's
+                sizing in features/profile/achievement-section.tsx. */}
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-sm"
               onClick={() => removeItem(item.id)}
               className="self-start text-muted-foreground hover:text-destructive"
               aria-label="Remove item"
             >
               <Trash2 className="size-4" />
-            </button>
+            </Button>
           </Card>
         ))}
       </div>
