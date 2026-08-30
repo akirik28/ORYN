@@ -18,7 +18,7 @@ import type { DimensionSignal } from "@/lib/scoring/signal";
 export function PreviewShell({ children, signal }: { children: ReactNode; signal: DimensionSignal[] }) {
   return (
     <div
-      className="flex min-h-svh"
+      className="flex min-h-svh flex-col lg:flex-row"
       style={{ background: "linear-gradient(145deg, #DDDAF5 0%, #D8DFF5 30%, #DDD8F2 55%, #D4DBF0 100%)" }}
     >
       <MobileNav signal={signal} displayName="Ada" email="ada@example.com" notifications={[]} />

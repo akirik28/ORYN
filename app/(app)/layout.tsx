@@ -58,7 +58,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     // min-h-svh (document scroll), not source's `height:100dvh; overflow:hidden` fixed-shell
     // SPA model — this app scrolls the real page, and Sidebar is `sticky` accordingly; only
     // the background color is a literal transplant, not the fixed-viewport architecture.
-    <div className="flex min-h-svh" style={{ background: "linear-gradient(145deg, #DDDAF5 0%, #D8DFF5 30%, #DDD8F2 55%, #D4DBF0 100%)" }}>
+    //
+    // flex-col below `lg`, row at `lg+`: MobileNav's sticky <header> is a plain flex-row
+    // sibling of Sidebar/content here (it renders as a Fragment, not its own wrapper), and
+    // only picks up `lg:hidden` on itself — so a row-direction container at every width
+    // put that header beside the content column instead of above it below `lg`, squeezing
+    // real page content into a sliver next to blank space. Sidebar is `hidden lg:flex`, so
+    // it occupies nothing below `lg` regardless of direction; row is only needed once it's
+    // actually on-screen.
+    <div className="flex min-h-svh flex-col lg:flex-row" style={{ background: "linear-gradient(145deg, #DDDAF5 0%, #D8DFF5 30%, #DDD8F2 55%, #D4DBF0 100%)" }}>
       {/* Keyboard users land here first; without it, reaching page content past the nav
           items costs several tabs on every navigation. */}
       <a
