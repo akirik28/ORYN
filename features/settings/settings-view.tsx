@@ -23,7 +23,13 @@ export interface SettingsViewProps {
 // 22px blur. Groups real sections that don't exist in the source's simpler demo
 // (Location, Citizenship, Study capacity, Visibility) the same way source groups Account
 // and Preferences, rather than inventing a different grouping of our own.
-const cardClassName = "space-y-6 rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-7";
+//
+// The animated aurora-border glow (`.glass-card*`) was missing from these two — every
+// other boxed page this session carries it, so Settings read flat/plain by comparison
+// (2026-08-30 founder review: "çerçeve renklendirmesi neredeyse hiçbir yerde yok" on this
+// page specifically). Two sections, two different variants so they don't pulse in sync.
+const cardClassName = "glass-card space-y-6 rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-7";
+const cardClassNameOffset = "glass-card-offset space-y-6 rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-7";
 
 export function SettingsView({ email, userId, profile }: SettingsViewProps) {
   return (
@@ -68,7 +74,7 @@ export function SettingsView({ email, userId, profile }: SettingsViewProps) {
         </ButtonLink>
       </section>
 
-      <section className={cardClassName}>
+      <section className={cardClassNameOffset}>
         <h2 className="text-[13px] font-bold tracking-[0.08em] text-[#AAAABC] uppercase">Preferences</h2>
 
         <div className="space-y-1.5">

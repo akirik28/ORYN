@@ -1392,6 +1392,16 @@ export interface Opportunity {
   application_requirements: string[];
   /** e.g. "2026-2027", "Summer 2026" — which cycle `cycle_status`/`deadline` describe. */
   current_cycle_label: string | null;
+  /** Migration 0066. Languages the programme is actually taught/run in — plural because
+   * bilingual programmes are common in Oryn's target markets. Empty means "not known",
+   * never "no language"; the card stays silent rather than guessing. */
+  languages_of_instruction: string[];
+  /** Migration 0066. Oryn-hosted image of the programme, mirroring the universities
+   * pipeline's storage convention. Null means no verified image yet — the card renders a
+   * neutral placeholder, never a stock photo standing in for a real one. */
+  image_url: string | null;
+  image_source_url: string | null;
+  image_attribution: string | null;
   verified_at: string | null;
   /** Identity links into canonical_entities (migration 0038) — resolved organizer/country,
    * separate from the denormalized `organization`/`country` text columns above. */
@@ -1448,6 +1458,11 @@ export type OpportunityInsert = Insertable<
   | "country_entity_id"
   | "access_channel"
   | "country_eligibility_confirmed_open"
+  // Migration 0066 — array has a DB default of '{}', the three image columns are nullable.
+  | "languages_of_instruction"
+  | "image_url"
+  | "image_source_url"
+  | "image_attribution"
 >;
 export type OpportunityUpdate = Updatable<Opportunity, "id" | "created_at" | "updated_at">;
 

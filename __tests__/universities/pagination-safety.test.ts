@@ -25,17 +25,27 @@ function source(relativePath: string): string {
  *
  * These are genuinely DB-behavior bugs a Node-side unit test can't reproduce (no live
  * PostgREST to hit here). What a test CAN do is assert the actual fix stays in place: the
- * functions that read a potentially-large table paginate (`.range(`), and nothing in this
- * page builds a `.in("...", [...])` filter from a scope-sized id array — the fetchViaIdIntersection
- * path exists specifically so the only `.in()` calls left are bounded to a single page (<=48).
+ * code that reads a potentially-large table paginates (`.range(`), and nothing builds a
+ * `.in("...", [...])` filter from a scope-sized id array — the id-intersection path exists
+ * specifically so the only `.in()` calls left are bounded to a single page (<=48).
+ *
+ * Both guarded paths moved 2026-08-31 out of the page and into
+ * lib/universities/browse-page.ts's `loadUniversityBrowsePage`, so the page and the
+ * infinite-scroll Server Action share one implementation. The former `getScopedRows` and
+ * `fetchViaIdIntersection` are now inlined branches of that one function, so the assertions
+ * below scope to it rather than to two separate names — the bug class being guarded is
+ * unchanged.
  */
 describe("universities explorer never repeats the 1000-row / large-.in() bug class", () => {
-  const page = source("app/(app)/universities/page.tsx");
+  const browsePage = source("lib/universities/browse-page.ts");
   const queries = source("lib/universities/queries.ts");
 
-  test("getScopedRows (page.tsx) paginates with .range() rather than a single unbounded select", () => {
-    const fn = extractFunction(page, "getScopedRows");
+  test("the scoped-rows read paginates with .range() rather than a single unbounded select", () => {
+    const fn = extractFunction(browsePage, "loadUniversityBrowsePage");
     expect(fn).toContain(".range(");
+    // The count check is the other half of the fix: a short read must fail loudly rather
+    // than silently return fewer universities than the server holds.
+    expect(fn).toContain("Refusing to return a partial result");
   });
 
   test("getUniversityCountByCountry paginates with .range()", () => {
@@ -50,11 +60,12 @@ describe("universities explorer never repeats the 1000-row / large-.in() bug cla
     expect(extractFunction(queries, "getAllQsListPositions")).toContain(".range(");
   });
 
-  test("fetchViaIdIntersection only ever calls .in(\"id\", ...) against a page-sized slice, never a full scope array", () => {
-    const fn = extractFunction(page, "fetchViaIdIntersection");
+  test("the id-intersection path only calls .in(\"id\", ...) against a page-sized slice, never a full scope array", () => {
+    const fn = extractFunction(browsePage, "loadUniversityBrowsePage");
     // The one `.in("id", ...)` left in this path must read from `pageIds` (already sliced to
-    // PAGE_SIZE), never from the full `scopedRows`/`matched`/`ordered` arrays directly.
+    // one page), never from the full `scopedRows`/`matched`/`ordered` arrays directly.
     expect(fn).toContain('.in("id", pageIds)');
+    expect(fn).not.toMatch(/\.in\("id",\s*(scopedRows|matched|ordered)/);
   });
 });
 

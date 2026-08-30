@@ -79,7 +79,10 @@ export default async function AdvisorPage() {
 
       {counselorResult ? <CounselorPriorities result={counselorResult} /> : null}
 
-      <div className="flex min-h-[28rem] flex-col">
+      {/* Boxed to match every other block on this page (2026-08-30, explicit founder
+          direction) — reverses AdvisorChat's own earlier "no card around the conversation"
+          call, see that component's comment. */}
+      <div className="glass-card flex min-h-[28rem] flex-col rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-7">
         <AdvisorChat conversationId={conversation?.id ?? null} initialMessages={messages} aiConfigured={isAIConfigured()} />
       </div>
     </div>

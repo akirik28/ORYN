@@ -119,8 +119,9 @@ export function AdvisorChat({
   }
 
   return (
-    // No card around the conversation. A bordered panel makes counsel look like output
-    // from a widget; this is the page.
+    // The card is applied by the page (2026-08-30, explicit founder direction reversing
+    // the earlier "no card" call here) — this component still owns none of that chrome
+    // itself, only the scroll/composer layout inside it.
     <div className="flex flex-1 flex-col">
       <div ref={scrollRef} className="flex-1 space-y-10 overflow-y-auto pb-6">
         {messages.length === 0 ? (

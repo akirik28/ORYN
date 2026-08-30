@@ -92,18 +92,15 @@ const CYCLE_STATUS_BADGE: Partial<Record<Opportunity["cycle_status"], { label: s
  * - **Descriptors** (selectivity, cycle status, deadline) drop to a quiet metadata row.
  *   They're facts about the opportunity, not warnings about the match.
  *
- * **On imagery.** `opportunities` has no image column and no acquisition pipeline
- * (universities have both), so there is no honest picture to show. Stock photography is
- * banned by the brief for exactly this reason, and it would also breach Rule 4 —
- * decoration standing in for evidence.
+ * **On imagery.** `opportunities.image_url` exists as of migration 0066 but no row is
+ * populated yet — acquisition is a separate task. Stock photography stays banned by the
+ * brief: a decorative photo standing in for evidence breaches Rule 4.
  *
- * A monogram placeholder was tried and removed: with *zero* rows having imagery, every
- * card rendered an identical ~250px empty tinted band, which is worse than no image —
- * dead space on every card, and monograms cut from arbitrary organizer strings were
- * meaningless anyway ("Middle East Technical University" → "MI"). So the media band
- * renders only when a real source exists. It is wired and ready: pass `imageUrl` once the
- * data lands and every card picks it up, with `MediaImage`'s designed fallback covering a
- * broken load. See docs/design-system.md § Known data dependencies.
+ * The media band therefore always renders, but as an explicit, honest placeholder until a
+ * real image lands ("No image yet", founder-directed 2026-08-30) rather than a stock shot
+ * or a meaningless monogram. An earlier revision hid the band entirely when unpopulated;
+ * that was reverted because it made the card layout change shape per-row once partial data
+ * lands. `imageUrl` overrides the placeholder the moment a row has one.
  */
 export function OpportunityCard({
   opportunity,
@@ -169,8 +166,18 @@ export function OpportunityCard({
 
   if (status === "not_interested") return null;
 
+  // Language sits with the other factual descriptors, not with the caveats: which language
+  // a programme runs in is a property of the opportunity, not a warning about the match.
+  // Empty array means "not known" (migration 0066) — stays silent rather than implying
+  // English by omission, which matters for a product whose users apply across languages.
+  const languageLabel =
+    opportunity.languages_of_instruction.length > 0
+      ? `Taught in ${opportunity.languages_of_instruction.join(" & ")}`
+      : null;
+
   const descriptors = [
     SELECTIVITY_LABEL[opportunity.selectivity_tier] ?? null,
+    languageLabel,
     CYCLE_STATUS_BADGE[opportunity.cycle_status]?.label ?? null,
   ].filter((d): d is string => d !== null);
 
@@ -187,15 +194,29 @@ export function OpportunityCard({
       )}
       style={{ background: "rgba(255,255,255,0.42)", backdropFilter: "blur(14px)" }}
     >
-      {imageUrl ? (
+      {(imageUrl ?? opportunity.image_url) ? (
         <MediaImage
           className={cn("w-full", featured ? "aspect-[21/8]" : "aspect-[16/7]")}
-          src={imageUrl}
+          src={imageUrl ?? opportunity.image_url}
           alt={`${opportunity.title}${opportunity.organization ? ` — ${opportunity.organization}` : ""}`}
           icon={Compass}
           sizes={featured ? "(min-width: 768px) 880px, 100vw" : "(min-width: 1024px) 420px, (min-width: 640px) 50vw, 100vw"}
         />
-      ) : null}
+      ) : (
+        /* Honest placeholder, not a stock photo — see the doc comment above. It says what
+           it is rather than impersonating an image that failed to load. */
+        <div
+          aria-hidden="true"
+          className={cn(
+            "flex w-full items-center justify-center gap-2 border-b border-white/50 text-xs text-ink-4",
+            featured ? "aspect-[21/8]" : "aspect-[16/7]",
+          )}
+          style={{ background: "linear-gradient(135deg, rgba(107,100,240,0.10) 0%, rgba(184,106,0,0.08) 55%, rgba(61,53,232,0.10) 100%)" }}
+        >
+          <Compass className="size-4" />
+          No image yet
+        </div>
+      )}
 
       <div className={cn("flex flex-1 flex-col gap-3", featured ? "p-6 md:p-8" : "p-5")}>
         {/* Why first (§ 19): the student's relationship to the opportunity outranks the

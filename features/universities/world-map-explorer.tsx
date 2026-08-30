@@ -11,6 +11,7 @@ import worldTopology from "world-atlas/countries-110m.json";
 import { SUPPORTED_COUNTRIES, countryByName } from "@/lib/data/country-geo";
 import { WORLD_REGION, type MapRegion } from "@/lib/data/regions";
 import { pickLabelPriorityCountries, resolveCountryFillStyle } from "@/lib/data/map-visuals";
+import type { UniversityMapPin } from "@/lib/universities/map-pins";
 
 const worldGeo = feature(
   worldTopology as unknown as Topology,
@@ -34,8 +35,20 @@ export interface CountryCount {
 const WORLD_LABEL_CAP = 8;
 const REGION_LABEL_CAP = 15;
 
+// Zoom applied when a country is selected. One value for every country rather than one
+// derived from land area: the pins themselves are what the student is looking at once
+// zoomed, and those are always clustered around cities, so a Russia-sized frame would push
+// them into an unreadable clump while a Netherlands-sized frame reads fine everywhere.
+const COUNTRY_ZOOM = 7;
+
 interface HoverState {
   name: string;
+  clientX: number;
+  clientY: number;
+}
+
+interface PinHoverState {
+  pin: UniversityMapPin;
   clientX: number;
   clientY: number;
 }
@@ -47,12 +60,23 @@ interface HoverState {
  * zoom applied to the same world SVG. Country selection (`?country=`) works identically
  * in both modes and preserves whichever region is currently active.
  */
-export function WorldMapExplorer({ countryCounts, region = WORLD_REGION }: { countryCounts: CountryCount[]; region?: MapRegion }) {
+export function WorldMapExplorer({
+  countryCounts,
+  region = WORLD_REGION,
+  pins = [],
+}: {
+  countryCounts: CountryCount[];
+  region?: MapRegion;
+  /** Individual universities for the selected country, already coordinate-filtered
+   *  server-side (lib/universities/map-pins.ts). Empty unless a country is selected. */
+  pins?: UniversityMapPin[];
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selected = searchParams.get("country");
   const isWorld = region.id === "world";
   const [hover, setHover] = useState<HoverState | null>(null);
+  const [pinHover, setPinHover] = useState<PinHoverState | null>(null);
 
   const countByName = useMemo(() => new Map(countryCounts.map((c) => [c.country, c.count])), [countryCounts]);
   const maxCount = Math.max(1, ...countryCounts.map((c) => c.count));
@@ -111,6 +135,21 @@ export function WorldMapExplorer({ countryCounts, region = WORLD_REGION }: { cou
   }
 
   const proj = region.projection ?? WORLD_REGION.projection!;
+  // Selecting a country re-projects the map onto it, the same mechanism regions already use
+  // (lib/data/regions.ts) rather than a CSS zoom over the world SVG. Driven entirely by the
+  // `?country=` URL param, so a shared or reloaded link opens on the same view.
+  //
+  // ZoomableGroup would have given a continuous animated fly-in and was tried first, but it
+  // throws "selection.interrupt is not a function" on first render: its d3-zoom calls
+  // selection.interrupt(), which only exists once d3-transition has patched d3-selection's
+  // prototype, and the library bundles its own d3-selection copy — so importing
+  // d3-transition here cannot reach it. Re-projection is the mechanism this codebase already
+  // proves works; the entrance animation below supplies the motion instead.
+  const selectedCentroid = selected ? countryByName.get(selected)?.centroid : undefined;
+  const zoomedToCountry = Boolean(selectedCentroid && pins.length > 0);
+  const activeProjection = zoomedToCountry
+    ? { projection: proj.projection, scale: proj.scale * COUNTRY_ZOOM, center: [selectedCentroid![1], selectedCentroid![0]] as [number, number] }
+    : { projection: proj.projection, scale: proj.scale, center: proj.center };
   const hoveredCount = hover ? (countByName.get(hover.name) ?? 0) : 0;
   const hoveredRegion = hover ? countryByName.get(hover.name)?.region : undefined;
 
@@ -133,8 +172,8 @@ export function WorldMapExplorer({ countryCounts, region = WORLD_REGION }: { cou
         </button>
       ) : null}
       <ComposableMap
-        projection={proj.projection}
-        projectionConfig={{ scale: proj.scale, center: createCoordinates(proj.center[0], proj.center[1]) }}
+        projection={activeProjection.projection}
+        projectionConfig={{ scale: activeProjection.scale, center: createCoordinates(activeProjection.center[0], activeProjection.center[1]) }}
         width={800}
         height={420}
         style={{ width: "100%", height: "auto" }}
@@ -158,7 +197,11 @@ export function WorldMapExplorer({ countryCounts, region = WORLD_REGION }: { cou
                 ...resolveCountryFillStyle({ isSupported, isSelected: isThisSelected, isHovered: isThisHovered }),
                 outline: "none",
                 cursor: isSupported ? "pointer" : "default",
-                transition: "fill 150ms ease, stroke 150ms ease",
+                transition: "fill 150ms ease, stroke 150ms ease, opacity 300ms ease",
+                // Zoomed into a country, its neighbours are context, not targets. Opacity
+                // rather than a flat grey fill so the existing tested fill ladder
+                // (map-visuals.ts) keeps producing the colors, just quieter.
+                ...(zoomedToCountry && !isThisSelected ? { opacity: 0.35 } : null),
               };
               return (
                 <Geography
@@ -190,7 +233,11 @@ export function WorldMapExplorer({ countryCounts, region = WORLD_REGION }: { cou
             })
           }
         </Geographies>
-        {visibleCountries.map((c) => {
+        {/* Country dots are the world/region-scale affordance. Once zoomed into a country
+            they are replaced by the university pins below rather than drawn alongside them —
+            keeping both puts a large count-sized dot directly on top of the pins it is
+            supposed to summarise. */}
+        {(zoomedToCountry ? [] : visibleCountries).map((c) => {
           const count = countByName.get(c.name) ?? 0;
           const isSelected = selected === c.name;
           const showLabel = labelPriorityNames.has(c.name);
@@ -229,8 +276,54 @@ export function WorldMapExplorer({ countryCounts, region = WORLD_REGION }: { cou
             </Marker>
           );
         })}
+
+        {/* University pins — only once zoomed into a country, otherwise dozens of pins would
+            sit on top of the country dots at world scale and read as noise. Every pin is a
+            real stored coordinate; universities without one are absent rather than
+            approximated (see lib/universities/map-pins.ts). */}
+        {zoomedToCountry
+          ? pins.map((pin, index) => {
+              const isPinHovered = pinHover?.pin.id === pin.id;
+              return (
+                <Marker
+                  key={pin.id}
+                  coordinates={createCoordinates(pin.longitude, pin.latitude)}
+                  onClick={() => router.push(`/universities/${pin.id}`)}
+                  onMouseEnter={(event) => setPinHover({ pin, clientX: event.clientX, clientY: event.clientY })}
+                  onMouseLeave={() => setPinHover(null)}
+                  className="cursor-pointer outline-none"
+                >
+                  {/* The entrance animation sits on an inner <g>, not on Marker: Marker's
+                      `style` prop is the library's variant object (default/hover/pressed),
+                      not plain CSS, so an animationDelay there is a type error. Staggered
+                      per pin, and capped — past ~20 the tail would still be arriving after
+                      the map itself has settled. */}
+                  <g className="pin-drop" style={{ animationDelay: `${Math.min(index, 20) * 22}ms` }}>
+                  {/* Halo only on hover — a permanent glow on every pin turns a dense city
+                      into a smear. */}
+                  {isPinHovered ? (
+                    <circle r={9} className="fill-primary/20" />
+                  ) : null}
+                  {/* Invisible hit target. The visible dot is ~3.5 SVG units, which lands
+                      around 3px on screen once the 800-wide viewBox is scaled into its
+                      container — far under any reasonable pointer target, and unhittable on
+                      a trackpad. Pointer events ride on this circle instead; the visible dot
+                      stays small so a dense city doesn't turn into one blob. */}
+                  <circle r={11} fill="transparent" />
+                  <circle
+                    r={isPinHovered ? 5 : 3.5}
+                    className={isPinHovered ? "fill-primary" : "fill-primary/85"}
+                    stroke="var(--card)"
+                    strokeWidth={1.2}
+                    style={{ transition: "r 140ms ease" }}
+                  />
+                  </g>
+                </Marker>
+              );
+            })
+          : null}
       </ComposableMap>
-      {hover ? (
+      {hover && !pinHover ? (
         // Positioned in viewport space (`fixed`, not `absolute`) so it's never clipped by
         // this container's own `overflow-hidden` — a card anchored `absolute` near the map's
         // edge would otherwise get cut off exactly when a student hovers the countries most
@@ -244,6 +337,36 @@ export function WorldMapExplorer({ countryCounts, region = WORLD_REGION }: { cou
             {hoveredCount > 0 ? `${hoveredCount.toLocaleString("en-US")} ${hoveredCount === 1 ? "university" : "universities"}` : "No universities yet"}
             {hoveredRegion ? ` · ${hoveredRegion}` : ""}
           </p>
+        </div>
+      ) : null}
+      {pinHover ? (
+        // Same viewport-space positioning as the country tooltip above, and for the same
+        // reason: an absolutely-positioned card would be clipped by this container's
+        // overflow-hidden exactly at the edges where pins are most likely to sit.
+        <div
+          className="pointer-events-none fixed z-20 w-56 overflow-hidden rounded-xl border bg-popover shadow-xl"
+          style={{ left: pinHover.clientX + 16, top: pinHover.clientY + 16 }}
+        >
+          {pinHover.pin.imageUrl ? (
+            // Plain <img>, not next/image: the src is an arbitrary remote URL from the
+            // acquisition pipeline, and next/image would need every one of those hosts
+            // allow-listed in next.config to render at all.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={pinHover.pin.imageUrl}
+              alt=""
+              aria-hidden="true"
+              className="h-24 w-full object-cover"
+            />
+          ) : null}
+          <div className="space-y-1 px-3 py-2.5">
+            <p className="text-sm leading-snug font-medium text-popover-foreground">{pinHover.pin.name}</p>
+            <p className="text-xs text-muted-foreground">
+              {[pinHover.pin.city, pinHover.pin.qsRank ? `QS #${pinHover.pin.qsRank}` : null]
+                .filter(Boolean)
+                .join(" · ") || "Open to see details"}
+            </p>
+          </div>
         </div>
       ) : null}
       <p className="relative border-t px-4 py-2.5 text-center text-xs text-muted-foreground">

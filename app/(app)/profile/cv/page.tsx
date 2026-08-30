@@ -15,6 +15,11 @@ export default async function CVPage() {
 
   return (
     <div className="space-y-6">
+      {/* No dark hero here, unlike Portfolio/Applications — the very next thing on this
+          page is a document meant to look like a real, printable CV. A heavy decorative
+          header directly above a plain white resume preview would read as a mismatch, so
+          this stays a simple heading; the glass-card treatment below is scoped to the
+          *controls* panel, never the print area itself. */}
       <div className="print:hidden">
         <Link href="/profile" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="size-3.5" /> Back to profile

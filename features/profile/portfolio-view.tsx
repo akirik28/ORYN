@@ -16,7 +16,7 @@ function ItemCard({ item }: { item: PortfolioItem }) {
     ongoingLabel: "Present",
   });
   return (
-    <div className="space-y-1 rounded-xl border p-4">
+    <div className="space-y-1 rounded-xl border border-white/65 bg-white/45 p-4 backdrop-blur-2xl">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <h3 className="font-semibold">{item.title}</h3>
         {dateRange ? <span className="text-xs text-muted-foreground">{dateRange}</span> : null}

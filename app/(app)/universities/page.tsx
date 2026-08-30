@@ -4,12 +4,13 @@ import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { Landmark, Search } from "lucide-react";
 import { UniversityExplorerHero } from "@/features/universities/university-explorer-hero";
-import { UniversityCard } from "@/features/universities/university-card";
+import { getUniversityMapPins } from "@/lib/universities/map-pins";
+import { loadUniversityBrowsePage, getUniversityCardMeta, UNIVERSITY_PAGE_SIZE } from "@/lib/universities/browse-page";
+import { UniversityBrowseGrid } from "@/features/universities/university-browse-grid";
 import { categorizeAndDedupeResearchTopics } from "@/lib/universities/research-taxonomy";
 import { UniversitySearchBox } from "@/features/universities/university-search-box";
 import { SUPPORTED_COUNTRIES } from "@/lib/data/country-geo";
 import { regionById } from "@/lib/data/regions";
-import { searchUniversityRows } from "@/lib/universities/alias-search";
 import { getSupersededUniversityIds, loadSupersessionMap } from "@/lib/universities/canonical";
 import { getUniversityCountByCountry, getAllCostOfAttendance, getAllQsListPositions } from "@/lib/universities/queries";
 import {
@@ -18,19 +19,15 @@ import {
   TYPE_OPTIONS,
   RANK_TIERS,
   RANK_OPTIONS,
-  applyRangeFilters,
-  matchesInstitutionType,
   type CostBucketValue,
   type SizeBucketValue,
 } from "@/lib/universities/filters";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/oryn/page-header";
 import { EmptyState } from "@/components/oryn/empty-state";
-import { Pagination } from "@/components/oryn/pagination";
 import { SortSelect } from "@/features/universities/sort-select";
 import { FilterSheet, type FilterOption } from "@/features/universities/filter-sheet";
 import { CompareBar } from "@/features/universities/compare-bar";
-import type { University } from "@/types/database";
 
 export const metadata = { title: "Universities" };
 
@@ -38,8 +35,6 @@ const VIEW_TAB =
   "border-b-2 pb-2 text-sm transition-colors duration-(--duration-fast) focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none";
 const VIEW_TAB_ACTIVE = "border-brand-primary font-medium text-ink-1";
 const VIEW_TAB_INACTIVE = "border-transparent text-ink-3 hover:text-ink-1";
-
-const PAGE_SIZE = 48;
 
 type SortOption = "ranking" | "name" | "students";
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
@@ -101,7 +96,7 @@ export default async function UniversitiesPage({
   // A text search goes through the canonical registry so aliases and accents resolve
   // ("MIT" -> Massachusetts Institute of Technology, "uskudar" -> "Üsküdar ..."), which
   // `ilike` could never do. Browsing without a query keeps the cheap, ordered path over
-  // `universities` itself, paginated the same way (`page`/`PAGE_SIZE`) rather than a single
+  // `universities` itself, paginated the same way (`page`/`UNIVERSITY_PAGE_SIZE`) rather than a single
   // unpaginated cap — see the 2026-08-18 fix note below for why that mattered.
   const scopedCountries = country ? [country] : region ? (region.countries.length > 0 ? region.countries : ["__no_countries_in_region__"]) : null;
 
@@ -126,101 +121,15 @@ export default async function UniversitiesPage({
     needsQsRankMap ? getAllQsListPositions(supabase) : Promise.resolve(null),
   ]);
 
-  const rangeFilters = { size, cost, rank };
   const rangeData = { costMap: costMap ?? undefined, qsRankMap: qsRankMap ?? undefined };
 
-  /**
-   * Country/region scope + the (high-coverage, 1002/1019) institution_type filter, applied
-   * as real Postgres filters — paginated + exact-count-verified against PostgREST's 1000-row
-   * cap (the same bug class fixed in getUniversityCountByCountry: a "World" scope alone is
-   * 1019 rows, already past it). student_size travels along unfiltered here (size bucketing
-   * happens in applyRangeFilters, not as a DB filter) specifically so an unknown-size
-   * university can still be counted as "excluded because unavailable" instead of just
-   * vanishing from an unfiltered `.gte()` the way a NULL comparison silently would.
-   */
-  async function getScopedRows(): Promise<{ id: string; name: string; student_size: number | null }[]> {
-    const rows: { id: string; name: string; student_size: number | null }[] = [];
-    let offset = 0;
-    let expectedTotal: number | null = null;
-    for (;;) {
-      let q2 = supabase
-        .from("universities")
-        .select("id, name, student_size", { count: "exact" })
-        .order("id", { ascending: true })
-        .range(offset, offset + 999);
-      if (scopedCountries) q2 = q2.in("country", scopedCountries);
-      if (supersededIds.length > 0) q2 = q2.not("id", "in", `(${supersededIds.join(",")})`);
-      if (type) q2 = q2.ilike("institution_type", `%${type}%`);
-      const { data, count, error } = await q2;
-      if (error) throw new Error(`getScopedRows: ${error.message}`);
-      if (expectedTotal === null) expectedTotal = count ?? 0;
-      rows.push(...(data ?? []));
-      if (!data || data.length < 1000) break;
-      offset += 1000;
-    }
-    if (rows.length !== expectedTotal) {
-      throw new Error(`getScopedRows: assembled ${rows.length} rows but the server counts ${expectedTotal}. Refusing to return a partial result.`);
-    }
-    return rows;
-  }
-
-  /**
-   * Used whenever a query can't be expressed as one direct Postgrest filter chain: Ranking
-   * sort (rank lives in `university_rankings`, a separate table — see the historical note
-   * below) or any of the cost/size/rank filters (see applyRangeFilters above for why those
-   * are TS-side, not `.in()`-based). Every other case (no filters, or type-only) stays on the
-   * cheaper single-query `browseQuery` path below.
-   *
-   * 10/1019 universities have no QS World University Ranking row at all (several are
-   * specialist business schools QS ranks separately, not in the World Ranking this product
-   * currently ingests — ESSEC, ESCP, LUISS, Bocconi, St. Gallen among them; genuinely absent
-   * data, not a bug). They used to be silently dropped from Ranking-sorted views and the
-   * rank-tier filter entirely — found live 2026-08-20 alongside the band-ranking gap fixed in
-   * getAllQsListPositions(). Now appended after every ranked result (alphabetically, since
-   * there's no rank to order them by) rather than vanishing — a student can still find and
-   * open them, their card just correctly shows no QS badge instead of a fabricated one.
-   */
-  async function fetchViaIdIntersection(): Promise<{ data: University[]; count: number; sizeUnknownCount?: number; costUnknownCount?: number }> {
-    const scopedRows = await getScopedRows();
-    const { matched, sizeUnknown, costUnknown } = applyRangeFilters(scopedRows, rangeFilters, rangeData);
-
-    let ordered: typeof matched;
-    if (sort === "ranking") {
-      const ranked = matched.filter((r) => qsRankMap!.has(r.id)).sort((a, b) => qsRankMap!.get(a.id)! - qsRankMap!.get(b.id)!);
-      const unranked = matched.filter((r) => !qsRankMap!.has(r.id)).sort((a, b) => a.name.localeCompare(b.name));
-      ordered = [...ranked, ...unranked];
-    } else if (sort === "students") {
-      ordered = matched.filter((r) => r.student_size != null).sort((a, b) => (b.student_size ?? 0) - (a.student_size ?? 0));
-    } else {
-      ordered = matched.slice().sort((a, b) => a.name.localeCompare(b.name));
-    }
-
-    const count = ordered.length;
-    const pageIds = ordered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((r) => r.id);
-    if (pageIds.length === 0) return { data: [], count, sizeUnknownCount: sizeUnknown, costUnknownCount: costUnknown };
-
-    // pageIds.length is always <= PAGE_SIZE (48) here — always well under the `.in()` size
-    // limit documented above, unlike the ids this function narrows FROM.
-    const { data: rows } = await supabase.from("universities").select("*").in("id", pageIds);
-    const byId = new Map((rows ?? []).map((u) => [u.id, u]));
-    const finalRows = pageIds.map((id) => byId.get(id)).filter((u): u is University => u != null);
-    return { data: finalRows, count, sizeUnknownCount: sizeUnknown, costUnknownCount: costUnknown };
-  }
-
-  const useIdIntersectionPath = sort === "ranking" || cost.length > 0 || size.length > 0 || rank !== null;
-
-  let browseQuery = supabase
-    .from("universities")
-    .select("*", { count: "exact" })
-    .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
-  if (sort === "students") browseQuery = browseQuery.order("student_size", { ascending: false, nullsFirst: false });
-  else browseQuery = browseQuery.order("name", { ascending: true });
-  if (scopedCountries) browseQuery = browseQuery.in("country", scopedCountries);
-  if (supersededIds.length > 0) browseQuery = browseQuery.not("id", "in", `(${supersededIds.join(",")})`);
-  if (type) browseQuery = browseQuery.ilike("institution_type", `%${type}%`);
-
-  const [universitiesRes, liveCountryCounts, targetsRes] = await Promise.all([
-    q ? Promise.resolve(null) : useIdIntersectionPath ? fetchViaIdIntersection() : browseQuery,
+  const [browseResult, liveCountryCounts, targetsRes] = await Promise.all([
+    loadUniversityBrowsePage(
+      supabase,
+      { q: q ?? null, scopedCountries, type, sort, cost, size, rank, page },
+      supersededIds,
+      rangeData
+    ),
     // 2026-08-18 fix: this used to be a single unpaginated `.select("country")` filtered
     // client-side against a 12-country hardcoded allowlist (SUPPORTED_COUNTRIES) — the
     // combination silently dropped 77 of the 89 real countries in the data from every
@@ -234,6 +143,10 @@ export default async function UniversitiesPage({
     supabase.from("target_universities").select("university_id").eq("user_id", session.userId!),
   ]);
 
+  // Pins are per-country, so this only runs once a country is actually selected — the
+  // world/region view plots country dots, not individual universities.
+  const mapPins = country ? await getUniversityMapPins(supabase, country, supersededIds) : [];
+
   const countryCounts = SUPPORTED_COUNTRIES.map((c) => ({
     country: c.name,
     count: liveCountryCounts.get(c.name) ?? 0,
@@ -246,65 +159,38 @@ export default async function UniversitiesPage({
   const totalUniversities = [...liveCountryCounts.values()].reduce((sum, n) => sum + n, 0);
 
   const savedIds = new Set((targetsRes.data ?? []).map((t) => t.university_id));
-  const rawSearchResult = q ? await searchUniversityRows(supabase, q, { limit: PAGE_SIZE, countries: scopedCountries }) : null;
-  let sizeUnknownCount: number | undefined;
-  let costUnknownCount: number | undefined;
-  let universities: University[];
-  let totalResults: number;
-  if (rawSearchResult) {
-    const typeFiltered = rawSearchResult.filter((u) => matchesInstitutionType(u.institution_type, type));
-    const { matched, sizeUnknown, costUnknown } = applyRangeFilters(typeFiltered, rangeFilters, rangeData);
-    universities = matched;
-    totalResults = matched.length;
-    sizeUnknownCount = sizeUnknown;
-    costUnknownCount = costUnknown;
-  } else if (useIdIntersectionPath) {
-    const result = universitiesRes as Awaited<ReturnType<typeof fetchViaIdIntersection>>;
-    universities = result.data;
-    totalResults = result.count;
-    sizeUnknownCount = result.sizeUnknownCount;
-    costUnknownCount = result.costUnknownCount;
-  } else {
-    const result = universitiesRes as Awaited<typeof browseQuery>;
-    universities = result.data ?? [];
-    totalResults = result.count ?? 0;
-  }
-  const totalPages = q ? 1 : Math.max(1, Math.ceil(totalResults / PAGE_SIZE));
+  // All three fetch paths (search / id-intersection / plain browse) now resolve inside
+  // loadUniversityBrowsePage, which the infinite-scroll Server Action calls too — so a
+  // scrolled-in page can never be assembled by different rules than the first one.
+  const universities = browseResult.universities;
+  const totalResults = browseResult.total;
+  const sizeUnknownCount = browseResult.sizeUnknownCount;
+  const costUnknownCount = browseResult.costUnknownCount;
+  // A text search returns a single unpaginated page, so there is nothing further to load.
+  const hasMore = !q && page * UNIVERSITY_PAGE_SIZE < totalResults;
 
-  // Batch-fetched separately (see getTargetUniversitiesWithDetails for why: our hand
-  // -authored Database type can't model FK embedding reliably) rather than joined in the
-  // main query, so cards can show "QS #N" without slowing down the primary browse path.
-  const qsRankByUniId = new Map<string, string>();
-  const costByUniId = new Map<string, { amount: number; currency: string | null }>();
-  const researchTopicsByUniId = new Map<string, string[]>();
-  const imageUrlByUniId = new Map<string, string>();
-  if (universities.length > 0) {
-    const ids = universities.map((u) => u.id);
-    const [{ data: rankings }, { data: stats }, { data: metrics }] = await Promise.all([
-      supabase.from("university_rankings").select("university_id, rank_display").eq("ranking_provider", "QS").in("university_id", ids),
-      supabase.from("university_statistics").select("university_id, cost_of_attendance, cost_currency").in("university_id", ids).not("cost_of_attendance", "is", null),
-      supabase
-        .from("university_profile_metrics")
-        .select("university_id, metric_code, value_text")
-        .in("metric_code", ["research_topics_top5", "primary_image_url"])
-        .in("university_id", ids),
-    ]);
-    for (const r of rankings ?? []) qsRankByUniId.set(r.university_id, r.rank_display);
-    for (const s of stats ?? []) {
-      if (s.cost_of_attendance != null) costByUniId.set(s.university_id, { amount: s.cost_of_attendance, currency: s.cost_currency });
-    }
-    for (const m of metrics ?? []) {
-      if (!m.value_text) continue;
-      if (m.metric_code === "research_topics_top5") {
-        const categories = categorizeAndDedupeResearchTopics(m.value_text.split(" | ").filter(Boolean));
-        if (categories.length > 0) researchTopicsByUniId.set(m.university_id, categories);
-      } else if (m.metric_code === "primary_image_url") {
-        imageUrlByUniId.set(m.university_id, m.value_text);
-      }
-    }
-  }
+  // Same batched per-card metadata the infinite-scroll action uses, so an appended page's
+  // cards carry exactly the fields the first page's do.
+  const cardMeta = await getUniversityCardMeta(supabase, universities, categorizeAndDedupeResearchTopics);
 
   const scopeLabel = country ?? region?.name ?? null;
+
+  // Handed to the infinite-scroll grid, and to the Server Action behind it, so an appended
+  // page is resolved with exactly the filters the first page used.
+  const browseParams = { q: q ?? null, scopedCountries, type, sort, cost, size, rank };
+  // Remount key: changing any filter or the sort produces a different result set, so the
+  // grid must reset its accumulated pages. Keying it is how React is told that — cheaper
+  // and less error-prone than syncing props into state inside the component.
+  const browseGridKey = JSON.stringify(browseParams);
+  // Country hrefs are pre-resolved here because building one needs this page's full param
+  // state, which the client grid deliberately doesn't carry. Only the countries actually on
+  // this page, and never the currently-scoped one (its own chip would be a no-op link).
+  const countryHrefByName: Record<string, string> = {};
+  for (const u of universities) {
+    if (u.country && u.country !== country && !(u.country in countryHrefByName)) {
+      countryHrefByName[u.country] = buildCountryHref(u.country);
+    }
+  }
 
   function buildHref(overrides: { page?: number; sort?: SortOption; cost?: string[]; type?: string | null; size?: string[]; rank?: string | null }): string {
     const params = new URLSearchParams();
@@ -372,7 +258,6 @@ export default async function UniversitiesPage({
     return `/universities?${params.toString()}`;
   }
 
-  const buildPageHref = (targetPage: number) => buildHref({ page: targetPage });
   const buildSortHref = (nextSort: SortOption) => buildHref({ sort: nextSort });
   const buildFilterHref = (overrides: { cost?: string[]; type?: string | null; size?: string[]; rank?: string | null }) => buildHref(overrides);
 
@@ -484,9 +369,14 @@ export default async function UniversitiesPage({
         <>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-xs text-muted-foreground">
+              {/* A range ("Showing 1–48 of 1,010") described a numbered page and would go
+                  stale the moment the grid below appends the next batch — this server
+                  render can't know how far the student has scrolled. The total is the part
+                  that stays true; how many are currently on screen is announced by the
+                  grid's own live region instead. */}
               {q
                 ? `${universities.length} result${universities.length === 1 ? "" : "s"} for "${q}"`
-                : `Showing ${(page - 1) * PAGE_SIZE + 1}–${(page - 1) * PAGE_SIZE + universities.length} of ${totalResults.toLocaleString("en-US")}${scopeLabel ? ` in ${scopeLabel}` : ""}`}
+                : `${totalResults.toLocaleString("en-US")} universit${totalResults === 1 ? "y" : "ies"}${scopeLabel ? ` in ${scopeLabel}` : ""}`}
             </p>
             {!q ? <SortSelect value={sort} options={SORT_OPTIONS.map((o) => ({ ...o, href: buildSortHref(o.value) }))} /> : null}
           </div>
@@ -497,19 +387,15 @@ export default async function UniversitiesPage({
             </p>
           ) : null}
           {isListView ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {universities.map((university) => (
-                <UniversityCard
-                  key={university.id}
-                  university={university}
-                  isSaved={savedIds.has(university.id)}
-                  qsRank={qsRankByUniId.get(university.id)}
-                  cost={costByUniId.get(university.id)}
-                  researchTopics={researchTopicsByUniId.get(university.id)}
-                  imageUrl={imageUrlByUniId.get(university.id)}
-                />
-              ))}
-            </div>
+            <UniversityBrowseGrid
+              key={browseGridKey}
+              initialUniversities={universities}
+              initialMeta={cardMeta}
+              initialSavedIds={[...savedIds]}
+              initialHasMore={hasMore}
+              params={browseParams}
+              buildCountryHref={countryHrefByName}
+            />
           ) : (
             // UI-V3 § 22: roughly 58/42. The map is sticky so it stays in view while the
             // results column scrolls — the whole point of pairing them is being able to read
@@ -518,6 +404,7 @@ export default async function UniversitiesPage({
               <div className="lg:sticky lg:top-24 lg:self-start">
                 <UniversityExplorerHero
                   countryCounts={countryCounts}
+                  mapPins={mapPins}
                   selected={country ?? null}
                   selectedRegion={region?.id ?? null}
                 />
@@ -532,30 +419,20 @@ export default async function UniversitiesPage({
                   viewport one, because this panel's width is set by the split, not the
                   screen: it goes two-up only if the panel itself ever gets wide enough. */}
               <div className="@container min-w-0">
-                <div className="grid gap-4 @2xl:grid-cols-2 lg:max-h-[calc(100svh-12rem)] lg:overflow-y-auto lg:pr-2">
-                  {universities.map((university) => (
-                    <UniversityCard
-                      key={university.id}
-                      university={university}
-                      isSaved={savedIds.has(university.id)}
-                      qsRank={qsRankByUniId.get(university.id)}
-                      cost={costByUniId.get(university.id)}
-                      researchTopics={researchTopicsByUniId.get(university.id)}
-                      imageUrl={imageUrlByUniId.get(university.id)}
-                      compact
-                      countryHref={
-                        university.country && university.country !== country
-                          ? buildCountryHref(university.country)
-                          : null
-                      }
-                    />
-                  ))}
-                </div>
+                <UniversityBrowseGrid
+                  key={browseGridKey}
+                  initialUniversities={universities}
+                  initialMeta={cardMeta}
+                  initialSavedIds={[...savedIds]}
+                  initialHasMore={hasMore}
+                  params={browseParams}
+                  compact
+                  buildCountryHref={countryHrefByName}
+                />
               </div>
             </div>
           )}
           <CompareBar />
-          {!q ? <Pagination currentPage={page} totalPages={totalPages} buildHref={buildPageHref} /> : null}
         </>
       ) : (
         <EmptyState

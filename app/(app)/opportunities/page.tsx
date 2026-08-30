@@ -7,6 +7,7 @@ import { refreshOpportunityMatches } from "@/lib/opportunities/persist-matches";
 import { browseOpportunities, getOpportunityFacets } from "@/lib/opportunities/browse";
 import { isOpportunityActionable, isOpportunitySufficientlyVerified } from "@/lib/opportunities/lifecycle";
 import { OpportunityCard } from "@/features/opportunities/opportunity-card";
+import { OpportunityBrowseGrid } from "@/features/opportunities/opportunity-browse-grid";
 import { OpportunityFilterBar } from "@/features/opportunities/opportunity-filter-bar";
 import { integrationStatus } from "@/lib/env";
 import { PageHeader } from "@/components/oryn/page-header";
@@ -21,13 +22,6 @@ const TAB =
   "border-b-2 pb-2 text-sm transition-colors duration-(--duration-fast) focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none";
 const TAB_ACTIVE = "border-brand-primary font-medium text-ink-1";
 const TAB_INACTIVE = "border-transparent text-ink-3 hover:text-ink-1";
-
-function pageHref(params: URLSearchParams, page: number): string {
-  const next = new URLSearchParams(params);
-  if (page > 1) next.set("page", String(page));
-  else next.delete("page");
-  return `/opportunities?${next.toString()}`;
-}
 
 export default async function OpportunitiesPage({
   searchParams,
@@ -235,15 +229,6 @@ async function BrowseAllView({
   ]);
   const statusById = new Map((savedRes.data ?? []).map((s) => [s.opportunity_id, s.status]));
 
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const linkParams = new URLSearchParams({ view: "browse" });
-  if (params.q) linkParams.set("q", params.q);
-  if (params.category) linkParams.set("category", params.category);
-  if (params.country) linkParams.set("country", params.country);
-  if (params.remote) linkParams.set("remote", params.remote);
-  if (params.free) linkParams.set("free", params.free);
-  if (params.cycle) linkParams.set("cycle", params.cycle);
-
   return (
     <div className="space-y-6">
       <OpportunityFilterBar
@@ -263,42 +248,16 @@ async function BrowseAllView({
           <p className="text-xs text-muted-foreground">
             {total} opportunit{total === 1 ? "y" : "ies"} match{total === 1 ? "es" : ""}
           </p>
-          <div className="grid gap-4 md:grid-cols-2">
-            {rows.map(({ opportunity, matchScore, eligible, eligibilityNotes, notActionable, needsVerification, reasonCodes }) => (
-              <OpportunityCard
-                key={opportunity.id}
-                opportunity={opportunity}
-                matchScore={matchScore}
-                reasonCodes={reasonCodes}
-                eligible={eligible}
-                eligibilityNotes={eligibilityNotes}
-                notActionable={notActionable}
-                needsVerification={needsVerification}
-                initialStatus={statusById.get(opportunity.id) ?? null}
-              />
-            ))}
-          </div>
-          {totalPages > 1 ? (
-            <div className="flex items-center justify-between text-sm">
-              {page > 1 ? (
-                <Link href={pageHref(linkParams, page - 1)} className="text-brand-primary hover:underline">
-                  ← Previous
-                </Link>
-              ) : (
-                <span />
-              )}
-              <span className="text-muted-foreground">
-                Page {page} of {totalPages}
-              </span>
-              {page < totalPages ? (
-                <Link href={pageHref(linkParams, page + 1)} className="text-brand-primary hover:underline">
-                  Next →
-                </Link>
-              ) : (
-                <span />
-              )}
-            </div>
-          ) : null}
+          {/* Page 1 is still server-rendered; the grid appends subsequent pages as the
+              student scrolls, replacing the old "Page N of M" pager (founder direction,
+              2026-08-30). */}
+          <OpportunityBrowseGrid
+            key={JSON.stringify(filters)}
+            initialRows={rows}
+            initialStatuses={Object.fromEntries(statusById)}
+            filters={filters}
+            initialHasMore={page * pageSize < total}
+          />
         </>
       ) : (
         <EmptyState
