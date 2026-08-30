@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   FileText,
   ScanLine,
@@ -24,14 +25,18 @@ import { PageHeader } from "@/components/oryn/page-header";
  * özellikler kenarda köşede saklanmasın"). Nothing here is new functionality; every tile
  * links to a route that already exists. This is a discovery surface, not a feature.
  *
- * On imagery: these tiles carry an icon over a tinted gradient, not photographs. That is
- * deliberate and is *not* the same call as OpportunityCard's placeholder — a feature tile
- * is illustrating a tool in this product, where decorative treatment is honest; an
- * opportunity card's image would be standing in as evidence about a real-world programme,
- * which is what Rule 4 forbids.
+ * On imagery: each tile carries a generated abstract illustration (/public/features), with
+ * its gradient + icon underneath as the loading/fallback ground. These are decorative
+ * illustrations of tools inside this product, which is honest — deliberately NOT the same
+ * call as OpportunityCard, where an image would stand in as evidence about a real-world
+ * programme and Rule 4 forbids it. They are marked aria-hidden with empty alt: the tile's
+ * heading and description already carry the meaning, so announcing the art would only add
+ * noise for a screen reader.
  */
 interface Feature {
   href: string;
+  /** Basename of the tile illustration in /public/features (no extension). */
+  image: string;
   title: string;
   description: string;
   icon: LucideIcon;
@@ -44,6 +49,7 @@ interface Feature {
 const FEATURES: Feature[] = [
   {
     href: "/profile/cv",
+    image: "cv-generator",
     title: "CV Generator",
     description:
       "Build a CV from what's already in your Journey — choose what to include, then print or save as PDF. Nothing is invented.",
@@ -53,6 +59,7 @@ const FEATURES: Feature[] = [
   },
   {
     href: "/profile/import",
+    image: "scan-cv",
     title: "Scan a CV",
     description:
       "Upload a CV or résumé and Oryn extracts your activities, awards and education. You review every item before anything is saved.",
@@ -62,6 +69,7 @@ const FEATURES: Feature[] = [
   },
   {
     href: "/profile/story-bank",
+    image: "story-bank",
     title: "Essay Story Bank",
     description:
       "The moments behind your achievements, kept in your own words — raw material for application essays, never auto-written for you.",
@@ -71,6 +79,7 @@ const FEATURES: Feature[] = [
   },
   {
     href: "/profile/portfolio",
+    image: "portfolio",
     title: "Portfolio",
     description: "Everything you've done in one place, as a timeline or grouped by category.",
     icon: FolderOpen,
@@ -79,6 +88,7 @@ const FEATURES: Feature[] = [
   },
   {
     href: "/documents",
+    image: "documents",
     title: "Documents",
     description:
       "Certificates and evidence files, attached to the achievements they belong to. Private by default — never public.",
@@ -88,6 +98,7 @@ const FEATURES: Feature[] = [
   },
   {
     href: "/u/me",
+    image: "public-profile",
     title: "Public profile",
     description:
       "A shareable version of your record. Off by default; grades and school details are never included.",
@@ -97,6 +108,7 @@ const FEATURES: Feature[] = [
   },
   {
     href: "/plan",
+    image: "weekly-plan",
     title: "Weekly plan",
     description:
       "Your three highest-value actions for the week, sized to the time you actually have.",
@@ -106,6 +118,7 @@ const FEATURES: Feature[] = [
   },
   {
     href: "/profile/history",
+    image: "progress",
     title: "Progress",
     description:
       "How your profile has changed month to month, and which areas actually moved.",
@@ -115,6 +128,7 @@ const FEATURES: Feature[] = [
   },
   {
     href: "/universities/compare",
+    image: "compare-universities",
     title: "Compare universities",
     description:
       "Put two to four universities side by side. Unknown figures read \"—\", never a guess.",
@@ -124,6 +138,7 @@ const FEATURES: Feature[] = [
   },
   {
     href: "/profile",
+    image: "research-ideas",
     title: "Research idea generator",
     description:
       "Project ideas scaled to your level and interests, built from real academic literature — achievable, not impressive-sounding.",
@@ -181,8 +196,20 @@ export function FeaturesView({ userId }: { userId: string }) {
                     href={href}
                     className={`${GLOW_VARIANTS[i % GLOW_VARIANTS.length]} group flex flex-col overflow-hidden rounded-2xl border border-white/65 bg-white/45 backdrop-blur-2xl transition-transform duration-(--duration-fast) hover:-translate-y-0.5 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none`}
                   >
-                    <div className={`flex h-24 items-center justify-center bg-gradient-to-br ${feature.tint}`}>
+                    {/* The gradient stays underneath as the tile's ground, so the card still
+                        reads correctly while the illustration loads (and if one is ever
+                        missing). The icon sits on top of it for the same reason — the image
+                        covers both once it paints. */}
+                    <div className={`relative flex h-32 items-center justify-center overflow-hidden bg-gradient-to-br ${feature.tint}`}>
                       <Icon className="size-8 text-ink-2" strokeWidth={1.4} aria-hidden="true" />
+                      <Image
+                        src={`/features/${feature.image}.webp`}
+                        alt=""
+                        aria-hidden="true"
+                        fill
+                        sizes="(min-width: 1024px) 380px, (min-width: 640px) 50vw, 100vw"
+                        className="object-cover"
+                      />
                     </div>
                     <div className="flex flex-1 flex-col gap-2 p-5">
                       <h3 className="font-medium text-ink-1">{feature.title}</h3>
