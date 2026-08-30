@@ -34,12 +34,12 @@ export default async function MessagesPage() {
           description="Messaging opens up once you and someone else accept a connection request. Visit Connections to get started."
         />
       ) : (
-        <ul className="divide-y rounded-lg border">
+        <ul className="glass-card divide-y divide-white/40 overflow-hidden rounded-2xl border border-white/65 bg-white/45 backdrop-blur-2xl">
           {conversations.map((c) => {
             const name = c.otherDisplayName ?? "A student";
             return (
               <li key={c.otherUserId}>
-                <Link href={`/messages/${c.otherUserId}`} className="flex items-center gap-3 px-4 py-3 hover:bg-accent">
+                <Link href={`/messages/${c.otherUserId}`} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-white/50">
                   <Avatar>
                     <AvatarFallback className="bg-brand-primary-soft text-brand-primary-strong">{initials(name)}</AvatarFallback>
                   </Avatar>

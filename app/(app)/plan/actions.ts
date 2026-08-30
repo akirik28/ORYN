@@ -7,6 +7,7 @@ import { getOrCreateWeeklyPlan } from "@/lib/plan/persist";
 import { AIProviderNotConfiguredError } from "@/lib/ai";
 import { assertWithinAIRateLimit, RateLimitExceededError } from "@/lib/ai/rate-limit";
 import { logEvent } from "@/lib/analytics/log";
+import { buildActionStatusPatch } from "@/lib/plan/status-patch";
 import type { ActionStatus, ReflectionOutcome } from "@/types/database";
 
 export async function regenerateWeeklyPlan(): Promise<{ error?: string }> {
@@ -54,14 +55,15 @@ export async function updateActionStatus(params: {
   const session = await requireUser();
   const supabase = await createClient();
 
+  // See lib/plan/status-patch.ts for why this is built conditionally rather than
+  // `{ status, reflection_outcome: params.reflectionOutcome ?? null, ... }` inline here —
+  // the race it fixes (two concurrent Server Action calls from one "complete + reflect"
+  // click) and the reasoning are documented there, next to the tests that pin it.
+  const patch = buildActionStatusPatch(params);
+
   const { error } = await supabase
     .from("weekly_actions")
-    .update({
-      status: params.status,
-      reflection_outcome: params.reflectionOutcome ?? null,
-      reflection_note: params.reflectionNote ?? null,
-      completed_at: params.status === "completed" ? new Date().toISOString() : null,
-    })
+    .update(patch)
     .eq("id", params.actionId)
     .eq("user_id", session.userId!);
 

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import { addFeaturedItem, removeFeaturedItem, reorderFeaturedItems } from "@/app/(app)/profile/featured-actions";
 import type { FeaturedItemType } from "@/types/database";
 
@@ -65,37 +66,52 @@ export function FeaturedManager({
         mode === "external_link"
           ? await addFeaturedItem("external_link", null, linkTitle, linkUrl)
           : await addFeaturedItem(mode, selectedId || null, null, null);
-      if (result.error) {
-        setError(result.error);
+      if (result.error || !result.id) {
+        setError(result.error ?? "Couldn't feature that. Please try again.");
         return;
       }
       setOpen(false);
-      // Best-effort optimistic append; the server revalidation on next navigation is
-      // the source of truth (this page doesn't refetch after a Server Action by itself).
+      // Optimistic append using the row's REAL id (not crypto.randomUUID()) — a locally
+      // generated id matched nothing in the database, so removing or reordering this exact
+      // item before the next full page load (which replaces this optimistic state with
+      // server-truthed `initialItems`) sent Server Actions an id that owned no row: a
+      // silent no-op delete that left the real row behind, or a reorder rejected outright.
+      // The server revalidation on next navigation is still the ultimate source of truth
+      // for everything else about this row; this only fixes the id itself.
       if (mode === "external_link") {
-        setItems((prev) => [...prev, { id: crypto.randomUUID(), itemType: "external_link", title: linkTitle || linkUrl, organization: null, url: linkUrl }]);
+        setItems((prev) => [...prev, { id: result.id!, itemType: "external_link", title: linkTitle || linkUrl, organization: null, url: linkUrl }]);
       } else {
         const candidate = candidates[mode].find((c) => c.id === selectedId);
-        if (candidate) setItems((prev) => [...prev, { id: crypto.randomUUID(), itemType: mode, title: candidate.label, organization: null, url: null }]);
+        if (candidate) setItems((prev) => [...prev, { id: result.id!, itemType: mode, title: candidate.label, organization: null, url: null }]);
       }
     });
   }
 
   function remove(id: string) {
+    const previous = items;
     setItems((prev) => prev.filter((i) => i.id !== id));
     startTransition(async () => {
-      await removeFeaturedItem(id);
+      const result = await removeFeaturedItem(id);
+      if (result.error) {
+        setItems(previous);
+        toast.error(result.error);
+      }
     });
   }
 
   function move(index: number, direction: -1 | 1) {
     const target = index + direction;
     if (target < 0 || target >= items.length) return;
+    const previous = items;
     const next = [...items];
     [next[index], next[target]] = [next[target], next[index]];
     setItems(next);
     startTransition(async () => {
-      await reorderFeaturedItems(next.map((i) => i.id));
+      const result = await reorderFeaturedItems(next.map((i) => i.id));
+      if (result.error) {
+        setItems(previous);
+        toast.error(result.error);
+      }
     });
   }
 

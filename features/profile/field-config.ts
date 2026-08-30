@@ -18,13 +18,20 @@ export const STORY_NOTES_FIELD = {
   placeholder: "Why did you start? What was the hardest moment? What changed? What did you learn? Who did you work with? What was the measurable outcome? Anything you don't want to forget.",
 };
 
+// `quickAdd: true` marks a field as part of an entity's *meaningful initial record* — the
+// minimum that makes the record true and useful (a test score without a score isn't a test
+// score record). Everything else is *accessible enrichment*: reachable via Edit on the same
+// entity, never removed, just not asked for up front. QuickAddEntry (quick-add-entry.tsx)
+// renders exactly `fields.filter(f => f.quickAdd)` per entity — same FieldConfig objects the
+// full Edit dialog already uses, so a label/placeholder/option list never has two copies to
+// drift apart. See that file's header comment for the full basic/advanced rationale.
 export type FieldConfig =
-  | { type: "text"; name: string; label: string; placeholder?: string; span?: "full" | "half" }
-  | { type: "textarea"; name: string; label: string; placeholder?: string }
-  | { type: "date"; name: string; label: string; span?: "full" | "half" }
-  | { type: "number"; name: string; label: string; span?: "full" | "half" }
-  | { type: "checkbox"; name: string; label: string }
-  | { type: "select"; name: string; label: string; options: { value: string; label: string }[]; placeholder?: string; span?: "full" | "half" }
+  | { type: "text"; name: string; label: string; placeholder?: string; span?: "full" | "half"; quickAdd?: boolean }
+  | { type: "textarea"; name: string; label: string; placeholder?: string; quickAdd?: boolean }
+  | { type: "date"; name: string; label: string; span?: "full" | "half"; quickAdd?: boolean }
+  | { type: "number"; name: string; label: string; span?: "full" | "half"; quickAdd?: boolean }
+  | { type: "checkbox"; name: string; label: string; quickAdd?: boolean }
+  | { type: "select"; name: string; label: string; options: { value: string; label: string }[]; placeholder?: string; span?: "full" | "half"; quickAdd?: boolean }
   // Canonical Entity Autocomplete System. `name` is the existing legacy free-text column
   // (kept in sync with the linked entity's display name at selection time);
   // `entityIdField` is the nullable `*_entity_id` column that links to the canonical
@@ -42,12 +49,13 @@ export type FieldConfig =
       customLabel?: string;
       placeholder?: string;
       span?: "full" | "half";
+      quickAdd?: boolean;
     }
   // Canonical-suggestion text field (features/entities/suggest-input.tsx) — for a small,
   // mostly-closed vocabulary (test names, course subjects) that doesn't warrant the full
   // registry `"entity"` uses. Unlike "select", never rejects or forces a value to be one of
   // `suggestions` — a genuinely custom entry is always valid and stored as typed.
-  | { type: "suggest"; name: string; label: string; suggestions: string[]; placeholder?: string; span?: "full" | "half" };
+  | { type: "suggest"; name: string; label: string; suggestions: string[]; placeholder?: string; span?: "full" | "half"; quickAdd?: boolean };
 
 
 export const ACTIVITY_CATEGORY_OPTIONS = [
@@ -118,9 +126,9 @@ export const SPORT_LEVEL_OPTIONS = [
 export const GOAL_CATEGORY_SUGGESTIONS = ["Academics", "Career", "Personal", "Financial", "Community/Leadership"];
 
 export const ACTIVITY_FIELDS: FieldConfig[] = [
-  { type: "text", name: "title", label: "Title", placeholder: "e.g. Robotics Club Captain" },
-  { type: "entity", name: "organization", entityIdField: "organization_entity_id", scope: "activity_organization", label: "Organization", allowCustom: true, customLabel: "organization", span: "half" },
-  { type: "select", name: "category", label: "Category", options: ACTIVITY_CATEGORY_OPTIONS, span: "half" },
+  { type: "text", name: "title", label: "Title", placeholder: "e.g. Robotics Club Captain", quickAdd: true },
+  { type: "entity", name: "organization", entityIdField: "organization_entity_id", scope: "activity_organization", label: "Organization", allowCustom: true, customLabel: "organization", span: "half", quickAdd: true },
+  { type: "select", name: "category", label: "Category", options: ACTIVITY_CATEGORY_OPTIONS, span: "half", quickAdd: true },
   { type: "textarea", name: "description", label: "Description" },
   { type: "checkbox", name: "is_leadership_role", label: "This is a leadership role" },
   { type: "number", name: "people_led", label: "People led", span: "half" },
@@ -148,7 +156,7 @@ export const ACTIVITY_FIELDS: FieldConfig[] = [
 ];
 
 export const PROJECT_FIELDS: FieldConfig[] = [
-  { type: "text", name: "title", label: "Title" },
+  { type: "text", name: "title", label: "Title", quickAdd: true },
   {
     type: "entity",
     name: "organization",
@@ -175,7 +183,7 @@ export const PROJECT_FIELDS: FieldConfig[] = [
 ];
 
 export const AWARD_FIELDS: FieldConfig[] = [
-  { type: "text", name: "title", label: "Title" },
+  { type: "text", name: "title", label: "Title", quickAdd: true },
   {
     type: "entity",
     name: "organization",
@@ -194,7 +202,7 @@ export const AWARD_FIELDS: FieldConfig[] = [
 ];
 
 export const RESEARCH_FIELDS: FieldConfig[] = [
-  { type: "text", name: "title", label: "Title" },
+  { type: "text", name: "title", label: "Title", quickAdd: true },
   {
     type: "entity",
     name: "organization",
@@ -206,7 +214,7 @@ export const RESEARCH_FIELDS: FieldConfig[] = [
     span: "half",
   },
   { type: "text", name: "mentor_name", label: "Mentor", span: "half" },
-  { type: "suggest", name: "field", label: "Field", suggestions: INTEREST_SUGGESTIONS, placeholder: "e.g. Economics", span: "half" },
+  { type: "suggest", name: "field", label: "Field", suggestions: INTEREST_SUGGESTIONS, placeholder: "e.g. Economics", span: "half", quickAdd: true },
   { type: "select", name: "output_type", label: "Output", options: RESEARCH_OUTPUT_OPTIONS, span: "half" },
   { type: "textarea", name: "description", label: "Description" },
   { type: "textarea", name: "methodology", label: "Methodology" },
@@ -221,7 +229,7 @@ export const RESEARCH_FIELDS: FieldConfig[] = [
 ];
 
 export const VOLUNTEERING_FIELDS: FieldConfig[] = [
-  { type: "text", name: "title", label: "Title" },
+  { type: "text", name: "title", label: "Title", quickAdd: true },
   {
     type: "entity",
     name: "organization",
@@ -231,6 +239,7 @@ export const VOLUNTEERING_FIELDS: FieldConfig[] = [
     allowCustom: true,
     customLabel: "organization",
     span: "half",
+    quickAdd: true,
   },
   { type: "suggest", name: "cause_area", label: "Cause area", suggestions: CAUSE_AREA_SUGGESTIONS, placeholder: "e.g. Education", span: "half" },
   { type: "textarea", name: "description", label: "Description" },
@@ -243,9 +252,9 @@ export const VOLUNTEERING_FIELDS: FieldConfig[] = [
 ];
 
 export const WORK_EXPERIENCE_FIELDS: FieldConfig[] = [
-  { type: "text", name: "title", label: "Title" },
-  { type: "entity", name: "organization", entityIdField: "organization_entity_id", scope: "work_organization", label: "Organization", allowCustom: true, customLabel: "employer" },
-  { type: "select", name: "employment_type", label: "Type", options: EMPLOYMENT_TYPE_OPTIONS, span: "half" },
+  { type: "text", name: "title", label: "Title", quickAdd: true },
+  { type: "entity", name: "organization", entityIdField: "organization_entity_id", scope: "work_organization", label: "Organization", allowCustom: true, customLabel: "employer", quickAdd: true },
+  { type: "select", name: "employment_type", label: "Type", options: EMPLOYMENT_TYPE_OPTIONS, span: "half", quickAdd: true },
   { type: "checkbox", name: "paid", label: "Paid" },
   { type: "textarea", name: "description", label: "Description" },
   { type: "date", name: "start_date", label: "Start date", span: "half" },
@@ -257,9 +266,9 @@ export const WORK_EXPERIENCE_FIELDS: FieldConfig[] = [
 ];
 
 export const EDUCATION_FIELDS: FieldConfig[] = [
-  { type: "entity", name: "school_name", entityIdField: "school_entity_id", scope: "school", label: "School name", allowCustom: true, customLabel: "school" },
+  { type: "entity", name: "school_name", entityIdField: "school_entity_id", scope: "school", label: "School name", allowCustom: true, customLabel: "school", quickAdd: true },
   { type: "suggest", name: "country", label: "Country", suggestions: COUNTRY_SUGGESTIONS, placeholder: "e.g. United States", span: "half" },
-  { type: "select", name: "stage", label: "Stage", options: EDUCATION_STAGE_OPTIONS, span: "half" },
+  { type: "select", name: "stage", label: "Stage", options: EDUCATION_STAGE_OPTIONS, span: "half", quickAdd: true },
   { type: "select", name: "curriculum", label: "Curriculum", options: CURRICULUM_FIELD_OPTIONS, span: "half" },
   { type: "checkbox", name: "is_current", label: "Currently attending" },
   { type: "date", name: "start_date", label: "Start date", span: "half" },
@@ -285,7 +294,7 @@ export const COURSE_LEVEL_OPTIONS = [
 export const COURSE_LEVEL_LABELS: Record<string, string> = Object.fromEntries(COURSE_LEVEL_OPTIONS.map((o) => [o.value, o.label]));
 
 export const COURSE_FIELDS: FieldConfig[] = [
-  { type: "suggest", name: "course_name", label: "Course", suggestions: COURSE_NAME_SUGGESTIONS, placeholder: "e.g. AP Microeconomics" },
+  { type: "suggest", name: "course_name", label: "Course", suggestions: COURSE_NAME_SUGGESTIONS, placeholder: "e.g. AP Microeconomics", quickAdd: true },
   { type: "select", name: "level", label: "Level", options: COURSE_LEVEL_OPTIONS, span: "half" },
   { type: "suggest", name: "subject", label: "Subject", suggestions: INTEREST_SUGGESTIONS, placeholder: "e.g. Economics", span: "half" },
   { type: "text", name: "academic_year", label: "Academic year", placeholder: "e.g. 2026-27", span: "half" },
@@ -295,14 +304,19 @@ export const COURSE_FIELDS: FieldConfig[] = [
 ];
 
 export const TEST_SCORE_FIELDS: FieldConfig[] = [
-  { type: "suggest", name: "test_name", label: "Test name", suggestions: TEST_NAME_SUGGESTIONS, placeholder: "e.g. SAT, IB Predicted" },
-  { type: "text", name: "score", label: "Score", span: "half" },
-  { type: "text", name: "max_score", label: "Max score", span: "half" },
-  { type: "date", name: "test_date", label: "Date" },
+  { type: "suggest", name: "test_name", label: "Test name", suggestions: TEST_NAME_SUGGESTIONS, placeholder: "e.g. SAT, IB Predicted", quickAdd: true },
+  // Free text, deliberately not `type: "number"` — a strict numeric input would reject
+  // legitimate non-numeric scores (IB "38", AP "5", CEFR-style "C1", a letter grade). The
+  // score/max_score numeric-relationship check (TestScoreSchema in
+  // lib/validation/achievements.ts) still catches an impossible *numeric* pair; a
+  // non-numeric score just skips that check rather than being blocked from saving at all.
+  { type: "text", name: "score", label: "Score", span: "half", quickAdd: true },
+  { type: "text", name: "max_score", label: "Max score", span: "half", quickAdd: true },
+  { type: "date", name: "test_date", label: "Date", quickAdd: true },
 ];
 
 export const CERTIFICATION_FIELDS: FieldConfig[] = [
-  { type: "text", name: "title", label: "Title" },
+  { type: "text", name: "title", label: "Title", quickAdd: true },
   {
     type: "entity",
     name: "organization",
@@ -325,14 +339,14 @@ export const GOAL_STATUS_OPTIONS = [
 ];
 
 export const GOAL_FIELDS: FieldConfig[] = [
-  { type: "text", name: "title", label: "Goal", placeholder: "e.g. Study Economics in the UK" },
+  { type: "text", name: "title", label: "Goal", placeholder: "e.g. Study Economics in the UK", quickAdd: true },
   { type: "suggest", name: "category", label: "Category (optional)", suggestions: GOAL_CATEGORY_SUGGESTIONS, placeholder: "e.g. Academics, Career", span: "half" },
   { type: "date", name: "target_date", label: "Target date", span: "half" },
   { type: "select", name: "status", label: "Status", options: GOAL_STATUS_OPTIONS },
 ];
 
 export const SPORTS_FIELDS: FieldConfig[] = [
-  { type: "suggest", name: "sport", label: "Sport", suggestions: SPORT_NAME_SUGGESTIONS, placeholder: "e.g. Swimming", span: "half" },
+  { type: "suggest", name: "sport", label: "Sport", suggestions: SPORT_NAME_SUGGESTIONS, placeholder: "e.g. Swimming", span: "half", quickAdd: true },
   { type: "text", name: "discipline", label: "Discipline / event", placeholder: "e.g. 200m Freestyle", span: "half" },
   {
     type: "entity",
@@ -343,6 +357,7 @@ export const SPORTS_FIELDS: FieldConfig[] = [
     allowCustom: true,
     customLabel: "team, club, or school",
     span: "half",
+    quickAdd: true,
   },
   { type: "text", name: "position", label: "Position / role", span: "half" },
   { type: "select", name: "level", label: "Competitive level", options: SPORT_LEVEL_OPTIONS, span: "half" },

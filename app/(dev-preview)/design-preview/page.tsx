@@ -4,6 +4,10 @@ import { UniversityExplorerHero } from "@/features/universities/university-explo
 import { AcceptanceMoment } from "@/features/applications/status-control";
 import { SUPPORTED_COUNTRIES } from "@/lib/data/country-geo";
 import { ProgressView } from "@/features/profile/progress-view";
+import { SettingsView } from "@/features/settings/settings-view";
+import { EvidenceRow } from "@/features/documents/evidence-row";
+import { SearchView } from "@/features/search/search-view";
+import { ApplicationsView } from "@/features/applications/applications-view";
 import { PreviewShell } from "./preview-shell";
 import {
   FIXTURE_STUDENT,
@@ -63,6 +67,43 @@ export default function DesignPreviewPage() {
         }))}
         opportunityMatchesRefreshed={true}
       />
+
+      <div className="mt-16 space-y-3 border-t pt-16">
+        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Settings</p>
+        <SettingsView email="ada@example.com" userId="fixture-user" profile={null} />
+      </div>
+
+      <div className="mt-16 max-w-2xl space-y-3 border-t pt-16">
+        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Documents (evidence row)</p>
+        <ul className="space-y-2">
+          <EvidenceRow id="1" fileName="Economics_Olympiad_Certificate.pdf" linkedLabel="National Economics Olympiad — 2nd Place" signedUrl="#" />
+          <EvidenceRow id="2" fileName="STEM_Director_Letter.pdf" linkedLabel="Regional Director — STEM Organization" signedUrl={null} />
+        </ul>
+      </div>
+
+      <div className="mt-16 space-y-3 border-t pt-16">
+        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Search</p>
+        <SearchView
+          query="econ"
+          results={[
+            { type: "university", id: "1", title: "London School of Economics", subtitle: "London, UK · QS #45", href: "/universities/1" },
+            { type: "opportunity", id: "2", title: "Research Science Institute", subtitle: "Research · Oct 15", href: "/opportunities/2" },
+            { type: "award", id: "3", title: "National Economics Olympiad", subtitle: "Award · 2025", href: "/profile" },
+          ]}
+        />
+      </div>
+
+      <div className="mt-16 space-y-3 border-t pt-16">
+        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Applications</p>
+        <ApplicationsView
+          hasTargets
+          availableTargets={[{ id: "t1", name: "Bocconi University" }]}
+          applications={[
+            { id: "a1", universityName: "University of Pennsylvania", applicationType: "early_decision", deadline: "2026-11-01", status: "in_progress", readiness: 33 },
+            { id: "a2", universityName: "University of Cambridge", applicationType: "regular", deadline: "2026-10-15", status: "not_started", readiness: 0 },
+          ]}
+        />
+      </div>
     </PreviewShell>
   );
 }

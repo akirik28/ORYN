@@ -5,7 +5,6 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Bell, CheckCheck } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { markNotificationRead, markAllNotificationsRead } from "@/app/(app)/notifications/actions";
@@ -23,22 +22,38 @@ export function NotificationBell({ notifications }: { notifications: Notificatio
           (see components/ui/button-link.tsx's comment on Button's own native default).
           Unlike the other PopoverTrigger/Button `render` usages in this codebase (an <a>
           or Link standing in for the button), there's nothing non-native about this one. */}
-      <PopoverTrigger render={<Button variant="ghost" size="icon" />} nativeButton={true} aria-label="Notifications">
+      {/* Figma-source trigger (App.tsx `Topbar`): 34px white box, #EEEEF6 border — literal
+          source colors, matching the search box next to it. */}
+      <PopoverTrigger
+        render={
+          <button
+            type="button"
+            style={{ background: "white", borderColor: "#EEEEF6" }}
+            className="flex size-[34px] items-center justify-center rounded-[9px] border text-[#6A6A7A] transition-colors hover:text-[#111118] focus-visible:outline-none"
+          />
+        }
+        nativeButton={true}
+        aria-label="Notifications"
+      >
         <span className="relative">
-          <Bell className="size-4" />
+          <Bell className="size-[17px]" strokeWidth={1.6} />
           {unreadCount > 0 ? (
-            <span className="absolute -right-1.5 -top-1.5 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
-              {unreadCount > 9 ? "9+" : unreadCount}
-            </span>
+            <span
+              aria-hidden="true"
+              style={{ background: "#3D35E8", borderColor: "white" }}
+              className="absolute -right-1 -top-1 size-2 rounded-full border-[1.5px]"
+            />
           ) : null}
+          <span className="sr-only">{unreadCount > 0 ? `${unreadCount} unread` : "No unread"}</span>
         </span>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 p-0">
-        <div className="flex items-center justify-between border-b px-3 py-2.5">
-          <span className="text-sm font-medium">Notifications</span>
+      <PopoverContent align="end" className="w-80 gap-0 rounded-[14px] p-0" style={{ borderColor: "#EEEEF6" }}>
+        <div className="flex items-center justify-between border-b px-4 py-3" style={{ borderColor: "#F4F4F8" }}>
+          <span className="text-[13px] font-bold" style={{ color: "#111118" }}>Notifications</span>
           {unreadCount > 0 ? (
             <button
-              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+              className="flex items-center gap-1 text-[11px] font-semibold hover:opacity-80"
+              style={{ color: "#3D35E8" }}
               disabled={isPending}
               onClick={() =>
                 startTransition(async () => {
@@ -53,34 +68,56 @@ export function NotificationBell({ notifications }: { notifications: Notificatio
         </div>
         <div className="max-h-96 overflow-y-auto">
           {notifications.length === 0 ? (
-            <p className="px-3 py-6 text-center text-sm text-muted-foreground">You&apos;re all caught up.</p>
+            <p className="px-4 py-7 text-center text-[13px]" style={{ color: "#AAAABC" }}>All caught up</p>
           ) : (
-            notifications.map((notification) => (
-              <Link
-                key={notification.id}
-                href={notification.link ?? "#"}
-                onClick={() => {
-                  setOpen(false);
-                  if (!notification.read_at) {
-                    startTransition(async () => {
-                      const result = await markNotificationRead(notification.id);
-                      if (result.error) toast.error(result.error);
-                    });
-                  }
-                }}
-                className={cn(
-                  "block border-b px-3 py-2.5 text-sm transition-colors last:border-b-0 hover:bg-accent",
-                  !notification.read_at && "bg-accent/40"
-                )}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <p className="font-medium leading-snug">{notification.title}</p>
-                  {!notification.read_at ? <span className="mt-1 size-1.5 shrink-0 rounded-full bg-primary" /> : null}
-                </div>
-                {notification.body ? <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{notification.body}</p> : null}
-                <p className="mt-1 text-xs text-muted-foreground">{formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}</p>
-              </Link>
-            ))
+            notifications.map((notification) => {
+              const rowClassName = cn(
+                "flex w-full items-start gap-2.5 border-b px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-accent",
+                !notification.read_at ? "bg-[#FAFAFE]" : "bg-transparent"
+              );
+              const rowContent = (
+                <>
+                  <span
+                    aria-hidden="true"
+                    style={{ background: notification.read_at ? "#D0D0E0" : "#3D35E8" }}
+                    className="mt-[5px] size-2 shrink-0 rounded-full"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[13px] leading-snug font-semibold" style={{ color: "#111118" }}>{notification.title}</span>
+                    {notification.body ? (
+                      <span className="mt-0.5 line-clamp-2 block text-xs leading-[1.45]" style={{ color: "#7A7A8A" }}>{notification.body}</span>
+                    ) : null}
+                    <span className="mt-1 block text-[11px]" style={{ color: "#AAAABC" }}>
+                      {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                    </span>
+                  </span>
+                </>
+              );
+              const onActivate = () => {
+                setOpen(false);
+                if (!notification.read_at) {
+                  startTransition(async () => {
+                    const result = await markNotificationRead(notification.id);
+                    if (result.error) toast.error(result.error);
+                  });
+                }
+              };
+
+              // A notification with no `link` previously still rendered as a Link, falling
+              // back to `href="#"` — a tap dutifully marked it read but visibly went
+              // nowhere, indistinguishable from a dead control. Rendered as a real button
+              // instead when there's nothing to navigate to, so the affordance matches what
+              // actually happens on click.
+              return notification.link ? (
+                <Link key={notification.id} href={notification.link} onClick={onActivate} className={rowClassName}>
+                  {rowContent}
+                </Link>
+              ) : (
+                <button key={notification.id} type="button" onClick={onActivate} className={rowClassName}>
+                  {rowContent}
+                </button>
+              );
+            })
           )}
         </div>
       </PopoverContent>

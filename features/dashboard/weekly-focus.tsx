@@ -5,6 +5,7 @@ import { Check } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ActionCard } from "@/components/oryn/action-card";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
 import { staggerFadeUp } from "@/lib/motion";
@@ -43,6 +44,13 @@ function ActionRow({ action, index }: { action: WeeklyAction; index: number }) {
   const [isPending, startTransition] = useTransition();
   const [showReflection, setShowReflection] = useState(false);
   const [localStatus, setLocalStatus] = useState(action.status);
+  // AGENTS.md Phase 10 ("Allow short notes") — updateActionStatus has accepted and
+  // persisted `reflectionNote` since it was written, but no input for it existed anywhere,
+  // so the capability was reachable from the server and dead everywhere else. Deliberately
+  // a single-line Input, not a Textarea: "short notes," and the four preset reasons above
+  // already carry the main signal — this is for the one extra detail worth keeping, not a
+  // second description field.
+  const [reflectionNote, setReflectionNote] = useState("");
   const isDone = localStatus === "completed";
 
   function toggle() {
@@ -66,8 +74,14 @@ function ActionRow({ action, index }: { action: WeeklyAction; index: number }) {
 
   function saveReflection(outcome: ReflectionOutcome) {
     setShowReflection(false);
+    const note = reflectionNote.trim();
     startTransition(async () => {
-      const result = await updateActionStatus({ actionId: action.id, status: "completed", reflectionOutcome: outcome });
+      const result = await updateActionStatus({
+        actionId: action.id,
+        status: "completed",
+        reflectionOutcome: outcome,
+        reflectionNote: note || undefined,
+      });
       if (result.error) toast.error(result.error);
     });
   }
@@ -85,13 +99,21 @@ function ActionRow({ action, index }: { action: WeeklyAction; index: number }) {
         meta={action.deadline ? <DeadlineBadge date={action.deadline} /> : null}
       >
         {showReflection ? (
-          <div className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3">
-            <span className="text-xs text-ink-3">What happened?</span>
-            {REFLECTION_OPTIONS.map((option) => (
-              <Button key={option.value} variant="outline" size="xs" onClick={() => saveReflection(option.value)}>
-                <Check className="size-3" /> {option.label}
-              </Button>
-            ))}
+          <div className="mt-3 space-y-2 border-t pt-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs text-ink-3">What happened?</span>
+              {REFLECTION_OPTIONS.map((option) => (
+                <Button key={option.value} variant="outline" size="xs" onClick={() => saveReflection(option.value)}>
+                  <Check className="size-3" /> {option.label}
+                </Button>
+              ))}
+            </div>
+            <Input
+              value={reflectionNote}
+              onChange={(e) => setReflectionNote(e.target.value)}
+              placeholder="Add a short note (optional)"
+              className="h-7 max-w-xs text-xs"
+            />
           </div>
         ) : null}
       </ActionCard>

@@ -23,15 +23,24 @@ export function EvidenceRow({
   const router = useRouter();
 
   return (
-    <li className="flex items-center justify-between gap-3 rounded-lg border px-4 py-3">
-      <div className="flex min-w-0 items-center gap-3">
-        <File className="size-4 shrink-0 text-muted-foreground" />
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium">{fileName}</p>
-          <Badge variant="outline" className="mt-0.5 text-xs">
-            {linkedLabel}
-          </Badge>
-        </div>
+    // Figma-source card chrome (ProfileTools.tsx `DocumentsScreen`): translucent white,
+    // 14px blur, literal source colors. rounded-lg -> rounded-[14px], px-4 py-3 -> a
+    // slightly roomier 16/18 to match the source card's own padding.
+    <li
+      className="flex items-start gap-3.5 rounded-[14px] px-[18px] py-4"
+      style={{ background: "rgba(255,255,255,0.55)", backdropFilter: "blur(14px)", border: "1px solid rgba(255,255,255,0.70)" }}
+    >
+      <span
+        className="flex size-9 shrink-0 items-center justify-center rounded-lg"
+        style={{ background: "#F0F0F6" }}
+      >
+        <File className="size-4 text-muted-foreground" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium">{fileName}</p>
+        <Badge variant="outline" className="mt-1.5 text-xs">
+          {linkedLabel}
+        </Badge>
       </div>
       <div className="flex shrink-0 items-center gap-1">
         {signedUrl ? (

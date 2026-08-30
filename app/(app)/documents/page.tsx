@@ -37,6 +37,16 @@ export default async function DocumentsPage() {
         action={<UploadEvidenceDialog items={linkableItems} />}
       />
 
+      {/* Literal source banner (ProfileTools.tsx `DocumentsScreen`) — the same
+          self-reported/evidence-added/verified distinction AGENTS.md Phase 11 requires,
+          restated here since a student uploading a file is exactly the moment that
+          distinction needs to be visible, not just documented elsewhere. */}
+      <div className="rounded-xl px-4 py-3 text-sm text-[#6A6A7A]" style={{ background: "rgba(61,53,232,0.06)" }}>
+        Uploading a document sets evidence status to <strong className="font-semibold text-ink-1">Evidence added</strong>. It does
+        not automatically become <strong className="font-semibold text-ink-1">Verified</strong> — verification is a separate
+        process.
+      </div>
+
       {evidenceWithUrls.length > 0 ? (
         <ul className="space-y-2">
           {evidenceWithUrls.map((evidence) => (

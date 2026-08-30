@@ -21,8 +21,16 @@ export default async function ConnectionsPage() {
 
   const isEmpty = accepted.length === 0 && incomingPending.length === 0 && outgoingPending.length === 0;
 
+  // Figma-source glass-card chrome (App.tsx `ConnectionsScreen`'s tab bar/card
+  // translucency) — applied to this page's existing stacked-sections layout rather than
+  // source's tabbed one. Source's four-tab UI (Suggested/Requests/Connected/Search)
+  // hides everything but one group at a time; this page already shows requests first and
+  // everything else below, which surfaces a pending request without an extra click — a
+  // reasonable real pattern, not something the visual pass should flatten to match source.
+  const cardBase = "space-y-3 rounded-2xl border border-white/65 bg-white/45 p-5 backdrop-blur-2xl md:p-6";
+
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       <PageHeader
         eyebrow="Connections"
         title="People on a similar path."
@@ -38,7 +46,7 @@ export default async function ConnectionsPage() {
       ) : (
         <>
           {incomingPending.length > 0 ? (
-            <section className="space-y-3">
+            <section className={`glass-card-fast ${cardBase}`}>
               <SectionHeader title="Requests" description={`${incomingPending.length} waiting for your response`} />
               <div className="space-y-2">
                 {incomingPending.map((connection) => (
@@ -48,7 +56,7 @@ export default async function ConnectionsPage() {
             </section>
           ) : null}
 
-          <section className="space-y-3">
+          <section className={`glass-card ${cardBase}`}>
             <SectionHeader title="Your connections" description={`${accepted.length} connected`} />
             {accepted.length > 0 ? (
               <div className="grid gap-3 sm:grid-cols-2">
@@ -62,7 +70,7 @@ export default async function ConnectionsPage() {
           </section>
 
           {outgoingPending.length > 0 ? (
-            <section className="space-y-3">
+            <section className={`glass-card-offset2 ${cardBase}`}>
               <SectionHeader title="Sent" description="Waiting for a response" />
               <div className="grid gap-3 sm:grid-cols-2">
                 {outgoingPending.map((connection) => (
@@ -75,7 +83,7 @@ export default async function ConnectionsPage() {
       )}
 
       {suggestions.length > 0 ? (
-        <section className="space-y-3">
+        <section className={`glass-card-offset ${cardBase}`}>
           <SectionHeader
             title="People on a similar path"
             description="Ranked by real overlap with your record — mutual connections, school, interests and skills. Every reason is shown."

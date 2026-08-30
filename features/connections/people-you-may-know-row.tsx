@@ -42,7 +42,14 @@ export function PeopleYouMayKnowRow({
   const name = displayName ?? "Oryn student";
 
   return (
-    <article className="flex flex-col rounded-2xl bg-surface-tint p-5">
+    // Figma-source card chrome — the content structure this card's own UI-V3 § 28 comment
+    // protects (overlap reasons as the body, not a footnote) is unchanged; only the
+    // container's colors move from the flat surface-tint fill to the glass treatment used
+    // everywhere else in this pass.
+    <article
+      className="flex flex-col rounded-2xl p-5"
+      style={{ background: "rgba(255,255,255,0.42)", backdropFilter: "blur(14px)", border: "1px solid rgba(255,255,255,0.65)" }}
+    >
       <div className="flex items-start gap-3">
         <Avatar className="mt-0.5 shrink-0">
           <AvatarFallback className="bg-brand-primary-soft text-brand-primary-strong">

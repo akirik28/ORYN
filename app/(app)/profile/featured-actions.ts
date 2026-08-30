@@ -16,6 +16,7 @@ import {
 import type { FeaturedItemType } from "@/types/database";
 
 type ActionResult = { error?: string };
+type AddResult = { id?: string; error?: string };
 
 function isHttpUrl(value: string): boolean {
   return /^https?:\/\/.+/i.test(value);
@@ -38,7 +39,7 @@ export async function addFeaturedItem(
   itemId: string | null,
   externalTitle: string | null,
   externalUrl: string | null
-): Promise<ActionResult> {
+): Promise<AddResult> {
   const session = await requireUser();
   const supabase = await createClient();
 
@@ -49,15 +50,27 @@ export async function addFeaturedItem(
   }
   const nextOrder = existing.length;
 
+  // Every insert below now returns the real row id — the client (featured-manager.tsx)
+  // uses it for its optimistic item instead of a locally-generated `crypto.randomUUID()`.
+  // The fake id looked identical to a real one but never matched an actual row: removing or
+  // reordering that same item before the next full page load (which replaces optimistic
+  // state with server-truthed data) sent a real Server Action a fake id — a silent no-op
+  // delete that left the item's real row behind, or a reorder rejected outright by
+  // `allFeaturedIdsOwned` below since the fake id owns nothing.
+  let id: string | undefined;
+
   if (itemType === "external_link") {
     const url = (externalUrl ?? "").trim();
     if (!url || !isHttpUrl(url)) return { error: "Enter a link starting with http:// or https://." };
     const title = (externalTitle ?? "").trim().slice(0, 220) || url;
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("featured_items")
-      .insert({ user_id: session.userId!, item_type: "external_link", item_id: null, external_title: title, external_url: url, display_order: nextOrder });
-    if (error) return { error: "Couldn't feature that link." };
+      .insert({ user_id: session.userId!, item_type: "external_link", item_id: null, external_title: title, external_url: url, display_order: nextOrder })
+      .select("id")
+      .single();
+    if (error || !data) return { error: "Couldn't feature that link." };
+    id = data.id;
   } else {
     if (!itemId || !isUuidLike(itemId)) return { error: "Choose an item to feature." };
     if (isDuplicateFeaturedSource(existing, itemType, itemId)) return { error: "That's already featured." };
@@ -69,17 +82,20 @@ export async function addFeaturedItem(
     const { data: sourceRow } = await supabase.from(table as "projects").select("id, user_id").eq("id", itemId).maybeSingle();
     if (!isFeaturedSourceOwnedByRequester(sourceRow, session.userId!)) return { error: "That item couldn't be found." };
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("featured_items")
-      .insert({ user_id: session.userId!, item_type: itemType, item_id: itemId, external_title: null, external_url: null, display_order: nextOrder });
-    if (error) {
-      if (error.code === "23505") return { error: "That's already featured." };
+      .insert({ user_id: session.userId!, item_type: itemType, item_id: itemId, external_title: null, external_url: null, display_order: nextOrder })
+      .select("id")
+      .single();
+    if (error || !data) {
+      if (error?.code === "23505") return { error: "That's already featured." };
       return { error: "Couldn't feature that." };
     }
+    id = data.id;
   }
 
   await afterFeaturedWrite(session.userId!);
-  return {};
+  return { id };
 }
 
 export async function removeFeaturedItem(id: string): Promise<ActionResult> {

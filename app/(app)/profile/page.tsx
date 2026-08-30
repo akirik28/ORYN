@@ -1,5 +1,19 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import {
+  ArrowRight,
+  Sparkles,
+  Trophy,
+  Medal,
+  FlaskConical,
+  Briefcase,
+  HandHeart,
+  BookOpen,
+  ClipboardCheck,
+  Hammer,
+  BadgeCheck,
+  Dumbbell,
+  GraduationCap,
+} from "lucide-react";
 import { getCurrentProfile, requireUser } from "@/lib/security/dal";
 import { PageHeader } from "@/components/oryn/page-header";
 import { SectionHeader } from "@/components/oryn/section-header";
@@ -14,6 +28,7 @@ import { DIMENSION_LABELS } from "@/lib/scoring/labels";
 import { PeerBenchmark } from "@/features/profile/peer-benchmark";
 import { getPeerBenchmarks } from "@/lib/benchmarking";
 import { AchievementSection } from "@/features/profile/achievement-section";
+import { QuickAddEntry, type QuickAddType } from "@/features/profile/quick-add-entry";
 import { ResearchIdeaGenerator } from "@/features/profile/research-idea-generator";
 import { ProfessionalIdentityForm } from "@/features/profile/professional-identity-form";
 import { OpenToForm } from "@/features/profile/open-to-form";
@@ -245,6 +260,62 @@ export default async function ProfilePage() {
   const summaryMap = <T extends { id: string }>(items: T[], summarize: (item: T) => { title: string; subtitle?: string }) =>
     Object.fromEntries(items.map((item) => [item.id, summarize(item)]));
 
+  // Shared with QuickAddEntry below, so the picker's "meaningful fields only" defaults and
+  // the full Edit dialog's defaults can never quietly drift apart into two answers for
+  // "what does a blank Activity look like."
+  const activityDefaults: FormValues = { title: "", organization: null, organization_entity_id: null, category: "other", description: null, is_leadership_role: false, people_led: null, organization_scope: null, opportunity_title: null, opportunity_id: null, start_date: null, end_date: null, ongoing: false, hours_per_week: null, weeks_per_year: null, location: null, story_notes: null };
+  const projectDefaults: FormValues = { title: "", organization: null, organization_entity_id: null, description: null, role: null, start_date: null, end_date: null, ongoing: false, hours_per_week: null, outcome_summary: null, users_reached: null, revenue_amount: null, repo_url: null, live_url: null, location: null, story_notes: null };
+  const awardDefaults: FormValues = { title: "", organization: null, organization_entity_id: null, level: null, description: null, award_date: null, location: null, story_notes: null };
+  const researchDefaults: FormValues = { title: "", organization: null, organization_entity_id: null, mentor_name: null, field: null, description: null, methodology: null, independence_level: null, output_type: "none", output_url: null, start_date: null, end_date: null, ongoing: false, hours_per_week: null, location: null, story_notes: null };
+  const volunteeringDefaults: FormValues = { title: "", organization: null, organization_entity_id: null, description: null, cause_area: null, start_date: null, end_date: null, ongoing: false, hours_per_week: null, weeks_per_year: null, location: null, story_notes: null };
+  const workDefaults: FormValues = { title: "", organization: "", organization_entity_id: null, employment_type: "internship", description: null, start_date: null, end_date: null, ongoing: false, hours_per_week: null, paid: null, location: null, story_notes: null };
+  const educationDefaults: FormValues = { school_name: "", school_entity_id: null, country: null, stage: "high_school", curriculum: null, start_date: null, end_date: null, is_current: true, overall_gpa: null, gpa_scale: null, notes: null };
+  const courseDefaults: FormValues = { course_name: "", level: "regular", subject: null, academic_year: null, grade_value: null, grade_scale: null, credit_hours: null };
+  const testScoreDefaults: FormValues = { test_name: "", score: "", max_score: null, test_date: null };
+  const certificationDefaults: FormValues = { title: "", organization: null, organization_entity_id: null, description: null, issue_date: null, expiry_date: null, credential_url: null };
+  const sportsDefaults: FormValues = { sport: "", discipline: null, team_name: null, team_entity_id: null, position: null, level: null, us_specific_label: null, is_captain: false, achievements: null, start_date: null, end_date: null, ongoing: false, hours_per_week: null, weeks_per_year: null, location: null, description: null, story_notes: null };
+
+  // Figma handoff (package 1) + AGENTS.md Phase 5: a single "What would you like to add?"
+  // entry point, one short step per type, instead of scrolling to the right one of eleven
+  // AchievementSection blocks below and opening its full every-field dialog. Deliberately
+  // scoped to the "things I did/attended" achievement types (the Figma reference's own list,
+  // plus Sports and Education, which share the same shape and cadence) — Goals, Skills, and
+  // Languages are conceptually different (a plan, not a record of something done) and their
+  // own AchievementSection dialogs are already two or three fields, so a second fast path
+  // would add a step rather than remove one. Every field list below is
+  // `X_FIELDS.filter(f => f.quickAdd)` — the exact same FieldConfig objects the full Edit
+  // dialog renders, never a duplicated field list — and every `onCreate` is the same Server
+  // Action AchievementSection's own "Add" button already calls, so validation, entity
+  // resolution, scoring recompute, and the timeline's revalidation all just work unchanged.
+  // `icon` is a pre-rendered element, not a component reference — QuickAddType's own doc
+  // comment (features/profile/quick-add-entry.tsx) explains why: this array is built in a
+  // Server Component and handed to a Client Component, and React's RSC boundary rejects a
+  // raw component/forwardRef value passed as plain prop data. Caught live in the browser
+  // (app/(dev-preview)/design-preview/quick-add), not by QuickAddEntry's own tests, which
+  // render it directly with no RSC boundary to cross.
+  const iconProps = { className: "size-4 text-ink-3", "aria-hidden": true as const };
+  const quickAddTypes: QuickAddType[] = [
+    { key: "activity", label: "Activity", icon: <Sparkles {...iconProps} />, fields: ACTIVITY_FIELDS.filter((f) => f.quickAdd), defaultValues: activityDefaults, onCreate: createActivity as (v: FormValues) => Promise<{ error?: string }> },
+    // Not its own table — a competition is an Activity with category preset to
+    // "competition_team" (see ACTIVITY_CATEGORY_OPTIONS). Distinct picker tile because
+    // "Activity" and "Competition" read as different things to a student even though Oryn
+    // stores them identically; the category select still shows in the short form so the
+    // preset is visible and changeable, not a silent guess.
+    { key: "competition", label: "Competition", icon: <Trophy {...iconProps} />, fields: ACTIVITY_FIELDS.filter((f) => f.quickAdd), defaultValues: { ...activityDefaults, category: "competition_team" }, onCreate: createActivity as (v: FormValues) => Promise<{ error?: string }> },
+    { key: "award", label: "Award", icon: <Medal {...iconProps} />, fields: AWARD_FIELDS.filter((f) => f.quickAdd), defaultValues: awardDefaults, onCreate: createAward as (v: FormValues) => Promise<{ error?: string }> },
+    { key: "research", label: "Research", icon: <FlaskConical {...iconProps} />, fields: RESEARCH_FIELDS.filter((f) => f.quickAdd), defaultValues: researchDefaults, onCreate: createResearchExperience as (v: FormValues) => Promise<{ error?: string }> },
+    // Also not its own table — work_experiences with employment_type preset to
+    // "internship"; same visible-not-silent treatment as Competition above.
+    { key: "internship", label: "Internship", icon: <Briefcase {...iconProps} />, fields: WORK_EXPERIENCE_FIELDS.filter((f) => f.quickAdd), defaultValues: workDefaults, onCreate: createWorkExperience as (v: FormValues) => Promise<{ error?: string }> },
+    { key: "volunteering", label: "Volunteering", icon: <HandHeart {...iconProps} />, fields: VOLUNTEERING_FIELDS.filter((f) => f.quickAdd), defaultValues: volunteeringDefaults, onCreate: createVolunteering as (v: FormValues) => Promise<{ error?: string }> },
+    { key: "course", label: "Course", icon: <BookOpen {...iconProps} />, fields: COURSE_FIELDS.filter((f) => f.quickAdd), defaultValues: courseDefaults, onCreate: createCourse as (v: FormValues) => Promise<{ error?: string }> },
+    { key: "test_score", label: "Test score", icon: <ClipboardCheck {...iconProps} />, fields: TEST_SCORE_FIELDS.filter((f) => f.quickAdd), defaultValues: testScoreDefaults, onCreate: createTestScore as (v: FormValues) => Promise<{ error?: string }> },
+    { key: "project", label: "Project", icon: <Hammer {...iconProps} />, fields: PROJECT_FIELDS.filter((f) => f.quickAdd), defaultValues: projectDefaults, onCreate: createProject as (v: FormValues) => Promise<{ error?: string }> },
+    { key: "certification", label: "Certification", icon: <BadgeCheck {...iconProps} />, fields: CERTIFICATION_FIELDS.filter((f) => f.quickAdd), defaultValues: certificationDefaults, onCreate: createCertification as (v: FormValues) => Promise<{ error?: string }> },
+    { key: "sport", label: "Sport", icon: <Dumbbell {...iconProps} />, fields: SPORTS_FIELDS.filter((f) => f.quickAdd), defaultValues: sportsDefaults, onCreate: createSportsExperience as (v: FormValues) => Promise<{ error?: string }> },
+    { key: "education", label: "Education", icon: <GraduationCap {...iconProps} />, fields: EDUCATION_FIELDS.filter((f) => f.quickAdd), defaultValues: educationDefaults, onCreate: createEducationRecord as (v: FormValues) => Promise<{ error?: string }> },
+  ];
+
   return (
     <div className="space-y-10">
       <PageHeader
@@ -351,6 +422,7 @@ export default async function ProfilePage() {
         <SectionHeader
           title="Your journey"
           description="Everything on one timeline, newest first. The sections below are where you add and edit — this is how it reads."
+          action={<QuickAddEntry types={quickAddTypes} />}
         />
         <JourneyTimeline entries={journeyEntries} />
       </section>
@@ -379,7 +451,7 @@ export default async function ProfilePage() {
         items={activities}
         summaries={summaryMap(activities, (item) => ({ title: item.title, subtitle: item.organization ?? undefined }))}
         fields={ACTIVITY_FIELDS}
-        defaultValues={{ title: "", organization: null, organization_entity_id: null, category: "other", description: null, is_leadership_role: false, people_led: null, organization_scope: null, opportunity_title: null, opportunity_id: null, start_date: null, end_date: null, ongoing: false, hours_per_week: null, weeks_per_year: null, location: null, story_notes: null }}
+        defaultValues={activityDefaults}
         onCreate={createActivity as (v: FormValues) => Promise<{ error?: string }>}
         onUpdate={updateActivity as (id: string, v: FormValues) => Promise<{ error?: string }>}
         onDelete={deleteActivity}
@@ -395,25 +467,7 @@ export default async function ProfilePage() {
           subtitle: [item.team_name, item.is_captain ? "Captain" : null].filter(Boolean).join(" · ") || undefined,
         }))}
         fields={SPORTS_FIELDS}
-        defaultValues={{
-          sport: "",
-          discipline: null,
-          team_name: null,
-          team_entity_id: null,
-          position: null,
-          level: null,
-          us_specific_label: null,
-          is_captain: false,
-          achievements: null,
-          start_date: null,
-          end_date: null,
-          ongoing: false,
-          hours_per_week: null,
-          weeks_per_year: null,
-          location: null,
-          description: null,
-          story_notes: null,
-        }}
+        defaultValues={sportsDefaults}
         onCreate={createSportsExperience as (v: FormValues) => Promise<{ error?: string }>}
         onUpdate={updateSportsExperience as (id: string, v: FormValues) => Promise<{ error?: string }>}
         onDelete={deleteSportsExperience}
@@ -426,7 +480,7 @@ export default async function ProfilePage() {
         items={projectsRes.data ?? []}
         summaries={summaryMap(projectsRes.data ?? [], (item) => ({ title: item.title, subtitle: item.outcome_summary ?? item.organization ?? undefined }))}
         fields={PROJECT_FIELDS}
-        defaultValues={{ title: "", organization: null, organization_entity_id: null, description: null, role: null, start_date: null, end_date: null, ongoing: false, hours_per_week: null, outcome_summary: null, users_reached: null, revenue_amount: null, repo_url: null, live_url: null, location: null, story_notes: null }}
+        defaultValues={projectDefaults}
         onCreate={createProject as (v: FormValues) => Promise<{ error?: string }>}
         onUpdate={updateProject as (id: string, v: FormValues) => Promise<{ error?: string }>}
         onDelete={deleteProject}
@@ -442,7 +496,7 @@ export default async function ProfilePage() {
         items={researchRes.data ?? []}
         summaries={summaryMap(researchRes.data ?? [], (item) => ({ title: item.title, subtitle: item.field ?? undefined }))}
         fields={RESEARCH_FIELDS}
-        defaultValues={{ title: "", organization: null, organization_entity_id: null, mentor_name: null, field: null, description: null, methodology: null, independence_level: null, output_type: "none", output_url: null, start_date: null, end_date: null, ongoing: false, hours_per_week: null, location: null, story_notes: null }}
+        defaultValues={researchDefaults}
         onCreate={createResearchExperience as (v: FormValues) => Promise<{ error?: string }>}
         onUpdate={updateResearchExperience as (id: string, v: FormValues) => Promise<{ error?: string }>}
         onDelete={deleteResearchExperience}
@@ -455,7 +509,7 @@ export default async function ProfilePage() {
         items={awardsRes.data ?? []}
         summaries={summaryMap(awardsRes.data ?? [], (item) => ({ title: item.title, subtitle: item.level ?? undefined }))}
         fields={AWARD_FIELDS}
-        defaultValues={{ title: "", organization: null, organization_entity_id: null, level: null, description: null, award_date: null, location: null, story_notes: null }}
+        defaultValues={awardDefaults}
         onCreate={createAward as (v: FormValues) => Promise<{ error?: string }>}
         onUpdate={updateAward as (id: string, v: FormValues) => Promise<{ error?: string }>}
         onDelete={deleteAward}
@@ -468,7 +522,7 @@ export default async function ProfilePage() {
         items={workRes.data ?? []}
         summaries={summaryMap(workRes.data ?? [], (item) => ({ title: item.title, subtitle: item.organization }))}
         fields={WORK_EXPERIENCE_FIELDS}
-        defaultValues={{ title: "", organization: "", organization_entity_id: null, employment_type: "internship", description: null, start_date: null, end_date: null, ongoing: false, hours_per_week: null, paid: null, location: null, story_notes: null }}
+        defaultValues={workDefaults}
         onCreate={createWorkExperience as (v: FormValues) => Promise<{ error?: string }>}
         onUpdate={updateWorkExperience as (id: string, v: FormValues) => Promise<{ error?: string }>}
         onDelete={deleteWorkExperience}
@@ -481,7 +535,7 @@ export default async function ProfilePage() {
         items={volunteeringRes.data ?? []}
         summaries={summaryMap(volunteeringRes.data ?? [], (item) => ({ title: item.title, subtitle: item.cause_area ?? undefined }))}
         fields={VOLUNTEERING_FIELDS}
-        defaultValues={{ title: "", organization: null, organization_entity_id: null, description: null, cause_area: null, start_date: null, end_date: null, ongoing: false, hours_per_week: null, weeks_per_year: null, location: null, story_notes: null }}
+        defaultValues={volunteeringDefaults}
         onCreate={createVolunteering as (v: FormValues) => Promise<{ error?: string }>}
         onUpdate={updateVolunteering as (id: string, v: FormValues) => Promise<{ error?: string }>}
         onDelete={deleteVolunteering}
@@ -494,7 +548,7 @@ export default async function ProfilePage() {
         items={educationRes.data ?? []}
         summaries={summaryMap(educationRes.data ?? [], (item) => ({ title: item.school_name, subtitle: item.country ?? undefined }))}
         fields={EDUCATION_FIELDS}
-        defaultValues={{ school_name: "", school_entity_id: null, country: null, stage: "high_school", curriculum: null, start_date: null, end_date: null, is_current: true, overall_gpa: null, gpa_scale: null, notes: null }}
+        defaultValues={educationDefaults}
         onCreate={createEducationRecord as (v: FormValues) => Promise<{ error?: string }>}
         onUpdate={updateEducationRecord as (id: string, v: FormValues) => Promise<{ error?: string }>}
         onDelete={deleteEducationRecord}
@@ -512,7 +566,7 @@ export default async function ProfilePage() {
             .join(" · ") || undefined,
         }))}
         fields={COURSE_FIELDS}
-        defaultValues={{ course_name: "", level: "regular", subject: null, academic_year: null, grade_value: null, grade_scale: null, credit_hours: null }}
+        defaultValues={courseDefaults}
         onCreate={createCourse as (v: FormValues) => Promise<{ error?: string }>}
         onUpdate={updateCourse as (id: string, v: FormValues) => Promise<{ error?: string }>}
         onDelete={deleteCourse}
@@ -525,7 +579,7 @@ export default async function ProfilePage() {
         items={testScoresRes.data ?? []}
         summaries={summaryMap(testScoresRes.data ?? [], (item) => ({ title: item.test_name, subtitle: item.score }))}
         fields={TEST_SCORE_FIELDS}
-        defaultValues={{ test_name: "", score: "", max_score: null, test_date: null }}
+        defaultValues={testScoreDefaults}
         onCreate={createTestScore as (v: FormValues) => Promise<{ error?: string }>}
         onUpdate={updateTestScore as (id: string, v: FormValues) => Promise<{ error?: string }>}
         onDelete={deleteTestScore}
@@ -538,7 +592,7 @@ export default async function ProfilePage() {
         items={certificationsRes.data ?? []}
         summaries={summaryMap(certificationsRes.data ?? [], (item) => ({ title: item.title, subtitle: item.organization ?? undefined }))}
         fields={CERTIFICATION_FIELDS}
-        defaultValues={{ title: "", organization: null, organization_entity_id: null, description: null, issue_date: null, expiry_date: null, credential_url: null }}
+        defaultValues={certificationDefaults}
         onCreate={createCertification as (v: FormValues) => Promise<{ error?: string }>}
         onUpdate={updateCertification as (id: string, v: FormValues) => Promise<{ error?: string }>}
         onDelete={deleteCertification}

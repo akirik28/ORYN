@@ -202,7 +202,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
       {display.about ? (
         <div className="space-y-2">
           <h2 className="font-semibold">About</h2>
-          <p className="whitespace-pre-wrap text-sm text-muted-foreground">{display.about}</p>
+          <p className="whitespace-pre-wrap text-sm break-words text-muted-foreground">{display.about}</p>
         </div>
       ) : null}
 
@@ -272,11 +272,19 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
       {hasAnyContact ? (
         <div className="space-y-2">
           <h2 className="font-semibold">Contact</h2>
+          {/* break-words on every URL/email value below (2026-08-29 mobile sweep) — a real
+              value like an email address or a non-vanity LinkedIn/GitHub URL is one
+              unbroken token with no space for the browser to wrap on by default, so it
+              pushed past this list's container width instead of wrapping. Deliberately
+              `break-words`, not the `truncate` this same file uses for Featured-item URLs
+              above: those are card labels where the link itself is the point and an
+              ellipsis is fine; this list exists specifically so a viewer can read the full
+              contact value, so wrapping it in full beats hiding the end of it. */}
           <ul className="space-y-1.5 text-sm">
             {contact.email ? (
               <li>
                 <span className="text-muted-foreground">Email: </span>
-                <a href={`mailto:${contact.email}`} className="text-brand-primary hover:underline">
+                <a href={`mailto:${contact.email}`} className="break-words text-brand-primary hover:underline">
                   {contact.email}
                 </a>
               </li>
@@ -290,7 +298,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             {contact.linkedinUrl ? (
               <li>
                 <span className="text-muted-foreground">LinkedIn: </span>
-                <a href={contact.linkedinUrl} target="_blank" rel="noreferrer noopener" className="text-brand-primary hover:underline">
+                <a href={contact.linkedinUrl} target="_blank" rel="noreferrer noopener" className="break-words text-brand-primary hover:underline">
                   {contact.linkedinUrl}
                 </a>
               </li>
@@ -298,7 +306,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             {contact.githubUrl ? (
               <li>
                 <span className="text-muted-foreground">GitHub: </span>
-                <a href={contact.githubUrl} target="_blank" rel="noreferrer noopener" className="text-brand-primary hover:underline">
+                <a href={contact.githubUrl} target="_blank" rel="noreferrer noopener" className="break-words text-brand-primary hover:underline">
                   {contact.githubUrl}
                 </a>
               </li>
@@ -306,7 +314,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             {contact.websiteUrl ? (
               <li>
                 <span className="text-muted-foreground">Website: </span>
-                <a href={contact.websiteUrl} target="_blank" rel="noreferrer noopener" className="text-brand-primary hover:underline">
+                <a href={contact.websiteUrl} target="_blank" rel="noreferrer noopener" className="break-words text-brand-primary hover:underline">
                   {contact.websiteUrl}
                 </a>
               </li>

@@ -65,7 +65,21 @@ export default async function ConversationPage({ params }: { params: Promise<{ u
   }
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] flex-col space-y-4">
+    // Below `lg`, the fixed mobile bottom nav (features/app-shell/mobile-nav.tsx, 3.5rem +
+    // env(safe-area-inset-bottom)) sits UNDER this box's old flat `100vh-8rem` budget,
+    // which only ever accounted for the chrome above (mobile header + page padding) —
+    // confirmed by the exact pixel math, not just visually. The result: ConversationThread
+    // renders taller than the space actually available between the two fixed bars, and
+    // since its own root is `overflow-hidden` with only the message list allowed to shrink
+    // (features/messaging/conversation-thread.tsx), once that list hits its own floor the
+    // composer and Send button get pushed under the nav instead of staying reachable —
+    // this route's primary action. Same `3.5rem + env(safe-area-inset-bottom)` clearance
+    // constant advisor-chat.tsx already uses for the identical problem, added on top of
+    // the existing top-chrome budget rather than replacing it; `lg:` keeps the original
+    // value exactly (no mobile nav exists there). `svh`, not `vh`, per this codebase's own
+    // established convention (app/(app)/universities/page.tsx) for a mobile Safari-safe
+    // viewport unit.
+    <div className="flex h-[calc(100svh-8rem-3.5rem-env(safe-area-inset-bottom))] flex-col space-y-4 lg:h-[calc(100svh-8rem)]">
       <PageHeader title={displayName} />
       <ConversationThread
         currentUserId={userId}

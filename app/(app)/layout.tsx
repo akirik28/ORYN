@@ -1,14 +1,11 @@
-import Link from "next/link";
-import Image from "next/image";
 import { redirect } from "next/navigation";
 import { requireProfile, verifySession } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
-import { TopNav } from "@/features/app-shell/top-nav";
-import { UserMenu } from "@/features/app-shell/user-menu";
+import { Sidebar } from "@/features/app-shell/sidebar";
+import { Topbar } from "@/features/app-shell/topbar";
 import { MobileNav } from "@/features/app-shell/mobile-nav";
-import { NotificationBell } from "@/features/app-shell/notification-bell";
+import { AmbientBlobs, AMBIENT_BLOB_CONFIGS } from "@/features/app-shell/ambient-blobs";
 import { NotConfiguredNotice } from "@/features/system/not-configured-notice";
-import { CommandPalette } from "@/features/search/command-palette";
 import { integrationStatus } from "@/lib/env";
 import { toProfileSignal } from "@/lib/scoring/signal";
 
@@ -54,9 +51,24 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const profileSignal = toProfileSignal(scoresRes.data ?? []);
 
   return (
-    <div className="flex min-h-svh flex-col">
-      {/* Keyboard users land here first; without it, reaching page content past the seven
-          nav items costs eight tabs on every navigation. */}
+    // Literal source ambient background (App.tsx `App()`'s root container) — the ground
+    // every glass-card/frosted-topbar translucency in this shell is designed to sit on.
+    // Missing before: every ported page sat on the app's own plain bg-background instead,
+    // which is why cards read flat/washed-out rather than glowing against a colored wash.
+    // min-h-svh (document scroll), not source's `height:100dvh; overflow:hidden` fixed-shell
+    // SPA model — this app scrolls the real page, and Sidebar is `sticky` accordingly; only
+    // the background color is a literal transplant, not the fixed-viewport architecture.
+    //
+    // flex-col below `lg`, row at `lg+`: MobileNav's sticky <header> is a plain flex-row
+    // sibling of Sidebar/content here (it renders as a Fragment, not its own wrapper), and
+    // only picks up `lg:hidden` on itself — so a row-direction container at every width
+    // put that header beside the content column instead of above it below `lg`, squeezing
+    // real page content into a sliver next to blank space. Sidebar is `hidden lg:flex`, so
+    // it occupies nothing below `lg` regardless of direction; row is only needed once it's
+    // actually on-screen.
+    <div className="flex min-h-svh flex-col lg:flex-row" style={{ background: "linear-gradient(145deg, #DDDAF5 0%, #D8DFF5 30%, #DDD8F2 55%, #D4DBF0 100%)" }}>
+      {/* Keyboard users land here first; without it, reaching page content past the nav
+          items costs several tabs on every navigation. */}
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-brand-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground"
@@ -71,28 +83,23 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         notifications={notifications ?? []}
       />
 
-      <header className="sticky top-0 z-30 hidden border-b bg-background/85 backdrop-blur-md lg:block">
-        <div className="mx-auto flex h-16 w-full max-w-[1360px] items-center gap-6 px-8">
-          <Link href="/dashboard" aria-label="Oryn — home" className="shrink-0">
-            <Image src="/brand/logo-full.png" alt="Oryn" width={92} height={31} priority className="h-7 w-auto" />
-          </Link>
-          <TopNav />
-          <div className="ml-auto flex shrink-0 items-center gap-2">
-            <CommandPalette variant="bar" />
-            <NotificationBell notifications={notifications ?? []} />
-            <UserMenu displayName={displayName} email={session.email} signal={profileSignal} />
-          </div>
-        </div>
-      </header>
+      <Sidebar displayName={displayName} email={session.email} signal={profileSignal} />
 
-      <main id="main-content" className="min-w-0 flex-1 overflow-x-hidden">
-        {/* max-w-[1200px] is the reading/composition measure (UI-V3 § 6); the header above
-            is deliberately 160px wider so nav and utilities sit at the viewport's edges
-            rather than boxed in with the prose. Pages that want the full bleed — the
-            university map, in particular — opt out with their own wrapper rather than
-            fighting a container here. */}
-        <div className="mx-auto w-full max-w-[1200px] px-4 pt-8 pb-24 md:px-8 md:pt-12 lg:pb-12">{children}</div>
-      </main>
+      <div className="relative flex min-w-0 flex-1 flex-col">
+        {/* Hoisted here rather than wired into each individual page: position:fixed means
+            DOM placement doesn't matter for where it renders, and every authenticated page
+            gets the ambient background this way with no per-page wiring. Source varies the
+            blob config per screen (App.tsx `AmbientBlobs`) — this uses one config
+            everywhere for now rather than hand-tuning positions for every route. */}
+        <AmbientBlobs blobs={AMBIENT_BLOB_CONFIGS.home} />
+        <Topbar notifications={notifications ?? []} />
+        <main id="main-content" className="relative z-[1] min-w-0 flex-1 overflow-x-hidden">
+          {/* max-w-[1200px] is the reading/composition measure (UI-V3 § 6). Pages that want
+              the full bleed — the university map, in particular — opt out with their own
+              wrapper rather than fighting a container here. */}
+          <div className="mx-auto w-full max-w-[1200px] px-4 pt-8 pb-24 md:px-8 md:pt-12 lg:pb-12">{children}</div>
+        </main>
+      </div>
     </div>
   );
 }

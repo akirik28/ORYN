@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { MapPin, Bookmark, BookmarkCheck, Landmark, Users, Trophy, DollarSign, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { addTargetUniversity } from "@/app/(app)/universities/actions";
@@ -155,7 +156,8 @@ export function UniversityCard({
             onClick={() =>
               startTransition(async () => {
                 const result = await addTargetUniversity(university.id);
-                if (!result.error) setSaved(true);
+                if (result.error) toast.error(result.error);
+                else setSaved(true);
               })
             }
           >

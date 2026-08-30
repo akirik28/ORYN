@@ -1,27 +1,9 @@
-import Link from "next/link";
-import { ClipboardCheck } from "lucide-react";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { computeReadiness } from "@/lib/applications/readiness";
 import { canonicalUniversityId, loadSupersessionMap } from "@/lib/universities/canonical";
-import { NewApplicationDialog } from "@/features/applications/new-application-dialog";
-import { Progress } from "@/components/ui/progress";
-import { PageHeader } from "@/components/oryn/page-header";
-import { EmptyState } from "@/components/oryn/empty-state";
-import { StatusBadge, type StatusTone } from "@/components/oryn/status-badge";
-import { DeadlineBadge } from "@/components/oryn/deadline-badge";
-import type { ApplicationStatus, RequirementStatus } from "@/types/database";
-
-const APPLICATION_STATUS_TONE: Record<ApplicationStatus, StatusTone> = {
-  not_started: "neutral",
-  in_progress: "brand",
-  submitted: "info",
-  under_review: "warning",
-  accepted: "success",
-  waitlisted: "warning",
-  rejected: "error",
-  withdrawn: "neutral",
-};
+import { ApplicationsView } from "@/features/applications/applications-view";
+import type { RequirementStatus } from "@/types/database";
 
 export const metadata = { title: "Applications" };
 
@@ -62,62 +44,14 @@ export default async function ApplicationsPage() {
     .filter((t) => !appliedTargetIds.has(t.id))
     .map((t) => ({ id: t.id, name: universityNameByTargetId.get(t.id) ?? "Unknown" }));
 
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Applications"
-        description="Track requirements and deadlines for each application."
-        action={<NewApplicationDialog availableTargets={availableTargets} />}
-      />
+  const rows = applications.map((application) => ({
+    id: application.id,
+    universityName: universityNameByTargetId.get(application.target_university_id) ?? "Unknown",
+    applicationType: application.application_type,
+    deadline: application.deadline,
+    status: application.status,
+    readiness: computeReadiness(requirementsByApplication.get(application.id) ?? []),
+  }));
 
-      {applications.length > 0 ? (
-        <ul className="space-y-3">
-          {applications.map((application) => {
-            const readiness = computeReadiness(requirementsByApplication.get(application.id) ?? []);
-
-            return (
-              <li key={application.id}>
-                <Link
-                  href={`/applications/${application.id}`}
-                  className="block space-y-3 rounded-xl border p-5 transition-colors duration-(--duration-fast) hover:border-brand-primary-border"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <p className="font-semibold">{universityNameByTargetId.get(application.target_university_id) ?? "Unknown"}</p>
-                      <p className="text-sm text-muted-foreground capitalize">{application.application_type.replace(/_/g, " ")}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {application.deadline ? <DeadlineBadge date={application.deadline} /> : null}
-                      <StatusBadge
-                        label={application.status.replace(/_/g, " ")}
-                        tone={APPLICATION_STATUS_TONE[application.status]}
-                        className="capitalize"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>Readiness</span>
-                      <span>{readiness}%</span>
-                    </div>
-                    <Progress value={readiness} />
-                  </div>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      ) : (
-        <EmptyState
-          icon={ClipboardCheck}
-          title={targets.length === 0 ? "No applications yet" : "No applications started yet"}
-          description={
-            targets.length === 0
-              ? "Save a university you're targeting to start an application."
-              : "Start one from a target university to begin tracking requirements and deadlines."
-          }
-        />
-      )}
-    </div>
-  );
+  return <ApplicationsView applications={rows} hasTargets={targets.length > 0} availableTargets={availableTargets} />;
 }

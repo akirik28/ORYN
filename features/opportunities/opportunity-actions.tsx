@@ -67,8 +67,15 @@ export function OpportunityActions({
       <Button variant={status === "applied" ? "secondary" : "outline"} size="sm" onClick={() => updateStatus("applied")} disabled={isPending}>
         {status === "applied" ? "Applied" : "Mark applied"}
       </Button>
+      {/* render={<Button .../>}: no padding class at all here previously — an ~16px hit
+          area, the raw icon's own size, well under the app's ~40px+ touch-target
+          convention. */}
       <DropdownMenu>
-        <DropdownMenuTrigger className="text-muted-foreground hover:text-foreground" aria-label="Not interested">
+        <DropdownMenuTrigger
+          render={<Button variant="ghost" size="icon-sm" className="text-muted-foreground hover:text-foreground" />}
+          nativeButton={true}
+          aria-label="Not interested"
+        >
           <X className="size-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">

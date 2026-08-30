@@ -270,6 +270,91 @@
   }
 }
 
+/* ── Figma-source ambient system (2026-08-30 handoff) ────────────────────────────────
+   Two effects the ported app-shell pages (Dashboard first) sit on:
+
+   1. aurora-border — a slow color-cycling glow around each glass-card, indigo -> violet
+      -> lavender -> green -> amber and back over 8s. Source's own version (src/index.css)
+      used a tight 32px/low-alpha shadow; widened and strengthened here on explicit
+      founder feedback (2026-08-30, referencing madlen.io's floating assistant widget as
+      the target look) — the glow should visibly bleed onto the page around the card, not
+      just outline its edge. The crisp 2px ring stays for definition at the card boundary.
+   2. blob-drift — NOT in source (App.tsx's AmbientBlobs positions its blobs once and
+      never moves them). Added because the founder explicitly asked for the background to
+      keep slowly shifting rather than sit static — a deliberate embellishment on top of
+      the source's own effect, not a literal transplant like the aurora glow above.
+
+   Both fully disabled under reduced-motion: this is decorative depth, never anything a
+   student needs to perceive to use the product. */
+@keyframes aurora-border {
+  0% {
+    box-shadow: 0 8px 64px rgba(61, 53, 232, 0.24), 0 0 0 2px rgba(107, 100, 240, 0.75);
+  }
+  20% {
+    box-shadow: 0 8px 64px rgba(61, 53, 232, 0.28), 0 0 0 2px rgba(61, 53, 232, 0.85);
+  }
+  40% {
+    box-shadow: 0 8px 64px rgba(160, 156, 248, 0.22), 0 0 0 2px rgba(160, 156, 248, 0.78);
+  }
+  60% {
+    box-shadow: 0 8px 64px rgba(28, 122, 74, 0.2), 0 0 0 2px rgba(28, 122, 74, 0.68);
+  }
+  80% {
+    box-shadow: 0 8px 64px rgba(184, 106, 0, 0.18), 0 0 0 2px rgba(184, 106, 0, 0.64);
+  }
+  100% {
+    box-shadow: 0 8px 64px rgba(61, 53, 232, 0.24), 0 0 0 2px rgba(107, 100, 240, 0.75);
+  }
+}
+
+.glass-card {
+  animation: aurora-border 8s ease-in-out infinite;
+}
+.glass-card-fast {
+  animation: aurora-border 5s ease-in-out infinite;
+}
+.glass-card-offset {
+  animation: aurora-border 8s ease-in-out infinite;
+  animation-delay: -2.7s;
+}
+.glass-card-offset2 {
+  animation: aurora-border 8s ease-in-out infinite;
+  animation-delay: -5.3s;
+}
+
+@keyframes blob-drift {
+  0%,
+  100% {
+    translate: -50% -50%;
+  }
+  25% {
+    translate: calc(-50% + 48px) calc(-50% - 36px);
+  }
+  50% {
+    translate: calc(-50% - 34px) calc(-50% + 52px);
+  }
+  75% {
+    translate: calc(-50% - 56px) calc(-50% - 28px);
+  }
+}
+
+.blob-drift {
+  animation: blob-drift 22s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-card,
+  .glass-card-fast,
+  .glass-card-offset,
+  .glass-card-offset2 {
+    animation: none;
+    box-shadow: 0 8px 64px rgba(61, 53, 232, 0.24), 0 0 0 2px rgba(107, 100, 240, 0.75);
+  }
+  .blob-drift {
+    animation: none;
+  }
+}
+
 /* CV Generator (features/profile/cv-builder.tsx): isolates .cv-print-area as the only
    visible content when printing / saving as PDF, regardless of the app shell around it. */
 @media print {

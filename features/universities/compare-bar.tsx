@@ -15,7 +15,17 @@ export function CompareBar() {
   const ids = compare.selected.map((e) => e.id).join(",");
 
   return (
-    <div className="fixed inset-x-0 bottom-4 z-40 flex justify-center px-4">
+    // bottom-[calc(3.5rem+env(safe-area-inset-bottom)+1rem)] below `lg`, bottom-4 at `lg`+:
+    // features/app-shell/mobile-nav.tsx's bottom bar is also `fixed`, `min-h-14` (3.5rem)
+    // plus its own safe-area padding, everywhere below `lg` (1024px) — the one breakpoint
+    // this bar's old flat `bottom-4` didn't account for. z-40 already put this bar visually
+    // on top of z-30 MobileNav rather than genuinely clearing it, so for as long as 1+
+    // universities were selected, the bottom nav's Home/Counselor/Journey/Explore/
+    // Universities/More destinations sat underneath and were unreachable on every mobile
+    // and tablet viewport — confirmed via mobile-nav.tsx's own exact classes, not just
+    // visually. Same `calc(3.5rem+env(safe-area-inset-bottom))` clearance
+    // features/advisor/advisor-chat.tsx's composer already uses for this identical problem.
+    <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom)+1rem)] z-40 flex justify-center px-4 lg:bottom-4">
       <div className="flex max-w-full items-center gap-3 rounded-2xl border bg-card px-4 py-2.5 shadow-lg">
         <span className="flex items-center gap-1.5 text-sm font-medium">
           <Scale className="size-4 text-brand-primary" />
