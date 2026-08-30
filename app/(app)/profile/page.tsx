@@ -17,6 +17,7 @@ import {
 import { getCurrentProfile, requireUser } from "@/lib/security/dal";
 import { PageHeader } from "@/components/oryn/page-header";
 import { SectionHeader } from "@/components/oryn/section-header";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/server";
 import { ScoreRadar } from "@/features/profile/score-radar";
 import { ProfileSignal } from "@/features/dashboard/profile-signal";
@@ -346,292 +347,321 @@ export default async function ProfilePage() {
         }
       />
 
-      <section className="space-y-6 rounded-2xl bg-surface-tint p-6 md:p-8">
-        <SectionHeader title="Professional profile" description="What other Oryn students see on your public profile." />
-        <ProfessionalIdentityForm
-          initialHeadline={profile?.headline ?? null}
-          initialAbout={profile?.about ?? null}
-        />
-        <div className="border-t pt-6">
-          <h3 className="mb-3 text-sm font-semibold">Open to</h3>
-          <OpenToForm initialSelected={profile?.open_to ?? []} initialVisibility={contactInfo.open_to_visibility} />
-        </div>
-        <div className="border-t pt-6">
-          <h3 className="mb-3 text-sm font-semibold">Contact information</h3>
-          <ContactInfoForm initialContact={contactInfo} isAdult={isAdult} />
-        </div>
-      </section>
+      {/* Was 14 AchievementSection blocks plus five one-off sections stacked in a single
+          scroll, every one visible (and every "Add" dialog reachable) only by scrolling
+          past all the others first — the single biggest source of "this page is
+          overwhelming" feedback. Tabs don't remove anything; every section below is
+          unchanged. They just mean a student sees one coherent group at a time instead of
+          the entire record's editing surface at once. Overview keeps every read-only/
+          identity block (nothing here is a repeated pattern, so nothing here needed
+          grouping); the other four tabs group the 14 AchievementSection blocks by what a
+          student would actually think to look for, not by database table. */}
+      <Tabs defaultValue="overview" className="gap-6">
+        <TabsList className="w-full justify-start overflow-x-auto sm:w-fit">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="academics">Academics</TabsTrigger>
+          <TabsTrigger value="experience">Experience</TabsTrigger>
+          <TabsTrigger value="recognition">Recognition</TabsTrigger>
+          <TabsTrigger value="skills">Skills & goals</TabsTrigger>
+        </TabsList>
 
-      <section className="space-y-3">
-        <SectionHeader title="Featured" description="Pin your best 3-5 items to the top of your public profile." />
-        <FeaturedManager initialItems={featuredManagerItems} candidates={featuredCandidates} />
-      </section>
+        <TabsContent value="overview" className="space-y-10 pt-2">
+          <section className="space-y-6 rounded-2xl bg-surface-tint p-6 md:p-8">
+            <SectionHeader title="Professional profile" description="What other Oryn students see on your public profile." />
+            <ProfessionalIdentityForm
+              initialHeadline={profile?.headline ?? null}
+              initialAbout={profile?.about ?? null}
+            />
+            <div className="border-t pt-6">
+              <h3 className="mb-3 text-sm font-semibold">Open to</h3>
+              <OpenToForm initialSelected={profile?.open_to ?? []} initialVisibility={contactInfo.open_to_visibility} />
+            </div>
+            <div className="border-t pt-6">
+              <h3 className="mb-3 text-sm font-semibold">Contact information</h3>
+              <ContactInfoForm initialContact={contactInfo} isAdult={isAdult} />
+            </div>
+          </section>
 
-      <section className="grid gap-6 md:grid-cols-[1fr_auto] md:items-start">
-        <div className="space-y-3">
-          <SectionHeader
-            title="Profile Strength"
-            description="How much Oryn knows about you — separate from how strong your profile is. Only you can see this."
+          <section className="space-y-3">
+            <SectionHeader title="Featured" description="Pin your best 3-5 items to the top of your public profile." />
+            <FeaturedManager initialItems={featuredManagerItems} candidates={featuredCandidates} />
+          </section>
+
+          <section className="grid gap-6 md:grid-cols-[1fr_auto] md:items-start">
+            <div className="space-y-3">
+              <SectionHeader
+                title="Profile Strength"
+                description="How much Oryn knows about you — separate from how strong your profile is. Only you can see this."
+              />
+              <Progress value={completenessPercent} />
+              <p className="text-sm text-muted-foreground">{completenessPercent}% complete</p>
+              {remainingSuggestions.length > 0 ? (
+                <ul className="grid gap-1.5 text-sm text-muted-foreground sm:grid-cols-2">
+                  {remainingSuggestions.map((item) => (
+                    <li key={item.label}>{item.label}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">Your profile is fully filled out.</p>
+              )}
+            </div>
+            <div className="shrink-0 space-y-1 text-sm text-muted-foreground md:text-right">
+              <p className="font-medium text-foreground">Profile views</p>
+              <p>{profileViewCounts.last7Days} in the last 7 days</p>
+              <p>{profileViewCounts.last30Days} in the last 30 days</p>
+            </div>
+          </section>
+
+          {/* The one deliberately contained module on this page — it's the page's single
+              "this is the point" surface, which is what rounded-3xl is reserved for.
+              `DimensionBars` (a 0-100 fill per dimension) was replaced by the same qualitative
+              ProfileSignal the dashboard uses: a bar implies a track you're meant to fill, and
+              founder direction is explicit that evidence states beat percentages. The score is
+              still shown here, as quiet metadata beside the word rather than as the reading —
+              this is the detail view, so the figure earns a place it hasn't earned on Home. */}
+          <section className="grid gap-8 rounded-3xl border border-brand-primary-border bg-brand-primary-subtle p-6 md:grid-cols-2 md:p-8">
+            <ScoreRadar scores={radarScores} />
+            <div className="flex flex-col justify-center">
+              <ProfileSignal signal={profileSignal} showScores heading="Where you stand" />
+            </div>
+          </section>
+
+          {/* UI-V3 § 17 — Oryn annotating the record rather than only storing it. Both branches
+              are derived from the same signal the block above renders, so the annotation can
+              never contradict what the student just read. Strengths are named as well as gaps:
+              a page that only ever points at what's missing reads as a scold, and the master
+              spec's Phase 39 is explicit that recognising an existing strength is itself
+              advice — it's what makes "you don't need more of this" credible. */}
+          {journeyNote ? (
+            <InsightCard variant={journeyNote.variant} eyebrow={journeyNote.eyebrow} title={journeyNote.title}>
+              {journeyNote.body}
+            </InsightCard>
+          ) : null}
+
+          <section className="space-y-6">
+            <SectionHeader
+              title="Your journey"
+              description="Everything on one timeline, newest first. The Academics / Experience / Recognition / Skills tabs above are where you add and edit — this is how it reads."
+              action={<QuickAddEntry types={quickAddTypes} />}
+            />
+            <JourneyTimeline entries={journeyEntries} />
+          </section>
+
+          <section className="space-y-3">
+            <SectionHeader title="Peer comparison" />
+            <PeerBenchmark summary={benchmarkSummary} />
+          </section>
+        </TabsContent>
+
+        <TabsContent value="academics" className="space-y-8 pt-2">
+          <AchievementSection
+            title="Education"
+            description="Schools and academic stages."
+            items={educationRes.data ?? []}
+            summaries={summaryMap(educationRes.data ?? [], (item) => ({ title: item.school_name, subtitle: item.country ?? undefined }))}
+            fields={EDUCATION_FIELDS}
+            defaultValues={educationDefaults}
+            onCreate={createEducationRecord as (v: FormValues) => Promise<{ error?: string }>}
+            onUpdate={updateEducationRecord as (id: string, v: FormValues) => Promise<{ error?: string }>}
+            onDelete={deleteEducationRecord}
+            emptyStateText="No education records yet."
           />
-          <Progress value={completenessPercent} />
-          <p className="text-sm text-muted-foreground">{completenessPercent}% complete</p>
-          {remainingSuggestions.length > 0 ? (
-            <ul className="grid gap-1.5 text-sm text-muted-foreground sm:grid-cols-2">
-              {remainingSuggestions.map((item) => (
-                <li key={item.label}>{item.label}</li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-muted-foreground">Your profile is fully filled out.</p>
-          )}
-        </div>
-        <div className="shrink-0 space-y-1 text-sm text-muted-foreground md:text-right">
-          <p className="font-medium text-foreground">Profile views</p>
-          <p>{profileViewCounts.last7Days} in the last 7 days</p>
-          <p>{profileViewCounts.last30Days} in the last 30 days</p>
-        </div>
-      </section>
 
-      {/* The one deliberately contained module on this page — it's the page's single
-          "this is the point" surface, which is what rounded-3xl is reserved for.
-          `DimensionBars` (a 0-100 fill per dimension) was replaced by the same qualitative
-          ProfileSignal the dashboard uses: a bar implies a track you're meant to fill, and
-          founder direction is explicit that evidence states beat percentages. The score is
-          still shown here, as quiet metadata beside the word rather than as the reading —
-          this is the detail view, so the figure earns a place it hasn't earned on Home. */}
-      <section className="grid gap-8 rounded-3xl border border-brand-primary-border bg-brand-primary-subtle p-6 md:grid-cols-2 md:p-8">
-        <ScoreRadar scores={radarScores} />
-        <div className="flex flex-col justify-center">
-          <ProfileSignal signal={profileSignal} showScores heading="Where you stand" />
-        </div>
-      </section>
+          <AchievementSection
+            title="Coursework"
+            description="AP, IB HL/SL, A-Level, honors, and regular courses. Oryn uses these to understand your academic rigor and subject range."
+            items={coursesRes.data ?? []}
+            summaries={summaryMap(coursesRes.data ?? [], (item) => ({
+              title: item.course_name,
+              subtitle: [COURSE_LEVEL_LABELS[item.level] ?? item.level, item.academic_year, item.grade_value ? `Grade ${item.grade_value}` : null]
+                .filter(Boolean)
+                .join(" · ") || undefined,
+            }))}
+            fields={COURSE_FIELDS}
+            defaultValues={courseDefaults}
+            onCreate={createCourse as (v: FormValues) => Promise<{ error?: string }>}
+            onUpdate={updateCourse as (id: string, v: FormValues) => Promise<{ error?: string }>}
+            onDelete={deleteCourse}
+            emptyStateText="No coursework yet. Add the courses you're taking — advanced coursework is one of the strongest academic signals."
+          />
 
-      {/* UI-V3 § 17 — Oryn annotating the record rather than only storing it. Both branches
-          are derived from the same signal the block above renders, so the annotation can
-          never contradict what the student just read. Strengths are named as well as gaps:
-          a page that only ever points at what's missing reads as a scold, and the master
-          spec's Phase 39 is explicit that recognising an existing strength is itself
-          advice — it's what makes "you don't need more of this" credible. */}
-      {journeyNote ? (
-        <InsightCard variant={journeyNote.variant} eyebrow={journeyNote.eyebrow} title={journeyNote.title}>
-          {journeyNote.body}
-        </InsightCard>
-      ) : null}
+          <AchievementSection
+            title="Test scores"
+            description="SAT, ACT, AP, IB, language proficiency, and more."
+            items={testScoresRes.data ?? []}
+            summaries={summaryMap(testScoresRes.data ?? [], (item) => ({ title: item.test_name, subtitle: item.score }))}
+            fields={TEST_SCORE_FIELDS}
+            defaultValues={testScoreDefaults}
+            onCreate={createTestScore as (v: FormValues) => Promise<{ error?: string }>}
+            onUpdate={updateTestScore as (id: string, v: FormValues) => Promise<{ error?: string }>}
+            onDelete={deleteTestScore}
+            emptyStateText="No test scores yet."
+          />
+        </TabsContent>
 
-      <section className="space-y-6">
-        <SectionHeader
-          title="Your journey"
-          description="Everything on one timeline, newest first. The sections below are where you add and edit — this is how it reads."
-          action={<QuickAddEntry types={quickAddTypes} />}
-        />
-        <JourneyTimeline entries={journeyEntries} />
-      </section>
+        <TabsContent value="experience" className="space-y-8 pt-2">
+          <AchievementSection
+            title="Activities"
+            description="Clubs, leadership roles, sports, summer programs."
+            items={activities}
+            summaries={summaryMap(activities, (item) => ({ title: item.title, subtitle: item.organization ?? undefined }))}
+            fields={ACTIVITY_FIELDS}
+            defaultValues={activityDefaults}
+            onCreate={createActivity as (v: FormValues) => Promise<{ error?: string }>}
+            onUpdate={updateActivity as (id: string, v: FormValues) => Promise<{ error?: string }>}
+            onDelete={deleteActivity}
+            emptyStateText="No activities yet. Add clubs, leadership, or other experiences."
+          />
 
-      <section className="space-y-3">
-        <SectionHeader title="Peer comparison" />
-        <PeerBenchmark summary={benchmarkSummary} />
-      </section>
+          <AchievementSection
+            title="Sports"
+            description="Athletic history — a first-class part of your profile, not folded into Activities."
+            items={sportsRes.data ?? []}
+            summaries={summaryMap(sportsRes.data ?? [], (item) => ({
+              title: item.sport,
+              subtitle: [item.team_name, item.is_captain ? "Captain" : null].filter(Boolean).join(" · ") || undefined,
+            }))}
+            fields={SPORTS_FIELDS}
+            defaultValues={sportsDefaults}
+            onCreate={createSportsExperience as (v: FormValues) => Promise<{ error?: string }>}
+            onUpdate={updateSportsExperience as (id: string, v: FormValues) => Promise<{ error?: string }>}
+            onDelete={deleteSportsExperience}
+            emptyStateText="No sports yet. Add a team, club, or individual sport you take seriously."
+          />
 
-      <AchievementSection
-        title="Goals"
-        description="What you're working toward — recommendations trace back to these."
-        items={goalsRes.data ?? []}
-        summaries={summaryMap(goalsRes.data ?? [], (item) => ({ title: item.title, subtitle: [item.category, item.status !== "active" ? item.status : null].filter(Boolean).join(" · ") || undefined }))}
-        fields={GOAL_FIELDS}
-        defaultValues={{ title: "", category: null, target_date: null, status: "active" }}
-        onCreate={createGoal as (v: FormValues) => Promise<{ error?: string }>}
-        onUpdate={updateGoal as (id: string, v: FormValues) => Promise<{ error?: string }>}
-        onDelete={deleteGoal}
-        emptyStateText="No goals yet. What are you working toward?"
-      />
+          <AchievementSection
+            title="Projects"
+            description="Things you've built or shipped, on your own or with a team."
+            items={projectsRes.data ?? []}
+            summaries={summaryMap(projectsRes.data ?? [], (item) => ({ title: item.title, subtitle: item.outcome_summary ?? item.organization ?? undefined }))}
+            fields={PROJECT_FIELDS}
+            defaultValues={projectDefaults}
+            onCreate={createProject as (v: FormValues) => Promise<{ error?: string }>}
+            onUpdate={updateProject as (id: string, v: FormValues) => Promise<{ error?: string }>}
+            onDelete={deleteProject}
+            emptyStateText="No projects yet."
+          />
 
-      <AchievementSection
-        title="Activities"
-        description="Clubs, leadership roles, sports, summer programs."
-        items={activities}
-        summaries={summaryMap(activities, (item) => ({ title: item.title, subtitle: item.organization ?? undefined }))}
-        fields={ACTIVITY_FIELDS}
-        defaultValues={activityDefaults}
-        onCreate={createActivity as (v: FormValues) => Promise<{ error?: string }>}
-        onUpdate={updateActivity as (id: string, v: FormValues) => Promise<{ error?: string }>}
-        onDelete={deleteActivity}
-        emptyStateText="No activities yet. Add clubs, leadership, or other experiences."
-      />
+          <div className="flex justify-end">
+            <ResearchIdeaGenerator />
+          </div>
+          <AchievementSection
+            title="Research"
+            description="Independent or mentored research experience."
+            items={researchRes.data ?? []}
+            summaries={summaryMap(researchRes.data ?? [], (item) => ({ title: item.title, subtitle: item.field ?? undefined }))}
+            fields={RESEARCH_FIELDS}
+            defaultValues={researchDefaults}
+            onCreate={createResearchExperience as (v: FormValues) => Promise<{ error?: string }>}
+            onUpdate={updateResearchExperience as (id: string, v: FormValues) => Promise<{ error?: string }>}
+            onDelete={deleteResearchExperience}
+            emptyStateText="No research experience yet — publication isn't required for a strong score."
+          />
 
-      <AchievementSection
-        title="Sports"
-        description="Athletic history — a first-class part of your profile, not folded into Activities."
-        items={sportsRes.data ?? []}
-        summaries={summaryMap(sportsRes.data ?? [], (item) => ({
-          title: item.sport,
-          subtitle: [item.team_name, item.is_captain ? "Captain" : null].filter(Boolean).join(" · ") || undefined,
-        }))}
-        fields={SPORTS_FIELDS}
-        defaultValues={sportsDefaults}
-        onCreate={createSportsExperience as (v: FormValues) => Promise<{ error?: string }>}
-        onUpdate={updateSportsExperience as (id: string, v: FormValues) => Promise<{ error?: string }>}
-        onDelete={deleteSportsExperience}
-        emptyStateText="No sports yet. Add a team, club, or individual sport you take seriously."
-      />
+          <AchievementSection
+            title="Work experience"
+            description="Internships, jobs, and apprenticeships."
+            items={workRes.data ?? []}
+            summaries={summaryMap(workRes.data ?? [], (item) => ({ title: item.title, subtitle: item.organization }))}
+            fields={WORK_EXPERIENCE_FIELDS}
+            defaultValues={workDefaults}
+            onCreate={createWorkExperience as (v: FormValues) => Promise<{ error?: string }>}
+            onUpdate={updateWorkExperience as (id: string, v: FormValues) => Promise<{ error?: string }>}
+            onDelete={deleteWorkExperience}
+            emptyStateText="No work experience yet."
+          />
 
-      <AchievementSection
-        title="Projects"
-        description="Things you've built or shipped, on your own or with a team."
-        items={projectsRes.data ?? []}
-        summaries={summaryMap(projectsRes.data ?? [], (item) => ({ title: item.title, subtitle: item.outcome_summary ?? item.organization ?? undefined }))}
-        fields={PROJECT_FIELDS}
-        defaultValues={projectDefaults}
-        onCreate={createProject as (v: FormValues) => Promise<{ error?: string }>}
-        onUpdate={updateProject as (id: string, v: FormValues) => Promise<{ error?: string }>}
-        onDelete={deleteProject}
-        emptyStateText="No projects yet."
-      />
+          <AchievementSection
+            title="Volunteering"
+            description="Community service and volunteering."
+            items={volunteeringRes.data ?? []}
+            summaries={summaryMap(volunteeringRes.data ?? [], (item) => ({ title: item.title, subtitle: item.cause_area ?? undefined }))}
+            fields={VOLUNTEERING_FIELDS}
+            defaultValues={volunteeringDefaults}
+            onCreate={createVolunteering as (v: FormValues) => Promise<{ error?: string }>}
+            onUpdate={updateVolunteering as (id: string, v: FormValues) => Promise<{ error?: string }>}
+            onDelete={deleteVolunteering}
+            emptyStateText="No volunteering yet."
+          />
+        </TabsContent>
 
-      <div className="flex justify-end">
-        <ResearchIdeaGenerator />
-      </div>
-      <AchievementSection
-        title="Research"
-        description="Independent or mentored research experience."
-        items={researchRes.data ?? []}
-        summaries={summaryMap(researchRes.data ?? [], (item) => ({ title: item.title, subtitle: item.field ?? undefined }))}
-        fields={RESEARCH_FIELDS}
-        defaultValues={researchDefaults}
-        onCreate={createResearchExperience as (v: FormValues) => Promise<{ error?: string }>}
-        onUpdate={updateResearchExperience as (id: string, v: FormValues) => Promise<{ error?: string }>}
-        onDelete={deleteResearchExperience}
-        emptyStateText="No research experience yet — publication isn't required for a strong score."
-      />
+        <TabsContent value="recognition" className="space-y-8 pt-2">
+          <AchievementSection
+            title="Awards"
+            description="Competitions, honors, and distinctions."
+            items={awardsRes.data ?? []}
+            summaries={summaryMap(awardsRes.data ?? [], (item) => ({ title: item.title, subtitle: item.level ?? undefined }))}
+            fields={AWARD_FIELDS}
+            defaultValues={awardDefaults}
+            onCreate={createAward as (v: FormValues) => Promise<{ error?: string }>}
+            onUpdate={updateAward as (id: string, v: FormValues) => Promise<{ error?: string }>}
+            onDelete={deleteAward}
+            emptyStateText="No awards yet."
+          />
 
-      <AchievementSection
-        title="Awards"
-        description="Competitions, honors, and distinctions."
-        items={awardsRes.data ?? []}
-        summaries={summaryMap(awardsRes.data ?? [], (item) => ({ title: item.title, subtitle: item.level ?? undefined }))}
-        fields={AWARD_FIELDS}
-        defaultValues={awardDefaults}
-        onCreate={createAward as (v: FormValues) => Promise<{ error?: string }>}
-        onUpdate={updateAward as (id: string, v: FormValues) => Promise<{ error?: string }>}
-        onDelete={deleteAward}
-        emptyStateText="No awards yet."
-      />
+          <AchievementSection
+            title="Certifications"
+            description="Certificates from courses or programs."
+            items={certificationsRes.data ?? []}
+            summaries={summaryMap(certificationsRes.data ?? [], (item) => ({ title: item.title, subtitle: item.organization ?? undefined }))}
+            fields={CERTIFICATION_FIELDS}
+            defaultValues={certificationDefaults}
+            onCreate={createCertification as (v: FormValues) => Promise<{ error?: string }>}
+            onUpdate={updateCertification as (id: string, v: FormValues) => Promise<{ error?: string }>}
+            onDelete={deleteCertification}
+            emptyStateText="No certifications yet."
+          />
+        </TabsContent>
 
-      <AchievementSection
-        title="Work experience"
-        description="Internships, jobs, and apprenticeships."
-        items={workRes.data ?? []}
-        summaries={summaryMap(workRes.data ?? [], (item) => ({ title: item.title, subtitle: item.organization }))}
-        fields={WORK_EXPERIENCE_FIELDS}
-        defaultValues={workDefaults}
-        onCreate={createWorkExperience as (v: FormValues) => Promise<{ error?: string }>}
-        onUpdate={updateWorkExperience as (id: string, v: FormValues) => Promise<{ error?: string }>}
-        onDelete={deleteWorkExperience}
-        emptyStateText="No work experience yet."
-      />
+        <TabsContent value="skills" className="space-y-8 pt-2">
+          <AchievementSection
+            title="Goals"
+            description="What you're working toward — recommendations trace back to these."
+            items={goalsRes.data ?? []}
+            summaries={summaryMap(goalsRes.data ?? [], (item) => ({ title: item.title, subtitle: [item.category, item.status !== "active" ? item.status : null].filter(Boolean).join(" · ") || undefined }))}
+            fields={GOAL_FIELDS}
+            defaultValues={{ title: "", category: null, target_date: null, status: "active" }}
+            onCreate={createGoal as (v: FormValues) => Promise<{ error?: string }>}
+            onUpdate={updateGoal as (id: string, v: FormValues) => Promise<{ error?: string }>}
+            onDelete={deleteGoal}
+            emptyStateText="No goals yet. What are you working toward?"
+          />
 
-      <AchievementSection
-        title="Volunteering"
-        description="Community service and volunteering."
-        items={volunteeringRes.data ?? []}
-        summaries={summaryMap(volunteeringRes.data ?? [], (item) => ({ title: item.title, subtitle: item.cause_area ?? undefined }))}
-        fields={VOLUNTEERING_FIELDS}
-        defaultValues={volunteeringDefaults}
-        onCreate={createVolunteering as (v: FormValues) => Promise<{ error?: string }>}
-        onUpdate={updateVolunteering as (id: string, v: FormValues) => Promise<{ error?: string }>}
-        onDelete={deleteVolunteering}
-        emptyStateText="No volunteering yet."
-      />
+          <AchievementSection
+            title="Skills"
+            description="Up to 15. Self-declared — connections can endorse a skill once they're added below."
+            items={skillsRes.data ?? []}
+            summaries={summaryMap(skillsRes.data ?? [], (item) => ({ title: item.name, subtitle: item.proficiency ?? undefined }))}
+            fields={SKILL_FIELDS}
+            defaultValues={{ name: "", category: "other", proficiency: null }}
+            onCreate={createSkill as (v: FormValues) => Promise<{ error?: string }>}
+            onUpdate={updateSkill as (id: string, v: FormValues) => Promise<{ error?: string }>}
+            onDelete={deleteSkill}
+            emptyStateText="No skills yet. Add up to 15 — technical, creative, analytical, or otherwise."
+          />
 
-      <AchievementSection
-        title="Education"
-        description="Schools and academic stages."
-        items={educationRes.data ?? []}
-        summaries={summaryMap(educationRes.data ?? [], (item) => ({ title: item.school_name, subtitle: item.country ?? undefined }))}
-        fields={EDUCATION_FIELDS}
-        defaultValues={educationDefaults}
-        onCreate={createEducationRecord as (v: FormValues) => Promise<{ error?: string }>}
-        onUpdate={updateEducationRecord as (id: string, v: FormValues) => Promise<{ error?: string }>}
-        onDelete={deleteEducationRecord}
-        emptyStateText="No education records yet."
-      />
-
-      <AchievementSection
-        title="Coursework"
-        description="AP, IB HL/SL, A-Level, honors, and regular courses. Oryn uses these to understand your academic rigor and subject range."
-        items={coursesRes.data ?? []}
-        summaries={summaryMap(coursesRes.data ?? [], (item) => ({
-          title: item.course_name,
-          subtitle: [COURSE_LEVEL_LABELS[item.level] ?? item.level, item.academic_year, item.grade_value ? `Grade ${item.grade_value}` : null]
-            .filter(Boolean)
-            .join(" · ") || undefined,
-        }))}
-        fields={COURSE_FIELDS}
-        defaultValues={courseDefaults}
-        onCreate={createCourse as (v: FormValues) => Promise<{ error?: string }>}
-        onUpdate={updateCourse as (id: string, v: FormValues) => Promise<{ error?: string }>}
-        onDelete={deleteCourse}
-        emptyStateText="No coursework yet. Add the courses you're taking — advanced coursework is one of the strongest academic signals."
-      />
-
-      <AchievementSection
-        title="Test scores"
-        description="SAT, ACT, AP, IB, language proficiency, and more."
-        items={testScoresRes.data ?? []}
-        summaries={summaryMap(testScoresRes.data ?? [], (item) => ({ title: item.test_name, subtitle: item.score }))}
-        fields={TEST_SCORE_FIELDS}
-        defaultValues={testScoreDefaults}
-        onCreate={createTestScore as (v: FormValues) => Promise<{ error?: string }>}
-        onUpdate={updateTestScore as (id: string, v: FormValues) => Promise<{ error?: string }>}
-        onDelete={deleteTestScore}
-        emptyStateText="No test scores yet."
-      />
-
-      <AchievementSection
-        title="Certifications"
-        description="Certificates from courses or programs."
-        items={certificationsRes.data ?? []}
-        summaries={summaryMap(certificationsRes.data ?? [], (item) => ({ title: item.title, subtitle: item.organization ?? undefined }))}
-        fields={CERTIFICATION_FIELDS}
-        defaultValues={certificationDefaults}
-        onCreate={createCertification as (v: FormValues) => Promise<{ error?: string }>}
-        onUpdate={updateCertification as (id: string, v: FormValues) => Promise<{ error?: string }>}
-        onDelete={deleteCertification}
-        emptyStateText="No certifications yet."
-      />
-
-      <AchievementSection
-        title="Skills"
-        description="Up to 15. Self-declared — connections can endorse a skill once they're added below."
-        items={skillsRes.data ?? []}
-        summaries={summaryMap(skillsRes.data ?? [], (item) => ({ title: item.name, subtitle: item.proficiency ?? undefined }))}
-        fields={SKILL_FIELDS}
-        defaultValues={{ name: "", category: "other", proficiency: null }}
-        onCreate={createSkill as (v: FormValues) => Promise<{ error?: string }>}
-        onUpdate={updateSkill as (id: string, v: FormValues) => Promise<{ error?: string }>}
-        onDelete={deleteSkill}
-        emptyStateText="No skills yet. Add up to 15 — technical, creative, analytical, or otherwise."
-      />
-
-      {/* The `languages` table has existed since the initial schema but was never surfaced,
-          so a bilingual student had nowhere to record it — which matters for a product
-          whose users apply internationally and where language level is a real admissions
-          gate. Certificates (IELTS, TOEFL, DELF…) go in Certifications above, which already
-          carries an issuer and a date; duplicating that here would be a worse model. */}
-      <AchievementSection
-        title="Languages"
-        description="Levels use CEFR, the scale most universities state their requirements in. Add language certificates under Certifications."
-        items={languagesRes.data ?? []}
-        summaries={summaryMap(languagesRes.data ?? [], (item) => ({
-          title: item.name,
-          subtitle: languageProficiencyLabel(item.proficiency) ?? undefined,
-        }))}
-        fields={LANGUAGE_FIELDS}
-        defaultValues={{ name: "", proficiency: null }}
-        onCreate={createLanguage as (v: FormValues) => Promise<{ error?: string }>}
-        onUpdate={updateLanguage as (id: string, v: FormValues) => Promise<{ error?: string }>}
-        onDelete={deleteLanguage}
-        emptyStateText="No languages yet. Add the ones you speak, including your first language."
-      />
+          {/* The `languages` table has existed since the initial schema but was never surfaced,
+              so a bilingual student had nowhere to record it — which matters for a product
+              whose users apply internationally and where language level is a real admissions
+              gate. Certificates (IELTS, TOEFL, DELF…) go in Certifications above, which already
+              carries an issuer and a date; duplicating that here would be a worse model. */}
+          <AchievementSection
+            title="Languages"
+            description="Levels use CEFR, the scale most universities state their requirements in. Add language certificates under Certifications."
+            items={languagesRes.data ?? []}
+            summaries={summaryMap(languagesRes.data ?? [], (item) => ({
+              title: item.name,
+              subtitle: languageProficiencyLabel(item.proficiency) ?? undefined,
+            }))}
+            fields={LANGUAGE_FIELDS}
+            defaultValues={{ name: "", proficiency: null }}
+            onCreate={createLanguage as (v: FormValues) => Promise<{ error?: string }>}
+            onUpdate={updateLanguage as (id: string, v: FormValues) => Promise<{ error?: string }>}
+            onDelete={deleteLanguage}
+            emptyStateText="No languages yet. Add the ones you speak, including your first language."
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

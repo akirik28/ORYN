@@ -15,8 +15,11 @@ const LEVEL_LABEL = { low: "Low", medium: "Medium", high: "High" } as const;
  * One recommendation, argued rather than listed. UI-V3 § 14 asks the counselor to show its
  * reasoning structure, so `why` — the evidence the deterministic pipeline actually
  * attached — is given its own labelled block rather than being greyed-out subtext under
- * the title. A left rail replaces the bordered box for the same reason as `ActionCard`:
- * a stack of these should read as a ranked argument, not as four identical panels.
+ * the title. A left rail, not an individual bordered box, so a group of these still reads
+ * as one ranked argument rather than several identical panels — the group itself is now
+ * boxed one level up (2026-08-30, explicit founder direction: every block on this page
+ * should sit in a visible frame), so the rail is doing that same "these belong together"
+ * job inside a card instead of on bare background.
  */
 function RecommendationCard({ recommendation, index }: { recommendation: CounselorRecommendation; index: number }) {
   const unknownEligibility = recommendation.eligibility.verdict === "unknown";
@@ -87,11 +90,13 @@ export function CounselorPriorities({ result }: { result: CounselorResult }) {
           }
         />
         {doItems.length > 0 ? (
-          <ul>
-            {doItems.map((r, i) => (
-              <RecommendationCard key={r.id} recommendation={r} index={i + 1} />
-            ))}
-          </ul>
+          <div className="glass-card-fast rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-7">
+            <ul>
+              {doItems.map((r, i) => (
+                <RecommendationCard key={r.id} recommendation={r} index={i + 1} />
+              ))}
+            </ul>
+          </div>
         ) : null}
       </div>
     );
@@ -110,7 +115,7 @@ export function CounselorPriorities({ result }: { result: CounselorResult }) {
   return (
     <div className="space-y-6">
       {doItems.length > 0 ? (
-        <section className="space-y-3">
+        <section className="glass-card space-y-3 rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-7">
           <SectionHeader title="Your priorities" />
           <ul>
             {doItems.map((r, i) => (
@@ -121,13 +126,15 @@ export function CounselorPriorities({ result }: { result: CounselorResult }) {
       ) : null}
 
       {avoidItem ? (
-        <InsightCard variant="avoid" eyebrow="One thing not to do" title={avoidItem.title}>
-          {avoidItem.why[0]}
-        </InsightCard>
+        <div className="glass-card-offset rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-7">
+          <InsightCard variant="avoid" eyebrow="One thing not to do" title={avoidItem.title}>
+            {avoidItem.why[0]}
+          </InsightCard>
+        </div>
       ) : null}
 
       {considerItems.length > 0 ? (
-        <section className="space-y-3">
+        <section className="glass-card-offset2 space-y-3 rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-7">
           <SectionHeader title="Worth considering" />
           <ul>
             {considerItems.map((r, i) => (

@@ -67,7 +67,13 @@ export function StrategyPanel({
   if (facts.length === 0 && signal.length === 0) return null;
 
   return (
-    <section aria-label="What Oryn is working from" className="rounded-2xl bg-surface-tint p-6 md:p-7">
+    // Figma-source glass-card chrome (2026-08-30, same treatment as Dashboard/Connections/
+    // Applications) — replaces the flat `bg-surface-tint` panel so this reads as one of the
+    // Counselor's boxed blocks rather than the one ungrouped surface on the page.
+    <section
+      aria-label="What Oryn is working from"
+      className="glass-card rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-7"
+    >
       <Eyebrow>Where you stand</Eyebrow>
 
       {facts.length > 0 ? (
