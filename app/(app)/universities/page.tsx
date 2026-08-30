@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { Landmark, Search } from "lucide-react";
 import { UniversityExplorerHero } from "@/features/universities/university-explorer-hero";
+import { getUniversityMapPins } from "@/lib/universities/map-pins";
 import { UniversityCard } from "@/features/universities/university-card";
 import { categorizeAndDedupeResearchTopics } from "@/lib/universities/research-taxonomy";
 import { UniversitySearchBox } from "@/features/universities/university-search-box";
@@ -233,6 +234,10 @@ export default async function UniversitiesPage({
     getUniversityCountByCountry(supabase, supersededIds),
     supabase.from("target_universities").select("university_id").eq("user_id", session.userId!),
   ]);
+
+  // Pins are per-country, so this only runs once a country is actually selected — the
+  // world/region view plots country dots, not individual universities.
+  const mapPins = country ? await getUniversityMapPins(supabase, country, supersededIds) : [];
 
   const countryCounts = SUPPORTED_COUNTRIES.map((c) => ({
     country: c.name,
@@ -518,6 +523,7 @@ export default async function UniversitiesPage({
               <div className="lg:sticky lg:top-24 lg:self-start">
                 <UniversityExplorerHero
                   countryCounts={countryCounts}
+                  mapPins={mapPins}
                   selected={country ?? null}
                   selectedRegion={region?.id ?? null}
                 />

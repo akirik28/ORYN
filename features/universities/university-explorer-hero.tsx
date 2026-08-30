@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { RegionGridExplorer } from "./region-grid-explorer";
 import { WORLD_REGION, regionById } from "@/lib/data/regions";
 import type { CountryCount } from "./world-map-explorer";
+import type { UniversityMapPin } from "@/lib/universities/map-pins";
 
 // Code-split: @vnedyalk0v/react19-simple-maps + the world topology (~110KB) never ship to a mobile
 // visitor, since the map is never mounted below the md breakpoint (see useIsDesktop below).
@@ -44,10 +45,14 @@ function useIsDesktop() {
  */
 export function UniversityExplorerHero({
   countryCounts,
+  mapPins = [],
   selected,
   selectedRegion,
 }: {
   countryCounts: CountryCount[];
+  /** Individual universities to plot, already scoped to the selected country server-side.
+   *  Empty in world/region view, where the map plots country dots instead. */
+  mapPins?: UniversityMapPin[];
   selected: string | null;
   selectedRegion: string | null;
 }) {
@@ -63,7 +68,7 @@ export function UniversityExplorerHero({
     <div className="space-y-4">
       {showMap ? (
         <div aria-hidden="true">
-          <WorldMapExplorer countryCounts={countryCounts} region={mapRegion} />
+          <WorldMapExplorer countryCounts={countryCounts} region={mapRegion} pins={mapPins} />
         </div>
       ) : null}
       <RegionGridExplorer countryCounts={countryCounts} selected={selected} selectedRegion={selectedRegion} />
