@@ -63,7 +63,13 @@ export function PendingRequestRow({ connection }: { connection: ConnectionWithPr
   const [isPending, startTransition] = useTransition();
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border p-3">
+    // Figma-source card chrome (App.tsx `ConnectionsScreen`'s request card): translucent
+    // white, 18px blur. Real AlertDialog-confirmed remove/withdraw logic below is
+    // untouched — only this container's colors changed.
+    <div
+      className="flex items-center justify-between gap-3 rounded-2xl p-4"
+      style={{ background: "rgba(255,255,255,0.48)", backdropFilter: "blur(18px)", border: "1px solid rgba(255,255,255,0.68)" }}
+    >
       <Identity connection={connection} />
       <div className="flex shrink-0 gap-2">
         <Button
@@ -114,7 +120,10 @@ export function ConnectionRow({ connection, pending = false }: { connection: Con
   }
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border p-3">
+    <div
+      className="flex items-center justify-between gap-3 rounded-2xl p-4"
+      style={{ background: "rgba(255,255,255,0.42)", backdropFilter: "blur(14px)", border: "1px solid rgba(255,255,255,0.65)" }}
+    >
       <Identity connection={connection} />
       <div className="flex shrink-0 items-center gap-2">
         {pending ? <span className="text-xs text-muted-foreground">Requested</span> : null}

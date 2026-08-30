@@ -21,7 +21,9 @@ export default async function PlanPage() {
       />
 
       {weeklyPlan && weeklyPlan.actions.length > 0 ? (
-        <WeeklyFocus actions={weeklyPlan.actions} />
+        <div className="glass-card rounded-2xl border border-white/65 bg-white/45 p-5 backdrop-blur-2xl md:p-6">
+          <WeeklyFocus actions={weeklyPlan.actions} />
+        </div>
       ) : (
         <EmptyState icon={ListChecks} title="No plan yet this week" description="Generate one to get your prioritized actions." />
       )}

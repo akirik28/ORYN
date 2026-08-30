@@ -175,11 +175,17 @@ export function OpportunityCard({
   ].filter((d): d is string => d !== null);
 
   return (
+    // glass-card-fast: Figma-source card chrome (App.tsx `OpportunityCard`) — translucency
+    // + aurora glow. The stock-photo media band that source always shows is deliberately
+    // not added here: this card's own imageUrl/MediaImage system exists specifically
+    // because fabricated imagery was tried and rejected (see the doc comment above) —
+    // that decision stands over the source screen's literal Unsplash placeholders.
     <article
       className={cn(
-        "group/opp flex flex-col overflow-hidden rounded-2xl bg-surface-panel ring-1 transition-colors duration-(--duration-fast)",
+        "glass-card-fast group/opp flex flex-col overflow-hidden rounded-2xl ring-1 transition-colors duration-(--duration-fast)",
         canClaimMatch && matchScore >= 80 ? "ring-brand-primary-border" : "ring-border/70",
       )}
+      style={{ background: "rgba(255,255,255,0.42)", backdropFilter: "blur(14px)" }}
     >
       {imageUrl ? (
         <MediaImage
@@ -283,10 +289,14 @@ export function OpportunityCard({
           >
             Applied
           </Button>
+          {/* render={<Button .../>}: a bare styled <button> here (p-1 padding, ~24px hit
+              area) sat well under the app's ~40px+ touch-target convention, in a dense
+              card row otherwise built from real Button components. */}
           <DropdownMenu>
             <DropdownMenuTrigger
+              render={<Button variant="ghost" size="icon-sm" className="ml-auto text-ink-4 hover:text-ink-1" />}
+              nativeButton={true}
               aria-label="Not interested"
-              className="ml-auto rounded-md p-1 text-ink-4 transition-colors hover:text-ink-1 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
             >
               <X className="size-4" />
             </DropdownMenuTrigger>
