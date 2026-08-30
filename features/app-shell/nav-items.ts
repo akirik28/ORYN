@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Home, UserRound, Landmark, Compass, ListChecks, ClipboardCheck, Sparkles, FolderClosed, Settings } from "lucide-react";
+import { Home, UserRound, Landmark, Compass, ListChecks, ClipboardCheck, Sparkles, FolderClosed, Settings, LayoutGrid } from "lucide-react";
 
 export interface NavItem {
   href: string;
@@ -64,6 +64,10 @@ export const PRIMARY_NAV: NavItem[] = [
  * Whoever builds it: the minor-safety questions above are the gate, not an afterthought.
  */
 export const SECONDARY_NAV: NavItem[] = [
+  // Discovery surface for tools that were previously reachable only from a stack of small
+  // text links in the Journey page's header (CV Generator, CV scanning, Story Bank,
+  // Portfolio). See app/(app)/features/page.tsx.
+  { href: "/features", label: "Features", icon: LayoutGrid },
   { href: "/documents", label: "Documents", icon: FolderClosed },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
