@@ -14,7 +14,25 @@ import {
   ArrowRight,
   type LucideIcon,
 } from "lucide-react";
+import type { StaticImageData } from "next/image";
 import { PageHeader } from "@/components/oryn/page-header";
+
+// Statically imported, not referenced by string path. Next fingerprints each file into
+// /_next/static/media/<name>.<contenthash>.webp, so replacing an illustration changes its
+// URL and a returning browser can never keep serving the previous one from cache. String
+// paths under /public keep a stable URL forever, which is exactly how a stale image
+// survives a redeploy — hit live during this work: the files and every server response
+// were already correct while two browsers kept painting the superseded art.
+import imgCvGenerator from "@/public/features/cv-generator.webp";
+import imgScanCv from "@/public/features/scan-cv.webp";
+import imgStoryBank from "@/public/features/story-bank.webp";
+import imgPortfolio from "@/public/features/portfolio.webp";
+import imgDocuments from "@/public/features/documents.webp";
+import imgPublicProfile from "@/public/features/public-profile.webp";
+import imgWeeklyPlan from "@/public/features/weekly-plan.webp";
+import imgProgress from "@/public/features/progress.webp";
+import imgCompareUniversities from "@/public/features/compare-universities.webp";
+import imgResearchIdeas from "@/public/features/research-ideas.webp";
 
 /**
  * Everything Oryn can do, in one place.
@@ -35,8 +53,9 @@ import { PageHeader } from "@/components/oryn/page-header";
  */
 interface Feature {
   href: string;
-  /** Basename of the tile illustration in /public/features (no extension). */
-  image: string;
+  /** Statically imported tile illustration — see the import block above on why these are
+   *  imports rather than /public string paths. */
+  image: StaticImageData;
   title: string;
   description: string;
   icon: LucideIcon;
@@ -49,7 +68,7 @@ interface Feature {
 const FEATURES: Feature[] = [
   {
     href: "/profile/cv",
-    image: "cv-generator",
+    image: imgCvGenerator,
     title: "CV Generator",
     description:
       "Build a CV from what's already in your Journey — choose what to include, then print or save as PDF. Nothing is invented.",
@@ -59,7 +78,7 @@ const FEATURES: Feature[] = [
   },
   {
     href: "/profile/import",
-    image: "scan-cv",
+    image: imgScanCv,
     title: "Scan a CV",
     description:
       "Upload a CV or résumé and Oryn extracts your activities, awards and education. You review every item before anything is saved.",
@@ -69,7 +88,7 @@ const FEATURES: Feature[] = [
   },
   {
     href: "/profile/story-bank",
-    image: "story-bank",
+    image: imgStoryBank,
     title: "Essay Story Bank",
     description:
       "The moments behind your achievements, kept in your own words — raw material for application essays, never auto-written for you.",
@@ -79,7 +98,7 @@ const FEATURES: Feature[] = [
   },
   {
     href: "/profile/portfolio",
-    image: "portfolio",
+    image: imgPortfolio,
     title: "Portfolio",
     description: "Everything you've done in one place, as a timeline or grouped by category.",
     icon: FolderOpen,
@@ -88,7 +107,7 @@ const FEATURES: Feature[] = [
   },
   {
     href: "/documents",
-    image: "documents",
+    image: imgDocuments,
     title: "Documents",
     description:
       "Certificates and evidence files, attached to the achievements they belong to. Private by default — never public.",
@@ -98,7 +117,7 @@ const FEATURES: Feature[] = [
   },
   {
     href: "/u/me",
-    image: "public-profile",
+    image: imgPublicProfile,
     title: "Public profile",
     description:
       "A shareable version of your record. Off by default; grades and school details are never included.",
@@ -108,7 +127,7 @@ const FEATURES: Feature[] = [
   },
   {
     href: "/plan",
-    image: "weekly-plan",
+    image: imgWeeklyPlan,
     title: "Weekly plan",
     description:
       "Your three highest-value actions for the week, sized to the time you actually have.",
@@ -118,7 +137,7 @@ const FEATURES: Feature[] = [
   },
   {
     href: "/profile/history",
-    image: "progress",
+    image: imgProgress,
     title: "Progress",
     description:
       "How your profile has changed month to month, and which areas actually moved.",
@@ -128,7 +147,7 @@ const FEATURES: Feature[] = [
   },
   {
     href: "/universities/compare",
-    image: "compare-universities",
+    image: imgCompareUniversities,
     title: "Compare universities",
     description:
       "Put two to four universities side by side. Unknown figures read \"—\", never a guess.",
@@ -138,7 +157,7 @@ const FEATURES: Feature[] = [
   },
   {
     href: "/profile",
-    image: "research-ideas",
+    image: imgResearchIdeas,
     title: "Research idea generator",
     description:
       "Project ideas scaled to your level and interests, built from real academic literature — achievable, not impressive-sounding.",
@@ -203,7 +222,7 @@ export function FeaturesView({ userId }: { userId: string }) {
                     <div className={`relative flex h-32 items-center justify-center overflow-hidden bg-gradient-to-br ${feature.tint}`}>
                       <Icon className="size-8 text-ink-2" strokeWidth={1.4} aria-hidden="true" />
                       <Image
-                        src={`/features/${feature.image}.webp`}
+                        src={feature.image}
                         alt=""
                         aria-hidden="true"
                         fill
