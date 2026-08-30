@@ -57,7 +57,10 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
 
   if (ordered.length < 2) {
     return (
-      <div className="space-y-8">
+      <div
+        className="dark space-y-8 rounded-[28px] p-4 text-foreground md:p-8"
+        style={{ background: "linear-gradient(145deg, #111030 0%, #1A1650 50%, #0E1540 100%)" }}
+      >
         <PageHeader title="Compare universities" description="Select 2–4 universities from the explorer to compare them here." />
         <EmptyState icon={Scale} title="Couldn't find enough of these universities" description="One or more selected universities may no longer be available." />
         <Link href="/universities" className="inline-flex items-center gap-1.5 text-sm text-brand-primary hover:underline">
@@ -115,7 +118,13 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
   ];
 
   return (
-    <div className="space-y-6">
+    // Not a source screen at all (this comparison table is real functionality beyond
+    // source's scope) — dark-wrapped anyway for visual consistency with the rest of the
+    // Universities section, same confirmed-token-based basis as the other two pages.
+    <div
+      className="dark space-y-6 rounded-[28px] p-4 text-foreground md:p-8"
+      style={{ background: "linear-gradient(145deg, #111030 0%, #1A1650 50%, #0E1540 100%)" }}
+    >
       <PageHeader title="Compare universities" description={`${ordered.length} universities side by side — unknown fields are shown as "—", never guessed.`} />
       <Link href="/universities" className="inline-flex items-center gap-1.5 text-sm text-brand-primary hover:underline">
         <ArrowLeft className="size-3.5" /> Back to explorer

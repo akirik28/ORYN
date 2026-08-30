@@ -404,7 +404,23 @@ export default async function UniversitiesPage({
   const activeFilterCount = cost.length + size.length + (type ? 1 : 0) + (rank ? 1 : 0);
 
   return (
-    <div className="space-y-8">
+    // Figma source marks Universities as one of its dark "isFull" screens (App.tsx
+    // `App()`'s `isFull` check) — confirmed live against the actual Figma Make prototype
+    // (2026-08-30), not guessed from the static export alone. `.dark` scopes every
+    // token-based className already on this page — this component tree, down to
+    // WorldMapExplorer's country-fill colors (lib/data/map-visuals.ts's
+    // resolveCountryFillStyle, unit-tested, built entirely from color-mix(in oklch,
+    // var(--brand-primary)/var(--background)/var(--muted)...)) — checked specifically
+    // because breaking that map was the real risk here, not assumed. Nothing hardcoded
+    // light hex anywhere in this feature; only the background below is a literal new
+    // value. Contained (rounded card within the normal content column), not edge-to-edge
+    // — same choice already made for the dashboard hero and Applications, since the
+    // shared layout's padding is asymmetric (pt-8 pb-24 vs md:pt-12 lg:pb-12) and doesn't
+    // cleanly cancel with a uniform negative margin.
+    <div
+      className="dark space-y-8 rounded-[28px] p-4 text-foreground md:p-8"
+      style={{ background: "linear-gradient(145deg, #111030 0%, #1A1650 50%, #0E1540 100%)" }}
+    >
       <div className="flex flex-wrap items-end justify-between gap-4">
         <PageHeader
           eyebrow="Universities"
@@ -432,7 +448,7 @@ export default async function UniversitiesPage({
       </div>
 
 
-      <div className="flex flex-col gap-3 rounded-2xl border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="glass-card-fast flex flex-col gap-3 rounded-2xl border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium">Search universities</p>
           <p className="text-xs text-muted-foreground">

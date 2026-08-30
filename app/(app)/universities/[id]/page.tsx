@@ -240,7 +240,14 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   const imageCaptionParts = [imageAttributionMetric?.value_text, imageLicenseMetric?.value_text].filter((v): v is string => Boolean(v));
 
   return (
-    <div className="space-y-8">
+    // Same dark "isFull"-screen treatment as the Explorer (app/(app)/universities/page.tsx)
+    // — source's UniversityDetailScreen is dark too, and this page's whole component tree
+    // is confirmed token-based (zero hardcoded hex across this file and its five imported
+    // components), so `.dark` resolves it correctly the same way.
+    <div
+      className="dark space-y-8 rounded-[28px] p-4 text-foreground md:p-8"
+      style={{ background: "linear-gradient(145deg, #111030 0%, #1A1650 50%, #0E1540 100%)" }}
+    >
       {imageMetric?.value_text ? (
         <DetailHeroImage
           src={imageMetric.value_text}
@@ -299,7 +306,13 @@ export default async function UniversityDetailPage({ params }: { params: Promise
           counts. Same computation, same freshness comments — only its position moved. */}
       {targetRes.data ? (
         <section className="space-y-4 rounded-2xl border border-brand-primary-border bg-brand-primary-subtle p-6">
-          <div className="flex items-center justify-between">
+          {/* flex-wrap + gap: OutlookBadge (via StatusBadge) is whitespace-nowrap by
+              design, and its longer labels ("Not an undergraduate degree here", "Not a
+              profile-review system" — real, reachable not_applicable states) plus this
+              row's own no-wrap could exceed the panel width at 320-375px with neither side
+              able to shrink. Wraps to its own line instead of clipping under
+              `<main>`'s overflow-x-hidden. */}
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-lg font-medium">Your outlook</h2>
             {/* The freshly computed label, not the row's — `targetRes.data` was read before
                 the refresh above wrote to it, so the persisted value here is one render
