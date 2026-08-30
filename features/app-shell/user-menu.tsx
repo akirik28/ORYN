@@ -34,10 +34,15 @@ export function UserMenu({
   displayName,
   email,
   signal,
+  variant = "compact",
 }: {
   displayName: string;
   email: string | null;
   signal: DimensionSignal[];
+  /** "sidebar": the larger profile-block trigger at the foot of the desktop Sidebar
+   *  (features/app-shell/sidebar.tsx), styled after the Figma source's equivalent block.
+   *  Same dropdown, same real data either way — only the trigger's size/layout changes. */
+  variant?: "compact" | "sidebar";
 }) {
   const coverage = signalCoverage(signal);
   const summary =
@@ -48,16 +53,34 @@ export function UserMenu({
         : `${coverage.assessed} area${coverage.assessed === 1 ? "" : "s"} assessed`;
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        aria-label="Account menu"
-        className="flex items-center gap-2 rounded-full p-0.5 transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-      >
-        <Avatar className="size-8">
-          <AvatarFallback className="bg-brand-primary-soft text-sm text-brand-primary-strong">
+      {variant === "sidebar" ? (
+        <DropdownMenuTrigger
+          aria-label="Account menu"
+          className="flex w-full items-center gap-2.5 rounded-lg p-1 text-left transition-colors hover:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none"
+        >
+          <span
+            className="flex size-[34px] shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+            style={{ background: "linear-gradient(135deg, #7B75F5, #3D35E8)" }}
+          >
             {initialsFor(displayName)}
-          </AvatarFallback>
-        </Avatar>
-      </DropdownMenuTrigger>
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[13px] font-semibold text-white/90">{displayName}</span>
+            <span className="block truncate text-[11px] text-white/35">{summary}</span>
+          </span>
+        </DropdownMenuTrigger>
+      ) : (
+        <DropdownMenuTrigger
+          aria-label="Account menu"
+          className="flex items-center gap-2 rounded-full p-0.5 transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+        >
+          <Avatar className="size-8">
+            <AvatarFallback className="bg-brand-primary-soft text-sm text-brand-primary-strong">
+              {initialsFor(displayName)}
+            </AvatarFallback>
+          </Avatar>
+        </DropdownMenuTrigger>
+      )}
       <DropdownMenuContent align="end" className="w-64">
         <div className="px-1.5 py-1.5">
           <p className="truncate text-sm font-medium">{displayName}</p>
