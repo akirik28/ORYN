@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/features/app-shell/sidebar";
 import { Topbar } from "@/features/app-shell/topbar";
 import { MobileNav } from "@/features/app-shell/mobile-nav";
-import { AmbientBlobs, AMBIENT_BLOB_CONFIGS } from "@/features/app-shell/ambient-blobs";
+import { RouteAmbientBlobs } from "@/features/app-shell/route-ambient-blobs";
 import { NotConfiguredNotice } from "@/features/system/not-configured-notice";
 import { integrationStatus } from "@/lib/env";
 import { toProfileSignal } from "@/lib/scoring/signal";
@@ -89,9 +89,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {/* Hoisted here rather than wired into each individual page: position:fixed means
             DOM placement doesn't matter for where it renders, and every authenticated page
             gets the ambient background this way with no per-page wiring. Source varies the
-            blob config per screen (App.tsx `AmbientBlobs`) — this uses one config
-            everywhere for now rather than hand-tuning positions for every route. */}
-        <AmbientBlobs blobs={AMBIENT_BLOB_CONFIGS.home} />
+            blob config per screen (App.tsx `AmbientBlobs`) and so does this now — the
+            wrapper picks the config from the pathname, so each section has its own
+            background weighting instead of one identical wash everywhere. */}
+        <RouteAmbientBlobs />
         <Topbar notifications={notifications ?? []} />
         <main id="main-content" className="relative z-[1] min-w-0 flex-1 overflow-x-hidden">
           {/* max-w-[1200px] is the reading/composition measure (UI-V3 § 6). Pages that want

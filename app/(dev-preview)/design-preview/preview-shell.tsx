@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { Sidebar } from "@/features/app-shell/sidebar";
 import { Topbar } from "@/features/app-shell/topbar";
 import { MobileNav } from "@/features/app-shell/mobile-nav";
-import { AmbientBlobs, AMBIENT_BLOB_CONFIGS } from "@/features/app-shell/ambient-blobs";
+import { RouteAmbientBlobs } from "@/features/app-shell/route-ambient-blobs";
 import type { DimensionSignal } from "@/lib/scoring/signal";
 
 // Mirrors app/(app)/layout.tsx's structure with fixture data — real shell components, no
@@ -24,7 +24,7 @@ export function PreviewShell({ children, signal }: { children: ReactNode; signal
       <MobileNav signal={signal} displayName="Ada" email="ada@example.com" notifications={[]} />
       <Sidebar displayName="Ada" email="ada@example.com" signal={signal} />
       <div className="relative flex min-w-0 flex-1 flex-col">
-        <AmbientBlobs blobs={AMBIENT_BLOB_CONFIGS.home} />
+        <RouteAmbientBlobs />
         <Topbar notifications={[]} />
         <main className="relative z-[1] min-w-0 flex-1 overflow-x-hidden">
           <div className="mx-auto w-full max-w-[1200px] px-4 pt-8 pb-24 md:px-8 md:pt-12 lg:pb-12">{children}</div>
