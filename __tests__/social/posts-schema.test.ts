@@ -29,9 +29,10 @@ describe("migration numbering", () => {
     // directory forever; migrations 0061-0065 (the RLS verification package's own fixes,
     // all unapplied like 0058 — public_profiles_require_authenticated,
     // profiles_guard_protected_columns, guard_computed_score_columns,
-    // message_reports_verify_reported_user, close_insert_forgery_six_tables) are what
-    // currently follow it. Bump the literal below when the next migration lands, the
-    // same way this one did — it is a collision guard, not a permanent ceiling.
+    // message_reports_verify_reported_user, close_insert_forgery_six_tables), plus 0066
+    // (opportunity_language_and_image), are what currently follow it. Bump the literal
+    // below when the next migration lands, the same way this one did — it is a collision
+    // guard, not a permanent ceiling.
     const numbers = readdirSync(MIGRATIONS_DIR)
       .filter((f) => f.endsWith(".sql"))
       .map((f) => f.slice(0, 4));
@@ -43,7 +44,8 @@ describe("migration numbering", () => {
     expect(numbers.filter((n) => n === "0063")).toHaveLength(1);
     expect(numbers.filter((n) => n === "0064")).toHaveLength(1);
     expect(numbers.filter((n) => n === "0065")).toHaveLength(1);
-    expect(Math.max(...numbers.map(Number))).toBe(65);
+    expect(numbers.filter((n) => n === "0066")).toHaveLength(1);
+    expect(Math.max(...numbers.map(Number))).toBe(66);
   });
 });
 

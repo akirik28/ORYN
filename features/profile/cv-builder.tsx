@@ -82,7 +82,10 @@ export function CVBuilder({
 
   return (
     <div className="grid gap-8 lg:grid-cols-[320px_1fr]">
-      <div className="space-y-6 print:hidden">
+      {/* Controls panel gets the glass-card frame; the print area below deliberately does
+          not (a printed CV must stay a plain white document — `print:` resets already
+          strip its screen chrome, and an animated glow has no business near it). */}
+      <div className="glass-card h-fit space-y-6 rounded-2xl border border-white/65 bg-white/45 p-5 backdrop-blur-2xl print:hidden">
         <div className="space-y-2">
           <label className="text-sm font-medium" htmlFor="cv-title">
             CV title

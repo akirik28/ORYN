@@ -303,6 +303,10 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       location_mode: "online",
       financial_aid_available: false,
       application_requirements: [],
+      languages_of_instruction: ["English"],
+      image_url: null,
+      image_source_url: null,
+      image_attribution: null,
       current_cycle_label: "2027",
       verified_at: daysFromNow(-3),
       organization_entity_id: null,
@@ -354,6 +358,12 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       location_mode: "online",
       financial_aid_available: true,
       application_requirements: [],
+      // Bilingual on purpose — exercises the "&"-joined multi-language label, which a
+      // single-language fixture would never surface.
+      languages_of_instruction: ["English", "Turkish"],
+      image_url: null,
+      image_source_url: null,
+      image_attribution: null,
       current_cycle_label: "2027",
       verified_at: daysFromNow(-5),
       organization_entity_id: null,
