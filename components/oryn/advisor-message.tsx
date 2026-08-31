@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 /**
  * A block of counsel from Oryn (UI-V3 § 14).
@@ -18,18 +19,28 @@ import { cn } from "@/lib/utils";
  * User turns get `variant="student"` — quieter, unruled, clearly secondary. The student's
  * question is the prompt for the counsel, not a peer utterance in a transcript.
  */
+const DEFAULT_ATTRIBUTION: Record<Locale, { oryn: string; student: string }> = {
+  en: { oryn: "Oryn", student: "You" },
+  tr: { oryn: "Oryn", student: "Sen" },
+};
+
 export function AdvisorMessage({
   variant = "oryn",
   attribution,
   meta,
+  locale = DEFAULT_LOCALE,
   children,
   className,
 }: {
   variant?: "oryn" | "student";
-  /** Small uppercase mark. Defaults to "Oryn" / "You". */
+  /** Small uppercase mark. Defaults to a locale-appropriate "Oryn" / "You", per `locale`. */
   attribution?: string;
   /** Quiet right-aligned metadata — a timestamp, a model note. */
   meta?: ReactNode;
+  /** The actual language of `attribution` (when explicitly passed) or of the default mark
+   *  otherwise — see components/oryn/eyebrow.tsx's `locale` prop doc for why this can't
+   *  just inherit the page's `<html lang>`. */
+  locale?: Locale;
   children: ReactNode;
   className?: string;
 }) {
@@ -38,8 +49,8 @@ export function AdvisorMessage({
   if (!isOryn) {
     return (
       <div className={cn("max-w-2xl", className)}>
-        <p className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-4 uppercase">
-          {attribution ?? "You"}
+        <p lang={locale} className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-4 uppercase">
+          {attribution ?? DEFAULT_ATTRIBUTION[locale].student}
         </p>
         <div className="mt-1.5 leading-relaxed text-ink-2">{children}</div>
       </div>
@@ -49,8 +60,8 @@ export function AdvisorMessage({
   return (
     <article className={cn("max-w-2xl border-l border-border pl-6 sm:pl-8", className)}>
       <header className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <span className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-1 uppercase">
-          {attribution ?? "Oryn"}
+        <span lang={locale} className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-1 uppercase">
+          {attribution ?? DEFAULT_ATTRIBUTION[locale].oryn}
         </span>
         {meta ? <span className="ml-auto text-[0.6875rem] text-ink-4 tabular-nums">{meta}</span> : null}
       </header>
@@ -68,14 +79,16 @@ export function AdvisorMessage({
  * indicator — dots say "typing", which is the messaging metaphor this component exists to
  * avoid, and this reads as something being composed.
  */
-export function AdvisorMessageThinking({ className }: { className?: string }) {
+export function AdvisorMessageThinking({ locale = DEFAULT_LOCALE, className }: { locale?: Locale; className?: string }) {
   return (
     <article
       aria-busy="true"
       aria-live="polite"
       className={cn("max-w-2xl border-l border-border pl-6 sm:pl-8", className)}
     >
-      <p className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-1 uppercase">Oryn</p>
+      <p lang={locale} className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-1 uppercase">
+        {DEFAULT_ATTRIBUTION[locale].oryn}
+      </p>
       <div className="mt-4 space-y-3" role="status" aria-label="Composing a response">
         <span className="block h-2.5 w-[92%] animate-pulse rounded-full bg-ink-4/20" />
         <span className="block h-2.5 w-[78%] animate-pulse rounded-full bg-ink-4/20" />
