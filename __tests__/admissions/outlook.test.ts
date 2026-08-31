@@ -319,17 +319,18 @@ describe("computeAdmissionOutlook — locale: tr", () => {
     expect(result.notApplicableReason).toContain("yarışarak değil yayımlanmış koşulları karşılayarak");
   });
 
-  // Known, documented gap: the Netherlands' own mechanism sentence (system-shape.ts) isn't
-  // translated yet, only Turkey's is — so this specific case is genuinely, correctly a mix
-  // of an English mechanism and a Turkish hedge today. Asserting the mix directly here so a
-  // future translation of the Dutch entry is a visible, expected test change, not a silent
-  // behavior shift.
-  test("a country without a translated mechanism yet (e.g. Netherlands) mixes English mechanism + Turkish hedge — documented, not hidden", () => {
+  // Known, documented gap: countries outside the pilot's 4-country target set (Turkey, UK,
+  // Netherlands, Italy — all translated now) still mix an English mechanism with a Turkish
+  // hedge. Germany, not Netherlands: Netherlands is translated as of this slice, so testing
+  // the fallback against it would silently stop testing the fallback at all. Asserting the
+  // mix directly so a future translation of Germany's entry is a visible, expected test
+  // change, not a silent behavior shift.
+  test("a country outside the pilot set (e.g. Germany) mixes English mechanism + Turkish hedge — documented, not hidden", () => {
     const result = computeAdmissionOutlook(
-      { ...base, admissionSystem: resolveAdmissionSystem({ targetCountry: "Netherlands", studentCountry: "Turkey" }, "tr") },
+      { ...base, admissionSystem: resolveAdmissionSystem({ targetCountry: "Germany", studentCountry: "Turkey" }, "tr") },
       "tr"
     );
-    expect(result.notApplicableReason).toContain("For open (non-numerus-fixus) Dutch programmes");
+    expect(result.notApplicableReason).toContain("German admission is credential-gated");
     expect(result.notApplicableReason).toContain("yarışarak değil yayımlanmış koşulları karşılayarak");
   });
 

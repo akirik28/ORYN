@@ -235,6 +235,53 @@ describe("resolveAdmissionSystem — locale: tr", () => {
     expect(result.mechanism).toContain("yabancı uyruklu öğrenci yolundan girer");
   });
 
+  // The pilot's other 3 target-country mechanisms (Turkey done above), each checked for its
+  // own real official term rather than a paraphrase — UCAS's personal statement, Dutch
+  // numerus fixus, Italian numero chiuso/IMAT — same standard as OBP for Turkey.
+  describe("the pilot's other 3 target countries (UK, Netherlands, Italy)", () => {
+    test("UK/UCAS mechanism is Turkish and names the personal statement by its real term", () => {
+      const result = resolveAdmissionSystem({ targetCountry: "United Kingdom", studentCountry: "Turkey" }, "tr");
+      expect(result.mechanism).toContain("UCAS");
+      expect(result.mechanism).toContain("kişisel beyan (personal statement)");
+      expect(result.mechanism).toContain("okul referansı");
+    });
+
+    test("UK domestic and international mechanisms agree (UCAS runs one process for both)", () => {
+      const domestic = resolveAdmissionSystem({ targetCountry: "United Kingdom", studentCountry: "United Kingdom" }, "tr");
+      const international = resolveAdmissionSystem({ targetCountry: "United Kingdom", studentCountry: "Turkey" }, "tr");
+      expect(domestic.mechanism).toBe(international.mechanism);
+    });
+
+    test("Dutch general mechanism is Turkish and keeps numerus fixus untranslated (the real term, unchanged in Dutch itself)", () => {
+      const result = resolveAdmissionSystem({ targetCountry: "Netherlands", studentCountry: "Turkey" }, "tr");
+      expect(result.mechanism).toContain("numerus fixus olmayan");
+      expect(result.mechanism).toContain("uygun olmak ile kabul edilmek aynı şeydir");
+    });
+
+    test("Dutch Medicine (numerus fixus itself) has its own distinct Turkish mechanism, holistic shape", () => {
+      const result = resolveAdmissionSystem({ targetCountry: "Netherlands", studentCountry: "Turkey", targetField: "medicine" }, "tr");
+      expect(result.shape).toBe("holistic_review");
+      expect(result.mechanism).toContain("motivasyon mektubu (motivation letter)");
+      expect(result.mechanism).not.toBe(resolveAdmissionSystem({ targetCountry: "Netherlands", studentCountry: "Turkey" }, "tr").mechanism);
+    });
+
+    test("Italian general mechanism is Turkish, domestic and international genuinely differ (the origin-diploma proof)", () => {
+      const domestic = resolveAdmissionSystem({ targetCountry: "Italy", studentCountry: "Italy" }, "tr");
+      const international = resolveAdmissionSystem({ targetCountry: "Italy", studentCountry: "Turkey" }, "tr");
+      expect(domestic.mechanism).toContain("nitelik ve sınav eşiklerine dayanır");
+      expect(international.mechanism).toContain("kaynak ülke diplomasının tamamlanmış olduğunun kanıtlanması");
+      expect(domestic.mechanism).not.toEqual(international.mechanism);
+    });
+
+    test("Italian Medicine (numero chiuso) names IMAT and semestre filtro by their real names", () => {
+      const result = resolveAdmissionSystem({ targetCountry: "Italy", studentCountry: "Turkey", targetField: "medicine" }, "tr");
+      expect(result.shape).toBe("academic_rank_competitive");
+      expect(result.mechanism).toContain("numero chiuso");
+      expect(result.mechanism).toContain("IMAT");
+      expect(result.mechanism).toContain("semestre filtro");
+    });
+  });
+
   test("the shape itself never changes with locale — only the sentence describing it does", () => {
     const en = resolveAdmissionSystem({ targetCountry: "Turkey", studentCountry: "Turkey" });
     const tr = resolveAdmissionSystem({ targetCountry: "Turkey", studentCountry: "Turkey" }, "tr");
@@ -248,9 +295,13 @@ describe("resolveAdmissionSystem — locale: tr", () => {
   // Known, documented gap (see PathwaySystem.mechanismTr's own comment): a country without
   // its own Turkish mechanism yet falls back to English rather than going blank. Asserted
   // directly so a future translation of this entry is a visible, expected test change.
+  // Germany, not Netherlands: the pilot's 4-country target set (Turkey/UK/Netherlands/Italy)
+  // is now fully translated, and this test exists specifically to prove the *fallback*
+  // still works for a country genuinely outside that set — using an already-translated one
+  // here would silently stop testing the fallback path at all.
   test("a country without a translated mechanism yet falls back to English, not null or empty, under locale=tr", () => {
-    const result = resolveAdmissionSystem({ targetCountry: "Netherlands", studentCountry: "Turkey" }, "tr");
-    const englishResult = resolveAdmissionSystem({ targetCountry: "Netherlands", studentCountry: "Turkey" });
+    const result = resolveAdmissionSystem({ targetCountry: "Germany", studentCountry: "Turkey" }, "tr");
+    const englishResult = resolveAdmissionSystem({ targetCountry: "Germany", studentCountry: "Turkey" });
     expect(result.mechanism).toBe(englishResult.mechanism);
     expect(result.mechanism).not.toBeNull();
   });

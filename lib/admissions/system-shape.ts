@@ -236,11 +236,20 @@ const REGISTRY: AdmissionSystemEntry[] = [
       shape: "holistic_review",
       mechanism:
         "UCAS applications carry one personal statement and one school reference, and both are read — but far more narrowly than in the US. Subject-relevant (\"super-curricular\") work counts; general breadth and leadership titles count for much less.",
+      // "personal statement" kept bilingual, same convention as Turkey's OBP — it's UCAS's
+      // own named artifact, and "kişisel beyan" alone (with no anchor to the English term a
+      // Turkish student will see inside the actual UCAS form) would risk reading as a
+      // paraphrase rather than the real thing. "super-curricular" stays English + quoted,
+      // matching the source's own treatment of it as UCAS jargon rather than ordinary prose.
+      mechanismTr:
+        "UCAS başvuruları bir kişisel beyan (personal statement) ve bir okul referansı içerir; ikisi de okunur — ancak ABD'dekinden çok daha dar kapsamda. Derse özgü (\"super-curricular\") çalışmalar önemlidir; genel çok yönlülük ve liderlik unvanları çok daha az ağırlık taşır.",
     },
     international: {
       shape: "holistic_review",
       mechanism:
         "UCAS applications carry one personal statement and one school reference, and both are read — but far more narrowly than in the US. Subject-relevant (\"super-curricular\") work counts; general breadth and leadership titles count for much less.",
+      mechanismTr:
+        "UCAS başvuruları bir kişisel beyan (personal statement) ve bir okul referansı içerir; ikisi de okunur — ancak ABD'dekinden çok daha dar kapsamda. Derse özgü (\"super-curricular\") çalışmalar önemlidir; genel çok yönlülük ve liderlik unvanları çok daha az ağırlık taşır.",
     },
     sources: [DOC("united-kingdom.md"), `${SPEC_18} §3.2`],
   },
@@ -296,11 +305,18 @@ const REGISTRY: AdmissionSystemEntry[] = [
       shape: "academic_threshold",
       mechanism:
         "For open (non-numerus-fixus) Dutch programmes, meeting the qualification and subject requirements is effectively the decision — eligible and admitted are the same thing. Recommendation letters are not a standard requirement and there is no activities review.",
+      // "numerus fixus" is the real term used in Dutch admissions itself (Latin-derived,
+      // unchanged in Dutch, English AND this Turkish sentence) — not translated, the same
+      // way ÖSYM/YKS stayed untranslated for Turkey.
+      mechanismTr:
+        "Açık (numerus fixus olmayan) Hollanda programlarında, nitelik ve ders şartlarını karşılamak fiilen kabul kararının kendisidir — uygun olmak ile kabul edilmek aynı şeydir. Referans mektupları standart bir gereklilik değildir ve aktivite incelemesi yapılmaz.",
     },
     international: {
       shape: "academic_threshold",
       mechanism:
         "For open (non-numerus-fixus) Dutch programmes, meeting the qualification and subject requirements is effectively the decision — eligible and admitted are the same thing. Recommendation letters are not a standard requirement and there is no activities review.",
+      mechanismTr:
+        "Açık (numerus fixus olmayan) Hollanda programlarında, nitelik ve ders şartlarını karşılamak fiilen kabul kararının kendisidir — uygun olmak ile kabul edilmek aynı şeydir. Referans mektupları standart bir gereklilik değildir ve aktivite incelemesi yapılmaz.",
     },
     fieldOverrides: [
       {
@@ -309,6 +325,10 @@ const REGISTRY: AdmissionSystemEntry[] = [
           shape: "holistic_review",
           mechanism:
             "Dutch Medicine is numerus fixus — a capped programme whose selection procedure must legally use at least two qualitative criteria, commonly including a motivation letter and CV. That is a programme-specific selection procedure rather than US-style holistic review, and the criteria are set per university, so check the specific programme's own published method.",
+          // "motivation letter" -> "motivasyon mektubu" is the standard Turkish rendering
+          // used by Turkish counselors advising on Dutch admissions, not an invented phrase.
+          mechanismTr:
+            "Hollanda'da Tıp numerus fixus'tur — seçim sürecinin yasal olarak en az iki niteliksel kriter kullanması gerekir; bunlar genellikle bir motivasyon mektubu (motivation letter) ve özgeçmiş (CV) içerir. Bu, ABD tarzı bütüncül (holistic) değerlendirmeden çok, programa özgü bir seçim sürecidir ve kriterler üniversiteye göre belirlenir — bu yüzden ilgili programın kendi yayımladığı yöntemi kontrol et.",
         },
       },
     ],
@@ -320,11 +340,15 @@ const REGISTRY: AdmissionSystemEntry[] = [
       shape: "academic_threshold",
       mechanism:
         "Ordinary Italian admission runs on qualification and test thresholds. Essays, recommendation letters and activity records are not standard parts of it.",
+      mechanismTr:
+        "Olağan İtalyan kabulü, nitelik ve sınav eşiklerine dayanır. Kompozisyonlar, referans mektupları ve aktivite kayıtları bunun standart bir parçası değildir.",
     },
     international: {
       shape: "academic_threshold",
       mechanism:
         "Ordinary Italian admission runs on qualification and test thresholds, plus proof that the origin qualification is complete. Essays, recommendation letters and activity records are not standard parts of it.",
+      mechanismTr:
+        "Olağan İtalyan kabulü, nitelik ve sınav eşiklerine dayanır; buna ek olarak kaynak ülke diplomasının tamamlanmış olduğunun kanıtlanması gerekir. Kompozisyonlar, referans mektupları ve aktivite kayıtları bunun standart bir parçası değildir.",
     },
     fieldOverrides: [
       {
@@ -333,6 +357,11 @@ const REGISTRY: AdmissionSystemEntry[] = [
           shape: "academic_rank_competitive",
           mechanism:
             "Italian Medicine is numero chiuso: a nationally-run ranked exam decides places in score order — IMAT for English-taught courses, and the semestre filtro exams for Italian-taught courses since 2025/26.",
+          // "numero chiuso", "IMAT" and "semestre filtro" are the actual official Italian/
+          // international terms (the last two are proper names of specific exams) — kept
+          // exactly as Italian universities themselves name them, not translated.
+          mechanismTr:
+            "İtalya'da Tıp numero chiuso'dur: ulusal düzeyde yürütülen sıralamalı bir sınav, yerleri puan sırasına göre belirler — İngilizce eğitim veren programlar için IMAT, 2025/26'dan itibaren İtalyanca eğitim veren programlar için ise semestre filtro sınavları.",
         },
       },
     ],
