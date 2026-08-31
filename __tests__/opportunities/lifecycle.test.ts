@@ -19,13 +19,77 @@ import type { Opportunity } from "@/types/database";
 
 const REFERENCE_DATE = new Date("2026-08-22T00:00:00");
 
-function row(overrides: Partial<Pick<Opportunity, "cycle_status" | "deadline">> = {}): Pick<Opportunity, "cycle_status" | "deadline"> {
+function row(
+  overrides: Partial<Pick<Opportunity, "status" | "cycle_status" | "deadline">> = {}
+): Pick<Opportunity, "status" | "cycle_status" | "deadline"> {
   return {
+    // Defaults to the only moderation state a student should ever be shown, so every
+    // pre-existing case in this file keeps testing what it was written to test.
+    status: "active",
     cycle_status: "unverified",
     deadline: null,
     ...overrides,
   };
 }
+
+/**
+ * The moderation half of the gate, added 2026-08-31 after finding it was never enforced on
+ * the recommendation path. `browse.ts` filtered `status = 'active'` in SQL so Browse was
+ * clean, but "For you" reads `opportunity_matches`, fetches the referenced rows by id, and
+ * re-checks them with `isOpportunityActionable` — which could not see `status` at all.
+ * `refreshOpportunityMatches` only ever upserts, so every match row written before a record
+ * was disabled survived and kept rendering.
+ *
+ * Live measurement that day: 67 match rows pointed at non-active opportunities, 59 passed the
+ * check, across all 8 onboarded accounts — including a table-row fragment scraped as a title
+ * ("Time: 4:30pm - 5:30pm (Hong Kong time)"), a bare course code, a 2023 cycle, and the
+ * professional Stockholm Water Prize. Every one had been disabled by a researcher days
+ * earlier and was still shown as "Strong match. It addresses a current gap in your profile."
+ */
+describe("isOpportunityActionable — moderation status", () => {
+  test("a disabled opportunity is never actionable, however healthy its cycle looks", () => {
+    expect(
+      isOpportunityActionable(row({ status: "disabled", cycle_status: "open", deadline: "2027-01-01" }), REFERENCE_DATE)
+    ).toBe(false);
+  });
+
+  test("under_review is excluded too — not yet vetted is not ready to recommend", () => {
+    expect(
+      isOpportunityActionable(
+        row({ status: "under_review", cycle_status: "upcoming", deadline: "2027-04-01" }),
+        REFERENCE_DATE
+      )
+    ).toBe(false);
+  });
+
+  test("expired is excluded", () => {
+    expect(isOpportunityActionable(row({ status: "expired", cycle_status: "open" }), REFERENCE_DATE)).toBe(false);
+  });
+
+  test("only active passes — the exact shape that was leaking", () => {
+    // Stockholm Water Prize as stored: disabled, but with a cycle_status and deadline that
+    // the pre-fix check waved straight through.
+    const leaked = { status: "disabled" as const, cycle_status: "unverified" as const, deadline: null };
+    expect(isOpportunityActionable(leaked, REFERENCE_DATE)).toBe(false);
+    expect(isOpportunityActionable({ ...leaked, status: "active" }, REFERENCE_DATE)).toBe(true);
+  });
+
+  test("filterActionableOpportunities drops non-active rows", () => {
+    const rows = [
+      row({ status: "active", cycle_status: "open" }),
+      row({ status: "disabled", cycle_status: "open" }),
+      row({ status: "under_review", cycle_status: "open" }),
+    ];
+    expect(filterActionableOpportunities(rows, REFERENCE_DATE)).toHaveLength(1);
+  });
+
+  test("the reason for a hidden row blames neither the student nor the programme", () => {
+    const reason = nonActionableOpportunityReason(row({ status: "disabled", cycle_status: "open" }));
+    // It must not claim the cycle closed or the deadline passed — both would be fabrications
+    // about the programme — nor tell the student they don't qualify.
+    expect(reason).not.toMatch(/closed|deadline has passed|not eligible|ineligible/i);
+  });
+});
 
 describe("isOpportunityActionable", () => {
   test("is actionable when cycle_status is open and deadline is in the future", () => {
@@ -341,7 +405,12 @@ describe("isOpportunitySufficientlyVerified", () => {
 describe("Regression -- a legacy-generation row is not gated on pipeline lineage", () => {
   // The exact live shape: no deadline, no `last_verified_at`, but a real `verified_at` and
   // `verification_state='verified_current'`. 51 rows in the catalogue looked like this.
-  const legacyGeneration = { deadline: null, last_verified_at: null, verified_at: "2026-08-18T00:00:00Z" };
+  const legacyGeneration = {
+    status: "active" as const,
+    deadline: null,
+    last_verified_at: null,
+    verified_at: "2026-08-18T00:00:00Z",
+  };
 
   test("a row verified through `verified_at` alone is sufficiently verified", () => {
     expect(isOpportunitySufficientlyVerified(legacyGeneration)).toBe(true);
@@ -362,7 +431,7 @@ describe("Regression -- a legacy-generation row is not gated on pipeline lineage
     // is what gives this seam a real signal.
     expect(
       isOpportunityRecommendable(
-        { cycle_status: "upcoming", deadline: null, last_verified_at: null, verified_at: null },
+        { status: "active" as const, cycle_status: "upcoming", deadline: null, last_verified_at: null, verified_at: null },
         REFERENCE_DATE
       )
     ).toBe(false);
@@ -491,6 +560,7 @@ describe("hasDeadlineCommitment -- the rolling seam", () => {
 
 describe("isOpportunityRecommendable -- the composed gate every recommendation path calls", () => {
   const verifiedAndOpen = {
+    status: "active" as const,
     cycle_status: "open" as const,
     deadline: "2026-09-15",
     last_verified_at: "2026-08-20T00:00:00Z",
@@ -505,9 +575,10 @@ describe("isOpportunityRecommendable -- the composed gate every recommendation p
     // Regression guard for #140/#141: each existing rule must still exclude on its own.
     expect(isOpportunityRecommendable({ ...verifiedAndOpen, cycle_status: "closed" }, REFERENCE_DATE)).toBe(false);
     expect(isOpportunityRecommendable({ ...verifiedAndOpen, deadline: "2026-01-01" }, REFERENCE_DATE)).toBe(false);
+    expect(isOpportunityRecommendable({ ...verifiedAndOpen, status: "disabled" }, REFERENCE_DATE)).toBe(false);
     expect(
       isOpportunityRecommendable(
-        { cycle_status: "upcoming", deadline: null, last_verified_at: null, verified_at: null },
+        { status: "active" as const, cycle_status: "upcoming", deadline: null, last_verified_at: null, verified_at: null },
         REFERENCE_DATE
       )
     ).toBe(false);

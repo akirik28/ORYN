@@ -147,7 +147,7 @@ export default async function DashboardPage() {
         // distinction #143 got wrong. Omitting `verified_at` here would silently re-create that
         // bug for this surface alone; OpportunityVerificationFacts requires it so that omitting
         // it fails typecheck rather than quietly hiding opportunities from the homepage.
-        .select("id, title, cycle_status, deadline, last_verified_at, verified_at, cost, selectivity_tier")
+        .select("id, title, status, cycle_status, deadline, last_verified_at, verified_at, cost, selectivity_tier")
         .in("id", opportunityIds)
         // The enum, not just the timestamps. isOpportunitySufficientlyVerified below asks
         // "did any pipeline ever touch this row", which is a different question from "has a

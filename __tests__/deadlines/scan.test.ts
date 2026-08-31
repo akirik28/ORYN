@@ -28,6 +28,10 @@ type OpportunityRow = {
   title: string;
   deadline: string | null;
   cycle_status: Database["public"]["Tables"]["opportunities"]["Row"]["cycle_status"];
+  /** Optional in the fixtures, defaulted to "active" by `makeSupabase` below: every real
+   * row has one, and spelling it out on the dozen cases that are not about moderation would
+   * bury the two that are. Set it explicitly to test the moderation gate. */
+  status?: Database["public"]["Tables"]["opportunities"]["Row"]["status"];
 };
 type SavedOpportunityRow = { opportunity_id: string; user_id: string; status: string };
 type NotificationRow = { id: string; user_id: string; category: string; link: string; created_at: string };
@@ -65,10 +69,14 @@ function makeQueryBuilder<T extends Record<string, unknown>>(rows: T[]) {
 
 function makeSupabase(tables: { saved_opportunities: SavedOpportunityRow[]; opportunities: OpportunityRow[]; notifications?: NotificationRow[] }) {
   const notifications = tables.notifications ?? [];
+  // Every real `opportunities` row has a moderation status, and since 2026-08-31 the
+  // lifecycle gate reads it. Defaulting here keeps the cases that are about cycles and
+  // deadlines saying only what they mean, while a case that sets it explicitly still wins.
+  const opportunities = tables.opportunities.map((row) => ({ status: "active" as const, ...row }));
   return {
     from: vi.fn((table: "saved_opportunities" | "opportunities" | "notifications") => {
       if (table === "saved_opportunities") return makeQueryBuilder(tables.saved_opportunities);
-      if (table === "opportunities") return makeQueryBuilder(tables.opportunities);
+      if (table === "opportunities") return makeQueryBuilder(opportunities);
       return makeQueryBuilder(notifications);
     }),
   } as unknown as SupabaseClient<Database>;

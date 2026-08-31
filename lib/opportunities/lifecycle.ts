@@ -51,9 +51,28 @@ export const NON_ACTIONABLE_OPPORTUNITY_CYCLE_STATUSES = new Set<Opportunity["cy
  * function can close.
  */
 export function isOpportunityActionable(
-  opportunity: Pick<Opportunity, "cycle_status" | "deadline">,
+  opportunity: Pick<Opportunity, "status" | "cycle_status" | "deadline">,
   referenceDate: Date = new Date()
 ): boolean {
+  // The moderation half of this file's own stated contract, which nothing was enforcing on
+  // the recommendation path. `browse.ts` filters `status = 'active'` in SQL, so Browse was
+  // clean, but "For you" reads `opportunity_matches` and then fetches the referenced rows by
+  // id with no status filter — and this function, its only re-check, could not see `status`
+  // at all. `refreshOpportunityMatches` never deletes, so every match row written before a
+  // row was disabled survived and kept rendering.
+  //
+  // Measured live 2026-08-31: 67 match rows pointed at non-active opportunities, 59 of them
+  // passed this check, across all 8 onboarded accounts. Among them a table-row fragment
+  // ("Time: 4:30pm - 5:30pm (Hong Kong time)"), a course code, a 2023 cycle, and the
+  // professional Stockholm Water Prize — each already disabled by a researcher days earlier,
+  // each still presented as "Strong match. It addresses a current gap in your profile."
+  // Disabling a record has to actually remove it, or moderation is decoration.
+  //
+  // `expired` and `under_review` are excluded on the same reasoning: not vetted, or known
+  // stale. Only `active` is something to put in front of a student.
+  if (opportunity.status !== "active") {
+    return false;
+  }
   if (NON_ACTIONABLE_OPPORTUNITY_CYCLE_STATUSES.has(opportunity.cycle_status)) {
     return false;
   }
@@ -81,7 +100,17 @@ export function isOpportunityActionable(
  * fix (eligibility.ts kept its own cycle-only `INACTIVE_CYCLE_STATUSES` and never learned the
  * deadline half of the rule).
  */
-export function nonActionableOpportunityReason(opportunity: Pick<Opportunity, "cycle_status" | "deadline">): string {
+export function nonActionableOpportunityReason(
+  opportunity: Pick<Opportunity, "status" | "cycle_status" | "deadline">
+): string {
+  // Deliberately vague, and deliberately not blamed on the student or the programme: a
+  // moderation state is Oryn's own bookkeeping ("we pulled this", "we haven't vetted it"),
+  // and neither the real reason nor the record itself is something to explain to a student.
+  // Surfaces should be filtering these out before any reason is ever rendered; this exists
+  // so that a path which forgets to says something harmless rather than something wrong.
+  if (opportunity.status !== "active") {
+    return "Oryn isn't showing this opportunity right now.";
+  }
   if (NON_ACTIONABLE_OPPORTUNITY_CYCLE_STATUSES.has(opportunity.cycle_status)) {
     return `This opportunity's current cycle is ${opportunity.cycle_status.replace(/_/g, " ")}.`;
   }
@@ -122,7 +151,7 @@ export interface ResolvedEligibility extends StoredEligibility {
  * per-student mismatch is never overwritten with a cheerier answer.
  */
 export function resolveStoredEligibility(
-  opportunity: Pick<Opportunity, "cycle_status" | "deadline">,
+  opportunity: Pick<Opportunity, "status" | "cycle_status" | "deadline">,
   stored: StoredEligibility,
   referenceDate: Date = new Date()
 ): ResolvedEligibility {
@@ -356,21 +385,22 @@ export const INSUFFICIENT_VERIFICATION_REASON =
  * than exclude, and they must be able to tell a student WHICH of the three things is true.
  */
 export function isOpportunityRecommendable(
-  opportunity: Pick<Opportunity, "cycle_status" | "deadline"> & OpportunityVerificationFacts,
+  opportunity: Pick<Opportunity, "status" | "cycle_status" | "deadline"> & OpportunityVerificationFacts,
   referenceDate: Date = new Date()
 ): boolean {
   return isOpportunityActionable(opportunity, referenceDate) && isOpportunitySufficientlyVerified(opportunity, referenceDate);
 }
 
 /**
- * Shared filter for every matching/recommendation/urgency read path — see the module comment
- * above for why this excludes on cycle_status and deadline but leaves `status` and direct-by-
- * id access untouched. Used by persist-matches.ts (stop computing fresh matches for a closed
- * cycle) and, defensively, by every surface that later joins opportunity_matches back against
- * opportunities (a match row upserted before a cycle closed must not keep reading as live just
- * because nothing has re-run refreshOpportunityMatches since).
+ * Shared filter for every matching/recommendation/urgency read path — excludes on the
+ * moderation flag, cycle_status and deadline alike, while leaving direct-by-id access
+ * untouched (the detail page still resolves any opportunity by its id, as it always has).
+ * Used by persist-matches.ts (stop computing fresh matches for a closed cycle) and,
+ * defensively, by every surface that later joins opportunity_matches back against
+ * opportunities — a match row upserted before its opportunity was closed OR disabled must not
+ * keep reading as live just because nothing has re-run refreshOpportunityMatches since.
  */
-export function filterActionableOpportunities<T extends Pick<Opportunity, "cycle_status" | "deadline">>(
+export function filterActionableOpportunities<T extends Pick<Opportunity, "status" | "cycle_status" | "deadline">>(
   opportunities: T[],
   referenceDate: Date = new Date()
 ): T[] {

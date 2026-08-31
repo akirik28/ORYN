@@ -108,7 +108,7 @@ export async function scanSavedOpportunityDeadlines(supabase: SupabaseClient<Dat
   const opportunityIds = [...new Set(saved.map((s) => s.opportunity_id))];
   const { data: opportunities } = await supabase
     .from("opportunities")
-    .select("id, title, deadline, cycle_status")
+    .select("id, title, status, deadline, cycle_status")
     .in("id", opportunityIds)
     .not("deadline", "is", null);
   const opportunityById = new Map((opportunities ?? []).map((o) => [o.id, o]));
