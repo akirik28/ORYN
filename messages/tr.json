@@ -1,0 +1,25 @@
+{
+  "nav": {
+    "home": "Ana Sayfa",
+    "counselor": "Danışman",
+    "journey": "Yolculuk",
+    "opportunities": "Fırsatlar",
+    "universities": "Üniversiteler",
+    "plan": "Plan",
+    "applications": "Başvurular",
+    "features": "Özellikler",
+    "documents": "Belgeler",
+    "settings": "Ayarlar",
+    "opportunitiesShort": "Keşfet",
+    "more": "Daha Fazla",
+    "moreDestinations": "Diğer sayfalar",
+    "primaryLandmark": "Ana gezinme",
+    "skipToContent": "İçeriğe geç",
+    "homeLink": "Oryn — ana sayfa"
+  },
+  "language": {
+    "label": "Dil",
+    "change": "Dili değiştir",
+    "saveFailed": "Dil tercihiniz kaydedilemedi. Lütfen tekrar deneyin."
+  }
+}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -11,6 +12,7 @@ import type { DimensionSignal } from "@/lib/scoring/signal";
 import { UserMenu } from "./user-menu";
 import { NotificationBell } from "./notification-bell";
 import { CommandPalette } from "@/features/search/command-palette";
+import { LanguageSwitcher } from "./language-switcher";
 import { PRIMARY_NAV, SECONDARY_NAV } from "./nav-items";
 import type { Notification } from "@/types/database";
 
@@ -48,6 +50,7 @@ export function MobileNav({
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const t = useTranslations("nav");
   const overflowActive = OVERFLOW_NAV.some(
     (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
   );
@@ -55,7 +58,7 @@ export function MobileNav({
   return (
     <>
       <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background/90 px-4 py-3 backdrop-blur-sm lg:hidden">
-        <Link href="/dashboard" aria-label="Oryn — home">
+        <Link href="/dashboard" aria-label={t("homeLink")}>
           <Image src="/brand/logo-full.png" alt="Oryn" width={92} height={31} className="h-7 w-auto" />
         </Link>
         <div className="flex items-center gap-1">
@@ -66,7 +69,7 @@ export function MobileNav({
       </header>
 
       <nav
-        aria-label="Primary"
+        aria-label={t("primaryLandmark")}
         className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm lg:hidden"
       >
         {BOTTOM_NAV.map((item) => {
@@ -92,15 +95,15 @@ export function MobileNav({
               <Icon className="size-5 shrink-0" />
               {/* The visible text may be the short form, so the link keeps the full label
                   as its accessible name — a screen reader shouldn't hear "Explore". */}
-              <span aria-hidden="true" className="max-w-full truncate">{item.shortLabel ?? item.label}</span>
-              <span className="sr-only">{item.label}</span>
+              <span aria-hidden="true" className="max-w-full truncate">{t(item.shortLabelKey ?? item.labelKey)}</span>
+              <span className="sr-only">{t(item.labelKey)}</span>
             </Link>
           );
         })}
         <button
           type="button"
           onClick={() => setOpen(true)}
-          aria-label="More destinations"
+          aria-label={t("moreDestinations")}
           aria-expanded={open}
           className={cn(
             "flex min-h-14 flex-col items-center justify-center gap-1 px-0.5 py-2 text-[9px] tracking-tight transition-colors min-[360px]:px-1 min-[360px]:text-[10px] min-[360px]:tracking-normal",
@@ -109,14 +112,14 @@ export function MobileNav({
           )}
         >
           <MoreHorizontal className="size-5 shrink-0" />
-          <span>More</span>
+          <span>{t("more")}</span>
         </button>
       </nav>
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="bottom" className="rounded-t-2xl p-0">
           <SheetHeader className="px-5 pt-5 pb-1">
-            <SheetTitle>More</SheetTitle>
+            <SheetTitle>{t("more")}</SheetTitle>
           </SheetHeader>
           <div className="grid grid-cols-2 gap-1 p-4">
             {OVERFLOW_NAV.map((item) => {
@@ -135,10 +138,14 @@ export function MobileNav({
                   )}
                 >
                   <Icon className="size-4 shrink-0" />
-                  {item.label}
+                  {t(item.labelKey)}
                 </Link>
               );
             })}
+            {/* Desktop reaches this from the sidebar footer; below `lg` that column does
+                not render at all, so the overflow sheet is the only place a phone user can
+                change language. */}
+            <LanguageSwitcher variant="sheet" />
           </div>
         </SheetContent>
       </Sheet>

@@ -2,17 +2,23 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { formatDistanceToNow } from "date-fns";
+import { useLocale } from "next-intl";
 import { Bell, CheckCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { markNotificationRead, markAllNotificationsRead } from "@/app/(app)/notifications/actions";
+import { formatRelativeTime } from "@/lib/i18n/date";
+import { toLocale } from "@/lib/i18n/config";
 import type { Notification } from "@/types/database";
 
 export function NotificationBell({ notifications }: { notifications: Notification[] }) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  // `useLocale()` is typed as the app's Locale union via the AppConfig augmentation in
+  // lib/i18n/app-config.d.ts, but it resolves at runtime from provider state — `toLocale`
+  // keeps a stale or unexpected value rendering English rather than throwing on an index.
+  const locale = toLocale(useLocale());
   const unreadCount = notifications.filter((n) => !n.read_at).length;
 
   return (
@@ -88,7 +94,7 @@ export function NotificationBell({ notifications }: { notifications: Notificatio
                       <span className="mt-0.5 line-clamp-2 block text-xs leading-[1.45]" style={{ color: "#7A7A8A" }}>{notification.body}</span>
                     ) : null}
                     <span className="mt-1 block text-[11px]" style={{ color: "#AAAABC" }}>
-                      {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                      {formatRelativeTime(notification.created_at, locale)}
                     </span>
                   </span>
                 </>

@@ -1,15 +1,25 @@
 import type { LucideIcon } from "lucide-react";
 import { Home, UserRound, Landmark, Compass, ListChecks, ClipboardCheck, Sparkles, FolderClosed, Settings, LayoutGrid } from "lucide-react";
+import type en from "@/messages/en.json";
+
+/**
+ * A key in the `nav` namespace of the message catalogs. Typed off `messages/en.json`
+ * rather than declared as `string`, so a renamed or misspelled key fails
+ * `npm run typecheck` instead of rendering "nav.jouney" into the sidebar.
+ */
+type NavMessageKey = keyof (typeof en)["nav"];
 
 export interface NavItem {
   href: string;
-  label: string;
+  /** Message key, not display text — resolved per-request against the student's locale.
+   *  The English value in messages/en.json is the label these used to hold literally. */
+  labelKey: NavMessageKey;
   icon: LucideIcon;
   /** Earns a slot in the mobile bottom bar. At most five — a sixth stops being a tap target. */
   mobilePrimary?: boolean;
   /** Used in the bottom bar only, where a 62px column ellipsises anything longer. Falls
-   *  back to `label`. Never used anywhere the full label has room. */
-  shortLabel?: string;
+   *  back to `labelKey`. Never used anywhere the full label has room. */
+  shortLabelKey?: NavMessageKey;
 }
 
 /**
@@ -34,13 +44,13 @@ export interface NavItem {
  * one tap away under "More" rather than being hidden — see `mobile-nav.tsx`.
  */
 export const PRIMARY_NAV: NavItem[] = [
-  { href: "/dashboard", label: "Home", icon: Home, mobilePrimary: true },
-  { href: "/advisor", label: "Counselor", icon: Sparkles, mobilePrimary: true },
-  { href: "/profile", label: "Journey", icon: UserRound, mobilePrimary: true },
-  { href: "/opportunities", label: "Opportunities", icon: Compass, mobilePrimary: true, shortLabel: "Explore" },
-  { href: "/universities", label: "Universities", icon: Landmark, mobilePrimary: true },
-  { href: "/plan", label: "Plan", icon: ListChecks },
-  { href: "/applications", label: "Applications", icon: ClipboardCheck },
+  { href: "/dashboard", labelKey: "home", icon: Home, mobilePrimary: true },
+  { href: "/advisor", labelKey: "counselor", icon: Sparkles, mobilePrimary: true },
+  { href: "/profile", labelKey: "journey", icon: UserRound, mobilePrimary: true },
+  { href: "/opportunities", labelKey: "opportunities", icon: Compass, mobilePrimary: true, shortLabelKey: "opportunitiesShort" },
+  { href: "/universities", labelKey: "universities", icon: Landmark, mobilePrimary: true },
+  { href: "/plan", labelKey: "plan", icon: ListChecks },
+  { href: "/applications", labelKey: "applications", icon: ClipboardCheck },
 ];
 
 /**
@@ -67,7 +77,7 @@ export const SECONDARY_NAV: NavItem[] = [
   // Discovery surface for tools that were previously reachable only from a stack of small
   // text links in the Journey page's header (CV Generator, CV scanning, Story Bank,
   // Portfolio). See app/(app)/features/page.tsx.
-  { href: "/features", label: "Features", icon: LayoutGrid },
-  { href: "/documents", label: "Documents", icon: FolderClosed },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/features", labelKey: "features", icon: LayoutGrid },
+  { href: "/documents", labelKey: "documents", icon: FolderClosed },
+  { href: "/settings", labelKey: "settings", icon: Settings },
 ];

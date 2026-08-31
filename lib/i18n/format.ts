@@ -1,20 +1,33 @@
+import { DEFAULT_LOCALE, INTL_LOCALES } from "./config";
+
 /**
  * Number/currency formatting with an explicit, deterministic locale — never a bare
  * `.toLocaleString()`. Without an explicit locale, `Intl`/`.toLocaleString()` resolves
  * against whatever ICU locale the *runtime* defaults to; called from a Server Component
  * that's the Node process's own locale, not the visiting student's, so the same number
- * could format differently across environments (or once this product is ever actually
- * localized, wouldn't move with the student's chosen language at all). One constant here
- * is what a future locale switch changes — not call sites scattered across the app.
+ * could format differently across environments.
+ *
+ * **Numbers are not locale-switched yet, deliberately.** The UI language now moves with
+ * the student (lib/i18n/locale.ts), but these formatters stay pinned to the English
+ * number system. Turkish groups digits the other way round — 12000 is "12.000" in tr-TR
+ * against "12,000" in en-US — so flipping this constant silently rewrites every
+ * university statistic, cost and token count in the product. That is a deliberate,
+ * separately-reviewed change against pages whose surrounding copy is still English, not a
+ * side effect of adding a language switcher. When it happens, thread the active locale
+ * through `INTL_LOCALES[locale]` and update __tests__/i18n/format.test.ts with it.
+ *
+ * Named for what it is, rather than `DEFAULT_LOCALE`: that name now belongs to the app's
+ * language code ("en") in lib/i18n/config.ts, and two constants in one directory holding
+ * "en" and "en-US" under a single name is a trap for whoever localizes numbers next.
  */
-export const DEFAULT_LOCALE = "en-US";
+export const NUMBER_FORMAT_LOCALE = INTL_LOCALES[DEFAULT_LOCALE];
 
 export function formatNumber(value: number, options?: Intl.NumberFormatOptions): string {
-  return new Intl.NumberFormat(DEFAULT_LOCALE, options).format(value);
+  return new Intl.NumberFormat(NUMBER_FORMAT_LOCALE, options).format(value);
 }
 
 export function formatCurrency(value: number, currency = "USD", options?: Intl.NumberFormatOptions): string {
-  return new Intl.NumberFormat(DEFAULT_LOCALE, { style: "currency", currency, maximumFractionDigits: 0, ...options }).format(value);
+  return new Intl.NumberFormat(NUMBER_FORMAT_LOCALE, { style: "currency", currency, maximumFractionDigits: 0, ...options }).format(value);
 }
 
 /**

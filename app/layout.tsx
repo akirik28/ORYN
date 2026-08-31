@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Manrope, Geist_Mono, Fraunces } from "next/font/google";
 import { MotionConfig } from "motion/react";
+import { NextIntlClientProvider } from "next-intl";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
+import { resolveLocale } from "@/lib/i18n/locale";
 import "./globals.css";
 
 // Body/UI face. Manrope over a neutral grotesk: it carries a little warmth and a wide
@@ -43,7 +45,13 @@ export const metadata: Metadata = {
     "Oryn helps students capture their achievements, understand their strengths and gaps, and know exactly what to do next to improve their future opportunities.",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Resolved here rather than in each route group so that <html lang> — which assistive
+  // technology uses to pick pronunciation, and which is only settable on this one element —
+  // actually matches the language the page is rendered in. See lib/i18n/locale.ts for the
+  // cookie-then-profile resolution order and its cost guards.
+  const locale = await resolveLocale();
+
   return (
     // Founder-locked visual direction (revised 2026-08-18, superseding the prior dark-
     // default decision below): light is the product's one deliberate default — bright,
@@ -60,18 +68,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     // differ from a static default — same "static class, no flash, no script" approach,
     // just defaulting the other direction now).
     <html
-      lang="en"
+      lang={locale}
       className={`${manrope.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
         {/* Global prefers-reduced-motion gate — every `motion.*` element in the app
             honors the OS setting automatically; no per-component opt-in needed. */}
-        <MotionConfig reducedMotion="user">
-          <TooltipProvider>
-            {children}
-            <Toaster position="bottom-right" />
-          </TooltipProvider>
-        </MotionConfig>
+        {/* Messages are passed whole because the catalog is currently ~19 keys of
+            navigation chrome — smaller than the code that would narrow it. If it grows to
+            cover real page copy, pass only the namespaces the client tree needs rather
+            than shipping every translation to the browser. */}
+        <NextIntlClientProvider locale={locale}>
+          <MotionConfig reducedMotion="user">
+            <TooltipProvider>
+              {children}
+              <Toaster position="bottom-right" />
+            </TooltipProvider>
+          </MotionConfig>
+        </NextIntlClientProvider>
       </body>
     </html>
   );
