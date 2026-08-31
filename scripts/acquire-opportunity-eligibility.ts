@@ -49,6 +49,7 @@
  *   npx tsx scripts/acquire-opportunity-eligibility.ts --limit 20
  *   npx tsx scripts/acquire-opportunity-eligibility.ts --only "HMMT"
  *   npx tsx scripts/acquire-opportunity-eligibility.ts --category competition
+ *   npx tsx scripts/acquire-opportunity-eligibility.ts --country-only    # skip rows only missing age/grade
  *   npx tsx scripts/acquire-opportunity-eligibility.ts --apply             # + write
  *   npx tsx scripts/acquire-opportunity-eligibility.ts --verbose           # + per-row detail
  *   npx tsx scripts/acquire-opportunity-eligibility.ts --report            # DB-only coverage
@@ -953,6 +954,13 @@ async function main(): Promise<void> {
   const category = categoryIndex >= 0 ? argv[categoryIndex + 1] : null;
   const limitIndex = argv.indexOf("--limit");
   const limit = limitIndex >= 0 ? Number(argv[limitIndex + 1]) : null;
+  // 2026-09-01, CEO-directed: country/citizenship prioritized over age for spend — country sits
+  // at 40/275 (the field driving the ambiguous "not verified" card copy) versus age at 154/275,
+  // and an unresolved age gap still degrades to an honest "can't check without a birth year"
+  // either way. Scopes the run to rows genuinely missing a country/citizenship signal,
+  // regardless of their age/grade status — a row already age-resolved but country-blank still
+  // qualifies, a row already country-resolved but age-blank does not.
+  const countryOnly = argv.includes("--country-only");
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const secretKey = process.env.SUPABASE_SECRET_KEY;
@@ -989,6 +997,7 @@ async function main(): Promise<void> {
   const priorityOf = (c: string) => PRIORITY[c] ?? 99;
 
   let targetSet = allRows.filter((r) => !countryResolved(r) || !ageOrGradeResolved(r));
+  if (countryOnly) targetSet = targetSet.filter((r) => !countryResolved(r));
   if (only) targetSet = targetSet.filter((r) => r.title.toLowerCase().includes(only.toLowerCase()));
   if (category) targetSet = targetSet.filter((r) => r.category === category);
   targetSet = [...targetSet].sort((a, b) => priorityOf(a.category) - priorityOf(b.category));
