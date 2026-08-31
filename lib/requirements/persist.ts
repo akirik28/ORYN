@@ -5,6 +5,7 @@ import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import { assembleRequirementFacts } from "./facts";
 import { evaluateRequirement } from "./evaluate";
 import { INFORMATIONAL_CATEGORIES } from "./types";
+import { NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES } from "./ingest";
 
 /**
  * Recomputes and caches this student's evaluation for every requirement attached to a
@@ -43,7 +44,12 @@ export async function refreshRequirementEvaluations(universityId: string, userId
   const { data: requirements } = await supabase.from("university_requirements").select("*").eq("university_id", universityId);
   if (!requirements || requirements.length === 0) return;
 
-  const applicable = requirements.filter((r) => r.program_id === null || r.program_id === programId);
+  // A row a research pass has since confirmed closed (verified_historical) or unresolved
+  // (conflicting) is real, correctly-sourced data worth keeping in the table — never worth
+  // evaluating a student against as though it still applies. Mirrors
+  // lib/deadlines/upcoming.ts's own filter for the identical reason.
+  const current = requirements.filter((r) => !NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES.has(r.verification_state));
+  const applicable = current.filter((r) => r.program_id === null || r.program_id === programId);
   const evaluable = applicable.filter((r) => !INFORMATIONAL_CATEGORIES.includes(r.requirement_type));
   if (evaluable.length === 0) return;
 

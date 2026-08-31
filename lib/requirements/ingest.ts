@@ -3,7 +3,8 @@ import { sourceAuthority, domainOf } from "@/lib/acquisition/source-authority";
 import { statesTheSameFact } from "@/lib/requirements/dedup";
 import { deriveEvaluationGate, deriveExcludedProvenances, deriveRecencyRule } from "@/lib/requirements/shape-audit";
 import type { EvaluationGate, RecencyRule, ScoreProvenance } from "@/lib/requirements/types";
-import type { RequirementCategory, RequirementGroupRole } from "@/types/database";
+import type { RequirementCategory, RequirementGroupRole, UniversityRequirement } from "@/types/database";
+import type { VerificationState } from "@/lib/acquisition/verification";
 
 /** One record from data/research/university-requirements/requirements_batch*.jsonl — see
  * docs/research/university-requirements/research-handoff-university-requirements.md for the
@@ -59,6 +60,14 @@ export interface AcceptedRequirementRow {
   scope: string | null;
   source_url: string;
   retrieved_at: string;
+  /** DB-vocabulary state (migration 0042's CHECK constraint) — see
+   * mapToRequirementVerificationState()'s own comment for how a research record's state
+   * becomes this value. Every row in university_requirements carried the column's bare
+   * default ('unverified') until this field was added: the row builder below simply never
+   * set it, so a record self-declared VERIFIED_HISTORICAL by its own research pass (e.g.
+   * REQ-2026-08-22-FI-HEL-001, found during the 2026-08-31 corpus vetting pass) would still
+   * be written and displayed exactly like a current fact. */
+  verification_state: VerificationState;
   /** Migration 0052's columns. They existed from 0052 but this builder never set them, which
    * is why an exclusion record could only ever be dropped (`not_ingestible`) rather than
    * stored with its meaning intact — the "eligibility encoded as absence" failure: Ankara
@@ -103,9 +112,78 @@ export interface RequirementIngestDecision {
 /** Verification states a requirement record can carry that make it unsafe to stage as a clean
  * current fact today, regardless of what the number/text says — see
  * docs/research/university-requirements/scalar-thresholds-are-not-enough.md. Not exported:
- * deadlines have their own, overlapping-but-not-identical unsafe set (VERIFIED_HISTORICAL
- * matters there; it never appears on a requirement record in this corpus). */
+ * deadlines have their own, overlapping-but-not-identical unsafe set.
+ *
+ * VERIFIED_HISTORICAL is deliberately NOT refused here, on purpose, matching
+ * lib/deadlines/ingest.ts's own choice for the identical state and for the identical reason
+ * (see that file's comment on its own UNSAFE_VERIFICATION_STATES): a real, correctly-sourced
+ * fact for a cycle that has closed is worth keeping, not discarding — it is landed via
+ * mapToRequirementVerificationState() below and then kept out of anything that reads as
+ * current via NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES, the requirements-side mirror of
+ * deadlines' NON_ACTIONABLE_VERIFICATION_STATES. A comment used to sit here asserting
+ * VERIFIED_HISTORICAL "never appears on a requirement record in this corpus" — the
+ * 2026-08-31 corpus-vetting pass found a live counterexample (REQ-2026-08-22-FI-HEL-001),
+ * which is what prompted this whole fix; the assertion is removed rather than repeated. */
 const UNSAFE_VERIFICATION_STATES = new Set(["CONFLICTING_EVIDENCE", "NEEDS_REVIEW", "CURRENT_CYCLE_NOT_PUBLISHED"]);
+
+/**
+ * Read-path filter, for every site that fetches university_requirements to show or evaluate
+ * against a student — the requirements-side mirror of lib/deadlines/ingest.ts's own
+ * NON_ACTIONABLE_VERIFICATION_STATES, matched deliberately rather than invented separately
+ * (a second, disagreeing notion of "current" is worse than no filter, since nobody could
+ * locate the resulting bug later). Vocabulary differs because the columns do:
+ * university_deadlines.verification_state is free text carrying the research record's own
+ * uppercase state directly; university_requirements.verification_state is CHECK-constrained
+ * to migration 0042's five lowercase values, so this set uses those instead.
+ *
+ * Deliberately does NOT include "unverified" — that is the column's own default for a row
+ * this pipeline has not graded, not an assertion that the fact is wrong (mirrors deadlines,
+ * whose own set omits it too). Every row in university_requirements carried exactly that
+ * default until this fix, precisely because nothing had ever written a real value — see the
+ * comment on AcceptedRequirementRow.verification_state.
+ *
+ * "conflicting" is included for defense in depth even though CONFLICTING_EVIDENCE is already
+ * refused at ingestion (UNSAFE_VERIFICATION_STATES above) and so should never reach this
+ * value today — a read path that only trusts ingestion to have been the sole writer is one
+ * bypass away from being wrong, the same reasoning deadlines' own comment gives for including
+ * its three already-refused states too.
+ *
+ * Typed against UniversityRequirement["verification_state"] (types/database.ts's six-value
+ * union, including "staleness_suspected") rather than the narrower five-value
+ * VerificationState this file writes — that sixth value belongs to migration 0059, which is
+ * not live yet (confirmed against the actual CHECK constraint, not the ledger, 2026-08-31),
+ * so nothing can produce it today. Typing against the row's real field keeps every call
+ * site's filter checking a live row's actual type without a cast, and costs nothing: a Set
+ * that can never receive its sixth member is still correct, just not yet exercised.
+ */
+export const NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES = new Set<UniversityRequirement["verification_state"]>(["verified_historical", "conflicting"]);
+
+/**
+ * Maps a research record's own self-declared verification_state (uppercase, free-form —
+ * VERIFIED_CURRENT, VERIFIED_HISTORICAL, VERIFIED_UNDATED, and the three already refused by
+ * UNSAFE_VERIFICATION_STATES above) onto the DB column's CHECK-constrained vocabulary
+ * (migration 0042: verified_current | verified_historical | verified_derived | unverified |
+ * conflicting).
+ *
+ * VERIFIED_UNDATED maps to "verified_current": a fact confirmed true with no expiration
+ * attached (an eligibility floor, not a dated deadline) is not historical — nothing says it
+ * has closed — and is not derived — it was read directly from a source, not computed from
+ * other stored facts — so verified_current is the closest genuine fit even though the DB has
+ * no distinct "undated" value of its own.
+ *
+ * Anything this function does not recognize — including the three states
+ * UNSAFE_VERIFICATION_STATES already refuses, which should never reach an accepted row, but
+ * are handled safely here rather than trusted never to appear — maps to "unverified": the
+ * column's own default, so an unrecognized value degrades to exactly the behavior every row
+ * had before this fix, not a guess.
+ */
+export function mapToRequirementVerificationState(researchState: string): VerificationState {
+  if (researchState === "VERIFIED_CURRENT") return "verified_current";
+  if (researchState === "VERIFIED_HISTORICAL") return "verified_historical";
+  if (researchState === "VERIFIED_UNDATED") return "verified_current";
+  if (researchState === "CONFLICTING_EVIDENCE") return "conflicting";
+  return "unverified";
+}
 /** Mirrors lib/requirements/evaluate.ts's SAFE_SCALE_AMBIGUITY as its exact complement, and
  * migration 0056 §1's own rule ("anything other than the first two blocks automatic
  * evaluation"). `possibly_discontinued_instrument` was missing here — a threshold on an exam
@@ -299,6 +377,7 @@ export function decideRequirementIngestion(
       structured_rule: null,
       scope: record.scope ?? null,
       data_confidence: (record.confidence as "high" | "medium" | "low") ?? "medium",
+      verification_state: mapToRequirementVerificationState(record.verification_state),
       source_url: record.source_url,
       retrieved_at: record.retrieved_at,
       is_exclusion: record.is_exclusion === true,
