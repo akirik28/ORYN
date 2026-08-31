@@ -65,6 +65,7 @@ export function UniversityCard({
     <div className="flex flex-col overflow-hidden rounded-2xl border bg-card">
       <MediaImage
         className={cn("w-full", compact ? "h-24" : "h-32")}
+        tintKey={university.id}
         src={imageUrl}
         fallbackSrc={university.logo_url}
         alt={`Campus of ${university.name}`}

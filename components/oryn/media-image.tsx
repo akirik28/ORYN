@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { placeholderTint } from "@/lib/ui/placeholder-tint";
 
 /**
  * The product's one image surface (UI-V3 § 19/30). Imagery here comes from sources we
@@ -36,6 +37,7 @@ export function MediaImage({
   icon: Icon,
   sizes = "100vw",
   priority = false,
+  tintKey,
   className,
   imageClassName,
 }: {
@@ -50,6 +52,14 @@ export function MediaImage({
   icon?: LucideIcon;
   sizes?: string;
   priority?: boolean;
+  /**
+   * Stable identifier — a row id — used to pick which of the eight placeholder tints the
+   * designed fallback uses, so a grid of un-imaged cards reads as distinct items rather than
+   * one repeated wash. Only affects step 3 of the chain; a real photo or logo covers the
+   * tint entirely. Omit it and every fallback keeps the single brand wash, which is the
+   * right answer for a lone hero with nothing to be distinct from.
+   */
+  tintKey?: string | null;
   /** Set the aspect ratio and any rounding here. */
   className?: string;
   imageClassName?: string;
@@ -69,9 +79,15 @@ export function MediaImage({
         // card band, and a single font-size can't serve both (30px in a 48px box nearly
         // touched the edges).
         "@container relative flex items-center justify-center overflow-hidden",
-        "bg-gradient-to-br from-brand-primary-subtle to-brand-primary-soft",
+        // The single brand wash stays the default; a tintKey swaps in that item's own pair.
+        // Written as a gradient over two custom properties rather than eight Tailwind
+        // variants so the dark theme can redefine the pair without this file changing.
+        tintKey == null
+          ? "bg-gradient-to-br from-brand-primary-subtle to-brand-primary-soft"
+          : "bg-[linear-gradient(to_bottom_right,var(--tint-from),var(--tint-to))]",
         className,
       )}
+      data-tint={tintKey == null ? undefined : placeholderTint(tintKey)}
     >
       {showPhoto ? (
         <Image
