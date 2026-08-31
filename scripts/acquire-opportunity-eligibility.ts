@@ -49,6 +49,7 @@
  *   npx tsx scripts/acquire-opportunity-eligibility.ts --limit 20
  *   npx tsx scripts/acquire-opportunity-eligibility.ts --only "HMMT"
  *   npx tsx scripts/acquire-opportunity-eligibility.ts --category competition
+ *   npx tsx scripts/acquire-opportunity-eligibility.ts --country-only    # skip rows only missing age/grade
  *   npx tsx scripts/acquire-opportunity-eligibility.ts --apply             # + write
  *   npx tsx scripts/acquire-opportunity-eligibility.ts --verbose           # + per-row detail
  *   npx tsx scripts/acquire-opportunity-eligibility.ts --report            # DB-only coverage
@@ -213,7 +214,20 @@ function extractLinks(html: string, baseUrl: string): { url: string; text: strin
 // unreachable before this because "Regulations" matches none of the words above (`rules?\b`
 // requires the literal substring "rule", which "Regulations" doesn't contain).
 const ELIGIBILITY_LINK_PATTERN = /eligib|who.?can.?apply|requirement|admission|apply|rules?\b|regulat|criteria|faq/i;
-const ELIGIBILITY_KEYWORD_DENSITY_PATTERN = /eligib|who can (apply|compete|participate)|must be \d|age[sd]?\s*\d|grade[sd]?\s*\d|citizen|residen|nationality/gi;
+// "residen(?!tial)" added 2026-09-01 after a summer_program-scoped batch resolved at 1/25 —
+// well under the competition category's own 3/25 — the opposite of what a delegation-entry
+// theory predicted, since university admissions have no such structure. Traced to a real,
+// confirmed bug, not a data absence: "residential" (a program TYPE — vs. "commuter"/"online",
+// standard summer-program vocabulary) substring-matches the bare "residen" this pattern used
+// for RESIDENCY, inflating density past the <3 threshold that gates sub-link-following. Cornell
+// is the clean case — its homepage scored 7 hits, all six "Residential"/"residen[t]ial", so the
+// script never followed the very real "Eligibility Requirements" link sitting right there
+// ("must be between 16-18 years of age... grade 10 or international equivalent..."), and the
+// row landed in "nothing usable" despite the content existing exactly where the link pattern
+// would have found it. Tufts (23/23 hits) and Stanford SASI (4/7) showed the same shape.
+// `residen(?!tial)` keeps resident/residents/residency/residence and excludes only the one
+// false-positive form.
+const ELIGIBILITY_KEYWORD_DENSITY_PATTERN = /eligib|who can (apply|compete|participate)|must be \d|age[sd]?\s*\d|grade[sd]?\s*\d|citizen|residen(?!tial)|nationality/gi;
 
 // ---------------------------------------------------------------------------------------------
 // Candidate page resolution
@@ -494,7 +508,11 @@ function verifyGrounding(quote: string | null | undefined, pages: SourcedPage[])
 // BAD case (Earth Prize's team-composition note, JLI's referee requirement, JLI's parental
 // consent) before widening, and none of those contain any of these words, so this broadening
 // doesn't reopen the failure this gate exists to prevent.
-const CITIZENSHIP_RELEVANCE_PATTERN = /citizen|citizenship|nationality|passport|visa|residen\w*|domestic|international|\bcountr(y|ies)\b/i;
+// residen(?!tial): same fix as ELIGIBILITY_KEYWORD_DENSITY_PATTERN above, applied here for
+// consistency — "international"/"domestic" already independently cover the one legitimate case
+// that combines with "residential" in this corpus (USC's "Residential Commuter option not
+// available to international students"), so narrowing this term costs nothing real.
+const CITIZENSHIP_RELEVANCE_PATTERN = /citizen|citizenship|nationality|passport|visa|residen(?!tial)|domestic|international|\bcountr(y|ies)\b/i;
 
 /** Caught in a 30-row audit: Battle Code MIT's "US Qualifier" division text ("Teams must
  * consist entirely of US college students") was read as a citizenship fact for a row Oryn
@@ -953,6 +971,13 @@ async function main(): Promise<void> {
   const category = categoryIndex >= 0 ? argv[categoryIndex + 1] : null;
   const limitIndex = argv.indexOf("--limit");
   const limit = limitIndex >= 0 ? Number(argv[limitIndex + 1]) : null;
+  // 2026-09-01, CEO-directed: country/citizenship prioritized over age for spend — country sits
+  // at 40/275 (the field driving the ambiguous "not verified" card copy) versus age at 154/275,
+  // and an unresolved age gap still degrades to an honest "can't check without a birth year"
+  // either way. Scopes the run to rows genuinely missing a country/citizenship signal,
+  // regardless of their age/grade status — a row already age-resolved but country-blank still
+  // qualifies, a row already country-resolved but age-blank does not.
+  const countryOnly = argv.includes("--country-only");
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const secretKey = process.env.SUPABASE_SECRET_KEY;
@@ -989,6 +1014,7 @@ async function main(): Promise<void> {
   const priorityOf = (c: string) => PRIORITY[c] ?? 99;
 
   let targetSet = allRows.filter((r) => !countryResolved(r) || !ageOrGradeResolved(r));
+  if (countryOnly) targetSet = targetSet.filter((r) => !countryResolved(r));
   if (only) targetSet = targetSet.filter((r) => r.title.toLowerCase().includes(only.toLowerCase()));
   if (category) targetSet = targetSet.filter((r) => r.category === category);
   targetSet = [...targetSet].sort((a, b) => priorityOf(a.category) - priorityOf(b.category));
