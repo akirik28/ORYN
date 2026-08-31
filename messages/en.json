@@ -1,0 +1,25 @@
+{
+  "nav": {
+    "home": "Home",
+    "counselor": "Counselor",
+    "journey": "Journey",
+    "opportunities": "Opportunities",
+    "universities": "Universities",
+    "plan": "Plan",
+    "applications": "Applications",
+    "features": "Features",
+    "documents": "Documents",
+    "settings": "Settings",
+    "opportunitiesShort": "Explore",
+    "more": "More",
+    "moreDestinations": "More destinations",
+    "primaryLandmark": "Primary",
+    "skipToContent": "Skip to content",
+    "homeLink": "Oryn — home"
+  },
+  "language": {
+    "label": "Language",
+    "change": "Change language",
+    "saveFailed": "Couldn't save your language. Please try again."
+  }
+}

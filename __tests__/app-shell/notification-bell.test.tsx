@@ -23,6 +23,7 @@ import "@testing-library/jest-dom/vitest";
 vi.mock("@/app/(app)/notifications/actions", () => ({ markNotificationRead: vi.fn(), markAllNotificationsRead: vi.fn() }));
 vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
+import { NextIntlClientProvider } from "next-intl";
 import { NotificationBell } from "@/features/app-shell/notification-bell";
 import { markNotificationRead, markAllNotificationsRead } from "@/app/(app)/notifications/actions";
 import { toast } from "sonner";
@@ -52,6 +53,20 @@ afterEach(() => {
   cleanup();
 });
 
+/**
+ * The bell reads the active locale (`useLocale()`) to render its relative timestamps, so
+ * it needs the same provider the root layout gives it in the real app. Pinned to "en" so
+ * these assertions stay about mark-read behavior rather than becoming a translation test —
+ * catalog content is covered in __tests__/i18n/locale.test.ts.
+ */
+function renderBell(notifications: Notification[]) {
+  return render(
+    <NextIntlClientProvider locale="en" messages={{}}>
+      <NotificationBell notifications={notifications} />
+    </NextIntlClientProvider>,
+  );
+}
+
 async function openBell() {
   fireEvent.click(screen.getByRole("button", { name: "Notifications" }));
   await screen.findByText("Notifications");
@@ -60,7 +75,7 @@ async function openBell() {
 describe("NotificationBell — pinned success-path behavior", () => {
   test("clicking an unread notification marks it read, no toast", async () => {
     vi.mocked(markNotificationRead).mockResolvedValue({});
-    render(<NotificationBell notifications={[notification()]} />);
+    renderBell([notification()]);
     await openBell();
 
     fireEvent.click(screen.getByText("Deadline tomorrow"));
@@ -71,7 +86,7 @@ describe("NotificationBell — pinned success-path behavior", () => {
 
   test("'Mark all read' calls the action once, no toast", async () => {
     vi.mocked(markAllNotificationsRead).mockResolvedValue({});
-    render(<NotificationBell notifications={[notification()]} />);
+    renderBell([notification()]);
     await openBell();
 
     fireEvent.click(screen.getByRole("button", { name: /Mark all read/ }));
@@ -81,7 +96,7 @@ describe("NotificationBell — pinned success-path behavior", () => {
   });
 
   test("clicking an already-read notification does not call markNotificationRead at all", async () => {
-    render(<NotificationBell notifications={[notification({ read_at: new Date().toISOString() })]} />);
+    renderBell([notification({ read_at: new Date().toISOString() })]);
     await openBell();
 
     fireEvent.click(screen.getByText("Deadline tomorrow"));
@@ -93,7 +108,7 @@ describe("NotificationBell — pinned success-path behavior", () => {
 describe("NotificationBell — failure path (docs/feat2-error-surfacing-audit-2026-08-22.md finding #3)", () => {
   test("a failed mark-read shows the real server error rather than nothing", async () => {
     vi.mocked(markNotificationRead).mockResolvedValue({ error: "Couldn't update notification." });
-    render(<NotificationBell notifications={[notification()]} />);
+    renderBell([notification()]);
     await openBell();
 
     fireEvent.click(screen.getByText("Deadline tomorrow"));
@@ -103,7 +118,7 @@ describe("NotificationBell — failure path (docs/feat2-error-surfacing-audit-20
 
   test("a failed 'Mark all read' shows the real server error rather than nothing", async () => {
     vi.mocked(markAllNotificationsRead).mockResolvedValue({ error: "Couldn't update notifications." });
-    render(<NotificationBell notifications={[notification()]} />);
+    renderBell([notification()]);
     await openBell();
 
     fireEvent.click(screen.getByRole("button", { name: /Mark all read/ }));

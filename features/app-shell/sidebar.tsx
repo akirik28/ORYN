@@ -3,8 +3,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { UserMenu } from "./user-menu";
+import { LanguageSwitcher } from "./language-switcher";
 import { PRIMARY_NAV, SECONDARY_NAV } from "./nav-items";
 import type { DimensionSignal } from "@/lib/scoring/signal";
 
@@ -30,6 +32,7 @@ export function Sidebar({
   signal: DimensionSignal[];
 }) {
   const pathname = usePathname();
+  const t = useTranslations("nav");
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
@@ -37,11 +40,11 @@ export function Sidebar({
       className="sticky top-0 hidden h-svh w-[214px] shrink-0 flex-col lg:flex"
       style={{ background: "linear-gradient(175deg, #17153A 0%, #0E0D26 55%, #0A0920 100%)" }}
     >
-      <Link href="/dashboard" aria-label="Oryn — home" className="flex items-center gap-2.5 px-5 pt-[26px] pb-5">
+      <Link href="/dashboard" aria-label={t("homeLink")} className="flex items-center gap-2.5 px-5 pt-[26px] pb-5">
         <Image src="/brand/logo-full.png" alt="Oryn" width={92} height={31} priority className="h-6 w-auto" />
       </Link>
 
-      <nav aria-label="Primary" className="flex flex-1 flex-col gap-px overflow-y-auto px-2.5">
+      <nav aria-label={t("primaryLandmark")} className="flex flex-1 flex-col gap-px overflow-y-auto px-2.5">
         {PRIMARY_NAV.map((item) => {
           const active = isActive(item.href);
           const Icon = item.icon;
@@ -64,7 +67,7 @@ export function Sidebar({
                 />
               ) : null}
               <Icon className="size-[18px]" strokeWidth={1.6} />
-              {item.label}
+              {t(item.labelKey)}
             </Link>
           );
         })}
@@ -87,7 +90,7 @@ export function Sidebar({
                   )}
                 >
                   <Icon className="size-[18px]" strokeWidth={1.6} />
-                  {item.label}
+                  {t(item.labelKey)}
                 </Link>
               );
             })}
@@ -106,8 +109,14 @@ export function Sidebar({
           )}
         >
           <SETTINGS_ITEM.icon className="size-[18px]" strokeWidth={1.6} />
-          {SETTINGS_ITEM.label}
+          {t(SETTINGS_ITEM.labelKey)}
         </Link>
+        {/* Sits with Settings rather than inside the account dropdown: a student who has
+            switched the product into a language they cannot read needs to find their way
+            back out without first parsing a menu label. An always-visible control with a
+            globe icon, showing the language named in itself, stays recognisable in any
+            locale. */}
+        <LanguageSwitcher variant="sidebar" />
         <div className="px-4 pt-2.5 pb-[18px]">
           <UserMenu displayName={displayName} email={email} signal={signal} variant="sidebar" />
         </div>

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { requireProfile, verifySession } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/features/app-shell/sidebar";
@@ -29,6 +30,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   const displayName = profile.display_name || profile.first_name || "Student";
+  const t = await getTranslations("nav");
 
   const supabase = await createClient();
   // The account menu used to render `profiles.profile_strength_score` straight from the
@@ -73,7 +75,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-brand-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground"
       >
-        Skip to content
+        {t("skipToContent")}
       </a>
 
       <MobileNav

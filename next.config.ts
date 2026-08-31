@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 
 // The university card/detail imagery is the one remote-image source this app allow-lists:
 // every acquired campus photo is re-hosted through our own Supabase Storage public bucket
@@ -16,4 +17,9 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Points next-intl at lib/i18n/request.ts instead of its default `./i18n/request.ts`, so
+// the i18n runtime lives beside the rest of the domain modules in lib/ (AGENTS.md Phase
+// 1.2) rather than in a top-level folder of its own.
+const withNextIntl = createNextIntlPlugin("./lib/i18n/request.ts");
+
+export default withNextIntl(nextConfig);

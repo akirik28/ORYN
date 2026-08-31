@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { LogOut } from "lucide-react";
 import { signOut } from "@/app/(auth)/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -44,6 +45,7 @@ export function UserMenu({
    *  Same dropdown, same real data either way — only the trigger's size/layout changes. */
   variant?: "compact" | "sidebar";
 }) {
+  const tNav = useTranslations("nav");
   const coverage = signalCoverage(signal);
   const summary =
     coverage.assessed === 0
@@ -99,7 +101,7 @@ export function UserMenu({
           const Icon = item.icon;
           return (
             <DropdownMenuItem key={item.href} render={<Link href={item.href} />}>
-              <Icon className="size-4" /> {item.label}
+              <Icon className="size-4" /> {tNav(item.labelKey)}
             </DropdownMenuItem>
           );
         })}
