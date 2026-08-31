@@ -29,10 +29,12 @@ describe("migration numbering", () => {
     // directory forever; migrations 0061-0065 (the RLS verification package's own fixes,
     // all unapplied like 0058 — public_profiles_require_authenticated,
     // profiles_guard_protected_columns, guard_computed_score_columns,
-    // message_reports_verify_reported_user, close_insert_forgery_six_tables), plus 0066
-    // (opportunity_language_and_image), are what currently follow it. Bump the literal
-    // below when the next migration lands, the same way this one did — it is a collision
-    // guard, not a permanent ceiling.
+    // message_reports_verify_reported_user, close_insert_forgery_six_tables), 0066
+    // (opportunity_language_and_image), 0068 (the renumbered dedup fix that used to
+    // collide at 0020), and 0069 (drops nine ad-hoc `_backup_*` tables — schema hygiene,
+    // 2026-08-31) are what currently follow it. Bump the literal below when the next
+    // migration lands, the same way this one did — it is a collision guard, not a
+    // permanent ceiling.
     const numbers = readdirSync(MIGRATIONS_DIR)
       .filter((f) => f.endsWith(".sql"))
       .map((f) => f.slice(0, 4));
@@ -52,7 +54,7 @@ describe("migration numbering", () => {
 
     // Still pinned, still a collision guard rather than a ceiling — bump it when the next
     // migration lands, as this line has been bumped before.
-    expect(Math.max(...numbers.map(Number))).toBe(68);
+    expect(Math.max(...numbers.map(Number))).toBe(69);
   });
 });
 
