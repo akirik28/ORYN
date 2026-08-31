@@ -120,3 +120,95 @@ export function isPublishableAsFact(outcome: AcquisitionOutcome): boolean {
 export function requiresCaveat(outcome: AcquisitionOutcome): boolean {
   return outcome === "verified_historical" || outcome === "stale" || outcome === "conflicting";
 }
+
+/**
+ * A fact whose freshness is governed by a known external annual publication event, not a
+ * rolling day-count — CADENCE_DAYS above answers "how many days since we last looked is
+ * too many", which is a good proxy for a slowly-changing fact (a university's identity,
+ * its general programme catalogue) but the wrong question for a fact that changes
+ * exactly once a year, on a roughly known date, regardless of when it was last checked.
+ *
+ * Concretely: a CAO points cutoff checked in March (getting last August's figure,
+ * since this year's isn't out yet) and re-checked 365 days later lands back in March —
+ * roughly seven months after this year's real publication in August, and roughly five
+ * months before it's actually needed again. The interval fires at the wrong time because
+ * it's anchored to an arbitrary first-check date instead of the calendar event itself.
+ * `nextAnnualWindowStart` / `isDueForAnnualRecheck` below anchor to the event instead —
+ * see CAO_POINTS_IE for the first concrete instance and the evidence behind it.
+ *
+ * `month`/`day` name the EARLIEST date in the calendar year fresh data could exist, not
+ * a guaranteed-exact publication date — real external calendars move by a few days year
+ * to year. Deliberately just one anchor date rather than a start+duration window: a
+ * window implies a precision about the publication's own spread that isn't actually
+ * known here, and one slightly-early anchor date is enough to answer "is a re-check
+ * worth attempting yet" without claiming more certainty than the sourcing supports.
+ */
+export interface AnnualCalendarWindow {
+  /** Human-readable, e.g. "CAO points (Ireland) — Round 1 offers". */
+  label: string;
+  /** 1-12. */
+  month: number;
+  /** Earliest day of `month` this window's publication could land. */
+  day: number;
+}
+
+/**
+ * The next date on or after `after` at which `window`'s annual publication is expected —
+ * the anchor a calendar-bound fact's next check should use instead of a rolling
+ * day-count. Pure, deterministic, no I/O.
+ *
+ * Compares by UTC calendar date only (both `after` and the returned date are UTC
+ * midnight), matching `resolveVerificationState`'s own use of `Date`/`getUTCFullYear`
+ * elsewhere in this file — a fact's freshness is a calendar-day question, not a
+ * timezone-of-day one.
+ */
+export function nextAnnualWindowStart(window: AnnualCalendarWindow, after: Date): Date {
+  const year = after.getUTCFullYear();
+  const candidate = new Date(Date.UTC(year, window.month - 1, window.day));
+  if (candidate.getTime() > after.getTime()) return candidate;
+  return new Date(Date.UTC(year + 1, window.month - 1, window.day));
+}
+
+/**
+ * Whether a calendar-bound fact last retrieved at `retrievedAt` is due for a re-check as
+ * of `now` — true once `now` has reached or passed the first annual-window start date
+ * that falls after `retrievedAt`. This is what fixes the drift `AnnualCalendarWindow`'s
+ * own comment describes: a fact retrieved in March is due the moment THIS year's window
+ * opens (August), not 365 days after March; a fact retrieved just after last year's
+ * window already closed correctly isn't due again until next year's, regardless of which
+ * day inside the window it happened to be retrieved on.
+ *
+ * An unparseable `retrievedAt` is treated as due — a fact ORYN can't establish the age
+ * of should never read as confidently fresh.
+ */
+export function isDueForAnnualRecheck(window: AnnualCalendarWindow, retrievedAt: string, now: Date = new Date()): boolean {
+  const retrieved = Date.parse(retrievedAt);
+  if (Number.isNaN(retrieved)) return true;
+  const nextWindowAfterRetrieval = nextAnnualWindowStart(window, new Date(retrieved));
+  return now.getTime() >= nextWindowAfterRetrieval.getTime();
+}
+
+/**
+ * Ireland's CAO points cutoffs — the first calendar-bound fact class, and the reason
+ * `AnnualCalendarWindow` exists. Evidence for the anchor date (2026-08-31 requirement-
+ * verification-state investigation, `data/research/university-requirements/
+ * ie_requirements_*.jsonl` and `docs/handoffs/ireland-requirement-staleness-2026-08-31.md`),
+ * three independent sourcings agreeing within a two-day span:
+ *   - CAO's own official 2026 guidelines: "places are allocated (mid-late August each
+ *     year)" (`Guidelines-EU-EFTA-UK-2026.pdf`, quoted verbatim in the corpus's
+ *     `REQ-2026-08-21-IE-CAO-008`).
+ *   - Four separate research records (Galway, Limerick, Maynooth), all retrieved
+ *     2026-08-21, independently state 2026 Round 1 offers were "not expected until
+ *     on/around 26 August".
+ *   - The prior cycle's actual precedent: a UCD article on 2025 Round 1's "exceptional
+ *     demand" was published 27 August 2025.
+ * 25 August is used — a day EARLY relative to all three sourcings rather than a day
+ * late, since a re-check attempted a few days before results are actually out is a
+ * cheap false negative (nothing new found yet, try again later); a fact still reading as
+ * fresh for days after it actually went stale is the expensive direction of error.
+ */
+export const CAO_POINTS_IE: AnnualCalendarWindow = {
+  label: "CAO points (Ireland) — Round 1 offers",
+  month: 8,
+  day: 25,
+};

@@ -1,5 +1,14 @@
 import { describe, expect, test } from "vitest";
-import { classifyFreshness, isPublishableAsFact, requiresCaveat, resolveVerificationState } from "@/lib/acquisition/verification";
+import {
+  CAO_POINTS_IE,
+  classifyFreshness,
+  isDueForAnnualRecheck,
+  isPublishableAsFact,
+  nextAnnualWindowStart,
+  requiresCaveat,
+  resolveVerificationState,
+  type AnnualCalendarWindow,
+} from "@/lib/acquisition/verification";
 
 describe("classifyFreshness", () => {
   test.each([
@@ -83,5 +92,61 @@ describe("publication gating", () => {
     expect(requiresCaveat("stale")).toBe(true);
     expect(requiresCaveat("conflicting")).toBe(true);
     expect(requiresCaveat("verified_current")).toBe(false);
+  });
+});
+
+
+describe("nextAnnualWindowStart", () => {
+  const window: AnnualCalendarWindow = { label: "test window", month: 8, day: 25 };
+
+  test("before this year's window, returns this year's date", () => {
+    expect(nextAnnualWindowStart(window, new Date("2026-03-15T00:00:00.000Z"))).toEqual(new Date("2026-08-25T00:00:00.000Z"));
+  });
+
+  test("after this year's window has passed, returns next year's date", () => {
+    expect(nextAnnualWindowStart(window, new Date("2026-09-01T00:00:00.000Z"))).toEqual(new Date("2027-08-25T00:00:00.000Z"));
+  });
+
+  test("exactly on the window's start date, treats it as already reached — rolls to next year", () => {
+    expect(nextAnnualWindowStart(window, new Date("2026-08-25T00:00:00.000Z"))).toEqual(new Date("2027-08-25T00:00:00.000Z"));
+  });
+
+  test("the day before the window opens, still returns this year's date", () => {
+    expect(nextAnnualWindowStart(window, new Date("2026-08-24T00:00:00.000Z"))).toEqual(new Date("2026-08-25T00:00:00.000Z"));
+  });
+});
+
+describe("isDueForAnnualRecheck — the drift problem AnnualCalendarWindow exists to fix", () => {
+  const window: AnnualCalendarWindow = { label: "test window", month: 8, day: 25 };
+
+  test("a fact retrieved in March is due the moment THIS year's window opens, not 365 days after March", () => {
+    // A rolling 365-day cadence from a March check would next fire the following March —
+    // this is the exact failure this mechanism replaces.
+    expect(isDueForAnnualRecheck(window, "2026-03-15T00:00:00.000Z", new Date("2026-08-24T00:00:00.000Z"))).toBe(false);
+    expect(isDueForAnnualRecheck(window, "2026-03-15T00:00:00.000Z", new Date("2026-08-25T00:00:00.000Z"))).toBe(true);
+  });
+
+  test("a fact retrieved just after last year's window closed is not due again until this year's window, not 365 days later to the day", () => {
+    expect(isDueForAnnualRecheck(window, "2025-08-27T00:00:00.000Z", new Date("2026-08-24T00:00:00.000Z"))).toBe(false);
+    expect(isDueForAnnualRecheck(window, "2025-08-27T00:00:00.000Z", new Date("2026-08-25T00:00:00.000Z"))).toBe(true);
+  });
+
+  test("a fact retrieved the same day the window opens is fresh until next year's window", () => {
+    expect(isDueForAnnualRecheck(window, "2026-08-25T00:00:00.000Z", new Date("2026-12-01T00:00:00.000Z"))).toBe(false);
+    expect(isDueForAnnualRecheck(window, "2026-08-25T00:00:00.000Z", new Date("2027-08-25T00:00:00.000Z"))).toBe(true);
+  });
+
+  test("an unparseable retrievedAt is treated as due, never as confidently fresh", () => {
+    expect(isDueForAnnualRecheck(window, "not-a-date", new Date("2026-01-01T00:00:00.000Z"))).toBe(true);
+  });
+});
+
+describe("CAO_POINTS_IE", () => {
+  test("the 38 CAO-points requirement rows found in the 2026-08-31 backfill, all retrieved 2026-08-21, are due today (2026-09-01) — this year's window opened 2026-08-25", () => {
+    expect(isDueForAnnualRecheck(CAO_POINTS_IE, "2026-08-21T00:00:00.000Z", new Date("2026-09-01T00:00:00.000Z"))).toBe(true);
+  });
+
+  test("the same rows were NOT yet due as of their own retrieval date", () => {
+    expect(isDueForAnnualRecheck(CAO_POINTS_IE, "2026-08-21T00:00:00.000Z", new Date("2026-08-21T00:00:00.000Z"))).toBe(false);
   });
 });
