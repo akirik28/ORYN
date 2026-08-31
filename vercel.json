@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    { "path": "/api/jobs/discover-opportunities", "schedule": "0 2 * * *" },
+    { "path": "/api/jobs/discover-requirements", "schedule": "0 4 * * *" },
+    { "path": "/api/jobs/sync-university-data", "schedule": "0 6 * * *" },
+    { "path": "/api/jobs/deadline-reminders", "schedule": "0 8 * * *" }
+  ],
+  "functions": {
+    "app/api/jobs/**": {
+      "maxDuration": 300
+    }
+  }
+}
