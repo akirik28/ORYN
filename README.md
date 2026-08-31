@@ -126,12 +126,15 @@ database. In short:
 ## Database migrations
 
 `supabase/migrations/` is the single source of truth; apply with `npx supabase db push`.
-`.github/workflows/migrations.yml` replays the entire sequence against an empty Postgres
-on every migration change — via both `psql` and `supabase db push`, because they fail
-differently — and asserts that every `public` table has row-level security enabled. That
-guard exists because migrations had only ever been applied incrementally to
-already-partway databases; a break that only appears from zero would otherwise surface for
-the first time during production setup.
+A CI job that replays the entire sequence against an empty Postgres on every migration
+change — via both `psql` and `supabase db push`, because they fail differently, asserting
+every `public` table has row-level security enabled — is written and verified but **not
+yet installed**: this repo's git automation can't push to `.github/workflows/` (missing
+`workflow` OAuth scope). See
+[`docs/ci-migration-replay-setup.md`](./docs/ci-migration-replay-setup.md) for the exact
+file to add and why it matters — migrations had only ever been applied incrementally to
+already-partway databases before this was written, so a break that only appears from zero
+would otherwise surface for the first time during production setup.
 
 ## Known limitations
 

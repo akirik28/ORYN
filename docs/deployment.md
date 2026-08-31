@@ -13,64 +13,42 @@ instruction for you, with the exact values to paste.
 
 ---
 
-## 0. Before anything else: two known blockers
+## 0. Before anything else: one remaining blocker (a second was found and fixed)
 
-Both are verified, reproduced, and have a known fix. Neither can be worked around at
-deploy time — they have to be fixed in the repository first.
+### 0.1 [RESOLVED 2026-08-31] Two migrations shared the version number `0020`
 
-### 0.1 Two migrations share the version number `0020` — this aborts `supabase db push`
+`supabase/migrations/` briefly contained both `0020_requirement_evaluation.sql` and
+`0020_target_university_null_program_dedup.sql`. The Supabase CLI keys
+`supabase_migrations.schema_migrations` on that leading version number, so two files
+claiming `0020` violated its primary key. Reproduced against a clean Postgres 17 database:
+`supabase db push` stopped at migration **21 of 68**, leaving the database
+**half-migrated** — everything from `0021` on, including all of this year's RLS hardening
+(`0061`–`0067`), silently absent while the app appeared to have a database.
 
-`supabase/migrations/` contains both:
-
-```
-0020_requirement_evaluation.sql
-0020_target_university_null_program_dedup.sql
-```
-
-The Supabase CLI reads the leading digits of each filename as that migration's *version*
-and stores it in `supabase_migrations.schema_migrations`, where the version is the primary
-key. Two files claiming version `0020` therefore violate that key. Reproduced against a
-clean Postgres 17 database:
+Fixed by renumbering the second file to `0068_target_university_null_program_dedup.sql`
+(commit `7e0f74ac`) — safe, since it only runs `create unique index if not exists` against
+a table `0007` already creates. **Re-verified against current `main` after the fix**, both
+independently:
 
 ```
-Applying migration 0020_requirement_evaluation.sql...
-Applying migration 0020_target_university_null_program_dedup.sql...
-ERROR: duplicate key value violates unique constraint "schema_migrations_pkey" (SQLSTATE 23505)
-Key (version)=(0020) already exists.
+psql, filename order:             68/68 applied, 0 errors
+supabase db push (--include-all): 68/68 applied, 0 errors, 68 rows in schema_migrations
 ```
 
-The push stops at migration **21 of 68** and leaves the database **half-migrated** — not
-empty, not complete. Everything from `0021` onward, including all of this year's RLS
-hardening (`0061`–`0067`), is simply absent while the app appears to have a database.
+Both paths produce an identical schema — **81 tables, 103 policies, 257 indexes, 93
+functions** — and the specific index the bug would have silently dropped
+(`target_universities_user_university_no_program_idx`) is confirmed present. The three
+security objects this defect would have taken down with it are confirmed present and
+correct on the fresh replay too: `public_profiles`'s `auth.uid() IS NOT NULL` guard, all 3
+`*_guard_computed_columns` triggers, and `anon`'s revoked execute on `is_blocked_between`.
 
-**The fix** — renumber the second file to the next free number:
-
-```bash
-git mv supabase/migrations/0020_target_university_null_program_dedup.sql supabase/migrations/0068_target_university_null_program_dedup.sql
-```
-
-Safe to reorder: that migration only runs `create unique index if not exists` on
-`target_universities`, which migration `0007` creates. Running it last is equivalent to
-running it 20th. Verified — after the rename, all 68 migrations apply and the resulting
-schema is identical to a plain in-order `psql` replay (81 tables, 103 policies, 257
-indexes, 93 functions).
-
-> **Do not "fix" this by renaming to `0020a`.** The CLI ignores files whose version is not
-> purely numeric — the push then reports success while never running the file. Verified:
-> the resulting database silently lacks
-> `target_universities_user_university_no_program_idx`, the index that prevents duplicate
-> target-university rows under concurrent requests. A silent gap is worse than the crash.
-
-**If the database is already live and partly migrated**, check what it thinks it has
-applied before renaming anything:
-
-```bash
-psql "$PRODUCTION_DB_URL" -c "select version, name from supabase_migrations.schema_migrations where version in ('0020','0068') order by version;"
-```
-
-A row already recorded as `0020` for the dedup file means renaming it to `0068` will make
-the CLI treat it as new and re-run it. That is harmless here (`create ... if not exists`),
-but confirm the file's content before assuming the same of any other migration.
+> **If you hit this again on some other pair of migrations**: do not "fix" it by renaming
+> to e.g. `0020a`. The CLI ignores any filename whose leading version isn't purely
+> numeric — the push reports success while silently never running that file, which is
+> worse than the crash. Renumber to the next free integer instead. A CI job that catches
+> this class of bug automatically is written and verified, but not yet installed — see
+> [`docs/ci-migration-replay-setup.md`](./ci-migration-replay-setup.md) for why (a git
+> permission gap, not a code problem) and the exact file to add.
 
 ### 0.2 Supabase's built-in email cannot deliver a single real signup
 
@@ -212,16 +190,42 @@ the hour, not the minute: a job set for `0 2 * * *` fires somewhere in `02:00–
 Two-hour gaps mean that even at worst-case drift, two jobs can never overlap and contend
 for the same Anthropic and Tavily rate limits.
 
-**Plan limits that shaped this file:**
+### 6.0 Daily-only cadence is a product decision, not just a config detail
 
-- **Hobby caps cron jobs at once per day.** A more frequent expression (`0 * * * *`,
-  `*/30 * * * *`) *fails the deployment* — it is not silently downgraded. All four
-  schedules above are daily, so this deploys on Hobby as-is.
-- Pro allows per-minute scheduling and per-minute precision. If discovery needs to run
-  more often than daily, that is the reason to upgrade — not the job count. All plans
-  allow 100 cron jobs per project.
-- `maxDuration` is set to 300s for `app/api/jobs/**` in `vercel.json`. That is also
-  Hobby's ceiling; Pro allows up to 800s if a discovery run starts timing out.
+This section deploys cleanly on Hobby specifically *because* every schedule above is
+daily — that was a constraint, not a preference. It's worth being deliberate about, since
+the tradeoff compounds as the product grows:
+
+- **Hobby hard-caps every cron job at once per day.** A more frequent expression
+  (`0 * * * *`, `*/30 * * * *`) doesn't get silently downgraded to daily — it **fails the
+  deployment outright**. So "stay on Hobby" and "run these jobs more than once a day" are
+  mutually exclusive; there's no partial version of this decision.
+- **What that costs today:** a newly-posted opportunity can sit undiscovered for up to
+  ~24h before the daily discovery run finds it. An opportunity whose deadline moved, or
+  that closed early, can show stale in the product for the same window before the next
+  run re-checks it. Deadline reminders (§`deadline-reminders`) are themselves only
+  re-evaluated once a day, so "6 days left" is accurate to within a day, not an hour —
+  fine for a 6-day-out reminder, less fine as a deadline gets close.
+- **What Pro removes:** per-minute scheduling and per-minute precision (vs. Hobby's
+  ±59-minute jitter). That's the whole change — job logic, `CRON_SECRET`, and everything
+  else in this section stays identical. Concretely, it's what would let discovery or
+  requirement re-verification move from once daily to, say, hourly near a deadline
+  cluster, without any code change — just tighter `vercel.json` schedules.
+- **What Pro does *not* change on its own:** more frequent job *runs* mean more Anthropic
+  and Tavily calls in the same period. Tightening these schedules on Pro is a rate-limit
+  and cost decision as much as a scheduling one — check `ai_usage` and provider rate
+  limits before tightening, not just the cron expression.
+- All plans allow 100 cron jobs per project either way, so job *count* was never the
+  constraint here — cadence is.
+- `maxDuration` is set to 300s for `app/api/jobs/**` in `vercel.json`. That's also
+  Hobby's ceiling; Pro allows up to 800s if a discovery run starts timing out, independent
+  of the daily-vs-more-often decision above.
+
+Nothing here needs deciding before the first deploy — daily is a reasonable, honest
+default, and every job already degrades safely (a no-op run, not a crash, when a provider
+key is missing). It's a decision worth revisiting once real opportunity volume makes
+same-day discovery lag actually felt, not something to discover by noticing data feels
+stale.
 
 ### 6.1 `CRON_SECRET` behaves differently from the other variables
 
