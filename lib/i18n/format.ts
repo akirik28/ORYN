@@ -48,3 +48,25 @@ export function formatMoney(value: number, currency: string | null, options?: In
   if (!currency) return formatNumber(value, { maximumFractionDigits: 0, ...options });
   return formatCurrency(value, currency, options);
 }
+
+/**
+ * A short, fixed elapsed-time string for a known duration between two timestamps — e.g. a
+ * background job's run time. Deliberately not `date-fns`'s `formatDistanceStrict`
+ * ("5 minutes"): an ops-facing number reads faster as "5m 12s" than as prose, matching the
+ * product's own "short, clear copy" rule for everything else (spec Phase 56).
+ *
+ * Not locale-aware, unlike this file's other formatters — "5m 12s" isn't natural-language
+ * prose, it's closer to a stopwatch reading, so there's nothing here for a locale to
+ * change. Revisit if this ever needs to read as a sentence rather than a label.
+ */
+export function formatDuration(ms: number): string {
+  if (ms < 0) return "0s";
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
+}
