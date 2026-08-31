@@ -57,8 +57,12 @@ describe("migration numbering", () => {
     // 0069 on 2026-08-31 — schema-hygiene's backup-table drop and the requirement
     // investigation's comment-only note — caught here on merge, which is the second time
     // in one day this guard has earned its place. The latter was renumbered to 0070. 0071
-    // (calendar_bound_fact_class) is the CAO-points display path's own new column.
-    expect(Math.max(...numbers.map(Number))).toBe(71);
+    // (calendar_bound_fact_class) is the CAO-points display path's own new column. And a
+    // third same-day collision, this time caught by this exact guard before merging rather
+    // than on merge: birth_year_changes (the minor-consent audit trail) also started as
+    // 0071, found the collision with calendar_bound_fact_class on rebase, and was
+    // renumbered to 0072.
+    expect(Math.max(...numbers.map(Number))).toBe(72);
   });
 });
 
