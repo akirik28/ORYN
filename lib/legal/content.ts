@@ -1,24 +1,41 @@
+import type { Locale } from "@/lib/i18n/config";
+
 /**
  * Every word of ORYN's legal surface — the three policy documents, the site footer, the
  * signup consent block, and the data-processor inventory — in ONE module.
  *
- * WHY ONE FILE: this is the translation unit. When the i18n layer lands, a locale is added
- * by producing a second object of type `LegalCopy` and selecting between them at the page
- * boundary — no page, footer, or form needs to change. Nothing below is JSX, and no string
- * is assembled from fragments at a call site, because both make a string untranslatable
- * (word order is not portable across languages). Structure lives in the components; text
- * lives here. `lib/i18n/format.ts` is the sibling convention for numbers/dates.
+ * WHY ONE FILE: this is the translation unit. `legalCopyEn`/`legalCopyTr` are two objects
+ * of the same `LegalCopy` shape, selected by `getLegalCopy(locale)`. No page, footer, or
+ * form branches on language itself — every component takes a `locale: Locale` prop and
+ * calls `getLegalCopy`/`getDataProcessors`, the same shape `lib/i18n/date.ts`'s
+ * `formatRelativeTime(date, locale)` already uses ("Server Components can pass the value
+ * from `resolveLocale()` and Client Components can pass the one from `useLocale()`,
+ * without two near-identical implementations" — that file's words, not just this one's
+ * convention). Nothing below is JSX, and no string is assembled from fragments at a call
+ * site, because both make a string untranslatable (word order is not portable across
+ * languages). Structure lives in the components; text lives here.
  *
- * WHY THE SOURCE LANGUAGE IS ENGLISH: every existing string in this product is English, so
- * English is the source and translations are derived. Documented assumption, and a real
- * caveat for the KVKK notice specifically — see `LAWYER_FLAGS.kvkkLanguage`. A Turkish-law
- * disclosure notice addressed to Turkish data subjects should be published in Turkish
- * before Turkey launch; that is a translation task, not a rewrite, which is precisely why
- * the text is shaped this way.
+ * REGISTER: all three documents use formal "siz" in Turkish, not the informal "sen" the
+ * rest of the product may eventually use for onboarding/UI copy. This is a deliberate,
+ * product-level (not legal) decision: a real KVKK aydınlatma metni is formal register by
+ * near-universal convention regardless of the audience's age, and Privacy/Terms sit right
+ * next to it in the same footer — switching register between sibling legal documents would
+ * read as more inconsistent than holding all three formal. Reversible; flag to the founder
+ * if this should instead match a casual house style once one exists.
  *
- * WHAT THIS IS NOT: legal advice, and not reviewed by a lawyer. Every document below is a
- * DRAFT. `LEGAL_REVIEW_STATUS.approved` is `false` and the layout renders a standing
- * banner off it — see the note on that constant before changing it.
+ * VOCABULARY: the Turkish text uses KVKK's own statutory terms where the English maps onto
+ * a settled one — veri sorumlusu (data controller), veri işleyen (data processor), açık
+ * rıza (explicit consent), aydınlatma yükümlülüğü (Art. 10 disclosure obligation), ilgili
+ * kişi (data subject, used where the law's own Article 11 list is being paraphrased).
+ * Where a clause's legal mapping is itself unresolved in English too (the Article 9
+ * transfer mechanism, the Article 5 legal-basis-per-purpose question), the Turkish
+ * translates the descriptive sentence around it but does not invent a Turkish name for a
+ * mechanism the English text also declines to name — seeLAWYER_FLAGS, unchanged by
+ * translation, which is where that decision actually gets made.
+ *
+ * WHAT THIS IS NOT: legal advice, and not reviewed by a lawyer, in either language. Every
+ * document below is a DRAFT. `LEGAL_REVIEW_STATUS.approved` is `false` and the layout
+ * renders a standing banner off it — see the note on that constant before changing it.
  */
 
 // ---------------------------------------------------------------------------
@@ -29,9 +46,9 @@
  * The single switch that decides whether these documents present themselves as drafts.
  *
  * Flipping `approved` to `true` removes the "awaiting legal review" banner from all three
- * documents at once. It is a legal assertion, not a styling preference: do not flip it to
- * clean up the UI. It belongs to whoever receives the lawyer's sign-off, and the sign-off
- * date and reviewing counsel should be recorded here in the same commit.
+ * documents, in both languages, at once. It is a legal assertion, not a styling preference:
+ * do not flip it to clean up the UI. It belongs to whoever receives the lawyer's sign-off,
+ * and the sign-off date and reviewing counsel should be recorded here in the same commit.
  */
 export const LEGAL_REVIEW_STATUS = {
   approved: false,
@@ -50,14 +67,29 @@ export const LEGAL_REVIEW_STATUS = {
  */
 export interface Unresolved {
   readonly __unresolved: true;
-  /** What is missing, in the reader's language. */
-  readonly label: string;
+  /**
+   * A key into `LegalCopy.common`'s `companyXxx` labels, not a literal string — the label
+   * is reader-facing text and must translate with everything else. Resolved against the
+   * current locale's copy at render time by `<Unconfirmed>`/`<CompanyDetails>`, so a
+   * placeholder chip is never stuck in English on a Turkish page.
+   */
+  readonly labelKey: CompanyDetailLabelKey;
   /** Who has to supply it. Shown to the lawyer, not to students. */
   readonly owner: "founder" | "counsel";
 }
 
-export function unresolved(label: string, owner: Unresolved["owner"] = "founder"): Unresolved {
-  return { __unresolved: true, label, owner };
+export type CompanyDetailLabelKey =
+  | "companyLegalName"
+  | "companyRegistration"
+  | "companyAddress"
+  | "companyVerbis"
+  | "companyEmail"
+  | "companyPrivacyEmail"
+  | "companyDpo"
+  | "companyGoverningLaw";
+
+export function unresolved(labelKey: CompanyDetailLabelKey, owner: Unresolved["owner"] = "founder"): Unresolved {
+  return { __unresolved: true, labelKey, owner };
 }
 
 export function isUnresolved(value: unknown): value is Unresolved {
@@ -71,20 +103,22 @@ export function isUnresolved(value: unknown): value is Unresolved {
 /**
  * ORYN has no registered legal entity on file in this repository, and a privacy notice
  * naming the wrong controller is worse than one that names none. Every field here is
- * therefore unresolved until the founder supplies the real registration details.
+ * therefore unresolved until the founder supplies the real registration details. Locale-
+ * invariant: which fields are missing doesn't change with language, only their rendered
+ * label does (via `labelKey`, resolved from `LegalCopy.common`).
  */
 export const COMPANY = {
   productName: "Oryn",
-  legalName: unresolved("Registered company name"),
-  registrationNumber: unresolved("Trade registry / company number"),
-  registeredAddress: unresolved("Registered address"),
+  legalName: unresolved("companyLegalName"),
+  registrationNumber: unresolved("companyRegistration"),
+  registeredAddress: unresolved("companyAddress"),
   /** KVKK: whether the controller must enrol in VERBİS depends on the entity and its size. */
-  verbisRegistration: unresolved("VERBİS registration number (if required)", "counsel"),
-  contactEmail: unresolved("Contact email address"),
-  privacyContactEmail: unresolved("Privacy/data-protection contact address"),
+  verbisRegistration: unresolved("companyVerbis", "counsel"),
+  contactEmail: unresolved("companyEmail"),
+  privacyContactEmail: unresolved("companyPrivacyEmail"),
   /** GDPR Art. 37 — only required for some controllers; counsel decides whether it applies. */
-  dataProtectionOfficer: unresolved("Data Protection Officer, if one is required", "counsel"),
-  governingLaw: unresolved("Governing law and competent courts", "counsel"),
+  dataProtectionOfficer: unresolved("companyDpo", "counsel"),
+  governingLaw: unresolved("companyGoverningLaw", "counsel"),
 };
 
 // ---------------------------------------------------------------------------
@@ -92,7 +126,7 @@ export const COMPANY = {
 // ---------------------------------------------------------------------------
 
 export interface DataProcessor {
-  /** Stable key — also the anchor id in the rendered table. */
+  /** Stable key — also the anchor id in the rendered table. Locale-invariant. */
   id: string;
   name: string;
   /** What the service does for ORYN, in one line. */
@@ -110,7 +144,10 @@ export interface DataProcessor {
 }
 
 /**
- * Every external service that receives data, and precisely what reaches it.
+ * Every external service that receives data, and precisely what reaches it — in English
+ * and Turkish. `id`, `personalData`, and `verifiedIn` are facts about the system, not text,
+ * so they're identical across both arrays by construction; a test asserts that rather than
+ * trusting eyeballing two 5-row arrays.
  *
  * Each `dataSent` line was read out of the code on 2026-08-31 rather than assumed from the
  * service's general purpose, because the two differ in ways that matter here: the advisor
@@ -119,10 +156,10 @@ export interface DataProcessor {
  * because discovery builds one shared global catalogue instead of searching per student.
  * `verifiedIn` names the file to re-read when checking whether a line is still true.
  *
- * If you add a provider, add it here in the same commit. This table is the answer to the
- * first question outside counsel will ask.
+ * If you add a provider, add it to BOTH arrays in the same commit. This table is the
+ * answer to the first question outside counsel will ask.
  */
-export const DATA_PROCESSORS: DataProcessor[] = [
+export const DATA_PROCESSORS_EN: DataProcessor[] = [
   {
     id: "supabase",
     name: "Supabase",
@@ -180,6 +217,68 @@ export const DATA_PROCESSORS: DataProcessor[] = [
   },
 ];
 
+export const DATA_PROCESSORS_TR: DataProcessor[] = [
+  {
+    id: "supabase",
+    name: "Supabase",
+    role: "Veritabanı, kimlik doğrulama ve dosya depolama — hesabınızdaki her şeyin tutulduğu ana sistem.",
+    dataSent:
+      "Girdiğiniz veya yüklediğiniz her şey: e-posta ve şifre bilgileri, profil bilgileri, başarılar, notlar ve sınav sonuçları, hedefler, hedef üniversiteler, yüklenen özgeçmişler ve kanıt dosyaları, danışman ile yazışmalar ve ürün kullanım kayıtları.",
+    location: "Amazon Web Services eu-central-1 (Frankfurt, Almanya).",
+    retention:
+      "Siz silene ya da hesabınızı kapatana kadar saklanır. Şu an için otomatik bir saklama süresi sınırı uygulanmamaktadır.",
+    personalData: true,
+    verifiedIn: "lib/supabase/, supabase/migrations/0015_storage_buckets.sql",
+  },
+  {
+    id: "anthropic",
+    name: "Anthropic (Claude API)",
+    role: "Profil analizinin, danışmanın, haftalık planların ve özgeçmiş aktarımının arkasındaki model.",
+    dataSent:
+      "Kaydınızın tamamı değil, özet bir profil: görünen adınız, mezuniyet yılınız, müfredatınız, ülkeniz, haftalık zaman bütçeniz, boyut puanlarınız ve etkinlik, proje, araştırma, ödül ve hedeflerinizin başlıkları — buna danışmana gönderdiğiniz mesaj da dahildir. Okul adınız bu özete dahil edilmez. Bir özgeçmiş yüklediğinizde, içeriğinin çıkarılabilmesi için belgenin tamamı gönderilir.",
+    location: "Anthropic altyapısı, AB/AEA dışında.",
+    retention: "Anthropic'in API şartlarına tabidir — güncel veri işleme ekiyle (data processing addendum) karşılaştırılarak hukuk danışmanınca teyit edilecektir.",
+    personalData: true,
+    verifiedIn: "lib/ai/student-context.ts, lib/ai/cv-extraction.ts, lib/ai/anthropic-provider.ts",
+  },
+  {
+    id: "tavily",
+    name: "Tavily",
+    role: "Fırsat ve üniversite sayfalarını bulmak ve güncel tutmak için kullanılan web arama servisi.",
+    dataSent:
+      "Yalnızca arama terimleri, ve bunlar hiçbir zaman bir öğrenciyi tanımlamaz — bir yarışma kategorisi veya bir üniversitenin adı gibi katalog sorgularıdır. Keşif süreci, kimse adına ayrı ayrı arama yapmak yerine herkes için tek bir ortak kütüphane oluşturur.",
+    location: "Tavily altyapısı, AB/AEA dışında.",
+    retention: "Hiçbir kişisel veri gönderilmediği için, hakkınızda saklanan hiçbir şey yoktur.",
+    personalData: false,
+    verifiedIn: "lib/providers/tavily.ts, lib/opportunities/discover.ts, lib/requirements/discover.ts",
+  },
+  {
+    id: "openalex",
+    name: "OpenAlex",
+    role: "Araştırma proje önerilerini gerçek ve güncel literatüre dayandırmak için kullanılan açık akademik veritabanı.",
+    dataSent:
+      "Seçtiğiniz alan ve ilgi alanlarından türetilen konu anahtar kelimeleri — örneğin \"ekonomi genç işsizliği\". Sorguya isim, e-posta veya hesap kimliği eklenmez.",
+    location: "OpenAlex (OurResearch), AB/AEA dışında.",
+    retention: "Hesap kimliği gönderilmediği için size bağlı hiçbir kayıt oluşmaz.",
+    personalData: false,
+    verifiedIn: "lib/providers/openalex.ts, lib/ai/research-generator.ts",
+  },
+  {
+    id: "college-scorecard",
+    name: "U.S. College Scorecard",
+    role: "Üniversite istatistikleri için kullanılan, ABD Eğitim Bakanlığı'nın resmî veri kümesi.",
+    dataSent: "Yalnızca üniversite kimlikleri. Hiçbir öğrenci verisi gönderilmez.",
+    location: "ABD Eğitim Bakanlığı (U.S. Department of Education).",
+    retention: "Hiçbir kişisel veri gönderilmez.",
+    personalData: false,
+    verifiedIn: "lib/providers/college-scorecard.ts",
+  },
+];
+
+export function getDataProcessors(locale: Locale): DataProcessor[] {
+  return locale === "tr" ? DATA_PROCESSORS_TR : DATA_PROCESSORS_EN;
+}
+
 // ---------------------------------------------------------------------------
 // Open questions for counsel
 // ---------------------------------------------------------------------------
@@ -192,9 +291,12 @@ export interface LawyerFlag {
 }
 
 /**
- * The decisions engineering deliberately did not make. These are rendered nowhere in the
- * product — they exist so the review packet (LEGAL_REVIEW.md) and this module cannot drift
- * apart, and so nobody mistakes an unanswered question for an answered one.
+ * The decisions engineering deliberately did not make. English only, deliberately: these
+ * are rendered nowhere in the product (never shown to a student in either language) — they
+ * exist so the review packet (LEGAL_REVIEW.md) and this module cannot drift apart, and so
+ * nobody mistakes an unanswered question for an answered one. Translating an internal
+ * engineering-to-counsel note would cost effort with no reader who needs it in Turkish;
+ * the documents those readers actually see are the ones translated above.
  */
 export const LAWYER_FLAGS: LawyerFlag[] = [
   {
@@ -202,7 +304,7 @@ export const LAWYER_FLAGS: LawyerFlag[] = [
     question:
       "Must the KVKK notice be published in Turkish before Turkey launch, and does an English-only version satisfy the Article 10 disclosure obligation in the meantime?",
     currentState:
-      "All three documents are drafted in English, structured for translation (lib/legal/content.ts is a single translation unit).",
+      "RESOLVED for text (this pass): the KVKK notice, along with Privacy and Terms, now has a complete Turkish translation (legalCopyTr in lib/legal/content.ts), selected automatically from the student's resolved locale — no manual step, no separate deploy. Still open: whether counsel wants the Turkish version reviewed independently of the English one, since a translation error is its own kind of error even when the source was approved.",
   },
   {
     id: "legalBasis",
@@ -216,14 +318,14 @@ export const LAWYER_FLAGS: LawyerFlag[] = [
     question:
       "What instrument covers the transfer of student data to Anthropic outside the EU/EEA, and what KVKK Article 9 mechanism (as amended in 2024) applies for Turkish users?",
     currentState:
-      "The database is in Frankfurt, but advisor context and uploaded CVs are sent to Anthropic outside the EU/EEA. No transfer instrument is recorded in the repository.",
+      "The database is in Frankfurt, but advisor context and uploaded CVs are sent to Anthropic outside the EU/EEA. No transfer instrument is recorded in the repository. The Turkish KVKK text describes the same transfer factually (who, what, where) without naming a mechanism, matching the English rather than translating a claim that isn't made.",
   },
   {
     id: "minorConsent",
     question:
       "At what age can a student consent for themselves in each launch market, what parental consent mechanism is required below it, and is a verifiable method needed or is notice sufficient?",
     currentState:
-      "Birth year is collected during onboarding, after signup. No parental consent mechanism is built. The signup form reserves the place for it and states the requirement.",
+      "Birth year is collected during onboarding, after signup. No parental consent mechanism is built. The signup form reserves the place for it and states the requirement, in the student's resolved language.",
   },
   {
     id: "retention",
@@ -235,7 +337,14 @@ export const LAWYER_FLAGS: LawyerFlag[] = [
     id: "liability",
     question:
       "Liability limitations, disclaimers, governing law, and forum — none of which engineering should draft.",
-    currentState: "The Terms draft states the product's limits in plain language but contains no liability clause.",
+    currentState: "The Terms draft states the product's limits in plain language, in both languages, but contains no liability clause in either.",
+  },
+  {
+    id: "turkishLegalReview",
+    question:
+      "The Turkish translation (legalCopyTr) was produced by engineering using standard KVKK statutory vocabulary (veri sorumlusu, veri işleyen, açık rıza, aydınlatma yükümlülüğü, ilgili kişi), not by a Turkish-qualified lawyer or a professional legal translator. Does it need independent review before publication, separately from the English source review?",
+    currentState:
+      "Structurally mirrors the English exactly — same sections, same ids, same bullet counts, same unresolved placeholders, same hedges (e.g. Article 9's transfer mechanism is left unnamed in Turkish exactly as in English, not translated into a guessed term). A test (__tests__/legal/consent.test.ts) enforces structural parity between legalCopyEn and legalCopyTr so the two can't silently diverge. The Article 11 rights list is translated from the standard, widely-published paraphrase of the statutory list, not quoted from the law verbatim.",
   },
 ];
 
@@ -304,6 +413,10 @@ export interface LegalCopy {
   signupConsent: {
     checkboxLabel: string;
     checkboxLinkTerms: string;
+    /** Glue word between the two document links — " & " in English, " ve " in Turkish.
+     * A separate key rather than hardcoded punctuation in the component, because it's
+     * still language-specific text, not layout. */
+    checkboxLinkSeparator: string;
     checkboxLinkPrivacy: string;
     checkboxRequiredError: string;
     minorHeading: string;
@@ -335,6 +448,10 @@ export interface LegalCopy {
     companyPrivacyEmail: string;
     companyDpo: string;
     companyGoverningLaw: string;
+    /** `<Unconfirmed>`'s bracket text: "[<label> — <notSupplied>, <pendingX>]". */
+    unresolvedNotSupplied: string;
+    unresolvedPendingFounder: string;
+    unresolvedPendingCounsel: string;
   };
 }
 
@@ -379,6 +496,7 @@ export const legalCopyEn: LegalCopy = {
   signupConsent: {
     checkboxLabel: "I have read and accept the",
     checkboxLinkTerms: "Terms of Use",
+    checkboxLinkSeparator: " & ",
     checkboxLinkPrivacy: "Privacy Notice",
     checkboxRequiredError: "Please accept the Terms of Use and Privacy Notice to continue.",
     minorHeading: "If you are under 18",
@@ -413,6 +531,9 @@ export const legalCopyEn: LegalCopy = {
     companyPrivacyEmail: "Privacy and data requests",
     companyDpo: "Data Protection Officer",
     companyGoverningLaw: "Governing law",
+    unresolvedNotSupplied: "not yet supplied",
+    unresolvedPendingFounder: "pending founder",
+    unresolvedPendingCounsel: "pending counsel",
   },
 
   documents: {
@@ -662,13 +783,13 @@ export const legalCopyEn: LegalCopy = {
       slug: "kvkk",
       title: "KVKK Disclosure Notice",
       intro:
-        "For students in Türkiye — the disclosure required by Article 10 of Law No. 6698 on the Protection of Personal Data. Draft, and pending translation into Turkish before publication.",
+        "For students in Türkiye — the disclosure required by Article 10 of Law No. 6698 on the Protection of Personal Data. Draft, pending counsel review before publication.",
       sections: [
         {
           id: "language",
           heading: "About this draft",
           body: [
-            "This notice is written in English because every part of the product is currently in English and this text is structured for translation. A disclosure notice addressed to data subjects in Türkiye should be published in Turkish, and doing so is on the list of things to complete before launching there. It is a translation task, not a rewrite.",
+            "This notice is available in Turkish, the language a disclosure addressed to data subjects in Türkiye should be published in — see the language switcher. It was translated by engineering using KVKK's standard statutory vocabulary, not by a Turkish-qualified lawyer or professional legal translator, and that translation itself is an open item for counsel to review (see LEGAL_REVIEW.md) — independent of whether the underlying English text has been approved.",
             "Article references below follow Law No. 6698. Article 9, on transfers abroad, was amended in 2024 and the applicable mechanism is one of the open questions for counsel rather than something asserted here.",
           ],
         },
@@ -705,7 +826,7 @@ export const legalCopyEn: LegalCopy = {
           id: "legal-basis",
           heading: "Legal basis (Article 5)",
           body: [
-            "The mapping of each purpose to a basis under Article 5 — in particular whether AI-driven profile analysis rests on the necessity of performing a contract or requires separate explicit consent — is a decision for counsel and is recorded as an open question rather than stated here.",
+            "The mapping of each purpose to a basis under Article 5 — in particular whether AI-driven profile analysis rests on the necessity of performing a contract or requires separate explicit consent (açık rıza) — is a decision for counsel and is recorded as an open question rather than stated here.",
             "What the product does today: signup captures a single acceptance of the Terms of Use together with acknowledgement of the Privacy Notice. Individual processing purposes are not separately consented.",
           ],
         },
@@ -761,8 +882,436 @@ export const legalCopyEn: LegalCopy = {
   },
 };
 
-/** The active copy. A locale selector replaces this line when i18n lands. */
-export const legalCopy = legalCopyEn;
+// ---------------------------------------------------------------------------
+// Turkish translation
+// ---------------------------------------------------------------------------
+
+export const legalCopyTr: LegalCopy = {
+  draftBanner: {
+    label: "Taslak — hukuki inceleme bekliyor",
+    body:
+      "Bu belge henüz bir avukat tarafından incelenip onaylanmamıştır. Dış hukuk danışmanının üzerinde somut bir düzeltme yapabileceği bir metin olması ve Oryn'in bilgilerinizle bugün gerçekte ne yaptığını görebilmeniz için bu şekilde yazılmıştır. Bu metni tamamlanmış bir hukuki sözleşme değil, ürünün bir açıklaması olarak değerlendirin.",
+  },
+
+  processorTable: {
+    caption: "Veri alan servisler ve her birine tam olarak neyin ulaştığı.",
+    columnService: "Servis",
+    columnData: "Ne gönderiliyor",
+    columnLocation: "Nerede",
+    columnRetention: "Ne kadar süreyle",
+    personalDataYes: "Sizi tanımlar",
+    personalDataNo: "Kişisel veri yok",
+  },
+
+  footer: {
+    tagline: "Öğrenciler için kişisel bir kariyer işletim sistemi.",
+    productHeading: "Ürün",
+    legalHeading: "Yasal",
+    contactHeading: "İletişim",
+    signIn: "Giriş yap",
+    createAccount: "Hesap oluştur",
+    privacy: "Gizlilik Bildirimi",
+    terms: "Kullanım Şartları",
+    kvkk: "KVKK Aydınlatma Metni (Türkiye)",
+    contactLabel: "E-posta",
+    companyLabel: "İşleten",
+    draftNotice: "Politikalarımız, hukuki incelemeyi bekleyen taslaklardır.",
+    copyright: (year: number) => `© ${year} Oryn`,
+    ageNotice: "14-18 yaş arası öğrenciler için tasarlanmıştır. 18 yaşından küçükseniz, bu belgeleri bir ebeveyn veya vasiyle birlikte okumalısınız.",
+  },
+
+  signupConsent: {
+    checkboxLabel: "Aşağıdakileri okudum ve kabul ediyorum:",
+    checkboxLinkTerms: "Kullanım Şartları",
+    checkboxLinkSeparator: " ve ",
+    checkboxLinkPrivacy: "Gizlilik Bildirimi",
+    checkboxRequiredError: "Devam etmek için lütfen Kullanım Şartları'nı ve Gizlilik Bildirimi'ni kabul edin.",
+    minorHeading: "18 yaşından küçükseniz",
+    minorBody:
+      "Oryn, 14-18 yaş arası öğrenciler için tasarlanmıştır; bu nedenle bunu okuyanların çoğu reşit değildir. Devam etmeden önce Kullanım Şartları'nı ve Gizlilik Bildirimi'ni bir ebeveyn veya vasinizle birlikte okumalısınız.",
+    minorPlaceholderNote:
+      "Doğum yılınızı, bu adımdan hemen sonraki kurulum aşamasında soruyoruz. Veli onayı şu an ürün içinde toplanmamaktadır — bu, gereklilik hukuk danışmanıyla teyit edildiğinde sorulacağı yerdir.",
+    dataSummaryHeading: "Kısaca neyi kabul ediyorsunuz",
+    dataSummary: [
+      "Girdiğiniz her şey, varsayılan olarak yalnızca hesabınıza özeldir. Kanıt dosyaları ve özgeçmiş yüklemeleri hiçbir zaman herkese açık bir adresten erişilebilir hale gelmez.",
+      "Profil özetiniz ve yüklediğiniz herhangi bir özgeçmiş, puanlarınızı, planlarınızı ve danışman yanıtlarınızı oluşturmak üzere Anthropic'in Claude API'sine gönderilir.",
+      "Hesap verileriniz Frankfurt, Almanya'da saklanır.",
+      "İstediğiniz zaman Ayarlar bölümünden tüm verilerinizi dışa aktarabilir veya hesabınızı silebilirsiniz.",
+    ],
+    reviewLink: "Gizlilik Bildirimi'nin tamamını okuyun",
+  },
+
+  common: {
+    backToHome: "Oryn'e dön",
+    lastDrafted: "Taslak tarihi",
+    notApproved: "Henüz hukuk danışmanınca onaylanmadı",
+    onThisPage: "Bu sayfada",
+    relatedDocuments: "İlgili belgeler",
+    companyIdentityHeading: "Veri sorumlusu bilgileri",
+    companyContactHeading: "İletişim bilgileri",
+    companyLawHeading: "Yetkili hukuk",
+    companyLegalName: "Ticaret unvanı",
+    companyRegistration: "Ticaret sicil numarası",
+    companyAddress: "Kayıtlı adres",
+    companyVerbis: "VERBİS kaydı",
+    companyEmail: "Genel iletişim",
+    companyPrivacyEmail: "Gizlilik ve veri talepleri",
+    companyDpo: "Veri Sorumlusu Temsilcisi",
+    companyGoverningLaw: "Yetkili hukuk ve mahkeme",
+    unresolvedNotSupplied: "henüz sağlanmadı",
+    unresolvedPendingFounder: "kurucudan bekleniyor",
+    unresolvedPendingCounsel: "hukuk danışmanından bekleniyor",
+  },
+
+  documents: {
+    // -------------------------------------------------------------------
+    privacy: {
+      slug: "privacy",
+      title: "Gizlilik Bildirimi",
+      intro:
+        "Oryn'in ne topladığı, neden topladığı, bu bilgilerin nereye gittiği ve bu konuda ne yapabileceğiniz. Ürünün bugün gerçekte ne yaptığını anlatmak üzere yazılmıştır.",
+      sections: [
+        {
+          id: "who-we-are",
+          companyDetails: "identity",
+          heading: "Verilerinizden kim sorumlu",
+          body: [
+            "Oryn, öğrenciler için bir kariyer ve profil planlama ürünüdür. Ürünü işleten şirket, burada açıklanan bilgiler bakımından veri sorumlusudur.",
+            "Kayıtlı tüzel kişilik, adres ve iletişim bilgileri henüz kesinleşmemiştir; tahmin yürütülmek yerine bu taslak boyunca çözülmemiş olarak gösterilmektedir. Bu bildirim yayımlanmadan önce doldurulmaları gerekir.",
+          ],
+        },
+        {
+          id: "what-we-collect",
+          heading: "Neleri topluyoruz",
+          body: [
+            "Yalnızca bize verdikleriniz, buna ek olarak ürünü nasıl kullandığınıza dair bir kayıt. Oryn'de reklam takip araçları veya üçüncü taraf analitik yoktur; kullanım olayları kendi veritabanımızda kaydedilir.",
+          ],
+          bullets: [
+            "Hesap bilgileri: e-posta adresiniz, görünen adınız ve kimlik doğrulama sağlayıcımız tarafından yönetilen bir şifre. Şifrenizi asla görmeyiz.",
+            "Temel profil bilgileri: ad ve soyad, doğum yılı, ülke, isteğe bağlı şehir, okul adı, mezuniyet yılı, müfredat, tercih edilen dil ve zaman dilimi.",
+            "Kaydınız: etkinlikler, liderlik rolleri, ödüller, sertifikalar, projeler, araştırma, gönüllülük, iş deneyimi, stajlar, yaz programları, spor, beceriler, diller, ilgi alanları ve hedefler.",
+            "Akademik bilgiler: eğitim geçmişi, dersler, notlar ve girmeyi tercih ettiğiniz standart sınav sonuçları.",
+            "Belgeler: aktarım için yüklediğiniz özgeçmişler ve bir başarıya eklediğiniz kanıt dosyaları.",
+            "Planlarınız: hedef üniversiteler, başvurular, son tarihler, haftalık eylemler ve bunları tamamladıktan sonra bildirdikleriniz.",
+            "Yazışmalar: Oryn danışmanıyla yaptığınız yazışmalar.",
+            "Kullanım: hangi ürün olaylarının ne zaman gerçekleştiği ve bir özelliğin ne kadar yapay zekâ token'ı kullandığı. Kullanım kaydımızda isteklerinizin (prompt) içeriğini saklamayız.",
+          ],
+        },
+        {
+          id: "why",
+          heading: "Neden kullanıyoruz",
+          body: [
+            "Aşağıdaki her kullanım, kaydolduğunuz ürüne hizmet eder. Verilerinizi satmayız ve size reklam göstermek için kullanmayız.",
+          ],
+          bullets: [
+            "Hesabınızı çalıştırmak ve oturumunuzu açık tutmak için.",
+            "Profil boyutlarınızı ve tamlığınızı hesaplamak, bunların zaman içinde nasıl değiştiğini göstermek için.",
+            "Haftalık önceliklerinizi oluşturmak ve bunların arkasındaki gerekçeyi açıklamak için.",
+            "Sizi gerçekten uygun olduğunuz fırsatlarla eşleştirmek ve istemediğinizi belirttiğiniz fırsatları bir daha göstermemek için.",
+            "Danışmandaki sorularınızı gerçek profilinizi bağlam alarak yanıtlamak için.",
+            "Paylaşılan alanlardaki içeriğin denetlenmesi dahil, ürünü güvenli tutmak için.",
+            "Ürünün hangi bölümlerinin kullanıldığını anlayıp geliştirebilmek için.",
+          ],
+        },
+        {
+          id: "ai",
+          heading: "Bilgileriniz bir yapay zekâ modeline nasıl ulaşır",
+          body: [
+            "Oryn'in analizi, haftalık planları, danışman yanıtları ve özgeçmiş aktarımının tümü Anthropic'in Claude API'si üzerinde çalışır. Bu, ürünün bilgilerinizi kendi veritabanımızın dışına gönderdiği bölümdür; bu yüzden burada net olmakta fayda var.",
+            "Danışmanı kullandığınızda veya bir plan oluşturduğunuzda, kaydınızın tamamını değil özet bir profil göndeririz: görünen adınız, mezuniyet yılınız, müfredatınız, ülkeniz, haftalık zaman bütçeniz, boyut puanlarınız ve etkinlik, proje, araştırma, ödül ve hedeflerinizin başlıkları. Okul adınız bu özete dahil edilmez.",
+            "Bir özgeçmiş aktardığınızda, içeriğinin çıkarılabilmesi için belgenin tamamı Anthropic'e gönderilir. O dosyada ne varsa — normalde toplamayacağımız bilgiler de dahil — belgeyle birlikte gönderilir. Belgeden çıkarılan hiçbir bilgi, siz inceleyip onaylamadan profilinize kaydedilmez.",
+            "Yapay zekâ çağrıları sunucularımızda gerçekleşir. API kimlik bilgilerimiz hiçbir zaman tarayıcınıza açılmaz.",
+            "Anthropic, AB/AEA dışındadır. Bu aktarımı kapsayan güvenceler hâlâ hukuk danışmanınca teyit edilmekte olup, burada kesin bir iddia olarak değil bu taslaktaki çözülmemiş bir soru olarak listelenmiştir.",
+          ],
+        },
+        {
+          id: "processors",
+          heading: "Verilerinizi başka kimler alıyor",
+          body: [
+            "Oryn az sayıda dış servis kullanır. Aşağıdaki liste bunların tamamıdır ve her birinin tam olarak ne aldığını gösterir. Bunlardan birkaçı sizi tanımlayan hiçbir şey almaz; tablo hangilerinin olduğunu belirtir.",
+          ],
+          includesProcessorTable: true,
+        },
+        {
+          id: "where",
+          heading: "Verileriniz nerede saklanıyor",
+          body: [
+            "Hesabınız, profiliniz, belgeleriniz ve yazışmalarınız, Amazon Web Services'in Frankfurt, Almanya'daki (eu-central-1) altyapısında barındırılan veritabanımızda ve dosya depolama alanımızda saklanır.",
+            "Yüklenen özgeçmişler ve kanıt dosyaları, herkese açık bir adresten erişilemeyen özel bir depolama alanında bulunur. Yalnızca sizin için oluşturulan, kısa ömürlü imzalı bağlantılar üzerinden okunabilirler ve erişim kurallarımız her dosyayı onu yükleyen hesapla sınırlar.",
+          ],
+        },
+        {
+          id: "retention",
+          heading: "Ne kadar süre sakladığımız",
+          body: [
+            "Bugün itibarıyla, bilgilerinizi siz silene kadar saklıyoruz. Bir öğeyi silmek onu kaldırır; hesabınızı silmek verilerinizi de beraberinde kaldırır.",
+            "Oryn, örneğin uzun süre kullanılmayan bir hesap için, henüz otomatik bir saklama süresi sınırı uygulamamaktadır. Bu, fiilen uygulanmadan önce burada belirli bir saklama süresi belirtmek ürünün tutmadığı bir söz vermek anlamına gelir; bu nedenle bu bölüm gerçek durumu kaydeder. Bu sürelerin belirlenmesi, hukuk danışmanı için açık sorulardan biridir.",
+          ],
+        },
+        {
+          id: "your-rights",
+          heading: "Neler yapabilirsiniz",
+          body: [
+            "Aşağıdakilerden ikisi bugün itibarıyla, bize sormanıza gerek kalmadan, Ayarlar sayfasından çalışır:",
+          ],
+          bullets: [
+            "Her şeyi dışa aktarın: verilerinizin eksiksiz bir kopyasını makine tarafından okunabilir bir dosya olarak indirin.",
+            "Hesabınızı silin: hesabınızı ve ona bağlı verileri kalıcı olarak kaldırın.",
+            "Herhangi bir şeyi düzeltin: profilinizdeki herhangi bir öğeyi doğrudan düzenleyin veya kaldırın.",
+            "Bize başvurun: yaşadığınız yere bağlı olarak, belirli işleme faaliyetlerine itiraz etme veya bunları kısıtlama, ya da veri koruma otoritenize şikâyette bulunma hakkına da sahip olabilirsiniz. Bu tür bir talep için iletişim bilgileri bu taslakta henüz çözülmemiştir.",
+          ],
+        },
+        {
+          id: "minors",
+          heading: "18 yaşından küçük öğrenciler",
+          body: [
+            "Oryn, 14-18 yaş arası öğrenciler için tasarlanmıştır; bu nedenle kullanıcılarının çoğunun reşit olmadığını varsayarız ve ürünü buna göre kurarız: profiller varsayılan olarak özeldir, kanıt sunmak isteğe bağlıdır, tam doğum tarihi yerine yalnızca doğum yılını sorarız, hassas konum bilgisi toplamayız ve öğrenciler arasında herkese açık bir mesajlaşma bulunmaz.",
+            "Bu bildirimi bir ebeveyn veya vasinizle birlikte okumalısınız. Veli onayı adımı henüz ürüne dahil edilmemiştir; kayıt formu bu adımın yer alacağı noktayı işaretler ve gereklilik, lansman yapacağımız her ülke için hukuk danışmanıyla teyit edilmektedir.",
+          ],
+        },
+        {
+          id: "security",
+          heading: "Verilerinizi nasıl koruyoruz",
+          body: [
+            "Veritabanımızdaki satırlarınıza erişim, yalnızca uygulama kodunda değil veritabanı düzeyinde de zorunlu kılınır; böylece üründeki bir hata başka bir hesabın izin vermeye çalışması hâlinde bile o hesap profilinizi okuyamaz. Yüklenen dosyalar varsayılan olarak özeldir ve yalnızca kısa ömürlü imzalı bağlantılarla erişilebilir. Tüm dış API kimlik bilgileri sunucuda kalır ve hiçbir zaman tarayıcınıza gönderilmez.",
+            "Hiçbir sistem tam anlamıyla güvenli değildir; bunun aksini ima etmek yerine açıkça söylemeyi tercih ederiz.",
+          ],
+        },
+        {
+          id: "changes",
+          heading: "Bu bildirimdeki değişiklikler",
+          body: [
+            "Bu belge bir taslaktır. İncelenip onaylandığında, bu bölüm yürürlük tarihini ve önemli değişiklikleri size nasıl bildireceğimizi kaydedecektir.",
+          ],
+        },
+        {
+          id: "contact",
+          companyDetails: "contact",
+          heading: "İletişim",
+          body: [
+            "Bu bildirimle ilgili sorularınız veya verilerinizle ilgili bir talebiniz, belirlendiğinde aşağıdaki adrese yönlendirilmelidir.",
+          ],
+        },
+      ],
+    },
+
+    // -------------------------------------------------------------------
+    terms: {
+      slug: "terms",
+      title: "Kullanım Şartları",
+      intro:
+        "Sizinle Oryn arasındaki anlaşma — ürünün ne yaptığı, ne yapmadığı ve birbirimize karşı sorumluluklarımız.",
+      sections: [
+        {
+          id: "what-oryn-is",
+          heading: "Oryn nedir",
+          body: [
+            "Oryn, yaptıklarınızı kaydetmenize, güçlü yönlerinizi ve eksiklerinizi anlamanıza ve sırada ne yapmanız gerektiğine karar vermenize yardımcı olur. Size bir profil analizi, haftalık öncelikler, fırsat eşleşmeleri, üniversite bilgileri ve kendi kaydınız üzerinden akıl yürüten bir yapay zekâ danışmanı sunar.",
+            "Bir hesap oluşturarak bu şartları kabul etmiş olursunuz. Bu şartları kabul etmiyorsanız, Oryn'i kullanmayın.",
+          ],
+        },
+        {
+          id: "what-oryn-is-not",
+          heading: "Oryn ne değildir",
+          body: [
+            "Bu bölüm her şeyden daha önemlidir; bu yüzden sona saklanmak yerine en başa konmuştur.",
+          ],
+          bullets: [
+            "Oryn kabul kararı vermez ve hiçbir üniversitenin kabul ofisiyle bir ilişkisi yoktur. Üründeki hiçbir şey bir başvuru, bir ön değerlendirme veya herhangi bir kuruma giden bir sinyal değildir.",
+            "Kariyer Profili puanınız, Oryn'in kendi gelişim ölçütüdür. Bir üniversitenin sizin hakkınızdaki değerlendirmesi değildir ve bir kabul olasılığı da değildir. Bunlar farklı şeylerdir ve ürün bu ikisini bilerek ayrı tutar.",
+            "\"Zorlayıcı\", \"Rekabetçi\" gibi bir kabul görünümü, Oryn'in erişebildiği bilgilere dayanan kendi sınıflandırmasıdır. Bir tahmin veya bir garanti değildir. Tahmini bir aralık gösterildiğinde, bu bir tahmin olarak etiketlenir ve yanıltıcı bir hassasiyetten bilerek kaçınılır.",
+            "Başvuru hazırlığı, bilinen bir kontrol listesinin ne kadarını tamamladığınızı ölçer. Şansınız hakkında hiçbir şey söylemez.",
+            "Oryn; okul danışmanınızın, nitelikli bir kabul danışmanının veya kendi değerlendirmenizin yerini tutmaz.",
+          ],
+        },
+        {
+          id: "ai-output",
+          heading: "Yapay zekâ tavsiyesi hakkında",
+          body: [
+            "Oryn'in önerileri, açıklamaları ve oluşturduğu proje fikirleri, profilinizdeki bilgilerle çalışan bir yapay zekâ modelinden gelir. Model yanılabilir. Girdiğiniz bir bilgiyi yanlış okuyabilir veya hakkınızda bilmediği bir boşluktan yola çıkarak akıl yürütebilir.",
+            "Oryn dışsal bir gerçeği ifade ettiğinde — bir son tarih, bir başvuru şartı, bir uygunluk kuralı — size kaynağı ve bu kaynağın en son ne zaman kontrol edildiğini gösterir. Önemli olan her şeyi, üzerine hareket etmeden önce resmî sayfadan kontrol edin. Kaynaklar değişir, son tarihler kayar.",
+            "Danışman, doğruladığı ile çıkarım yaptığı bilgiyi ayırt edecek ve bir önerinin düşük güvenilirlikte olduğunu size söyleyecek şekilde kurulmuştur. Bu sinyalleri ciddiye alın; bunlar, alternatifin geleceğiniz hakkında kendinden emin görünen ama yanlış çıkabilecek bir tavsiye olması yüzünden oradadır.",
+          ],
+        },
+        {
+          id: "eligibility",
+          heading: "Oryn'i kimler kullanabilir",
+          body: [
+            "Oryn, 14-18 yaş arası öğrenciler için tasarlanmıştır. 18 yaşından küçükseniz, bu şartları bir ebeveyn veya vasinizle birlikte okumalısınız; yaşadığınız yere bağlı olarak ürünü kullanabilmeniz için onlarının onayı gerekebilir.",
+            "Asgari yaş ve veli onayının alması gereken şekil ülkeye göre değişir ve hukuk danışmanıyla teyit edilmektedir. Bu belirlenene kadar bu bölüm, yerleşik bir kuralı değil niyetimizi anlatmaktadır.",
+          ],
+        },
+        {
+          id: "your-account",
+          heading: "Hesabınız",
+          body: [
+            "Şifrenizi kimseyle paylaşmayın ve e-posta adresinizi güncel tutun. Hesabınız altında olan her şeyden siz sorumlusunuz. Hesabınıza başka birinin eriştiğini düşünüyorsanız bize bildirin.",
+            "Kişi başına bir hesap. Başka birinin bilgisi dışında, onun adına bir hesap oluşturmayın.",
+          ],
+        },
+        {
+          id: "your-content",
+          heading: "Oryn'e girdikleriniz",
+          body: [
+            "Kaydınız sizin kalır. Bize, yalnızca ürünü sizin için çalıştırmak amacıyla — puanlarınızı hesaplamak, planlarınızı oluşturmak, sizi fırsatlarla eşleştirmek ve sorularınızı yanıtlamak için — saklama ve işleme izni verirsiniz. Bundan fazlası değil.",
+            "Yalnızca doğru olan bilgileri girin. Oryn, kanıt eklenene kadar bir başarıyı beyana dayalı olarak etiketler; bir dosya eklemek, bağımsız bir doğrulamayla aynı şey değildir — ürün bunu doğrulanmış olarak nitelendirmez, siz de nitelendirmemelisiniz.",
+            "Paylaşma hakkınız olmayan hiçbir şeyi yüklemeyin ve başkalarının kişisel bilgilerini yüklemeyin.",
+          ],
+        },
+        {
+          id: "acceptable-use",
+          heading: "Kabul edilebilir kullanım",
+          body: ["Kısa bir liste; ve hepsi zaten aklınıza gelecek türden:"],
+          bullets: [
+            "Başka bir öğrencinin verilerine erişmeye çalışmayın veya ürünü bunun yollarını aramak için kullanmayın.",
+            "Ürünü kazımayın (scrape) veya rakip bir veri kümesi oluşturmak için kullanmayın.",
+            "Kötü amaçlı dosyalar veya yasa dışı, taciz edici ya da istismar edici içerik yüklemeyin.",
+            "Kimliğinizi veya başarılarınızı yanlış tanıtmayın.",
+            "Yapay zekâ danışmanına zararlı içerik ürettirmeye veya başka kullanıcıların bilgilerini açığa çıkarmaya çalışmayın.",
+          ],
+        },
+        {
+          id: "availability",
+          heading: "Erişilebilirlik ve değişiklikler",
+          body: [
+            "Oryn aktif olarak geliştirilmektedir. Özellikler değişecektir ve ürünün bazı bölümleri yavaş kalabilecek veya erişilemez olabilecek dış servislere bağlıdır. Bu durumda ürün, yerine bir şey uydurmak yerine verinin şu an erişilemez olduğunu söyleyecek şekilde kurulmuştur.",
+            "Özellikleri değiştirebilir veya kaldırabiliriz. Bir değişiklik sizi önemli ölçüde etkiliyorsa, bunu belirteceğiz.",
+          ],
+        },
+        {
+          id: "ending",
+          heading: "Hesabınızı kapatmak",
+          body: [
+            "Hesabınızı istediğiniz zaman Ayarlar bölümünden silebilir, isterseniz önce verilerinizi dışa aktarabilirsiniz. Silme işlemi kalıcıdır.",
+            "Bu şartları ihlal eden veya başka öğrencileri riske atan bir hesabı askıya alabiliriz.",
+          ],
+        },
+        {
+          id: "liability",
+          heading: "Sorumluluk",
+          body: [
+            "Bu bölüm, bilinçli olarak bir avukatın yazması için boş bırakılmıştır. Bir sorumluluk sınırlaması taslağı hazırlamak mühendisliğin yapması gereken bir iş değildir; gerçek bir madde gibi görünen ama öyle olmayan bir yer tutucu, dürüst bir boşluktan daha kötü olurdu.",
+            "Eğitiminizle ilgili kararlar size aittir. Oryn, bu kararlar üzerine düşünmenize yardımcı olan bir araçtır.",
+          ],
+        },
+        {
+          id: "law",
+          companyDetails: "law",
+          heading: "Yetkili hukuk",
+          body: [
+            "Uygulanacak hukuk ve yetkili mahkemeler, şirketin nerede kayıtlı olduğuna bağlıdır ve bu henüz kesinleşmemiştir. Her ikisi de bu taslakta çözülmemiştir.",
+          ],
+        },
+      ],
+    },
+
+    // -------------------------------------------------------------------
+    kvkk: {
+      slug: "kvkk",
+      title: "KVKK Aydınlatma Metni",
+      intro:
+        "Türkiye'deki öğrenciler için — 6698 sayılı Kişisel Verilerin Korunması Kanunu'nun 10. maddesinde öngörülen aydınlatma yükümlülüğü kapsamında hazırlanmıştır. Taslaktır, yayımlanmadan önce hukuk danışmanı incelemesi beklemektedir.",
+      sections: [
+        {
+          id: "language",
+          heading: "Bu taslak hakkında",
+          body: [
+            "Bu metin, Türkiye'deki ilgili kişilere yönelik bir aydınlatma metninin yayımlanması gereken dil olan Türkçe olarak sunulmaktadır — bkz. dil seçici. Metin, Türkçe hukuk alanında yetkin bir avukat veya profesyonel bir hukuki çevirmen tarafından değil, KVKK'nın standart mevzuat terminolojisi kullanılarak mühendislik ekibi tarafından çevrilmiştir; bu çevirinin kendisi, İngilizce kaynak metnin onaylanıp onaylanmadığından bağımsız olarak, hukuk danışmanının inceleyeceği açık bir madde olarak kalmaktadır (bkz. LEGAL_REVIEW.md).",
+            "Aşağıdaki madde atıfları 6698 sayılı Kanun'u esas alır. Yurt dışına aktarımı düzenleyen 9. madde 2024 yılında değiştirilmiştir ve uygulanacak mekanizma, burada iddia edilen bir husus değil, hukuk danışmanı için açık sorulardan biridir.",
+          ],
+        },
+        {
+          id: "controller",
+          companyDetails: "identity",
+          heading: "Veri sorumlusu",
+          body: [
+            "Oryn'i işleten şirket, veri sorumlusudur. Ticaret unvanı, adresi ve — yükümlülük uygulanıyorsa — VERBİS kaydı henüz kesinleşmemiş olup, tahmin yürütülmek yerine çözülmemiş olarak gösterilmektedir.",
+          ],
+        },
+        {
+          id: "categories",
+          heading: "İşlenen kişisel veri kategorileri",
+          body: ["Gizlilik Bildirimi'nde açıklanan aynı veriler, bu kanunun beklediği şekilde gruplandırılmıştır:"],
+          bullets: [
+            "Kimlik: ad ve soyad, görünen ad, doğum yılı.",
+            "İletişim: e-posta adresi.",
+            "Eğitim: okul, müfredat, mezuniyet yılı, dersler, notlar, standart sınav sonuçları.",
+            "Başarı ve etkinlik: etkinlikler, liderlik, ödüller, projeler, araştırma, iş, gönüllülük, spor, beceriler, diller, ilgi alanları, hedefler.",
+            "Belgeler: yüklenen özgeçmişler ve kanıt dosyaları — bunlar, yüklediğiniz içeriğe bağlı olarak başka kategorileri de içerebilir.",
+            "İşlem ve kullanım: ürün olayları, oturum kayıtları, yapay zekâ kullanım sayıları, danışman yazışmaları.",
+            "Konum: ülke ve isteğe bağlı olarak şehir. Hassas konum bilgisi toplanmaz.",
+          ],
+        },
+        {
+          id: "purposes",
+          heading: "İşleme amaçları",
+          body: [
+            "Hesabınızı oluşturmak ve işletmek; profil analizinizi ve tamlığınızı üretmek; haftalık öncelikler ve öneriler oluşturmak; sizi uygun olduğunuz fırsatlarla eşleştirmek; sorularınızı yapay zekâ danışmanı aracılığıyla yanıtlamak; paylaşılan alanları güvenli tutmak; ve ürünün nasıl kullanıldığını anlayıp geliştirmek amaçlarıyla işlenir.",
+          ],
+        },
+        {
+          id: "legal-basis",
+          heading: "Hukuki sebep (5. madde)",
+          body: [
+            "Her bir amacın 5. madde kapsamındaki bir hukuki sebeple eşleştirilmesi — özellikle yapay zekâ destekli profil analizinin bir sözleşmenin kurulması veya ifasıyla doğrudan ilgili olma gerekçesine mi dayandığı, yoksa ayrı bir açık rıza mı gerektirdiği — hukuk danışmanının kararına bırakılmış olup burada belirtilmek yerine açık bir soru olarak kaydedilmiştir.",
+            "Ürünün bugün yaptığı: kayıt sırasında Kullanım Şartları'nın kabulü ile Gizlilik Bildirimi'nin onaylanması tek bir adımda birlikte alınır. İşleme amaçları ayrı ayrı rıza konusu yapılmaz.",
+          ],
+        },
+        {
+          id: "collection",
+          heading: "Toplama yöntemi",
+          body: [
+            "Tüm kişisel veriler elektronik ortamda ve doğrudan sizden toplanır: kayıt formu, katılım (onboarding) süreci, profil sayfaları, yüklediğiniz belgeler ve ürünü kullanımınız aracılığıyla. Oryn, kişisel veri satın almaz veya üçüncü taraflardan temin etmez.",
+          ],
+        },
+        {
+          id: "transfers",
+          heading: "Yurt içi ve yurt dışına aktarımlar (9. madde)",
+          body: [
+            "Verileriniz, Türkiye dışında, Frankfurt, Almanya'da saklanır. Bir kısmı, başta yapay zekâ işleme için Anthropic olmak üzere, AB/AEA dışındaki hizmet sağlayıcılara ayrıca aktarılır. Aşağıdaki tablo her bir alıcıyı ve her birinin tam olarak ne aldığını listeler.",
+            "2024 değişiklikleri sonrasında bu aktarımları hukuka uygun kılan 9. madde mekanizması henüz belirlenmemiş olup hukuk danışmanı için açık bir sorudur. Bu taslak, böyle bir mekanizmanın halihazırda uygulandığını iddia etmemektedir.",
+          ],
+          includesProcessorTable: true,
+        },
+        {
+          id: "rights",
+          heading: "Haklarınız (11. madde)",
+          body: ["6698 sayılı Kanun'un 11. maddesi uyarınca aşağıdaki haklara sahipsiniz:"],
+          bullets: [
+            "Kişisel verilerinizin işlenip işlenmediğini öğrenme.",
+            "Kişisel verileriniz işlenmişse buna ilişkin bilgi talep etme.",
+            "Kişisel verilerinizin işlenme amacını ve bunların amacına uygun kullanılıp kullanılmadığını öğrenme.",
+            "Yurt içinde veya yurt dışında kişisel verilerinizin aktarıldığı üçüncü kişileri bilme.",
+            "Kişisel verilerinizin eksik veya yanlış işlenmiş olması hâlinde bunların düzeltilmesini isteme ve bu kapsamda yapılan işlemin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmesini isteme.",
+            "İşlenmesini gerektiren sebeplerin ortadan kalkması hâlinde kişisel verilerinizin silinmesini veya yok edilmesini isteme ve bu kapsamda yapılan işlemin, kişisel verilerin aktarıldığı üçüncü kişilere bildirilmesini isteme.",
+            "İşlenen verilerin münhasıran otomatik sistemler vasıtasıyla analiz edilmesi suretiyle aleyhinize bir sonucun ortaya çıkmasına itiraz etme.",
+            "Kişisel verilerinizin kanuna aykırı olarak işlenmesi sebebiyle zarara uğramanız hâlinde zararın giderilmesini talep etme.",
+          ],
+        },
+        {
+          id: "exercising",
+          companyDetails: "contact",
+          heading: "Bu hakları nasıl kullanabilirsiniz",
+          body: [
+            "Bu haklardan ikisi ürüne dahildir ve herhangi bir talep gerektirmez: Ayarlar bölümünden verilerinizin eksiksiz bir kopyasını indirebilir ve hesabınızı kalıcı olarak silebilirsiniz. Herhangi bir öğeyi doğrudan düzeltebilir veya kaldırabilirsiniz.",
+            "Bunların dışındaki talepler için kanunun öngördüğü yol, veri sorumlusuna yazılı başvurudur; veri sorumlusu bu başvuruya otuz gün içinde yanıt vermek zorundadır. Başvuru adresi ve tam prosedür bu taslakta henüz çözülmemiş olup yayımlanmadan önce belirlenmelidir.",
+          ],
+        },
+        {
+          id: "minors",
+          heading: "18 yaşından küçük öğrenciler",
+          body: [
+            "Oryn, 14-18 yaş arası öğrenciler için tasarlanmıştır. Türk hukukuna göre bir öğrencinin kendi adına rıza gösterebileceği yaş ve veli onayının alması gereken şekil, hukuk danışmanıyla teyit edilmektedir. Ürün, katılım (onboarding) sırasında doğum yılını toplar ve kayıt akışında veli onayına bir yer ayırır; mekanizma henüz kurulmamıştır ve bu bildirim aksini ima etmemektedir.",
+          ],
+        },
+      ],
+    },
+  },
+};
+
+export function getLegalCopy(locale: Locale): LegalCopy {
+  return locale === "tr" ? legalCopyTr : legalCopyEn;
+}
 
 /** Route metadata for the footer and cross-links — one place, so a slug change is one edit. */
 export const LEGAL_ROUTES = [

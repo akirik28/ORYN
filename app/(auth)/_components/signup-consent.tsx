@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
-import { legalCopy } from "@/lib/legal/content";
+import type { Locale } from "@/lib/i18n/config";
+import { getLegalCopy } from "@/lib/legal/content";
 
 /**
  * The consent surface on the signup form: a short plain-language summary of what is being
@@ -21,9 +22,13 @@ import { legalCopy } from "@/lib/legal/content";
  * screen after this one, so the product cannot yet know at this point whether the person
  * signing up is a minor — which is exactly why this block addresses everyone rather than
  * pretending to branch.
+ *
+ * `locale` is resolved once by the Server Component signup page and threaded down through
+ * the client `SignUpForm` — not `useLocale()` here — so the whole page's copy comes from a
+ * single resolution, the same convention the rest of this feature uses.
  */
-export function SignUpConsent({ error }: { error?: string }) {
-  const t = legalCopy.signupConsent;
+export function SignUpConsent({ error, locale }: { error?: string; locale: Locale }) {
+  const t = getLegalCopy(locale).signupConsent;
 
   return (
     <div className="space-y-4">
@@ -60,7 +65,7 @@ export function SignUpConsent({ error }: { error?: string }) {
           <Link href="/terms" className="font-semibold hover:underline" style={{ color: "#3D35E8" }}>
             {t.checkboxLinkTerms}
           </Link>
-          {" & "}
+          {t.checkboxLinkSeparator}
           <Link href="/privacy" className="font-semibold hover:underline" style={{ color: "#3D35E8" }}>
             {t.checkboxLinkPrivacy}
           </Link>

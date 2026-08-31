@@ -57,7 +57,10 @@ export default function AuthPreviewPage() {
             <h1 style={{ ...h1Style, fontSize: 28 }}>Create your account</h1>
             <p className="text-sm" style={{ color: "#7A7A8A" }}>Free for students. No credit card required.</p>
           </div>
-          <SignUpForm />
+          {/* This harness checks Figma-source visual fidelity, not i18n — fixed to "en"
+              rather than resolving a real locale, same dev-only scope this file's header
+              comment already documents. */}
+          <SignUpForm locale="en" />
         </div>
       </Card>
 

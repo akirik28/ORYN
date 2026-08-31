@@ -217,8 +217,19 @@ export default function LandingPage() {
 
       {/* Dark tone: this page is pinned to the Figma source's literal hex values rather
           than the app's tokens (see the file header), so the footer has to be told which
-          ground it is sitting on instead of resolving tokens that would render light. */}
-      <SiteFooter tone="dark" />
+          ground it is sitting on instead of resolving tokens that would render light.
+
+          locale="en" is hardcoded, not resolved: the hero/features copy above is the
+          Figma-ported source text and out of this lane's scope to translate (a separate,
+          much larger undertaking than the legal documents this footer links to) — so a
+          resolved Turkish footer sitting under permanently-English hero copy would read as
+          a half-translated page, worse than a consistently English one. (This route is
+          already dynamic regardless — app/layout.tsx's own resolveLocale() call forces
+          every route dynamic app-wide, predating this file; hardcoding here doesn't
+          recover static rendering, it just avoids resolving a locale this page's other
+          copy can't act on.) Revisit once whoever owns this page's marketing copy
+          translates the rest of it. */}
+      <SiteFooter tone="dark" locale="en" />
     </div>
   );
 }

@@ -6,9 +6,10 @@ This document is the handoff to outside counsel. It says what Oryn actually does
 student data, where the three draft policy documents live, and which decisions engineering
 deliberately did not make.
 
-Drafted 2026-08-31. Source of truth for all policy text is `lib/legal/content.ts` — a single
-module holding every word of the legal surface. This file summarises it for review; if the
-two ever disagree, the module is what ships.
+Drafted 2026-08-31, revised 2026-08-31 (Turkish translation added). Source of truth for all
+policy text is `lib/legal/content.ts` — a single module holding every word of the legal
+surface, in both languages. This file summarises it for review; if the two ever disagree,
+the module is what ships.
 
 ---
 
@@ -16,21 +17,46 @@ two ever disagree, the module is what ships.
 
 | Surface | Route / file | State |
 | --- | --- | --- |
-| Privacy Notice | `/privacy` | Draft |
-| Terms of Use | `/terms` | Draft |
-| KVKK Disclosure Notice | `/kvkk` | Draft, English — needs Turkish translation before Türkiye launch |
-| Site footer with policy links | `features/legal/site-footer.tsx` | Live on the landing page and the policy pages |
-| Signup consent surface | `app/(auth)/_components/signup-consent.tsx` | Live, enforced server-side |
-| Data processor inventory | `DATA_PROCESSORS` in `lib/legal/content.ts`, rendered in `/privacy` and `/kvkk` | Verified against the code |
+| Privacy Notice | `/privacy` | Draft, English + Turkish |
+| Terms of Use | `/terms` | Draft, English + Turkish |
+| KVKK Disclosure Notice | `/kvkk` | Draft, English + Turkish — see §1a on the translation's own review status |
+| Site footer with policy links | `features/legal/site-footer.tsx` | Live on the policy pages, both languages; landing page (`app/page.tsx`) footer fixed to English — see that file's comment |
+| Signup consent surface | `app/(auth)/_components/signup-consent.tsx` | Live, enforced server-side, both languages |
+| Data processor inventory | `DATA_PROCESSORS_EN`/`DATA_PROCESSORS_TR` in `lib/legal/content.ts` (via `getDataProcessors(locale)`), rendered in `/privacy` and `/kvkk` | Verified against the code; EN/TR fact parity (which processors, `personalData`, `verifiedIn`) enforced by test |
 
-Every document renders a standing "Draft — awaiting legal review" banner. It is driven by
-one constant, `LEGAL_REVIEW_STATUS.approved`, currently `false`. Flipping it removes the
-banner from all three documents at once, and a test requires that flipping it is accompanied
-by a reviewer name and a sign-off date.
+Every document renders a standing "Draft — awaiting legal review" banner, in whichever
+language the visitor is reading. It is driven by one constant,
+`LEGAL_REVIEW_STATUS.approved`, currently `false`, shared by both languages. Flipping it
+removes the banner from all three documents, in both languages, at once, and a test
+requires that flipping it is accompanied by a reviewer name and a sign-off date.
+
+### 1a. How the Turkish translation was produced, and what still needs review
+
+`legalCopyTr` in `lib/legal/content.ts` is a complete, structural mirror of `legalCopyEn`
+— same documents, same section ids and order, same bullet/paragraph counts, same
+unresolved placeholders, same hedges (Article 9's transfer mechanism, for instance, is
+left unnamed in Turkish exactly as in English, not translated into a guessed term). A test
+(`__tests__/legal/consent.test.ts`, "EN/TR structural parity") enforces the structure match
+and separately asserts every translatable string actually differs from its English source
+(nothing silently left untranslated).
+
+It was translated by engineering, using KVKK's own settled statutory vocabulary — *veri
+sorumlusu* (data controller), *veri işleyen* (data processor), *açık rıza* (explicit
+consent), *aydınlatma yükümlülüğü* (Article 10 disclosure obligation), *ilgili kişi* (data
+subject, in the Article 11 rights list) — **not by a Turkish-qualified lawyer or a
+professional legal translator.** That is a real, separate open item: see `turkishLegalReview`
+in §3 below. Locale selection (`getLegalCopy(locale)`) follows the same pattern
+`lib/i18n/date.ts`'s `formatRelativeTime` already established — a Server Component resolves
+the locale via `resolveLocale()`, a Client Component via `useLocale()`, and both hand it
+to pure, synchronous selector functions — coordinated with, and approved by, the i18n
+lane before implementation (added zero keys to `messages/en.json`/`messages/tr.json`,
+which that lane had flagged as a live collision point).
 
 Company identity — registered name, address, contact email, VERBİS registration, governing
-law — is **not invented anywhere**. Each renders as a visibly unresolved placeholder chip
-(`features/legal/unconfirmed.tsx`). These must be supplied before publication.
+law — is **not invented anywhere, in either language**. Each renders as a visibly unresolved
+placeholder chip (`features/legal/unconfirmed.tsx`), itself now translated (the chip's
+"not yet supplied, pending X" framing is Turkish on the Turkish pages, not left in English).
+These fields must be supplied before publication.
 
 ---
 
@@ -38,7 +64,9 @@ law — is **not invented anywhere**. Each renders as a visibly unresolved place
 
 Each line below was read out of the code on 2026-08-31, not inferred from what the service
 is generally for. The distinction mattered: two integrations send less than their name
-suggests.
+suggests. English shown; the Turkish array (`DATA_PROCESSORS_TR`) carries the same facts —
+same ids, same `personalData`, same `verifiedIn` — with the prose fields translated, and a
+test enforces that the facts can't drift apart between the two.
 
 ### Supabase — *receives personal data*
 - **Role:** database, authentication, file storage. System of record.
@@ -90,9 +118,13 @@ a feature name — **not prompt content** (`supabase/migrations/0013_ops.sql`).
 These are mirrored in `LAWYER_FLAGS` in `lib/legal/content.ts`. Each pairs the question with
 what the product does *today*, so advice is given against reality rather than intent.
 
-1. **KVKK notice language.** Must it be published in Turkish before Türkiye launch, and does
-   an English version satisfy the Article 10 obligation meanwhile?
-   *Today:* all three documents are English, structured as a single translation unit.
+1. **KVKK notice language — RESOLVED for text.** Must it be published in Turkish before
+   Türkiye launch, and does an English version satisfy the Article 10 obligation meanwhile?
+   *Today:* all three documents now have a complete Turkish translation, selected
+   automatically from the visitor's resolved locale — no manual step, no separate deploy.
+   Still open: whether counsel wants the Turkish text reviewed independently of the English
+   source (see the new item 7 below) — a translation error is its own kind of error even
+   once the source text is approved.
 
 2. **Legal basis.** Which KVKK Art. 5 / GDPR Art. 6 basis covers each purpose — specifically
    whether AI profile analysis rests on contract necessity or needs separate explicit consent?
@@ -115,7 +147,16 @@ what the product does *today*, so advice is given against reality rather than in
    export both work.
 
 6. **Liability, disclaimers, governing law, forum.** Not drafted — the Terms state the
-   product's limits in plain language but contain no liability clause.
+   product's limits in plain language, in both languages, but contain no liability clause
+   in either.
+
+7. **Turkish translation review (new).** `legalCopyTr` was produced by engineering using
+   standard KVKK statutory vocabulary, not by a Turkish-qualified lawyer or a professional
+   legal translator. Does it need independent review before publication, separately from
+   the English source review?
+   *Today:* structurally mirrors the English exactly (test-enforced — see §1a). The
+   Article 11 rights list is translated from the standard, widely-published paraphrase of
+   the statutory list, not quoted from the law verbatim.
 
 ---
 
@@ -133,10 +174,19 @@ Claims a reviewer can rely on, each verified in code:
 - **Server-side credentials only** — no external API key is exposed to the browser.
 - **Consent is enforced server-side.** The signup checkbox is validated in `SignUpSchema`;
   stripping the client-side `required` attribute and submitting still fails. Verified in a
-  browser against a production build on 2026-08-31, and covered by `__tests__/legal/consent.test.ts`.
+  browser against a production build on 2026-08-31, in both English and Turkish (the
+  server-side rejection message localizes too — `app/(auth)/actions.ts`'s `signUp()`
+  overrides the schema's static English fallback with the locale-resolved one), and
+  covered by `__tests__/legal/consent.test.ts`.
 - **Consent is recorded.** On successful signup, `terms_accepted_at`, `terms_version` and
   `terms_approved_by_counsel` are written to the auth user's metadata, so accounts created
   against *this* draft text stay distinguishable from ones created after a revision.
+- **Turkish renders correctly end-to-end**, verified in a browser against a production
+  build on 2026-08-31: `/privacy`, `/kvkk` (including the processor table, in both its
+  desktop `<table>` and mobile card layouts), and the signup consent block, with the
+  locale cookie (`oryn_locale`) set to `tr`; no horizontal overflow on a 375px viewport
+  despite Turkish running longer than English in several places; English still renders
+  correctly when the cookie is `en` or absent (the default is unchanged).
 
 Not implemented, and not claimed anywhere in the product text: independent verification of
 evidence, guardian consent, automated retention limits.
@@ -145,9 +195,10 @@ evidence, guardian consent, automated retention limits.
 
 ## 5. Before publication
 
-- [ ] Fill in company identity in `COMPANY` (`lib/legal/content.ts`) — registered name, number, address, contact addresses.
-- [ ] Answer the six questions in section 3; update the affected document sections.
-- [ ] Translate the KVKK notice into Turkish.
-- [ ] Have counsel draft the liability, disclaimer, and governing-law sections.
-- [ ] Set `LEGAL_REVIEW_STATUS.approved = true` **with** `reviewedBy` and `reviewedOn` — a test enforces this.
-- [ ] Re-verify the processor inventory against the code; add any provider introduced since.
+- [ ] Fill in company identity in `COMPANY` (`lib/legal/content.ts`) — registered name, number, address, contact addresses. Renders correctly in both languages once filled (only the placeholder chip is bilingual; the values themselves are locale-invariant facts like a registration number).
+- [x] ~~Translate the KVKK notice into Turkish.~~ Done 2026-08-31 — along with Privacy and Terms, not KVKK alone.
+- [ ] Have a Turkish-qualified lawyer or professional legal translator review `legalCopyTr` independently of the English source review (item 7 in §3).
+- [ ] Answer the remaining six open questions in section 3; update the affected document sections in **both** `legalCopyEn` and `legalCopyTr`.
+- [ ] Have counsel draft the liability, disclaimer, and governing-law sections, in both languages.
+- [ ] Set `LEGAL_REVIEW_STATUS.approved = true` **with** `reviewedBy` and `reviewedOn` — a test enforces this. One flag covers both languages; if English and Turkish end up needing to be approved on different dates, that's a real gap in this constant worth flagging back to whoever built it.
+- [ ] Re-verify the processor inventory against the code; add any provider introduced since, **to both `DATA_PROCESSORS_EN` and `DATA_PROCESSORS_TR`** — a test checks the two arrays' facts (id, personalData, verifiedIn) can't silently diverge, but won't catch a provider added to only one.
