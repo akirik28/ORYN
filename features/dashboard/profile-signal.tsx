@@ -3,14 +3,15 @@ import { cn } from "@/lib/utils";
 import { Eyebrow } from "@/components/oryn/eyebrow";
 // Short forms: this block is a scan-and-compare read, and the full
 // "Execution / Project Depth" wraps to two lines in every column width it renders in.
-import { DIMENSION_LABELS, DIMENSION_LABELS_SHORT } from "@/lib/scoring/labels";
+import { dimensionLabel, dimensionLabelShort } from "@/lib/scoring/labels";
 import {
-  EVIDENCE_STATE_LABELS,
-  EVIDENCE_STATE_SHORT_LABELS,
+  evidenceStateLabel,
+  evidenceStateShortLabel,
   isAssessed,
   type DimensionSignal,
   type EvidenceState,
 } from "@/lib/scoring/signal";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 /**
  * Profile Signal (UI-V3 § 11) — how Oryn reads the shape of a student's profile.
@@ -72,10 +73,22 @@ function Spectrum({ state }: { state: EvidenceState }) {
   );
 }
 
+const EMPTY_STATE_COPY: Record<Locale, { body: string; cta: string }> = {
+  en: {
+    body: "Oryn hasn't read your profile yet. Add a few courses, activities or projects and this becomes a picture of where you actually stand.",
+    cta: "Start your journey",
+  },
+  tr: {
+    body: "Oryn henüz profilini okumadı. Birkaç ders, aktivite veya proje ekle; bu, gerçekte nerede durduğunun bir resmine dönüşür.",
+    cta: "Yolculuğuna başla",
+  },
+};
+
 export function ProfileSignal({
   signal,
   showScores = false,
   heading = "Profile signal",
+  locale = DEFAULT_LOCALE,
 }: {
   signal: DimensionSignal[];
   /** The detail view (the profile page) may show the underlying 0-100 figure as quiet
@@ -84,16 +97,22 @@ export function ProfileSignal({
    *  the footnote, never the reverse. */
   showScores?: boolean;
   heading?: string;
+  /** The actual language of `heading` (a caller-supplied prop this component doesn't
+   *  control) and of every other string this component renders itself. Callers that pass a
+   *  translated `heading` must pass the matching `locale` alongside it — see
+   *  components/oryn/eyebrow.tsx's own `locale` prop doc for why this can't just inherit
+   *  the page's `<html lang>`. */
+  locale?: Locale;
 }) {
   if (signal.length === 0) {
+    const copy = EMPTY_STATE_COPY[locale];
     return (
       <section aria-label={heading}>
-        <Eyebrow>{heading}</Eyebrow>
-        <p className="mt-4 max-w-xl leading-relaxed text-ink-2">
-          Oryn hasn&apos;t read your profile yet. Add a few courses, activities or projects and this
-          becomes a picture of where you actually stand.{" "}
+        <Eyebrow locale={locale}>{heading}</Eyebrow>
+        <p lang={locale} className="mt-4 max-w-xl leading-relaxed text-ink-2">
+          {copy.body}{" "}
           <Link href="/profile" className="text-brand-primary underline-offset-4 hover:underline">
-            Start your journey
+            {copy.cta}
           </Link>
           .
         </p>
@@ -107,11 +126,11 @@ export function ProfileSignal({
   // it lays out correctly wherever it's placed.
   return (
     <section aria-label={heading} className="@container">
-      <Eyebrow>{heading}</Eyebrow>
+      <Eyebrow locale={locale}>{heading}</Eyebrow>
       {/* Single column in the detail view: it renders full dimension names ("Intellectual
           Curiosity") inside a half-width slot, where two ~280px columns truncated every
           label. The summary variant uses short names and can afford two columns. */}
-      <ul className={cn("mt-5 grid gap-x-10 gap-y-3.5", !showScores && "@md:grid-cols-2")}>
+      <ul lang={locale} className={cn("mt-5 grid gap-x-10 gap-y-3.5", !showScores && "@md:grid-cols-2")}>
         {signal.map((row) => (
           // flex-wrap, and a right-hand group that is no longer shrink-0: the long state
           // labels ("A good next area to strengthen") are wider than the Home aside, and a
@@ -121,7 +140,7 @@ export function ProfileSignal({
           // actually needing to wrap at the widths this really renders at.
           <li key={row.dimension} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-border/60 pb-3">
             <span className="min-w-0 truncate text-sm text-ink-2">
-              {showScores ? DIMENSION_LABELS[row.dimension] : DIMENSION_LABELS_SHORT[row.dimension]}
+              {showScores ? dimensionLabel(row.dimension, locale) : dimensionLabelShort(row.dimension, locale)}
             </span>
             <span className="flex min-w-0 items-center gap-2.5">
               {/* Only for states Oryn actually assessed. Printing "0" beside "Not enough
@@ -136,15 +155,15 @@ export function ProfileSignal({
                 // full width on the profile page.
                 <>
                   <span className={cn("text-xs whitespace-nowrap @lg:hidden", STATE_TEXT[row.state])}>
-                    {EVIDENCE_STATE_SHORT_LABELS[row.state]}
+                    {evidenceStateShortLabel(row.state, locale)}
                   </span>
                   <span className={cn("hidden text-xs whitespace-nowrap @lg:inline", STATE_TEXT[row.state])}>
-                    {EVIDENCE_STATE_LABELS[row.state]}
+                    {evidenceStateLabel(row.state, locale)}
                   </span>
                 </>
               ) : (
                 <span className={cn("text-xs whitespace-nowrap", STATE_TEXT[row.state])}>
-                  {EVIDENCE_STATE_SHORT_LABELS[row.state]}
+                  {evidenceStateShortLabel(row.state, locale)}
                 </span>
               )}
               <Spectrum state={row.state} />

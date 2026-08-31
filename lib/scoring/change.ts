@@ -1,5 +1,6 @@
 import type { ProfileDimension } from "@/types/database";
-import { DIMENSION_LABELS } from "./labels";
+import { DIMENSION_LABELS, dimensionLabel } from "./labels";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 export interface DimensionChange {
   dimension: ProfileDimension;
@@ -64,24 +65,37 @@ export function buildProfileChange(
 /**
  * One plain sentence describing the movement, or null when there is nothing truthful to
  * say. Kept here rather than in a component so Home and Progress cannot drift apart.
+ *
+ * `locale` defaults to English so Progress (not yet migrated) keeps producing byte-identical
+ * output; only features/dashboard/dashboard-view.tsx passes a resolved student locale today.
+ * The Turkish is a separately-composed sentence per branch, not a translated one — e.g. the
+ * "N other areas" branch drops English's singular/plural suffix entirely ("3 alan", never
+ * "3 alanlar"), because Turkish doesn't inflect a noun for count when a number precedes it;
+ * building that branch by porting the English `?"" : "s"` ternary would have produced a
+ * grammatical but foreign-sounding sentence.
  */
-export function describeProfileChange(change: ProfileChange): string | null {
+export function describeProfileChange(change: ProfileChange, locale: Locale = DEFAULT_LOCALE): string | null {
   if (!change.hasHistory) return null;
+  const tr = locale === "tr";
 
   const [best] = change.improved;
   if (best) {
+    const label = dimensionLabel(best.dimension, locale);
     const others = change.improved.length - 1;
-    const lead = `${DIMENSION_LABELS[best.dimension]} is the area that moved most since your last review.`;
-    if (others > 0) return `${lead} ${others} other area${others === 1 ? "" : "s"} also moved forward.`;
+    const lead = tr ? `Son incelemenden bu yana en çok ${label} alanı ilerledi.` : `${label} is the area that moved most since your last review.`;
+    if (others > 0) {
+      return tr ? `${lead} ${others} alan daha ilerledi.` : `${lead} ${others} other area${others === 1 ? "" : "s"} also moved forward.`;
+    }
     return lead;
   }
 
   const [worst] = change.declined;
   if (worst) {
-    return `Nothing moved forward since your last review, and ${DIMENSION_LABELS[
-      worst.dimension
-    ].toLowerCase()} has less supporting evidence than it did.`;
+    const label = dimensionLabel(worst.dimension, locale);
+    return tr
+      ? `Son incelemenden bu yana hiçbir alan ilerlemedi; ${label} ise daha önce sahip olduğu kanıtın bir kısmını kaybetti.`
+      : `Nothing moved forward since your last review, and ${DIMENSION_LABELS[worst.dimension].toLowerCase()} has less supporting evidence than it did.`;
   }
 
-  return "Your profile has held steady since your last review.";
+  return tr ? "Profilin son incelemenden bu yana sabit kaldı." : "Your profile has held steady since your last review.";
 }

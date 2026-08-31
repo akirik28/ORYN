@@ -1,4 +1,5 @@
 import type { DataConfidence, ProfileDimension } from "@/types/database";
+import type { Locale } from "@/lib/i18n/config";
 
 /**
  * What Oryn is willing to say about one dimension.
@@ -46,6 +47,34 @@ export const EVIDENCE_STATE_SHORT_LABELS: Record<EvidenceState, string> = {
   developing: "Developing",
   strong: "Strong",
 };
+
+const EVIDENCE_STATE_LABELS_TR: Record<EvidenceState, string> = {
+  not_assessed: "Henüz yeterli kanıt yok",
+  limited_evidence: "Sınırlı kanıt",
+  emerging: "Güçlendirilecek iyi bir sonraki alan",
+  developing: "Gelişiyor",
+  strong: "Güçlü",
+};
+
+const EVIDENCE_STATE_SHORT_LABELS_TR: Record<EvidenceState, string> = {
+  not_assessed: "Henüz yok",
+  limited_evidence: "Sınırlı kanıt",
+  emerging: "Güçlendirilecek sonraki",
+  developing: "Gelişiyor",
+  strong: "Güçlü",
+};
+
+/** Locale-aware evidence-state label lookups — same additive shape as
+ *  lib/scoring/labels.ts's dimensionLabel()/dimensionLabelShort(): the English maps above
+ *  stay untouched for their existing un-migrated callers, these are the opt-in path for a
+ *  caller that has a resolved student locale. */
+export function evidenceStateLabel(state: EvidenceState, locale: Locale): string {
+  return locale === "tr" ? EVIDENCE_STATE_LABELS_TR[state] : EVIDENCE_STATE_LABELS[state];
+}
+
+export function evidenceStateShortLabel(state: EvidenceState, locale: Locale): string {
+  return locale === "tr" ? EVIDENCE_STATE_SHORT_LABELS_TR[state] : EVIDENCE_STATE_SHORT_LABELS[state];
+}
 
 /**
  * States in which Oryn is actually asserting something *about the student*.

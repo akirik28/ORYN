@@ -66,3 +66,36 @@ describe("describeProfileChange", () => {
     }
   });
 });
+
+describe("describeProfileChange — locale: tr", () => {
+  test("a single improvement, Turkish", () => {
+    const change = buildProfileChange([row("research", 55)], { research: 42 });
+    expect(describeProfileChange(change, "tr")).toBe("Son incelemenden bu yana en çok Araştırma alanı ilerledi.");
+  });
+
+  test("an improvement plus others uses a plain count, no English-style pluralization", () => {
+    const change = buildProfileChange(
+      [row("research", 55), row("leadership", 50), row("academics", 90)],
+      { research: 42, leadership: 40, academics: 85 },
+    );
+    const sentence = describeProfileChange(change, "tr")!;
+    expect(sentence).toContain("2 alan daha ilerledi.");
+    expect(sentence).not.toMatch(/alanlar/); // never pluralized with a suffix
+  });
+
+  test("a decline is reported rather than hidden, Turkish", () => {
+    const sentence = describeProfileChange(buildProfileChange([row("research", 30)], { research: 42 }), "tr");
+    expect(sentence).toContain("hiçbir alan ilerlemedi");
+    expect(sentence).toContain("Araştırma");
+  });
+
+  test("steady, Turkish", () => {
+    const change = buildProfileChange([row("research", 42)], { research: 42 });
+    expect(describeProfileChange(change, "tr")).toBe("Profilin son incelemenden bu yana sabit kaldı.");
+  });
+
+  test("omitting locale is identical to passing 'en' explicitly (default-locale backward compatibility)", () => {
+    const change = buildProfileChange([row("research", 55)], { research: 42 });
+    expect(describeProfileChange(change)).toBe(describeProfileChange(change, "en"));
+  });
+});

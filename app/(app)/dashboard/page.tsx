@@ -1,5 +1,6 @@
 import { getCurrentProfile, requireUser } from "@/lib/security/dal";
 import { resolveLocale } from "@/lib/i18n/locale";
+import type { Locale } from "@/lib/i18n/config";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWeeklyPlan, getOrCreateWeeklyPlan } from "@/lib/plan/persist";
 import { getTargetUniversitiesWithDetails } from "@/lib/universities/queries";
@@ -17,8 +18,13 @@ import { DashboardView } from "@/features/dashboard/dashboard-view";
 
 export const metadata = { title: "Home" };
 
-function greeting() {
+function greeting(locale: Locale) {
   const hour = new Date().getHours();
+  if (locale === "tr") {
+    if (hour < 12) return "Günaydın";
+    if (hour < 18) return "İyi günler";
+    return "İyi akşamlar";
+  }
   if (hour < 12) return "Good morning";
   if (hour < 18) return "Good afternoon";
   return "Good evening";
@@ -40,6 +46,10 @@ export default async function DashboardPage() {
   const userId = session.userId!;
   const profile = await getCurrentProfile();
   const supabase = await createClient();
+  // Resolved once and reused everywhere below (resolveLocale() is itself cache()d, but one
+  // call site is clearer than repeating "await resolveLocale()" at each point this page
+  // needs it — the hero, profile signal, and the counselor dashboard contract all do).
+  const locale = await resolveLocale();
 
   const { refreshed: opportunityMatchesRefreshed } = await refreshOpportunityMatches(userId);
 
@@ -131,7 +141,6 @@ export default async function DashboardPage() {
   const counselorState = await counselorStatePromise;
   if (counselorState) {
     try {
-      const locale = await resolveLocale();
       counselorContract = buildCounselorDashboardContract(counselorState, upcomingDeadlines, new Date(), locale);
     } catch (error) {
       console.error("[dashboard] failed to build counselor dashboard contract", error instanceof Error ? error.stack : error);
@@ -209,7 +218,8 @@ export default async function DashboardPage() {
   return (
     <DashboardView
       displayName={displayName}
-      greeting={greeting()}
+      greeting={greeting(locale)}
+      locale={locale}
       biggestGap={biggestGap ? { dimension: biggestGap.dimension, score: biggestGap.score } : null}
       profileChange={profileChange}
       profileSignal={profileSignal}

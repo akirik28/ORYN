@@ -3,6 +3,7 @@ import { signOut } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { PageHeader } from "@/components/oryn/page-header";
+import { Eyebrow } from "@/components/oryn/eyebrow";
 import { DisplayNameForm } from "@/features/settings/display-name-form";
 import { LocationForm } from "@/features/settings/location-form";
 import { CitizenshipForm } from "@/features/settings/citizenship-form";
@@ -44,7 +45,12 @@ export function SettingsView({ email, userId, profile }: SettingsViewProps) {
             A student needs to be able to answer "which account am I actually in?" —
             especially after switching between a school and a personal address. */}
         <div className="rounded-xl bg-surface-tint px-4 py-3">
-          <p className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-3 uppercase">Signed in as</p>
+          {/* The one uppercase label on this page where Turkish case-folding actually
+              diverges (contains "i") — migrated to the shared Eyebrow rather than
+              translated in place, since the rest of this page stays English for now;
+              Eyebrow's default locale="en" is what stops "Signed in as" from folding to
+              "SİGNED İN AS" (dotted İ) under a Turkish document lang. */}
+          <Eyebrow rule={false}>Signed in as</Eyebrow>
           <p className="mt-1 text-sm break-all text-ink-1">{email}</p>
         </div>
 
