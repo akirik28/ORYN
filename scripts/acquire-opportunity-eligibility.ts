@@ -206,7 +206,13 @@ function extractLinks(html: string, baseUrl: string): { url: string; text: strin
   return links;
 }
 
-const ELIGIBILITY_LINK_PATTERN = /eligib|who.?can.?apply|requirement|admission|apply|rules?\b|criteria|faq/i;
+// "regulat" added 2026-09-01 after a link-discovery measurement pass (scripts/measure-
+// eligibility-link-depth.ts) confirmed a real, concrete miss: IMO, IEO, and IYPT all publish
+// their real per-contestant eligibility (age windows, enrollment status, and for IMO a genuine
+// citizenship clause) on a page linked directly from their homepage as "Regulations" —
+// unreachable before this because "Regulations" matches none of the words above (`rules?\b`
+// requires the literal substring "rule", which "Regulations" doesn't contain).
+const ELIGIBILITY_LINK_PATTERN = /eligib|who.?can.?apply|requirement|admission|apply|rules?\b|regulat|criteria|faq/i;
 const ELIGIBILITY_KEYWORD_DENSITY_PATTERN = /eligib|who can (apply|compete|participate)|must be \d|age[sd]?\s*\d|grade[sd]?\s*\d|citizen|residen|nationality/gi;
 
 // ---------------------------------------------------------------------------------------------
