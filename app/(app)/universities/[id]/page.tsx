@@ -9,6 +9,7 @@ import { explainOutlook, type DimensionScoreInput } from "@/lib/admissions/expla
 import { refreshRequirementEvaluations } from "@/lib/requirements/persist";
 import { REQUIREMENT_CATEGORY_LABELS } from "@/lib/requirements/types";
 import { NON_ACTIONABLE_VERIFICATION_STATES } from "@/lib/deadlines/ingest";
+import { NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES } from "@/lib/requirements/ingest";
 import { isDatedDeadlineUpcoming } from "@/lib/deadlines/lifecycle";
 import { OutlookBadge } from "@/features/universities/outlook-badge";
 import { SourceBadge } from "@/components/oryn/source-badge";
@@ -136,7 +137,10 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   // versus a degree that doesn't exist at undergraduate level here. See OutlookBadge.
   const outlook = targetRes.data ? await refreshAdmissionOutlook(targetRes.data.id, session.userId!) : null;
 
-  const requirements = requirementsRes.data ?? [];
+  // A row a research pass has since confirmed closed (verified_historical) or unresolved
+  // (conflicting) is real, correctly-sourced data worth keeping in the table — never worth
+  // showing as though it still applies. Mirrors actionableDeadlines below, same reasoning.
+  const requirements = (requirementsRes.data ?? []).filter((r) => !NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES.has(r.verification_state));
   if (requirements.length > 0) {
     await refreshRequirementEvaluations(university.id, session.userId!, targetRes.data?.program_id ?? null);
   }

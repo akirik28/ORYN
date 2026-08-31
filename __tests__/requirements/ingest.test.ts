@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   applyRequirementDecision,
   decideRequirementIngestion,
+  mapToRequirementVerificationState,
+  NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES,
   requirementDedupKey,
   requirementRecordIdentity,
   requirementUniqueIndexKey,
@@ -120,6 +122,41 @@ describe("decideRequirementIngestion — the shapes that must still be refused",
 
   it("still blocks an ambiguous scale", () => {
     expect(decide(req({ scale_ambiguity: "partially_unsatisfiable" })).outcome).toBe("not_ingestible");
+  });
+});
+
+describe("decideRequirementIngestion — verification_state on the accepted row", () => {
+  // 2026-08-31: the row builder never set this column at all, so every requirement ever
+  // ingested landed as the DB default ("unverified") regardless of what the research record
+  // actually said. Found while vetting an older, unapplied corpus (REQ-2026-08-22-FI-HEL-001,
+  // a VERIFIED_HISTORICAL record) and confirmed live: all 1,325 rows in university_requirements
+  // carried "unverified" before this fix. These tests pin the mapping so it cannot regress
+  // silently the way the original omission did.
+
+  it("maps VERIFIED_CURRENT to verified_current", () => {
+    expect(decide(req({ verification_state: "VERIFIED_CURRENT" })).row!.verification_state).toBe("verified_current");
+  });
+
+  it("maps VERIFIED_HISTORICAL to verified_historical, and does NOT refuse the record — matches lib/deadlines/ingest.ts's own choice to land historical facts rather than discard them", () => {
+    const decision = decide(req({ verification_state: "VERIFIED_HISTORICAL" }));
+    expect(decision.outcome).toBe("accepted");
+    expect(decision.row!.verification_state).toBe("verified_historical");
+  });
+
+  it("maps VERIFIED_UNDATED to verified_current — a dateless fact (an eligibility floor) is not historical and not derived", () => {
+    expect(decide(req({ verification_state: "VERIFIED_UNDATED" })).row!.verification_state).toBe("verified_current");
+  });
+
+  it("maps an unrecognized state to unverified rather than guessing", () => {
+    expect(mapToRequirementVerificationState("SOMETHING_NEW")).toBe("unverified");
+  });
+
+  it("NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES contains exactly verified_historical and conflicting — never unverified, which is the column's own safe default, not an assertion the fact is wrong", () => {
+    expect(NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES.has("verified_historical")).toBe(true);
+    expect(NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES.has("conflicting")).toBe(true);
+    expect(NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES.has("unverified")).toBe(false);
+    expect(NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES.has("verified_current")).toBe(false);
+    expect(NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES.has("verified_derived")).toBe(false);
   });
 });
 

@@ -9,6 +9,7 @@ import { getCompletenessChecklist } from "@/lib/scoring/completeness";
 import { assembleRequirementFacts } from "@/lib/requirements/facts";
 import { evaluateRequirement } from "@/lib/requirements/evaluate";
 import { INFORMATIONAL_CATEGORIES } from "@/lib/requirements/types";
+import { NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES } from "@/lib/requirements/ingest";
 import { refreshOpportunityMatches } from "@/lib/opportunities/persist-matches";
 import { ACTIVE_TARGET_STATUSES } from "@/lib/deadlines/upcoming";
 import { toDimensionScoreRows } from "./gaps";
@@ -35,7 +36,11 @@ async function getRequirementCandidateInputs(
   const { data: requirements } = await supabase.from("university_requirements").select("*").in("university_id", universityIds);
   if (!requirements || requirements.length === 0) return [];
 
-  const evaluable = requirements.filter((r) => !INFORMATIONAL_CATEGORIES.includes(r.requirement_type));
+  // Never surface a candidate ("sit this test", "meet this grade") built from a requirement
+  // a research pass has since confirmed closed or unresolved — mirrors
+  // lib/requirements/persist.ts's own filter, same reasoning as lib/deadlines/upcoming.ts's.
+  const current = requirements.filter((r) => !NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES.has(r.verification_state));
+  const evaluable = current.filter((r) => !INFORMATIONAL_CATEGORIES.includes(r.requirement_type));
   if (evaluable.length === 0) return [];
 
   const programIdsByUniversity = new Map<string, Set<string | null>>();
