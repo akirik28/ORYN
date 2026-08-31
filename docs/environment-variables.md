@@ -4,9 +4,10 @@ Single reference for every environment variable this app reads. No values appear
 for where to obtain each credential, setup steps, and how to verify it's actually
 working, see [`API_SETUP.md`](../API_SETUP.md). This doc answers a narrower question:
 required or optional, server-only or client-exposed, which feature it gates, and exactly
-what happens when it's absent. All ten variables are read in one place,
+what happens when it's absent. The ten application variables are read in one place,
 [`lib/env.ts`](../lib/env.ts) — nothing elsewhere in the codebase reads `process.env`
-directly for one of these.
+directly for one of these. The three `SENTRY_*` variables are the one deliberate
+exception; see the note under the table.
 
 `.env.example` is the committed, all-empty template. `.env.local` is git-ignored and
 must never be committed — confirmed clean (`git log --all -- .env.local` is empty) as of
@@ -24,6 +25,21 @@ every audit this project has run.
 | `OPENALEX_CONTACT_EMAIL` | Optional | Server-only | OpenAlex "polite pool" rate limit only — OpenAlex itself needs no auth | Nothing breaks; requests just use the standard (lower) rate-limit pool |
 | `CRON_SECRET` | Required if the four background jobs are ever scheduled | Server-only — `lib/jobs/verify-cron-request.ts` | Bearer-auth guard on all four `/api/jobs/*` routes | **Fail-closed by design**: an unset secret makes `verifyCronRequest` refuse every request, including legitimate ones — verified by reading the function directly this pass. This is the one variable where "missing" means "feature completely inaccessible" rather than "degrades gracefully," on purpose |
 | `NEXT_PUBLIC_APP_URL` | Optional (recommended for production) | Client-exposed by prefix, though only ever read server-side (`app/(auth)/actions.ts`) as a fallback base URL | Password-reset and signup-confirmation email links | Falls back to the request's own `origin` header first, then to `http://localhost:3000` if that's also unavailable — a second-line risk (matters if some future code path skips the `origin` header), not a first-line one |
+| `SENTRY_DSN` | Optional (recommended for production) | **Server-only** — read in `lib/monitoring/index.ts` | Error tracking for every uncaught server error, via the root `instrumentation.ts` → `onRequestError` hook | Falls back to `ConsoleErrorReporter`: errors still print to the platform log stream tagged `[monitoring:error]`, they just aren't aggregated or alertable. Nothing throws, and a malformed DSN is treated as absent rather than crashing the server |
+| `SENTRY_ENVIRONMENT` | Optional | Server-only | Tags each event with an environment | Falls back to `VERCEL_ENV`, then `NODE_ENV`, then `"development"` — correct on Vercel with no configuration |
+| `SENTRY_RELEASE` | Optional | Server-only | Ties an event to a specific deploy | Falls back to `VERCEL_GIT_COMMIT_SHA`; omitted from the event entirely if neither is set |
+
+### Why `SENTRY_*` bypasses `lib/env.ts`
+
+`lib/monitoring/` reads `process.env` directly, which is the only place in the codebase
+that does so for a documented variable. Two reasons, both deliberate: the module is loaded
+from the root `instrumentation.ts` during server bootstrap and from both the Node and Edge
+runtimes, so it must not drag in a module graph that assumes either; and monitoring has to
+keep working when env plumbing elsewhere is broken, because reporting that breakage is its
+job. Folding these into `lib/env.ts` later is a safe, mechanical change.
+
+They are also absent from `.env.example`, which lists only the application variables.
+Local development needs no DSN — the console reporter is the intended local behavior.
 
 ## CI
 
