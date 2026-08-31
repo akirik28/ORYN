@@ -1,7 +1,38 @@
 import { describe, expect, test } from "vitest";
-import { computeAdmissionOutlook } from "@/lib/admissions/outlook";
+import { computeAdmissionOutlook, dataConfidenceForCompleteness } from "@/lib/admissions/outlook";
 import { checkUndergraduateFieldAvailability } from "@/lib/admissions/field-availability";
 import { resolveAdmissionSystem } from "@/lib/admissions/system-shape";
+
+describe("dataConfidenceForCompleteness", () => {
+  // Fresh-install audit, 2026-09-01: this was a two-way ternary with no "low" branch —
+  // `completeness_percent >= 60 ? "high" : "medium"` — so a genuinely empty profile
+  // (0% complete) earned the identical "medium" as one at 59%. The gate in
+  // lib/admissions/persist.ts now stops a zero-signal profile from reaching this function
+  // at all, but a real, low-but-nonzero profile still needs an honest third band.
+  test("below the low threshold is low, not medium", () => {
+    expect(dataConfidenceForCompleteness(10)).toBe("low");
+  });
+
+  test("at the low/medium boundary is medium", () => {
+    expect(dataConfidenceForCompleteness(30)).toBe("medium");
+  });
+
+  test("just below the high threshold is medium, not high", () => {
+    expect(dataConfidenceForCompleteness(59)).toBe("medium");
+  });
+
+  test("at the high threshold is high", () => {
+    expect(dataConfidenceForCompleteness(60)).toBe("high");
+  });
+
+  test("a fully complete profile is high", () => {
+    expect(dataConfidenceForCompleteness(100)).toBe("high");
+  });
+
+  test("zero is low, not medium — the exact case that used to be misclassified", () => {
+    expect(dataConfidenceForCompleteness(0)).toBe("low");
+  });
+});
 
 describe("computeAdmissionOutlook", () => {
   test("classifies a strong profile against a non-selective school as likely", () => {

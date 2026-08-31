@@ -2,8 +2,9 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import { checkUndergraduateFieldAvailability } from "./field-availability";
-import { computeAdmissionOutlook, type AdmissionOutlookResult } from "./outlook";
+import { computeAdmissionOutlook, dataConfidenceForCompleteness, type AdmissionOutlookResult } from "./outlook";
 import { resolveAdmissionSystem } from "./system-shape";
+import { hasConfidentSignal, toProfileSignal } from "@/lib/scoring/signal";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 /**
@@ -22,6 +23,18 @@ import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
  * `notApplicableReason`/`admissionSystemMechanism` — nothing written to the database, which
  * has no locale-specific columns (see this function's own note below on why explanatory
  * copy isn't persisted at all).
+ *
+ * FIXED 2026-09-01 (fresh-install audit): this used to compute and persist a real outlook
+ * — including a numeric percentage range — for a profile with zero scored dimensions,
+ * because `profile_strength_score ?? 0` is indistinguishable from a genuinely-assessed
+ * zero. A brand-new student's first target university read "Extreme Reach, 1-11%" before
+ * they had entered a single course or activity: a confident, specific-looking answer
+ * about a student Oryn has not read anything about. `hasConfidentSignal` — the same
+ * predicate `lib/scoring/dashboard-hero.ts` already uses to avoid the equivalent failure
+ * on the dashboard — is the fix: no confident signal, no outlook. `target_universities`
+ * keeps whatever it already had (null for a fresh row), and `OutlookBadge`'s existing
+ * `!outlook -> "Not yet assessed"` fallback — which could never actually fire before,
+ * because this function always wrote a real value first — now does its job.
  */
 export async function refreshAdmissionOutlook(targetUniversityId: string, userId: string, locale: Locale = DEFAULT_LOCALE): Promise<AdmissionOutlookResult | null> {
   const supabase = await createClient();
@@ -34,11 +47,14 @@ export async function refreshAdmissionOutlook(targetUniversityId: string, userId
     .single();
   if (!target) return null;
 
-  const [profileRes, statsRes, universityRes, programRes] = await Promise.all([
+  const [profileRes, scoresRes, statsRes, universityRes, programRes] = await Promise.all([
     // `country` is residence/school location, which is the correct signal for every pathway
     // split in the researched set — never citizenship. See lib/admissions/system-shape.ts's
     // ApplicantPathway doc for the rules that establish this.
     supabase.from("profiles").select("profile_strength_score, completeness_percent, country").eq("id", userId).single(),
+    // Same source and same shape the dashboard hero reads (app/(app)/dashboard/page.tsx) —
+    // needed for hasConfidentSignal below, not for profileStrength itself.
+    supabase.from("profile_scores").select("dimension, score, confidence, reason_codes").eq("user_id", userId),
     supabase
       .from("university_statistics")
       .select("admission_rate, data_confidence")
@@ -57,8 +73,15 @@ export async function refreshAdmissionOutlook(targetUniversityId: string, userId
       : Promise.resolve({ data: null }),
   ]);
 
+  // The gate. Oryn has not read enough of this profile to say anything about it — leaving
+  // the row untouched (not writing a "low confidence" guess either) is the honest move,
+  // and it's what lets OutlookBadge's own "Not yet assessed" fallback do its job.
+  if (!hasConfidentSignal(toProfileSignal(scoresRes.data ?? []))) {
+    return null;
+  }
+
   const profileStrength = profileRes.data?.profile_strength_score ?? 0;
-  const dataConfidence = profileRes.data && profileRes.data.completeness_percent >= 60 ? "high" : "medium";
+  const dataConfidence = dataConfidenceForCompleteness(profileRes.data?.completeness_percent ?? 0);
   const targetCountry = universityRes.data?.country ?? null;
   const targetField = programRes.data?.subject_taxonomy ?? null;
 

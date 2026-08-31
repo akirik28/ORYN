@@ -34,6 +34,30 @@ function classifyOutlook(compositeScore: number): OutlookLabel {
 }
 
 /**
+ * How much to trust the profile-strength half of the outlook, given only how *complete*
+ * the profile is. Exported so every caller derives this the same way instead of
+ * re-forking a private rule — `lib/universities/counseling-adapter.ts` used to carry a
+ * comment admitting it was hand-copying `refreshAdmissionOutlook`'s inline ternary
+ * ("that one-line rule isn't re-exported as its own function, so it isn't re-derived here
+ * either"), which is exactly the setup for the two copies drifting apart. Now there's one.
+ *
+ * Three bands, not two: the caller-side gate (`hasConfidentSignal` — see
+ * `lib/admissions/persist.ts`) already refuses to compute an outlook at all below that
+ * bar, so by the time this runs there is *some* real signal; this only decides how much.
+ * A `completeness_percent` of 59 used to earn the identical "medium" as one of 5 — wrong
+ * even in the populated case, just less visibly than the zero-signal case was. 60 is the
+ * pre-existing "high" bar, unchanged; 30 is a plain midpoint below it, not tied to
+ * `MIN_COMPLETENESS_FOR_JUDGMENT` (a different gate, in `lib/counselor/config.ts`, that
+ * happens to use a nearby number for an unrelated reason — reusing it here would imply a
+ * conceptual link that doesn't actually exist).
+ */
+export function dataConfidenceForCompleteness(completenessPercent: number): DataConfidence {
+  if (completenessPercent >= 60) return "high";
+  if (completenessPercent >= 30) return "medium";
+  return "low";
+}
+
+/**
  * Gate 1 from `docs/research/counseling-intelligence/18-geography-conditional-scoring-design-
  * spec.md` §2: does the student's target admissions system review non-academic evidence at
  * all? "holistic" = USA always, UK/France narrowly (per that spec's §3.1-3.2). "credential_gate"
