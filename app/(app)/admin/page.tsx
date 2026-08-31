@@ -1,5 +1,5 @@
 import { formatDistanceToNow } from "date-fns";
-import { formatNumber } from "@/lib/i18n/format";
+import { formatNumber, formatDuration } from "@/lib/i18n/format";
 import { requireAdmin } from "@/lib/security/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,9 @@ import { PostRemovalControl } from "@/features/admin/post-removal-control";
 import { PageHeader } from "@/components/oryn/page-header";
 import { resolveReportedContentPreview } from "@/lib/moderation/content-preview";
 import { REPORTED_POST_MISSING_LABEL } from "@/lib/social/posts-moderation";
+import { JOB_DEFINITIONS } from "@/lib/jobs/schedule";
+import { summarizeJobHealth, EMPTY_STREAK_THRESHOLD } from "@/lib/jobs/job-health";
+import type { ExternalSyncJob } from "@/types/database";
 import { triggerOpportunityDiscovery, triggerUniversitySync, triggerDeadlineScan, triggerRequirementDiscovery } from "./actions";
 
 export const metadata = { title: "Admin" };
@@ -25,18 +28,42 @@ const STATUS_CLASS: Record<string, string> = {
   running: "border-primary/30 text-primary",
   dismissed: "text-muted-foreground",
   unknown: "text-muted-foreground",
+  // Synthetic states from lib/jobs/job-health.ts — not stored on any row, derived by
+  // comparing a job's last recorded run against its own expected cadence. Styled with the
+  // same visual weight as `down`/`failed`: a job gone silent is not a lesser problem than
+  // one that errored loudly, it's the harder-to-notice version of the same problem.
+  never_run: "border-red-500/30 text-red-700 dark:text-red-400",
+  stale: "border-red-500/30 text-red-700 dark:text-red-400",
+  stuck: "border-amber-500/30 text-amber-700 dark:text-amber-400",
 };
+
+/** "never_run" -> "never run". Every other status here has no underscore, so this is a
+ * no-op for them — one rule instead of a label per status. */
+function displayStatus(status: string): string {
+  return status.replaceAll("_", " ");
+}
 
 export default async function AdminPage() {
   await requireAdmin();
   const admin = createAdminClient();
 
-  const [providersRes, jobsRes, usageRes, reportsRes] = await Promise.all([
+  // Recent runs are fetched PER known job (not one shared `limit(N)` across every job
+  // name) so an infrequently-run job can never be crowded out of view by another job's
+  // activity — the exact silent-failure shape this section exists to catch. Uses
+  // `external_sync_jobs_job_name_idx on (job_name, started_at desc)` (migration 0013),
+  // so this is four cheap indexed lookups, not a table scan. `EMPTY_STREAK_THRESHOLD`
+  // rows per job is enough for summarizeJobHealth to detect a run of quietly-empty
+  // "successes" — see lib/jobs/job-health.ts.
+  const [providersRes, jobRunsByDefinition, usageRes, reportsRes] = await Promise.all([
     admin.from("provider_health").select("*").order("provider"),
-    admin.from("external_sync_jobs").select("*").order("started_at", { ascending: false }).limit(15),
+    Promise.all(
+      JOB_DEFINITIONS.map((def) => admin.from("external_sync_jobs").select("*").eq("job_name", def.jobName).order("started_at", { ascending: false }).limit(EMPTY_STREAK_THRESHOLD))
+    ),
     admin.from("ai_usage").select("feature, input_tokens, output_tokens").order("created_at", { ascending: false }).limit(500),
     admin.from("message_reports").select("*").order("created_at", { ascending: false }).limit(100),
   ]);
+
+  const jobHealth = JOB_DEFINITIONS.map((def, i) => summarizeJobHealth(def, (jobRunsByDefinition[i].data as ExternalSyncJob[] | null) ?? []));
 
   const usageByFeature = new Map<string, { calls: number; inputTokens: number; outputTokens: number }>();
   for (const row of usageRes.data ?? []) {
@@ -87,7 +114,7 @@ export default async function AdminPage() {
 
   return (
     <div className="space-y-10">
-      <PageHeader title="Admin" description="Provider health, background jobs, and AI usage. Not linked from navigation." />
+      <PageHeader title="Admin" description="Provider health, scheduled jobs, and AI usage. Not linked from navigation." />
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
@@ -155,6 +182,14 @@ export default async function AdminPage() {
                   <span className="text-xs">
                     {provider.last_success_at ? `Last OK ${formatDistanceToNow(new Date(provider.last_success_at), { addSuffix: true })}` : "Never succeeded"}
                   </span>
+                  {/* last_failure_at was always a real column here — it just wasn't shown.
+                      A provider can be `healthy` today while having failed recently (one
+                      good call after a run of bad ones resets `status`, not the failure
+                      timestamp), so showing only "last OK" hides exactly the recovery-vs-
+                      never-had-a-problem distinction someone checking this page wants. */}
+                  <span className="text-xs">
+                    {provider.last_failure_at ? `Last failure ${formatDistanceToNow(new Date(provider.last_failure_at), { addSuffix: true })}` : "Never failed"}
+                  </span>
                   <Badge variant="outline" className={STATUS_CLASS[provider.status]}>
                     {provider.status}
                   </Badge>
@@ -168,31 +203,45 @@ export default async function AdminPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="font-semibold">Background jobs</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold">Scheduled jobs</h2>
+          <span className="text-xs text-muted-foreground">One row per job — a job that hasn&apos;t run recently can&apos;t hide behind another job&apos;s activity</span>
+        </div>
         <div className="flex flex-wrap gap-2">
           <JobTriggerButton label="Run opportunity discovery" action={triggerOpportunityDiscovery} />
           <JobTriggerButton label="Run university sync" action={triggerUniversitySync} />
           <JobTriggerButton label="Run deadline scan" action={triggerDeadlineScan} />
           <JobTriggerButton label="Run requirement discovery" action={triggerRequirementDiscovery} />
         </div>
-        {jobsRes.data && jobsRes.data.length > 0 ? (
-          <ul className="divide-y rounded-lg border">
-            {jobsRes.data.map((job) => (
-              <li key={job.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
-                <span className="font-medium">{job.job_name}</span>
+        <ul className="divide-y rounded-lg border">
+          {jobHealth.map((job) => (
+            <li key={job.jobName} className="flex flex-col gap-1.5 px-4 py-3 text-sm">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-medium">{job.label}</span>
                 <div className="flex items-center gap-3 text-muted-foreground">
-                  <span className="text-xs">{job.items_processed} processed</span>
-                  <span className="text-xs">{formatDistanceToNow(new Date(job.started_at), { addSuffix: true })}</span>
+                  <span className="text-xs">{job.itemsProcessed !== null ? `${formatNumber(job.itemsProcessed)} processed` : "—"}</span>
+                  <span className="text-xs">{job.durationMs !== null ? `ran ${formatDuration(job.durationMs)}` : job.status === "running" || job.status === "stuck" ? "still running" : "—"}</span>
+                  <span className="text-xs">{job.lastStartedAt ? formatDistanceToNow(new Date(job.lastStartedAt), { addSuffix: true }) : "never"}</span>
                   <Badge variant="outline" className={STATUS_CLASS[job.status]}>
-                    {job.status}
+                    {displayStatus(job.status)}
                   </Badge>
                 </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-muted-foreground">No job runs recorded yet.</p>
-        )}
+              </div>
+              {job.error ? <p className="text-xs text-muted-foreground">{job.error}</p> : null}
+              {/* A row existing isn't evidence the job did anything — several jobs degrade
+                  to a no-op "success" when a provider credential is missing (see
+                  docs/environment-variables.md). This is what turns "found nothing new
+                  tonight" (normal — expected, even, for a slow-changing source) apart from
+                  "hasn't accomplished anything in a week" (worth a human's attention),
+                  without either being folded silently into a green "succeeded" badge. */}
+              {job.emptyStreak >= EMPTY_STREAK_THRESHOLD ? (
+                <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
+                  0 items processed on the last {job.emptyStreak} consecutive runs — succeeding, but not doing anything. Worth checking whether a required credential is missing.
+                </p>
+              ) : null}
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section className="space-y-3">
