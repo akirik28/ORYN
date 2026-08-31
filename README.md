@@ -104,11 +104,37 @@ npm run build
 
 ## Deployment
 
-Deploys anywhere Next.js 16 runs (Vercel is the reference target). Set every variable
-from `.env.example` in your hosting platform's environment configuration —
-`NEXT_PUBLIC_*` variables are inlined at build time, everything else stays server-only.
-If you use the background jobs (`API_SETUP.md`), configure your scheduler to hit them
-with the `CRON_SECRET` bearer token.
+**Full step-by-step guide: [docs/deployment.md](./docs/deployment.md).** Follow it rather
+than improvising — it covers two blockers that stop a first deploy dead, and both need a
+repository change before you start.
+
+Oryn has not been deployed yet: there is no hosting project, domain, or production
+database. In short:
+
+- Deploys anywhere Next.js 16 runs; Vercel is the reference target and `vercel.json` is
+  committed, defining all four scheduled jobs and their function limits.
+- Set every variable from `.env.example` in the platform's environment config.
+  `NEXT_PUBLIC_*` are inlined at build time (a change needs a redeploy); everything else
+  stays server-only.
+- `CRON_SECRET` is what makes the four `/api/jobs/*` routes reachable at all. It is
+  fail-closed: unset means every request is refused, including the scheduler's.
+- Set `SENTRY_DSN` for error tracking. Without it errors still reach the platform log
+  stream via `lib/monitoring/`'s console fallback, just unaggregated.
+- Supabase's built-in email only sends 2 messages/hour to pre-authorized addresses, so a
+  custom SMTP provider is required before the first real signup — not an optimization.
+
+## Database migrations
+
+`supabase/migrations/` is the single source of truth; apply with `npx supabase db push`.
+A CI job that replays the entire sequence against an empty Postgres on every migration
+change — via both `psql` and `supabase db push`, because they fail differently, asserting
+every `public` table has row-level security enabled — is written and verified but **not
+yet installed**: this repo's git automation can't push to `.github/workflows/` (missing
+`workflow` OAuth scope). See
+[`docs/ci-migration-replay-setup.md`](./docs/ci-migration-replay-setup.md) for the exact
+file to add and why it matters — migrations had only ever been applied incrementally to
+already-partway databases before this was written, so a break that only appears from zero
+would otherwise surface for the first time during production setup.
 
 ## Known limitations
 
