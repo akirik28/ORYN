@@ -206,7 +206,13 @@ function extractLinks(html: string, baseUrl: string): { url: string; text: strin
   return links;
 }
 
-const ELIGIBILITY_LINK_PATTERN = /eligib|who.?can.?apply|requirement|admission|apply|rules?\b|criteria|faq/i;
+// "regulat" added 2026-09-01 after a link-discovery measurement pass (scripts/measure-
+// eligibility-link-depth.ts) confirmed a real, concrete miss: IMO, IEO, and IYPT all publish
+// their real per-contestant eligibility (age windows, enrollment status, and for IMO a genuine
+// citizenship clause) on a page linked directly from their homepage as "Regulations" —
+// unreachable before this because "Regulations" matches none of the words above (`rules?\b`
+// requires the literal substring "rule", which "Regulations" doesn't contain).
+const ELIGIBILITY_LINK_PATTERN = /eligib|who.?can.?apply|requirement|admission|apply|rules?\b|regulat|criteria|faq/i;
 const ELIGIBILITY_KEYWORD_DENSITY_PATTERN = /eligib|who can (apply|compete|participate)|must be \d|age[sd]?\s*\d|grade[sd]?\s*\d|citizen|residen|nationality/gi;
 
 // ---------------------------------------------------------------------------------------------
@@ -434,6 +440,9 @@ async function extractEligibility(
       if (parsed.success) return { data: parsed.data, usage };
       lastError = parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
     } catch (error) {
+      // Never retried, never swallowed into the generic error bucket — see
+      // isBillingExhaustedError's own comment for why this specific condition is fatal.
+      if (isBillingExhaustedError(error)) throw error;
       lastError = error instanceof Error ? error.message : String(error);
       await new Promise((r) => setTimeout(r, 1500));
     }
@@ -904,7 +913,34 @@ async function reportOnly(target: PostgrestTarget): Promise<void> {
 // Main
 // ---------------------------------------------------------------------------------------------
 
-type Outcome = { kind: "resolved"; fields: string[] } | { kind: "unresolved"; reason: string } | { kind: "unreachable" } | { kind: "error" };
+type Outcome = { kind: "resolved"; fields: string[] } | { kind: "unresolved"; reason: string } | { kind: "unreachable" } | { kind: "error" } | { kind: "billing_halted" };
+
+/**
+ * A billing failure must never look like an ordinary extraction failure. Before this, a
+ * depleted Anthropic account surfaced as "400 Your credit balance is too low..." on every
+ * remaining row, and the run kept going — 94 of 198 rows in one real run silently counted as
+ * generic `error` outcomes, indistinguishable in the summary from 94 rows that had a genuine
+ * extraction problem. The run finished, printed a clean-looking summary, and only a human
+ * reading the raw stderr noticed the actual cause. That's the same failure shape as a job that
+ * 500s on every request but still reports "completed" — the fix is the same: detect the
+ * specific condition and make it fatal, not swallow it into a generic bucket.
+ *
+ * Detected on the Anthropic SDK's own typed error (status 400, the nested error body's message
+ * containing "credit balance") rather than a bare string match on the top-level Error#message,
+ * which is a formatted `${status} ${json}` composite that could coincidentally contain similar
+ * text from an unrelated cause. Retrying this error (the existing 2-attempt loop would have)
+ * is worse than useless — it doubles the wasted request against an account that cannot pay for
+ * either one.
+ */
+function isBillingExhaustedError(error: unknown): boolean {
+  if (error instanceof Anthropic.APIError && error.status === 400) {
+    const nestedMessage = (error.error as { error?: { message?: string } } | undefined)?.error?.message;
+    if (typeof nestedMessage === "string" && /credit balance is too low/i.test(nestedMessage)) return true;
+  }
+  // Fallback for a non-SDK-typed rejection (e.g. a network layer that wraps the response
+  // differently) — still gated on the specific phrase, never a bare "400" or "error".
+  return error instanceof Error && /credit balance is too low/i.test(error.message);
+}
 
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
@@ -970,15 +1006,29 @@ async function main(): Promise<void> {
 
   let totalInputTokens = 0;
   let totalOutputTokens = 0;
+  // Set by the first worker that hits a billing failure; every worker (including ones already
+  // mid-row) checks this before starting its NEXT row, so at most CONCURRENCY rows are ever
+  // in flight past the actual point of exhaustion — not the full remaining target set.
+  let billingHaltedReason: string | null = null;
 
   const outcomes = await mapWithConcurrency(targetSet, CONCURRENCY, async (row): Promise<Outcome> => {
+    if (billingHaltedReason) return { kind: "billing_halted" };
     try {
       if (!row.official_url) return { kind: "unresolved", reason: "no official_url on file" };
 
       const { pages, anyReachable } = await resolvePages(row.official_url, row.application_url, fetchImpl);
       if (!anyReachable || pages.length === 0) return { kind: "unreachable" };
 
-      const result = await extractEligibility(client, model, row.title, row.organization, pages);
+      let result: Awaited<ReturnType<typeof extractEligibility>>;
+      try {
+        result = await extractEligibility(client, model, row.title, row.organization, pages);
+      } catch (error) {
+        if (isBillingExhaustedError(error)) {
+          billingHaltedReason = error instanceof Error ? error.message : String(error);
+          return { kind: "billing_halted" };
+        }
+        throw error;
+      }
       if (!result) return { kind: "error" };
       totalInputTokens += result.usage.inputTokens;
       totalOutputTokens += result.usage.outputTokens;
@@ -1027,13 +1077,30 @@ async function main(): Promise<void> {
   const unresolved = outcomes.filter((o) => o.kind === "unresolved");
   const unreachable = outcomes.filter((o) => o.kind === "unreachable");
   const errored = outcomes.filter((o) => o.kind === "error");
+  const billingHalted = outcomes.filter((o) => o.kind === "billing_halted");
 
   console.log(`\n${"=".repeat(78)}`);
-  console.log(`Looked at ${targetSet.length} opportunities that had a gap.`);
+
+  if (billingHaltedReason) {
+    // Deliberately the FIRST thing printed after the divider, and phrased as a stop, not a
+    // summary line among others — this is the exact failure this whole change exists to make
+    // impossible to miss. Every row not in resolved/unresolved/unreachable/errored above was
+    // never attempted at all, not silently skipped as if it had been checked.
+    const attempted = resolved.length + unresolved.length + unreachable.length + errored.length;
+    console.log(`STOPPED: Anthropic account ran out of credits after ${attempted} of ${targetSet.length} rows.`);
+    console.log(`  ${targetSet.length - attempted} rows were never attempted — not resolved, not unresolved, simply never reached.`);
+    console.log(`  Error: ${billingHaltedReason}`);
+    console.log(`  ${resolved.length} rows ${apply ? "were written" : "would have been written"} before the stop — those are real and safe to keep.`);
+    console.log(`  Re-run this exact command once credits are restored: it only ever touches rows still missing the target field, so nothing here needs to be redone.`);
+    process.exitCode = 1;
+  }
+
+  console.log(`\nLooked at ${targetSet.length} opportunities that had a gap.`);
   console.log(`  ${apply ? "Wrote" : "Would write"} at least one new field on: ${resolved.length}`);
   console.log(`  Fetched fine, but the source stated nothing usable:          ${unresolved.length}`);
   console.log(`  Could not fetch any page at all:                            ${unreachable.length}`);
   console.log(`  Errored (extraction/schema/write failure):                  ${errored.length}`);
+  if (billingHalted.length > 0) console.log(`  Never attempted (billing stop):                             ${billingHalted.length}`);
   console.log(`  COULD NOT RESOLVE (unresolved + unreachable + errored):     ${unresolved.length + unreachable.length + errored.length}`);
 
   const fieldCounts = new Map<string, number>();
