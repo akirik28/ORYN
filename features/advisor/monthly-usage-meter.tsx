@@ -49,9 +49,17 @@ export function MonthlyUsageMeter({ quota, className }: { quota: MonthlyQuota; c
   const resets = new Date(quota.resetsAt).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 
   return (
+    // Toned for the surface this actually sits on. Every value here used to be white-alpha
+    // (border-white/12, bg-white/[0.04], track bg-white/[0.07], text-white/35) — correct on
+    // a dark card, but the meter's only caller puts it in the Counselor page's light
+    // sidebar, beside a `border-white/65 bg-white/45` chat panel. At 4-12% white on a pale
+    // lilac ground the panel, its border and the whole progress track were invisible, so
+    // the meter read as an unstyled number floating on the page (founder report,
+    // 2026-08-31: "bar gözükmüyor, saydam"). Tokens below flip with the theme rather than
+    // assuming either one.
     <div
       className={cn(
-        "rounded-2xl border border-white/12 bg-white/[0.04] p-4 backdrop-blur-xl",
+        "rounded-2xl border border-white/65 bg-white/45 p-4 backdrop-blur-xl dark:border-white/12 dark:bg-white/[0.04]",
         className,
       )}
     >
@@ -60,15 +68,24 @@ export function MonthlyUsageMeter({ quota, className }: { quota: MonthlyQuota; c
           <Sparkles className="size-3.5" /> This month
         </p>
         <p className="font-mono text-xs tabular-nums text-muted-foreground">
-          <span className={cn("font-semibold", exhausted ? "text-rose-300" : low ? "text-amber-300" : "text-foreground")}>
+          <span
+            className={cn(
+              "font-semibold",
+              exhausted
+                ? "text-rose-600 dark:text-rose-300"
+                : low
+                  ? "text-amber-600 dark:text-amber-300"
+                  : "text-foreground",
+            )}
+          >
             {quota.remaining}
           </span>
-          <span className="text-white/35"> / {quota.limit}</span>
+          <span className="text-ink-4"> / {quota.limit}</span>
         </p>
       </div>
 
       <div
-        className="relative mt-3 h-2.5 overflow-hidden rounded-full bg-white/[0.07]"
+        className="relative mt-3 h-2.5 overflow-hidden rounded-full bg-black/10 dark:bg-white/[0.07]"
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={quota.limit}
