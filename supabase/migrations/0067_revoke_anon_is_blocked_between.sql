@@ -1,0 +1,43 @@
+-- Closes an anon-execute leak on `is_blocked_between`, found live via Supabase's own
+-- security advisor (get_advisors, 2026-08-31) while applying BUG-1's still-pending
+-- migrations 0061-0065. Same root cause 0061 already documents for `public_profiles`,
+-- now found to also affect this function.
+--
+-- THE GAP: migration 0027 (`revoke all on function public.is_blocked_between(uuid, uuid)
+-- from public; grant execute ... to authenticated;`) and migration 0040 (`revoke all ...
+-- from public; grant execute ... to authenticated, service_role;`) both intended to keep
+-- this function out of reach of anonymous, unauthenticated callers. Live advisor output
+-- shows `anon` can still call it via `/rest/v1/rpc/is_blocked_between`. Reason: this
+-- project's standing default ACL (`ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT
+-- EXECUTE ON FUNCTIONS TO anon, authenticated, service_role`, set at project bootstrap,
+-- predating every migration referenced above) grants `anon` its own direct, additive
+-- privilege on every function created in `public` -- entirely separate from the `PUBLIC`
+-- pseudo-role either prior migration revoked from. `REVOKE ... FROM PUBLIC` does not
+-- touch a role's own separately-granted privilege, and `GRANT ... TO authenticated,
+-- service_role` only adds, never removes `anon`'s standing grant. Both prior migrations
+-- read as though they closed this off; neither actually could, for a reason unrelated to
+-- what either one's SQL says -- exactly the failure shape 0061 already names for
+-- `public_profiles` ("a grant silently drifting from... stated intent").
+--
+-- BLAST RADIUS: `is_blocked_between(user_a, user_b)` takes two arbitrary UUIDs and
+-- returns a boolean with no ownership check on either argument -- SECURITY DEFINER,
+-- so it runs with the function owner's privileges regardless of caller. An anonymous,
+-- unauthenticated caller can currently probe any two user IDs and learn whether one
+-- has blocked the other -- a real information-disclosure surface (blocking is a
+-- safety signal, most relevant for a product whose primary users are minors) that
+-- requires no session at all, only two guessed or enumerated UUIDs.
+--
+-- FIX: an explicit `revoke execute ... from anon`, which -- unlike `revoke ... from
+-- public` -- removes anon's own direct grant rather than a pseudo-role's. This is the
+-- only role that needs removing: `authenticated` and `service_role` both have
+-- legitimate callers (sendMessage, endorsement-actions, recommendation-actions, and
+-- lib/messaging/messages.ts all call this via the caller's own authenticated session;
+-- posts-visibility policies call it as the row-owning function itself, unaffected by
+-- caller-role grants).
+--
+-- Same class of drift may affect other SECURITY DEFINER functions created before this
+-- was understood -- not swept here, since this migration exists to close the one gap
+-- the live advisor actually surfaced, not to re-audit every function's grant history
+-- speculatively.
+
+revoke execute on function public.is_blocked_between(uuid, uuid) from anon;

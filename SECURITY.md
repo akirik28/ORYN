@@ -74,6 +74,31 @@ that user via a simulated JWT — the count came back correct, and a second, unr
 simulated user could not see the first user's usage rows (RLS holds). The fix is now an
 observed fact, not just a code-reading conclusion.
 
+**Migrations 0061–0065 and 0067 applied live, 2026-08-31.** BUG-1's RLS verification
+package (`docs/FOUNDER-START-HERE.md`, `docs/founder-blocked-backlog.md`) had closed these
+in application code but left the database half founder-gated — see that page's own "every
+fix has a code half and a database half" framing. All six re-verified directly against
+`oryn-qa-scratch` after the founder applied them via the SQL Editor (not assumed from the
+migration files existing): `profiles_00_guard_protected_columns` now guards `is_admin`,
+`profile_strength_score`, and `completeness_percent` together (0062+0063 combined, matching
+the live trigger definition); five more computed-column guard triggers exist on
+`profile_scores`, `profile_score_snapshots`, `opportunity_matches`,
+`student_requirement_evaluations`, `evidence_files` (0063); `message_reports`' insert
+policy's `WITH CHECK` now cross-references `messages.sender_id` /
+`recommendations.author_id` rather than trusting the caller (0064); all six
+INSERT-forgery tables now carry separate select/update/delete policies with no insert
+policy at all, `"owner full access"` gone (0065); `public_profiles` requires
+`auth.uid() is not null` (0061). **0067, new this pass**: the same additive-default-ACL
+drift 0061 documents for `public_profiles` was independently found (via `get_advisors`,
+not the original BUG-1 sweep) to also leave `is_blocked_between` executable by `anon`
+despite two prior migrations (0027, 0040) each trying to close it the same
+`revoke ... from public` way that doesn't touch a role's own separate additive grant —
+fixed with an explicit `revoke execute ... from anon`, live-reverified via
+`has_function_privilege('anon', ..., 'EXECUTE') = false` and confirmed off the advisor's
+own output afterward. Every one of these was a genuinely open, live, exploitable gap until
+this pass, not a defense-in-depth extra — treat prior mentions of them elsewhere in this
+document or `docs/known-issues.md` as historical unless dated on or after 2026-08-31.
+
 ## Social / connections (V1, `supabase/migrations/0023`–`0025`)
 
 - `public_profiles` is a security-definer view over a fixed column whitelist
