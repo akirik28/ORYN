@@ -56,8 +56,9 @@ describe("migration numbering", () => {
     // migration lands, as this line has been bumped before. Two migrations both claimed
     // 0069 on 2026-08-31 — schema-hygiene's backup-table drop and the requirement
     // investigation's comment-only note — caught here on merge, which is the second time
-    // in one day this guard has earned its place. The latter was renumbered to 0070.
-    expect(Math.max(...numbers.map(Number))).toBe(70);
+    // in one day this guard has earned its place. The latter was renumbered to 0070. 0071
+    // (calendar_bound_fact_class) is the CAO-points display path's own new column.
+    expect(Math.max(...numbers.map(Number))).toBe(71);
   });
 });
 

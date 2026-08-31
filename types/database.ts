@@ -1058,6 +1058,14 @@ export interface UniversityRequirement {
    * remediation trigger at another, at the same university). `advisory_only`: informational,
    * no admission consequence either way. See docs/handoffs/schema-gaps-design-2026-08-22.md §C2. */
   unmet_consequence: "blocks_admission" | "triggers_remediation" | "advisory_only" | null;
+  /** Migration 0071 (2026-08-31). Null for an ordinary row. Set only for a fact whose
+   * validity is tied to a known external annual publication event — see
+   * lib/acquisition/verification.ts's AnnualCalendarWindow and CAO_POINTS_IE, the only
+   * concrete instance today. Read exclusively by lib/requirements/calendar-bound.ts's
+   * display path, which is structurally incapable of a Met/Not-met verdict — never by
+   * evaluateRequirement() or anything that could present a dated competitive-outcome
+   * figure as a threshold a student can clear. */
+  calendar_bound_fact_class: "cao_points_ie" | null;
   source_url: string | null;
   retrieved_at: string | null;
   last_checked_at: string | null;
@@ -1090,6 +1098,7 @@ export type UniversityRequirementInsert = Insertable<
   | "conflict_group_id"
   | "research_record_id"
   | "unmet_consequence"
+  | "calendar_bound_fact_class"
 >;
 
 export interface UniversityStatistic {
