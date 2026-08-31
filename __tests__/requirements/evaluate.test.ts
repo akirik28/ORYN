@@ -755,3 +755,103 @@ describe("exclusion rows and 0056 qualifiers on the same requirement", () => {
     expect(evaluateRequirementGroup([member], facts).memberResults.get("ielts")!.reviewReason).toBe("unreadable_qualifiers");
   });
 });
+
+describe("English notInList wording — regression guard", () => {
+  // A first draft of the Turkish curriculum copy ran the English branch's curricula through
+  // curriculumLabel() (which does `.replace(/_/g, " ")`) before joining, which would have
+  // turned "turkish_curriculum, a_level" into "turkish curriculum, a level" — a silent change
+  // to pre-existing English output. Caught before it shipped; pinned here so it can't recur.
+  test("the raw underscored curriculum values are preserved, never space-replaced", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, curricula: ["turkish_curriculum", "a_level"] };
+    const result = evaluateRequirement("curriculum", { kind: "curriculum", curricula: ["ib"] }, facts);
+    expect(result.reasoning).toBe("Your recorded curriculum (turkish_curriculum, a_level) isn't in the accepted list.");
+  });
+});
+
+describe("evaluateRequirement / evaluateRequirementGroup — locale: tr", () => {
+  test("curriculum match and no-match reasoning is Turkish, with a real curriculum label", () => {
+    const matchFacts: RequirementFacts = { ...EMPTY_FACTS, curricula: ["ib"] };
+    const met = evaluateRequirement("curriculum", { kind: "curriculum", curricula: ["ib", "a_level"] }, matchFacts, undefined, "tr");
+    expect(met.reasoning).toBe("IB müfredatın eşleşiyor.");
+
+    const noMatchFacts: RequirementFacts = { ...EMPTY_FACTS, curricula: ["turkish_curriculum"] };
+    const notMet = evaluateRequirement("curriculum", { kind: "curriculum", curricula: ["ib", "a_level"] }, noMatchFacts, undefined, "tr");
+    expect(notMet.reasoning).toBe("Kayıtlı müfredatın (Türk müfredatı) kabul edilen listede değil.");
+  });
+
+  test("a below-threshold test score is reported in Turkish", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "SAT", score: "1300" }] };
+    const result = evaluateRequirement("standardized_test", { kind: "test_score", testName: "SAT", minScore: 1400 }, facts, undefined, "tr");
+    expect(result.status).toBe("not_met");
+    expect(result.reasoning).toBe("En iyi SAT puanın (1300) gereken 1400 değerinin altında.");
+  });
+
+  test("TU Dublin's age-bar gate reads in Turkish and still names the birth-year limitation", () => {
+    const result = evaluateRequirement("international_requirement", null, EMPTY_FACTS, { evaluation_gate: "age_bar" }, "tr");
+    expect(result.status).toBe("needs_manual_review");
+    expect(result.reasoning).toMatch(/doğum yılı/);
+  });
+
+  test("METU's inverted recency window is explained in Turkish, boundary date and result date both interpolated", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "8.0", testDate: "2025-06-01" }] };
+    const result = evaluateRequirement(
+      "english_proficiency",
+      IELTS_RULE,
+      facts,
+      { recency_rule: { direction: "not_valid_on_or_after", boundaryDate: "2022-12-24" } },
+      "tr"
+    );
+    expect(result.status).toBe("not_met");
+    expect(result.reasoning).toBe(
+      "Bu üniversite 2022-12-24 tarihinden itibaren alınan sonuçları kabul etmiyor ve kayıtlı sonucun (2025-06-01) bunun dışında kalıyor."
+    );
+  });
+
+  test("Edinburgh's provenance refusal names the test variant in Turkish, keeping ETS's own product name untranslated", () => {
+    const osrSeven: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "7.0", provenance: "one_skill_retake" }] };
+    const result = evaluateRequirement("english_proficiency", IELTS_RULE, osrSeven, { excluded_provenances: ["one_skill_retake"] }, "tr");
+    expect(result.status).toBe("not_met");
+    expect(result.reasoning).toMatch(/One Skill Retake/);
+    expect(result.reasoning).toMatch(/bu üniversite/);
+  });
+
+  test("a group met via one alternative names the count and the winning member's own title in Turkish", () => {
+    const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "8.0" }] };
+    const result = evaluateRequirementGroup(ENGLISH_TEST_ALTERNATIVES, facts, "tr");
+    expect(result.status).toBe("met");
+    expect(result.reasoning).toMatch(/kabul edilen 4 alternatiften herhangi biri yeterli/);
+  });
+
+  test("a group where every alternative fails is reported as such in Turkish, without repeating each member's own reasoning", () => {
+    const facts: RequirementFacts = {
+      ...EMPTY_FACTS,
+      testScores: [
+        { testName: "IELTS", score: "5.0" },
+        { testName: "TOEFL", score: "70", maxScore: "120" },
+      ],
+    };
+    const result = evaluateRequirementGroup([IELTS, TOEFL], facts, "tr");
+    expect(result.status).toBe("not_met");
+    expect(result.reasoning).toBe("Kabul edilen 2 alternatiften hiçbiri şu anda karşılanmıyor.");
+  });
+
+  test("omitting locale is identical to passing 'en' explicitly (default-locale backward compatibility)", () => {
+    const scoreFacts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "IELTS", score: "8.0" }] };
+    const curriculumFacts: RequirementFacts = { ...EMPTY_FACTS, curricula: ["turkish_curriculum"] };
+    const gpaFacts: RequirementFacts = { ...EMPTY_FACTS, gpas: [{ value: 3.0, scale: 4 }] };
+
+    expect(evaluateRequirement("english_proficiency", IELTS_RULE, scoreFacts)).toEqual(
+      evaluateRequirement("english_proficiency", IELTS_RULE, scoreFacts, undefined, "en")
+    );
+    expect(evaluateRequirement("curriculum", { kind: "curriculum", curricula: ["ib"] }, curriculumFacts)).toEqual(
+      evaluateRequirement("curriculum", { kind: "curriculum", curricula: ["ib"] }, curriculumFacts, undefined, "en")
+    );
+    expect(evaluateRequirement("minimum_grade", { kind: "minimum_grade", minGpa: 3.5, scale: 4 }, gpaFacts)).toEqual(
+      evaluateRequirement("minimum_grade", { kind: "minimum_grade", minGpa: 3.5, scale: 4 }, gpaFacts, undefined, "en")
+    );
+    expect(evaluateRequirement("international_requirement", null, EMPTY_FACTS, { evaluation_gate: "age_bar" })).toEqual(
+      evaluateRequirement("international_requirement", null, EMPTY_FACTS, { evaluation_gate: "age_bar" }, "en")
+    );
+    expect(evaluateRequirementGroup(ENGLISH_TEST_ALTERNATIVES, scoreFacts)).toEqual(evaluateRequirementGroup(ENGLISH_TEST_ALTERNATIVES, scoreFacts, "en"));
+  });
+});

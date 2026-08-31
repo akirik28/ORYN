@@ -288,18 +288,25 @@ const FACT_INDEPENDENT_FACTS: RequirementFacts = { curricula: [], courses: [], g
 
 function resolveRequirementStatus(
   requirement: CounselingRequirementInput,
-  evaluationByRequirementId: Map<string, CounselingRequirementEvaluationInput>
+  evaluationByRequirementId: Map<string, CounselingRequirementEvaluationInput>,
+  locale: Locale
 ): { status: RequirementEvaluationStatus; reasoning: string } {
   const evaluation = evaluationByRequirementId.get(requirement.id);
   if (evaluation) return evaluation;
   if (INFORMATIONAL_CATEGORIES.includes(requirement.requirementType) || MANUAL_REVIEW_CATEGORIES.includes(requirement.requirementType)) {
-    return evaluateRequirement(requirement.requirementType, null, FACT_INDEPENDENT_FACTS);
+    return evaluateRequirement(requirement.requirementType, null, FACT_INDEPENDENT_FACTS, undefined, locale);
   }
   // Genuinely absent (the caller didn't refresh evaluations before assembling, or this
   // requirement was added since the last refresh). Not the same as `evaluateRequirement`'s
   // "no structured rule recorded" case — that would misreport a rule that may well exist as
   // if it didn't. This is just an honest "not evaluated yet."
-  return { status: "unknown", reasoning: "This requirement hasn't been checked against your profile yet." };
+  return {
+    status: "unknown",
+    reasoning:
+      locale === "tr"
+        ? "Bu gereklilik henüz profiline göre kontrol edilmedi."
+        : "This requirement hasn't been checked against your profile yet.",
+  };
 }
 
 function deriveProgramFocus(input: UniversityCounselingViewInput): ProgramFocus {
@@ -484,7 +491,7 @@ export function buildUniversityCounselingView(input: UniversityCounselingViewInp
   const evaluationByRequirementId = new Map(input.requirementEvaluations.map((e) => [e.requirementId, e]));
 
   const rollup: RequirementRollupItem[] = input.requirements.map((requirement) => {
-    const resolved = resolveRequirementStatus(requirement, evaluationByRequirementId);
+    const resolved = resolveRequirementStatus(requirement, evaluationByRequirementId, locale);
     return {
       requirementId: requirement.id,
       category: requirement.requirementType,

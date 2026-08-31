@@ -60,7 +60,7 @@ export default async function DashboardPage() {
   // refreshOpportunityMatches call in addition to the one above — a known, small duplicate
   // read (same accepted tradeoff lib/counselor/state.ts's own comment documents for
   // assembleScoringFacts), not restructured here to keep this change additive.
-  const counselorStatePromise = getCounselorState(userId).catch((error) => {
+  const counselorStatePromise = getCounselorState(userId, locale).catch((error) => {
     console.error("[dashboard] failed to compute counselor state", error instanceof Error ? error.stack : error);
     return null;
   });

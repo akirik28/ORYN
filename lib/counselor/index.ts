@@ -36,6 +36,6 @@ export { rankDimensionStrengths } from "./strengths";
  * the resolved student locale.
  */
 export async function getCounselorRecommendations(userId: string, locale: Locale = DEFAULT_LOCALE): Promise<CounselorResult> {
-  const state = await getCounselorState(userId);
+  const state = await getCounselorState(userId, locale);
   return runCounselorPipeline(state, new Date(), locale);
 }

@@ -64,12 +64,10 @@ function whyForOpportunity(ranked: RankedCandidate, locale: Locale): string[] {
   return lines;
 }
 
-// `match.evaluation.reasoning` comes from lib/requirements/evaluate.ts, a separate,
-// ~30-template English-only reasoning generator for university requirement checks
-// (curriculum/coursework/GPA/language rules) — out of scope for this pass (flagged as
-// follow-up, not silently skipped: see this branch's own status notes). A Turkish student
-// currently sees this one line in English inside an otherwise-Turkish recommendation;
-// everything else on the same card (title, other why lines, eligibility notes) is Turkish.
+// `match.evaluation.reasoning` comes from lib/requirements/evaluate.ts, which now takes the
+// same `locale` this module does (closed the gap this comment used to flag: state.ts threads
+// its caller's locale into evaluateRequirement, so the string arriving here is already in the
+// right language — nothing further to translate at this call site).
 function whyForRequirement(ranked: RankedCandidate, state: CounselorState): string[] {
   if (ranked.candidate.source.kind !== "requirement_action") return [];
   const requirementId = ranked.candidate.source.requirementId;

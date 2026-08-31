@@ -289,18 +289,16 @@ describe("buildRecommendation — locale: tr", () => {
     expect(rec.why[0]).toBe("Oryn bu bilgiye henüz sahip değil — güvenilir öneriler için gerekli.");
   });
 
-  // Documents the known, deliberate gap rather than leaving it silently uncovered: the
-  // requirement evaluator's own reasoning (lib/requirements/evaluate.ts) is out of scope
-  // for this pass and stays English regardless of locale — see evidence.ts's own comment
-  // on whyForRequirement.
-  test("requirement_action why line is NOT translated yet — evaluate.ts's reasoning passes through verbatim", () => {
-    const input: RequirementCandidateInput = {
-      universityId: "uni-1",
-      universityName: "Test University",
-      requirement: requirement(),
-      evaluation: { status: "not_met", reasoning: "No SAT score is on file yet." },
-    };
-    const ranked: RankedCandidate = {
+  // The requirement evaluator's own reasoning (lib/requirements/evaluate.ts) used to be
+  // computed English-only regardless of the counselor pipeline's own locale — state.ts called
+  // evaluateRequirement() without a locale argument, so a Turkish recommendation card could
+  // carry one English "why" line. That gap is now closed at the source: lib/counselor/state.ts
+  // threads its caller's locale into evaluateRequirement before this object is ever built, so
+  // `evaluation.reasoning` arrives here already in the right language. `whyForRequirement`
+  // correctly does not re-translate it — that would risk double-translating or overriding a
+  // correct Turkish string — it is a pure pass-through, proven below in both directions.
+  test("requirement_action why line passes evaluation.reasoning through verbatim, in whatever language it already arrived in", () => {
+    const buildRanked = (): RankedCandidate => ({
       candidate: {
         source: { kind: "requirement_action", universityId: "uni-1", requirementId: "req-1", status: "not_met" },
         title: "Address: SAT score (Test University)",
@@ -321,9 +319,29 @@ describe("buildRecommendation — locale: tr", () => {
       urgency: "medium",
       confidence: "medium",
       recommendationClass: "do",
+    });
+
+    const englishInput: RequirementCandidateInput = {
+      universityId: "uni-1",
+      universityName: "Test University",
+      requirement: requirement(),
+      evaluation: { status: "not_met", reasoning: "No SAT score is on file yet." },
     };
-    const rec = buildRecommendation(ranked, state([input]), "tr");
-    expect(rec.why).toContain("No SAT score is on file yet.");
+    const englishRec = buildRecommendation(buildRanked(), state([englishInput]), "en");
+    expect(englishRec.why).toContain("No SAT score is on file yet.");
+
+    // Same pipeline, called in Turkish — state.ts would have produced Turkish reasoning by
+    // this point in the real pipeline; simulated directly here to keep this a unit test of
+    // buildRecommendation alone, not an integration test of evaluateRequirement's own copy.
+    const turkishInput: RequirementCandidateInput = {
+      universityId: "uni-1",
+      universityName: "Test University",
+      requirement: requirement(),
+      evaluation: { status: "not_met", reasoning: "Henüz kayıtlı bir SAT puanı yok." },
+    };
+    const turkishRec = buildRecommendation(buildRanked(), state([turkishInput]), "tr");
+    expect(turkishRec.why).toContain("Henüz kayıtlı bir SAT puanı yok.");
+    expect(turkishRec.why).not.toContain("No SAT score is on file yet.");
   });
 
   test("omitting locale still produces the exact English output (default-locale backward compatibility)", () => {

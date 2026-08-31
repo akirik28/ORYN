@@ -164,7 +164,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
     .filter((r) => r.calendar_bound_fact_class === "cao_points_ie")
     .map((r) => toCalendarBoundFactDisplay(r, CAO_POINTS_IE));
   if (requirements.length > 0) {
-    await refreshRequirementEvaluations(university.id, session.userId!, targetRes.data?.program_id ?? null);
+    await refreshRequirementEvaluations(university.id, session.userId!, targetRes.data?.program_id ?? null, locale);
   }
   const [profile, evaluationsRes] = await Promise.all([
     getCurrentProfile(),
