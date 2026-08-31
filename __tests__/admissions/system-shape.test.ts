@@ -222,3 +222,49 @@ describe("resolveAdmissionSystem — totality", () => {
     expect(resolveAdmissionSystem({ targetCountry: "   ", studentCountry: "Turkey" }).basis).toBe("no_entry");
   });
 });
+
+describe("resolveAdmissionSystem — locale: tr", () => {
+  test("Turkey's domestic mechanism is Turkish and names the OBP by its real term", () => {
+    const result = resolveAdmissionSystem({ targetCountry: "Turkey", studentCountry: "Turkey" }, "tr");
+    expect(result.mechanism).toContain("ÖSYM'nin YKS yerleştirme algoritması");
+    expect(result.mechanism).toContain("OBP");
+  });
+
+  test("Turkey's international (foreign-national) mechanism is Turkish", () => {
+    const result = resolveAdmissionSystem({ targetCountry: "Turkey", studentCountry: "Germany" }, "tr");
+    expect(result.mechanism).toContain("yabancı uyruklu öğrenci yolundan girer");
+  });
+
+  test("the shape itself never changes with locale — only the sentence describing it does", () => {
+    const en = resolveAdmissionSystem({ targetCountry: "Turkey", studentCountry: "Turkey" });
+    const tr = resolveAdmissionSystem({ targetCountry: "Turkey", studentCountry: "Turkey" }, "tr");
+    expect(tr.shape).toBe(en.shape);
+    expect(tr.pathway).toBe(en.pathway);
+    expect(tr.basis).toBe(en.basis);
+    expect(tr.sources).toEqual(en.sources);
+    expect(tr.mechanism).not.toBe(en.mechanism);
+  });
+
+  // Known, documented gap (see PathwaySystem.mechanismTr's own comment): a country without
+  // its own Turkish mechanism yet falls back to English rather than going blank. Asserted
+  // directly so a future translation of this entry is a visible, expected test change.
+  test("a country without a translated mechanism yet falls back to English, not null or empty, under locale=tr", () => {
+    const result = resolveAdmissionSystem({ targetCountry: "Netherlands", studentCountry: "Turkey" }, "tr");
+    const englishResult = resolveAdmissionSystem({ targetCountry: "Netherlands", studentCountry: "Turkey" });
+    expect(result.mechanism).toBe(englishResult.mechanism);
+    expect(result.mechanism).not.toBeNull();
+  });
+
+  test("the pathway-undetermined concatenation (e.g. Ireland with no student country) uses a Turkish connector when locale=tr, even though neither side is translated yet", () => {
+    const result = resolveAdmissionSystem({ targetCountry: "Ireland", studentCountry: null }, "tr");
+    expect(result.mechanism).toContain("Ortaöğretimini başka bir yerde tamamlayan başvuru sahipleri için ayrı bir yol geçerlidir");
+  });
+
+  test("omitting locale is identical to passing 'en' explicitly, for both a translated and an untranslated country (default-locale backward compatibility)", () => {
+    for (const targetCountry of ["Turkey", "Netherlands", "Germany"]) {
+      const withDefault = resolveAdmissionSystem({ targetCountry, studentCountry: "Turkey" });
+      const withExplicitEn = resolveAdmissionSystem({ targetCountry, studentCountry: "Turkey" }, "en");
+      expect(withDefault).toEqual(withExplicitEn);
+    }
+  });
+});

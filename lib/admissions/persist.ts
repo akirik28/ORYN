@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { checkUndergraduateFieldAvailability } from "./field-availability";
 import { computeAdmissionOutlook, type AdmissionOutlookResult } from "./outlook";
 import { resolveAdmissionSystem } from "./system-shape";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 /**
  * Computes and caches the admission outlook onto a target_universities row. Cheap
@@ -15,8 +16,14 @@ import { resolveAdmissionSystem } from "./system-shape";
  * admissions-system input since migration 0049, but this function never passed one, so a
  * student targeting a Turkish or German university got the same US-style
  * reach/competitive/likely framing as one targeting Yale.
+ *
+ * `locale` defaults to English; see lib/counselor/evidence.ts's buildRecommendation for the
+ * reasoning shared across this codebase's i18n work. Only affects the returned result's
+ * `notApplicableReason`/`admissionSystemMechanism` — nothing written to the database, which
+ * has no locale-specific columns (see this function's own note below on why explanatory
+ * copy isn't persisted at all).
  */
-export async function refreshAdmissionOutlook(targetUniversityId: string, userId: string): Promise<AdmissionOutlookResult | null> {
+export async function refreshAdmissionOutlook(targetUniversityId: string, userId: string, locale: Locale = DEFAULT_LOCALE): Promise<AdmissionOutlookResult | null> {
   const supabase = await createClient();
 
   const { data: target } = await supabase
@@ -55,21 +62,27 @@ export async function refreshAdmissionOutlook(targetUniversityId: string, userId
   const targetCountry = universityRes.data?.country ?? null;
   const targetField = programRes.data?.subject_taxonomy ?? null;
 
-  const admissionSystem = resolveAdmissionSystem({
-    targetCountry,
-    studentCountry: profileRes.data?.country ?? null,
-    targetUniversityName: universityRes.data?.name ?? null,
-    targetField,
-  });
-  const fieldAvailability = checkUndergraduateFieldAvailability({ country: targetCountry, field: targetField });
+  const admissionSystem = resolveAdmissionSystem(
+    {
+      targetCountry,
+      studentCountry: profileRes.data?.country ?? null,
+      targetUniversityName: universityRes.data?.name ?? null,
+      targetField,
+    },
+    locale
+  );
+  const fieldAvailability = checkUndergraduateFieldAvailability({ country: targetCountry, field: targetField }, locale);
 
-  const outlook = computeAdmissionOutlook({
-    profileStrength,
-    admissionRate: statsRes.data?.admission_rate ?? null,
-    dataConfidence,
-    admissionSystem,
-    fieldAvailability,
-  });
+  const outlook = computeAdmissionOutlook(
+    {
+      profileStrength,
+      admissionRate: statsRes.data?.admission_rate ?? null,
+      dataConfidence,
+      admissionSystem,
+      fieldAvailability,
+    },
+    locale
+  );
 
   // `notApplicableReason`/`notApplicableKind`/`admissionSystemMechanism` are deliberately not
   // written: `target_universities` has no column for them, and adding one is the same

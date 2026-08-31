@@ -1,4 +1,5 @@
 import { isSameCountry } from "@/lib/opportunities/matching";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import type { ProgramSubjectTaxonomy } from "@/types/database";
 
 /**
@@ -55,7 +56,9 @@ interface FieldAvailabilityEntry {
   countryNames: string[];
   field: ProgramSubjectTaxonomy;
   explanation: string;
+  explanationTr: string;
   caveat: string | null;
+  caveatTr: string | null;
 }
 
 const RULE_021 = "docs/research/admissions-systems/README.md#rule-admissions-021";
@@ -70,30 +73,42 @@ const NOT_OFFERED_AT_UNDERGRADUATE: FieldAvailabilityEntry[] = [
     field: "medicine",
     explanation:
       "Medicine is not an undergraduate degree in the United States. You earn a bachelor's degree first — in any subject, alongside the pre-med course requirements — and apply to medical school for the MD afterwards. There is no undergraduate Medicine programme to be admitted to.",
+    explanationTr:
+      "Amerika Birleşik Devletleri'nde Tıp bir lisans derecesi değildir. Önce herhangi bir alanda lisans eğitimini — tıp öncesi (pre-med) ders gereksinimleriyle birlikte — tamamlar, ardından MD için tıp fakültesine başvurursun. Kabul edilecek bir lisans Tıp programı yoktur.",
     caveat:
       "A small number of US universities run combined BS/MD programmes admitting from high school; these are separate, individually-named programmes, not undergraduate Medicine admission.",
+    caveatTr:
+      "Az sayıda ABD üniversitesi, liseden doğrudan kabul yapan birleşik BS/MD programları yürütür; bunlar ayrı, kendi adlarıyla anılan programlardır — lisans düzeyinde Tıp kabulü değildir.",
   },
   {
     countryNames: US_NAMES,
     field: "law",
     explanation:
       "Law is not an undergraduate degree in the United States. The JD is a postgraduate degree; undergraduates take a bachelor's in any subject first and apply to law school afterwards.",
+    explanationTr:
+      "Amerika Birleşik Devletleri'nde Hukuk bir lisans derecesi değildir. JD bir lisansüstü derecedir; öğrenciler önce herhangi bir alanda lisans eğitimi alır, ardından hukuk fakültesine başvurur.",
     caveat: null,
+    caveatTr: null,
   },
   {
     countryNames: CANADA_NAMES,
     field: "medicine",
     explanation:
       "Medicine is not an undergraduate degree in Canada. You complete a bachelor's degree first and apply to medical school afterwards.",
+    explanationTr: "Kanada'da Tıp bir lisans derecesi değildir. Önce bir lisans eğitimini tamamlar, ardından tıp fakültesine başvurursun.",
     caveat: null,
+    caveatTr: null,
   },
   {
     countryNames: CANADA_NAMES,
     field: "law",
     explanation:
       "Law is effectively not an undergraduate degree in Canada. The JD is a postgraduate degree taken after a bachelor's.",
+    explanationTr: "Kanada'da Hukuk fiilen bir lisans derecesi değildir. JD, lisans eğitiminden sonra alınan bir lisansüstü derecedir.",
     caveat:
       "Quebec's CEGEP-linked civil-law route is the one exception, and it is realistically available only to students schooled in the Quebec CEGEP system — not a general alternative for an international applicant.",
+    caveatTr:
+      "Quebec'in CEGEP'e bağlı medeni hukuk (civil-law) yolu tek istisnadır ve gerçekte yalnızca Quebec CEGEP sistemi içinde eğitim görmüş öğrenciler için mevcuttur — uluslararası bir başvuru sahibi için genel bir alternatif değildir.",
   },
 ];
 
@@ -123,8 +138,11 @@ export interface FieldAvailabilityQuery {
 /**
  * Total: an unknown country, an unstated field, or any field outside the two this package
  * researched all return `"unknown"`, which changes nothing downstream.
+ *
+ * `locale` defaults to English; see lib/counselor/evidence.ts's buildRecommendation for the
+ * reasoning shared across this codebase's i18n work.
  */
-export function checkUndergraduateFieldAvailability(query: FieldAvailabilityQuery): FieldAvailabilityResult {
+export function checkUndergraduateFieldAvailability(query: FieldAvailabilityQuery, locale: Locale = DEFAULT_LOCALE): FieldAvailabilityResult {
   const country = query.country?.trim();
   if (!country || !query.field || !CHECKED_FIELDS.includes(query.field)) return UNKNOWN;
 
@@ -134,8 +152,8 @@ export function checkUndergraduateFieldAvailability(query: FieldAvailabilityQuer
   if (blocked) {
     return {
       availability: "not_offered_at_undergraduate",
-      explanation: blocked.explanation,
-      caveat: blocked.caveat,
+      explanation: locale === "tr" ? blocked.explanationTr : blocked.explanation,
+      caveat: locale === "tr" ? blocked.caveatTr : blocked.caveat,
       sources: [RULE_021, `${PROGRAM_DOCS}${query.field}.md`],
     };
   }

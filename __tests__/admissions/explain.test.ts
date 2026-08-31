@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { explainOutlook, type DimensionScoreInput } from "@/lib/admissions/explain";
-import { DIMENSION_LABELS, DIMENSION_ORDER } from "@/lib/scoring/labels";
+import { DIMENSION_LABELS, DIMENSION_ORDER, dimensionLabel } from "@/lib/scoring/labels";
 
 function allZeroLowConfidence(): DimensionScoreInput[] {
   return DIMENSION_ORDER.map((dimension) => ({ dimension, score: 0, confidence: "low" as const }));
@@ -188,5 +188,41 @@ describe("explainOutlook — Gate 1 shape awareness", () => {
     const empty = explainOutlook(allZeroLowConfidence(), "holistic_review");
     expect(empty.insufficientData).toBe(true);
     expect(empty.profileNotAnInput).toBe(false);
+  });
+});
+
+describe("explainOutlook — locale: tr", () => {
+  const evidenced: DimensionScoreInput[] = [
+    { dimension: "leadership", score: 91, confidence: "high" },
+    { dimension: "research", score: 42, confidence: "high" },
+  ];
+
+  test("strengths/gaps use the Turkish dimension label, reusing lib/scoring/labels.ts's shared source", () => {
+    const result = explainOutlook(evidenced, "holistic_review", "tr");
+    expect(result.strengths).toEqual([dimensionLabel("leadership", "tr")]);
+    expect(result.gaps).toEqual([dimensionLabel("research", "tr")]);
+    expect(result.strengths).toEqual(["Liderlik"]);
+    expect(result.gaps).toEqual(["Araştırma"]);
+  });
+
+  test("holistic unknowns are Turkish", () => {
+    const result = explainOutlook(evidenced, "holistic_review", "tr");
+    expect(result.unknowns).toEqual(["Kompozisyonlar", "Referans mektupları", "Bu başvuru döneminin aday havuzu"]);
+  });
+
+  test("rank-competitive unknowns are Turkish and still just the one real unknown", () => {
+    const result = explainOutlook(evidenced, "academic_rank_competitive", "tr");
+    expect(result.unknowns).toEqual(["Bu dönemin puan eşiğinin nereye geleceği"]);
+  });
+
+  test("threshold shape still invents no unknowns in Turkish either", () => {
+    const result = explainOutlook(evidenced, "academic_threshold", "tr");
+    expect(result.unknowns).toEqual([]);
+  });
+
+  test("omitting locale is identical to passing 'en' explicitly (default-locale backward compatibility)", () => {
+    for (const shape of ["holistic_review", "academic_rank_competitive", "academic_threshold", "unknown"] as const) {
+      expect(explainOutlook(evidenced, shape)).toEqual(explainOutlook(evidenced, shape, "en"));
+    }
   });
 });

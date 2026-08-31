@@ -279,3 +279,91 @@ describe("computeAdmissionOutlook", () => {
     });
   });
 });
+
+describe("computeAdmissionOutlook — locale: tr", () => {
+  const base = { profileStrength: 72, admissionRate: 0.3, dataConfidence: "high" } as const;
+
+  // Turkey specifically: both the outlook.ts hedge AND system-shape.ts's mechanism are
+  // translated for this country, so the full sentence should read as one coherent Turkish
+  // paragraph, not a translated tail glued onto an English head.
+  test("a Turkey/YKS target's full reason is Turkish end to end, including the mechanism", () => {
+    const result = computeAdmissionOutlook(
+      { ...base, admissionSystem: resolveAdmissionSystem({ targetCountry: "Turkey", studentCountry: "Turkey" }, "tr") },
+      "tr"
+    );
+    expect(result.notApplicableReason).toContain("ÖSYM'nin YKS yerleştirme algoritması");
+    expect(result.notApplicableReason).toContain("burada bir değerlendirici yok");
+    // No leftover English hedge phrasing from the untranslated source strings — Turkish
+    // itself shares the Latin alphabet, so this checks specific known English fragments
+    // rather than a generic "no lowercase Latin word" pattern, which would flag Turkish too.
+    expect(result.notApplicableReason).not.toContain("placement algorithm");
+    expect(result.notApplicableReason).not.toContain("no reviewer");
+  });
+
+  // The honesty check specifically requested for this slice: the hedge must still admit the
+  // same limit the English does, not read as more certain.
+  test("the rank-competitive hedge still says Oryn won't guess the cutoff, not just that it can't see it", () => {
+    const result = computeAdmissionOutlook(
+      { ...base, admissionSystem: resolveAdmissionSystem({ targetCountry: "Turkey", studentCountry: "Turkey" }, "tr") },
+      "tr"
+    );
+    expect(result.notApplicableReason).toContain("tahmin yürütmez");
+  });
+
+  test("the threshold hedge (e.g. a Dutch open programme) is Turkish", () => {
+    const result = computeAdmissionOutlook(
+      { ...base, admissionSystem: resolveAdmissionSystem({ targetCountry: "Netherlands", studentCountry: "Turkey" }, "tr") },
+      "tr"
+    );
+    expect(result.notApplicableKind).toBe("no_evidence_review_threshold");
+    expect(result.notApplicableReason).toContain("yarışarak değil yayımlanmış koşulları karşılayarak");
+  });
+
+  // Known, documented gap: the Netherlands' own mechanism sentence (system-shape.ts) isn't
+  // translated yet, only Turkey's is — so this specific case is genuinely, correctly a mix
+  // of an English mechanism and a Turkish hedge today. Asserting the mix directly here so a
+  // future translation of the Dutch entry is a visible, expected test change, not a silent
+  // behavior shift.
+  test("a country without a translated mechanism yet (e.g. Netherlands) mixes English mechanism + Turkish hedge — documented, not hidden", () => {
+    const result = computeAdmissionOutlook(
+      { ...base, admissionSystem: resolveAdmissionSystem({ targetCountry: "Netherlands", studentCountry: "Turkey" }, "tr") },
+      "tr"
+    );
+    expect(result.notApplicableReason).toContain("For open (non-numerus-fixus) Dutch programmes");
+    expect(result.notApplicableReason).toContain("yarışarak değil yayımlanmış koşulları karşılayarak");
+  });
+
+  test("field-not-offered-at-undergraduate reason is Turkish", () => {
+    const result = computeAdmissionOutlook(
+      { ...base, fieldAvailability: checkUndergraduateFieldAvailability({ country: "United States", field: "medicine" }, "tr") },
+      "tr"
+    );
+    expect(result.notApplicableReason).toContain("Amerika Birleşik Devletleri'nde Tıp bir lisans derecesi değildir");
+  });
+
+  test("field-not-offered reason includes the Turkish caveat when one exists (Canada/law)", () => {
+    const result = computeAdmissionOutlook(
+      { ...base, fieldAvailability: checkUndergraduateFieldAvailability({ country: "Canada", field: "law" }, "tr") },
+      "tr"
+    );
+    expect(result.notApplicableReason).toContain("Kanada'da Hukuk fiilen bir lisans derecesi değildir");
+    expect(result.notApplicableReason).toContain("Quebec");
+  });
+
+  test("the deprecated credential_gate_unspecified path is Turkish too", () => {
+    const result = computeAdmissionOutlook({ ...base, admissionSystemType: "credential_gate" }, "tr");
+    expect(result.notApplicableReason).toContain("kimlik/sınav temelli");
+  });
+
+  test("omitting locale is identical to passing 'en' explicitly, across every not-applicable kind (default-locale backward compatibility)", () => {
+    const cases = [
+      { ...base, admissionSystem: resolveAdmissionSystem({ targetCountry: "Turkey", studentCountry: "Turkey" }) },
+      { ...base, admissionSystem: resolveAdmissionSystem({ targetCountry: "Netherlands", studentCountry: "Turkey" }) },
+      { ...base, fieldAvailability: checkUndergraduateFieldAvailability({ country: "United States", field: "medicine" }) },
+      { ...base, admissionSystemType: "credential_gate" as const },
+    ];
+    for (const input of cases) {
+      expect(computeAdmissionOutlook(input)).toEqual(computeAdmissionOutlook(input, "en"));
+    }
+  });
+});

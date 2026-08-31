@@ -1,5 +1,6 @@
 import { isSameCountry } from "@/lib/opportunities/matching";
 import { normalizeEntitySearchText } from "@/lib/entities/normalize";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import type { ProgramSubjectTaxonomy } from "@/types/database";
 
 /**
@@ -140,6 +141,22 @@ export interface AdmissionSystemResolution {
 interface PathwaySystem {
   shape: AdmissionSystemShape;
   mechanism: string;
+  /**
+   * Turkish translation of `mechanism`, where one exists. Optional and incomplete by design:
+   * these ~30 sentences are highly specific, factually precise descriptions of individual
+   * countries' admission mechanisms (named exams, named algorithms, named institutions) —
+   * translating all of them with the same care as Turkey's own entry is a distinct, much
+   * larger body of work than the rest of this slice, not something to rush through at
+   * uniform low attention per sentence. Turkey is translated first because it is this
+   * product's own named priority market (AGENTS.md §0) and the sentences a real Turkish
+   * user is most likely to actually read and be able to verify.
+   *
+   * `resolveAdmissionSystem` falls back to the English `mechanism` when this is absent, even
+   * under `locale: "tr"` — a correct English sentence is a better outcome than a missing one,
+   * and this is the same "say less rather than invent, never say nothing where a real answer
+   * exists" standard the rest of this codebase's i18n work holds to.
+   */
+  mechanismTr?: string;
 }
 
 interface FieldOverride {
@@ -233,11 +250,19 @@ const REGISTRY: AdmissionSystemEntry[] = [
       shape: "academic_rank_competitive",
       mechanism:
         "ÖSYM's YKS placement algorithm is the admission decision itself: exam scores plus your school grade average produce one number, and places are filled in strict rank order against each programme's quota. There is no application file at any point — no essay, no interview, no recommendation letter, no activity record — so non-academic evidence has no channel into the result at all.",
+      // "school grade average" is Turkey's own official OBP (Okul Başarı Puanı) — named
+      // explicitly rather than left generic, since a real YKS candidate reading this would
+      // recognize the term immediately and a vaguer phrase would read as if Oryn didn't
+      // actually know the mechanism it's describing.
+      mechanismTr:
+        "ÖSYM'nin YKS yerleştirme algoritması kabul kararının kendisidir: sınav puanların ile okul başarı puanın (OBP) tek bir sayı üretir ve yerleşmeler her programın kontenjanına göre kesin sıralama sırasıyla yapılır. Hiçbir aşamada bir başvuru dosyası yoktur — ne kompozisyon, ne mülakat, ne referans mektubu, ne de aktivite kaydı — bu yüzden akademik olmayan hiçbir kanıt sonuca hiçbir şekilde etki etmez.",
     },
     international: {
       shape: "academic_rank_competitive",
       mechanism:
         "Students who completed secondary school outside Türkiye enter through the separate foreign-national pathway, where each university sets its own accepted credentials (TR-YÖS, SAT, A-Level, IB, Abitur, or the diploma score alone) and fills its own quota in score order. A small number of institutions add one further criterion of their own; essays and recommendation letters are not a general part of it.",
+      mechanismTr:
+        "Ortaöğretimini Türkiye dışında tamamlayan öğrenciler, her üniversitenin kendi kabul ettiği belgeleri (TR-YÖS, SAT, A-Level, IB, Abitur veya yalnızca diploma notu) belirlediği ve kendi kontenjanını puan sırasına göre doldurduğu ayrı yabancı uyruklu öğrenci yolundan girer. Az sayıda kurum kendi ek bir kriterini daha uygular; kompozisyon ve referans mektupları bunun genel bir parçası değildir.",
     },
     sources: [DOC("turkey.md"), `${SPEC_18} §3.3`, "docs/research/turkish-exams/06-counseling-implications.md"],
   },
@@ -541,7 +566,19 @@ function resolvePathway(entry: AdmissionSystemEntry, studentCountry: string | nu
  * than as any particular mechanism — see `computeAdmissionOutlook`, which changes nothing at
  * all for an unknown shape.
  */
-export function resolveAdmissionSystem(query: AdmissionSystemQuery): AdmissionSystemResolution {
+/** Falls back to English even under locale "tr" when no `mechanismTr` exists yet — a correct
+ *  English sentence beats a missing one. See PathwaySystem.mechanismTr's own doc. */
+function mechanismFor(system: PathwaySystem, locale: Locale): string {
+  return locale === "tr" && system.mechanismTr ? system.mechanismTr : system.mechanism;
+}
+
+/**
+ * `locale` defaults to English; see lib/counselor/evidence.ts's buildRecommendation for the
+ * reasoning shared across this codebase's i18n work. Only ~2 of the ~30 mechanism sentences
+ * this function can return are actually translated today (Turkey's domestic/international
+ * entries) — see PathwaySystem.mechanismTr.
+ */
+export function resolveAdmissionSystem(query: AdmissionSystemQuery, locale: Locale = DEFAULT_LOCALE): AdmissionSystemResolution {
   const country = query.targetCountry?.trim();
   if (!country) return UNRESOLVED;
 
@@ -565,7 +602,7 @@ export function resolveAdmissionSystem(query: AdmissionSystemQuery): AdmissionSy
         pathway,
         pathwayBasis,
         basis: fieldScoped ? "institution_field" : "institution",
-        mechanism: chosen.system.mechanism,
+        mechanism: mechanismFor(chosen.system, locale),
         sources: entry.sources,
       };
     }
@@ -579,7 +616,7 @@ export function resolveAdmissionSystem(query: AdmissionSystemQuery): AdmissionSy
         pathway,
         pathwayBasis,
         basis: "country_field",
-        mechanism: override.system.mechanism,
+        mechanism: mechanismFor(override.system, locale),
         sources: entry.sources,
       };
     }
@@ -590,12 +627,13 @@ export function resolveAdmissionSystem(query: AdmissionSystemQuery): AdmissionSy
     // Both are described rather than one being picked — picking would be a coin flip
     // presented as a finding, and for Ireland and Hong Kong the two sides land on opposite
     // Gate-1 answers.
+    const connector = locale === "tr" ? "Ortaöğretimini başka bir yerde tamamlayan başvuru sahipleri için ayrı bir yol geçerlidir:" : "A separate pathway applies to applicants who completed secondary school elsewhere:";
     return {
       shape: entry.domestic.shape === entry.international.shape ? entry.domestic.shape : "unknown",
       pathway,
       pathwayBasis,
       basis: "pathway_undetermined",
-      mechanism: `${entry.domestic.mechanism} A separate pathway applies to applicants who completed secondary school elsewhere: ${entry.international.mechanism}`,
+      mechanism: `${mechanismFor(entry.domestic, locale)} ${connector} ${mechanismFor(entry.international, locale)}`,
       sources: entry.sources,
     };
   }
@@ -606,7 +644,7 @@ export function resolveAdmissionSystem(query: AdmissionSystemQuery): AdmissionSy
     pathway,
     pathwayBasis,
     basis: pathwayBasis === "not_pathway_split" ? "country" : "country_pathway",
-    mechanism: system.mechanism,
+    mechanism: mechanismFor(system, locale),
     sources: entry.sources,
   };
 }
