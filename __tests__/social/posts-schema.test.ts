@@ -36,17 +36,23 @@ describe("migration numbering", () => {
     const numbers = readdirSync(MIGRATIONS_DIR)
       .filter((f) => f.endsWith(".sql"))
       .map((f) => f.slice(0, 4));
-    expect(numbers.filter((n) => n === "0058")).toHaveLength(1);
-    expect(numbers.filter((n) => n === "0059")).toHaveLength(1);
-    expect(numbers.filter((n) => n === "0060")).toHaveLength(1);
-    expect(numbers.filter((n) => n === "0061")).toHaveLength(1);
-    expect(numbers.filter((n) => n === "0062")).toHaveLength(1);
-    expect(numbers.filter((n) => n === "0063")).toHaveLength(1);
-    expect(numbers.filter((n) => n === "0064")).toHaveLength(1);
-    expect(numbers.filter((n) => n === "0065")).toHaveLength(1);
-    expect(numbers.filter((n) => n === "0066")).toHaveLength(1);
-    expect(numbers.filter((n) => n === "0067")).toHaveLength(1);
-    expect(Math.max(...numbers.map(Number))).toBe(67);
+    // Checked across EVERY migration, not a hand-listed range. The previous version
+    // enumerated 0058-0067 one line at a time, which is why it sat green for months while
+    // 0020 was duplicated: 0020_requirement_evaluation.sql and
+    // 0020_target_university_null_program_dedup.sql both existed, and no assertion looked
+    // there. That collision was not cosmetic — `supabase db push` against an empty database
+    // hard-aborts on the primary-key violation in supabase_migrations.schema_migrations at
+    // migration 21 of 68, so a fresh install silently stopped before EVERY RLS migration
+    // from 0061 on. The live project only has those because a session applied them directly,
+    // outside the ledger; a clean production install would have shipped without them
+    // (found by the deploy lane, 2026-08-31, verified against a clean Postgres 17; the
+    // duplicate is now renumbered to 0068).
+    const duplicates = [...new Set(numbers.filter((n, i) => numbers.indexOf(n) !== i))];
+    expect(duplicates, `duplicate migration version(s): ${duplicates.join(", ")}`).toEqual([]);
+
+    // Still pinned, still a collision guard rather than a ceiling — bump it when the next
+    // migration lands, as this line has been bumped before.
+    expect(Math.max(...numbers.map(Number))).toBe(68);
   });
 });
 
