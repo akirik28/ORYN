@@ -96,6 +96,12 @@ export interface Profile {
   last_name: string | null;
   display_name: string | null;
   birth_year: number | null;
+  /** Denormalized from auth.users.raw_user_meta_data at signup (migration 0072) so it's
+   * queryable without the admin client. Read-only from application code — set once by
+   * handle_new_user(), never updated after. See birth_year_changes for why this exists:
+   * comparing this against a later birth_year edit is how a consent/age mismatch becomes
+   * detectable. */
+  terms_accepted_at: string | null;
   country: string | null;
   /** Distinct from `country` (residence/school location) — citizenship (migration 0047),
    * never inferred from country. Multi-valued for dual/multiple citizenship. Empty = not
@@ -136,7 +142,7 @@ export interface Profile {
   created_at: string;
   updated_at: string;
 }
-export type ProfileUpdate = Updatable<Profile, "id" | "created_at" | "updated_at">;
+export type ProfileUpdate = Updatable<Profile, "id" | "created_at" | "updated_at" | "terms_accepted_at">;
 
 export type ContactVisibility = "private" | "connections" | "public";
 
@@ -1689,6 +1695,21 @@ export interface ProductEvent {
 }
 export type ProductEventInsert = Insertable<ProductEvent, "id" | "created_at" | "metadata">;
 
+export interface BirthYearChange {
+  id: string;
+  user_id: string;
+  /** Null on the first-ever row for a user_id — see the table comment (migration 0072)
+   * for why that's the "became known" vs. "changed" signal, deliberately not a separate
+   * source column. */
+  previous_value: number | null;
+  new_value: number | null;
+  /** Consent time as of the moment of THIS change, not looked up after the fact. */
+  terms_accepted_at: string | null;
+  changed_at: string;
+}
+/** No Insert type on purpose: profiles_log_birth_year_change is the only writer (migration
+ * 0072) and the table has no INSERT policy for any role, same posture as PostRevision. */
+
 // ---------- Database aggregate (Supabase client generic shape) ----------
 
 // `Relationships` is required by @supabase/postgrest-js's GenericTable constraint for the
@@ -1795,6 +1816,7 @@ export interface Database {
       ai_usage: Table<AiUsage, AiUsageInsert, Partial<AiUsageInsert>>;
       rate_limit_events: Table<RateLimitEvent, RateLimitEventInsert, Partial<RateLimitEventInsert>>;
       product_events: Table<ProductEvent, ProductEventInsert, Partial<ProductEventInsert>>;
+      birth_year_changes: Table<BirthYearChange, never, never>;
     };
   };
 }
