@@ -1,4 +1,5 @@
 import { requireUser, getCurrentProfile } from "@/lib/security/dal";
+import { resolveLocale } from "@/lib/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
 import { getUpcomingDeadlines } from "@/lib/deadlines/upcoming";
 import { AdvisorChat } from "@/features/advisor/advisor-chat";
@@ -63,7 +64,8 @@ export default async function AdvisorPage() {
   // confidence states for the ordinary case; this only guards the unexpected one.
   let counselorResult: Awaited<ReturnType<typeof getCounselorRecommendations>> | null = null;
   try {
-    counselorResult = await getCounselorRecommendations(userId);
+    const locale = await resolveLocale();
+    counselorResult = await getCounselorRecommendations(userId, locale);
   } catch (error) {
     console.error("[advisor] failed to compute counselor recommendations", error instanceof Error ? error.stack : error);
   }

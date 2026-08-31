@@ -259,3 +259,54 @@ describe("generateCandidateActions — combined", () => {
     expect(candidates.map((c) => c.source.kind).sort()).toEqual(["opportunity", "profile_task", "requirement_action"]);
   });
 });
+
+describe("generateCandidateActions — locale: tr", () => {
+  const baseInput: RequirementCandidateInput = {
+    universityId: "uni-1",
+    universityName: "Test University",
+    requirement: requirement(),
+    evaluation: { status: "not_met", reasoning: "No SAT score is on file." },
+  };
+
+  test("not_met requirement title is Turkish, sourced requirement title (SAT score) stays as-is", () => {
+    const candidates = generateCandidateActions(state({ requirementCandidateInputs: [baseInput] }), "tr");
+    const req = candidates.find((c) => c.source.kind === "requirement_action");
+    expect(req!.title).toBe("Ele al: SAT score (Test University)");
+  });
+
+  test("unknown-status requirement title is Turkish", () => {
+    const candidates = generateCandidateActions(
+      state({ requirementCandidateInputs: [{ ...baseInput, evaluation: { status: "unknown", reasoning: "x" } }] }),
+      "tr"
+    );
+    const req = candidates.find((c) => c.source.kind === "requirement_action");
+    expect(req!.title).toBe("Kontrol için gerekli bilgiyi ekle: SAT score (Test University)");
+  });
+
+  // No requirement.title on file — falls through to the category label, which IS Oryn's
+  // own copy and so is the one part of this title genuinely translated.
+  test("falls back to the Turkish category label when the requirement has no title", () => {
+    const noTitle: RequirementCandidateInput = { ...baseInput, requirement: requirement({ title: null, requirement_type: "english_proficiency" }) };
+    const candidates = generateCandidateActions(state({ requirementCandidateInputs: [noTitle] }), "tr");
+    const req = candidates.find((c) => c.source.kind === "requirement_action");
+    expect(req!.title).toBe("Ele al: İngilizce yeterliliği (Test University)");
+  });
+
+  test("opportunity and profile-task titles are untouched by locale (out of scope for this pass)", () => {
+    const candidates = generateCandidateActions(
+      state({
+        eligibleOpportunityMatches: [{ match: match(), opportunity: opportunity({ title: "Test Opportunity" }) }],
+        completenessChecklist: [checklistItem({ label: "Add a career goal", done: false })],
+      }),
+      "tr"
+    );
+    expect(candidates.find((c) => c.source.kind === "opportunity")!.title).toBe("Test Opportunity");
+    expect(candidates.find((c) => c.source.kind === "profile_task")!.title).toBe("Add a career goal");
+  });
+
+  test("omitting locale still produces the exact English output (default-locale backward compatibility)", () => {
+    const withDefault = generateCandidateActions(state({ requirementCandidateInputs: [baseInput] }));
+    const withExplicitEn = generateCandidateActions(state({ requirementCandidateInputs: [baseInput] }), "en");
+    expect(withDefault).toEqual(withExplicitEn);
+  });
+});

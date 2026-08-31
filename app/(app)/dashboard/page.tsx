@@ -1,4 +1,5 @@
 import { getCurrentProfile, requireUser } from "@/lib/security/dal";
+import { resolveLocale } from "@/lib/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWeeklyPlan, getOrCreateWeeklyPlan } from "@/lib/plan/persist";
 import { getTargetUniversitiesWithDetails } from "@/lib/universities/queries";
@@ -130,7 +131,8 @@ export default async function DashboardPage() {
   const counselorState = await counselorStatePromise;
   if (counselorState) {
     try {
-      counselorContract = buildCounselorDashboardContract(counselorState, upcomingDeadlines);
+      const locale = await resolveLocale();
+      counselorContract = buildCounselorDashboardContract(counselorState, upcomingDeadlines, new Date(), locale);
     } catch (error) {
       console.error("[dashboard] failed to build counselor dashboard contract", error instanceof Error ? error.stack : error);
     }

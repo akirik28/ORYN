@@ -9,6 +9,7 @@ import {
   filterActionableOpportunities,
   hasAnyVerificationRecord,
   hasDeadlineCommitment,
+  insufficientVerificationReason,
   isOpportunityActionable,
   isOpportunityRecommendable,
   isOpportunitySufficientlyVerified,
@@ -205,6 +206,47 @@ describe("nonActionableOpportunityReason", () => {
 
   test("renders a multi-word cycle status readably rather than as a raw enum value", () => {
     expect(nonActionableOpportunityReason(row({ cycle_status: "historical" }))).not.toMatch(/_/);
+  });
+
+  test("omitting locale is identical to passing 'en' explicitly (default-locale backward compatibility)", () => {
+    expect(nonActionableOpportunityReason(row({ cycle_status: "closed" }))).toBe(nonActionableOpportunityReason(row({ cycle_status: "closed" }), "en"));
+  });
+
+  describe("locale: tr", () => {
+    for (const [cycleStatus, label] of [
+      ["closed", "kapandı"],
+      ["historical", "artık düzenlenmiyor"],
+      ["discontinued", "iptal edildi"],
+    ] as const) {
+      test(`names the cycle status in Turkish ('${cycleStatus}')`, () => {
+        expect(nonActionableOpportunityReason(row({ cycle_status: cycleStatus }), "tr")).toBe(`Bu fırsatın mevcut dönemi: ${label}.`);
+      });
+    }
+
+    test("names the passed deadline in Turkish", () => {
+      expect(nonActionableOpportunityReason(row({ cycle_status: "date_not_announced", deadline: "2026-03-07" }), "tr")).toBe(
+        "Bu fırsatın başvuru son tarihi geçti."
+      );
+    });
+
+    test("names a hidden/moderated row in Turkish without blaming the student or the programme", () => {
+      const reason = nonActionableOpportunityReason(row({ status: "disabled", cycle_status: "open" }), "tr");
+      expect(reason).toBe("Oryn bu fırsatı şu anda göstermiyor.");
+    });
+  });
+});
+
+describe("insufficientVerificationReason", () => {
+  test("English branch returns the exact same string as the INSUFFICIENT_VERIFICATION_REASON constant", () => {
+    expect(insufficientVerificationReason()).toBe(INSUFFICIENT_VERIFICATION_REASON);
+    expect(insufficientVerificationReason("en")).toBe(INSUFFICIENT_VERIFICATION_REASON);
+  });
+
+  test("Turkish branch is a distinct, real Turkish sentence", () => {
+    const tr = insufficientVerificationReason("tr");
+    expect(tr).not.toBe(INSUFFICIENT_VERIFICATION_REASON);
+    expect(tr).toMatch(/doğrulamadı/);
+    expect(tr).toMatch(/resmi sayfayı kontrol edin/);
   });
 });
 

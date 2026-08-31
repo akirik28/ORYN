@@ -1,13 +1,7 @@
-import { DIMENSION_LABELS } from "@/lib/scoring/labels";
 import { GAP_CLAIM_SCORE_CEILING } from "./config";
-import type { CounselorRecommendation, CounselorState, NextActionType, ProfileGap, RankedCandidate } from "./types";
-
-const SEVERITY_LABEL: Record<ProfileGap["severity"], string> = {
-  critical: "a significant current gap",
-  moderate: "a moderate current gap",
-  minor: "a minor current gap",
-  insufficient_data: "an area Oryn doesn't have enough data on yet",
-};
+import { alreadyStrongWhyLine, gapWhyLine, missingInfoWhyLine, verifiedActiveLine } from "./copy";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
+import type { CounselorRecommendation, CounselorState, NextActionType, RankedCandidate } from "./types";
 
 function slugify(value: string): string {
   return value
@@ -57,30 +51,30 @@ function nextActionFor(candidate: RankedCandidate["candidate"]): { label: string
  * act; a mixed candidate (e.g. a real Awards gap alongside an already-strong Academics
  * match) keeps its genuine reason and drops only the false one.
  */
-function whyForOpportunity(ranked: RankedCandidate): string[] {
+function whyForOpportunity(ranked: RankedCandidate, locale: Locale): string[] {
   const isDeprioritized = ranked.recommendationClass === "deprioritize" || ranked.recommendationClass === "avoid_for_now";
   const lines = ranked.matchedGaps
     .filter((g) => isDeprioritized || g.score < GAP_CLAIM_SCORE_CEILING)
     .map((g) =>
-      g.score >= GAP_CLAIM_SCORE_CEILING
-        ? `Addresses ${DIMENSION_LABELS[g.dimension]}, already strong (${g.score}/100) — not a reason to prioritize this.`
-        : `Addresses ${DIMENSION_LABELS[g.dimension]}, ${SEVERITY_LABEL[g.severity]} (${g.score}/100).`
+      g.score >= GAP_CLAIM_SCORE_CEILING ? alreadyStrongWhyLine(g.dimension, g.score, locale) : gapWhyLine(g.dimension, g.severity, g.score, locale)
     );
   if (ranked.candidate.verificationState === "verified_current") {
-    lines.push("Verified as currently active.");
+    lines.push(verifiedActiveLine(locale));
   }
   return lines;
 }
 
+// `match.evaluation.reasoning` comes from lib/requirements/evaluate.ts, a separate,
+// ~30-template English-only reasoning generator for university requirement checks
+// (curriculum/coursework/GPA/language rules) — out of scope for this pass (flagged as
+// follow-up, not silently skipped: see this branch's own status notes). A Turkish student
+// currently sees this one line in English inside an otherwise-Turkish recommendation;
+// everything else on the same card (title, other why lines, eligibility notes) is Turkish.
 function whyForRequirement(ranked: RankedCandidate, state: CounselorState): string[] {
   if (ranked.candidate.source.kind !== "requirement_action") return [];
   const requirementId = ranked.candidate.source.requirementId;
   const match = state.requirementCandidateInputs.find((i) => i.requirement.id === requirementId);
   return match ? [match.evaluation.reasoning] : [];
-}
-
-function whyForProfileTask(): string[] {
-  return ["Oryn doesn't have this information yet — needed for confident recommendations."];
 }
 
 /**
@@ -89,16 +83,21 @@ function whyForProfileTask(): string[] {
  * templates parameterized by real fields (gap dimension/severity, or the requirement
  * evaluator's own sourced reasoning string) — never free LLM text, so a recommendation is
  * fully explainable even when the optional LLM narration layer (Phase J) is unavailable.
+ *
+ * `locale` is optional and defaults to English so every existing caller (weekly-plan.ts,
+ * opportunity-context.ts — both feed an English-prompted AI call and have no locale to pass
+ * yet) keeps producing byte-identical output. Only app/(app)/advisor/page.tsx and
+ * app/(app)/dashboard/page.tsx pass a resolved student locale.
  */
-export function buildRecommendation(ranked: RankedCandidate, state: CounselorState): CounselorRecommendation {
+export function buildRecommendation(ranked: RankedCandidate, state: CounselorState, locale: Locale = DEFAULT_LOCALE): CounselorRecommendation {
   const { candidate } = ranked;
 
   const why =
     candidate.source.kind === "opportunity"
-      ? whyForOpportunity(ranked)
+      ? whyForOpportunity(ranked, locale)
       : candidate.source.kind === "requirement_action"
         ? whyForRequirement(ranked, state)
-        : whyForProfileTask();
+        : [missingInfoWhyLine(locale)];
 
   return {
     id: recommendationId(candidate),

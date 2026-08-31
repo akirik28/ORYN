@@ -1,5 +1,6 @@
 import { clampScore } from "@/lib/scoring/math";
 import { evaluateCandidateEligibility } from "./eligibility";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import {
   DATA_CONFIDENCE_SCORE,
   EFFORT_BY_CATEGORY,
@@ -53,11 +54,14 @@ interface ScoredCandidate {
   confidence: BoundedLevel;
 }
 
-function scoreOpportunityCandidate(candidate: CandidateAction, gaps: ProfileGap[], state: CounselorState, referenceDate: Date): Omit<ScoredCandidate, "eligibility"> {
+function scoreOpportunityCandidate(candidate: CandidateAction, gaps: ProfileGap[], state: CounselorState, referenceDate: Date, locale: Locale): Omit<ScoredCandidate, "eligibility"> {
   const matchedGaps = matchedGapsFor(candidate, gaps);
   const source = candidate.source as { kind: "opportunity"; opportunityId: string };
   const entry = state.eligibleOpportunityMatches.find((e) => e.opportunity.id === source.opportunityId);
-  const eligibility = evaluateCandidateEligibility(candidate, state, referenceDate);
+  // Only .verdict is read below — the notes text itself never surfaces from this call, so
+  // the locale threaded through here doesn't change any output, but keeps the signature
+  // consistent with scoreCandidate's own (real) eligibility call below.
+  const eligibility = evaluateCandidateEligibility(candidate, state, referenceDate, locale);
 
   const gapRelevance = gapRelevanceComponent(matchedGaps);
   const fieldAlignment = entry?.match.relevance_score ?? 0;
@@ -124,10 +128,10 @@ function scoreProfileTaskCandidate(candidate: CandidateAction, state: CounselorS
   };
 }
 
-function scoreCandidate(candidate: CandidateAction, gaps: ProfileGap[], state: CounselorState, referenceDate: Date): ScoredCandidate {
-  const eligibility = evaluateCandidateEligibility(candidate, state, referenceDate);
+function scoreCandidate(candidate: CandidateAction, gaps: ProfileGap[], state: CounselorState, referenceDate: Date, locale: Locale): ScoredCandidate {
+  const eligibility = evaluateCandidateEligibility(candidate, state, referenceDate, locale);
   if (candidate.source.kind === "opportunity") {
-    return { ...scoreOpportunityCandidate(candidate, gaps, state, referenceDate), eligibility };
+    return { ...scoreOpportunityCandidate(candidate, gaps, state, referenceDate, locale), eligibility };
   }
   if (candidate.source.kind === "requirement_action") {
     return { ...scoreRequirementCandidate(candidate, state), eligibility };
@@ -164,10 +168,19 @@ function strongestGap(gaps: ProfileGap[]): ProfileGap | null {
  * existing `recommendation_class` enum (do/consider/deprioritize/avoid_for_now) —
  * deprioritize/avoid_for_now are produced deterministically here rather than left unused,
  * per docs/known-issues.md's documented gap.
+ *
+ * `locale` defaults to English; see evidence.ts's buildRecommendation for why this is safe
+ * for every existing caller.
  */
-export function rankCandidates(candidates: CandidateAction[], gaps: ProfileGap[], state: CounselorState, referenceDate: Date = new Date()): RankedCandidate[] {
+export function rankCandidates(
+  candidates: CandidateAction[],
+  gaps: ProfileGap[],
+  state: CounselorState,
+  referenceDate: Date = new Date(),
+  locale: Locale = DEFAULT_LOCALE
+): RankedCandidate[] {
   const eligible = candidates
-    .map((c) => scoreCandidate(c, gaps, state, referenceDate))
+    .map((c) => scoreCandidate(c, gaps, state, referenceDate, locale))
     .filter((s) => s.eligibility.verdict !== "known_ineligible");
 
   const adjusted = applyRedundancyDecay(eligible).sort((a, b) => b.score - a.score);
