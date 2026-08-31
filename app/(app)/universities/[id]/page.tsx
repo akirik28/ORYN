@@ -11,6 +11,9 @@ import { refreshRequirementEvaluations } from "@/lib/requirements/persist";
 import { REQUIREMENT_CATEGORY_LABELS } from "@/lib/requirements/types";
 import { NON_ACTIONABLE_VERIFICATION_STATES } from "@/lib/deadlines/ingest";
 import { NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES } from "@/lib/requirements/ingest";
+import { CAO_POINTS_IE } from "@/lib/acquisition/verification";
+import { toCalendarBoundFactDisplay } from "@/lib/requirements/calendar-bound";
+import { CalendarBoundFactList } from "@/features/universities/calendar-bound-fact-card";
 import { isDatedDeadlineUpcoming } from "@/lib/deadlines/lifecycle";
 import { OutlookBadge } from "@/features/universities/outlook-badge";
 import { SourceBadge } from "@/components/oryn/source-badge";
@@ -152,6 +155,14 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   // (conflicting) is real, correctly-sourced data worth keeping in the table — never worth
   // showing as though it still applies. Mirrors actionableDeadlines below, same reasoning.
   const requirements = (requirementsRes.data ?? []).filter((r) => !NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES.has(r.verification_state));
+  // Only rows explicitly tagged calendar_bound_fact_class — NOT every verified_historical
+  // row. The other historical rows for this university (an ordinary stale fact, not a
+  // calendar-bound one) stay excluded from `requirements` above and are not shown here
+  // either; this list and that filter are deliberately disjoint, not a broader "show all
+  // historical facts" toggle.
+  const calendarBoundFacts = (requirementsRes.data ?? [])
+    .filter((r) => r.calendar_bound_fact_class === "cao_points_ie")
+    .map((r) => toCalendarBoundFactDisplay(r, CAO_POINTS_IE));
   if (requirements.length > 0) {
     await refreshRequirementEvaluations(university.id, session.userId!, targetRes.data?.program_id ?? null);
   }
@@ -556,6 +567,12 @@ export default async function UniversityDetailPage({ params }: { params: Promise
           {[...requirementsByProgram.entries()].map(([programId, items]) => (
             <RequirementGroup key={programId} title={programNameById.get(programId) ?? "Program"} items={items} evaluationByRequirement={evaluationByRequirement} />
           ))}
+        </section>
+      ) : null}
+
+      {calendarBoundFacts.length > 0 ? (
+        <section className="space-y-4">
+          <CalendarBoundFactList title="Recent admissions data" items={calendarBoundFacts} />
         </section>
       ) : null}
 
