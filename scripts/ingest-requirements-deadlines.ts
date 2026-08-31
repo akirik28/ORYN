@@ -140,6 +140,13 @@ async function loadUniversityCandidates(target: PostgrestTarget): Promise<ReqUni
 async function main() {
   const args = process.argv.slice(2);
   const apply = args.includes("--apply");
+  // Restricts which corpus files this run reads, by substring match on filename — e.g.
+  // `--only=2026-08-31` to process just one research batch. Added so a batch that is still
+  // being reviewed (an older corpus sampled for staleness before any --apply) can sit
+  // untouched in the same directory while a separately-vetted batch is applied on its own
+  // branch. Omitting the flag processes every file, exactly as before this option existed.
+  const onlyArg = args.find((a) => a.startsWith("--only="));
+  const only = onlyArg ? onlyArg.slice("--only=".length) : null;
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const secretKey = process.env.SUPABASE_SECRET_KEY;
@@ -151,7 +158,10 @@ async function main() {
   const target: PostgrestTarget = { url, key: secretKey };
 
   const dir = "data/research/university-requirements";
-  const { requirementFiles, deadlineFiles } = classifyCorpusFiles(dir);
+  const all = classifyCorpusFiles(dir);
+  const requirementFiles = only ? all.requirementFiles.filter((f) => f.includes(only)) : all.requirementFiles;
+  const deadlineFiles = only ? all.deadlineFiles.filter((f) => f.includes(only)) : all.deadlineFiles;
+  if (only) console.log(`--only=${only}: ${requirementFiles.length} requirement file(s), ${deadlineFiles.length} deadline file(s) selected out of ${all.requirementFiles.length + all.deadlineFiles.length} total.`);
 
   // Read on the filename, route on the record's own shape. 19 requirements-named files in this
   // corpus contain deadline records; routing those on the filename handed them to
