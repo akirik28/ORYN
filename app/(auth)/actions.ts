@@ -13,7 +13,8 @@ import {
 import { requireUser } from "@/lib/security/dal";
 import { env } from "@/lib/env";
 import { isSafeRedirectTarget } from "@/lib/security/safe-redirect";
-import { LEGAL_REVIEW_STATUS } from "@/lib/legal/content";
+import { resolveLocale } from "@/lib/i18n/locale";
+import { getLegalCopy, LEGAL_REVIEW_STATUS } from "@/lib/legal/content";
 
 async function getOrigin() {
   const originHeader = (await headers()).get("origin");
@@ -29,7 +30,16 @@ export async function signUp(_prevState: AuthFormState, formData: FormData): Pro
   });
 
   if (!parsed.success) {
-    return { errors: parsed.error.flatten().fieldErrors as Record<string, string[]> };
+    const errors = parsed.error.flatten().fieldErrors as Record<string, string[]>;
+    // SignUpSchema's own message is a static English fallback (see its comment) — the
+    // schema can't know the visitor's locale at module-load time, but this action runs
+    // per-request and can, so it overrides just this one field's message with the
+    // localized version.
+    if (errors.acceptedTerms) {
+      const locale = await resolveLocale();
+      errors.acceptedTerms = [getLegalCopy(locale).signupConsent.checkboxRequiredError];
+    }
+    return { errors };
   }
 
   const supabase = await createClient();

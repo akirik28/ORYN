@@ -1,27 +1,31 @@
-import { DATA_PROCESSORS, legalCopy } from "@/lib/legal/content";
+import type { Locale } from "@/lib/i18n/config";
+import { getDataProcessors, getLegalCopy, type LegalCopy } from "@/lib/legal/content";
 
 /**
  * The data-processor inventory: every external service that receives data, and precisely
- * what reaches it. Rendered from `DATA_PROCESSORS` in both the Privacy Notice and the KVKK
- * notice, so the two can never disagree about where student data goes.
+ * what reaches it. Rendered from `getDataProcessors(locale)` in both the Privacy Notice and
+ * the KVKK notice, so the two can never disagree about where student data goes — in either
+ * language, since `id`/`personalData`/`verifiedIn` are identical across the EN/TR arrays by
+ * construction (see the test asserting that in __tests__/legal/consent.test.ts).
  *
  * A real `<table>` rather than a stack of divs — it is tabular data, and outside counsel
  * will read it as a table. It scrolls inside its own container on narrow screens instead
  * of forcing the page to scroll sideways, and collapses to stacked cards below `sm`, where
  * five columns of prose is unreadable on a phone.
  */
-export function ProcessorTable() {
-  const t = legalCopy.processorTable;
+export function ProcessorTable({ locale }: { locale: Locale }) {
+  const t = getLegalCopy(locale).processorTable;
+  const processors = getDataProcessors(locale);
 
   return (
     <div className="mt-5">
       {/* Phone: one card per service. */}
       <ul className="space-y-3 sm:hidden">
-        {DATA_PROCESSORS.map((p) => (
+        {processors.map((p) => (
           <li key={p.id} id={`processor-${p.id}`} className="rounded-xl border border-border bg-card p-4">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="text-sm font-semibold text-ink-1">{p.name}</h3>
-              <PersonalDataTag personalData={p.personalData} />
+              <PersonalDataTag personalData={p.personalData} t={t} />
             </div>
             <p className="mt-1 text-[13px] leading-relaxed text-ink-3">{p.role}</p>
             <dl className="mt-3 space-y-2 text-[13px]">
@@ -46,12 +50,12 @@ export function ProcessorTable() {
             </tr>
           </thead>
           <tbody>
-            {DATA_PROCESSORS.map((p) => (
+            {processors.map((p) => (
               <tr key={p.id} id={`processor-${p.id}`} className="border-b border-border last:border-0 align-top">
                 <th scope="row" className="px-4 py-4 font-normal">
                   <span className="block font-semibold text-ink-1">{p.name}</span>
                   <span className="mt-1 block leading-relaxed text-ink-4">{p.role}</span>
-                  <span className="mt-2 inline-block"><PersonalDataTag personalData={p.personalData} /></span>
+                  <span className="mt-2 inline-block"><PersonalDataTag personalData={p.personalData} t={t} /></span>
                 </th>
                 <td className="px-4 py-4 leading-relaxed text-ink-3">{p.dataSent}</td>
                 <td className="px-4 py-4 leading-relaxed text-ink-3">{p.location}</td>
@@ -74,8 +78,7 @@ function Field({ label, value }: { label: string; value: string }) {
   );
 }
 
-function PersonalDataTag({ personalData }: { personalData: boolean }) {
-  const t = legalCopy.processorTable;
+function PersonalDataTag({ personalData, t }: { personalData: boolean; t: LegalCopy["processorTable"] }) {
   return (
     <span
       className={

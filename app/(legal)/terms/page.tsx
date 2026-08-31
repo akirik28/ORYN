@@ -1,14 +1,17 @@
+import type { Metadata } from "next";
+import { resolveLocale } from "@/lib/i18n/locale";
 import { LegalDocumentView } from "@/features/legal/legal-document";
-import { legalCopy } from "@/lib/legal/content";
+import { getLegalCopy } from "@/lib/legal/content";
 
-// Named `doc`, not `document` — a module-scope `document` shadows the DOM global.
-const doc = legalCopy.documents.terms;
+export async function generateMetadata(): Promise<Metadata> {
+  const copy = getLegalCopy(await resolveLocale());
+  return { title: copy.documents.terms.title, description: copy.documents.terms.intro };
+}
 
-export const metadata = {
-  title: doc.title,
-  description: doc.intro,
-};
+export default async function TermsPage() {
+  const locale = await resolveLocale();
+  // Named `doc`, not `document` — a module-scope `document` shadows the DOM global.
+  const doc = getLegalCopy(locale).documents.terms;
 
-export default function TermsPage() {
-  return <LegalDocumentView document={doc} />;
+  return <LegalDocumentView document={doc} locale={locale} />;
 }

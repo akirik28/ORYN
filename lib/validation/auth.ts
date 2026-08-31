@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { legalCopy } from "@/lib/legal/content";
+import { getLegalCopy } from "@/lib/legal/content";
 
 export const SignUpSchema = z.object({
   displayName: z.string().min(2, { error: "Enter at least 2 characters." }).max(80).trim(),
@@ -18,10 +18,17 @@ export const SignUpSchema = z.object({
    * An unticked checkbox submits no field at all (not `false`), so the raw value here is
    * `"on"` or `null`; `preprocess` collapses both shapes before `literal(true)` produces
    * the one error message a student should ever see for this field.
+   *
+   * The message here is always English: schema definition runs once at module load, not
+   * per-request, so it cannot know the visitor's locale. `signUp()` in actions.ts — which
+   * runs per-request and can resolve one — overrides this specific field's message with
+   * the localized version before returning errors to the form. This fallback is what a
+   * caller sees only if that override is ever skipped, so it stays a real, correct
+   * (English) sentence rather than a placeholder.
    */
   acceptedTerms: z.preprocess(
     (value) => value === "on" || value === "true" || value === true,
-    z.literal(true, { error: legalCopy.signupConsent.checkboxRequiredError })
+    z.literal(true, { error: getLegalCopy("en").signupConsent.checkboxRequiredError })
   ),
 });
 export type SignUpInput = z.infer<typeof SignUpSchema>;

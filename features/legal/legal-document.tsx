@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { legalCopy, LEGAL_REVIEW_STATUS, LEGAL_ROUTES, type LegalDocument } from "@/lib/legal/content";
+import type { Locale } from "@/lib/i18n/config";
+import { getLegalCopy, LEGAL_REVIEW_STATUS, LEGAL_ROUTES, type LegalDocument } from "@/lib/legal/content";
 import { DraftBanner } from "./draft-banner";
 import { ProcessorTable } from "./processor-table";
 import { CompanyDetails } from "./company-details";
@@ -12,13 +13,27 @@ import { CompanyDetails } from "./company-details";
  *
  * Every section gets a stable `id` from the content module (not a slugified heading), so
  * deep links like /privacy#processors keep working after the text is translated.
+ *
+ * `document` is already the locale-resolved `LegalDocument` (the caller picked it out of
+ * `getLegalCopy(locale).documents.*`); `locale` is threaded through separately for the
+ * `common` strings and the sub-components this view renders, the same split the page-level
+ * callers use.
  */
-export function LegalDocumentView({ document }: { document: LegalDocument }) {
-  const t = legalCopy.common;
+export function LegalDocumentView({ document, locale }: { document: LegalDocument; locale: Locale }) {
+  const copy = getLegalCopy(locale);
+  const t = copy.common;
   const others = LEGAL_ROUTES.filter((r) => r.slug !== document.slug);
 
   return (
-    <article className="mx-auto w-full max-w-3xl px-5 py-10 sm:px-8 sm:py-16">
+    // `lang={locale}` explicitly, even though it matches root layout's <html lang> today
+    // (both resolve from the same request-scoped resolveLocale()) — this view has real
+    // uppercase headings below, and CSS text-transform:uppercase under lang="tr" applies
+    // Turkish case-folding even to correctly-Turkish text's neighbors if the two ever
+    // desync (e.g. a future caller passing a `document` from one locale's copy with a
+    // different `locale` prop). Stating it here removes the dependency on that invariant
+    // holding elsewhere, rather than fixing a mismatch that exists today (contrast
+    // SiteFooter, which has one).
+    <article lang={locale} className="mx-auto w-full max-w-3xl px-5 py-10 sm:px-8 sm:py-16">
       <Link
         href="/"
         className="inline-flex items-center gap-1.5 text-sm text-ink-3 transition-colors hover:text-brand-primary"
@@ -38,7 +53,7 @@ export function LegalDocumentView({ document }: { document: LegalDocument }) {
       </header>
 
       <div className="mt-8">
-        <DraftBanner />
+        <DraftBanner locale={locale} />
       </div>
 
       {/* Contents. A policy document is read by jumping, not front to back. */}
@@ -83,8 +98,8 @@ export function LegalDocumentView({ document }: { document: LegalDocument }) {
                 ))}
               </ul>
             ) : null}
-            {section.companyDetails ? <CompanyDetails kind={section.companyDetails} /> : null}
-            {section.includesProcessorTable ? <ProcessorTable /> : null}
+            {section.companyDetails ? <CompanyDetails kind={section.companyDetails} locale={locale} /> : null}
+            {section.includesProcessorTable ? <ProcessorTable locale={locale} /> : null}
           </section>
         ))}
       </div>
@@ -95,7 +110,7 @@ export function LegalDocumentView({ document }: { document: LegalDocument }) {
           {others.map((route) => (
             <li key={route.slug}>
               <Link href={route.href} className="text-sm text-brand-primary hover:underline">
-                {legalCopy.documents[route.slug].title}
+                {copy.documents[route.slug].title}
               </Link>
             </li>
           ))}

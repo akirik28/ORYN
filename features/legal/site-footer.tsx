@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { COMPANY, legalCopy, isUnresolved } from "@/lib/legal/content";
+import type { Locale } from "@/lib/i18n/config";
+import { COMPANY, getLegalCopy, isUnresolved } from "@/lib/legal/content";
 
 /**
  * The public site footer — policy links, contact, and company identity.
@@ -14,8 +15,9 @@ import { COMPANY, legalCopy, isUnresolved } from "@/lib/legal/content";
  * loud `<Unconfirmed>` chip used inside the documents: in a footer the chip reads as a
  * broken component, whereas in a policy document the loudness is the point.
  */
-export function SiteFooter({ tone = "light" }: { tone?: "dark" | "light" }) {
-  const t = legalCopy.footer;
+export function SiteFooter({ tone = "light", locale }: { tone?: "dark" | "light"; locale: Locale }) {
+  const copy = getLegalCopy(locale);
+  const t = copy.footer;
   const dark = tone === "dark";
   const year = new Date().getFullYear();
 
@@ -38,7 +40,14 @@ export function SiteFooter({ tone = "light" }: { tone?: "dark" | "light" }) {
       };
 
   return (
-    <footer style={c.wrap} className="w-full">
+    // `lang={locale}` — not inherited from the page's `<html lang>`, because they can
+    // disagree: app/page.tsx hardcodes locale="en" here (the surrounding hero copy is
+    // untranslated) while root layout's own <html lang> reflects the visitor's actual
+    // resolved locale, which may be "tr". Under lang="tr", CSS text-transform:uppercase
+    // applies Turkish dotted/dotless-I case-folding even to English text in the subtree —
+    // a live, reproduced bug on this app's uppercase labels, not a hypothetical one — so
+    // this subtree has to declare its own real language rather than trust the ancestor's.
+    <footer lang={locale} style={c.wrap} className="w-full">
       <div className="mx-auto grid w-full max-w-5xl gap-10 px-6 py-12 sm:px-8 sm:py-14 md:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
         <div>
           <p className="text-[15px] font-semibold" style={c.heading}>
@@ -64,7 +73,7 @@ export function SiteFooter({ tone = "light" }: { tone?: "dark" | "light" }) {
           <li className="text-[13px] leading-relaxed" style={c.body}>
             <span style={c.faint}>{t.contactLabel}: </span>
             {isUnresolved(COMPANY.contactEmail) ? (
-              <span style={c.faint}>[{COMPANY.contactEmail.label}]</span>
+              <span style={c.faint}>[{copy.common[COMPANY.contactEmail.labelKey]}]</span>
             ) : (
               <a href={`mailto:${COMPANY.contactEmail}`} style={c.link} className="hover:underline">
                 {COMPANY.contactEmail}
@@ -74,7 +83,7 @@ export function SiteFooter({ tone = "light" }: { tone?: "dark" | "light" }) {
           <li className="text-[13px] leading-relaxed" style={c.body}>
             <span style={c.faint}>{t.companyLabel}: </span>
             {isUnresolved(COMPANY.legalName) ? (
-              <span style={c.faint}>[{COMPANY.legalName.label}]</span>
+              <span style={c.faint}>[{copy.common[COMPANY.legalName.labelKey]}]</span>
             ) : (
               COMPANY.legalName
             )}

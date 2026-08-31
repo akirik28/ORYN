@@ -1,16 +1,18 @@
-import { legalCopy, LEGAL_REVIEW_STATUS } from "@/lib/legal/content";
+import type { Locale } from "@/lib/i18n/config";
+import { getLegalCopy, LEGAL_REVIEW_STATUS } from "@/lib/legal/content";
 
 /**
  * The standing "this is not approved" notice at the top of every legal document.
  *
  * Renders nothing once `LEGAL_REVIEW_STATUS.approved` flips — one constant governs all
- * three pages, so approval cannot be applied to one document and forgotten on another.
- * Not dismissible: a banner a reader can close is a banner that stops being true.
+ * three pages, in both languages, at once, so approval cannot be applied to one document
+ * and forgotten on another. Not dismissible: a banner a reader can close is a banner that
+ * stops being true.
  */
-export function DraftBanner() {
+export function DraftBanner({ locale }: { locale: Locale }) {
   if (LEGAL_REVIEW_STATUS.approved) return null;
 
-  const { label, body } = legalCopy.draftBanner;
+  const { label, body } = getLegalCopy(locale).draftBanner;
 
   return (
     <aside

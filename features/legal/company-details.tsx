@@ -1,4 +1,5 @@
-import { COMPANY, legalCopy, isUnresolved } from "@/lib/legal/content";
+import type { Locale } from "@/lib/i18n/config";
+import { COMPANY, getLegalCopy, isUnresolved } from "@/lib/legal/content";
 import { Unconfirmed } from "./unconfirmed";
 import type { LegalSection, Unresolved } from "@/lib/legal/content";
 
@@ -10,8 +11,8 @@ type Kind = NonNullable<LegalSection["companyDetails"]>;
  * chip; the component handles resolved strings too, so filling `COMPANY` in later is the
  * only change needed here.
  */
-export function CompanyDetails({ kind }: { kind: Kind }) {
-  const t = legalCopy.common;
+export function CompanyDetails({ kind, locale }: { kind: Kind; locale: Locale }) {
+  const t = getLegalCopy(locale).common;
 
   const rows: { label: string; value: string | Unresolved }[] =
     kind === "identity"
@@ -40,7 +41,7 @@ export function CompanyDetails({ kind }: { kind: Kind }) {
           <div key={row.label} className="sm:flex sm:gap-4">
             <dt className="text-[13px] font-medium text-ink-2 sm:w-56 sm:shrink-0">{row.label}</dt>
             <dd className="text-[13px] leading-relaxed text-ink-3">
-              {isUnresolved(row.value) ? <Unconfirmed value={row.value} /> : row.value}
+              {isUnresolved(row.value) ? <Unconfirmed value={row.value} locale={locale} /> : row.value}
             </dd>
           </div>
         ))}
