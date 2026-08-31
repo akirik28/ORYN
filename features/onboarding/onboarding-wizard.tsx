@@ -86,6 +86,9 @@ export function OnboardingWizard() {
   const [schoolName, setSchoolName] = useState("");
   const [schoolId, setSchoolId] = useState<string | null>(null);
   const [graduationYear, setGraduationYear] = useState(String(currentYear + 1));
+  // No default: a pre-filled year would be silently wrong for almost everyone, and this
+  // one has to be right — it gates every age-restricted opportunity.
+  const [birthYear, setBirthYear] = useState("");
   const [curriculum, setCurriculum] = useState<CurriculumType | "">("");
   const [interests, setInterests] = useState<string[]>([]);
   const [targetGeographies, setTargetGeographies] = useState<TargetGeography[]>([]);
@@ -106,6 +109,16 @@ export function OnboardingWizard() {
       setError("Fill in your country, school, and curriculum to continue.");
       return;
     }
+    // Checked here rather than only on submit: the student is four steps from the end at
+    // this point, and a Zod error surfacing on the final button would send them back
+    // through the wizard for one number. The bounds match CompleteOnboardingSchema's.
+    if (step === 1) {
+      const year = Number(birthYear);
+      if (!birthYear.trim() || !Number.isInteger(year) || year < currentYear - 100 || year > currentYear - 10) {
+        setError("Enter the year you were born — Oryn needs it to check age limits on programs.");
+        return;
+      }
+    }
     isAdvancing.current = true;
     setStep((s) => Math.min(s + 1, TOTAL_STEPS - 1));
   }
@@ -125,6 +138,7 @@ export function OnboardingWizard() {
       schoolName: schoolName.trim(),
       schoolId,
       graduationYear: Number(graduationYear),
+      birthYear: Number(birthYear),
       curriculum: curriculum as CompleteOnboardingInput["curriculum"],
       interests,
       targetGeographies,
@@ -199,6 +213,27 @@ export function OnboardingWizard() {
                     min={currentYear}
                     max={currentYear + 8}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="birthYear">Year you were born</Label>
+                  <Input
+                    id="birthYear"
+                    type="number"
+                    inputMode="numeric"
+                    placeholder={String(currentYear - 16)}
+                    value={birthYear}
+                    onChange={(e) => setBirthYear(e.target.value)}
+                    min={currentYear - 100}
+                    max={currentYear - 10}
+                    aria-describedby="birthYear-why"
+                  />
+                  {/* Says what it is for, in the student's terms. Without this the question
+                      reads as one more form field to resent; with it, it reads as the thing
+                      that stops every opportunity card saying "Oryn can't check this". */}
+                  <p id="birthYear-why" className="text-xs text-muted-foreground">
+                    Lots of programs have age limits. Oryn needs this to tell you which ones you
+                    can actually apply to — the year is enough, never your full birthday.
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="curriculum">Curriculum</Label>
