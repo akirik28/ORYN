@@ -9,6 +9,13 @@ import type { MonthlyQuota } from "@/lib/ai/monthly-quota";
  * This month's counselor allowance, as a real balance rather than decoration — the number
  * shown is the same one app/(app)/advisor/actions.ts enforces, counted from `ai_usage`.
  *
+ * The bar shows what is LEFT, not what has been spent, because everything around it does:
+ * the big figure is `remaining`, and the sentence underneath reads "300 messages left".
+ * Drawing spent instead put the panel at odds with itself — at the start of a month it
+ * said "300 messages left" above a completely empty bar, which reads as "you have none"
+ * and was reported as the bar being missing (founder, 2026-08-31). Full at the start of
+ * the month, draining as it is used, is the meaning the surrounding copy already carries.
+ *
  * The colour is a function of how much is left, not a fixed brand gradient: a bar that
  * looks identical at 5% and 95% spent tells a student nothing. It travels indigo → violet
  * while there is plenty of headroom, warms to amber past three-quarters, and goes rose
@@ -21,7 +28,7 @@ export function MonthlyUsageMeter({ quota, className }: { quota: MonthlyQuota; c
   // than a static graphic. Width transitions handle the rest.
   const [shown, setShown] = useState(0);
   useEffect(() => {
-    const id = requestAnimationFrame(() => setShown(quota.fraction));
+    const id = requestAnimationFrame(() => setShown(1 - quota.fraction));
     return () => cancelAnimationFrame(id);
   }, [quota.fraction]);
 
@@ -49,9 +56,17 @@ export function MonthlyUsageMeter({ quota, className }: { quota: MonthlyQuota; c
   const resets = new Date(quota.resetsAt).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 
   return (
+    // Toned for the surface this actually sits on. Every value here used to be white-alpha
+    // (border-white/12, bg-white/[0.04], track bg-white/[0.07], text-white/35) — correct on
+    // a dark card, but the meter's only caller puts it in the Counselor page's light
+    // sidebar, beside a `border-white/65 bg-white/45` chat panel. At 4-12% white on a pale
+    // lilac ground the panel, its border and the whole progress track were invisible, so
+    // the meter read as an unstyled number floating on the page (founder report,
+    // 2026-08-31: "bar gözükmüyor, saydam"). Tokens below flip with the theme rather than
+    // assuming either one.
     <div
       className={cn(
-        "rounded-2xl border border-white/12 bg-white/[0.04] p-4 backdrop-blur-xl",
+        "rounded-2xl border border-white/65 bg-white/45 p-4 backdrop-blur-xl dark:border-white/12 dark:bg-white/[0.04]",
         className,
       )}
     >
@@ -60,27 +75,38 @@ export function MonthlyUsageMeter({ quota, className }: { quota: MonthlyQuota; c
           <Sparkles className="size-3.5" /> This month
         </p>
         <p className="font-mono text-xs tabular-nums text-muted-foreground">
-          <span className={cn("font-semibold", exhausted ? "text-rose-300" : low ? "text-amber-300" : "text-foreground")}>
+          <span
+            className={cn(
+              "font-semibold",
+              exhausted
+                ? "text-rose-600 dark:text-rose-300"
+                : low
+                  ? "text-amber-600 dark:text-amber-300"
+                  : "text-foreground",
+            )}
+          >
             {quota.remaining}
           </span>
-          <span className="text-white/35"> / {quota.limit}</span>
+          <span className="text-ink-4"> / {quota.limit}</span>
         </p>
       </div>
 
       <div
-        className="relative mt-3 h-2.5 overflow-hidden rounded-full bg-white/[0.07]"
+        className="relative mt-3 h-2.5 overflow-hidden rounded-full bg-black/10 dark:bg-white/[0.07]"
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={quota.limit}
-        aria-valuenow={quota.used}
-        aria-label={`${quota.used} of ${quota.limit} counselor messages used this month`}
+        aria-valuenow={quota.remaining}
+        aria-label={`${quota.remaining} of ${quota.limit} counselor messages left this month`}
       >
         <div
           className={cn(
             "relative h-full rounded-full bg-gradient-to-r transition-[width] duration-1000 ease-out",
             fill,
           )}
-          style={{ width: `${Math.max(shown * 100, quota.used > 0 ? 3 : 0)}%`, boxShadow: glow }}
+          // Floor of 3% while anything remains, so a last message or two is still a visible
+          // sliver rather than rounding away to an empty bar. Exhausted is a true zero.
+          style={{ width: `${exhausted ? 0 : Math.max(shown * 100, 3)}%`, boxShadow: glow }}
         >
           {/* Sheen travels across the filled portion only. Suppressed once exhausted. */}
           {!exhausted ? (
