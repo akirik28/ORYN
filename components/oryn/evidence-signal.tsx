@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 /**
  * A single supporting fact, shown citation-style: micro-label, a large tabular value, and
@@ -21,6 +22,7 @@ export function EvidenceSignal({
   timestamp,
   tone = "neutral",
   bordered = false,
+  locale = DEFAULT_LOCALE,
   className,
 }: {
   label: string;
@@ -36,6 +38,9 @@ export function EvidenceSignal({
   tone?: "neutral" | "positive" | "missing";
   /** Left hairline, for stacked evidence lists. */
   bordered?: boolean;
+  /** The actual language of `label` — see components/oryn/eyebrow.tsx's `locale` prop doc
+   *  for why this can't just inherit the page's `<html lang>`. */
+  locale?: Locale;
   className?: string;
 }) {
   const valueTone = {
@@ -46,7 +51,7 @@ export function EvidenceSignal({
 
   return (
     <figure className={cn(bordered && "border-l border-border pl-4", className)}>
-      <figcaption className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-3 uppercase">
+      <figcaption lang={locale} className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-3 uppercase">
         {label}
       </figcaption>
       <p className="mt-1.5 flex items-baseline gap-1.5">

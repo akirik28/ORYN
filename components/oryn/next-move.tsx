@@ -2,6 +2,12 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Eyebrow } from "./eyebrow";
 import { EvidenceSignal } from "./evidence-signal";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
+
+const EVIDENCE_ROW_LABEL: Record<Locale, string> = {
+  en: "What Oryn is reading",
+  tr: "Oryn'ın okuduğu veriler",
+};
 
 export interface NextMoveEvidence {
   label: string;
@@ -36,6 +42,7 @@ export function NextMove({
   surface = false,
   size = "default",
   as: Heading = "h2",
+  locale = DEFAULT_LOCALE,
   className,
 }: {
   eyebrow?: ReactNode;
@@ -54,13 +61,25 @@ export function NextMove({
   /** Heading level, so the page outline stays correct. When this is the statement that
    *  opens a page — Home's hero — it is the page's `h1`, not an `h2` under nothing. */
   as?: "h1" | "h2" | "h3";
+  /**
+   * The actual language of `eyebrow`, `evidence[].label` and `facts[].term` — see
+   * components/oryn/eyebrow.tsx's `locale` prop doc for why this can't just inherit the
+   * page's `<html lang>`. Also selects the language of this component's own internal
+   * "What Oryn is reading" evidence-row label. A single value for the whole instance:
+   * if a future caller genuinely needs to mix languages within one NextMove (e.g.
+   * translated `headline` but a deliberately-untranslated `eyebrow`), pass a custom
+   * `eyebrow` ReactNode with its own `lang` span rather than fighting this prop.
+   */
+  locale?: Locale;
   className?: string;
 }) {
   const hero = size === "hero";
 
   return (
     <section className={cn(surface && "rounded-2xl bg-module-recommendation p-6 md:p-8", className)}>
-      <Eyebrow tone="brand">{eyebrow}</Eyebrow>
+      <Eyebrow tone="brand" locale={locale}>
+        {eyebrow}
+      </Eyebrow>
 
       {/* The hero step starts at 1.75rem, not 2.25rem. A phone's usable measure inside this
           block is ~240px once the shell, the card and the inner panel have each taken their
@@ -84,7 +103,9 @@ export function NextMove({
 
       {evidence && evidence.length > 0 ? (
         <div className="mt-8">
-          <Eyebrow rule={false}>What Oryn is reading</Eyebrow>
+          <Eyebrow rule={false} locale={locale}>
+            {EVIDENCE_ROW_LABEL[locale]}
+          </Eyebrow>
           {/* gap-x-6 below `sm`: at gap-x-10 three signals could not sit two-up on a phone
               and stacked into one tall column. */}
           <div className="mt-3 flex flex-wrap gap-x-6 gap-y-5 sm:gap-x-10">
@@ -95,6 +116,7 @@ export function NextMove({
                 value={item.value}
                 unit={item.unit}
                 tone={item.tone}
+                locale={locale}
               />
             ))}
           </div>
@@ -108,7 +130,9 @@ export function NextMove({
         <dl className="mt-7 flex flex-wrap gap-x-10 gap-y-3">
           {facts.map((fact) => (
             <div key={fact.term}>
-              <dt className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-3 uppercase">{fact.term}</dt>
+              <dt lang={locale} className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-3 uppercase">
+                {fact.term}
+              </dt>
               <dd className="mt-1 text-sm text-ink-1">{fact.value}</dd>
             </div>
           ))}
