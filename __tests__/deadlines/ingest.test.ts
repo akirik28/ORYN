@@ -312,3 +312,55 @@ describe("deadlineFactKeyFromRow", () => {
     expect(deadlineFactKeyFromRow({ recurrence: "not_published_centrally", deadline_date: null, recurrence_month: null, recurrence_day: null })).toBeNull();
   });
 });
+
+describe("decideDeadlineIngestion — program linking (exact match or null)", () => {
+  const PROGRAMS = [
+    { id: "prog-ibeb", universityId: ERASMUS_ID, name: "International Bachelor Economics and Business Economics" },
+    { id: "prog-med-a", universityId: UCC_ID, name: "Medicine" },
+    { id: "prog-med-b", universityId: UCC_ID, name: "Medicine" },
+  ];
+
+  it("links program_id when program_name resolves to exactly one program at that university", () => {
+    const decision = decideDeadlineIngestion(
+      dl({ program_name: "International Bachelor Economics and Business Economics" }),
+      UNIVERSITIES,
+      new Set<string>(),
+      PROGRAMS
+    );
+    expect(decision.outcome).toBe("accepted");
+    expect(decision.row?.program_id).toBe("prog-ibeb");
+    expect(decision.programLinkNote).toBeNull();
+  });
+
+  it("leaves program_id null and states why when program_name has no exact match", () => {
+    const decision = decideDeadlineIngestion(dl({ program_name: "Economics BSc" }), UNIVERSITIES, new Set<string>(), PROGRAMS);
+    expect(decision.outcome).toBe("accepted");
+    expect(decision.row?.program_id).toBeNull();
+    expect(decision.programLinkNote).toContain("no exact-match");
+  });
+
+  it("leaves program_id null and states why when program_name is ambiguous at that university", () => {
+    const decision = decideDeadlineIngestion(
+      dl({ university_name: "University College Cork", university_country: "Ireland", program_name: "Medicine", source_url: "https://www.ucc.ie/en/apply" }),
+      UNIVERSITIES,
+      new Set<string>(),
+      PROGRAMS
+    );
+    expect(decision.outcome).toBe("accepted");
+    expect(decision.row?.program_id).toBeNull();
+    expect(decision.programLinkNote).toContain("ambiguous");
+  });
+
+  it("leaves program_id null with no note when program_name is absent, exactly as before this feature existed", () => {
+    const decision = decideDeadlineIngestion(dl({ program_name: null }), UNIVERSITIES, new Set<string>(), PROGRAMS);
+    expect(decision.outcome).toBe("accepted");
+    expect(decision.row?.program_id).toBeNull();
+    expect(decision.programLinkNote).toBeNull();
+  });
+
+  it("defaults to no linking at all when no programs pool is passed — every existing caller's behavior, unchanged", () => {
+    const decision = decide(dl({ program_name: "International Bachelor Economics and Business Economics" }));
+    expect(decision.outcome).toBe("accepted");
+    expect(decision.row?.program_id).toBeNull();
+  });
+});

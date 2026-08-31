@@ -1,4 +1,5 @@
 import { resolveIdentity, type LocalUniversity } from "@/lib/acquisition/identity";
+import { resolveExactProgram, type ProgramLookupRow } from "@/lib/acquisition/program-identity";
 import { sourceAuthority, domainOf } from "@/lib/acquisition/source-authority";
 import { statesTheSameFact } from "@/lib/requirements/dedup";
 import { deriveEvaluationGate, deriveExcludedProvenances, deriveRecencyRule } from "@/lib/requirements/shape-audit";
@@ -50,7 +51,14 @@ export type RequirementIngestOutcome = "accepted" | "duplicate" | "unresolved_un
 
 export interface AcceptedRequirementRow {
   university_id: string;
-  program_id: null;
+  /** Resolved by lib/acquisition/program-identity.ts's resolveExactProgram — exact match on
+   * this university's own university_programs.name, or null. Never a fuzzy or partial match;
+   * see that file's own comment for why. Null covers three different cases equally safely:
+   * record.program_name was empty (nothing to link), named a program not found here, or
+   * named one that matched more than one row — decision.programLinkNote (on
+   * RequirementIngestDecision, not on this row) carries which one happened, for the caller
+   * to log. */
+  program_id: string | null;
   requirement_type: RequirementCategory;
   title: string;
   requirement_detail: string;
@@ -107,6 +115,11 @@ export interface RequirementIngestDecision {
   detail: string | null;
   universityId: string | null;
   row: AcceptedRequirementRow | null;
+  /** Set only on an "accepted" decision where record.program_name was non-empty but did not
+   * resolve to exactly one program row — see resolveExactProgram. Null on every other
+   * outcome, and null on an accepted row that either had no program_name or resolved
+   * cleanly, so a caller can log this unconditionally without an extra outcome check. */
+  programLinkNote: string | null;
 }
 
 /** Verification states a requirement record can carry that make it unsafe to stage as a clean
@@ -295,7 +308,13 @@ export function decideRequirementIngestion(
   record: ResearchRequirementRecord,
   universities: readonly UniversityLookupRow[],
   supersededIds: ReadonlySet<string>,
-  existingTitlesByKey: ReadonlyMap<string, readonly string[]>
+  existingTitlesByKey: ReadonlyMap<string, readonly string[]>,
+  // Defaults to empty so every pre-existing caller (old one-off batch scripts, tests that
+  // don't care about program-linking) compiles and behaves exactly as before this parameter
+  // existed: an empty pool can never produce a match, so every row still lands with
+  // program_id: null, unchanged. Only scripts/ingest-requirements-deadlines.ts passes the
+  // real pool.
+  programs: readonly ProgramLookupRow[] = []
 ): RequirementIngestDecision {
   const identity = requirementRecordIdentity(record);
   if (identity.shape !== "requirement") {
@@ -311,16 +330,17 @@ export function decideRequirementIngestion(
           : "Not a requirement record: it carries neither research_requirement_id nor research_deadline_id, so nothing identifies it. Recorded under a deterministic UNIDENTIFIED- marker with the full payload.",
       universityId: null,
       row: null,
+      programLinkNote: null,
     };
   }
 
   const { universityId, reason } = resolveRequirementUniversity(record, universities);
   if (!universityId) {
-    return { outcome: "unresolved_university", detail: reason, universityId: null, row: null };
+    return { outcome: "unresolved_university", detail: reason, universityId: null, row: null, programLinkNote: null };
   }
 
   if (supersededIds.has(record.research_requirement_id)) {
-    return { outcome: "superseded", detail: "A newer record in this same corpus explicitly supersedes this one.", universityId, row: null };
+    return { outcome: "superseded", detail: "A newer record in this same corpus explicitly supersedes this one.", universityId, row: null, programLinkNote: null };
   }
 
   // is_exclusion is no longer a reason to drop the record. Migration 0052 added the column
@@ -332,15 +352,15 @@ export function decideRequirementIngestion(
   // lib/requirements/evaluate.ts refuses to auto-resolve any row carrying the flag.
 
   if (UNSAFE_VERIFICATION_STATES.has(record.verification_state)) {
-    return { outcome: "not_ingestible", detail: `verification_state=${record.verification_state}`, universityId, row: null };
+    return { outcome: "not_ingestible", detail: `verification_state=${record.verification_state}`, universityId, row: null, programLinkNote: null };
   }
 
   if (record.scale_ambiguity && UNSAFE_SCALE_AMBIGUITY.has(record.scale_ambiguity)) {
-    return { outcome: "not_ingestible", detail: `scale_ambiguity=${record.scale_ambiguity}`, universityId, row: null };
+    return { outcome: "not_ingestible", detail: `scale_ambiguity=${record.scale_ambiguity}`, universityId, row: null, programLinkNote: null };
   }
 
   if (!record.requirement_text?.trim()) {
-    return { outcome: "not_ingestible", detail: "requirement_text is null/empty — nothing to show a student.", universityId, row: null };
+    return { outcome: "not_ingestible", detail: "requirement_text is null/empty — nothing to show a student.", universityId, row: null, programLinkNote: null };
   }
 
   const matchedUniversity = universities.find((u) => u.id === universityId);
@@ -352,6 +372,7 @@ export function decideRequirementIngestion(
       detail: `source_url "${record.source_url}" does not resolve to an accepted authority for policy facts (was source_authority_passes_gate=${record.source_authority_passes_gate} at research time) — ${record.source_authority_note ?? "no note"}`,
       universityId,
       row: null,
+      programLinkNote: null,
     };
   }
 
@@ -360,16 +381,19 @@ export function decideRequirementIngestion(
   const existingForKey = existingTitlesByKey.get(dedupKey) ?? [];
   const isDuplicate = existingForKey.some((existingTitle) => statesTheSameFact(existingTitle, title));
   if (isDuplicate) {
-    return { outcome: "duplicate", detail: "An existing (or earlier-in-this-batch) requirement for the same university, category, and scope has a highly similar title.", universityId, row: null };
+    return { outcome: "duplicate", detail: "An existing (or earlier-in-this-batch) requirement for the same university, category, and scope has a highly similar title.", universityId, row: null, programLinkNote: null };
   }
+
+  const programResolution = resolveExactProgram(universityId, record.program_name, programs);
 
   return {
     outcome: "accepted",
     detail: null,
     universityId,
+    programLinkNote: programResolution.reason,
     row: {
       university_id: universityId,
-      program_id: null,
+      program_id: programResolution.programId,
       requirement_type: record.requirement_category_db as RequirementCategory,
       title,
       requirement_detail: record.requirement_text,

@@ -1,4 +1,5 @@
 import { resolveIdentity, type LocalUniversity } from "@/lib/acquisition/identity";
+import { resolveExactProgram, type ProgramLookupRow } from "@/lib/acquisition/program-identity";
 import { sourceAuthority, domainOf } from "@/lib/acquisition/source-authority";
 
 /** One record from data/research/university-requirements/deadlines_batch*.jsonl — see
@@ -32,7 +33,11 @@ export type DeadlineIngestOutcome = "accepted" | "duplicate" | "unresolved_unive
 
 export interface AcceptedDeadlineRow {
   university_id: string;
-  program_id: null;
+  /** Resolved by lib/acquisition/program-identity.ts's resolveExactProgram — exact match on
+   * this university's own university_programs.name, or null. See that file's comment for
+   * why this is exact-only. DeadlineIngestDecision.programLinkNote (not this row) carries
+   * why a non-empty program_name still ended up null, for the caller to log. */
+  program_id: string | null;
   deadline_type: string;
   /** Null for a recurring_annual_undated row — the date lives in recurrence_month/day instead.
    * Migration 0056's university_deadlines_recurrence_shape_check enforces which of the two
@@ -163,6 +168,11 @@ export interface DeadlineIngestDecision {
   detail: string | null;
   universityId: string | null;
   row: AcceptedDeadlineRow | null;
+  /** Set only on an "accepted" decision where record.program_name was non-empty but did not
+   * resolve to exactly one program row — see resolveExactProgram. Null on every other
+   * outcome, and null on an accepted row that either had no program_name or resolved
+   * cleanly, so a caller can log this unconditionally without an extra outcome check. */
+  programLinkNote: string | null;
 }
 
 /**
@@ -211,10 +221,19 @@ export function resolveDeadlineUniversity(record: ResearchDeadlineRecord, univer
  * `existingKeys` from the live table must include recurring rows using the same `recurring:MM-DD`
  * shape or re-running a batch will re-accept (and duplicate-insert) every recurring row every
  * time. See scripts/ingest-requirements-deadlines.ts. */
-export function decideDeadlineIngestion(record: ResearchDeadlineRecord, universities: readonly UniversityLookupRow[], existingKeys: ReadonlySet<string>): DeadlineIngestDecision {
+export function decideDeadlineIngestion(
+  record: ResearchDeadlineRecord,
+  universities: readonly UniversityLookupRow[],
+  existingKeys: ReadonlySet<string>,
+  // Defaults to empty so every pre-existing caller compiles and behaves exactly as before
+  // this parameter existed — see the identical note on decideRequirementIngestion in
+  // lib/requirements/ingest.ts. Only scripts/ingest-requirements-deadlines.ts passes the
+  // real pool.
+  programs: readonly ProgramLookupRow[] = []
+): DeadlineIngestDecision {
   const { universityId, reason } = resolveDeadlineUniversity(record, universities);
   if (!universityId) {
-    return { outcome: "unresolved_university", detail: reason, universityId: null, row: null };
+    return { outcome: "unresolved_university", detail: reason, universityId: null, row: null, programLinkNote: null };
   }
 
   let deadlineDate: string | null = null;
@@ -230,27 +249,28 @@ export function decideDeadlineIngestion(record: ResearchDeadlineRecord, universi
         detail: `recurrence=recurring_annual_undated ("${record.deadline_text_verbatim}") — could not extract exactly one unambiguous calendar date from deadline_text_verbatim (found zero dates, or found two-or-more distinct dates that may belong to different sub-facts, e.g. a range or a compound "application X; documents Y" string). Needs structured recurrence_month/recurrence_day captured at the research stage, or manual resolution. See extractSingleRecurringDate in lib/deadlines/ingest.ts.`,
         universityId,
         row: null,
+        programLinkNote: null,
       };
     }
     recurrenceMonth = extracted.month;
     recurrenceDay = extracted.day;
     factKey = `recurring:${String(extracted.month).padStart(2, "0")}-${String(extracted.day).padStart(2, "0")}`;
   } else if (record.recurrence === "not_published_centrally") {
-    return { outcome: "not_ingestible", detail: "recurrence=not_published_centrally — nothing published to ingest.", universityId, row: null };
+    return { outcome: "not_ingestible", detail: "recurrence=not_published_centrally — nothing published to ingest.", universityId, row: null, programLinkNote: null };
   } else {
     // dated_specific, or (matching this function's pre-existing behavior for any value outside
     // the three migration 0056's CHECK constraint allows) anything else: attempt the ordinary
     // dated shape and let a genuine constraint violation surface honestly as `rejected` with the
     // real Postgres error, rather than guessing what an unrecognized value should mean here.
     if (!record.deadline_date) {
-      return { outcome: "not_ingestible", detail: `recurrence=${record.recurrence} but deadline_date is null — inconsistent record, needs review.`, universityId, row: null };
+      return { outcome: "not_ingestible", detail: `recurrence=${record.recurrence} but deadline_date is null — inconsistent record, needs review.`, universityId, row: null, programLinkNote: null };
     }
     deadlineDate = record.deadline_date;
     factKey = deadlineDate;
   }
 
   if (UNSAFE_VERIFICATION_STATES.has(record.verification_state)) {
-    return { outcome: "not_ingestible", detail: `verification_state=${record.verification_state}`, universityId, row: null };
+    return { outcome: "not_ingestible", detail: `verification_state=${record.verification_state}`, universityId, row: null, programLinkNote: null };
   }
 
   const matchedUniversity = universities.find((u) => u.id === universityId);
@@ -262,21 +282,25 @@ export function decideDeadlineIngestion(record: ResearchDeadlineRecord, universi
       detail: `source_url "${record.source_url}" does not resolve to an accepted authority for policy facts (was source_authority_passes_gate=${record.source_authority_passes_gate} at research time).`,
       universityId,
       row: null,
+      programLinkNote: null,
     };
   }
 
   const dedupKey = deadlineDedupKey(universityId, record.deadline_type, factKey);
   if (existingKeys.has(dedupKey)) {
-    return { outcome: "duplicate", detail: "Same university, deadline type, and date/recurrence already exists.", universityId, row: null };
+    return { outcome: "duplicate", detail: "Same university, deadline type, and date/recurrence already exists.", universityId, row: null, programLinkNote: null };
   }
+
+  const programResolution = resolveExactProgram(universityId, record.program_name, programs);
 
   return {
     outcome: "accepted",
     detail: null,
     universityId,
+    programLinkNote: programResolution.reason,
     row: {
       university_id: universityId,
-      program_id: null,
+      program_id: programResolution.programId,
       deadline_type: record.deadline_type,
       deadline_date: deadlineDate,
       application_cycle: record.cycle_label ?? (record.cycle_year ? String(record.cycle_year) : null),
