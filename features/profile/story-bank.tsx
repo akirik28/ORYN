@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/oryn/empty-state";
+import { cn } from "@/lib/utils";
 import { generateStoryOutlines } from "@/app/(app)/profile/story-bank/actions";
 import type { EssayOutlineResponse } from "@/lib/ai/essay-outlines";
 import type { StoryBankItem } from "@/lib/story-bank/collect";
@@ -20,6 +21,8 @@ const OUTLINE_STEPS = [
   { key: "reflection", label: "Reflection" },
   { key: "connectionToFuture", label: "Connection to future" },
 ] as const;
+
+const GLOWS = ["glass-card", "glass-card-offset", "glass-card-fast", "glass-card-offset2"];
 
 export function StoryBank({ experiences }: { experiences: StoryBankItem[] }) {
   const [prompt, setPrompt] = useState("");
@@ -64,7 +67,7 @@ export function StoryBank({ experiences }: { experiences: StoryBankItem[] }) {
 
   return (
     <div className="space-y-8">
-      <div className="rounded-2xl border bg-card p-5">
+      <div className="glass-card rounded-2xl border border-white/65 bg-white/45 p-5 backdrop-blur-2xl">
         <label htmlFor="essay-prompt" className="text-sm font-medium">
           The essay prompt you&apos;re answering
         </label>
@@ -86,7 +89,7 @@ export function StoryBank({ experiences }: { experiences: StoryBankItem[] }) {
               story notes)
             </span>
           </p>
-          <div className="max-h-56 space-y-1.5 overflow-y-auto rounded-xl border p-3">
+          <div className="max-h-56 space-y-1.5 overflow-y-auto rounded-xl border border-white/55 bg-white/35 p-3">
             {experiences.map((e) => (
               <label key={e.id} className="flex items-start gap-2 text-sm">
                 <Checkbox checked={selected.has(e.id)} onCheckedChange={() => toggle(e.id)} className="mt-0.5" />
@@ -120,7 +123,7 @@ export function StoryBank({ experiences }: { experiences: StoryBankItem[] }) {
           ) : null}
 
           {result.candidates.map((candidate, ci) => (
-            <section key={ci} className="space-y-4 rounded-2xl border bg-card p-5">
+            <section key={ci} className={cn("space-y-4 rounded-2xl border border-white/65 bg-white/45 p-5 backdrop-blur-2xl", GLOWS[ci % GLOWS.length])}>
               <div>
                 <h2 className="text-lg font-medium">{candidate.experienceTitle}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{candidate.whyThisStory}</p>

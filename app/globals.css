@@ -313,22 +313,22 @@
    student needs to perceive to use the product. */
 @keyframes aurora-border {
   0% {
-    box-shadow: 0 8px 64px rgba(61, 53, 232, 0.24), 0 0 0 2px rgba(107, 100, 240, 0.75);
+    box-shadow: 0 12px 120px 12px rgba(61, 53, 232, 0.42), 0 0 0 2px rgba(107, 100, 240, 0.8);
   }
   20% {
-    box-shadow: 0 8px 64px rgba(61, 53, 232, 0.28), 0 0 0 2px rgba(61, 53, 232, 0.85);
+    box-shadow: 0 12px 128px 14px rgba(61, 53, 232, 0.48), 0 0 0 2px rgba(61, 53, 232, 0.9);
   }
   40% {
-    box-shadow: 0 8px 64px rgba(160, 156, 248, 0.22), 0 0 0 2px rgba(160, 156, 248, 0.78);
+    box-shadow: 0 12px 124px 12px rgba(160, 156, 248, 0.42), 0 0 0 2px rgba(160, 156, 248, 0.82);
   }
   60% {
-    box-shadow: 0 8px 64px rgba(28, 122, 74, 0.2), 0 0 0 2px rgba(28, 122, 74, 0.68);
+    box-shadow: 0 12px 118px 10px rgba(99, 102, 241, 0.38), 0 0 0 2px rgba(129, 140, 248, 0.72);
   }
   80% {
-    box-shadow: 0 8px 64px rgba(184, 106, 0, 0.18), 0 0 0 2px rgba(184, 106, 0, 0.64);
+    box-shadow: 0 12px 116px 10px rgba(184, 106, 0, 0.34), 0 0 0 2px rgba(184, 106, 0, 0.68);
   }
   100% {
-    box-shadow: 0 8px 64px rgba(61, 53, 232, 0.24), 0 0 0 2px rgba(107, 100, 240, 0.75);
+    box-shadow: 0 12px 120px 12px rgba(61, 53, 232, 0.42), 0 0 0 2px rgba(107, 100, 240, 0.8);
   }
 }
 
@@ -351,6 +351,31 @@
    pin at the call site (features/universities/world-map-explorer.tsx) so a city's cluster
    arrives in sequence rather than all at once — the map reads as resolving rather than
    snapping. Transform-only, so it composites on the GPU and never triggers layout. */
+/* Sheen travelling across the filled portion of the counselor's monthly allowance bar
+   (features/advisor/monthly-usage-meter.tsx). Transform-only so it composites on the GPU,
+   and suppressed under reduced-motion with the rest of the decorative system below. */
+/* A static counterpart to the animated aurora above, for surfaces that repeat many times
+   on one screen — portfolio entries, list rows. Same violet cast so they read as part of
+   the same lit system, but no keyframes: animating a box-shadow on dozens of elements at
+   once is the one place this effect actually costs something, and a list does not need to
+   pulse to feel lit. */
+.lit-card {
+  box-shadow: 0 6px 40px -6px rgba(61, 53, 232, 0.28), 0 0 0 1px rgba(107, 100, 240, 0.22);
+}
+
+@keyframes usage-sheen {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(420%);
+  }
+}
+
+.usage-sheen {
+  animation: usage-sheen 2.8s ease-in-out infinite;
+}
+
 @keyframes pin-drop {
   from {
     opacity: 0;
@@ -394,7 +419,11 @@
   .glass-card-offset,
   .glass-card-offset2 {
     animation: none;
-    box-shadow: 0 8px 64px rgba(61, 53, 232, 0.24), 0 0 0 2px rgba(107, 100, 240, 0.75);
+    box-shadow: 0 12px 120px 12px rgba(61, 53, 232, 0.42), 0 0 0 2px rgba(107, 100, 240, 0.8);
+  }
+  .usage-sheen {
+    animation: none;
+    opacity: 0;
   }
   .pin-drop {
     animation: none;

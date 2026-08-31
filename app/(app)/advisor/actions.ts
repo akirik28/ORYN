@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { generateAdvisorReply } from "@/lib/ai/advisor-chat";
 import { classifyAdvisorFailure } from "@/lib/ai/advisor-failure";
 import { assertWithinAIRateLimit, RateLimitExceededError } from "@/lib/ai/rate-limit";
+import { isMonthlyQuotaExhausted } from "@/lib/ai/monthly-quota";
 import { logEvent } from "@/lib/analytics/log";
 import { isUuidLike } from "@/lib/validation/uuid";
 import type { AIMessage } from "@/lib/ai/provider";
@@ -27,6 +28,15 @@ export async function sendAdvisorMessage(
       return { conversationId: conversationId ?? "", error: error.message };
     }
     throw error;
+  }
+
+  // The monthly allowance the UI shows has to be the one actually enforced, or the bar is
+  // decoration. Checked after the burst limiter because that one is the cheaper guard.
+  if (await isMonthlyQuotaExhausted(userId, "advisor_chat")) {
+    return {
+      conversationId: conversationId ?? "",
+      error: "You've used this month's counselor messages. Your allowance resets at the start of next month.",
+    };
   }
 
   const supabase = await createClient();
@@ -128,6 +138,12 @@ export async function retryAdvisorMessage(failedMessageId: string): Promise<{ co
   } catch (error) {
     if (error instanceof RateLimitExceededError) return { error: error.message };
     throw error;
+  }
+
+  // A retry spends real model budget like any other call, so it draws on the same
+  // allowance rather than offering a way around it.
+  if (await isMonthlyQuotaExhausted(userId, "advisor_chat")) {
+    return { error: "You've used this month's counselor messages. Your allowance resets at the start of next month." };
   }
 
   const { data: allMessages } = await supabase

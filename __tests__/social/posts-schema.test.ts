@@ -45,7 +45,8 @@ describe("migration numbering", () => {
     expect(numbers.filter((n) => n === "0064")).toHaveLength(1);
     expect(numbers.filter((n) => n === "0065")).toHaveLength(1);
     expect(numbers.filter((n) => n === "0066")).toHaveLength(1);
-    expect(Math.max(...numbers.map(Number))).toBe(66);
+    expect(numbers.filter((n) => n === "0067")).toHaveLength(1);
+    expect(Math.max(...numbers.map(Number))).toBe(67);
   });
 });
 

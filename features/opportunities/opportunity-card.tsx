@@ -170,10 +170,13 @@ export function OpportunityCard({
   // a programme runs in is a property of the opportunity, not a warning about the match.
   // Empty array means "not known" (migration 0066) — stays silent rather than implying
   // English by omission, which matters for a product whose users apply across languages.
+  // Defensive read: the column arrives with migration 0066, and a database that has not
+  // caught up yet returns the row without the key at all rather than as an empty array.
+  // Treating that as "not known" keeps a schema lag showing one missing descriptor instead
+  // of throwing and taking the whole Opportunities route down with an error boundary.
+  const languages = opportunity.languages_of_instruction ?? [];
   const languageLabel =
-    opportunity.languages_of_instruction.length > 0
-      ? `Taught in ${opportunity.languages_of_instruction.join(" & ")}`
-      : null;
+    languages.length > 0 ? `Taught in ${languages.join(" & ")}` : null;
 
   const descriptors = [
     SELECTIVITY_LABEL[opportunity.selectivity_tier] ?? null,

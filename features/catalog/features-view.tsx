@@ -156,7 +156,7 @@ const FEATURES: Feature[] = [
     group: "Exploring",
   },
   {
-    href: "/profile",
+    href: "/profile/research-ideas",
     image: imgResearchIdeas,
     title: "Research idea generator",
     description:

@@ -328,21 +328,6 @@ export default async function ProfilePage() {
             <Link href="/profile/import" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
               Scan a CV <ArrowRight className="size-3.5" />
             </Link>
-            <Link href="/profile/portfolio" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
-              View portfolio <ArrowRight className="size-3.5" />
-            </Link>
-            <Link href="/profile/cv" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
-              Build CV <ArrowRight className="size-3.5" />
-            </Link>
-            <Link href="/profile/story-bank" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
-              Essay Story Bank <ArrowRight className="size-3.5" />
-            </Link>
-            <Link href="/profile/history" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
-              View progress <ArrowRight className="size-3.5" />
-            </Link>
-            <Link href={`/u/${userId}`} className="inline-flex items-center gap-1 text-brand-primary hover:underline">
-              Preview public profile <ArrowRight className="size-3.5" />
-            </Link>
           </div>
         }
       />
@@ -366,7 +351,7 @@ export default async function ProfilePage() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-10 pt-2">
-          <section className="space-y-6 rounded-2xl bg-surface-tint p-6 md:p-8">
+          <section className="glass-card space-y-6 rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-8">
             <SectionHeader title="Professional profile" description="What other Oryn students see on your public profile." />
             <ProfessionalIdentityForm
               initialHeadline={profile?.headline ?? null}
@@ -455,6 +440,7 @@ export default async function ProfilePage() {
 
         <TabsContent value="academics" className="space-y-8 pt-2">
           <AchievementSection
+            glowVariant="glass-card"
             title="Education"
             description="Schools and academic stages."
             items={educationRes.data ?? []}
@@ -468,6 +454,7 @@ export default async function ProfilePage() {
           />
 
           <AchievementSection
+            glowVariant="glass-card-offset"
             title="Coursework"
             description="AP, IB HL/SL, A-Level, honors, and regular courses. Oryn uses these to understand your academic rigor and subject range."
             items={coursesRes.data ?? []}
@@ -486,6 +473,7 @@ export default async function ProfilePage() {
           />
 
           <AchievementSection
+            glowVariant="glass-card-fast"
             title="Test scores"
             description="SAT, ACT, AP, IB, language proficiency, and more."
             items={testScoresRes.data ?? []}
@@ -501,6 +489,7 @@ export default async function ProfilePage() {
 
         <TabsContent value="experience" className="space-y-8 pt-2">
           <AchievementSection
+            glowVariant="glass-card-offset2"
             title="Activities"
             description="Clubs, leadership roles, sports, summer programs."
             items={activities}
@@ -514,6 +503,7 @@ export default async function ProfilePage() {
           />
 
           <AchievementSection
+            glowVariant="glass-card"
             title="Sports"
             description="Athletic history — a first-class part of your profile, not folded into Activities."
             items={sportsRes.data ?? []}
@@ -530,6 +520,7 @@ export default async function ProfilePage() {
           />
 
           <AchievementSection
+            glowVariant="glass-card-offset"
             title="Projects"
             description="Things you've built or shipped, on your own or with a team."
             items={projectsRes.data ?? []}
@@ -546,6 +537,7 @@ export default async function ProfilePage() {
             <ResearchIdeaGenerator />
           </div>
           <AchievementSection
+            glowVariant="glass-card-fast"
             title="Research"
             description="Independent or mentored research experience."
             items={researchRes.data ?? []}
@@ -559,6 +551,7 @@ export default async function ProfilePage() {
           />
 
           <AchievementSection
+            glowVariant="glass-card-offset2"
             title="Work experience"
             description="Internships, jobs, and apprenticeships."
             items={workRes.data ?? []}
@@ -572,6 +565,7 @@ export default async function ProfilePage() {
           />
 
           <AchievementSection
+            glowVariant="glass-card"
             title="Volunteering"
             description="Community service and volunteering."
             items={volunteeringRes.data ?? []}
@@ -587,6 +581,7 @@ export default async function ProfilePage() {
 
         <TabsContent value="recognition" className="space-y-8 pt-2">
           <AchievementSection
+            glowVariant="glass-card-offset"
             title="Awards"
             description="Competitions, honors, and distinctions."
             items={awardsRes.data ?? []}
@@ -600,6 +595,7 @@ export default async function ProfilePage() {
           />
 
           <AchievementSection
+            glowVariant="glass-card-fast"
             title="Certifications"
             description="Certificates from courses or programs."
             items={certificationsRes.data ?? []}
@@ -615,6 +611,7 @@ export default async function ProfilePage() {
 
         <TabsContent value="skills" className="space-y-8 pt-2">
           <AchievementSection
+            glowVariant="glass-card-offset2"
             title="Goals"
             description="What you're working toward — recommendations trace back to these."
             items={goalsRes.data ?? []}
@@ -628,6 +625,7 @@ export default async function ProfilePage() {
           />
 
           <AchievementSection
+            glowVariant="glass-card"
             title="Skills"
             description="Up to 15. Self-declared — connections can endorse a skill once they're added below."
             items={skillsRes.data ?? []}
@@ -646,6 +644,7 @@ export default async function ProfilePage() {
               gate. Certificates (IELTS, TOEFL, DELF…) go in Certifications above, which already
               carries an issuer and a date; duplicating that here would be a worse model. */}
           <AchievementSection
+            glowVariant="glass-card-offset"
             title="Languages"
             description="Levels use CEFR, the scale most universities state their requirements in. Add language certificates under Certifications."
             items={languagesRes.data ?? []}

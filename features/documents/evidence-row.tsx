@@ -27,7 +27,7 @@ export function EvidenceRow({
     // 14px blur, literal source colors. rounded-lg -> rounded-[14px], px-4 py-3 -> a
     // slightly roomier 16/18 to match the source card's own padding.
     <li
-      className="flex items-start gap-3.5 rounded-[14px] px-[18px] py-4"
+      className="lit-card flex items-start gap-3.5 rounded-[14px] px-[18px] py-4"
       style={{ background: "rgba(255,255,255,0.55)", backdropFilter: "blur(14px)", border: "1px solid rgba(255,255,255,0.70)" }}
     >
       <span

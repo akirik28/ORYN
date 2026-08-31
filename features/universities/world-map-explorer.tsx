@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { clusterUniversityPins, fanOutOffsets } from "@/lib/universities/cluster-pins";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { ComposableMap, Geographies, Geography, Marker, createCoordinates } from "@vnedyalk0v/react19-simple-maps";
@@ -77,6 +78,10 @@ export function WorldMapExplorer({
   const isWorld = region.id === "world";
   const [hover, setHover] = useState<HoverState | null>(null);
   const [pinHover, setPinHover] = useState<PinHoverState | null>(null);
+  // Which dense cluster the student has opened, if any. Opening one fans its members out
+  // so each becomes individually reachable; only one is open at a time, so the map never
+  // ends up with several exploded clusters overlapping each other.
+  const [openCluster, setOpenCluster] = useState<string | null>(null);
 
   const countByName = useMemo(() => new Map(countryCounts.map((c) => [c.country, c.count])), [countryCounts]);
   const maxCount = Math.max(1, ...countryCounts.map((c) => c.count));
@@ -147,6 +152,10 @@ export function WorldMapExplorer({
   // proves works; the entrance animation below supplies the motion instead.
   const selectedCentroid = selected ? countryByName.get(selected)?.centroid : undefined;
   const zoomedToCountry = Boolean(selectedCentroid && pins.length > 0);
+  // Universities in one metro area sit within a fraction of a degree, which at country
+  // zoom is a few pixels: drawn individually they stack into a blob where only the last
+  // one painted is actually hoverable. Clustering keeps every university reachable.
+  const clusters = useMemo(() => clusterUniversityPins(pins), [pins]);
   const activeProjection = zoomedToCountry
     ? { projection: proj.projection, scale: proj.scale * COUNTRY_ZOOM, center: [selectedCentroid![1], selectedCentroid![0]] as [number, number] }
     : { projection: proj.projection, scale: proj.scale, center: proj.center };
@@ -282,17 +291,69 @@ export function WorldMapExplorer({
             real stored coordinate; universities without one are absent rather than
             approximated (see lib/universities/map-pins.ts). */}
         {zoomedToCountry
-          ? pins.map((pin, index) => {
-              const isPinHovered = pinHover?.pin.id === pin.id;
+          ? clusters.map((cluster, index) => {
+              const isOpen = openCluster === cluster.id;
+              // A cluster of one is an ordinary pin: same size, same behaviour. Only a
+              // genuinely overlapping group gets the count treatment.
+              if (cluster.members.length > 1 && !isOpen) {
+                const count = cluster.members.length;
+                return (
+                  <Marker
+                    key={cluster.id}
+                    coordinates={createCoordinates(cluster.longitude, cluster.latitude)}
+                    onClick={() => setOpenCluster(cluster.id)}
+                    onMouseEnter={() => setPinHover(null)}
+                    className="cursor-pointer outline-none"
+                  >
+                    <g className="pin-drop" style={{ animationDelay: `${Math.min(index, 20) * 22}ms` }}>
+                      <circle r={11} className="fill-primary/25" />
+                      <circle r={8.5} className="fill-primary" stroke="var(--card)" strokeWidth={1.4} />
+                      <text
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                        className="pointer-events-none fill-primary-foreground"
+                        style={{ fontSize: 8, fontWeight: 600 }}
+                      >
+                        {count > 99 ? "99+" : count}
+                      </text>
+                    </g>
+                  </Marker>
+                );
+              }
+
+              const offsets = fanOutOffsets(isOpen ? cluster.members.length : 1);
               return (
                 <Marker
-                  key={pin.id}
-                  coordinates={createCoordinates(pin.longitude, pin.latitude)}
-                  onClick={() => router.push(`/universities/${pin.id}`)}
-                  onMouseEnter={(event) => setPinHover({ pin, clientX: event.clientX, clientY: event.clientY })}
-                  onMouseLeave={() => setPinHover(null)}
-                  className="cursor-pointer outline-none"
+                  key={cluster.id}
+                  coordinates={createCoordinates(cluster.longitude, cluster.latitude)}
+                  className="outline-none"
                 >
+                  {isOpen ? (
+                    // Faint tether so an opened cluster still reads as one place rather
+                    // than a scatter of unrelated pins. Doubles as the way back: clicking
+                    // the centre collapses the group again, so opening one is not a
+                    // one-way trip that leaves the map permanently exploded.
+                    <g className="cursor-pointer" onClick={() => setOpenCluster(null)}>
+                      <circle
+                        r={-fanOutOffsets(cluster.members.length)[0].y}
+                        className="fill-none stroke-primary/25"
+                        strokeWidth={0.7}
+                      />
+                      <circle r={5} className="fill-card stroke-primary/40" strokeWidth={0.8} />
+                    </g>
+                  ) : null}
+                  {cluster.members.map((pin, memberIndex) => {
+                    const isPinHovered = pinHover?.pin.id === pin.id;
+                    const offset = offsets[memberIndex] ?? { x: 0, y: 0 };
+                    return (
+                      <g
+                        key={pin.id}
+                        transform={`translate(${offset.x}, ${offset.y})`}
+                        className="cursor-pointer outline-none"
+                        onClick={() => router.push(`/universities/${pin.id}`)}
+                        onMouseEnter={(event) => setPinHover({ pin, clientX: event.clientX, clientY: event.clientY })}
+                        onMouseLeave={() => setPinHover(null)}
+                      >
                   {/* The entrance animation sits on an inner <g>, not on Marker: Marker's
                       `style` prop is the library's variant object (default/hover/pressed),
                       not plain CSS, so an animationDelay there is a type error. Staggered
@@ -317,7 +378,10 @@ export function WorldMapExplorer({
                     strokeWidth={1.2}
                     style={{ transition: "r 140ms ease" }}
                   />
-                  </g>
+                      </g>
+                      </g>
+                    );
+                  })}
                 </Marker>
               );
             })

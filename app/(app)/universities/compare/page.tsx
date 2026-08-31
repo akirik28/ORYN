@@ -130,7 +130,7 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
         <ArrowLeft className="size-3.5" /> Back to explorer
       </Link>
 
-      <div className="overflow-x-auto rounded-2xl border">
+      <div className="glass-card overflow-x-auto rounded-2xl border border-white/65 bg-white/45 backdrop-blur-2xl">
         <table className="w-full min-w-[640px] border-collapse text-sm">
           <thead>
             <tr className="border-b bg-muted/40">

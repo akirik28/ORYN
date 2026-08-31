@@ -5,11 +5,14 @@ import { AdvisorChat } from "@/features/advisor/advisor-chat";
 import { StrategyPanel } from "@/features/advisor/strategy-panel";
 import { CounselorPriorities } from "@/features/advisor/counselor-priorities";
 import { PageHeader } from "@/components/oryn/page-header";
+import { SectionHeader } from "@/components/oryn/section-header";
 import { isAIConfigured } from "@/lib/ai";
 import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
 import { toProfileSignal, canClaimGap } from "@/lib/scoring/signal";
 import { DIMENSION_LABELS } from "@/lib/scoring/labels";
 import { getCounselorRecommendations } from "@/lib/counselor";
+import { getMonthlyQuota } from "@/lib/ai/monthly-quota";
+import { MonthlyUsageMeter } from "@/features/advisor/monthly-usage-meter";
 
 export const metadata = { title: "Counselor" };
 
@@ -24,6 +27,9 @@ export default async function AdvisorPage() {
     supabase.from("profile_scores").select("dimension, score, confidence, reason_codes").eq("user_id", userId),
     getUpcomingDeadlines(supabase, userId, 10),
   ]);
+
+  // The allowance the chat actually enforces (app/(app)/advisor/actions.ts).
+  const quota = await getMonthlyQuota(userId, "advisor_chat");
 
   const conversation = conversationRes.data;
   const messages = conversation
@@ -81,10 +87,27 @@ export default async function AdvisorPage() {
 
       {/* Boxed to match every other block on this page (2026-08-30, explicit founder
           direction) — reverses AdvisorChat's own earlier "no card around the conversation"
-          call, see that component's comment. */}
-      <div className="glass-card flex min-h-[28rem] flex-col rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-7">
-        <AdvisorChat conversationId={conversation?.id ?? null} initialMessages={messages} aiConfigured={isAIConfigured()} />
-      </div>
+          call, see that component's comment.
+
+          Given its own titled section and a sidebar as of 2026-08-31: the conversation is
+          the reason this page exists, and as an unlabelled box below two analysis panels
+          it read as one more widget. The heading states what the box is for; the sidebar
+          carries this month's real allowance beside it rather than hiding the number
+          inside an error message the student only sees once they hit the wall. */}
+      <section className="space-y-4">
+        <SectionHeader
+          title="Talk it through"
+          description="Ask anything about your profile, your targets or what to do next. Oryn answers from your record — including when the honest answer is to do less."
+        />
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_18rem]">
+          <div className="glass-card flex min-h-[34rem] flex-col rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-7">
+            <AdvisorChat conversationId={conversation?.id ?? null} initialMessages={messages} aiConfigured={isAIConfigured()} />
+          </div>
+          <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+            <MonthlyUsageMeter quota={quota} />
+          </aside>
+        </div>
+      </section>
     </div>
   );
 }

@@ -86,7 +86,16 @@ export function UniversityBrowseGrid({
 
   return (
     <>
-      <div className={compact ? "grid gap-4 @2xl:grid-cols-2 lg:max-h-[calc(100svh-12rem)] lg:overflow-y-auto lg:pr-2" : "grid gap-5 sm:grid-cols-2 lg:grid-cols-3"}>
+      <div className={compact
+            ? // Single column at every width. The container query that used to go two-up
+              // here contradicted the call site's own reasoning (app/(app)/universities/
+              // page.tsx: "One column, not two"), and on a wide screen the results panel
+              // did cross the @2xl threshold — so cards sat side by side exactly where a
+              // stacked list was intended, with the action row overflowing again.
+              "grid gap-4 lg:max-h-[calc(100svh-12rem)] lg:overflow-y-auto lg:pr-2"
+            : "grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
+        }
+      >
         {universities.map((university) => {
           const m = meta[university.id] ?? {};
           return (

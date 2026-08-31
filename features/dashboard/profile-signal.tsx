@@ -55,7 +55,7 @@ const STATE_TEXT: Record<EvidenceState, string> = {
 function Spectrum({ state }: { state: EvidenceState }) {
   const lit = STATE_STEP[state];
   return (
-    <span className="flex items-center gap-0.5" aria-hidden="true">
+    <span className="flex shrink-0 items-center gap-0.5" aria-hidden="true">
       {[1, 2, 3, 4].map((step) => (
         <span
           key={step}
@@ -113,20 +113,40 @@ export function ProfileSignal({
           label. The summary variant uses short names and can afford two columns. */}
       <ul className={cn("mt-5 grid gap-x-10 gap-y-3.5", !showScores && "@md:grid-cols-2")}>
         {signal.map((row) => (
-          <li key={row.dimension} className="flex items-center justify-between gap-4 border-b border-border/60 pb-3">
+          // flex-wrap, and a right-hand group that is no longer shrink-0: the long state
+          // labels ("A good next area to strengthen") are wider than the Home aside, and a
+          // nowrap group that cannot shrink pushed the whole row past the card's edge, so
+          // the values were clipped off-screen rather than wrapping. Wrapping is the
+          // width-independent guard; the short/long label swap below keeps it from
+          // actually needing to wrap at the widths this really renders at.
+          <li key={row.dimension} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-border/60 pb-3">
             <span className="min-w-0 truncate text-sm text-ink-2">
               {showScores ? DIMENSION_LABELS[row.dimension] : DIMENSION_LABELS_SHORT[row.dimension]}
             </span>
-            <span className="flex shrink-0 items-center gap-2.5">
+            <span className="flex min-w-0 items-center gap-2.5">
               {/* Only for states Oryn actually assessed. Printing "0" beside "Not enough
                   evidence yet" asserts a measurement that never happened — the same
                   confusion between absence and weakness this whole model exists to end. */}
               {showScores && isAssessed(row.state) ? (
-                <span className="text-xs text-ink-4 tabular-nums">{row.score}</span>
+                <span className="shrink-0 text-xs text-ink-4 tabular-nums">{row.score}</span>
               ) : null}
-              <span className={cn("text-xs whitespace-nowrap", STATE_TEXT[row.state])}>
-                {showScores ? EVIDENCE_STATE_LABELS[row.state] : EVIDENCE_STATE_SHORT_LABELS[row.state]}
-              </span>
+              {showScores ? (
+                // Same fact at two lengths, chosen by the container's own width rather
+                // than the viewport — this block sits in a ~460px aside on Home and at
+                // full width on the profile page.
+                <>
+                  <span className={cn("text-xs whitespace-nowrap @lg:hidden", STATE_TEXT[row.state])}>
+                    {EVIDENCE_STATE_SHORT_LABELS[row.state]}
+                  </span>
+                  <span className={cn("hidden text-xs whitespace-nowrap @lg:inline", STATE_TEXT[row.state])}>
+                    {EVIDENCE_STATE_LABELS[row.state]}
+                  </span>
+                </>
+              ) : (
+                <span className={cn("text-xs whitespace-nowrap", STATE_TEXT[row.state])}>
+                  {EVIDENCE_STATE_SHORT_LABELS[row.state]}
+                </span>
+              )}
               <Spectrum state={row.state} />
             </span>
           </li>

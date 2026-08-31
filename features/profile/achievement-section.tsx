@@ -17,6 +17,7 @@ import { refineAchievement } from "@/app/(app)/profile/actions";
 import type { AchievementRefinement } from "@/lib/ai/refine-achievement";
 import { SectionHeader } from "@/components/oryn/section-header";
 import { EmptyState } from "@/components/oryn/empty-state";
+import { cn } from "@/lib/utils";
 
 interface AchievementSectionProps<T extends { id: string }> {
   title: string;
@@ -38,6 +39,8 @@ interface AchievementSectionProps<T extends { id: string }> {
   onUpdate: (id: string, values: FormValues) => Promise<{ error?: string }>;
   onDelete: (id: string) => Promise<{ error?: string }>;
   emptyStateText: string;
+  /** One of globals.css's aurora variants, so a column of these doesn't glow in unison. */
+  glowVariant?: string;
   /** Defaults to a generic "nothing here" glyph — this one component backs ~15 unrelated
    * section types (Goals, Activities, Research, Skills, ...), so no single icon fits all
    * of them; callers may pass a more specific one where it's worth the prop. */
@@ -56,6 +59,7 @@ export function AchievementSection<T extends { id: string }>({
   onDelete,
   emptyStateText,
   emptyStateIcon = Inbox,
+  glowVariant,
 }: AchievementSectionProps<T>) {
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -147,7 +151,11 @@ export function AchievementSection<T extends { id: string }>({
   }
 
   return (
-    <section className="space-y-3">
+    // Journey's record blocks carry the same aurora-glass frame every other surface in
+    // the app uses (founder direction 2026-08-31: the uncoloured boxes on Journey should
+    // be lit like the rest). Rotated variants are applied per block at the call site so a
+    // long column of sections doesn't pulse in unison.
+    <section className={cn("glass-card space-y-4 rounded-2xl border border-white/65 bg-white/45 p-5 backdrop-blur-2xl md:p-6", glowVariant)}>
       <SectionHeader
         title={title}
         description={description}
@@ -161,7 +169,7 @@ export function AchievementSection<T extends { id: string }>({
       {items.length === 0 ? (
         <EmptyState icon={emptyStateIcon} title={emptyStateText} className="py-6" />
       ) : (
-        <ul className="divide-y rounded-lg border">
+        <ul className="divide-y divide-white/45 overflow-hidden rounded-xl border border-white/50 bg-white/35">
           {items.map((item) => {
             const summary = summaries[item.id] ?? { title: "Untitled" };
             return (

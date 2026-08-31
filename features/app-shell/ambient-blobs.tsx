@@ -25,6 +25,8 @@ export const AMBIENT_BLOB_CONFIGS: Record<string, AmbientBlob[]> = {
     { x: "8%", y: "50%", w: 460, h: 360, color: "rgba(59,130,246,0.26)" },
     { x: "85%", y: "70%", w: 380, h: 320, color: "rgba(184,106,0,0.22)" },
     { x: "40%", y: "85%", w: 420, h: 300, color: "rgba(61,53,232,0.24)" },
+    { x: "50%", y: "35%", w: 900, h: 700, color: "rgba(37,99,235,0.10)" },
+    { x: "20%", y: "18%", w: 760, h: 620, color: "rgba(139,92,246,0.11)" },
   ],
   // Warm-led: the "go and do something" surface.
   opportunities: [
@@ -32,6 +34,8 @@ export const AMBIENT_BLOB_CONFIGS: Record<string, AmbientBlob[]> = {
     { x: "88%", y: "35%", w: 480, h: 400, color: "rgba(107,100,240,0.34)" },
     { x: "30%", y: "78%", w: 440, h: 340, color: "rgba(59,130,246,0.24)" },
     { x: "70%", y: "92%", w: 380, h: 300, color: "rgba(61,53,232,0.22)" },
+    { x: "58%", y: "45%", w: 880, h: 700, color: "rgba(37,99,235,0.09)" },
+    { x: "80%", y: "12%", w: 720, h: 600, color: "rgba(139,92,246,0.10)" },
   ],
   // Cool and wide — a reference surface, calmer than the action ones.
   universities: [
@@ -39,6 +43,8 @@ export const AMBIENT_BLOB_CONFIGS: Record<string, AmbientBlob[]> = {
     { x: "82%", y: "18%", w: 420, h: 380, color: "rgba(61,53,232,0.26)" },
     { x: "55%", y: "80%", w: 520, h: 380, color: "rgba(107,100,240,0.28)" },
     { x: "10%", y: "70%", w: 340, h: 300, color: "rgba(184,106,0,0.14)" },
+    { x: "45%", y: "40%", w: 940, h: 720, color: "rgba(37,99,235,0.12)" },
+    { x: "72%", y: "60%", w: 780, h: 620, color: "rgba(139,92,246,0.09)" },
   ],
   // Violet-dominant, the most "thinking" of the set.
   counselor: [
@@ -46,6 +52,8 @@ export const AMBIENT_BLOB_CONFIGS: Record<string, AmbientBlob[]> = {
     { x: "12%", y: "38%", w: 420, h: 360, color: "rgba(61,53,232,0.30)" },
     { x: "80%", y: "78%", w: 400, h: 320, color: "rgba(184,106,0,0.20)" },
     { x: "35%", y: "88%", w: 460, h: 320, color: "rgba(59,130,246,0.22)" },
+    { x: "40%", y: "40%", w: 900, h: 720, color: "rgba(37,99,235,0.10)" },
+    { x: "62%", y: "62%", w: 800, h: 640, color: "rgba(139,92,246,0.13)" },
   ],
   // The student's own record — warmest and softest of the set.
   journey: [
@@ -53,6 +61,8 @@ export const AMBIENT_BLOB_CONFIGS: Record<string, AmbientBlob[]> = {
     { x: "85%", y: "45%", w: 460, h: 400, color: "rgba(184,106,0,0.26)" },
     { x: "45%", y: "82%", w: 520, h: 360, color: "rgba(59,130,246,0.24)" },
     { x: "5%", y: "62%", w: 360, h: 320, color: "rgba(61,53,232,0.22)" },
+    { x: "55%", y: "38%", w: 880, h: 700, color: "rgba(37,99,235,0.10)" },
+    { x: "18%", y: "70%", w: 760, h: 600, color: "rgba(139,92,246,0.11)" },
   ],
 };
 
@@ -91,7 +101,11 @@ export function AmbientBlobs({ blobs }: { blobs: AmbientBlob[] }) {
             width: b.w,
             height: b.h,
             background: b.color,
-            filter: "blur(90px)",
+            // Blur scales with the blob's own size. The four foreground blobs keep
+            // roughly source's 90px; the two wide low-alpha ones added 2026-08-31 are
+            // meant to read as dim room light washing the background rather than as
+            // another defined shape, and at 900px a fixed 90px blur still shows an edge.
+            filter: `blur(${Math.round(Math.max(90, b.w * 0.16))}px)`,
             transform: "translate(-50%, -50%)",
             // Distinct duration/delay per blob (18-33s, staggered) so all four drift
             // out of phase with each other — synchronized motion is what reads as

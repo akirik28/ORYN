@@ -118,7 +118,7 @@ export function ProgressView({ review }: { review: MonthlyReview }) {
               {declined.length > 0 ? `, ${declined.length} moved back` : ""}
               {steady > 0 ? `, ${steady} held steady` : ""}.
             </p>
-            <ul className="divide-y rounded-xl border">
+            <ul className="glass-card-offset divide-y divide-white/45 overflow-hidden rounded-2xl border border-white/65 bg-white/45 backdrop-blur-2xl">
               {review.dimensionDeltas.map((d) => (
                 <li key={d.dimension} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
                   <span>{DIMENSION_LABELS[d.dimension]}</span>
@@ -132,11 +132,11 @@ export function ProgressView({ review }: { review: MonthlyReview }) {
           </section>
 
           <section className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-xl border p-5">
+            <div className="glass-card rounded-2xl border border-white/65 bg-white/45 p-5 backdrop-blur-2xl">
               <p className="text-2xl font-semibold tracking-tight">{review.projectsCompletedRecently}</p>
               <p className="text-sm text-muted-foreground">Projects marked complete in the last {review.windowDays} days</p>
             </div>
-            <div className="rounded-xl border p-5">
+            <div className="glass-card-fast rounded-2xl border border-white/65 bg-white/45 p-5 backdrop-blur-2xl">
               <p className="text-2xl font-semibold tracking-tight">{review.applicationsSubmittedRecently}</p>
               <p className="text-sm text-muted-foreground">Applications submitted or updated in the last {review.windowDays} days</p>
             </div>
