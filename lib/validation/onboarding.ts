@@ -62,6 +62,25 @@ export const CompleteOnboardingSchema = z.object({
     .int()
     .min(currentYear, { error: "Pick a graduation year in the future." })
     .max(currentYear + 8),
+  /**
+   * Asked here, and required, because it is the one input Oryn cannot work around. 139 of
+   * the active opportunities carry an age limit, and `lib/counselor/eligibility.ts` refuses
+   * to guess: with no birth year on file every one of them degrades to "this has an age
+   * requirement Oryn can't check", on the Counselor page and on every opportunity card. It
+   * was previously collected nowhere in the product — not onboarding, not the profile, not
+   * settings — only read, so 6 of 11 accounts had it null and 5 of those had completed
+   * onboarding (measured 2026-08-31). An optional field here would reproduce exactly that.
+   *
+   * Year only, never a full date: `lib/social/age.ts` documents that year-precision is
+   * enough for every decision this product makes, and the spec asks for the minimum that
+   * works. The bounds are deliberately wide — they reject typos and impossible values, not
+   * unusual students.
+   */
+  birthYear: z.coerce
+    .number()
+    .int()
+    .min(currentYear - 100, { error: "Enter the year you were born." })
+    .max(currentYear - 10, { error: "Enter the year you were born." }),
   curriculum: z.enum(["ap", "ib", "a_level", "turkish_curriculum", "national_curriculum", "other"]),
   interests: z.array(z.string().min(1)).max(20),
   targetGeographies: z.array(z.enum(["usa", "uk", "europe", "canada", "turkey", "not_sure"])).max(6),

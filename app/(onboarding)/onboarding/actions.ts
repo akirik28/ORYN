@@ -123,6 +123,7 @@ export async function completeOnboarding(input: CompleteOnboardingInput): Promis
       school_name: schoolName,
       school_entity_id: schoolId,
       graduation_year: data.graduationYear,
+      birth_year: data.birthYear,
       curriculum: data.curriculum,
       target_geographies: data.targetGeographies,
       onboarding_completed: true,

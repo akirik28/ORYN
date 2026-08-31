@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/oryn/page-header";
 import { DisplayNameForm } from "@/features/settings/display-name-form";
 import { LocationForm } from "@/features/settings/location-form";
 import { CitizenshipForm } from "@/features/settings/citizenship-form";
+import { BirthYearForm } from "@/features/settings/birth-year-form";
 import { CapacityForm } from "@/features/settings/capacity-form";
 import { VisibilityForm } from "@/features/settings/visibility-form";
 import { DeleteAccountDialog } from "@/features/settings/delete-account-dialog";
@@ -83,6 +84,15 @@ export function SettingsView({ email, userId, profile }: SettingsViewProps) {
             Used to prioritize nearby opportunities. Country is part of your public profile if you turn that on below; city is never shown publicly.
           </p>
           <LocationForm initialCountry={profile?.country ?? ""} initialCity={profile?.city ?? null} />
+        </div>
+
+        <div className="space-y-1.5 border-t border-brand-primary-border/40 pt-6">
+          <h3 className="text-sm font-medium">Age</h3>
+          <p className="text-sm text-muted-foreground">
+            Most competitions and summer programs have an age limit. Without this, Oryn shows them as
+            unverified instead of telling you whether you qualify.
+          </p>
+          <BirthYearForm initialBirthYear={profile?.birth_year ?? null} />
         </div>
 
         <div className="space-y-1.5 border-t border-brand-primary-border/40 pt-6">

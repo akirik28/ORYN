@@ -75,6 +75,38 @@ export async function updateLocation(country: string, city: string | null): Prom
   return {};
 }
 
+/**
+ * The edit path for a field onboarding now requires but that no existing account was ever
+ * asked for — before this, `birth_year` was read in four places and writable in none, so
+ * every account created before it was added is stuck with null and sees "Oryn can't check
+ * this without your birth year on file" on every age-restricted opportunity.
+ *
+ * Bounds duplicated from `CompleteOnboardingSchema` deliberately: this is a Server Action
+ * reachable independently of that schema, and a client that skips the form must not be able
+ * to write a value the onboarding path would have rejected.
+ */
+export async function updateBirthYear(birthYear: number | null): Promise<{ error?: string }> {
+  const session = await requireUser();
+
+  if (birthYear !== null) {
+    const currentYear = new Date().getFullYear();
+    if (!Number.isInteger(birthYear) || birthYear < currentYear - 100 || birthYear > currentYear - 10) {
+      return { error: "Enter the year you were born." };
+    }
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("profiles").update({ birth_year: birthYear }).eq("id", session.userId!);
+  if (error) return { error: "Couldn't save your birth year." };
+
+  revalidatePath("/settings");
+  // Both surfaces re-derive eligibility from this value, so a stale cache here is the
+  // difference between "Oryn can't check this" and a real answer.
+  revalidatePath("/opportunities");
+  revalidatePath("/advisor");
+  return {};
+}
+
 /** Distinct from updateLocation's `country` (residence/school location) — citizenship
  * (migration 0047), never inferred from it, feeds Counselor Core's structured eligibility
  * check (lib/counselor/eligibility.ts) against opportunities.eligible_citizenships. Never
