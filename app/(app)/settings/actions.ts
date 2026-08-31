@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { removeAllUserStorage, StorageCleanupError } from "@/lib/account/delete-storage";
 import { UpdatePasswordSchema } from "@/lib/validation/auth";
 import type { TimeBudget } from "@/types/database";
 
@@ -166,15 +167,47 @@ export async function updateVisibility(isPublic: boolean, lookingFor: string | n
 }
 
 /**
- * Permanently deletes the student's account (Phase 12 minor-safe requirement). Uses the
- * admin client to delete the auth.users row directly — every other table cascades via
- * `references auth.users(id) on delete cascade` (profiles) and `references
- * profiles(id) on delete cascade` (everything else), so this one call removes all of the
- * student's data. Irreversible; the confirmation happens in the UI before this is called.
+ * Permanently deletes the student's account (Phase 12 minor-safe requirement).
+ *
+ * Order matters and is the whole design. Storage objects are removed FIRST, while the
+ * database rows saying which file paths belonged to this student still exist — reversed,
+ * there is no way left to know which paths were theirs. Only once that succeeds does the
+ * admin client delete the `auth.users` row; every table cascades via `references
+ * auth.users(id) on delete cascade` (profiles) and `references profiles(id) on delete
+ * cascade` (everything else, independently verified table-by-table against the live
+ * database in DATA_RIGHTS_AUDIT.md), so that one call removes the rest of the student's
+ * *database* data.
+ *
+ * It does not touch Storage — Postgres FK cascades don't reach it, which is exactly the
+ * gap DATA_RIGHTS_AUDIT.md found: this function used to delete the account and leave
+ * every uploaded file behind, unreachable and unaccounted for, forever, while a comment
+ * right here claimed "this one call removes all of the student's data." That claim was
+ * false for Storage and is the reason removeAllUserStorage() exists. If it throws, this
+ * function must return an honest error and must NOT proceed to deleteUser() — a partial
+ * cleanup reported to the student as a complete deletion is worse than a deletion that
+ * visibly failed and can be retried.
+ *
+ * Irreversible once both steps succeed; the confirmation happens in the UI before this is
+ * called.
  */
 export async function deleteMyAccount(): Promise<{ error?: string }> {
   const session = await requireUser();
   const admin = createAdminClient();
+
+  try {
+    await removeAllUserStorage(admin, session.userId!);
+  } catch (error) {
+    console.error("[deleteMyAccount] storage cleanup failed; account was NOT deleted", {
+      userId: session.userId,
+      bucket: error instanceof StorageCleanupError ? error.bucket : undefined,
+      stage: error instanceof StorageCleanupError ? error.stage : undefined,
+      error,
+    });
+    return {
+      error:
+        "We couldn't finish removing your files, so your account has not been deleted. Please try again, or contact support if this keeps happening.",
+    };
+  }
 
   const { error } = await admin.auth.admin.deleteUser(session.userId!);
   if (error) return { error: "Couldn't delete your account. Please try again or contact support." };
