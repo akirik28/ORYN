@@ -67,6 +67,7 @@ import {
 } from "../lib/deadlines/ingest";
 import { fetchAllRowsVerified, type PostgrestTarget } from "../lib/acquisition/paginate";
 import { excludeSupersededUniversities, loadSupersessionMapViaRest } from "../lib/universities/canonical";
+import type { ProgramLookupRow } from "../lib/acquisition/program-identity";
 
 try {
   process.loadEnvFile(".env.local");
@@ -192,7 +193,7 @@ async function main() {
     console.warn("");
   }
 
-  const [universities, { rows: existingReqs }, { rows: existingDls }] = await Promise.all([
+  const [universities, { rows: existingReqs }, { rows: existingDls }, { rows: programRows }] = await Promise.all([
     loadUniversityCandidates(target),
     fetchAllRowsVerified<{ university_id: string; requirement_type: string; title: string | null; scope: string | null }>(target, "university_requirements", "university_id,requirement_type,title,scope", "order=id"),
     fetchAllRowsVerified<{ university_id: string; deadline_type: string; deadline_date: string | null; recurrence: string; recurrence_month: number | null; recurrence_day: number | null }>(
@@ -201,8 +202,13 @@ async function main() {
       "university_id,deadline_type,deadline_date,recurrence,recurrence_month,recurrence_day",
       "order=id"
     ),
+    fetchAllRowsVerified<{ id: string; university_id: string; name: string }>(target, "university_programs", "id,university_id,name", "order=id"),
   ]);
-  console.log(`Candidate pool: ${universities.length} universities. Existing: ${existingReqs.length} requirements, ${existingDls.length} deadlines.`);
+  // Exact-match pool for lib/acquisition/program-identity.ts's resolveExactProgram — see that
+  // file for why this is the whole pool, unfiltered, with matching scoped to universityId at
+  // resolution time rather than pre-partitioned here.
+  const programs: ProgramLookupRow[] = programRows.map((p) => ({ id: p.id, universityId: p.university_id, name: p.name }));
+  console.log(`Candidate pool: ${universities.length} universities, ${programs.length} programs. Existing: ${existingReqs.length} requirements, ${existingDls.length} deadlines.`);
 
   const supersededIds = new Set(reqRecords.map((r) => r.supersedes).filter((s): s is string => Boolean(s)));
 
@@ -227,23 +233,42 @@ async function main() {
   // same-batch duplicates that a batch-snapshot decision pass wouldn't see coming — the
   // decision computation itself has to be the single source of truth for what will actually
   // land, in both dry-run reporting and --apply, or the two would silently disagree.
+  let reqProgramLinked = 0;
+  let reqProgramMissed = 0;
   const reqDecisions: { record: ResearchRequirementRecord; decision: ReturnType<typeof decideRequirementIngestion> }[] = [];
   for (const record of reqRecords) {
-    const decision = decideRequirementIngestion(record, universities, supersededIds, existingTitlesByKey);
+    const decision = decideRequirementIngestion(record, universities, supersededIds, existingTitlesByKey, programs);
     if (decision.outcome === "accepted" && decision.row) {
       const key = requirementDedupKey(decision.row.university_id, decision.row.requirement_type, decision.row.scope);
       existingTitlesByKey.set(key, [...(existingTitlesByKey.get(key) ?? []), decision.row.title]);
+      if (decision.row.program_id) reqProgramLinked++;
+      else if (decision.programLinkNote) {
+        reqProgramMissed++;
+        console.warn(`  program not linked (${record.research_requirement_id}): ${decision.programLinkNote}`);
+      }
     }
     reqDecisions.push({ record, decision });
   }
+  let dlProgramLinked = 0;
+  let dlProgramMissed = 0;
   const dlDecisions: { record: ResearchDeadlineRecord; decision: ReturnType<typeof decideDeadlineIngestion> }[] = [];
   for (const record of dlRecords) {
-    const decision = decideDeadlineIngestion(record, universities, existingDeadlineKeys);
+    const decision = decideDeadlineIngestion(record, universities, existingDeadlineKeys, programs);
     if (decision.outcome === "accepted" && decision.row) {
       const factKey = deadlineFactKeyFromRow(decision.row);
       if (factKey) existingDeadlineKeys.add(deadlineDedupKey(decision.row.university_id, decision.row.deadline_type, factKey));
+      if (decision.row.program_id) dlProgramLinked++;
+      else if (decision.programLinkNote) {
+        dlProgramMissed++;
+        console.warn(`  program not linked (${record.research_deadline_id}): ${decision.programLinkNote}`);
+      }
     }
     dlDecisions.push({ record, decision });
+  }
+  if (reqProgramLinked + reqProgramMissed + dlProgramLinked + dlProgramMissed > 0) {
+    console.log(
+      `Program linking: ${reqProgramLinked} requirement row(s) linked, ${reqProgramMissed} named a program that didn't resolve; ${dlProgramLinked} deadline row(s) linked, ${dlProgramMissed} named a program that didn't resolve.`
+    );
   }
 
   const reqCounts: Record<string, number> = {};

@@ -439,3 +439,63 @@ describe("requirementRecordIdentity — no record can produce an unwritable audi
     for (const value of Object.values(written[0])) expect(value).not.toBeUndefined();
   });
 });
+
+describe("decideRequirementIngestion — program linking (exact match or null)", () => {
+  const PROGRAMS = [
+    { id: "prog-med", universityId: EDINBURGH_ID, name: "Medicine MBChB" },
+    { id: "prog-dent-a", universityId: METU_ID, name: "Dentistry" },
+    { id: "prog-dent-b", universityId: METU_ID, name: "Dentistry" },
+  ];
+
+  it("links program_id when program_name resolves to exactly one program at that university", () => {
+    const decision = decideRequirementIngestion(
+      req({ program_name: "Medicine MBChB" }),
+      UNIVERSITIES,
+      new Set<string>(),
+      new Map<string, readonly string[]>(),
+      PROGRAMS
+    );
+    expect(decision.outcome).toBe("accepted");
+    expect(decision.row?.program_id).toBe("prog-med");
+    expect(decision.programLinkNote).toBeNull();
+  });
+
+  it("leaves program_id null and states why when program_name has no exact match", () => {
+    const decision = decideRequirementIngestion(
+      req({ program_name: "Veterinary Medicine" }),
+      UNIVERSITIES,
+      new Set<string>(),
+      new Map<string, readonly string[]>(),
+      PROGRAMS
+    );
+    expect(decision.outcome).toBe("accepted");
+    expect(decision.row?.program_id).toBeNull();
+    expect(decision.programLinkNote).toContain("no exact-match");
+  });
+
+  it("leaves program_id null and states why when program_name is ambiguous at that university", () => {
+    const decision = decideRequirementIngestion(
+      req({ university_name: "Middle East Technical University", university_country: "Türkiye", program_name: "Dentistry" }),
+      UNIVERSITIES,
+      new Set<string>(),
+      new Map<string, readonly string[]>(),
+      PROGRAMS
+    );
+    expect(decision.outcome).toBe("accepted");
+    expect(decision.row?.program_id).toBeNull();
+    expect(decision.programLinkNote).toContain("ambiguous");
+  });
+
+  it("leaves program_id null with no note when program_name is absent, exactly as before this feature existed", () => {
+    const decision = decideRequirementIngestion(req({ program_name: null }), UNIVERSITIES, new Set<string>(), new Map<string, readonly string[]>(), PROGRAMS);
+    expect(decision.outcome).toBe("accepted");
+    expect(decision.row?.program_id).toBeNull();
+    expect(decision.programLinkNote).toBeNull();
+  });
+
+  it("defaults to no linking at all when no programs pool is passed — every existing caller's behavior, unchanged", () => {
+    const decision = decide(req({ program_name: "Medicine MBChB" }));
+    expect(decision.outcome).toBe("accepted");
+    expect(decision.row?.program_id).toBeNull();
+  });
+});
