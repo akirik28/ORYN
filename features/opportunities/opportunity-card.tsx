@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { placeholderTint } from "@/lib/ui/placeholder-tint";
 import { StatusBadge, type StatusTone } from "@/components/oryn/status-badge";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
 import { Eyebrow } from "@/components/oryn/eyebrow";
@@ -200,6 +201,7 @@ export function OpportunityCard({
       {(imageUrl ?? opportunity.image_url) ? (
         <MediaImage
           className={cn("w-full", featured ? "aspect-[21/8]" : "aspect-[16/7]")}
+          tintKey={opportunity.id}
           src={imageUrl ?? opportunity.image_url}
           alt={`${opportunity.title}${opportunity.organization ? ` — ${opportunity.organization}` : ""}`}
           icon={Compass}
@@ -210,11 +212,15 @@ export function OpportunityCard({
            it is rather than impersonating an image that failed to load. */
         <div
           aria-hidden="true"
+          data-tint={placeholderTint(opportunity.id)}
           className={cn(
             "flex w-full items-center justify-center gap-2 border-b border-white/50 text-xs text-ink-4",
+            // Each card starts from its own colour (app/globals.css's [data-tint] block).
+            // Previously one fixed three-stop gradient, identical on every card, which made a
+            // grid of un-imaged opportunities read as a single repeated non-thing.
+            "bg-[linear-gradient(135deg,var(--tint-from)_0%,var(--tint-to)_100%)]",
             featured ? "aspect-[21/8]" : "aspect-[16/7]",
           )}
-          style={{ background: "linear-gradient(135deg, rgba(107,100,240,0.10) 0%, rgba(184,106,0,0.08) 55%, rgba(61,53,232,0.10) 100%)" }}
         >
           <Compass className="size-4" />
           No image yet

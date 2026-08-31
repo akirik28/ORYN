@@ -165,6 +165,57 @@
   --module-action: oklch(0.958 0.021 67.6);
   --module-action-fg: oklch(0.5 0.11 45);
 
+
+  /* ── Media placeholder tints ───────────────────────────────────────────────────────
+     Every card whose image hasn't been acquired yet used to render the identical wash, so
+     a grid of them read as one repeated non-thing rather than a list of distinct items
+     (founder, 2026-08-31). Each item now starts from its own colour, picked
+     deterministically from its id by lib/ui/placeholder-tint.ts — same card, same colour,
+     every visit and on both server and client.
+
+     Hue is the ONLY axis that varies. Lightness and chroma are pinned across all eight, so
+     they read as one family at a glance instead of the "rainbow dashboard" the brief bans
+     outright; every hue here is already spoken somewhere in this file (272 brand, 293
+     recommendation, 84 evidence/sand, 55 clay, 67/20 action-adjacent, plus blue-cyan and
+     green to complete the rotation). Chroma stays near the module surfaces' own values —
+     this is a backdrop behind a label, not a colour statement.
+
+     Defined as a pair of custom properties rather than eight utility classes so the same
+     two names serve MediaImage's designed fallback and OpportunityCard's "No image yet"
+     band, and so the dark theme swaps them without either component knowing. */
+  [data-tint="0"] {
+    --tint-from: oklch(0.955 0.032 272);
+    --tint-to: oklch(0.90 0.055 272);
+  }
+  [data-tint="1"] {
+    --tint-from: oklch(0.955 0.032 293);
+    --tint-to: oklch(0.90 0.055 293);
+  }
+  [data-tint="2"] {
+    --tint-from: oklch(0.955 0.032 325);
+    --tint-to: oklch(0.90 0.055 325);
+  }
+  [data-tint="3"] {
+    --tint-from: oklch(0.955 0.032 20);
+    --tint-to: oklch(0.90 0.055 20);
+  }
+  [data-tint="4"] {
+    --tint-from: oklch(0.955 0.032 55);
+    --tint-to: oklch(0.90 0.055 55);
+  }
+  [data-tint="5"] {
+    --tint-from: oklch(0.955 0.032 84);
+    --tint-to: oklch(0.90 0.055 84);
+  }
+  [data-tint="6"] {
+    --tint-from: oklch(0.955 0.032 160);
+    --tint-to: oklch(0.90 0.055 160);
+  }
+  [data-tint="7"] {
+    --tint-from: oklch(0.955 0.032 210);
+    --tint-to: oklch(0.90 0.055 210);
+  }
+
   /* Selective accents. The brief is explicit that the sand/clay surface may carry an
      important recommendation but must not become the product's dominant surface. */
   --accent-sand: oklch(0.811 0.07 80.4);
@@ -278,6 +329,43 @@
   --module-recommendation-fg: oklch(0.78 0.13 272);
   --module-action: oklch(0.2 0.03 67.6);
   --module-action-fg: oklch(0.78 0.09 55);
+
+
+  /* Media placeholder tints — dark. Same eight hues, re-solved for a near-black ground the
+     way the module surfaces above are: lightness drops well below the surface it sits on
+     and chroma rises, because the light-theme values would glow on this background. */
+  [data-tint="0"] {
+    --tint-from: oklch(0.20 0.045 272);
+    --tint-to: oklch(0.26 0.065 272);
+  }
+  [data-tint="1"] {
+    --tint-from: oklch(0.20 0.045 293);
+    --tint-to: oklch(0.26 0.065 293);
+  }
+  [data-tint="2"] {
+    --tint-from: oklch(0.20 0.045 325);
+    --tint-to: oklch(0.26 0.065 325);
+  }
+  [data-tint="3"] {
+    --tint-from: oklch(0.20 0.045 20);
+    --tint-to: oklch(0.26 0.065 20);
+  }
+  [data-tint="4"] {
+    --tint-from: oklch(0.20 0.045 55);
+    --tint-to: oklch(0.26 0.065 55);
+  }
+  [data-tint="5"] {
+    --tint-from: oklch(0.20 0.045 84);
+    --tint-to: oklch(0.26 0.065 84);
+  }
+  [data-tint="6"] {
+    --tint-from: oklch(0.20 0.045 160);
+    --tint-to: oklch(0.26 0.065 160);
+  }
+  [data-tint="7"] {
+    --tint-from: oklch(0.20 0.045 210);
+    --tint-to: oklch(0.26 0.065 210);
+  }
 
   --accent-sand: oklch(0.72 0.06 80.4);
   --accent-clay: oklch(0.66 0.09 55);
