@@ -157,7 +157,7 @@ export function CvImportFlow() {
               <label htmlFor={item.id} className="min-w-0 flex-1 cursor-pointer">
                 <span className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
                   <span className="font-medium text-ink-1">{item.title}</span>
-                  <span className="text-xs text-ink-4">{CATEGORY_LABELS[item.category]}</span>
+                  <span className="text-xs text-ink-3">{CATEGORY_LABELS[item.category]}</span>
                   {item.confidence === "low" ? (
                     <span className="text-xs text-warning">Oryn is unsure about this one</span>
                   ) : null}

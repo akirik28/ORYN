@@ -284,7 +284,7 @@ export function OnboardingWizard() {
         )}
       </AnimatePresence>
 
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
 
       <div className="flex items-center justify-between border-t pt-6">
         <Button variant="ghost" onClick={goBack} disabled={step === 0 || isPending}>

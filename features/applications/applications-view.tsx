@@ -106,7 +106,7 @@ export function ApplicationsView({
                   <div className={application.readiness === 100 ? "text-2xl font-bold text-success" : "text-2xl font-bold text-ink-1"}>
                     {application.readiness}%
                   </div>
-                  <div className="text-[11px] font-medium text-ink-4">ready</div>
+                  <div className="text-[11px] font-medium text-ink-3">ready</div>
                 </div>
               </div>
               <Progress value={application.readiness} className="mt-5" />

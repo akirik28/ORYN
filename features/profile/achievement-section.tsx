@@ -236,7 +236,7 @@ export function AchievementSection<T extends { id: string }>({
             </div>
           ) : null}
 
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel

@@ -46,7 +46,7 @@ export function LegalDocumentView({ document, locale }: { document: LegalDocumen
           {document.title}
         </h1>
         <p className="mt-3 text-base leading-relaxed text-ink-3">{document.intro}</p>
-        <p className="mt-4 text-[13px] text-ink-4">
+        <p className="mt-4 text-[13px] text-ink-3">
           {t.lastDrafted} {LEGAL_REVIEW_STATUS.draftedOn}
           {LEGAL_REVIEW_STATUS.approved ? null : <> · {t.notApproved}</>}
         </p>
@@ -66,7 +66,7 @@ export function LegalDocumentView({ document, locale }: { document: LegalDocumen
                 href={`#${section.id}`}
                 className="text-ink-3 transition-colors hover:text-brand-primary hover:underline"
               >
-                <span className="mr-2 tabular-nums text-ink-4">{i + 1}.</span>
+                <span className="mr-2 tabular-nums text-ink-3">{i + 1}.</span>
                 {section.heading}
               </a>
             </li>
@@ -78,7 +78,7 @@ export function LegalDocumentView({ document, locale }: { document: LegalDocumen
         {document.sections.map((section, i) => (
           <section key={section.id} id={section.id} className="scroll-mt-8">
             <h2 className="font-display text-xl leading-snug tracking-tight text-ink-1 sm:text-2xl">
-              <span className="mr-2 tabular-nums text-ink-4">{i + 1}.</span>
+              <span className="mr-2 tabular-nums text-ink-3">{i + 1}.</span>
               {section.heading}
             </h2>
             <div className="mt-4 space-y-4">

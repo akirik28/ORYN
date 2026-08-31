@@ -46,7 +46,7 @@ export function EvidenceSignal({
   const valueTone = {
     neutral: "text-ink-1",
     positive: "text-success",
-    missing: "text-ink-4",
+    missing: "text-ink-3",
   }[tone];
 
   return (
@@ -61,7 +61,7 @@ export function EvidenceSignal({
       {source ? (
         <p className="mt-1.5 text-xs text-ink-3">
           {source}
-          {timestamp ? <span className="text-ink-4"> · {timestamp}</span> : null}
+          {timestamp ? <span className="text-ink-3"> · {timestamp}</span> : null}
         </p>
       ) : null}
     </figure>

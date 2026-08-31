@@ -135,7 +135,7 @@ export function UniversityBrowseGrid({
           </Button>
         </div>
       ) : universities.length > 0 ? (
-        <p className="py-6 text-center text-xs text-ink-4">That&apos;s every university matching these filters.</p>
+        <p className="py-6 text-center text-xs text-ink-3">That&apos;s every university matching these filters.</p>
       ) : null}
     </>
   );

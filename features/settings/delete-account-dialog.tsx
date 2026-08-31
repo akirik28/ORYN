@@ -38,7 +38,7 @@ export function DeleteAccountDialog() {
         <div className="space-y-2">
           <Label htmlFor="confirm-delete">Type DELETE to confirm</Label>
           <Input id="confirm-delete" value={confirmText} onChange={(e) => setConfirmText(e.target.value)} />
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>

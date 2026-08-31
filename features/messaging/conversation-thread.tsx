@@ -246,7 +246,7 @@ export function ConversationThread({
       </div>
 
       <div className="border-t p-3">
-        {error ? <p className="mb-2 text-sm text-destructive">{error}</p> : null}
+        {error ? <p role="alert" className="mb-2 text-sm text-destructive">{error}</p> : null}
         {!canSendNow ? (
           <p className="text-center text-sm text-muted-foreground">{footerCopy}</p>
         ) : (

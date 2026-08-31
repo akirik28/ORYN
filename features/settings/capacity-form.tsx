@@ -129,7 +129,7 @@ export function CapacityForm({
         <p className="pl-6 text-xs text-muted-foreground">Reduces how much the weekly plan asks of you until this passes.</p>
       </div>
 
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
     </div>
   );
 }

@@ -207,7 +207,7 @@ export function FeaturedManager({
               <p className="text-sm text-muted-foreground">You don&apos;t have any of these yet — add one to your profile first.</p>
             )}
 
-            {error ? <p className="text-sm text-destructive">{error}</p> : null}
+            {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>

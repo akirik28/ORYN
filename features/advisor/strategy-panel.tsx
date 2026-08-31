@@ -109,14 +109,7 @@ export function StrategyPanel({
               {signal.map((row) => (
                 <li key={row.dimension} className="flex items-baseline justify-between gap-4 text-sm">
                   <span className="min-w-0 truncate text-ink-2">{DIMENSION_LABELS[row.dimension]}</span>
-                  <span
-                    className={cn(
-                      "shrink-0 text-xs",
-                      row.state === "limited_evidence" ? "text-ink-4" : "text-ink-3",
-                    )}
-                  >
-                    {EVIDENCE_STATE_LABELS[row.state]}
-                  </span>
+                  <span className="shrink-0 text-xs text-ink-3">{EVIDENCE_STATE_LABELS[row.state]}</span>
                 </li>
               ))}
             </ul>

@@ -112,7 +112,7 @@ export function ResearchIdeaStudio() {
           ))}
         </div>
 
-        {error ? <p className="mt-4 text-sm text-destructive">{error}</p> : null}
+        {error ? <p role="alert" className="mt-4 text-sm text-destructive">{error}</p> : null}
       </div>
 
       {isGenerating ? (

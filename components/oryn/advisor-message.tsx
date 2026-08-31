@@ -49,7 +49,7 @@ export function AdvisorMessage({
   if (!isOryn) {
     return (
       <div className={cn("max-w-2xl", className)}>
-        <p lang={locale} className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-4 uppercase">
+        <p lang={locale} className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-3 uppercase">
           {attribution ?? DEFAULT_ATTRIBUTION[locale].student}
         </p>
         <div className="mt-1.5 leading-relaxed text-ink-2">{children}</div>
@@ -63,7 +63,7 @@ export function AdvisorMessage({
         <span lang={locale} className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-1 uppercase">
           {attribution ?? DEFAULT_ATTRIBUTION[locale].oryn}
         </span>
-        {meta ? <span className="ml-auto text-[0.6875rem] text-ink-4 tabular-nums">{meta}</span> : null}
+        {meta ? <span className="ml-auto text-[0.6875rem] text-ink-3 tabular-nums">{meta}</span> : null}
       </header>
       {/* Serif at a long measure and 1.75 line height. Counsel should feel like something
           written, and the display face is already the voice Oryn speaks in elsewhere. */}

@@ -84,7 +84,7 @@ export function JourneyTimeline({ entries }: { entries: JourneyEntry[] }) {
               {group.year ?? "Undated"}
             </h3>
             <span aria-hidden="true" className="h-px flex-1 bg-border" />
-            <span className="text-xs text-ink-4 tabular-nums">
+            <span className="text-xs text-ink-3 tabular-nums">
               {group.entries.length} {group.entries.length === 1 ? "entry" : "entries"}
             </span>
           </div>
@@ -157,7 +157,7 @@ function JourneyRow({ entry }: { entry: JourneyEntry }) {
             ) : null}
             {entry.dateLabel ? <span className="tabular-nums">{entry.dateLabel}</span> : null}
             {!isStory && !isCompact ? (
-              <span className="text-ink-4">· {KIND_LABEL[entry.kind]}</span>
+              <span className="text-ink-3">· {KIND_LABEL[entry.kind]}</span>
             ) : null}
           </p>
 

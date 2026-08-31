@@ -86,7 +86,7 @@ export function CitizenshipForm({ initialCitizenships }: { initialCitizenships: 
       >
         {isPending ? <Loader2 className="size-4 animate-spin" /> : saved ? "Saved" : "Save"}
       </Button>
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
     </div>
   );
 }

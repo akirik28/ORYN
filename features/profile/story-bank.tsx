@@ -109,7 +109,7 @@ export function StoryBank({ experiences }: { experiences: StoryBankItem[] }) {
           </p>
         </div>
 
-        {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}
+        {error ? <p role="alert" className="mt-3 text-sm text-destructive">{error}</p> : null}
 
         <Button onClick={submit} disabled={isPending || !prompt.trim()} className="mt-4">
           <Sparkles className="size-4" /> {isPending ? "Finding your stories…" : "Find my stories"}
