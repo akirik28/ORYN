@@ -1,5 +1,6 @@
 import { reviewsNonAcademicEvidence, type AdmissionSystemShape } from "@/lib/admissions/system-shape";
-import { DIMENSION_LABELS } from "@/lib/scoring/labels";
+import { dimensionLabel } from "@/lib/scoring/labels";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import type { DataConfidence, ProfileDimension } from "@/types/database";
 
 export interface OutlookExplanation {
@@ -55,6 +56,13 @@ const UNKNOWNS_BY_SHAPE: Record<AdmissionSystemShape, string[]> = {
   unknown: ["Essays", "Recommendations", "Applicant pool in this admission cycle"],
 };
 
+const UNKNOWNS_BY_SHAPE_TR: Record<AdmissionSystemShape, string[]> = {
+  holistic_review: ["Kompozisyonlar", "Referans mektupları", "Bu başvuru döneminin aday havuzu"],
+  academic_rank_competitive: ["Bu dönemin puan eşiğinin nereye geleceği"],
+  academic_threshold: [],
+  unknown: ["Kompozisyonlar", "Referans mektupları", "Bu başvuru döneminin aday havuzu"],
+};
+
 const STRENGTH_GAP_THRESHOLD = 55;
 const MAX_NAMED = 2;
 
@@ -87,10 +95,17 @@ function byScoreAscThenDimensionAsc(a: DimensionScoreInput, b: DimensionScoreInp
  * produces byte-identical output to before the parameter existed — the same rule the rest of
  * the Gate 1 wiring follows: Oryn changes what it says only where it has *established* that
  * the holistic framing does not describe the target, never on a guess.
+ *
+ * `locale` defaults to English; see lib/counselor/evidence.ts's buildRecommendation for the
+ * reasoning shared across this codebase's i18n work.
  */
-export function explainOutlook(scores: DimensionScoreInput[], admissionSystemShape?: AdmissionSystemShape | null): OutlookExplanation {
+export function explainOutlook(
+  scores: DimensionScoreInput[],
+  admissionSystemShape?: AdmissionSystemShape | null,
+  locale: Locale = DEFAULT_LOCALE
+): OutlookExplanation {
   const shape = admissionSystemShape ?? "unknown";
-  const unknowns = UNKNOWNS_BY_SHAPE[shape];
+  const unknowns = locale === "tr" ? UNKNOWNS_BY_SHAPE_TR[shape] : UNKNOWNS_BY_SHAPE[shape];
 
   // Gate 1 established that nothing here reads non-academic evidence. Strengths and gaps are
   // withheld rather than computed: they are true statements about the student, but this panel
@@ -115,12 +130,12 @@ export function explainOutlook(scores: DimensionScoreInput[], admissionSystemSha
     .sort(byScoreDescThenDimensionAsc)
     .slice(0, MAX_NAMED)
     .filter((s) => s.score >= STRENGTH_GAP_THRESHOLD)
-    .map((s) => DIMENSION_LABELS[s.dimension]);
+    .map((s) => dimensionLabel(s.dimension, locale));
   const gaps = [...evidenced]
     .sort(byScoreAscThenDimensionAsc)
     .slice(0, MAX_NAMED)
     .filter((s) => s.score < STRENGTH_GAP_THRESHOLD)
-    .map((s) => DIMENSION_LABELS[s.dimension]);
+    .map((s) => dimensionLabel(s.dimension, locale));
 
   return { strengths, gaps, unknowns, insufficientData: false, profileNotAnInput: false };
 }

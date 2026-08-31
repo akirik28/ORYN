@@ -8,6 +8,7 @@ import { INFORMATIONAL_CATEGORIES, MANUAL_REVIEW_CATEGORIES, REQUIREMENT_CATEGOR
 import type { RequirementFacts } from "@/lib/requirements/types";
 import { formatTuition, tuitionQualifier } from "@/lib/universities/tuition-format";
 import { formatCurrency } from "@/lib/i18n/format";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import type {
   DataConfidence,
   OutlookLabel,
@@ -414,29 +415,36 @@ function deriveTargetField(input: UniversityCounselingViewInput, programFocus: P
 
 function deriveOutlook(
   input: UniversityCounselingViewInput,
-  statedField: SubjectTaxonomy | null
+  statedField: SubjectTaxonomy | null,
+  locale: Locale
 ): AdmissionOutlookSummary | null {
   if (!input.target) return null;
 
   const targetCountry = input.universityCountry ?? null;
-  const admissionSystem = resolveAdmissionSystem({
-    targetCountry,
-    studentCountry: input.studentCountry ?? null,
-    targetUniversityName: input.universityName,
-    targetField: statedField,
-  });
+  const admissionSystem = resolveAdmissionSystem(
+    {
+      targetCountry,
+      studentCountry: input.studentCountry ?? null,
+      targetUniversityName: input.universityName,
+      targetField: statedField,
+    },
+    locale
+  );
 
-  const outlook = computeAdmissionOutlook({
-    profileStrength: input.profileStrength,
-    admissionRate: input.admissionRate,
-    dataConfidence: input.profileDataConfidence,
-    admissionSystem,
-    fieldAvailability: checkUndergraduateFieldAvailability({ country: targetCountry, field: statedField }),
-  });
+  const outlook = computeAdmissionOutlook(
+    {
+      profileStrength: input.profileStrength,
+      admissionRate: input.admissionRate,
+      dataConfidence: input.profileDataConfidence,
+      admissionSystem,
+      fieldAvailability: checkUndergraduateFieldAvailability({ country: targetCountry, field: statedField }, locale),
+    },
+    locale
+  );
   // Gate 1's own answer feeds the explanation too, not just the label. Without this the
   // panel contradicts its own badge: "not a profile-review system" over a list of profile
   // strengths, gaps, and essay/recommendation "unknowns" that this mechanism never reads.
-  const explanation = explainOutlook(input.profileDimensionScores, outlook.admissionSystemShape);
+  const explanation = explainOutlook(input.profileDimensionScores, outlook.admissionSystemShape, locale);
 
   return {
     outlook: outlook.outlook,
@@ -471,7 +479,7 @@ const EMPTY_STATUS_COUNTS: Record<RequirementEvaluationStatus, number> = {
  * pieces. Pure and total — never throws on missing/empty input, mirroring every other
  * lib/admissions and lib/requirements function it composes.
  */
-export function buildUniversityCounselingView(input: UniversityCounselingViewInput): UniversityCounselingView {
+export function buildUniversityCounselingView(input: UniversityCounselingViewInput, locale: Locale = DEFAULT_LOCALE): UniversityCounselingView {
   const evaluationByRequirementId = new Map(input.requirementEvaluations.map((e) => [e.requirementId, e]));
 
   const rollup: RequirementRollupItem[] = input.requirements.map((requirement) => {
@@ -508,7 +516,7 @@ export function buildUniversityCounselingView(input: UniversityCounselingViewInp
   const programFocus = deriveProgramFocus(input);
   const tuition = deriveTuitionContext(input.tuition);
   const targetField = deriveTargetField(input, programFocus);
-  const outlook = deriveOutlook(input, targetField.stated);
+  const outlook = deriveOutlook(input, targetField.stated, locale);
 
   const recommendedActions: RecommendedAction[] = [];
 

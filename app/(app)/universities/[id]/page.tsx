@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { MapPin, Users, DollarSign, GraduationCap, ExternalLink, Trophy, Target, TrendingUp } from "lucide-react";
 import { SUBJECT_LABELS } from "@/lib/programs/subject-labels";
 import { requireUser, getCurrentProfile } from "@/lib/security/dal";
+import { resolveLocale } from "@/lib/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
 import { refreshAdmissionOutlook } from "@/lib/admissions/persist";
 import { explainOutlook, type DimensionScoreInput } from "@/lib/admissions/explain";
@@ -45,6 +46,15 @@ const BINDING_POLICY_LABELS: Record<string, string> = {
   non_binding: "Non-binding",
 };
 
+/** Turkish for the outlook estimate's confidence word — the only enum interpolated
+ * directly into the "Your outlook" panel's own English sentence rather than sourced from
+ * lib/admissions/*.ts. Page-local since nothing else on this page renders it. */
+const CONFIDENCE_LABEL_TR: Record<"high" | "medium" | "low", string> = {
+  high: "yüksek",
+  medium: "orta",
+  low: "düşük",
+};
+
 const MONTH_NAMES = [
   "January",
   "February",
@@ -82,6 +92,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   const { id } = await params;
   const session = await requireUser();
   const supabase = await createClient();
+  const locale = await resolveLocale();
 
   // A loser row still has a real, working detail page (it must — programs/requirements/FKs on
   // one side of a pair are exactly why the row can't just be deleted), but no surface should
@@ -135,7 +146,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   // was withheld when it was. `target_universities` persists only the label, and
   // "not_applicable" covers reasons that need opposite sentences — a credential-gated system
   // versus a degree that doesn't exist at undergraduate level here. See OutlookBadge.
-  const outlook = targetRes.data ? await refreshAdmissionOutlook(targetRes.data.id, session.userId!) : null;
+  const outlook = targetRes.data ? await refreshAdmissionOutlook(targetRes.data.id, session.userId!, locale) : null;
 
   // A row a research pass has since confirmed closed (verified_historical) or unresolved
   // (conflicting) is real, correctly-sourced data worth keeping in the table — never worth
@@ -197,7 +208,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   // contradicts itself: a badge reading "Not a profile-review system" sitting directly above a
   // list of profile strengths, profile gaps, and essay/recommendation "unknowns" for a
   // mechanism (YKS, CAO, a Dutch open programme) that reads none of them.
-  const explanation = explainOutlook(dimensionScores, outlook?.admissionSystemShape);
+  const explanation = explainOutlook(dimensionScores, outlook?.admissionSystemShape, locale);
 
   // Fresh-computation-wins, consistently: the badge already used `outlook` over the row for
   // staleness reasons, and the range and the reason have to agree with the badge or the panel
@@ -317,7 +328,9 @@ export default async function UniversityDetailPage({ params }: { params: Promise
               able to shrink. Wraps to its own line instead of clipping under
               `<main>`'s overflow-x-hidden. */}
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-lg font-medium">Your outlook</h2>
+            <h2 lang={locale} className="text-lg font-medium">
+              {locale === "tr" ? "Kabul görünümün" : "Your outlook"}
+            </h2>
             {/* The freshly computed label, not the row's — `targetRes.data` was read before
                 the refresh above wrote to it, so the persisted value here is one render
                 stale, and pairing a stale label with a fresh reason could show the reason
@@ -330,13 +343,14 @@ export default async function UniversityDetailPage({ params }: { params: Promise
               exactly the false precision non-negotiable #5 forbids. `computeAdmissionOutlook`
               returns whole percentage points; the persisted columns store 0-1. */}
           {outlookEstimate ? (
-            <p className="text-sm text-muted-foreground">
-              Oryn estimate:{" "}
+            <p lang={locale} className="text-sm text-muted-foreground">
+              {locale === "tr" ? "Oryn tahmini:" : "Oryn estimate:"}{" "}
               <span className="font-medium text-foreground">
                 {outlookEstimate.low}–{outlookEstimate.high}%
               </span>{" "}
-              ({outlookEstimate.confidence} confidence). This is not a guarantee or an official university
-              probability.
+              {locale === "tr"
+                ? `(${outlookEstimate.confidence ? CONFIDENCE_LABEL_TR[outlookEstimate.confidence] : ""} güven). Bu bir garanti veya resmi bir üniversite olasılığı değildir.`
+                : `(${outlookEstimate.confidence} confidence). This is not a guarantee or an official university probability.`}
             </p>
           ) : null}
           {/* Phase 16.2's explanation is mandatory, and for a target Oryn declined to rate, the
@@ -344,12 +358,14 @@ export default async function UniversityDetailPage({ params }: { params: Promise
               grid describing a review step this system doesn't have. Before this, the reason was
               computed in full and dropped on the floor. */}
           {notApplicableReason ? (
-            <p className="max-w-3xl text-sm text-muted-foreground">{notApplicableReason}</p>
+            <p lang={locale} className="max-w-3xl text-sm text-muted-foreground">
+              {notApplicableReason}
+            </p>
           ) : null}
           {notApplicableReason ? (
             showMechanismUnknowns ? (
-              <div className="text-sm">
-                <p className="font-medium text-muted-foreground">Unknowns</p>
+              <div lang={locale} className="text-sm">
+                <p className="font-medium text-muted-foreground">{locale === "tr" ? "Bilinmeyenler" : "Unknowns"}</p>
                 <ul className="mt-1 space-y-0.5 text-muted-foreground">
                   {explanation.unknowns.map((u) => (
                     <li key={u}>? {u}</li>
@@ -358,29 +374,45 @@ export default async function UniversityDetailPage({ params }: { params: Promise
               </div>
             ) : null
           ) : (
-            <div className="grid gap-4 text-sm sm:grid-cols-3">
+            <div lang={locale} className="grid gap-4 text-sm sm:grid-cols-3">
               <div>
-                <p className="font-medium text-success">Strengths</p>
+                <p className="font-medium text-success">{locale === "tr" ? "Güçlü Yönler" : "Strengths"}</p>
                 <ul className="mt-1 space-y-0.5 text-muted-foreground">
                   {explanation.strengths.length > 0 ? (
                     explanation.strengths.map((s) => <li key={s}>+ {s}</li>)
                   ) : (
-                    <li>{explanation.insufficientData ? "We don't know enough about this yet." : "Add more profile data to see this."}</li>
+                    <li>
+                      {locale === "tr"
+                        ? explanation.insufficientData
+                          ? "Bu konuda henüz yeterince bilgimiz yok."
+                          : "Bunu görmek için profiline daha fazla bilgi ekle."
+                        : explanation.insufficientData
+                          ? "We don't know enough about this yet."
+                          : "Add more profile data to see this."}
+                    </li>
                   )}
                 </ul>
               </div>
               <div>
-                <p className="font-medium text-warning">Gaps</p>
+                <p className="font-medium text-warning">{locale === "tr" ? "Boşluklar" : "Gaps"}</p>
                 <ul className="mt-1 space-y-0.5 text-muted-foreground">
                   {explanation.gaps.length > 0 ? (
                     explanation.gaps.map((g) => <li key={g}>− {g}</li>)
                   ) : (
-                    <li>{explanation.insufficientData ? "We don't know enough about this yet." : "None obvious yet."}</li>
+                    <li>
+                      {locale === "tr"
+                        ? explanation.insufficientData
+                          ? "Bu konuda henüz yeterince bilgimiz yok."
+                          : "Henüz belirgin bir şey yok."
+                        : explanation.insufficientData
+                          ? "We don't know enough about this yet."
+                          : "None obvious yet."}
+                    </li>
                   )}
                 </ul>
               </div>
               <div>
-                <p className="font-medium text-muted-foreground">Unknowns</p>
+                <p className="font-medium text-muted-foreground">{locale === "tr" ? "Bilinmeyenler" : "Unknowns"}</p>
                 <ul className="mt-1 space-y-0.5 text-muted-foreground">
                   {explanation.unknowns.map((u) => (
                     <li key={u}>? {u}</li>

@@ -1,6 +1,7 @@
 import type { DataConfidence, OutlookLabel } from "@/types/database";
 import type { FieldAvailabilityResult } from "./field-availability";
 import type { AdmissionSystemResolution, AdmissionSystemShape } from "./system-shape";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 export const ADMISSION_MODEL_VERSION = "admission_model_v1";
 
@@ -142,6 +143,33 @@ const NOT_APPLICABLE_REASONS: Record<NotApplicableKind, string> = {
     "This target's admissions system is credential/exam-gated — non-academic profile strength is not a general input to the admission decision itself, so this outlook should not be shown as a normal reach/competitive/likely-style classification. See 18-geography-conditional-scoring-design-spec.md §3.3-3.4.",
 };
 
+/**
+ * Turkish counterparts. "reach/competitive/likely" is left untranslated deliberately in both
+ * languages — it's the literal vocabulary `OutlookBadge` renders on screen today, itself not
+ * yet translated (a different, not-yet-assigned component), so naming it in Turkish here
+ * would describe a badge that doesn't say that.
+ *
+ * Each hedge was checked specifically for whether the Turkish still admits the same limit the
+ * English does, not just for fluency — the founder's own standing instruction for this slice.
+ * "there is no reviewer here — so it would be describing a step that doesn't exist" survives
+ * as "burada bir değerlendirici yok — yani var olmayan bir adımı anlatmış olurdu" (would be
+ * describing a step that doesn't exist); "and won't guess" survives as "tahmin yürütmez"
+ * (does not guess) — neither softens into a claim Oryn doesn't have grounds for.
+ */
+const NOT_APPLICABLE_REASONS_TR: Record<NotApplicableKind, string> = {
+  no_evidence_review_rank_competitive:
+    "Bu hedef yalnızca akademik sonuçlara göre, her yıl talebe göre değişen bir sıralama eşiğine göre kabul yapıyor. Oryn'ın reach/competitive/likely ölçeği bir profilin insan bir değerlendirici gözünde nasıl okunduğunu anlatır; burada bir değerlendirici yok — yani var olmayan bir adımı anlatmış olurdu. Oryn ayrıca bu dönemin eşiğinin nereye geleceğini gösteremez ve tahmin yürütmez.",
+  no_evidence_review_threshold:
+    "Bu hedef, yarışarak değil yayımlanmış koşulları karşılayarak kabul ediyor: uygun olduğun an kabul edilmiş olursun. Aktivitelerini okuyan bir değerlendirici yok, yüksek sıralanacağın bir sıralama da yok — bu yüzden bir reach/competitive/likely derecelendirmesi bu sistemde bulunmayan bir mekanizmayı anlatmış olurdu. Burada önemli olan gereklilik kontrolüdür, profil puanı değil.",
+  field_not_offered_at_undergraduate: "Bu, bu ülkede bir lisans yolu değil; bu yüzden değerlendirilecek bir lisans kabulü de yok.",
+  credential_gate_unspecified:
+    "Bu hedefin kabul sistemi kimlik/sınav temelli (credential/exam-gated) — akademik olmayan profil gücü kabul kararına genel bir girdi değildir, bu yüzden bu görünüm normal bir reach/competitive/likely tarzı sınıflandırma olarak gösterilmemelidir. Bkz. 18-geography-conditional-scoring-design-spec.md §3.3-3.4.",
+};
+
+function notApplicableReasonFor(kind: NotApplicableKind, locale: Locale): string {
+  return locale === "tr" ? NOT_APPLICABLE_REASONS_TR[kind] : NOT_APPLICABLE_REASONS[kind];
+}
+
 /** Maps Gate 1's shape onto the suppression decision. `holistic_review` and `unknown` both
  * mean "keep the existing classification": the first because the scale genuinely describes
  * the target, the second because Oryn has established nothing and must not act on a guess. */
@@ -157,8 +185,13 @@ function notApplicableKindForShape(shape: AdmissionSystemShape): NotApplicableKi
  * composite score combines the student's profile strength with the school's selectivity;
  * the optional numeric range is a deliberately wide, low/medium-confidence approximation,
  * never higher confidence and never single-point precision.
+ *
+ * `locale` defaults to English; see lib/counselor/evidence.ts's buildRecommendation for the
+ * full reasoning behind that default across this codebase's i18n work. Only affects
+ * `notApplicableReason` — `admissionSystem.mechanism` (from system-shape.ts, concatenated in
+ * front of it below) is untranslated for all but Turkey today; see that file's own note.
  */
-export function computeAdmissionOutlook(inputs: AdmissionOutlookInputs): AdmissionOutlookResult {
+export function computeAdmissionOutlook(inputs: AdmissionOutlookInputs, locale: Locale = DEFAULT_LOCALE): AdmissionOutlookResult {
   const tier = selectivityTier(inputs.admissionRate);
   const compositeScore = Math.max(0, Math.min(100, inputs.profileStrength - SELECTIVITY_PENALTY[tier]));
 
@@ -206,13 +239,22 @@ export function computeAdmissionOutlook(inputs: AdmissionOutlookInputs): Admissi
   let notApplicableReason: string | null = null;
   if (isNotApplicable) {
     if (field) {
-      notApplicableReason = [field.explanation ?? NOT_APPLICABLE_REASONS[notApplicableKind], field.caveat]
+      // field.explanation is already in the caller's chosen locale by this point — it comes
+      // from inputs.fieldAvailability, which the caller built via
+      // checkUndergraduateFieldAvailability(query, locale). Only the fallback (an unresearched
+      // field within a researched country/kind combination — should not occur in practice, but
+      // this function stays total) needs its own locale lookup.
+      notApplicableReason = [field.explanation ?? notApplicableReasonFor(notApplicableKind, locale), field.caveat]
         .filter((part): part is string => part !== null)
         .join(" ");
     } else {
+      // mechanism (from inputs.admissionSystem, i.e. system-shape.ts) is untranslated for all
+      // but Turkey today — see that file's own note. For every other country in this branch,
+      // a Turkish reader gets an English mechanism sentence glued in front of a Turkish hedge
+      // until system-shape.ts's remaining ~28 sentences are translated. Flagged, not hidden.
       notApplicableReason = mechanism === null
-        ? NOT_APPLICABLE_REASONS[notApplicableKind]
-        : `${mechanism} ${NOT_APPLICABLE_REASONS[notApplicableKind]}`;
+        ? notApplicableReasonFor(notApplicableKind, locale)
+        : `${mechanism} ${notApplicableReasonFor(notApplicableKind, locale)}`;
     }
   }
 

@@ -79,3 +79,48 @@ describe("checkUndergraduateFieldAvailability — refuses to claim what it did n
     expect(() => checkUndergraduateFieldAvailability({ country: null, field: null })).not.toThrow();
   });
 });
+
+describe("checkUndergraduateFieldAvailability — locale: tr", () => {
+  test.each([
+    ["United States", "medicine", "Amerika Birleşik Devletleri'nde Tıp bir lisans derecesi değildir"],
+    ["United States", "law", "Amerika Birleşik Devletleri'nde Hukuk bir lisans derecesi değildir"],
+    ["Canada", "medicine", "Kanada'da Tıp bir lisans derecesi değildir"],
+    ["Canada", "law", "Kanada'da Hukuk fiilen bir lisans derecesi değildir"],
+  ] as const)("%s %s explanation is Turkish and names the real route", (country, field, expectedOpening) => {
+    const result = checkUndergraduateFieldAvailability({ country, field }, "tr");
+    expect(result.explanation).toContain(expectedOpening);
+  });
+
+  test("Canada/Law's Turkish caveat states the Quebec CEGEP exception", () => {
+    const result = checkUndergraduateFieldAvailability({ country: "Canada", field: "law" }, "tr");
+    expect(result.caveat).toContain("Quebec");
+    expect(result.caveat).toContain("CEGEP");
+  });
+
+  test("US/Medicine's Turkish caveat names the BS/MD exception", () => {
+    const result = checkUndergraduateFieldAvailability({ country: "United States", field: "medicine" }, "tr");
+    expect(result.caveat).toContain("BS/MD");
+  });
+
+  test("an entry with no caveat in English has no caveat in Turkish either (US/Law, Canada/Medicine)", () => {
+    expect(checkUndergraduateFieldAvailability({ country: "United States", field: "law" }, "tr").caveat).toBeNull();
+    expect(checkUndergraduateFieldAvailability({ country: "Canada", field: "medicine" }, "tr").caveat).toBeNull();
+  });
+
+  test("an offered result carries no explanation in Turkish either — nothing to warn about, in either language", () => {
+    const result = checkUndergraduateFieldAvailability({ country: "United Kingdom", field: "medicine" }, "tr");
+    expect(result.explanation).toBeNull();
+    expect(result.caveat).toBeNull();
+  });
+
+  test("omitting locale is identical to passing 'en' explicitly, across every researched entry (default-locale backward compatibility)", () => {
+    for (const [country, field] of [
+      ["United States", "medicine"],
+      ["United States", "law"],
+      ["Canada", "medicine"],
+      ["Canada", "law"],
+    ] as const) {
+      expect(checkUndergraduateFieldAvailability({ country, field })).toEqual(checkUndergraduateFieldAvailability({ country, field }, "en"));
+    }
+  });
+});
