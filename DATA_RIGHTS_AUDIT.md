@@ -269,3 +269,60 @@ where I'd most want a lawyer's read rather than mine:**
 has a settled interpretation that resolves the `ai_usage`/`product_events` question one
 way, and whether Turkish KVKK practice on this point differs from GDPR practice in any way
 that changes the answer for Turkish users specifically.
+
+---
+
+## Part 3a — A seventh gap, and a different kind of question: can the export mechanism even carry it?
+
+`birth_year_changes` (migration 0072, added after this document's first pass, to make a
+birth-year edit that outpaces consent detectable — see `LEGAL_REVIEW.md` §6.1) has the
+same direct `user_id` link the six gaps above were flagged for, and by the same materiality
+reasoning in Part 3, is plausibly the student's own data. But the question this section
+answers is different from Part 3's: not *should* it be exported, but *can* it, given how
+`/api/export-data/route.ts` actually works today. The answer is no, not without a change,
+and the reason is structural rather than an oversight like the other six.
+
+**Every table `EXPORT_TABLES` currently touches is exported through the request-scoped
+client, never the admin client** — verified by grep: zero occurrences of `createAdminClient`
+or an admin call anywhere in `app/api/export-data/route.ts`. That means the export
+mechanism has one uniform assumption baked into its shape: every exportable table must
+carry an RLS policy granting the owning student `SELECT` on their own rows. This is easy to
+miss because it's satisfied invisibly for all 37 tables currently exported (EXPORT_TABLES's 29, EXPORT_PARTICIPANT_TABLES's 7, plus profiles itself) — including the
+two, `message_reports` and `profile_views`, that already needed special handling (an
+explicit column allowlist instead of `select("*")`, to avoid leaking admin-only columns).
+Both still depend on an RLS policy existing at all (`reporter_id = auth.uid()`,
+`viewed_user_id = auth.uid()` respectively) — they're special-cased on *which columns*,
+never on *whether RLS permits the read in the first place*.
+
+`birth_year_changes` breaks that assumption on purpose. Its migration enables RLS and adds
+no policies — not even a select-own one — specifically because whether a student should
+ever see this log through *any* surface was left as its own open product decision (see the
+table's own `COMMENT ON TABLE`). The consequence for export: adding `"birth_year_changes"`
+to `EXPORT_TABLES` today would not fail loudly. `select("*").eq("user_id", userId)` through
+the request-scoped client would run, RLS would silently return zero rows for every student,
+and the export would look complete — the table listed, a query executed — while never once
+returning what it claims to. That's a worse failure mode than the six gaps above, which are
+at least honestly absent rather than present and empty.
+
+**Two ways to close this, with a real tradeoff between them, not a preference**:
+
+- **Add an RLS "select own" policy** (`user_id = auth.uid()`) matching the pattern the other
+  37 tables already use. Simplest, and keeps the export route's defense-in-depth property —
+  a filtering bug in the route would still be caught by RLS underneath, the same backstop
+  every other exported table has. But it doesn't scope the visibility to *export
+  specifically*: it makes the log readable by the student's own session through any future
+  code that queries this table with the normal client, not just this one route. That
+  re-opens, by a side door, exactly the "should a student ever see this" question the
+  migration deliberately left unanswered.
+- **Read it via the admin client, scoped in application code** (`.eq("user_id", userId)`
+  inside the route, the same trust model `deleteMyAccount()` already uses elsewhere). Keeps
+  RLS locked down for every other surface — the visibility question stays genuinely open.
+  But it would be the first admin-client read in this route, and it trades away that
+  defense-in-depth property specifically for this table: a bug in the route's own filter
+  would no longer be caught by anything underneath, unlike the other 37 tables where RLS
+  independently blocks a leak even if the application code got the filter wrong.
+
+Not resolving which one — that's a real design call with a security tradeoff on one side and
+a product-visibility question on the other, not something to pick unilaterally in an audit
+document. Flagging it here so whoever adds this table to the export surface later doesn't
+discover the RLS gap by shipping a query that silently returns nothing.
