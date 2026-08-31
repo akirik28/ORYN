@@ -202,3 +202,130 @@ evidence, guardian consent, automated retention limits.
 - [ ] Have counsel draft the liability, disclaimer, and governing-law sections, in both languages.
 - [ ] Set `LEGAL_REVIEW_STATUS.approved = true` **with** `reviewedBy` and `reviewedOn` — a test enforces this. One flag covers both languages; if English and Turkish end up needing to be approved on different dates, that's a real gap in this constant worth flagging back to whoever built it.
 - [ ] Re-verify the processor inventory against the code; add any provider introduced since, **to both `DATA_PROCESSORS_EN` and `DATA_PROCESSORS_TR`** — a test checks the two arrays' facts (id, personalData, verifiedIn) can't silently diverge, but won't catch a provider added to only one.
+
+---
+
+## 6. Minor-consent sequencing — design options for a founder/counsel decision
+
+This section is design and analysis, not an implementation, and not a recommendation
+between the options — that choice belongs to the founder and counsel together, the same
+posture as the export-omission question in Part 3 of `DATA_RIGHTS_AUDIT.md`. It expands
+`LAWYER_FLAGS.minorConsent` (§3, item 4) rather than replacing it; that entry stays the
+one-line pointer, this is the detail behind it.
+
+**The problem, stated precisely.** Consent (the Terms/Privacy checkbox) is captured at
+signup. Age (`birth_year`) is captured at onboarding, which happens strictly after signup.
+Under both GDPR (Art. 8) and KVKK, the mechanism for obtaining a minor's consent is not
+the same as for an adult's. Today, every signup goes through the identical adult-shaped
+consent flow — including the 14-year-olds the landing page and Privacy Notice explicitly
+say the product is for — because at the moment consent is captured, the server does not
+yet know, and cannot know, how old the person is.
+
+### 6.1 What the product currently does, verified against the code
+
+| Moment | What's known | What's recorded |
+|---|---|---|
+| Signup (`app/(auth)/actions.ts`, `signUp()`) | Nothing about age. `country` and `birth_year` are not fields on this form. | `terms_accepted_at`, `terms_version`, `terms_approved_by_counsel` written unconditionally to the auth user's metadata — one consent shape for everyone. |
+| Onboarding, screen 2 of 5 (`features/onboarding/onboarding-wizard.tsx`) | The student *enters* `country` and `birthYear` here, client-side only, in React state. | **Nothing yet.** There is no per-step save and no `localStorage` — closing the tab here loses it. |
+| Onboarding, final step (`completeOnboarding` in `app/(onboarding)/onboarding/actions.ts`) | Everything the wizard collected across all 5 screens. | `country`, `birth_year`, `onboarding_completed: true` are written together, in one call, only once the student reaches and submits the last screen. |
+| Settings, any time after (`app/(app)/settings/actions.ts`, `updateBirthYear()`) | The student can change their stated birth year later. | Overwrites `birth_year`. No re-consent or notice of any kind is triggered by this write today. |
+
+**One fact that meaningfully bounds the gap**: `app/(app)/layout.tsx` redirects to
+`/onboarding` whenever `profile.onboarding_completed` is false, and every real feature —
+the advisor, opportunities, profile building, everything under `(app)` — lives behind
+that layout. A student cannot reach any of those features while the server's age is
+unknown; the unknown-age window is signup plus however long onboarding takes (typically
+minutes), not an open-ended period of real product use. This does not fix the sequencing
+problem — the *consent event itself* still happens before age is known, and the flow that
+adult and minor both click through at signup is currently identical — but it means the
+realistic exposure is "an adult-shaped consent screen briefly preceded feature access for
+a minor," not "a minor used the AI advisor for weeks under a consent basis meant for
+adults." Worth having precisely, since it changes how urgent a full guardian-verification
+build is relative to fixing the sequencing itself.
+
+One more relevant fact: CV import (`uploadAndExtractCV`, reachable from onboarding's
+Import screen) sends a document to Anthropic's API *before* onboarding's final submit —
+so an AI call can happen before the server has recorded age, independent of the consent
+question. Noting it here because it's adjacent, not because it changes the analysis above:
+the Privacy Notice already discloses that CV contents are sent to Anthropic, and nothing
+about that disclosure is age-conditional today either.
+
+### 6.2 Options, with their real costs
+
+**A — Ask for birth year at signup, before consent.**
+- *Friction:* Signup today is three fields and a checkbox — deliberately minimal, matching
+  the product's own stated progressive-onboarding philosophy (`AGENTS.md`'s Phase 3: "must
+  NOT feel like a government form"). Adding a field to the very first screen a visitor
+  sees is where funnel drop-off is most sensitive; this is the option most likely to cost
+  signups, not just add a step.
+- *Engineering:* Moderate. A new signup field, consent copy that branches on the entered
+  age, and a decision about onboarding's own birth-year screen — remove it and thread the
+  signup-time value through, or accept asking twice.
+- *What it buys:* The cleanest fix to the sequencing problem specifically — age is known
+  at the exact moment consent is captured, so the right consent shape can be shown from
+  the first instant. Does not, by itself, solve *guardian consent verification* — that is
+  a separate mechanism (see Option C) this option does nothing to build.
+
+**B — Keep the current order; re-prompt once age becomes known.**
+- *Friction:* None added at signup. A new step appears only for students who turn out to
+  be minors, immediately after they enter their birth year in onboarding (or as a gate
+  before the final submit) — scoped to the population that actually needs it, rather than
+  shown to everyone regardless of age.
+- *Engineering:* A new piece of state (something like "minor consent step completed",
+  distinct from the adult `terms_accepted_at` already on record), a new UI step, and an
+  explicit decision this option doesn't answer by itself: does the adult-shaped consent
+  already captured at signup get superseded for a student who turns out to be a minor, or
+  does the new step layer on top of it? Also needs a decision on `updateBirthYear()` in
+  Settings — today, editing birth year later triggers nothing; if this option ships, does
+  crossing the minor/adult line via a later edit re-trigger the same step, or is Settings
+  deliberately left out of scope?
+- *What it buys:* The same practical outcome as Option A — a minor-appropriate consent
+  event is captured before any feature is reachable, since onboarding still gates
+  everything under `(app)`. The open question for counsel is narrower than Option A's:
+  whether having already shown a brief adult-shaped consent screen to a minor, even if
+  immediately followed by the correct one seconds later, is itself a problem — particularly
+  if that first screen's copy makes any representation inappropriate for a 14-year-old to
+  have agreed to, even momentarily.
+
+**C — Gate minor accounts on a guardian step.**
+- *Friction:* By far the highest. This can block the product's primary use case for a
+  real fraction of its stated audience — the landing page and Privacy Notice both
+  explicitly target 14-18-year-olds — until a third party (a parent) takes an action that
+  may take days or may never happen. Built naively, this is an activation-killer for
+  exactly the users the product says it's for.
+- *Engineering:* By far the largest. This is not a copy or sequencing change — it's a new
+  feature: collecting a guardian's contact, verifying *their* affirmative response through
+  some channel, a new holding/waiting state gating `(app)` the same way
+  `onboarding_completed` does today, and handling a guardian who never responds. This is
+  the build the signup form's own copy already promises is coming
+  (`signupConsent.minorPlaceholderNote` in `lib/legal/content.ts`: "Guardian approval is
+  not yet collected in the product — this is where it will be asked for once the
+  requirement is confirmed with legal counsel") — Option C is that promise, not a new idea.
+- *What it buys:* The most defensible posture if built correctly — actual verifiable
+  guardian consent, which is what the stricter readings of both frameworks want for
+  younger minors specifically. It is a project, not a fix that lands in one branch.
+
+None of these three are mutually exclusive as end states — B or A could ship first to fix
+sequencing, with C following later as the actual guardian-verification build. Whether
+that staged approach is acceptable, or whether nothing should ship without C, is itself
+part of what this decision needs to settle.
+
+### 6.3 What this document cannot resolve
+
+**The age threshold varies by jurisdiction, and the product already collects the input a
+per-country rule would need.** GDPR Article 8 lets each EU member state set its own
+digital-consent age between 13 and 16; Türkiye's position under KVKK is a distinct
+question this document is not asserting an answer to — Turkish law's treatment of a
+minor's capacity to consent does not come from the same GDPR Article 8 mechanism, and
+guessing at a specific age here would be exactly the kind of invented legal claim this
+whole packet has tried not to make. `country` is already collected at onboarding, so the
+raw ingredient for a per-country rule exists — but it's a free-text field with
+suggestions (`SuggestInput` in the wizard), not a constrained list, so building reliable
+per-country logic on top of it would need normalizing that data first, and then
+maintaining a threshold table across every jurisdiction the product reaches as those laws
+change. A single conservative threshold (e.g. always applying GDPR's own ceiling, 16) is
+far simpler to build and keep correct, at the cost of being stricter than the law actually
+requires in the many countries that permit a lower age. **Whether to build per-country
+logic or adopt one conservative number is a decision for counsel, not a fact this document
+can settle** — it depends on risk tolerance and maintenance appetite as much as on the law
+itself.
