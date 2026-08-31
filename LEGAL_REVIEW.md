@@ -230,6 +230,12 @@ yet know, and cannot know, how old the person is.
 | Onboarding, final step (`completeOnboarding` in `app/(onboarding)/onboarding/actions.ts`) | Everything the wizard collected across all 5 screens. | `country`, `birth_year`, `onboarding_completed: true` are written together, in one call, only once the student reaches and submits the last screen. **As of migration 0072, this first-ever write is logged** (`birth_year_changes`, `previous_value` null) alongside the consent timestamp already on file, so the gap this row used to describe is now detectable, not invisible. |
 | Settings, any time after (`app/(app)/settings/actions.ts`, `updateBirthYear()`) | The student can change their stated birth year later. | Overwrites `birth_year`. **As of migration 0072, a `birth_year_changes` row is written automatically** (old value, new value, and consent time as of that moment) — a database trigger, not application code, so it cannot be forgotten by a future call site. This makes the mismatch *detectable*; it still triggers no re-consent flow and applies no threshold, both of which remain the founder/counsel decision in §6.2-6.3. |
 
+**The two "as of migration 0072" rows above are true of this repository and not yet true of
+production** — migration 0072 is recorded in `supabase/migrations/` but has not been applied
+to the live project, so `birth_year_changes` does not yet exist there and neither trigger
+fires on a real account today; do not read this section as saying the mismatch is currently
+detectable in production, only that it will be once 0072 is applied.
+
 **One fact that meaningfully bounds the gap**: `app/(app)/layout.tsx` redirects to
 `/onboarding` whenever `profile.onboarding_completed` is false, and every real feature —
 the advisor, opportunities, profile building, everything under `(app)` — lives behind
