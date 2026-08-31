@@ -146,11 +146,12 @@ export interface UniversityCounselingViewInput {
   /** 0-100 overall career profile score (`profiles.profile_strength_score`). */
   profileStrength: number;
 
-  /** Confidence in the underlying profile data feeding the outlook. Callers assembling this
-   * from live data should derive it exactly as `lib/admissions/persist.ts`'s
-   * `refreshAdmissionOutlook` does (`completeness_percent >= 60 ? "high" : "medium"`) —
-   * that one-line rule isn't re-exported as its own function, so it isn't re-derived here
-   * either; passing it in keeps any future divergence visible instead of silently forked. */
+  /** Confidence in the underlying profile data feeding the outlook. Callers assembling
+   * this from live data should use `lib/admissions/outlook.ts`'s exported
+   * `dataConfidenceForCompleteness` — the same function `refreshAdmissionOutlook` calls —
+   * rather than re-deriving the completeness threshold by hand (that rule wasn't always
+   * exported; a caller here once had to hand-copy it, which is exactly how two divergent
+   * copies happen). */
   profileDataConfidence: DataConfidence;
 
   /** This student's own dimension scores (score + confidence per dimension), for
