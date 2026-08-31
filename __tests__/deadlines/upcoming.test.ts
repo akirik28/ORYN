@@ -24,6 +24,10 @@ type OpportunityRow = {
   title: string;
   deadline: string | null;
   cycle_status: Database["public"]["Tables"]["opportunities"]["Row"]["cycle_status"];
+  /** Optional in the fixtures, defaulted to "active" by `makeSupabase` below: every real
+   * row has one, and spelling it out on the dozen cases that are not about moderation would
+   * bury the two that are. Set it explicitly to test the moderation gate. */
+  status?: Database["public"]["Tables"]["opportunities"]["Row"]["status"];
 };
 type SavedOpportunityRow = { opportunity_id: string; user_id: string; status: string };
 
@@ -57,9 +61,13 @@ function makeQueryBuilder<T extends Record<string, unknown>>(rows: T[]) {
 }
 
 function makeSupabase(tables: { saved_opportunities: SavedOpportunityRow[]; opportunities: OpportunityRow[] }) {
+  // Every real `opportunities` row has a moderation status, and since 2026-08-31 the
+  // lifecycle gate reads it. Defaulting here keeps the cases that are about cycles and
+  // deadlines saying only what they mean, while a case that sets it explicitly still wins.
+  const opportunities = tables.opportunities.map((row) => ({ status: "active" as const, ...row }));
   return {
     from: vi.fn((table: "saved_opportunities" | "opportunities") =>
-      table === "saved_opportunities" ? makeQueryBuilder(tables.saved_opportunities) : makeQueryBuilder(tables.opportunities)
+      table === "saved_opportunities" ? makeQueryBuilder(tables.saved_opportunities) : makeQueryBuilder(opportunities)
     ),
   } as unknown as SupabaseClient<Database>;
 }
@@ -103,6 +111,31 @@ describe("getUpcomingOpportunityDeadlines — pinned current behavior", () => {
     });
     const result = await getUpcomingOpportunityDeadlines(supabase, USER_ID, TODAY);
     expect(result).toEqual([]);
+  });
+
+  test("a saved opportunity that has since been disabled is not counted down to", async () => {
+    // The other half of the same 2026-08-31 leak: a student can save an opportunity that is
+    // later pulled, and the deadline engine would keep counting down to it. Being saved is
+    // not a reason to keep surfacing a record Oryn has withdrawn.
+    const supabase = makeSupabase({
+      saved_opportunities: [{ opportunity_id: "opp-1", user_id: USER_ID, status: "saved" }],
+      opportunities: [
+        { id: "opp-1", title: "Pulled Programme", deadline: "2026-11-01", cycle_status: "open", status: "disabled" },
+      ],
+    });
+
+    expect(await getUpcomingOpportunityDeadlines(supabase, USER_ID, TODAY)).toEqual([]);
+  });
+
+  test("an under_review opportunity is not counted down to either", async () => {
+    const supabase = makeSupabase({
+      saved_opportunities: [{ opportunity_id: "opp-1", user_id: USER_ID, status: "saved" }],
+      opportunities: [
+        { id: "opp-1", title: "Not Yet Vetted", deadline: "2026-11-01", cycle_status: "open", status: "under_review" },
+      ],
+    });
+
+    expect(await getUpcomingOpportunityDeadlines(supabase, USER_ID, TODAY)).toEqual([]);
   });
 
   test("cycle_status='unverified' with a future deadline is still returned — unconfirmed is not the same claim as wrong", async () => {

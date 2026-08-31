@@ -67,7 +67,7 @@ export async function getUpcomingOpportunityDeadlines(supabase: SupabaseClient<D
   const opportunityIds = [...new Set(saved.map((s) => s.opportunity_id))];
   const { data: opportunities } = await supabase
     .from("opportunities")
-    .select("id, title, deadline, cycle_status")
+    .select("id, title, status, deadline, cycle_status")
     .in("id", opportunityIds)
     .not("deadline", "is", null)
     .gte("deadline", today);

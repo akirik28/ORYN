@@ -110,7 +110,7 @@ async function ForYouView({
   const matches = matchesRes.data ?? [];
   const opportunityIds = matches.map((m) => m.opportunity_id);
   const { data: opportunities } = opportunityIds.length
-    ? await supabase.from("opportunities").select("*").in("id", opportunityIds)
+    ? await supabase.from("opportunities").select("*").in("id", opportunityIds).eq("status", "active")
     : { data: [] };
 
   const opportunityById = new Map((opportunities ?? []).map((o) => [o.id, o]));
