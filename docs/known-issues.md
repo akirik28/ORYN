@@ -11,6 +11,92 @@ dedicated living docs rather than being tracked here — start at
 file's remaining entries (the Drive-doc product-decision conflict, data-readiness gaps,
 scoped-out items) are still current as of the dates on each entry.
 
+## Tracking upstream — every Dialog silently loses focus on the first Shift+Tab
+
+**2026-09-01, accessibility audit follow-up.** Every dialog in the app (they all render
+through `components/ui/dialog.tsx`, an unmodified wrapper around `@base-ui/react`'s
+`Dialog.Root/Trigger/Portal/Backdrop/Popup/Close/Title/Description`) has a focus trap that
+works forward but not backward. **This is not "the trap is broken"** — Escape still closes
+the dialog and correctly returns focus to whatever opened it, so nobody is stuck in the
+usual sense. The actual problem: press Shift+Tab once from the first focusable element in a
+freshly-opened dialog, and focus lands on a `aria-hidden="true"`, 1×1px, off-screen
+`<span data-base-ui-focus-guard>` and stays there — not for a frame, not for a moment while
+something else resolves, but indefinitely (checked with a 9-point poll from 0ms to 6.5s of
+real elapsed time, same result throughout). Between that keypress and pressing Escape, a
+sighted keyboard user has **no visible focus indicator anywhere on the page**, and nothing
+tells them Escape is the way out. That silence, not a "trap," is the user harm.
+
+**Forward direction works correctly**: Tab through every focusable element and one more
+wraps cleanly back to the first, both in the DOM (`document.activeElement`) and visually
+(focus ring renders on the wrapped-to element). Only the backward direction — Shift+Tab off
+the first element, which should symmetrically wrap to the last — fails to redirect.
+
+**Confirmed upstream, not ours**, two ways:
+1. `components/ui/dialog.tsx` has zero focus-management code of its own — no
+   `initialFocus`/`finalFocus` override, nothing that touches how the guards behave. There
+   is no hook in our wrapper that could explain an asymmetric guard failure.
+2. Reproduces identically in a from-scratch page using only `@base-ui/react/dialog` directly
+   — `Dialog.Root` → `Dialog.Trigger` ("Open") → `Dialog.Portal` → `Dialog.Backdrop` →
+   `Dialog.Popup` containing two plain `<button>`s and a `Dialog.Close`, no ORYN styling, no
+   ORYN content, nothing but the library's own primitives:
+   ```tsx
+   <Dialog.Root>
+     <Dialog.Trigger>Open</Dialog.Trigger>
+     <Dialog.Portal>
+       <Dialog.Backdrop style={{ position: "fixed", inset: 0 }} />
+       <Dialog.Popup style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)" }}>
+         <button>Button One</button>
+         <button>Button Two</button>
+         <Dialog.Close>Close</Dialog.Close>
+       </Dialog.Popup>
+     </Dialog.Portal>
+   </Dialog.Root>
+   ```
+   Open it, let focus auto-land on "Button One" (the library's own default), press
+   Shift+Tab once: focus goes to the guard span and never leaves it. Exact same signature as
+   the real product dialogs.
+
+**Version**: `@base-ui/react@1.7.0` — both installed and the latest published version per
+`npm view @base-ui/react version`, so this is not a stale-dependency problem a bump would
+fix.
+
+**Checked whether Base UI already knows.** No open or closed issue in `mui/base-ui` matches
+this exact symptom (searched "focus guard", "shift tab", "dialog focus", "backward",
+"wrap around focus", "focus stuck", plus every open issue labeled `component: dialog`, as of
+2026-09-01). What does exist, and is worth knowing about if anyone investigates further:
+- A maintainer (`atomiks`) states the design intent directly, on a since-closed PR about
+  guard elements: *"FocusGuard doesn't actually receive the focus, it only moves the
+  focus"* ([PR #2676](https://github.com/mui/base-ui/pull/2676)) — i.e. our repro's
+  behavior is a deviation from Base UI's own stated intent for this mechanism, not an
+  edge case nobody's thought about.
+- [#4678](https://github.com/mui/base-ui/issues/4678) (open): background elements stay
+  reachable by Tab despite `aria-hidden`, because their forked `FloatingFocusManager`
+  applies `aria-hidden` without `inert`. Adjacent infrastructure, different symptom (ours
+  never reaches the background — it never leaves the guard).
+- [#4843](https://github.com/mui/base-ui/issues/4843) (open): dialogs don't set
+  `aria-modal="true"` — also independently visible in our repro's DOM. A separate,
+  already-tracked gap, not something to duplicate-file.
+- No exact match found. This may be a genuinely new report if someone files it.
+
+**Checked for a documented workaround.** Dialog.Root's `modal` prop and Dialog.Popup's
+`initialFocus`/`finalFocus` props are the only focus-related API surface in their docs.
+None of them govern how the internal guards redirect on backward Tab — there is no
+supported prop that avoids this.
+
+**Not fixed.** A hand-rolled Tab-key handler in `dialog.tsx` was considered and rejected: it
+would fight Base UI's own guard implementation, is exactly the kind of change that looks
+correct against the one dialog it's tested on and breaks subtly in another, and becomes a
+permanent fork of behavior owned by a library we don't maintain. Tracking instead — file
+upstream (using the minimal repro above) or wait for a Base UI release, whichever the
+founder/CEO decides.
+
+**Smaller, separate issue in the same investigation, and this one is ours**: the dialog's
+close (×) button is last in DOM/tab order despite sitting visually top-right, in every
+dialog using `DialogContent` — `components/ui/dialog.tsx` renders `{children}` before the
+close button inside `Dialog.Popup`, so tab order always ends on Close regardless of where it
+sits visually. Not the focus-guard bug, not urgent, but a real, fixable, ORYN-side paper cut
+worth a line here so it isn't lost.
+
 ## Needs founder decision — message_reports let a student name an innocent user as the accused
 
 **2026-08-22, BUG-1, live RLS verification package, surfaces 3+4 (sendMessage / block /
