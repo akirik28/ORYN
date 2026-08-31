@@ -52,6 +52,7 @@
     "reconcile:custom-vocabulary": "tsx scripts/reconcile-custom-vocabulary.ts",
     "acquire:university-images": "tsx scripts/acquire-university-images.ts",
     "report:university-images": "tsx scripts/university-image-coverage-report.ts",
+    "report:calendar-bound-requirements": "tsx scripts/report-calendar-bound-requirements.ts",
     "import:opportunity-corpus": "tsx scripts/import-opportunity-corpus.ts",
     "audit:recommendation-readiness": "tsx scripts/audit-recommendation-readiness.ts",
     "audit:opportunity-duplicates": "tsx scripts/audit-opportunity-duplicates.ts",
