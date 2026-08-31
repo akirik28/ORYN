@@ -9,7 +9,7 @@
 -- GoTrue column), the replay job fails and tells us, which is the point. Resist the urge
 -- to broaden it speculatively; add only what a real migration provably needs.
 --
--- Verified dependency surface as of migration 0067: auth.users(id), auth.uid(),
+-- Verified dependency surface as of migration 0072: auth.users(id), auth.uid(),
 -- storage.buckets, storage.objects, storage.foldername(), the anon/authenticated/
 -- service_role roles, and the supabase_realtime publication.
 
@@ -30,7 +30,19 @@ create schema if not exists storage;
 create table if not exists auth.users (
   id uuid primary key default gen_random_uuid(),
   email text,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  -- Real Supabase carries raw_user_meta_data (jsonb) and raw_app_meta_data on auth.users;
+  -- verified against the live project rather than assumed. Migration 0072 reads
+  -- raw_user_meta_data to backfill profiles.terms_accepted_at, and without the column here
+  -- the replay failed on main with "column u.raw_user_meta_data does not exist" — a gap in
+  -- this stub, not a defect in the migration.
+  --
+  -- Note the shape of that failure: this file's own header claims a "verified dependency
+  -- surface as of migration 0067", so it was correct when written and silently went stale
+  -- the moment a later migration reached for something new. Anything added here should be
+  -- re-verified against the live project's information_schema, not copied from memory.
+  raw_user_meta_data jsonb,
+  raw_app_meta_data jsonb
 );
 
 -- On Supabase this reads the request JWT. Locally it reads a GUC, so a pgTAP-style test
