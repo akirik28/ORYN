@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AUTH_INPUT_CLASS, AUTH_SUBMIT_STYLE } from "./auth-field-styles";
+import { SignUpConsent } from "./signup-consent";
 
 export function SignUpForm() {
   const [state, action, pending] = useActionState(signUp, undefined);
@@ -53,16 +54,13 @@ export function SignUpForm() {
           <p className="text-sm text-destructive">{state.errors.password[0]}</p>
         ) : null}
       </div>
+      <SignUpConsent error={state?.errors?.acceptedTerms?.[0]} />
       {state?.message && state.variant === "error" ? (
         <p className="text-sm text-destructive">{state.message}</p>
       ) : null}
       <Button type="submit" className="w-full text-white hover:opacity-90" style={AUTH_SUBMIT_STYLE} disabled={pending}>
         {pending ? "Creating account…" : "Create account"}
       </Button>
-      <p className="text-center text-xs" style={{ color: "#AAAABC" }}>
-        Evidence is optional, your data is private by default, and you can delete your
-        account at any time from Settings.
-      </p>
     </form>
   );
 }
