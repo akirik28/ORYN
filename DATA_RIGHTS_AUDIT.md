@@ -189,10 +189,14 @@ Part 1 that doesn't actually delete on account deletion either.
 Per instruction, none of this is fixed on this branch. In rough priority order, for you to
 triage:
 
-1. **Storage cleanup on account deletion** — the highest-severity item. No code exists for
-   this at all; it isn't a matter of a wrong condition or an edge case, it's a missing step.
-   Affects `evidence` (live orphan today, caveat above) most directly; `cv-uploads` more
-   broadly since nothing ever cleans it, deletion or not.
+1. **Storage cleanup on account deletion — fix pushed, not yet merged**
+   (`oryn/deletion-storage-fix-2026-08-31`, `lib/account/delete-storage.ts`). Storage
+   objects are now removed, per bucket, before `deleteUser()` runs; a cleanup failure
+   returns an honest error instead of proceeding to delete the account. Covers `evidence`,
+   `cv-uploads`, and `post-media` (the last enumerated from the schema even though the
+   posts feature is off, so the flag flipping on later doesn't reopen this). Unit-tested
+   (pagination, chunked removal, first-bucket-failure-stops-everything) without executing
+   against a real account, per instruction.
 2. **`ai_usage`'s delete-vs-anonymize mismatch** — needs a decision (see above), then either
    the schema or the code comment should change to match reality; right now they disagree.
 3. **Six export gaps** — likely a straightforward fix (same `EXPORT_TABLES`-style pattern the
@@ -205,3 +209,63 @@ triage:
 Nothing here required inventing a claim I couldn't check — where I was uncertain (the
 `secret.pdf` orphan's real origin, whether `ai_usage` anonymization was deliberate or an
 oversight), I said so rather than picking the more dramatic reading.
+
+---
+
+## Part 3 — For counsel: is each export omission legally required?
+
+Requested separately from the storage fix, and deliberately not resolved in code: this is
+an analysis for a lawyer to confirm or correct, not an engineering decision, and nothing
+below should be read as legal advice — it is the technical facts plus my own non-lawyer
+reasoning about how they likely map onto GDPR Article 15 (access)/Article 20 (portability)
+and KVKK Article 11, laid out so counsel has something concrete to react to rather than a
+bare table name.
+
+**The general shape of the question.** Both frameworks define "personal data" broadly —
+any information relating to an identified or identifiable natural person. Whether a
+category is *convenient to serialize* has no bearing on whether it falls inside that
+definition; "we didn't get to it" is an engineering fact, not a lawful basis for omitting
+something a subject access request is entitled to. That's the standard I ranked these six
+against — not whether including them would be easy, but whether a reasonable reading of
+"the student's personal data" plainly includes them.
+
+**The three I ranked High materiality read, to me, as squarely inside that definition and
+without an obvious exemption:**
+- `ai_recommendations` — text generated *about* this specific student (`title`, `reason`)
+  that they then responded to (`user_response`, `feedback`). This is about as clear a case
+  of "relates to an identifiable person" as exists in this schema.
+- `opportunity_matches` — the eligibility/relevance/match analysis computed from this
+  student's own profile, about this student. Same reasoning.
+- `student_requirement_evaluations` — a per-student `status` and free-text `reasoning`
+  evaluating whether *this* student meets *this* requirement. Same reasoning.
+
+None of these three resemble a business's own confidential algorithm or a third party's
+data (the two most common lawful grounds for withholding something from an access
+request) — they're records of an assessment made of one specific person, stored under
+their own `user_id`.
+
+**The three I ranked Medium/Low are where I think the actual legal question sits, and
+where I'd most want a lawyer's read rather than mine:**
+- `ai_usage` / `product_events` — both carry a `user_id` and therefore likely qualify for
+  the *access* right (Art. 15/KVKK Art. 11's "learn whether processed" and "request
+  information about the processing") almost regardless of content, since access is not
+  limited to data the subject themselves supplied. Whether they specifically belong in a
+  *portability* export (Art. 20, which some readings limit to data the subject "provided"
+  by using the service, not data the system generated in response to their actions) is
+  more genuinely contestable — this table's export today conflates both rights into one
+  JSON file, so the distinction matters for what gets included, not just how.
+- `rate_limit_events` — `action` + `created_at` only. The thinnest case that this is
+  meaningfully "the student's data" in the sense a subject access request is understood to
+  be about, versus operational/security logging closer in character to a web server's
+  access log. I'd lean toward including it anyway on the basis that the marginal cost of
+  including thin operational data is near zero and the downside of a regulator disagreeing
+  with an "it's not really personal data" argument is not — but that's a risk-posture
+  opinion, not a legal one, and it's exactly the kind of call this section exists to hand
+  to you rather than settle myself.
+
+**What I am not qualified to answer, and am not attempting to**: which specific Article
+5/6 legal basis covers each processing purpose (already an open item — see
+`LAWYER_FLAGS.legalBasis`), whether Article 20's "provided by the data subject" language
+has a settled interpretation that resolves the `ai_usage`/`product_events` question one
+way, and whether Turkish KVKK practice on this point differs from GDPR practice in any way
+that changes the answer for Turkish users specifically.
