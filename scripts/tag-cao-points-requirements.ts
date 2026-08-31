@@ -55,10 +55,17 @@ async function main() {
   }
 
   const dir = "data/research/university-requirements";
+  // 2026-09-01: also search researcher_notes, not just requirement_text/limitations.
+  // REQ-2026-08-21-IE-UCC-011 was missed by the first version of this check — its own
+  // researcher_notes says "Recorded per the standing instruction to treat CAO points as
+  // a competitive outcome" but neither requirement_text nor limitations mentions "CAO" at
+  // all, so it silently fell through. Caught during the follow-up "classify the other 30"
+  // investigation, not by this script itself — worth remembering that a text heuristic is
+  // only as complete as the fields it's told to look at.
   const isCaoPoints = new Set<string>();
   for (const f of readdirSync(dir).filter((f) => f.startsWith("ie_requirements_") && f.endsWith(".jsonl"))) {
-    for (const rec of parseJsonl<{ research_requirement_id?: string; requirement_text?: string; limitations?: string }>(`${dir}/${f}`)) {
-      const text = `${rec.requirement_text ?? ""} ${rec.limitations ?? ""}`;
+    for (const rec of parseJsonl<{ research_requirement_id?: string; requirement_text?: string; limitations?: string; researcher_notes?: string }>(`${dir}/${f}`)) {
+      const text = `${rec.requirement_text ?? ""} ${rec.limitations ?? ""} ${rec.researcher_notes ?? ""}`;
       if (rec.research_requirement_id && /CAO/.test(text) && /points|Round/.test(text)) {
         isCaoPoints.add(rec.research_requirement_id);
       }
