@@ -1,0 +1,21 @@
+-- Documents a finding from the 2026-08-31 requirement-verification-state backfill
+-- investigation, not a schema change with new behavior — see
+-- docs/handoffs/requirement-84-unresolved-rows-2026-08-31.md for the full evidence.
+--
+-- 84 of the 1,325 live university_requirements rows have research_record_id = null, with
+-- zero exceptions in either direction: every row created before migration 0056
+-- (2026-08-21 18:49:03 UTC, when this column was added) is null, and every row created
+-- from that instant onward has a value. This is not a deleted corpus file or a gap in an
+-- ingestion pathway — it is exactly the schema-migration boundary, confirmed by matching
+-- the count precisely rather than inferring it. Their source_url domains (ucl.ac.uk,
+-- cam.ac.uk, ox.ac.uk, ethz.ch, and 18 others, all real official university/testing
+-- sites) are genuine, so this is real pre-migration research data, not fabricated or
+-- hand-entered content — it simply predates the column that would let it be traced back
+-- to its original research record.
+--
+-- Decision: these 84 rows stay verification_state = 'unverified' (their current, correct
+-- value) rather than being backfilled by inference. A row whose provenance cannot be
+-- reconstructed should read as exactly what it is — provenance unknown — not be guessed
+-- into verified_current on the strength of "it's probably fine".
+comment on column public.university_requirements.research_record_id is
+  'The accepted research record''s own identifier (0056 §9) — null for any row created before 2026-08-21 18:49:03 UTC, when this column was added. That boundary is exact: every one of the 84 pre-migration rows is null, and zero rows created afterward are (verified 2026-08-31). Not evidence of a deleted corpus file or a gap in an ingestion pathway — the column genuinely did not exist yet when these rows were written, and migration 0056 did not attempt to backfill historical rows. See docs/handoffs/requirement-84-unresolved-rows-2026-08-31.md.';

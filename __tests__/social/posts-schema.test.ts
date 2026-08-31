@@ -53,8 +53,11 @@ describe("migration numbering", () => {
     expect(duplicates, `duplicate migration version(s): ${duplicates.join(", ")}`).toEqual([]);
 
     // Still pinned, still a collision guard rather than a ceiling — bump it when the next
-    // migration lands, as this line has been bumped before.
-    expect(Math.max(...numbers.map(Number))).toBe(69);
+    // migration lands, as this line has been bumped before. Two migrations both claimed
+    // 0069 on 2026-08-31 — schema-hygiene's backup-table drop and the requirement
+    // investigation's comment-only note — caught here on merge, which is the second time
+    // in one day this guard has earned its place. The latter was renumbered to 0070.
+    expect(Math.max(...numbers.map(Number))).toBe(70);
   });
 });
 
