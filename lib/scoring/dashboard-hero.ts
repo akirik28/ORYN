@@ -1,4 +1,4 @@
-import { canClaimGap, hasConfidentSignal, type DimensionSignal } from "@/lib/scoring/signal";
+import { canClaimGap, hasConfidentSignal, signalCoverage, type DimensionSignal } from "@/lib/scoring/signal";
 import { DIMENSION_LABELS } from "@/lib/scoring/labels";
 import type { ProfileDimension } from "@/types/database";
 
@@ -46,13 +46,23 @@ export function computeDashboardHeroState(
   const claimableGap = biggestGap && canClaimGap(profileSignal, biggestGap.dimension) ? biggestGap : null;
   const hasRichSignal = hasConfidentSignal(profileSignal);
 
-  const strongCount = profileSignal.filter((row) => row.state === "strong").length;
-  const unknownCount = profileSignal.filter((row) => row.state === "limited_evidence").length;
+  // Counted by `signalCoverage`, not by hand. This block used to classify the states itself
+  // and got both numbers wrong: it treated `limited_evidence` as the only unknown state, so
+  // "Areas assessed" was `total - limitedEvidence` — which silently counted every
+  // `not_assessed` dimension as assessed — and it then printed that same
+  // `limited_evidence` count under the label "No evidence yet", which is the wording for
+  // `not_assessed`. On a real account holding 3 assessed / 3 limited / 3 nothing-at-all it
+  // rendered "Areas assessed 6 · No evidence yet 3" when the truth was 3 and 6 (founder
+  // account, 2026-08-31). `isAssessed` is the one predicate that decides this question
+  // everywhere else; re-deriving it locally is what let the two drift apart.
+  const coverage = signalCoverage(profileSignal);
   const evidence: HeroEvidenceStat[] | undefined = hasRichSignal
     ? [
-        { label: "Areas assessed", value: profileSignal.length - unknownCount },
-        { label: "Already strong", value: strongCount, tone: strongCount > 0 ? "positive" : undefined },
-        ...(unknownCount > 0 ? [{ label: "No evidence yet", value: unknownCount, tone: "missing" as const }] : []),
+        { label: "Areas assessed", value: coverage.assessed },
+        { label: "Already strong", value: coverage.strong, tone: coverage.strong > 0 ? "positive" : undefined },
+        ...(coverage.awaitingEvidence > 0
+          ? [{ label: "No evidence yet", value: coverage.awaitingEvidence, tone: "missing" as const }]
+          : []),
       ]
     : undefined;
 

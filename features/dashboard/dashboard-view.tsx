@@ -15,7 +15,7 @@ import { GeneratePlanButton } from "@/features/dashboard/generate-plan-button";
 import { ProfileSignal } from "@/features/dashboard/profile-signal";
 import { OutlookBadge } from "@/features/universities/outlook-badge";
 import { computeDashboardHeroState } from "@/lib/scoring/dashboard-hero";
-import type { DimensionSignal } from "@/lib/scoring/signal";
+import { signalCoverage, type DimensionSignal } from "@/lib/scoring/signal";
 import { describeProfileChange, type ProfileChange } from "@/lib/scoring/change";
 import type { getTargetUniversitiesWithDetails } from "@/lib/universities/queries";
 import type { getUpcomingDeadlines, DeadlineSource } from "@/lib/deadlines/upcoming";
@@ -89,6 +89,10 @@ export function DashboardView({
   // same "nothing recorded" copy as a genuinely empty profile (live Gate 2 finding,
   // 2026-08-24, docs/handoffs/gate2-ai-counselor-report-2026-08-24.md §18).
   const heroState = computeDashboardHeroState(profileSignal, biggestGap);
+  // Read once here rather than inside the hero branch: the `rich_unclaimable` copy has to
+  // say how many areas are still unevidenced, and that count is the difference between a
+  // hedge the student can act on and one that just sounds evasive.
+  const coverage = signalCoverage(profileSignal);
   const changeSentence = describeProfileChange(profileChange);
 
   return (
@@ -155,20 +159,56 @@ export function DashboardView({
                 }
               />
             ) : heroState.kind === "rich_unclaimable" ? (
+              /* This state does NOT mean "your profile is balanced", and it must never say
+                 so. `computeDashboardHeroState` reaches it when the profile has real signal
+                 but the *lowest-scoring* dimension is one Oryn has not assessed — which is
+                 exactly what this file's own test calls it ("rich profile whose weakest
+                 dimension is unassessed"). On the real call path it can mean nothing else:
+                 `app/(app)/dashboard/page.tsx` builds `profileSignal` and `biggestGap` from
+                 the same `scores` rows, and `rankDimensionGaps` sorts ascending, so a
+                 profile with every dimension assessed always names its weakest one and
+                 lands in `claimable` instead.
+
+                 The previous copy — "none of them is clearly behind the rest, that's a good
+                 sign" — described a balanced profile, a situation that cannot produce this
+                 state. On a real account it sat directly above a signal panel reading
+                 Awards 100 / Leadership "Nothing yet" and a weekly plan reading
+                 "leadership, research, entrepreneurship and community impact are all near
+                 zero", while the Counselor page reported those same gaps correctly. Three
+                 surfaces, one set of scores, and Home was the one contradicting the others
+                 (founder account, 2026-08-31).
+
+                 What is true here is narrower and more useful: Oryn cannot rank a gap it
+                 has no evidence for, so the honest move is to say which areas are missing
+                 and send the student to fill them in — not to reassure. */
               <NextMove
                 size="hero"
                 as="h1"
                 eyebrow="Where you stand"
-                headline="No single dimension stands out as your clearest gap right now."
-                why="Oryn compares your dimensions against each other, not against other students, and right now none of them is clearly behind the rest — that's a good sign, not a gap in what Oryn knows."
+                headline="Oryn can't name your clearest gap yet."
+                why={
+                  coverage.awaitingEvidence > 0 ? (
+                    <>
+                      The area that currently looks weakest is one Oryn has too little evidence to judge,
+                      so ranking it as your gap would be guessing.{" "}
+                      {coverage.awaitingEvidence} of {coverage.total} areas are in that position — filling
+                      even one of them in is what turns this into a real answer.
+                    </>
+                  ) : (
+                    <>
+                      Oryn compares your dimensions against each other, and right now it can&apos;t place
+                      the weakest one confidently enough to name it as your gap.
+                    </>
+                  )
+                }
                 evidence={heroState.evidence}
                 action={
                   <>
-                    <ButtonLink href="/advisor">
-                      Talk to your counselor <ArrowRight className="size-4" />
+                    <ButtonLink href="/profile">
+                      Add what&apos;s missing <ArrowRight className="size-4" />
                     </ButtonLink>
-                    <ButtonLink href="/profile" variant="outline">
-                      See the full picture
+                    <ButtonLink href="/advisor" variant="outline">
+                      Talk to your counselor
                     </ButtonLink>
                   </>
                 }
