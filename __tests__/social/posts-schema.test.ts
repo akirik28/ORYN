@@ -51,8 +51,10 @@ describe("migration numbering", () => {
     expect(duplicates, `duplicate migration version(s): ${duplicates.join(", ")}`).toEqual([]);
 
     // Still pinned, still a collision guard rather than a ceiling — bump it when the next
-    // migration lands, as this line has been bumped before.
-    expect(Math.max(...numbers.map(Number))).toBe(68);
+    // migration lands, as this line has been bumped before. 0069
+    // (research_record_id_predates_column) is a comment-only migration from the
+    // 2026-08-31 requirement-verification-state backfill investigation.
+    expect(Math.max(...numbers.map(Number))).toBe(69);
   });
 });
 
