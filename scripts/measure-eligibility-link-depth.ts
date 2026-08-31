@@ -172,7 +172,11 @@ const SKIP_LINK_PATTERN = /\.(pdf|jpg|jpeg|png|gif|svg|zip|docx?|xlsx?)(\?|$)|ma
 // Tier A / Tier B scoring — see the file header for the reasoning.
 const TIER_A_PATTERN = /eligib|citizen|resident|residency|nationality|visa|must be|required to|age\s*\d|\d{1,2}\s*(years?\s*old)|grade\s*\d/i;
 const NUMBER_NEAR_AGE_GRADE = /\b(age[sd]?|years?\s*old|yaş)\b[^.]{0,25}\b\d{1,2}\b|\b\d{1,2}\b[^.]{0,25}\b(age[sd]?|years?\s*old|yaş)\b|\bgrade[sd]?\b[^.]{0,15}\b\d{1,2}\b|\b\d{1,2}(th|st|nd|rd)?\b[^.]{0,15}\bgrade\b/i;
-const CITIZENSHIP_WORD = /citizen|citizenship|nationality|passport|visa|residen\w*|domestic|international|\bcountr(y|ies)\b/i;
+// residen(?!tial): "Residential" (a program TYPE — vs. "commuter"/"online") substring-matched
+// the bare "residen\w*" this used, a confirmed real bug in the sibling acquisition script (see
+// its own ELIGIBILITY_KEYWORD_DENSITY_PATTERN comment) — fixed here too for consistency, though
+// this script's own runs so far weren't traced to the same specific failure.
+const CITIZENSHIP_WORD = /citizen|citizenship|nationality|passport|visa|residen(?!tial)|domestic|international|\bcountr(y|ies)\b/i;
 const REQUIREMENT_WORD = /\b(must be|required to|only|eligible|not eligible|restricted to|at least|no more than|no older than|no younger than|open only to)\b/i;
 function scorePage(text: string): { tierA: boolean; tierB: boolean } {
   const tierA = TIER_A_PATTERN.test(text);
