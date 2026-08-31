@@ -3,6 +3,7 @@ import { generateCandidateActions } from "./candidates";
 import { rankCandidates } from "./scoring";
 import { buildRecommendation } from "./evidence";
 import { COUNSELOR_SCORE_VERSION, MAX_CONSIDER_RECOMMENDATIONS, MIN_COMPLETENESS_FOR_JUDGMENT } from "./config";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import type { CounselorResult, CounselorState } from "./types";
 
 /**
@@ -12,11 +13,14 @@ import type { CounselorResult, CounselorState } from "./types";
  * explained result. This is what makes Counselor Core work even when the AI provider is
  * down (spec §22/§59) — the natural-language narration layer (lib/ai/counselor-explain.ts)
  * is a strictly optional addition on top of this, never a dependency of it.
+ *
+ * `locale` defaults to English; see evidence.ts's buildRecommendation for the full
+ * reasoning. This is the one place it fans out to every downstream generator at once.
  */
-export function runCounselorPipeline(state: CounselorState, referenceDate: Date = new Date()): CounselorResult {
+export function runCounselorPipeline(state: CounselorState, referenceDate: Date = new Date(), locale: Locale = DEFAULT_LOCALE): CounselorResult {
   const gaps = rankDimensionGaps(state.dimensionScores);
-  const candidates = generateCandidateActions(state);
-  const ranked = rankCandidates(candidates, gaps, state, referenceDate);
+  const candidates = generateCandidateActions(state, locale);
+  const ranked = rankCandidates(candidates, gaps, state, referenceDate, locale);
 
   let considerCount = 0;
   const recommendations = ranked
@@ -25,7 +29,7 @@ export function runCounselorPipeline(state: CounselorState, referenceDate: Date 
       considerCount += 1;
       return considerCount <= MAX_CONSIDER_RECOMMENDATIONS;
     })
-    .map((r) => buildRecommendation(r, state));
+    .map((r) => buildRecommendation(r, state, locale));
 
   const completenessPercent = state.advisor.completenessPercent ?? 0;
 

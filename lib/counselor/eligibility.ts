@@ -1,11 +1,13 @@
 import {
-  INSUFFICIENT_VERIFICATION_REASON,
+  insufficientVerificationReason,
   isOpportunityActionable,
   isOpportunitySufficientlyVerified,
   nonActionableOpportunityReason,
 } from "@/lib/opportunities/lifecycle";
 import { isSameCountry } from "@/lib/opportunities/matching";
 import { currentGradeLevel, gradeMatchesEligibility } from "@/lib/profile/grade-level";
+import { eligibilityCopy } from "./copy";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import type { CandidateAction, CounselorState, EligibilityResult, EligibilityVerdict } from "./types";
 
 function matchesAnyKnownCountry(known: readonly string[], allowed: readonly string[]): boolean {
@@ -29,11 +31,12 @@ function matchesAnyKnownCountry(known: readonly string[], allowed: readonly stri
 function evaluateOpportunityEligibility(
   candidate: CandidateAction & { source: { kind: "opportunity" } },
   state: CounselorState,
-  referenceDate: Date
+  referenceDate: Date,
+  locale: Locale
 ): EligibilityResult {
   const entry = state.eligibleOpportunityMatches.find((e) => e.opportunity.id === candidate.source.opportunityId);
   if (!entry) {
-    return { verdict: "unknown", notes: ["This opportunity's current data couldn't be found."] };
+    return { verdict: "unknown", notes: [eligibilityCopy.dataNotFound(locale)] };
   }
   const { opportunity } = entry;
 
@@ -43,7 +46,7 @@ function evaluateOpportunityEligibility(
   // DB-boundary code (this repo's convention) — this check makes the invariant hold on its
   // own, independent of the caller having filtered correctly upstream.
   if (opportunity.verification_state !== "verified_current") {
-    return { verdict: "known_ineligible", notes: ["This opportunity is not currently verified."] };
+    return { verdict: "known_ineligible", notes: [eligibilityCopy.notVerified(locale)] };
   }
 
   // A hard, structured "not actionable right now" check — independent of matching.ts, which
@@ -55,7 +58,7 @@ function evaluateOpportunityEligibility(
   // next action no student could take. Read-time by design — it self-heals the moment
   // ingestion refreshes `deadline` to a real next-cycle date, with no write or backfill.
   if (!isOpportunityActionable(opportunity, referenceDate)) {
-    return { verdict: "known_ineligible", notes: [nonActionableOpportunityReason(opportunity)] };
+    return { verdict: "known_ineligible", notes: [nonActionableOpportunityReason(opportunity, locale)] };
   }
 
   // The third lifecycle gate (lib/opportunities/lifecycle.ts), and the one the two above
@@ -82,7 +85,7 @@ function evaluateOpportunityEligibility(
   // discussion in lib/opportunities/lifecycle.ts — including why `verified_at` is used only as
   // a floor against total absence of evidence and never as a freshness measurement.
   if (!isOpportunitySufficientlyVerified(opportunity, referenceDate)) {
-    return { verdict: "known_ineligible", notes: [INSUFFICIENT_VERIFICATION_REASON] };
+    return { verdict: "known_ineligible", notes: [insufficientVerificationReason(locale)] };
   }
 
   const notes: string[] = [];
@@ -102,7 +105,7 @@ function evaluateOpportunityEligibility(
   // this product deliberately doesn't collect, see migration 0002's comment). ---
   const hasAgeRestriction = opportunity.minimum_age !== null || opportunity.maximum_age !== null;
   if (hasAgeRestriction && birthYear === null) {
-    notes.push("This opportunity has an age requirement Oryn can't check without your birth year on file.");
+    notes.push(eligibilityCopy.ageRequirementUnknown(locale));
   }
 
   // --- Country / residency (eligible_countries is the existing, already-in-wide-use
@@ -112,9 +115,9 @@ function evaluateOpportunityEligibility(
   const hasCountryRestriction = opportunity.eligible_countries.length > 0;
   if (hasCountryRestriction) {
     if (!studentCountry) {
-      notes.push("This opportunity is restricted by country and your country isn't on file yet.");
+      notes.push(eligibilityCopy.countryUnknown(locale));
     } else if (!matchesAnyKnownCountry([studentCountry], opportunity.eligible_countries)) {
-      return { verdict: "known_ineligible", notes: [`Not currently open to students in ${studentCountry}.`] };
+      return { verdict: "known_ineligible", notes: [eligibilityCopy.countryNotEligible(studentCountry, locale)] };
     }
   }
 
@@ -128,11 +131,11 @@ function evaluateOpportunityEligibility(
   const hasCitizenshipRestriction = eligibleCitizenships.length > 0;
   if (hasCitizenshipRestriction) {
     if (citizenshipCountries.length === 0) {
-      notes.push("This opportunity requires a specific citizenship and yours isn't on file yet.");
+      notes.push(eligibilityCopy.citizenshipUnknown(locale));
     } else if (!matchesAnyKnownCountry(citizenshipCountries, eligibleCitizenships)) {
       return {
         verdict: "known_ineligible",
-        notes: [`Requires citizenship in ${eligibleCitizenships.join(", ")}; citizenship on file is ${citizenshipCountries.join(", ")}.`],
+        notes: [eligibilityCopy.citizenshipNotEligible(eligibleCitizenships.join(", "), citizenshipCountries.join(", "), locale)],
       };
     }
   }
@@ -143,10 +146,10 @@ function evaluateOpportunityEligibility(
   // residence"). Still surfaced whenever the structured column above didn't already resolve
   // it, since it's real evidence a student should see even if Oryn can't act on it alone. ---
   if (opportunity.citizenship_restrictions && !hasCitizenshipRestriction) {
-    notes.push(`Citizenship restriction on file (not automatically verified): ${opportunity.citizenship_restrictions}`);
+    notes.push(eligibilityCopy.citizenshipRestrictionOnFile(opportunity.citizenship_restrictions, locale));
   }
   if (opportunity.residency_restrictions && !hasCountryRestriction) {
-    notes.push(`Residency restriction on file (not automatically verified): ${opportunity.residency_restrictions}`);
+    notes.push(eligibilityCopy.residencyRestrictionOnFile(opportunity.residency_restrictions, locale));
   }
 
   // --- Unverified country eligibility (migration 0060, read defensively like 0047's
@@ -161,7 +164,7 @@ function evaluateOpportunityEligibility(
   const countryEligibilityConfirmedOpen = opportunity.country_eligibility_confirmed_open ?? false;
   const hasUnstructuredRestrictionEvidence = Boolean(opportunity.citizenship_restrictions || opportunity.residency_restrictions);
   if (!hasCountryRestriction && !hasCitizenshipRestriction && !hasUnstructuredRestrictionEvidence && !countryEligibilityConfirmedOpen) {
-    notes.push("Country eligibility hasn't been verified for this opportunity yet — check the official page for restrictions.");
+    notes.push(eligibilityCopy.countryEligibilityUnverified(locale));
   }
 
   // --- Grade level, computed from graduation_year (lib/profile/grade-level.ts) — closes
@@ -172,9 +175,9 @@ function evaluateOpportunityEligibility(
   if (opportunity.eligible_grades.length > 0) {
     const grade = currentGradeLevel(graduationYear);
     if (grade === null) {
-      notes.push("This opportunity restricts eligibility by grade level and Oryn can't compute your current grade without a graduation year on file.");
+      notes.push(eligibilityCopy.gradeLevelUnknown(locale));
     } else if (!gradeMatchesEligibility(grade, opportunity.eligible_grades)) {
-      return { verdict: "known_ineligible", notes: [`Restricted to grades ${opportunity.eligible_grades.join(", ")}; you're currently grade ${grade}.`] };
+      return { verdict: "known_ineligible", notes: [eligibilityCopy.gradeNotEligible(opportunity.eligible_grades.join(", "), grade, locale)] };
     }
   }
 
@@ -192,14 +195,19 @@ function evaluateOpportunityEligibility(
  * `referenceDate` defaults to now so existing callers keep working; lib/counselor/scoring.ts
  * passes the same reference date it already threads through rankCandidates, so a caller
  * evaluating "as of" some other date gets one consistent answer across eligibility and urgency.
+ *
+ * `locale` defaults to English, same reasoning as evidence.ts's buildRecommendation — only
+ * lib/counselor/scoring.ts's two call sites need to pass a resolved student locale through;
+ * every other existing caller is unaffected.
  */
 export function evaluateCandidateEligibility(
   candidate: CandidateAction,
   state: CounselorState,
-  referenceDate: Date = new Date()
+  referenceDate: Date = new Date(),
+  locale: Locale = DEFAULT_LOCALE
 ): EligibilityResult {
   if (candidate.source.kind === "opportunity") {
-    return evaluateOpportunityEligibility(candidate as CandidateAction & { source: { kind: "opportunity" } }, state, referenceDate);
+    return evaluateOpportunityEligibility(candidate as CandidateAction & { source: { kind: "opportunity" } }, state, referenceDate, locale);
   }
   return { verdict: "known_eligible" as EligibilityVerdict, notes: [] };
 }

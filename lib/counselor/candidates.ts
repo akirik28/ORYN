@@ -1,6 +1,7 @@
 import { CATEGORY_DIMENSIONS } from "@/lib/opportunities/matching";
 import { competesInCoreRecommendations } from "@/lib/opportunities/commercial";
-import { REQUIREMENT_CATEGORY_LABELS } from "@/lib/requirements/types";
+import { requirementActionTitle, requirementCategoryLabel } from "./copy";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import type { CandidateAction, CounselorState, RequirementCandidateInput } from "./types";
 
 const ACTIONABLE_REQUIREMENT_STATUSES = new Set(["not_met", "unknown"]);
@@ -25,16 +26,21 @@ function opportunityCandidates(state: CounselorState): CandidateAction[] {
   }));
 }
 
-function requirementLabel(input: RequirementCandidateInput): string {
-  return input.requirement.title ?? REQUIREMENT_CATEGORY_LABELS[input.requirement.requirement_type];
+// `input.requirement.title`, when present, is sourced text (the university's own wording
+// for the requirement) — never translated, same rule as opportunity/citizenship free text
+// elsewhere in the counselor layer. Only the fallback category label
+// (REQUIREMENT_CATEGORY_LABELS's English, or requirementCategoryLabel's Turkish) is Oryn's
+// own copy and eligible for translation.
+function requirementLabel(input: RequirementCandidateInput, locale: Locale): string {
+  return input.requirement.title ?? requirementCategoryLabel(input.requirement.requirement_type, locale);
 }
 
-function requirementCandidates(state: CounselorState): CandidateAction[] {
+function requirementCandidates(state: CounselorState, locale: Locale): CandidateAction[] {
   return state.requirementCandidateInputs
     .filter((input) => ACTIONABLE_REQUIREMENT_STATUSES.has(input.evaluation.status))
     .map((input) => {
-      const label = requirementLabel(input);
-      const title = input.evaluation.status === "not_met" ? `Address: ${label} (${input.universityName})` : `Add the information needed to check: ${label} (${input.universityName})`;
+      const label = requirementLabel(input, locale);
+      const title = requirementActionTitle(label, input.universityName, input.evaluation.status, locale);
       return {
         source: { kind: "requirement_action", universityId: input.universityId, requirementId: input.requirement.id, status: input.evaluation.status },
         title,
@@ -75,7 +81,12 @@ function profileTaskCandidates(state: CounselorState): CandidateAction[] {
  *     one of the student's active target universities.
  *   - profile_task: any incomplete item from the profile-completeness checklist.
  * An empty CounselorState correctly produces an empty list — no fabricated filler.
+ *
+ * `locale` defaults to English (see evidence.ts's buildRecommendation for why) and only
+ * affects requirement_action titles — opportunity titles are the opportunity's own stored
+ * (English) title, and profile_task titles are checklist labels defined in
+ * lib/scoring/completeness.ts, neither in scope for this pass.
  */
-export function generateCandidateActions(state: CounselorState): CandidateAction[] {
-  return [...opportunityCandidates(state), ...requirementCandidates(state), ...profileTaskCandidates(state)];
+export function generateCandidateActions(state: CounselorState, locale: Locale = DEFAULT_LOCALE): CandidateAction[] {
+  return [...opportunityCandidates(state), ...requirementCandidates(state, locale), ...profileTaskCandidates(state)];
 }

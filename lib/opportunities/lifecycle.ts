@@ -1,4 +1,5 @@
 import type { Opportunity } from "@/types/database";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 /**
  * `cycle_status` already carries the truth about whether an opportunity's current cycle is
@@ -100,8 +101,25 @@ export function isOpportunityActionable(
  * fix (eligibility.ts kept its own cycle-only `INACTIVE_CYCLE_STATUSES` and never learned the
  * deadline half of the rule).
  */
+// Turkish labels for exactly the three values NON_ACTIONABLE_OPPORTUNITY_CYCLE_STATUSES
+// holds — not all seven Opportunity["cycle_status"] values, since only those three ever
+// reach the interpolation below. Falls back to the raw value (English underscore-stripped,
+// same as the pre-existing English branch's own defensiveness) for anything else, rather
+// than throwing, in case that set ever grows without this map growing with it.
+const CYCLE_STATUS_LABEL_TR: Partial<Record<Opportunity["cycle_status"], string>> = {
+  closed: "kapandı",
+  historical: "artık düzenlenmiyor",
+  discontinued: "iptal edildi",
+};
+
+/**
+ * `locale` defaults to English so lib/opportunities/browse.ts and
+ * app/(app)/opportunities/[id]/page.tsx — both outside this pass's scope (opportunity
+ * browsing/detail, not counselor reasoning) — keep producing byte-identical output.
+ */
 export function nonActionableOpportunityReason(
-  opportunity: Pick<Opportunity, "status" | "cycle_status" | "deadline">
+  opportunity: Pick<Opportunity, "status" | "cycle_status" | "deadline">,
+  locale: Locale = DEFAULT_LOCALE
 ): string {
   // Deliberately vague, and deliberately not blamed on the student or the programme: a
   // moderation state is Oryn's own bookkeeping ("we pulled this", "we haven't vetted it"),
@@ -109,12 +127,16 @@ export function nonActionableOpportunityReason(
   // Surfaces should be filtering these out before any reason is ever rendered; this exists
   // so that a path which forgets to says something harmless rather than something wrong.
   if (opportunity.status !== "active") {
-    return "Oryn isn't showing this opportunity right now.";
+    return locale === "tr" ? "Oryn bu fırsatı şu anda göstermiyor." : "Oryn isn't showing this opportunity right now.";
   }
   if (NON_ACTIONABLE_OPPORTUNITY_CYCLE_STATUSES.has(opportunity.cycle_status)) {
+    if (locale === "tr") {
+      const label = CYCLE_STATUS_LABEL_TR[opportunity.cycle_status] ?? opportunity.cycle_status.replace(/_/g, " ");
+      return `Bu fırsatın mevcut dönemi: ${label}.`;
+    }
     return `This opportunity's current cycle is ${opportunity.cycle_status.replace(/_/g, " ")}.`;
   }
-  return "This opportunity's application deadline has passed.";
+  return locale === "tr" ? "Bu fırsatın başvuru son tarihi geçti." : "This opportunity's application deadline has passed.";
 }
 
 export interface StoredEligibility {
@@ -377,6 +399,21 @@ export function isOpportunitySufficientlyVerified(
 export const NEEDS_VERIFICATION_LABEL = "Needs verification";
 export const INSUFFICIENT_VERIFICATION_REASON =
   "Oryn hasn't verified this opportunity's current status and has no application dates on file, so it isn't recommended as a confident next step. Check the official page before relying on it.";
+
+const INSUFFICIENT_VERIFICATION_REASON_TR =
+  "Oryn bu fırsatın güncel durumunu doğrulamadı ve kayıtlı bir başvuru tarihi yok; bu nedenle güvenilir bir sonraki adım olarak önerilmiyor. Güvenmeden önce resmi sayfayı kontrol edin.";
+
+/**
+ * Locale-aware wrapper around INSUFFICIENT_VERIFICATION_REASON, added rather than changing
+ * that constant's own shape — lib/opportunities/browse.ts and
+ * app/(app)/opportunities/[id]/page.tsx both reference the bare constant directly (and
+ * __tests__/opportunities/lifecycle.test.ts asserts against it by identity), none of which
+ * are in scope for this pass. English branch returns the exact same constant, not a
+ * re-typed copy, so the two can never drift apart.
+ */
+export function insufficientVerificationReason(locale: Locale = DEFAULT_LOCALE): string {
+  return locale === "tr" ? INSUFFICIENT_VERIFICATION_REASON_TR : INSUFFICIENT_VERIFICATION_REASON;
+}
 
 /**
  * The composed gate every recommendation-critical path calls: actionable AND supported by

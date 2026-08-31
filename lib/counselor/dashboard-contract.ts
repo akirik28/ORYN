@@ -2,6 +2,7 @@ import type { StudentAdvisorContext } from "@/lib/ai/student-context";
 import type { UpcomingDeadline } from "@/lib/deadlines/upcoming";
 import { runCounselorPipeline } from "./pipeline";
 import { rankDimensionStrengths } from "./strengths";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import type { CounselorRecommendation, CounselorResult, CounselorState, ProfileGap, ProfileStrength } from "./types";
 
 /**
@@ -76,13 +77,18 @@ function isOpportunitySourced(recommendation: CounselorRecommendation): boolean 
  * identically whether or not ANTHROPIC_API_KEY is configured (the gap this closes: the
  * dashboard's "This week" block previously depended solely on lib/ai/weekly-plan.ts, which
  * has no deterministic fallback of its own).
+ *
+ * `locale` defaults to English; see lib/counselor/pipeline.ts's runCounselorPipeline for the
+ * full reasoning. app/(app)/dashboard/page.tsx is this function's only caller and passes
+ * the resolved student locale.
  */
 export function buildCounselorDashboardContract(
   state: CounselorState,
   upcomingDeadlines: UpcomingDeadline[],
-  referenceDate: Date = new Date()
+  referenceDate: Date = new Date(),
+  locale: Locale = DEFAULT_LOCALE
 ): CounselorDashboardContract {
-  const result = runCounselorPipeline(state, referenceDate);
+  const result = runCounselorPipeline(state, referenceDate, locale);
   const strengths = rankDimensionStrengths(state.dimensionScores);
 
   const thisWeekActions = result.recommendations.filter((r) => r.recommendationClass === "do");

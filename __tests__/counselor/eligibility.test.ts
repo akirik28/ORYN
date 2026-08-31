@@ -267,3 +267,54 @@ describe("evaluateCandidateEligibility — non-opportunity candidates", () => {
     expect(result.verdict).toBe("known_eligible");
   });
 });
+
+describe("evaluateCandidateEligibility — locale: tr", () => {
+  test("verdicts are unaffected by locale — only note text changes", () => {
+    const en = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ cycle_status: "closed" })), new Date(), "en");
+    const tr = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ cycle_status: "closed" })), new Date(), "tr");
+    expect(tr.verdict).toBe(en.verdict);
+  });
+
+  test("country-eligibility-unverified note is Turkish", () => {
+    const result = evaluateCandidateEligibility(
+      opportunityCandidate(),
+      state(opportunity({ country_eligibility_confirmed_open: false })),
+      new Date(),
+      "tr"
+    );
+    expect(result.notes.join(" ")).toMatch(/ülke uygunluğu henüz doğrulanmadı/);
+  });
+
+  test("age-requirement-unknown note is Turkish", () => {
+    const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ minimum_age: 14 }), null), new Date(), "tr");
+    expect(result.notes.join(" ")).toMatch(/yaş şartı/);
+  });
+
+  // studentCountry stays untranslated by design (see lib/counselor/copy.ts's file header) —
+  // the surrounding Turkish grammar must not require case-marking it.
+  test("country-not-eligible note is Turkish around an untranslated stored country name", () => {
+    const result = evaluateCandidateEligibility(
+      opportunityCandidate(),
+      state(opportunity({ eligible_countries: ["Germany"] }), 2009, { advisor: { student: { birthYear: 2009, country: "France" } } as CounselorState["advisor"] }),
+      new Date(),
+      "tr"
+    );
+    expect(result.notes.join(" ") + result.verdict).toContain("France");
+  });
+
+  test("closed-cycle known_ineligible reason is Turkish", () => {
+    const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ cycle_status: "closed" })), new Date(), "tr");
+    expect(result.notes.join(" ")).toMatch(/kapandı/);
+  });
+
+  test("not-verified reason is Turkish", () => {
+    const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ verification_state: "unverified" })), new Date(), "tr");
+    expect(result.notes.join(" ")).toMatch(/doğrulanmış değil/);
+  });
+
+  test("omitting locale still produces the exact English notes (default-locale backward compatibility)", () => {
+    const withDefault = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ country_eligibility_confirmed_open: false })));
+    const withExplicitEn = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ country_eligibility_confirmed_open: false })), new Date(), "en");
+    expect(withDefault).toEqual(withExplicitEn);
+  });
+});

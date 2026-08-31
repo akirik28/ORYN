@@ -239,3 +239,95 @@ describe("buildRecommendation — profile_task", () => {
     expect(rec.id).toBe("profile_task:add-a-career-goal");
   });
 });
+
+describe("buildRecommendation — locale: tr", () => {
+  test("gap why line is Turkish, dimension label included, score preserved", () => {
+    const rec = buildRecommendation(rankedOpportunity(), state(), "tr");
+    expect(rec.why.join(" ")).toMatch(/Araştırma/);
+    expect(rec.why.join(" ")).toContain("20/100");
+    expect(rec.why.join(" ")).not.toMatch(/Addresses|research/i);
+  });
+
+  test("already-strong line is Turkish and still omits the word 'gap' in either language", () => {
+    const strongMatch = gap({ dimension: "academics", score: 94, severity: "minor", confidence: "high" });
+    const rec = buildRecommendation(rankedOpportunity({ matchedGaps: [strongMatch], recommendationClass: "avoid_for_now" }), state(), "tr");
+    expect(rec.why.join(" ")).toMatch(/Akademik/);
+    expect(rec.why.join(" ")).toMatch(/zaten güçlü/);
+    expect(rec.why.join(" ")).not.toMatch(/\bgap\b/i);
+  });
+
+  test("verified-active line is Turkish", () => {
+    const rec = buildRecommendation(rankedOpportunity(), state(), "tr");
+    expect(rec.why.join(" ")).toMatch(/doğrulandı/);
+  });
+
+  test("profile_task why line is Turkish", () => {
+    const ranked: RankedCandidate = {
+      candidate: {
+        source: { kind: "profile_task", checklistKey: "Add a career goal" },
+        title: "Add a career goal",
+        category: "profile_completion",
+        addressesDimensions: [],
+        verificationState: null,
+        sourceUrl: null,
+        deadline: null,
+        costOnFile: null,
+        applicationRequirements: [],
+      },
+      eligibility: { verdict: "known_eligible", notes: [] },
+      matchedGaps: [],
+      score: 70,
+      scoreBreakdown: { gapRelevance: 0, fieldAlignment: 0, urgency: 0, dataQuality: 100 },
+      impact: "medium",
+      effort: "low",
+      urgency: "low",
+      confidence: "high",
+      recommendationClass: "do",
+    };
+    const rec = buildRecommendation(ranked, state(), "tr");
+    expect(rec.why[0]).toBe("Oryn bu bilgiye henüz sahip değil — güvenilir öneriler için gerekli.");
+  });
+
+  // Documents the known, deliberate gap rather than leaving it silently uncovered: the
+  // requirement evaluator's own reasoning (lib/requirements/evaluate.ts) is out of scope
+  // for this pass and stays English regardless of locale — see evidence.ts's own comment
+  // on whyForRequirement.
+  test("requirement_action why line is NOT translated yet — evaluate.ts's reasoning passes through verbatim", () => {
+    const input: RequirementCandidateInput = {
+      universityId: "uni-1",
+      universityName: "Test University",
+      requirement: requirement(),
+      evaluation: { status: "not_met", reasoning: "No SAT score is on file yet." },
+    };
+    const ranked: RankedCandidate = {
+      candidate: {
+        source: { kind: "requirement_action", universityId: "uni-1", requirementId: "req-1", status: "not_met" },
+        title: "Address: SAT score (Test University)",
+        category: "requirement_action",
+        addressesDimensions: [],
+        verificationState: null,
+        sourceUrl: "https://university.example/requirements",
+        deadline: null,
+        costOnFile: null,
+        applicationRequirements: [],
+      },
+      eligibility: { verdict: "known_eligible", notes: [] },
+      matchedGaps: [],
+      score: 80,
+      scoreBreakdown: { gapRelevance: 0, fieldAlignment: 0, urgency: 0, dataQuality: 60 },
+      impact: "high",
+      effort: "medium",
+      urgency: "medium",
+      confidence: "medium",
+      recommendationClass: "do",
+    };
+    const rec = buildRecommendation(ranked, state([input]), "tr");
+    expect(rec.why).toContain("No SAT score is on file yet.");
+  });
+
+  test("omitting locale still produces the exact English output (default-locale backward compatibility)", () => {
+    const withDefault = buildRecommendation(rankedOpportunity(), state());
+    const withExplicitEn = buildRecommendation(rankedOpportunity(), state(), "en");
+    expect(withDefault).toEqual(withExplicitEn);
+  });
+});
