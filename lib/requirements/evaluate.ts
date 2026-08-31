@@ -3,7 +3,6 @@ import { RequirementQualifiersSchema, StructuredRuleSchema } from "@/lib/validat
 import {
   INFORMATIONAL_CATEGORIES,
   MANUAL_REVIEW_CATEGORIES,
-  SCORE_PROVENANCE_LABELS,
   type EvaluationGate,
   type ManualReviewReason,
   type RecencyRule,
@@ -15,6 +14,26 @@ import {
   type ScoreProvenance,
   type StudentTestScore,
 } from "./types";
+import {
+  courseLevelLabel,
+  courseworkCopy,
+  curriculumCopy,
+  curriculumLabel,
+  gateCopy,
+  gpaCopy,
+  groupCopy,
+  informationalReason,
+  languageCopy,
+  noStructuredRuleReason,
+  provenanceCopy,
+  recencyCopy,
+  scoreProvenanceLabel,
+  submittedMaterialReason,
+  testScoreCopy,
+  unreadableQualifiersReason,
+  unstatedScaleGateReason,
+} from "./copy";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 /** Rigor ordering used only to compare a course against a rule's `minLevel` — not a
  * general-purpose ranking (that's lib/scoring's job, and it deliberately doesn't rank
@@ -34,10 +53,9 @@ function review(reasoning: string, reviewReason: ManualReviewReason): Requiremen
   return { status: "needs_manual_review", reasoning, reviewReason };
 }
 
-const NO_RULE_RESULT = review(
-  "No structured rule has been recorded for this requirement yet — check the source link directly.",
-  "no_structured_rule"
-);
+function noRuleResult(locale: Locale): RequirementEvaluationResult {
+  return review(noStructuredRuleReason(locale), "no_structured_rule");
+}
 
 /**
  * What a student is told when a row is gated (migration 0056 §4). Each of these is
@@ -45,32 +63,12 @@ const NO_RULE_RESULT = review(
  * if admitted and a missing essay are the same status and must not read the same way.
  * `age_bar` and `binding_commitment` in particular are permanent — no better data lifts
  * them — so the copy says what to do instead of implying Oryn will work it out later.
+ *
+ * The actual English/Turkish text lives in ./copy.ts's `gateCopy` — this function is just
+ * the gate-to-result wiring, unchanged in shape from before locale existed.
  */
-const GATE_COPY: Record<EvaluationGate, string> = {
-  inverted_recency:
-    "This university refuses certificates taken AFTER a cut-off date, not before one — the usual \"must be recent enough\" reading is backwards here. Check the exact dates on the source page against your own certificate.",
-  recency_window:
-    "This qualification has a validity window, and Oryn can't tell whether yours still falls inside it at the point you'd actually apply. Check the window against your certificate date on the source page.",
-  unstated_scale:
-    "The published threshold is a bare number with no scale stated, so there is nothing safe to compare your score to. Check the source page for the maximum this number is out of.",
-  incomparable_scale:
-    "This threshold is a rank or a cut-off Oryn can't express as a score, so your number and the requirement aren't the same kind of quantity. Compare them yourself on the source page.",
-  named_exclusion:
-    "This university refuses some ways of obtaining a score even when the number itself qualifies. Check the source page for which variants it accepts before relying on your result.",
-  eligibility_restriction:
-    "This is a restriction on who is eligible rather than a threshold to clear, so Oryn won't score it either way. Read it on the source page.",
-  age_bar:
-    "This depends on your exact date of birth, and Oryn stores only your birth year — deliberately, so it holds as little about you as it can. If you were born in the second half of the year, the year alone can't settle it: check the cut-off date against your own birthday.",
-  source_conflict:
-    "Two official pages state this differently and neither has been established as correct, so Oryn won't pick one. Check the source directly.",
-  historical:
-    "This was correct for an application cycle that has already closed, so it may not describe the cycle you're applying in. Check the current page.",
-  binding_commitment:
-    "This is a commitment, not a box to tick. Applying under this round binds you: if you're admitted you're expected to enrol and to withdraw your other applications. Oryn will never mark it satisfied. Read the agreement in full, with your school counsellor and your family, before you apply.",
-};
-
-function gateResult(gate: EvaluationGate): RequirementEvaluationResult {
-  return review(GATE_COPY[gate], gate);
+function gateResult(gate: EvaluationGate, locale: Locale): RequirementEvaluationResult {
+  return review(gateCopy(gate, locale), gate);
 }
 
 /**
@@ -206,16 +204,14 @@ export function evaluateRequirement(
   category: RequirementCategory,
   rawStructuredRule: unknown,
   facts: RequirementFacts,
-  rawQualifiers?: unknown
+  rawQualifiers?: unknown,
+  locale: Locale = DEFAULT_LOCALE
 ): RequirementEvaluationResult {
   let qualifiers: RequirementQualifiers = NO_QUALIFIERS;
   if (rawQualifiers !== null && rawQualifiers !== undefined) {
     const parsedQualifiers = RequirementQualifiersSchema.safeParse(rawQualifiers);
     if (!parsedQualifiers.success) {
-      return review(
-        "Oryn couldn't read the conditions attached to this requirement, so it won't guess at a verdict — check the source link directly.",
-        "unreadable_qualifiers"
-      );
+      return review(unreadableQualifiersReason(locale), "unreadable_qualifiers");
     }
     qualifiers = parsedQualifiers.data;
   }
@@ -236,69 +232,63 @@ export function evaluateRequirement(
   // So a rule authored onto an exclusion row by a later reviewer cannot override it, and
   // neither can a later change to the category lists below.
   const gate = qualifiers.evaluationGate ?? (qualifiers.isExclusion ? "eligibility_restriction" : null);
-  if (gate) return gateResult(gate);
+  if (gate) return gateResult(gate, locale);
 
   if (MANUAL_REVIEW_CATEGORIES.includes(category)) {
-    return review(
-      "This requirement depends on submitted material Oryn doesn't evaluate automatically — review it yourself.",
-      "submitted_material"
-    );
+    return review(submittedMaterialReason(locale), "submitted_material");
   }
   if (INFORMATIONAL_CATEGORIES.includes(category)) {
-    return { status: "unknown", reasoning: "Informational — see the listed date, not something to satisfy." };
+    return { status: "unknown", reasoning: informationalReason(locale) };
   }
 
   if (qualifiers.scaleAmbiguity && !SAFE_SCALE_AMBIGUITY.has(qualifiers.scaleAmbiguity)) {
-    return review(
-      "The scale this requirement's number is measured on couldn't be pinned down from the source, so comparing your result to it wouldn't mean anything. Check the source page.",
-      "unstated_scale"
-    );
+    return review(unstatedScaleGateReason(locale), "unstated_scale");
   }
 
-  if (rawStructuredRule === null || rawStructuredRule === undefined) return NO_RULE_RESULT;
+  if (rawStructuredRule === null || rawStructuredRule === undefined) return noRuleResult(locale);
 
   const parsed = StructuredRuleSchema.safeParse(rawStructuredRule);
-  if (!parsed.success) return { ...NO_RULE_RESULT, reviewReason: "unreadable_rule" };
+  if (!parsed.success) return { ...noRuleResult(locale), reviewReason: "unreadable_rule" };
   const rule = parsed.data;
 
   switch (rule.kind) {
     case "curriculum": {
       if (facts.curricula.length === 0) {
-        return { status: "unknown", reasoning: "No curriculum is on file yet — add your education record." };
+        return { status: "unknown", reasoning: curriculumCopy.noneOnFile(locale) };
       }
       const match = facts.curricula.find((c) => rule.curricula.includes(c));
       return match
-        ? { status: "met", reasoning: `Your ${match.replace(/_/g, " ")} curriculum matches.` }
-        : { status: "not_met", reasoning: `Your recorded curriculum (${facts.curricula.join(", ")}) isn't in the accepted list.` };
+        ? { status: "met", reasoning: curriculumCopy.matches(curriculumLabel(match, locale), locale) }
+        : { status: "not_met", reasoning: curriculumCopy.notInList(facts.curricula, locale) };
     }
 
     case "coursework": {
       if (facts.courses.length === 0) {
-        return { status: "unknown", reasoning: "No coursework is on file yet — add your courses." };
+        return { status: "unknown", reasoning: courseworkCopy.noneOnFile(locale) };
       }
       const bySubject = facts.courses.filter((c) => c.subject && fuzzyIncludes(c.subject, rule.subject));
       if (bySubject.length === 0) {
-        return { status: "not_met", reasoning: `No course matching "${rule.subject}" is on file.` };
+        return { status: "not_met", reasoning: courseworkCopy.noMatch(rule.subject, locale) };
       }
       const exactSubject = bySubject.some((c) => c.subject && normalize(c.subject) === normalize(rule.subject));
       if (!rule.minLevel) {
         return exactSubject
-          ? { status: "met", reasoning: `A course in ${rule.subject} is on file.` }
-          : { status: "likely_met", reasoning: `A related course ("${bySubject[0].subject}") is on file, close to "${rule.subject}".` };
+          ? { status: "met", reasoning: courseworkCopy.exactNoLevel(rule.subject, locale) }
+          : { status: "likely_met", reasoning: courseworkCopy.relatedNoLevel(bySubject[0].subject!, rule.subject, locale) };
       }
       const bestLevel = Math.max(...bySubject.map((c) => COURSE_LEVEL_RANK[c.level]));
       const meetsLevel = bestLevel >= COURSE_LEVEL_RANK[rule.minLevel];
       if (!meetsLevel) {
-        return { status: "not_met", reasoning: `Your ${rule.subject} coursework doesn't yet reach the required ${rule.minLevel.replace(/_/g, " ")} level.` };
+        return { status: "not_met", reasoning: courseworkCopy.belowLevel(rule.subject, courseLevelLabel(rule.minLevel, locale), locale) };
       }
       return exactSubject
-        ? { status: "met", reasoning: `Your ${rule.subject} coursework meets the required level.` }
-        : { status: "likely_met", reasoning: `A related course ("${bySubject[0].subject}") appears to meet the required level.` };
+        ? { status: "met", reasoning: courseworkCopy.exactMeetsLevel(rule.subject, locale) }
+        : { status: "likely_met", reasoning: courseworkCopy.relatedMeetsLevel(bySubject[0].subject!, locale) };
     }
 
     case "minimum_grade": {
       if (facts.gpas.length === 0) {
-        return { status: "unknown", reasoning: "No GPA is on file yet — add your education record." };
+        return { status: "unknown", reasoning: gpaCopy.noneOnFile(locale) };
       }
       // Only compare GPAs already on the rule's own scale. A flat linear ratio
       // ((value/scale)*ruleScale) is not a valid way to convert between grading systems —
@@ -309,40 +299,34 @@ export function evaluateRequirement(
       // brings requirement evaluation in line with it rather than quietly disagreeing.
       const sameScale = facts.gpas.filter((gpa) => gpa.scale === rule.scale);
       if (sameScale.length === 0) {
-        return review(
-          `Your GPA is recorded on a different scale than this requirement's ${rule.scale}-point scale — compare it yourself rather than trust an automatic conversion.`,
-          "gpa_scale_mismatch"
-        );
+        return review(gpaCopy.scaleMismatch(rule.scale, locale), "gpa_scale_mismatch");
       }
       const best = Math.max(...sameScale.map((gpa) => gpa.value));
       return best >= rule.minGpa
-        ? { status: "met", reasoning: `Your GPA (${best} on a ${rule.scale} scale) meets the required ${rule.minGpa}.` }
-        : { status: "not_met", reasoning: `Your GPA (${best} on a ${rule.scale} scale) is below the required ${rule.minGpa}.` };
+        ? { status: "met", reasoning: gpaCopy.meets(best, rule.scale, rule.minGpa, locale) }
+        : { status: "not_met", reasoning: gpaCopy.below(best, rule.scale, rule.minGpa, locale) };
     }
 
     case "test_score":
-      return evaluateTestScore(rule.testName, rule.minScore, rule.minPercentileRank, facts, qualifiers);
+      return evaluateTestScore(rule.testName, rule.minScore, rule.minPercentileRank, facts, qualifiers, locale);
 
     case "language_proficiency": {
       if (rule.testName) {
-        return evaluateTestScore(rule.testName, rule.minScore, rule.minPercentileRank, facts, qualifiers);
+        return evaluateTestScore(rule.testName, rule.minScore, rule.minPercentileRank, facts, qualifiers, locale);
       }
       if (rule.languageName) {
         const match = facts.languages.find((l) => fuzzyIncludes(l.name, rule.languageName!));
-        if (!match) return { status: "unknown", reasoning: `No ${rule.languageName} language entry is on file.` };
+        if (!match) return { status: "unknown", reasoning: languageCopy.noEntry(rule.languageName, locale) };
         if (!match.proficiency) {
-          return review(
-            `${rule.languageName} is on file without a proficiency level — add one to evaluate this automatically.`,
-            "missing_language_proficiency"
-          );
+          return review(languageCopy.missingProficiency(rule.languageName, locale), "missing_language_proficiency");
         }
         const strong = /native|fluent/i.test(match.proficiency);
         if (rule.acceptNativeOrFluent && strong) {
-          return { status: "met", reasoning: `Your recorded ${rule.languageName} proficiency ("${match.proficiency}") meets this.` };
+          return { status: "met", reasoning: languageCopy.meets(rule.languageName, match.proficiency, locale) };
         }
-        return { status: "not_met", reasoning: `Your recorded ${rule.languageName} proficiency ("${match.proficiency}") may not meet this — review manually.` };
+        return { status: "not_met", reasoning: languageCopy.mayNotMeet(rule.languageName, match.proficiency, locale) };
       }
-      return review("This requirement doesn't specify enough detail to evaluate automatically.", "underspecified_rule");
+      return review(languageCopy.underspecified(locale), "underspecified_rule");
     }
   }
 }
@@ -400,10 +384,14 @@ function memberQualifiers(member: RequirementGroupMember): unknown {
   return { ...member.rawQualifiers, is_exclusion: member.isExclusion };
 }
 
-export function evaluateRequirementGroup(members: RequirementGroupMember[], facts: RequirementFacts): RequirementGroupEvaluationResult {
+export function evaluateRequirementGroup(
+  members: RequirementGroupMember[],
+  facts: RequirementFacts,
+  locale: Locale = DEFAULT_LOCALE
+): RequirementGroupEvaluationResult {
   const memberResults = new Map<string, RequirementEvaluationResult>();
   for (const member of members) {
-    memberResults.set(member.id, evaluateRequirement(member.category, member.rawStructuredRule, facts, memberQualifiers(member)));
+    memberResults.set(member.id, evaluateRequirement(member.category, member.rawStructuredRule, facts, memberQualifiers(member), locale));
   }
 
   // groupRole 'exclusion' implies is_exclusion (migration 0052's
@@ -412,27 +400,15 @@ export function evaluateRequirementGroup(members: RequirementGroupMember[], fact
   // exclusion sitting in the inclusion list still cannot be counted as an alternative that
   // satisfies the group.
   if (members.some((m) => m.groupRole === "exclusion" || m.isExclusion)) {
-    return {
-      status: "needs_manual_review",
-      reasoning: "This requirement has an exclusion condition attached that Oryn doesn't evaluate automatically — review the source directly.",
-      memberResults,
-    };
+    return { status: "needs_manual_review", reasoning: groupCopy.exclusionPresent(locale), memberResults };
   }
   if (members.some((m) => m.groupRole === "qualifier")) {
-    return {
-      status: "needs_manual_review",
-      reasoning: "This requirement has an additional condition attached (e.g. a recency window) that Oryn doesn't evaluate automatically — review the source directly.",
-      memberResults,
-    };
+    return { status: "needs_manual_review", reasoning: groupCopy.qualifierPresent(locale), memberResults };
   }
 
   const inclusions = members.filter((m) => m.groupRole === "inclusion");
   if (inclusions.length === 0) {
-    return {
-      status: "needs_manual_review",
-      reasoning: "This requirement group has no recognized alternatives to evaluate — review the source directly.",
-      memberResults,
-    };
+    return { status: "needs_manual_review", reasoning: groupCopy.noAlternatives(locale), memberResults };
   }
 
   let best: { member: RequirementGroupMember; result: RequirementEvaluationResult; rank: number } | null = null;
@@ -444,15 +420,18 @@ export function evaluateRequirementGroup(members: RequirementGroupMember[], fact
   const { member, result } = best!;
 
   if (result.status === "met" || result.status === "likely_met") {
-    const label = member.title ?? "one of the accepted alternatives";
+    // member.title, when present, is the requirement's own sourced wording — never
+    // translated, same rule as every other stored/sourced string in this codebase's i18n
+    // work. Only the fallback (Oryn's own copy) is locale-aware.
+    const label = member.title ?? groupCopy.defaultAlternativeLabel(locale);
     return {
       status: result.status,
-      reasoning: `${result.reasoning} (${label} — any one of ${inclusions.length} accepted alternatives is enough.)`,
+      reasoning: groupCopy.metViaAlternative(result.reasoning, label, inclusions.length, locale),
       memberResults,
     };
   }
   if (result.status === "not_met") {
-    return { status: "not_met", reasoning: `None of the ${inclusions.length} accepted alternatives are currently met.`, memberResults };
+    return { status: "not_met", reasoning: groupCopy.noneMet(inclusions.length, locale), memberResults };
   }
   // needs_manual_review or unknown: surface the best-ranked alternative's own reasoning as-is
   // rather than inventing group-specific phrasing for cases evaluateRequirement already
@@ -482,16 +461,8 @@ function violatesWindow(rule: RecencyRule, testDate: string | null | undefined):
   return false;
 }
 
-function describeWindow(rule: RecencyRule): string {
-  if (rule.direction === "not_valid_on_or_after" && rule.boundaryDate) {
-    return `this university does not accept results from ${rule.boundaryDate} onwards`;
-  }
-  if (rule.direction === "not_valid_before" && rule.boundaryDate) {
-    return `this threshold only applies to results from ${rule.boundaryDate} onwards`;
-  }
-  const window = rule.value && rule.unit ? `${rule.value} ${rule.unit}` : "a limited period";
-  return `results are only valid for ${window}`;
-}
+// describeWindow moved to ./copy.ts (needs a locale to describe the window in) — recencyBlock
+// below calls the imported version.
 
 /**
  * Case 1 — a validity window, in whichever direction the source actually states it.
@@ -509,19 +480,13 @@ function describeWindow(rule: RecencyRule): string {
  * own two-year validity, so "the stated window is satisfied" and "this score is usable" are
  * different claims and only the first is checkable here.
  */
-function recencyBlock(rule: RecencyRule, candidates: StudentTestScore[]): RequirementEvaluationResult {
+function recencyBlock(rule: RecencyRule, candidates: StudentTestScore[], locale: Locale): RequirementEvaluationResult {
   const violating = candidates.filter((c) => violatesWindow(rule, c.testDate));
   if (candidates.length > 0 && violating.length === candidates.length) {
     const dates = violating.map((c) => c.testDate).filter(Boolean).join(", ");
-    return {
-      status: "not_met",
-      reasoning: `${capitalize(describeWindow(rule))}, and the result you've recorded (${dates}) falls outside that.`,
-    };
+    return { status: "not_met", reasoning: recencyCopy.violated(rule, dates, locale) };
   }
-  return review(
-    `This requirement has a validity window — ${describeWindow(rule)} — and Oryn can't confirm your result falls inside it, so it won't call this met. Check the dates on the source page.`,
-    rule.direction === "not_valid_on_or_after" ? "inverted_recency" : "recency_window"
-  );
+  return review(recencyCopy.unresolved(rule, locale), rule.direction === "not_valid_on_or_after" ? "inverted_recency" : "recency_window");
 }
 
 /**
@@ -537,34 +502,31 @@ function recencyBlock(rule: RecencyRule, candidates: StudentTestScore[]): Requir
  * by name ("a numerically-qualifying IELTS One Skill Retake or TOEFL MyBest score must still
  * evaluate to needs_manual_review, not met").
  */
-function provenanceBlock(excluded: readonly ScoreProvenance[], candidates: StudentTestScore[]): RequirementEvaluationResult | null {
+function provenanceBlock(
+  excluded: readonly ScoreProvenance[],
+  candidates: StudentTestScore[],
+  locale: Locale
+): RequirementEvaluationResult | null {
   if (excluded.length === 0 || candidates.length === 0) return null;
   const refused = candidates.filter((c) => c.provenance && excluded.includes(c.provenance));
   if (refused.length === candidates.length) {
-    const names = [...new Set(refused.map((c) => SCORE_PROVENANCE_LABELS[c.provenance!]))].join(", ");
-    return {
-      status: "not_met",
-      reasoning: `Your score qualifies on the number, but this university doesn't accept ${names} — how the score was obtained is what rules it out here, not the result.`,
-    };
+    const names = [...new Set(refused.map((c) => scoreProvenanceLabel(c.provenance!, locale)))].join(", ");
+    return { status: "not_met", reasoning: provenanceCopy.refused(names, locale) };
   }
   if (candidates.every((c) => c.provenance)) return null;
-  const names = [...new Set(excluded.map((p) => SCORE_PROVENANCE_LABELS[p]))].join(", ");
-  return review(
-    `This university doesn't accept ${names} even when the number qualifies, and Oryn doesn't know how your score was obtained — check that yours isn't one of these before relying on it.`,
-    "named_exclusion"
-  );
+  const names = [...new Set(excluded.map((p) => scoreProvenanceLabel(p, locale)))].join(", ");
+  return review(provenanceCopy.unknownProvenance(names, locale), "named_exclusion");
 }
 
-function capitalize(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1);
-}
+// capitalize moved to ./copy.ts, used internally by recencyCopy.violated.
 
 function evaluateTestScore(
   testName: string,
   minScore: number | undefined,
   minPercentileRank: number | undefined,
   facts: RequirementFacts,
-  qualifiers: RequirementQualifiers
+  qualifiers: RequirementQualifiers,
+  locale: Locale
 ): RequirementEvaluationResult {
   const ruleScale = qualifiers.testScale ?? null;
 
@@ -573,10 +535,10 @@ function evaluateTestScore(
   // even looked at: these are properties of the requirement, and no amount of student data
   // makes the comparison legitimate.
   if (minPercentileRank !== undefined || (ruleScale && RANK_SCALES.has(ruleScale))) {
-    return gateResult("incomparable_scale");
+    return gateResult("incomparable_scale", locale);
   }
   if (ruleScale && UNSTATED_SCALES.has(ruleScale)) {
-    return gateResult("unstated_scale");
+    return gateResult("unstated_scale", locale);
   }
 
   // Case 2 — a bare number on an instrument whose scale is not self-describing. TOEFL was
@@ -584,16 +546,13 @@ function evaluateTestScore(
   // legacy 0-120 threshold stops being merely ambiguous and becomes unmeasurable.
   const qualifierLabel = needsScaleQualifier(testName);
   if (minScore !== undefined && qualifierLabel && !ruleScale) {
-    return review(
-      `This ${qualifierLabel} threshold is recorded as a bare number with no scale attached, and ${qualifierLabel} scores aren't comparable across scales — Oryn won't guess which one it means. Check the source page.`,
-      "unstated_scale"
-    );
+    return review(testScoreCopy.bareNumberNoScale(qualifierLabel, locale), "unstated_scale");
   }
 
   const exact = facts.testScores.filter((t) => normalize(t.testName) === normalize(testName));
   let candidates = exact.length > 0 ? exact : facts.testScores.filter((t) => fuzzyIncludes(t.testName, testName));
   if (candidates.length === 0) {
-    return { status: "unknown", reasoning: `No ${testName} score is on file yet.` };
+    return { status: "unknown", reasoning: testScoreCopy.noScoreOnFile(testName, locale) };
   }
   const isExactName = exact.length > 0;
 
@@ -607,46 +566,40 @@ function evaluateTestScore(
     if (comparable.length > 0) {
       candidates = comparable;
     } else if (placed.some((p) => p.family === null)) {
-      return review(
-        `This threshold is stated on the ${ruleScale} scale, and Oryn can't tell which scale your ${testName} result is on — record the maximum your score was out of, or compare it yourself on the source page.`,
-        "unstated_student_scale"
-      );
+      return review(testScoreCopy.unstatedStudentScale(ruleScale, testName, locale), "unstated_student_scale");
     } else {
       return review(
-        `Your ${testName} result is on a different scale (${placed[0].family}) than this threshold (${ruleScale}). The two aren't convertible, so Oryn won't compare them.`,
+        testScoreCopy.incomparableStudentScale(testName, String(placed[0].family), ruleScale, locale),
         "incomparable_student_scale"
       );
     }
   }
 
   const block =
-    provenanceBlock(qualifiers.excludedProvenances ?? [], candidates) ??
-    (qualifiers.recencyRule ? recencyBlock(qualifiers.recencyRule, candidates) : null);
+    provenanceBlock(qualifiers.excludedProvenances ?? [], candidates, locale) ??
+    (qualifiers.recencyRule ? recencyBlock(qualifiers.recencyRule, candidates, locale) : null);
 
   if (minScore === undefined) {
     return applyBlock(
       isExactName
-        ? { status: "met", reasoning: `A ${testName} score is on file.` }
-        : { status: "likely_met", reasoning: `A score for a similarly-named test ("${candidates[0].testName}") is on file.` },
+        ? { status: "met", reasoning: testScoreCopy.exactOnFileNoMinScore(testName, locale) }
+        : { status: "likely_met", reasoning: testScoreCopy.similarOnFileNoMinScore(candidates[0].testName, locale) },
       block
     );
   }
 
   const numericScores = candidates.map((t) => Number.parseFloat(t.score)).filter((n) => !Number.isNaN(n));
   if (numericScores.length === 0) {
-    return applyBlock(
-      review(`A ${testName} score is on file but isn't a plain number Oryn can compare — review it manually.`, "non_numeric_score"),
-      block
-    );
+    return applyBlock(review(testScoreCopy.nonNumericScore(testName, locale), "non_numeric_score"), block);
   }
   const best = Math.max(...numericScores);
   if (best < minScore) {
-    return { status: "not_met", reasoning: `Your best ${testName} score (${best}) is below the required ${minScore}.` };
+    return { status: "not_met", reasoning: testScoreCopy.belowMinScore(testName, best, minScore, locale) };
   }
   return applyBlock(
     isExactName
-      ? { status: "met", reasoning: `Your best ${testName} score (${best}) meets the required ${minScore}.` }
-      : { status: "likely_met", reasoning: `A similarly-named test's score (${best}) meets the required ${minScore}.` },
+      ? { status: "met", reasoning: testScoreCopy.exactMeetsMinScore(testName, best, minScore, locale) }
+      : { status: "likely_met", reasoning: testScoreCopy.similarMeetsMinScore(best, minScore, locale) },
     block
   );
 }

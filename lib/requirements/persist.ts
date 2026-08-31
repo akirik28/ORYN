@@ -6,6 +6,7 @@ import { assembleRequirementFacts } from "./facts";
 import { evaluateRequirement } from "./evaluate";
 import { INFORMATIONAL_CATEGORIES } from "./types";
 import { NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES } from "./ingest";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 /**
  * Recomputes and caches this student's evaluation for every requirement attached to a
@@ -33,7 +34,12 @@ import { NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES } from "./ingest";
  * comment for the full account, including why `provider_health` isn't the right log
  * target here (it needs the same admin client to record anything).
  */
-export async function refreshRequirementEvaluations(universityId: string, userId: string, programId?: string | null): Promise<void> {
+export async function refreshRequirementEvaluations(
+  universityId: string,
+  userId: string,
+  programId?: string | null,
+  locale: Locale = DEFAULT_LOCALE
+): Promise<void> {
   const admin = tryCreateAdminClient();
   if (!admin) {
     console.error("[requirement-evaluations] SUPABASE_SECRET_KEY not configured — skipping evaluation refresh, page will render with existing (possibly stale) evaluations");
@@ -61,7 +67,7 @@ export async function refreshRequirementEvaluations(universityId: string, userId
     // 0056's columns off it by name — plus migration 0052's applied `is_exclusion` — and
     // strips the rest, so this is correct both before 0056 is applied (those qualifiers
     // absent, exclusions still honoured) and after.
-    const result = evaluateRequirement(requirement.requirement_type, requirement.structured_rule, facts, requirement);
+    const result = evaluateRequirement(requirement.requirement_type, requirement.structured_rule, facts, requirement, locale);
     return {
       user_id: userId,
       requirement_id: requirement.id,

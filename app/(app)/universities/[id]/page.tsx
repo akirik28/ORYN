@@ -153,7 +153,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   // showing as though it still applies. Mirrors actionableDeadlines below, same reasoning.
   const requirements = (requirementsRes.data ?? []).filter((r) => !NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES.has(r.verification_state));
   if (requirements.length > 0) {
-    await refreshRequirementEvaluations(university.id, session.userId!, targetRes.data?.program_id ?? null);
+    await refreshRequirementEvaluations(university.id, session.userId!, targetRes.data?.program_id ?? null, locale);
   }
   const [profile, evaluationsRes] = await Promise.all([
     getCurrentProfile(),

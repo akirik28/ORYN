@@ -12,6 +12,7 @@ import { INFORMATIONAL_CATEGORIES } from "@/lib/requirements/types";
 import { NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES } from "@/lib/requirements/ingest";
 import { refreshOpportunityMatches } from "@/lib/opportunities/persist-matches";
 import { ACTIVE_TARGET_STATUSES } from "@/lib/deadlines/upcoming";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import { toDimensionScoreRows } from "./gaps";
 import type { CounselorState, RequirementCandidateInput } from "./types";
 
@@ -28,7 +29,8 @@ import type { CounselorState, RequirementCandidateInput } from "./types";
 async function getRequirementCandidateInputs(
   supabase: SupabaseClient<Database>,
   userId: string,
-  activeTargets: StudentAdvisorContext["targetUniversities"]
+  activeTargets: StudentAdvisorContext["targetUniversities"],
+  locale: Locale
 ): Promise<RequirementCandidateInput[]> {
   if (activeTargets.length === 0) return [];
 
@@ -67,7 +69,7 @@ async function getRequirementCandidateInputs(
     requirement,
     // The row doubles as the qualifier source, `is_exclusion` included — see
     // lib/requirements/persist.ts.
-    evaluation: evaluateRequirement(requirement.requirement_type, requirement.structured_rule, facts, requirement),
+    evaluation: evaluateRequirement(requirement.requirement_type, requirement.structured_rule, facts, requirement, locale),
   }));
 }
 
@@ -84,7 +86,7 @@ async function getRequirementCandidateInputs(
  * buildStudentAdvisorContext's contract a second time in this pass to keep the change
  * additive (see lib/ai/student-context.ts's own Phase B extension).
  */
-export async function getCounselorState(userId: string): Promise<CounselorState> {
+export async function getCounselorState(userId: string, locale: Locale = DEFAULT_LOCALE): Promise<CounselorState> {
   const supabase = await createClient();
 
   // Recompute-on-read, same convention as the Opportunities/Dashboard pages already use.
@@ -158,7 +160,7 @@ export async function getCounselorState(userId: string): Promise<CounselorState>
   // is enum-backed at the DB level, so this reflects real data, not an assumption.
   const activeStatuses: readonly string[] = ACTIVE_TARGET_STATUSES;
   const activeTargets = advisor.targetUniversities.filter((t) => activeStatuses.includes(t.status));
-  const requirementCandidateInputs = await getRequirementCandidateInputs(supabase, userId, activeTargets);
+  const requirementCandidateInputs = await getRequirementCandidateInputs(supabase, userId, activeTargets, locale);
 
   return {
     userId,
