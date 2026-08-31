@@ -66,6 +66,16 @@ async function addFeaturedCandidate() {
   fireEvent.click(await screen.findByRole("option", { name: "My Research Tool" }));
   fireEvent.click(screen.getByRole("button", { name: "Feature it" }));
   await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument(), WAIT_OPTS);
+  // The dialog leaving the DOM is NOT the same signal as the add's transition settling, and
+  // every row control is `disabled={isPending}` (featured-manager.tsx:134-140). Base UI's
+  // exit animation can finish first, so a caller that clicks "Remove" the moment the dialog
+  // is gone can land that click on a still-disabled button — React drops it, the Server
+  // Action is never called, and the caller's own waitFor then times out against a call that
+  // will never come. That is the flake this file kept hitting under full-suite parallel load
+  // (never in isolation): the click was being lost, so 92241bd3's longer timeouts could not
+  // help — they only lengthened the wait for something already gone. Wait for the control to
+  // be interactive, not merely present.
+  await waitFor(() => expect(screen.getByRole("button", { name: "Remove" })).toBeEnabled(), WAIT_OPTS);
 }
 
 describe("FeaturedManager — real id, not a phantom one", () => {
