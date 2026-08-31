@@ -13,6 +13,7 @@ import {
 import { requireUser } from "@/lib/security/dal";
 import { env } from "@/lib/env";
 import { isSafeRedirectTarget } from "@/lib/security/safe-redirect";
+import { LEGAL_REVIEW_STATUS } from "@/lib/legal/content";
 
 async function getOrigin() {
   const originHeader = (await headers()).get("origin");
@@ -24,6 +25,7 @@ export async function signUp(_prevState: AuthFormState, formData: FormData): Pro
     displayName: formData.get("displayName"),
     email: formData.get("email"),
     password: formData.get("password"),
+    acceptedTerms: formData.get("acceptedTerms"),
   });
 
   if (!parsed.success) {
@@ -34,11 +36,27 @@ export async function signUp(_prevState: AuthFormState, formData: FormData): Pro
   const origin = await getOrigin();
   const { displayName, email, password } = parsed.data;
 
+  /**
+   * A record of *what* was accepted and *when*, not just that a box was ticked. Stored on
+   * the auth user's metadata rather than a new column, so this needs no migration and
+   * survives independently of the profile row.
+   *
+   * `terms_version` is the draft date of the documents in `lib/legal/content.ts`. Once the
+   * text is revised — and especially once counsel approves it — accounts created before
+   * that revision remain distinguishable from ones created after, which is the whole point
+   * of recording a version rather than a bare boolean.
+   */
+  const consentMetadata = {
+    terms_accepted_at: new Date().toISOString(),
+    terms_version: LEGAL_REVIEW_STATUS.draftedOn,
+    terms_approved_by_counsel: LEGAL_REVIEW_STATUS.approved,
+  };
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      data: { display_name: displayName },
+      data: { display_name: displayName, ...consentMetadata },
       emailRedirectTo: `${origin}/auth/confirm?next=/onboarding`,
     },
   });

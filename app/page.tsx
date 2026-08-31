@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { instrumentSerif, inter } from "@/lib/fonts";
+import { SiteFooter } from "@/features/legal/site-footer";
 
 // Ported from the Figma Make source handoff (src/AuthFlow.tsx, `Landing` component,
 // 2026-08-30 export) — inline styles, copy, spacing, colors, and blur/glow values kept
@@ -213,6 +214,11 @@ export default function LandingPage() {
           ))}
         </div>
       </div>
+
+      {/* Dark tone: this page is pinned to the Figma source's literal hex values rather
+          than the app's tokens (see the file header), so the footer has to be told which
+          ground it is sitting on instead of resolving tokens that would render light. */}
+      <SiteFooter tone="dark" />
     </div>
   );
 }
