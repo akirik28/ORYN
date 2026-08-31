@@ -100,8 +100,11 @@ export function DashboardView({
           than the source's full viewport bleed — the shared (app) layout's content column
           already has its own horizontal padding, and breaking out of it here would need to
           change that column for every other page too. */}
+      {/* Three nested paddings stack up here — the shell's column, this card, and the glass
+          panel inside it. At the desktop values that left ~240px of measure on a 375px
+          phone, so each one steps down below `sm` (founder report, 2026-08-31). */}
       <div
-        className="relative overflow-hidden rounded-[28px] px-6 py-11 md:px-10 md:py-14"
+        className="relative overflow-hidden rounded-[28px] px-4 py-8 sm:px-6 sm:py-11 md:px-10 md:py-14"
         style={{ background: "linear-gradient(145deg, #111030 0%, #1A1650 50%, #0E1540 100%)" }}
       >
         <div
@@ -123,7 +126,7 @@ export function DashboardView({
             {greeting}, {displayName}.
           </p>
           <div
-            className="mt-6 rounded-[20px] p-7 md:p-8"
+            className="mt-6 rounded-[20px] p-5 sm:p-7 md:p-8"
             style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", backdropFilter: "blur(12px)" }}
           >
             {heroState.kind === "claimable" ? (

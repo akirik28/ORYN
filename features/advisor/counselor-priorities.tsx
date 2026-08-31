@@ -52,7 +52,9 @@ function RecommendationCard({ recommendation, index }: { recommendation: Counsel
 
       {unknownEligibility && recommendation.warnings[0] ? (
         <p className="mt-2.5">
-          <StatusBadge label={recommendation.warnings[0]} tone="warning" icon={TriangleAlert} />
+          {/* wrap: this caveat is a sentence, not a status word — as a nowrap pill it ran
+              off the right edge of a phone screen and was clipped by the shell. */}
+          <StatusBadge label={recommendation.warnings[0]} tone="warning" icon={TriangleAlert} wrap />
         </p>
       ) : null}
 

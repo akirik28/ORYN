@@ -81,11 +81,20 @@ export function CVBuilder({
   }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[320px_1fr]">
+    // Both tracks are minmax(0,...) rather than a bare `1fr`/implicit `auto`. A grid item
+    // defaults to `min-width: auto`, so an `auto`-minimum track is inflated to the item's
+    // min-content width — and the "Include" list's entry titles are `truncate`, i.e.
+    // `white-space: nowrap`, which makes their min-content the *full* untruncated title.
+    // At 375px that sized the single mobile column to 623px: the layout's own
+    // `overflow-x-hidden` then clipped the right half of both the controls panel and the CV
+    // preview, with no way to scroll to it (founder report, 2026-08-31). The explicit `0`
+    // minimum lets the track shrink and the titles ellipsise as they were always meant to.
+    // Same idiom the advisor/dashboard/universities grids already use.
+    <div className="grid gap-8 grid-cols-[minmax(0,1fr)] lg:grid-cols-[320px_minmax(0,1fr)]">
       {/* Controls panel gets the glass-card frame; the print area below deliberately does
           not (a printed CV must stay a plain white document — `print:` resets already
           strip its screen chrome, and an animated glow has no business near it). */}
-      <div className="glass-card h-fit space-y-6 rounded-2xl border border-white/65 bg-white/45 p-5 backdrop-blur-2xl print:hidden">
+      <div className="glass-card h-fit min-w-0 space-y-6 rounded-2xl border border-white/65 bg-white/45 p-5 backdrop-blur-2xl print:hidden">
         <div className="space-y-2">
           <label className="text-sm font-medium" htmlFor="cv-title">
             CV title
@@ -128,7 +137,9 @@ export function CVBuilder({
         </Button>
       </div>
 
-      <div className="cv-print-area rounded-2xl border bg-card p-8 print:rounded-none print:border-0 print:p-0 print:shadow-none">
+      {/* p-5 below `sm`: 32px of padding either side of a 343px column left the CV body
+          under 280px, which wrapped every entry into a ragged column. */}
+      <div className="cv-print-area min-w-0 rounded-2xl border bg-card p-5 sm:p-8 print:rounded-none print:border-0 print:p-0 print:shadow-none">
         <header className="border-b pb-4">
           <h1 className="font-display text-2xl">{studentName}</h1>
           <p className="text-sm text-muted-foreground">

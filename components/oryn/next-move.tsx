@@ -62,23 +62,32 @@ export function NextMove({
     <section className={cn(surface && "rounded-2xl bg-module-recommendation p-6 md:p-8", className)}>
       <Eyebrow tone="brand">{eyebrow}</Eyebrow>
 
+      {/* The hero step starts at 1.75rem, not 2.25rem. A phone's usable measure inside this
+          block is ~240px once the shell, the card and the inner panel have each taken their
+          padding; at text-4xl a one-sentence headline ran six lines and filled the screen
+          before anything else appeared (founder report, 2026-08-31). Same three-step ramp
+          for the argument text underneath — `text-lg` only once there's room for it. */}
       <Heading
         className={cn(
           "mt-4 font-display tracking-[-0.02em] text-balance",
-          hero ? "max-w-3xl text-4xl leading-[1.05] md:text-5xl" : "max-w-2xl text-2xl leading-[1.15] md:text-3xl",
+          hero
+            ? "max-w-3xl text-[1.75rem] leading-[1.1] sm:text-4xl sm:leading-[1.05] md:text-5xl"
+            : "max-w-2xl text-2xl leading-[1.15] md:text-3xl",
         )}
       >
         {headline}
       </Heading>
 
       {why ? (
-        <div className={cn("mt-4 max-w-2xl leading-relaxed text-ink-2", hero && "text-lg")}>{why}</div>
+        <div className={cn("mt-4 max-w-2xl leading-relaxed text-ink-2", hero && "sm:text-lg")}>{why}</div>
       ) : null}
 
       {evidence && evidence.length > 0 ? (
         <div className="mt-8">
           <Eyebrow rule={false}>What Oryn is reading</Eyebrow>
-          <div className="mt-3 flex flex-wrap gap-x-10 gap-y-5">
+          {/* gap-x-6 below `sm`: at gap-x-10 three signals could not sit two-up on a phone
+              and stacked into one tall column. */}
+          <div className="mt-3 flex flex-wrap gap-x-6 gap-y-5 sm:gap-x-10">
             {evidence.map((item) => (
               <EvidenceSignal
                 key={item.label}
