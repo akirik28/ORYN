@@ -1,0 +1,51 @@
+[
+  {
+    "id": "c8e6898c-10e1-4f4b-a464-2e25a0a0ede0",
+    "research_record_id": "REQ-2026-08-21-DEL0020",
+    "requirement_detail": "The Computer Science & Engineering bachelor's programme at TU Delft has a Matching & Selection (Numerus Fixus) procedure. We can welcome 590 new bachelor students for the academic year 2026-2027. There are 345 spots reserved for the English track and 245 spots for the Bilingual track (Dutch-English). Students with a foreign diploma are solely admissible for the English track, unless they fulfil the Dutch language requirements of the Bilingual track.",
+    "retrieved_at": "2026-08-21T00:00:00+00:00",
+    "last_checked_at": null
+  },
+  {
+    "id": "0457b062-ad0c-42b2-9108-e98f400eb8a5",
+    "research_record_id": "REQ-2026-08-21-ERA0015",
+    "requirement_detail": "Numerus fixus: for 2026-2027, 700 seats are available. Ranking: \"Numbers 1-350: best grade average + passed the activity\"; \"Numbers 351 and higher: through a weighted lottery\" — \"Your grades (weight 50%) A random score (weight 50%)\". A mandatory online ESE curriculum-based activity (E-modules) must be completed, pass/fail, prior to 9 March 2026 12:00 AM CET (noon), to be eligible for the top-350 direct-ranking track.",
+    "retrieved_at": "2026-08-21T00:00:00+00:00",
+    "last_checked_at": null
+  },
+  {
+    "id": "aff6fbf1-0c7c-43b1-95e2-1d7032f25f99",
+    "research_record_id": "REQ-2026-08-21-UVA0047",
+    "requirement_detail": "Ranking — Your ranking for the English track is determined by the total score on the selection and a lottery. When drawing lots we work with three groups: Group 1: the 110 highest-scoring applicants; Group 2: the middle group; Group 3: the low-scoring group. For group 1 this translates to ranking numbers 1 to 110; group 2 has a better chance of higher ranking numbers than group 3. With a ranking number between 1 - 330 you are immediately placed; with a ranking number 331 or higher, you have to wait until a place becomes available when a placed applicant withdraws. After your official score has been announced, you have the option to lodge an appeal against the procedure that was followed.",
+    "retrieved_at": "2026-08-21T00:00:00+00:00",
+    "last_checked_at": null
+  },
+  {
+    "id": "f26e05a5-7e77-4f12-aef2-9986eb94687e",
+    "research_record_id": "REQ-2026-08-21-UVA0048",
+    "requirement_detail": "Selection attempts — You are allowed to participate only one time in the selection procedure for this programme (one selection attempt). After registration you can't do a second attempt. A selection attempt will be registered if: you have (had) an active application for the Bachelor's programme in Psychology in Studielink after 15 January 2026; you didn't participate in the selection procedure and still have (had) an active application after 15 January 2026; you withdraw your application after 15 January 2026. No selection attempt will be registered if: you withdraw your application in Studielink before 16 January 2026. Note: In case you fail your final high school exams, the used-up selection attempt in Studielink can be annulled.",
+    "retrieved_at": "2026-08-21T00:00:00+00:00",
+    "last_checked_at": null
+  },
+  {
+    "id": "49cd6748-db25-4c6a-87e6-dac40889fdbf",
+    "research_record_id": "REQ-2026-08-21-UVA0044",
+    "requirement_detail": "Test scores must also conform to the following guidelines: An official test score must be received before 1 April 2026 for all international students. If you do not provide a test score before this deadline, you must have a test scheduled for a date w[ithin an allowed window]. Your test score may not be more than 2 years old with respect to the start date of your programme.",
+    "retrieved_at": "2026-08-21T00:00:00+00:00",
+    "last_checked_at": null
+  },
+  {
+    "id": "3b4687c1-8f9c-4a8e-89d8-4545cc691658",
+    "research_record_id": "REQ-2026-08-21-GRO0038",
+    "requirement_detail": "Selection consists of an RUG-administered online test (not a third-party standardized test) covering three topics: Introduction to Psychology, Statistics, and Social Psychology, based on provided literature and a video lecture. \"Your CV and prior academic results are not considered in this selection process.\" Ranking is purely by test performance relative to other applicants.",
+    "retrieved_at": "2026-08-21T00:00:00+00:00",
+    "last_checked_at": null
+  },
+  {
+    "id": "70f31d9a-1301-49ea-898b-cbc12414d76f",
+    "research_record_id": "REQ-2026-08-21-GRO0040",
+    "requirement_detail": "Selection uses a \"Fit & Benchmark Procedure\": an online activity with \"mini videos by our professors and short readings\" and related questions, benchmarking each applicant's performance against other applicants to produce a ranking number. \"Your CV and prior study results are not taken into account in this procedure.\"",
+    "retrieved_at": "2026-08-21T00:00:00+00:00",
+    "last_checked_at": null
+  }
+]
