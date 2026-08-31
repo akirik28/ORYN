@@ -1,4 +1,5 @@
 import type { Locale } from "@/lib/i18n/config";
+import { dimensionLabel } from "@/lib/scoring/labels";
 import type { ProfileDimension, RequirementCategory } from "@/types/database";
 import type { GapSeverity } from "./types";
 
@@ -7,13 +8,13 @@ import type { GapSeverity } from "./types";
  * the sentences the whole product is judged on (CEO's framing, and correct: this is the only
  * text a student sees that explains a recommendation rather than just stating one).
  *
- * Deliberately separate from `lib/scoring/labels.ts`'s `DIMENSION_LABELS` and
- * `lib/requirements/types.ts`'s `REQUIREMENT_CATEGORY_LABELS` rather than making those
- * locale-aware directly: those two are consumed by ~15 UI call sites across features/ and
- * app/ that are out of scope for this slice (dashboard hero, profile signal, strategy panel,
- * peer benchmarking — CEO's slices b/d). Widening their shape here would make this branch
- * unreviewable and risk breaking surfaces nobody asked to translate yet. This file owns a
- * separate, counselor-scoped label set instead.
+ * Dimension names come from `lib/scoring/labels.ts`'s `dimensionLabel()` (added for slice
+ * (b), which needed the same 9 Turkish names for a second surface) — this file used to carry
+ * its own private duplicate rather than widen that module's shape, back when only this file
+ * needed Turkish dimension names at all; now that a second caller genuinely exists, the
+ * shared version is the single source of truth and this file just calls it. Requirement
+ * category names (`requirementCategoryLabel` below) are still this file's own — nothing
+ * outside the counselor needs those translated yet, so there's nothing to share.
  *
  * **Not translated word-for-word — restructured per sentence.** English "Addresses X,
  * moderate gap (43/100)" is itself telegraphic label-style copy, not a full sentence; the
@@ -30,38 +31,6 @@ import type { GapSeverity } from "./types";
  * "X öğrencilerine açık değil" needs no suffix on X), rather than guessing at vowel harmony
  * for a string that might not even be Turkish content.
  */
-
-const DIMENSION_LABEL_TR: Record<ProfileDimension, string> = {
-  academics: "Akademik",
-  intellectual_curiosity: "Entelektüel Merak",
-  leadership: "Liderlik",
-  research: "Araştırma",
-  entrepreneurship: "Girişimcilik",
-  community_impact: "Toplumsal Etki",
-  awards_distinction: "Ödüller ve Başarılar",
-  career_exploration: "Kariyer Keşfi",
-  execution_project_depth: "Uygulama / Proje Derinliği",
-};
-
-// English labels intentionally re-declared here rather than imported from
-// lib/scoring/labels.ts — that file is a UI-facing shared dependency (see file header); this
-// is the counselor-reasoning copy's own source of truth for its own sentences, so the two
-// can evolve independently without one accidentally changing the other's output.
-const DIMENSION_LABEL_EN: Record<ProfileDimension, string> = {
-  academics: "Academics",
-  intellectual_curiosity: "Intellectual Curiosity",
-  leadership: "Leadership",
-  research: "Research",
-  entrepreneurship: "Entrepreneurship",
-  community_impact: "Community Impact",
-  awards_distinction: "Awards & Distinction",
-  career_exploration: "Career Exploration",
-  execution_project_depth: "Execution / Project Depth",
-};
-
-export function dimensionLabel(dimension: ProfileDimension, locale: Locale): string {
-  return locale === "tr" ? DIMENSION_LABEL_TR[dimension] : DIMENSION_LABEL_EN[dimension];
-}
 
 const SEVERITY_LABEL_TR: Record<GapSeverity, string> = {
   critical: "kritik düzeyde boşluk",
@@ -82,7 +51,7 @@ export function gapWhyLine(dimension: ProfileDimension, severity: GapSeverity, s
   if (locale === "tr") {
     return `${dimensionLabel(dimension, "tr")} — ${SEVERITY_LABEL_TR[severity]} (${score}/100).`;
   }
-  return `Addresses ${DIMENSION_LABEL_EN[dimension]}, ${SEVERITY_LABEL_EN[severity]} (${score}/100).`;
+  return `Addresses ${dimensionLabel(dimension, "en")}, ${SEVERITY_LABEL_EN[severity]} (${score}/100).`;
 }
 
 /** The "already strong, not a reason to prioritize" variant — kept separate from
@@ -91,7 +60,7 @@ export function alreadyStrongWhyLine(dimension: ProfileDimension, score: number,
   if (locale === "tr") {
     return `${dimensionLabel(dimension, "tr")} — zaten güçlü (${score}/100), bu nedenle önceliklendirme gerekçesi değil.`;
   }
-  return `Addresses ${DIMENSION_LABEL_EN[dimension]}, already strong (${score}/100) — not a reason to prioritize this.`;
+  return `Addresses ${dimensionLabel(dimension, "en")}, already strong (${score}/100) — not a reason to prioritize this.`;
 }
 
 export function verifiedActiveLine(locale: Locale): string {

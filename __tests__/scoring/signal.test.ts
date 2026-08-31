@@ -3,6 +3,8 @@ import {
   buildProfileSignal,
   canClaimGap,
   evidenceStateFor,
+  evidenceStateLabel,
+  evidenceStateShortLabel,
   hasConfidentSignal,
   isAssessed,
   signalCoverage,
@@ -10,6 +12,7 @@ import {
   EVIDENCE_STATE_LABELS,
   EVIDENCE_STATE_SHORT_LABELS,
   type DimensionScoreRow,
+  type EvidenceState,
 } from "@/lib/scoring/signal";
 import type { DataConfidence, ProfileDimension } from "@/types/database";
 
@@ -199,4 +202,26 @@ describe("signalCoverage", () => {
     ]);
     expect(signalCoverage(signal)).toEqual({ assessed: 3, awaitingEvidence: 2, strong: 2, total: 5 });
   });
+});
+
+describe("evidenceStateLabel / evidenceStateShortLabel", () => {
+  const ALL_STATES: EvidenceState[] = ["not_assessed", "limited_evidence", "emerging", "developing", "strong"];
+
+  test("English branch matches the existing constant maps exactly", () => {
+    for (const state of ALL_STATES) {
+      expect(evidenceStateLabel(state, "en")).toBe(EVIDENCE_STATE_LABELS[state]);
+      expect(evidenceStateShortLabel(state, "en")).toBe(EVIDENCE_STATE_SHORT_LABELS[state]);
+    }
+  });
+
+  test("Turkish branch is distinct, real Turkish, one value per state", () => {
+    const seen = new Set<string>();
+    for (const state of ALL_STATES) {
+      const label = evidenceStateLabel(state, "tr");
+      expect(label).not.toBe(EVIDENCE_STATE_LABELS[state]);
+      expect(seen.has(label)).toBe(false);
+      seen.add(label);
+    }
+  });
+
 });

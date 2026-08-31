@@ -1,6 +1,10 @@
 import { canClaimGap, hasConfidentSignal, signalCoverage, type DimensionSignal } from "@/lib/scoring/signal";
-import { DIMENSION_LABELS } from "@/lib/scoring/labels";
+import { dimensionLabel } from "@/lib/scoring/labels";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import type { ProfileDimension } from "@/types/database";
+
+const EVIDENCE_STAT_LABEL_EN = { areasAssessed: "Areas assessed", alreadyStrong: "Already strong", noEvidenceYet: "No evidence yet" };
+const EVIDENCE_STAT_LABEL_TR = { areasAssessed: "Değerlendirilen alan", alreadyStrong: "Zaten güçlü", noEvidenceYet: "Henüz kanıt yok" };
 
 export interface HeroEvidenceStat {
   label: string;
@@ -42,9 +46,11 @@ export interface DashboardHeroState {
 export function computeDashboardHeroState(
   profileSignal: DimensionSignal[],
   biggestGap: { dimension: ProfileDimension; score: number } | null,
+  locale: Locale = DEFAULT_LOCALE,
 ): DashboardHeroState {
   const claimableGap = biggestGap && canClaimGap(profileSignal, biggestGap.dimension) ? biggestGap : null;
   const hasRichSignal = hasConfidentSignal(profileSignal);
+  const statLabel = locale === "tr" ? EVIDENCE_STAT_LABEL_TR : EVIDENCE_STAT_LABEL_EN;
 
   // Counted by `signalCoverage`, not by hand. This block used to classify the states itself
   // and got both numbers wrong: it treated `limited_evidence` as the only unknown state, so
@@ -58,16 +64,16 @@ export function computeDashboardHeroState(
   const coverage = signalCoverage(profileSignal);
   const evidence: HeroEvidenceStat[] | undefined = hasRichSignal
     ? [
-        { label: "Areas assessed", value: coverage.assessed },
-        { label: "Already strong", value: coverage.strong, tone: coverage.strong > 0 ? "positive" : undefined },
+        { label: statLabel.areasAssessed, value: coverage.assessed },
+        { label: statLabel.alreadyStrong, value: coverage.strong, tone: coverage.strong > 0 ? "positive" : undefined },
         ...(coverage.awaitingEvidence > 0
-          ? [{ label: "No evidence yet", value: coverage.awaitingEvidence, tone: "missing" as const }]
+          ? [{ label: statLabel.noEvidenceYet, value: coverage.awaitingEvidence, tone: "missing" as const }]
           : []),
       ]
     : undefined;
 
   if (claimableGap) {
-    return { kind: "claimable", gapLabel: DIMENSION_LABELS[claimableGap.dimension], evidence };
+    return { kind: "claimable", gapLabel: dimensionLabel(claimableGap.dimension, locale), evidence };
   }
   if (hasRichSignal) {
     return { kind: "rich_unclaimable", gapLabel: null, evidence };

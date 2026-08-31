@@ -17,6 +17,7 @@ import { OutlookBadge } from "@/features/universities/outlook-badge";
 import { computeDashboardHeroState } from "@/lib/scoring/dashboard-hero";
 import { signalCoverage, type DimensionSignal } from "@/lib/scoring/signal";
 import { describeProfileChange, type ProfileChange } from "@/lib/scoring/change";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import type { getTargetUniversitiesWithDetails } from "@/lib/universities/queries";
 import type { getUpcomingDeadlines, DeadlineSource } from "@/lib/deadlines/upcoming";
 import type { WeeklyPlanWithActions } from "@/lib/plan/persist";
@@ -32,6 +33,12 @@ const DEADLINE_SOURCE_ICONS: Record<DeadlineSource, typeof FileText> = {
 export interface DashboardViewProps {
   displayName: string;
   greeting: string;
+  /** The student's resolved locale (lib/i18n/locale.ts). Drives the hero's own copy and
+   *  Profile dimensions; every other section on this page (This week, Due soon, One thing
+   *  not to do, University outlook, Opportunities) is out of this pass's scope and stays
+   *  English regardless — safe by default, since every component it renders through
+   *  defaults to English when no locale is passed (see components/oryn/eyebrow.tsx). */
+  locale?: Locale;
   biggestGap: { dimension: ProfileDimension; score: number } | null;
   /** Per-dimension movement since the last snapshot. Replaced the single aggregate delta —
    * see lib/scoring/change.ts for why a mean of nine dimensions isn't something to act on. */
@@ -70,6 +77,7 @@ const glassCard: CSSProperties = {
 export function DashboardView({
   displayName,
   greeting,
+  locale = DEFAULT_LOCALE,
   biggestGap,
   profileChange,
   profileSignal,
@@ -88,12 +96,13 @@ export function DashboardView({
   // profile whose literal weakest dimension happens to be unassessed used to render the
   // same "nothing recorded" copy as a genuinely empty profile (live Gate 2 finding,
   // 2026-08-24, docs/handoffs/gate2-ai-counselor-report-2026-08-24.md §18).
-  const heroState = computeDashboardHeroState(profileSignal, biggestGap);
+  const heroState = computeDashboardHeroState(profileSignal, biggestGap, locale);
   // Read once here rather than inside the hero branch: the `rich_unclaimable` copy has to
   // say how many areas are still unevidenced, and that count is the difference between a
   // hedge the student can act on and one that just sounds evasive.
   const coverage = signalCoverage(profileSignal);
-  const changeSentence = describeProfileChange(profileChange);
+  const changeSentence = describeProfileChange(profileChange, locale);
+  const tr = locale === "tr";
 
   return (
     <div>
@@ -126,7 +135,7 @@ export function DashboardView({
             it kept the light-mode ink color cascaded down from body — dark ink on a dark
             purple card, nearly unreadable. Same fix as the landing page's dark wrapper. */}
         <div className="dark relative mx-auto max-w-[860px] text-foreground">
-          <p className="text-sm text-white/60">
+          <p lang={locale} className="text-sm text-white/60">
             {greeting}, {displayName}.
           </p>
           <div
@@ -137,25 +146,51 @@ export function DashboardView({
               <NextMove
                 size="hero"
                 as="h1"
-                eyebrow="Your next move"
-                headline={<>Your clearest gap right now is {heroState.gapLabel!.toLowerCase()}.</>}
+                locale={locale}
+                eyebrow={tr ? "Sıradaki adımın" : "Your next move"}
+                headline={
+                  tr ? (
+                    <span lang="tr">Şu an en belirgin boşluğun: {heroState.gapLabel}.</span>
+                  ) : (
+                    <>Your clearest gap right now is {heroState.gapLabel!.toLowerCase()}.</>
+                  )
+                }
                 why={
-                  <>
-                    Oryn compares your dimensions against each other, not against other students. Across
-                    everything you&apos;ve recorded, this is the area with the least supporting evidence — so
-                    it&apos;s where the same hours of work change your profile most.
-                  </>
+                  tr ? (
+                    <span lang="tr">
+                      Oryn seni diğer öğrencilerle değil, kendi alanlarınla kıyaslar. Kaydettiğin her şey arasında en
+                      az kanıta sahip olan alan burası — yani aynı sürede harcanan emeğin profilini en çok
+                      değiştireceği yer de burası.
+                    </span>
+                  ) : (
+                    <>
+                      Oryn compares your dimensions against each other, not against other students. Across
+                      everything you&apos;ve recorded, this is the area with the least supporting evidence — so
+                      it&apos;s where the same hours of work change your profile most.
+                    </>
+                  )
                 }
                 evidence={heroState.evidence}
                 action={
-                  <>
-                    <ButtonLink href="/advisor">
-                      Build a plan for this <ArrowRight className="size-4" />
-                    </ButtonLink>
-                    <ButtonLink href="/profile" variant="outline">
-                      See the full picture
-                    </ButtonLink>
-                  </>
+                  tr ? (
+                    <span lang="tr" className="contents">
+                      <ButtonLink href="/advisor">
+                        Bunun için bir plan oluştur <ArrowRight className="size-4" />
+                      </ButtonLink>
+                      <ButtonLink href="/profile" variant="outline">
+                        Tüm tabloyu gör
+                      </ButtonLink>
+                    </span>
+                  ) : (
+                    <>
+                      <ButtonLink href="/advisor">
+                        Build a plan for this <ArrowRight className="size-4" />
+                      </ButtonLink>
+                      <ButtonLink href="/profile" variant="outline">
+                        See the full picture
+                      </ButtonLink>
+                    </>
+                  )
                 }
               />
             ) : heroState.kind === "rich_unclaimable" ? (
@@ -181,19 +216,40 @@ export function DashboardView({
                  What is true here is narrower and more useful: Oryn cannot rank a gap it
                  has no evidence for, so the honest move is to say which areas are missing
                  and send the student to fill them in — not to reassure. */
+              // Turkish here is not a translation exercise — see the block comment above:
+              // this copy exists specifically to admit a limit rather than claim balance,
+              // and a Turkish version that reads more confident than the English would undo
+              // the entire point of the fix that comment documents. "can't name...yet" is
+              // carried by "henüz...söyleyemiyor" (not-yet-able-to-say) — the same admission
+              // of a present limitation, not a softened or confident restatement.
               <NextMove
                 size="hero"
                 as="h1"
-                eyebrow="Where you stand"
-                headline="Oryn can't name your clearest gap yet."
+                locale={locale}
+                eyebrow={tr ? "Şu anki durumun" : "Where you stand"}
+                headline={tr ? "Oryn henüz en belirgin boşluğunu söyleyemiyor." : "Oryn can't name your clearest gap yet."}
                 why={
                   coverage.awaitingEvidence > 0 ? (
-                    <>
-                      The area that currently looks weakest is one Oryn has too little evidence to judge,
-                      so ranking it as your gap would be guessing.{" "}
-                      {coverage.awaitingEvidence} of {coverage.total} areas are in that position — filling
-                      even one of them in is what turns this into a real answer.
-                    </>
+                    tr ? (
+                      <span lang="tr">
+                        Şu an en zayıf görünen alan, Oryn&apos;ın karar verecek kadar kanıta sahip olmadığı bir alan —
+                        bu yüzden onu boşluğun olarak göstermek tahmin olurdu. {coverage.total} alandan{" "}
+                        {coverage.awaitingEvidence} tanesi bu durumda; birini bile doldurmak bunu gerçek bir cevaba
+                        dönüştürür.
+                      </span>
+                    ) : (
+                      <>
+                        The area that currently looks weakest is one Oryn has too little evidence to judge,
+                        so ranking it as your gap would be guessing.{" "}
+                        {coverage.awaitingEvidence} of {coverage.total} areas are in that position — filling
+                        even one of them in is what turns this into a real answer.
+                      </>
+                    )
+                  ) : tr ? (
+                    <span lang="tr">
+                      Oryn alanlarını birbiriyle kıyaslar; şu anda en zayıf olanı, boşluğun diye adlandıracak kadar
+                      güvenle konumlandıramıyor.
+                    </span>
                   ) : (
                     <>
                       Oryn compares your dimensions against each other, and right now it can&apos;t place
@@ -203,26 +259,44 @@ export function DashboardView({
                 }
                 evidence={heroState.evidence}
                 action={
-                  <>
-                    <ButtonLink href="/profile">
-                      Add what&apos;s missing <ArrowRight className="size-4" />
-                    </ButtonLink>
-                    <ButtonLink href="/advisor" variant="outline">
-                      Talk to your counselor
-                    </ButtonLink>
-                  </>
+                  tr ? (
+                    <span lang="tr" className="contents">
+                      <ButtonLink href="/profile">
+                        Eksikleri ekle <ArrowRight className="size-4" />
+                      </ButtonLink>
+                      <ButtonLink href="/advisor" variant="outline">
+                        Danışmanınla konuş
+                      </ButtonLink>
+                    </span>
+                  ) : (
+                    <>
+                      <ButtonLink href="/profile">
+                        Add what&apos;s missing <ArrowRight className="size-4" />
+                      </ButtonLink>
+                      <ButtonLink href="/advisor" variant="outline">
+                        Talk to your counselor
+                      </ButtonLink>
+                    </>
+                  )
                 }
               />
             ) : (
               <NextMove
                 size="hero"
                 as="h1"
-                eyebrow="Getting started"
-                headline="Tell Oryn what you've done, and it will tell you what to do next."
-                why="Oryn reads your courses, activities, projects and awards to find where your profile is thinnest. Right now there isn't enough recorded for it to say anything it could stand behind — that's a gap in what Oryn knows, not a judgement about you."
+                locale={locale}
+                eyebrow={tr ? "Başlarken" : "Getting started"}
+                headline={
+                  tr ? "Oryn'a neler yaptığını anlat, o da sana sırada ne olduğunu söylesin." : "Tell Oryn what you've done, and it will tell you what to do next."
+                }
+                why={
+                  tr
+                    ? "Oryn, profilinin nerede en zayıf olduğunu bulmak için derslerini, aktivitelerini, projelerini ve ödüllerini okur. Şu anda arkasında durabileceği bir şey söylemesi için yeterli kayıt yok — bu Oryn'ın bilgisindeki bir eksiklik, senin hakkında bir yargı değil."
+                    : "Oryn reads your courses, activities, projects and awards to find where your profile is thinnest. Right now there isn't enough recorded for it to say anything it could stand behind — that's a gap in what Oryn knows, not a judgement about you."
+                }
                 action={
                   <ButtonLink href="/profile">
-                    Start your journey <ArrowRight className="size-4" />
+                    {tr ? "Yolculuğuna başla" : "Start your journey"} <ArrowRight className="size-4" />
                   </ButtonLink>
                 }
               />
@@ -238,7 +312,7 @@ export function DashboardView({
                 ) : (
                   <Minus className="size-4 shrink-0" aria-hidden="true" />
                 )}
-                <span>{changeSentence}</span>
+                <span lang={locale}>{changeSentence}</span>
               </p>
             ) : null}
           </div>
@@ -292,7 +366,12 @@ export function DashboardView({
                     already supports a quiet numeric footnote beside the qualitative read for
                     exactly this case (see features/dashboard/profile-signal.tsx) — the word
                     stays primary, the score is real data, not fabricated to match source. */}
-                <ProfileSignal signal={profileSignal} showScores heading="Profile dimensions" />
+                <ProfileSignal
+                  signal={profileSignal}
+                  showScores
+                  heading={tr ? "Profil boyutları" : "Profile dimensions"}
+                  locale={locale}
+                />
               </section>
 
               {upcomingDeadlines.length > 0 ? (

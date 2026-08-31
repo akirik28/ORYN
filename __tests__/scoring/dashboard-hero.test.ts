@@ -104,3 +104,34 @@ describe("computeDashboardHeroState", () => {
     expect(result.kind).toBe("rich_unclaimable");
   });
 });
+
+describe("computeDashboardHeroState — locale: tr", () => {
+  test("gapLabel is the Turkish dimension name", () => {
+    const signal = ALL_DIMENSIONS.map((d, i) =>
+      d === "research" ? signalRow(d, { state: "emerging", score: 20, confidence: "medium" }) : signalRow(d, { state: "strong", score: 90 - i, confidence: "high" }),
+    );
+    const result = computeDashboardHeroState(signal, { dimension: "research", score: 20 }, "tr");
+    expect(result.kind).toBe("claimable");
+    expect(result.gapLabel).toBe("Araştırma");
+  });
+
+  test("evidence stat labels are Turkish", () => {
+    const signal: DimensionSignal[] = [
+      signalRow("awards_distinction", { state: "strong", score: 100, confidence: "high" }),
+      signalRow("academics", { state: "developing", score: 43, confidence: "medium" }),
+      signalRow("research", { state: "limited_evidence", score: 5 }),
+    ];
+    const result = computeDashboardHeroState(signal, { dimension: "research", score: 5 }, "tr");
+    const labels = result.evidence!.map((e) => e.label);
+    expect(labels).toEqual(["Değerlendirilen alan", "Zaten güçlü", "Henüz kanıt yok"]);
+  });
+
+  test("omitting locale is identical to passing 'en' explicitly (default-locale backward compatibility)", () => {
+    const signal = ALL_DIMENSIONS.map((d, i) =>
+      d === "research" ? signalRow(d, { state: "emerging", score: 20, confidence: "medium" }) : signalRow(d, { state: "strong", score: 90 - i, confidence: "high" }),
+    );
+    const withDefault = computeDashboardHeroState(signal, { dimension: "research", score: 20 });
+    const withExplicitEn = computeDashboardHeroState(signal, { dimension: "research", score: 20 }, "en");
+    expect(withDefault).toEqual(withExplicitEn);
+  });
+});
