@@ -54,7 +54,7 @@ export function ProcessorTable({ locale }: { locale: Locale }) {
               <tr key={p.id} id={`processor-${p.id}`} className="border-b border-border last:border-0 align-top">
                 <th scope="row" className="px-4 py-4 font-normal">
                   <span className="block font-semibold text-ink-1">{p.name}</span>
-                  <span className="mt-1 block leading-relaxed text-ink-4">{p.role}</span>
+                  <span className="mt-1 block leading-relaxed text-ink-3">{p.role}</span>
                   <span className="mt-2 inline-block"><PersonalDataTag personalData={p.personalData} t={t} /></span>
                 </th>
                 <td className="px-4 py-4 leading-relaxed text-ink-3">{p.dataSent}</td>
@@ -84,7 +84,7 @@ function PersonalDataTag({ personalData, t }: { personalData: boolean; t: LegalC
       className={
         personalData
           ? "inline-block rounded-full bg-brand-primary-subtle px-2 py-0.5 text-[11px] font-semibold text-brand-primary-strong"
-          : "inline-block rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-ink-4"
+          : "inline-block rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-ink-3"
       }
     >
       {personalData ? t.personalDataYes : t.personalDataNo}

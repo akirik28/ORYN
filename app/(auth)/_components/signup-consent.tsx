@@ -81,7 +81,7 @@ export function SignUpConsent({ error, locale }: { error?: string; locale: Local
       <div className="rounded-[12px] border border-dashed border-[#D8D4F0] bg-[#FAFAFE] p-4">
         <h2 className="text-[13px] font-semibold text-[#3A3A4A]">{t.minorHeading}</h2>
         <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#5A5A6E]">{t.minorBody}</p>
-        <p className="mt-2 text-[12.5px] leading-relaxed text-[#8A8A9E]">{t.minorPlaceholderNote}</p>
+        <p className="mt-2 text-[12.5px] leading-relaxed text-[#5A5A6E]">{t.minorPlaceholderNote}</p>
       </div>
     </div>
   );

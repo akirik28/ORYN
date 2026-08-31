@@ -73,7 +73,7 @@ export function ResearchIdeaGenerator() {
               Generate
             </Button>
           </div>
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
 
           {projects && projects.length > 0 ? (
             <div className="space-y-4">

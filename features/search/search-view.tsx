@@ -23,7 +23,7 @@ export function SearchView({ query, results }: { query: string; results: SearchR
             placeholder="Search universities, opportunities, your profile…"
             aria-label="Search Oryn"
             autoFocus
-            className="flex-1 bg-transparent text-[15px] outline-none placeholder:text-ink-4"
+            className="flex-1 bg-transparent text-[15px] outline-none placeholder:text-ink-3"
           />
           {query ? (
             // A plain link to the bare route, not a same-named submit button — a button
@@ -52,7 +52,7 @@ export function SearchView({ query, results }: { query: string; results: SearchR
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-ink-1">{result.title}</p>
-                  {result.subtitle ? <p className="truncate text-xs text-ink-4">{result.subtitle}</p> : null}
+                  {result.subtitle ? <p className="truncate text-xs text-ink-3">{result.subtitle}</p> : null}
                 </div>
                 <span aria-hidden="true" className="shrink-0 text-ink-4">
                   →

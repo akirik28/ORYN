@@ -123,7 +123,7 @@ export function OpportunityBrowseGrid({
           </Button>
         </div>
       ) : (
-        <p className="py-6 text-center text-xs text-ink-4">That&apos;s everything matching these filters.</p>
+        <p className="py-6 text-center text-xs text-ink-3">That&apos;s everything matching these filters.</p>
       )}
     </>
   );

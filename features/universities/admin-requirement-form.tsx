@@ -131,7 +131,7 @@ export function AdminRequirementForm({ universityId, programs }: { universityId:
         </p>
       </div>
 
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
       {status ? <p className="text-sm text-emerald-700 dark:text-emerald-400">{status}</p> : null}
 
       <Button

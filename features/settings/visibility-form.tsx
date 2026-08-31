@@ -108,7 +108,7 @@ export function VisibilityForm({
       <Button variant="outline" size="sm" disabled={isPending || !dirty} onClick={save}>
         {isPending ? <Loader2 className="size-4 animate-spin" /> : saved ? "Saved" : "Save"}
       </Button>
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
     </div>
   );
 }

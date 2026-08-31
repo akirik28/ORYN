@@ -119,7 +119,7 @@ export function QuickAddEntry({ types }: { types: QuickAddType[] }) {
           ) : selected ? (
             <div className="space-y-4">
               <DynamicFormFields fields={selected.fields} values={values} onChange={handleChange} />
-              {error ? <p className="text-sm text-destructive">{error}</p> : null}
+              {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
             </div>
           ) : null}
 

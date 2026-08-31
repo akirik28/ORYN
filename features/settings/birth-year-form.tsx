@@ -70,7 +70,7 @@ export function BirthYearForm({ initialBirthYear }: { initialBirthYear: number |
           ? "Not set. Programs with an age limit will show as unverified rather than confirmed either way, because Oryn won't guess your age."
           : "Used to check age limits on programs and competitions. The year is enough — Oryn never asks for your full birthday."}
       </p>
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
     </div>
   );
 }

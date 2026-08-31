@@ -95,7 +95,7 @@ export function UploadEvidenceDialog({ items }: { items: LinkableItem[] }) {
             Uploading a file marks this item &quot;Evidence added&quot; — it&apos;s self-reported until independently
             verified, and only visible to you.
           </p>
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>

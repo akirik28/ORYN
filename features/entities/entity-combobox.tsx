@@ -332,7 +332,7 @@ function CreateCustomEntityDialog({
             <p className="text-xs text-muted-foreground">
               Oryn will add this as unverified until someone checks it against an official source.
             </p>
-            {error ? <p className="text-sm text-destructive">{error}</p> : null}
+            {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
           </div>
         )}
 

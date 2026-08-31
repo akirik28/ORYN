@@ -39,7 +39,7 @@ export function DisplayNameForm({ initialName }: { initialName: string }) {
           {isPending ? <Loader2 className="size-4 animate-spin" /> : saved ? "Saved" : "Save"}
         </Button>
       </div>
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
     </div>
   );
 }

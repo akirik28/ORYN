@@ -87,7 +87,7 @@ export function MonthlyUsageMeter({ quota, className }: { quota: MonthlyQuota; c
           >
             {quota.remaining}
           </span>
-          <span className="text-ink-4"> / {quota.limit}</span>
+          <span className="text-ink-3"> / {quota.limit}</span>
         </p>
       </div>
 

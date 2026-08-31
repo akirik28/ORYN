@@ -21,14 +21,21 @@ export function SiteFooter({ tone = "light", locale }: { tone?: "dark" | "light"
   const dark = tone === "dark";
   const year = new Date().getFullYear();
 
+  // `body` and `faint` share a value in both tones: every `faint` use in this component
+  // (contact labels, the unresolved-company-detail placeholder, the copyright/draft/age
+  // notices) is real text a visitor has to read, not decoration, so it needs the same
+  // legibility as `body` rather than a step down from it. `rgba(255,255,255,0.4)` — the
+  // dark tone's old `body` value, copied from app/page.tsx's Figma palette — measured
+  // 3.76:1 against `#0A0920` on its own, also short of AA; bumped alongside `faint` rather
+  // than left as a smaller version of the same problem.
   const c = dark
     ? {
         wrap: { background: "#0A0920", borderTop: "1px solid rgba(255,255,255,0.06)" },
         heading: { color: "rgba(255,255,255,0.9)" },
-        body: { color: "rgba(255,255,255,0.4)" },
+        body: { color: "rgba(255,255,255,0.5)" },
         link: { color: "rgba(255,255,255,0.55)" },
         rule: { borderTop: "1px solid rgba(255,255,255,0.06)" },
-        faint: { color: "rgba(255,255,255,0.3)" },
+        faint: { color: "rgba(255,255,255,0.5)" },
       }
     : {
         wrap: { background: "var(--surface-tint)", borderTop: "1px solid var(--border)" },
@@ -36,7 +43,7 @@ export function SiteFooter({ tone = "light", locale }: { tone?: "dark" | "light"
         body: { color: "var(--ink-3)" },
         link: { color: "var(--ink-2)" },
         rule: { borderTop: "1px solid var(--border)" },
-        faint: { color: "var(--ink-4)" },
+        faint: { color: "var(--ink-3)" },
       };
 
   return (

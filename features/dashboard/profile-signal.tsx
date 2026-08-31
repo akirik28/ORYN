@@ -49,8 +49,8 @@ const STATE_TEXT: Record<EvidenceState, string> = {
   strong: "text-success",
   developing: "text-ink-2",
   emerging: "text-ink-2",
-  limited_evidence: "text-ink-4",
-  not_assessed: "text-ink-4",
+  limited_evidence: "text-ink-3",
+  not_assessed: "text-ink-3",
 };
 
 function Spectrum({ state }: { state: EvidenceState }) {
@@ -147,7 +147,7 @@ export function ProfileSignal({
                   evidence yet" asserts a measurement that never happened — the same
                   confusion between absence and weakness this whole model exists to end. */}
               {showScores && isAssessed(row.state) ? (
-                <span className="shrink-0 text-xs text-ink-4 tabular-nums">{row.score}</span>
+                <span className="shrink-0 text-xs text-ink-3 tabular-nums">{row.score}</span>
               ) : null}
               {showScores ? (
                 // Same fact at two lengths, chosen by the container's own width rather
