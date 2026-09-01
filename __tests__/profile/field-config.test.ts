@@ -85,16 +85,17 @@ describe("localizeFields", () => {
     // cite since nothing else in messages/tr.json happens to use the word yet.
     const LOANWORDS = new Set(["AP", "IB", "A-Level", "Honors", "Mentor", "Poster"]);
 
-    // LANGUAGE_FIELDS's "proficiency" select gets its options from
-    // lib/vocabularies/languages.ts's LANGUAGE_PROFICIENCY_OPTIONS (Native, Bilingual, C2 —
-    // Mastery, ...) — a real, still-untranslated gap, but a DIFFERENT file's (16 strings,
-    // labels + hints), flagged separately and not part of this pass's assignment (which was
-    // field-config.ts itself, plus lib/scoring/completeness.ts). Excluded here rather than
-    // added to LOANWORDS so this test doesn't quietly certify it as intentionally English.
+    // LANGUAGE_FIELDS's "proficiency" options (lib/vocabularies/languages.ts's
+    // LANGUAGE_PROFICIENCY_OPTIONS) were the last still-untranslated FieldConfig array when
+    // this test was first written — now translated (2026-09-01, same pass as
+    // lib/vocabularies/languages.ts's own locale-aware accessors), so no array needs
+    // excluding here any more. If a future FieldConfig array genuinely can't be covered yet,
+    // exclude it explicitly with a comment the way this one used to be, rather than silently
+    // narrowing the walk.
     async function allFieldArrays(): Promise<FieldConfig[][]> {
       const mod = await import("@/features/profile/field-config");
       return Object.entries(mod)
-        .filter(([name, value]) => name.endsWith("_FIELDS") && Array.isArray(value) && name !== "LANGUAGE_FIELDS")
+        .filter(([name, value]) => name.endsWith("_FIELDS") && Array.isArray(value))
         .map(([, value]) => value as FieldConfig[]);
     }
 

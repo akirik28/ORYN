@@ -1,3 +1,5 @@
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
+
 /**
  * Languages and proficiency levels.
  *
@@ -41,6 +43,39 @@ export const LANGUAGE_PROFICIENCY_OPTIONS = LANGUAGE_PROFICIENCY_LEVELS.map((lev
   value: level.value,
   label: level.label,
 }));
+
+/**
+ * Locale (2026-09-01) — the last of the three `check:i18n` Data-modules files oryn-a7's
+ * scanner fix surfaced (the other two, `lib/scoring/completeness.ts` and
+ * `features/profile/field-config.ts`, were fixed earlier the same night).
+ *
+ * `hint` is translated even though nothing in the app currently renders it — confirmed by
+ * grep, `LANGUAGE_PROFICIENCY_OPTIONS` (below) drops `hint` entirely and
+ * `languageProficiencyLabel` never reads it either. The type's own doc comment says it's
+ * "shown under the option," which is a real, still-unbuilt feature, not a defect this pass
+ * introduces or is responsible for fixing — translating the string now means whoever builds
+ * that UI later doesn't also have to translate it then, and a hint left in English forever
+ * because "nothing reads it yet" is exactly the kind of half-finished translation this
+ * session's i18n passes have been trying to close out.
+ *
+ * Values keyed by `value` (already a stable identifier — a CEFR code — never a display
+ * string), same shape as `dimensionLabel`/`completenessChecklistLabel`.
+ */
+const LANGUAGE_PROFICIENCY_TR: Record<string, { label: string; hint: string }> = {
+  native: { label: "Anadil", hint: "Konuşarak büyüdüğün ilk dilin." },
+  bilingual: { label: "İki Dilli", hint: "İki dili anadil düzeyinde veya ona yakın bir düzeyde konuşursun." },
+  c2: { label: "C2 — Ustalık", hint: "Neredeyse her şeyi anlarsın; kendini net bir şekilde ifade edersin." },
+  c1: { label: "C1 — İleri Düzey", hint: "Akıcı ve doğal konuşursun; bu dilde bir üniversite programı okuyabilirsin." },
+  b2: { label: "B2 — Üst Orta Düzey", hint: "Karmaşık metinler ve tartışmalarla rahatça başa çıkarsın." },
+  b1: { label: "B1 — Orta Düzey", hint: "Günlük durumların çoğunun üstesinden tek başına gelirsin." },
+  a2: { label: "A2 — Temel Düzey", hint: "Basit, günlük konuşmalar yapabilirsin." },
+  a1: { label: "A1 — Başlangıç Düzeyi", hint: "Temel ifadeler kurabilir, kendini tanıtabilirsin." },
+};
+
+export function languageProficiencyHint(value: string, locale: Locale): string | null {
+  if (locale === "tr") return LANGUAGE_PROFICIENCY_TR[value]?.hint ?? null;
+  return LANGUAGE_PROFICIENCY_LEVELS.find((l) => l.value === value)?.hint ?? null;
+}
 
 /** Ordered by how often a student in ORYN's markets is likely to need it, then A-Z. */
 export const LANGUAGE_NAME_SUGGESTIONS: string[] = [
@@ -92,8 +127,14 @@ export const LANGUAGE_NAME_SUGGESTIONS: string[] = [
   "Sign Language",
 ];
 
-/** Human label for a stored proficiency value; falls back to the raw value for legacy rows. */
-export function languageProficiencyLabel(value: string | null): string | null {
+/**
+ * Human label for a stored proficiency value; falls back to the raw value for legacy rows.
+ * `locale` is additive (defaults to English, same pattern as every other lib/-side label
+ * accessor this session's i18n passes have threaded a locale through) — the one existing
+ * caller (app/(app)/profile/page.tsx) now passes its own resolved locale.
+ */
+export function languageProficiencyLabel(value: string | null, locale: Locale = DEFAULT_LOCALE): string | null {
   if (!value) return null;
+  if (locale === "tr") return LANGUAGE_PROFICIENCY_TR[value]?.label ?? LANGUAGE_PROFICIENCY_LEVELS.find((l) => l.value === value)?.label ?? value;
   return LANGUAGE_PROFICIENCY_LEVELS.find((l) => l.value === value)?.label ?? value;
 }
