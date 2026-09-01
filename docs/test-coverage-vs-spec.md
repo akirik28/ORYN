@@ -11,7 +11,7 @@ Phase 50 names seven integration tests and one end-to-end path. Against the suit
 | Phase 50 asks for | State |
 |---|---|
 | authentication | **partial** — `legal/consent.test.ts` covers the signup consent gate. No test exercises sign-in or session handling. |
-| CV import workflow | **partial** — `onboarding/import-step-flatten.test.ts` covers flattening an extraction result. The upload → extract → review → confirm → save path is untested. |
+| CV import workflow | covered at the write step as of 2026-09-01 — `profile/cv-import-action.test.ts`, including partial-import honesty. The upload and extraction steps remain untested (they need a model call). |
 | profile creation | covered |
 | weekly plan generation | covered — `ai/weekly-plan.test.ts`, including the counselor-grounding contract |
 | university save | covered at the action (`addTargetUniversity`), and now removal too |
@@ -41,9 +41,10 @@ from the two that are not.
 having covered turned out to be the optimistic-update rollback rather than the happy path —
 without it a failed write leaves the button showing a status nobody saved.
 
-The CV import workflow is still tested only at its last step. It needs no infrastructure
-either — mockable the way `__tests__/universities/save-university-button.test.tsx` mocks its
-action — and is the cheapest remaining coverage.
+The CV import workflow is now covered at the step where data reaches a profile, including
+the partial-import case the action's own comment insists on. What remains untested there is
+upload and extraction, which need a real model call — the same credit constraint as the
+Turkish eval pass.
 
 ## What the suite is unusually good at
 
