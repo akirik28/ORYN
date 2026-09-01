@@ -20,7 +20,11 @@ import {
  * EXPORT_TABLES has its own `user_id` column, so one `.eq()` shape covers all of them.
  * Tables where "my data" isn't a plain `user_id` match (messages, connections,
  * blocked_users, message_reports — each keyed by a pair of participant columns) are
- * fetched separately below. */
+ * fetched separately below.
+ *
+ * `EXPORT_EXCLUDED_TABLES` in lib/export/tables.ts records the one `user_id` table this
+ * deliberately skips and why. Read that before adding anything: a table whose RLS has no
+ * SELECT policy exports as permanently empty while the response still reports success. */
 
 export async function GET() {
   const session = await requireUser();

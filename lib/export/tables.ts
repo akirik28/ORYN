@@ -37,7 +37,48 @@ export const EXPORT_TABLES = [
   // Professional Profile pack (migrations 0033-0036).
   "contact_info",
   "featured_items",
+  /**
+   * What Oryn concluded *about* the student, and what it recorded them doing. Added
+   * 2026-09-01 after cross-checking this list against every live table carrying a
+   * `user_id` — these five matched the rule in this list's own header ("my data is a
+   * plain user_id = me match") and were absent anyway, with nothing written down to say
+   * why. Derived and inferred data is the student's data too: `opportunity_matches` holds
+   * the eligibility verdicts and match scores the product reached about them, and
+   * `student_requirement_evaluations` holds whether it judged them to meet each
+   * requirement. Leaving those out would make "full export" mean "the parts you typed in".
+   */
+  "opportunity_matches",
+  "student_requirement_evaluations",
+  "ai_recommendations",
+  "ai_usage",
+  "rate_limit_events",
 ] as const;
+
+/**
+ * Tables carrying a `user_id` that this export deliberately does NOT cover, with the
+ * reason. An entry here is a decision; an absence from both lists is a bug, and
+ * __tests__/export/tables.test.ts fails on one.
+ */
+export const EXPORT_EXCLUDED_TABLES: Record<string, string> = {
+  /**
+   * Analytics events (migration 0042). This is personal data and it belongs in the export
+   * on the merits — it is excluded only because it *cannot yet be exported honestly*:
+   * `product_events` has RLS enabled with no SELECT policy, so a read through the normal
+   * request client returns zero rows. Adding it today would produce a section that is
+   * always empty while the export reports success — a false completeness claim, which is
+   * worse than a documented omission. Needs a "select own product_events" policy in a
+   * migration first; then move this entry into EXPORT_TABLES above.
+   */
+  product_events: "RLS has no SELECT policy — would export as permanently empty; needs a migration first",
+  /**
+   * Migration 0072's audit trail of a student's birth-year changes. Their data, and it
+   * belongs here — but 0072 is not applied to any environment yet
+   * (see docs/migration-state.md), and Supabase resolves a query against a missing table
+   * as an error that this route turns into `[]`. So adding it now buys the same silent
+   * empty section as product_events. Move it into EXPORT_TABLES when 0072 lands.
+   */
+  birth_year_changes: "migration 0072 is not applied anywhere yet — would export as permanently empty until it is",
+};
 
 /** Tables keyed by a participant pair rather than a plain user_id — each needs its own
  * filter shape in the route, so this list exists for coverage testing, not for driving

@@ -1,7 +1,10 @@
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import {
   EXPORT_TABLES,
   EXPORT_PARTICIPANT_TABLES,
+  EXPORT_EXCLUDED_TABLES,
   MESSAGE_REPORTS_EXPORT_COLUMNS,
   PROFILE_VIEWS_EXPORT_COLUMNS,
   messagesExportFilter,
@@ -147,6 +150,66 @@ describe("PROFILE_VIEWS_EXPORT_COLUMNS — never exposes viewer identity", () =>
   test("still includes enough to be meaningful", () => {
     for (const column of ["id", "viewed_on", "created_at"]) {
       expect((PROFILE_VIEWS_EXPORT_COLUMNS as readonly string[]).includes(column)).toBe(true);
+    }
+  });
+});
+
+/**
+ * The enumerated cases above are regression guards for gaps someone already found. This
+ * one is derived, so it also catches the gap nobody has found yet.
+ *
+ * It reads the migrations rather than a hand-kept list, and asserts that every table
+ * carrying a `user_id` is either exported or explicitly excluded with a reason. That is
+ * exactly how the previous gap happened: five tables holding what Oryn concluded *about*
+ * a student (opportunity_matches, student_requirement_evaluations, ai_recommendations,
+ * ai_usage, rate_limit_events) matched EXPORT_TABLES' own stated rule and were simply
+ * never added, with nothing anywhere recording a decision either way.
+ */
+describe("every user_id table is exported or excluded on purpose", () => {
+  const migrationsDir = join(process.cwd(), "supabase", "migrations");
+  // SOCIAL_POSTS_EXPORT_TABLES counts as covered: the export surface for the social layer
+  // is defined and tested, just not wired into the route while migration 0058 stays
+  // unapplied (see that constant's own header).
+  const covered = new Set<string>([...EXPORT_TABLES, ...EXPORT_PARTICIPANT_TABLES, ...SOCIAL_POSTS_EXPORT_TABLES, "profiles"]);
+
+  /** Tables created with a `user_id` column, minus any later dropped. */
+  function userIdTablesFromMigrations(): string[] {
+    const created = new Set<string>();
+    const dropped = new Set<string>();
+
+    for (const file of readdirSync(migrationsDir).filter((f) => f.endsWith(".sql")).sort()) {
+      const sql = readFileSync(join(migrationsDir, file), "utf8");
+
+      // `create table public.x ( ... );` — body up to the closing paren at line start.
+      for (const match of sql.matchAll(/create table (?:if not exists )?public\.([a-z_]+)\s*\(([\s\S]*?)^\);/gim)) {
+        if (/\buser_id\b/.test(match[2])) created.add(match[1]);
+      }
+      // A user_id added afterwards counts the same.
+      for (const match of sql.matchAll(/alter table (?:only )?public\.([a-z_]+)[\s\S]{0,200}?add column (?:if not exists )?user_id\b/gim)) {
+        created.add(match[1]);
+      }
+      for (const match of sql.matchAll(/drop table (?:if exists )?public\.([a-z_]+)/gim)) {
+        dropped.add(match[1]);
+      }
+    }
+    return [...created].filter((t) => !dropped.has(t)).sort();
+  }
+
+  test("the migration scan finds a realistic number of tables — a broken regex must fail loudly, not silently pass", () => {
+    // Without this, a regex that stops matching turns the assertion below into a no-op
+    // that reports success forever, which is the failure mode this whole file exists to
+    // catch elsewhere.
+    expect(userIdTablesFromMigrations().length).toBeGreaterThan(25);
+  });
+
+  test.each(userIdTablesFromMigrations())("%s is covered or documented", (table) => {
+    const isCovered = covered.has(table) || table in EXPORT_EXCLUDED_TABLES;
+    expect(isCovered, `${table} has a user_id column but is neither in EXPORT_TABLES/EXPORT_PARTICIPANT_TABLES nor in EXPORT_EXCLUDED_TABLES. Add it to the export, or add it to the exclusion map with the reason.`).toBe(true);
+  });
+
+  test("every exclusion carries a reason", () => {
+    for (const [table, reason] of Object.entries(EXPORT_EXCLUDED_TABLES)) {
+      expect(reason.length, `${table} is excluded without a reason`).toBeGreaterThan(20);
     }
   });
 });
