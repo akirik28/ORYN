@@ -26,6 +26,32 @@ history has no visibility into either, so those are marked "not verifiable this 
 rather than asserted either way.
 
 
+## English month names on university deadlines, and why it is one file
+
+`app/(app)/universities/[id]/page.tsx` formats deadline dates with
+`.toLocaleDateString("en-US", …)` (line 687) and a hardcoded English `MONTH_NAMES` array
+(line 61, used by the recurring-deadline formatter at 681), regardless of locale. A Turkish
+student reads "12 Ocak" everywhere else on the page and "January 12, 2027" on the deadline.
+Spotted by the i18n lane while translating that file, and deliberately left alone there
+rather than folded into a translation diff.
+
+Worth separating from two things it resembles:
+
+- **It is not the documented number-format deferral.** `lib/i18n/format.ts` explains why
+  number formatting stays `en-US` for now — flipping it "silently rewrites every university
+  statistic, cost and token count", so it is a separately-reviewed change rather than a side
+  effect of adding a switcher. That reasoning is about *numbers*, and it has a trigger
+  condition worth noticing: it defers "against pages whose surrounding copy is still
+  English", and that copy is being translated right now. The deferral expires as the pages do.
+- **It is not a systemic gap.** `lib/i18n/date.ts` already exists, takes a locale, and is
+  used by four files. This is the only direct `toLocaleDateString("en-…")` call left in
+  `app/` or `features/`.
+
+The real gap is narrower than either: `date.ts` exports `formatRelativeTime` and a date-fns
+locale, but **no absolute-date formatter**, so a page needing "12 January 2027" had nothing
+to call and reached for `toLocaleDateString` with a literal. Fix is an absolute formatter in
+`date.ts` plus the two call sites — not a policy decision.
+
 ## A student cannot remove a target university
 
 **Open, small, and the fix is already written.** `removeTargetUniversity` exists in
