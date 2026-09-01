@@ -143,7 +143,7 @@ export async function CounselorPriorities({ result }: { result: CounselorResult 
 
       {avoidItem ? (
         <div className="glass-card-offset rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-7">
-          <InsightCard variant="avoid" eyebrow={t("oneThingNotToDo")} title={avoidItem.title}>
+          <InsightCard variant="avoid" eyebrow={t("oneThingNotToDo")} title={avoidItem.title} locale={locale}>
             {avoidItem.why[0]}
           </InsightCard>
         </div>

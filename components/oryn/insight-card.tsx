@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import type { Locale } from "@/lib/i18n/config";
 import { Eyebrow, type EyebrowTone } from "./eyebrow";
 
 export type InsightVariant = "gap" | "avoid" | "strength" | "neutral";
@@ -38,6 +39,7 @@ export function InsightCard({
   children,
   action,
   className,
+  locale,
 }: {
   variant?: InsightVariant;
   eyebrow: ReactNode;
@@ -45,10 +47,14 @@ export function InsightCard({
   children?: ReactNode;
   action?: ReactNode;
   className?: string;
+  /** The actual language of `eyebrow` — forwarded to Eyebrow's own `locale` prop, same
+   * reasoning as that component documents: defaults to English because most callers
+   * still pass English, but a caller passing already-translated Turkish must say so. */
+  locale?: Locale;
 }) {
   return (
     <section className={cn(className)}>
-      <Eyebrow tone={VARIANT_TONE[variant]}>{eyebrow}</Eyebrow>
+      <Eyebrow tone={VARIANT_TONE[variant]} locale={locale}>{eyebrow}</Eyebrow>
       <p className="mt-4 max-w-2xl font-display text-2xl leading-[1.15] tracking-[-0.02em] text-balance md:text-3xl">
         {title}
       </p>

@@ -410,7 +410,7 @@ export async function DashboardView({
           </div>
 
           {avoidRecommendation ? (
-            <InsightCard variant="avoid" eyebrow={t("oneThingNotToDo")} title={avoidRecommendation.title}>
+            <InsightCard variant="avoid" eyebrow={t("oneThingNotToDo")} title={avoidRecommendation.title} locale={locale}>
               {avoidRecommendation.reason}
             </InsightCard>
           ) : null}

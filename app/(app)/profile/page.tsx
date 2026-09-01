@@ -420,7 +420,7 @@ export default async function ProfilePage() {
               spec's Phase 39 is explicit that recognising an existing strength is itself
               advice — it's what makes "you don't need more of this" credible. */}
           {journeyNote ? (
-            <InsightCard variant={journeyNote.variant} eyebrow={journeyNote.eyebrow} title={journeyNote.title}>
+            <InsightCard variant={journeyNote.variant} eyebrow={journeyNote.eyebrow} title={journeyNote.title} locale={locale}>
               {journeyNote.body}
             </InsightCard>
           ) : null}
