@@ -41,7 +41,7 @@ const MAX_HISTORY_TURNS = 40;
 export async function sendAdvisorMessage(
   conversationId: string | null,
   content: string
-): Promise<{ conversationId: string; assistantMessageId?: string; content?: string; error?: string }> {
+): Promise<{ conversationId: string; assistantMessageId?: string; content?: string; degraded?: boolean; error?: string }> {
   const session = await requireUser();
   const userId = session.userId!;
   const locale = await resolveLocale();
@@ -130,14 +130,14 @@ export async function sendAdvisorMessage(
   await logEvent(userId, "advisor_message_sent", { conversationId: convId });
 
   try {
-    const reply = await generateAdvisorReply({ userId, history, newMessage: trimmed });
+    const { text: reply, degraded } = await generateAdvisorReply({ userId, history, newMessage: trimmed });
     const { data: assistantMessage } = await supabase
       .from("advisor_messages")
       .insert({ conversation_id: convId, user_id: userId, role: "assistant", content: reply, status: "complete" })
       .select("id")
       .single();
     revalidatePath("/advisor");
-    return { conversationId: convId, assistantMessageId: assistantMessage?.id, content: reply };
+    return { conversationId: convId, assistantMessageId: assistantMessage?.id, content: reply, degraded };
   } catch (error) {
     // P0 fix: previously nothing was written here at all — the user's message stayed
     // saved with no reply and no persisted failure signal, only an ephemeral client-side
@@ -161,7 +161,7 @@ export async function sendAdvisorMessage(
  * conversation) — never inserts a duplicate user message, never loses the student's
  * original question.
  */
-export async function retryAdvisorMessage(failedMessageId: string): Promise<{ content?: string; error?: string }> {
+export async function retryAdvisorMessage(failedMessageId: string): Promise<{ content?: string; degraded?: boolean; error?: string }> {
   const session = await requireUser();
   const userId = session.userId!;
   const locale = await resolveLocale();
@@ -218,10 +218,10 @@ export async function retryAdvisorMessage(failedMessageId: string): Promise<{ co
     .map((m) => ({ role: m.role, content: m.content ?? "" }));
 
   try {
-    const reply = await generateAdvisorReply({ userId, history, newMessage: userMessage.content });
+    const { text: reply, degraded } = await generateAdvisorReply({ userId, history, newMessage: userMessage.content });
     await supabase.from("advisor_messages").update({ content: reply, status: "complete", error_message: null }).eq("id", failedMessageId);
     revalidatePath("/advisor");
-    return { content: reply };
+    return { content: reply, degraded };
   } catch (error) {
     console.error("[advisor] retry failed", error);
     const { status, errorMessage } = classifyAdvisorFailure(error, locale);

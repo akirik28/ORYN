@@ -15,6 +15,7 @@ import { toProfileSignal, canClaimGap } from "@/lib/scoring/signal";
 import { dimensionLabel } from "@/lib/scoring/labels";
 import { getCounselorRecommendations } from "@/lib/counselor";
 import { getMonthlyQuota } from "@/lib/ai/monthly-quota";
+import { selectModelForUser } from "@/lib/ai/limits/budget";
 import { MonthlyUsageMeter } from "@/features/advisor/monthly-usage-meter";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -38,6 +39,12 @@ export default async function AdvisorPage() {
 
   // The allowance the chat actually enforces (app/(app)/advisor/actions.ts).
   const quota = await getMonthlyQuota(userId, "advisor_chat");
+  // A second, independent read purely for display — selectModelForUser has no side
+  // effects (it only reads ai_usage, same table getMonthlyQuota above already reads for
+  // the same reason), so calling it here doesn't select a model for any real generation,
+  // it just answers "is this student currently past lib/ai/limits/budget.ts's target" so
+  // the meter can say so before the student notices from the replies themselves.
+  const { degraded: budgetDegraded } = await selectModelForUser(userId);
 
   const conversation = conversationRes.data;
   const messages = conversation
@@ -105,7 +112,7 @@ export default async function AdvisorPage() {
             <AdvisorChat conversationId={conversation?.id ?? null} initialMessages={messages} aiConfigured={isAIConfigured()} />
           </div>
           <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
-            <MonthlyUsageMeter quota={quota} />
+            <MonthlyUsageMeter quota={quota} budgetDegraded={budgetDegraded} />
           </aside>
         </div>
       </section>
