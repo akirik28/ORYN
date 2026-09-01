@@ -100,6 +100,32 @@ if (!missingInTr.length && !extraInTr.length) console.log("  in sync — no key 
 // languages ("Plan"). Listed rather than counted as a defect so a human can judge.
 if (identical.length) console.log(`  identical in both locales (${identical.length}): ${identical.join(", ")}`);
 
+/**
+ * Page titles are a surface no string count sees, because they are not in the component.
+ * `export const metadata = { title: "Applications" }` is resolved at build time, so a
+ * Turkish page renders under an English browser tab, bookmark and share preview — the
+ * founder's "tamamı türkçe olmalı" includes the tab.
+ *
+ * The legal pages already solved this and carry the reasoning: `generateMetadata` resolving
+ * the same request-time locale the body does, rather than a build-time English default. What
+ * this counts is the pages that still use the static form, plus any `generateMetadata` that
+ * never reads a locale — the second kind looks fixed and is not.
+ */
+function scanMetadata(): { staticTitles: string[]; localeBlindGenerators: string[] } {
+  const staticTitles: string[] = [];
+  const localeBlindGenerators: string[] = [];
+  for (const file of walk(join(ROOT, "app"))) {
+    const source = readFileSync(file, "utf8");
+    const rel = relative(ROOT, file);
+    if (NOT_STUDENT_FACING.some((re) => re.test(`/${rel}`))) continue;
+    if (/export const metadata\b/.test(source) && /title:\s*"/.test(source)) staticTitles.push(rel);
+    else if (/generateMetadata/.test(source) && !/getTranslations|resolveLocale|getLocale/.test(source)) {
+      localeBlindGenerators.push(rel);
+    }
+  }
+  return { staticTitles, localeBlindGenerators };
+}
+
 const files = SCAN_DIRS.flatMap((d) => walk(join(ROOT, d)));
 let aware = 0;
 const untranslated: Array<{ file: string; count: number }> = [];
@@ -153,6 +179,14 @@ console.log("\n  By area:");
 for (const [area, { files: n, strings: s }] of [...byArea].sort((a, b) => b[1].strings - a[1].strings).slice(0, 12)) {
   console.log(`    ${String(s).padStart(3)} strings  ${String(n).padStart(2)} files  ${area}`);
 }
+
+const meta = scanMetadata();
+console.log("\nPage titles");
+console.log(`  ${meta.staticTitles.length} student-facing pages set a build-time English title — the browser tab stays English in Turkish`);
+if (meta.localeBlindGenerators.length > 0) {
+  console.log(`  ${meta.localeBlindGenerators.length} use generateMetadata but never read a locale (looks fixed, is not): ${meta.localeBlindGenerators.join(", ")}`);
+}
+console.log("  Pattern to copy: app/(legal)/privacy/page.tsx's generateMetadata, which resolves the request-time locale.");
 
 if (missingInTr.length || extraInTr.length) {
   // Reported, not asserted: __tests__/i18n/catalog-parity.test.ts fails `npm test` on
