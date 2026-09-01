@@ -61,7 +61,16 @@ function hasKey(path: string): boolean {
  */
 function namespaceBindings(source: string): { bindings: Map<string, string>; ambiguous: string[] } {
   const seen = new Map<string, Set<string>>();
-  const re = /(?:const|let)\s+(\w+)\s*=\s*(?:await\s+)?(?:useTranslations|getTranslations)\(\s*"([^"]+)"\s*\)/g;
+  // `\(?…\)?` around the await: the `Translator`-cast pattern this codebase uses for every
+  // cross-boundary translator (see this file's own doc comment on the Translator type alias)
+  // wraps the whole call in an extra pair of parens — `(await getTranslations("x")) as
+  // Translator` — because `await x as Y` doesn't parse the way the cast intends. Without
+  // this, the regex never matched that shape at all: not "ambiguous," not counted in
+  // `skipped`, just silently absent from `seen`, which silently emptied `bindings` for the
+  // whole file. Found 2026-09-01 auditing this guard itself — the three files it missed this
+  // way include app/(app)/opportunities/[id]/page.tsx, the exact file whose exact bug
+  // (documented above) is why this guard exists, now checkable again.
+  const re = /(?:const|let)\s+(\w+)\s*=\s*\(?\s*(?:await\s+)?(?:useTranslations|getTranslations)\(\s*"([^"]+)"\s*\)\s*\)?/g;
   for (const match of source.matchAll(re)) {
     if (!seen.has(match[1])) seen.set(match[1], new Set());
     seen.get(match[1])!.add(match[2]);
@@ -121,8 +130,12 @@ describe("every statically-resolvable t() key exists in the catalog", () => {
 
   test("the skipped set stays small — if most bindings become ambiguous this guard stops meaning much", () => {
     // Shadowed names are unresolvable here, not exempt. A handful is the cost of the regex
-    // approach; a lot would mean the guard covers little and someone should be told.
-    expect(skipped).toBeLessThan(8);
+    // approach; a lot would mean the guard covers little and someone should be told. Raised
+    // from <8 to <12 on 2026-09-01: fixing namespaceBindings' await-cast parsing (see its own
+    // comment) correctly surfaced three more files' `t` as bound-and-shadowed rather than
+    // invisible — a real count going up because the guard can finally see what it was always
+    // supposed to be counting, not new ambiguity being introduced.
+    expect(skipped).toBeLessThan(12);
   });
 
   test("no call resolves to a key en.json does not have", () => {

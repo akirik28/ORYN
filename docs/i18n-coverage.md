@@ -264,6 +264,104 @@ appeared in any count this file quotes; the same shape let `GeneratePlanButton`'
 When auditing a component's own props for this, grep the component's signature for
 `= "[A-Z]` — the script won't find it.
 
+## The other three guards, audited the same way — one real hole, one tightened, two named
+
+`check:i18n` had three scope failures found on 2026-09-01. CEO's question, asked directly:
+what does the same "what does it not look at" audit find in the other three standing i18n
+guards (`__tests__/i18n/translation-keys.test.ts`, `label-accessors.test.ts`,
+`locale.test.ts`)? Answered per-guard below — fixed where the fix was cheap and unambiguous,
+named where it wasn't, and said plainly where a guard turned out sound, because a page that
+only lists failures reads like a product that's all failures.
+
+**`translation-keys.test.ts` had a real hole, and it hid the guard's own reason for
+existing.** `namespaceBindings`' regex expected `const t = useTranslations("x")` or
+`const t = await getTranslations("x")` — not `const t = (await getTranslations("x")) as
+Translator`, the extra-parens shape every Server Component needing the `Translator` cast
+actually uses, because `await x as Y` doesn't parse the way the cast intends. A file using
+that shape didn't fail, didn't get counted as skipped — its translator binding simply never
+entered `seen`, so the file contributed nothing to `checked` and nothing to `skipped`, with
+no signal anywhere that it hadn't been looked at. Three files had this: `features/advisor/
+counselor-priorities.tsx`, and — the one worth sitting with — `app/(app)/opportunities/
+[id]/page.tsx`, **the exact file whose exact bug this guard was built to catch** (its own
+top comment: the page called an `eligibilityUnknown` badge against the wrong namespace,
+found only by reading rendered text). Had that bug come back, this guard would not have
+seen it. Fixed: the regex now tolerates the optional wrapping parens. `checked` moved from
+1055 to 1068 real calls now verified — no offenders among them, so the fix closes a hole,
+it doesn't reveal a live bug behind it. `skipped` moved 4 → 8 for the honest reason: these
+three files' `t` also collides with a `: Translator`-typed helper parameter, the same
+already-correct shadowing logic every other file with this shape already triggers — raised
+the ceiling assertion from `<8` to `<12` to match, with the reasoning recorded inline.
+
+**Named, not fixed: the shadowing that catches the collision above is file-scoped, not
+function-scoped, and throws away real coverage to stay safe.** Once a name is flagged
+ambiguous, *every* call to that name in the whole file is skipped — including calls in a
+completely different, unambiguous function that never sees the `: Translator` parameter at
+all. Concretely: `CounselorPriorities()`'s own `t("needsMoreInfoTitle")` and its siblings are
+just as resolvable as any other call in the file (one binding, one namespace, no ambiguity)
+but are discarded anyway because a *different* function three functions down,
+`RecommendationCard`, receives a same-named `t` as a parameter. The correct fix is
+function-scoped resolution — and that needs real scope tracking (matching braces per
+function body, distinguishing a param list from a call), not a regex tweak, so it wasn't
+attempted here rather than shipping something that looks precise and silently misparses a
+nested arrow function. This is the single highest-value next investment in this guard: it is
+currently under-counting its own best cases, on the pages CEO's own example bug lived in.
+
+**Named, not fixed, and not really fixable by this kind of guard: `t(\`x.${y}\`)` and
+`t(someVar)`.** Already excluded by design (the guard's own comment says so), re-confirmed
+here rather than re-litigated: this session's earlier manual sweep already checked all 12
+live dynamic-key call sites against their real TypeScript/Zod types and found them clean —
+a one-time audit, not a standing guard. Properly automating it needs type-aware resolution
+(what values can `y` actually hold at this call site), which is a different kind of tool
+than a source-text regex.
+
+**`label-accessors.test.ts`: the file-level exemption was correspondingly coarse, tightened,
+no live bug found.** The "a module defining an accessor may index its own map" exemption
+skipped the *entire file* once it matched `export function ...Label(Short)?(` anywhere in
+it — not just the specific map that accessor wraps. Every current accessor file happens to
+own exactly one map, so this was harmless today, but the scanner never verified that
+one-to-one shape held; it just trusted it. Rewrote the exemption to pair each map with its
+own accessor's exact name (`DIMENSION_LABELS` ↔ `dimensionLabel`, etc.) and skip only that
+pairing, so a second, unrelated map indexed directly in an accessor file would now be
+caught. Verified with a standalone replay of the old logic against every file in scope
+before touching the real test: zero offenders either way — the tightening is real, the
+current codebase just doesn't happen to need it yet.
+
+**`label-accessors.test.ts`'s directory list (`app`, `features`, `components`, `lib`) is not
+missing anything live.** CEO's own suspicion — `scripts/` or `types/` unreachable — checked
+directly: neither directory contains a single file matching the locale-aware signature this
+guard looks for (`grep` for `useTranslations`/`getTranslations` across both turns up nothing
+but the coverage script's own source, matching itself). A hole with no live instance is a
+note, and this is one: worth remembering if either directory ever grows real component code,
+not worth widening the scan for today.
+
+**`locale.test.ts` is the soundest of the three, and it's worth saying why rather than just
+asserting it.** It doesn't sample source code with a regex — it walks the full, complete
+JSON of both catalogs, every key, every value, with no partial-file or partial-directory
+surface area to have a blind spot in. Its "Turkish is actually translated, not copied from
+English" test is a genuine answer to "how do you catch a scaffolded-and-never-filled-in
+catalog": an exact-equality allowlist of 19 deliberately-identical entries (loanwords,
+proper nouns, numeric templates), each with its own recorded reason, so a new identical pair
+fails loudly instead of joining the list unnoticed. **What it cannot do, and no string-diff
+check could:** prove a Turkish value that *differs* from English is actually correct
+Turkish rather than a wrong or garbled translation that simply isn't a copy-paste. That's
+not a scope gap to widen — it's the edge of what comparing two strings can prove at all;
+closing it needs a bilingual reviewer or a semantic (LLM-based) check, a different kind of
+tool than this file. Also checked and clean: no orphaned third locale file sitting in
+`messages/` outside the two the parity test actually imports; the duplicate-key detector
+tracks the full nested path via a brace-depth stack, not just top-level keys, despite its
+own comment leading with "top-level" (a documentation-vs-behavior gap worth a one-line fix
+sometime, not a coverage gap — it is already checking more than it says it is); and its
+line-based JSON walker would silently miss a duplicate inside a single-line compact object
+(`"key": { "a": 1, "a": 2 }`) — checked, zero such lines exist in either 1000+-line catalog
+today, a formatting-dependent fragility worth naming, not fixing blind.
+
+**One thing worth naming across all four guards, today's and the three above:** every
+failure was a scope failure, not a logic failure. `check:i18n` did exactly what its regex
+said over a narrower domain than anyone realized; so did all three of these. None were
+wrong about what they checked — each was silently checking less than its own name promised.
+The useful question about any of these checks going forward isn't "is it correct" — it
+already is, by its own narrow definition — it's "what does it not look at."
+
 ## What this means for a launch date
 
 A Turkish student switching to Turkish today gets a translated shell, translated legal

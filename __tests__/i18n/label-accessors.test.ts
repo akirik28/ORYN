@@ -30,17 +30,26 @@ const ROOT = process.cwd();
 // most, because it is the one whose output a model rewrites into prose.
 const SCAN_DIRS = ["app", "features", "components", "lib"];
 
-/** English-only maps that have a locale-aware accessor, so reaching for them is a choice. */
+/**
+ * English-only maps that have a locale-aware accessor, so reaching for them is a choice —
+ * paired with that accessor's own exported function name. The pairing matters: a file is
+ * only exempt from the check for *its own* map, not for every map, so a second, unrelated
+ * map indexed directly in the same file (e.g. an accessor module that also happens to reach
+ * past someone else's accessor) still gets caught. Before this pairing existed, the skip
+ * below matched any `export function ...Label(Short)?(` and exempted the *whole file* —
+ * correct today only because each accessor currently lives alone with its own map, one file
+ * to one map, which the scanner never verified and the codebase isn't obligated to keep true.
+ */
 const MAPS_WITH_ACCESSORS = [
-  "DIMENSION_LABELS",
-  "DIMENSION_LABELS_SHORT",
-  "EVIDENCE_STATE_LABELS",
-  "EVIDENCE_STATE_SHORT_LABELS",
-  "OPEN_TO_LABELS",
-  "SUBJECT_LABELS",
-  "REQUIREMENT_CATEGORY_LABELS",
-  "EVIDENCE_LINKABLE_LABELS",
-  "SEARCH_RESULT_TYPE_LABELS",
+  { map: "DIMENSION_LABELS", accessor: "dimensionLabel" },
+  { map: "DIMENSION_LABELS_SHORT", accessor: "dimensionLabelShort" },
+  { map: "EVIDENCE_STATE_LABELS", accessor: "evidenceStateLabel" },
+  { map: "EVIDENCE_STATE_SHORT_LABELS", accessor: "evidenceStateShortLabel" },
+  { map: "OPEN_TO_LABELS", accessor: "openToLabel" },
+  { map: "SUBJECT_LABELS", accessor: "subjectLabel" },
+  { map: "REQUIREMENT_CATEGORY_LABELS", accessor: "requirementCategoryLabel" },
+  { map: "EVIDENCE_LINKABLE_LABELS", accessor: "evidenceLinkableLabel" },
+  { map: "SEARCH_RESULT_TYPE_LABELS", accessor: "searchResultTypeLabel" },
 ] as const;
 
 const LOCALE_AWARE =
@@ -61,12 +70,14 @@ function scan(): { offenders: string[]; localeAwareFiles: number } {
 
   for (const file of SCAN_DIRS.flatMap((d) => walk(join(ROOT, d)))) {
     const source = readFileSync(file, "utf8");
-    // The module that DEFINES an accessor necessarily indexes the raw map inside it.
-    if (/export function \w*[Ll]abel(Short)?\s*\(/.test(source)) continue;
     if (!LOCALE_AWARE.test(source)) continue;
     localeAwareFiles += 1;
 
-    for (const map of MAPS_WITH_ACCESSORS) {
+    for (const { map, accessor } of MAPS_WITH_ACCESSORS) {
+      // The module that DEFINES *this map's own* accessor necessarily indexes the raw map
+      // inside it — exempt only that pairing, not the whole file, so an unrelated second
+      // map indexed directly in the same file still gets caught.
+      if (new RegExp(`export function ${accessor}\\s*\\(`).test(source)) continue;
       // Indexing specifically — `Object.keys(MAP)` to enumerate options is fine and common.
       if (new RegExp(`\\b${map}\\[`).test(source)) {
         offenders.push(`${relative(ROOT, file)} indexes ${map} directly`);
