@@ -26,6 +26,18 @@ time by someone noticing rather than by the process. Overnight working sessions 
 skip end-of-session cleanup, so worktrees accumulate between passes with nothing to stop
 them. Attaching removal to the merge makes it happen exactly as often as it needs to.
 
+### Remove the one branch you merged, by name — never sweep
+
+**The rule is per-merge, not periodic, and that distinction has teeth.** On 2026-09-01 the
+integrator ran a sweep over "everything that looks merged" and deleted
+`oryn/i18n-advisor-2026-09-01`'s worktree three minutes after a lane created it. Both safety
+checks passed and both were meaningless there: a freshly-cut branch is an ancestor of `main`
+from the instant it exists, and a worktree nobody has written to yet is clean. Nothing was
+lost — there was nothing in it — but the sweep is what made that possible, and no check can
+rescue a sweep from removing something that does not exist yet.
+
+So: after merging branch X, remove branch X's worktree. Do not enumerate.
+
 ### Before removing anything: "merged" is not "idle"
 
 **A branch freshly cut from `main` is an ancestor of `main` from the instant it is created**
