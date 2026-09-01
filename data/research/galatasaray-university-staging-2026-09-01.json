@@ -1,0 +1,77 @@
+{
+  "status": "staged, not applied. No DB writes. See docs/handoffs/galatasaray-university-research-2026-09-01.md for full sourcing and reasoning.",
+  "note_on_scope": "This IS a catalogue addition, not a depth-enrichment pass -- Galatasaray has no existing universities row. See the handoff doc's opening section.",
+  "proposed_university_row": {
+    "name": "Galatasaray University",
+    "aliases": ["Galatasaray Üniversitesi", "GSÜ", "GSU"],
+    "country": "Turkey",
+    "city": "Istanbul",
+    "institution_type": "DEVLET (state university, not VAKIF/foundation)",
+    "website_url": "https://gsu.edu.tr",
+    "website_url_note": "Verified live 2026-09-01: https://gsu.edu.tr (no www) resolves 200 with a valid Sectigo-issued cert, subject O=GALATASARAY UNIVERSITESI. https://www.gsu.edu.tr (www subdomain) fails TLS chain verification in every tool tried (curl, WebFetch, browser) -- likely an incomplete intermediate-certificate chain served on that specific vhost, not a fake/wrong domain (the leaf cert itself is genuine and correctly issued). Recommend storing the bare domain as canonical; flag the www-subdomain cert gap for whoever owns gsu.edu.tr's own infrastructure, not something to route around here.",
+    "source_url": "https://gsu.edu.tr",
+    "source_confidence": "high",
+    "retrieved_at": "2026-09-01"
+  },
+  "proposed_university_programs": [
+    { "name": "Hukuk (Fransızca)", "faculty_or_school": "Hukuk Fakültesi", "degree_level": "LISANS", "language_of_instruction": "Fransızca", "duration_years": 4, "yok_kilavuz_kodu": 104010052 },
+    { "name": "İletişim (Fransızca)", "faculty_or_school": "İletişim Fakültesi", "degree_level": "LISANS", "language_of_instruction": "Fransızca", "duration_years": 4, "yok_kilavuz_kodu": 104010113 },
+    { "name": "İktisat (Fransızca)", "faculty_or_school": "İktisadi ve İdari Bilimler Fakültesi", "degree_level": "LISANS", "language_of_instruction": "Fransızca", "duration_years": 4, "yok_kilavuz_kodu": 104010061 },
+    { "name": "İşletme (Fransızca)", "faculty_or_school": "İktisadi ve İdari Bilimler Fakültesi", "degree_level": "LISANS", "language_of_instruction": "Fransızca", "duration_years": 4, "yok_kilavuz_kodu": 104010079 },
+    { "name": "Uluslararası İlişkiler (Fransızca)", "faculty_or_school": "İktisadi ve İdari Bilimler Fakültesi", "degree_level": "LISANS", "language_of_instruction": "Fransızca", "duration_years": 4, "yok_kilavuz_kodu": 104010097 },
+    { "name": "Siyaset Bilimi (Fransızca)", "faculty_or_school": "İktisadi ve İdari Bilimler Fakültesi", "degree_level": "LISANS", "language_of_instruction": "Fransızca", "duration_years": 4, "yok_kilavuz_kodu": 104010088 },
+    { "name": "Fransız Dili ve Edebiyatı (Fransızca)", "faculty_or_school": "Fen-Edebiyat Fakültesi", "degree_level": "LISANS", "language_of_instruction": "Fransızca", "duration_years": 4, "yok_kilavuz_kodu": 104010025 },
+    { "name": "Sosyoloji (Fransızca)", "faculty_or_school": "Fen-Edebiyat Fakültesi", "degree_level": "LISANS", "language_of_instruction": "Fransızca", "duration_years": 4, "yok_kilavuz_kodu": 104010043 },
+    { "name": "Felsefe (Fransızca)", "faculty_or_school": "Fen-Edebiyat Fakültesi", "degree_level": "LISANS", "language_of_instruction": "Fransızca", "duration_years": 4, "yok_kilavuz_kodu": 104010016 },
+    { "name": "Matematik (Fransızca)", "faculty_or_school": "Fen-Edebiyat Fakültesi", "degree_level": "LISANS", "language_of_instruction": "Fransızca", "duration_years": 4, "yok_kilavuz_kodu": 104010034 },
+    { "name": "Endüstri Mühendisliği (Fransızca)", "faculty_or_school": "Mühendislik ve Teknoloji Fakültesi", "degree_level": "LISANS", "language_of_instruction": "Fransızca", "duration_years": 4, "yok_kilavuz_kodu": 104010131 },
+    { "name": "Bilgisayar Mühendisliği (Fransızca)", "faculty_or_school": "Mühendislik ve Teknoloji Fakültesi", "degree_level": "LISANS", "language_of_instruction": "Fransızca", "duration_years": 4, "yok_kilavuz_kodu": 104010122 },
+    { "name": "İletişim (Fransızca) (KKTC Uyruklu)", "faculty_or_school": "İletişim Fakültesi", "degree_level": "LISANS", "language_of_instruction": "Fransızca", "duration_years": 4, "yok_kilavuz_kodu": 104070070, "note": "1-seat Northern Cyprus national quota variant of the base İletişim programme, not a distinct field" }
+  ],
+  "programs_source": {
+    "source_url": "https://yokatlas.yok.gov.tr/api/tercih-kilavuz/search",
+    "source_type": "official_primary (national ÖSYM/YÖK placement guide, keyless public API)",
+    "source_confidence": "high",
+    "retrieved_at": "2026-09-01T18:00:00Z",
+    "note": "All 13 of Galatasaray's LISANS-level programmes are French-medium (ogrenimDiliAdi='Fransızca') -- a defining, distinguishing characteristic of this institution among Turkey's state universities, not an incidental fact. No English-medium or Turkish-medium LISANS track exists at Galatasaray per this live data."
+  },
+  "proposed_university_program_placement_cycles": [
+    { "yok_kilavuz_kodu": 104010052, "program_name": "Hukuk (Fransızca)", "cycle_year": 2026, "puan_turu": "EA", "kontenjan": 35, "min_puan": 514.67813, "basari_sirasi": 305, "placement_status": "filled" },
+    { "yok_kilavuz_kodu": 104010113, "program_name": "İletişim (Fransızca)", "cycle_year": 2026, "puan_turu": "SÖZ", "kontenjan": 25, "min_puan": 476.66317, "basari_sirasi": 441, "placement_status": "filled" },
+    { "yok_kilavuz_kodu": 104010061, "program_name": "İktisat (Fransızca)", "cycle_year": 2026, "puan_turu": "EA", "kontenjan": 25, "min_puan": 488.73123, "basari_sirasi": 1189, "placement_status": "filled" },
+    { "yok_kilavuz_kodu": 104010079, "program_name": "İşletme (Fransızca)", "cycle_year": 2026, "puan_turu": "EA", "kontenjan": 25, "min_puan": 487.61659, "basari_sirasi": 1247, "placement_status": "filled" },
+    { "yok_kilavuz_kodu": 104010097, "program_name": "Uluslararası İlişkiler (Fransızca)", "cycle_year": 2026, "puan_turu": "EA", "kontenjan": 25, "min_puan": 481.23845, "basari_sirasi": 1635, "placement_status": "filled" },
+    { "yok_kilavuz_kodu": 104010088, "program_name": "Siyaset Bilimi (Fransızca)", "cycle_year": 2026, "puan_turu": "EA", "kontenjan": 25, "min_puan": 472.03444, "basari_sirasi": 2301, "placement_status": "filled" },
+    { "yok_kilavuz_kodu": 104010025, "program_name": "Fransız Dili ve Edebiyatı (Fransızca)", "cycle_year": 2026, "puan_turu": "DİL", "kontenjan": 25, "min_puan": 479.89068, "basari_sirasi": 3164, "placement_status": "filled" },
+    { "yok_kilavuz_kodu": 104010043, "program_name": "Sosyoloji (Fransızca)", "cycle_year": 2026, "puan_turu": "EA", "kontenjan": 25, "min_puan": 447.08315, "basari_sirasi": 5916, "placement_status": "filled" },
+    { "yok_kilavuz_kodu": 104010131, "program_name": "Endüstri Mühendisliği (Fransızca)", "cycle_year": 2026, "puan_turu": "SAY", "kontenjan": 35, "min_puan": 512.11883, "basari_sirasi": 11570, "placement_status": "filled" },
+    { "yok_kilavuz_kodu": 104010122, "program_name": "Bilgisayar Mühendisliği (Fransızca)", "cycle_year": 2026, "puan_turu": "SAY", "kontenjan": 25, "min_puan": 506.70927, "basari_sirasi": 15032, "placement_status": "filled" },
+    { "yok_kilavuz_kodu": 104010016, "program_name": "Felsefe (Fransızca)", "cycle_year": 2026, "puan_turu": "EA", "kontenjan": 25, "min_puan": 421.32964, "basari_sirasi": 18353, "placement_status": "filled" },
+    { "yok_kilavuz_kodu": 104010034, "program_name": "Matematik (Fransızca)", "cycle_year": 2026, "puan_turu": "SAY", "kontenjan": 25, "min_puan": 485.37753, "basari_sirasi": 31317, "placement_status": "filled" },
+    { "yok_kilavuz_kodu": 104070070, "program_name": "İletişim (Fransızca) (KKTC Uyruklu)", "cycle_year": 2026, "puan_turu": "SÖZ", "kontenjan": 1, "min_puan": 374.53913, "basari_sirasi": 39022, "placement_status": "filled" }
+  ],
+  "placement_cycles_note": "cycle_label/source_url/data_confidence/retrieved_at intentionally omitted here (same fields as programs_source above) -- an --apply run would populate them exactly as scripts/ingest-yok-atlas-placements.ts already does for the other 12 universities, via the same matching path, once these program rows exist to match against.",
+  "domestic_admission_facts": {
+    "mechanism": "Identical to every other Turkish devlet/vakif university: YKS placement in strict rank order per programme quota. No essay, interview, recommendation letter, or activity file at any point -- lib/admissions/system-shape.ts's existing Turkey/domestic entry already covers this correctly; nothing Galatasaray-specific needed here.",
+    "distinguishing_fact": "Every programme is French-medium. What is NOT established: whether placed students who don't already speak French complete a mandatory prep year before the 4-year programme begins. gsu.edu.tr references a general 'Yabancı Dil Eğitimi' (foreign language education) unit but no page found describes a French-specific placement/prep pathway for newly-admitted students. Left unresolved rather than guessed -- see the handoff doc."
+  },
+  "international_pathway_facts": {
+    "exam_name": "GSÜYÖS (Galatasaray Üniversitesi Yabancı Uyruklu Öğrenci Sınavı -- Galatasaray University Foreign National Student Exam)",
+    "source_url": "https://international.gsu.edu.tr",
+    "source_confidence": "high",
+    "retrieved_at": "2026-09-01",
+    "note": "Galatasaray runs its own named foreign-national entrance exam rather than accepting SAT/A-Level/IB/Abitur/diploma-score directly the way lib/admissions/system-shape.ts's general Turkey/international entry describes some universities doing -- a genuine per-institution variation within that entry's own framing, not a contradiction of it.",
+    "cited_deadline": {
+      "cycle": "2026-2027, second application session",
+      "window": "1-4 September 2026",
+      "source_quote_fr": "La deuxième session de l'appel à candidatures 2026-2027 pour les programmes de licence destinés aux étudiants internationaux aura lieu du 1er au 4 septembre 2026.",
+      "applies_to": "international/foreign-national undergraduate applicants only -- NOT the domestic YKS calendar, which is nationally set by ÖSYM and not Galatasaray-specific"
+    }
+  },
+  "explicitly_not_established": [
+    "Whether a mandatory French-language preparatory year exists for domestically-placed (YKS) students",
+    "GSÜYÖS's own specific credential requirements, scoring, or test format",
+    "The first application session's dates for the 2026-2027 international cycle (only the second session was found stated)",
+    "Any devlet-set domestic YKS deadline specific to Galatasaray -- this is nationally shared across all YKS-placement universities, not sourced per-institution here"
+  ]
+}
