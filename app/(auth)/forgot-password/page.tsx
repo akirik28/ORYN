@@ -1,23 +1,23 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { ForgotPasswordForm } from "../_components/forgot-password-form";
 import { instrumentSerif } from "@/lib/fonts";
 
 export const metadata = { title: "Reset your password" };
 
-export default function ForgotPasswordPage() {
+export default async function ForgotPasswordPage() {
+  const t = await getTranslations("auth.forgotPassword");
   return (
     <div className="space-y-6">
       <div className="space-y-1 text-center">
         <h1 style={{ fontFamily: instrumentSerif.style.fontFamily, fontSize: 26, fontWeight: 400, color: "#111118" }}>
-          Reset your password
+          {t("headline")}
         </h1>
-        <p className="text-sm" style={{ color: "#7A7A8A" }}>
-          Enter your email and we&apos;ll send a reset link if an account exists.
-        </p>
+        <p className="text-sm" style={{ color: "#7A7A8A" }}>{t("description")}</p>
       </div>
       <ForgotPasswordForm />
       <p className="text-center text-[13px]" style={{ color: "#AAAABC" }}>
-        <Link href="/login">← Back to sign in</Link>
+        <Link href="/login">{t("backToSignIn")}</Link>
       </p>
     </div>
   );

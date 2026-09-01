@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/oryn/error-state";
 
@@ -24,6 +25,8 @@ export default function AppError({
   error: Error & { digest?: string };
   retry: () => void;
 }) {
+  const t = useTranslations("errors.appError");
+
   useEffect(() => {
     // Server Component errors arrive with a generic message + digest in production (Next
     // strips the real message/stack to avoid leaking server details to the client) — this
@@ -36,14 +39,14 @@ export default function AppError({
     <div className="flex min-h-[50vh] items-center justify-center py-10">
       <div className="w-full max-w-md">
         <ErrorState
-          description="Something went wrong loading this page. Nothing has been lost — try again, or head back to your dashboard."
+          description={t("description")}
           retry={
             <div className="flex gap-2">
               <Button size="sm" onClick={retry}>
-                Try again
+                {t("tryAgain")}
               </Button>
               <Button size="sm" variant="outline" render={<Link href="/dashboard" />} nativeButton={false}>
-                Back to dashboard
+                {t("backToDashboard")}
               </Button>
             </div>
           }

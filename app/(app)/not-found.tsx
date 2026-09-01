@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/oryn/empty-state";
@@ -10,16 +11,17 @@ import { EmptyState } from "@/components/oryn/empty-state";
 // app/(app)/layout.tsx, so the sidebar/nav stays and the student has a way back — before
 // this file existed, those notFound() calls fell through to Next's bare built-in 404 with
 // no navigation. Reuses the existing EmptyState primitive rather than a one-off page.
-export default function AppNotFound() {
+export default async function AppNotFound() {
+  const t = await getTranslations("errors.notFound");
   return (
     <div className="flex min-h-[50vh] items-center justify-center py-10">
       <EmptyState
         icon={SearchX}
-        title="We couldn't find that"
-        description="This might have been removed, or the link may be out of date."
+        title={t("title")}
+        description={t("description")}
         action={
           <Button size="sm" render={<Link href="/dashboard" />} nativeButton={false}>
-            Back to dashboard
+            {t("backToDashboard")}
           </Button>
         }
       />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Check } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
@@ -15,21 +15,33 @@ import { updateActionStatus } from "@/app/(app)/plan/actions";
 import type { Locale } from "@/lib/i18n/config";
 import type { ReflectionOutcome, WeeklyAction } from "@/types/database";
 
-const REFLECTION_OPTIONS: { value: ReflectionOutcome; label: string }[] = [
-  { value: "completed_successfully", label: "Completed successfully" },
-  { value: "partially_completed", label: "Partially completed" },
-  { value: "did_not_work", label: "Didn't work" },
-  { value: "opportunity_no_longer_available", label: "No longer available" },
+const REFLECTION_OPTIONS: ReflectionOutcome[] = [
+  "completed_successfully",
+  "partially_completed",
+  "did_not_work",
+  "opportunity_no_longer_available",
 ];
 
+/** Labels live in the message catalogs, not next to the values — this runs inside a
+ *  component (ActionRow), where the translation hook is actually valid to call, unlike
+ *  the module-level array above. Kept as a static if/else chain rather than a computed
+ *  key so __tests__/i18n/translation-keys.test.ts can still verify every call. */
+function reflectionLabel(t: ReturnType<typeof useTranslations>, value: ReflectionOutcome): string {
+  if (value === "completed_successfully") return t("reflectionOptions.completedSuccessfully");
+  if (value === "partially_completed") return t("reflectionOptions.partiallyCompleted");
+  if (value === "did_not_work") return t("reflectionOptions.didNotWork");
+  return t("reflectionOptions.noLongerAvailable");
+}
+
 function NumeralToggle({ index, done, pending, onToggle }: { index: number; done: boolean; pending: boolean; onToggle: () => void }) {
+  const t = useTranslations("dashboard.weeklyFocus");
   return (
     <button
       type="button"
       onClick={onToggle}
       disabled={pending}
       aria-pressed={done}
-      aria-label={done ? "Mark as not started" : "Mark as complete"}
+      aria-label={done ? t("markNotStarted") : t("markComplete")}
       className={cn(
         "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-medium transition-colors duration-(--duration-fast)",
         done
@@ -43,6 +55,7 @@ function NumeralToggle({ index, done, pending, onToggle }: { index: number; done
 }
 
 function ActionRow({ action, index }: { action: WeeklyAction; index: number }) {
+  const t = useTranslations("dashboard.weeklyFocus");
   const locale = useLocale() as Locale;
   const [isPending, startTransition] = useTransition();
   const [showReflection, setShowReflection] = useState(false);
@@ -104,17 +117,17 @@ function ActionRow({ action, index }: { action: WeeklyAction; index: number }) {
         {showReflection ? (
           <div className="mt-3 space-y-2 border-t pt-3">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs text-ink-3">What happened?</span>
-              {REFLECTION_OPTIONS.map((option) => (
-                <Button key={option.value} variant="outline" size="xs" onClick={() => saveReflection(option.value)}>
-                  <Check className="size-3" /> {option.label}
+              <span className="text-xs text-ink-3">{t("whatHappened")}</span>
+              {REFLECTION_OPTIONS.map((value) => (
+                <Button key={value} variant="outline" size="xs" onClick={() => saveReflection(value)}>
+                  <Check className="size-3" /> {reflectionLabel(t, value)}
                 </Button>
               ))}
             </div>
             <Input
               value={reflectionNote}
               onChange={(e) => setReflectionNote(e.target.value)}
-              placeholder="Add a short note (optional)"
+              placeholder={t("reflectionPlaceholder")}
               className="h-7 max-w-xs text-xs"
             />
           </div>
@@ -125,8 +138,9 @@ function ActionRow({ action, index }: { action: WeeklyAction; index: number }) {
 }
 
 export function WeeklyFocus({ actions }: { actions: WeeklyAction[] }) {
+  const t = useTranslations("dashboard.weeklyFocus");
   if (actions.length === 0) {
-    return <p className="text-sm text-ink-3">No actions in this week&apos;s plan yet.</p>;
+    return <p className="text-sm text-ink-3">{t("noActions")}</p>;
   }
 
   return (

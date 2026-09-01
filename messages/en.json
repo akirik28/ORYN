@@ -53,7 +53,20 @@
     "noTargetUniversitiesSuffix": "to add your first — Oryn will start showing you where you stand.",
     "couldntRefreshMatches": "We couldn't refresh your matches just now. The list below is your last known result, not necessarily current.",
     "matchPercent": "{score}% match",
-    "noOpportunityMatches": "Personalized matches appear here once your profile has enough signal for Oryn to rank them honestly."
+    "noOpportunityMatches": "Personalized matches appear here once your profile has enough signal for Oryn to rank them honestly.",
+    "weeklyFocus": {
+      "markComplete": "Mark as complete",
+      "markNotStarted": "Mark as not started",
+      "whatHappened": "What happened?",
+      "reflectionPlaceholder": "Add a short note (optional)",
+      "noActions": "No actions in this week's plan yet.",
+      "reflectionOptions": {
+        "completedSuccessfully": "Completed successfully",
+        "partiallyCompleted": "Partially completed",
+        "didNotWork": "Didn't work",
+        "noLongerAvailable": "No longer available"
+      }
+    }
   },
   "common": {
     "cancel": "Cancel",
@@ -1167,7 +1180,26 @@
       "password": "Password",
       "passwordHint": "At least 8 characters, with a letter and a number.",
       "submitting": "Creating account…",
-      "submit": "Create account"
+      "submit": "Create account",
+      "headline": "Create your account",
+      "alreadyHaveAccount": "Already have an account?",
+      "displayNameLabel": "Display name",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "passwordRequirements": "At least 8 characters, with a letter and a number.",
+      "creatingAccount": "Creating account…",
+      "createAccount": "Create account",
+      "checkEmailMessage": "Check your email to confirm your account and get started.",
+      "displayNameTooShort": "Enter at least 2 characters."
+    },
+    "forgotPassword": {
+      "headline": "Reset your password",
+      "description": "Enter your email and we'll send a reset link if an account exists.",
+      "backToSignIn": "← Back to sign in",
+      "emailLabel": "Email",
+      "sendingLink": "Sending…",
+      "sendResetLink": "Send reset link",
+      "linkSentMessage": "If an account exists for that email, a reset link is on its way."
     }
   },
   "landing": {
@@ -1326,5 +1358,71 @@
     "contactInstagram": "Instagram: ",
     "contactTwitter": "X / Twitter: ",
     "contactDiscord": "Discord: "
+  },
+  "errors": {
+    "appError": {
+      "description": "Something went wrong loading this page. Nothing has been lost — try again, or head back to your dashboard.",
+      "tryAgain": "Try again",
+      "backToDashboard": "Back to dashboard"
+    },
+    "notFound": {
+      "title": "We couldn't find that",
+      "description": "This might have been removed, or the link may be out of date.",
+      "backToDashboard": "Back to dashboard",
+      "backToHome": "Back to home"
+    }
+  },
+  "catalog": {
+    "eyebrow": "Features",
+    "title": "Everything Oryn can do.",
+    "description": "Tools that work from the record you've already built — not separate things to fill in again.",
+    "open": "Open",
+    "groups": {
+      "yourRecord": "Your record",
+      "planning": "Planning",
+      "exploring": "Exploring"
+    },
+    "features": {
+      "cvGenerator": {
+        "title": "CV Generator",
+        "description": "Build a CV from what's already in your Journey — choose what to include, then print or save as PDF. Nothing is invented."
+      },
+      "scanCv": {
+        "title": "Scan a CV",
+        "description": "Upload a CV or résumé and Oryn extracts your activities, awards and education. You review every item before anything is saved."
+      },
+      "storyBank": {
+        "title": "Essay Story Bank",
+        "description": "The moments behind your achievements, kept in your own words — raw material for application essays, never auto-written for you."
+      },
+      "portfolio": {
+        "title": "Portfolio",
+        "description": "Everything you've done in one place, as a timeline or grouped by category."
+      },
+      "documents": {
+        "title": "Documents",
+        "description": "Certificates and evidence files, attached to the achievements they belong to. Private by default — never public."
+      },
+      "publicProfile": {
+        "title": "Public profile",
+        "description": "A shareable version of your record. Off by default; grades and school details are never included."
+      },
+      "weeklyPlan": {
+        "title": "Weekly plan",
+        "description": "Your three highest-value actions for the week, sized to the time you actually have."
+      },
+      "progress": {
+        "title": "Progress",
+        "description": "How your profile has changed month to month, and which areas actually moved."
+      },
+      "compareUniversities": {
+        "title": "Compare universities",
+        "description": "Put two to four universities side by side. Unknown figures read \"—\", never a guess."
+      },
+      "researchIdeas": {
+        "title": "Research idea generator",
+        "description": "Project ideas scaled to your level and interests, built from real academic literature — achievable, not impressive-sounding."
+      }
+    }
   }
 }

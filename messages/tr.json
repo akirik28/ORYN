@@ -53,7 +53,20 @@
     "noTargetUniversitiesSuffix": "ilkini eklemek için — Oryn nerede durduğunu göstermeye başlasın.",
     "couldntRefreshMatches": "Eşleşmelerini şu an yenileyemedik. Aşağıdaki liste son bilinen sonucun, güncel olmayabilir.",
     "matchPercent": "%{score} eşleşme",
-    "noOpportunityMatches": "Oryn'ın seni dürüstçe sıralayabilmesi için profilinde yeterli sinyal oluştuğunda kişiselleştirilmiş eşleşmeler burada görünecek."
+    "noOpportunityMatches": "Oryn'ın seni dürüstçe sıralayabilmesi için profilinde yeterli sinyal oluştuğunda kişiselleştirilmiş eşleşmeler burada görünecek.",
+    "weeklyFocus": {
+      "markComplete": "Tamamlandı olarak işaretle",
+      "markNotStarted": "Başlanmadı olarak işaretle",
+      "whatHappened": "Ne oldu?",
+      "reflectionPlaceholder": "Kısa bir not ekle (opsiyonel)",
+      "noActions": "Bu haftanın planında henüz eylem yok.",
+      "reflectionOptions": {
+        "completedSuccessfully": "Başarıyla tamamlandı",
+        "partiallyCompleted": "Kısmen tamamlandı",
+        "didNotWork": "İşe yaramadı",
+        "noLongerAvailable": "Artık mevcut değil"
+      }
+    }
   },
   "common": {
     "cancel": "İptal",
@@ -1167,7 +1180,26 @@
       "password": "Şifre",
       "passwordHint": "En az 8 karakter, bir harf ve bir rakam içermeli.",
       "submitting": "Hesap oluşturuluyor…",
-      "submit": "Hesap oluştur"
+      "submit": "Hesap oluştur",
+      "headline": "Hesabını oluştur",
+      "alreadyHaveAccount": "Zaten bir hesabın var mı?",
+      "displayNameLabel": "Görünen ad",
+      "emailLabel": "E-posta",
+      "passwordLabel": "Şifre",
+      "passwordRequirements": "En az 8 karakter, bir harf ve bir rakam içermeli.",
+      "creatingAccount": "Hesap oluşturuluyor…",
+      "createAccount": "Hesap oluştur",
+      "checkEmailMessage": "Hesabını onaylamak ve başlamak için e-postanı kontrol et.",
+      "displayNameTooShort": "En az 2 karakter gir."
+    },
+    "forgotPassword": {
+      "headline": "Şifreni sıfırla",
+      "description": "E-postanı gir, hesap varsa sıfırlama bağlantısı gönderelim.",
+      "backToSignIn": "← Girişe dön",
+      "emailLabel": "E-posta",
+      "sendingLink": "Gönderiliyor…",
+      "sendResetLink": "Sıfırlama bağlantısı gönder",
+      "linkSentMessage": "Bu e-postayla bir hesap varsa, sıfırlama bağlantısı yolda."
     }
   },
   "landing": {
@@ -1300,7 +1332,7 @@
     "fallbackName": "Oryn öğrencisi",
     "classOf": "{year} mezunu",
     "mutualConnections": "{count, plural, one {{count} ortak bağlantı} other {{count} ortak bağlantı}}",
-    "message": "Mesaj",
+    "message": "Mesaj gönder",
     "about": "Hakkında",
     "featured": "Öne çıkanlar",
     "portfolio": "Portföy",
@@ -1309,7 +1341,7 @@
     "email": "E-posta",
     "phone": "Telefon",
     "website": "Web sitesi",
-    "privateNotice": "Bunu yalnızca sen görebilirsin. Paylaşmak için Ayarlar'dan <settingsLink>Herkese açık profil</settingsLink> özelliğini aç.",
+    "privateNotice": "Bunu sadece sen görebilirsin. Paylaşmak için Ayarlar'dan <settingsLink>Herkese açık profil</settingsLink> seçeneğini aç.",
     "lookingFor": "Aradığı: {value}",
     "aboutHeading": "Hakkında",
     "featuredHeading": "Öne çıkanlar",
@@ -1326,5 +1358,71 @@
     "contactInstagram": "Instagram: ",
     "contactTwitter": "X / Twitter: ",
     "contactDiscord": "Discord: "
+  },
+  "errors": {
+    "appError": {
+      "description": "Bu sayfa yüklenirken bir sorun oluştu. Hiçbir şey kaybolmadı — tekrar dene ya da panele geri dön.",
+      "tryAgain": "Tekrar dene",
+      "backToDashboard": "Panele dön"
+    },
+    "notFound": {
+      "title": "Bunu bulamadık",
+      "description": "Bu kaldırılmış olabilir, ya da bağlantı güncel değil.",
+      "backToDashboard": "Panele dön",
+      "backToHome": "Ana sayfaya dön"
+    }
+  },
+  "catalog": {
+    "eyebrow": "Özellikler",
+    "title": "Oryn'ın yapabileceği her şey.",
+    "description": "Zaten oluşturduğun kayıttan çalışan araçlar — yeniden doldurman gereken ayrı şeyler değil.",
+    "open": "Aç",
+    "groups": {
+      "yourRecord": "Kaydın",
+      "planning": "Planlama",
+      "exploring": "Keşif"
+    },
+    "features": {
+      "cvGenerator": {
+        "title": "CV Oluşturucu",
+        "description": "Journey'nde zaten olanlardan bir CV oluştur — neyi dahil edeceğini seç, sonra yazdır ya da PDF olarak kaydet. Hiçbir şey uydurulmaz."
+      },
+      "scanCv": {
+        "title": "CV Tara",
+        "description": "Bir CV ya da özgeçmiş yükle, Oryn aktivitelerini, ödüllerini ve eğitimini çıkarsın. Hiçbir şey kaydedilmeden önce her öğeyi sen gözden geçirirsin."
+      },
+      "storyBank": {
+        "title": "Deneme Hikaye Bankası",
+        "description": "Başarılarının arkasındaki anlar, kendi kelimelerinle saklanır — başvuru denemeleri için ham malzeme, senin yerine asla otomatik yazılmaz."
+      },
+      "portfolio": {
+        "title": "Portföy",
+        "description": "Yaptığın her şey tek bir yerde, zaman çizelgesi olarak ya da kategoriye göre gruplanmış."
+      },
+      "documents": {
+        "title": "Belgeler",
+        "description": "Ait oldukları başarılara eklenmiş sertifikalar ve kanıt dosyaları. Varsayılan olarak özel — asla herkese açık değil."
+      },
+      "publicProfile": {
+        "title": "Herkese açık profil",
+        "description": "Kaydının paylaşılabilir bir versiyonu. Varsayılan olarak kapalı; notlar ve okul detayları asla dahil edilmez."
+      },
+      "weeklyPlan": {
+        "title": "Haftalık plan",
+        "description": "Gerçekten sahip olduğun zamana göre boyutlandırılmış, haftanın en değerli üç eylemi."
+      },
+      "progress": {
+        "title": "İlerleme",
+        "description": "Profilin ay ay nasıl değişti, ve hangi alanlar gerçekten ilerledi."
+      },
+      "compareUniversities": {
+        "title": "Üniversiteleri karşılaştır",
+        "description": "İki ila dört üniversiteyi yan yana koy. Bilinmeyen rakamlar tahmin değil \"—\" olarak görünür."
+      },
+      "researchIdeas": {
+        "title": "Araştırma fikri üretici",
+        "description": "Seviyene ve ilgi alanlarına göre ölçeklenmiş, gerçek akademik literatürden oluşturulmuş proje fikirleri — etkileyici görünmek için değil, ulaşılabilir olmak için."
+      }
+    }
   }
 }
