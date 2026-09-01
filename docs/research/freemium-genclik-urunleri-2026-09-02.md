@@ -119,3 +119,107 @@ Policy (§"Child Users," current as of the policy's stated May 26, 2026 revision
 
 ---
 
+## 2. Quizlet
+
+**Sources checked (all this session, 2026-09-02):** `quizlet.com`'s own app pages
+(`/upgrade`, `/features`) returned **"Access to this page has been denied"** to this
+session's browser on every path tried — this looks like bot-detection on the main app
+shell specifically, not a broken link, since the same domain's help subdomain loaded fine.
+All findings below come from the official `help.quizlet.com` help center instead, plus one
+attempt at the Google Play Store listing.
+- [help.quizlet.com — Subscribing to Quizlet](https://help.quizlet.com/hc/en-us/articles/360041181691-Subscribing-to-Quizlet)
+- [help.quizlet.com — Studying on Quizlet](https://help.quizlet.com/hc/en-us/articles/360030841732-Studying-on-Quizlet)
+- [help.quizlet.com — Studying with Ask Quizlet](https://help.quizlet.com/hc/en-us/articles/4279035072-Studying-with-Ask-Quizlet)
+- [help.quizlet.com — Signing up for a free account](https://help.quizlet.com/hc/articles/360030555532)
+- [play.google.com — Quizlet: More than Flashcards](https://play.google.com/store/apps/details?id=com.quizlet.quizletandroid)
+
+### 2.1 What exactly stays free
+OBSERVED (Studying on Quizlet, official): flashcard creation/search/sharing, basic
+Flashcards study mode, and the game-style activities (Match, Blast, Blocks) are free with
+no stated cap. Beyond that, free access is **metered per-feature, and several caps are
+scoped per flashcard set rather than per month**:
+- **Learn mode** (adaptive, progressively-harder questions): free for "a limited number of
+  rounds per flashcard set" — exact number not stated in this article.
+- **Test mode**: free users get "one practice test per flashcard set."
+- **Practice Tests** (AI-generated full exam simulations) and **Study Guides**
+  (AI-generated from your own uploaded notes): both explicitly "try for free with limited
+  access" — no number given.
+- **Expert Solutions** (step-by-step textbook answers): notably tiered by academic level,
+  not just by subscription — "Standard high school–level expert solutions are free for
+  students and teachers" with no stated limit, while **college-level textbook solutions are
+  capped per-textbook** for non-subscribers. This is the one place any product in this
+  survey gives strictly more for free specifically to the younger/high-school segment of
+  its own users.
+- **Diagram sets** (image/map labeling): not available to free users at all — Plus-only,
+  no metered free tier.
+- Teacher-assigned work is called out as a specific exemption: a separate help article
+  ("Using Assignments") states "Assignments are free from ads and study limits" — i.e. when
+  a teacher assigns Quizlet content, the student doing that specific assignment is not
+  metered even on a free account.
+
+**Discrepancy worth flagging, not silently resolving:** third-party aggregator sites
+(SECONDARY, not used as a verified figure) describe Quizlet Plus's limits as flat monthly
+quotas — "3 practice tests/month, 3 Q&A/month, 20 Learn rounds/month" — while Quizlet's own
+help articles describe the free/Plus distinction as **per-flashcard-set**, not per-month.
+Both could be true at once (a per-set cap that also nets out to a monthly-ish number in
+practice), but I could not confirm the monthly framing against an official page, so the
+per-set language above is what's verified; the monthly numbers are not.
+
+### 2.2 What's behind the wall
+Quizlet is unusual among this set for having **three** paid tiers, confirmed on
+help.quizlet.com/.../Subscribing-to-Quizlet: **Quizlet Plus** ("extended access... with
+monthly usage limits" — explicitly still metered, just less than free), **Quizlet Plus
+Unlimited** (removes the caps, adds custom study paths / progress tracking / smart
+grading), and **Quizlet Plus for teachers** (separate). A **Family Plan** exists too, with
+one specific restriction stated officially: "Only free Quizlet users are eligible to
+purchase or join a Family Plan" — an existing individual Plus subscriber can't fold into a
+Family Plan the way Duolingo's Super subscribers can upgrade into Super Family.
+
+### 2.3 WHEN the wall appears
+Two different moments, and they're genuinely different in kind:
+1. **At first use of a premium mode** (Learn beyond N rounds, a second Test on the same
+   set, any Diagram set) — a hard, feature-level gate, not a trial period. There is no
+   Duolingo-style "N days of full access, then it locks" — the free ceiling is present from
+   a brand-new account's very first session.
+2. **Never, for core flashcard creation and the game modes** — those aren't gated at all,
+   so a purely free user who never touches Learn/Test/Practice Tests/Study Guides never
+   sees an upgrade prompt tied to a limit, only whatever ambient upsell exists in the UI
+   chrome (not independently verified this session — the app shell itself was inaccessible
+   to this browser).
+
+### 2.4 CTA style
+**NOT FOUND / NOT VERIFIED.** Because the main app domain returned "Access denied" on
+every path this session tried, I could not see the actual upgrade modal, banner, or
+in-line badge Quizlet shows a free user. Nothing here should be read as a claim about CTA
+style — this is a real gap, not an omission.
+
+### 2.5 Price
+**NOT FOUND** via an official, unauthenticated page — same failure mode as the CTA
+question, and for the same reason (app shell inaccessible). The Google Play Store listing
+confirms the app "Contains ads" and has "In-app purchases" but did not render a visible
+price or price range in this session's page text. **SECONDARY, explicitly flagged, not
+verified:** aggregator sites cite Quizlet Plus at $2.99/mo billed annually ($35.99/yr) and
+Plus Unlimited at $3.74/mo billed annually ($44.99/yr), both with a 7-day trial. I am not
+treating these as confirmed. Student-specific discount: not found. Annual-vs-monthly
+discount rate: not found from an official source.
+
+### 2.6 Minor-specific flow
+OBSERVED (Signing up for a free account, official): signup asks for a birthday, and "certain
+users may need to enter their parent's email address to help us comply with local laws...
+must have their parent confirm their consent via a confirmation email before they can
+create and edit flashcard sets" — a COPPA-style consent gate tied to account creation
+itself, not to payment specifically.
+
+**The single most directly relevant finding in this entire document** sits here, not in
+the pricing sections: Quizlet's own AI chat feature, **Ask Quizlet**, carries an explicit,
+separate age-and-geography gate stated in its own help article: *"Ask Quizlet is currently
+only available for users in the United States who are 14 years old or older."* This is a
+different, additional restriction layered on top of the general account age-gate above —
+Quizlet evidently decided its conversational AI feature specifically needed a stricter,
+narrower eligibility check than the rest of the product, independent of subscription tier.
+I could not determine from this article alone whether Ask Quizlet is free-tier-available
+(subject to that 14+/US gate) or Plus-gated on top of it — not stated either way in the
+source checked, and I'm not guessing.
+
+---
+
