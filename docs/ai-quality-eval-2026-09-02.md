@@ -117,3 +117,88 @@ suggestive, not settled. The judge is itself an AI surface with the same failure
 the thing it grades; `judge.ts`'s own header says to read it as a signal to investigate,
 not a certified score. The judge was explicitly told not to fact-check, so nothing here
 speaks to whether the counsel's factual claims are true.
+
+---
+
+# Second run: haiku-4-5, same 12 cases — 2026-09-02, 00:45
+
+Run to answer one question the tier design was blocked on: **is a free tier on Haiku
+offerable, or does the counsel fall apart?** The founder's budget is $0.50/student/month
+target, $1.00 ceiling. After weekly plans and counselor explanations, ~$0.37/month is left
+for the advisor — about **10 Sonnet messages** or **~32 Haiku messages**. So the whole
+shape of the free tier turns on this.
+
+**Cost: $0.078** (38,314 input + 7,953 output at $1/$5 per M).
+
+## Headline: 315/360 against Sonnet's 325/360
+
+Three percent apart. That is much closer than the price ratio suggests, and on its own it
+would say "ship Haiku on free". The aggregate is misleading, and the split is the finding.
+
+| | Sonnet | Haiku |
+|---|---|---|
+| **regression fixture** (clear strengths, obvious gap, something genuinely worth discouraging) | 164 | **175** |
+| **baseline fixture** (well-rounded profile, nothing sharp to say) | **161** | 140 |
+| total | **325** | 315 |
+
+**Haiku beats Sonnet on the hard case and collapses on the ordinary one.** Its worst case,
+`weekly_plan/tr/baseline`, scored **16/30** — concise 2, analytical 2, calm 2 — with the
+judge calling it "verbose and repetitive… the phrasing is often unclear or padded". Sonnet's
+worst baseline case scored 23.
+
+This matters more than the headline, because **the ordinary profile is the free tier's
+typical user.** A student who just signed up has a thin, unremarkable profile and nothing
+dramatic to be told. That is precisely where Haiku degrades.
+
+By surface, the same story: `advisor_chat` is near-identical (115 vs 117) and
+`counselor_explain` is near-identical in total (99 vs 97, differently distributed).
+`weekly_plan` is where Haiku loses — 101 against 111 — and effectively all of the gap is
+that one Turkish baseline case.
+
+Both models are weaker in Turkish than English (Haiku 151/164, Sonnet 158/167), by a similar
+margin. Turkish is not the problem; it is a consistent, small penalty in both.
+
+## Deterministic: 0 findings, after fixing the check
+
+The run initially reported 1 failure of 12. It was a false positive, and finding it was
+worth the run on its own — see the commit for `lib/ai/eval/deterministic-checks.ts`. The
+check split on sentence punctuation, which assumed prose; Haiku answered in a markdown
+bullet list containing no `.!?` at all, so the whole list became one scope and a score
+belonging to a *different* dimension was attributed to an unassessed one. The reply was
+correct and the judge scored it 5/5 on evidence-awareness.
+
+**Sonnet had passed the same case only because it happened to answer in prose.** The
+instrument's reliability was a function of output formatting, and a lane is shortening these
+prompts right now — which pushes models toward exactly that list shape. Fixed and pinned
+with tests before it could start failing on better output.
+
+So: **both models, 0 deterministic findings in 12.** No raw identifiers, no scores quoted
+for unassessed dimensions.
+
+## The manufactured-discouragement defect is structural, not model-specific
+
+The single most useful thing this second run bought. From the Sonnet section above: three of
+six baseline cases invented a "don't do this" where the fixture explicitly has nothing to
+discourage (`expectDiscourage: "no"`).
+
+Haiku's rate is **also 3 of 6.** And in both models, **both `weekly_plan` baseline cases
+manufactured one** — 4 of 4 across two independent models. Haiku, like Sonnet, put the
+fixture's only recommendation, the `do`-classed Regional Science Fair, into avoid territory.
+
+That moves this from "one model's habit" to **a property of the prompt**, which is what the
+asymmetric guard predicted: `lib/ai/weekly-plan.ts:106` forbids ruled-out items from
+appearing in `actions` and says nothing about recommended items appearing in `avoidForNow`,
+and `namesSameActivity` only catches the both-lists collision. Two models reaching the same
+wrong answer through the same gap is about as clear as this gets without a fix to test
+against.
+
+## What this means for the free tier
+
+**Haiku is viable, but not as a drop-in.** The evidence supports a free tier on Haiku at
+~32 messages/month, on one condition: the padding failure has to be addressed at the prompt
+level first. Both models fill space when there is nothing sharp to say — Sonnet mildly,
+Haiku badly — and the instruction that is missing is not "be brief" but **permission to say
+less when there is less to say.**
+
+That work is already assigned. Until it lands, "free tier on Haiku" is a supported
+direction, not a finished answer.
