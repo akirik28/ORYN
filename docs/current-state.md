@@ -73,7 +73,9 @@ source and the commits that changed them — not from memory of what a lane inte
 
   AI output follows the student's language too, on five of six surfaces
   (`lib/ai/output-language.ts`). **Its quality is unmeasured** — the eval suite is
-  English-only and checking whether Turkish counsel keeps its register costs model calls.
+  measured at all, in either language: there is no output-quality eval suite: the tests
+  around these surfaces assert prompt contents and usage logging, never what the model says
+  back. Building one is free; running it costs model calls.
 
 - **A Saved page exists** (`/saved`, secondary nav) — founder request, 2026-09-01. Two
   sections rather than one merged list, because "compare" means different things for a

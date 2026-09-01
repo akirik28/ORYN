@@ -147,7 +147,9 @@ product already made:
   not to English.
 
 **What is not covered, and it is the important half.** Nothing measures the *quality* of the
-Turkish that comes back. The eval suite is English-only, and checking whether Turkish counsel
+Turkish that comes back — and nor does anything measure the English. There is no
+output-quality eval suite in either language; the tests around these surfaces assert what goes
+into the prompt and that usage is logged, never what the model says. Checking whether counsel
 keeps the demanding-mentor register costs real model calls against a nearly-spent balance.
 The mechanism is asserted in `__tests__/ai/output-language.test.ts`; the register is not.
 

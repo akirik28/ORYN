@@ -32,7 +32,11 @@ import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
  * the interface in that language right now.
  *
  * WHAT THIS DOES NOT DO, and it matters: nothing here measures the *quality* of Turkish
- * output. The eval coverage in `__tests__` is English-only, and checking whether Turkish
+ * output. There is no AI output-quality eval suite at all -- in EITHER language. The tests
+ * around these surfaces assert what goes into the prompt and that usage is logged; none
+ * assess what the model says back. So the honest statement is not "Turkish is unmeasured"
+ * but "nothing is". Building the harness costs nothing; running it costs model calls, and
+ * checking whether Turkish
  * counsel keeps the demanding-mentor register costs real model calls. The mechanism is
  * asserted; the register is not. See docs/i18n-coverage.md.
  */
