@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { FileUp, Loader2, PencilLine, SkipForward, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +40,19 @@ const CATEGORY_LABELS: Record<ExtractedCategory, string> = {
   research: "Research",
   workExperience: "Work experience",
 };
+
+/** Same six categories, same translation keys as features/profile/cv-import-flow.tsx's
+ * CATEGORY_LABEL_KEYS — reused rather than re-translated a third time (profile/page.tsx's
+ * AchievementSection titles were the first). CATEGORY_LABELS above stays untranslated and
+ * is only ever used for its keys (flatten()'s Object.keys iteration), never displayed. */
+const CATEGORY_LABEL_KEYS = {
+  education: "page.sections.education.title",
+  activities: "page.sections.activities.title",
+  awards: "page.sections.awards.title",
+  projects: "page.sections.projects.title",
+  research: "page.sections.research.title",
+  workExperience: "page.sections.workExperience.title",
+} as const satisfies Record<ExtractedCategory, string>;
 
 /** Mirrors features/profile/field-config.ts's per-table entity scopes exactly — CV-import
  * items land in the same tables the manual profile forms do, so a school extracted here
@@ -96,6 +110,8 @@ export function ImportStep({
   setReviewedItems: (items: ReviewedExtractedItem[]) => void;
   country?: string | null;
 }) {
+  const t = useTranslations("onboarding.import");
+  const tProfile = useTranslations("profile");
   const [method, setMethod] = useState<"choose" | "cv" | "manual">("choose");
   const [status, setStatus] = useState<"idle" | "uploading" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -134,8 +150,8 @@ export function ImportStep({
           className="flex flex-col items-center gap-2 rounded-xl border p-6 text-center transition-colors hover:border-primary hover:bg-accent"
         >
           <FileUp className="size-6 text-primary" />
-          <span className="font-medium">Upload CV</span>
-          <span className="text-xs text-muted-foreground">PDF, DOCX, or text</span>
+          <span className="font-medium">{t("uploadCv")}</span>
+          <span className="text-xs text-muted-foreground">{t("uploadCvHint")}</span>
         </button>
         <button
           type="button"
@@ -143,8 +159,8 @@ export function ImportStep({
           className="flex flex-col items-center gap-2 rounded-xl border p-6 text-center transition-colors hover:border-primary hover:bg-accent"
         >
           <PencilLine className="size-6 text-primary" />
-          <span className="font-medium">Enter manually</span>
-          <span className="text-xs text-muted-foreground">Add things yourself</span>
+          <span className="font-medium">{t("enterManually")}</span>
+          <span className="text-xs text-muted-foreground">{t("enterManuallyHint")}</span>
         </button>
         <button
           type="button"
@@ -152,8 +168,8 @@ export function ImportStep({
           className="flex flex-col items-center gap-2 rounded-xl border p-6 text-center transition-colors hover:border-primary hover:bg-accent"
         >
           <SkipForward className="size-6 text-primary" />
-          <span className="font-medium">Skip for now</span>
-          <span className="text-xs text-muted-foreground">Do this later</span>
+          <span className="font-medium">{t("skipForNow")}</span>
+          <span className="text-xs text-muted-foreground">{t("skipForNowHint")}</span>
         </button>
       </div>
     );
@@ -162,10 +178,10 @@ export function ImportStep({
   if (method === "manual") {
     return (
       <Card className="p-6 text-sm text-muted-foreground">
-        No problem — you can add activities, awards, projects, and more from your Profile at any time.
+        {t("manualNotice")}
         <div className="mt-4">
           <Button variant="outline" size="sm" onClick={() => setMethod("choose")}>
-            Back to import options
+            {t("backToImportOptions")}
           </Button>
         </div>
       </Card>
@@ -183,14 +199,14 @@ export function ImportStep({
           {status === "uploading" ? (
             <>
               <Loader2 className="size-6 animate-spin text-primary" />
-              <span className="font-medium">Reading your CV…</span>
-              <span className="text-xs text-muted-foreground">This usually takes a few seconds.</span>
+              <span className="font-medium">{t("readingCv")}</span>
+              <span className="text-xs text-muted-foreground">{t("readingCvHint")}</span>
             </>
           ) : (
             <>
               <FileUp className="size-6 text-primary" />
-              <span className="font-medium">Click to choose a file</span>
-              <span className="text-xs text-muted-foreground">PDF, DOCX, or plain text — up to 10MB</span>
+              <span className="font-medium">{t("clickToChoose")}</span>
+              <span className="text-xs text-muted-foreground">{t("clickToChooseHint")}</span>
             </>
           )}
         </Label>
@@ -208,7 +224,7 @@ export function ImportStep({
         />
         {errorMessage ? <p className="text-sm text-destructive">{errorMessage}</p> : null}
         <Button variant="ghost" size="sm" onClick={() => setMethod("choose")}>
-          Back to import options
+          {t("backToImportOptions")}
         </Button>
       </div>
     );
@@ -216,10 +232,7 @@ export function ImportStep({
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
-        We found {reviewedItems.length} item{reviewedItems.length === 1 ? "" : "s"}. Review before adding them to
-        your Oryn profile — uncheck anything that isn&apos;t right, or edit the details.
-      </p>
+      <p className="text-sm text-muted-foreground">{t("foundItems", { count: reviewedItems.length })}</p>
       <div className="max-h-96 space-y-3 overflow-y-auto pr-1">
         {reviewedItems.map((item) => (
           <Card key={item.id} className="flex gap-3 p-3">
@@ -230,8 +243,8 @@ export function ImportStep({
             />
             <div className="flex-1 space-y-1.5">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span className="rounded bg-muted px-1.5 py-0.5">{CATEGORY_LABELS[item.category]}</span>
-                {item.confidence === "low" ? <span className="text-amber-600">Low confidence — please check</span> : null}
+                <span className="rounded bg-muted px-1.5 py-0.5">{tProfile(CATEGORY_LABEL_KEYS[item.category])}</span>
+                {item.confidence === "low" ? <span className="text-amber-600">{t("lowConfidence")}</span> : null}
               </div>
               <Input
                 value={item.title}
@@ -248,7 +261,7 @@ export function ImportStep({
                   value={item.organization ?? ""}
                   entityId={item.organizationEntityId}
                   context={{ country: country?.trim() || null }}
-                  placeholder={item.category === "education" ? "School" : "Organization"}
+                  placeholder={item.category === "education" ? t("schoolPlaceholder") : t("organizationPlaceholder")}
                   allowCustom
                   customLabel={item.category === "education" ? "school" : "organization"}
                   onChange={(next) => updateItem(item.id, { organization: next.displayName, organizationEntityId: next.id })}
@@ -265,7 +278,7 @@ export function ImportStep({
               size="icon-sm"
               onClick={() => removeItem(item.id)}
               className="self-start text-muted-foreground hover:text-destructive"
-              aria-label="Remove item"
+              aria-label={t("removeItemAriaLabel")}
             >
               <Trash2 className="size-4" />
             </Button>
@@ -273,7 +286,7 @@ export function ImportStep({
         ))}
       </div>
       <Button variant="ghost" size="sm" onClick={() => setMethod("choose")}>
-        Start over
+        {t("startOver")}
       </Button>
     </div>
   );

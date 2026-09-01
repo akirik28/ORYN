@@ -2,6 +2,8 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup, act } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
+import { NextIntlClientProvider } from "next-intl";
+import en from "@/messages/en.json";
 
 /**
  * Regression coverage for the double-activation bug found this session: `Continue`
@@ -63,9 +65,20 @@ function rawClick(el: Element) {
   el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
 }
 
+/** Same wrap as __tests__/profile/{featured-manager,achievement-section,quick-add-entry}.test.tsx —
+ * OnboardingWizard reads from useTranslations("onboarding.wizard"), so it needs a real
+ * provider, not a mocked one, since these tests assert on the actual rendered English copy. */
+function renderWizard() {
+  return render(
+    <NextIntlClientProvider locale="en" messages={en}>
+      <OnboardingWizard />
+    </NextIntlClientProvider>
+  );
+}
+
 describe("OnboardingWizard — double-activation guard", () => {
   test("two activations landing before either is processed advance exactly one step, not two", async () => {
-    render(<OnboardingWizard />);
+    renderWizard();
     const continueButton = screen.getByRole("button", { name: /Continue/ });
 
     // Both dispatches share one act() block, so — unlike two separate fireEvent.click()
@@ -84,7 +97,7 @@ describe("OnboardingWizard — double-activation guard", () => {
   });
 
   test("a normal single click still advances one step (the fix doesn't break the common path)", async () => {
-    render(<OnboardingWizard />);
+    renderWizard();
 
     fireEvent.click(screen.getByRole("button", { name: /Continue/ }));
 
@@ -92,7 +105,7 @@ describe("OnboardingWizard — double-activation guard", () => {
   });
 
   test("Continue is re-armed once the step actually changes — a later click still works", async () => {
-    render(<OnboardingWizard />);
+    renderWizard();
 
     fireEvent.click(screen.getByRole("button", { name: /Continue/ }));
     expect(await screen.findByRole("heading", { name: "Tell us about your school" })).toBeInTheDocument();
@@ -105,7 +118,7 @@ describe("OnboardingWizard — double-activation guard", () => {
   });
 
   test("a rejected step-1 validation attempt doesn't wedge Continue for a later Back", async () => {
-    render(<OnboardingWizard />);
+    renderWizard();
     fireEvent.click(screen.getByRole("button", { name: /Continue/ })); // -> step 1, empty fields
     await screen.findByRole("heading", { name: "Tell us about your school" });
 
@@ -119,7 +132,7 @@ describe("OnboardingWizard — double-activation guard", () => {
   });
 
   test("two Back activations landing before either is processed retreat exactly one step, not two", async () => {
-    render(<OnboardingWizard />);
+    renderWizard();
     fireEvent.click(screen.getByRole("button", { name: /Continue/ })); // -> step 1
     await screen.findByRole("heading", { name: "Tell us about your school" });
     fireEvent.click(screen.getByRole("button", { name: /Continue/ })); // rejected (empty fields) — stay on step 1, guard untouched
@@ -141,7 +154,7 @@ describe("OnboardingWizard — double-activation guard", () => {
 
 describe("OnboardingWizard — step transition doesn't freeze on the first click", () => {
   test("both the progress value and the visible heading update after one click, immediately", async () => {
-    render(<OnboardingWizard />);
+    renderWizard();
 
     fireEvent.click(screen.getByRole("button", { name: /Continue/ }));
 

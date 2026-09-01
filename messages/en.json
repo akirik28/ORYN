@@ -209,20 +209,76 @@
       "peerComparison": "Peer comparison",
       "whereYouStand": "Where you stand",
       "sections": {
-        "education": { "title": "Education", "description": "Schools and academic stages.", "empty": "No education records yet." },
-        "coursework": { "title": "Coursework", "description": "AP, IB HL/SL, A-Level, honors, and regular courses. Oryn uses these to understand your academic rigor and subject range.", "empty": "No coursework yet. Add the courses you're taking — advanced coursework is one of the strongest academic signals." },
-        "testScores": { "title": "Test scores", "description": "SAT, ACT, AP, IB, language proficiency, and more.", "empty": "No test scores yet." },
-        "activities": { "title": "Activities", "description": "Clubs, leadership roles, sports, summer programs.", "empty": "No activities yet. Add clubs, leadership, or other experiences." },
-        "sports": { "title": "Sports", "description": "Athletic history — a first-class part of your profile, not folded into Activities.", "empty": "No sports yet. Add a team, club, or individual sport you take seriously." },
-        "projects": { "title": "Projects", "description": "Things you've built or shipped, on your own or with a team.", "empty": "No projects yet." },
-        "research": { "title": "Research", "description": "Independent or mentored research experience.", "empty": "No research experience yet — publication isn't required for a strong score." },
-        "workExperience": { "title": "Work experience", "description": "Internships, jobs, and apprenticeships.", "empty": "No work experience yet." },
-        "volunteering": { "title": "Volunteering", "description": "Community service and volunteering.", "empty": "No volunteering yet." },
-        "awards": { "title": "Awards", "description": "Competitions, honors, and distinctions.", "empty": "No awards yet." },
-        "certifications": { "title": "Certifications", "description": "Certificates from courses or programs.", "empty": "No certifications yet." },
-        "goals": { "title": "Goals", "description": "What you're working toward — recommendations trace back to these.", "empty": "No goals yet. What are you working toward?" },
-        "skills": { "title": "Skills", "description": "Up to 15. Self-declared — connections can endorse a skill once they're added below.", "empty": "No skills yet. Add up to 15 — technical, creative, analytical, or otherwise." },
-        "languages": { "title": "Languages", "description": "Levels use CEFR, the scale most universities state their requirements in. Add language certificates under Certifications.", "empty": "No languages yet. Add the ones you speak, including your first language." }
+        "education": {
+          "title": "Education",
+          "description": "Schools and academic stages.",
+          "empty": "No education records yet."
+        },
+        "coursework": {
+          "title": "Coursework",
+          "description": "AP, IB HL/SL, A-Level, honors, and regular courses. Oryn uses these to understand your academic rigor and subject range.",
+          "empty": "No coursework yet. Add the courses you're taking — advanced coursework is one of the strongest academic signals."
+        },
+        "testScores": {
+          "title": "Test scores",
+          "description": "SAT, ACT, AP, IB, language proficiency, and more.",
+          "empty": "No test scores yet."
+        },
+        "activities": {
+          "title": "Activities",
+          "description": "Clubs, leadership roles, sports, summer programs.",
+          "empty": "No activities yet. Add clubs, leadership, or other experiences."
+        },
+        "sports": {
+          "title": "Sports",
+          "description": "Athletic history — a first-class part of your profile, not folded into Activities.",
+          "empty": "No sports yet. Add a team, club, or individual sport you take seriously."
+        },
+        "projects": {
+          "title": "Projects",
+          "description": "Things you've built or shipped, on your own or with a team.",
+          "empty": "No projects yet."
+        },
+        "research": {
+          "title": "Research",
+          "description": "Independent or mentored research experience.",
+          "empty": "No research experience yet — publication isn't required for a strong score."
+        },
+        "workExperience": {
+          "title": "Work experience",
+          "description": "Internships, jobs, and apprenticeships.",
+          "empty": "No work experience yet."
+        },
+        "volunteering": {
+          "title": "Volunteering",
+          "description": "Community service and volunteering.",
+          "empty": "No volunteering yet."
+        },
+        "awards": {
+          "title": "Awards",
+          "description": "Competitions, honors, and distinctions.",
+          "empty": "No awards yet."
+        },
+        "certifications": {
+          "title": "Certifications",
+          "description": "Certificates from courses or programs.",
+          "empty": "No certifications yet."
+        },
+        "goals": {
+          "title": "Goals",
+          "description": "What you're working toward — recommendations trace back to these.",
+          "empty": "No goals yet. What are you working toward?"
+        },
+        "skills": {
+          "title": "Skills",
+          "description": "Up to 15. Self-declared — connections can endorse a skill once they're added below.",
+          "empty": "No skills yet. Add up to 15 — technical, creative, analytical, or otherwise."
+        },
+        "languages": {
+          "title": "Languages",
+          "description": "Levels use CEFR, the scale most universities state their requirements in. Add language certificates under Certifications.",
+          "empty": "No languages yet. Add the ones you speak, including your first language."
+        }
       },
       "quickAdd": {
         "activity": "Activity",
@@ -485,6 +541,99 @@
         "colleague": "Colleague",
         "other": "Other"
       }
+    }
+  },
+  "onboarding": {
+    "wizard": {
+      "goalsTitle": "What are you working toward?",
+      "goalsSubtitle": "Pick as many as apply — you can change this later.",
+      "goalOptions": {
+        "competitiveUniversities": "Competitive universities",
+        "exploringCareers": "Exploring careers",
+        "buildingMyProfile": "Building my profile",
+        "findingOpportunities": "Finding opportunities",
+        "notSureYet": "Not sure yet"
+      },
+      "schoolTitle": "Tell us about your school",
+      "schoolSubtitle": "This helps Oryn understand your academic context.",
+      "countryLabel": "Country",
+      "countryPlaceholder": "United States",
+      "schoolLabel": "School",
+      "schoolPlaceholder": "Start typing your school's name",
+      "graduationYearLabel": "Graduation year",
+      "birthYearLabel": "Year you were born",
+      "birthYearWhy": "Lots of programs have age limits. Oryn needs this to tell you which ones you can actually apply to — the year is enough, never your full birthday.",
+      "curriculumLabel": "Curriculum",
+      "curriculumOptions": {
+        "ap": "AP",
+        "ib": "IB",
+        "aLevel": "A-Level",
+        "turkishCurriculum": "Turkish curriculum",
+        "nationalCurriculum": "National curriculum",
+        "other": "Other"
+      },
+      "interestsTitle": "What are you interested in?",
+      "interestsSubtitle": "Search or add your own — this shapes your recommendations.",
+      "geographyTitle": "Where might you want to study?",
+      "geographySubtitle": "Pick as many regions as you're considering.",
+      "geographyOptions": {
+        "usa": "USA",
+        "uk": "UK",
+        "europe": "Europe",
+        "canada": "Canada",
+        "turkey": "Turkey",
+        "notSure": "Not sure"
+      },
+      "importTitle": "Import your profile",
+      "importSubtitle": "Upload a CV to save time, or start fresh — either way takes a minute.",
+      "back": "Back",
+      "continue": "Continue",
+      "finish": "Finish",
+      "settingUp": "Setting up your profile…",
+      "schoolStepError": "Fill in your country, school, and curriculum to continue.",
+      "birthYearError": "Enter the year you were born — Oryn needs it to check age limits on programs."
+    },
+    "interests": {
+      "placeholder": "Search or type your own interest and press Enter",
+      "removeAriaLabel": "Remove {interest}",
+      "suggestions": {
+        "economics": "Economics",
+        "business": "Business",
+        "computerScience": "Computer Science",
+        "engineering": "Engineering",
+        "medicine": "Medicine",
+        "law": "Law",
+        "psychology": "Psychology",
+        "politics": "Politics",
+        "mathematics": "Mathematics",
+        "physics": "Physics",
+        "design": "Design",
+        "entrepreneurship": "Entrepreneurship",
+        "biology": "Biology",
+        "environmentalScience": "Environmental Science",
+        "history": "History",
+        "literature": "Literature"
+      }
+    },
+    "import": {
+      "uploadCv": "Upload CV",
+      "uploadCvHint": "PDF, DOCX, or text",
+      "enterManually": "Enter manually",
+      "enterManuallyHint": "Add things yourself",
+      "skipForNow": "Skip for now",
+      "skipForNowHint": "Do this later",
+      "manualNotice": "No problem — you can add activities, awards, projects, and more from your Profile at any time.",
+      "backToImportOptions": "Back to import options",
+      "readingCv": "Reading your CV…",
+      "readingCvHint": "This usually takes a few seconds.",
+      "clickToChoose": "Click to choose a file",
+      "clickToChooseHint": "PDF, DOCX, or plain text — up to 10MB",
+      "foundItems": "We found {count, plural, one {# item} other {# items}}. Review before adding them to your Oryn profile — uncheck anything that isn't right, or edit the details.",
+      "lowConfidence": "Low confidence — please check",
+      "schoolPlaceholder": "School",
+      "organizationPlaceholder": "Organization",
+      "removeItemAriaLabel": "Remove item",
+      "startOver": "Start over"
     }
   }
 }

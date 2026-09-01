@@ -209,20 +209,76 @@
       "peerComparison": "Akran karşılaştırması",
       "whereYouStand": "Nerede durduğun",
       "sections": {
-        "education": { "title": "Eğitim", "description": "Okullar ve akademik aşamalar.", "empty": "Henüz eğitim kaydı yok." },
-        "coursework": { "title": "Dersler", "description": "AP, IB HL/SL, A-Level, onur (honors) ve normal dersler. Oryn bunları akademik zorluk düzeyini ve konu çeşitliliğini anlamak için kullanır.", "empty": "Henüz ders kaydı yok. Aldığın dersleri ekle — ileri düzey dersler en güçlü akademik sinyallerden biridir." },
-        "testScores": { "title": "Sınav puanları", "description": "SAT, ACT, AP, IB, dil yeterliliği ve daha fazlası.", "empty": "Henüz sınav puanı yok." },
-        "activities": { "title": "Faaliyetler", "description": "Kulüpler, liderlik rolleri, spor, yaz programları.", "empty": "Henüz faaliyet yok. Kulüp, liderlik veya diğer deneyimlerini ekle." },
-        "sports": { "title": "Spor", "description": "Sportif geçmişin — profilinin Faaliyetler'e dahil edilmeyen, kendi başına bir bölümü.", "empty": "Henüz spor yok. Ciddiye aldığın bir takım, kulüp veya bireysel spor ekle." },
-        "projects": { "title": "Projeler", "description": "Tek başına ya da bir ekiple yaptığın veya hayata geçirdiğin şeyler.", "empty": "Henüz proje yok." },
-        "research": { "title": "Araştırma", "description": "Bağımsız veya danışmanlık eşliğinde yürütülen araştırma deneyimi.", "empty": "Henüz araştırma deneyimi yok — güçlü bir puan için yayın şart değil." },
-        "workExperience": { "title": "İş deneyimi", "description": "Stajlar, işler ve çıraklıklar.", "empty": "Henüz iş deneyimi yok." },
-        "volunteering": { "title": "Gönüllülük", "description": "Toplum hizmeti ve gönüllülük.", "empty": "Henüz gönüllülük kaydı yok." },
-        "awards": { "title": "Ödüller", "description": "Yarışmalar, onurlar ve üstün başarılar.", "empty": "Henüz ödül yok." },
-        "certifications": { "title": "Sertifikalar", "description": "Kurs veya programlardan alınan sertifikalar.", "empty": "Henüz sertifika yok." },
-        "goals": { "title": "Hedefler", "description": "Neye doğru çalıştığın — öneriler bunlara dayanır.", "empty": "Henüz hedef yok. Neye doğru çalışıyorsun?" },
-        "skills": { "title": "Beceriler", "description": "En fazla 15. Kendi beyanınla — bağlantıların eklendikten sonra bir beceriyi onaylayabilir.", "empty": "Henüz beceri yok. En fazla 15 tane ekle — teknik, yaratıcı, analitik veya başka türden." },
-        "languages": { "title": "Diller", "description": "Seviyeler için çoğu üniversitenin şartlarını belirttiği ölçek olan CEFR kullanılır. Dil sertifikalarını Sertifikalar altına ekle.", "empty": "Henüz dil yok. Ana dilin dahil, konuştuğun dilleri ekle." }
+        "education": {
+          "title": "Eğitim",
+          "description": "Okullar ve akademik aşamalar.",
+          "empty": "Henüz eğitim kaydı yok."
+        },
+        "coursework": {
+          "title": "Dersler",
+          "description": "AP, IB HL/SL, A-Level, onur (honors) ve normal dersler. Oryn bunları akademik zorluk düzeyini ve konu çeşitliliğini anlamak için kullanır.",
+          "empty": "Henüz ders kaydı yok. Aldığın dersleri ekle — ileri düzey dersler en güçlü akademik sinyallerden biridir."
+        },
+        "testScores": {
+          "title": "Sınav puanları",
+          "description": "SAT, ACT, AP, IB, dil yeterliliği ve daha fazlası.",
+          "empty": "Henüz sınav puanı yok."
+        },
+        "activities": {
+          "title": "Faaliyetler",
+          "description": "Kulüpler, liderlik rolleri, spor, yaz programları.",
+          "empty": "Henüz faaliyet yok. Kulüp, liderlik veya diğer deneyimlerini ekle."
+        },
+        "sports": {
+          "title": "Spor",
+          "description": "Sportif geçmişin — profilinin Faaliyetler'e dahil edilmeyen, kendi başına bir bölümü.",
+          "empty": "Henüz spor yok. Ciddiye aldığın bir takım, kulüp veya bireysel spor ekle."
+        },
+        "projects": {
+          "title": "Projeler",
+          "description": "Tek başına ya da bir ekiple yaptığın veya hayata geçirdiğin şeyler.",
+          "empty": "Henüz proje yok."
+        },
+        "research": {
+          "title": "Araştırma",
+          "description": "Bağımsız veya danışmanlık eşliğinde yürütülen araştırma deneyimi.",
+          "empty": "Henüz araştırma deneyimi yok — güçlü bir puan için yayın şart değil."
+        },
+        "workExperience": {
+          "title": "İş deneyimi",
+          "description": "Stajlar, işler ve çıraklıklar.",
+          "empty": "Henüz iş deneyimi yok."
+        },
+        "volunteering": {
+          "title": "Gönüllülük",
+          "description": "Toplum hizmeti ve gönüllülük.",
+          "empty": "Henüz gönüllülük kaydı yok."
+        },
+        "awards": {
+          "title": "Ödüller",
+          "description": "Yarışmalar, onurlar ve üstün başarılar.",
+          "empty": "Henüz ödül yok."
+        },
+        "certifications": {
+          "title": "Sertifikalar",
+          "description": "Kurs veya programlardan alınan sertifikalar.",
+          "empty": "Henüz sertifika yok."
+        },
+        "goals": {
+          "title": "Hedefler",
+          "description": "Neye doğru çalıştığın — öneriler bunlara dayanır.",
+          "empty": "Henüz hedef yok. Neye doğru çalışıyorsun?"
+        },
+        "skills": {
+          "title": "Beceriler",
+          "description": "En fazla 15. Kendi beyanınla — bağlantıların eklendikten sonra bir beceriyi onaylayabilir.",
+          "empty": "Henüz beceri yok. En fazla 15 tane ekle — teknik, yaratıcı, analitik veya başka türden."
+        },
+        "languages": {
+          "title": "Diller",
+          "description": "Seviyeler için çoğu üniversitenin şartlarını belirttiği ölçek olan CEFR kullanılır. Dil sertifikalarını Sertifikalar altına ekle.",
+          "empty": "Henüz dil yok. Ana dilin dahil, konuştuğun dilleri ekle."
+        }
       },
       "quickAdd": {
         "activity": "Faaliyet",
@@ -485,6 +541,99 @@
         "colleague": "Meslektaş",
         "other": "Diğer"
       }
+    }
+  },
+  "onboarding": {
+    "wizard": {
+      "goalsTitle": "Neye doğru çalışıyorsun?",
+      "goalsSubtitle": "Geçerli olan kadarını seç — bunu daha sonra değiştirebilirsin.",
+      "goalOptions": {
+        "competitiveUniversities": "Rekabetçi üniversiteler",
+        "exploringCareers": "Kariyerleri keşfetmek",
+        "buildingMyProfile": "Profilimi oluşturmak",
+        "findingOpportunities": "Fırsatlar bulmak",
+        "notSureYet": "Henüz emin değilim"
+      },
+      "schoolTitle": "Bize okulunu anlat",
+      "schoolSubtitle": "Bu, Oryn'ın akademik bağlamını anlamasına yardımcı olur.",
+      "countryLabel": "Ülke",
+      "countryPlaceholder": "Türkiye",
+      "schoolLabel": "Okul",
+      "schoolPlaceholder": "Okulunun adını yazmaya başla",
+      "graduationYearLabel": "Mezuniyet yılı",
+      "birthYearLabel": "Doğduğun yıl",
+      "birthYearWhy": "Birçok programın yaş sınırı var. Oryn, hangilerine gerçekten başvurabileceğini söylemek için buna ihtiyaç duyar — yıl yeterli, tam doğum tarihin asla gerekmez.",
+      "curriculumLabel": "Müfredat",
+      "curriculumOptions": {
+        "ap": "AP",
+        "ib": "IB",
+        "aLevel": "A-Level",
+        "turkishCurriculum": "Türk müfredatı",
+        "nationalCurriculum": "Ulusal müfredat",
+        "other": "Diğer"
+      },
+      "interestsTitle": "Neyle ilgileniyorsun?",
+      "interestsSubtitle": "Ara ya da kendi ilgi alanını ekle — bu, önerilerini şekillendirir.",
+      "geographyTitle": "Nerede okumak istiyor olabilirsin?",
+      "geographySubtitle": "Düşündüğün kadar çok bölge seç.",
+      "geographyOptions": {
+        "usa": "ABD",
+        "uk": "Birleşik Krallık",
+        "europe": "Avrupa",
+        "canada": "Kanada",
+        "turkey": "Türkiye",
+        "notSure": "Emin değilim"
+      },
+      "importTitle": "Profilini içe aktar",
+      "importSubtitle": "Zaman kazanmak için bir CV yükle, ya da sıfırdan başla — ikisi de sadece bir dakika sürer.",
+      "back": "Geri",
+      "continue": "Devam et",
+      "finish": "Bitir",
+      "settingUp": "Profilin hazırlanıyor…",
+      "schoolStepError": "Devam etmek için ülkeni, okulunu ve müfredatını doldur.",
+      "birthYearError": "Doğduğun yılı gir — Oryn, programlardaki yaş sınırlarını kontrol etmek için buna ihtiyaç duyar."
+    },
+    "interests": {
+      "placeholder": "Ara ya da kendi ilgi alanını yaz ve Enter'a bas",
+      "removeAriaLabel": "{interest} ilgi alanını kaldır",
+      "suggestions": {
+        "economics": "Ekonomi",
+        "business": "İşletme",
+        "computerScience": "Bilgisayar Bilimi",
+        "engineering": "Mühendislik",
+        "medicine": "Tıp",
+        "law": "Hukuk",
+        "psychology": "Psikoloji",
+        "politics": "Siyaset",
+        "mathematics": "Matematik",
+        "physics": "Fizik",
+        "design": "Tasarım",
+        "entrepreneurship": "Girişimcilik",
+        "biology": "Biyoloji",
+        "environmentalScience": "Çevre Bilimi",
+        "history": "Tarih",
+        "literature": "Edebiyat"
+      }
+    },
+    "import": {
+      "uploadCv": "CV Yükle",
+      "uploadCvHint": "PDF, DOCX veya metin",
+      "enterManually": "Elle gir",
+      "enterManuallyHint": "Kendin ekle",
+      "skipForNow": "Şimdilik atla",
+      "skipForNowHint": "Bunu sonra yap",
+      "manualNotice": "Sorun değil — faaliyetlerini, ödüllerini, projelerini ve daha fazlasını istediğin zaman Profilinden ekleyebilirsin.",
+      "backToImportOptions": "İçe aktarma seçeneklerine dön",
+      "readingCv": "CV'in okunuyor…",
+      "readingCvHint": "Bu genellikle birkaç saniye sürer.",
+      "clickToChoose": "Bir dosya seçmek için tıkla",
+      "clickToChooseHint": "PDF, DOCX veya düz metin — en fazla 10MB",
+      "foundItems": "{count, plural, one {# öğe} other {# öğe}} bulduk. Oryn profiline eklemeden önce gözden geçir — doğru olmayanların işaretini kaldır ya da ayrıntıları düzenle.",
+      "lowConfidence": "Düşük güven — lütfen kontrol et",
+      "schoolPlaceholder": "Okul",
+      "organizationPlaceholder": "Kurum",
+      "removeItemAriaLabel": "Öğeyi kaldır",
+      "startOver": "Baştan başla"
     }
   }
 }
