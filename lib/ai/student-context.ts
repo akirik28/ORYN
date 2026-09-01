@@ -6,7 +6,9 @@ import { computeCareerProfile } from "@/lib/scoring";
 import { getUpcomingDeadlines } from "@/lib/deadlines/upcoming";
 import { canonicalUniversityId, loadSupersessionMap, type SupersessionMap } from "@/lib/universities/canonical";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database, EvidenceStatus } from "@/types/database";
+import { dimensionLabel } from "@/lib/scoring/labels";
+import type { Locale } from "@/lib/i18n/config";
+import type { Database, EvidenceStatus, ProfileDimension } from "@/types/database";
 
 export interface StudentAdvisorContext {
   student: {
@@ -25,7 +27,7 @@ export interface StudentAdvisorContext {
      * prompt text today, same as birthYear. */
     citizenshipCountries: string[];
   };
-  profileScores: { dimension: string; score: number; confidence: string }[];
+  profileScores: { dimension: ProfileDimension; score: number; confidence: string }[];
   overallScore: number;
   completenessPercent: number;
   /**
@@ -257,7 +259,13 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
   };
 }
 
-export function formatContextForPrompt(context: StudentAdvisorContext): string {
+/**
+ * `locale` is additive and defaults to English, matching lib/scoring/labels.ts's own opt-in
+ * pattern. The weekly plan is still generated in English regardless of the student's locale
+ * — that is a separate, larger piece of work — so no caller passes this yet. It exists so
+ * that work does not have to come back and re-plumb the prompt.
+ */
+export function formatContextForPrompt(context: StudentAdvisorContext, locale: Locale = "en"): string {
   const lines: string[] = [];
   lines.push(`Student: ${context.student.displayName}, graduating ${context.student.graduationYear ?? "unknown"}, ${context.student.curriculum ?? "unknown curriculum"}, ${context.student.country ?? "unknown country"}.`);
   const busyNote = context.student.busyMode
@@ -266,8 +274,16 @@ export function formatContextForPrompt(context: StudentAdvisorContext): string {
   lines.push(`Weekly time budget: ${context.student.weeklyTimeBudget ?? "not set"}.${busyNote}`);
   lines.push(`Career Profile: ${context.overallScore}/100 overall. Profile completeness: ${context.completenessPercent}%.`);
   lines.push("Dimension scores:");
+  /**
+   * Display labels, not the raw column values. The model reads this block and then writes
+   * prose the student sees, so a bare `career_exploration` in the prompt comes back out as
+   * `career_exploration` in the counsel — observed live on the dashboard's "One thing not to
+   * do" card, 2026-09-01: "your career_exploration gap is better addressed by...". Nothing
+   * in the pipeline was going to catch that; it is a schema identifier that reached a
+   * sixteen-year-old through the one component that reformats its input freely.
+   */
   for (const d of context.profileScores) {
-    lines.push(`  - ${d.dimension}: ${d.score}/100 (confidence: ${d.confidence})`);
+    lines.push(`  - ${dimensionLabel(d.dimension, locale)}: ${d.score}/100 (confidence: ${d.confidence})`);
   }
   /**
    * `verified` renders silently (no tag) — the "no news is good news" default, unchanged

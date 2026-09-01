@@ -96,3 +96,38 @@ describe("formatContextForPrompt — evidence status tags", () => {
     expect(formatContextForPrompt(context)).toContain("Ongoing Club [ongoing] [verification rejected]");
   });
 });
+
+/**
+ * The prompt is read by a model that then writes prose the student sees, so anything in it
+ * that looks like a name will come back out as one. A raw `career_exploration` reached the
+ * dashboard's "One thing not to do" card that way on 2026-09-01 — "your career_exploration
+ * gap is better addressed by…" — and no test or type could have caught it, because the
+ * value was correct at every step except the one that reformats its input freely.
+ */
+describe("formatContextForPrompt — dimension names are human labels, not column values", () => {
+  const withScores: StudentAdvisorContext = {
+    ...baseContext(),
+    profileScores: [
+      { dimension: "career_exploration", score: 12, confidence: "low" },
+      { dimension: "execution_project_depth", score: 40, confidence: "medium" },
+      { dimension: "intellectual_curiosity", score: 55, confidence: "high" },
+    ],
+  };
+
+  test("renders the display label", () => {
+    const text = formatContextForPrompt(withScores);
+    expect(text).toContain("Career Exploration: 12/100");
+  });
+
+  test("no snake_case identifier survives anywhere in the prompt", () => {
+    // Broader than the three above on purpose: this is the class of bug, not the instance.
+    const snakeCase = formatContextForPrompt(withScores).match(/\b[a-z]+(?:_[a-z]+)+\b/g) ?? [];
+    const allowed = new Set(["self_reported", "evidence_added", "verification_rejected"]);
+    expect(snakeCase.filter((w) => !allowed.has(w))).toEqual([]);
+  });
+
+  test("locale is additive — Turkish labels when asked, English by default", () => {
+    expect(formatContextForPrompt(withScores, "tr")).toContain("Kariyer Keşfi: 12/100");
+    expect(formatContextForPrompt(withScores)).toContain("Career Exploration: 12/100");
+  });
+});
