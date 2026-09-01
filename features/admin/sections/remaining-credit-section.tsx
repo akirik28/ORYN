@@ -1,19 +1,22 @@
 import { formatDistanceToNow } from "date-fns";
 import { getTranslations } from "next-intl/server";
 import { formatCurrency } from "@/lib/i18n/format";
-import type { RemainingCredit } from "./spend-data";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getRemainingCredit } from "@/lib/admin/queries";
 
 const money = (value: number) => formatCurrency(value, "USD", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
 
 /**
  * Anthropic's account balance is not exposed by any API — there is nothing to query, so this
  * is deliberately a derived estimate (a manually-entered starting figure minus measured spend
- * since), never presented as a live balance. `credit === null` means the two required env vars
- * aren't set, which renders as "not set up," not as $0 remaining — an unconfigured figure and a
- * verified-zero one are different claims and must not look the same.
+ * since), never presented as a live balance (D4). A missing starting figure renders as "not
+ * set up," never as $0 remaining — an unconfigured figure and a verified-zero one are
+ * different claims and must not look the same.
  */
-export async function RemainingCreditCard({ credit }: { credit: RemainingCredit | null }) {
+export async function RemainingCreditSection() {
   const t = await getTranslations("admin.credit");
+  const admin = createAdminClient();
+  const credit = await getRemainingCredit(admin);
 
   return (
     <section className="space-y-3">

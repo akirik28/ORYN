@@ -101,13 +101,16 @@ describe("message_reports.post_id has exactly one writer, and it is gated", () =
 });
 
 describe("the admin moderation surface itself carries none of the five unreachability layers", () => {
-  test("removeReportedPost, restoreReportedPost, and the admin page's post query all touch posts/post_likes directly, bypassing post-actions.ts and posts.ts", () => {
+  test("removeReportedPost, restoreReportedPost, and the admin report query all touch posts/post_likes directly, bypassing post-actions.ts and posts.ts", () => {
     const actions = readFileSync(join(ROOT, "app/(app)/admin/actions.ts"), "utf8");
     for (const fn of ["removeReportedPost", "restoreReportedPost"]) {
       expect(functionBody(actions, fn), `${fn} must query posts directly`).toMatch(/\.from\(["']posts["']\)/);
     }
-    const page = readFileSync(join(ROOT, "app/(app)/admin/page.tsx"), "utf8");
-    expect(page).toMatch(/\.from\(["']posts["']\)/);
+    // Moved from app/(app)/admin/page.tsx to lib/admin/queries.ts's getReports()
+    // (docs/admin-panel-architecture-2026-09-02.md, D1: page.tsx is composition-only now,
+    // every admin read lives in this one module).
+    const queries = readFileSync(join(ROOT, "lib/admin/queries.ts"), "utf8");
+    expect(queries).toMatch(/\.from\(["']posts["']\)/);
   });
 
   test("none of the three admin call sites check the social feed flag — they rely entirely on the precondition chain, not the flag", () => {

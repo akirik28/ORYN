@@ -22,6 +22,7 @@
     "userMenu": {
       "accountMenu": "Hesap menüsü",
       "careerProfile": "Kariyer profili",
+      "adminPanel": "Yönetici paneli",
       "signOut": "Çıkış yap",
       "addWhatYouveDone": "Neler yaptığını ekle",
       "areasStrong": "{count, plural, one {# alan güçlü} other {# alan güçlü}}",
@@ -1507,16 +1508,23 @@
   },
   "admin": {
     "pageTitle": "Yönetici Paneli",
+    "pageDescription": "Kurucunun görmesi ve yönetmesi gereken her şey — önce harcama, sonra sistem durumu, sonra kullanıcılar.",
+    "tabs": {
+      "spend": "Harcama",
+      "system": "Sistem",
+      "people": "Kullanıcılar"
+    },
     "spend": {
       "sectionTitle": "Yapay zekâ harcaması",
-      "last24h": "Son 24 saat",
+      "today": "Bugün",
       "last7d": "Son 7 gün",
       "last30d": "Son 30 gün",
+      "allTime": "Tüm zamanlar",
       "byFeature": "Özelliğe göre",
       "byModel": "Modele göre",
       "callsCount": "{count} çağrı",
-      "unattributed": "Kullanıcısı belirlenemeyen",
-      "unattributedNote": "{count} çağrı, {amount}. Öğrenci bazlı görünüm bunları göremez — yukarıdaki toplamlara hiçbir zaman dahil edilmez.",
+      "unattributed": "Arka plan işleri (öğrenciye bağlı değil)",
+      "unattributedNote": "{count} çağrı, {amount}. Fırsat ve gereksinim taraması gibi katalog işlerinden gelen harcama — hiçbir öğrenciye ait olmayan gerçek bir maliyet, öğrenci bazlı görünümün gözden kaçırdığı bir şey değil.",
       "noUsage": "Henüz kaydedilmiş yapay zekâ kullanımı yok."
     },
     "perUser": {

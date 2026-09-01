@@ -1,12 +1,15 @@
 import { formatDistanceToNow } from "date-fns";
 import { getTranslations } from "next-intl/server";
 import { formatCurrency } from "@/lib/i18n/format";
-import type { AdminUserRow } from "./spend-data";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getAdminUserList } from "@/lib/admin/queries";
 
 const money = (value: number) => formatCurrency(value, "USD", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
 
-export async function UserListCard({ users }: { users: AdminUserRow[] }) {
+export async function UserListSection() {
   const t = await getTranslations("admin.users");
+  const admin = createAdminClient();
+  const users = await getAdminUserList(admin);
 
   return (
     <section className="space-y-3">
@@ -17,7 +20,7 @@ export async function UserListCard({ users }: { users: AdminUserRow[] }) {
             <span className="font-medium">{user.displayName ?? t("unnamed")}</span>
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
               {/* Tier column stays here, rendering "—", until tiers actually exist — see
-                  features/admin/spend-data.ts's AdminUserRow, which never invents one. */}
+                  lib/admin/queries.ts's AdminUserRow, which never invents one. */}
               <span>{t("tier")}: —</span>
               <span>{t("signedUp")}: {formatDistanceToNow(new Date(user.signedUpAt), { addSuffix: true })}</span>
               <span>{t("lastSeen")}: {user.lastSeenAt ? formatDistanceToNow(new Date(user.lastSeenAt), { addSuffix: true }) : t("never")}</span>
