@@ -33,10 +33,18 @@ const MAPS_WITH_ACCESSORS = [
   "OPEN_TO_LABELS",
   "SUBJECT_LABELS",
   "REQUIREMENT_CATEGORY_LABELS",
+<<<<<<< HEAD
   "EVIDENCE_LINKABLE_LABELS",
 ] as const;
 
 const LOCALE_AWARE = /useTranslations|getTranslations|locale === "tr"|getLegalCopy|dimensionLabel|evidenceStateLabel|openToLabel|subjectLabel|requirementCategoryLabel|evidenceLinkableLabel/;
+=======
+  "SEARCH_RESULT_TYPE_LABELS",
+] as const;
+
+const LOCALE_AWARE =
+  /useTranslations|getTranslations|locale === "tr"|getLegalCopy|dimensionLabel|evidenceStateLabel|openToLabel|subjectLabel|requirementCategoryLabel|searchResultTypeLabel/;
+>>>>>>> origin/oryn/i18n-search-2026-09-01
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {

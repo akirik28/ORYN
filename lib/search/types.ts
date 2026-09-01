@@ -1,3 +1,5 @@
+import type { Locale } from "@/lib/i18n/config";
+
 export type SearchResultType =
   | "university"
   | "program"
@@ -42,3 +44,30 @@ export const SEARCH_RESULT_TYPE_LABELS: Record<SearchResultType, string> = {
   goal: "Goal",
   application: "Application",
 };
+
+const SEARCH_RESULT_TYPE_LABELS_TR: Record<SearchResultType, string> = {
+  university: "Üniversite",
+  program: "Program",
+  opportunity: "Fırsat",
+  activity: "Etkinlik",
+  award: "Ödül",
+  certification: "Sertifika",
+  project: "Proje",
+  research_experience: "Araştırma",
+  volunteering_experience: "Gönüllülük",
+  work_experience: "İş deneyimi",
+  education_record: "Eğitim",
+  test_score: "Sınav puanı",
+  goal: "Hedef",
+  application: "Başvuru",
+};
+
+/**
+ * Locale-aware lookup, same shape as lib/scoring/labels.ts's dimensionLabel — the last
+ * English-only label map (docs/i18n-coverage.md) with a student-facing consumer
+ * (command-palette.tsx, search-view.tsx) and no accessor. SEARCH_RESULT_TYPE_LABELS stays
+ * English-only and untouched; this is the additive, opt-in path callers switch to.
+ */
+export function searchResultTypeLabel(type: SearchResultType, locale: Locale): string {
+  return locale === "tr" ? SEARCH_RESULT_TYPE_LABELS_TR[type] : SEARCH_RESULT_TYPE_LABELS[type];
+}

@@ -1,16 +1,21 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Search, SearchIcon, X } from "lucide-react";
 import { EmptyState } from "@/components/oryn/empty-state";
-import { SEARCH_RESULT_TYPE_LABELS, type SearchResult } from "@/lib/search/types";
+import { resolveLocale } from "@/lib/i18n/locale";
+import { searchResultTypeLabel, type SearchResult } from "@/lib/search/types";
 
-export function SearchView({ query, results }: { query: string; results: SearchResult[] }) {
+export async function SearchView({ query, results }: { query: string; results: SearchResult[] }) {
+  const locale = await resolveLocale();
+  const t = await getTranslations("search.view");
+
   return (
     <div className="mx-auto max-w-[600px] space-y-7">
       <div className="space-y-4">
         {/* Italic display title (Figma source App.tsx `SearchScreen`) — the app's own
             font-display (not the source's Instrument Serif; see lib/fonts.ts's scoping
             note), matching how this page's counterparts elsewhere use the same face. */}
-        <h1 className="font-display text-3xl tracking-[-0.02em] italic">Search</h1>
+        <h1 className="font-display text-3xl tracking-[-0.02em] italic">{t("title")}</h1>
 
         {/* A real GET form, not source's client-only instant filter: works without JS and
             hits the real globalSearch backend rather than a hardcoded 8-row array. Visual
@@ -20,22 +25,22 @@ export function SearchView({ query, results }: { query: string; results: SearchR
           <input
             name="q"
             defaultValue={query}
-            placeholder="Search universities, opportunities, your profile…"
-            aria-label="Search Oryn"
+            placeholder={t("placeholder")}
+            aria-label={t("inputAriaLabel")}
             autoFocus
             className="flex-1 bg-transparent text-[15px] outline-none placeholder:text-ink-3"
           />
           {query ? (
             // A plain link to the bare route, not a same-named submit button — a button
             // sharing the input's `name="q"` would send both values on submit (`q` twice).
-            <Link href="/search" aria-label="Clear search" className="text-ink-4 hover:text-ink-2">
+            <Link href="/search" aria-label={t("clearAriaLabel")} className="text-ink-4 hover:text-ink-2">
               <X className="size-4" />
             </Link>
           ) : null}
         </form>
       </div>
 
-      {query.length > 0 && query.length < 2 ? <p className="text-sm text-muted-foreground">Keep typing — search needs at least 2 characters.</p> : null}
+      {query.length > 0 && query.length < 2 ? <p className="text-sm text-muted-foreground">{t("keepTyping")}</p> : null}
 
       {query.length >= 2 ? (
         results.length > 0 ? (
@@ -48,7 +53,7 @@ export function SearchView({ query, results }: { query: string; results: SearchR
                 style={{ background: "rgba(255,255,255,0.55)", backdropFilter: "blur(14px)", border: "1px solid rgba(255,255,255,0.70)" }}
               >
                 <span className="shrink-0 rounded-[5px] bg-brand-primary-soft px-1.5 py-0.5 text-[11px] font-bold text-brand-primary-strong">
-                  {SEARCH_RESULT_TYPE_LABELS[result.type]}
+                  {searchResultTypeLabel(result.type, locale)}
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-ink-1">{result.title}</p>
@@ -61,7 +66,7 @@ export function SearchView({ query, results }: { query: string; results: SearchR
             ))}
           </div>
         ) : (
-          <EmptyState icon={SearchIcon} title="No results" description={`Nothing matched "${query}".`} />
+          <EmptyState icon={SearchIcon} title={t("noResultsTitle")} description={t("noResultsFor", { query })} />
         )
       ) : null}
     </div>

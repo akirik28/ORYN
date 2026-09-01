@@ -1094,5 +1094,27 @@
       "statusNotice": "Uploading a file marks this item \"Evidence added\" — it's self-reported until independently verified, and only visible to you.",
       "upload": "Upload"
     }
+  },
+  "search": {
+    "view": {
+      "title": "Search",
+      "placeholder": "Search universities, opportunities, your profile…",
+      "inputAriaLabel": "Search Oryn",
+      "clearAriaLabel": "Clear search",
+      "keepTyping": "Keep typing — search needs at least 2 characters.",
+      "noResultsTitle": "No results",
+      "noResultsFor": "Nothing matched \"{query}\"."
+    },
+    "commandPalette": {
+      "barLabel": "Search universities, programs, competitions…",
+      "barSrOnly": "Search Oryn. Shortcut: Command K",
+      "iconAriaLabel": "Search",
+      "dialogTitle": "Search Oryn",
+      "inputPlaceholder": "Search universities, opportunities, your profile…",
+      "searchFailed": "Search isn't available right now. Please try again.",
+      "keepTyping": "Keep typing — at least 2 characters.",
+      "emptyPrompt": "Search universities, opportunities, applications, and everything in your profile.",
+      "noResultsFor": "No results for \"{query}\"."
+    }
   }
 }
