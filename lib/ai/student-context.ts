@@ -9,12 +9,14 @@ import { getUpcomingDeadlines } from "@/lib/deadlines/upcoming";
 import { canonicalUniversityId, loadSupersessionMap, type SupersessionMap } from "@/lib/universities/canonical";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { dimensionLabel } from "@/lib/scoring/labels";
-import type { Locale } from "@/lib/i18n/config";
+import { DEFAULT_LOCALE, isLocale, type Locale } from "@/lib/i18n/config";
 import type { Database, EvidenceStatus, OutlookLabel, ProfileDimension } from "@/types/database";
 
 export interface StudentAdvisorContext {
   student: {
     displayName: string;
+    /** Drives the language every AI surface answers in — see lib/ai/output-language.ts. */
+    preferredLanguage: Locale;
     country: string | null;
     schoolName: string | null;
     graduationYear: number | null;
@@ -211,6 +213,13 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
   return {
     student: {
       displayName: profile?.display_name ?? "Student",
+      /**
+       * The student's own stored preference, not the request cookie. Weekly plans are also
+       * generated from cron, where there is no request to read a cookie from, and a plan
+       * written in a different language from the one the student reads would be worse than
+       * no plan. `isLocale` guards it because the column has no CHECK constraint.
+       */
+      preferredLanguage: isLocale(profile?.preferred_language) ? profile.preferred_language : DEFAULT_LOCALE,
       country: profile?.country ?? null,
       schoolName: profile?.school_name ?? null,
       graduationYear: profile?.graduation_year ?? null,

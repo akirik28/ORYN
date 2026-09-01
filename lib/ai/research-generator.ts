@@ -5,6 +5,7 @@ import { getAIProvider } from "./index";
 import { logAIUsage } from "./usage";
 import { openAlexProvider } from "@/lib/providers/openalex";
 import { buildStudentAdvisorContext } from "./student-context";
+import { withOutputLanguage } from "./output-language";
 
 const ResearchProjectSchema = z.object({
   researchQuestion: z.string(),
@@ -51,7 +52,7 @@ export async function generateResearchProjects(params: { userId: string; interes
 
   const provider = getAIProvider();
   const result = await provider.generateStructured({
-    system: SYSTEM_PROMPT,
+    system: withOutputLanguage(SYSTEM_PROMPT, context.student.preferredLanguage),
     prompt: `Student field of interest: ${params.field}\nOther interests: ${params.interests.join(", ") || "none stated"}\nWeekly time budget: ${context.student.weeklyTimeBudget ?? "not set"}\nCurrent research score: ${context.profileScores.find((s) => s.dimension === "research")?.score ?? "unknown"}/100\n\nCurrent research literature in this space, for grounding:\n${themesContext}\n\nGenerate up to 3 achievable research project ideas.`,
     schema: ResearchProjectListSchema,
     schemaName: "record_research_projects",

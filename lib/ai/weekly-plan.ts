@@ -8,6 +8,7 @@ import { buildStudentAdvisorContext, formatContextForPrompt } from "./student-co
 import { formatEligibilityCaveat } from "./eligibility-text";
 import { formatFeeCaveat } from "./fee-text";
 import { formatRequirementsCaveat } from "./requirements-text";
+import { withOutputLanguage } from "./output-language";
 import { getCounselorRecommendations } from "@/lib/counselor";
 import type { CounselorRecommendation, RecommendationClass } from "@/lib/counselor/types";
 
@@ -216,8 +217,8 @@ export async function generateWeeklyPlan(userId: string): Promise<WeeklyPlanGene
   const provider = getAIProvider();
 
   const result = await provider.generateStructured({
-    system: ADVISOR_SYSTEM_PROMPT,
-    prompt: `Here is the student's current context:\n\n${formatContextForPrompt(context)}${counselorGrounding}\n\nGenerate this week's plan: 1-3 highest-impact actions (fewer is fine if that's all that's genuinely high-impact), plus one thing to explicitly avoid prioritizing right now if something stands out. Ground every action in the student's actual gaps and existing work — don't propose generic tasks. Never name the same activity in both "actions" and "avoidForNow" — if you would recommend it, it does not belong in "avoidForNow", and if it belongs in "avoidForNow", do not recommend it.`,
+    system: withOutputLanguage(ADVISOR_SYSTEM_PROMPT, context.student.preferredLanguage),
+    prompt: `Here is the student's current context:\n\n${formatContextForPrompt(context, context.student.preferredLanguage)}${counselorGrounding}\n\nGenerate this week's plan: 1-3 highest-impact actions (fewer is fine if that's all that's genuinely high-impact), plus one thing to explicitly avoid prioritizing right now if something stands out. Ground every action in the student's actual gaps and existing work — don't propose generic tasks. Never name the same activity in both "actions" and "avoidForNow" — if you would recommend it, it does not belong in "avoidForNow", and if it belongs in "avoidForNow", do not recommend it.`,
     schema: WeeklyPlanSchema,
     schemaName: "record_weekly_plan",
     schemaDescription: "Records this week's prioritized action plan for the student.",

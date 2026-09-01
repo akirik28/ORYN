@@ -6,6 +6,7 @@ function baseContext(overrides: Partial<StudentAdvisorContext> = {}): StudentAdv
   return {
     student: {
       displayName: "Test Student",
+    preferredLanguage: "en" as const,
       country: null,
       schoolName: null,
       graduationYear: null,

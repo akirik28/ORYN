@@ -32,7 +32,10 @@ vi.mock("@/lib/ai/usage", () => ({
 }));
 
 vi.mock("@/lib/ai/student-context", () => ({
-  buildStudentAdvisorContext: vi.fn().mockResolvedValue({}),
+  // `student` is required by StudentAdvisorContext, and generateWeeklyPlan reads
+  // preferredLanguage off it to pick the response language — an empty object typechecked
+  // only because the mock is untyped.
+  buildStudentAdvisorContext: vi.fn().mockResolvedValue({ student: { preferredLanguage: "en" } }),
   formatContextForPrompt: () => "STUDENT CONTEXT BLOCK",
 }));
 
