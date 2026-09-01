@@ -1,6 +1,8 @@
 # Which migrations are actually live
 
-Measured 2026-09-01 against `oryn-qa-scratch` (`qtcvcflzxbuagvvwahhu`).
+Measured 2026-09-01 against `oryn-qa-scratch` (`qtcvcflzxbuagvvwahhu`), with 0072 corrected
+and 0073 added on 2026-09-02 — see the note on 0072 below for why this table's own history
+is the sharpest illustration of point 1 above.
 
 ## Two ways I got this wrong before getting it right
 
@@ -41,18 +43,21 @@ the definition, not the name.
 | 0068 target_university_null_program_dedup | yes | named unique index present |
 | 0069 drop_ad_hoc_backup_tables | yes | zero `public._backup_*` tables remain |
 | 0070, 0071 | yes | recorded in the ledger |
-| 0072 birth_year_change_audit | **no** | `birth_year_changes` absent |
+| 0072 birth_year_change_audit | **yes (as of 2026-09-02)** | `to_regclass('public.birth_year_changes')` resolves; RLS enabled, zero policies — matches the migration exactly. Recorded here as "no" the day before, from a probe run 2026-09-01; this table went live in the roughly 24 hours between that probe and this correction. If you are reading this after some time has passed, re-probe — don't trust either date. |
+| 0073 product_events_select_own | **yes (as of 2026-09-02)** | `pg_policies` shows `"select own product_events"`, `SELECT`, `{authenticated}`, `user_id = auth.uid()` — the policy 0073 creates, by name and definition, not just by a table existing. |
 
 All five security-hardening migrations (0061–0065) plus 0067 are live. That was checked
 here rather than carried forward from memory.
 
 ## What each gap actually costs
 
-**0072 — the only one a student can feel.** It adds `profiles.terms_accepted_at`, the
-`birth_year_changes` table, and the `profiles_log_birth_year_change` trigger. Without it,
-**a student can change their birth year and the change is recorded nowhere** — while the
-settings form completes and reports success. Silent, which is the failure shape this
-codebase keeps producing.
+**0072 — no longer a gap, confirmed 2026-09-02.** `profiles.terms_accepted_at`, the
+`birth_year_changes` table, and the `profiles_log_birth_year_change` trigger (enabled) are
+all live. A birth-year change is now recorded. What's *not* resolved is a separate
+question this migration deliberately left open rather than one it missed: `birth_year_changes`
+carries RLS with zero policies, so nothing can read it back yet, including the data export
+(see lib/export/tables.ts's EXPORT_EXCLUDED_TABLES entry and DATA_RIGHTS_AUDIT.md Part 3a).
+That's a real, still-open item — just a different one than "does this get logged at all."
 
 Signup is *not* affected: `app/(auth)/actions.ts` writes consent into the auth user's
 metadata, not the profiles column, and says so in its own comment. 0072's column is a

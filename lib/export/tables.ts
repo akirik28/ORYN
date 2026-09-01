@@ -60,6 +60,17 @@ export const EXPORT_TABLES = [
    * Removing this one line is the whole reversal if counsel says otherwise.
    */
   "rate_limit_events",
+  /**
+   * Product analytics (migration 0019). Was excluded because RLS had no SELECT policy —
+   * migration 0073 added `"select own product_events"` (own rows, `authenticated` only,
+   * no write access), confirmed live against oryn-qa-scratch on 2026-09-02 via
+   * `pg_policies` (not inferred from the migration file existing — this repo has been
+   * burned by that exact gap before, see docs/migration-state.md's own "a probe that
+   * matches a conventional name proves nothing"). Plain `user_id` column, fits the generic
+   * export path with no column allowlist needed. See 0073's own header for the
+   * access-vs-portability reasoning this shares with ai_usage/rate_limit_events above.
+   */
+  "product_events",
 ] as const;
 
 /**
@@ -69,23 +80,22 @@ export const EXPORT_TABLES = [
  */
 export const EXPORT_EXCLUDED_TABLES: Record<string, string> = {
   /**
-   * Analytics events (migration 0042). This is personal data and it belongs in the export
-   * on the merits — it is excluded only because it *cannot yet be exported honestly*:
-   * `product_events` has RLS enabled with no SELECT policy, so a read through the normal
-   * request client returns zero rows. Adding it today would produce a section that is
-   * always empty while the export reports success — a false completeness claim, which is
-   * worse than a documented omission. Needs a "select own product_events" policy in a
-   * migration first; then move this entry into EXPORT_TABLES above.
-   */
-  product_events: "RLS has no SELECT policy — would export as permanently empty; needs a migration first",
-  /**
    * Migration 0072's audit trail of a student's birth-year changes. Their data, and it
-   * belongs here — but 0072 is not applied to any environment yet
-   * (see docs/migration-state.md), and Supabase resolves a query against a missing table
-   * as an error that this route turns into `[]`. So adding it now buys the same silent
-   * empty section as product_events. Move it into EXPORT_TABLES when 0072 lands.
+   * belongs here — but unlike product_events, applying the table wasn't the whole
+   * blocker. Confirmed live against oryn-qa-scratch on 2026-09-02 (this doc's own prior
+   * text, and docs/migration-state.md, both said "0072 not applied anywhere yet" as of
+   * 2026-09-01 — that had gone stale by the next day, so don't trust this comment either
+   * without re-probing): the table exists, RLS is enabled, and it carries zero policies —
+   * not even a select-own one. DATA_RIGHTS_AUDIT.md Part 3a lays out why that's deliberate
+   * rather than an oversight (the migration's own COMMENT ON TABLE leaves "should a
+   * student ever see this through any surface" as an open product question) and presents
+   * two ways to close it with a real tradeoff between them (an RLS select-own policy vs.
+   * an admin-client read scoped in this route's own code) — not resolved here, on purpose;
+   * whoever picks one should also update this comment and move the table into
+   * EXPORT_TABLES.
    */
-  birth_year_changes: "migration 0072 is not applied anywhere yet — would export as permanently empty until it is",
+  birth_year_changes:
+    "table exists (migration 0072 applied) and carries user_id, but RLS has zero policies — the read-access design question in DATA_RIGHTS_AUDIT.md Part 3a is still open, not just an unapplied migration",
   /**
    * Migration 0075's log of which deadline reminders a student has already received (see
    * lib/deadlines/scan.ts). Their data, benign, and the RLS policy is already select-own —

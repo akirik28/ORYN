@@ -172,11 +172,17 @@ export async function updateVisibility(isPublic: boolean, lookingFor: string | n
  * Order matters and is the whole design. Storage objects are removed FIRST, while the
  * database rows saying which file paths belonged to this student still exist — reversed,
  * there is no way left to know which paths were theirs. Only once that succeeds does the
- * admin client delete the `auth.users` row; every table cascades via `references
- * auth.users(id) on delete cascade` (profiles) and `references profiles(id) on delete
- * cascade` (everything else, independently verified table-by-table against the live
- * database in DATA_RIGHTS_AUDIT.md), so that one call removes the rest of the student's
- * *database* data.
+ * admin client delete the `auth.users` row; 41 of the 42 live tables with a `profiles(id)`
+ * reference cascade via `on delete cascade` (independently verified table-by-table against
+ * the live database in DATA_RIGHTS_AUDIT.md), so that one call removes the rest of the
+ * student's *database* data — with one deliberate exception: `ai_usage.user_id` is
+ * `on delete set null`, not cascade (migration 0013_ops.sql), so an `ai_usage` row survives
+ * as an anonymized record (feature/provider/model/token counts/cost, no prompt content,
+ * no user_id) rather than being removed. DATA_RIGHTS_AUDIT.md treats that as a legitimate
+ * way to satisfy an erasure right, not a bug — but it is a real, deliberate divergence from
+ * "every table cascades," not a rounding error, and whether anonymize-in-place is
+ * sufficient (vs. requiring full deletion) is recorded as an open question in
+ * `LAWYER_FLAGS` (lib/legal/content.ts) rather than settled here.
  *
  * It does not touch Storage — Postgres FK cascades don't reach it, which is exactly the
  * gap DATA_RIGHTS_AUDIT.md found: this function used to delete the account and leave
