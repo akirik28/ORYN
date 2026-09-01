@@ -8,10 +8,36 @@ integration checkpoint — history lives in `docs/handoffs/*` and `git log`, not
 it's not itself stale before trusting an ownership claim), and `docs/MASTER-EXECUTION-STRATEGY.md`
 for the enduring product/build direction.**
 
+## ⚠️ `origin/main` is frozen — read this before checking anything against it (2026-09-01 ~15:40 onward)
+
+**`git push origin main` is being refused by the local permission classifier in the integrating
+session.** Not GitHub, not the token, not branch protection (`gh api …/branches/main/protection`
+returns "Branch not protected"), and not a hold — branch pushes work normally throughout. Only
+`main` is refused, and a denied action is not to be routed around.
+
+**Consequence, and it has now misled five separate sessions independently:** `origin/main` has
+been stuck at `cf3efcf9` since about 15:40 while local `main` accumulated more than twenty merged
+commits. Anything that reads the remote — `git log origin/main`, `merge-base --is-ancestor …
+origin/main`, a fleet monitor polling GitHub — reports that the night stopped, and reports it
+confidently. **Check the local ref**: `git -C <checkout> log --oneline -1 main`, and
+`git rev-list --count origin/main..main` for the size of the gap.
+
+Two knock-on rules while this holds. **Cut new branches from local `main`, not `origin/main`** —
+the latter is missing every merge since 15:40, including possibly your own. And **`git diff
+origin/main <branch>` is meaningless** for a branch cut before the freeze: two-dot diffs render
+`main`'s own progress as if it were the branch's content (this made one branch look like it
+shipped 1,669 lines of code it does not contain). Use `main...branch` (three dots) or
+`git merge-tree --write-tree main <branch>`.
+
+Only the founder can clear this — by pushing `main` themselves or widening the permission. It is
+item 0-bis on the launch plan.
+
 ## Measurement provenance (read this before trusting any number below)
 
 - **Code state** is measured against a specific commit on a specific branch. It goes stale the
-  moment anyone pushes. Re-run `git log --oneline -1 origin/main` before trusting it.
+  moment anyone pushes. Re-run `git log --oneline -1 origin/main` before trusting it — **but see
+  the frozen-`origin/main` warning above: right now that command is actively misleading and the
+  local ref is the honest one.**
 - **Live database state** is measured by directly querying the `oryn-qa-scratch` Supabase
   project (`qtcvcflzxbuagvvwahhu`) via the Supabase MCP connector. Re-measure before trusting it
   for anything more than a same-day approximation — every count below was queried fresh for this
