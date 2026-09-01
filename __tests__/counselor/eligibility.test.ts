@@ -119,7 +119,7 @@ describe("evaluateCandidateEligibility — opportunities", () => {
   test("unknown, with a not-verified note, when eligible_countries is empty and NOT research-confirmed open", () => {
     const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ country_eligibility_confirmed_open: false })));
     expect(result.verdict).toBe("unknown");
-    expect(result.notes.join(" ")).toMatch(/country eligibility hasn't been verified/i);
+    expect(result.notes.join(" ")).toMatch(/country eligibility not verified yet/i);
   });
 
   // The opposite overcorrection is forbidden too: unresearched is not evidence of a
@@ -282,12 +282,12 @@ describe("evaluateCandidateEligibility — locale: tr", () => {
       new Date(),
       "tr"
     );
-    expect(result.notes.join(" ")).toMatch(/ülke uygunluğu henüz doğrulanmadı/);
+    expect(result.notes.join(" ")).toMatch(/ülke uygunluğu henüz doğrulanmadı/i);
   });
 
   test("age-requirement-unknown note is Turkish", () => {
     const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ minimum_age: 14 }), null), new Date(), "tr");
-    expect(result.notes.join(" ")).toMatch(/yaş şartı/);
+    expect(result.notes.join(" ")).toMatch(/yaş şartı/i);
   });
 
   // studentCountry stays untranslated by design (see lib/counselor/copy.ts's file header) —

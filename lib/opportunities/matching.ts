@@ -106,19 +106,78 @@ export function isSameCountry(a: string, b: string): boolean {
  * bookmark is not an exclusion — the student hasn't decided yet.
  */
 /**
- * `locale` is additive (defaults to English, same pattern as lib/counselor/copy.ts and every
- * other lib/-side reasoning function this i18n effort has threaded a locale through) — found
- * and fixed as part of the advisor package, not the earlier opportunities pass, because these
- * notes are `eligibility_notes`/warnings shown on BOTH the opportunities cards AND the
- * Counselor's own recommendation warnings (lib/counselor/evidence.ts reads `ranked.eligibility.notes`
- * straight from this function's output). Real numbers, not a guess: measured 2026-09-01,
- * 325 of 623 currently "strong match" opportunities carry a note here, and 110 of those say
- * "add your birth year to check" — a Turkish student was seeing English on roughly a third
- * of their best recommendations. The two "restriction on file" notes below echo
+ * The single source of the eligibility sentences shared with
+ * `lib/counselor/eligibility.ts`'s `evaluateOpportunityEligibility` (via `eligibilityMessages`
+ * below) — until 2026-09-01 that file kept its own independent copy in
+ * `lib/counselor/copy.ts`'s `eligibilityCopy`, translated faithfully but never reconciled, so
+ * a student reading an opportunity from the Advisor page and then its own detail page saw two
+ * different English sentences (and, after that translation pass, two different Turkish ones)
+ * about the exact same restriction. Full before/after: `docs/known-issues.md`'s "two
+ * independent eligibility pipelines" entry (now resolved, kept there for history).
+ *
+ * This file's wording won for two independent reasons, not just "pick one": (1) it already
+ * addresses the student with the informal `sen` register Turkish grammar distinguishes from
+ * formal `siz` — `copy.ts`'s version used `siz` ("doğum yılınız", "sizinki"), which was the
+ * lone formal-register surface in an otherwise-informal product (confirmed against this same
+ * i18n push's other packages — signup, the public profile, search all use `sen`), not a
+ * deliberate choice anyone had made; (2) it's shorter, matching the product's own stated copy
+ * preference for direct phrasing over a fuller explanatory clause (spec Phase 56). Two of
+ * `copy.ts`'s ten sentences were genuinely more complete, not just wordier — the
+ * citizenship-known-ineligible and grade-known-ineligible branches also stated what's
+ * currently on file, which is real information a student can use to catch a data-entry
+ * mistake on their own profile — so `citizenshipNotEligible`/`gradeNotEligible` below keep
+ * that detail even though the surrounding sentence is the terser version.
+ *
+ * `locale` is additive (defaults to English, same pattern as every other lib/-side reasoning
+ * function this i18n effort has threaded a locale through) — found and fixed as part of the
+ * advisor package, not the earlier opportunities pass, because these notes are
+ * `eligibility_notes`/warnings shown on BOTH the opportunities cards AND the Counselor's own
+ * recommendation warnings (lib/counselor/evidence.ts reads `ranked.eligibility.notes` straight
+ * from this function's output). Real numbers, not a guess: measured 2026-09-01, 325 of 623
+ * currently "strong match" opportunities carry a note here, and 110 of those say "add your
+ * birth year to check" — a Turkish student was seeing English on roughly a third of their best
+ * recommendations. The two "restriction on file" notes below echo
  * `opportunity.citizenshipRestrictions`/`residencyRestrictions` verbatim (sourced prose from
  * the opportunity's own record) — only their prefix is translated, matching this whole
  * effort's "sourced text stays as stored" rule.
  */
+export const eligibilityMessages = {
+  ageUnknown: (locale: Locale) => (locale === "tr" ? "Yaş şartı var — kontrol etmek için doğum yılını ekle." : "Has an age requirement — add your birth year to check."),
+
+  countryUnknown: (locale: Locale) => (locale === "tr" ? "Ülkeye göre kısıtlı — kontrol etmek için ülkeni ekle." : "Restricted by country — add your country to check."),
+
+  // studentCountry is stored, proper-noun profile data — never translated (lib/counselor/
+  // copy.ts's file header has the fuller reasoning: the surrounding Turkish grammar is built
+  // so no suffix has to attach to it).
+  countryNotEligible: (studentCountry: string, locale: Locale) =>
+    locale === "tr" ? `Şu anda ${studentCountry} öğrencilerine açık değil.` : `Not currently open to students from ${studentCountry}.`,
+
+  citizenshipUnknown: (locale: Locale) =>
+    locale === "tr" ? "Belirli bir vatandaşlık gerektiriyor — kontrol etmek için Ayarlar'a kendi vatandaşlığını ekle." : "Requires a specific citizenship — add yours in Settings to check.",
+
+  // `onFile` is the "kept from copy.ts" enrichment described above — both callers already
+  // have this in scope (the student's own citizenshipCountries), it was only ever a matter of
+  // whether the sentence said it.
+  citizenshipNotEligible: (eligible: string, onFile: string, locale: Locale) =>
+    locale === "tr" ? `Gerekli vatandaşlık: ${eligible}; kayıtlı vatandaşlığın: ${onFile}.` : `Requires citizenship in ${eligible}; citizenship on file is ${onFile}.`,
+
+  citizenshipRestrictionOnFile: (restriction: string, locale: Locale) =>
+    locale === "tr" ? `Kayıtlı vatandaşlık kısıtlaması (otomatik doğrulanmadı): ${restriction}` : `Citizenship restriction on file (not automatically verified): ${restriction}`,
+
+  residencyRestrictionOnFile: (restriction: string, locale: Locale) =>
+    locale === "tr" ? `Kayıtlı ikamet kısıtlaması (otomatik doğrulanmadı): ${restriction}` : `Residency restriction on file (not automatically verified): ${restriction}`,
+
+  countryEligibilityUnverified: (locale: Locale) =>
+    locale === "tr" ? "Ülke uygunluğu henüz doğrulanmadı — kısıtlamalar için resmi sayfayı kontrol et." : "Country eligibility not verified yet — check the official page for restrictions.",
+
+  gradeUnknown: (locale: Locale) => (locale === "tr" ? "Sınıf seviyesine göre kısıtlı — kontrol etmek için mezuniyet yılını ekle." : "Restricted by grade level — add your graduation year to check."),
+
+  // `currentGrade` is the same kind of "kept from copy.ts" enrichment as citizenshipNotEligible
+  // above.
+  gradeNotEligible: (eligibleGrades: string, currentGrade: number, locale: Locale) =>
+    locale === "tr" ? `Uygun sınıflar: ${eligibleGrades}; şu anki sınıfın: ${currentGrade}.` : `Restricted to grades ${eligibleGrades}; you're currently grade ${currentGrade}.`,
+};
+
 export function computeEligibility(
   student: StudentMatchProfile,
   opportunity: OpportunityForMatching,
@@ -138,7 +197,7 @@ export function computeEligibility(
 
   const hasAgeRestriction = opportunity.minimumAge !== null || opportunity.maximumAge !== null;
   if (hasAgeRestriction && student.age === null) {
-    unknownNotes.push(tr ? "Yaş şartı var — kontrol etmek için doğum yılını ekle." : "Has an age requirement — add your birth year to check.");
+    unknownNotes.push(eligibilityMessages.ageUnknown(locale));
   } else {
     if (opportunity.minimumAge !== null && student.age !== null && student.age < opportunity.minimumAge) {
       return { eligible: false, notes: tr ? `Asgari ${opportunity.minimumAge} yaş gerektiriyor.` : `Requires minimum age ${opportunity.minimumAge}.` };
@@ -151,12 +210,9 @@ export function computeEligibility(
   const hasCountryRestriction = opportunity.eligibleCountries.length > 0;
   if (hasCountryRestriction) {
     if (!student.country) {
-      unknownNotes.push(tr ? "Ülkeye göre kısıtlı — kontrol etmek için ülkeni ekle." : "Restricted by country — add your country to check.");
+      unknownNotes.push(eligibilityMessages.countryUnknown(locale));
     } else if (!opportunity.eligibleCountries.some((eligible) => isSameCountry(eligible, student.country!))) {
-      return {
-        eligible: false,
-        notes: tr ? `Şu anda ${student.country} öğrencilerine açık değil.` : `Not currently open to students from ${student.country}.`,
-      };
+      return { eligible: false, notes: eligibilityMessages.countryNotEligible(student.country, locale) };
     }
   }
 
@@ -165,13 +221,11 @@ export function computeEligibility(
   if (hasCitizenshipRestriction) {
     const citizenshipCountries = student.citizenshipCountries ?? [];
     if (citizenshipCountries.length === 0) {
-      unknownNotes.push(
-        tr ? "Belirli bir vatandaşlık gerektiriyor — kontrol etmek için Ayarlar'a kendi vatandaşlığını ekle." : "Requires a specific citizenship — add yours in Settings to check."
-      );
+      unknownNotes.push(eligibilityMessages.citizenshipUnknown(locale));
     } else if (!citizenshipCountries.some((c) => eligibleCitizenships.some((e) => isSameCountry(c, e)))) {
       return {
         eligible: false,
-        notes: tr ? `Şu vatandaşlıklardan birini gerektiriyor: ${eligibleCitizenships.join(", ")}.` : `Requires citizenship in ${eligibleCitizenships.join(", ")}.`,
+        notes: eligibilityMessages.citizenshipNotEligible(eligibleCitizenships.join(", "), citizenshipCountries.join(", "), locale),
       };
     }
   }
@@ -186,18 +240,10 @@ export function computeEligibility(
   // this now surfaces that previously produced no note at all (verified against
   // oryn-qa-scratch, 2026-08-22).
   if (opportunity.citizenshipRestrictions && !hasCitizenshipRestriction) {
-    unknownNotes.push(
-      tr
-        ? `Kayıtlı vatandaşlık kısıtlaması (otomatik doğrulanmadı): ${opportunity.citizenshipRestrictions}`
-        : `Citizenship restriction on file (not automatically verified): ${opportunity.citizenshipRestrictions}`
-    );
+    unknownNotes.push(eligibilityMessages.citizenshipRestrictionOnFile(opportunity.citizenshipRestrictions, locale));
   }
   if (opportunity.residencyRestrictions && !hasCountryRestriction) {
-    unknownNotes.push(
-      tr
-        ? `Kayıtlı ikamet kısıtlaması (otomatik doğrulanmadı): ${opportunity.residencyRestrictions}`
-        : `Residency restriction on file (not automatically verified): ${opportunity.residencyRestrictions}`
-    );
+    unknownNotes.push(eligibilityMessages.residencyRestrictionOnFile(opportunity.residencyRestrictions, locale));
   }
 
   // Empty eligibleCountries has two live meanings: research-confirmed open (deliberately
@@ -214,18 +260,16 @@ export function computeEligibility(
     !hasUnstructuredRestrictionEvidence &&
     !(opportunity.countryEligibilityConfirmedOpen ?? false)
   ) {
-    unknownNotes.push(
-      tr ? "Ülke uygunluğu henüz doğrulanmadı — kısıtlamalar için resmi sayfayı kontrol et." : "Country eligibility not verified yet — check the official page for restrictions."
-    );
+    unknownNotes.push(eligibilityMessages.countryEligibilityUnverified(locale));
   }
 
   const eligibleGrades = opportunity.eligibleGrades ?? [];
   if (eligibleGrades.length > 0) {
     const grade = currentGradeLevel(student.graduationYear ?? null);
     if (grade === null) {
-      unknownNotes.push(tr ? "Sınıf seviyesine göre kısıtlı — kontrol etmek için mezuniyet yılını ekle." : "Restricted by grade level — add your graduation year to check.");
+      unknownNotes.push(eligibilityMessages.gradeUnknown(locale));
     } else if (!gradeMatchesEligibility(grade, eligibleGrades)) {
-      return { eligible: false, notes: tr ? `${eligibleGrades.join(", ")}. sınıflarla sınırlı.` : `Restricted to grades ${eligibleGrades.join(", ")}.` };
+      return { eligible: false, notes: eligibilityMessages.gradeNotEligible(eligibleGrades.join(", "), grade, locale) };
     }
   }
 

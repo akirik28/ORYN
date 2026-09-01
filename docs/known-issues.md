@@ -96,7 +96,38 @@ a data array, not a URL. Confirmed by reading the call site, after confirming th
 when the path is visited directly.
 
 
-## Needs founder decision — two independent eligibility pipelines write different English for the same restriction
+## ~~Two independent eligibility pipelines write different English for the same restriction~~ — FIXED 2026-09-01
+
+**Closed** on `oryn/eligibility-copy-consolidation-2026-09-01` (pushed, not yet merged):
+`lib/opportunities/matching.ts` now exports `eligibilityMessages`, the single source for
+all ten sentences in the table below. `lib/counselor/eligibility.ts` calls into it instead
+of `lib/counselor/copy.ts`'s old `eligibilityCopy`, which now keeps only the two messages
+`matching.ts` has no counterpart for (`dataNotFound`, `notVerified`). Verified live, both
+locales, on a real opportunity for a real student: JA Company Programme (Europe) — age-
+restricted, country never researched — now reads the identical sentence, "Has an age
+requirement — add your birth year to check.", on both the Opportunities card and the
+Advisor's warning for the same student. Before this pass the two surfaces disagreed on
+that exact sentence, in both languages.
+
+**`matching.ts`'s wording won, not `copy.ts`'s as this doc's own recommendation below had
+guessed.** Two independent reasons, not a coin flip: (1) `copy.ts`'s Turkish used the
+formal `siz` register ("doğum yılınız", "sizinki") — the lone formal-register surface
+found across this whole i18n push's other packages (signup, public profile, search), all
+of which use informal `sen`. Confirmed with a full catalog count, not a guess: 85 informal
+vs. 8 formal markers across all 1,028 strings in `messages/tr.json`. `copy.ts`'s formal
+register was an unnoticed outlier, not a deliberate choice anyone had made. (2)
+`matching.ts`'s English is shorter, matching the product's own stated copy preference for
+direct phrasing over a fuller explanatory clause (spec Phase 56). Two of `copy.ts`'s ten
+sentences — the citizenship-known-ineligible and grade-known-ineligible branches — were
+genuinely more complete, not just wordier: they state what's currently on file, real
+information a student can use to catch a data-entry mistake on their own profile. So
+`eligibilityMessages.citizenshipNotEligible`/`gradeNotEligible` keep that detail even
+though the surrounding sentence is the terser version.
+
+Full root cause, the register measurement, and the live before/after:
+`docs/handoffs/eligibility-copy-consolidation-2026-09-01.md`.
+
+Original finding and the (superseded) recommendation, kept below for history.
 
 **2026-09-01, i18n advisor package.** While threading `locale` through
 `lib/opportunities/matching.ts`'s `computeEligibility()` and live-verifying the result, I
