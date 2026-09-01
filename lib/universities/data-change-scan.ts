@@ -31,19 +31,30 @@ import { DEFAULT_LOCALE, toLocale, type Locale } from "@/lib/i18n/config";
  * TWO MORE THINGS A STUDENT MIGHT REASONABLY EXPECT THIS TO COVER, DELIBERATELY NOT BUILT,
  * NAMED HERE SO THE GAP IS A DECISION AND NOT AN OVERSIGHT:
  *
- *   Deadline changes. university_deadlines already gets last_checked_at/data_status
- *   (migration 0074, "same enum, same meanings" as university_requirements) — but that
- *   migration is written and NOT applied to the live project (confirmed via
- *   `list_migrations` against the real project, 2026-09-02: the applied list still ends
- *   before 0074). Querying a column that does not exist live would fail outright, not
- *   degrade gracefully, so this source is not wired in. The moment 0074 lands, the same
- *   shape as the 'university' source above — compare last_changed_at against
- *   target_universities.created_at — covers it with a small, mechanical addition. This is
- *   also why it is not a duplicate of the existing deadline-approaching notification
- *   (lib/deadlines/scan.ts, category "deadline"): that one fires when a stored date crosses
- *   a days-until threshold; this one would fire on the date *changing at all*, which can
- *   happen far outside any threshold window and currently produces no signal to the
- *   student until the new date happens to enter one.
+ *   Deadline changes. This was first scoped out here as "blocked on migration 0074, not
+ *   applied live" — that premise was wrong, found and corrected the same session: direct
+ *   probing (`information_schema.columns`, not the `list_migrations` tool, which is stale
+ *   relative to the live schema — see 7ffffb8b's identical correction for migration 0072)
+ *   confirmed 0074 IS applied, university_deadlines genuinely has last_checked_at and
+ *   data_status today. The real blocker is narrower and different: 0074 added those two
+ *   columns only, NOT a last_changed_at-equivalent — university_deadlines has no column
+ *   that distinguishes "this row was re-verified, nothing moved" from "the actual date (or
+ *   text) changed", which is exactly the ambiguity last_checked_at/data_status describe by
+ *   design (freshness of verification) rather than resolve (change vs. no change). That is
+ *   the identical shape universities.last_changed_at had before THIS package's own fix
+ *   (hasUniversityDataChanged, lib/universities/sync-us-universities.ts) — the difference
+ *   is universities already had a last_changed_at column to correct; university_deadlines
+ *   has none to correct, so covering this needs a new migration adding one plus a
+ *   comparator for lib/deadlines/ingest.ts (this session's own domain-authority work
+ *   touched that exact file earlier, so the write path is already familiar) — comparable
+ *   in size to what this package just built for universities, not a small addition, and
+ *   not attempted here. Worth flagging as the natural next package: it is the specific
+ *   case named as the headline example for this whole notification category. Also why it
+ *   would not duplicate the existing deadline-approaching notification (lib/deadlines/
+ *   scan.ts, category "deadline") once built: that one fires when a stored date crosses a
+ *   days-until threshold; this would fire on the date *changing at all*, which can happen
+ *   far outside any threshold window and today produces no signal until the new date
+ *   happens to enter one.
  *
  *   Admission-statistics changes (admission rate, SAT/ACT range, cost, graduation rate —
  *   university_statistics). That table has no last_changed_at-equivalent column at all,
