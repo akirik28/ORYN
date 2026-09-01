@@ -112,6 +112,13 @@ export async function getOrCreateWeeklyPlan(userId: string, opts?: { force?: boo
       // with copies of itself. Scoped to this ISO week, matching weekly_plans' own
       // one-row-per-(user,week) shape, not a rolling window -- a genuinely new avoid-for-now
       // suggestion next week should still land.
+      // .limit(1) before .maybeSingle(): without it, two rows matching (a real race between
+      // two regenerate calls -- no unique constraint stops it, same shape
+      // buildActionStatusPatch exists to handle for the other half of this feature) makes
+      // maybeSingle() error, data comes back null, and the check below reads that as "no
+      // existing row" -- inserting again, permanently, since the duplicate it just created
+      // makes the next race even more likely. Bounding to one row keeps the guard working
+      // even after a race has already happened, not just before the first one.
       const { data: existingRecommendation } = await supabase
         .from("ai_recommendations")
         .select("id")
@@ -119,6 +126,7 @@ export async function getOrCreateWeeklyPlan(userId: string, opts?: { force?: boo
         .eq("recommendation_class", "avoid_for_now")
         .eq("title", generation.avoidForNow.activity)
         .gte("shown_at", `${weekStartDate}T00:00:00.000Z`)
+        .limit(1)
         .maybeSingle();
       if (!existingRecommendation) {
         await admin.from("ai_recommendations").insert({
@@ -140,12 +148,15 @@ export async function getOrCreateWeeklyPlan(userId: string, opts?: { force?: boo
   // needs a second notification telling them so. Live before this: one student had 100
   // identical "Your weekly plan is ready" notifications, 100 of them unread. Scoped to the
   // ISO week for the same reason -- once per week's plan, not once per generation.
+  // .limit(1) for the same reason as the ai_recommendations check above -- without it, two
+  // rows matching turns maybeSingle() into a silent, self-perpetuating false negative.
   const { data: existingNotification } = await supabase
     .from("notifications")
     .select("id")
     .eq("user_id", userId)
     .eq("category", "weekly_plan")
     .gte("created_at", `${weekStartDate}T00:00:00.000Z`)
+    .limit(1)
     .maybeSingle();
   if (!existingNotification) {
     await createNotification({
