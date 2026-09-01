@@ -4,10 +4,9 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { Bell, CheckCheck } from "lucide-react";
-import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { markNotificationRead, markAllNotificationsRead } from "@/app/(app)/notifications/actions";
+import { markReadIfUnread, markAllRead } from "@/features/notifications/mark-read";
 import { formatRelativeTime } from "@/lib/i18n/date";
 import { toLocale } from "@/lib/i18n/config";
 import type { Notification } from "@/types/database";
@@ -65,12 +64,7 @@ export function NotificationBell({ notifications, unreadCount }: { notifications
               className="flex items-center gap-1 text-[11px] font-semibold hover:opacity-80"
               style={{ color: "#3D35E8" }}
               disabled={isPending}
-              onClick={() =>
-                startTransition(async () => {
-                  const result = await markAllNotificationsRead();
-                  if (result.error) toast.error(result.error);
-                })
-              }
+              onClick={() => markAllRead(startTransition)}
             >
               <CheckCheck className="size-3.5" /> {t("markAllRead")}
             </button>
@@ -105,12 +99,7 @@ export function NotificationBell({ notifications, unreadCount }: { notifications
               );
               const onActivate = () => {
                 setOpen(false);
-                if (!notification.read_at) {
-                  startTransition(async () => {
-                    const result = await markNotificationRead(notification.id);
-                    if (result.error) toast.error(result.error);
-                  });
-                }
+                markReadIfUnread(notification, startTransition);
               };
 
               // A notification with no `link` previously still rendered as a Link, falling
@@ -129,6 +118,15 @@ export function NotificationBell({ notifications, unreadCount }: { notifications
               );
             })
           )}
+        </div>
+        {/* Always shown, even when the visible 20 are all read — the popover only ever
+            shows the most recent 20 (app/(app)/layout.tsx), so there can be more history
+            than fits here regardless of what's currently unread. This is the "see
+            everything" escape hatch the popover itself deliberately doesn't try to be. */}
+        <div className="border-t px-4 py-2.5 text-center" style={{ borderColor: "#F4F4F8" }}>
+          <Link href="/notifications" onClick={() => setOpen(false)} className="text-[11px] font-semibold hover:opacity-80" style={{ color: "#3D35E8" }}>
+            {t("viewAll")}
+          </Link>
         </div>
       </PopoverContent>
     </Popover>
