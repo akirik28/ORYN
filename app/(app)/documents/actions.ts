@@ -99,10 +99,3 @@ export async function deleteEvidence(evidenceId: string): Promise<{ error?: stri
   revalidatePath("/documents");
   return {};
 }
-
-export async function getSignedEvidenceUrl(filePath: string): Promise<string | null> {
-  await requireUser();
-  const supabase = await createClient();
-  const { data } = await supabase.storage.from("evidence").createSignedUrl(filePath, 60 * 10);
-  return data?.signedUrl ?? null;
-}

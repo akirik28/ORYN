@@ -25,6 +25,35 @@ state (a specific row's status, whether `.env.local` still holds a placeholder) 
 history has no visibility into either, so those are marked "not verifiable this pass"
 rather than asserted either way.
 
+
+## A student cannot remove a target university
+
+**Open, small, and the fix is already written.** `removeTargetUniversity` exists in
+`app/(app)/universities/actions.ts`, is correctly scoped (`.eq("user_id", session.userId)`)
+and revalidates both `/universities` and `/dashboard` — and **nothing calls it.** The
+universities UI imports `addTargetUniversity`, `updateTargetUniversityStatus` and
+`loadMoreUniversities` from that file, never this one.
+
+So: saving is one click on a card with no confirmation, and there is no undo. The nearest
+thing is setting the status to "Withdrawn", which the picker offers — but nothing filters
+withdrawn targets out of any list, including the dashboard's University Outlook, so the row
+follows the student around either way. 18 target rows exist across 8 users today.
+
+Found by sweeping every `"use server"` file for exported actions with no caller. That sweep
+returned three:
+
+- `ensureWeeklyPlan` — a leftover from an earlier fix; removed, and it was also the one path
+  to plan generation with no rate limit (see that commit).
+- `getSignedEvidenceUrl` — a duplicate; `app/(app)/documents/page.tsx` already creates the
+  signed URL inline and `evidence-row.tsx` renders it. Removed. Worth recording that it was
+  **not** the IDOR it looks like: it took an arbitrary `filePath` and only checked that
+  *someone* was logged in, but Storage RLS scopes `evidence` reads to
+  `(storage.foldername(name))[1] = auth.uid()`, and `createSignedUrl` needs SELECT — verified
+  against the live policies. The database boundary held where the application code didn't.
+- `removeTargetUniversity` — this one. Not removed, because unlike the other two it is a
+  missing feature rather than dead code.
+
+
 ## Tracking upstream — every Dialog silently loses focus on the first Shift+Tab
 
 **2026-09-01, accessibility audit follow-up.** Every dialog in the app (they all render
