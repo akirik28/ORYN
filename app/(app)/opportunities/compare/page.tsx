@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { ArrowLeft, Scale } from "lucide-react";
 import { requireUser } from "@/lib/security/dal";
@@ -13,7 +14,16 @@ import { EmptyState } from "@/components/oryn/empty-state";
 import { COMPARE_MAX } from "@/lib/universities/compare-constants";
 import type { Opportunity } from "@/types/database";
 
-export const metadata = { title: "Compare opportunities" };
+// `pageTitle`, not `title` (which is the on-page H1, phrased as an instruction —
+// "Compare opportunities") — same distinction app/(app)/universities/compare/page.tsx
+// already draws between the two, and for the same reason: a browser-tab title reads as a
+// document name, not a command, and the two registers genuinely differ in Turkish
+// ("Fırsat Karşılaştırma" vs "Fırsatları karşılaştır") even where English happens to stay
+// the same string either way.
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("opportunities.comparePage");
+  return { title: t("pageTitle") };
+}
 
 const NA = <span className="text-muted-foreground">—</span>;
 

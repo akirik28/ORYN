@@ -973,6 +973,7 @@
       "compare": "Compare"
     },
     "comparePage": {
+      "pageTitle": "Compare opportunities",
       "title": "Compare opportunities",
       "description": "Select 2–4 opportunities from Saved to compare them here.",
       "nothingYetTitle": "Nothing to compare yet",

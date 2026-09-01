@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
@@ -10,7 +11,14 @@ import { SavedOpportunitiesSection } from "@/features/saved/saved-opportunities-
 import { CompareBar } from "@/features/universities/compare-bar";
 import { OpportunityCompareBar } from "@/features/opportunities/opportunity-compare-bar";
 
-export const metadata = { title: "Saved" };
+// No separate `pageTitle` key (contrast opportunities/compare/page.tsx's own comment on
+// exactly this choice): `saved.title`/`saved.description` are already a plain noun phrase
+// in both locales ("Saved"/"Kaydedilenler"), not an instruction, so there's no register
+// gap between the on-page H1 and the browser tab to resolve with a second key.
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("saved");
+  return { title: t("title"), description: t("description") };
+}
 
 /**
  * Founder request, 2026-09-01 (verbatim): "kaydet butonu var ya, kaydedilenler diye bir
