@@ -22,6 +22,7 @@ import { completeOnboarding } from "@/app/(onboarding)/onboarding/actions";
 import { EntityCombobox } from "@/features/entities/entity-combobox";
 import { SuggestInput } from "@/features/entities/suggest-input";
 import { COUNTRY_SUGGESTIONS } from "@/lib/vocabularies/countries";
+import { meetsMinimumSignupAge } from "@/lib/legal/age-policy";
 import { InterestsStep } from "./steps/interests-step";
 import { ImportStep, type ReviewedExtractedItem } from "./steps/import-step";
 
@@ -146,6 +147,15 @@ export function OnboardingWizard() {
       const year = Number(birthYear);
       if (!birthYear.trim() || !Number.isInteger(year) || year < currentYear - 100 || year > currentYear - 10) {
         setError(t("birthYearError"));
+        return;
+      }
+      // Separate message from the format check above on purpose — this is the
+      // minimum-age policy (lib/legal/age-policy.ts), not a plausibility bound, and the
+      // server re-checks it independently (completeOnboarding) rather than trusting this
+      // client-side pass. This copy is what most students who fail it will actually see;
+      // the server check exists so it can't be bypassed, not because this one is unreliable.
+      if (!meetsMinimumSignupAge(year)) {
+        setError(t("birthYearTooYoung"));
         return;
       }
     }

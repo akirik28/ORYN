@@ -322,6 +322,33 @@ describe("output guard — actions and avoidForNow must never name the same thin
     expect(plan.avoidForNow).toBeNull();
     expect(plan.actions).toHaveLength(1);
   });
+
+  test("a Counselor Core recommendation put ONLY in avoidForNow (never in actions) is still caught — the 2026-09-02 eval finding", async () => {
+    // The defect this reproduces: Counselor Core has exactly one do-classed candidate and
+    // nothing ruled out. The model recommends something else for "actions" and puts the
+    // Counselor Core candidate in "avoidForNow" instead — no title appears in both lists,
+    // so the pre-existing actions-vs-avoidForNow check has nothing to catch.
+    h.recommendations = [rec({ recommendationClass: "do", title: "Regional Science Fair" })];
+
+    const { plan } = await runPlan(
+      planResponse({
+        actions: [
+          { title: "Finish the youth-unemployment dataset", description: "d", reason: "r", category: "research", estimatedMinutes: 150, impact: "high" as const },
+        ],
+        avoidForNow: { activity: "Regional Science Fair", reason: "Unconfirmed eligibility and a time conflict." },
+      }),
+    );
+
+    expect(plan.avoidForNow).toBeNull();
+    expect(plan.actions).toHaveLength(1);
+  });
+
+  test("the prompt itself forbids a recommended item from landing in avoidForNow, not just actions", async () => {
+    h.recommendations = [rec({ recommendationClass: "do", title: "Regional Science Fair" })];
+    const { prompt } = await runPlan();
+    const recommendedSection = sectionContaining(prompt, "Regional Science Fair");
+    expect(recommendedSection).toContain('avoidForNow');
+  });
 });
 
 describe("formatCounselorGrounding (pure)", () => {
@@ -393,6 +420,20 @@ describe("resolvePlanSelfContradiction (pure)", () => {
 
   test("an empty or whitespace-only avoid activity is never treated as matching everything", () => {
     expect(resolvePlanSelfContradiction(plan(["Finish the dataset"], "   ")).avoidForNow).not.toBeNull();
+  });
+
+  test("catches a Counselor Core recommendation named in avoidForNow, even with zero overlap against actions", () => {
+    const result = resolvePlanSelfContradiction(plan(["Finish the youth-unemployment dataset"], "Regional Science Fair"), ["Regional Science Fair"]);
+    expect(result.avoidForNow).toBeNull();
+  });
+
+  test("a title absent from both actions and the counselor-recommended list survives untouched", () => {
+    const result = resolvePlanSelfContradiction(plan(["Finish the youth-unemployment dataset"], "Start another entrepreneurship club"), ["Regional Science Fair"]);
+    expect(result.avoidForNow).not.toBeNull();
+  });
+
+  test("counselorRecommendedTitles defaults to empty — omitting it changes nothing for the original actions-only check", () => {
+    expect(resolvePlanSelfContradiction(plan(["Start another entrepreneurship club"], "starting another entrepreneurship club")).avoidForNow).toBeNull();
   });
 });
 

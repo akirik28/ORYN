@@ -113,9 +113,28 @@ change what a student sees today; that's a separate, real UI gap, not assumed al
 | Galatasaray Üniversitesi | DEVLET | 9 | 4 | All 13 programmes under the top-50k bar — the most concentrated selectivity profile outside Koç/Sabancı. The single sharpest gap in the whole exercise: nationally famous, top-10 on both signals, entirely absent from the catalogue. |
 | Marmara Üniversitesi | DEVLET | 3 | 19 | 126 programmes, 50 under 50k — broader footprint than Ankara Üniversitesi's own. Major İstanbul devlet flagship, currently absent. |
 | Yeditepe Üniversitesi | VAKIF | 5 | 8 | 142 programmes, 40 under 50k. Stronger on both axes than Bahçeşehir/Bilgi peers. |
-| TOBB Ekonomi ve Teknoloji Üniversitesi | VAKIF | 17 | 5 | Small, elite technical/economics vakıf — same shape as Bilkent one tier down in scale. |
+| TOBB Ekonomi ve Teknoloji Üniversitesi | VAKIF | 17 | ~18 (corrected, see below) | 28 programmes under the top-50k bar — breadth, not peak selectivity, is this school's real basis for inclusion. |
 
 Devlet/vakıf split of the adds: 2/2, preserving the existing catalogue's own balance.
+
+**Correction, 2026-09-01, same day, from oryn-60**: the peak-rank cell above originally read "5,"
+carried over from a source figure that skipped its own stated ≥10-seat floor — the exact
+methodology deliberately built to stop a thin scholarship seat from misrepresenting a whole
+institution (§0/§1's own reasoning for why 3-seat outliers get floored), just not applied to this
+one citation. The cited seat has `kontenjan=3`; properly floored, TOBB ETÜ's true peak placement
+rank is 3,554 — solid, roughly Yıldız Teknik/Marmara tier, not top-5. **Does not change TOBB
+ETÜ's inclusion**: the breadth signal (#17, 28 programmes ≤50k, summed across every fee tier so
+one thin seat can't distort it) was always the more robust basis, same shape as Marmara's own
+breadth-driven case, and stands unaffected. Gebze Teknik's numbers were checked for the same
+failure mode and don't need the same correction — it's devlet, no fee tiers, never exposed to it.
+
+**Worth carrying as a standing caveat, not just a one-off fix**: a vakıf university's
+selectivity can span three orders of magnitude within a single programme by fee tier (TOBB
+ETÜ's own İktisat: rank 838 on a scholarship seat vs. 818,411 full-price in the same programme).
+Any single selectivity number quoted for a vakıf institution needs its fee tier stated before it
+goes near a ranking, a comparison, or a UI — two vakıf schools can look identically selective
+while offering completely different realities to a paying student, and a devlet institution's
+single number carries no equivalent risk.
 
 **My own call (1): İstanbul Üniversitesi-Cerrahpaşa — in.** Oryn-60 flagged this as a judgment
 call (institutionally a 2019 split from İstanbul Üniversitesi, already in the catalogue) rather

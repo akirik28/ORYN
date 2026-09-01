@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { removeAllUserStorage, StorageCleanupError } from "@/lib/account/delete-storage";
 import { UpdatePasswordSchema } from "@/lib/validation/auth";
+import { meetsMinimumSignupAge } from "@/lib/legal/age-policy";
+import { logEvent } from "@/lib/analytics/log";
 import type { TimeBudget } from "@/types/database";
 
 /**
@@ -100,6 +102,15 @@ export async function updateBirthYear(birthYear: number | null): Promise<{ error
   const { error } = await supabase.from("profiles").update({ birth_year: birthYear }).eq("id", session.userId!);
   if (error) return { error: "Couldn't save your birth year." };
 
+  // Same non-blocking flag as app/(confirm-age)/confirm-age/actions.ts, and the same
+  // reasoning: this is an existing account correcting its own on-file value, not a new
+  // signup — refusing or reverting the edit unilaterally would be a bigger decision than
+  // "capture the age" (see docs/age-gate-design-2026-09-02.md). Only fires on an actual
+  // value, never on clearing it back to null — there's no age to flag in that case.
+  if (birthYear !== null && !meetsMinimumSignupAge(birthYear)) {
+    await logEvent(session.userId!, "birth_year_settings_update_below_minimum_age", { birthYear });
+  }
+
   revalidatePath("/settings");
   // Both surfaces re-derive eligibility from this value, so a stale cache here is the
   // difference between "Oryn can't check this" and a real answer.
@@ -172,11 +183,17 @@ export async function updateVisibility(isPublic: boolean, lookingFor: string | n
  * Order matters and is the whole design. Storage objects are removed FIRST, while the
  * database rows saying which file paths belonged to this student still exist — reversed,
  * there is no way left to know which paths were theirs. Only once that succeeds does the
- * admin client delete the `auth.users` row; every table cascades via `references
- * auth.users(id) on delete cascade` (profiles) and `references profiles(id) on delete
- * cascade` (everything else, independently verified table-by-table against the live
- * database in DATA_RIGHTS_AUDIT.md), so that one call removes the rest of the student's
- * *database* data.
+ * admin client delete the `auth.users` row; 41 of the 42 live tables with a `profiles(id)`
+ * reference cascade via `on delete cascade` (independently verified table-by-table against
+ * the live database in DATA_RIGHTS_AUDIT.md), so that one call removes the rest of the
+ * student's *database* data — with one deliberate exception: `ai_usage.user_id` is
+ * `on delete set null`, not cascade (migration 0013_ops.sql), so an `ai_usage` row survives
+ * as an anonymized record (feature/provider/model/token counts/cost, no prompt content,
+ * no user_id) rather than being removed. DATA_RIGHTS_AUDIT.md treats that as a legitimate
+ * way to satisfy an erasure right, not a bug — but it is a real, deliberate divergence from
+ * "every table cascades," not a rounding error, and whether anonymize-in-place is
+ * sufficient (vs. requiring full deletion) is recorded as an open question in
+ * `LAWYER_FLAGS` (lib/legal/content.ts) rather than settled here.
  *
  * It does not touch Storage — Postgres FK cascades don't reach it, which is exactly the
  * gap DATA_RIGHTS_AUDIT.md found: this function used to delete the account and leave

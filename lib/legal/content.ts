@@ -334,6 +334,13 @@ export const LAWYER_FLAGS: LawyerFlag[] = [
       "No automated retention limit exists. Data persists until the student deletes the item or the account. Deletion and full export are both implemented and working.",
   },
   {
+    id: "aiUsageAnonymization",
+    question:
+      "On account deletion, is anonymizing an ai_usage row (nulling user_id, keeping feature/provider/model/token counts/cost) sufficient to satisfy an erasure right, or must the row be deleted outright?",
+    currentState:
+      "ai_usage.user_id is `on delete set null` (migration 0013_ops.sql), not cascade — the one exception among the 42 live tables referencing profiles(id), all of which cascade. logAIUsage() (lib/ai/usage.ts) never writes prompt or response text to this table, only those seven columns, so what survives is aggregate usage metering with no remaining identifier and no qualitative content. DATA_RIGHTS_AUDIT.md's read: this is a recognized way to satisfy erasure (anonymization), not a retained personal-data record — but that is engineering's non-lawyer reasoning, not a decision, and the alternative (cascade-delete the row like every other table) would lose the ability to reconstruct aggregate historical AI cost/usage once accounts are deleted.",
+  },
+  {
     id: "liability",
     question:
       "Liability limitations, disclaimers, governing law, and forum — none of which engineering should draft.",

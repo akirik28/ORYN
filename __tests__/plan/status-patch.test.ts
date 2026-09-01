@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest";
-import { buildActionStatusPatch } from "@/lib/plan/status-patch";
+import { buildActionStatusPatch, shouldLogCompletion } from "@/lib/plan/status-patch";
 
 /**
  * Regression coverage for the 2026-08-29 audit finding: features/dashboard/weekly-focus.tsx
@@ -44,5 +44,31 @@ describe("buildActionStatusPatch", () => {
 
   test("not_started clears completed_at", () => {
     expect(buildActionStatusPatch({ status: "not_started" }).completed_at).toBeNull();
+  });
+});
+
+describe("shouldLogCompletion", () => {
+  // Measured live 2026-09-02: product_events held 8 weekly_action_completed rows across 4
+  // distinct actionIds — exactly 2.00 per action — because both Server Action calls from a
+  // single click carry status "completed".
+  test("logs on the toggle that actually completes the action", () => {
+    expect(shouldLogCompletion("not_started", "completed")).toBe(true);
+    expect(shouldLogCompletion("in_progress", "completed")).toBe(true);
+  });
+
+  test("does NOT log again on the reflection call that follows it — the doubling", () => {
+    expect(shouldLogCompletion("completed", "completed")).toBe(false);
+  });
+
+  test("does not log for any non-completing update", () => {
+    expect(shouldLogCompletion("not_started", "in_progress")).toBe(false);
+    expect(shouldLogCompletion("completed", "not_started")).toBe(false);
+  });
+
+  test("treats an unreadable previous status as a completion rather than swallowing the event", () => {
+    // If the pre-read fails or the row is missing, under-counting a real completion is the
+    // worse error than a rare double — the event is how anyone knows the loop works at all.
+    expect(shouldLogCompletion(null, "completed")).toBe(true);
+    expect(shouldLogCompletion(undefined, "completed")).toBe(true);
   });
 });

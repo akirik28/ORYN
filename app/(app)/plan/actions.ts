@@ -9,7 +9,7 @@ import { AIProviderNotConfiguredError } from "@/lib/ai";
 import { assertWithinAIRateLimit, RateLimitExceededError } from "@/lib/ai/rate-limit";
 import { logEvent } from "@/lib/analytics/log";
 import { aiServiceFailureMessage } from "@/lib/ai/service-failure";
-import { buildActionStatusPatch } from "@/lib/plan/status-patch";
+import { buildActionStatusPatch, shouldLogCompletion } from "@/lib/plan/status-patch";
 import type { ActionStatus, ReflectionOutcome } from "@/types/database";
 
 export async function regenerateWeeklyPlan(): Promise<{ error?: string }> {
@@ -52,6 +52,20 @@ export async function updateActionStatus(params: {
   // click) and the reasoning are documented there, next to the tests that pin it.
   const patch = buildActionStatusPatch(params);
 
+  // Read the status BEFORE writing, only so the analytics event below can tell a real
+  // completion from a second write about an already-completed action. The same click
+  // produces two independent Server Action calls (see status-patch.ts for the full
+  // reasoning) and BOTH carry `status: "completed"` — the toggle, then the reflection
+  // moments later. status-patch.ts fixed what that race did to the DATA; it never touched
+  // what it did to the event, so every real completion has been logging
+  // `weekly_action_completed` twice, inflating that metric roughly 2x for anyone reading it.
+  const { data: before } = await supabase
+    .from("weekly_actions")
+    .select("status")
+    .eq("id", params.actionId)
+    .eq("user_id", session.userId!)
+    .maybeSingle();
+
   const { error } = await supabase
     .from("weekly_actions")
     .update(patch)
@@ -62,7 +76,10 @@ export async function updateActionStatus(params: {
     return { error: "Couldn't update that action. Please try again." };
   }
 
-  if (params.status === "completed") {
+  // See lib/plan/status-patch.ts's shouldLogCompletion for why a transition, not a mention:
+  // both calls from one click carry status "completed", and this event was measured firing
+  // exactly 2.00 times per real completion before the guard existed.
+  if (shouldLogCompletion(before?.status, params.status)) {
     await logEvent(session.userId!, "weekly_action_completed", { actionId: params.actionId });
   }
 

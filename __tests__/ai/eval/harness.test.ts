@@ -188,6 +188,31 @@ describe("runEval", () => {
     expect(report.deterministicFailureCount).toBe(0);
   });
 
+  test("one failing case does not destroy the run — the successes were already paid for", async () => {
+    // 2026-09-02: a live run threw on a weekly_plan case (the model omitted a required
+    // field twice — a known behaviour anthropic-provider.ts's own retry comment documents)
+    // and the exception took the entire report with it: every case that had already
+    // succeeded, every judge score already billed, and the usage total. ~$0.20-0.30 of real
+    // spend produced nothing readable, and the operator could not even say how much
+    // precisely, because totals are computed at the end.
+    const provider = new MockAIProvider();
+    provider.queueText("A reply that works.");
+    // Second call has nothing queued — MockAIProvider throws, standing in for the real
+    // schema-validation failure.
+    const cases = [
+      { fixture: baselineFixture, target: "advisor_chat" as const, locale: "en" as const },
+      { fixture: baselineFixture, target: "advisor_chat" as const, locale: "tr" as const },
+    ];
+    const report = await runEval(provider, cases, { includeJudge: false });
+
+    expect(report.results).toHaveLength(1);
+    expect(report.failures).toHaveLength(1);
+    expect(report.failures[0].case.locale).toBe("tr");
+    expect(report.failures[0].message).toBeTruthy();
+    // The surviving case's spend is still accounted for, which is the point.
+    expect(report.totalUsage).toEqual({ inputTokens: 10, outputTokens: 10 });
+  });
+
   test("totalUsage sums targetUsage across all cases", async () => {
     const provider = new MockAIProvider();
     provider.queueText("A reply.");
