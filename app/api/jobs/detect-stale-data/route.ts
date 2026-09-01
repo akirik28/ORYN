@@ -1,26 +1,28 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { verifyCronRequest } from "@/lib/jobs/verify-cron-request";
 import { runWithTracking } from "@/lib/jobs/run-with-tracking";
-import { scanDeadlines } from "@/lib/deadlines/scan";
+import { detectStaleData } from "@/lib/jobs/detect-stale-data";
 
 /**
- * Scheduled job (Phase 24 notification; NOT Phase 30 Job B — this sends notifications
- * about deadlines already stored, it never re-reads a source to validate them. Real Job B
- * is docs/opportunity-reverification-job-design-2026-08-23.md's `opportunity_reverification`
- * design, unbuilt as of this writing. See that doc's §1.3 for why the name moved — and see
- * lib/deadlines/scan.ts's own scanDeadlines() docstring, which already carries this
- * correction; this route's docstring was the one place it hadn't propagated to). Run daily:
- *   curl -X POST /api/jobs/deadline-reminders -H "Authorization: Bearer $CRON_SECRET"
+ * Scheduled job (Phase 30, Job E — stale data detection). Not wired into vercel.json;
+ * scheduling this is a deployment decision for the founder, not something this route
+ * assumes. Safely inert without CRON_SECRET regardless (verifyCronRequest refuses
+ * everything when it's unset). Run manually or on whatever cadence is chosen:
+ *   curl -X POST /api/jobs/detect-stale-data -H "Authorization: Bearer $CRON_SECRET"
+ *
+ * Stored-data-only: recomputes `data_status` on universities and university_requirements
+ * from existing timestamps, no source re-fetch. Does not cover opportunities (no
+ * data_status column there; see docs/opportunity-reverification-job-design-2026-08-23.md
+ * for that table's own, larger, unbuilt job) or university_deadlines (migration 0074 adds
+ * the columns but is not yet applied live). Full reasoning, including what this job
+ * structurally cannot detect, is in lib/jobs/detect-stale-data.ts's own top comment.
  */
 export async function POST(request: NextRequest) {
   if (!verifyCronRequest(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const result = await runWithTracking("deadline_reminders", async () => {
-    const { notified, checked } = await scanDeadlines();
-    return { itemsProcessed: notified, result: { notified, checked } };
-  });
+  const result = await runWithTracking("detect_stale_data", async () => detectStaleData());
 
   return NextResponse.json(result);
 }
