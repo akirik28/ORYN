@@ -88,13 +88,21 @@ describe("message catalogs", () => {
     // per-namespace copy. Each entry below is a confirmed, deliberate loanword, shared
     // proper noun, or locale-independent notation, not an untranslated copy-paste — "Plan"
     // and "Mentor" are genuinely the same word in Turkish, "(n={size})" is statistical
-    // sample-size notation with no language to translate. A new identical pair failing
-    // this test is the guard working: confirm it's deliberate before adding it here, don't
-    // add speculatively.
+    // sample-size notation with no language to translate, and "AP"/"IB"/"A-Level" are the
+    // real, internationally-recognized names of those curricula, not English words with a
+    // Turkish equivalent. A new identical pair failing this test is the guard working:
+    // confirm it's deliberate before adding it here, don't add speculatively.
     const enFlat = new Map(flatten(en).map((key) => [key, key.split(".").reduce<unknown>((o, part) => (o as Record<string, unknown>)?.[part], en)]));
     const trFlat = new Map(flatten(tr).map((key) => [key, key.split(".").reduce<unknown>((o, part) => (o as Record<string, unknown>)?.[part], tr)]));
     const shared = [...enFlat.keys()].filter((key) => enFlat.get(key) === trFlat.get(key));
-    expect(shared).toEqual(["nav.plan", "profile.peerBenchmark.cohortSize", "profile.recommendations.relationships.mentor"]);
+    expect(shared).toEqual([
+      "nav.plan",
+      "onboarding.wizard.curriculumOptions.ap",
+      "onboarding.wizard.curriculumOptions.ib",
+      "onboarding.wizard.curriculumOptions.aLevel",
+      "profile.peerBenchmark.cohortSize",
+      "profile.recommendations.relationships.mentor",
+    ]);
   });
 
   test("every shipped locale has a label and an Intl tag", () => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { GOAL_OPTIONS, CURRICULUM_OPTIONS, GEOGRAPHY_OPTIONS } from "@/lib/validation/onboarding";
 import type { CurriculumType, TargetGeography } from "@/types/database";
 import type { CompleteOnboardingInput } from "@/lib/validation/onboarding";
 import { completeOnboarding } from "@/app/(onboarding)/onboarding/actions";
@@ -72,6 +72,36 @@ function StepShell({ title, subtitle, children }: { title: string; subtitle?: st
 }
 
 export function OnboardingWizard() {
+  const t = useTranslations("onboarding.wizard");
+  const tCommon = useTranslations("common");
+  // GOAL_OPTIONS has no separate stored value — the displayed string is what's persisted
+  // in profiles.goals (a free-text string[], never pattern-matched elsewhere in the app,
+  // confirmed before translating this file) — so it's translated directly rather than
+  // given a value/label split like curriculum/geography below, which back real enum
+  // columns and must keep a stable value independent of display language.
+  const GOAL_OPTIONS = [
+    t("goalOptions.competitiveUniversities"),
+    t("goalOptions.exploringCareers"),
+    t("goalOptions.buildingMyProfile"),
+    t("goalOptions.findingOpportunities"),
+    t("goalOptions.notSureYet"),
+  ];
+  const CURRICULUM_OPTIONS: { value: CurriculumType; label: string }[] = [
+    { value: "ap", label: t("curriculumOptions.ap") },
+    { value: "ib", label: t("curriculumOptions.ib") },
+    { value: "a_level", label: t("curriculumOptions.aLevel") },
+    { value: "turkish_curriculum", label: t("curriculumOptions.turkishCurriculum") },
+    { value: "national_curriculum", label: t("curriculumOptions.nationalCurriculum") },
+    { value: "other", label: t("curriculumOptions.other") },
+  ];
+  const GEOGRAPHY_OPTIONS: { value: TargetGeography; label: string }[] = [
+    { value: "usa", label: t("geographyOptions.usa") },
+    { value: "uk", label: t("geographyOptions.uk") },
+    { value: "europe", label: t("geographyOptions.europe") },
+    { value: "canada", label: t("geographyOptions.canada") },
+    { value: "turkey", label: t("geographyOptions.turkey") },
+    { value: "not_sure", label: t("geographyOptions.notSure") },
+  ];
   const [step, setStep] = useState(0);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -106,7 +136,7 @@ export function OnboardingWizard() {
     if (isAdvancing.current) return;
     setError(null);
     if (step === 1 && (!country.trim() || !schoolName.trim() || !curriculum)) {
-      setError("Fill in your country, school, and curriculum to continue.");
+      setError(t("schoolStepError"));
       return;
     }
     // Checked here rather than only on submit: the student is four steps from the end at
@@ -115,7 +145,7 @@ export function OnboardingWizard() {
     if (step === 1) {
       const year = Number(birthYear);
       if (!birthYear.trim() || !Number.isInteger(year) || year < currentYear - 100 || year > currentYear - 10) {
-        setError("Enter the year you were born — Oryn needs it to check age limits on programs.");
+        setError(t("birthYearError"));
         return;
       }
     }
@@ -167,7 +197,7 @@ export function OnboardingWizard() {
 
       <AnimatePresence mode="wait">
         {step === 0 && (
-          <StepShell key="0" title="What are you working toward?" subtitle="Pick as many as apply — you can change this later.">
+          <StepShell key="0" title={t("goalsTitle")} subtitle={t("goalsSubtitle")}>
             <div className="flex flex-wrap gap-2">
               {GOAL_OPTIONS.map((goal) => (
                 <TogglePill key={goal} selected={goals.includes(goal)} onClick={() => toggle(goals, goal, setGoals)}>
@@ -179,21 +209,21 @@ export function OnboardingWizard() {
         )}
 
         {step === 1 && (
-          <StepShell key="1" title="Tell us about your school" subtitle="This helps Oryn understand your academic context.">
+          <StepShell key="1" title={t("schoolTitle")} subtitle={t("schoolSubtitle")}>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="country">Country</Label>
-                <SuggestInput id="country" value={country} onChange={setCountry} suggestions={COUNTRY_SUGGESTIONS} placeholder="United States" />
+                <Label htmlFor="country">{t("countryLabel")}</Label>
+                <SuggestInput id="country" value={country} onChange={setCountry} suggestions={COUNTRY_SUGGESTIONS} placeholder={t("countryPlaceholder")} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="school">School</Label>
+                <Label htmlFor="school">{t("schoolLabel")}</Label>
                 <EntityCombobox
                   id="school"
                   scope="school"
                   value={schoolName}
                   entityId={schoolId}
                   context={{ country: country.trim() || null }}
-                  placeholder="Start typing your school's name"
+                  placeholder={t("schoolPlaceholder")}
                   allowCustom
                   customLabel="school"
                   onChange={(next) => {
@@ -204,7 +234,7 @@ export function OnboardingWizard() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="gradYear">Graduation year</Label>
+                  <Label htmlFor="gradYear">{t("graduationYearLabel")}</Label>
                   <Input
                     id="gradYear"
                     type="number"
@@ -215,7 +245,7 @@ export function OnboardingWizard() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="birthYear">Year you were born</Label>
+                  <Label htmlFor="birthYear">{t("birthYearLabel")}</Label>
                   <Input
                     id="birthYear"
                     type="number"
@@ -230,16 +260,13 @@ export function OnboardingWizard() {
                   {/* Says what it is for, in the student's terms. Without this the question
                       reads as one more form field to resent; with it, it reads as the thing
                       that stops every opportunity card saying "Oryn can't check this". */}
-                  <p id="birthYear-why" className="text-xs text-muted-foreground">
-                    Lots of programs have age limits. Oryn needs this to tell you which ones you
-                    can actually apply to — the year is enough, never your full birthday.
-                  </p>
+                  <p id="birthYear-why" className="text-xs text-muted-foreground">{t("birthYearWhy")}</p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="curriculum">Curriculum</Label>
+                  <Label htmlFor="curriculum">{t("curriculumLabel")}</Label>
                   <Select value={curriculum} onValueChange={(v) => v && setCurriculum(v as CurriculumType)}>
                     <SelectTrigger id="curriculum" className="w-full">
-                      <SelectValue placeholder="Select..." />
+                      <SelectValue placeholder={tCommon("selectPlaceholder")} />
                     </SelectTrigger>
                     <SelectContent>
                       {CURRICULUM_OPTIONS.map((option) => (
@@ -256,13 +283,13 @@ export function OnboardingWizard() {
         )}
 
         {step === 2 && (
-          <StepShell key="2" title="What are you interested in?" subtitle="Search or add your own — this shapes your recommendations.">
+          <StepShell key="2" title={t("interestsTitle")} subtitle={t("interestsSubtitle")}>
             <InterestsStep interests={interests} setInterests={setInterests} />
           </StepShell>
         )}
 
         {step === 3 && (
-          <StepShell key="3" title="Where might you want to study?" subtitle="Pick as many regions as you're considering.">
+          <StepShell key="3" title={t("geographyTitle")} subtitle={t("geographySubtitle")}>
             <div className="flex flex-wrap gap-2">
               {GEOGRAPHY_OPTIONS.map((option) => (
                 <TogglePill
@@ -278,7 +305,7 @@ export function OnboardingWizard() {
         )}
 
         {step === 4 && (
-          <StepShell key="4" title="Import your profile" subtitle="Upload a CV to save time, or start fresh — either way takes a minute.">
+          <StepShell key="4" title={t("importTitle")} subtitle={t("importSubtitle")}>
             <ImportStep reviewedItems={reviewedItems} setReviewedItems={setReviewedItems} country={country} />
           </StepShell>
         )}
@@ -288,16 +315,16 @@ export function OnboardingWizard() {
 
       <div className="flex items-center justify-between border-t pt-6">
         <Button variant="ghost" onClick={goBack} disabled={step === 0 || isPending}>
-          <ArrowLeft className="size-4" /> Back
+          <ArrowLeft className="size-4" /> {t("back")}
         </Button>
         {step < TOTAL_STEPS - 1 ? (
           <Button onClick={goNext}>
-            Continue <ArrowRight className="size-4" />
+            {t("continue")} <ArrowRight className="size-4" />
           </Button>
         ) : (
           <Button onClick={finish} disabled={isPending}>
             {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-            {isPending ? "Setting up your profile…" : "Finish"}
+            {isPending ? t("settingUp") : t("finish")}
           </Button>
         )}
       </div>

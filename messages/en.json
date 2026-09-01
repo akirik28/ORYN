@@ -56,6 +56,99 @@
     "save": "Save",
     "selectPlaceholder": "Select…"
   },
+  "onboarding": {
+    "wizard": {
+      "goalsTitle": "What are you working toward?",
+      "goalsSubtitle": "Pick as many as apply — you can change this later.",
+      "goalOptions": {
+        "competitiveUniversities": "Competitive universities",
+        "exploringCareers": "Exploring careers",
+        "buildingMyProfile": "Building my profile",
+        "findingOpportunities": "Finding opportunities",
+        "notSureYet": "Not sure yet"
+      },
+      "schoolTitle": "Tell us about your school",
+      "schoolSubtitle": "This helps Oryn understand your academic context.",
+      "countryLabel": "Country",
+      "countryPlaceholder": "United States",
+      "schoolLabel": "School",
+      "schoolPlaceholder": "Start typing your school's name",
+      "graduationYearLabel": "Graduation year",
+      "birthYearLabel": "Year you were born",
+      "birthYearWhy": "Lots of programs have age limits. Oryn needs this to tell you which ones you can actually apply to — the year is enough, never your full birthday.",
+      "curriculumLabel": "Curriculum",
+      "curriculumOptions": {
+        "ap": "AP",
+        "ib": "IB",
+        "aLevel": "A-Level",
+        "turkishCurriculum": "Turkish curriculum",
+        "nationalCurriculum": "National curriculum",
+        "other": "Other"
+      },
+      "interestsTitle": "What are you interested in?",
+      "interestsSubtitle": "Search or add your own — this shapes your recommendations.",
+      "geographyTitle": "Where might you want to study?",
+      "geographySubtitle": "Pick as many regions as you're considering.",
+      "geographyOptions": {
+        "usa": "USA",
+        "uk": "UK",
+        "europe": "Europe",
+        "canada": "Canada",
+        "turkey": "Turkey",
+        "notSure": "Not sure"
+      },
+      "importTitle": "Import your profile",
+      "importSubtitle": "Upload a CV to save time, or start fresh — either way takes a minute.",
+      "back": "Back",
+      "continue": "Continue",
+      "finish": "Finish",
+      "settingUp": "Setting up your profile…",
+      "schoolStepError": "Fill in your country, school, and curriculum to continue.",
+      "birthYearError": "Enter the year you were born — Oryn needs it to check age limits on programs."
+    },
+    "interests": {
+      "placeholder": "Search or type your own interest and press Enter",
+      "removeAriaLabel": "Remove {interest}",
+      "suggestions": {
+        "economics": "Economics",
+        "business": "Business",
+        "computerScience": "Computer Science",
+        "engineering": "Engineering",
+        "medicine": "Medicine",
+        "law": "Law",
+        "psychology": "Psychology",
+        "politics": "Politics",
+        "mathematics": "Mathematics",
+        "physics": "Physics",
+        "design": "Design",
+        "entrepreneurship": "Entrepreneurship",
+        "biology": "Biology",
+        "environmentalScience": "Environmental Science",
+        "history": "History",
+        "literature": "Literature"
+      }
+    },
+    "import": {
+      "uploadCv": "Upload CV",
+      "uploadCvHint": "PDF, DOCX, or text",
+      "enterManually": "Enter manually",
+      "enterManuallyHint": "Add things yourself",
+      "skipForNow": "Skip for now",
+      "skipForNowHint": "Do this later",
+      "manualNotice": "No problem — you can add activities, awards, projects, and more from your Profile at any time.",
+      "backToImportOptions": "Back to import options",
+      "readingCv": "Reading your CV…",
+      "readingCvHint": "This usually takes a few seconds.",
+      "clickToChoose": "Click to choose a file",
+      "clickToChooseHint": "PDF, DOCX, or plain text — up to 10MB",
+      "foundItems": "We found {count, plural, one {# item} other {# items}}. Review before adding them to your Oryn profile — uncheck anything that isn't right, or edit the details.",
+      "lowConfidence": "Low confidence — please check",
+      "schoolPlaceholder": "School",
+      "organizationPlaceholder": "Organization",
+      "removeItemAriaLabel": "Remove item",
+      "startOver": "Start over"
+    }
+  },
   "profile": {
     "backToProfile": "Back to profile",
     "page": {
