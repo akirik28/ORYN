@@ -3,6 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, TargetUniversity, University } from "@/types/database";
 import { canonicalUniversityId, loadSupersessionMap } from "@/lib/universities/canonical";
+import { refreshAdmissionOutlook } from "@/lib/admissions/persist";
 
 const PAGE_SIZE = 1000;
 
@@ -143,6 +144,55 @@ export interface TargetUniversityWithDetails extends TargetUniversity {
 }
 
 /**
+ * Refreshes any outlook that predates the student's current profile score, so this function's
+ * two callers (the dashboard, the Saved list) never render a verdict computed against an old
+ * profile. Same "self-heal at read time" idiom as the supersession resolution below — the
+ * alternative, a background sweep alone, would still leave a window between a profile change
+ * and the student next seeing it reflected. See docs/handoffs/admission-outlook-refresh-
+ * 2026-09-01.md for the fuller design (a weekly sweep exists too, as a backstop for a student
+ * who never revisits either surface).
+ *
+ * Compares against `profiles.updated_at` rather than a fixed age: the signal that matters is
+ * "has the input changed," not "how long has it been," so this stays correct whether a student
+ * edits daily or once a year. `profiles.updated_at` bumps on any profile column, not only the
+ * scoring ones (migration 0002's generic trigger), so an edit like changing
+ * `preferred_language` can trigger an unnecessary-but-harmless refresh — accepted rather than
+ * solved with a new dedicated column: `refreshAdmissionOutlook` is deterministic and cheap, so
+ * re-running it on an unchanged profile just writes back the same numbers.
+ *
+ * `refreshAdmissionOutlook` returning `null` means the honesty gate currently refuses this
+ * profile, and it deliberately leaves the stored row untouched (see that function's own doc
+ * comment) — so a stale-but-now-refused target is patched to a cleared outlook here in memory
+ * rather than re-read from the database, which would show the untouched stale value on exactly
+ * the case this whole function exists to prevent. A successful refresh IS re-read, deliberately:
+ * cheaper than threading every persisted field back out of `AdmissionOutlookResult` by hand, and
+ * the database is the correct source of truth once the write has actually happened.
+ */
+async function refreshStaleOutlooks(supabase: SupabaseClient<Database>, userId: string, targets: readonly TargetUniversity[]): Promise<Map<string, TargetUniversity>> {
+  const { data: profile } = await supabase.from("profiles").select("updated_at").eq("id", userId).single();
+  if (!profile?.updated_at) return new Map();
+  const profileUpdatedAt = new Date(profile.updated_at).getTime();
+
+  const stale = targets.filter((t) => !t.outlook_calculated_at || new Date(t.outlook_calculated_at).getTime() < profileUpdatedAt);
+  if (stale.length === 0) return new Map();
+
+  const results = await Promise.all(stale.map(async (t) => [t.id, await refreshAdmissionOutlook(t.id, userId)] as const));
+  const refusedIds = new Set(results.filter(([, result]) => result === null).map(([id]) => id));
+  const refreshedIds = stale.map((t) => t.id).filter((id) => !refusedIds.has(id));
+
+  const patches = new Map<string, TargetUniversity>();
+  if (refreshedIds.length > 0) {
+    const { data: fresh } = await supabase.from("target_universities").select("*").in("id", refreshedIds);
+    for (const row of fresh ?? []) patches.set(row.id, row);
+  }
+  for (const id of refusedIds) {
+    const original = stale.find((t) => t.id === id)!;
+    patches.set(id, { ...original, outlook: null, estimate_range_low: null, estimate_range_high: null, outlook_confidence: null });
+  }
+  return patches;
+}
+
+/**
  * Joins target_universities to universities with two plain queries instead of a nested
  * PostgREST `.select("*, universities(*)")` — our hand-authored Database type doesn't
  * model FK Relationships (see the Identity<T> comment in types/database.ts), so nested
@@ -164,13 +214,16 @@ export async function getTargetUniversitiesWithDetails(
 
   if (!targets || targets.length === 0) return [];
 
+  const outlookPatches = await refreshStaleOutlooks(supabase, userId, targets);
+  const freshTargets = outlookPatches.size === 0 ? targets : targets.map((t) => outlookPatches.get(t.id) ?? t);
+
   // Resolved through the canonical winner — self-heals a target that references a known-
   // duplicate loser row (from before the write-path fix existed) at read time instead of
   // permanently showing the dashboard a stale duplicate. See lib/universities/canonical.ts.
   const supersessionMap = await loadSupersessionMap(supabase);
-  const universityIds = [...new Set(targets.map((t) => canonicalUniversityId(supersessionMap, t.university_id)))];
+  const universityIds = [...new Set(freshTargets.map((t) => canonicalUniversityId(supersessionMap, t.university_id)))];
   const { data: universities } = await supabase.from("universities").select("*").in("id", universityIds);
   const universityById = new Map((universities ?? []).map((u) => [u.id, u]));
 
-  return targets.map((target) => ({ ...target, university: universityById.get(canonicalUniversityId(supersessionMap, target.university_id)) ?? null }));
+  return freshTargets.map((target) => ({ ...target, university: universityById.get(canonicalUniversityId(supersessionMap, target.university_id)) ?? null }));
 }
