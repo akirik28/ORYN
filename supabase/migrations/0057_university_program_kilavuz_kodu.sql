@@ -52,7 +52,7 @@
 -- and pays for itself the moment a backfill pass starts checking "do I already have this
 -- programme's code" before writing -- the same reason official_program_url already has one.
 
-alter table public.university_programs add column kilavuz_kodu text;
+alter table public.university_programs add column if not exists kilavuz_kodu text;
 
 create index university_programs_kilavuz_kodu_idx
   on public.university_programs (kilavuz_kodu)

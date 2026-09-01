@@ -29,6 +29,7 @@
 -- way -- it checks that every user_id table is covered *or* documented -- so this is a
 -- deliberate follow-up, not something a test will nag about.
 
+drop policy if exists "select own product_events" on public.product_events;
 create policy "select own product_events"
   on public.product_events
   for select

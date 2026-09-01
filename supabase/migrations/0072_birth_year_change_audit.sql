@@ -13,7 +13,7 @@
 -- read-only from the trigger's perspective, so a birth-year-change row can be compared
 -- against consent time with a plain query against `public`, and so handle_new_user()
 -- below can populate it in the same insert it already does for display_name.
-alter table public.profiles add column terms_accepted_at timestamptz;
+alter table public.profiles add column if not exists terms_accepted_at timestamptz;
 
 -- One-time backfill for accounts created before this column existed — the fact is already
 -- on file in auth.users, this just makes it queryable the same way for every account
@@ -55,7 +55,7 @@ $$;
 -- change (not looked up later) so the row is self-contained — whether consent predates,
 -- postdates, or (today, always) predates this specific birth-year fact is answerable from
 -- this table alone, without joining back to auth.users or re-deriving it some other way.
-create table public.birth_year_changes (
+create table if not exists public.birth_year_changes (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles(id) on delete cascade,
   previous_value integer,
@@ -63,7 +63,7 @@ create table public.birth_year_changes (
   terms_accepted_at timestamptz,
   changed_at timestamptz not null default now()
 );
-create index birth_year_changes_user_id_idx on public.birth_year_changes(user_id, changed_at desc);
+create index if not exists birth_year_changes_user_id_idx on public.birth_year_changes(user_id, changed_at desc);
 
 comment on table public.birth_year_changes is
   'Append-only. previous_value is null => this account''s birth year was recorded for the '
@@ -102,6 +102,7 @@ $$;
 -- AFTER UPDATE OF birth_year, not a blanket "after update on profiles" — this must fire
 -- on every code path that changes birth_year, including ones that don't exist yet, without
 -- also firing (and paying the IS DISTINCT FROM check) on every unrelated profile edit.
+drop trigger if exists profiles_log_birth_year_change on public.profiles;
 create trigger profiles_log_birth_year_change
   after update of birth_year on public.profiles
   for each row execute function public.log_birth_year_change();
