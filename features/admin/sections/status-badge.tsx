@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import type { Locale } from "@/lib/i18n/config";
 
 /** Shared across every admin section that renders a status pill (Reports, Provider health,
  *  Scheduled jobs) — one map instead of the same colors re-declared per file. */
@@ -23,16 +24,67 @@ const STATUS_CLASS: Record<string, string> = {
   stuck: "border-amber-500/30 text-amber-700 dark:text-amber-400",
 };
 
-/** "never_run" -> "never run". Every other status here has no underscore, so this is a
- *  no-op for them — one rule instead of a label per status. */
-function displayStatus(status: string): string {
-  return status.replaceAll("_", " ");
+/**
+ * Every status label this component can render, across all three domains that share it
+ * (message report status, provider health, job health). One flat map, matching
+ * STATUS_CLASS's own flat shape — a handful of these mean roughly the same thing in
+ * different domains ("healthy"/"succeeded"/"resolved" are all "the good state" for their
+ * own row), and giving each domain its own map would just be the same six-or-so concepts
+ * duplicated three times.
+ */
+const STATUS_LABELS: Record<string, string> = {
+  healthy: "Healthy",
+  succeeded: "Succeeded",
+  resolved: "Resolved",
+  degraded: "Degraded",
+  reviewing: "Reviewing",
+  down: "Down",
+  failed: "Failed",
+  open: "Open",
+  running: "Running",
+  dismissed: "Dismissed",
+  unknown: "Unknown",
+  never_run: "Never run",
+  stale: "Stale",
+  stuck: "Stuck",
+};
+
+/**
+ * `never_run` and `stale` specifically need care in Turkish: every scheduled job on this
+ * panel will show one of these two on first view, because ORYN has never been deployed and
+ * Vercel Cron only fires against a production deployment (docs/nothing-scheduled-has-ever-
+ * run-2026-09-02.md) — not because anything is broken. "Hiç çalıştırılmadı" (was never
+ * triggered, passive) reads as an infrastructure fact rather than "başarısız" (failed)
+ * would; "Güncel değil" (not current) for `stale` avoids "bozuk"/"bayat"-style wording that
+ * would read as a defect. See scheduled-jobs-section.tsx for the additional explanatory
+ * note shown when every job is in one of these two states.
+ */
+const STATUS_LABELS_TR: Record<string, string> = {
+  healthy: "Sağlıklı",
+  succeeded: "Başarılı",
+  resolved: "Çözüldü",
+  degraded: "Sorunlu",
+  reviewing: "İnceleniyor",
+  down: "Çalışmıyor",
+  failed: "Başarısız",
+  open: "Açık",
+  running: "Çalışıyor",
+  dismissed: "Reddedildi",
+  unknown: "Bilinmiyor",
+  never_run: "Hiç çalıştırılmadı",
+  stale: "Güncel değil",
+  stuck: "Takıldı",
+};
+
+export function statusLabel(status: string, locale: Locale): string {
+  const map = locale === "tr" ? STATUS_LABELS_TR : STATUS_LABELS;
+  return map[status] ?? status;
 }
 
-export function StatusBadge({ status }: { status: string }) {
+export function StatusBadge({ status, locale }: { status: string; locale: Locale }) {
   return (
     <Badge variant="outline" className={STATUS_CLASS[status]}>
-      {displayStatus(status)}
+      {statusLabel(status, locale)}
     </Badge>
   );
 }
