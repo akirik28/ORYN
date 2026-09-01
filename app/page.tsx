@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { instrumentSerif, inter } from "@/lib/fonts";
 import { SiteFooter } from "@/features/legal/site-footer";
 
@@ -29,7 +30,9 @@ const FEATURES = [
   },
 ];
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const t = await getTranslations("landing");
+
   return (
     <div
       style={{
@@ -65,7 +68,7 @@ export default function LandingPage() {
             textDecoration: "none",
           }}
         >
-          Sign in
+          {t("signIn")}
         </Link>
       </nav>
 
@@ -128,7 +131,7 @@ export default function LandingPage() {
               letterSpacing: "0.04em",
             }}
           >
-            ✦ Personalized for ages 14–18
+            <span aria-hidden="true">✦</span> {t("badge")}
           </div>
           <h1
             style={{
@@ -141,9 +144,9 @@ export default function LandingPage() {
               letterSpacing: "-0.03em",
             }}
           >
-            Your profile.
+            {t("headlineLine1")}
             <br />
-            <span style={{ fontStyle: "italic", color: "#A09CF8" }}>Your strategy.</span>
+            <span style={{ fontStyle: "italic", color: "#A09CF8" }}>{t("headlineLine2")}</span>
           </h1>
           <p
             style={{
@@ -156,8 +159,7 @@ export default function LandingPage() {
               marginRight: "auto",
             }}
           >
-            ORYN is a personal career and profile operating system for students preparing for competitive
-            universities and opportunities.
+            {t("subhead")}
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link
@@ -174,7 +176,7 @@ export default function LandingPage() {
                 textDecoration: "none",
               }}
             >
-              Get started — it&apos;s free
+              {t("getStarted")}
             </Link>
             <Link
               href="/login"
@@ -188,7 +190,7 @@ export default function LandingPage() {
                 textDecoration: "none",
               }}
             >
-              Sign in
+              {t("signIn")}
             </Link>
           </div>
         </div>
@@ -219,16 +221,19 @@ export default function LandingPage() {
           than the app's tokens (see the file header), so the footer has to be told which
           ground it is sitting on instead of resolving tokens that would render light.
 
-          locale="en" is hardcoded, not resolved: the hero/features copy above is the
-          Figma-ported source text and out of this lane's scope to translate (a separate,
-          much larger undertaking than the legal documents this footer links to) — so a
-          resolved Turkish footer sitting under permanently-English hero copy would read as
-          a half-translated page, worse than a consistently English one. (This route is
-          already dynamic regardless — app/layout.tsx's own resolveLocale() call forces
-          every route dynamic app-wide, predating this file; hardcoding here doesn't
-          recover static rendering, it just avoids resolving a locale this page's other
-          copy can't act on.) Revisit once whoever owns this page's marketing copy
-          translates the rest of it. */}
+          locale="en" is still hardcoded, not resolved. Updated 2026-09-01: the hero/nav
+          chrome above (badge, headline, subhead, sign-in/CTA links) is now translated —
+          only the FEATURES array's three title/description pairs remain the Figma-ported
+          source text, out of this pass's scope (real marketing-copy translation, a
+          separate and larger undertaking than the short chrome strings this pass covered).
+          A resolved Turkish footer would still be trailing that one English section
+          directly above it, so the original reasoning holds: don't resolve a locale the
+          page's own copy can't fully act on yet. (This route is already dynamic
+          regardless — app/layout.tsx's own resolveLocale() call forces every route
+          dynamic app-wide, predating this file; hardcoding here doesn't recover static
+          rendering, it just avoids resolving a locale this page's other copy can't act
+          on.) Revisit once FEATURES is translated too — at that point the footer should
+          resolve the real locale like every other page's does. */}
       <SiteFooter tone="dark" locale="en" />
     </div>
   );

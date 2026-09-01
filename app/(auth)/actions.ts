@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import {
   SignUpSchema,
@@ -88,20 +89,32 @@ export async function signUp(_prevState: AuthFormState, formData: FormData): Pro
 }
 
 export async function signIn(_prevState: AuthFormState, formData: FormData): Promise<AuthFormState> {
+  const t = await getTranslations("auth.login");
   const parsed = SignInSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
   });
 
   if (!parsed.success) {
-    return { errors: parsed.error.flatten().fieldErrors as Record<string, string[]> };
+    const errors = parsed.error.flatten().fieldErrors as Record<string, string[]>;
+    // SignInSchema's own messages are a static English fallback, for the same reason
+    // documented on SignUpSchema.acceptedTerms — the schema is built once at module load
+    // and cannot know the visitor's locale, but this action runs per-request and can.
+    const translated: Record<string, string> = {
+      "Enter a valid email address.": t("emailInvalid"),
+      "Enter your password.": t("passwordRequired"),
+    };
+    for (const field of Object.keys(errors)) {
+      errors[field] = errors[field].map((message) => translated[message] ?? message);
+    }
+    return { errors };
   }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
 
   if (error) {
-    return { message: "Incorrect email or password.", variant: "error" };
+    return { message: t("incorrectCredentials"), variant: "error" };
   }
 
   const next = formData.get("next");
@@ -147,13 +160,28 @@ export async function updatePassword(
 
   const parsed = UpdatePasswordSchema.safeParse({ password: formData.get("password") });
   if (!parsed.success) {
-    return { errors: parsed.error.flatten().fieldErrors as Record<string, string[]> };
+    const errors = parsed.error.flatten().fieldErrors as Record<string, string[]>;
+    // Same reasoning as signIn() above — UpdatePasswordSchema's messages are a static
+    // English fallback; this action runs per-request and can resolve the real locale.
+    const t = await getTranslations("auth.resetPassword");
+    const translated: Record<string, string> = {
+      "Use at least 8 characters.": t("passwordMinLength"),
+      "Include at least one letter.": t("passwordNeedsLetter"),
+      "Include at least one number.": t("passwordNeedsNumber"),
+    };
+    if (errors.password) {
+      errors.password = errors.password.map((message) => translated[message] ?? message);
+    }
+    return { errors };
   }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
 
   if (error) {
+    // error.message is Supabase Auth's own SDK error text, not static app copy — no
+    // catalog entry exists for it, and building one would mean maintaining a mapping
+    // against an external service's own message set. Left in English deliberately.
     return { message: error.message, variant: "error" };
   }
 
