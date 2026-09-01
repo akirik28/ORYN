@@ -1,5 +1,5 @@
 import type { ProfileDimension } from "@/types/database";
-import { DIMENSION_LABELS, dimensionLabel } from "./labels";
+import { dimensionLabel } from "./labels";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 export interface DimensionChange {
@@ -94,7 +94,7 @@ export function describeProfileChange(change: ProfileChange, locale: Locale = DE
     const label = dimensionLabel(worst.dimension, locale);
     return tr
       ? `Son incelemenden bu yana hiçbir alan ilerlemedi; ${label} ise daha önce sahip olduğu kanıtın bir kısmını kaybetti.`
-      : `Nothing moved forward since your last review, and ${DIMENSION_LABELS[worst.dimension].toLowerCase()} has less supporting evidence than it did.`;
+      : `Nothing moved forward since your last review, and ${label.toLowerCase()} has less supporting evidence than it did.`;
   }
 
   return tr ? "Profilin son incelemenden bu yana sabit kaldı." : "Your profile has held steady since your last review.";

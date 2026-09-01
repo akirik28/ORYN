@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { assembleScoringFacts } from "@/lib/scoring/assemble-facts";
 import { computeCareerProfile } from "@/lib/scoring";
 import { outlookLabel } from "@/lib/admissions/outlook";
-import { buildProfileSignal, isAssessed, EVIDENCE_STATE_LABELS, type EvidenceState } from "@/lib/scoring/signal";
+import { buildProfileSignal, isAssessed, evidenceStateLabel, type EvidenceState } from "@/lib/scoring/signal";
 import { getUpcomingDeadlines } from "@/lib/deadlines/upcoming";
 import { canonicalUniversityId, loadSupersessionMap, type SupersessionMap } from "@/lib/universities/canonical";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -320,8 +320,8 @@ export function formatContextForPrompt(context: StudentAdvisorContext, locale: L
     const label = dimensionLabel(d.dimension, locale);
     lines.push(
       isAssessed(d.state)
-        ? `  - ${label}: ${EVIDENCE_STATE_LABELS[d.state]} (${d.score}/100, confidence: ${d.confidence})`
-        : `  - ${label}: ${EVIDENCE_STATE_LABELS[d.state]} — no score to quote, Oryn has not assessed this`,
+        ? `  - ${label}: ${evidenceStateLabel(d.state, locale)} (${d.score}/100, confidence: ${d.confidence})`
+        : `  - ${label}: ${evidenceStateLabel(d.state, locale)} — no score to quote, Oryn has not assessed this`,
     );
   }
   /**

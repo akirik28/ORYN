@@ -22,7 +22,13 @@ import { join, relative } from "node:path";
  */
 
 const ROOT = process.cwd();
-const SCAN_DIRS = ["app", "features", "components"];
+// `lib` was missing until 2026-09-01 and that is where the worst instance lived:
+// lib/ai/student-context.ts read OUTLOOK_LABELS raw, so a Turkish student's advisor prompt
+// said "(target, Competitive)" in English while the badge beside it said Turkish. A lane
+// found it by reading the map's own doc comment, which names that exact second consumer.
+// The prompt is a student-facing surface; excluding lib/ excluded the surface that matters
+// most, because it is the one whose output a model rewrites into prose.
+const SCAN_DIRS = ["app", "features", "components", "lib"];
 
 /** English-only maps that have a locale-aware accessor, so reaching for them is a choice. */
 const MAPS_WITH_ACCESSORS = [
@@ -55,6 +61,8 @@ function scan(): { offenders: string[]; localeAwareFiles: number } {
 
   for (const file of SCAN_DIRS.flatMap((d) => walk(join(ROOT, d)))) {
     const source = readFileSync(file, "utf8");
+    // The module that DEFINES an accessor necessarily indexes the raw map inside it.
+    if (/export function \w*[Ll]abel(Short)?\s*\(/.test(source)) continue;
     if (!LOCALE_AWARE.test(source)) continue;
     localeAwareFiles += 1;
 
