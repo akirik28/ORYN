@@ -222,7 +222,14 @@ const dataModules: Array<{ file: string; count: number }> = [];
 for (const file of DATA_MODULE_DIRS.flatMap((d) => walkTs(join(ROOT, d)))) {
   const rel = relative(ROOT, file);
   if (NOT_STUDENT_FACING.some((re) => re.test(`/${rel}`))) continue;
-  if (rel.includes("__tests__") || rel.startsWith("lib/dev/")) continue;
+  // Fixture data is not product copy. `lib/dev/` was excluded from the start; `/fixtures.ts`
+  // anywhere generalises it after lib/ai/eval/fixtures.ts arrived and landed at the top of
+  // this list with 19 "strings" that are two invented student profiles. Matching on the
+  // filename rather than on a path prefix keeps the rule one line and keeps it true for the
+  // next fixture file, wherever it lands. Deliberately narrow: it excludes files *named*
+  // fixtures, not files that merely contain test-shaped data, so a real copy file can never
+  // disappear from this list by being adjacent to one.
+  if (rel.includes("__tests__") || rel.startsWith("lib/dev/") || rel.endsWith("/fixtures.ts")) continue;
   const source = readFileSync(file, "utf8");
   if (LOCALE_AWARE.test(source)) continue;
   const count = source.match(DATA_MODULE_STRING)?.length ?? 0;
