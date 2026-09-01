@@ -30,6 +30,19 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     redirect("/onboarding");
   }
 
+  // Onboarding has required birth_year since __tests__/onboarding/birth-year-collection.test.ts
+  // (lib/validation/onboarding.ts) — but that only binds accounts that complete onboarding
+  // from here forward. Accounts that completed onboarding before that requirement existed
+  // carry onboarding_completed=true with birth_year still null (confirmed live,
+  // 2026-09-02: 4 of the product's 11 accounts). Nothing else in the codebase re-asks, so
+  // without this check those accounts pass every future age-gated decision
+  // (isLikelyAdult, opportunity eligibility) as silently-unknown forever. Redirects here,
+  // not inside individual pages, for the same reason the onboarding_completed check above
+  // does: one place, applies to every route this layout wraps.
+  if (profile.birth_year === null) {
+    redirect("/confirm-age");
+  }
+
   const displayName = profile.display_name || profile.first_name || "Student";
   const t = await getTranslations("nav");
 

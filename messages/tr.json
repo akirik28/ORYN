@@ -90,6 +90,14 @@
     "notConfiguredTitle": "Supabase henüz yapılandırılmadı",
     "notConfiguredDescription": "Hesapları ve verileri etkinleştirmek için .env.local dosyasında NEXT_PUBLIC_SUPABASE_URL ve NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY değerlerini ayarla. Adım adım talimatlar için API_SETUP.md dosyasına bak."
   },
+  "confirmAge": {
+    "title": "Bir şey daha",
+    "subtitle": "Devam etmeden önce doğduğun yıla ihtiyacımız var — Oryn bunu programlardaki yaş sınırlarını kontrol etmek için kullanıyor ve hesabında eksikti.",
+    "fieldLabel": "Doğduğun yıl",
+    "fieldWhy": "Yıl yeterli — Oryn tam doğum tarihini asla sormaz.",
+    "submit": "Devam et",
+    "invalidYear": "Doğduğun yılı gir."
+  },
   "settings": {
     "view": {
       "description": "Hesabını ve tercihlerini yönet.",
@@ -633,6 +641,7 @@
       "settingUp": "Profilin hazırlanıyor…",
       "schoolStepError": "Devam etmek için ülkeni, okulunu ve müfredatını doldur.",
       "birthYearError": "Doğduğun yılı gir — Oryn, programlardaki yaş sınırlarını kontrol etmek için buna ihtiyaç duyar.",
+      "birthYearTooYoung": "Oryn henüz bu yaşın altındaki hesaplara hizmet veremiyor.",
       "pageTitle": "Profilini kur"
     },
     "interests": {
