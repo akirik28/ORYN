@@ -387,3 +387,107 @@ default.
 
 ---
 
+## 5. Khan Academy / Khanmigo
+
+**The single most directly relevant product in this survey.** Khan Academy is a free,
+donation-funded nonprofit K-12 platform; **Khanmigo is its separately-branded AI tutor**
+(its own domain, `khanmigo.ai`), and Khanmigo's own access model is closer to ORYN's
+proposed advisor-chat shape than anything else researched — same age band, same
+"AI-tutor-as-the-paid-layer-on-a-free-platform" structure.
+
+**Sources checked (all this session, 2026-09-02), with direct-DOM verification, not
+WebFetch summaries, for every number quoted:**
+- [khanmigo.ai](https://khanmigo.ai) — marketing/FAQ page. The FAQ answers are
+  visually collapsed by a Webflow accordion that would not open under scripted or real
+  click events in this session (likely requires a lazy-init step this browser didn't
+  trigger) — so I read them the honest way available: confirmed each answer's exact text
+  is genuinely present in the loaded page's DOM via `document.body.textContent`, matching
+  a WebFetch lead word-for-word, before quoting anything below. Every quote here was
+  matched against the live page's own text, not taken from the WebFetch summary alone.
+- [khanmigo.ai/pricing](https://www.khanmigo.ai/pricing) — dedicated pricing page,
+  rendered normally, read directly.
+- [khanacademy.org/about](https://www.khanacademy.org/about) — official mission/scale page.
+
+### 5.1 What exactly stays free
+The base Khan Academy platform (video lessons, practice exercises, mastery tracking across
+math, science, humanities, test prep, etc.) is **entirely free, for everyone, with no
+paywall of any kind** — this is the organization's stated mission, quoted directly from
+their About page: *"Khan Academy's mission is to provide a free, world-class education to
+anyone, anywhere."* Available in 190+ countries and 55+ languages per the same page.
+**Khanmigo, the AI tutor layer, has no free tier at all for individual/parent users** — see
+5.3. Teachers get Khanmigo free (5.2).
+
+### 5.2 What's behind the wall
+Confirmed on the pricing page: for **teachers**, Khanmigo itself is free (lesson planning,
+student-work summaries, rubric/exit-ticket generation, chat history) — the wall is
+specifically on **non-teacher humans**: individual learners/adults and parent-managed
+family accounts both pay identically, **$4/month or $44/year** ("Save $4 w/ annual" — an
+8.3% discount, notably the smallest annual discount found anywhere in this survey, versus
+Duolingo/Photomath's ~50% and Brilliant's 30%). The family tier is not priced per child —
+one $4/month subscription lets a parent "Add children from your parent account," confirmed
+elsewhere on the same page as **up to 10 children**. Family-tier extras beyond the
+individual tier: viewing "the history of your children's interactions," moderation alerts,
+and (parent-tier only) "personalized coaching" framed around college admissions —
+worth flagging given ORYN's own subject matter.
+
+### 5.3 WHEN the wall appears — no free allowance at all
+This is the sharpest, most unambiguous finding in this document, and directly verified,
+not inferred. From the FAQ, DOM-confirmed verbatim: *"To access Khanmigo as a parent or
+learner, you must make a monthly or annual payment, be 18 years or older, live in the
+United States, and have a billing address in the U.S."* There is no free-message
+allowance, no trial period mentioned anywhere on either page checked, and no path for an
+individual learner under 18 to hold their own paid account — a minor can only reach
+Khanmigo at all as one of up to 10 children added under a paying adult's family
+subscription. Compare this to every other AI-chat feature found in this survey (Quizlet's
+Ask Quizlet, Brilliant's Koji): both of those have *some* stated free-usable path (even if
+age- or feature-gated); Khanmigo's individual/family product has none. The wall is at
+**account creation itself**, before message one — the most restrictive placement in this
+entire document.
+
+*Two things outside my brief, flagged for oryn-f5 rather than analyzed here:* the pricing
+page states chat history is retained and accessible to subscribers, and for family
+accounts, a parent can view "the history of your children's interactions" — both are
+mechanics of what happens *inside* a paid allowance, not about where or when the wall
+itself triggers, so I'm handing them over as raw observation rather than drawing
+conclusions about them.
+
+### 5.4 CTA style
+The public marketing site (`khanmigo.ai`) is built entirely as an upgrade funnel — every
+top-level page (`/parents`, `/learners`, `/pricing`) exists to sell the subscription, with
+repeated "Get Khanmigo" CTAs. This reads as the same ambient/omnipresent style as Duolingo
+rather than a limit-triggered interruption, for the simple reason that there's no free
+usage during which an interruption could occur (5.3) — the entire visitor journey before
+payment *is* the CTA.
+
+### 5.5 Price
+OBSERVED directly, `khanmigo.ai/pricing`, 2026-09-02: **$4/month or $44/year** for both
+"For you" (individual) and "For families" tiers — identical price, family tier adds
+child-management features rather than costing more. Teachers: free. Districts: custom
+quote ("Request pricing"). Sales tax explicitly excluded per an on-page footnote. Student
+discount: not applicable/not found — the individual tier is priced the same regardless of
+who's buying it.
+
+**Anchor this against the cost numbers already on the table for ORYN's own advisor:** Khan
+Academy — a nonprofit, not optimizing for margin the way a VC-backed product would — prices
+unlimited(-seeming; usage limits within the paid tier not stated on this page and are
+oryn-f5's territory, not mine) AI tutoring, for up to 10 people on one account, at $4/month
+total. That's a genuinely low anchor for what a family expects to pay for AI tutoring
+access in this exact market, independent of what it costs Khan Academy to serve.
+
+### 5.6 Minor-specific flow
+The clearest-stated age mechanic in this whole document: the **paying account holder must
+be 18+ and US-resident** (5.3, DOM-verified verbatim); a minor's only access path is as one
+of up to 10 children added to that adult's account, with the parent able to see the child's
+interaction history and receive moderation alerts. This is a stricter version of the same
+shape as Duolingo's "Child Users may join paid Family Plans" (§1.6) and Brilliant's
+parent-consent-driven under-13 flow (§4.6) — a third product independently converging on
+**"a minor's access to the paid/AI tier routes through an adult's account and an adult's
+payment," never a minor paying directly.** I attempted to verify the base (non-Khanmigo)
+Khan Academy platform's own under-13 account mechanics via an official explainer article
+surfaced by search, but that specific URL 404'd this session — secondary summaries
+describe a "restricted account" / parent-or-school-consent model consistent with COPPA, but
+I'm not stating that as verified since I couldn't open the source page myself. Flagging as
+**NOT INDEPENDENTLY VERIFIED**, distinct from everything else in this section.
+
+---
+
