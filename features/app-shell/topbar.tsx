@@ -8,7 +8,7 @@ import type { Notification } from "@/types/database";
  * in the sidebar now, and the account menu lives at the sidebar's foot). Literal source
  * colors, not the app's own header tokens — same rule as the rest of this shell pass.
  */
-export function Topbar({ notifications }: { notifications: Notification[] }) {
+export function Topbar({ notifications, unreadCount }: { notifications: Notification[]; unreadCount: number }) {
   return (
     <div
       className="sticky top-0 z-20 hidden h-[52px] items-center gap-3 border-b px-6 backdrop-blur-xl lg:flex"
@@ -18,7 +18,7 @@ export function Topbar({ notifications }: { notifications: Notification[] }) {
         <CommandPalette variant="bar" />
       </div>
       <div className="ml-auto flex shrink-0 items-center">
-        <NotificationBell notifications={notifications} />
+        <NotificationBell notifications={notifications} unreadCount={unreadCount} />
       </div>
     </div>
   );

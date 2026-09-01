@@ -60,12 +60,16 @@ afterEach(() => {
  * these assertions stay about mark-read behavior rather than becoming a translation test —
  * catalog content is covered in __tests__/i18n/locale.test.ts.
  */
-function renderBell(notifications: Notification[]) {
+function renderBell(notifications: Notification[], unreadCount?: number) {
   return render(
     // Real catalog, not {}: the component reads its labels from `notifications` now, and an
     // empty object made next-intl throw MISSING_MESSAGE rather than render.
+    //
+    // unreadCount defaults to deriving from the passed list, which is fine for these small
+    // fixtures — the point of the explicit prop (see the dedicated test below) is that the
+    // real caller's count can diverge from the list length once the list is capped.
     <NextIntlClientProvider locale="en" messages={en}>
-      <NotificationBell notifications={notifications} />
+      <NotificationBell notifications={notifications} unreadCount={unreadCount ?? notifications.filter((n) => !n.read_at).length} />
     </NextIntlClientProvider>,
   );
 }
@@ -105,6 +109,17 @@ describe("NotificationBell — pinned success-path behavior", () => {
     fireEvent.click(screen.getByText("Deadline tomorrow"));
 
     expect(markNotificationRead).not.toHaveBeenCalled();
+  });
+
+  // app/(app)/layout.tsx fetches only the 20 most recent notifications, so a student past
+  // that (a real account hit 103 unread from the weekly-plan duplicate bug — see
+  // lib/plan/persist.ts) has more unread than the list this component receives. The badge
+  // must reflect the caller's real count, not `notifications.length` / a derived filter —
+  // pinning that here so a future edit can't quietly go back to deriving it.
+  test("the unread badge uses the unreadCount prop, not the length of the notifications list", async () => {
+    renderBell([notification()], 103);
+
+    expect(screen.getByText("103 unread")).toBeInTheDocument();
   });
 });
 

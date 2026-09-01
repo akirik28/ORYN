@@ -38,19 +38,29 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // row above. It now renders a qualitative read instead, which needs the per-dimension
   // rows — at most nine, indexed on user_id, fetched alongside the notifications that were
   // already being loaded here.
-  const [notificationsRes, scoresRes] = await Promise.all([
+  const [notificationsRes, unreadRes, scoresRes] = await Promise.all([
     supabase
       .from("notifications")
       .select("*")
       .eq("user_id", session.userId!)
       .order("created_at", { ascending: false })
       .limit(20),
+    // A true total, not derived from the capped list above: a student who fell behind
+    // (the weekly-plan duplicate bug alone once left one account with 103 unread rows,
+    // see lib/plan/persist.ts) would otherwise see the bell cap out at whatever fits in
+    // the last 20 rows fetched, silently under-reporting how much is actually unread.
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", session.userId!)
+      .is("read_at", null),
     supabase
       .from("profile_scores")
       .select("dimension, score, confidence, reason_codes")
       .eq("user_id", session.userId!),
   ]);
   const notifications = notificationsRes.data;
+  const unreadCount = unreadRes.count ?? 0;
   const profileSignal = toProfileSignal(scoresRes.data ?? []);
 
   return (
@@ -84,6 +94,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         displayName={displayName}
         email={session.email}
         notifications={notifications ?? []}
+        unreadCount={unreadCount}
         isAdmin={profile.is_admin}
       />
 
@@ -97,7 +108,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             wrapper picks the config from the pathname, so each section has its own
             background weighting instead of one identical wash everywhere. */}
         <RouteAmbientBlobs />
-        <Topbar notifications={notifications ?? []} />
+        <Topbar notifications={notifications ?? []} unreadCount={unreadCount} />
         <main id="main-content" className="relative z-[1] min-w-0 flex-1 overflow-x-hidden">
           {/* max-w-[1200px] is the reading/composition measure (UI-V3 § 6). Pages that want
               the full bleed — the university map, in particular — opt out with their own
