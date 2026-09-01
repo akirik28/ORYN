@@ -253,6 +253,17 @@ An earlier version of this file said 247 across 78 files. That came from a line-
 way this codebase formats JSX. Same criteria, better reading of them; the floor moved up,
 it did not move for a different reason.
 
+A third kind, found 2026-09-01: a component's own **default parameter value** for an
+optional prop — `function Foo({ title = "English text" })` — is invisible to the scanner
+regardless of word count, because it walks JSX call-site markup (`<Foo title="...">`)
+looking for literal props, not the component's own function signature where the fallback
+lives. `NotConfiguredNotice`'s five-word `title`/`description` defaults rendered in
+production every time (all three top-level layouts called it with zero props) and never
+appeared in any count this file quotes; the same shape let `GeneratePlanButton`'s
+`"Thinking…"` pending label through too, compounding with the single-word miss above.
+When auditing a component's own props for this, grep the component's signature for
+`= "[A-Z]` — the script won't find it.
+
 ## What this means for a launch date
 
 A Turkish student switching to Turkish today gets a translated shell, translated legal
