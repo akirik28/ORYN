@@ -1,9 +1,13 @@
 import Link from "next/link";
+import { useTranslations, useLocale } from "next-intl";
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import type { Opportunity } from "@/types/database";
+import { cycleStatusLabel } from "@/lib/opportunities/lifecycle";
+import { categoryLabel } from "@/lib/opportunities/labels";
+import type { Locale } from "@/lib/i18n/config";
+import type { Opportunity, OpportunityCategory } from "@/types/database";
 import type { OpportunityFacets } from "@/lib/opportunities/browse";
 
 const PILL = "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors duration-(--duration-fast)";
@@ -11,12 +15,7 @@ const PILL_ACTIVE = "border-brand-primary bg-brand-primary text-primary-foregrou
 const PILL_INACTIVE = "border-border hover:border-brand-primary-border hover:bg-brand-primary-subtle";
 const SELECT_CLASS = "h-9 rounded-lg border bg-background px-2.5 text-sm";
 
-const CYCLE_STATUS_OPTIONS: { value: Opportunity["cycle_status"]; label: string }[] = [
-  { value: "open", label: "Open now" },
-  { value: "upcoming", label: "Opens soon" },
-  { value: "closed", label: "Closed for this cycle" },
-  { value: "date_not_announced", label: "Next dates not announced" },
-];
+const CYCLE_STATUS_OPTION_VALUES: Opportunity["cycle_status"][] = ["open", "upcoming", "closed", "date_not_announced"];
 
 export interface OpportunityBrowseParams {
   q?: string;
@@ -25,10 +24,6 @@ export interface OpportunityBrowseParams {
   remoteOnly?: boolean;
   freeOnly?: boolean;
   cycleStatus?: string;
-}
-
-function humanizeCategory(category: string): string {
-  return category.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
 }
 
 function categoryHref(current: OpportunityBrowseParams, category: string | undefined): string {
@@ -56,6 +51,8 @@ function categoryHref(current: OpportunityBrowseParams, category: string | undef
  * remote/online, free/paid, and cycle status, all backed by actual columns.
  */
 export function OpportunityFilterBar({ facets, current }: { facets: OpportunityFacets; current: OpportunityBrowseParams }) {
+  const t = useTranslations("opportunities.filterBar");
+  const locale = useLocale() as Locale;
   const totalActive = facets.categoryCounts.reduce((sum, c) => sum + c.count, 0);
   const hasAnyFilter = Boolean(
     current.q || current.category || current.country || current.remoteOnly || current.freeOnly || current.cycleStatus
@@ -63,9 +60,9 @@ export function OpportunityFilterBar({ facets, current }: { facets: OpportunityF
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap gap-2" role="navigation" aria-label="Browse opportunities by category">
+      <div className="flex flex-wrap gap-2" role="navigation" aria-label={t("categoryNavAriaLabel")}>
         <Link href={categoryHref(current, undefined)} className={cn(PILL, !current.category ? PILL_ACTIVE : PILL_INACTIVE)}>
-          All <span className="opacity-70">· {totalActive}</span>
+          {t("all")} <span className="opacity-70">· {totalActive}</span>
         </Link>
         {facets.categoryCounts.map(({ category, count }) => (
           <Link
@@ -73,7 +70,7 @@ export function OpportunityFilterBar({ facets, current }: { facets: OpportunityF
             href={categoryHref(current, category)}
             className={cn(PILL, current.category === category ? PILL_ACTIVE : PILL_INACTIVE, count === 0 && current.category !== category && "opacity-50")}
           >
-            {humanizeCategory(category)} <span className="opacity-70">· {count}</span>
+            {categoryLabel(category as OpportunityCategory, locale)} <span className="opacity-70">· {count}</span>
           </Link>
         ))}
       </div>
@@ -84,21 +81,21 @@ export function OpportunityFilterBar({ facets, current }: { facets: OpportunityF
 
         <div className="min-w-48 flex-1 space-y-1.5">
           <label htmlFor="opp-q" className="text-xs font-medium text-muted-foreground">
-            Search
+            {t("search")}
           </label>
           <div className="relative">
             <Search className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input id="opp-q" name="q" defaultValue={current.q} placeholder="Title or organization…" className="pl-7" />
+            <Input id="opp-q" name="q" defaultValue={current.q} placeholder={t("searchPlaceholder")} className="pl-7" />
           </div>
         </div>
 
         {facets.countries.length > 0 ? (
           <div className="space-y-1.5">
             <label htmlFor="opp-country" className="text-xs font-medium text-muted-foreground">
-              Country
+              {t("country")}
             </label>
             <select id="opp-country" name="country" defaultValue={current.country ?? ""} className={SELECT_CLASS}>
-              <option value="">Any</option>
+              <option value="">{t("any")}</option>
               {facets.countries.map(({ country, count }) => (
                 <option key={country} value={country}>
                   {country} ({count})
@@ -110,13 +107,13 @@ export function OpportunityFilterBar({ facets, current }: { facets: OpportunityF
 
         <div className="space-y-1.5">
           <label htmlFor="opp-cycle" className="text-xs font-medium text-muted-foreground">
-            Cycle status
+            {t("cycleStatus")}
           </label>
           <select id="opp-cycle" name="cycle" defaultValue={current.cycleStatus ?? ""} className={SELECT_CLASS}>
-            <option value="">Any</option>
-            {CYCLE_STATUS_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
+            <option value="">{t("any")}</option>
+            {CYCLE_STATUS_OPTION_VALUES.map((value) => (
+              <option key={value} value={value}>
+                {cycleStatusLabel(value, locale)}
               </option>
             ))}
           </select>
@@ -124,19 +121,19 @@ export function OpportunityFilterBar({ facets, current }: { facets: OpportunityF
 
         <label className="flex h-9 items-center gap-1.5 text-sm">
           <input type="checkbox" name="remote" value="1" defaultChecked={current.remoteOnly} className="size-4 rounded border-input accent-(--brand-primary)" />
-          Remote/online
+          {t("remoteOnline")}
         </label>
         <label className="flex h-9 items-center gap-1.5 text-sm">
           <input type="checkbox" name="free" value="1" defaultChecked={current.freeOnly} className="size-4 rounded border-input accent-(--brand-primary)" />
-          Free only
+          {t("freeOnly")}
         </label>
 
         <Button type="submit" size="sm">
-          Apply
+          {t("applyButton")}
         </Button>
         {hasAnyFilter ? (
           <Button type="button" variant="ghost" size="sm" render={<Link href="/opportunities?view=browse" />} nativeButton={false}>
-            Reset
+            {t("reset")}
           </Button>
         ) : null}
       </form>

@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { ExternalLink, Bookmark, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { setOpportunityStatus } from "@/app/(app)/opportunities/actions";
-import { NOT_INTERESTED_REASONS } from "./opportunity-card";
+import { useNotInterestedReasons } from "./opportunity-card";
 import type { SavedOpportunityStatus } from "@/types/database";
 
 /** The detail page's action row — same underlying setOpportunityStatus mutation
@@ -24,6 +25,10 @@ export function OpportunityActions({
   applicationUrl: string | null;
   initialStatus: SavedOpportunityStatus | null;
 }) {
+  const t = useTranslations("opportunities.actions");
+  const tCard = useTranslations("opportunities.card");
+  const tCommon = useTranslations("common");
+  const reasons = useNotInterestedReasons();
   const [status, setStatus] = useState(initialStatus);
   const [isPending, startTransition] = useTransition();
 
@@ -44,7 +49,7 @@ export function OpportunityActions({
   if (status === "not_interested") {
     return (
       <Button variant="outline" size="sm" onClick={() => updateStatus("saved")} disabled={isPending}>
-        {isPending ? <Loader2 className="size-3.5 animate-spin" /> : "Marked not interested — undo"}
+        {isPending ? <Loader2 className="size-3.5 animate-spin" /> : t("markedNotInterestedUndo")}
       </Button>
     );
   }
@@ -53,19 +58,19 @@ export function OpportunityActions({
     <div className="flex flex-wrap items-center gap-2">
       {officialUrl ? (
         <Button variant="outline" size="sm" render={<a href={officialUrl} target="_blank" rel="noopener noreferrer" />} nativeButton={false}>
-          Official page <ExternalLink className="size-3.5" />
+          {t("officialPage")} <ExternalLink className="size-3.5" />
         </Button>
       ) : null}
       {applicationUrl && applicationUrl !== officialUrl ? (
         <Button size="sm" render={<a href={applicationUrl} target="_blank" rel="noopener noreferrer" />} nativeButton={false}>
-          Apply <ExternalLink className="size-3.5" />
+          {t("apply")} <ExternalLink className="size-3.5" />
         </Button>
       ) : null}
       <Button variant={status === "saved" ? "secondary" : "outline"} size="sm" onClick={() => updateStatus("saved")} disabled={isPending}>
-        <Bookmark className="size-3.5" /> {status === "saved" ? "Saved" : "Save"}
+        <Bookmark className="size-3.5" /> {status === "saved" ? tCard("saved") : tCommon("save")}
       </Button>
       <Button variant={status === "applied" ? "secondary" : "outline"} size="sm" onClick={() => updateStatus("applied")} disabled={isPending}>
-        {status === "applied" ? "Applied" : "Mark applied"}
+        {status === "applied" ? tCard("applied") : t("markApplied")}
       </Button>
       {/* render={<Button .../>}: no padding class at all here previously — an ~16px hit
           area, the raw icon's own size, well under the app's ~40px+ touch-target
@@ -74,12 +79,12 @@ export function OpportunityActions({
         <DropdownMenuTrigger
           render={<Button variant="ghost" size="icon-sm" className="text-muted-foreground hover:text-foreground" />}
           nativeButton={true}
-          aria-label="Not interested"
+          aria-label={tCard("notInterestedAriaLabel")}
         >
           <X className="size-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          {NOT_INTERESTED_REASONS.map((reason) => (
+          {reasons.map((reason) => (
             <DropdownMenuItem key={reason.value} onClick={() => updateStatus("not_interested", reason.value)}>
               {reason.label}
             </DropdownMenuItem>

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useTranslations, useLocale } from "next-intl";
 import { toast } from "sonner";
 import { differenceInCalendarDays } from "date-fns";
 import { ExternalLink, Bookmark, X, Compass } from "lucide-react";
@@ -20,64 +21,88 @@ import { Eyebrow } from "@/components/oryn/eyebrow";
 import { MediaImage } from "@/components/oryn/media-image";
 import { OpportunityStandingBadge } from "./standing-badge";
 import { setOpportunityStatus } from "@/app/(app)/opportunities/actions";
+import { selectivityLabel, cycleStatusLabel } from "@/lib/opportunities/lifecycle";
+import type { Locale } from "@/lib/i18n/config";
 import type { Opportunity, SavedOpportunityStatus } from "@/types/database";
 
-export const NOT_INTERESTED_REASONS = [
-  { value: "not_interested_topic", label: "Not interested in this topic" },
-  { value: "too_expensive", label: "Too expensive" },
-  { value: "no_time", label: "No time" },
-  { value: "location", label: "Location doesn't work" },
-  { value: "too_competitive", label: "Too competitive" },
-  { value: "already_applied", label: "Already applied" },
-  { value: "other", label: "Other" },
-];
+/** Same TS-generic workaround as app/(app)/universities/[id]/page.tsx's own `Translator`
+ * alias — a next-intl translator scoped to one namespace can't be passed to a plain function
+ * expecting `(key: string) => string` (the key type is a strict literal union, not `string`,
+ * and function parameters are contravariant), so tierFor takes this narrower shape instead. */
+type Translator = (key: string) => string;
 
-function tierFor(score: number): { label: string; tone: StatusTone } {
-  if (score >= 80) return { label: "Exceptional match", tone: "brand" };
-  if (score >= 60) return { label: "Strong match", tone: "brand" };
-  if (score >= 40) return { label: "Worth a look", tone: "neutral" };
-  return { label: "Low priority", tone: "neutral" };
+/** Shared by opportunity-actions.tsx (the detail page's action row) — a hook rather than a
+ * static export, now that the labels need a translator; the values themselves (persisted in
+ * saved_opportunities.not_interested_reason) are unchanged. */
+export function useNotInterestedReasons(): { value: string; label: string }[] {
+  const t = useTranslations("opportunities.reasons");
+  return [
+    { value: "not_interested_topic", label: t("notInterestedTopic") },
+    { value: "too_expensive", label: t("tooExpensive") },
+    { value: "no_time", label: t("noTime") },
+    { value: "location", label: t("location") },
+    { value: "too_competitive", label: t("tooCompetitive") },
+    { value: "already_applied", label: t("alreadyApplied") },
+    { value: "other", label: t("other") },
+  ];
+}
+
+/** "match" register — Browse's own recommendation framing. The detail page's fitFor (same
+ * four thresholds) deliberately uses "fit" instead ("Oryn's take" is a first-person verdict,
+ * not a ranked-list tag) — see that file's own comment. Middle two tiers share their English
+ * text between the two files, but that's this codebase's actual wording, not a shortcut. */
+function tierFor(score: number, t: Translator): { label: string; tone: StatusTone } {
+  if (score >= 80) return { label: t("exceptional"), tone: "brand" };
+  if (score >= 60) return { label: t("strong"), tone: "brand" };
+  if (score >= 40) return { label: t("worthALook"), tone: "neutral" };
+  return { label: t("lowPriority"), tone: "neutral" };
 }
 
 /**
  * The student-facing reason, as a sentence rather than three concatenated fragments.
  * UI-V3 § 19 puts "why Oryn recommends it" above the opportunity's own identity, so this
  * needs to read as counsel, not as a tag list.
+ *
+ * Kept local (not moved to lib/opportunities/) rather than routed through the message
+ * catalog — it's generated prose built from reason codes via conditional joining, the same
+ * shape as lib/counselor/copy.ts's sentence-builders, just living in a Client Component
+ * because reason codes only ever reach the client already resolved. `.toLocaleUpperCase("tr")`
+ * on the Turkish branch, not `.toUpperCase()` — plain `.toUpperCase()` on a lowercase "i"
+ * produces the dotless "I", not Turkish's dotted "İ" (this file's fragments can start with
+ * "ilgi", so the bug is reachable, not theoretical).
  */
-function reasonSentence(reasonCodes: string[]): string | null {
-  const parts: string[] = [];
-  if (reasonCodes.includes("addresses_a_current_gap")) parts.push("it addresses a current gap in your profile");
-  if (reasonCodes.includes("matches_your_interests")) parts.push("it matches your interests");
-  if (reasonCodes.includes("near_you")) parts.push("it's based in your country");
+function reasonSentence(reasonCodes: string[], locale: Locale): string | null {
+  const parts: string[] =
+    locale === "tr"
+      ? [
+          reasonCodes.includes("addresses_a_current_gap") ? "profilindeki bir boşluğu kapatıyor" : null,
+          reasonCodes.includes("matches_your_interests") ? "ilgi alanlarınla örtüşüyor" : null,
+          reasonCodes.includes("near_you") ? "kendi ülkende gerçekleşiyor" : null,
+        ].filter((p): p is string => p !== null)
+      : [
+          reasonCodes.includes("addresses_a_current_gap") ? "it addresses a current gap in your profile" : null,
+          reasonCodes.includes("matches_your_interests") ? "it matches your interests" : null,
+          reasonCodes.includes("near_you") ? "it's based in your country" : null,
+        ].filter((p): p is string => p !== null);
   if (parts.length === 0) return null;
   const joined =
-    parts.length === 1 ? parts[0] : `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
-  return `${joined.charAt(0).toUpperCase()}${joined.slice(1)}.`;
+    parts.length === 1
+      ? parts[0]
+      : locale === "tr"
+        ? `${parts.slice(0, -1).join(", ")} ve ${parts[parts.length - 1]}`
+        : `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
+  const capitalized = locale === "tr" ? joined.charAt(0).toLocaleUpperCase("tr") + joined.slice(1) : joined.charAt(0).toUpperCase() + joined.slice(1);
+  return `${capitalized}.`;
 }
-
-// Factual selectivity is a separate signal from ORYN's match score — RSI and an
-// open-enrollment summer course should never read the same just because both matched a
-// student's interests. Only render for tiers that are actually informative; "unknown"
-// stays silent rather than implying "not selective".
-const SELECTIVITY_LABEL: Partial<Record<Opportunity["selectivity_tier"], string>> = {
-  extremely_selective: "Extremely selective",
-  highly_selective: "Highly selective",
-  selective: "Selective",
-  competitive_award: "Competitive award",
-  open_enrollment: "Open enrollment",
-};
 
 // cycle_status is about whether *this* cycle is taking applications right now — distinct
 // from whether the opportunity is worth knowing about at all. Only the states a student
-// needs a heads-up about get a badge; "open" is the unremarkable default and stays quiet.
-const CYCLE_STATUS_BADGE: Partial<Record<Opportunity["cycle_status"], { label: string; tone: StatusTone }>> = {
-  upcoming: { label: "Opens soon", tone: "info" },
-  closed: { label: "Closed for this cycle", tone: "neutral" },
-  date_not_announced: { label: "Next dates not announced", tone: "neutral" },
-  historical: { label: "Historical — not currently running", tone: "warning" },
-  discontinued: { label: "Discontinued", tone: "error" },
-  unverified: { label: "Verification pending", tone: "warning" },
-};
+// needs a heads-up about become a plain-text descriptor; "open" is the unremarkable default
+// and stays quiet — achieved here by simply not calling cycleStatusLabel for it, same effect
+// as the old local map not having an "open" key. (The old map's per-status `tone` field was
+// dead code — descriptors render as plain text, never a StatusBadge — so it isn't carried
+// forward; nothing here ever read it.)
+const CYCLE_STATUSES_WORTH_A_DESCRIPTOR = new Set<Opportunity["cycle_status"]>(["upcoming", "closed", "date_not_announced", "historical", "discontinued", "unverified"]);
 
 /**
  * UI-V3 § 19 inverts this card's old hierarchy. It used to open with up to six badges —
@@ -140,10 +165,15 @@ export function OpportunityCard({
   /** A verified image of this programme. No source populates it yet — see the note above. */
   imageUrl?: string | null;
 }) {
+  const t = useTranslations("opportunities.card");
+  const tTier = useTranslations("opportunities.matchTier") as Translator;
+  const tCommon = useTranslations("common");
+  const locale = useLocale() as Locale;
+  const reasons = useNotInterestedReasons();
   const [status, setStatus] = useState(initialStatus);
   const [isPending, startTransition] = useTransition();
-  const tier = tierFor(matchScore);
-  const reason = reasonSentence(reasonCodes);
+  const tier = tierFor(matchScore, tTier);
+  const reason = reasonSentence(reasonCodes, locale);
   // The confidence tier is a claim Oryn can only make about a row it can vouch for.
   const canClaimMatch = eligible && !needsVerification;
 
@@ -176,13 +206,12 @@ export function OpportunityCard({
   // Treating that as "not known" keeps a schema lag showing one missing descriptor instead
   // of throwing and taking the whole Opportunities route down with an error boundary.
   const languages = opportunity.languages_of_instruction ?? [];
-  const languageLabel =
-    languages.length > 0 ? `Taught in ${languages.join(" & ")}` : null;
+  const languageLabel = languages.length > 0 ? t("taughtInPrefix", { languages: languages.join(" & ") }) : null;
 
   const descriptors = [
-    SELECTIVITY_LABEL[opportunity.selectivity_tier] ?? null,
+    selectivityLabel(opportunity.selectivity_tier, locale) ?? null,
     languageLabel,
-    CYCLE_STATUS_BADGE[opportunity.cycle_status]?.label ?? null,
+    CYCLE_STATUSES_WORTH_A_DESCRIPTOR.has(opportunity.cycle_status) ? cycleStatusLabel(opportunity.cycle_status, locale) : null,
   ].filter((d): d is string => d !== null);
 
   return (
@@ -223,7 +252,7 @@ export function OpportunityCard({
           )}
         >
           <Compass className="size-4" />
-          No image yet
+          {t("noImageYet")}
         </div>
       )}
 
@@ -232,11 +261,11 @@ export function OpportunityCard({
             opportunity's own metadata. */}
         {canClaimMatch && reason ? (
           <div>
-            <Eyebrow tone="brand">{tier.label}</Eyebrow>
+            <Eyebrow tone="brand" locale={locale}>{tier.label}</Eyebrow>
             <p className="mt-2 text-sm leading-relaxed text-ink-2">{reason}</p>
           </div>
         ) : canClaimMatch ? (
-          <Eyebrow tone={tier.tone === "brand" ? "brand" : "neutral"}>{tier.label}</Eyebrow>
+          <Eyebrow tone={tier.tone === "brand" ? "brand" : "neutral"} locale={locale}>{tier.label}</Eyebrow>
         ) : null}
 
         <div>
@@ -265,12 +294,13 @@ export function OpportunityCard({
               eligible={eligible}
               notActionable={notActionable}
               needsVerification={needsVerification}
-              ineligibleLabel="Not eligible"
+              locale={locale}
+              ineligibleLabel={t("ineligibleLabel")}
             />
             {/* Eligible-but-unverified is not the same claim as eligible-and-confirmed — a
                 restriction exists but Oryn is missing the fact needed to check it (see
                 computeEligibility's unknownNotes). Never silently badge that as a plain match. */}
-            {eligible && eligibilityNotes ? <StatusBadge label="Eligibility unknown" tone="warning" /> : null}
+            {eligible && eligibilityNotes ? <StatusBadge label={t("eligibilityUnknown")} tone="warning" /> : null}
           </div>
         ) : null}
 
@@ -300,7 +330,7 @@ export function OpportunityCard({
         <div className="flex flex-wrap items-center gap-2 pt-1">
           {opportunity.official_url ? (
             <Button variant="outline" size="sm" render={<a href={opportunity.official_url} target="_blank" rel="noopener noreferrer" />} nativeButton={false}>
-              View <ExternalLink className="size-3.5" />
+              {t("view")} <ExternalLink className="size-3.5" />
             </Button>
           ) : null}
           <Button
@@ -309,7 +339,7 @@ export function OpportunityCard({
             onClick={() => updateStatus("saved")}
             disabled={isPending}
           >
-            <Bookmark className="size-3.5" /> {status === "saved" ? "Saved" : "Save"}
+            <Bookmark className="size-3.5" /> {status === "saved" ? t("saved") : tCommon("save")}
           </Button>
           <Button
             variant={status === "applied" ? "secondary" : "outline"}
@@ -317,7 +347,7 @@ export function OpportunityCard({
             onClick={() => updateStatus("applied")}
             disabled={isPending}
           >
-            Applied
+            {t("applied")}
           </Button>
           {/* render={<Button .../>}: a bare styled <button> here (p-1 padding, ~24px hit
               area) sat well under the app's ~40px+ touch-target convention, in a dense
@@ -326,12 +356,12 @@ export function OpportunityCard({
             <DropdownMenuTrigger
               render={<Button variant="ghost" size="icon-sm" className="ml-auto text-ink-4 hover:text-ink-1" />}
               nativeButton={true}
-              aria-label="Not interested"
+              aria-label={t("notInterestedAriaLabel")}
             >
               <X className="size-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {NOT_INTERESTED_REASONS.map((reasonOption) => (
+              {reasons.map((reasonOption) => (
                 <DropdownMenuItem key={reasonOption.value} onClick={() => updateStatus("not_interested", reasonOption.value)}>
                   {reasonOption.label}
                 </DropdownMenuItem>

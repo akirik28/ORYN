@@ -832,5 +832,110 @@
     "source": "Kaynak:",
     "checked": "{time} kontrol edildi",
     "viewSource": "Kaynağı görüntüle"
+  },
+  "opportunities": {
+    "card": {
+      "noImageYet": "Henüz görsel yok",
+      "ineligibleLabel": "Uygun değil",
+      "eligibilityUnknown": "Uygunluk belirsiz",
+      "view": "Görüntüle",
+      "saved": "Kaydedildi",
+      "applied": "Başvuruldu",
+      "notInterestedAriaLabel": "İlgilenmiyorum",
+      "taughtInPrefix": "{languages} dilinde"
+    },
+    "matchTier": {
+      "exceptional": "Olağanüstü eşleşme",
+      "strong": "Güçlü eşleşme",
+      "worthALook": "Göz atmaya değer",
+      "lowPriority": "Düşük öncelik"
+    },
+    "fitTier": {
+      "exceptional": "Olağanüstü uyum",
+      "strong": "Güçlü uyum",
+      "worthALook": "Göz atmaya değer",
+      "lowPriority": "Düşük öncelik"
+    },
+    "actions": {
+      "markedNotInterestedUndo": "İlgilenmiyorum olarak işaretlendi — geri al",
+      "officialPage": "Resmi sayfa",
+      "apply": "Başvur",
+      "markApplied": "Başvuruldu olarak işaretle"
+    },
+    "reasons": {
+      "notInterestedTopic": "Bu konuyla ilgilenmiyorum",
+      "tooExpensive": "Çok pahalı",
+      "noTime": "Vaktim yok",
+      "location": "Konum uygun değil",
+      "tooCompetitive": "Çok rekabetçi",
+      "alreadyApplied": "Zaten başvurdum",
+      "other": "Diğer"
+    },
+    "browseGrid": {
+      "loadingMoreSr": "Daha fazla fırsat yükleniyor",
+      "shownCountSr": "{count} fırsat gösteriliyor",
+      "loading": "Yükleniyor…",
+      "tryAgain": "Tekrar dene",
+      "loadMore": "Daha fazla yükle",
+      "allShown": "Bu filtrelere uyan tüm fırsatlar bunlar."
+    },
+    "filterBar": {
+      "categoryNavAriaLabel": "Kategoriye göre fırsatlara göz at",
+      "all": "Tümü",
+      "search": "Ara",
+      "searchPlaceholder": "Başlık veya kurum…",
+      "country": "Ülke",
+      "any": "Fark etmez",
+      "cycleStatus": "Dönem durumu",
+      "remoteOnline": "Uzaktan/çevrimiçi",
+      "freeOnly": "Sadece ücretsiz",
+      "applyButton": "Uygula",
+      "reset": "Sıfırla"
+    },
+    "standingBadge": {
+      "ineligibleForYou": "Senin için uygun değil",
+      "notOpenRightNow": "Şu anda açık değil"
+    },
+    "browsePage": {
+      "eyebrow": "Fırsatlar",
+      "title": "Şu anki durumun için seçildi.",
+      "description": "Her birinin profiline ne katabileceğine göre sıralandı — prestij veya popülerliğe göre değil.",
+      "refreshError": "Eşleşmelerini şu anda yenileyemedik. Aşağıdaki eşleşme puanları ve uygunluk bilgileri son bilinen sonucun, güncel olmayabilir.",
+      "forYou": "Senin için",
+      "browseAll": "Tümüne göz at",
+      "noMatchesTitle": "Henüz eşleşme yok",
+      "noMatchesConfigured": "Fırsatlar belirli aralıklarla keşfediliyor. Yakında tekrar kontrol et, ya da Oryn'ın ne arayacağını bilmesi için profilini daha fazla tamamla.",
+      "noMatchesNotConfigured": "Fırsat keşfi bu ortamda henüz yapılandırılmadı (TAVILY_API_KEY gerekiyor). API_SETUP.md dosyasına bakın.",
+      "bestNextMove": "En iyi sıradaki adım",
+      "bestNextMoveDescription": "Profiline şu anda en çok katkı sağlayacak tek fırsat.",
+      "alsoWorthYourTime": "Değerlendirmeye değer diğerleri",
+      "resultsCount": "{count, plural, one {{formatted} fırsat eşleşiyor} other {{formatted} fırsat eşleşiyor}}",
+      "noOpportunitiesFound": "Fırsat bulunamadı",
+      "matchingQuerySuffix": " — “{query}” ile eşleşen",
+      "tryDifferentSearch": "Farklı bir arama dene, ya da bir filtreyi temizle — Oryn'ın fırsat kataloğu zamanla büyüyor."
+    },
+    "detailPage": {
+      "orynsTake": "Oryn'ın değerlendirmesi",
+      "cantConfirmPrefix": "Oryn'ın doğrulayamadığı bir şey: ",
+      "refreshError": "Bu fırsat için eşleşmeni şu anda yenileyemedik. Aşağıdaki uygunluk ve eşleşme bilgileri son bilinen sonucun, güncel olmayabilir.",
+      "fit": "Uyum",
+      "selectivity": "Seçicilik",
+      "urgency": "Aciliyet",
+      "closesToday": "Bugün kapanıyor",
+      "daysLeft": "{days} gün kaldı",
+      "deadlineLabel": "Son tarih:",
+      "financialAidAvailable": "Mali destek mevcut",
+      "financialAidAvailableSuffix": " · Mali destek mevcut",
+      "currencyNotRecorded": " · para birimi kayıtlı değil, resmi sayfayı kontrol edin",
+      "agesRange": "{min}–{max} yaş",
+      "gradesSuffix": " · Sınıflar {grades}",
+      "whatYoullNeed": "Başvurmak için gerekenler",
+      "eligibilityNotesHeading": "Uygunluk notları",
+      "citizenshipLabel": "Vatandaşlık: {text}",
+      "residencyLabel": "İkamet: {text}",
+      "sourcesHeading": "Kaynaklar",
+      "visitOfficialPage": "Resmi sayfayı ziyaret et",
+      "any": "herhangi"
+    }
   }
 }

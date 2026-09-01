@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { OpportunityCard } from "./opportunity-card";
 import { loadMoreOpportunities } from "@/app/(app)/opportunities/actions";
+import { formatNumber } from "@/lib/i18n/format";
 import type { OpportunityBrowseFilters, OpportunityBrowseRow } from "@/lib/opportunities/browse";
 import type { SavedOpportunityStatus } from "@/types/database";
 
@@ -38,6 +40,7 @@ export function OpportunityBrowseGrid({
   // that by keying this component on the filters (see the page) so React remounts it —
   // rather than syncing props into state from an effect, which would cascade renders and
   // is what the react-hooks/set-state-in-effect rule is guarding against.
+  const t = useTranslations("opportunities.browseGrid");
   const [rows, setRows] = useState(initialRows);
   const [statuses, setStatuses] = useState(initialStatuses);
   const [page, setPage] = useState(1);
@@ -104,7 +107,7 @@ export function OpportunityBrowseGrid({
       {/* aria-live so a screen reader hears that more results arrived — a silently growing
           list is the accessibility failure mode of infinite scroll. */}
       <div aria-live="polite" className="sr-only">
-        {isPending ? "Loading more opportunities" : `${rows.length} opportunities shown`}
+        {isPending ? t("loadingMoreSr") : t("shownCountSr", { count: formatNumber(rows.length) })}
       </div>
 
       {hasMore ? (
@@ -113,17 +116,17 @@ export function OpportunityBrowseGrid({
           <Button variant="outline" size="sm" onClick={loadMore} disabled={isPending}>
             {isPending ? (
               <>
-                <Loader2 className="size-3.5 animate-spin" /> Loading…
+                <Loader2 className="size-3.5 animate-spin" /> {t("loading")}
               </>
             ) : error ? (
-              "Try again"
+              t("tryAgain")
             ) : (
-              "Load more"
+              t("loadMore")
             )}
           </Button>
         </div>
       ) : (
-        <p className="py-6 text-center text-xs text-ink-3">That&apos;s everything matching these filters.</p>
+        <p className="py-6 text-center text-xs text-ink-3">{t("allShown")}</p>
       )}
     </>
   );
