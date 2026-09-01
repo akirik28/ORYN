@@ -55,9 +55,40 @@ This is closer to working than it looks, which is why it belongs high on the lis
 - **13 of 18** belong to a student with 3+ assessed dimensions
 - **6 of 18 have both sides ready** — and only **1** has an outlook computed
 
-So five targets have the data and no result. That is a much smaller problem than "the feature is
-empty", and nobody has yet established whether the remaining gate is stricter than expected or
-the refresh simply hasn't run for them. **Worth one session's investigation, not a rebuild.**
+So five targets have the data and no result. **Narrowed since first writing, 21:15** — and it is
+not the honesty gate:
+
+- `hasConfidentSignal` passes on **one** assessed dimension. One affected student has **9 of 9**
+  assessed, four saved universities, and all four have `outlook_calculated_at` **NULL** — never
+  computed, not computed-and-declined.
+- `refreshAdmissionOutlook` has two early returns and an **unconditional** write after them, with
+  **no error check on that write**.
+- It is called from exactly two places — the university detail page and the save action — and the
+  save-time call has existed since **15 August**, predating every one of these saves.
+- The single row that does have an outlook was calculated **six days after** it was saved,
+  consistent with someone opening the detail page later.
+
+**A call that should have fired at save time, from code older than the saves, left no trace.**
+Under investigation. What it costs a student meanwhile: the dashboard's University Outlook block
+reads the **stored** column, so a student who saves five universities sees a badge for none of
+them — and the outlook never improves as their profile does.
+
+### 2b. The requirements queue is lying about its own state
+
+Established tonight, and it changes how the corpus should be read: **~193 records that the queue
+labels `rejected` or `unresolved_university` are not losses.** 35 of 36 `rejected` rows match live
+`university_requirements` by exact text — later re-ingestion captured them and the outcome labels
+never caught up. Of 157 `unresolved_university`, **143 are correct non-matches** (national bodies:
+swissuniversities, Ireland's CAO, OUAC, Québec, EducationPlannerBC — not universities), 12 are
+already recovered, and exactly **one fact is genuinely missing** (Ankara's TR-YÖS 200-point
+baseline).
+
+The 219 `not_ingestible` are the gate working: mostly January 2026's TOEFL rescale making several
+universities' per-subtest thresholds literally unsatisfiable, plus genuine
+conflicting-official-source cases. Correct refusals.
+
+So the depth problem is **narrower than the queue makes it look** — but the queue's labels need
+reconciling, or the next person reads 466 losses that aren't there.
 
 ### 3. The university catalogue is a name and a photo for most of it
 
