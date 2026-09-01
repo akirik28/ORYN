@@ -66,8 +66,11 @@ describe("migration numbering", () => {
     // of the above before appending — which is the point of a tripwire over a ceiling. 0074
     // (deadline_freshness) is the column pair that lets a deadline say when it was last
     // checked, added before applying 85 records across six new countries so that what gets
-    // promised can also be measured.
-    expect(Math.max(...numbers.map(Number))).toBe(74);
+    // promised can also be measured. 0075 (deadline_notification_log) is the dedupe table
+    // the reminder job's aggregation needs — one row per (student, deadline, urgency
+    // bucket) already notified, so a nearer bucket can still re-notify without ever
+    // repeating the same bucket twice.
+    expect(Math.max(...numbers.map(Number))).toBe(75);
   });
 });
 

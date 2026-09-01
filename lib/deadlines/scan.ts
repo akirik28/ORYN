@@ -2,7 +2,7 @@ import "server-only";
 
 import { differenceInCalendarDays } from "date-fns";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/database";
+import type { Database, DeadlineNotificationLogInsert, DeadlineNotificationSource } from "@/types/database";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createNotification } from "@/lib/notifications/create";
 import { canonicalUniversityId, loadSupersessionMap, type SupersessionMap } from "@/lib/universities/canonical";
@@ -12,18 +12,50 @@ import { deadlineDetailLabel } from "@/lib/deadlines/upcoming";
 import { getTranslations } from "next-intl/server";
 import { DEFAULT_LOCALE, toLocale, type Locale } from "@/lib/i18n/config";
 
-/** Days-until-deadline thresholds that trigger a reminder (Phase 23/24). A student gets
- * at most one reminder per deadline per threshold — see the dedup check below. */
-const REMINDER_THRESHOLDS = [14, 7, 3, 1];
+/**
+ * Days-until-deadline thresholds that trigger a reminder (Phase 23/24). Phase 23 itself
+ * names 3/7/14/30; `1` is this codebase's own addition on top of spec (a same-day-tomorrow
+ * alert reads as strictly more useful, not a deviation worth removing) — `30` was, until
+ * this package, simply missing from this array, so the spec's own outermost bucket had
+ * never once been reachable. Ordered descending (most-distant bucket first) only because
+ * that's the natural reading order; matching is exact-day via thresholdCrossed() below and
+ * doesn't depend on array order.
+ *
+ * A deadline crossing into a NEARER bucket re-notifies rather than firing once ever — see
+ * writeDeadlineNotifications()'s and migration 0075's comments for why that's the
+ * deliberate choice, not an oversight.
+ */
+const REMINDER_THRESHOLDS = [30, 14, 7, 3, 1];
 
 const ACTIVE_APPLICATION_STATUSES = ["not_started", "in_progress", "submitted", "under_review"] as const;
 const ACTIVE_TARGET_STATUSES = ["exploring", "target", "applying"] as const;
 
-interface DeadlineCandidate {
+/**
+ * One deadline that crossed a reminder threshold in this run, for one student. Collected
+ * by the three scan*Deadlines functions below and aggregated afterward — nothing in this
+ * file notifies a student directly from inside a per-source loop any more (Phase 24: "avoid
+ * spam, aggregate where possible"; see writeDeadlineNotifications()).
+ *
+ * `source`/`sourceId`/`daysUntil` together are the dedupe key persisted to
+ * deadline_notification_log (migration 0075) — deliberately not `deadlineDate`, so a
+ * university pushing a deadline back doesn't need special-casing: a changed date just
+ * means a (possibly) different daysUntil, which is already part of the key.
+ *
+ * `singleBody`/`itemLabel` are both pre-translated at collection time (each scan*Deadlines
+ * function already has the right per-student `translate` in scope from `localeByUser`) —
+ * `singleBody` is the exact sentence used when this is the only hit for this student this
+ * run (byte-for-byte what every student received before this package), `itemLabel` is the
+ * bare name used to build one line of an aggregated digest when it isn't.
+ */
+export interface DeadlineHit {
   userId: string;
-  deadlineDate: string;
+  locale: Locale;
+  source: DeadlineNotificationSource;
+  sourceId: string;
+  daysUntil: number;
   link: string;
-  body: string;
+  itemLabel: string;
+  singleBody: string;
 }
 
 /** Narrower than next-intl's real `getTranslations` return type — this is all any function
@@ -37,7 +69,11 @@ type NotificationKey =
   | "applicationDeadlineApproaching"
   | "applicationDeadlineApproachingGeneric"
   | "universityDeadlineApproaching"
-  | "unnamedTargetUniversity";
+  | "unnamedTargetUniversity"
+  | "unnamedApplication"
+  | "deadlineDigestTitle"
+  | "deadlineDigestItem"
+  | "deadlineDigestItemTomorrow";
 type NotificationTranslator = (key: NotificationKey, values?: Record<string, string | number>) => string;
 
 /** One translator per shipped locale, loaded once per `scanDeadlines()` run rather than
@@ -61,55 +97,38 @@ async function loadLocalesByUser(supabase: SupabaseClient<Database>, userIds: st
   return new Map((data ?? []).map((p) => [p.id, toLocale(p.preferred_language)]));
 }
 
-/** Shared threshold-check + dedup + notify for one deadline candidate, reused across all
- * three sources below. Dedup is a cheap "was a notification linking to this already sent
- * in roughly the last day" check — good enough for a once-daily cron; a job running more
- * than once a day could double up right at a threshold boundary.
- *
- * Exported (only) so __tests__/deadlines/notify-if-threshold-crossed.test.ts can pin this
- * shared core directly — the actual threshold/dedup decision every one of the three scan
- * sources delegates to — rather than only exercising it indirectly through one source's
- * own table set. No behavior change. */
-export async function notifyIfThresholdCrossed(supabase: SupabaseClient<Database>, today: Date, candidate: DeadlineCandidate, translate: NotificationTranslator): Promise<boolean> {
-  const daysUntil = differenceInCalendarDays(new Date(candidate.deadlineDate), today);
-  if (!REMINDER_THRESHOLDS.includes(daysUntil)) return false;
-
-  const { data: recent } = await supabase
-    .from("notifications")
-    .select("id")
-    .eq("user_id", candidate.userId)
-    .eq("category", "deadline")
-    .eq("link", candidate.link)
-    .gte("created_at", new Date(today.getTime() - 20 * 60 * 60 * 1000).toISOString())
-    .maybeSingle();
-  if (recent) return false;
-
-  await createNotification({
-    userId: candidate.userId,
-    category: "deadline",
-    title: daysUntil === 1 ? translate("deadlineTomorrow") : translate("daysUntilDeadline", { days: daysUntil }),
-    body: candidate.body,
-    link: candidate.link,
-  });
-  return true;
+/**
+ * Pure threshold match — returns the crossed bucket (30/14/7/3/1) or null. Exported so
+ * __tests__/deadlines/threshold-crossed.test.ts can pin date arithmetic directly, the same
+ * role notifyIfThresholdCrossed's threshold half used to play before this package split
+ * "does this cross a threshold" (pure, no I/O) from "has it already been notified about"
+ * (needs deadline_notification_log, see filterAlreadyNotified below) and "what does the
+ * notification say" (needs aggregation across possibly-several hits, see
+ * buildDigestNotification below). The old function did all three inline per-candidate,
+ * which is exactly what made per-candidate notifications the only option.
+ */
+export function thresholdCrossed(deadlineDate: string, today: Date): number | null {
+  const daysUntil = differenceInCalendarDays(new Date(deadlineDate), today);
+  return REMINDER_THRESHOLDS.includes(daysUntil) ? daysUntil : null;
 }
 
 /** Exported (only) so __tests__/deadlines/scan-applications.test.ts can pin its behavior
  * directly, without also mocking the opportunity/university scan sources. No behavior
- * change. */
+ * change to the underlying eligibility/resolution logic — only the tail (notify directly
+ * vs. return a hit for later aggregation) is new. */
 export async function scanApplications(
   supabase: SupabaseClient<Database>,
   today: Date,
   supersessionMap: SupersessionMap,
   translators: Record<Locale, NotificationTranslator>
-): Promise<{ notified: number; checked: number }> {
+): Promise<{ hits: DeadlineHit[]; checked: number }> {
   const { data: applications } = await supabase
     .from("applications")
     .select("id, user_id, deadline, target_university_id")
     .not("deadline", "is", null)
     .in("status", ACTIVE_APPLICATION_STATUSES);
 
-  if (!applications || applications.length === 0) return { notified: 0, checked: 0 };
+  if (!applications || applications.length === 0) return { hits: [], checked: 0 };
 
   const targetIds = [...new Set(applications.map((a) => a.target_university_id))];
   const { data: targets } = targetIds.length
@@ -127,37 +146,40 @@ export async function scanApplications(
 
   const localeByUser = await loadLocalesByUser(supabase, [...new Set(applications.map((a) => a.user_id))]);
 
-  let notified = 0;
+  const hits: DeadlineHit[] = [];
   for (const application of applications) {
+    const daysUntil = thresholdCrossed(application.deadline!, today);
+    if (daysUntil === null) continue;
+
     const universityId = universityIdByTarget.get(application.target_university_id);
     const universityName = universityId ? universityNameById.get(universityId) : null;
-    const translate = translators[localeByUser.get(application.user_id) ?? DEFAULT_LOCALE];
-    const wasNotified = await notifyIfThresholdCrossed(
-      supabase,
-      today,
-      {
-        userId: application.user_id,
-        deadlineDate: application.deadline!,
-        link: `/applications/${application.id}`,
-        body: universityName ? translate("applicationDeadlineApproaching", { name: universityName }) : translate("applicationDeadlineApproachingGeneric"),
-      },
-      translate
-    );
-    if (wasNotified) notified += 1;
+    const locale = localeByUser.get(application.user_id) ?? DEFAULT_LOCALE;
+    const translate = translators[locale];
+
+    hits.push({
+      userId: application.user_id,
+      locale,
+      source: "application",
+      sourceId: application.id,
+      daysUntil,
+      link: `/applications/${application.id}`,
+      itemLabel: universityName ?? translate("unnamedApplication"),
+      singleBody: universityName ? translate("applicationDeadlineApproaching", { name: universityName }) : translate("applicationDeadlineApproachingGeneric"),
+    });
   }
-  return { notified, checked: applications.length };
+  return { hits, checked: applications.length };
 }
 
 /** Exported (only) so __tests__/deadlines/scan.test.ts can pin and verify its
  * cycle_status filtering directly, without also mocking the application/university
- * scan sources. No behavior change. */
+ * scan sources. No behavior change to the actionability guard — only the tail is new. */
 export async function scanSavedOpportunityDeadlines(
   supabase: SupabaseClient<Database>,
   today: Date,
   translators: Record<Locale, NotificationTranslator>
-): Promise<{ notified: number; checked: number }> {
+): Promise<{ hits: DeadlineHit[]; checked: number }> {
   const { data: saved } = await supabase.from("saved_opportunities").select("user_id, opportunity_id").eq("status", "saved");
-  if (!saved || saved.length === 0) return { notified: 0, checked: 0 };
+  if (!saved || saved.length === 0) return { hits: [], checked: 0 };
 
   const opportunityIds = [...new Set(saved.map((s) => s.opportunity_id))];
   const { data: opportunities } = await supabase
@@ -169,7 +191,7 @@ export async function scanSavedOpportunityDeadlines(
 
   const localeByUser = await loadLocalesByUser(supabase, [...new Set(saved.map((s) => s.user_id))]);
 
-  let notified = 0;
+  const hits: DeadlineHit[] = [];
   let checked = 0;
   for (const save of saved) {
     const opportunity = opportunityById.get(save.opportunity_id);
@@ -179,37 +201,45 @@ export async function scanSavedOpportunityDeadlines(
     // with a future-dated deadline still on file. 'unverified' stays reachable.
     if (!isOpportunityActionable(opportunity, today)) continue;
     checked += 1;
-    const translate = translators[localeByUser.get(save.user_id) ?? DEFAULT_LOCALE];
-    const wasNotified = await notifyIfThresholdCrossed(
-      supabase,
-      today,
-      {
-        userId: save.user_id,
-        deadlineDate: opportunity.deadline,
-        link: "/opportunities",
-        body: translate("applicationDeadlineApproaching", { name: opportunity.title }),
-      },
-      translate
-    );
-    if (wasNotified) notified += 1;
+
+    const daysUntil = thresholdCrossed(opportunity.deadline, today);
+    if (daysUntil === null) continue;
+
+    const locale = localeByUser.get(save.user_id) ?? DEFAULT_LOCALE;
+    const translate = translators[locale];
+    hits.push({
+      userId: save.user_id,
+      locale,
+      source: "opportunity",
+      sourceId: opportunity.id,
+      daysUntil,
+      // Every saved-opportunity single-item notification has always pointed at the same
+      // generic list page (there's no per-opportunity detail route) — unlike applications
+      // and university deadlines, this was never actually a usable dedupe key on its own,
+      // which is exactly why migration 0075 keys dedupe on (source, source_id,
+      // threshold_days) and not on `link`.
+      link: "/opportunities",
+      itemLabel: opportunity.title,
+      singleBody: translate("applicationDeadlineApproaching", { name: opportunity.title }),
+    });
   }
-  return { notified, checked };
+  return { hits, checked };
 }
 
 /** Exported (only) so __tests__/deadlines/scan-target-universities.test.ts can pin its
  * behavior directly, without also mocking the application/opportunity scan sources. No
- * behavior change. */
+ * behavior change to the program/verification-state filtering — only the tail is new. */
 export async function scanTargetUniversityDeadlines(
   supabase: SupabaseClient<Database>,
   today: Date,
   supersessionMap: SupersessionMap,
   translators: Record<Locale, NotificationTranslator>
-): Promise<{ notified: number; checked: number }> {
+): Promise<{ hits: DeadlineHit[]; checked: number }> {
   const { data: targets } = await supabase
     .from("target_universities")
     .select("id, user_id, university_id, program_id")
     .in("status", ACTIVE_TARGET_STATUSES);
-  if (!targets || targets.length === 0) return { notified: 0, checked: 0 };
+  if (!targets || targets.length === 0) return { hits: [], checked: 0 };
 
   // Canonicalized: both so university_deadlines is queried for the winner row (where real
   // deadline data actually lives, per how pickCanonicalWinner scores FK richness) and so a
@@ -218,7 +248,7 @@ export async function scanTargetUniversityDeadlines(
   const [{ data: deadlines }, { data: universities }] = await Promise.all([
     supabase
       .from("university_deadlines")
-      .select("university_id, program_id, deadline_type, deadline_date, verification_state, cycle_label, deadline_text_verbatim")
+      .select("id, university_id, program_id, deadline_type, deadline_date, verification_state, cycle_label, deadline_text_verbatim")
       .in("university_id", universityIds)
       .not("deadline_date", "is", null),
     supabase.from("universities").select("id, name").in("id", universityIds),
@@ -227,11 +257,12 @@ export async function scanTargetUniversityDeadlines(
 
   const localeByUser = await loadLocalesByUser(supabase, [...new Set(targets.map((target) => target.user_id))]);
 
-  let notified = 0;
+  const hits: DeadlineHit[] = [];
   let checked = 0;
   for (const target of targets) {
     const canonicalId = canonicalUniversityId(supersessionMap, target.university_id);
-    const translate = translators[localeByUser.get(target.user_id) ?? DEFAULT_LOCALE];
+    const locale = localeByUser.get(target.user_id) ?? DEFAULT_LOCALE;
+    const translate = translators[locale];
     // A university-level deadline (program_id null) always applies; a program-specific
     // one only applies once the student has actually picked that program — otherwise we
     // can't tell which of a university's many programs it belongs to. VERIFIED_HISTORICAL (and
@@ -243,24 +274,126 @@ export async function scanTargetUniversityDeadlines(
     const universityName = universityNameById.get(canonicalId) ?? translate("unnamedTargetUniversity");
     for (const deadline of relevant) {
       checked += 1;
-      const wasNotified = await notifyIfThresholdCrossed(
-        supabase,
-        today,
-        {
-          userId: target.user_id,
-          deadlineDate: deadline.deadline_date!,
-          link: `/universities/${canonicalId}`,
-          // deadlineDetailLabel is verbatim source text or an internal enum value, never
-          // translated — same "a quoted claim must stay checkable against its source"
-          // principle lib/ai/output-language.ts documents for AI prose.
-          body: translate("universityDeadlineApproaching", { name: universityName, detail: deadlineDetailLabel(deadline) }),
-        },
-        translate
-      );
-      if (wasNotified) notified += 1;
+      const daysUntil = thresholdCrossed(deadline.deadline_date!, today);
+      if (daysUntil === null) continue;
+
+      hits.push({
+        userId: target.user_id,
+        locale,
+        source: "university_deadline",
+        sourceId: deadline.id,
+        daysUntil,
+        link: `/universities/${canonicalId}`,
+        // deadlineDetailLabel is verbatim source text or an internal enum value, never
+        // translated — same "a quoted claim must stay checkable against its source"
+        // principle lib/ai/output-language.ts documents for AI prose.
+        itemLabel: `${universityName} — ${deadlineDetailLabel(deadline)}`,
+        singleBody: translate("universityDeadlineApproaching", { name: universityName, detail: deadlineDetailLabel(deadline) }),
+      });
     }
   }
-  return { notified, checked };
+  return { hits, checked };
+}
+
+/**
+ * Which of `hits` have NOT already been notified about — one query against
+ * deadline_notification_log (migration 0075) for every user appearing in `hits`, rather
+ * than one query per hit. Dedupe key is (user_id, source, source_id, threshold_days): see
+ * the migration's own comment for why threshold_days is part of the key (a nearer bucket
+ * is a new fact) rather than deadlineDate (a pushed-back date shouldn't need special
+ * handling — it's just a different daysUntil, already covered).
+ */
+async function filterAlreadyNotified(supabase: SupabaseClient<Database>, hits: DeadlineHit[]): Promise<DeadlineHit[]> {
+  if (hits.length === 0) return [];
+  const userIds = [...new Set(hits.map((hit) => hit.userId))];
+  const { data: logged } = await supabase.from("deadline_notification_log").select("user_id, source, source_id, threshold_days").in("user_id", userIds);
+  const loggedKeys = new Set((logged ?? []).map((row) => `${row.user_id}|${row.source}|${row.source_id}|${row.threshold_days}`));
+  return hits.filter((hit) => !loggedKeys.has(`${hit.userId}|${hit.source}|${hit.sourceId}|${hit.daysUntil}`));
+}
+
+/**
+ * Builds one notification's title/body/link from one student's crossed-threshold hits this
+ * run — pure, no I/O, so the aggregation shape itself is directly testable without mocking
+ * Supabase. A single hit reuses the exact title/body/link every student received before
+ * this package (deadlineTomorrow/daysUntilDeadline + that source's own sentence + that
+ * item's own link); this is deliberate byte-for-byte compatibility, not an oversight that
+ * happens to look unaggregated. Two or more hits use a new digest shape: one title naming
+ * the count, one line per item (sorted soonest-first) joined with "; " rather than a
+ * newline — notification-bell.tsx renders `body` in a plain `line-clamp-2` span with no
+ * `white-space: pre-line`, so a literal newline would collapse to a single space and read
+ * as a run-on sentence; that component isn't this package's territory to change, so the
+ * copy is designed to already work with it. Link points at /dashboard (the "Due soon"
+ * widget, lib/deadlines/upcoming.ts) rather than any one item's own page, since a digest
+ * covering different sources has no single correct destination.
+ */
+export function buildDigestNotification(hits: readonly DeadlineHit[], translate: NotificationTranslator): { title: string; body: string; link: string } {
+  if (hits.length === 1) {
+    const hit = hits[0];
+    return {
+      title: hit.daysUntil === 1 ? translate("deadlineTomorrow") : translate("daysUntilDeadline", { days: hit.daysUntil }),
+      body: hit.singleBody,
+      link: hit.link,
+    };
+  }
+
+  const sorted = [...hits].sort((a, b) => a.daysUntil - b.daysUntil);
+  const body = sorted
+    .map((hit) => (hit.daysUntil === 1 ? translate("deadlineDigestItemTomorrow", { name: hit.itemLabel }) : translate("deadlineDigestItem", { name: hit.itemLabel, days: hit.daysUntil })))
+    .join("; ");
+  return {
+    title: translate("deadlineDigestTitle", { count: hits.length }),
+    body,
+    link: "/dashboard",
+  };
+}
+
+/**
+ * Writes exactly one notification per student for this run (Phase 24: "avoid spam,
+ * aggregate where possible") and logs every included hit to deadline_notification_log so
+ * the same (student, deadline, bucket) is never notified again. Logging only happens after
+ * a successful write — createNotification now reports whether the insert actually landed
+ * (see its own updated comment) specifically so a failed notification is never logged as
+ * delivered, which would otherwise permanently and silently suppress a reminder the
+ * student never received.
+ *
+ * `.upsert(..., { ignoreDuplicates: true })` rather than a plain insert: filterAlreadyNotified
+ * already excludes anything logged before this function runs, so this is a defensive second
+ * layer against a genuine race (two overlapping scanDeadlines() runs), not the primary
+ * dedupe mechanism — the unique index (migration 0075) is what actually makes that race safe
+ * either way.
+ *
+ * Returns the number of deadline hits actually surfaced to a student (post-dedup, pre-
+ * grouping) — a more meaningful "items processed" figure for runWithTracking than the
+ * number of notification rows, the same way every other Phase 30 job counts real facts
+ * written rather than batches sent.
+ */
+async function writeDeadlineNotifications(supabase: SupabaseClient<Database>, hits: DeadlineHit[], translators: Record<Locale, NotificationTranslator>): Promise<number> {
+  const hitsByUser = new Map<string, DeadlineHit[]>();
+  for (const hit of hits) {
+    hitsByUser.set(hit.userId, [...(hitsByUser.get(hit.userId) ?? []), hit]);
+  }
+
+  let notified = 0;
+  for (const [userId, userHits] of hitsByUser) {
+    const translate = translators[userHits[0].locale];
+    const { title, body, link } = buildDigestNotification(userHits, translate);
+
+    const sent = await createNotification({ userId, category: "deadline", title, body, link });
+    if (!sent) continue;
+
+    const logRows: DeadlineNotificationLogInsert[] = userHits.map((hit) => ({
+      user_id: hit.userId,
+      source: hit.source,
+      source_id: hit.sourceId,
+      threshold_days: hit.daysUntil,
+    }));
+    const { error: logError } = await supabase.from("deadline_notification_log").upsert(logRows, { onConflict: "user_id,source,source_id,threshold_days", ignoreDuplicates: true });
+    if (logError) {
+      console.warn("[deadlines] failed to log notified deadlines", { userId, error: logError });
+    }
+    notified += userHits.length;
+  }
+  return notified;
 }
 
 /**
@@ -269,9 +402,9 @@ export async function scanTargetUniversityDeadlines(
  * is docs/opportunity-reverification-job-design-2026-08-23.md's `opportunity_reverification`
  * design, unbuilt as of this writing. See that doc's §1.3 for why the name moved).
  * Cross-source Deadline Engine: scans applications, saved opportunities, and target
- * universities' program deadlines, notifying the owner once per threshold crossed per
- * deadline. See lib/deadlines/upcoming.ts for the read-side ("Due soon" widget) that
- * mirrors this same three-source union.
+ * universities' program deadlines, aggregating every threshold crossed per student into
+ * one notification per run (see writeDeadlineNotifications). See lib/deadlines/upcoming.ts
+ * for the read-side ("Due soon" widget) that mirrors this same three-source union.
  */
 export async function scanDeadlines(): Promise<{ notified: number; checked: number }> {
   const supabase = createAdminClient();
@@ -289,8 +422,12 @@ export async function scanDeadlines(): Promise<{ notified: number; checked: numb
     scanTargetUniversityDeadlines(supabase, today, supersessionMap, translators),
   ]);
 
+  const allHits = [...applications.hits, ...opportunities.hits, ...universities.hits];
+  const freshHits = await filterAlreadyNotified(supabase, allHits);
+  const notified = await writeDeadlineNotifications(supabase, freshHits, translators);
+
   return {
-    notified: applications.notified + opportunities.notified + universities.notified,
+    notified,
     checked: applications.checked + opportunities.checked + universities.checked,
   };
 }

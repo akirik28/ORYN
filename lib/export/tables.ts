@@ -86,6 +86,14 @@ export const EXPORT_EXCLUDED_TABLES: Record<string, string> = {
    * empty section as product_events. Move it into EXPORT_TABLES when 0072 lands.
    */
   birth_year_changes: "migration 0072 is not applied anywhere yet — would export as permanently empty until it is",
+  /**
+   * Migration 0075's log of which deadline reminders a student has already received (see
+   * lib/deadlines/scan.ts). Their data, benign, and the RLS policy is already select-own —
+   * same posture as ai_usage above, which IS exported — but 0075 is not applied anywhere
+   * yet, same situation as birth_year_changes immediately above. Move it into EXPORT_TABLES
+   * once 0075 lands.
+   */
+  deadline_notification_log: "migration 0075 is not applied anywhere yet — would export as permanently empty until it is",
 };
 
 /** Tables keyed by a participant pair rather than a plain user_id — each needs its own

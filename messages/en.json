@@ -1380,6 +1380,10 @@
     "applicationDeadlineApproachingGeneric": "An application deadline is approaching.",
     "universityDeadlineApproaching": "{name} — {detail} deadline approaching.",
     "unnamedTargetUniversity": "A target university",
+    "unnamedApplication": "An application",
+    "deadlineDigestTitle": "{count} deadlines coming up",
+    "deadlineDigestItem": "{name} — {days} days",
+    "deadlineDigestItemTomorrow": "{name} — tomorrow",
     "newOpportunityMatch": "New match: {name}"
   },
   "plan": {
