@@ -24,6 +24,7 @@ vi.mock("@/app/(app)/notifications/actions", () => ({ markNotificationRead: vi.f
 vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
 import { NextIntlClientProvider } from "next-intl";
+import en from "@/messages/en.json";
 import { NotificationBell } from "@/features/app-shell/notification-bell";
 import { markNotificationRead, markAllNotificationsRead } from "@/app/(app)/notifications/actions";
 import { toast } from "sonner";
@@ -61,7 +62,9 @@ afterEach(() => {
  */
 function renderBell(notifications: Notification[]) {
   return render(
-    <NextIntlClientProvider locale="en" messages={{}}>
+    // Real catalog, not {}: the component reads its labels from `notifications` now, and an
+    // empty object made next-intl throw MISSING_MESSAGE rather than render.
+    <NextIntlClientProvider locale="en" messages={en}>
       <NotificationBell notifications={notifications} />
     </NextIntlClientProvider>,
   );

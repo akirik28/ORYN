@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Bell, CheckCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -15,6 +15,7 @@ import type { Notification } from "@/types/database";
 export function NotificationBell({ notifications }: { notifications: Notification[] }) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const t = useTranslations("notifications");
   // `useLocale()` is typed as the app's Locale union via the AppConfig augmentation in
   // lib/i18n/app-config.d.ts, but it resolves at runtime from provider state — `toLocale`
   // keeps a stale or unexpected value rendering English rather than throwing on an index.
@@ -39,7 +40,7 @@ export function NotificationBell({ notifications }: { notifications: Notificatio
           />
         }
         nativeButton={true}
-        aria-label="Notifications"
+        aria-label={t("label")}
       >
         <span className="relative">
           <Bell className="size-[17px]" strokeWidth={1.6} />
@@ -50,12 +51,12 @@ export function NotificationBell({ notifications }: { notifications: Notificatio
               className="absolute -right-1 -top-1 size-2 rounded-full border-[1.5px]"
             />
           ) : null}
-          <span className="sr-only">{unreadCount > 0 ? `${unreadCount} unread` : "No unread"}</span>
+          <span className="sr-only">{unreadCount > 0 ? t("unreadCount", { count: unreadCount }) : t("noUnread")}</span>
         </span>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 gap-0 rounded-[14px] p-0" style={{ borderColor: "#EEEEF6" }}>
         <div className="flex items-center justify-between border-b px-4 py-3" style={{ borderColor: "#F4F4F8" }}>
-          <span className="text-[13px] font-bold" style={{ color: "#111118" }}>Notifications</span>
+          <span className="text-[13px] font-bold" style={{ color: "#111118" }}>{t("title")}</span>
           {unreadCount > 0 ? (
             <button
               className="flex items-center gap-1 text-[11px] font-semibold hover:opacity-80"
@@ -68,13 +69,13 @@ export function NotificationBell({ notifications }: { notifications: Notificatio
                 })
               }
             >
-              <CheckCheck className="size-3.5" /> Mark all read
+              <CheckCheck className="size-3.5" /> {t("markAllRead")}
             </button>
           ) : null}
         </div>
         <div className="max-h-96 overflow-y-auto">
           {notifications.length === 0 ? (
-            <p className="px-4 py-7 text-center text-[13px]" style={{ color: "#AAAABC" }}>All caught up</p>
+            <p className="px-4 py-7 text-center text-[13px]" style={{ color: "#AAAABC" }}>{t("allCaughtUp")}</p>
           ) : (
             notifications.map((notification) => {
               const rowClassName = cn(

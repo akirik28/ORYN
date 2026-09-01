@@ -1267,5 +1267,21 @@
       "updateFailed": "Couldn't update that request.",
       "removeFailed": "Couldn't remove that."
     }
+  },
+  "notifications": {
+    "label": "Notifications",
+    "title": "Notifications",
+    "markAllRead": "Mark all read",
+    "allCaughtUp": "All caught up",
+    "unreadCount": "{count} unread",
+    "noUnread": "No unread"
+  },
+  "plan": {
+    "title": "This week's plan",
+    "defaultDescription": "Your prioritized actions for the week.",
+    "regenerate": "Regenerate",
+    "generate": "Generate my plan",
+    "emptyTitle": "No plan yet this week",
+    "emptyDescription": "Generate one to get your prioritized actions."
   }
 }

@@ -1,4 +1,5 @@
 import { ListChecks } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/security/dal";
 import { getCurrentWeeklyPlan } from "@/lib/plan/persist";
 import { WeeklyFocus } from "@/features/dashboard/weekly-focus";
@@ -9,15 +10,16 @@ import { EmptyState } from "@/components/oryn/empty-state";
 export const metadata = { title: "Plan" };
 
 export default async function PlanPage() {
+  const t = await getTranslations("plan");
   const session = await requireUser();
   const weeklyPlan = await getCurrentWeeklyPlan(session.userId!);
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="This week's plan"
-        description={weeklyPlan?.plan.summary || "Your prioritized actions for the week."}
-        action={<GeneratePlanButton label={weeklyPlan ? "Regenerate" : "Generate my plan"} />}
+        title={t("title")}
+        description={weeklyPlan?.plan.summary || t("defaultDescription")}
+        action={<GeneratePlanButton label={weeklyPlan ? t("regenerate") : t("generate")} />}
       />
 
       {weeklyPlan && weeklyPlan.actions.length > 0 ? (
@@ -25,7 +27,7 @@ export default async function PlanPage() {
           <WeeklyFocus actions={weeklyPlan.actions} />
         </div>
       ) : (
-        <EmptyState icon={ListChecks} title="No plan yet this week" description="Generate one to get your prioritized actions." />
+        <EmptyState icon={ListChecks} title={t("emptyTitle")} description={t("emptyDescription")} />
       )}
     </div>
   );

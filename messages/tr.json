@@ -1267,5 +1267,21 @@
       "updateFailed": "Bu istek güncellenemedi.",
       "removeFailed": "Kaldırılamadı."
     }
+  },
+  "notifications": {
+    "label": "Bildirimler",
+    "title": "Bildirimler",
+    "markAllRead": "Tümünü okundu işaretle",
+    "allCaughtUp": "Hepsi tamam",
+    "unreadCount": "{count} okunmamış",
+    "noUnread": "Okunmamış yok"
+  },
+  "plan": {
+    "title": "Bu haftanın planı",
+    "defaultDescription": "Bu hafta için öncelikli işlerin.",
+    "regenerate": "Yeniden oluştur",
+    "generate": "Planımı oluştur",
+    "emptyTitle": "Bu hafta henüz plan yok",
+    "emptyDescription": "Öncelikli işlerini görmek için bir plan oluştur."
   }
 }
