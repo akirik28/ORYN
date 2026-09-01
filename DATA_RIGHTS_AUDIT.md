@@ -214,15 +214,29 @@ oversight), I said so rather than picking the more dramatic reading.
 
 ## Part 3 — For counsel: is each export omission legally required?
 
-> **Status note added 2026-09-01 — the code moved after this analysis was written; the
-> analysis below is unchanged and still the thing for counsel to react to.**
+> **Status note added 2026-09-01, updated 2026-09-02 — the code moved twice after this
+> analysis was written; the analysis below is unchanged and still the thing for counsel to
+> react to.**
 >
-> Five of the six are now in the export (`opportunity_matches`,
-> `student_requirement_evaluations`, `ai_recommendations`, `ai_usage`, `rate_limit_events`),
-> so a subject access request today returns them. `product_events` is not, and could not be:
-> it has RLS enabled with no `SELECT` policy, so exporting it would emit a permanently empty
-> section while reporting success — a false completeness claim. It needs a policy in a
-> migration first, and is recorded in `EXPORT_EXCLUDED_TABLES` with that reason.
+> All six are now in the export (`opportunity_matches`, `student_requirement_evaluations`,
+> `ai_recommendations`, `ai_usage`, `rate_limit_events`, `product_events`), so a subject
+> access request today returns all of them. `product_events` was the last holdout: it
+> needed migration 0073's `"select own product_events"` RLS policy first (confirmed live
+> against `oryn-qa-scratch` via `pg_policies` on 2026-09-02, not inferred from the
+> migration file's existence), then moving from `EXPORT_EXCLUDED_TABLES` into
+> `EXPORT_TABLES` in `lib/export/tables.ts`. A seventh table surfaced independently in Part
+> 3a below (`birth_year_changes`) and is a different kind of gap — not fixed here, see that
+> section.
+>
+> Storage cleanup (Part 1) is also closed: `lib/account/delete-storage.ts`, referenced as
+> "fix pushed, not yet merged" in the original "What I'd flag" list below, has since merged
+> to `main` (`4409b65d`) with tests. `deleteMyAccount()` now calls it before deleting the
+> auth user and refuses to proceed if cleanup fails.
+>
+> `ai_usage`'s delete-vs-anonymize question (item 2 below) is still exactly as open as when
+> this was written — not fixed, because it is a decision, not a bug — but is now recorded
+> as `LAWYER_FLAGS.aiUsageAnonymization` in `lib/legal/content.ts` and the
+> `deleteMyAccount()` comment no longer implies this table cascades along with the other 41.
 >
 > **One of those five settles something this section deliberately did not.** On
 > `rate_limit_events` the text below says inclusion is "a risk-posture opinion, not a legal
