@@ -745,62 +745,46 @@ it presents an extraction artifact as an editorial fact, and the field's authori
 misleading.*
 **Depends on**: nothing technical — a schema/product judgment. ORYN-CFO was asked to weigh in.
 
-## 33. ~~Ten `_backup_*`/staging tables in `public`~~ — NINE DROPPED; the tenth is live infrastructure needing a `revoke`, not a drop
+## 33. ~~Ten `_backup_*`/staging tables in `public`~~ — NINE DROPPED; the tenth is live infrastructure, not a straggler
 
-> ### Mostly resolved. The decision is now about a single table, not ten.
+> ### Resolved for nine. The tenth needed a different read, arrived at over three passes.
 >
-> Queried live 2026-09-01 18:20: of the ten this entry describes, **nine no longer exist**.
-> The one still in `public` is **`qs2027_import_staging`**.
+> Queried live 2026-09-01 18:20: of the ten this entry originally described, **nine no longer
+> exist** (migration `0069`, applied with no ledger row — confirmed by the absence itself). The
+> one still in `public` is **`qs2027_import_staging`**.
 >
-> A lane reported all ten gone; they flagged that reading as inferred from absence rather than
-> from a record of the drop, and were right to hedge — the direct query found the survivor.
-> Absence of nine is not absence of ten, and the difference is the whole decision.
+> Getting to the right read of that one table took three tries, each corrected by the next. A
+> lane reported all ten gone, correctly hedged as "inferred from absence, not a record of the
+> drop" — the direct query found the survivor. The next read treated the survivor as "same
+> decision, one tenth the scope" — also wrong. `qs2027_import_staging` is **not abandoned
+> residue like the nine that were dropped**; it is live pipeline infrastructure, verified
+> directly:
 >
-> **Corrected again, 2026-09-01 18:15 — and the decision is a different one, not a smaller one.**
-> I first rewrote this as "same decision, one tenth the scope." That was wrong too.
-> `qs2027_import_staging` is **not abandoned residue like the nine that were dropped** — it is
-> live pipeline infrastructure. Verified directly:
->
-> - **1,000 rows**, a populated QS Top-1000 staging dataset, not an empty leftover.
+> - **1,000 rows** — a populated QS Top-1000 staging dataset, not an empty leftover.
 > - **Live code depends on it**: `scripts/acquire-qs-institution-profile.ts` reads it (joining
 >   on `list_position`), and `lib/acquisition/paginate.ts` special-cases its lack of an `id`
 >   column.
 > - It is **migration-tracked**, and `0069_drop_ad_hoc_backup_tables.sql` — the migration that
->   removed the others — **deliberately spared it**.
+>   removed the other nine — **deliberately spared it**.
 >
 > A prior schema-hygiene audit had already reached this conclusion and excluded it by name:
 > *"active pipeline infrastructure for an ongoing QS Top1000 expansion, not abandoned residue.
-> Revisit once that expansion is complete, not before."*
+> Revisit once that expansion is complete, not before."* Same reasoning applies to
+> `global_university_discovery_queue`, flagged by that same audit and never part of this
+> entry's original ten — noted so a later cleanup doesn't sweep it up.
 >
-> **So dropping or relocating it now risks breaking an in-progress pipeline nobody has declared
-> finished.** The exposure concern is still real and arguably sharper than for the nine, since
-> this table holds live in-progress data rather than a stale snapshot: RLS is on with **zero
-> policies** (so nothing can read it today), but `anon` and `authenticated` both hold Supabase's
-> default schema-wide **SELECT/INSERT/UPDATE/DELETE/TRUNCATE**. One permissive policy, or one
-> `DISABLE ROW LEVEL SECURITY` during an incident, and it is open.
->
-> **The fix that fits is `revoke`, not `drop`** — strip the default grants and leave the table
-> where the pipeline expects it. That is not destructive to data and can be written as a
-> migration for your approval like any other. Dropping stays on the table as an option *after*
-> whoever owns the QS expansion says it is finished.
->
-> Same reasoning applies to `global_university_discovery_queue`, flagged by that same audit and
-> never part of this entry's ten — noted so it isn't swept up by a later cleanup.
+> **So dropping or relocating `qs2027_import_staging` now risks breaking an in-progress
+> pipeline nobody has declared finished.** It shares its access-control posture (RLS on, zero
+> policies, Supabase's default `anon`/`authenticated` grants) with thirteen other internal
+> tables — whether that posture is safe to change, across all fourteen, is now one question
+> instead of fourteen: **item 40**.
 
-**Action (one table, `qs2027_import_staging`)**: approve a migration revoking the default `anon`/`authenticated` grants on it — or decide the QS expansion is finished, in which case dropping it becomes available again.
-**Why it matters, precisely**: they are **not exposed today** — RLS is enabled on all ten with
-zero policies, which denies everything, verified. But they each carry Supabase's default
-schema-wide `anon` grant (SELECT/UPDATE/DELETE). ORYN-BASORG's framing: *a loaded gun with the
-safety on, and the safety is a thing people turn off casually.* A single permissive policy, or
-one `ALTER TABLE … DISABLE ROW LEVEL SECURITY` during an incident, turns it into live anonymous
-CRUD over a copy of real data — and these are exactly the tables where that happens, because
-they're throwaway snapshots nobody owns, documents, or re-reviews.
-**The trade-off**: dropping them loses the rollback safety net they exist to provide. They're
-16–264 kB, so size isn't the issue.
-**Mitigation already in place**: standing rule adopted org-wide — RLS is never disabled on a
-`_backup_*` or staging table for any reason; a lane needing to inspect one queries as a
-privileged role instead.
-**Depends on**: your call. It's destructive DDL against live data, so it waited for you.
+**Action**: nothing table-specific here — the grant question for `qs2027_import_staging` is
+folded into item 40's blanket-revoke proposal, which covers it by name. The one decision that
+belongs to *this* entry: once whoever owns the QS Top1000 expansion declares it finished,
+dropping `qs2027_import_staging` becomes available again, the same way the other nine were.
+**Depends on**: item 40 for the grant question; a product/ops call on the QS expansion's
+completion for the drop question.
 
 ---
 
@@ -1289,6 +1273,115 @@ product question from the three defects above.
 
 **Depends on**: your decision on (a)/(b)/(c) above for the deletion behavior. The two dedup
 fixes and this write-up need no decision — already on `oryn/plan-regenerate-defects-2026-09-01`.
+
+---
+
+## 40. Product decision: fourteen internal tables carry a default grant their own RLS already denies — safe to revoke it?
+
+**Action**: approve a migration that revokes Supabase's default schema-wide `anon`/
+`authenticated` grants on the fourteen tables listed below — with one table (`product_events`)
+handled differently, not identically, per the carve-out below.
+
+**Why it's one question, not fourteen**: this started as the exposure note attached to item 33
+(`qs2027_import_staging`), but that table isn't special — checking it properly meant checking
+what it's actually a member of. Re-derived independently rather than trusted forward (item 33's
+own history is three straight corrections in one evening — see
+`docs/handoffs/` if that sequence is instructive — so this entry re-ran every check from
+scratch rather than inheriting a number):
+
+- **14 of 78 `public` tables have RLS enabled and *zero* policies**, confirmed directly against
+  `pg_policies` (not just the advisor lint): `canonical_entity_merges`,
+  `canonical_field_policies`, `deadline_research_queue`, `entity_locations`,
+  `entity_relationships`, `entity_verification_queue`, `external_sync_jobs`,
+  `global_university_discovery_queue`, `product_events`, `program_research_queue`,
+  `provider_health`, `qs2027_import_staging`, `requirement_research_queue`,
+  `university_profile_verification_queue`. Confirmed complete — no fifteenth table with zero
+  policies exists.
+- **The default grant is not what makes these fourteen distinctive.** All 78 `public` tables
+  (80 relations, counting two views) carry Supabase's default `anon` grant — it's schema-wide,
+  not something switched on selectively. What's distinctive about these fourteen is that,
+  unlike the other 64, **nothing currently converts the grant into access**: RLS is on and
+  denies everything, by omission rather than by a rule anyone wrote and can reason about. A
+  single permissive policy added carelessly, or one `DISABLE ROW LEVEL SECURITY` during an
+  incident, turns any of them into live anonymous-or-authenticated CRUD with no further step
+  required — ORYN-BASORG's framing for the original nine-table version of this: *a loaded gun
+  with the safety on, and the safety is a thing people turn off casually.*
+- **Exactly one of the fourteen holds anything that looks like student data.** Checked every
+  column on all fourteen for a `user_id`/`profile_id`/`student`/`email`-shaped column:
+  `product_events.user_id` is the only hit. The other thirteen are research/ingestion queues,
+  entity-canonicalisation bookkeeping, and operational telemetry over public-domain university
+  data — some large (`program_research_queue` alone is 19,034 rows), none minor-safety data.
+
+**The `product_events` carve-out — this is not a fourteenth identical case, and treating it as
+one would silently break something that just shipped.** Migration `0073` (already applied) gave
+`authenticated` users a real, scoped policy: `select own product_events … using (user_id =
+auth.uid())`, specifically so the data-export endpoint can return a student's own analytics
+rows instead of a silent empty section. **A Postgres RLS policy only restores access within
+what the underlying `GRANT` already permits — it cannot grant access the table-level privilege
+doesn't have.** Revoking `authenticated`'s `SELECT` on `product_events` as part of a blanket
+sweep would make `0073`'s policy unreachable: the export would go back to silently empty, the
+exact failure mode `0073` was written to close, and nothing would error to say so. Every other
+part of `product_events`'s default grant is safe to revoke by the same logic as the other
+thirteen — `0073`'s own text states writes stay service-role-only "exactly as today," matching
+what the code shows (below), and `anon` gets nothing from `0073` at all (`auth.uid()` is null
+for an anonymous request, so an `anon` grant here was never doing anything).
+
+**Checked, not assumed, whether a revoke is safe for what's actually running today** — CEO's
+explicit ask, because a revoke that silently breaks an ingestion script would be a bad trade for
+a theoretical exposure. Every file in `lib/`, `app/`, and `scripts/` referencing any of the
+fourteen tables was checked for which Supabase client it writes through:
+
+- **Four tables have no code reference anywhere in the application** — `entity_locations`,
+  `entity_verification_queue`, `university_profile_verification_queue`, and
+  `global_university_discovery_queue` were seeded once by their own creating migrations
+  (`0038`/`0039`/`0044`/`0051`) and have no `lib/`, `app/`, or `scripts/` file touching them at
+  all today. Nothing can break because nothing calls them.
+- **Every other write path goes through the service-role key, with no counter-example found.**
+  In application code: `lib/providers/health.ts`, `lib/jobs/run-with-tracking.ts`, and
+  `lib/analytics/log.ts` (the three files that write `provider_health`, `external_sync_jobs`,
+  and `product_events` respectively) all call `createAdminClient()` directly. Two files that
+  import both a request-scoped and an admin client (`lib/opportunities/persist-matches.ts`,
+  `lib/requirements/persist.ts`) use the request-scoped client for reads only and route their
+  one write elsewhere (`opportunity_matches`, `student_requirement_evaluations` — neither in
+  this set) through `admin`. In scripts: every ingestion/acquisition script referencing
+  `program_research_queue`, `deadline_research_queue`, `requirement_research_queue`,
+  `canonical_entity_merges`, `entity_relationships`, or `qs2027_import_staging` (thirteen
+  scripts checked by name) constructs its own client directly from `SUPABASE_SECRET_KEY` — the
+  service-role key, not the publishable one. Service-role bypasses grants and RLS entirely, so
+  none of this depends on what `anon`/`authenticated` can do.
+
+**Proposed shape** (not yet written as a migration — sketched here so approval and drafting can
+happen in one round trip):
+
+```sql
+-- Thirteen tables: strip the default grant entirely for anon and authenticated.
+revoke all on table
+  public.canonical_entity_merges, public.canonical_field_policies,
+  public.deadline_research_queue, public.entity_locations, public.entity_relationships,
+  public.entity_verification_queue, public.external_sync_jobs,
+  public.global_university_discovery_queue, public.program_research_queue,
+  public.provider_health, public.qs2027_import_staging, public.requirement_research_queue,
+  public.university_profile_verification_queue
+from anon, authenticated;
+
+-- product_events: strip everything for anon (its 0073 policy never covers it); for
+-- authenticated, strip only what 0073 didn't intend to grant, keep select.
+revoke insert, update, delete, truncate, references, trigger on table public.product_events
+  from anon, authenticated;
+revoke select on table public.product_events from anon;
+```
+
+**Trade-off**: none identified against current functionality — see the write-path audit above.
+The only cost is to any *future* code that assumes the default grant is still there; going
+forward, a table meant for `anon`/`authenticated` access needs an explicit `GRANT` alongside its
+policy, which is the pattern the rest of the schema already follows.
+**The broader posture question, beyond these fourteen**: should a newly created internal/queue
+table ever inherit the default schema-wide grant, or should new tables be created with grants
+revoked by default and added back explicitly only when a policy exists to bound them? That's a
+standing-convention decision, not just a cleanup of these fourteen — worth deciding once rather
+than re-litigating at table fifteen.
+**Depends on**: your call — it's DDL against live grants, not data, but still waited for you per
+the same discipline as item 33.
 
 ---
 
