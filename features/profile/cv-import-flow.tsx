@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { FileUp, Loader2, Check, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,14 +16,14 @@ import { importReviewedCvItems } from "@/app/(app)/profile/import/actions";
 import type { CvImportCategory, CvImportItem } from "@/lib/profile/cv-import";
 import type { CVExtractionResult } from "@/lib/ai/cv-extraction";
 
-const CATEGORY_LABELS: Record<CvImportCategory, string> = {
-  education: "Education",
-  activities: "Activities",
-  awards: "Awards",
-  projects: "Projects",
-  research: "Research",
-  workExperience: "Work experience",
-};
+const CATEGORY_LABEL_KEYS = {
+  education: "page.sections.education.title",
+  activities: "page.sections.activities.title",
+  awards: "page.sections.awards.title",
+  projects: "page.sections.projects.title",
+  research: "page.sections.research.title",
+  workExperience: "page.sections.workExperience.title",
+} as const satisfies Record<CvImportCategory, string>;
 
 interface ReviewItem extends CvImportItem {
   id: string;
@@ -33,7 +34,7 @@ interface ReviewItem extends CvImportItem {
 function flatten(result: CVExtractionResult): ReviewItem[] {
   const items: ReviewItem[] = [];
   let n = 0;
-  for (const category of Object.keys(CATEGORY_LABELS) as CvImportCategory[]) {
+  for (const category of Object.keys(CATEGORY_LABEL_KEYS) as CvImportCategory[]) {
     for (const raw of result[category]) {
       n += 1;
       items.push({
@@ -67,6 +68,9 @@ function flatten(result: CVExtractionResult): ReviewItem[] {
  * without the student confirming it.
  */
 export function CvImportFlow() {
+  const t = useTranslations("profile");
+  const tImport = useTranslations("profile.cvImport");
+  const tCommon = useTranslations("common");
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [items, setItems] = useState<ReviewItem[] | null>(null);
@@ -91,7 +95,7 @@ export function CvImportFlow() {
       }
       const flat = flatten(result.extraction);
       if (flat.length === 0) {
-        setError("We read the file but couldn't find anything to import from it. You can add entries manually instead.");
+        setError(tImport("noItemsFoundError"));
         return;
       }
       setItems(flat);
@@ -102,7 +106,7 @@ export function CvImportFlow() {
     if (!items) return;
     const selected = items.filter((i) => i.included);
     if (selected.length === 0) {
-      setError("Select at least one item to import.");
+      setError(tImport("selectAtLeastOneError"));
       return;
     }
     setError(null);
@@ -124,7 +128,7 @@ export function CvImportFlow() {
       }
       setItems(null);
       setFileName(null);
-      setNotice(`Added ${result.inserted} item${result.inserted === 1 ? "" : "s"} to your profile.`);
+      setNotice(tImport("addedNotice", { count: result.inserted ?? 0 }));
       router.refresh();
     });
   }
@@ -134,10 +138,9 @@ export function CvImportFlow() {
     return (
       <div className="space-y-6">
         <div>
-          <Eyebrow tone="brand">Review before adding</Eyebrow>
+          <Eyebrow tone="brand">{tImport("reviewBeforeAdding")}</Eyebrow>
           <p className="mt-3 max-w-2xl leading-relaxed text-ink-2">
-            Oryn found {items.length} item{items.length === 1 ? "" : "s"} in {fileName}. Nothing is added
-            to your profile until you confirm it — uncheck anything that isn&apos;t right.
+            {tImport("foundItems", { count: items.length, fileName: fileName ?? "" })}
           </p>
         </div>
 
@@ -157,9 +160,9 @@ export function CvImportFlow() {
               <label htmlFor={item.id} className="min-w-0 flex-1 cursor-pointer">
                 <span className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
                   <span className="font-medium text-ink-1">{item.title}</span>
-                  <span className="text-xs text-ink-3">{CATEGORY_LABELS[item.category]}</span>
+                  <span className="text-xs text-ink-3">{t(CATEGORY_LABEL_KEYS[item.category])}</span>
                   {item.confidence === "low" ? (
-                    <span className="text-xs text-warning">Oryn is unsure about this one</span>
+                    <span className="text-xs text-warning">{tImport("unsureAboutThis")}</span>
                   ) : null}
                 </span>
                 {item.organization ? <span className="mt-0.5 block text-sm text-ink-3">{item.organization}</span> : null}
@@ -178,10 +181,10 @@ export function CvImportFlow() {
         <div className="flex flex-wrap items-center gap-3">
           <Button onClick={save} disabled={isSaving || selectedCount === 0}>
             {isSaving ? <Loader2 className="size-4 animate-spin" /> : null}
-            Add {selectedCount} item{selectedCount === 1 ? "" : "s"} to my profile
+            {tImport("addItemsToProfile", { count: selectedCount })}
           </Button>
           <Button variant="outline" disabled={isSaving} onClick={() => { setItems(null); setFileName(null); setError(null); }}>
-            Cancel
+            {tCommon("cancel")}
           </Button>
         </div>
       </div>
@@ -204,8 +207,8 @@ export function CvImportFlow() {
       >
         <EmptyState
           icon={FileUp}
-          title="Scan a CV or résumé"
-          description="Upload a PDF, DOCX or text file. Oryn reads it, shows you what it found, and adds only what you confirm — nothing is saved without your review."
+          title={tImport("scanTitle")}
+          description={tImport("scanDescription")}
           action={
             <>
               <input
@@ -222,7 +225,7 @@ export function CvImportFlow() {
               />
               <Button onClick={() => fileRef.current?.click()} disabled={isUploading}>
                 {isUploading ? <Loader2 className="size-4 animate-spin" /> : <FileUp className="size-4" />}
-                {isUploading ? `Reading ${fileName}…` : "Choose a file"}
+                {isUploading ? tImport("readingFile", { fileName: fileName ?? "" }) : tImport("chooseFile")}
               </Button>
             </>
           }

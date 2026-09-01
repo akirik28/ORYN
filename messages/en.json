@@ -125,7 +125,18 @@
       "title": "Scan a CV.",
       "description": "Already have your record written down somewhere? Oryn can read it and pull out your education, activities, awards, projects, research and work — you review everything before any of it is saved.",
       "notConfiguredTitle": "CV scanning isn't configured yet",
-      "notConfiguredDescription": "This needs ANTHROPIC_API_KEY to be set — see API_SETUP.md. You can still add everything to your profile manually."
+      "notConfiguredDescription": "This needs ANTHROPIC_API_KEY to be set — see API_SETUP.md. You can still add everything to your profile manually.",
+      "reviewBeforeAdding": "Review before adding",
+      "foundItems": "Oryn found {count, plural, one {# item} other {# items}} in {fileName}. Nothing is added to your profile until you confirm it — uncheck anything that isn't right.",
+      "unsureAboutThis": "Oryn is unsure about this one",
+      "addItemsToProfile": "{count, plural, one {Add # item} other {Add # items}} to my profile",
+      "scanTitle": "Scan a CV or résumé",
+      "scanDescription": "Upload a PDF, DOCX or text file. Oryn reads it, shows you what it found, and adds only what you confirm — nothing is saved without your review.",
+      "readingFile": "Reading {fileName}…",
+      "chooseFile": "Choose a file",
+      "noItemsFoundError": "We read the file but couldn't find anything to import from it. You can add entries manually instead.",
+      "selectAtLeastOneError": "Select at least one item to import.",
+      "addedNotice": "{count, plural, one {Added # item} other {Added # items}} to your profile."
     },
     "portfolio": {
       "title": "Portfolio",
