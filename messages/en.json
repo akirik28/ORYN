@@ -1401,7 +1401,9 @@
     "profileUpdateTitle": "Your profile score changed",
     "profileUpdateItem": "{name} {delta}",
     "completenessMilestoneReached": "Your profile is now {percent}% complete",
-    "newOpportunityMatch": "New match: {name}"
+    "newOpportunityMatch": "New match: {name}",
+    "universityDataChangedTitle": "{name} — information updated",
+    "universityDataChangedDigestTitle": "{count} universities updated"
   },
   "plan": {
     "title": "This week's plan",

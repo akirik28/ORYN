@@ -21,6 +21,42 @@ function normalizeUrl(url: string): string {
   return /^https?:\/\//.test(url) ? url : `https://${url}`;
 }
 
+/** The fields this sync actually writes to `universities` (see universityPayload below) —
+ * shared type so the comparator and the payload can never silently drift apart. */
+interface ComparableUniversityFields {
+  name: string;
+  city: string | null;
+  institution_type: string | null;
+  website_url: string | null;
+  student_size: number | null;
+  external_ids: Record<string, unknown>;
+}
+
+/**
+ * Whether a fresh College Scorecard read differs from what's already stored, for any field
+ * this sync is capable of writing — pure, no I/O, so it's directly testable without a
+ * database. Exists because `last_changed_at` is a real signal something downstream reads
+ * (lib/universities/data-change-scan.ts, Phase 24's university_data_changed notification):
+ * before this function existed, syncOne stamped `last_changed_at: now` on every run
+ * unconditionally, insert or update, whether or not any field actually differed — which
+ * would have made that column mean "was last synced", not "last changed", and made the
+ * notification fire on every scheduled Job C run regardless of whether a student's tracked
+ * university had anything new to report. `external_ids` is compared by value (JSON.stringify
+ * on both sides, same shape either way since this function only ever receives what
+ * `universityPayload` itself builds) rather than by reference, since a fresh object literal
+ * is never `===` to a previously-stored one even when their contents are identical.
+ */
+export function hasUniversityDataChanged(existing: ComparableUniversityFields, incoming: ComparableUniversityFields): boolean {
+  return (
+    existing.name !== incoming.name ||
+    existing.city !== incoming.city ||
+    existing.institution_type !== incoming.institution_type ||
+    existing.website_url !== incoming.website_url ||
+    existing.student_size !== incoming.student_size ||
+    JSON.stringify(existing.external_ids) !== JSON.stringify(incoming.external_ids)
+  );
+}
+
 /**
  * Upserts one U.S. university from College Scorecard into universities +
  * university_statistics + university_sources (Phase 30 Job C: university data
@@ -42,7 +78,7 @@ async function syncOne(schoolName: string): Promise<SyncResult> {
 
   const { data: existing } = await supabase
     .from("universities")
-    .select("id")
+    .select("id, name, city, institution_type, website_url, student_size, external_ids")
     .ilike("name", escapeLikePattern(school.name))
     .eq("country", "United States")
     .maybeSingle();
@@ -52,26 +88,48 @@ async function syncOne(schoolName: string): Promise<SyncResult> {
   // an update never wipes a value an admin (or a future richer provider) already set on
   // an existing row. A brand-new row still gets them as `null` implicitly (no explicit
   // value = the column's own default), identical to the previous behavior for inserts.
-  const universityPayload = {
+  const incomingFields = {
     name: school.name,
-    country: "United States",
     city: school.city,
     institution_type: school.institutionType,
     website_url: school.websiteUrl ? normalizeUrl(school.websiteUrl) : null,
     student_size: school.studentSize,
     external_ids: { college_scorecard_id: school.collegeScorecardId },
+  };
+
+  // last_checked_at always advances -- a check genuinely happened this run regardless of
+  // outcome. last_changed_at only advances when something actually differs from the
+  // stored row (hasUniversityDataChanged, above) -- an unconditional stamp here is what
+  // this fix removes, since a downstream reader (the university_data_changed notification
+  // scan) treats last_changed_at as "this fact became true," not "this row was re-synced."
+  const sharedFields = {
+    ...incomingFields,
+    country: "United States",
     data_confidence: "high" as const,
     data_status: "fresh" as const,
     last_checked_at: now,
-    last_changed_at: now,
   };
 
   let universityId: string;
   if (existing) {
     universityId = existing.id;
-    await supabase.from("universities").update(universityPayload).eq("id", universityId);
+    // last_changed_at is spread in only when something actually differs -- omitting the
+    // key entirely (rather than assigning it `undefined`) both satisfies UniversityUpdate's
+    // `string | null` typing and, more importantly, is what actually leaves the column
+    // untouched: PostgREST only writes columns present in the payload.
+    const changed = hasUniversityDataChanged(existing, incomingFields);
+    await supabase
+      .from("universities")
+      .update({ ...sharedFields, ...(changed ? { last_changed_at: now } : {}) })
+      .eq("id", universityId);
   } else {
-    const { data: inserted, error } = await supabase.from("universities").insert(universityPayload).select().single();
+    // A brand-new row's own creation is its first "change" -- always stamped, same as
+    // scripts/expand-university-spine.ts's own convention for a freshly-created row.
+    const { data: inserted, error } = await supabase
+      .from("universities")
+      .insert({ ...sharedFields, last_changed_at: now })
+      .select()
+      .single();
     if (error || !inserted) return { schoolName, status: "error", detail: error?.message ?? "insert failed" };
     universityId = inserted.id;
   }

@@ -1401,7 +1401,9 @@
     "profileUpdateTitle": "Profil puanın değişti",
     "profileUpdateItem": "{name} {delta}",
     "completenessMilestoneReached": "Profilin artık %{percent} tamamlandı",
-    "newOpportunityMatch": "Yeni eşleşme: {name}"
+    "newOpportunityMatch": "Yeni eşleşme: {name}",
+    "universityDataChangedTitle": "{name} — bilgiler güncellendi",
+    "universityDataChangedDigestTitle": "{count} üniversite güncellendi"
   },
   "plan": {
     "title": "Bu haftanın planı",
