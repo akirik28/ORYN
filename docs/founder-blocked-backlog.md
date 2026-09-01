@@ -548,6 +548,53 @@ retire-now-research-later or accept-and-schedule.
 **Depends on**: nothing technical. Full detail will be in `docs/known-issues.md` under BUG-1's
 investigation note.
 
+### Re-verified 2026-09-01 15:20 — the verdicts above held; three things they do not cover
+
+Re-queried all three live rows rather than re-reading this entry. **Nothing drifted**: CMU and
+NYU are still index pages, USC is still a single coherent programme family (and now carries a
+$11,570 cost with `cycle_status='open'`, which is what a real programme record looks like). The
+SQL above can be run as written. What pulling on the thread added:
+
+**a. One genuine casualty among the disabled rows, and it is not in the table above.**
+`c581e99a` **The Pioneer Academics Research Program**, disabled 2026-08-23, **has no
+replacement anywhere in the table.** Eight of the nine disabled truncated rows have a live,
+correctly-titled counterpart — that is what makes their retirement safe, and it is checked here
+row by row, not inferred from the two this entry already names. Pioneer is the ninth. It is a
+real, well-known research programme; its `official_url` points at a marketing review post
+(`/news/is-pioneer-academics-worth-it-review-…`) rather than a programme page, which is the
+likely reason someone retired it. Whether it was *also* rejected on merit is not recoverable —
+there is no field-level changelog, so "no replacement exists" is the entirety of the evidence.
+**Re-adding it with a correct URL is a live write and therefore yours.**
+
+**b. The defect is not only live, it is loaded.** This entry measures the `active` set. The
+same import left **41 rows sitting in `under_review`**, and they share one shape: description
+clipped at exactly 899–900 characters, **and `deadline`, `cost`, `minimum_age` and
+`maximum_age` all null on every single one**. Verified from the product code rather than
+assumed — `isOpportunityActionable` (`lib/opportunities/lifecycle.ts`) returns false for any
+status but `active`, and `browse.ts` filters `status='active'` in SQL — so **no student sees
+them today**. The point is what happens on the day someone approves the queue: 41 records go
+live that cannot answer "am I eligible?" or "when is this due?", which are two of the three
+questions the opportunity surface exists to answer. **Fill those fields before promoting the
+queue**, or promote selectively.
+
+**c. The rule you are being asked for should be written to cover four more rows, not three.**
+Sitting in `under_review` right now: **University of Pennsylvania (PA, USA)** is exactly the USC
+case (its description names ESAP, cost $9,250 — retitle, do not retire); **Brown University (RI,
+USA)** and **Harvard University (MA, USA)** are exactly the CMU/NYU case. Not urgent, since none
+is visible — but if the decision is recorded as "these three rows" rather than as a rule, the
+same defect ships the day they are approved. One row that looks like it belongs and does not:
+**York University Helix Summer Science Institute (ON, CANADA)** names a real programme and
+merely carries a location suffix. Leave it alone.
+
+**Method note, because it nearly went the other way.** KCL and St Andrews have an
+`official_url` pointing at an unrelated academic page while their *descriptions* carry the
+correct summer-school URL on the university's own domain. That reads as "two real programmes
+wrongly hidden by a fixable field error," and it was one message away from being reported that
+way. One more query settled it — both are live under correct titles, exactly as this entry
+already said. The entry was right; the fresh reading of the same rows was wrong. **A group
+verdict is not evidence about any row in the group, and that cuts toward the cautious answer as
+often as away from it.**
+
 ## 28. Five opportunities that no AI-permitted fetch path can reach
 
 **Action**: check these by hand, or decide to drop them: **Technovation** and **CSHL** block
