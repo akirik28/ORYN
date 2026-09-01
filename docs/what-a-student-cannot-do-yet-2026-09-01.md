@@ -46,32 +46,41 @@ Two clicks did it, on two separate accounts. A confirmation dialog landed tonigh
 being silent; **it does not stop it happening.** What regeneration should do with completed work
 is an open product decision (backlog item 39): carry forward, delete only incomplete, or archive.
 
-### 2. The admission outlook shows nothing for 17 of 18 saved universities
+### 2. The admission outlook works. It just never recomputes as a student improves
 
-This is closer to working than it looks, which is why it belongs high on the list:
+**This item was wrong when first written, twice, and the corrected version is much smaller.**
+It said the feature was empty for 17 of 18 saved universities. All 18 are now accounted for with
+nothing left over:
 
-- **9 of 18** have university-side statistics
-- **12 of 18** have requirements
-- **13 of 18** belong to a student with 3+ assessed dimensions
-- **6 of 18 have both sides ready** — and only **1** has an outlook computed
+- **12 rows (4 students) were never saved through the app at all.** Each shares an *identical
+  microsecond* `created_at` with its siblings — impossible for real saves, which are one HTTP
+  round-trip each, and no other code path in `app/`, `lib/` or `scripts/` inserts into
+  `target_universities`. They were bulk-seeded straight into the database. The save-time refresh
+  never fired because there was no save.
+- **6 rows (3 students) are genuine saves** — individually timestamped, minutes apart. They are
+  null because all three students' dimensions sit at `low` confidence, which
+  `evidenceStateFor` maps to `limited_evidence` and `isAssessed` excludes. **The honesty gate
+  working exactly as designed**, refusing to publish an outlook for a profile it hasn't really
+  read.
+- **1 row has a real outlook** — the control, proving the mechanism works when a real save meets
+  confident signal.
 
-So five targets have the data and no result. **Narrowed since first writing, 21:15** — and it is
-not the honesty gate:
+**My own arithmetic was the error.** I reported one student as having "9 of 9 dimensions
+assessed" from a query counting `jsonb_array_length(reason_codes) > 0`. The product does not
+define "assessed" that way — `isAssessed` reads the evidence *state*, and a dimension scored at
+`low` confidence is `limited_evidence`, not assessed. I invented a predicate instead of using the
+product's own, which is the specific mistake this codebase has a standing rule against.
 
-- `hasConfidentSignal` passes on **one** assessed dimension. One affected student has **9 of 9**
-  assessed, four saved universities, and all four have `outlook_calculated_at` **NULL** — never
-  computed, not computed-and-declined.
-- `refreshAdmissionOutlook` has two early returns and an **unconditional** write after them, with
-  **no error check on that write**.
-- It is called from exactly two places — the university detail page and the save action — and the
-  save-time call has existed since **15 August**, predating every one of these saves.
-- The single row that does have an outlook was calculated **six days after** it was saved,
-  consistent with someone opening the detail page later.
+**What is genuinely missing, and it is a product decision rather than a bug:** nothing
+retroactively refreshes a saved university's outlook when a student's profile later crosses the
+confidence threshold. The only two triggers are the save itself and a visit to that university's
+detail page. So a student who saves five universities in week one and fills in their profile in
+week three still sees five empty badges — the outlook is frozen at whichever moment they happened
+to click. A weekly sweep, or refreshing stale rows on dashboard load, would close it; neither
+exists.
 
-**A call that should have fired at save time, from code older than the saves, left no trace.**
-Under investigation. What it costs a student meanwhile: the dashboard's University Outlook block
-reads the **stored** column, so a student who saves five universities sees a badge for none of
-them — and the outlook never improves as their profile does.
+A missing error check on that write was real and has been added (logged, not thrown) — useful for
+the next failure, though it was not this one.
 
 ### 2b. The requirements queue is lying about its own state
 
