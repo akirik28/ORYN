@@ -91,6 +91,36 @@ source and the commits that changed them — not from memory of what a lane inte
 ## Live database (measured 2026-09-01 ~03:10, this checkpoint — every number re-queried, none
 carried forward)
 
+### The MVP's sixteen capabilities, checked against live data (2026-09-01)
+
+Every loop in Phase 53's list has real rows behind it except two, and the two are the same
+loop:
+
+| | |
+|---|---|
+| weekly plans generated | 8 |
+| profile score snapshots (profile evolution) | 26 |
+| advisor conversations / messages | 5 / 26 |
+| target universities / applications | 18 / 3 |
+| saved opportunities / evidence files | 3 / 1 |
+| ai_recommendations (the avoid_for_now log) | 110 |
+| **weekly actions completed** | **0** |
+| **actions with a reflection recorded** | **0** |
+
+So *act → reflect → profile changes → priorities change* — Phase 10, and the thing that
+separates Oryn from a task list — **has never closed once in live data.**
+
+**It is not broken.** The path was read end to end: `app/(app)/plan/actions.ts` persists the
+reflection, `lib/plan/status-patch.ts` includes those columns only when actually supplied,
+`student-context.ts:266` reads them back, and line 376 renders them into the prompt under
+"learn from these — don't just repeat what was skipped or didn't work". Unit tests cover the
+patch and the dashboard control. It has simply never had data.
+
+Worth one real pass before launch, by someone who can write to a live account: complete an
+action, answer the reflection, and check whether the next plan changes. Nothing an agent
+should do on the founder's account.
+
+
 - `universities`: **1,019** rows — **1,010 canonical, 9 superseded** — **unchanged from 08-22.**
   No university-catalogue growth since; the intervening work went into requirements, deadlines,
   and i18n instead.
