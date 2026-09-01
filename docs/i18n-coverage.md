@@ -238,6 +238,16 @@ maps, and every `toast.error(...)` message. The true number is higher; how much 
 not worth chasing, because the decision it informs — how big is this job — is already
 answered by the order of magnitude.
 
+It also, until `a25d18ce`, never opened a `.ts` file at all — `walk` collected `.tsx` and
+stopped. That is a different kind of miss from the ones above: not a pattern too narrow to
+catch a string, but a whole file extension the scan could not see. `features/profile/
+field-config.ts` holds ~173 labels, placeholders and select options for every achievement
+form, and `lib/scoring/completeness.ts` holds the checklist whose labels become the
+dashboard's top three actions for a new profile; neither appeared in any number this file
+quotes. The script now prints them in a separate **Data modules** section, deliberately not
+folded into the total, because a `label:` in `lib/` may be student copy or an operator string
+and only the consumer settles it.
+
 An earlier version of this file said 247 across 78 files. That came from a line-based
 `grep`, which cannot see JSX text sitting on the line *after* its opening tag — the ordinary
 way this codebase formats JSX. Same criteria, better reading of them; the floor moved up,

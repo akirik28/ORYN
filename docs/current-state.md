@@ -49,11 +49,25 @@ source and the commits that changed them — not from memory of what a lane inte
   `fix(settings): remove Storage objects before deleting an account, not never`) — it used to
   leave orphaned files behind indefinitely. Neither claim is "launch-ready legal compliance";
   both are "the thing the 08-22 checkpoint said didn't exist now exists and does what it says."
-- **Turkish is complete on the string level, and there are now four guards keeping it that
-  way.** `npm run check:i18n` reports **0 untranslated student-facing strings** (from 332
-  across 86 files that morning) and **0 pages with a build-time English title** (from 25).
-  The catalogs hold 1,000+ keys in exact parity. Two files still show raw JSX and both are
-  deliberate — one is bilingual by conditional, one is prompt-coupled.
+- **Turkish is complete across `.tsx`, and there are now four guards keeping it that way —
+  but `.ts` was never scanned at all, and that is where the largest remaining block is.**
+  `npm run check:i18n` reports **0 untranslated student-facing strings in `.tsx` files under
+  `app/` and `features/`** (from 332 across 86 files that morning) and **0 pages with a
+  build-time English title** (from 25). The catalogs hold 1,000+ keys in exact parity. Two
+  files still show raw JSX and both are deliberate — one is bilingual by conditional, one is
+  prompt-coupled.
+
+  **Read that first number with its scope attached.** Until `a25d18ce` the script's `walk`
+  collected `.tsx` and nothing else, so it reported zero while
+  `features/profile/field-config.ts` — 400 lines, no locale reference, ~173 labels,
+  placeholders, help text and select options — supplied **every achievement form a student
+  fills in**, and `lib/scoring/completeness.ts` supplied the checklist whose labels become the
+  dashboard's **top three actions for a brand-new profile**. Both are `.ts`. The claim was true
+  of what was scanned and false of the product, and it was a lane tracing the empty-profile
+  path that found it, not the guard. The script now prints a separate **Data modules** section
+  listing locale-blind `.ts` files — candidates for a human, not a count, since a `message:` in
+  `lib/` may be a student's toast or an operator's log line and only the consumer settles
+  which.
 
   The guards matter more than the number, because each was written after a real defect:
   `__tests__/i18n/locale.test.ts` fails on catalog drift, on a **duplicate key** (which
