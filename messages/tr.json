@@ -17,6 +17,16 @@
     "skipToContent": "İçeriğe geç",
     "homeLink": "Oryn — ana sayfa"
   },
+  "appShell": {
+    "userMenu": {
+      "accountMenu": "Hesap menüsü",
+      "careerProfile": "Kariyer profili",
+      "signOut": "Çıkış yap",
+      "addWhatYouveDone": "Neler yaptığını ekle",
+      "areasStrong": "{count, plural, one {# alan güçlü} other {# alan güçlü}}",
+      "areasAssessed": "{count, plural, one {# alan değerlendirildi} other {# alan değerlendirildi}}"
+    }
+  },
   "language": {
     "label": "Dil",
     "change": "Dili değiştir",
@@ -716,6 +726,7 @@
       "regionNavAriaLabel": "Bölgeye göre üniversitelere göz at",
       "countryNavAriaLabel": "Ülkeye göre üniversitelere göz at",
       "world": "Dünya",
+      "backToWorld": "Dünyaya dön",
       "noRegionUniversitiesYet": "Henüz {region} üniversitesi yok",
       "dataBeingAdded": "Üniversite verileri hala ekleniyor",
       "checkBackSoon": "Yakında tekrar kontrol edin.",

@@ -180,6 +180,11 @@ describe("ICU plural counts that bypass formatNumber are deliberate", () => {
     // Universities a single student is tracking applications to — bounded by how many
     // schools one person can realistically apply to, nowhere near four digits.
     "applications.hero.universityCount",
+    // How many of a student's own profile dimensions are strong/assessed — bounded by
+    // DIMENSION_ORDER's fixed length (9 today, lib/scoring/labels.ts), never close to
+    // needing a thousands separator.
+    "appShell.userMenu.areasAssessed",
+    "appShell.userMenu.areasStrong",
   ];
 
   test("no un-reviewed `#` inside a plural block", () => {

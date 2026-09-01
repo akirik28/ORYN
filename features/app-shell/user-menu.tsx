@@ -46,18 +46,19 @@ export function UserMenu({
   variant?: "compact" | "sidebar";
 }) {
   const tNav = useTranslations("nav");
+  const tMenu = useTranslations("appShell.userMenu");
   const coverage = signalCoverage(signal);
   const summary =
     coverage.assessed === 0
-      ? "Add what you've done"
+      ? tMenu("addWhatYouveDone")
       : coverage.strong > 0
-        ? `${coverage.strong} area${coverage.strong === 1 ? "" : "s"} strong`
-        : `${coverage.assessed} area${coverage.assessed === 1 ? "" : "s"} assessed`;
+        ? tMenu("areasStrong", { count: coverage.strong })
+        : tMenu("areasAssessed", { count: coverage.assessed });
   return (
     <DropdownMenu>
       {variant === "sidebar" ? (
         <DropdownMenuTrigger
-          aria-label="Account menu"
+          aria-label={tMenu("accountMenu")}
           className="flex w-full items-center gap-2.5 rounded-lg p-1 text-left transition-colors hover:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none"
         >
           <span
@@ -73,7 +74,7 @@ export function UserMenu({
         </DropdownMenuTrigger>
       ) : (
         <DropdownMenuTrigger
-          aria-label="Account menu"
+          aria-label={tMenu("accountMenu")}
           className="flex items-center gap-2 rounded-full p-0.5 transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
         >
           <Avatar className="size-8">
@@ -93,7 +94,7 @@ export function UserMenu({
           href="/profile"
           className="flex items-center justify-between gap-2 rounded-md px-1.5 py-1.5 transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
         >
-          <span className="text-sm text-ink-2">Career profile</span>
+          <span className="text-sm text-ink-2">{tMenu("careerProfile")}</span>
           <span className="text-sm text-ink-3">{summary}</span>
         </Link>
         <DropdownMenuSeparator />
@@ -107,7 +108,7 @@ export function UserMenu({
         })}
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" onClick={() => void signOut()}>
-          <LogOut className="size-4" /> Sign out
+          <LogOut className="size-4" /> {tMenu("signOut")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
