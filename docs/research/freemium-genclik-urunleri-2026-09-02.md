@@ -22,6 +22,15 @@ Three confidence levels appear throughout:
   the official page would not disclose the figure without signing up.
 - **NOT FOUND** — I looked and could not verify it from a source that meets this doc's bar.
 
+**Contents:** [1. Duolingo](#1-duolingo) · [2. Quizlet](#2-quizlet) ·
+[3. Photomath](#3-photomath) · [4. Brilliant](#4-brilliant) ·
+[5. Khan Academy / Khanmigo](#5-khan-academy--khanmigo) · [6. Chegg](#6-chegg) ·
+[7. Scribbr](#7-scribbr) · [8. Grammarly](#8-grammarly) ·
+[9. Notion (student plan)](#9-notion-student-plan) ·
+[10. CollegeVine](#10-collegevine--the-closest-real-competitor-and-the-single-most-load-bearing-finding-in-this-document) ·
+[11. Synthesis & recommendation](#11-cross-product-synthesis-and-the-oryn-question) — **start
+here if you only read one section.**
+
 ---
 
 ## 1. Duolingo
@@ -361,9 +370,9 @@ discount). **Annual**, under the active Back-to-School promotion: TRY 300/mo str
 through, discounted to **TRY 210/mo** (billed as one annual payment) — a **30% discount**,
 matching the page's own "Save 30%" banner exactly (300 × 0.7 = 210). **Family** (6 seats):
 TRY 600/mo struck through, discounted to **TRY 420/mo**, same 30% rate. A separate gift
-option and a group/institutional plan both exist (linked, not priced on this page). Student
--specific discount: not found — nothing on this page names a separate student price; the
-discount available today is seasonal ("Back to School"), not identity-based.
+option and a group/institutional plan both exist (linked, not priced on this page).
+Student-specific discount: not found — nothing on this page names a separate student
+price; the discount available today is seasonal ("Back to School"), not identity-based.
 
 ### 4.6 Minor-specific flow
 OBSERVED (Privacy Policy, "Children's Privacy" section, standard COPPA framing, names
@@ -883,6 +892,146 @@ Child User mode, no verified-consent path, unlike Duolingo/Brilliant — closer 
 Scribbr's/Grammarly's simpler-policy category). Practically low-stakes for this product
 specifically, since college-chancing users skew toward the older end of high school by the
 nature of the product, but worth noting for completeness.
+
+---
+
+## 11. Cross-product synthesis and the ORYN question
+
+A note on framing before the synthesis itself: I was briefed partway through this research
+that ORYN's free/paid split is **already decided**, not open — free keeps profile,
+portfolio, universities, opportunities, deadlines, applications, and the weekly plan
+(deliberately, since it's cheap to generate and is the core loop); the wall sits on
+advisor-chat depth and volume. So what follows evaluates that chosen wall against the
+evidence rather than re-deriving a placement from scratch, and stays specifically on
+**where and when the wall shows** — what happens mechanically once someone is inside a paid
+or free allowance (degrade behavior, grace messages, model-downgrade cascades) is a
+neighboring research brief's territory, not mine, and I've flagged the few places above
+where that boundary came up.
+
+### 11.1 WHEN does the upgrade prompt actually appear? (the question almost nobody writes down)
+
+| Product | Free AI/premium allowance before any prompt? | Where the wall actually triggers |
+|---|---|---|
+| Duolingo | Yes — full course content unmetered | Ambient/omnipresent CTA on marketing pages (shown before any use at all); the well-known in-lesson trigger (hearts/energy depleted) is usage-based but not independently reproduced this session |
+| Quizlet | Yes — flashcards, Match/Blast/Blocks unmetered | Per-feature, at first use of a gated mode (Learn beyond N rounds, 2nd Test on a set) — no trial window, present from account #1 |
+| Photomath | Yes — unlimited free problem-solving | Never, for volume — free is uncapped; Plus sells explanation depth, discoverable via an in-app menu tab, not a limit interrupt |
+| Brilliant | No — first exercise redirects to onboarding before any content renders | **Directly observed**: click first lesson → full-page redirect, before the exercise loads. The most aggressive placement found: gates access itself, not just premium features |
+| Khan Academy (base) | Yes — 100% free, no paywall | N/A — no wall on the core platform at all |
+| Khanmigo (AI layer) | **No — zero free allowance** | Account creation itself; payment required before message one |
+| Chegg | Not found (site blocked this session) | Not found |
+| Scribbr | Partial — Citation Generator free/unmetered; plagiarism checker has no free preview | Plagiarism checker: pay at upload (step 1), before any result |
+| Grammarly | Yes — 100 AI prompts/month stated | Running monthly quota, resets — same shape as a subscription meter, not a trial |
+| Notion | Yes — Free tier functionally uncapped for a single-member workspace | Structural (multi-member collaboration, file size), not volume; the free *Education* upgrade gates on identity (verified .edu email), not usage |
+| CollegeVine (Sage) | **Yes — unlimited, no cap stated anywhere found** | No wall found on the AI feature itself; account creation is the only gate located |
+
+Reading down that right column, the placements cluster into four real patterns, not a
+spectrum: **(a) ambient, shown regardless of use** (Duolingo's marketing surfaces); **(b)
+usage-metered, hit organically** (Quizlet, Grammarly, arguably Duolingo's in-lesson hearts);
+**(c) zero free allowance, gate is account/payment itself** (Khanmigo, and Brilliant for
+content access broadly); **(d) no wall located on the AI feature at all** (CollegeVine's
+Sage). ORYN's stated design — free access to the product generally, wall on advisor
+*depth and volume* — is pattern (b): the dominant pattern among products that meter an AI
+feature specifically (Grammarly, Quizlet's Ask Quizlet), not an outlier choice.
+
+### 11.2 The tension worth naming plainly: two close analogs disagree with each other
+
+**Khanmigo and Brilliant's Koji pay for AI-tutoring access from message one, no exceptions.
+CollegeVine's Sage — the one product in this document that does exactly what ORYN's
+advisor does, for exactly ORYN's user — gives it away free, unlimited, and says so twice in
+its own FAQ.** That's not a footnote; per the standing request from the coordinating
+session, this is exactly the kind of finding that should be surfaced plainly rather than
+smoothed into a table. Two genuinely comparable products made opposite calls, and the
+reason isn't mysterious once you look at *how each is funded*: Khan Academy is a
+donation-funded nonprofit; CollegeVine's free-to-students model is funded by universities
+paying for access to an opted-in student pool — a real, working, third monetization
+pattern (§10.2) that has nothing to do with subscriptions or metering at all.
+
+**ORYN doesn't have either of those alternate funding sources right now** — no donor base,
+and (as far as this research surfaced) no university-side marketplace paying for access to
+ORYN's students. That's the actual reason the Khanmigo/Grammarly/Quizlet pattern (meter or
+gate the AI feature directly, fund it from the same user paying for it) is the one that
+transfers to ORYN's current business model, not because it's more common in this survey,
+but because CollegeVine's alternative requires building an entire second business
+(university partnerships, opt-in data sharing, the sales motion to support it) that isn't
+part of what's been described to me. **Worth stating as a real option nonetheless, not
+dismissed**: if ORYN ever wanted a path to a genuinely free advisor, "universities or
+programs pay for visibility to an opted-in, engaged applicant pool" is a validated model
+sitting right next to ORYN in the same market — a strategic question for the founder, not
+something this research resolves.
+
+### 11.3 Anchoring the wall's shape against ORYN's own measured costs
+
+Numbers supplied by the coordinating session, measured this same round, not independently
+re-verified by me: an advisor message costs **~$0.035** (86% of that is output length);
+budget target **$0.50/student/month**, ceiling **$1.00/month** — roughly **10 Sonnet
+messages/month, or ~32 on Haiku**; one real user spent **$3.04 in a single week** via
+repeated clicks on one button, with no cap in place at the time.
+
+Set against what this survey found free users actually get elsewhere: Grammarly gives 100
+AI-generation prompts/month **free**, before any payment — an order of magnitude above
+ORYN's entire monthly ceiling, paid or free combined. Quizlet's per-set Learn/Test
+allowances and Duolingo's daily energy refills both imply a free active user comfortably
+clears more than 10 AI-touched interactions a month. **This is the real constraint on
+"validate the chosen wall," more than any placement question**: the industry pattern this
+document found is "give a real, usable free allowance, meter the rest" — but ORYN's
+current per-message economics may not support a free allowance anywhere near what users of
+comparable products are used to receiving, unless the free tier leans hard on the cheaper
+model (Haiku), on shorter outputs (already identified elsewhere as both the main cost lever
+*and* the weakest quality dimension — a rare case where the fix for one is the fix for the
+other), or on some combination that hasn't been sized yet. I'm not the right research
+thread to size that allowance — that's a direct extension of the cost-metering brief — but
+the wall's *placement* (advisor depth/volume) survives contact with this evidence; the
+wall's *size*, on these numbers, will likely have to be thinner than what a student
+switching over from Grammarly or Quizlet would expect, and that gap is worth the founder
+knowing about explicitly rather than discovering after launch.
+
+### 11.4 Minor-access patterns found, for whoever owns the minors-and-payments brief
+
+Not mine to resolve (a parallel brief covers legal capacity to sell to minors), but four
+real, working patterns turned up doing this research, worth handing over rather than
+re-discovering: **(A) built-out accommodation** — a distinct Child User account type with
+verified parental consent and feature restrictions (Duolingo §1.6, Brilliant §4.6); **(B)
+minimal/honor-system** — a notice that under-13s shouldn't be there plus an informal
+"ask your parent" request for 13–17, no verification (Scribbr §7.6); **(C) hard cutoff, no
+accommodation** — must be able to legally self-consent alone, full stop (Grammarly §8.6,
+which would exclude a 14-year-old under the EU's 16-year threshold entirely); and **(D) a
+second, stricter, feature-specific age gate layered on top of the general account gate** —
+Quizlet's Ask Quizlet requires 14+ *and* US residency specifically for the AI chat feature,
+separate from and stricter than the general signup age-gate (§2.6). Pattern (D) is the one
+most structurally relevant to ORYN's advisor specifically, since it's precedent for
+treating conversational AI as needing its own, narrower eligibility check distinct from the
+rest of the product — directly relevant given ORYN's 14–18 band spans jurisdictions
+(Turkey, UK, EU, US) with different digital-consent ages, the same fault line that trips up
+Grammarly's blanket rule.
+
+### 11.5 Recommendation
+
+**The evidence supports the wall ORYN has chosen, on placement.** Metering an AI-chat
+feature separately from the rest of a free product — rather than walling profile,
+portfolio, or planning tools — is the pattern every comparable subscription product in
+this survey converged on independently (Grammarly, Quizlet, and, for the base-vs-AI-layer
+split specifically, Khan Academy/Khanmigo). Keeping the weekly plan free, specifically
+because it's the core loop, matches Photomath's and Notion's shared instinct of leaving the
+everyday, low-cost, habit-forming action unmetered and charging for the deeper/rarer one.
+
+**Two things the evidence says to act on, not just note:**
+
+1. **Don't let the wall's placement quietly become a wall at zero.** Every successful
+   metered-AI comparator found here (Grammarly, Quizlet, Duolingo) gives free users a real,
+   usable allowance before any prompt — the zero-free-message pattern (Khanmigo, Koji)
+   belongs to products with a funding source ORYN doesn't currently have. Whatever the free
+   advisor allowance ends up being, it needs to be large enough that a free user actually
+   experiences the advisor doing its job at least a few times a month, not so thin it's
+   effectively a locked feature wearing a "free tier" label — that's the gap flagged in
+   11.3, and it's a sizing question for the cost/metering work, not something this document
+   can answer alone.
+2. **CollegeVine's Sage is the one comparable a prospective ORYN user is most likely to
+   have already used, and it's free.** That's a real competitive-positioning fact, not a
+   pricing template to copy outright — copying it requires copying the marketplace revenue
+   model behind it, which is a founder-level strategic decision this research doesn't
+   settle. But whatever the free advisor allowance is, the messaging around it should
+   reckon with the fact that the closest comparable product in the market makes the same
+   feature free, rather than assume users will judge ORYN's wall in a vacuum.
 
 ---
 
