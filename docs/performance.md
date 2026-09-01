@@ -79,6 +79,12 @@ duplicates below are already documented in the functions' own comments as
 third, and the cross-table pattern underneath all of them, was not previously
 written down anywhere I could find.
 
+**Amended after review (2026-09-01): the first pass of this section undercounted
+`getUpcomingDeadlines`'s call sites (missed a third) and, more importantly,
+described a fix that would pass every gate without actually removing the
+duplication. Both are corrected below — see "What actually memoizing this
+needs."**
+
 ### The chain, traced
 
 `/dashboard` calls, per render:
@@ -91,20 +97,35 @@ written down anywhere I could find.
      again internally — **documented duplicate**
      (`lib/counselor/state.ts:81-87`'s own comment: "one duplicate round of
      ~10 lightweight parallel queries per Counselor page load")
-   - `buildStudentAdvisorContext` also calls `getUpcomingDeadlines` internally
+   - `buildStudentAdvisorContext` also calls `getUpcomingDeadlines(supabase, userId, 5)`
+     internally
 3. `getUpcomingDeadlines(supabase, userId, 4)` directly, in the same
    `Promise.all` as several other reads
 
-Step 2's `getUpcomingDeadlines` and step 3 are the same function, same user,
-same page render — called twice. **Not documented anywhere before this pass.**
+`/advisor` calls the identical chain (`getCounselorState` →
+`buildStudentAdvisorContext`) and additionally calls
+`getUpcomingDeadlines(supabase, userId, 10)` directly — a *third* call site for
+that function codebase-wide, not two. All three: `dashboard/page.tsx:91` (limit
+4), `advisor/page.tsx:36` (limit 10), `lib/ai/student-context.ts:185` (limit 5).
+**Not documented anywhere before this pass.**
+
+`assembleScoringFacts` has **four** call sites codebase-wide, not two:
+`lib/counselor/state.ts:97` and `lib/ai/student-context.ts:162` (the pair that
+actually co-occurs in one dashboard/advisor render — this is the real
+duplicate), plus `app/(app)/profile/page.tsx:163` (its own separate render,
+not a duplicate on its own) and `lib/scoring/persist.ts:47` inside
+`recomputeCareerProfile` (fired from write-path Server Actions after achievement
+edits, never from a page render — also not a render-time duplicate). Only the
+first pair is the finding; naming all four here so nothing is left for someone
+else to have to re-derive.
 
 ### What each duplicated call actually costs, counted directly from the functions
 
-| Function | Reads it performs | Called how many times per `/dashboard` render |
+| Function | Reads it performs | Called how many times per render, and with what arguments |
 |---|---|---|
-| `refreshOpportunityMatches` (`lib/opportunities/persist-matches.ts`) | 5 parallel reads (`profiles`, `profile_scores`, `student_interests`, `opportunities`, `saved_opportunities`) + 1 write (`opportunity_matches` upsert) | **2** |
-| `assembleScoringFacts` (`lib/scoring/assemble-facts.ts`) | 13 parallel reads, one per achievement/profile table | **2** |
-| `getUpcomingDeadlines` (`lib/deadlines/upcoming.ts`) | up to 9 reads across its three sub-sources (applications/targets/universities, saved-opportunities/opportunities, target-universities/deadlines/universities) plus its own `loadSupersessionMap` call | **2** |
+| `refreshOpportunityMatches` (`lib/opportunities/persist-matches.ts`) | 5 parallel reads (`profiles`, `profile_scores`, `student_interests`, `opportunities`, `saved_opportunities`) + 1 write (`opportunity_matches` upsert) | **2**, identical arguments (`userId`, `locale`) both times |
+| `assembleScoringFacts` (`lib/scoring/assemble-facts.ts`) | 13 parallel reads, one per achievement/profile table | **2** per dashboard/advisor render, identical arguments (`userId`) — see the 4-call-site note above for the other two, non-duplicating sites |
+| `getUpcomingDeadlines` (`lib/deadlines/upcoming.ts`) | up to 9 reads across its three sub-sources (applications/targets/universities, saved-opportunities/opportunities, target-universities/deadlines/universities) plus its own `loadSupersessionMap` call | **2** per render, but with a **different `limit` each time** — dashboard: 4 vs. 5; advisor: 10 vs. 5. Argument mismatch, not just a missed cache — see below |
 | `loadSupersessionMap` (`lib/universities/canonical.ts`) — a 1-query read of a 9-row table, per its own comment | called independently inside `getTargetUniversitiesWithDetails`, inside *each* of the two `getUpcomingDeadlines` calls, and inside `buildStudentAdvisorContext` | **≥4** |
 | raw `profiles` table (not routed through the memoized `getCurrentProfile()` — see below) | read directly inside `refreshOpportunityMatches`, inside `getCounselorState`'s own query, and inside `buildStudentAdvisorContext` | **≥3** |
 | `student_interests` | read directly inside `refreshOpportunityMatches` and again inside `buildStudentAdvisorContext` | **2** |
@@ -113,10 +134,10 @@ same page render — called twice. **Not documented anywhere before this pass.**
 
 Every row above is a genuine second (or third, or fourth) round trip for data
 already fetched once in the same render — not a guess, traced from the actual
-`Promise.all` calls in `app/(app)/dashboard/page.tsx`, `lib/counselor/state.ts`,
-and `lib/ai/student-context.ts`.
+`Promise.all` calls in `app/(app)/dashboard/page.tsx`, `app/(app)/advisor/page.tsx`,
+`lib/counselor/state.ts`, and `lib/ai/student-context.ts`.
 
-### The tool for fixing this already exists in the codebase, applied narrowly
+### The tool for fixing this already exists in the codebase, applied narrowly — but not sufficient by itself
 
 React's `cache()` — Next.js's built-in per-request memoization, which turns
 "the same function called twice with the same arguments in one render" into one
@@ -131,9 +152,50 @@ None of the ~10 data-fetching functions in the chain above
 `loadSupersessionMap`, `buildStudentAdvisorContext`, `getCounselorState`,
 `getTargetUniversitiesWithDetails`) are wrapped in it. The pattern is proven,
 in production, in this exact codebase — it just wasn't extended past the two
-auth functions it started on. That makes this a smaller lift than it would be
-in a codebase starting from zero, and is the concrete next step this area
-points to. Not applied in this pass, per the instruction to measure first.
+auth functions it started on. **That makes this a smaller lift than it would be
+in a codebase starting from zero, but it is not a drop-in fix for these
+particular functions** — see below for why, and for what the fix actually is.
+
+### What actually memoizing this needs
+
+`cache()` memoizes on argument *identity*, not on what the arguments mean.
+`createClient()` (`lib/supabase/server.ts`) is **not itself memoized** — it
+builds a fresh `createServerClient` on every call, with no `cache()` wrapper.
+`getCounselorState` awaits its own `createClient()` call; `buildStudentAdvisorContext`
+awaits a second, independent one. So the two `assembleScoringFacts(supabase, userId)`
+calls traced above arrive with **two different `supabase` object references** —
+a `cache()` wrapper around `assembleScoringFacts` would see them as two
+different calls and miss both times, doing all the same round trips this
+document already counted, while looking fixed. Same problem for
+`loadSupersessionMap(supabase)`, which takes no argument but `supabase`.
+
+`getUpcomingDeadlines` has a second, independent reason `cache()` alone
+wouldn't help even with a memoized client: its three call sites pass **three
+different `limit` values** (4, 10, 5). Those are legitimately different calls —
+memoization is correctly a miss on different arguments. Deduping this one needs
+the call sites reconciled (fetch once at the largest limit a render actually
+needs and slice down, rather than three independent fetches), not a cache
+wrapper.
+
+So the actual fix is at least three separate pieces of work, not one:
+
+1. **Memoize `createClient` itself** with `cache()` — the enabling step, and
+   genuinely the same one-line pattern `lib/security/dal.ts` already uses for
+   `verifySession`/`getCurrentProfile`. Once request-scoped calls to
+   `createClient()` return the same object, `cache()` on `assembleScoringFacts`
+   and `loadSupersessionMap` starts actually deduping.
+2. **Or, more invasively:** drop the `supabase` parameter from the memoized
+   functions' signatures entirely and have them call the (now-memoized)
+   client internally, keying `cache()` purely on `userId`. Cleaner call
+   sites, bigger diff.
+3. **Reconcile the `getUpcomingDeadlines` limits separately.** No amount of
+   memoization fixes 4-vs-10-vs-5 — this needs the three call sites agreeing
+   on one fetch.
+
+None of this weakens the finding: the duplication traced above is real either
+way, and "the tool is already in this codebase, proven" is still the right
+frame. What's corrected is that it's an enabling step plus two follow-on
+fixes, not a single wrapper — see Recommendation 1.
 
 ---
 
@@ -170,6 +232,14 @@ student's dashboard to another.
 
 ## 4. Repeated external calls
 
+**This section is about page renders specifically — not a blanket "external
+calls are fine."** What's established below is narrower and, read correctly,
+better: pages never call an external provider at all, so the question of
+whether a *page render* re-fetches or caches an external call doesn't arise.
+It says nothing about whether the background jobs themselves ever fetch the
+same URL redundantly across runs — that's a different question this pass
+didn't check, since it's a job-scheduling question, not a render-time one.
+
 **Clean, checked directly.** `grep`ing `app/` and `features/` for any import of
 `lib/providers/*` (the shared layer for Tavily, College Scorecard, and OpenAlex
 — `lib/providers/fetch-json.ts`'s `fetchProviderJson`) returns **zero results.**
@@ -203,15 +273,31 @@ this area.
 
 ## Recommendations (not applied — for visibility, ranked by what they'd buy)
 
-1. **Wrap the ~10 duplicated data-fetching functions in `react`'s `cache()`.**
-   Directly removes the ≥2x-4x duplicate reads traced in section 2, on the
-   product's two busiest pages. The pattern is already proven in this
-   codebase (`lib/security/dal.ts`, `lib/i18n/locale.ts`) — this is extending
-   an existing convention, not introducing a new one.
+1. **Fix the duplicate-read chain in section 2 — three pieces, not one wrapper.**
+   A single `cache()` wrapper around the duplicated functions would pass every
+   gate and change nothing, because `createClient()` isn't itself memoized (see
+   "What actually memoizing this needs" above) — that's the failure mode this
+   whole codebase has spent real effort pulling out elsewhere, so it's worth
+   naming precisely here rather than recommending it by accident:
+   - Memoize `createClient()` with `cache()` (the enabling step — same
+     one-line pattern `lib/security/dal.ts` already proves), **or** drop
+     `supabase` from the memoized functions' own signatures so they fetch
+     their own (now-memoized) client and key only on `userId`.
+   - Separately, reconcile `getUpcomingDeadlines`'s three different `limit`
+     arguments (4, 10, 5) to one fetch per render.
+   Together these remove the real duplicate reads traced in section 2, on the
+   product's two busiest pages.
 2. **Install `@next/bundle-analyzer`.** Turns section 1's "71 non-leaf client
    components, unranked" and section 3's "2.9MB total, no per-route number"
    into one real, actionable, ranked list — which specific boundaries and
-   which specific routes are actually worth touching.
+   which specific routes are actually worth touching. What it costs: an
+   official Vercel/Next.js package (published in step with this project's own
+   Next.js 16.x line), one dependency of its own
+   (`webpack-bundle-analyzer`), and it's a `devDependency` — it never ships
+   to the production bundle it measures. Setup is a few lines in
+   `next.config.ts` (wrapping the existing config export) plus running the
+   build with an `ANALYZE=true` env var to get the report; no ongoing
+   runtime cost.
 3. **Wrap global-data reads (`universities`, `opportunities` catalogue) in
    `unstable_cache`.** Closes the literal Phase 27 gap in section 4 without
    touching anything personalized.
@@ -228,9 +314,14 @@ follow-up someone can pick up directly from this document.
   `app/(app)/advisor/page.tsx`, `lib/counselor/state.ts`,
   `lib/ai/student-context.ts`, `lib/opportunities/persist-matches.ts`,
   `lib/scoring/assemble-facts.ts`, `lib/deadlines/upcoming.ts`,
-  `lib/universities/canonical.ts`, `lib/universities/queries.ts`, and
-  `lib/security/dal.ts` in full; every query count in the table above is a
-  direct count of `.from(...)` calls in those files, not an estimate.
+  `lib/universities/canonical.ts`, `lib/universities/queries.ts`,
+  `lib/security/dal.ts`, `lib/supabase/server.ts`, `app/(app)/profile/page.tsx`,
+  and `lib/scoring/persist.ts` in full; every query count in the table above
+  is a direct count of `.from(...)` calls in those files, not an estimate.
+  Every call site for `getUpcomingDeadlines` and `assembleScoringFacts` was
+  found with `grep -rn "functionName(" --include="*.ts" --include="*.tsx" .`
+  rather than assumed from the files already read, which is what caught the
+  third `getUpcomingDeadlines` site on the first amendment to this document.
 - Bundle size: `npm run build` (Next.js 16.3.1, Turbopack) on this branch,
   then `du -sh .next/static/chunks` and an inspection of
   `.next/build-manifest.json`.
