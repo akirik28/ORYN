@@ -46,6 +46,31 @@ the partial-import case the action's own comment insists on. What remains untest
 upload and extraction, which need a real model call — the same credit constraint as the
 Turkish eval pass.
 
+## Three tests fail under heavy parallel load, and that is not a defect
+
+Recorded because four separate lanes have now each independently diagnosed it, which is four
+times the same re-derivation.
+
+With five or more sessions building and testing on this machine at once, load average runs
+26–59 on 8 cores and three tests exceed vitest's 5s default:
+`__tests__/entities/entity-combobox.test.tsx`, `__tests__/onboarding/onboarding-wizard.test.tsx`,
+and (until `7fee3a11`) `__tests__/opportunities/refresh-matches-admin-degradation.test.ts`.
+All pass in isolation. CI has been green throughout — GitHub's runners are not under this load.
+
+**Two different mechanisms, and only one was worth fixing.** The refresh-matches one was
+specific: whichever test imports `persist-matches` first pays for the whole module graph, so
+it failed on the *first* test in each `describe` and never the second — which is also the
+proof it was not a logic regression, since a broken guard fails both. That one is fixed with
+a raised timeout on the two first-import tests and the reasoning at the call site.
+
+The other two have no such shape — they are `findBy*`/`waitFor`-heavy component tests, and
+what is slow is everything. Raising the suite's timeout to accommodate them would trade a
+known false alarm for a blind spot on real hangs, so they are documented rather than
+silenced.
+
+**If you see one of these red:** check the load average before investigating. If it is above
+about 15, re-run the file alone.
+
 ## What the suite is unusually good at
 
 Worth saying, because a gap list reads worse than the truth. The strongest coverage in this
