@@ -104,6 +104,14 @@ export const EXPORT_EXCLUDED_TABLES: Record<string, string> = {
    * once 0075 lands.
    */
   deadline_notification_log: "migration 0075 is not applied anywhere yet — would export as permanently empty until it is",
+  /**
+   * Migration 0078's log of which university-data-change notifications a student has
+   * already received (see lib/universities/data-change-scan.ts). Same posture as
+   * deadline_notification_log immediately above — their data, benign, select-own RLS
+   * already written into the migration — and not yet applied anywhere either. Move it into
+   * EXPORT_TABLES once 0078 lands.
+   */
+  university_notification_log: "migration 0078 is not applied anywhere yet — would export as permanently empty until it is",
 };
 
 /** Tables keyed by a participant pair rather than a plain user_id — each needs its own

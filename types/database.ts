@@ -1716,6 +1716,28 @@ export interface DeadlineNotificationLog {
 }
 export type DeadlineNotificationLogInsert = Insertable<DeadlineNotificationLog, "id" | "notified_at">;
 
+/** 'university' (universities.last_changed_at, a core fact differed) | 'requirement'
+ * (university_requirements.created_at, a brand-new row appeared) — see migration 0078's
+ * own comment for why both exist and why an existing requirement's wording changing is
+ * deliberately NOT a third value. */
+export type UniversityNotificationSource = "university" | "requirement";
+
+/** Dedupe log for the university_data_changed notification (migration 0078) — mirrors
+ * DeadlineNotificationLog's role and shape; see lib/universities/data-change-scan.ts. */
+export interface UniversityNotificationLog {
+  id: string;
+  user_id: string;
+  university_id: string;
+  source: UniversityNotificationSource;
+  /** The source's own "this changed" timestamp this row fired for (university.last_changed_at
+   * or the new requirement's created_at, per `source`) — part of the dedupe key, not
+   * metadata: a later value is a new fact and re-notifies, same reasoning
+   * DeadlineNotificationLog.threshold_days's own comment gives for a nearer bucket. */
+  last_changed_at: string;
+  notified_at: string;
+}
+export type UniversityNotificationLogInsert = Insertable<UniversityNotificationLog, "id" | "notified_at">;
+
 export interface BirthYearChange {
   id: string;
   user_id: string;
@@ -1839,6 +1861,7 @@ export interface Database {
       product_events: Table<ProductEvent, ProductEventInsert, Partial<ProductEventInsert>>;
       birth_year_changes: Table<BirthYearChange, never, never>;
       deadline_notification_log: Table<DeadlineNotificationLog, DeadlineNotificationLogInsert, never>;
+      university_notification_log: Table<UniversityNotificationLog, UniversityNotificationLogInsert, never>;
     };
   };
 }
