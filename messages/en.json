@@ -8,6 +8,7 @@
     "plan": "Plan",
     "applications": "Applications",
     "features": "Features",
+    "saved": "Saved",
     "documents": "Documents",
     "settings": "Settings",
     "opportunitiesShort": "Explore",
@@ -962,6 +963,33 @@
       "sourcesHeading": "Sources",
       "visitOfficialPage": "Visit official page",
       "any": "any"
+    },
+    "compareBar": {
+      "selected": "{count} selected",
+      "clear": "Clear",
+      "compare": "Compare"
+    },
+    "comparePage": {
+      "title": "Compare opportunities",
+      "description": "Select 2–4 opportunities from Saved to compare them here.",
+      "nothingYetTitle": "Nothing to compare yet",
+      "nothingYetDescription": "Go back to Saved, select at least two opportunities with the Compare button on each, then open the compare tray.",
+      "backToSaved": "Back to Saved",
+      "notEnoughTitle": "Couldn't find enough of these opportunities",
+      "notEnoughDescription": "One or more selected opportunities may no longer be available.",
+      "sideBySide": "{count} opportunities side by side — unknown fields are shown as “—”, never guessed.",
+      "category": "Category",
+      "location": "Location",
+      "remoteAllowed": "Remote allowed",
+      "deadline": "Deadline",
+      "cycleStatus": "Cycle status",
+      "selectivity": "Selectivity",
+      "cost": "Cost",
+      "free": "Free",
+      "ageRange": "Age range",
+      "ageRangeBoth": "{min}–{max}",
+      "ageRangeMin": "{min}+",
+      "ageRangeMax": "Up to {max}"
     }
   },
   "advisor": {
@@ -1443,5 +1471,25 @@
     "city": "City",
     "country": "Country",
     "unverifiedNotice": "Oryn will add this as unverified until someone checks it against an official source."
+  },
+  "saved": {
+    "eyebrow": "Everything you've saved",
+    "title": "Saved",
+    "description": "Opportunities and universities you're tracking, in one place.",
+    "universitiesSectionTitle": "Universities",
+    "opportunitiesSectionTitle": "Opportunities",
+    "noUniversitiesTitle": "No saved universities yet",
+    "noUniversitiesDescription": "Save a university from Universities to track it here.",
+    "noOpportunitiesTitle": "No saved opportunities yet",
+    "noOpportunitiesDescription": "Save an opportunity from Opportunities to track it here.",
+    "noMatchesTitle": "Nothing matches this filter",
+    "noMatchesDescription": "Try a different status or category.",
+    "filterByStatus": "Status",
+    "filterByCategory": "Category",
+    "allStatuses": "All",
+    "allCategories": "All",
+    "compare": "Compare",
+    "comparing": "Comparing",
+    "compareLimitTooltip": "You can compare up to 4 at a time."
   }
 }

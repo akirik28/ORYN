@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Home, UserRound, Landmark, Compass, ListChecks, ClipboardCheck, Sparkles, FolderClosed, Settings, LayoutGrid } from "lucide-react";
+import { Home, UserRound, Landmark, Compass, ListChecks, ClipboardCheck, Sparkles, FolderClosed, Settings, LayoutGrid, Bookmark } from "lucide-react";
 import type en from "@/messages/en.json";
 
 /**
@@ -78,6 +78,11 @@ export const SECONDARY_NAV: NavItem[] = [
   // text links in the Journey page's header (CV Generator, CV scanning, Story Bank,
   // Portfolio). See app/(app)/features/page.tsx.
   { href: "/features", labelKey: "features", icon: LayoutGrid },
+  // Founder request, 2026-09-01 — everything saved (opportunities + universities) in one
+  // place, with compare and filter. Secondary, not primary: real and useful, but not one
+  // of the five destinations that earn a mobile bottom-bar slot, same tier as Features/
+  // Documents/Settings below.
+  { href: "/saved", labelKey: "saved", icon: Bookmark },
   { href: "/documents", labelKey: "documents", icon: FolderClosed },
   { href: "/settings", labelKey: "settings", icon: Settings },
 ];
