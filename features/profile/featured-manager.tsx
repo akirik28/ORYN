@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { ArrowDown, ArrowUp, ExternalLink, Loader2, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,16 +24,6 @@ interface CandidateItem {
   label: string;
 }
 
-const SOURCE_TYPE_OPTIONS: { value: Exclude<FeaturedItemType, "external_link">; label: string }[] = [
-  { value: "project", label: "Project" },
-  { value: "research_experience", label: "Research" },
-  { value: "award", label: "Award" },
-  { value: "activity", label: "Activity" },
-  { value: "work_experience", label: "Work experience" },
-  { value: "volunteering_experience", label: "Volunteering" },
-  { value: "sports_experience", label: "Sports" },
-];
-
 const MAX_FEATURED = 5;
 
 export function FeaturedManager({
@@ -42,6 +33,17 @@ export function FeaturedManager({
   initialItems: FeaturedManagerItem[];
   candidates: Record<Exclude<FeaturedItemType, "external_link">, CandidateItem[]>;
 }) {
+  const t = useTranslations("common");
+  const tFeatured = useTranslations("profile.featuredManager");
+  const SOURCE_TYPE_OPTIONS: { value: Exclude<FeaturedItemType, "external_link">; label: string }[] = [
+    { value: "project", label: tFeatured("sourceTypes.project") },
+    { value: "research_experience", label: tFeatured("sourceTypes.research") },
+    { value: "award", label: tFeatured("sourceTypes.award") },
+    { value: "activity", label: tFeatured("sourceTypes.activity") },
+    { value: "work_experience", label: tFeatured("sourceTypes.workExperience") },
+    { value: "volunteering_experience", label: tFeatured("sourceTypes.volunteering") },
+    { value: "sports_experience", label: tFeatured("sourceTypes.sports") },
+  ];
   const [items, setItems] = useState(initialItems);
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<FeaturedItemType>("project");
@@ -67,7 +69,7 @@ export function FeaturedManager({
           ? await addFeaturedItem("external_link", null, linkTitle, linkUrl)
           : await addFeaturedItem(mode, selectedId || null, null, null);
       if (result.error || !result.id) {
-        setError(result.error ?? "Couldn't feature that. Please try again.");
+        setError(result.error ?? tFeatured("genericError"));
         return;
       }
       setOpen(false);
@@ -131,13 +133,13 @@ export function FeaturedManager({
                 ) : null}
               </div>
               <div className="flex shrink-0 items-center gap-0.5">
-                <Button variant="ghost" size="icon-xs" disabled={isPending || index === 0} onClick={() => move(index, -1)} aria-label="Move up">
+                <Button variant="ghost" size="icon-xs" disabled={isPending || index === 0} onClick={() => move(index, -1)} aria-label={tFeatured("moveUp")}>
                   <ArrowUp className="size-3.5" />
                 </Button>
-                <Button variant="ghost" size="icon-xs" disabled={isPending || index === items.length - 1} onClick={() => move(index, 1)} aria-label="Move down">
+                <Button variant="ghost" size="icon-xs" disabled={isPending || index === items.length - 1} onClick={() => move(index, 1)} aria-label={tFeatured("moveDown")}>
                   <ArrowDown className="size-3.5" />
                 </Button>
-                <Button variant="ghost" size="icon-xs" disabled={isPending} onClick={() => remove(item.id)} aria-label="Remove">
+                <Button variant="ghost" size="icon-xs" disabled={isPending} onClick={() => remove(item.id)} aria-label={tFeatured("remove")}>
                   <X className="size-3.5" />
                 </Button>
               </div>
@@ -145,23 +147,21 @@ export function FeaturedManager({
           ))}
         </ul>
       ) : (
-        <p className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
-          Nothing featured yet. Pin your best project, award, or research to the top of your profile.
-        </p>
+        <p className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">{tFeatured("emptyState")}</p>
       )}
 
       {items.length < MAX_FEATURED ? (
         <Button variant="outline" size="sm" onClick={openAdd}>
-          <Plus className="size-4" /> Feature something
+          <Plus className="size-4" /> {tFeatured("featureSomething")}
         </Button>
       ) : (
-        <p className="text-xs text-muted-foreground">You&apos;ve featured the maximum of {MAX_FEATURED} items.</p>
+        <p className="text-xs text-muted-foreground">{tFeatured("maxFeatured", { max: MAX_FEATURED })}</p>
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Feature something</DialogTitle>
+            <DialogTitle>{tFeatured("featureSomething")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <Select
@@ -181,19 +181,19 @@ export function FeaturedManager({
                     {option.label}
                   </SelectItem>
                 ))}
-                <SelectItem value="external_link">External link</SelectItem>
+                <SelectItem value="external_link">{tFeatured("externalLink")}</SelectItem>
               </SelectContent>
             </Select>
 
             {mode === "external_link" ? (
               <div className="space-y-2">
-                <Input placeholder="Title (optional)" value={linkTitle} onChange={(e) => setLinkTitle(e.target.value)} />
+                <Input placeholder={tFeatured("titleOptional")} value={linkTitle} onChange={(e) => setLinkTitle(e.target.value)} />
                 <Input placeholder="https://..." value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} />
               </div>
             ) : candidates[mode].length > 0 ? (
               <Select value={selectedId} onValueChange={(v) => v && setSelectedId(v)}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Choose an item" />
+                  <SelectValue placeholder={tFeatured("chooseAnItem")} />
                 </SelectTrigger>
                 <SelectContent>
                   {candidates[mode].map((candidate) => (
@@ -204,17 +204,17 @@ export function FeaturedManager({
                 </SelectContent>
               </Select>
             ) : (
-              <p className="text-sm text-muted-foreground">You don&apos;t have any of these yet — add one to your profile first.</p>
+              <p className="text-sm text-muted-foreground">{tFeatured("noneYet")}</p>
             )}
 
             {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button onClick={submitAdd} disabled={isPending || (mode === "external_link" ? !linkUrl.trim() : !selectedId)}>
-              {isPending ? <Loader2 className="size-4 animate-spin" /> : "Feature it"}
+              {isPending ? <Loader2 className="size-4 animate-spin" /> : tFeatured("featureIt")}
             </Button>
           </DialogFooter>
         </DialogContent>

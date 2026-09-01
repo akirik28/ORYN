@@ -21,5 +21,241 @@
     "label": "Language",
     "change": "Change language",
     "saveFailed": "Couldn't save your language. Please try again."
+  },
+  "common": {
+    "cancel": "Cancel",
+    "submit": "Submit",
+    "delete": "Delete",
+    "show": "Show",
+    "hide": "Hide"
+  },
+  "profile": {
+    "backToProfile": "Back to profile",
+    "page": {
+      "eyebrow": "Journey",
+      "title": "Everything you've built so far.",
+      "description": "Your record of academics, leadership, research and execution. This is Oryn's development assessment — not an admissions score, and not visible to universities.",
+      "scanCv": "Scan a CV",
+      "tabs": {
+        "overview": "Overview",
+        "academics": "Academics",
+        "experience": "Experience",
+        "recognition": "Recognition",
+        "skills": "Skills & goals"
+      },
+      "professionalProfile": {
+        "title": "Professional profile",
+        "description": "What other Oryn students see on your public profile."
+      },
+      "openTo": "Open to",
+      "contactInformation": "Contact information",
+      "featured": {
+        "title": "Featured",
+        "description": "Pin your best 3-5 items to the top of your public profile."
+      },
+      "strength": {
+        "title": "Profile Strength",
+        "description": "How much Oryn knows about you — separate from how strong your profile is. Only you can see this.",
+        "percentComplete": "{percent}% complete",
+        "fullyFilled": "Your profile is fully filled out."
+      },
+      "views": {
+        "label": "Profile views",
+        "last7Days": "{count} in the last 7 days",
+        "last30Days": "{count} in the last 30 days"
+      },
+      "journeyNote": {
+        "emptyEyebrow": "Nothing to read yet",
+        "emptyTitle": "Add a few things and this page starts working.",
+        "emptyBody": "Oryn hasn't been given enough to assess any area yet. That's a gap in the record, not a judgement about you — add your courses, activities and projects below and it will start telling you where you actually stand.",
+        "gapEyebrow": "Where the leverage is",
+        "gapTitle": "{dimension} is where your next effort counts most.",
+        "gapBodyWithAwaiting": "Of the {assessed, plural, one {# area} other {# areas}} Oryn can currently assess, this one has the least behind it — so the same hours move your profile furthest here. {awaitingEvidence, plural, one {# other area has} other {# other areas have}} nothing recorded yet, so this reading may change as you add more.",
+        "gapBodySimple": "Of everything Oryn can assess, this area has the least behind it — which makes it where the same hours move your profile furthest.",
+        "strengthEyebrow": "Oryn noticed a pattern",
+        "strengthTitle": "{dimension} is becoming a consistent strength.",
+        "strengthBody": "It's the best-evidenced part of your record. Adding more of the same is unlikely to change how your profile reads — the leverage is elsewhere."
+      },
+      "journey": {
+        "title": "Your journey",
+        "description": "Everything on one timeline, newest first. The Academics / Experience / Recognition / Skills tabs above are where you add and edit — this is how it reads."
+      },
+      "peerComparison": "Peer comparison",
+      "whereYouStand": "Where you stand",
+      "sections": {
+        "education": { "title": "Education", "description": "Schools and academic stages.", "empty": "No education records yet." },
+        "coursework": { "title": "Coursework", "description": "AP, IB HL/SL, A-Level, honors, and regular courses. Oryn uses these to understand your academic rigor and subject range.", "empty": "No coursework yet. Add the courses you're taking — advanced coursework is one of the strongest academic signals." },
+        "testScores": { "title": "Test scores", "description": "SAT, ACT, AP, IB, language proficiency, and more.", "empty": "No test scores yet." },
+        "activities": { "title": "Activities", "description": "Clubs, leadership roles, sports, summer programs.", "empty": "No activities yet. Add clubs, leadership, or other experiences." },
+        "sports": { "title": "Sports", "description": "Athletic history — a first-class part of your profile, not folded into Activities.", "empty": "No sports yet. Add a team, club, or individual sport you take seriously." },
+        "projects": { "title": "Projects", "description": "Things you've built or shipped, on your own or with a team.", "empty": "No projects yet." },
+        "research": { "title": "Research", "description": "Independent or mentored research experience.", "empty": "No research experience yet — publication isn't required for a strong score." },
+        "workExperience": { "title": "Work experience", "description": "Internships, jobs, and apprenticeships.", "empty": "No work experience yet." },
+        "volunteering": { "title": "Volunteering", "description": "Community service and volunteering.", "empty": "No volunteering yet." },
+        "awards": { "title": "Awards", "description": "Competitions, honors, and distinctions.", "empty": "No awards yet." },
+        "certifications": { "title": "Certifications", "description": "Certificates from courses or programs.", "empty": "No certifications yet." },
+        "goals": { "title": "Goals", "description": "What you're working toward — recommendations trace back to these.", "empty": "No goals yet. What are you working toward?" },
+        "skills": { "title": "Skills", "description": "Up to 15. Self-declared — connections can endorse a skill once they're added below.", "empty": "No skills yet. Add up to 15 — technical, creative, analytical, or otherwise." },
+        "languages": { "title": "Languages", "description": "Levels use CEFR, the scale most universities state their requirements in. Add language certificates under Certifications.", "empty": "No languages yet. Add the ones you speak, including your first language." }
+      },
+      "quickAdd": {
+        "activity": "Activity",
+        "competition": "Competition",
+        "award": "Award",
+        "research": "Research",
+        "internship": "Internship",
+        "volunteering": "Volunteering",
+        "course": "Course",
+        "testScore": "Test score",
+        "project": "Project",
+        "certification": "Certification",
+        "sport": "Sport",
+        "education": "Education"
+      },
+      "gradePrefix": "Grade {value}",
+      "captain": "Captain"
+    },
+    "cv": {
+      "title": "CV Generator",
+      "description": "Built entirely from your structured profile — choose what to include, then print or save as PDF. Nothing is invented; polish wording for any entry from the Profile page's \"Improve with AI\" first."
+    },
+    "cvImport": {
+      "backToJourney": "Back to journey",
+      "eyebrow": "Journey",
+      "title": "Scan a CV.",
+      "description": "Already have your record written down somewhere? Oryn can read it and pull out your education, activities, awards, projects, research and work — you review everything before any of it is saved.",
+      "notConfiguredTitle": "CV scanning isn't configured yet",
+      "notConfiguredDescription": "This needs ANTHROPIC_API_KEY to be set — see API_SETUP.md. You can still add everything to your profile manually."
+    },
+    "portfolio": {
+      "title": "Portfolio",
+      "description": "Everything you've done, in one place."
+    },
+    "researchIdeas": {
+      "eyebrow": "Research",
+      "title": "Find a project you can actually finish.",
+      "description": "Oryn proposes research scaled to your level and the time you have — grounded in real academic literature and public data, never an impressive-sounding question with no way to answer it.",
+      "fieldLabel": "What field do you want to work in?",
+      "fieldPlaceholder": "e.g. Economics, Computer Science, Psychology",
+      "generating": "Thinking",
+      "generate": "Generate ideas",
+      "tryLabel": "Try:",
+      "suggestedFields": {
+        "economics": "Economics",
+        "computerScience": "Computer Science",
+        "psychology": "Psychology",
+        "biology": "Biology",
+        "politicalScience": "Political Science",
+        "environmentalScience": "Environmental Science"
+      },
+      "noIdeasTitle": "No ideas generated yet",
+      "noIdeasDescription": "Name a field and Oryn will propose three projects scaled to your level — each one something you could realistically finish, with real data sources rather than an impressive-sounding title.",
+      "timeNeeded": "Time needed",
+      "finishedLooksLike": "Finished project looks like",
+      "method": "Method",
+      "skillsNeeded": "Skills you'll need",
+      "dataSources": "Where the data comes from",
+      "firstSteps": "Your first steps",
+      "addedToResearch": "Added to your research",
+      "addToResearch": "Add to my research",
+      "couldntGenerate": "Oryn couldn't put together a project for that field. Try naming it a little differently.",
+      "difficulty": {
+        "accessible": "accessible",
+        "moderate": "moderate",
+        "ambitious": "ambitious"
+      }
+    },
+    "storyBank": {
+      "title": "Essay Story Bank",
+      "description": "Find which of your real experiences carry an essay-worthy story, and how you might structure it. Oryn organizes what you've recorded — it never invents an event and never writes the essay for you.",
+      "emptyTitle": "Add experiences to your profile first",
+      "emptyDescription": "Add activities, projects, research, sports, volunteering, or work to your profile first — your essay stories come from things you've actually done, never from something invented for you.",
+      "promptLabel": "The essay prompt you're answering",
+      "promptPlaceholder": "Paste the exact prompt, e.g. \"Discuss an accomplishment, event, or realization that sparked a period of personal growth.\"",
+      "experiencesToConsider": "Experiences to consider",
+      "selectedCount": "{count} selected",
+      "allLabel": "all",
+      "storyNotesCount": "— {withNotes} of {total} have story notes",
+      "hasStoryNotes": "has story notes",
+      "helperText": "Leave everything unchecked to consider all of them. Entries with story notes give far better results — add yours from the Profile page.",
+      "finding": "Finding your stories…",
+      "findMyStories": "Find my stories",
+      "angleLabel": "Angle {number}:",
+      "missingDetailPrefix": "Worth adding to your story notes: {detail}",
+      "footerDisclaimer": "These are structures for your own writing, not a draft. Oryn never writes the essay for you — and never adds a detail you didn't record yourself.",
+      "outlineSteps": {
+        "hook": "Hook",
+        "context": "Context",
+        "conflict": "Conflict",
+        "action": "Action",
+        "turningPoint": "Turning point",
+        "reflection": "Reflection",
+        "connectionToFuture": "Connection to future"
+      }
+    },
+    "featuredManager": {
+      "sourceTypes": {
+        "project": "Project",
+        "research": "Research",
+        "award": "Award",
+        "activity": "Activity",
+        "workExperience": "Work experience",
+        "volunteering": "Volunteering",
+        "sports": "Sports"
+      },
+      "externalLink": "External link",
+      "emptyState": "Nothing featured yet. Pin your best project, award, or research to the top of your profile.",
+      "featureSomething": "Feature something",
+      "maxFeatured": "You've featured the maximum of {max} items.",
+      "titleOptional": "Title (optional)",
+      "chooseAnItem": "Choose an item",
+      "noneYet": "You don't have any of these yet — add one to your profile first.",
+      "featureIt": "Feature it",
+      "genericError": "Couldn't feature that. Please try again.",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "remove": "Remove"
+    },
+    "progress": {
+      "title": "Progress",
+      "subtitle": "How your profile has changed over the last {days} days.",
+      "whereYouStand": "Where you stand",
+      "strongestEvidence": "Your strongest evidence is in <bold>{dimensions}</bold>. ",
+      "developing": "{count, plural, one {# area is} other {# areas are}} developing. ",
+      "awaitingEvidence": "Oryn still has too little to say about {count} of them.",
+      "nextToStrengthen": "Next area to strengthen",
+      "nextToStrengthenBody": " — {state}. Of everything Oryn has a read on, this is where the same hours of work change your profile most.",
+      "notEnoughHistoryTitle": "Not enough history yet",
+      "notEnoughHistoryDescription": "Check back after your profile has had a chance to change over a few weeks. Oryn compares your dimensions against a snapshot taken at least a month ago.",
+      "whatChanged": "What changed",
+      "movedForward": "{count, plural, one {# area moved forward} other {# areas moved forward}}",
+      "noneMovedForward": "No area moved forward",
+      "movedBackSuffix": ", {count} moved back",
+      "heldSteadySuffix": ", {count} held steady",
+      "projectsCompleted": "Projects marked complete in the last {days} days",
+      "applicationsSubmitted": "Applications submitted or updated in the last {days} days"
+    },
+    "recommendations": {
+      "title": "Recommendations",
+      "write": "Write a recommendation",
+      "anonymousAuthor": "An Oryn student",
+      "hidden": "Hidden",
+      "noneYet": "No recommendations yet",
+      "writePlaceholder": "What would you tell someone about working with them?",
+      "report": "Report",
+      "reportDialogTitle": "Report this recommendation",
+      "reportPlaceholder": "What's wrong with this?",
+      "reportSubmit": "Submit report",
+      "deleteDialogTitle": "Delete this recommendation?",
+      "deleteDialogDescription": "This removes the recommendation you wrote — it can't be undone.",
+      "relationships": {
+        "teacher": "Teacher",
+        "mentor": "Mentor",
+        "teammate": "Teammate",
+        "projectCollaborator": "Project collaborator",
+        "colleague": "Colleague",
+        "other": "Other"
+      }
+    }
   }
 }

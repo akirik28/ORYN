@@ -9,8 +9,10 @@
  * Three separate things get reported, because they fail in different ways:
  *
  * 1. **Catalog parity.** A key present in en.json and missing from tr.json renders English
- *    text inside a Turkish UI, silently. This is the only check here that can FAIL the
- *    command — the rest are measurements, not assertions.
+ *    text inside a Turkish UI, silently. Reported here for visibility; the actual gate is
+ *    __tests__/i18n/catalog-parity.test.ts, which fails `npm test` on the same drift — this
+ *    script no longer exits non-zero on its own, so the two don't both claim the same
+ *    enforcement.
  * 2. **Locale-aware file count.** Rough, and gets less meaningful as the catalog grows:
  *    once most copy is in messages/*.json, "does this file branch on locale" stops being
  *    the interesting question.
@@ -120,6 +122,8 @@ for (const [area, { files: n, strings: s }] of [...byArea].sort((a, b) => b[1].s
 }
 
 if (missingInTr.length || extraInTr.length) {
-  console.error("\nFAIL: the catalogs have drifted. A key in one and not the other is a silent untranslated string.");
-  process.exit(1);
+  // Reported, not asserted: __tests__/i18n/catalog-parity.test.ts fails `npm test` on
+  // exactly this drift, so this script no longer needs its own exit code to say the same
+  // thing twice — see that file's own doc comment.
+  console.error("\nThe catalogs have drifted — see MISSING/ONLY IN tr.json above.");
 }

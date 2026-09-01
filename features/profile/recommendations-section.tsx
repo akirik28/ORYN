@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { Eye, EyeOff, Flag, Loader2, Plus, Quote, Trash2 } from "lucide-react";
@@ -49,21 +50,6 @@ interface RecommendationItem {
   createdAt: string;
 }
 
-const RELATIONSHIP_OPTIONS: {
-  value: RecommendationRelationship;
-  label: string;
-}[] = [
-  { value: "teacher", label: "Teacher" },
-  { value: "mentor", label: "Mentor" },
-  { value: "teammate", label: "Teammate" },
-  { value: "project_collaborator", label: "Project collaborator" },
-  { value: "colleague", label: "Colleague" },
-  { value: "other", label: "Other" },
-];
-const RELATIONSHIP_LABELS = Object.fromEntries(
-  RELATIONSHIP_OPTIONS.map((o) => [o.value, o.label]),
-) as Record<RecommendationRelationship, string>;
-
 export function RecommendationsSection({
   recipientId,
   items,
@@ -77,6 +63,18 @@ export function RecommendationsSection({
   isSelf: boolean;
   canWrite: boolean;
 }) {
+  const t = useTranslations("common");
+  const tRec = useTranslations("profile.recommendations");
+  const RELATIONSHIP_OPTIONS: { value: RecommendationRelationship; label: string }[] = [
+    { value: "teacher", label: tRec("relationships.teacher") },
+    { value: "mentor", label: tRec("relationships.mentor") },
+    { value: "teammate", label: tRec("relationships.teammate") },
+    { value: "project_collaborator", label: tRec("relationships.projectCollaborator") },
+    { value: "colleague", label: tRec("relationships.colleague") },
+    { value: "other", label: tRec("relationships.other") },
+  ];
+  const RELATIONSHIP_LABELS = Object.fromEntries(RELATIONSHIP_OPTIONS.map((o) => [o.value, o.label])) as Record<RecommendationRelationship, string>;
+
   const [writeOpen, setWriteOpen] = useState(false);
   const [relationship, setRelationship] =
     useState<RecommendationRelationship>("mentor");
@@ -139,7 +137,7 @@ export function RecommendationsSection({
   return (
     <div className="space-y-3">
       <SectionHeader
-        title="Recommendations"
+        title={tRec("title")}
         action={
           canWrite ? (
             <Button
@@ -147,7 +145,7 @@ export function RecommendationsSection({
               size="sm"
               onClick={() => setWriteOpen(true)}
             >
-              <Plus className="size-4" /> Write a recommendation
+              <Plus className="size-4" /> {tRec("write")}
             </Button>
           ) : undefined
         }
@@ -160,7 +158,7 @@ export function RecommendationsSection({
               <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
                 <div>
                   <span className="font-medium">
-                    {item.authorName ?? "An Oryn student"}
+                    {item.authorName ?? tRec("anonymousAuthor")}
                   </span>
                   <span className="text-muted-foreground">
                     {" "}
@@ -174,7 +172,7 @@ export function RecommendationsSection({
                     })}
                   </span>
                   {item.status === "hidden" ? (
-                    <span className="italic">Hidden</span>
+                    <span className="italic">{tRec("hidden")}</span>
                   ) : null}
                 </div>
               </div>
@@ -201,7 +199,7 @@ export function RecommendationsSection({
                     ) : (
                       <EyeOff className="size-3" />
                     )}
-                    {item.status === "hidden" ? "Show" : "Hide"}
+                    {item.status === "hidden" ? t("show") : t("hide")}
                   </Button>
                 ) : null}
                 {item.authorId === viewerId ? (
@@ -210,7 +208,7 @@ export function RecommendationsSection({
                     size="xs"
                     onClick={() => setDeleteTarget(item)}
                   >
-                    <Trash2 className="size-3" /> Delete
+                    <Trash2 className="size-3" /> {t("delete")}
                   </Button>
                 ) : null}
                 {!isSelf && item.authorId !== viewerId ? (
@@ -219,7 +217,7 @@ export function RecommendationsSection({
                     size="xs"
                     onClick={() => setReportTarget(item)}
                   >
-                    <Flag className="size-3" /> Report
+                    <Flag className="size-3" /> {tRec("report")}
                   </Button>
                 ) : null}
               </div>
@@ -227,13 +225,13 @@ export function RecommendationsSection({
           ))}
         </ul>
       ) : (
-        <EmptyState icon={Quote} title="No recommendations yet" className="py-6" />
+        <EmptyState icon={Quote} title={tRec("noneYet")} className="py-6" />
       )}
 
       <Dialog open={writeOpen} onOpenChange={setWriteOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Write a recommendation</DialogTitle>
+            <DialogTitle>{tRec("write")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <Select
@@ -258,7 +256,7 @@ export function RecommendationsSection({
               value={body}
               maxLength={3000}
               onChange={(e) => setBody(e.target.value)}
-              placeholder="What would you tell someone about working with them?"
+              placeholder={tRec("writePlaceholder")}
             />
             {writeError ? (
               <p className="text-sm text-destructive">{writeError}</p>
@@ -266,13 +264,13 @@ export function RecommendationsSection({
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setWriteOpen(false)}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button onClick={submitWrite} disabled={isPending || !body.trim()}>
               {isPending ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
-                "Submit"
+                t("submit")
               )}
             </Button>
           </DialogFooter>
@@ -285,23 +283,23 @@ export function RecommendationsSection({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Report this recommendation</DialogTitle>
+            <DialogTitle>{tRec("reportDialogTitle")}</DialogTitle>
           </DialogHeader>
           <Textarea
             value={reportReason}
             onChange={(e) => setReportReason(e.target.value)}
-            placeholder="What's wrong with this?"
+            placeholder={tRec("reportPlaceholder")}
             rows={4}
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => setReportTarget(null)}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               onClick={submitReport}
               disabled={isPending || !reportReason.trim()}
             >
-              Submit report
+              {tRec("reportSubmit")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -310,16 +308,16 @@ export function RecommendationsSection({
       <AlertDialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this recommendation?</AlertDialogTitle>
+            <AlertDialogTitle>{tRec("deleteDialogTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This removes the recommendation you wrote — it can&apos;t be undone.
+              {tRec("deleteDialogDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel render={<Button variant="outline" disabled={isPending} />}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel render={<Button variant="outline" disabled={isPending} />}>{t("cancel")}</AlertDialogCancel>
             <Button variant="destructive" onClick={confirmDelete} disabled={isPending}>
               {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-              Delete
+              {t("delete")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

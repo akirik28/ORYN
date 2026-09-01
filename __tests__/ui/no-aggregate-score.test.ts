@@ -61,11 +61,14 @@ describe("student-facing surfaces do not render the aggregate score", () => {
     expect(read("lib/scoring/monthly-review.ts")).toContain("overallDelta");
   });
 
-  // Removing the number must not have taken the honest bad news with it.
+  // Removing the number must not have taken the honest bad news with it. Checks the
+  // catalog key, not the rendered English string — progress-view.tsx now sources this
+  // text from messages/en.json via next-intl (profile.progress.nextToStrengthen), so the
+  // literal sentence no longer appears in the component's own source.
   test("dimension-level evidence and gaps are still shown", () => {
     const progress = read("features/profile/progress-view.tsx");
     expect(progress).toContain("dimensionDeltas");
-    expect(progress).toContain("Next area to strengthen");
+    expect(progress).toContain("nextToStrengthen");
     const home = read("features/dashboard/dashboard-view.tsx");
     expect(home).toContain("Your clearest gap right now is");
     // "No evidence yet" moved into lib/scoring/dashboard-hero.ts (2026-08-24, Gate 2
