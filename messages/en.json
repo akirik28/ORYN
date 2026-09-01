@@ -1377,7 +1377,8 @@
     "applicationDeadlineApproaching": "{name} — application deadline approaching.",
     "applicationDeadlineApproachingGeneric": "An application deadline is approaching.",
     "universityDeadlineApproaching": "{name} — {detail} deadline approaching.",
-    "unnamedTargetUniversity": "A target university"
+    "unnamedTargetUniversity": "A target university",
+    "newOpportunityMatch": "New match: {name}"
   },
   "plan": {
     "title": "This week's plan",

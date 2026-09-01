@@ -1,12 +1,20 @@
 import "server-only";
 
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import { computeOpportunityMatch, isNearStudent } from "./matching";
 import type { StudentMatchProfile, OpportunityForMatching } from "./matching";
 import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
 import { filterActionableOpportunities } from "./lifecycle";
-import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
+import { createNotification } from "@/lib/notifications/create";
+import { DEFAULT_LOCALE, toLocale, type Locale } from "@/lib/i18n/config";
+
+/** Notify about at most this many newly-eligible matches per refresh — same "don't
+ * overwhelm" ceiling AGENTS.md Phase 7 already applies to the dashboard's own "3
+ * highest-impact actions," reused here so a profile edit that newly qualifies a student
+ * for a dozen opportunities at once can't produce a dozen notifications in one render. */
+const MAX_NEW_MATCH_NOTIFICATIONS_PER_REFRESH = 3;
 
 /**
  * Recomputes and upserts opportunity_matches for one student against every active
@@ -60,7 +68,7 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
   }
   const supabase = await createClient();
 
-  const [profileRes, scoresRes, interestsRes, opportunitiesRes, savedRes] = await Promise.all([
+  const [profileRes, scoresRes, interestsRes, opportunitiesRes, savedRes, previousMatchesRes] = await Promise.all([
     // select("*"), not an explicit column list: an explicit list naming citizenship_countries
     // (migration 0047, not applied on every environment) makes PostgREST reject the WHOLE
     // query (42703 "column does not exist"), silently degrading every other profile field
@@ -78,6 +86,12 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
     // dismissed must never resurface as a fresh recommendation — see computeEligibility's
     // savedStatus parameter (lib/opportunities/matching.ts).
     supabase.from("saved_opportunities").select("opportunity_id, status").eq("user_id", userId),
+    // Read before this call's own upsert overwrites it -- the only way to tell "newly
+    // eligible this render" from "already eligible last render too." An empty result here
+    // is itself meaningful: it means this student has never had matches computed before,
+    // so there is no baseline to diff against (see the notification block below, which
+    // treats that case as "skip notifying" rather than "everything is new").
+    supabase.from("opportunity_matches").select("opportunity_id, eligible").eq("user_id", userId),
   ]);
 
   const savedStatusByOpportunityId = new Map((savedRes.data ?? []).map((s) => [s.opportunity_id, s.status]));
@@ -144,7 +158,83 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
   });
 
   await admin.from("opportunity_matches").upsert(rows, { onConflict: "user_id,opportunity_id" });
+  await notifyNewlyEligibleMatches(supabase, userId, profileRes.data?.preferred_language, rows, opportunities, previousMatchesRes.data);
   return { refreshed: true };
+}
+
+/**
+ * Phase 24's `new_opportunity` category, wired up for the first time — previously declared
+ * in `NotificationCategory` with no writer anywhere (see
+ * docs/handoffs/notification-categories-audit-2026-09-01.md). Deliberately its own function
+ * rather than inlined into the upsert above: the diff against `previousMatches` is the whole
+ * point and reads better named. Exported (only) so
+ * __tests__/opportunities/notify-newly-eligible-matches.test.ts can pin it directly against
+ * plain fixtures, the same shape lib/deadlines/scan.ts's notifyIfThresholdCrossed already
+ * uses — testing the full refreshOpportunityMatches flow end to end would mean mocking
+ * seven-plus table reads and the real matching engine just to reach this. No behavior change.
+ *
+ * "Newly eligible" is the bar, not merely "eligible" — this function runs from every
+ * `refreshOpportunityMatches` call (dashboard, /opportunities, /opportunities/[id], all on
+ * every render), so notifying on "still eligible, same as last render" would produce the
+ * exact notification storm this project already found and fixed once for weekly_plan (100
+ * identical rows for one account). An admin client isn't needed here — `createNotification`
+ * already opens its own admin connection internally (no insert policy exists for this table
+ * at all, not even a scoped one), so both reads below stay on the caller's own RLS-scoped
+ * client, same as every other read in `refreshOpportunityMatches`.
+ */
+export async function notifyNewlyEligibleMatches(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  preferredLanguage: string | null | undefined,
+  rows: { opportunity_id: string; eligible: boolean; match_score: number }[],
+  opportunities: { id: string; title: string }[],
+  previousMatches: { opportunity_id: string; eligible: boolean }[] | null
+): Promise<void> {
+  // No previous row at all means this student's matches have never been computed before --
+  // there is no baseline, so "everything is eligible" would read as "everything is new" and
+  // notify about the student's entire matched catalogue the first time they ever open the
+  // app. Skip rather than treat an absent baseline as a diff against nothing.
+  if (previousMatches === null || previousMatches.length === 0) return;
+
+  const previouslyEligibleIds = new Set(previousMatches.filter((m) => m.eligible).map((m) => m.opportunity_id));
+  const newlyEligible = rows
+    .filter((r) => r.eligible && !previouslyEligibleIds.has(r.opportunity_id))
+    .sort((a, b) => b.match_score - a.match_score)
+    .slice(0, MAX_NEW_MATCH_NOTIFICATIONS_PER_REFRESH);
+  if (newlyEligible.length === 0) return;
+
+  const opportunityById = new Map(opportunities.map((o) => [o.id, o]));
+  const locale = toLocale(preferredLanguage);
+  const t = await getTranslations({ locale, namespace: "notifications" });
+
+  for (const match of newlyEligible) {
+    const opportunity = opportunityById.get(match.opportunity_id);
+    if (!opportunity) continue;
+    const link = `/opportunities/${match.opportunity_id}`;
+    // Dedup: a (user, opportunity) pair notifies at most once, ever -- unlike deadline
+    // reminders (which intentionally re-fire at each threshold), a match becoming eligible
+    // is a one-time event, so the window is unbounded rather than scoped to a day/week.
+    // .limit(1) before .maybeSingle() for the same reason as every other dedup check added
+    // tonight: without it, a genuine race (two renders landing within the same request
+    // window) can produce two matching rows, and an unbounded maybeSingle() turns that into
+    // a permanent, self-perpetuating false negative rather than a one-time double-send.
+    const { data: existing } = await supabase
+      .from("notifications")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("category", "new_opportunity")
+      .eq("link", link)
+      .limit(1)
+      .maybeSingle();
+    if (existing) continue;
+
+    await createNotification({
+      userId,
+      category: "new_opportunity",
+      title: t("newOpportunityMatch", { name: opportunity.title }),
+      link,
+    });
+  }
 }
 
 function buildReasonCodes(
