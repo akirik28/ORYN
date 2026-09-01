@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { MessageCircle } from "lucide-react";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
@@ -22,21 +23,18 @@ export default async function MessagesPage() {
   const session = await requireUser();
   const supabase = await createClient();
   const conversations = await getConversations(supabase, session.userId!);
+  const t = await getTranslations("messaging.list");
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Messages" description="1:1 conversations with your connections. Removed connections stay readable but read-only." />
+      <PageHeader title={t("pageTitle")} description={t("description")} />
 
       {conversations.length === 0 ? (
-        <EmptyState
-          icon={MessageCircle}
-          title="No conversations yet"
-          description="Messaging opens up once you and someone else accept a connection request. Visit Connections to get started."
-        />
+        <EmptyState icon={MessageCircle} title={t("emptyTitle")} description={t("emptyDescription")} />
       ) : (
         <ul className="glass-card divide-y divide-white/40 overflow-hidden rounded-2xl border border-white/65 bg-white/45 backdrop-blur-2xl">
           {conversations.map((c) => {
-            const name = c.otherDisplayName ?? "A student";
+            const name = c.otherDisplayName ?? t("defaultName");
             return (
               <li key={c.otherUserId}>
                 <Link href={`/messages/${c.otherUserId}`} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-white/50">
@@ -54,10 +52,10 @@ export default async function MessagesPage() {
                     </div>
                     <p className="truncate text-sm text-muted-foreground">
                       {!c.isConnected
-                        ? "No longer connected — read only"
+                        ? t("readOnlyNotice")
                         : c.lastMessage
                           ? c.lastMessage.body
-                          : "Say hello — start the conversation."}
+                          : t("sayHello")}
                     </p>
                   </div>
                 </Link>

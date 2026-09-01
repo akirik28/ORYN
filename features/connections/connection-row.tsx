@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Check, X, UserMinus, MessageCircle, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -29,7 +30,8 @@ function initials(name: string | null) {
 }
 
 function Identity({ connection }: { connection: ConnectionWithProfile }) {
-  const name = connection.otherProfile?.display_name ?? "A student";
+  const t = useTranslations("connections.row");
+  const name = connection.otherProfile?.display_name ?? t("defaultName");
   const meta = [connection.otherProfile?.curriculum, connection.otherProfile?.country].filter(Boolean).join(" · ");
 
   const content = (
@@ -60,6 +62,7 @@ function Identity({ connection }: { connection: ConnectionWithProfile }) {
 }
 
 export function PendingRequestRow({ connection }: { connection: ConnectionWithProfile }) {
+  const t = useTranslations("connections.actions");
   const [isPending, startTransition] = useTransition();
 
   return (
@@ -82,7 +85,7 @@ export function PendingRequestRow({ connection }: { connection: ConnectionWithPr
             })
           }
         >
-          <Check className="size-3.5" /> Accept
+          <Check className="size-3.5" /> {t("accept")}
         </Button>
         <Button
           size="sm"
@@ -95,7 +98,7 @@ export function PendingRequestRow({ connection }: { connection: ConnectionWithPr
             })
           }
         >
-          <X className="size-3.5" /> Decline
+          <X className="size-3.5" /> {t("decline")}
         </Button>
       </div>
     </div>
@@ -103,10 +106,13 @@ export function PendingRequestRow({ connection }: { connection: ConnectionWithPr
 }
 
 export function ConnectionRow({ connection, pending = false }: { connection: ConnectionWithProfile; pending?: boolean }) {
+  const t = useTranslations("connections.row");
+  const tActions = useTranslations("connections.actions");
+  const tCommon = useTranslations("common");
   const [isPending, startTransition] = useTransition();
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const label = pending ? "Withdraw request" : "Remove connection";
-  const name = connection.otherProfile?.display_name ?? "this student";
+  const label = pending ? t("withdrawRequest") : t("removeConnection");
+  const name = connection.otherProfile?.display_name ?? t("thisStudent");
 
   function confirmRemove() {
     startTransition(async () => {
@@ -126,10 +132,10 @@ export function ConnectionRow({ connection, pending = false }: { connection: Con
     >
       <Identity connection={connection} />
       <div className="flex shrink-0 items-center gap-2">
-        {pending ? <span className="text-xs text-muted-foreground">Requested</span> : null}
+        {pending ? <span className="text-xs text-muted-foreground">{tActions("requested")}</span> : null}
         {!pending && connection.status === "accepted" ? (
           <Button size="sm" variant="outline" render={<Link href={`/messages/${connection.otherProfile?.id ?? ""}`} />} nativeButton={false}>
-            <MessageCircle className="size-3.5" /> Message
+            <MessageCircle className="size-3.5" /> {tActions("message")}
           </Button>
         ) : null}
         <Button
@@ -148,13 +154,11 @@ export function ConnectionRow({ connection, pending = false }: { connection: Con
           <AlertDialogHeader>
             <AlertDialogTitle>{label}?</AlertDialogTitle>
             <AlertDialogDescription>
-              {pending
-                ? `Your connection request to ${name} will be withdrawn. You can send a new one later.`
-                : `You'll no longer be connected to ${name}. They won't be notified, and you can reconnect later.`}
+              {pending ? t("withdrawConfirmDescription", { name }) : t("removeConfirmDescription", { name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel render={<Button variant="outline" disabled={isPending} />}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel render={<Button variant="outline" disabled={isPending} />}>{tCommon("cancel")}</AlertDialogCancel>
             <Button variant="destructive" onClick={confirmRemove} disabled={isPending}>
               {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
               {label}

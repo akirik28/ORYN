@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Eyebrow } from "@/components/oryn/eyebrow";
+import { toLocale } from "@/lib/i18n/config";
 import { ConnectButton } from "./connect-button";
 
 function initials(name: string | null) {
@@ -39,7 +41,14 @@ export function PeopleYouMayKnowRow({
   headline?: string | null;
   reasons: string[];
 }) {
-  const name = displayName ?? "Oryn student";
+  const t = useTranslations("connections.peopleYouMayKnow");
+  // Eyebrow's `text-transform: uppercase` case-folds per its `lang` attribute, and its own
+  // doc explains why it can't default to the page's locale (most of its 19+ callers still
+  // render English) — a caller that translates its children has to pass the matching
+  // locale, or Turkish "yönlerin" uppercases with English rules (dotless I) instead of
+  // Turkish ones (dotted İ). See docs/i18n-coverage.md's dotted-İ section.
+  const locale = toLocale(useLocale());
+  const name = displayName ?? t("defaultName");
 
   return (
     // Figma-source card chrome — the content structure this card's own UI-V3 § 28 comment
@@ -69,7 +78,7 @@ export function PeopleYouMayKnowRow({
 
       {reasons.length > 0 ? (
         <div className="mt-4">
-          <Eyebrow rule={false}>You overlap on</Eyebrow>
+          <Eyebrow rule={false} locale={locale}>{t("overlapLabel")}</Eyebrow>
           <ul className="mt-2 space-y-1">
             {reasons.map((reason) => (
               <li key={reason} className="flex items-baseline gap-2 text-sm text-ink-2">
@@ -87,7 +96,7 @@ export function PeopleYouMayKnowRow({
           href={`/u/${id}`}
           className="text-sm text-ink-3 underline-offset-4 transition-colors hover:text-brand-primary hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
         >
-          View profile
+          {t("viewProfile")}
         </Link>
       </div>
     </article>

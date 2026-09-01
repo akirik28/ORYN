@@ -1,4 +1,5 @@
 import { Users } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { getConnections } from "@/lib/social/connections";
@@ -14,9 +15,10 @@ export const metadata = { title: "Connections" };
 export default async function ConnectionsPage() {
   const session = await requireUser();
   const supabase = await createClient();
-  const [{ accepted, incomingPending, outgoingPending }, suggestions] = await Promise.all([
+  const [{ accepted, incomingPending, outgoingPending }, suggestions, t] = await Promise.all([
     getConnections(supabase, session.userId!),
     getPeopleYouMayKnow(session.userId!),
+    getTranslations("connections.page"),
   ]);
 
   const isEmpty = accepted.length === 0 && incomingPending.length === 0 && outgoingPending.length === 0;
@@ -31,23 +33,15 @@ export default async function ConnectionsPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader
-        eyebrow="Connections"
-        title="People on a similar path."
-        description="Students whose record overlaps with yours. Oryn shows you why before you connect — and only ever surfaces someone who has chosen to make their profile public."
-      />
+      <PageHeader eyebrow={t("eyebrow")} title={t("title")} description={t("description")} />
 
       {isEmpty ? (
-        <EmptyState
-          icon={Users}
-          title="No connections yet"
-          description="Turn on your public profile in Settings to share it, or accept a request when one comes in."
-        />
+        <EmptyState icon={Users} title={t("emptyTitle")} description={t("emptyDescription")} />
       ) : (
         <>
           {incomingPending.length > 0 ? (
             <section className={`glass-card-fast ${cardBase}`}>
-              <SectionHeader title="Requests" description={`${incomingPending.length} waiting for your response`} />
+              <SectionHeader title={t("requestsTitle")} description={t("requestsWaiting", { count: incomingPending.length })} />
               <div className="space-y-2">
                 {incomingPending.map((connection) => (
                   <PendingRequestRow key={connection.id} connection={connection} />
@@ -57,7 +51,7 @@ export default async function ConnectionsPage() {
           ) : null}
 
           <section className={`glass-card ${cardBase}`}>
-            <SectionHeader title="Your connections" description={`${accepted.length} connected`} />
+            <SectionHeader title={t("connectionsTitle")} description={t("connectedCount", { count: accepted.length })} />
             {accepted.length > 0 ? (
               <div className="grid gap-3 sm:grid-cols-2">
                 {accepted.map((connection) => (
@@ -65,13 +59,13 @@ export default async function ConnectionsPage() {
                 ))}
               </div>
             ) : (
-              <EmptyState icon={Users} title="Accepted connections will appear here." className="py-6" />
+              <EmptyState icon={Users} title={t("acceptedEmptyTitle")} className="py-6" />
             )}
           </section>
 
           {outgoingPending.length > 0 ? (
             <section className={`glass-card-offset2 ${cardBase}`}>
-              <SectionHeader title="Sent" description="Waiting for a response" />
+              <SectionHeader title={t("sentTitle")} description={t("sentDescription")} />
               <div className="grid gap-3 sm:grid-cols-2">
                 {outgoingPending.map((connection) => (
                   <ConnectionRow key={connection.id} connection={connection} pending />
@@ -84,10 +78,7 @@ export default async function ConnectionsPage() {
 
       {suggestions.length > 0 ? (
         <section className={`glass-card-offset ${cardBase}`}>
-          <SectionHeader
-            title="People on a similar path"
-            description="Ranked by real overlap with your record — mutual connections, school, interests and skills. Every reason is shown."
-          />
+          <SectionHeader title={t("suggestionsTitle")} description={t("suggestionsDescription")} />
           <div className="grid gap-3 sm:grid-cols-2">
             {suggestions.map((person) => (
               <PeopleYouMayKnowRow

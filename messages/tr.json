@@ -1154,5 +1154,107 @@
     "headlineLine1": "Profilin.",
     "headlineLine2": "Stratejin.",
     "subhead": "ORYN, rekabetçi üniversitelere ve fırsatlara hazırlanan öğrenciler için kişisel bir kariyer ve profil işletim sistemi."
+  },
+  "messaging": {
+    "list": {
+      "pageTitle": "Mesajlar",
+      "description": "Bağlantılarınla birebir sohbetler. Kaldırılan bağlantılar okunabilir kalır, sadece yeni mesaj yazamazsın.",
+      "emptyTitle": "Henüz sohbet yok",
+      "emptyDescription": "Mesajlaşma, sen ve karşı taraf bir bağlantı isteğini kabul ettiğinde açılır. Başlamak için Bağlantılar'a göz at.",
+      "defaultName": "Bir öğrenci",
+      "readOnlyNotice": "Artık bağlı değilsin — sadece okunabilir",
+      "sayHello": "Merhaba de — sohbeti başlat."
+    },
+    "conversation": {
+      "title": "Sohbet",
+      "deniedTitle": "Yalnızca kabul edilmiş bağlantılara mesaj gönderebilirsin",
+      "deniedDescription": "Bu sohbet kullanılamıyor — ya bu öğrenciyle kabul edilmiş bir bağlantın yok, ya da istek henüz kabul edilmedi.",
+      "defaultName": "Bu öğrenci"
+    },
+    "thread": {
+      "options": "Sohbet seçenekleri",
+      "block": "Engelle",
+      "unblock": "Engeli kaldır",
+      "blockedByMeNotice": "Bu öğrenciyi engelledin — sana mesaj gönderemez, sen de ona gönderemezsin.",
+      "unavailableNotice": "Şu anda bu öğrenciye mesaj gönderemezsin.",
+      "disconnectedNotice": "Artık bağlı değilsin — bu sohbeti görüntüleyebilirsin ama yeni mesaj gönderemezsin.",
+      "acceptedConnection": "Kabul edilmiş bağlantı",
+      "unblockToSendFooter": "Yeni mesaj göndermek için engeli kaldır.",
+      "unavailableFooter": "Şu anda bu öğrenciye mesaj gönderemezsin.",
+      "disconnectedFooter": "Artık bağlı değilsin, bu yüzden yeni mesaj gönderemezsin.",
+      "emptyMessages": "Henüz mesaj yok — merhaba de.",
+      "report": "Bildir",
+      "writePlaceholder": "Bir mesaj yaz…",
+      "send": "Gönder",
+      "reportDialogTitle": "Bu mesajı bildir",
+      "reportPlaceholder": "Bu mesajda ne sorun var?",
+      "submitReport": "Bildirimi gönder",
+      "blockConfirmTitle": "{name} engellensin mi?",
+      "blockConfirmDescription": "Engeli kaldırana kadar ikiniz de birbirinize mesaj gönderemezsiniz."
+    },
+    "errors": {
+      "invalidRecipient": "Geçersiz alıcı.",
+      "cantMessageSelf": "Kendine mesaj gönderemezsin.",
+      "emptyMessage": "Mesaj boş olamaz.",
+      "messageTooLong": "Mesaj çok uzun.",
+      "notAccepted": "Yalnızca kabul edilmiş bağlantılara mesaj gönderebilirsin.",
+      "blockedByOther": "Bu kişiye mesaj gönderemezsin.",
+      "sendFailed": "Mesaj gönderilemedi. Lütfen tekrar dene.",
+      "invalidConversation": "Geçersiz sohbet.",
+      "readStatusFailed": "Okundu durumu güncellenemedi.",
+      "invalidUser": "Geçersiz kullanıcı.",
+      "blockFailed": "Bu kullanıcı engellenemedi.",
+      "unblockFailed": "Bu kullanıcının engeli kaldırılamadı.",
+      "invalidReport": "Geçersiz bildirim.",
+      "reportReasonRequired": "Lütfen sorunu açıkla.",
+      "reportFailed": "Bildirim gönderilemedi."
+    }
+  },
+  "connections": {
+    "page": {
+      "eyebrow": "Bağlantılar",
+      "title": "Benzer bir yoldaki kişiler.",
+      "description": "Kaydı seninkiyle örtüşen öğrenciler. Oryn bağlanmadan önce nedenini gösterir — ve yalnızca profilini herkese açık yapmış kişileri gösterir.",
+      "emptyTitle": "Henüz bağlantın yok",
+      "emptyDescription": "Paylaşmak için Ayarlar'dan profilini herkese açık yap, ya da gelen bir isteği kabul et.",
+      "requestsTitle": "İstekler",
+      "requestsWaiting": "{count} kişi yanıtını bekliyor",
+      "connectionsTitle": "Bağlantıların",
+      "connectedCount": "{count} bağlantı",
+      "acceptedEmptyTitle": "Kabul edilen bağlantılar burada görünecek.",
+      "sentTitle": "Gönderilen",
+      "sentDescription": "Yanıt bekleniyor",
+      "suggestionsTitle": "Benzer bir yoldaki kişiler",
+      "suggestionsDescription": "Kaydınla gerçek örtüşmeye göre sıralandı — ortak bağlantılar, okul, ilgi alanları ve yetenekler. Her neden gösterilir."
+    },
+    "actions": {
+      "accept": "Kabul et",
+      "decline": "Reddet",
+      "requested": "İstek gönderildi",
+      "connected": "Bağlandın",
+      "connect": "Bağlan",
+      "message": "Mesaj"
+    },
+    "row": {
+      "defaultName": "Bir öğrenci",
+      "thisStudent": "bu öğrenci",
+      "withdrawRequest": "İsteği geri çek",
+      "removeConnection": "Bağlantıyı kaldır",
+      "withdrawConfirmDescription": "{name} adlı kişiye gönderdiğin bağlantı isteği geri çekilecek. Daha sonra tekrar gönderebilirsin.",
+      "removeConfirmDescription": "{name} ile bağlantın kalkacak. Bilgilendirilmeyecekler, istersen daha sonra tekrar bağlanabilirsin."
+    },
+    "peopleYouMayKnow": {
+      "overlapLabel": "Ortak yönlerin",
+      "viewProfile": "Profili görüntüle",
+      "defaultName": "Oryn öğrencisi"
+    },
+    "errors": {
+      "cantConnectSelf": "Kendinle bağlantı kuramazsın.",
+      "notPublic": "Bu profil herkese açık değil, o yüzden bağlantı kuramazsın.",
+      "alreadyExists": "Aranızda zaten bir bağlantı isteği var.",
+      "sendFailed": "İstek gönderilemedi. Lütfen tekrar dene.",
+      "updateFailed": "Bu istek güncellenemedi.",
+      "removeFailed": "Kaldırılamadı."
+    }
   }
 }
