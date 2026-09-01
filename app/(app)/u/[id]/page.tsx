@@ -13,7 +13,9 @@ import { getEndorsementsForSkills, type SkillEndorsementInfo } from "@/lib/socia
 import { getRecommendationsFor } from "@/lib/social/recommendations-query";
 import { getMutualConnections } from "@/lib/social/mutual-connections";
 import { recordProfileView } from "@/lib/social/profile-views";
-import { OPEN_TO_LABELS, type OpenToOption } from "@/lib/social/open-to";
+import { getTranslations } from "next-intl/server";
+import { resolveLocale } from "@/lib/i18n/locale";
+import { openToLabel, type OpenToOption } from "@/lib/social/open-to";
 import { EndorseSkillButton } from "@/features/connections/endorse-skill-button";
 import { RecommendationsSection } from "@/features/profile/recommendations-section";
 import { RecentActivityStrip } from "@/features/profile/recent-activity-strip";
@@ -90,6 +92,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 export default async function PublicProfilePage({ params }: { params: Promise<{ id: string }> }) {
+  // Product names stay as they are — LinkedIn, GitHub, Instagram, X / Twitter and Discord are
+  // what a student sees on those services themselves, and translating a brand is how a link
+  // stops being recognisable. Email, Phone and Website are ordinary nouns and do translate.
+  const t = await getTranslations("publicProfile");
+  const locale = await resolveLocale();
   const { id } = await params;
   if (!isUuidLike(id)) notFound();
 
@@ -143,11 +150,19 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
       {isSelfPrivate ? (
         <div className="flex items-center gap-2 rounded-xl border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
           <Lock className="size-4 shrink-0" />
-          Only you can see this. Turn on{" "}
-          <Link href="/settings" className="text-brand-primary hover:underline">
-            Public profile
-          </Link>{" "}
-          in Settings to share it.
+          {/* t.rich, not three concatenated fragments: Turkish puts the link in a different
+              position in the sentence, so the surrounding words cannot be split around a
+              fixed slot. The catalog owns the whole sentence and the component owns only
+              what a <link> renders as. */}
+          <span>
+            {t.rich("privateNotice", {
+              link: (chunks) => (
+                <Link href="/settings" className="text-brand-primary hover:underline">
+                  {chunks}
+                </Link>
+              ),
+            })}
+          </span>
         </div>
       ) : null}
 
@@ -159,19 +174,19 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             </AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="font-display text-2xl tracking-tight">{display.display_name ?? "Oryn student"}</h1>
+            <h1 className="font-display text-2xl tracking-tight">{display.display_name ?? t("fallbackName")}</h1>
             {display.headline ? <p className="text-sm font-medium text-foreground/90">{display.headline}</p> : null}
             <p className="text-sm text-muted-foreground">
-              {[display.curriculum, display.country, display.graduation_year ? `Class of ${display.graduation_year}` : null]
+              {[display.curriculum, display.country, display.graduation_year ? t("classOf", { year: display.graduation_year }) : null]
                 .filter(Boolean)
                 .join(" · ")}
             </p>
             {mutual.count > 0 ? (
               <p className="mt-0.5 text-xs text-muted-foreground">
-                {mutual.count} mutual connection{mutual.count === 1 ? "" : "s"}
+                {t("mutualConnections", { count: mutual.count })}
                 {mutual.preview.length > 0
                   ? `: ${mutual.preview
-                      .map((p) => p.displayName ?? "Oryn student")
+                      .map((p) => p.displayName ?? t("fallbackName"))
                       .join(", ")}${mutual.count > mutual.preview.length ? ` +${mutual.count - mutual.preview.length}` : ""}`
                   : null}
               </p>
@@ -182,7 +197,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
           <div className="flex gap-2">
             {canShowMessageButton(connection?.status ?? null) ? (
               <Button size="sm" variant="outline" render={<Link href={`/messages/${id}`} />} nativeButton={false}>
-                <MessageCircle className="size-3.5" /> Message
+                <MessageCircle className="size-3.5" /> {t("message")}
               </Button>
             ) : null}
             <ConnectButton
@@ -242,7 +257,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
         <>
           <SkillList skills={skills} endorsements={endorsements} ownerId={id} canEndorse={!isSelf && hasAcceptedConnection} />
           <div className="space-y-3">
-            <h2 className="font-semibold">Portfolio</h2>
+            <h2 className="font-semibold">{t("portfolio")}</h2>
             <PortfolioView items={portfolio} />
           </div>
         </>
@@ -258,11 +273,11 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
       {contact.openTo.length > 0 ? (
         <div className="space-y-2">
-          <h2 className="font-semibold">Open to</h2>
+          <h2 className="font-semibold">{t("openTo")}</h2>
           <div className="flex flex-wrap gap-1.5">
             {contact.openTo.map((option) => (
               <Badge key={option} variant="outline">
-                {OPEN_TO_LABELS[option as OpenToOption] ?? option}
+                {openToLabel(option as OpenToOption, locale) ?? option}
               </Badge>
             ))}
           </div>
@@ -271,7 +286,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
       {hasAnyContact ? (
         <div className="space-y-2">
-          <h2 className="font-semibold">Contact</h2>
+          <h2 className="font-semibold">{t("contact")}</h2>
           {/* break-words on every URL/email value below (2026-08-29 mobile sweep) — a real
               value like an email address or a non-vanity LinkedIn/GitHub URL is one
               unbroken token with no space for the browser to wrap on by default, so it
@@ -283,7 +298,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
           <ul className="space-y-1.5 text-sm">
             {contact.email ? (
               <li>
-                <span className="text-muted-foreground">Email: </span>
+                <span className="text-muted-foreground">{t("email")}: </span>
                 <a href={`mailto:${contact.email}`} className="break-words text-brand-primary hover:underline">
                   {contact.email}
                 </a>
@@ -291,7 +306,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             ) : null}
             {contact.phone ? (
               <li>
-                <span className="text-muted-foreground">Phone: </span>
+                <span className="text-muted-foreground">{t("phone")}: </span>
                 {contact.phone}
               </li>
             ) : null}
@@ -313,7 +328,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             ) : null}
             {contact.websiteUrl ? (
               <li>
-                <span className="text-muted-foreground">Website: </span>
+                <span className="text-muted-foreground">{t("website")}: </span>
                 <a href={contact.websiteUrl} target="_blank" rel="noreferrer noopener" className="break-words text-brand-primary hover:underline">
                   {contact.websiteUrl}
                 </a>

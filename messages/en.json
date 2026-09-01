@@ -1283,5 +1283,20 @@
     "generate": "Generate my plan",
     "emptyTitle": "No plan yet this week",
     "emptyDescription": "Generate one to get your prioritized actions."
+  },
+  "publicProfile": {
+    "fallbackName": "Oryn student",
+    "classOf": "Class of {year}",
+    "mutualConnections": "{count, plural, one {{count} mutual connection} other {{count} mutual connections}}",
+    "message": "Message",
+    "about": "About",
+    "featured": "Featured",
+    "portfolio": "Portfolio",
+    "openTo": "Open to",
+    "contact": "Contact",
+    "email": "Email",
+    "phone": "Phone",
+    "website": "Website",
+    "privateNotice": "Only you can see this. Turn on <link>Public profile</link> in Settings to share it."
   }
 }

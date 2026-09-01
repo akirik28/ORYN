@@ -1283,5 +1283,20 @@
     "generate": "Planımı oluştur",
     "emptyTitle": "Bu hafta henüz plan yok",
     "emptyDescription": "Öncelikli işlerini görmek için bir plan oluştur."
+  },
+  "publicProfile": {
+    "fallbackName": "Oryn öğrencisi",
+    "classOf": "{year} mezunu",
+    "mutualConnections": "{count, plural, one {{count} ortak bağlantı} other {{count} ortak bağlantı}}",
+    "message": "Mesaj gönder",
+    "about": "Hakkında",
+    "featured": "Öne çıkanlar",
+    "portfolio": "Portföy",
+    "openTo": "Açık olduğu fırsatlar",
+    "contact": "İletişim",
+    "email": "E-posta",
+    "phone": "Telefon",
+    "website": "Web sitesi",
+    "privateNotice": "Bunu sadece sen görebilirsin. Paylaşmak için Ayarlar'dan <link>Herkese açık profil</link> seçeneğini aç."
   }
 }
