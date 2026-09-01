@@ -745,7 +745,7 @@ it presents an extraction artifact as an editorial fact, and the field's authori
 misleading.*
 **Depends on**: nothing technical — a schema/product judgment. ORYN-CFO was asked to weigh in.
 
-## 33. ~~Ten `_backup_*`/staging tables in `public`~~ — NINE ARE GONE; **one remains**, verified live 2026-09-01
+## 33. ~~Ten `_backup_*`/staging tables in `public`~~ — NINE DROPPED; the tenth is live infrastructure needing a `revoke`, not a drop
 
 > ### Mostly resolved. The decision is now about a single table, not ten.
 >
@@ -756,11 +756,38 @@ misleading.*
 > from a record of the drop, and were right to hedge — the direct query found the survivor.
 > Absence of nine is not absence of ten, and the difference is the whole decision.
 >
-> Everything below still applies, to that one table: RLS on, zero policies, but carrying
-> Supabase's default schema-wide `anon` grant. **The decision is unchanged in kind and nine
-> tenths smaller in scope.**
+> **Corrected again, 2026-09-01 18:15 — and the decision is a different one, not a smaller one.**
+> I first rewrote this as "same decision, one tenth the scope." That was wrong too.
+> `qs2027_import_staging` is **not abandoned residue like the nine that were dropped** — it is
+> live pipeline infrastructure. Verified directly:
+>
+> - **1,000 rows**, a populated QS Top-1000 staging dataset, not an empty leftover.
+> - **Live code depends on it**: `scripts/acquire-qs-institution-profile.ts` reads it (joining
+>   on `list_position`), and `lib/acquisition/paginate.ts` special-cases its lack of an `id`
+>   column.
+> - It is **migration-tracked**, and `0069_drop_ad_hoc_backup_tables.sql` — the migration that
+>   removed the others — **deliberately spared it**.
+>
+> A prior schema-hygiene audit had already reached this conclusion and excluded it by name:
+> *"active pipeline infrastructure for an ongoing QS Top1000 expansion, not abandoned residue.
+> Revisit once that expansion is complete, not before."*
+>
+> **So dropping or relocating it now risks breaking an in-progress pipeline nobody has declared
+> finished.** The exposure concern is still real and arguably sharper than for the nine, since
+> this table holds live in-progress data rather than a stale snapshot: RLS is on with **zero
+> policies** (so nothing can read it today), but `anon` and `authenticated` both hold Supabase's
+> default schema-wide **SELECT/INSERT/UPDATE/DELETE/TRUNCATE**. One permissive policy, or one
+> `DISABLE ROW LEVEL SECURITY` during an incident, and it is open.
+>
+> **The fix that fits is `revoke`, not `drop`** — strip the default grants and leave the table
+> where the pipeline expects it. That is not destructive to data and can be written as a
+> migration for your approval like any other. Dropping stays on the table as an option *after*
+> whoever owns the QS expansion says it is finished.
+>
+> Same reasoning applies to `global_university_discovery_queue`, flagged by that same audit and
+> never part of this entry's ten — noted so it isn't swept up by a later cleanup.
 
-**Action (now one table, `qs2027_import_staging`)**: decide to drop it or relocate it to a non-exposed schema.
+**Action (one table, `qs2027_import_staging`)**: approve a migration revoking the default `anon`/`authenticated` grants on it — or decide the QS expansion is finished, in which case dropping it becomes available again.
 **Why it matters, precisely**: they are **not exposed today** — RLS is enabled on all ten with
 zero policies, which denies everything, verified. But they each carry Supabase's default
 schema-wide `anon` grant (SELECT/UPDATE/DELETE). ORYN-BASORG's framing: *a loaded gun with the
