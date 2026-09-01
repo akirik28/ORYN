@@ -99,11 +99,42 @@ export default function DesignPreviewPage() {
           hasTargets
           availableTargets={[{ id: "t1", name: "Bocconi University" }]}
           applications={[
-            { id: "a1", universityName: "University of Pennsylvania", applicationType: "early_decision", deadline: "2026-11-01", status: "in_progress", readiness: { kind: "measured", percent: 33 } },
-            { id: "a2", universityName: "University of Cambridge", applicationType: "regular_decision", deadline: "2026-10-15", status: "not_started", readiness: { kind: "measured", percent: 0 } },
-            { id: "a3", universityName: "Yale University", applicationType: "regular_decision", deadline: "2026-01-02", status: "submitted", readiness: { kind: "not_tracked", applicationStatus: "submitted" } },
+            {
+              id: "a1", universityName: "University of Pennsylvania", applicationType: "early_decision", deadline: "2026-11-01", status: "in_progress", readiness: { kind: "measured", percent: 33 },
+              requirements: [
+                { id: "r1", requirement_type: "application", status: "completed" },
+                { id: "r2", requirement_type: "transcript", status: "completed" },
+                { id: "r3", requirement_type: "test_score", status: "not_started" },
+                { id: "r4", requirement_type: "essay", status: "not_started" },
+                { id: "r5", requirement_type: "recommendation", status: "not_started" },
+                { id: "r6", requirement_type: "financial_aid", status: "not_started" },
+              ],
+            },
+            {
+              id: "a2", universityName: "University of Cambridge", applicationType: "regular_decision", deadline: "2026-10-15", status: "not_started", readiness: { kind: "measured", percent: 0 },
+              requirements: [
+                { id: "r7", requirement_type: "application", status: "not_started" },
+                { id: "r8", requirement_type: "transcript", status: "not_started" },
+                { id: "r9", requirement_type: "essay", status: "not_started" },
+                { id: "r10", requirement_type: "recommendation", status: "not_started" },
+              ],
+            },
+            {
+              id: "a3", universityName: "Yale University", applicationType: "regular_decision", deadline: "2026-01-02", status: "submitted", readiness: { kind: "not_tracked", applicationStatus: "submitted" },
+              requirements: [
+                { id: "r11", requirement_type: "application", status: "completed" },
+                { id: "r12", requirement_type: "transcript", status: "not_started" },
+                { id: "r13", requirement_type: "essay", status: "not_started" },
+                { id: "r14", requirement_type: "recommendation", status: "not_started" },
+              ],
+            },
           ]}
         />
+      </div>
+
+      <div className="mt-16 space-y-3 border-t pt-16">
+        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Applications — empty, no targets saved yet</p>
+        <ApplicationsView hasTargets={false} availableTargets={[]} applications={[]} />
       </div>
     </PreviewShell>
   );

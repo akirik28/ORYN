@@ -11,6 +11,8 @@
     "documents": "Documents",
     "settings": "Settings",
     "opportunitiesShort": "Explore",
+    "applicationsShort": "Apps",
+    "universitiesShort": "Unis",
     "more": "More",
     "moreDestinations": "More destinations",
     "primaryLandmark": "Primary",
@@ -1101,11 +1103,16 @@
       "noTargetsTitle": "No applications yet",
       "noTargetsDescription": "Save a university you're targeting to start an application.",
       "hasTargetsTitle": "No applications started yet",
-      "hasTargetsDescription": "Start one from a target university to begin tracking requirements and deadlines."
+      "hasTargetsDescription": "Start one from a target university to begin tracking requirements and deadlines.",
+      "cta": "Explore universities"
+    },
+    "addAnother": {
+      "title": "Add another university",
+      "description": "Save a university as a target first"
     },
     "newDialog": {
       "startApplication": "Start an application",
-      "saveTargetFirst": "Save a target university first — applications start from a target.",
+      "saveTargetFirst": "Save a target university first",
       "university": "University",
       "applicationType": "Application type",
       "deadline": "Deadline",

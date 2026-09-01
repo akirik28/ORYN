@@ -22,7 +22,8 @@ const OVERFLOW_NAV = [...PRIMARY_NAV.filter((item) => !item.mobilePrimary), ...S
 /**
  * Mobile and tablet shell (UI-V3 § 32). Deliberately not the desktop chrome at a smaller
  * width: a compact header for identity and utilities, and a thumb-reachable bottom bar for
- * the five destinations a student actually moves between. Everything else is one tap away
+ * the destinations a student actually moves between (six as of 2026-09-02, Applications
+ * promoted alongside the original five — see nav-items.ts). Everything else is one tap away
  * under "More" — hidden from the bar, not from the product.
  *
  * The boundary is `lg` (1024), not `md`. The desktop header carries a logo, seven nav
@@ -72,7 +73,7 @@ export function MobileNav({
 
       <nav
         aria-label={t("primaryLandmark")}
-        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-7 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm lg:hidden"
       >
         {BOTTOM_NAV.map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);

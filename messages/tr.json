@@ -11,6 +11,8 @@
     "documents": "Belgeler",
     "settings": "Ayarlar",
     "opportunitiesShort": "Keşfet",
+    "applicationsShort": "Başv.",
+    "universitiesShort": "Üniv.",
     "more": "Daha Fazla",
     "moreDestinations": "Diğer sayfalar",
     "primaryLandmark": "Ana gezinme",
@@ -1101,11 +1103,16 @@
       "noTargetsTitle": "Henüz başvuru yok",
       "noTargetsDescription": "Başvuru oluşturmak için hedeflediğin bir üniversiteyi kaydet.",
       "hasTargetsTitle": "Henüz başlanmış bir başvuru yok",
-      "hasTargetsDescription": "Gereksinimleri ve son tarihleri takip etmeye başlamak için hedef bir üniversiteden başvuru oluştur."
+      "hasTargetsDescription": "Gereksinimleri ve son tarihleri takip etmeye başlamak için hedef bir üniversiteden başvuru oluştur.",
+      "cta": "Üniversiteleri keşfet"
+    },
+    "addAnother": {
+      "title": "Başka bir üniversite ekle",
+      "description": "Önce bir üniversiteyi hedef olarak kaydet"
     },
     "newDialog": {
       "startApplication": "Başvuru oluştur",
-      "saveTargetFirst": "Önce hedef bir üniversite kaydet — başvurular bir hedeften başlar.",
+      "saveTargetFirst": "Önce hedef bir üniversite kaydet",
       "university": "Üniversite",
       "applicationType": "Başvuru türü",
       "deadline": "Son tarih",

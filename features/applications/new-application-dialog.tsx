@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,10 +33,15 @@ export function NewApplicationDialog({ availableTargets }: { availableTargets: {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
+  // Was a disabled button with the reason as a hover-only tooltip — a dead end on any
+  // touch device, and the actual bug behind the founder's "çalışmıyor" report on this
+  // page: the precondition was stated, but nothing let a student act on it. Now a real
+  // link to where a target is actually saved from, with the same reason as visible copy
+  // rather than a tooltip.
   if (availableTargets.length === 0) {
     return (
-      <Button variant="outline" disabled title={t("saveTargetFirst")}>
-        <Plus className="size-4" /> {t("startApplication")}
+      <Button variant="outline" render={<Link href="/universities" />} nativeButton={false}>
+        <Plus className="size-4" /> {t("saveTargetFirst")}
       </Button>
     );
   }
