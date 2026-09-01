@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { updateDisplayName } from "@/app/(app)/settings/actions";
 
 export function DisplayNameForm({ initialName }: { initialName: string }) {
+  const t = useTranslations("common");
+  const tDisplayName = useTranslations("settings.displayName");
   const [name, setName] = useState(initialName);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +25,7 @@ export function DisplayNameForm({ initialName }: { initialName: string }) {
     <div className="space-y-1.5">
       <div className="flex items-end gap-2">
         <div className="flex-1 space-y-1.5">
-          <Label htmlFor="display-name">Display name</Label>
+          <Label htmlFor="display-name">{tDisplayName("label")}</Label>
           <Input id="display-name" value={name} onChange={(e) => { setName(e.target.value); setSaved(false); }} />
         </div>
         <Button
@@ -36,7 +39,7 @@ export function DisplayNameForm({ initialName }: { initialName: string }) {
             })
           }
         >
-          {isPending ? <Loader2 className="size-4 animate-spin" /> : saved ? "Saved" : "Save"}
+          {isPending ? <Loader2 className="size-4 animate-spin" /> : saved ? tDisplayName("saved") : t("save")}
         </Button>
       </div>
       {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}

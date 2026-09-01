@@ -56,6 +56,105 @@
     "save": "Save",
     "selectPlaceholder": "Select…"
   },
+  "settings": {
+    "view": {
+      "description": "Manage your account and preferences.",
+      "account": "Account",
+      "signedInAs": "Signed in as",
+      "password": "Password",
+      "signOut": "Sign out",
+      "yourRecord": "Your record",
+      "yourRecordDescription": "Import from a CV instead of typing everything in. Oryn shows you what it found and adds only what you confirm.",
+      "scanCv": "Scan a CV",
+      "preferences": "Preferences",
+      "locationTitle": "Location",
+      "locationDescription": "Used to prioritize nearby opportunities. Country is part of your public profile if you turn that on below; city is never shown publicly.",
+      "ageTitle": "Age",
+      "ageDescription": "Most competitions and summer programs have an age limit. Without this, Oryn shows them as unverified instead of telling you whether you qualify.",
+      "citizenshipTitle": "Citizenship",
+      "citizenshipDescription": "Different from your location above — used to check citizenship-restricted opportunities. Optional; add as many as apply.",
+      "studyCapacityTitle": "Study capacity",
+      "studyCapacityDescription": "Helps the weekly plan match what you can realistically do.",
+      "visibilityTitle": "Visibility",
+      "visibilityDescription": "Control what other Oryn students can see about you.",
+      "dangerZone": "Danger zone",
+      "dangerZoneDescription": "Download everything Oryn has stored about you, or permanently delete your account.",
+      "exportData": "Export my data",
+      "footerDisclaimer": "Career profile scores are Oryn's own development assessment, not an official admissions probability. See individual pages for source information on university and opportunity data."
+    },
+    "birthYear": {
+      "label": "Year you were born",
+      "notSet": "Not set. Programs with an age limit will show as unverified rather than confirmed either way, because Oryn won't guess your age.",
+      "helper": "Used to check age limits on programs and competitions. The year is enough — Oryn never asks for your full birthday.",
+      "saved": "Saved"
+    },
+    "citizenship": {
+      "notStated": "Not stated. Oryn will show eligibility for citizenship-restricted opportunities as unverified rather than confirmed either way.",
+      "addLabel": "Add a citizenship",
+      "placeholder": "e.g. Turkey",
+      "removeAriaLabel": "Remove {country}",
+      "saved": "Saved"
+    },
+    "capacity": {
+      "timeBudgetLabel": "Time available outside school, per week",
+      "notSet": "Not set",
+      "timeBudgetOptions": {
+        "under2h": "Under 2 hours",
+        "between2And5h": "2–5 hours",
+        "between5And10h": "5–10 hours",
+        "over10h": "10+ hours"
+      },
+      "timeBudgetHelper": "Used when generating your weekly plan, so recommendations fit the time you actually have.",
+      "busyModeLabel": "I'm in a busy period right now (exams, deadlines)",
+      "until": "Until",
+      "busyModeHelper": "Reduces how much the weekly plan asks of you until this passes.",
+      "saved": "Saved"
+    },
+    "deleteAccount": {
+      "trigger": "Delete account",
+      "title": "Delete your account",
+      "description": "This permanently deletes your profile, achievements, evidence files, conversations, and everything else. This cannot be undone.",
+      "confirmLabel": "Type DELETE to confirm",
+      "permanentlyDelete": "Permanently delete"
+    },
+    "displayName": {
+      "label": "Display name",
+      "saved": "Saved"
+    },
+    "password": {
+      "changePassword": "Change password",
+      "updated": "Password updated.",
+      "mismatchError": "Those two passwords don't match.",
+      "newPasswordLabel": "New password",
+      "requirements": "At least 8 characters, with a letter and a number.",
+      "confirmLabel": "Confirm new password",
+      "updateButton": "Update password"
+    },
+    "visibility": {
+      "publicProfileTitle": "Public profile",
+      "publicProfileDescription": "Show a shareable profile with your projects, achievements, and skills. Off by default — grades and school details are never included.",
+      "on": "On",
+      "off": "Off",
+      "lookingForLabel": "Currently looking for (optional)",
+      "lookingForPlaceholder": "e.g. Research collaborators",
+      "lookingForPresets": {
+        "researchCollaborators": "Research collaborators",
+        "internshipNextSummer": "Internship for next summer",
+        "competitionTeammates": "Competition teammates",
+        "startupCoFounders": "Startup co-founders",
+        "mentorship": "Mentorship"
+      },
+      "copyLink": "Copy link",
+      "copied": "Copied",
+      "visibleToStudents": "Visible to other signed-in Oryn students, not the open web.",
+      "saved": "Saved"
+    },
+    "location": {
+      "countryLabel": "Country",
+      "cityLabel": "City (optional)",
+      "saved": "Saved"
+    }
+  },
   "profile": {
     "backToProfile": "Back to profile",
     "page": {

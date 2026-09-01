@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,8 @@ const currentYear = new Date().getFullYear();
  * answer "can I actually apply to this?" instead of declining to guess.
  */
 export function BirthYearForm({ initialBirthYear }: { initialBirthYear: number | null }) {
+  const t = useTranslations("common");
+  const tBirthYear = useTranslations("settings.birthYear");
   const [birthYear, setBirthYear] = useState(initialBirthYear ? String(initialBirthYear) : "");
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +34,7 @@ export function BirthYearForm({ initialBirthYear }: { initialBirthYear: number |
     <div className="space-y-2">
       <div className="flex flex-wrap items-end gap-2">
         <div className="min-w-40 flex-1 space-y-1.5">
-          <Label htmlFor="settings-birth-year">Year you were born</Label>
+          <Label htmlFor="settings-birth-year">{tBirthYear("label")}</Label>
           <Input
             id="settings-birth-year"
             type="number"
@@ -60,15 +63,13 @@ export function BirthYearForm({ initialBirthYear }: { initialBirthYear: number |
             })
           }
         >
-          {isPending ? <Loader2 className="size-4 animate-spin" /> : saved ? "Saved" : "Save"}
+          {isPending ? <Loader2 className="size-4 animate-spin" /> : saved ? tBirthYear("saved") : t("save")}
         </Button>
       </div>
       {/* States what changes when it is filled in, and what is not being asked for. Both
           matter for an audience that is mostly under 18. */}
       <p className="text-sm text-muted-foreground">
-        {initialBirthYear === null
-          ? "Not set. Programs with an age limit will show as unverified rather than confirmed either way, because Oryn won't guess your age."
-          : "Used to check age limits on programs and competitions. The year is enough — Oryn never asks for your full birthday."}
+        {initialBirthYear === null ? tBirthYear("notSet") : tBirthYear("helper")}
       </p>
       {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
     </div>
