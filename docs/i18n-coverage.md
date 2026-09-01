@@ -1,6 +1,7 @@
 # How much of Oryn is actually bilingual
 
-Measured 2026-09-01 on `main`. The founder's requirement is explicit —
+Run it yourself: `npm run check:i18n` (`scripts/measure-i18n-coverage.ts`). Numbers below
+are that command's output on `main`, 2026-09-01. The founder's requirement is explicit —
 *"türkçe ingilizce seçeneği olmalı site için tamamen"*, full Turkish/English across the
 whole site — so this file states the honest distance to it rather than the progress made.
 
@@ -20,34 +21,45 @@ whole site — so this file states the honest distance to it rather than the pro
 
 ## What is not
 
-**19 of 171 `.tsx` files under `app/` and `features/` are locale-aware. 152 are not.**
+**18 of 171 `.tsx` files under `app/` and `features/` are locale-aware. 153 are not.**
 
-Of those, 78 student-facing files contain roughly **247 user-facing English strings** with
+Of those, 86 student-facing files contain at least **332 user-facing English strings** with
 no Turkish path. Excluded from that count: `(dev-preview)` routes, which `notFound()` gates,
 and `/admin`, which only staff see.
 
-| Area | Files with untranslated text |
-|---|---|
-| `features/profile` | 16 |
-| `features/universities` | 9 |
-| `features/settings` | 8 |
-| `app/(app)/profile` | 6 |
-| `features/advisor` | 4 |
-| `features/opportunities`, `features/onboarding` | 3 each |
-| eight more areas | 1–2 each |
+| Area | Strings | Files |
+|---|---|---|
+| `features/profile` | 69 | 17 |
+| `app/(app)/profile` | 36 | 6 |
+| `features/settings` | 36 | 8 |
+| `features/onboarding` | 31 | 3 |
+| `features/universities` | 16 | 10 |
+| `features/advisor` | 14 | 4 |
+| `features/search`, `app/(app)/opportunities` | 12 each | 2 each |
+| seven more areas | 1–10 each | 1–3 each |
 
-Sampled to confirm these are real: `features/profile/progress-view.tsx` alone carries
-"Back to profile", "Where you stand", "Next area to strengthen", "How your profile has
-changed over the last …", `title="Not enough history yet"`.
+**Rank by strings, not by files.** The two orderings disagree, and the file count is the
+misleading one: `features/onboarding` is 3 files but 31 strings, while
+`features/universities` is 10 files and only 16. A package scoped by file count would put
+universities ahead of onboarding and be wrong about which is more work.
 
-## Read the 247 as a floor, not a total
+Sampled to confirm these are real: `features/messaging/conversation-thread.tsx` carries
+"Conversation options", "No messages", "Write a message…", "Report this", "What's wrong
+with this message?", "Submit report".
 
-The count comes from grepping JSX text nodes of two or more words plus
-`label`/`placeholder`/`title`/`aria-label` props. That misses single-word labels ("Save",
-"Details", "Compare"), strings inside template literals, strings held in arrays and
-constant maps, and every `toast.error(...)` message. The true number is higher; how much
-higher is not worth measuring precisely, because the decision it informs — how big is this
-job — is already answered by the order of magnitude.
+## Read the 332 as a floor, not a total
+
+The count matches JSX text nodes of two or more words plus
+`label`/`placeholder`/`title`/`aria-label` props. It misses single-word labels ("Save",
+"Details", "Compare"), strings inside template literals, strings held in arrays and const
+maps, and every `toast.error(...)` message. The true number is higher; how much higher is
+not worth chasing, because the decision it informs — how big is this job — is already
+answered by the order of magnitude.
+
+An earlier version of this file said 247 across 78 files. That came from a line-based
+`grep`, which cannot see JSX text sitting on the line *after* its opening tag — the ordinary
+way this codebase formats JSX. Same criteria, better reading of them; the floor moved up,
+it did not move for a different reason.
 
 ## What this means for a launch date
 

@@ -12,6 +12,7 @@
     "test:watch": "vitest",
     "db:types": "supabase gen types typescript --linked > types/database.ts",
     "check:integrations": "tsx scripts/check-integrations.ts",
+    "check:i18n": "tsx scripts/measure-i18n-coverage.ts",
     "entities:backfill-report": "tsx scripts/entities-backfill-report.ts",
     "entities:audit": "tsx scripts/entities-audit.ts",
     "enrich:student-counts": "tsx scripts/enrich-student-counts.ts",
