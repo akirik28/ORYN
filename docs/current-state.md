@@ -29,6 +29,8 @@ for the enduring product/build direction.**
 | Prior checkpoint | `2334f07`, 2026-08-22 19:40 — **208 commits since**, not individually reconstructed here; see `git log 2334f07..origin/main` for the full record |
 | Gate on the checkpoint commit | lint clean · typecheck clean · **189 files / 2,864 tests** · production build compiles (this session's own worktree, `npm run lint && typecheck && test && build`) |
 | Live DB measured against | `oryn-qa-scratch` (`qtcvcflzxbuagvvwahhu`), via Supabase MCP, 2026-09-01 ~03:10 |
+| Which migrations are actually live | `docs/migration-state.md` — probed from the schema, **not** from `schema_migrations`, which has no row for twelve of them |
+| RLS re-verified live | 2026-09-01, at 78 tables (the figure in `SECURITY.md` had been 44); 78/78 enabled, no blanket SELECT on a `user_id` table, no `anon` grant without an `auth.uid()` predicate |
 
 If this file and a handoff doc disagree, this file is newer and wins *for the date stamped
 above*. If this file and a fresh live measurement disagree, the live measurement wins — this
@@ -103,10 +105,23 @@ carried forward)
     is unchanged: `computeEligibility`/`evaluateOpportunityEligibility` both still read an empty
     array as *unrestricted*, not *unknown*.
   - **82/421 carry a deadline** (up from 60/391).
-  - The Tier-1 six-row disable (institution-name-titled rows filed as opportunities) is still
-    not applied — verified dry-run, blocked by the safety classifier, escalated to the founder;
-    see `docs/known-issues.md`. Not re-measured live this pass whether the 6 specific rows are
-    still `active` — would take one more query to confirm, not assumed either way.
+  - The Tier-1 six-row disable: **that query has now been run (2026-09-01), and the answer was
+    not what the docs said in either direction.** Three rows were disabled on 2026-08-23
+    (King's College London, St Andrews, the UCSC class page); three were missed and are still
+    `active`. Reading the rows then changed the verdict again: none of the six match the
+    "categorically wrong, never valid opportunity records" label they were filed under — each
+    has a real pre-college programme and a correct official URL. What makes two of the three
+    survivors retire-able is narrower: CMU's and NYU's rows are index pages whose specific
+    programmes already exist as separate properly-titled active rows. **USC's does not, and
+    disabling it would remove USC Pre-College from the catalogue** — it needs a retitle. Per-row
+    verdicts and both SQL statements are in `docs/founder-blocked-backlog.md`; the shape is the
+    same "umbrella row" question the S5 research lane raised independently, now cross-referenced.
+  - **The wider ~80-defective-rows decision was re-measured the same pass and is now about 31.**
+    Raw URLs in description bodies 77 → 1, descriptions restating their own title 77 → 7 (five
+    purely cosmetic), truncated mid-word 45 → 31; roughly 34 of 275 active rows carry any hard
+    defect, against 85 of 271 in August. Indicative rather than an exact delta — different
+    detector — and the SQL is in the backlog so it can be re-run. What remains is milder than the
+    item was framed around: the 31 truncated rows have good titles and real content.
 - `canonical_entities`: **1,174** (up from 1,172). `entity_verification_queue`: **92 open**
   (36 `in_progress` + 56 `queued`), **11 `verified`** — down from "101 still open," real
   progress, not carried forward.
