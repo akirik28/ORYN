@@ -15,7 +15,8 @@
     "moreDestinations": "Diğer sayfalar",
     "primaryLandmark": "Ana gezinme",
     "skipToContent": "İçeriğe geç",
-    "homeLink": "Oryn — ana sayfa"
+    "homeLink": "Oryn — ana sayfa",
+    "saved": "Kaydedilenler"
   },
   "appShell": {
     "userMenu": {
@@ -965,6 +966,33 @@
       "sourcesHeading": "Kaynaklar",
       "visitOfficialPage": "Resmi sayfayı ziyaret et",
       "any": "herhangi"
+    },
+    "compareBar": {
+      "selected": "{count} seçildi",
+      "clear": "Temizle",
+      "compare": "Karşılaştır"
+    },
+    "comparePage": {
+      "title": "Fırsatları karşılaştır",
+      "description": "Karşılaştırmak için Kaydedilenler'den 2-4 fırsat seç.",
+      "nothingYetTitle": "Henüz karşılaştıracak bir şey yok",
+      "nothingYetDescription": "Kaydedilenler'e dön, her birindeki Karşılaştır düğmesiyle en az iki fırsat seç, sonra karşılaştırma çubuğunu aç.",
+      "backToSaved": "Kaydedilenler'e dön",
+      "notEnoughTitle": "Bu fırsatların yeterince tanesi bulunamadı",
+      "notEnoughDescription": "Seçilen fırsatlardan biri veya birkaçı artık mevcut olmayabilir.",
+      "sideBySide": "{count} fırsat yan yana — bilinmeyen alanlar tahmin edilmez, “—” olarak gösterilir.",
+      "category": "Kategori",
+      "location": "Konum",
+      "remoteAllowed": "Uzaktan katılıma açık",
+      "deadline": "Son tarih",
+      "cycleStatus": "Dönem durumu",
+      "selectivity": "Seçicilik",
+      "cost": "Ücret",
+      "free": "Ücretsiz",
+      "ageRange": "Yaş aralığı",
+      "ageRangeBoth": "{min}–{max}",
+      "ageRangeMin": "{min}+",
+      "ageRangeMax": "{max} yaşına kadar"
     }
   },
   "advisor": {
@@ -1450,5 +1478,25 @@
   },
   "admin": {
     "pageTitle": "Yönetici Paneli"
+  },
+  "saved": {
+    "eyebrow": "Kaydettiklerin",
+    "title": "Kaydedilenler",
+    "description": "Takip ettiğin fırsatlar ve üniversiteler, tek yerde.",
+    "universitiesSectionTitle": "Üniversiteler",
+    "opportunitiesSectionTitle": "Fırsatlar",
+    "noUniversitiesTitle": "Henüz kaydedilmiş üniversite yok",
+    "noUniversitiesDescription": "Bir üniversiteyi Üniversiteler sayfasından kaydederek burada takip et.",
+    "noOpportunitiesTitle": "Henüz kaydedilmiş fırsat yok",
+    "noOpportunitiesDescription": "Bir fırsatı Fırsatlar sayfasından kaydederek burada takip et.",
+    "noMatchesTitle": "Bu filtreye uyan bir şey yok",
+    "noMatchesDescription": "Farklı bir durum veya kategori dene.",
+    "filterByStatus": "Durum",
+    "filterByCategory": "Kategori",
+    "allStatuses": "Tümü",
+    "allCategories": "Tümü",
+    "compare": "Karşılaştır",
+    "comparing": "Karşılaştırılıyor",
+    "compareLimitTooltip": "Aynı anda en fazla 4 tane karşılaştırabilirsin."
   }
 }

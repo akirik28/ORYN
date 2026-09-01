@@ -135,6 +135,12 @@ describe("message catalogs", () => {
       "publicProfile.contactInstagram",
       "publicProfile.contactLinkedin",
       "publicProfile.contactTwitter",
+      // Numeric templates, not words — "{min}–{max}" and "{min}+" have nothing to
+      // translate, same reasoning as universities.adminForm.program above. The compare
+      // table's other age-range key, ageRangeMax ("Up to {max}" / "{max} yaşına kadar"),
+      // does have real words and correctly differs.
+      "opportunities.comparePage.ageRangeBoth",
+      "opportunities.comparePage.ageRangeMin",
       ].sort(),
     );
   });
