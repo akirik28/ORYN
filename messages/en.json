@@ -1095,6 +1095,10 @@
       "status": "Status",
       "acceptedTitle": "You're in.",
       "acceptedBody": "Accepted to {universityName}. Whatever came before this moment worked — well done."
+    },
+    "readiness": {
+      "label": "Application readiness",
+      "description": "Measures how much of your known checklist is complete — not your chance of admission."
     }
   },
   "documents": {
@@ -1424,5 +1428,20 @@
         "description": "Project ideas scaled to your level and interests, built from real academic literature — achievable, not impressive-sounding."
       }
     }
+  },
+  "entities": {
+    "linkedToVerified": "Linked to a verified entry.",
+    "searchFailed": "Search isn't working right now — try again in a moment.",
+    "noMatches": "No matches found.",
+    "unverifiedTag": "(unverified)",
+    "cantFind": "Can't find your {noun}?",
+    "schoolAddTitle": "Add your school",
+    "addTitle": "Add {article} {noun}",
+    "didYouMean": "Did you mean one of these already-listed entries?",
+    "noneOfThese": "None of these — add it anyway",
+    "name": "Name",
+    "city": "City",
+    "country": "Country",
+    "unverifiedNotice": "Oryn will add this as unverified until someone checks it against an official source."
   }
 }
