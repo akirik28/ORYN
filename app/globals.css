@@ -108,8 +108,16 @@
      value that still clears 4.6:1 on the tint (the tighter of the two grounds), so it
      stays visually secondary without failing. */
   --muted-foreground: oklch(0.538 0.028 300.7);
-  --accent: oklch(0.936 0.015 294.5);
-  --accent-foreground: oklch(0.35 0.2 272);
+  /* Was a pale wash (0.936) barely distinguishable from --popover (0.998) — 1.20:1 against
+     it, versus WCAG 1.4.11's 3:1 floor for a focus/hover indicator. Solid fill instead of a
+     lighter wash: measured 3.23:1 on this theme's --popover and 6.19:1 on .dark's (same
+     value, reused rather than solved twice — see .dark's own comment). --accent-foreground
+     moved with it to 0.25 0.2 272, 4.82:1 against this --accent — clears normal-text AA
+     (4.5:1), not just the 3:1 UI floor, with room to spare. Founder-approved 2026-09-02
+     after a side-by-side against an outline alternative; solid fill was the deliberate
+     choice, not the safe default. */
+  --accent: oklch(0.65 0.02 294.5);
+  --accent-foreground: oklch(0.25 0.2 272);
   --destructive: oklch(0.505 0.17 25);
   --border: oklch(0.902 0.017 84.6);
   --input: oklch(0.902 0.017 84.6);
@@ -269,8 +277,15 @@
   --secondary-foreground: oklch(0.97 0.005 272);
   --muted: oklch(0.16 0.022 272);
   --muted-foreground: oklch(0.74 0.02 272);
-  --accent: oklch(0.24 0.06 272);
-  --accent-foreground: oklch(0.93 0.05 272);
+  /* Same defect as light, independently confirmed — the old dark wash (0.24) measured
+     1.21:1 against .dark's own --popover (0.13), just as broken, previously undocumented.
+     Reuses light's exact fill (0.65 0.02 294.5) rather than a separate dark-solved value:
+     a solid mid-tone fill doesn't need to invert between themes the way a pale/dark wash
+     did, and 6.19:1 here is comfortably clear. --accent-foreground must move too, not stay
+     — the old 0.93 0.05 272 was solved for legibility on the old *dark* fill and only
+     reads 2.61:1 on this lighter one. */
+  --accent: oklch(0.65 0.02 294.5);
+  --accent-foreground: oklch(0.25 0.2 272);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(0.32 0.045 272);
   --input: oklch(0.34 0.045 272);
