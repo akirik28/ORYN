@@ -7,10 +7,21 @@ this information; update here first, not in five places.
 
 Each item: **exact action**, **why it's blocking**, **what it depends on**.
 
-> **Numbering is discovery order, not priority.** As of 2026-08-22 evening the two highest-priority
-> items are **[36](#36-critical--any-signed-in-user-can-make-themselves-an-admin)** (privilege
-> escalation, live now) then **[30](#30-launch-blocker--anonymous-users-can-read-any-public-student-profile)**.
-> Everything else can wait, and **nothing on this list expires.**
+> **Numbering is discovery order, not priority.**
+>
+> **Superseded 2026-09-01.** This header used to name items **36** and **30** as the two
+> highest-priority, "live now." Both were verified closed in the database on 2026-09-01 and are
+> struck below — the guard trigger and the `auth.uid()` view predicate are live, checked by
+> reading their definitions rather than this file. Item **29** and most of item **33** went the
+> same way the same evening.
+>
+> **The lesson is in the header itself**: this pointer stayed wrong for days because every pass
+> that "confirmed" those items re-read *this document* instead of querying the database, so the
+> file became its own authority. A `CRITICAL` label made re-deriving feel unnecessary, which is
+> exactly backwards. **Before acting on any entry here, probe the live schema object.**
+>
+> Nothing on this list expires — but entries do get quietly fixed by other work, and this file
+> is the last place to find out.
 
 > Looking for *what to do first*, not *the full list*? **[FOUNDER-START-HERE.md](./FOUNDER-START-HERE.md)**
 > sequences the subset that actually gets the app running, in order, with expected results.
@@ -607,10 +618,21 @@ opted out of AI access; three refuse the connection. A human browser can read al
 as verified. They are not wrong today — they are unknown, and correctly labelled as such.
 **Depends on**: nothing but a person with a browser, or a decision to retire them.
 
-## 29. Apply migration 0060 (`opportunities.country_eligibility_confirmed_open`)
+## 29. ~~Apply migration 0060 (`opportunities.country_eligibility_confirmed_open`)~~ — ALREADY APPLIED, verified live 2026-09-01
 
-**Action**: apply `supabase/migrations/0060_opportunity_country_eligibility_confirmed_open.sql`
-to the live database, or say no.
+> ### ✅ Nothing to do. The column is live.
+>
+> `information_schema.columns` confirms `opportunities.country_eligibility_confirmed_open`
+> exists in `oryn-qa-scratch`, queried directly 2026-09-01 18:20. Surfaced by the
+> `current-state.md` refresh and re-derived here before striking it, the same way items 30
+> and 36 were.
+>
+> This is the third entry tonight that was applied without the ledger recording it — the same
+> pattern that made `supabase_migrations.schema_migrations` unreliable as an authority for
+> this project. **Probe the schema object, never the ledger, and never this file.**
+
+**Action (no longer required)**: ~~apply `supabase/migrations/0060_opportunity_country_eligibility_confirmed_open.sql`
+to the live database, or say no.~~
 **Why it's blocked**: same posture as 0057 — written, reviewed, merged to `main` (PR #5), and
 deliberately not applied. The application code reads the column defensively, so every
 environment behaves identically and honestly whether or not it has been applied; nothing is
@@ -723,9 +745,22 @@ it presents an extraction artifact as an editorial fact, and the field's authori
 misleading.*
 **Depends on**: nothing technical — a schema/product judgment. ORYN-CFO was asked to weigh in.
 
-## 33. Ten `_backup_*`/staging tables in `public`: drop them, or move them out
+## 33. ~~Ten `_backup_*`/staging tables in `public`~~ — NINE ARE GONE; **one remains**, verified live 2026-09-01
 
-**Action**: decide to drop them or relocate them to a non-exposed schema.
+> ### Mostly resolved. The decision is now about a single table, not ten.
+>
+> Queried live 2026-09-01 18:20: of the ten this entry describes, **nine no longer exist**.
+> The one still in `public` is **`qs2027_import_staging`**.
+>
+> A lane reported all ten gone; they flagged that reading as inferred from absence rather than
+> from a record of the drop, and were right to hedge — the direct query found the survivor.
+> Absence of nine is not absence of ten, and the difference is the whole decision.
+>
+> Everything below still applies, to that one table: RLS on, zero policies, but carrying
+> Supabase's default schema-wide `anon` grant. **The decision is unchanged in kind and nine
+> tenths smaller in scope.**
+
+**Action (now one table, `qs2027_import_staging`)**: decide to drop it or relocate it to a non-exposed schema.
 **Why it matters, precisely**: they are **not exposed today** — RLS is enabled on all ten with
 zero policies, which denies everything, verified. But they each carry Supabase's default
 schema-wide `anon` grant (SELECT/UPDATE/DELETE). ORYN-BASORG's framing: *a loaded gun with the
