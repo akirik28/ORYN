@@ -122,50 +122,18 @@ export function requirementActionTitle(label: string, universityName: string, st
 
 // ---------------------------------------------------------------------------
 // Eligibility notes (lib/counselor/eligibility.ts)
+//
+// The per-restriction sentences (age/country/citizenship/grade) used to live here as a
+// second, independently-worded implementation of the same messages `matching.ts` builds for
+// the Opportunities pages — see `lib/opportunities/matching.ts`'s `eligibilityMessages` doc
+// comment for why matching.ts's wording won the consolidation (docs/known-issues.md's
+// "two independent eligibility pipelines" entry, now resolved). Only the two messages with
+// no counterpart in matching.ts — a missing/unfetched opportunity row, and one that failed
+// its own verification check — stay here.
 // ---------------------------------------------------------------------------
 
 export const eligibilityCopy = {
   dataNotFound: (locale: Locale) => (locale === "tr" ? "Bu fırsatın güncel verisi bulunamadı." : "This opportunity's current data couldn't be found."),
 
   notVerified: (locale: Locale) => (locale === "tr" ? "Bu fırsat şu anda doğrulanmış değil." : "This opportunity is not currently verified."),
-
-  ageRequirementUnknown: (locale: Locale) =>
-    locale === "tr"
-      ? "Bu fırsatın bir yaş şartı var; doğum yılınız kayıtlı olmadan Oryn bunu kontrol edemez."
-      : "This opportunity has an age requirement Oryn can't check without your birth year on file.",
-
-  countryUnknown: (locale: Locale) =>
-    locale === "tr" ? "Bu fırsat ülkeye göre kısıtlı ve ülkeniz henüz kayıtlı değil." : "This opportunity is restricted by country and your country isn't on file yet.",
-
-  // studentCountry is stored, proper-noun profile/opportunity data — never translated. The
-  // Turkish clause is built so no suffix has to attach to it (see file header).
-  countryNotEligible: (studentCountry: string, locale: Locale) =>
-    locale === "tr" ? `Şu anda ${studentCountry} öğrencilerine açık değil.` : `Not currently open to students in ${studentCountry}.`,
-
-  citizenshipUnknown: (locale: Locale) =>
-    locale === "tr" ? "Bu fırsat belirli bir vatandaşlık gerektiriyor ve sizinki henüz kayıtlı değil." : "This opportunity requires a specific citizenship and yours isn't on file yet.",
-
-  citizenshipNotEligible: (eligible: string, onFile: string, locale: Locale) =>
-    locale === "tr"
-      ? `Gerekli vatandaşlık: ${eligible}; kayıtlı vatandaşlığınız: ${onFile}.`
-      : `Requires citizenship in ${eligible}; citizenship on file is ${onFile}.`,
-
-  citizenshipRestrictionOnFile: (restriction: string, locale: Locale) =>
-    locale === "tr" ? `Kayıtlı vatandaşlık kısıtlaması (otomatik doğrulanmadı): ${restriction}` : `Citizenship restriction on file (not automatically verified): ${restriction}`,
-
-  residencyRestrictionOnFile: (restriction: string, locale: Locale) =>
-    locale === "tr" ? `Kayıtlı ikamet kısıtlaması (otomatik doğrulanmadı): ${restriction}` : `Residency restriction on file (not automatically verified): ${restriction}`,
-
-  countryEligibilityUnverified: (locale: Locale) =>
-    locale === "tr"
-      ? "Bu fırsat için ülke uygunluğu henüz doğrulanmadı — kısıtlamalar için resmi sayfayı kontrol edin."
-      : "Country eligibility hasn't been verified for this opportunity yet — check the official page for restrictions.",
-
-  gradeLevelUnknown: (locale: Locale) =>
-    locale === "tr"
-      ? "Bu fırsat sınıf seviyesine göre kısıtlı ve mezuniyet yılınız kayıtlı olmadan Oryn mevcut sınıfınızı hesaplayamaz."
-      : "This opportunity restricts eligibility by grade level and Oryn can't compute your current grade without a graduation year on file.",
-
-  gradeNotEligible: (eligibleGrades: string, currentGrade: number, locale: Locale) =>
-    locale === "tr" ? `Uygun sınıflar: ${eligibleGrades}; şu anki sınıfınız: ${currentGrade}.` : `Restricted to grades ${eligibleGrades}; you're currently grade ${currentGrade}.`,
 };

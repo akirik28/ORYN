@@ -4,7 +4,7 @@ import {
   isOpportunitySufficientlyVerified,
   nonActionableOpportunityReason,
 } from "@/lib/opportunities/lifecycle";
-import { isSameCountry } from "@/lib/opportunities/matching";
+import { eligibilityMessages, isSameCountry } from "@/lib/opportunities/matching";
 import { currentGradeLevel, gradeMatchesEligibility } from "@/lib/profile/grade-level";
 import { eligibilityCopy } from "./copy";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
@@ -105,7 +105,7 @@ function evaluateOpportunityEligibility(
   // this product deliberately doesn't collect, see migration 0002's comment). ---
   const hasAgeRestriction = opportunity.minimum_age !== null || opportunity.maximum_age !== null;
   if (hasAgeRestriction && birthYear === null) {
-    notes.push(eligibilityCopy.ageRequirementUnknown(locale));
+    notes.push(eligibilityMessages.ageUnknown(locale));
   }
 
   // --- Country / residency (eligible_countries is the existing, already-in-wide-use
@@ -115,9 +115,9 @@ function evaluateOpportunityEligibility(
   const hasCountryRestriction = opportunity.eligible_countries.length > 0;
   if (hasCountryRestriction) {
     if (!studentCountry) {
-      notes.push(eligibilityCopy.countryUnknown(locale));
+      notes.push(eligibilityMessages.countryUnknown(locale));
     } else if (!matchesAnyKnownCountry([studentCountry], opportunity.eligible_countries)) {
-      return { verdict: "known_ineligible", notes: [eligibilityCopy.countryNotEligible(studentCountry, locale)] };
+      return { verdict: "known_ineligible", notes: [eligibilityMessages.countryNotEligible(studentCountry, locale)] };
     }
   }
 
@@ -131,11 +131,11 @@ function evaluateOpportunityEligibility(
   const hasCitizenshipRestriction = eligibleCitizenships.length > 0;
   if (hasCitizenshipRestriction) {
     if (citizenshipCountries.length === 0) {
-      notes.push(eligibilityCopy.citizenshipUnknown(locale));
+      notes.push(eligibilityMessages.citizenshipUnknown(locale));
     } else if (!matchesAnyKnownCountry(citizenshipCountries, eligibleCitizenships)) {
       return {
         verdict: "known_ineligible",
-        notes: [eligibilityCopy.citizenshipNotEligible(eligibleCitizenships.join(", "), citizenshipCountries.join(", "), locale)],
+        notes: [eligibilityMessages.citizenshipNotEligible(eligibleCitizenships.join(", "), citizenshipCountries.join(", "), locale)],
       };
     }
   }
@@ -146,10 +146,10 @@ function evaluateOpportunityEligibility(
   // residence"). Still surfaced whenever the structured column above didn't already resolve
   // it, since it's real evidence a student should see even if Oryn can't act on it alone. ---
   if (opportunity.citizenship_restrictions && !hasCitizenshipRestriction) {
-    notes.push(eligibilityCopy.citizenshipRestrictionOnFile(opportunity.citizenship_restrictions, locale));
+    notes.push(eligibilityMessages.citizenshipRestrictionOnFile(opportunity.citizenship_restrictions, locale));
   }
   if (opportunity.residency_restrictions && !hasCountryRestriction) {
-    notes.push(eligibilityCopy.residencyRestrictionOnFile(opportunity.residency_restrictions, locale));
+    notes.push(eligibilityMessages.residencyRestrictionOnFile(opportunity.residency_restrictions, locale));
   }
 
   // --- Unverified country eligibility (migration 0060, read defensively like 0047's
@@ -164,7 +164,7 @@ function evaluateOpportunityEligibility(
   const countryEligibilityConfirmedOpen = opportunity.country_eligibility_confirmed_open ?? false;
   const hasUnstructuredRestrictionEvidence = Boolean(opportunity.citizenship_restrictions || opportunity.residency_restrictions);
   if (!hasCountryRestriction && !hasCitizenshipRestriction && !hasUnstructuredRestrictionEvidence && !countryEligibilityConfirmedOpen) {
-    notes.push(eligibilityCopy.countryEligibilityUnverified(locale));
+    notes.push(eligibilityMessages.countryEligibilityUnverified(locale));
   }
 
   // --- Grade level, computed from graduation_year (lib/profile/grade-level.ts) — closes
@@ -175,9 +175,9 @@ function evaluateOpportunityEligibility(
   if (opportunity.eligible_grades.length > 0) {
     const grade = currentGradeLevel(graduationYear);
     if (grade === null) {
-      notes.push(eligibilityCopy.gradeLevelUnknown(locale));
+      notes.push(eligibilityMessages.gradeUnknown(locale));
     } else if (!gradeMatchesEligibility(grade, opportunity.eligible_grades)) {
-      return { verdict: "known_ineligible", notes: [eligibilityCopy.gradeNotEligible(opportunity.eligible_grades.join(", "), grade, locale)] };
+      return { verdict: "known_ineligible", notes: [eligibilityMessages.gradeNotEligible(opportunity.eligible_grades.join(", "), grade, locale)] };
     }
   }
 
