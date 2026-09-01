@@ -605,3 +605,83 @@ is Scribbr's parent company.)
 
 ---
 
+## 8. Grammarly
+
+Corporate note, confirmed across every official page checked: Grammarly now operates under
+a parent brand, **"Superhuman"** — the pricing page footer reads "2026 © Superhuman
+Platform," and Grammarly's own Privacy Policy link redirects to `superhuman.com`. Not core
+to the brief, but worth knowing if this name surfaces elsewhere.
+
+**Sources checked (all this session, 2026-09-02):**
+- [grammarly.com/plans](https://www.grammarly.com/plans) — pricing/comparison page
+- [grammarly.com/edu](https://www.grammarly.com/edu) — institutional education page
+- [superhuman.com's Privacy Policy](https://www.grammarly.com/privacy-policy) (redirect target)
+- [grammarly.com/terms](https://www.grammarly.com/terms) — Terms of Service
+
+### 8.1 What exactly stays free
+OBSERVED, from the pricing comparison table: Free ($0) gets core mistake-checking, tone
+detection, and — the one number stated outright — **"Generate text with 100 AI prompts"**,
+i.e. a concrete, named monthly AI-generation allowance on the free tier, not an unlimited
+core product with a paid AI add-on (contrast Photomath, where free is unlimited and only
+the explanation layer is paid).
+
+### 8.2 What's behind the wall
+Pro ($12, see 8.5 on the unit): full sentence rewrites, tone adjustment, fluency rewriting,
+"unlimited personalized suggestions," plagiarism + AI-generated-text detection, and **2,000
+AI prompts/month** (20x the free allowance, not unlimited even on the paid tier).
+Enterprise (contact sales): unlimited AI prompts/member/month, plus admin/security features
+irrelevant to a consumer comparison.
+
+### 8.3 WHEN the wall appears
+Structurally usage-metered on the one number that's stated (100 AI prompts/month, free),
+same shape as Quizlet's per-set limits or a query quota — a running allowance that resets,
+not a one-time trial window. Separately, **Pro itself is sold via a 7-day free trial with
+"$0 payment today"** and an explicit "email reminder 2 days before trial ends" — Grammarly
+is unusually upfront on its own pricing page about the exact trial-to-charge mechanic and
+reminder timing, which reads as a deliberate response to the generic "surprise trial
+charge" complaint category rather than an accident of copy.
+
+### 8.4 CTA style
+Standard interruptive marketing page for the Pro upsell (comparison table, "Try for free"
+CTA repeated top/bottom) — not independently observed in-product (i.e. what a free user
+sees mid-document on prompt 101) since that requires an active account.
+
+### 8.5 Price
+OBSERVED: Free tier explicitly labeled "$0 USD / month." Pro shows **"$12 USD"** on the
+same pricing card, but — flagging this precisely rather than rounding it off — my
+extraction of that card did not capture an explicit "/ month" unit next to the $12 the way
+Free's "$0 / month" was captured; no second (e.g. flat monthly, non-annual) price or a
+billed-monthly/billed-annually toggle was found anywhere on the page in this session's
+extraction, so only one Pro price is shown, and I can't independently confirm its exact
+billing cadence from the page text alone beyond "$12 USD" sitting where Free's monthly
+price sits. Institutional/education discount: **confirmed to exist** ("Do you offer
+discounts for educational institutions? Yes!") but explicitly framed as an
+institution-to-institution sale ("Contact Education Sales," "trusted by 3,000+
+institutions") — not a self-serve individual student discount code or `.edu`-email
+mechanic. No percentage or price is published for it. Annual-vs-monthly discount rate for
+individuals: not found, for the reason above.
+
+### 8.6 Minor-specific flow
+OBSERVED, and the **strictest cutoff in this survey — no accommodation at all** for a user
+below the self-consent age, unlike every other product here. Terms of Service §3.2
+("Eligibility"), quoted directly: *"You may only use our Services if you are old enough to
+consent (by yourself and not by a parent or guardian) to share your data under applicable
+law. For example, you must be at least 13 years old under most United States law, or 16
+years old under European Union law."* There is no Child User mode, no verified-parental-
+consent path, no restricted account type anywhere in the Privacy Policy (searched in full —
+36,889 characters of visible text, zero matches for "child," "minor," or "COPPA"). The
+Privacy Policy's only age-related clause at all is a targeted-advertising carve-out ("We do
+not engage in sales, sharing, or targeted advertising... about anyone we know to be under
+the age of 18") — a CCPA/state-law compliance clause, not an eligibility or design
+accommodation.
+
+**Directly consequential for ORYN's own 14-18, US/UK/EU/Turkey target band:** applied
+literally, Grammarly's own eligibility rule would already exclude a 14- or 15-year-old
+anywhere the EU's 16-year self-consent threshold applies, while allowing that same age in
+the US (13+). Of the four products with an explicit age mechanic in this document
+(Duolingo, Brilliant, Scribbr, Grammarly), Grammarly is the only one with **zero** path for
+a younger teen to use the product at all, consent or no consent — the other three all build
+some version of "yes, with an adult in the loop."
+
+---
+
