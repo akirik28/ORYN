@@ -435,7 +435,7 @@ export async function DashboardView({
                       <span className="min-w-0 truncate text-sm text-ink-2">
                         {target.university?.name ?? t("unknownUniversity")}
                       </span>
-                      <OutlookBadge outlook={target.outlook} />
+                      <OutlookBadge outlook={target.outlook} locale={locale} />
                     </li>
                   ))}
                 </ul>

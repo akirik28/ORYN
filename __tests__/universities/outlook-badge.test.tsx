@@ -85,3 +85,47 @@ describe("OutlookBadge — US undergraduate Medicine and Law do not exist as bac
     expect(screen.getByText("Not yet assessed")).toBeInTheDocument();
   });
 });
+
+/**
+ * Turkish coverage added 2026-09-01 i18n pass. "Reach/Competitive/Likely" are Oryn's own
+ * classification words, not fixed external vocabulary a student has to recognize on a real
+ * form (unlike "Early Decision" — see applications.newDialog's own catalog comment on that
+ * distinction) — translated rather than kept as English loanwords. `locale` defaults to
+ * English, so every test above this block is unaffected by these labels existing at all.
+ */
+describe("OutlookBadge renders Turkish labels when locale=\"tr\"", () => {
+  test("the five real outlook classes translate", () => {
+    const cases: [ReturnType<typeof computeAdmissionOutlook>["outlook"], string][] = [
+      ["extreme_reach", "Aşırı Zorlu"],
+      ["reach", "Zorlu"],
+      ["competitive", "Rekabetçi"],
+      ["strong", "Güçlü"],
+      ["likely", "Olası"],
+    ];
+    for (const [outlook, label] of cases) {
+      const { unmount } = render(<OutlookBadge outlook={outlook} locale="tr" />);
+      expect(screen.getByText(label), outlook).toBeInTheDocument();
+      unmount();
+    }
+  });
+
+  test("not_applicable with no kind reads the translated neutral fallback", () => {
+    render(<OutlookBadge outlook="not_applicable" locale="tr" />);
+    expect(screen.getByText("Bu ölçekte değerlendirilmiyor")).toBeInTheDocument();
+  });
+
+  test("the two not_applicable reason classes stay distinct in Turkish too", () => {
+    const fieldGap = computeAdmissionOutlook({
+      ...HIGH_ACHIEVER,
+      fieldAvailability: checkUndergraduateFieldAvailability({ country: "United States", field: "medicine" }),
+    });
+    render(<OutlookBadge outlook={fieldGap.outlook} notApplicableKind={fieldGap.notApplicableKind} locale="tr" />);
+    expect(screen.getByText("Burada lisans programı değil")).toBeInTheDocument();
+    expect(screen.queryByText("Profil değerlendirmeli bir sistem değil")).not.toBeInTheDocument();
+  });
+
+  test("an unassessed target translates too", () => {
+    render(<OutlookBadge outlook={null} locale="tr" />);
+    expect(screen.getByText("Henüz değerlendirilmedi")).toBeInTheDocument();
+  });
+});

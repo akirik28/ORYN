@@ -26,6 +26,30 @@ export const OUTLOOK_LABELS: Record<OutlookLabel, string> = {
   not_applicable: "Not rated on this scale",
 };
 
+/**
+ * Turkish counterparts (2026-09-01, features/universities/outlook-badge.tsx's i18n pass —
+ * the "different, not-yet-assigned component" this file's NOT_APPLICABLE_REASONS_TR
+ * comment used to name as the reason "reach/competitive/likely" stayed English there).
+ * Translated rather than kept as English loanwords: unlike "Early Decision"/"Regular
+ * Decision" (the literal, fixed words printed on a real Common App form — see
+ * applications.newDialog's own catalog comment), this is Oryn's own classification
+ * vocabulary, not text a student has to recognize on an external document. A Turkish
+ * 14–18-year-old reading "Reach" with no Turkish around it has no more reason to
+ * understand it than any other unglossed English adjective.
+ */
+const OUTLOOK_LABELS_TR: Record<OutlookLabel, string> = {
+  extreme_reach: "Aşırı Zorlu",
+  reach: "Zorlu",
+  competitive: "Rekabetçi",
+  strong: "Güçlü",
+  likely: "Olası",
+  not_applicable: "Bu ölçekte değerlendirilmiyor",
+};
+
+export function outlookLabel(outlook: OutlookLabel, locale: Locale): string {
+  return locale === "tr" ? OUTLOOK_LABELS_TR[outlook] : OUTLOOK_LABELS[outlook];
+}
+
 /** Selectivity penalty applied to profile strength — configurable, named constants per
  * spec 17 ("all formula parameters must be configurable"), not magic numbers inline. */
 const SELECTIVITY_PENALTY = {
@@ -189,10 +213,12 @@ const NOT_APPLICABLE_REASONS: Record<NotApplicableKind, string> = {
 };
 
 /**
- * Turkish counterparts. "reach/competitive/likely" is left untranslated deliberately in both
- * languages — it's the literal vocabulary `OutlookBadge` renders on screen today, itself not
- * yet translated (a different, not-yet-assigned component), so naming it in Turkish here
- * would describe a badge that doesn't say that.
+ * Turkish counterparts. Originally left "reach/competitive/likely" untranslated on the
+ * premise that `OutlookBadge` itself was still English-only, so naming it in Turkish here
+ * would describe a badge that didn't say that. That premise no longer holds — the badge
+ * has its own Turkish labels now (`OUTLOOK_LABELS_TR` above) — so these three sentences
+ * were updated to reference the same words the badge actually shows: "Zorlu/Rekabetçi/
+ * Olası", not the English scale name.
  *
  * Each hedge was checked specifically for whether the Turkish still admits the same limit the
  * English does, not just for fluency — the founder's own standing instruction for this slice.
@@ -203,12 +229,12 @@ const NOT_APPLICABLE_REASONS: Record<NotApplicableKind, string> = {
  */
 const NOT_APPLICABLE_REASONS_TR: Record<NotApplicableKind, string> = {
   no_evidence_review_rank_competitive:
-    "Bu hedef yalnızca akademik sonuçlara göre, her yıl talebe göre değişen bir sıralama eşiğine göre kabul yapıyor. Oryn'ın reach/competitive/likely ölçeği bir profilin insan bir değerlendirici gözünde nasıl okunduğunu anlatır; burada bir değerlendirici yok — yani var olmayan bir adımı anlatmış olurdu. Oryn ayrıca bu dönemin eşiğinin nereye geleceğini gösteremez ve tahmin yürütmez.",
+    "Bu hedef yalnızca akademik sonuçlara göre, her yıl talebe göre değişen bir sıralama eşiğine göre kabul yapıyor. Oryn'ın Zorlu/Rekabetçi/Olası ölçeği bir profilin insan bir değerlendirici gözünde nasıl okunduğunu anlatır; burada bir değerlendirici yok — yani var olmayan bir adımı anlatmış olurdu. Oryn ayrıca bu dönemin eşiğinin nereye geleceğini gösteremez ve tahmin yürütmez.",
   no_evidence_review_threshold:
-    "Bu hedef, yarışarak değil yayımlanmış koşulları karşılayarak kabul ediyor: uygun olduğun an kabul edilmiş olursun. Aktivitelerini okuyan bir değerlendirici yok, yüksek sıralanacağın bir sıralama da yok — bu yüzden bir reach/competitive/likely derecelendirmesi bu sistemde bulunmayan bir mekanizmayı anlatmış olurdu. Burada önemli olan gereklilik kontrolüdür, profil puanı değil.",
+    "Bu hedef, yarışarak değil yayımlanmış koşulları karşılayarak kabul ediyor: uygun olduğun an kabul edilmiş olursun. Aktivitelerini okuyan bir değerlendirici yok, yüksek sıralanacağın bir sıralama da yok — bu yüzden bir Zorlu/Rekabetçi/Olası derecelendirmesi bu sistemde bulunmayan bir mekanizmayı anlatmış olurdu. Burada önemli olan gereklilik kontrolüdür, profil puanı değil.",
   field_not_offered_at_undergraduate: "Bu, bu ülkede bir lisans yolu değil; bu yüzden değerlendirilecek bir lisans kabulü de yok.",
   credential_gate_unspecified:
-    "Bu hedefin kabul sistemi kimlik/sınav temelli (credential/exam-gated) — akademik olmayan profil gücü kabul kararına genel bir girdi değildir, bu yüzden bu görünüm normal bir reach/competitive/likely tarzı sınıflandırma olarak gösterilmemelidir. Bkz. 18-geography-conditional-scoring-design-spec.md §3.3-3.4.",
+    "Bu hedefin kabul sistemi kimlik/sınav temelli (credential/exam-gated) — akademik olmayan profil gücü kabul kararına genel bir girdi değildir, bu yüzden bu görünüm normal bir Zorlu/Rekabetçi/Olası tarzı sınıflandırma olarak gösterilmemelidir. Bkz. 18-geography-conditional-scoring-design-spec.md §3.3-3.4.",
 };
 
 function notApplicableReasonFor(kind: NotApplicableKind, locale: Locale): string {
