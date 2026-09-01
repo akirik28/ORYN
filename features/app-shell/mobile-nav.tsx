@@ -83,11 +83,23 @@ export function MobileNav({
               /* min-h-14: a 44pt-plus touch target, per the same rule the overflow
                  button below follows. */
               className={cn(
-                // 9px with tight tracking below 360: six columns at 320px leave ~53px each,
-                // where "Universities" ellipsised at 10px. The icon carries recognition and
-                // the full label is always the link's accessible name, so this trades a
-                // little legibility at the narrowest width for a complete word.
-                "flex min-h-14 flex-col items-center justify-center gap-1 px-0.5 py-2 text-[9px] tracking-tight transition-colors min-[360px]:px-1 min-[360px]:text-[10px] min-[360px]:tracking-normal",
+                // 9px below 360: six columns at 320px leave ~53px each, where
+                // "Universities" ellipsised at 10px. The icon carries recognition and the
+                // full label is always the link's accessible name, so this trades a little
+                // legibility at the narrowest width for a complete word.
+                //
+                // The tight tracking and 2px padding now hold at every width, not just
+                // below 360. The earlier `min-[360px]:tracking-normal` / `min-[360px]:px-1`
+                // pair was tuned against English, where "Universities" measures 54px into
+                // 55px of inner width — a 1px margin that Turkish does not have.
+                // "Üniversiteler" is 58px and ellipsised at 375px (measured in the browser
+                // at mobile width, 2026-09-01, by substituting the string and reading
+                // scrollWidth vs clientWidth; every other label fit). Keeping tight
+                // tracking brings it to 55px and keeping px-0.5 leaves 59px of room, so the
+                // headroom is ~4px rather than the 0px either change alone would give.
+                // Same trade the paragraph above already made, applied at the width where
+                // the second language needs it.
+                "flex min-h-14 flex-col items-center justify-center gap-1 px-0.5 py-2 text-[9px] tracking-tight transition-colors min-[360px]:text-[10px]",
                 "focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none focus-visible:-outline-offset-2",
                 active ? "text-brand-primary" : "text-ink-3",
               )}
@@ -106,7 +118,7 @@ export function MobileNav({
           aria-label={t("moreDestinations")}
           aria-expanded={open}
           className={cn(
-            "flex min-h-14 flex-col items-center justify-center gap-1 px-0.5 py-2 text-[9px] tracking-tight transition-colors min-[360px]:px-1 min-[360px]:text-[10px] min-[360px]:tracking-normal",
+            "flex min-h-14 flex-col items-center justify-center gap-1 px-0.5 py-2 text-[9px] tracking-tight transition-colors min-[360px]:text-[10px]",
             "focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none focus-visible:-outline-offset-2",
             overflowActive ? "text-brand-primary" : "text-ink-3",
           )}
