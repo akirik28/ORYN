@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { computeCompleteness, computeCounselingCompleteness, getCompletenessChecklist } from "@/lib/scoring/completeness";
-import type { CompletenessFacts } from "@/lib/scoring/completeness";
+import { completenessChecklistLabel, computeCompleteness, computeCounselingCompleteness, getCompletenessChecklist } from "@/lib/scoring/completeness";
+import type { CompletenessChecklistKey, CompletenessFacts } from "@/lib/scoring/completeness";
 
 function emptyFacts(): CompletenessFacts {
   return {
@@ -173,5 +173,36 @@ describe("getCompletenessChecklist", () => {
     expect(labels).toContain("Add 3 or more skills");
     expect(labels).toContain("Feature a project or achievement");
     expect(labels).toContain("Add contact information");
+  });
+
+  // Every item needs a stable key distinct from its English label — lib/counselor/
+  // candidates.ts's checklistKey (this checklist's other real consumer) uses it as a
+  // recommendation's identity, which must not move when the display text is translated.
+  test("every item has a key, and every key is unique", () => {
+    const items = getCompletenessChecklist(emptyFacts());
+    expect(items.every((item) => Boolean(item.key))).toBe(true);
+    expect(new Set(items.map((item) => item.key)).size).toBe(items.length);
+  });
+});
+
+describe("completenessChecklistLabel", () => {
+  test("English matches the checklist item's own label, for every key", () => {
+    for (const item of getCompletenessChecklist(emptyFacts())) {
+      expect(completenessChecklistLabel(item.key, "en")).toBe(item.label);
+    }
+  });
+
+  test("Turkish is a real, distinct translation for every key — not a silent English fallback", () => {
+    for (const item of getCompletenessChecklist(emptyFacts())) {
+      const tr = completenessChecklistLabel(item.key, "tr");
+      expect(tr).not.toBe(item.label);
+      expect(tr.length).toBeGreaterThan(0);
+    }
+  });
+
+  test("a specific pair reads naturally in both languages", () => {
+    const key: CompletenessChecklistKey = "activity";
+    expect(completenessChecklistLabel(key, "en")).toBe("Add an activity");
+    expect(completenessChecklistLabel(key, "tr")).toBe("Bir aktivite ekle");
   });
 });

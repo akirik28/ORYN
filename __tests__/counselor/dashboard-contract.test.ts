@@ -214,7 +214,7 @@ describe("buildCounselorDashboardContract", () => {
     const opp = opportunity("research-fellowship", { category: "fellowship", fields: ["Research"] });
     const state = baseState({
       eligibleOpportunityMatches: [{ opportunity: opp, match: match("research-fellowship", { relevance_score: 90 }) }],
-      completenessChecklist: [{ label: "Add a career goal", done: false }],
+      completenessChecklist: [{ key: "career_goal", label: "Add a career goal", done: false }],
     });
     const contract = buildCounselorDashboardContract(state, []);
     expect(contract.recommendedOpportunities.length).toBeGreaterThan(0);

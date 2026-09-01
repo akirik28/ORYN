@@ -115,7 +115,7 @@ function requirement(overrides: Partial<UniversityRequirement> = {}): University
 }
 
 function checklistItem(overrides: Partial<CompletenessChecklistItem> = {}): CompletenessChecklistItem {
-  return { label: "Add a target university", done: false, ...overrides };
+  return { key: "target_university", label: "Add a target university", done: false, ...overrides };
 }
 
 function state(overrides: Partial<CounselorState> = {}): CounselorState {
@@ -228,11 +228,16 @@ describe("generateCandidateActions — requirement actions", () => {
 describe("generateCandidateActions — profile tasks", () => {
   test("turns each incomplete checklist item into a candidate", () => {
     const candidates = generateCandidateActions(
-      state({ completenessChecklist: [checklistItem({ label: "Add a career goal", done: false }), checklistItem({ label: "Add an activity", done: true })] })
+      state({
+        completenessChecklist: [
+          checklistItem({ key: "career_goal", label: "Set a career goal", done: false }),
+          checklistItem({ key: "activity", label: "Add an activity", done: true }),
+        ],
+      })
     );
     const tasks = candidates.filter((c) => c.source.kind === "profile_task");
     expect(tasks).toHaveLength(1);
-    expect(tasks[0].title).toBe("Add a career goal");
+    expect(tasks[0].title).toBe("Set a career goal");
     expect(tasks[0].category).toBe("profile_completion");
   });
 
@@ -293,16 +298,26 @@ describe("generateCandidateActions — locale: tr", () => {
     expect(req!.title).toBe("Ele al: İngilizce yeterliliği (Test University)");
   });
 
-  test("opportunity and profile-task titles are untouched by locale (out of scope for this pass)", () => {
+  test("opportunity titles are untouched by locale (the opportunity's own stored text)", () => {
     const candidates = generateCandidateActions(
-      state({
-        eligibleOpportunityMatches: [{ match: match(), opportunity: opportunity({ title: "Test Opportunity" }) }],
-        completenessChecklist: [checklistItem({ label: "Add a career goal", done: false })],
-      }),
+      state({ eligibleOpportunityMatches: [{ match: match(), opportunity: opportunity({ title: "Test Opportunity" }) }] }),
       "tr"
     );
     expect(candidates.find((c) => c.source.kind === "opportunity")!.title).toBe("Test Opportunity");
-    expect(candidates.find((c) => c.source.kind === "profile_task")!.title).toBe("Add a career goal");
+  });
+
+  // Regression coverage for the fix itself: profile-task titles used to just echo item.label,
+  // which also did double duty as source.checklistKey — so translating the label would have
+  // silently moved the stable id (lib/counselor/evidence.ts's sourceId slugifies it) out from
+  // under anything keyed on it. The key must stay put while the title translates around it.
+  test("profile-task titles translate by locale; the stable checklistKey does not move with them", () => {
+    const candidates = generateCandidateActions(
+      state({ completenessChecklist: [checklistItem({ key: "career_goal", label: "Set a career goal", done: false })] }),
+      "tr"
+    );
+    const task = candidates.find((c) => c.source.kind === "profile_task");
+    expect(task!.title).toBe("Bir kariyer hedefi belirle");
+    expect(task!.source).toMatchObject({ checklistKey: "career_goal" });
   });
 
   test("omitting locale still produces the exact English output (default-locale backward compatibility)", () => {

@@ -1,4 +1,5 @@
 import type { EntityScope } from "@/lib/entities/field-policy";
+import type { Locale } from "@/lib/i18n/config";
 import { INTEREST_SUGGESTIONS } from "@/lib/validation/onboarding";
 import { COURSE_NAME_SUGGESTIONS } from "@/lib/vocabularies/subjects";
 import { TEST_NAME_SUGGESTIONS } from "@/lib/vocabularies/tests";
@@ -398,3 +399,197 @@ export const SKILL_FIELDS: FieldConfig[] = [
   { type: "select", name: "category", label: "Category", options: SKILL_CATEGORY_OPTIONS, span: "half" },
   { type: "suggest", name: "proficiency", label: "Proficiency (optional)", suggestions: PROFICIENCY_SUGGESTIONS, placeholder: "e.g. Intermediate" },
 ];
+
+// ---------------------------------------------------------------------------
+// Locale (2026-09-01 first-run i18n pass)
+//
+// Every FieldConfig array above is English-only source data, same shape as every other
+// English map this session has added a locale-aware accessor beside (dimensionLabel,
+// eligibilityMessages, completenessChecklistLabel) -- the arrays themselves stay untouched,
+// and localizeFields() below is the opt-in path for the three real consumers
+// (achievement-section.tsx, dynamic-form-fields.tsx, quick-add-entry.tsx).
+//
+// Keyed by the exact English source string, not by field `name` -- `name` is already a
+// stable identifier (the underlying DB column, e.g. "start_date"), but the SAME name means
+// different things in different arrays (SPORTS_FIELDS's "level" is Recreational..
+// International; COURSE_FIELDS's "level" is Regular..Dual enrollment) while the SAME
+// English text always means the same thing regardless of which array it appears in, which
+// is also why STORY_NOTES_FIELD only needs translating once despite being shared by five
+// arrays. AP/IB/A-Level/Honors are deliberately absent from the map below and fall through
+// to English -- established loanwords for curriculum terms with no natural Turkish
+// equivalent, same convention this codebase already uses elsewhere (onboarding-wizard.tsx's
+// own curriculum options).
+//
+// `customLabel` (5 values: employer/institution/organization/school/"team, club, or
+// school") is deliberately NOT translated here -- it's free text that belongs to
+// features/entities/entity-combobox.tsx and lib/entities/field-policy.ts's territory, and
+// that file's own header comment already explains why (the Turkish cantFind/addTitle
+// catalog keys are built not to need the noun translated at all).
+// ---------------------------------------------------------------------------
+
+const FIELD_TEXT_TR: Record<string, string> = {
+  "Abandoned": "Vazgeçildi",
+  "Academic program": "Akademik program",
+  "Academic year": "Akademik yıl",
+  "Academics": "Akademik",
+  "Achieved": "Ulaşıldı",
+  "Achievements / rankings / results": "Başarılar / sıralamalar / sonuçlar",
+  "Active": "Aktif",
+  "Analytical": "Analitik",
+  "Apprenticeship": "Çıraklık",
+  "Awarding organization": "Ödülü veren kurum",
+  "Captain / team leader": "Kaptan / takım lideri",
+  "Career": "Kariyer",
+  "Category": "Kategori",
+  "Category (optional)": "Kategori (opsiyonel)",
+  "Cause area": "Amaç alanı",
+  "Club": "Kulüp",
+  "Communication": "İletişim",
+  "Community organization": "Toplum kuruluşu",
+  "Community/Leadership": "Topluluk/Liderlik",
+  "Competition team": "Yarışma takımı",
+  "Competitive level": "Yarışma seviyesi",
+  "Country": "Ülke",
+  "Course": "Ders",
+  "Creative": "Yaratıcı",
+  "Credential URL": "Belge URL'si",
+  "Credit hours (optional)": "Kredi saati (opsiyonel)",
+  "Currently attending": "Şu anda devam ediyor",
+  "Curriculum": "Müfredat",
+  "Date": "Tarih",
+  "Description": "Açıklama",
+  "Discipline / event": "Disiplin / etkinlik",
+  "Dual enrollment": "Çift kayıt",
+  "End date": "Bitiş tarihi",
+  "Expiry date": "Geçerlilik bitiş tarihi",
+  "Field": "Alan",
+  "Financial": "Finansal",
+  "Freelance": "Serbest çalışma",
+  "Full-time job": "Tam zamanlı iş",
+  "GPA scale (e.g. 4.0)": "Not ortalaması ölçeği (örn. 4.0)",
+  "Goal": "Hedef",
+  "Grade (optional)": "Not (opsiyonel)",
+  "Grade scale (optional)": "Not ölçeği (opsiyonel)",
+  "High school": "Lise",
+  "Hours per week": "Haftalık saat",
+  "IB Higher Level (HL)": "IB Üst Düzey (HL)",
+  "IB Standard Level (SL)": "IB Standart Düzey (SL)",
+  "International": "Uluslararası",
+  "Internship": "Staj",
+  "Issue date": "Veriliş tarihi",
+  "Issuing organization": "Veren kurum",
+  "Language": "Dil",
+  "Leadership": "Liderlik",
+  "Level": "Seviye",
+  "Live URL": "Canlı URL",
+  "Location": "Konum",
+  "Max score": "Azami puan",
+  "Mentor": "Mentor",
+  "Methodology": "Metodoloji",
+  "Middle school": "Ortaokul",
+  "National": "Ulusal",
+  "National curriculum": "Ulusal müfredat",
+  "None yet": "Henüz yok",
+  "Notes": "Notlar",
+  "Ongoing": "Devam ediyor",
+  "Organization": "Kurum",
+  "Organization (optional)": "Kurum (opsiyonel)",
+  "Organization / institution": "Kurum / enstitü",
+  "Oryn program/opportunity this matches (optional)": "Bununla eşleşen Oryn programı/fırsatı (opsiyonel)",
+  "Other": "Diğer",
+  "Other label (optional, e.g. Varsity)": "Diğer etiket (opsiyonel, örn. Varsity)",
+  "Outcome / measurable result": "Sonuç / ölçülebilir kazanım",
+  "Output": "Çıktı",
+  "Output URL": "Çıktı URL'si",
+  "Overall GPA": "Genel not ortalaması",
+  "Paid": "Ücretli",
+  "Part-time job": "Yarı zamanlı iş",
+  "Peer-reviewed publication": "Hakemli yayın",
+  "People led": "Yönetilen kişi sayısı",
+  "Personal": "Kişisel",
+  "Position / role": "Pozisyon / rol",
+  "Poster": "Poster",
+  "Pre-university": "Üniversite öncesi",
+  "Preprint": "Ön baskı",
+  "Presentation": "Sunum",
+  "Proficiency": "Yeterlilik",
+  "Proficiency (optional)": "Yeterlilik (opsiyonel)",
+  "Recreational": "Amatör",
+  "Regional": "Bölgesel",
+  "Regular": "Normal",
+  "Repository URL": "Depo URL'si",
+  "Revenue (if any)": "Gelir (varsa)",
+  "School": "Okul",
+  "School journal": "Okul dergisi",
+  "School name": "Okul adı",
+  "Scope (e.g. school-wide, regional)": "Kapsam (örn. okul geneli, bölgesel)",
+  "Score": "Puan",
+  "Skill": "Beceri",
+  "Sport": "Spor",
+  "Sports": "Spor",
+  "Stage": "Aşama",
+  "Start date": "Başlangıç tarihi",
+  "Status": "Durum",
+  "Story notes (optional)": "Hikaye notları (opsiyonel)",
+  "Student government": "Öğrenci meclisi",
+  "Subject": "Konu",
+  "Summer program": "Yaz programı",
+  "Target date": "Hedef tarih",
+  "Team / club / school": "Takım / kulüp / okul",
+  "Technical": "Teknik",
+  "Test name": "Sınav adı",
+  "This is a leadership role": "Bu bir liderlik rolü",
+  "Title": "Başlık",
+  "Turkish curriculum": "Türk müfredatı",
+  "Type": "Tür",
+  "Undergraduate": "Lisans",
+  "Users reached": "Ulaşılan kullanıcı sayısı",
+  "Weeks per year": "Yıllık hafta",
+  "Why did you start? What was the hardest moment? What changed? What did you learn? Who did you work with? What was the measurable outcome? Anything you don't want to forget.": "Neden başladın? En zor an neydi? Ne değişti? Neler öğrendin? Kiminle çalıştın? Ölçülebilir sonuç neydi? Unutmak istemediğin başka bir şey var mı?",
+  "Your independence (e.g. led data collection)": "Bağımsızlığın (örn. veri toplamayı yönettin)",
+  "Your role": "Rolün",
+  "e.g. 200m Freestyle": "örn. 200m Serbest",
+  "e.g. 2026-27": "örn. 2026-27",
+  "e.g. A, 5, 7": "örn. A, 5, 7",
+  "e.g. A-F, 1-5, 1-7": "örn. A-F, 1-5, 1-7",
+  "e.g. AP Microeconomics": "örn. AP Mikroekonomi",
+  "e.g. Academics, Career": "örn. Akademik, Kariyer",
+  "e.g. Economics": "örn. Ekonomi",
+  "e.g. Education": "örn. Eğitim",
+  "e.g. English, Turkish": "örn. İngilizce, Türkçe",
+  "e.g. Intermediate": "örn. Orta düzey",
+  "e.g. Python, Public speaking": "örn. Python, Topluluk önünde konuşma",
+  "e.g. Robotics Club Captain": "örn. Robotik Kulübü Kaptanı",
+  "e.g. SAT, IB Predicted": "örn. SAT, IB Tahmini",
+  "e.g. School, National, International": "örn. Okul, Ulusal, Uluslararası",
+  "e.g. Study Economics in the UK": "örn. İngiltere'de Ekonomi okumak",
+  "e.g. Swimming": "örn. Yüzme",
+  "e.g. United States": "örn. Amerika Birleşik Devletleri",
+  "e.g. YYGS": "örn. YYGS",
+};
+
+function fieldText(text: string, locale: Locale): string {
+  return locale === "tr" ? (FIELD_TEXT_TR[text] ?? text) : text;
+}
+
+/**
+ * Returns a copy of `fields` with label/placeholder/option-label resolved to `locale`.
+ * Every consumer should call this once where it receives a FieldConfig[] rather than
+ * reading `.label`/`.placeholder`/`.options` directly -- `name`, `type`, `quickAdd`,
+ * `span`, `scope`, `entityIdField`, `allowCustom`, `customLabel`, and `suggestions`
+ * (a separate, much larger translation surface in lib/vocabularies/*, out of scope here)
+ * are untouched.
+ */
+export function localizeFields(fields: FieldConfig[], locale: Locale): FieldConfig[] {
+  if (locale !== "tr") return fields;
+  return fields.map((field): FieldConfig => {
+    const label = fieldText(field.label, locale);
+    const withLabel = { ...field, label };
+    const withPlaceholder =
+      "placeholder" in withLabel && withLabel.placeholder ? { ...withLabel, placeholder: fieldText(withLabel.placeholder, locale) } : withLabel;
+    if (withPlaceholder.type === "select") {
+      return { ...withPlaceholder, options: withPlaceholder.options.map((o) => ({ ...o, label: fieldText(o.label, locale) })) };
+    }
+    return withPlaceholder;
+  });
+}

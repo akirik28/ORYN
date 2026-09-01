@@ -1,5 +1,6 @@
 import { CATEGORY_DIMENSIONS } from "@/lib/opportunities/matching";
 import { competesInCoreRecommendations } from "@/lib/opportunities/commercial";
+import { completenessChecklistLabel } from "@/lib/scoring/completeness";
 import { requirementActionTitle, requirementCategoryLabel } from "./copy";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import type { CandidateAction, CounselorState, RequirementCandidateInput } from "./types";
@@ -55,12 +56,16 @@ function requirementCandidates(state: CounselorState, locale: Locale): Candidate
     });
 }
 
-function profileTaskCandidates(state: CounselorState): CandidateAction[] {
+function profileTaskCandidates(state: CounselorState, locale: Locale): CandidateAction[] {
   return state.completenessChecklist
     .filter((item) => !item.done)
     .map((item) => ({
-      source: { kind: "profile_task", checklistKey: item.label },
-      title: item.label,
+      // `item.key` is the stable identity (see CompletenessChecklistKey's own doc comment
+      // for why it has to be separate from the translated title below) — evidence.ts's
+      // sourceId/recommendationId slugifies this into the recommendation's id, and a slug
+      // built from translated text would move every time the student's locale did.
+      source: { kind: "profile_task", checklistKey: item.key },
+      title: completenessChecklistLabel(item.key, locale),
       category: "profile_completion",
       addressesDimensions: [],
       verificationState: null,
@@ -82,11 +87,11 @@ function profileTaskCandidates(state: CounselorState): CandidateAction[] {
  *   - profile_task: any incomplete item from the profile-completeness checklist.
  * An empty CounselorState correctly produces an empty list — no fabricated filler.
  *
- * `locale` defaults to English (see evidence.ts's buildRecommendation for why) and only
- * affects requirement_action titles — opportunity titles are the opportunity's own stored
- * (English) title, and profile_task titles are checklist labels defined in
- * lib/scoring/completeness.ts, neither in scope for this pass.
+ * `locale` defaults to English (see evidence.ts's buildRecommendation for why) and affects
+ * requirement_action and profile_task titles — opportunity titles are the opportunity's own
+ * stored (English) title, out of scope for translation the same way sourced requirement
+ * text is (see requirementLabel above).
  */
 export function generateCandidateActions(state: CounselorState, locale: Locale = DEFAULT_LOCALE): CandidateAction[] {
-  return [...opportunityCandidates(state), ...requirementCandidates(state, locale), ...profileTaskCandidates(state)];
+  return [...opportunityCandidates(state), ...requirementCandidates(state, locale), ...profileTaskCandidates(state, locale)];
 }

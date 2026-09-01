@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -9,10 +9,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 import { EntityCombobox } from "@/features/entities/entity-combobox";
 import { SuggestInput } from "@/features/entities/suggest-input";
-import type { FieldConfig } from "./field-config";
+import { localizeFields, type FieldConfig } from "./field-config";
+import type { Locale } from "@/lib/i18n/config";
 
 export type FormValues = Record<string, string | number | boolean | null>;
 
+/**
+ * The single rendering choke point for every FieldConfig array in features/profile/
+ * field-config.ts — both AchievementSection's full Edit dialog and QuickAddEntry's short
+ * form render through this component and nothing else, so localizing `fields` once here
+ * (rather than at either call site) covers both without either caller needing to know
+ * about it. 2026-09-01 first-run i18n pass — field-config.ts's own header comment has the
+ * full reasoning for why translation is keyed by source text rather than field `name`.
+ */
 export function DynamicFormFields({
   fields,
   values,
@@ -23,9 +32,11 @@ export function DynamicFormFields({
   onChange: (name: string, value: string | number | boolean | null) => void;
 }) {
   const t = useTranslations("common");
+  const locale = useLocale() as Locale;
+  const localizedFields = localizeFields(fields, locale);
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      {fields.map((field) => {
+      {localizedFields.map((field) => {
         const span = "span" in field && field.span === "half" ? "" : "sm:col-span-2";
         const value = values[field.name];
 

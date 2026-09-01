@@ -238,7 +238,7 @@
         "education": {
           "title": "Eğitim",
           "description": "Okullar ve akademik aşamalar.",
-          "empty": "Henüz eğitim kaydı yok."
+          "empty": "Henüz eğitim kaydı yok. Şu anki okulun da dahil olmak üzere, okuduğun okulları ekle."
         },
         "coursework": {
           "title": "Dersler",
@@ -248,7 +248,7 @@
         "testScores": {
           "title": "Sınav puanları",
           "description": "SAT, ACT, AP, IB, dil yeterliliği ve daha fazlası.",
-          "empty": "Henüz sınav puanı yok."
+          "empty": "Henüz sınav puanı yok. SAT, ACT, IB veya diğer sonuçlarını ekle."
         },
         "activities": {
           "title": "Faaliyetler",
@@ -263,7 +263,7 @@
         "projects": {
           "title": "Projeler",
           "description": "Tek başına ya da bir ekiple yaptığın veya hayata geçirdiğin şeyler.",
-          "empty": "Henüz proje yok."
+          "empty": "Henüz proje yok. Tek başına veya bir ekiple yaptığın ya da yönettiğin bir şey ekle."
         },
         "research": {
           "title": "Araştırma",
@@ -273,22 +273,22 @@
         "workExperience": {
           "title": "İş deneyimi",
           "description": "Stajlar, işler ve çıraklıklar.",
-          "empty": "Henüz iş deneyimi yok."
+          "empty": "Henüz iş deneyimi yok. Bir staj, yarı zamanlı iş veya başka bir ücretli çalışma ekle."
         },
         "volunteering": {
           "title": "Gönüllülük",
           "description": "Toplum hizmeti ve gönüllülük.",
-          "empty": "Henüz gönüllülük kaydı yok."
+          "empty": "Henüz gönüllülük kaydı yok. Bir amaç, okul veya topluluk için harcadığın zamanı ekle."
         },
         "awards": {
           "title": "Ödüller",
           "description": "Yarışmalar, onurlar ve üstün başarılar.",
-          "empty": "Henüz ödül yok."
+          "empty": "Henüz ödül yok. Okul düzeyinden uluslararası düzeye, aldığın onur veya ödülleri ekle."
         },
         "certifications": {
           "title": "Sertifikalar",
           "description": "Kurs veya programlardan alınan sertifikalar.",
-          "empty": "Henüz sertifika yok."
+          "empty": "Henüz sertifika yok. Okul dışında kazandığın belgeleri ekle."
         },
         "goals": {
           "title": "Hedefler",
@@ -412,8 +412,9 @@
       "saved": "Kaydedildi"
     },
     "portfolioView": {
-      "emptyTitle": "Henüz burada bir şey yok",
-      "emptyDescription": "Profiline eklediğin başarılar burada otomatik olarak görünecek.",
+      "emptyTitle": "Portfolyon henüz boş",
+      "emptyDescription": "Yolculuk sayfandan aktivite, proje, ödül veya diğer başarılarını ekle — zaman çizelgesine veya kategoriye göre düzenlenmiş halde otomatik olarak burada görünecekler.",
+      "emptyAction": "Yolculuğa git",
       "timeline": "Zaman çizelgesi",
       "byCategory": "Kategoriye göre"
     },

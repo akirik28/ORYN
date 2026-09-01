@@ -208,10 +208,10 @@ describe("Contract test 2 (spec §58) — near-empty profile", () => {
     advisor: { student: { birthYear: null, country: null }, completenessPercent: 7 } as CounselorState["advisor"],
     dimensionScores: toDimensionScoreRows(emptyScores),
     completenessChecklist: [
-      { label: "Add your school and academic details", done: false },
-      { label: "Add an activity", done: false },
-      { label: "Set a career goal", done: false },
-      { label: "Add an interest", done: false },
+      { key: "school_details", label: "Add your school and academic details", done: false },
+      { key: "activity", label: "Add an activity", done: false },
+      { key: "career_goal", label: "Set a career goal", done: false },
+      { key: "interest", label: "Add an interest", done: false },
     ],
     eligibleOpportunityMatches: [],
     requirementCandidateInputs: [],
@@ -239,7 +239,7 @@ describe("Contract test 3 (spec §59) — LLM provider outage", () => {
     userId: "user-1",
     advisor: { student: { birthYear: 2009, country: "United States" }, completenessPercent: 80 } as CounselorState["advisor"],
     dimensionScores: toDimensionScoreRows(scores),
-    completenessChecklist: [{ label: "Add a career goal", done: false }],
+    completenessChecklist: [{ key: "career_goal", label: "Add a career goal", done: false }],
     eligibleOpportunityMatches: [{ opportunity: opportunity("opp-1"), match: match("opp-1") }],
     requirementCandidateInputs: [],
   };
