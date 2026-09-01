@@ -55,7 +55,7 @@ export default async function ApplicationsPage() {
     applicationType: application.application_type,
     deadline: application.deadline,
     status: application.status,
-    readiness: computeReadiness(requirementsByApplication.get(application.id) ?? []),
+    readiness: computeReadiness(application.status, requirementsByApplication.get(application.id) ?? []),
   }));
 
   return <ApplicationsView applications={rows} hasTargets={targets.length > 0} availableTargets={availableTargets} />;

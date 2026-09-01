@@ -1142,7 +1142,9 @@
     },
     "readiness": {
       "label": "Başvuru hazırlığı",
-      "description": "Bilinen kontrol listenin ne kadarının tamamlandığını gösterir — kabul şansını değil."
+      "description": "Bilinen kontrol listenin ne kadarının tamamlandığını gösterir — kabul şansını değil.",
+      "notTracked": "Başvurunuzu gönderdikten sonra hazırlık takibi durur. Bunun kararınızla bir ilgisi yoktur — aşağıdaki kontrol listesi yalnızca kendi referansınız için kalır.",
+      "unmeasured": "Bu başvuru için şu anda takip edilen bir gereksinim yok."
     },
     "singularLabel": "Başvuru"
   },

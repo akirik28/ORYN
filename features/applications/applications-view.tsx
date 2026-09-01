@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { EmptyState } from "@/components/oryn/empty-state";
 import { StatusBadge, type StatusTone } from "@/components/oryn/status-badge";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
+import type { ApplicationReadiness } from "@/lib/applications/readiness";
 import type { ApplicationStatus, ApplicationType } from "@/types/database";
 
 const APPLICATION_STATUS_TONE: Record<ApplicationStatus, StatusTone> = {
@@ -25,7 +26,7 @@ export interface ApplicationsViewRow {
   applicationType: ApplicationType;
   deadline: string | null;
   status: ApplicationStatus;
-  readiness: number;
+  readiness: ApplicationReadiness;
 }
 
 export async function ApplicationsView({
@@ -108,14 +109,21 @@ export async function ApplicationsView({
                     ) : null}
                   </p>
                 </div>
-                <div className="shrink-0 text-right">
-                  <div className={application.readiness === 100 ? "text-2xl font-bold text-success" : "text-2xl font-bold text-ink-1"}>
-                    {application.readiness}%
+                {application.readiness.kind === "measured" ? (
+                  <div className="shrink-0 text-right">
+                    <div className={application.readiness.percent === 100 ? "text-2xl font-bold text-success" : "text-2xl font-bold text-ink-1"}>
+                      {application.readiness.percent}%
+                    </div>
+                    <div className="text-[11px] font-medium text-ink-3">{t("ready")}</div>
                   </div>
-                  <div className="text-[11px] font-medium text-ink-3">{t("ready")}</div>
-                </div>
+                ) : null}
               </div>
-              <Progress value={application.readiness} className="mt-5" />
+              {/* Readiness is only shown while an application is still being assembled
+                  (not_started/in_progress) — see lib/applications/readiness.ts. Once
+                  submitted or decided, the status badge above already says what matters;
+                  a stale completion percentage next to it would read as something being
+                  wrong with an application that's already sent. */}
+              {application.readiness.kind === "measured" ? <Progress value={application.readiness.percent} className="mt-5" /> : null}
             </Link>
           ))
         ) : (

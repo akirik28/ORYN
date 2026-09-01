@@ -61,7 +61,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
     : { data: null };
 
   const requirements = requirementsRes.data ?? [];
-  const readiness = computeReadiness(requirements);
+  const readiness = computeReadiness(application.status, requirements);
   const universityName = university?.name ?? t("singularLabel");
   const applicationTypeLabel = t(`newDialog.typeOptions.${application.application_type}`);
 
@@ -77,10 +77,18 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
       <div className="space-y-1.5">
         <div className="flex items-center justify-between text-sm">
           <span className="font-medium">{t("readiness.label")}</span>
-          <span className="text-muted-foreground">{readiness}%</span>
+          {readiness.kind === "measured" ? <span className="text-muted-foreground">{readiness.percent}%</span> : null}
         </div>
-        <Progress value={readiness} />
-        <p className="text-xs text-muted-foreground">{t("readiness.description")}</p>
+        {readiness.kind === "measured" ? (
+          <>
+            <Progress value={readiness.percent} />
+            <p className="text-xs text-muted-foreground">{t("readiness.description")}</p>
+          </>
+        ) : readiness.kind === "not_tracked" ? (
+          <p className="text-xs text-muted-foreground">{t("readiness.notTracked")}</p>
+        ) : (
+          <p className="text-xs text-muted-foreground">{t("readiness.unmeasured")}</p>
+        )}
       </div>
 
       <RequirementChecklist requirements={requirements} />
