@@ -427,20 +427,34 @@ stop-and-protect event.
   | **New York University (NY, USA)** | **`active`** | 2026-08-31 17:45 |
   | **University of Southern California (CA, USA)** | **`active`** | 2026-08-31 20:09 |
 
-  So **half the disable was applied on 2026-08-23** and three rows were missed. The three
-  survivors are worse off than "pending": they are `category = 'summer_program'`, matched to
-  **all 8 users**, **4 of those 8 as "Strong match"**, and all 8 marked eligible. Every Oryn
-  user is currently being recommended "Carnegie Mellon University (PA, USA)" as a summer
-  programme to apply to. Their 2026-08-31 `updated_at` means last night's enrichment pass
-  *improved* rows that should have been retired.
+  So **half the disable was applied on 2026-08-23** and three rows were missed. All three
+  survivors are `category = 'summer_program'`, matched to **all 8 users**, **4 of 8 as
+  "Strong match"**, all marked eligible.
 
-  Still not a lane task — this is a data write to the founder's live project, and the
-  original attempt was escalated rather than forced. The exact statement is in
-  `docs/founder-blocked-backlog.md`; it now needs to name three ids, not six.
+  **Then reading the rows themselves changed the verdict again.** These were filed as
+  "categorically wrong, never valid opportunity records." They are not. Each has a real
+  pre-college programme and a correct official URL. What actually makes two of them
+  retire-able is narrower: they are index pages whose specific programmes already exist as
+  separate, properly-titled, active rows — CMU's row points at its pre-college admissions
+  index while "Carnegie Mellon SAMS" and CMIMC are separate active rows; NYU's points at a
+  programme *finder* while "NYU Precollege Program" and two others are separate active rows.
+  The same is true of the two already disabled: "King's College London Pre-University Summer
+  School" and "University of St Andrews Summer Academic Experience" were both already active,
+  so those retirements were correct.
 
-  The lesson worth keeping: this entry trusted a handoff report as the authority on live
-  state. The handoff was accurate when written; the database moved and nothing told the
-  document. Re-query before repeating a status claim about live data.
+  **USC is the exception and must not be disabled.** No properly-titled replacement exists —
+  the only other active USC row is "Dive Into Engineering!", one narrow Viterbi programme.
+  Retiring it would remove USC Pre-College's summer courses from the catalogue. It needs a
+  retitle; its `official_url` is already right.
+
+  Still not a lane task — a data write to the founder's live project, escalated rather than
+  forced. `docs/founder-blocked-backlog.md` carries both statements, per row.
+
+  Two lessons, both cheap to repeat. This entry trusted a **handoff report** as the authority
+  on live state; the report was accurate when written, the database moved, nothing told the
+  document. And the group label "categorically wrong, not a judgment call" was doing work no
+  row-level check supported — acting on it as written would have disabled a real programme.
+  A verdict about a group is not evidence about any row in it.
 - **Tier 2 (~79 rows)**: re-research-or-retire is a real product-cost tradeoff (a garbled
   card vs. an empty shelf on ~29% of the live catalogue) touching founder-supplied data —
   **escalated to the founder by ORYN-CEO, not decided by any lane.** Producing "corrected"

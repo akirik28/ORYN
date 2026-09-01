@@ -430,31 +430,56 @@ spreadsheet cells. ORYN's importer carried it through faithfully rather than int
 the ` | ` separators and the ~900-character truncation exist verbatim in the seed SQL, and no
 900-character clip exists anywhere in the generator. **There is no extraction bug to fix; the
 source corpus is the defect.** That is why this is your call and not an engineering task.
-**Half-handled without you, and this needs one minute of your time** (categorically-wrong
-rows, not a judgment call). The UCSC course-catalogue entry, King's College London and
-St Andrews were retired on 2026-08-23. **Three institution-name rows were missed and are
-still live**, re-measured against the database on 2026-09-01:
+**Half-handled without you — and the classification underneath it needed checking.** The
+UCSC course-catalogue entry, King's College London and St Andrews were retired on
+2026-08-23. Three institution-name rows were missed and are still live. Re-measured
+2026-09-01, and this time by reading each row rather than trusting the label on the group:
+
+The rows were filed as "categorically wrong, never valid opportunity records." That is not
+what they are. Every one of them has a real pre-college programme behind it and a correct
+official URL. What makes them retire-able is something different and narrower: they are
+**index pages whose specific programmes already exist as separate, properly-titled, active
+rows**.
+
+| Row | Verdict | Why |
+|---|---|---|
+| King's College London (London, UK) | correctly disabled | "King's College London Pre-University Summer School" is active with the right URL |
+| University of St. Andrews (Scotland, UK) | correctly disabled | "University of St Andrews Summer Academic Experience" is active with the right URL |
+| ECON 1 - 01 Introductory Microeconomics | correctly disabled | genuinely a UCSC class-detail page, not an opportunity |
+| Carnegie Mellon University (PA, USA) | safe to disable | points at CMU's pre-college admissions index; "Carnegie Mellon SAMS" and CMIMC are already separate active rows |
+| New York University (NY, USA) | safe to disable | points at NYU's programme *finder*; "NYU Precollege Program", "NYU High School Law Institute" and "Future Makers: NYU Stern Pre-College Institute" are already separate active rows |
+| **University of Southern California (CA, USA)** | **do NOT disable** | **no properly-titled replacement exists.** The only other active USC row is "Dive Into Engineering!", one narrow Viterbi programme. Disabling this removes USC Pre-College's summer courses from the catalogue entirely |
 
 ```sql
--- Three university names filed as summer programmes. Currently matched to all 8 users,
--- 4 of 8 as "Strong match", all 8 marked eligible.
+-- Two index-page duplicates. Their real programmes already exist as separate active rows.
 update public.opportunities
 set status = 'disabled', updated_at = now()
 where id in (
   'b4091e25-c8ca-4042-9976-ee41ae4031d5',  -- Carnegie Mellon University (PA, USA)
-  '907e279d-bc2f-46b0-b970-9ed9c0abb261',  -- New York University (NY, USA)
-  '4a54159a-58dd-4304-a139-2b76f2a9fe38'   -- University of Southern California (CA, USA)
+  '907e279d-bc2f-46b0-b970-9ed9c0abb261'   -- New York University (NY, USA)
 );
 ```
 
-An agent cannot run this — the same auto-mode safety classifier that blocked the original
-attempt — and no lane should force it, since it is a write to your live project. It is three
-rows, reversible by setting `status` back to `'active'`.
+**USC needs a retitle, not a retirement** — its `official_url` is already correct
+(`https://precollege.usc.edu/summer-programs/`); only the `title` field carries the
+institution name instead of the programme name:
 
-Worth knowing why it went unnoticed: the earlier note said all six were confirmed still
-active and awaiting you. Half had in fact been applied, and nothing updated the document.
-The three survivors were then *enriched* by the 2026-08-31 pass — effort spent improving
-rows that should have been retired.
+```sql
+update public.opportunities
+set title = 'USC Pre-College Summer Programs', updated_at = now()
+where id = '4a54159a-58dd-4304-a139-2b76f2a9fe38';
+```
+
+An agent cannot run either statement — the same auto-mode safety classifier that blocked the
+original attempt — and no lane should force it, since it is a write to your live project.
+Both are reversible.
+
+Two things worth knowing about how this was nearly got wrong. The earlier note here said all
+six were still active and awaiting you; half had in fact been applied and nothing updated the
+document. And the group label "categorically wrong, not a judgment call" was doing work that
+no row-level check supported — acting on it as written would have disabled a real programme.
+A group verdict is not evidence about any particular row in the group.
+
 **Why it matters**: these are on the surface students browse. Per your own non-negotiables,
 nothing that misleads should ship. But re-researching ~80 rows to this project's evidence bar is
 real work (measured yield elsewhere: ~5% of rows per hour of research), so the honest options are
