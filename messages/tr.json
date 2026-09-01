@@ -30,7 +30,7 @@
   "language": {
     "label": "Dil",
     "change": "Dili değiştir",
-    "saveFailed": "Dil tercihiniz kaydedilemedi. Lütfen tekrar deneyin."
+    "saveFailed": "Dil tercihin kaydedilemedi. Lütfen tekrar dene."
   },
   "dashboard": {
     "focusThisWeek": "Bu haftaki odağın",
@@ -818,7 +818,7 @@
       "totalCount": "{count, plural, one {{formatted} üniversite toplam} other {{formatted} üniversite toplam}}",
       "search": "Ara",
       "costOfAttendance": "Öğrenim maliyeti",
-      "costSpanHint": "Daha geniş bir aralığa yaymak için ihtiyacınız kadarını seçin.",
+      "costSpanHint": "Daha geniş bir aralığa yaymak için ihtiyacın kadarını seçin.",
       "institutionType": "Kurum türü",
       "studentPopulation": "Öğrenci sayısı",
       "qsRanking": "QS sıralaması",
@@ -829,16 +829,16 @@
       "sizeUnknownExcluded": "{count, plural, one {{formatted} ek üniversite} other {{formatted} ek üniversite}} öğrenci sayısı verisi mevcut olmadığı için hariç tutuldu.",
       "noUniversitiesFound": "Üniversite bulunamadı",
       "matchingQuerySuffix": " — “{query}” ile eşleşen",
-      "noMatchFilters": "Mevcut filtrelere uyan üniversite yok — maliyet, büyüklük veya sıralama aralığını genişletmeyi deneyin.",
-      "dataAddedOverTime": "Üniversite verileri zamanla ekleniyor — yakında tekrar kontrol edin, ya da başka bir bölge deneyin.",
+      "noMatchFilters": "Mevcut filtrelere uyan üniversite yok — maliyet, büyüklük veya sıralama aralığını genişletmeyi dene.",
+      "dataAddedOverTime": "Üniversite verileri zamanla ekleniyor — yakında tekrar kontrol et, ya da başka bir bölge dene.",
       "uncoveredNote": "Not: {count, plural, one {{formatted} incelenmekte olan ülke} other {{formatted} incelenmekte olan ülke}} henüz bir bölgeye eşleştirilmedi ({names}) — yukarıdaki toplama dahil, henüz hiçbir bölge sekmesinde değil.",
       "sortByName": "Ad"
     },
     "comparePage": {
       "title": "Üniversiteleri karşılaştır",
-      "description": "Burada karşılaştırmak için keşfet sayfasından 2–4 üniversite seçin.",
+      "description": "Burada karşılaştırmak için keşfet sayfasından 2–4 üniversite seç.",
       "nothingYetTitle": "Henüz karşılaştırılacak bir şey yok",
-      "nothingYetDescription": "Keşfet sayfasına dönün, her kartta Karşılaştır düğmesiyle en az iki üniversite seçin, sonra karşılaştırma çekmecesini açın.",
+      "nothingYetDescription": "Keşfet sayfasına dön, her kartta Karşılaştır düğmesiyle en az iki üniversite seç, sonra karşılaştırma çekmecesini aç.",
       "backToExplorer": "Keşfet sayfasına dön",
       "notEnoughTitle": "Bu üniversitelerden yeterince bulunamadı",
       "notEnoughDescription": "Seçilen üniversitelerden biri veya birkaçı artık mevcut olmayabilir.",
@@ -1135,7 +1135,7 @@
       "iconAriaLabel": "Ara",
       "dialogTitle": "Oryn'de ara",
       "inputPlaceholder": "Üniversitelerde, fırsatlarda, profilinde ara…",
-      "searchFailed": "Arama şu anda kullanılamıyor. Lütfen tekrar deneyin.",
+      "searchFailed": "Arama şu anda kullanılamıyor. Lütfen tekrar dene.",
       "keepTyping": "Yazmaya devam et — en az 2 karakter.",
       "emptyPrompt": "Üniversitelerde, fırsatlarda, başvurularda ve profilindeki her şeyde ara.",
       "noResultsFor": "\"{query}\" için sonuç yok."
