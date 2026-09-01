@@ -428,6 +428,15 @@ export const SKILL_FIELDS: FieldConfig[] = [
 // ---------------------------------------------------------------------------
 
 const FIELD_TEXT_TR: Record<string, string> = {
+  // The 8 LANGUAGE_PROFICIENCY_OPTIONS labels (lib/vocabularies/languages.ts) — kept in sync
+  // with that file's own LANGUAGE_PROFICIENCY_TR by hand rather than importing it, since the
+  // two are read by genuinely different mechanisms (this map by exact-string lookup inside
+  // localizeFields; that file's by CEFR `value` inside languageProficiencyLabel/Hint) and a
+  // shared import would couple a presentation-layer resolver to a vocabulary module's
+  // internal data shape for no real benefit — same reasoning as every other option-array
+  // string in this file living here rather than being re-exported from its source module.
+  "A1 — Beginner": "A1 — Başlangıç Düzeyi",
+  "A2 — Elementary": "A2 — Temel Düzey",
   "Abandoned": "Vazgeçildi",
   "Academic program": "Akademik program",
   "Academic year": "Akademik yıl",
@@ -438,6 +447,9 @@ const FIELD_TEXT_TR: Record<string, string> = {
   "Analytical": "Analitik",
   "Apprenticeship": "Çıraklık",
   "Awarding organization": "Ödülü veren kurum",
+  "B1 — Intermediate": "B1 — Orta Düzey",
+  "B2 — Upper intermediate": "B2 — Üst Orta Düzey",
+  "Bilingual": "İki Dilli",
   "Captain / team leader": "Kaptan / takım lideri",
   "Career": "Kariyer",
   "Category": "Kategori",
@@ -449,6 +461,8 @@ const FIELD_TEXT_TR: Record<string, string> = {
   "Community/Leadership": "Topluluk/Liderlik",
   "Competition team": "Yarışma takımı",
   "Competitive level": "Yarışma seviyesi",
+  "C1 — Advanced": "C1 — İleri Düzey",
+  "C2 — Mastery": "C2 — Ustalık",
   "Country": "Ülke",
   "Course": "Ders",
   "Creative": "Yaratıcı",
@@ -487,6 +501,7 @@ const FIELD_TEXT_TR: Record<string, string> = {
   "Mentor": "Mentor",
   "Methodology": "Metodoloji",
   "Middle school": "Ortaokul",
+  "Native": "Anadil",
   "National": "Ulusal",
   "National curriculum": "Ulusal müfredat",
   "None yet": "Henüz yok",

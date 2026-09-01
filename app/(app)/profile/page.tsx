@@ -652,7 +652,7 @@ export default async function ProfilePage() {
             items={languagesRes.data ?? []}
             summaries={summaryMap(languagesRes.data ?? [], (item) => ({
               title: item.name,
-              subtitle: languageProficiencyLabel(item.proficiency) ?? undefined,
+              subtitle: languageProficiencyLabel(item.proficiency, locale) ?? undefined,
             }))}
             fields={LANGUAGE_FIELDS}
             defaultValues={{ name: "", proficiency: null }}
