@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/oryn/page-header";
 import { CvImportFlow } from "@/features/profile/cv-import-flow";
@@ -7,7 +8,10 @@ import { isAIConfigured } from "@/lib/ai";
 import { EmptyState } from "@/components/oryn/empty-state";
 import { FileUp } from "lucide-react";
 
-export const metadata = { title: "Scan a CV" };
+export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations("profile.page");
+  return { title: tMeta("scanCv") };
+}
 
 export default async function CvImportPage() {
   const t = await getTranslations("profile.cvImport");

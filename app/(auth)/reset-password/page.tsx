@@ -1,10 +1,14 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { verifySession } from "@/lib/security/dal";
 import { ResetPasswordForm } from "../_components/reset-password-form";
 import { instrumentSerif } from "@/lib/fonts";
 
-export const metadata = { title: "Set a new password" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("auth.resetPassword");
+  return { title: t("setNewPassword") };
+}
 
 // No direct source screen for this one — the Figma handoff's ForgotPassword flow never
 // shows a distinct "enter your new password" step. Given the same Instrument

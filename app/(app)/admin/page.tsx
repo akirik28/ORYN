@@ -1,4 +1,6 @@
 import { formatDistanceToNow } from "date-fns";
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { formatNumber, formatDuration } from "@/lib/i18n/format";
 import { requireAdmin } from "@/lib/security/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -14,7 +16,10 @@ import { summarizeJobHealth, EMPTY_STREAK_THRESHOLD } from "@/lib/jobs/job-healt
 import type { ExternalSyncJob } from "@/types/database";
 import { triggerOpportunityDiscovery, triggerUniversitySync, triggerDeadlineScan, triggerRequirementDiscovery } from "./actions";
 
-export const metadata = { title: "Admin" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("admin");
+  return { title: t("pageTitle") };
+}
 
 const STATUS_CLASS: Record<string, string> = {
   healthy: "border-emerald-500/30 text-emerald-700 dark:text-emerald-400",

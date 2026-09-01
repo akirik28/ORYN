@@ -1,9 +1,13 @@
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/security/dal";
 import { PageHeader } from "@/components/oryn/page-header";
 import { ResearchIdeaStudio } from "@/features/profile/research-idea-studio";
 
-export const metadata = { title: "Research ideas" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("profile.researchIdeas");
+  return { title: t("pageTitle") };
+}
 
 export default async function ResearchIdeasPage() {
   await requireUser();

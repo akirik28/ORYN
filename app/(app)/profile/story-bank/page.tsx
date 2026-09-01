@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { collectStoryBankExperiences } from "@/lib/story-bank/collect";
 import { StoryBank } from "@/features/profile/story-bank";
 
-export const metadata = { title: "Essay Story Bank" };
+export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations("profile.storyBank");
+  return { title: tMeta("title") };
+}
 
 export default async function StoryBankPage() {
   const session = await requireUser();

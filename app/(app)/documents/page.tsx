@@ -1,4 +1,5 @@
 import { FileText } from "lucide-react";
+import type { Metadata } from "next";
 import { getTranslations, getLocale } from "next-intl/server";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
@@ -9,7 +10,10 @@ import { EmptyState } from "@/components/oryn/empty-state";
 import { PageHeader } from "@/components/oryn/page-header";
 import { evidenceLinkableLabel, type EvidenceLinkableTable } from "@/lib/validation/evidence";
 
-export const metadata = { title: "Documents" };
+export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations("nav");
+  return { title: tMeta("documents") };
+}
 
 export default async function DocumentsPage() {
   const session = await requireUser();

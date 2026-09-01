@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { MessageCircle } from "lucide-react";
 import { requireUser } from "@/lib/security/dal";
@@ -8,7 +9,10 @@ import { PageHeader } from "@/components/oryn/page-header";
 import { EmptyState } from "@/components/oryn/empty-state";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
-export const metadata = { title: "Messages" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("messaging.list");
+  return { title: t("pageTitle") };
+}
 
 function initials(name: string) {
   return name

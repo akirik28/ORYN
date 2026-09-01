@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { buildPortfolio } from "@/lib/portfolio/build";
 import { PortfolioView } from "@/features/profile/portfolio-view";
 
-export const metadata = { title: "Portfolio" };
+export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations("profile.portfolio");
+  return { title: tMeta("title") };
+}
 
 export default async function PortfolioPage() {
   const session = await requireUser();

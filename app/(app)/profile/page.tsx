@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { getTranslations, getLocale } from "next-intl/server";
 import {
   ArrowRight,
@@ -105,7 +106,10 @@ import { languageProficiencyLabel } from "@/lib/vocabularies/languages";
 import type { FormValues } from "@/features/profile/dynamic-form-fields";
 import type { ProfileDimension } from "@/types/database";
 
-export const metadata = { title: "Profile" };
+export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations("nav");
+  return { title: tMeta("journey") };
+}
 
 export default async function ProfilePage() {
   const session = await requireUser();

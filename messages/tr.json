@@ -442,6 +442,7 @@
       "useThisDescription": "Bu açıklamayı kullan"
     },
     "researchIdeas": {
+      "pageTitle": "Araştırma Fikirleri",
       "eyebrow": "Araştırma",
       "title": "Gerçekten bitirebileceğin bir proje bul.",
       "description": "Oryn, seviyene ve ayırabildiğin zamana göre ölçeklenmiş araştırmalar önerir — gerçek akademik literatüre ve kamuya açık verilere dayanır, asla cevaplanma yolu olmayan, sadece kulağa etkileyici gelen bir soru değil.",
@@ -570,6 +571,7 @@
   },
   "onboarding": {
     "wizard": {
+      "pageTitle": "Profilini kur",
       "goalsTitle": "Neye doğru çalışıyorsun?",
       "goalsSubtitle": "Geçerli olan kadarını seç — bunu daha sonra değiştirebilirsin.",
       "goalOptions": {
@@ -835,6 +837,7 @@
       "sortByName": "Ad"
     },
     "comparePage": {
+      "pageTitle": "Üniversite Karşılaştırma",
       "title": "Üniversiteleri karşılaştır",
       "description": "Burada karşılaştırmak için keşfet sayfasından 2–4 üniversite seç.",
       "nothingYetTitle": "Henüz karşılaştırılacak bir şey yok",
@@ -1034,6 +1037,7 @@
     }
   },
   "applications": {
+    "singularLabel": "Başvuru",
     "hero": {
       "cycleLabel": "2026–27 dönemi",
       "title": "Başvurular.",
@@ -1095,6 +1099,10 @@
       "status": "Durum",
       "acceptedTitle": "Kabul edildin.",
       "acceptedBody": "{universityName} sana kabul verdi. Buraya kadar yaptığın her şey işe yaradı — tebrikler."
+    },
+    "readiness": {
+      "label": "Başvuru hazırlığı",
+      "description": "Bilinen kontrol listenin ne kadarının tamamlandığını gösterir — kabul şansını değil."
     }
   },
   "documents": {
@@ -1424,5 +1432,8 @@
         "description": "Seviyene ve ilgi alanlarına göre ölçeklenmiş, gerçek akademik literatürden oluşturulmuş proje fikirleri — etkileyici görünmek için değil, ulaşılabilir olmak için."
       }
     }
+  },
+  "admin": {
+    "pageTitle": "Yönetici Paneli"
   }
 }

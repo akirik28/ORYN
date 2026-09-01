@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { computeReadiness } from "@/lib/applications/readiness";
@@ -17,6 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   const session = await requireUser();
   const supabase = await createClient();
+  const t = await getTranslations("applications");
   const { data: application } = await supabase
     .from("applications")
     .select("target_university_id")
@@ -29,20 +31,21 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     .select("university_id")
     .eq("id", application.target_university_id)
     .single();
-  if (!target) return { title: "Application" };
+  if (!target) return { title: t("singularLabel") };
   const supersessionMap = await loadSupersessionMap(supabase);
   const { data: university } = await supabase
     .from("universities")
     .select("name")
     .eq("id", canonicalUniversityId(supersessionMap, target.university_id))
     .single();
-  return { title: university?.name ?? "Application" };
+  return { title: university?.name ?? t("singularLabel") };
 }
 
 export default async function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await requireUser();
   const supabase = await createClient();
+  const t = await getTranslations("applications");
 
   const { data: application } = await supabase.from("applications").select("*").eq("id", id).eq("user_id", session.userId!).single();
   if (!application) notFound();
@@ -59,28 +62,25 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
 
   const requirements = requirementsRes.data ?? [];
   const readiness = computeReadiness(requirements);
-  const universityName = university?.name ?? "Application";
-  const applicationTypeLabel = application.application_type.replace(/_/g, " ");
-  const applicationTypeCapitalized = applicationTypeLabel.charAt(0).toUpperCase() + applicationTypeLabel.slice(1);
+  const universityName = university?.name ?? t("singularLabel");
+  const applicationTypeLabel = t(`newDialog.typeOptions.${application.application_type}`);
 
   return (
     <div className="max-w-2xl space-y-6">
       <PageHeader
         title={universityName}
-        description={`${applicationTypeCapitalized}${application.deadline ? ` · Due ${application.deadline}` : ""}`}
+        description={`${applicationTypeLabel}${application.deadline ? ` · ${t("due")} ${application.deadline}` : ""}`}
       />
 
       <ApplicationStatusControl applicationId={application.id} initialStatus={application.status} universityName={universityName} />
 
       <div className="space-y-1.5">
         <div className="flex items-center justify-between text-sm">
-          <span className="font-medium">Application readiness</span>
+          <span className="font-medium">{t("readiness.label")}</span>
           <span className="text-muted-foreground">{readiness}%</span>
         </div>
         <Progress value={readiness} />
-        <p className="text-xs text-muted-foreground">
-          Measures how much of your known checklist is complete — not your chance of admission.
-        </p>
+        <p className="text-xs text-muted-foreground">{t("readiness.description")}</p>
       </div>
 
       <RequirementChecklist requirements={requirements} />

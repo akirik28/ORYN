@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { cn } from "@/lib/utils";
 import { requireUser } from "@/lib/security/dal";
@@ -35,7 +36,10 @@ import { SortSelect } from "@/features/universities/sort-select";
 import { FilterSheet, type FilterOption } from "@/features/universities/filter-sheet";
 import { CompareBar } from "@/features/universities/compare-bar";
 
-export const metadata = { title: "Universities" };
+export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations("nav");
+  return { title: tMeta("universities") };
+}
 
 const VIEW_TAB =
   "border-b-2 pb-2 text-sm transition-colors duration-(--duration-fast) focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none";

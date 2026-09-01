@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { getCurrentProfile, requireUser } from "@/lib/security/dal";
 import { resolveLocale } from "@/lib/i18n/locale";
 import type { Locale } from "@/lib/i18n/config";
@@ -16,7 +18,10 @@ import { getCounselorState } from "@/lib/counselor/state";
 import { buildCounselorDashboardContract, type CounselorDashboardContract } from "@/lib/counselor/dashboard-contract";
 import { DashboardView } from "@/features/dashboard/dashboard-view";
 
-export const metadata = { title: "Home" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("nav");
+  return { title: t("home") };
+}
 
 function greeting(locale: Locale) {
   const hour = new Date().getHours();

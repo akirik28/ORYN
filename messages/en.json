@@ -442,6 +442,7 @@
       "useThisDescription": "Use this description"
     },
     "researchIdeas": {
+      "pageTitle": "Research ideas",
       "eyebrow": "Research",
       "title": "Find a project you can actually finish.",
       "description": "Oryn proposes research scaled to your level and the time you have — grounded in real academic literature and public data, never an impressive-sounding question with no way to answer it.",
@@ -570,6 +571,7 @@
   },
   "onboarding": {
     "wizard": {
+      "pageTitle": "Set up your profile",
       "goalsTitle": "What are you working toward?",
       "goalsSubtitle": "Pick as many as apply — you can change this later.",
       "goalOptions": {
@@ -835,6 +837,7 @@
       "sortByName": "Name"
     },
     "comparePage": {
+      "pageTitle": "Compare universities",
       "title": "Compare universities",
       "description": "Select 2–4 universities from the explorer to compare them here.",
       "nothingYetTitle": "Nothing to compare yet",
@@ -1034,6 +1037,7 @@
     }
   },
   "applications": {
+    "singularLabel": "Application",
     "hero": {
       "cycleLabel": "2026–27 cycle",
       "title": "Applications.",
@@ -1095,6 +1099,10 @@
       "status": "Status",
       "acceptedTitle": "You're in.",
       "acceptedBody": "Accepted to {universityName}. Whatever came before this moment worked — well done."
+    },
+    "readiness": {
+      "label": "Application readiness",
+      "description": "Measures how much of your known checklist is complete — not your chance of admission."
     }
   },
   "documents": {
@@ -1424,5 +1432,8 @@
         "description": "Project ideas scaled to your level and interests, built from real academic literature — achievable, not impressive-sounding."
       }
     }
+  },
+  "admin": {
+    "pageTitle": "Admin"
   }
 }
