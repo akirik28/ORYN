@@ -762,7 +762,8 @@
     "compareBar": {
       "selected": "{count} selected",
       "clear": "Clear",
-      "compare": "Compare"
+      "compare": "Compare",
+      "ariaLabel": "Compare universities"
     },
     "sortSelect": {
       "ariaLabel": "Sort universities",
@@ -970,7 +971,8 @@
     "compareBar": {
       "selected": "{count} selected",
       "clear": "Clear",
-      "compare": "Compare"
+      "compare": "Compare",
+      "ariaLabel": "Compare opportunities"
     },
     "comparePage": {
       "pageTitle": "Compare opportunities",

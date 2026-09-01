@@ -762,7 +762,8 @@
     "compareBar": {
       "selected": "{count} seçildi",
       "clear": "Temizle",
-      "compare": "Karşılaştır"
+      "compare": "Karşılaştır",
+      "ariaLabel": "Üniversiteleri karşılaştır"
     },
     "sortSelect": {
       "ariaLabel": "Üniversiteleri sırala",
@@ -970,7 +971,8 @@
     "compareBar": {
       "selected": "{count} seçildi",
       "clear": "Temizle",
-      "compare": "Karşılaştır"
+      "compare": "Karşılaştır",
+      "ariaLabel": "Fırsatları karşılaştır"
     },
     "comparePage": {
       "pageTitle": "Fırsat Karşılaştırma",
