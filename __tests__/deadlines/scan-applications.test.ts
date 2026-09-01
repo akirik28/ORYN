@@ -1,18 +1,27 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
+import type { Locale } from "@/lib/i18n/config";
 
 /**
  * scanApplications feeds the deadline-reminder notification job's application source
- * (Phase 24/30 Job B) — untested until this package, same gap as its saved-opportunity
+ * (Phase 24; see lib/deadlines/scan.ts's own scanDeadlines doc comment for why this is
+ * NOT Phase 30 Job B) — untested until this package, same gap as its saved-opportunity
  * sibling closed in __tests__/deadlines/scan.test.ts. Isolated the same way: mocks only
- * `applications`, `target_universities`, `universities`, and `notifications` (via a
- * mocked createNotification), never touching the opportunity/university-deadline sources
- * scanDeadlines also fans out to. `canonicalUniversityId` is exercised with a real, empty
- * `SupersessionMap` (a plain in-memory `Map`, not itself Supabase-backed) rather than
- * mocked — an empty map is the overwhelmingly common real case (most universities aren't
- * duplicates) and lib/universities/canonical.ts's own module comment confirms
- * `canonicalUniversityId` never throws on an id with no entry, just returns it unchanged.
+ * `applications`, `target_universities`, `universities`, `profiles`, and `notifications`
+ * (via a mocked createNotification), never touching the opportunity/university-deadline
+ * sources scanDeadlines also fans out to. `canonicalUniversityId` is exercised with a
+ * real, empty `SupersessionMap` (a plain in-memory `Map`, not itself Supabase-backed)
+ * rather than mocked — an empty map is the overwhelmingly common real case (most
+ * universities aren't duplicates) and lib/universities/canonical.ts's own module comment
+ * confirms `canonicalUniversityId` never throws on an id with no entry, just returns it
+ * unchanged.
+ *
+ * `TRANSLATORS` (2026-09-01, notification i18n) reproduces messages/en.json and
+ * messages/tr.json's real notification strings for exactly the keys this file's bodies
+ * use — every pre-existing assertion keeps meaning what it always meant, and the last
+ * test proves locale actually threads from `profiles.preferred_language` through to the
+ * stored notification body.
  */
 
 vi.mock("@/lib/notifications/create", () => ({ createNotification: vi.fn() }));
@@ -29,6 +38,7 @@ type ApplicationRow = {
 };
 type TargetUniversityRow = { id: string; university_id: string };
 type UniversityRow = { id: string; name: string };
+type ProfileRow = { id: string; preferred_language: string | null };
 type NotificationRow = { id: string; user_id: string; category: string; link: string; created_at: string };
 
 function makeQueryBuilder<T extends Record<string, unknown>>(rows: T[]) {
@@ -63,16 +73,19 @@ function makeSupabase(tables: {
   applications: ApplicationRow[];
   target_universities?: TargetUniversityRow[];
   universities?: UniversityRow[];
+  profiles?: ProfileRow[];
   notifications?: NotificationRow[];
 }) {
   const targetUniversities = tables.target_universities ?? [];
   const universities = tables.universities ?? [];
+  const profiles = tables.profiles ?? [];
   const notifications = tables.notifications ?? [];
   return {
-    from: vi.fn((table: "applications" | "target_universities" | "universities" | "notifications") => {
+    from: vi.fn((table: "applications" | "target_universities" | "universities" | "profiles" | "notifications") => {
       if (table === "applications") return makeQueryBuilder(tables.applications);
       if (table === "target_universities") return makeQueryBuilder(targetUniversities);
       if (table === "universities") return makeQueryBuilder(universities);
+      if (table === "profiles") return makeQueryBuilder(profiles);
       return makeQueryBuilder(notifications);
     }),
   } as unknown as SupabaseClient<Database>;
@@ -82,6 +95,29 @@ const STUDENT_ID = "student-1";
 const TODAY = new Date("2026-08-22T00:00:00");
 const DEADLINE_7_DAYS_OUT = "2026-08-29";
 const EMPTY_SUPERSESSION_MAP = new Map();
+
+const TRANSLATORS: Record<Locale, (key: string, values?: Record<string, string | number>) => string> = {
+  en: (key, values) =>
+    key === "applicationDeadlineApproachingGeneric"
+      ? "An application deadline is approaching."
+      : key === "applicationDeadlineApproaching"
+        ? `${values?.name} — application deadline approaching.`
+        : key === "daysUntilDeadline"
+          ? `${values?.days} days until deadline`
+          : key === "deadlineTomorrow"
+            ? "Deadline tomorrow"
+            : key,
+  tr: (key, values) =>
+    key === "applicationDeadlineApproachingGeneric"
+      ? "Bir başvuru son tarihi yaklaşıyor."
+      : key === "applicationDeadlineApproaching"
+        ? `${values?.name} — başvuru son tarihi yaklaşıyor.`
+        : key === "daysUntilDeadline"
+          ? `Son başvuruya ${values?.days} gün kaldı`
+          : key === "deadlineTomorrow"
+            ? "Son gün yarın"
+            : key,
+};
 
 beforeEach(() => {
   vi.mocked(createNotification).mockClear();
@@ -95,7 +131,7 @@ describe("scanApplications", () => {
       universities: [{ id: "univ-1", name: "Yale University" }],
     });
 
-    const result = await scanApplications(supabase, TODAY, EMPTY_SUPERSESSION_MAP);
+    const result = await scanApplications(supabase, TODAY, EMPTY_SUPERSESSION_MAP, TRANSLATORS);
 
     expect(result).toEqual({ notified: 1, checked: 1 });
     expect(createNotification).toHaveBeenCalledWith(
@@ -114,14 +150,14 @@ describe("scanApplications", () => {
       target_universities: [{ id: "target-1", university_id: "univ-1" }],
       universities: [{ id: "univ-1", name: "Yale University" }],
     });
-    const result = await scanApplications(supabase, TODAY, EMPTY_SUPERSESSION_MAP);
+    const result = await scanApplications(supabase, TODAY, EMPTY_SUPERSESSION_MAP, TRANSLATORS);
     expect(result).toEqual({ notified: 0, checked: 1 });
     expect(createNotification).not.toHaveBeenCalled();
   });
 
   test("no matching applications returns zero without querying target_universities/universities", async () => {
     const supabase = makeSupabase({ applications: [] });
-    const result = await scanApplications(supabase, TODAY, EMPTY_SUPERSESSION_MAP);
+    const result = await scanApplications(supabase, TODAY, EMPTY_SUPERSESSION_MAP, TRANSLATORS);
     expect(result).toEqual({ notified: 0, checked: 0 });
     expect(createNotification).not.toHaveBeenCalled();
   });
@@ -135,7 +171,7 @@ describe("scanApplications", () => {
       target_universities: [{ id: "target-1", university_id: "univ-1" }],
       universities: [{ id: "univ-1", name: "Yale University" }],
     });
-    const result = await scanApplications(supabase, TODAY, EMPTY_SUPERSESSION_MAP);
+    const result = await scanApplications(supabase, TODAY, EMPTY_SUPERSESSION_MAP, TRANSLATORS);
     expect(result).toEqual({ notified: 1, checked: 2 });
     expect(createNotification).toHaveBeenCalledTimes(1);
   });
@@ -146,8 +182,38 @@ describe("scanApplications", () => {
       target_universities: [],
       universities: [],
     });
-    const result = await scanApplications(supabase, TODAY, EMPTY_SUPERSESSION_MAP);
+    const result = await scanApplications(supabase, TODAY, EMPTY_SUPERSESSION_MAP, TRANSLATORS);
     expect(result).toEqual({ notified: 1, checked: 1 });
     expect(createNotification).toHaveBeenCalledWith(expect.objectContaining({ body: "An application deadline is approaching." }));
+  });
+
+  test("a student with preferred_language='tr' gets a Turkish title and body — locale actually threads through, not just the plumbing", async () => {
+    const supabase = makeSupabase({
+      applications: [{ id: "app-1", user_id: STUDENT_ID, deadline: DEADLINE_7_DAYS_OUT, target_university_id: "target-1", status: "in_progress" }],
+      target_universities: [{ id: "target-1", university_id: "univ-1" }],
+      universities: [{ id: "univ-1", name: "Yale University" }],
+      profiles: [{ id: STUDENT_ID, preferred_language: "tr" }],
+    });
+
+    const result = await scanApplications(supabase, TODAY, EMPTY_SUPERSESSION_MAP, TRANSLATORS);
+
+    expect(result).toEqual({ notified: 1, checked: 1 });
+    expect(createNotification).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "Son başvuruya 7 gün kaldı", body: "Yale University — başvuru son tarihi yaklaşıyor." })
+    );
+  });
+
+  test("a student with no profiles row at all defaults to English, not a crash", async () => {
+    const supabase = makeSupabase({
+      applications: [{ id: "app-1", user_id: STUDENT_ID, deadline: DEADLINE_7_DAYS_OUT, target_university_id: "target-1", status: "in_progress" }],
+      target_universities: [{ id: "target-1", university_id: "univ-1" }],
+      universities: [{ id: "univ-1", name: "Yale University" }],
+      profiles: [],
+    });
+
+    const result = await scanApplications(supabase, TODAY, EMPTY_SUPERSESSION_MAP, TRANSLATORS);
+
+    expect(result).toEqual({ notified: 1, checked: 1 });
+    expect(createNotification).toHaveBeenCalledWith(expect.objectContaining({ body: "Yale University — application deadline approaching." }));
   });
 });

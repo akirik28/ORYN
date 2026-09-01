@@ -1370,7 +1370,14 @@
     "markAllRead": "Tümünü okundu işaretle",
     "allCaughtUp": "Hepsi tamam",
     "unreadCount": "{count} okunmamış",
-    "noUnread": "Okunmamış yok"
+    "noUnread": "Okunmamış yok",
+    "weeklyPlanReady": "Haftalık planın hazır",
+    "deadlineTomorrow": "Son gün yarın",
+    "daysUntilDeadline": "Son başvuruya {days} gün kaldı",
+    "applicationDeadlineApproaching": "{name} — başvuru son tarihi yaklaşıyor.",
+    "applicationDeadlineApproachingGeneric": "Bir başvuru son tarihi yaklaşıyor.",
+    "universityDeadlineApproaching": "{name} — {detail} son tarihi yaklaşıyor.",
+    "unnamedTargetUniversity": "Bir hedef üniversite"
   },
   "plan": {
     "title": "Bu haftanın planı",
