@@ -360,7 +360,11 @@ export async function DashboardView({
                           ? t("planFailedDescription")
                           : t("noPlanDescription")
                     }
-                    action={planError !== "not_configured" ? <GeneratePlanButton /> : undefined}
+                    action={
+                      planError !== "not_configured" ? (
+                        <GeneratePlanButton label={t("generateMyPlan")} pendingLabel={t("thinking")} hasExistingPlan={false} />
+                      ) : undefined
+                    }
                   />
                 )}
               </div>

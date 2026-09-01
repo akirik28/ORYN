@@ -12,6 +12,15 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { DynamicFormFields, type FormValues } from "./dynamic-form-fields";
 import type { FieldConfig } from "./field-config";
 import { refineAchievement } from "@/app/(app)/profile/actions";
@@ -71,6 +80,7 @@ export function AchievementSection<T extends { id: string }>({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [refinement, setRefinement] = useState<AchievementRefinement | null>(null);
   const [isRefining, startRefining] = useTransition();
   const [refineError, setRefineError] = useState<string | null>(null);
@@ -151,6 +161,7 @@ export function AchievementSection<T extends { id: string }>({
       const result = await onDelete(id);
       if (result.error) toast.error(result.error);
       setDeletingId(null);
+      setDeleteConfirmId(null);
     });
   }
 
@@ -189,9 +200,9 @@ export function AchievementSection<T extends { id: string }>({
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    onClick={() => handleDelete(item.id)}
+                    onClick={() => setDeleteConfirmId(item.id)}
                     disabled={isPending && deletingId === item.id}
-                    aria-label={t("delete")}
+                    aria-label={tSection("deleteItemAriaLabel", { title: summary.title })}
                   >
                     {isPending && deletingId === item.id ? (
                       <Loader2 className="size-3.5 animate-spin" />
@@ -254,6 +265,24 @@ export function AchievementSection<T extends { id: string }>({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={deleteConfirmId !== null} onOpenChange={(nextOpen) => !nextOpen && setDeleteConfirmId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {tSection("deleteConfirmTitle", { title: (deleteConfirmId ? summaries[deleteConfirmId]?.title : null) ?? tSection("untitled") })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>{tSection("deleteConfirmDescription")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel render={<Button variant="outline" disabled={isPending} />}>{t("cancel")}</AlertDialogCancel>
+            <Button variant="destructive" disabled={isPending} onClick={() => deleteConfirmId && handleDelete(deleteConfirmId)}>
+              {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+              {t("delete")}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { getTranslations } from "next-intl/server";
 import { NotConfiguredNotice } from "@/features/system/not-configured-notice";
 import { integrationStatus } from "@/lib/env";
 import { inter } from "@/lib/fonts";
@@ -8,9 +9,10 @@ import { inter } from "@/lib/fonts";
 // prerendering candidate. See app/(app)/layout.tsx for the fuller explanation.
 export const dynamic = "force-dynamic";
 
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+export default async function AuthLayout({ children }: { children: React.ReactNode }) {
   if (!integrationStatus.supabase) {
-    return <NotConfiguredNotice />;
+    const tSystem = await getTranslations("system");
+    return <NotConfiguredNotice title={tSystem("notConfiguredTitle")} description={tSystem("notConfiguredDescription")} />;
   }
 
   return (

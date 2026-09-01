@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { requireProfile } from "@/lib/security/dal";
 import { NotConfiguredNotice } from "@/features/system/not-configured-notice";
 import { integrationStatus } from "@/lib/env";
@@ -10,7 +11,8 @@ export const dynamic = "force-dynamic";
 
 export default async function OnboardingLayout({ children }: { children: React.ReactNode }) {
   if (!integrationStatus.supabase) {
-    return <NotConfiguredNotice />;
+    const tSystem = await getTranslations("system");
+    return <NotConfiguredNotice title={tSystem("notConfiguredTitle")} description={tSystem("notConfiguredDescription")} />;
   }
 
   const profile = await requireProfile();

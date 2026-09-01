@@ -1,12 +1,21 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { File, Trash2, Loader2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { deleteEvidence } from "@/app/(app)/documents/actions";
 
 export function EvidenceRow({
@@ -23,7 +32,20 @@ export function EvidenceRow({
   const t = useTranslations("documents.row");
   const tCommon = useTranslations("common");
   const [isPending, startTransition] = useTransition();
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const router = useRouter();
+
+  function handleDelete() {
+    startTransition(async () => {
+      const result = await deleteEvidence(id);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      setConfirmOpen(false);
+      router.refresh();
+    });
+  }
 
   return (
     // Figma-source card chrome (ProfileTools.tsx `DocumentsScreen`): translucent white,
@@ -55,21 +77,28 @@ export function EvidenceRow({
           variant="ghost"
           size="icon-sm"
           disabled={isPending}
-          onClick={() =>
-            startTransition(async () => {
-              const result = await deleteEvidence(id);
-              if (result.error) {
-                toast.error(result.error);
-                return;
-              }
-              router.refresh();
-            })
-          }
-          aria-label={tCommon("delete")}
+          onClick={() => setConfirmOpen(true)}
+          aria-label={t("deleteAriaLabel", { fileName })}
         >
           {isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5 text-muted-foreground hover:text-destructive" />}
         </Button>
       </div>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("deleteConfirmTitle", { fileName })}</AlertDialogTitle>
+            <AlertDialogDescription>{t("deleteConfirmDescription")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel render={<Button variant="outline" disabled={isPending} />}>{tCommon("cancel")}</AlertDialogCancel>
+            <Button variant="destructive" disabled={isPending} onClick={handleDelete}>
+              {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+              {tCommon("delete")}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </li>
   );
 }

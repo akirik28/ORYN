@@ -35,6 +35,8 @@
   },
   "dashboard": {
     "focusThisWeek": "Bu haftaki odağın",
+    "generateMyPlan": "Planımı oluştur",
+    "thinking": "Düşünüyor…",
     "counselorFallbackDescription": "Doğrulanmış profil verilerine dayanır — yapay zekâ gerekmez.",
     "planNotConfiguredTitle": "AI Danışman henüz yapılandırılmadı",
     "planFailedTitle": "Bu haftanın planını oluşturamadık",
@@ -79,6 +81,10 @@
     "edit": "Düzenle",
     "save": "Kaydet",
     "selectPlaceholder": "Seç…"
+  },
+  "system": {
+    "notConfiguredTitle": "Supabase henüz yapılandırılmadı",
+    "notConfiguredDescription": "Hesapları ve verileri etkinleştirmek için .env.local dosyasında NEXT_PUBLIC_SUPABASE_URL ve NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY değerlerini ayarla. Adım adım talimatlar için API_SETUP.md dosyasına bak."
   },
   "settings": {
     "view": {
@@ -441,7 +447,10 @@
       "addDialogTitle": "{title} ekle",
       "editDialogTitle": "{title} düzenle",
       "improveWithAi": "Bu kaydı yapay zekâ ile geliştir",
-      "useThisDescription": "Bu açıklamayı kullan"
+      "useThisDescription": "Bu açıklamayı kullan",
+      "deleteItemAriaLabel": "{title} sil",
+      "deleteConfirmTitle": "\"{title}\" silinsin mi?",
+      "deleteConfirmDescription": "Bu işlem geri alınamaz."
     },
     "researchIdeas": {
       "eyebrow": "Araştırma",
@@ -1147,7 +1156,10 @@
     },
     "row": {
       "view": "Görüntüle",
-      "fallbackName": "Kanıt"
+      "fallbackName": "Kanıt",
+      "deleteAriaLabel": "{fileName} sil",
+      "deleteConfirmTitle": "\"{fileName}\" silinsin mi?",
+      "deleteConfirmDescription": "Bu işlem geri alınamaz."
     },
     "uploadDialog": {
       "addEvidence": "Kanıt ekle",
@@ -1365,6 +1377,9 @@
     "defaultDescription": "Bu hafta için öncelikli işlerin.",
     "regenerate": "Yeniden oluştur",
     "generate": "Planımı oluştur",
+    "thinking": "Düşünüyor…",
+    "regenerateConfirmTitle": "Bu haftanın planı yeniden oluşturulsun mu?",
+    "regenerateConfirmDescription": "Bu, bu haftaki planındaki tüm işleri değiştirir — tamamladığın işler ve onlar hakkında yazdığın notlar dahil. Bu işlem geri alınamaz.",
     "emptyTitle": "Bu hafta henüz plan yok",
     "emptyDescription": "Öncelikli işlerini görmek için bir plan oluştur."
   },

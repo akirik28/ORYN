@@ -23,7 +23,13 @@ export default async function PlanPage() {
       <PageHeader
         title={t("title")}
         description={weeklyPlan?.plan.summary || t("defaultDescription")}
-        action={<GeneratePlanButton label={weeklyPlan ? t("regenerate") : t("generate")} />}
+        action={
+          <GeneratePlanButton
+            label={weeklyPlan ? t("regenerate") : t("generate")}
+            pendingLabel={t("thinking")}
+            hasExistingPlan={!!weeklyPlan}
+          />
+        }
       />
 
       {weeklyPlan && weeklyPlan.actions.length > 0 ? (
