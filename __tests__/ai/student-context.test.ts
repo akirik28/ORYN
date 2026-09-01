@@ -108,15 +108,30 @@ describe("formatContextForPrompt — dimension names are human labels, not colum
   const withScores: StudentAdvisorContext = {
     ...baseContext(),
     profileScores: [
-      { dimension: "career_exploration", score: 12, confidence: "low" },
-      { dimension: "execution_project_depth", score: 40, confidence: "medium" },
-      { dimension: "intellectual_curiosity", score: 55, confidence: "high" },
+      { dimension: "career_exploration", score: 12, confidence: "low", state: "limited_evidence" },
+      { dimension: "execution_project_depth", score: 40, confidence: "medium", state: "developing" },
+      { dimension: "intellectual_curiosity", score: 55, confidence: "high", state: "developing" },
     ],
   };
 
   test("renders the display label", () => {
     const text = formatContextForPrompt(withScores);
-    expect(text).toContain("Career Exploration: 12/100");
+    expect(text).toContain("Execution / Project Depth: Developing (40/100");
+  });
+
+  /**
+   * 18 of 22 stored weekly actions quoted an "X/100" back at the student on 2026-09-01,
+   * including "Academics is 0/100" for a dimension nobody had entered anything for. No
+   * component renders overallScore and every surface shows an evidence state instead, so
+   * the model was reintroducing precisely what that design decision removed — and a 0 on an
+   * unassessed dimension is an absence being reported as a measurement.
+   */
+  test("an unassessed dimension is described, never given a number to quote", () => {
+    const text = formatContextForPrompt(withScores);
+    const line = text.split("\n").find((l) => l.includes("Career Exploration"))!;
+    expect(line).toContain("Limited evidence");
+    expect(line).not.toMatch(/\d+\/100/);
+    expect(line).toContain("Oryn has not assessed this");
   });
 
   test("no snake_case identifier survives anywhere in the prompt", () => {
@@ -127,7 +142,7 @@ describe("formatContextForPrompt — dimension names are human labels, not colum
   });
 
   test("locale is additive — Turkish labels when asked, English by default", () => {
-    expect(formatContextForPrompt(withScores, "tr")).toContain("Kariyer Keşfi: 12/100");
-    expect(formatContextForPrompt(withScores)).toContain("Career Exploration: 12/100");
+    expect(formatContextForPrompt(withScores, "tr")).toContain("Kariyer Keşfi:");
+    expect(formatContextForPrompt(withScores)).toContain("Career Exploration:");
   });
 });

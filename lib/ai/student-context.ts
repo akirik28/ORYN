@@ -3,6 +3,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { assembleScoringFacts } from "@/lib/scoring/assemble-facts";
 import { computeCareerProfile } from "@/lib/scoring";
+import { buildProfileSignal, isAssessed, EVIDENCE_STATE_LABELS, type EvidenceState } from "@/lib/scoring/signal";
 import { getUpcomingDeadlines } from "@/lib/deadlines/upcoming";
 import { canonicalUniversityId, loadSupersessionMap, type SupersessionMap } from "@/lib/universities/canonical";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -27,7 +28,12 @@ export interface StudentAdvisorContext {
      * prompt text today, same as birthYear. */
     citizenshipCountries: string[];
   };
-  profileScores: { dimension: ProfileDimension; score: number; confidence: string }[];
+  /**
+   * `state` is what the student's own surfaces render (lib/scoring/signal.ts). It is here
+   * because the model reads this block and writes the prose they see: given a bare number
+   * it will quote the number, and a dimension nobody has entered anything for scores 0.
+   */
+  profileScores: { dimension: ProfileDimension; score: number; confidence: string; state: EvidenceState }[];
   overallScore: number;
   completenessPercent: number;
   /**
@@ -212,7 +218,12 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
       birthYear: profile?.birth_year ?? null,
       citizenshipCountries: profile?.citizenship_countries ?? [],
     },
-    profileScores: dimensions.map((d) => ({ dimension: d.dimension, score: d.score, confidence: d.confidence })),
+    profileScores: buildProfileSignal(dimensions).map((d) => ({
+      dimension: d.dimension,
+      score: d.score,
+      confidence: d.confidence,
+      state: d.state,
+    })),
     overallScore,
     completenessPercent: profile?.completeness_percent ?? 0,
     activities: facts.activities.map((a) => ({
@@ -273,7 +284,6 @@ export function formatContextForPrompt(context: StudentAdvisorContext, locale: L
     : "";
   lines.push(`Weekly time budget: ${context.student.weeklyTimeBudget ?? "not set"}.${busyNote}`);
   lines.push(`Career Profile: ${context.overallScore}/100 overall. Profile completeness: ${context.completenessPercent}%.`);
-  lines.push("Dimension scores:");
   /**
    * Display labels, not the raw column values. The model reads this block and then writes
    * prose the student sees, so a bare `career_exploration` in the prompt comes back out as
@@ -281,9 +291,26 @@ export function formatContextForPrompt(context: StudentAdvisorContext, locale: L
    * do" card, 2026-09-01: "your career_exploration gap is better addressed by...". Nothing
    * in the pipeline was going to catch that; it is a schema identifier that reached a
    * sixteen-year-old through the one component that reformats its input freely.
+   *
+   * The same argument applies to the numbers. Every student-facing surface deliberately
+   * shows an evidence state rather than a strength percentage (UI-V3, founder direction) —
+   * and no component renders `overallScore` at all. The model was reintroducing exactly what
+   * that decision removed: 18 of 22 stored weekly actions quoted an "X/100" back at the
+   * student, including "Academics is 0/100" and "Research is at 0/100" for dimensions whose
+   * real state is *nothing recorded yet*. A 0 there is an absence, not a measurement, and
+   * saying it as a score tells a student they were assessed and failed.
+   *
+   * So an unassessed dimension is described, never numbered. Assessed ones keep the score,
+   * where it is a real reading and the model needs it to rank.
    */
+  lines.push("Dimension states (describe these as states; never quote a score for a dimension Oryn has not assessed):");
   for (const d of context.profileScores) {
-    lines.push(`  - ${dimensionLabel(d.dimension, locale)}: ${d.score}/100 (confidence: ${d.confidence})`);
+    const label = dimensionLabel(d.dimension, locale);
+    lines.push(
+      isAssessed(d.state)
+        ? `  - ${label}: ${EVIDENCE_STATE_LABELS[d.state]} (${d.score}/100, confidence: ${d.confidence})`
+        : `  - ${label}: ${EVIDENCE_STATE_LABELS[d.state]} — no score to quote, Oryn has not assessed this`,
+    );
   }
   /**
    * `verified` renders silently (no tag) — the "no news is good news" default, unchanged
