@@ -47,13 +47,24 @@ of the four Tier-1 candidates offering Russian-medium instruction, a distinct si
 Galatasaray's uniform French, TOBB ETÜ's Turkish/English mix, and Marmara's Turkish/English/
 German/French/Arabic spread.
 
+## Admission facts — checked, same outcome as TOBB ETÜ
+
+International-admissions page identified correctly this time (`https://international.yeditepe.edu.tr/admission`
+— found via the homepage's own navigation, not guessed), and fetched. **Same result as TOBB
+ETÜ**: a generic application-portal landing page ("Online applications are open!", links to
+Associate/Undergraduate/Graduate degree levels) with no entrance-exam or accepted-credential
+detail on the page itself — that content sits on further linked program-specific pages not
+fetched this pass. Whether Yeditepe runs its own entrance exam or accepts SAT/A-Level/IB/Abitur/
+diploma scores directly for international applicants remains **genuinely unresolved**, same as
+TOBB ETÜ, unlike Galatasaray where the equivalent question resolved cleanly (GSÜYÖS).
+
 ## What this does NOT do
 
 - No `universities`/`university_programs`/`university_program_placement_cycles` rows inserted.
 - No full 64-programme staged JSON catalogue this pass, same reasoning as Marmara's — the raw
   142-record set is reproducible directly from YÖK Atlas's own API, not re-attached here.
-- No admissions-facts research (international pathway, domestic distinguishing facts) this
-  pass — the Tier-1 thread's remaining time went to closing the correction-verification item
-  first, which was the more load-bearing gap. A future pass can add this the same way Galatasaray/
-  TOBB ETÜ's admission-facts sections were built.
+- No international entrance-exam answer — checked, found only a generic portal, named as
+  unresolved rather than guessed at, same treatment as TOBB ETÜ's identical outcome.
+- No domestic-pathway distinguishing facts beyond what §"Scale" and the fee-tier finding above
+  already establish — nothing else searched for this pass.
 - No reconciliation of the 64-vs-67 programme-count gap against the university's own claim.
