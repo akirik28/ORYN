@@ -214,6 +214,59 @@ export function looksOfficial(domain: string): boolean {
 }
 
 /**
+ * Institution-specific secondary official domains, verified by hand one at a time — never a
+ * substitute for ROR-sourced provenance (see `officialDomains` in `sourceAuthority`'s own doc
+ * comment below), only a narrow patch for what ROR does not cover: an admissions site hosted
+ * on a domain that does not share its institution's primary suffix. ROR's own record for MIT
+ * (https://ror.org/042nb2s44, checked live 2026-09-01) lists exactly one domain, `mit.edu` —
+ * it has no knowledge of `mitadmissions.org`, so full ROR integration alone would not have
+ * closed this gap.
+ *
+ * `mitadmissions.org` verified live 2026-09-01: resolves (HTTP 200), and is directly
+ * cross-linked from MIT's own already-official `web.mit.edu/admissions` page — the same
+ * "live-fetched, not guessed" bar as APPLICATION_SYSTEM_DOMAINS above. Missing this domain was
+ * the entire reason all 44 `requirement_research_queue` rows for MIT — 5 of 8 students with a
+ * saved target_universities row target it, the single most-targeted school in the pilot
+ * cohort — were rejected with `malformed_source`: every one of them cited an official
+ * mitadmissions.org page, and `lib/requirements/ingest.ts` was building `officialDomains` from
+ * `website_url` alone.
+ *
+ * Keyed by exact `universities.name`. Production currently has two MIT rows — one a nameless
+ * stub with no `website_url`, referenced by zero research records — so this only needs to
+ * match whichever row `resolveRequirementUniversity` actually resolves the real research
+ * against, which it does by name; it does not need to be duplicate-safe beyond that.
+ *
+ * Every sibling call site that builds an `officialDomains` set the same website_url-only way
+ * (`lib/programs/ingest.ts`, `lib/deadlines/ingest.ts`, and four `scripts/*.ts` acquisition
+ * scripts — grep `officialDomains` for the full list) shares this exact limitation. Only
+ * `lib/requirements/ingest.ts` was switched to consume this constant, because that is the one
+ * call site with a confirmed, live-demand institution blocked by it today; the others were
+ * left alone rather than widening this fix on spec.
+ */
+const ADDITIONAL_OFFICIAL_DOMAINS: Readonly<Record<string, readonly string[]>> = {
+  "Massachusetts Institute of Technology": ["mitadmissions.org"],
+};
+
+/**
+ * `officialDomains` for a specific university: its own site (unchanged from every existing
+ * call site's inline construction) plus any hand-verified secondary domain from
+ * ADDITIONAL_OFFICIAL_DOMAINS above. A caller passes whatever it already looked up for the
+ * matched university; nothing here queries the database itself.
+ */
+export function officialDomainsFor(university: { name?: string | null; websiteUrl?: string | null }): Set<string> {
+  const domains = new Set<string>();
+  if (university.websiteUrl) {
+    const domain = domainOf(university.websiteUrl);
+    if (domain) domains.add(domain);
+  }
+  const additional = university.name ? ADDITIONAL_OFFICIAL_DOMAINS[university.name] : undefined;
+  if (additional) {
+    for (const domain of additional) domains.add(domain);
+  }
+  return domains;
+}
+
+/**
  * Whether `url` may be used to publish a fact of `factClass`, and at what tier.
  *
  * `officialDomains` lets a caller additionally treat a specific institution's own domain as

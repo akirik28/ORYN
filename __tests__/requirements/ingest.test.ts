@@ -16,10 +16,13 @@ import { RequirementQualifiersSchema } from "@/lib/validation/requirements";
 
 const EDINBURGH_ID = "11111111-1111-1111-1111-111111111111";
 const METU_ID = "22222222-2222-2222-2222-222222222222";
+const MIT_ID = "33333333-3333-3333-3333-333333333333";
 
 const UNIVERSITIES: UniversityLookupRow[] = [
   { id: EDINBURGH_ID, name: "The University of Edinburgh", country: "United Kingdom", websiteUrl: "https://www.ed.ac.uk" },
   { id: METU_ID, name: "Middle East Technical University", country: "Türkiye", websiteUrl: "https://www.metu.edu.tr" },
+  // Production's real row (website_url populated, unlike its unreferenced null-fields duplicate).
+  { id: MIT_ID, name: "Massachusetts Institute of Technology", country: "United States", websiteUrl: "https://web.mit.edu" },
 ];
 
 /** Minimal record that lands cleanly; each test overrides only the field under examination. */
@@ -437,6 +440,37 @@ describe("requirementRecordIdentity — no record can produce an unwritable audi
     // Every field a misfiled record can be missing must be an explicit null, never undefined:
     // supabase-js drops undefined keys, so the column would silently take its default.
     for (const value of Object.values(written[0])) expect(value).not.toBeUndefined();
+  });
+});
+
+describe("decideRequirementIngestion — mitadmissions.org (officialDomainsFor regression)", () => {
+  // Found while scoping the Gate F target-set document, 2026-09-01: all 44 of MIT's
+  // requirement_research_queue rows — the single most-targeted school in the pilot cohort, 5
+  // of 8 students — were malformed_source. Every one of them cited an official
+  // mitadmissions.org page; lib/requirements/ingest.ts built officialDomains from website_url
+  // (web.mit.edu) alone, and mitadmissions.org carries no academic suffix for looksOfficial()
+  // to catch on its own.
+  it("accepts a requirement sourced from MIT's official admissions domain", () => {
+    const record = req({
+      research_requirement_id: "REQ-MIT-0001",
+      university_name: "Massachusetts Institute of Technology",
+      university_country: "United States",
+      source_url: "https://mitadmissions.org/apply/first-year/",
+    });
+    const decision = decide(record);
+    expect(decision.outcome).toBe("accepted");
+    expect(decision.row?.university_id).toBe(MIT_ID);
+  });
+
+  it("still refuses the same record for an institution with no curated addition — this is MIT-specific, not a blanket relaxation", () => {
+    const record = req({
+      research_requirement_id: "REQ-EDI-MITADMISSIONS-0001",
+      university_name: "The University of Edinburgh",
+      university_country: "United Kingdom",
+      source_url: "https://mitadmissions.org/apply/first-year/",
+    });
+    const decision = decide(record);
+    expect(decision.outcome).toBe("malformed_source");
   });
 });
 

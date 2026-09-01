@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { domainOf, looksOfficial, sourceAuthority } from "@/lib/acquisition/source-authority";
+import { domainOf, looksOfficial, officialDomainsFor, sourceAuthority } from "@/lib/acquisition/source-authority";
 
 describe("domainOf", () => {
   test("strips www and lowercases", () => {
@@ -175,5 +175,49 @@ describe("sourceAuthority", () => {
   test("an unrelated domain that merely shares a suffix-unsafe substring with a curated system domain still fails", () => {
     // notucas.com must not match ucas.com the same way notethz.ch must not match ethz.ch above.
     expect(sourceAuthority("policy", "https://notucas.com/deadlines")).toBeNull();
+  });
+});
+
+// Regression: requirements-ingestion gap found while scoping the Gate F target-set document,
+// 2026-09-01. ROR's own record for MIT (https://ror.org/042nb2s44, checked live) lists exactly
+// one domain, mit.edu — it has no knowledge of mitadmissions.org, the domain every one of MIT's
+// 44 rejected requirement_research_queue rows actually cited. lib/requirements/ingest.ts built
+// officialDomains from website_url alone, so a wholly legitimate official admissions page was
+// refused outright.
+describe("officialDomainsFor", () => {
+  test("includes the university's own website domain, same as every existing call site's inline construction", () => {
+    expect(officialDomainsFor({ name: "University of Edinburgh", websiteUrl: "https://www.ed.ac.uk" })).toEqual(new Set(["ed.ac.uk"]));
+  });
+
+  test("returns an empty set for a university with no website_url and no curated addition", () => {
+    expect(officialDomainsFor({ name: "Some Unlisted University", websiteUrl: null })).toEqual(new Set());
+  });
+
+  test("adds MIT's verified admissions domain on top of its website domain", () => {
+    // Production's real MIT row: website_url is https://web.mit.edu specifically (not the
+    // bare mit.edu), so the website-domain half of the set is web.mit.edu, not mit.edu.
+    const domains = officialDomainsFor({ name: "Massachusetts Institute of Technology", websiteUrl: "https://web.mit.edu" });
+    expect(domains).toEqual(new Set(["web.mit.edu", "mitadmissions.org"]));
+  });
+
+  test("the curated addition is keyed by exact name — a near-miss name gets no addition", () => {
+    // Regression guard for production's real duplicate: a second "Massachusetts Institute of
+    // Technology (MIT)" row exists, with no website_url and zero research records against it.
+    // The curated map must not match it via any substring/fuzzy rule.
+    expect(officialDomainsFor({ name: "Massachusetts Institute of Technology (MIT)", websiteUrl: null })).toEqual(new Set());
+  });
+
+  test("sourceAuthority accepts a policy fact sourced from mitadmissions.org once officialDomainsFor is used", () => {
+    const domains = officialDomainsFor({ name: "Massachusetts Institute of Technology", websiteUrl: "https://web.mit.edu" });
+    // mitadmissions.org carries no academic suffix, so looksOfficial() alone refuses it — this
+    // is the exact shape of the failure all 44 rejected rows hit.
+    expect(sourceAuthority("policy", "https://mitadmissions.org/apply/first-year/", domains)).toEqual({ tier: "HIGH", sourceType: "official_primary" });
+    // Confirms this was really the fix, not a pre-existing pass: the old website_url-only
+    // construction still refuses the exact same URL.
+    expect(sourceAuthority("policy", "https://mitadmissions.org/apply/first-year/", new Set(["web.mit.edu"]))).toBeNull();
+  });
+
+  test("handles a missing university gracefully — the real call site does officialDomainsFor(matchedUniversity ?? {})", () => {
+    expect(officialDomainsFor({})).toEqual(new Set());
   });
 });

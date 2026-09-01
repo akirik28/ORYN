@@ -1,6 +1,6 @@
 import { resolveIdentity, type LocalUniversity } from "@/lib/acquisition/identity";
 import { resolveExactProgram, type ProgramLookupRow } from "@/lib/acquisition/program-identity";
-import { sourceAuthority, domainOf } from "@/lib/acquisition/source-authority";
+import { sourceAuthority, officialDomainsFor } from "@/lib/acquisition/source-authority";
 import { statesTheSameFact } from "@/lib/requirements/dedup";
 import { deriveEvaluationGate, deriveExcludedProvenances, deriveRecencyRule } from "@/lib/requirements/shape-audit";
 import type { EvaluationGate, RecencyRule, ScoreProvenance } from "@/lib/requirements/types";
@@ -364,7 +364,7 @@ export function decideRequirementIngestion(
   }
 
   const matchedUniversity = universities.find((u) => u.id === universityId);
-  const officialDomains = new Set(matchedUniversity?.websiteUrl ? [domainOf(matchedUniversity.websiteUrl)] : []);
+  const officialDomains = officialDomainsFor(matchedUniversity ?? {});
   const authority = sourceAuthority("policy", record.source_url, officialDomains);
   if (!authority) {
     return {
