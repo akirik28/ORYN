@@ -414,13 +414,33 @@ stop-and-protect event.
 - **Tier 1 (6 rows, uncontested — not a judgment call, never valid opportunity records)**:
   the 5 institution-name-titled rows plus the UCSC course-catalogue row. Routed to
   RES-I2 to set `status='disabled'` with reason recorded.
-  **Update, 2026-09-01 — not "in flight," stalled**: `docs/handoffs/i2_retire-nonopportunities_ingest-report.md`
-  shows the dry run completed and re-verified clean (all 6 confirmed `active`, disable
-  transaction rehearsed and rolled back correctly), but the actual `commit` was blocked by
-  Claude Code's own auto-mode safety classifier — the same class of block covered in
-  `founder-blocked-backlog.md`. Escalated to the founder as one of four blocked writes that
-  session; no evidence since of it having been applied. Same status as the RLS migrations
-  above: written, verified, waiting on the founder to actually run it — not a lane task.
+  **Update, 2026-09-01 — measured against the live DB, and the previous entry here was
+  wrong in both directions.** It said all 6 were confirmed `active` and there was "no
+  evidence of it having been applied." Querying the rows directly:
+
+  | Row | Status | `updated_at` |
+  |---|---|---|
+  | King's College London (London, UK) | `disabled` | 2026-08-23 22:26 |
+  | University of St. Andrews (Scotland, UK) | `disabled` | 2026-08-23 22:26 |
+  | ECON 1 - 01 Introductory Microeconomics (UCSC) | `disabled` | 2026-08-23 22:26 |
+  | **Carnegie Mellon University (PA, USA)** | **`active`** | 2026-08-31 17:45 |
+  | **New York University (NY, USA)** | **`active`** | 2026-08-31 17:45 |
+  | **University of Southern California (CA, USA)** | **`active`** | 2026-08-31 20:09 |
+
+  So **half the disable was applied on 2026-08-23** and three rows were missed. The three
+  survivors are worse off than "pending": they are `category = 'summer_program'`, matched to
+  **all 8 users**, **4 of those 8 as "Strong match"**, and all 8 marked eligible. Every Oryn
+  user is currently being recommended "Carnegie Mellon University (PA, USA)" as a summer
+  programme to apply to. Their 2026-08-31 `updated_at` means last night's enrichment pass
+  *improved* rows that should have been retired.
+
+  Still not a lane task — this is a data write to the founder's live project, and the
+  original attempt was escalated rather than forced. The exact statement is in
+  `docs/founder-blocked-backlog.md`; it now needs to name three ids, not six.
+
+  The lesson worth keeping: this entry trusted a handoff report as the authority on live
+  state. The handoff was accurate when written; the database moved and nothing told the
+  document. Re-query before repeating a status claim about live data.
 - **Tier 2 (~79 rows)**: re-research-or-retire is a real product-cost tradeoff (a garbled
   card vs. an empty shelf on ~29% of the live catalogue) touching founder-supplied data —
   **escalated to the founder by ORYN-CEO, not decided by any lane.** Producing "corrected"

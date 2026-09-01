@@ -430,10 +430,31 @@ spreadsheet cells. ORYN's importer carried it through faithfully rather than int
 the ` | ` separators and the ~900-character truncation exist verbatim in the seed SQL, and no
 900-character clip exists anywhere in the generator. **There is no extraction bug to fix; the
 source corpus is the defect.** That is why this is your call and not an engineering task.
-**Already handled without you** (categorically-wrong rows, not a judgment call): a UCSC
-course-catalogue entry, the 5 institution-name titles, and one record that is three separate CMU
-programs concatenated are being retired, because they are wrong in kind rather than degraded in
-quality.
+**Half-handled without you, and this needs one minute of your time** (categorically-wrong
+rows, not a judgment call). The UCSC course-catalogue entry, King's College London and
+St Andrews were retired on 2026-08-23. **Three institution-name rows were missed and are
+still live**, re-measured against the database on 2026-09-01:
+
+```sql
+-- Three university names filed as summer programmes. Currently matched to all 8 users,
+-- 4 of 8 as "Strong match", all 8 marked eligible.
+update public.opportunities
+set status = 'disabled', updated_at = now()
+where id in (
+  'b4091e25-c8ca-4042-9976-ee41ae4031d5',  -- Carnegie Mellon University (PA, USA)
+  '907e279d-bc2f-46b0-b970-9ed9c0abb261',  -- New York University (NY, USA)
+  '4a54159a-58dd-4304-a139-2b76f2a9fe38'   -- University of Southern California (CA, USA)
+);
+```
+
+An agent cannot run this — the same auto-mode safety classifier that blocked the original
+attempt — and no lane should force it, since it is a write to your live project. It is three
+rows, reversible by setting `status` back to `'active'`.
+
+Worth knowing why it went unnoticed: the earlier note said all six were confirmed still
+active and awaiting you. Half had in fact been applied, and nothing updated the document.
+The three survivors were then *enriched* by the 2026-08-31 pass — effort spent improving
+rows that should have been retired.
 **Why it matters**: these are on the surface students browse. Per your own non-negotiables,
 nothing that misleads should ship. But re-researching ~80 rows to this project's evidence bar is
 real work (measured yield elsewhere: ~5% of rows per hour of research), so the honest options are
