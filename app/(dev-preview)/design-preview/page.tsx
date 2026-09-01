@@ -99,8 +99,9 @@ export default function DesignPreviewPage() {
           hasTargets
           availableTargets={[{ id: "t1", name: "Bocconi University" }]}
           applications={[
-            { id: "a1", universityName: "University of Pennsylvania", applicationType: "early_decision", deadline: "2026-11-01", status: "in_progress", readiness: 33 },
-            { id: "a2", universityName: "University of Cambridge", applicationType: "regular_decision", deadline: "2026-10-15", status: "not_started", readiness: 0 },
+            { id: "a1", universityName: "University of Pennsylvania", applicationType: "early_decision", deadline: "2026-11-01", status: "in_progress", readiness: { kind: "measured", percent: 33 } },
+            { id: "a2", universityName: "University of Cambridge", applicationType: "regular_decision", deadline: "2026-10-15", status: "not_started", readiness: { kind: "measured", percent: 0 } },
+            { id: "a3", universityName: "Yale University", applicationType: "regular_decision", deadline: "2026-01-02", status: "submitted", readiness: { kind: "not_tracked", applicationStatus: "submitted" } },
           ]}
         />
       </div>

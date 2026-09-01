@@ -1142,7 +1142,9 @@
     },
     "readiness": {
       "label": "Application readiness",
-      "description": "Measures how much of your known checklist is complete — not your chance of admission."
+      "description": "Measures how much of your known checklist is complete — not your chance of admission.",
+      "notTracked": "Readiness stops being tracked once you submit. It has no bearing on your decision — the checklist below stays here for your own reference.",
+      "unmeasured": "No requirements are currently tracked for this application."
     },
     "singularLabel": "Application"
   },
