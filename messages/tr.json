@@ -1379,7 +1379,8 @@
     "applicationDeadlineApproaching": "{name} — başvuru son tarihi yaklaşıyor.",
     "applicationDeadlineApproachingGeneric": "Bir başvuru son tarihi yaklaşıyor.",
     "universityDeadlineApproaching": "{name} — {detail} son tarihi yaklaşıyor.",
-    "unnamedTargetUniversity": "Bir hedef üniversite"
+    "unnamedTargetUniversity": "Bir hedef üniversite",
+    "newOpportunityMatch": "Yeni eşleşme: {name}"
   },
   "plan": {
     "title": "Bu haftanın planı",

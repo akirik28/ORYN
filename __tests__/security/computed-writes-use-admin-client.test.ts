@@ -61,16 +61,18 @@ describe("lib/opportunities/persist-matches.ts", () => {
     expect(src).toContain('await admin.from("opportunity_matches").upsert(rows,');
   });
 
-  test("no write to opportunity_matches still uses the RLS-scoped client", () => {
-    expect(src).not.toContain('supabase.from("opportunity_matches")');
+  test("no write to opportunity_matches uses the RLS-scoped client -- only a read (migration 0065 explicitly grants 'select own opportunity_matches'; the notify-new-matches diff added 2026-09-01 reads its own previous state the same RLS-scoped way lib/opportunities/browse.ts already does elsewhere)", () => {
+    expect(src).toContain('supabase.from("opportunity_matches").select(');
+    expect(src).not.toMatch(/supabase\.from\("opportunity_matches"\)\.(upsert|insert|update|delete)\(/);
   });
 
-  test("every read (profiles, profile_scores, student_interests, opportunities, saved_opportunities) stays RLS-scoped", () => {
+  test("every read (profiles, profile_scores, student_interests, opportunities, saved_opportunities, opportunity_matches) stays RLS-scoped", () => {
     expect(src).toContain('supabase.from("profiles").select(');
     expect(src).toContain('supabase.from("profile_scores").select(');
     expect(src).toContain('supabase.from("student_interests").select(');
     expect(src).toContain('.from("opportunities")\n      .select(');
     expect(src).toContain('supabase.from("saved_opportunities").select(');
+    expect(src).toContain('supabase.from("opportunity_matches").select(');
   });
 });
 
