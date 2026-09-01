@@ -37,9 +37,13 @@ export default async function ApplicationsPage() {
 
   const applicationIds = applications.map((a) => a.id);
   const { data: requirements } = applicationIds.length
-    ? await supabase.from("application_requirements").select("application_id, status").in("application_id", applicationIds)
+    ? await supabase
+        .from("application_requirements")
+        .select("id, application_id, requirement_type, status")
+        .order("requirement_type")
+        .in("application_id", applicationIds)
     : { data: [] };
-  const requirementsByApplication = new Map<string, { status: RequirementStatus }[]>();
+  const requirementsByApplication = new Map<string, { id: string; requirement_type: string; status: RequirementStatus }[]>();
   for (const req of requirements ?? []) {
     requirementsByApplication.set(req.application_id, [...(requirementsByApplication.get(req.application_id) ?? []), req]);
   }
@@ -56,6 +60,7 @@ export default async function ApplicationsPage() {
     deadline: application.deadline,
     status: application.status,
     readiness: computeReadiness(application.status, requirementsByApplication.get(application.id) ?? []),
+    requirements: requirementsByApplication.get(application.id) ?? [],
   }));
 
   return <ApplicationsView applications={rows} hasTargets={targets.length > 0} availableTargets={availableTargets} />;
