@@ -473,7 +473,8 @@
         "accessible": "erişilebilir",
         "moderate": "orta",
         "ambitious": "iddialı"
-      }
+      },
+      "pageTitle": "Araştırma Fikirleri"
     },
     "storyBank": {
       "title": "Deneme Hikaye Bankası",
@@ -616,7 +617,8 @@
       "finish": "Bitir",
       "settingUp": "Profilin hazırlanıyor…",
       "schoolStepError": "Devam etmek için ülkeni, okulunu ve müfredatını doldur.",
-      "birthYearError": "Doğduğun yılı gir — Oryn, programlardaki yaş sınırlarını kontrol etmek için buna ihtiyaç duyar."
+      "birthYearError": "Doğduğun yılı gir — Oryn, programlardaki yaş sınırlarını kontrol etmek için buna ihtiyaç duyar.",
+      "pageTitle": "Profilini kur"
     },
     "interests": {
       "placeholder": "Ara ya da kendi ilgi alanını yaz ve Enter'a bas",
@@ -851,7 +853,8 @@
       "costPerYear": "{value} / yıl",
       "admissionRate": "Kabul oranı",
       "applicationSystem": "Başvuru sistemi",
-      "researchStrengths": "Araştırma güçlü yönleri"
+      "researchStrengths": "Araştırma güçlü yönleri",
+      "pageTitle": "Üniversite Karşılaştırma"
     }
   },
   "sourceBadge": {
@@ -1099,7 +1102,8 @@
     "readiness": {
       "label": "Başvuru hazırlığı",
       "description": "Bilinen kontrol listenin ne kadarının tamamlandığını gösterir — kabul şansını değil."
-    }
+    },
+    "singularLabel": "Başvuru"
   },
   "documents": {
     "title": "Belgeler",
@@ -1443,5 +1447,8 @@
     "city": "Şehir",
     "country": "Ülke",
     "unverifiedNotice": "Oryn bunu, resmi bir kaynakla karşılaştırılana kadar doğrulanmamış olarak ekleyecek."
+  },
+  "admin": {
+    "pageTitle": "Yönetici Paneli"
   }
 }

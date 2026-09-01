@@ -1,4 +1,5 @@
 import { Users } from "lucide-react";
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
@@ -10,7 +11,10 @@ import { EmptyState } from "@/components/oryn/empty-state";
 import { ConnectionRow, PendingRequestRow } from "@/features/connections/connection-row";
 import { PeopleYouMayKnowRow } from "@/features/connections/people-you-may-know-row";
 
-export const metadata = { title: "Connections" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("connections.page");
+  return { title: t("eyebrow") };
+}
 
 export default async function ConnectionsPage() {
   const session = await requireUser();

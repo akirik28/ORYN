@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Compass } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -19,7 +20,10 @@ import { EmptyState } from "@/components/oryn/empty-state";
 import { ErrorState } from "@/components/oryn/error-state";
 import type { Opportunity, OpportunityCategory } from "@/types/database";
 
-export const metadata = { title: "Opportunities" };
+export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations("nav");
+  return { title: tMeta("opportunities") };
+}
 
 const TAB =
   "border-b-2 pb-2 text-sm transition-colors duration-(--duration-fast) focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none";

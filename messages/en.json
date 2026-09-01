@@ -473,7 +473,8 @@
         "accessible": "accessible",
         "moderate": "moderate",
         "ambitious": "ambitious"
-      }
+      },
+      "pageTitle": "Research ideas"
     },
     "storyBank": {
       "title": "Essay Story Bank",
@@ -616,7 +617,8 @@
       "finish": "Finish",
       "settingUp": "Setting up your profile…",
       "schoolStepError": "Fill in your country, school, and curriculum to continue.",
-      "birthYearError": "Enter the year you were born — Oryn needs it to check age limits on programs."
+      "birthYearError": "Enter the year you were born — Oryn needs it to check age limits on programs.",
+      "pageTitle": "Set up your profile"
     },
     "interests": {
       "placeholder": "Search or type your own interest and press Enter",
@@ -851,7 +853,8 @@
       "costPerYear": "{value} / year",
       "admissionRate": "Admission rate",
       "applicationSystem": "Application system",
-      "researchStrengths": "Research strengths"
+      "researchStrengths": "Research strengths",
+      "pageTitle": "Compare universities"
     }
   },
   "sourceBadge": {
@@ -1099,7 +1102,8 @@
     "readiness": {
       "label": "Application readiness",
       "description": "Measures how much of your known checklist is complete — not your chance of admission."
-    }
+    },
+    "singularLabel": "Application"
   },
   "documents": {
     "title": "Documents",
@@ -1443,5 +1447,8 @@
     "city": "City",
     "country": "Country",
     "unverifiedNotice": "Oryn will add this as unverified until someone checks it against an official source."
+  },
+  "admin": {
+    "pageTitle": "Admin"
   }
 }

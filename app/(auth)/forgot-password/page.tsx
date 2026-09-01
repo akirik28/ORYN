@@ -1,9 +1,13 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { ForgotPasswordForm } from "../_components/forgot-password-form";
 import { instrumentSerif } from "@/lib/fonts";
 
-export const metadata = { title: "Reset your password" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("auth.forgotPassword");
+  return { title: t("headline") };
+}
 
 export default async function ForgotPasswordPage() {
   const t = await getTranslations("auth.forgotPassword");

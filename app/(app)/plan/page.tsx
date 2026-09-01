@@ -1,4 +1,5 @@
 import { ListChecks } from "lucide-react";
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/security/dal";
 import { getCurrentWeeklyPlan } from "@/lib/plan/persist";
@@ -7,7 +8,10 @@ import { GeneratePlanButton } from "@/features/dashboard/generate-plan-button";
 import { PageHeader } from "@/components/oryn/page-header";
 import { EmptyState } from "@/components/oryn/empty-state";
 
-export const metadata = { title: "Plan" };
+export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations("nav");
+  return { title: tMeta("plan") };
+}
 
 export default async function PlanPage() {
   const t = await getTranslations("plan");

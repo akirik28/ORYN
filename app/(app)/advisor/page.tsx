@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { requireUser, getCurrentProfile } from "@/lib/security/dal";
 import { resolveLocale } from "@/lib/i18n/locale";
@@ -16,7 +17,10 @@ import { getCounselorRecommendations } from "@/lib/counselor";
 import { getMonthlyQuota } from "@/lib/ai/monthly-quota";
 import { MonthlyUsageMeter } from "@/features/advisor/monthly-usage-meter";
 
-export const metadata = { title: "Counselor" };
+export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations("nav");
+  return { title: tMeta("counselor") };
+}
 
 export default async function AdvisorPage() {
   const session = await requireUser();

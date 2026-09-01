@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { computeReadiness } from "@/lib/applications/readiness";
@@ -5,7 +7,10 @@ import { canonicalUniversityId, loadSupersessionMap } from "@/lib/universities/c
 import { ApplicationsView } from "@/features/applications/applications-view";
 import type { RequirementStatus } from "@/types/database";
 
-export const metadata = { title: "Applications" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("nav");
+  return { title: t("applications") };
+}
 
 export default async function ApplicationsPage() {
   const session = await requireUser();

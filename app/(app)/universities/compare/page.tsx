@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { ArrowLeft } from "lucide-react";
 import { requireUser } from "@/lib/security/dal";
@@ -10,7 +11,10 @@ import { Scale } from "lucide-react";
 import { COMPARE_MAX } from "@/lib/universities/compare-constants";
 import type { University } from "@/types/database";
 
-export const metadata = { title: "Compare universities" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("universities.comparePage");
+  return { title: t("pageTitle") };
+}
 
 const NA = <span className="text-muted-foreground">—</span>;
 

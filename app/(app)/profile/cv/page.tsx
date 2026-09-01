@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { requireUser, getCurrentProfile } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { buildPortfolio } from "@/lib/portfolio/build";
 import { CVBuilder } from "@/features/profile/cv-builder";
 
-export const metadata = { title: "CV Generator" };
+export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations("profile.cv");
+  return { title: tMeta("title") };
+}
 
 export default async function CVPage() {
   const session = await requireUser();

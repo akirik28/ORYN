@@ -1,10 +1,14 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { SignUpForm } from "../_components/signup-form";
 import { instrumentSerif } from "@/lib/fonts";
 
-export const metadata = { title: "Create your account" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("auth.signup");
+  return { title: t("title") };
+}
 
 export default async function SignUpPage() {
   const locale = await resolveLocale();

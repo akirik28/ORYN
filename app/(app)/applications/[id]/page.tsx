@@ -18,6 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   const session = await requireUser();
   const supabase = await createClient();
+  const t = await getTranslations("applications");
   const { data: application } = await supabase
     .from("applications")
     .select("target_university_id")
@@ -30,14 +31,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     .select("university_id")
     .eq("id", application.target_university_id)
     .single();
-  if (!target) return { title: "Application" };
+  if (!target) return { title: t("singularLabel") };
   const supersessionMap = await loadSupersessionMap(supabase);
   const { data: university } = await supabase
     .from("universities")
     .select("name")
     .eq("id", canonicalUniversityId(supersessionMap, target.university_id))
     .single();
-  return { title: university?.name ?? "Application" };
+  return { title: university?.name ?? t("singularLabel") };
 }
 
 export default async function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -61,7 +62,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
 
   const requirements = requirementsRes.data ?? [];
   const readiness = computeReadiness(requirements);
-  const universityName = university?.name ?? "Application";
+  const universityName = university?.name ?? t("singularLabel");
   const applicationTypeLabel = t(`newDialog.typeOptions.${application.application_type}`);
 
   return (

@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { getCurrentProfile, requireUser } from "@/lib/security/dal";
 import { SettingsView } from "@/features/settings/settings-view";
 
-export const metadata = { title: "Settings" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("nav");
+  return { title: t("settings") };
+}
 
 export default async function SettingsPage() {
   // requireUser() (redirect-on-fail), not verifySession() — this page is nested under
