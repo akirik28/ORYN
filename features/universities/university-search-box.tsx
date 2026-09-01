@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Loader2, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { searchEntitiesAction } from "@/app/(app)/entities/actions";
@@ -23,6 +24,7 @@ const MIN_QUERY_LENGTH = 2;
  * native submit still re-renders the page with the full filtered grid below.
  */
 export function UniversitySearchBox({ defaultValue, country }: { defaultValue?: string; country?: string | null }) {
+  const t = useTranslations("universities.searchBox");
   const router = useRouter();
   const [query, setQuery] = useState(defaultValue ?? "");
   const [results, setResults] = useState<EntitySearchResult[]>([]);
@@ -100,10 +102,10 @@ export function UniversitySearchBox({ defaultValue, country }: { defaultValue?: 
           aria-expanded={open}
           aria-controls={listboxId}
           aria-autocomplete="list"
-          aria-label="Search universities"
+          aria-label={t("ariaLabel")}
           className="pl-7 sm:w-72"
           value={query}
-          placeholder="Search by university name…"
+          placeholder={t("placeholder")}
           onChange={(e) => handleChange(e.target.value)}
           onFocus={() => query.trim().length >= MIN_QUERY_LENGTH && setOpen(true)}
           onKeyDown={handleKeyDown}

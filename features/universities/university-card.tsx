@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { MapPin, Bookmark, BookmarkCheck, Landmark, Users, Trophy, DollarSign, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -56,6 +57,8 @@ export function UniversityCard({
    *  synchronisation, so dropping it would make the pairing one-directional. */
   countryHref?: string | null;
 }) {
+  const t = useTranslations("universities.card");
+  const tCommon = useTranslations("common");
   const [saved, setSaved] = useState(isSaved);
   const [isPending, startTransition] = useTransition();
   const compare = useCompare();
@@ -111,7 +114,7 @@ export function UniversityCard({
             {university.student_size ? (
               <span className="flex items-center gap-1">
                 <Users className="size-3.5 shrink-0" />
-                {formatNumber(university.student_size)} students
+                {formatNumber(university.student_size)} {t("students")}
               </span>
             ) : null}
           </div>
@@ -126,7 +129,7 @@ export function UniversityCard({
             <DollarSign className="size-3.5 shrink-0 text-muted-foreground" />
             {cost.currency === "USD" || !cost.currency ? "$" : `${cost.currency} `}
             {cost.amount.toLocaleString("en-US")}
-            <span className="font-normal text-muted-foreground">/ year, cost of attendance</span>
+            <span className="font-normal text-muted-foreground">{t("costOfAttendanceSuffix")}</span>
           </p>
         ) : null}
 
@@ -135,7 +138,7 @@ export function UniversityCard({
           // degree programs offered — unlabeled chips here read as majors on a compact
           // card, exactly the confusion the product spec calls out to avoid.
           <div className="space-y-1">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Research focus</p>
+            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{t("researchFocus")}</p>
             <div className="flex flex-wrap gap-1.5">
               {researchTopics.map((topic) => (
                 <span key={topic} className="rounded-full border bg-muted/50 px-2 py-0.5 text-xs text-muted-foreground">
@@ -148,7 +151,7 @@ export function UniversityCard({
 
         <div className="mt-auto flex items-center gap-2 pt-2">
           <Button variant="outline" size="sm" render={<Link href={`/universities/${university.id}`} />} nativeButton={false}>
-            Details
+            {t("details")}
           </Button>
           <Button
             variant={saved ? "secondary" : "outline"}
@@ -163,17 +166,17 @@ export function UniversityCard({
             }
           >
             {saved ? <BookmarkCheck className="size-3.5" /> : <Bookmark className="size-3.5" />}
-            {saved ? "Saved" : "Save"}
+            {saved ? t("saved") : tCommon("save")}
           </Button>
           <Button
             variant={isComparing ? "secondary" : "outline"}
             size="sm"
             disabled={!isComparing && compare.atLimit}
             onClick={() => compare.toggle({ id: university.id, name: university.name })}
-            title={!isComparing && compare.atLimit ? "Compare up to 4 at a time" : undefined}
+            title={!isComparing && compare.atLimit ? t("compareLimitTooltip") : undefined}
           >
             <Scale className="size-3.5" />
-            {isComparing ? "Comparing" : "Compare"}
+            {isComparing ? t("comparing") : t("compare")}
           </Button>
         </div>
       </div>

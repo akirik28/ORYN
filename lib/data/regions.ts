@@ -1,3 +1,4 @@
+import type { Locale } from "@/lib/i18n/config";
 import { SUPPORTED_COUNTRIES } from "./country-geo";
 
 /**
@@ -77,3 +78,22 @@ export const MAP_REGIONS: MapRegion[] = [
 ];
 
 export const regionById = new Map(MAP_REGIONS.map((r) => [r.id, r]));
+
+/** `MapRegion.name` (used above and in country-geo.ts's own `region` field) stays English —
+ * it's also a grouping key compared against `SUPPORTED_COUNTRIES`' `region` column, so
+ * changing it would need a data migration, not a UI fix. This is the small, separate,
+ * closed set of continent display names a student actually sees (7 values: the 6 regions
+ * above plus "World"), keyed by `MapRegion.id` instead so it can't drift from that key. */
+const REGION_LABEL_TR: Record<string, string> = {
+  world: "Dünya",
+  europe: "Avrupa",
+  north_america: "Kuzey Amerika",
+  asia: "Asya",
+  oceania: "Okyanusya",
+  south_america: "Güney Amerika",
+  africa: "Afrika",
+};
+
+export function regionLabel(region: Pick<MapRegion, "id" | "name">, locale: Locale): string {
+  return locale === "tr" ? (REGION_LABEL_TR[region.id] ?? region.name) : region.name;
+}

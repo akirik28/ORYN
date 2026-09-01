@@ -4,8 +4,9 @@ import { computeAdmissionOutlook, type NotApplicableKind } from "@/lib/admission
 import { resolveAdmissionSystem, type AdmissionSystemShape } from "@/lib/admissions/system-shape";
 import { explainOutlook, type DimensionScoreInput } from "@/lib/admissions/explain";
 import { evaluateRequirement } from "@/lib/requirements/evaluate";
-import { INFORMATIONAL_CATEGORIES, MANUAL_REVIEW_CATEGORIES, REQUIREMENT_CATEGORY_LABELS } from "@/lib/requirements/types";
+import { INFORMATIONAL_CATEGORIES, MANUAL_REVIEW_CATEGORIES } from "@/lib/requirements/types";
 import type { RequirementFacts } from "@/lib/requirements/types";
+import { requirementCategoryLabel } from "@/lib/counselor/copy";
 import { formatTuition, tuitionQualifier } from "@/lib/universities/tuition-format";
 import { formatCurrency } from "@/lib/i18n/format";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
@@ -517,7 +518,7 @@ export function buildUniversityCounselingView(input: UniversityCounselingViewInp
   // never evaluates those regardless of what's on file; see recommendedActions below instead).
   const missingEvidence: MissingEvidenceItem[] = rollup
     .filter((item) => item.status === "unknown" && !INFORMATIONAL_CATEGORIES.includes(item.category) && !MANUAL_REVIEW_CATEGORIES.includes(item.category))
-    .map((item) => ({ requirementId: item.requirementId, title: item.title ?? REQUIREMENT_CATEGORY_LABELS[item.category], reasoning: item.reasoning }));
+    .map((item) => ({ requirementId: item.requirementId, title: item.title ?? requirementCategoryLabel(item.category, locale), reasoning: item.reasoning }));
 
   const manualReviewItems = rollup.filter((item) => item.status === "needs_manual_review" && MANUAL_REVIEW_CATEGORIES.includes(item.category));
 
@@ -564,14 +565,14 @@ export function buildUniversityCounselingView(input: UniversityCounselingViewInp
     const rollupItem = rollup.find((r) => r.requirementId === item.requirementId)!;
     if (seenMissingCategories.has(rollupItem.category)) continue;
     seenMissingCategories.add(rollupItem.category);
-    recommendedActions.push({ label: item.reasoning, detail: REQUIREMENT_CATEGORY_LABELS[rollupItem.category], requirementId: item.requirementId });
+    recommendedActions.push({ label: item.reasoning, detail: requirementCategoryLabel(rollupItem.category, locale), requirementId: item.requirementId });
   }
 
   const seenManualReviewCategories = new Set<RequirementCategory>();
   for (const item of manualReviewItems) {
     if (seenManualReviewCategories.has(item.category)) continue;
     seenManualReviewCategories.add(item.category);
-    recommendedActions.push({ label: item.reasoning, detail: REQUIREMENT_CATEGORY_LABELS[item.category], requirementId: item.requirementId });
+    recommendedActions.push({ label: item.reasoning, detail: requirementCategoryLabel(item.category, locale), requirementId: item.requirementId });
   }
 
   if (programFocus.interestSource !== "none" && programFocus.matchedPrograms.length === 0) {

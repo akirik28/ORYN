@@ -88,10 +88,11 @@ describe("message catalogs", () => {
     // per-namespace copy. Each entry below is a confirmed, deliberate loanword, shared
     // proper noun, or locale-independent notation, not an untranslated copy-paste — "Plan"
     // and "Mentor" are genuinely the same word in Turkish, "(n={size})" is statistical
-    // sample-size notation with no language to translate, and "AP"/"IB"/"A-Level" are the
-    // real, internationally-recognized names of those curricula, not English words with a
-    // Turkish equivalent. A new identical pair failing this test is the guard working:
-    // confirm it's deliberate before adding it here, don't add speculatively.
+    // sample-size notation with no language to translate, "AP"/"IB"/"A-Level" are the
+    // real, internationally-recognized names of those curricula, and "Program" is a
+    // standard, fully-naturalized Turkish loanword (identically spelled) — not English
+    // words with a Turkish equivalent. A new identical pair failing this test is the guard
+    // working: confirm it's deliberate before adding it here, don't add speculatively.
     const enFlat = new Map(flatten(en).map((key) => [key, key.split(".").reduce<unknown>((o, part) => (o as Record<string, unknown>)?.[part], en)]));
     const trFlat = new Map(flatten(tr).map((key) => [key, key.split(".").reduce<unknown>((o, part) => (o as Record<string, unknown>)?.[part], tr)]));
     // Sorted, because this is a set comparison and key order is incidental: it follows
@@ -107,6 +108,8 @@ describe("message catalogs", () => {
       "onboarding.wizard.curriculumOptions.aLevel",
       "profile.peerBenchmark.cohortSize",
       "profile.recommendations.relationships.mentor",
+      "universities.detail.programFallback",
+      "universities.adminForm.program",
       ].sort(),
     );
   });

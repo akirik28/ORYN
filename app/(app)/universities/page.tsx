@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { cn } from "@/lib/utils";
 import { requireUser } from "@/lib/security/dal";
+import { resolveLocale } from "@/lib/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
 import { Landmark, Search } from "lucide-react";
 import { UniversityExplorerHero } from "@/features/universities/university-explorer-hero";
@@ -10,15 +12,19 @@ import { UniversityBrowseGrid } from "@/features/universities/university-browse-
 import { categorizeAndDedupeResearchTopics } from "@/lib/universities/research-taxonomy";
 import { UniversitySearchBox } from "@/features/universities/university-search-box";
 import { SUPPORTED_COUNTRIES } from "@/lib/data/country-geo";
-import { regionById } from "@/lib/data/regions";
+import { regionById, regionLabel } from "@/lib/data/regions";
 import { getSupersededUniversityIds, loadSupersessionMap } from "@/lib/universities/canonical";
 import { getUniversityCountByCountry, getAllCostOfAttendance, getAllQsListPositions } from "@/lib/universities/queries";
+import { formatNumber } from "@/lib/i18n/format";
 import {
   COST_BUCKETS,
   SIZE_BUCKETS,
   TYPE_OPTIONS,
   RANK_TIERS,
-  RANK_OPTIONS,
+  costBucketLabel,
+  sizeBucketLabel,
+  typeOptionLabel,
+  rankOptionLabel,
   type CostBucketValue,
   type SizeBucketValue,
 } from "@/lib/universities/filters";
@@ -37,11 +43,6 @@ const VIEW_TAB_ACTIVE = "border-brand-primary font-medium text-ink-1";
 const VIEW_TAB_INACTIVE = "border-transparent text-ink-3 hover:text-ink-1";
 
 type SortOption = "ranking" | "name" | "students";
-const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: "ranking", label: "QS Ranking" },
-  { value: "students", label: "Student population" },
-  { value: "name", label: "Name" },
-];
 
 export default async function UniversitiesPage({
   searchParams,
@@ -71,6 +72,13 @@ export default async function UniversitiesPage({
     rank: rankParam,
     view: viewParam,
   } = await searchParams;
+  const locale = await resolveLocale();
+  const t = await getTranslations("universities.browsePage");
+  const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+    { value: "ranking", label: t("qsRanking") },
+    { value: "students", label: t("studentPopulation") },
+    { value: "name", label: t("sortByName") },
+  ];
   // Map is the default exploration mode (UI-V3 § 21 makes the map a core feature, not an
   // optional extra); List is the conventional catalogue for when a student already knows
   // what they're looking for. Below `md` the map never mounts at all — see
@@ -173,7 +181,7 @@ export default async function UniversitiesPage({
   // cards carry exactly the fields the first page's do.
   const cardMeta = await getUniversityCardMeta(supabase, universities, categorizeAndDedupeResearchTopics);
 
-  const scopeLabel = country ?? region?.name ?? null;
+  const scopeLabel = country ?? (region ? regionLabel(region, locale) : null);
 
   // Handed to the infinite-scroll grid, and to the Server Action behind it, so an appended
   // page is resolved with exactly the filters the first page used.
@@ -308,9 +316,9 @@ export default async function UniversitiesPage({
     >
       <div className="flex flex-wrap items-end justify-between gap-4">
         <PageHeader
-          eyebrow="Universities"
-          title="Where you could go."
-          description="Start from the map, or search directly."
+          eyebrow={t("eyebrow")}
+          title={t("title")}
+          description={t("description")}
         />
         {/* Desktop-only: below md the map is never mounted, so a Map/List choice there would
             offer a view that can't render. */}
@@ -320,14 +328,14 @@ export default async function UniversitiesPage({
             aria-current={!isListView ? "page" : undefined}
             className={cn(VIEW_TAB, !isListView ? VIEW_TAB_ACTIVE : VIEW_TAB_INACTIVE)}
           >
-            Map
+            {t("map")}
           </Link>
           <Link
             href={buildViewHref(true)}
             aria-current={isListView ? "page" : undefined}
             className={cn(VIEW_TAB, isListView ? VIEW_TAB_ACTIVE : VIEW_TAB_INACTIVE)}
           >
-            List
+            {t("list")}
           </Link>
         </div>
       </div>
@@ -335,9 +343,9 @@ export default async function UniversitiesPage({
 
       <div className="glass-card-fast flex flex-col gap-3 rounded-2xl border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-medium">Search universities</p>
+          <p className="text-sm font-medium">{t("searchHeading")}</p>
           <p className="text-xs text-muted-foreground">
-            {scopeLabel ? `Filtered to ${scopeLabel}` : "Across all supported regions"} · {totalUniversities.toLocaleString("en-US")} universities total
+            {scopeLabel ? t("filteredTo", { scope: scopeLabel }) : t("acrossAllRegions")} · {t("totalCount", { count: totalUniversities, formatted: formatNumber(totalUniversities) })}
           </p>
         </div>
         {/* At 375px all three controls fitted on one row *exactly*, so nothing wrapped and
@@ -349,17 +357,25 @@ export default async function UniversitiesPage({
             {region ? <input type="hidden" name="region" value={region.id} /> : null}
             <UniversitySearchBox defaultValue={q} country={country ?? null} />
             <Button type="submit" variant="outline" size="sm" className="shrink-0">
-              <Search className="size-3.5" /> Search
+              <Search className="size-3.5" /> {t("search")}
             </Button>
           </form>
           <FilterSheet
             activeCount={activeFilterCount}
             clearHref={buildFilterHref({ cost: [], type: null, size: [], rank: null })}
             groups={[
-              { label: "Cost of attendance", description: "Select as many as you need to span a wider range.", options: toMultiOptions(COST_BUCKETS, cost, "cost") },
-              { label: "Institution type", options: toOptions(TYPE_OPTIONS, type, "type") },
-              { label: "Student population", description: "Select as many as you need to span a wider range.", options: toMultiOptions(SIZE_BUCKETS, size, "size") },
-              { label: "QS ranking", options: toOptions(RANK_OPTIONS, rank, "rank") },
+              {
+                label: t("costOfAttendance"),
+                description: t("costSpanHint"),
+                options: toMultiOptions(COST_BUCKETS.map((b) => ({ value: b.value, label: costBucketLabel(b.value, locale) })), cost, "cost"),
+              },
+              { label: t("institutionType"), options: toOptions(TYPE_OPTIONS.map((o) => ({ value: o.value, label: typeOptionLabel(o.value, locale) })), type, "type") },
+              {
+                label: t("studentPopulation"),
+                description: t("costSpanHint"),
+                options: toMultiOptions(SIZE_BUCKETS.map((b) => ({ value: b.value, label: sizeBucketLabel(b.value, locale) })), size, "size"),
+              },
+              { label: t("qsRanking"), options: toOptions(RANK_TIERS.map((v) => ({ value: v, label: rankOptionLabel(v, locale) })), rank, "rank") },
             ]}
           />
         </div>
@@ -375,15 +391,15 @@ export default async function UniversitiesPage({
                   that stays true; how many are currently on screen is announced by the
                   grid's own live region instead. */}
               {q
-                ? `${universities.length} result${universities.length === 1 ? "" : "s"} for "${q}"`
-                : `${totalResults.toLocaleString("en-US")} universit${totalResults === 1 ? "y" : "ies"}${scopeLabel ? ` in ${scopeLabel}` : ""}`}
+                ? t("resultsForQuery", { count: universities.length, formatted: formatNumber(universities.length), query: q })
+                : `${t("totalInScope", { count: totalResults, formatted: formatNumber(totalResults) })}${scopeLabel ? t("inScopeSuffix", { scope: scopeLabel }) : ""}`}
             </p>
             {!q ? <SortSelect value={sort} options={SORT_OPTIONS.map((o) => ({ ...o, href: buildSortHref(o.value) }))} /> : null}
           </div>
           {costUnknownCount || sizeUnknownCount ? (
             <p className="text-xs text-muted-foreground/80">
-              {costUnknownCount ? `${costUnknownCount.toLocaleString("en-US")} additional ${costUnknownCount === 1 ? "university is" : "universities are"} excluded because cost data is unavailable. ` : ""}
-              {sizeUnknownCount ? `${sizeUnknownCount.toLocaleString("en-US")} additional ${sizeUnknownCount === 1 ? "university is" : "universities are"} excluded because student population data is unavailable.` : ""}
+              {costUnknownCount ? t("costUnknownExcluded", { count: costUnknownCount, formatted: formatNumber(costUnknownCount) }) : ""}
+              {sizeUnknownCount ? t("sizeUnknownExcluded", { count: sizeUnknownCount, formatted: formatNumber(sizeUnknownCount) }) : ""}
             </p>
           ) : null}
           {isListView ? (
@@ -437,19 +453,14 @@ export default async function UniversitiesPage({
       ) : (
         <EmptyState
           icon={Landmark}
-          title={`No universities found${q ? ` matching "${q}"` : ""}${scopeLabel ? ` in ${scopeLabel}` : ""}`}
-          description={
-            activeFilterCount > 0
-              ? "No universities match the current filters — try widening the cost, size, or ranking range."
-              : "University data is added over time — check back soon, or try another region."
-          }
+          title={`${t("noUniversitiesFound")}${q ? t("matchingQuerySuffix", { query: q }) : ""}${scopeLabel ? t("inScopeSuffix", { scope: scopeLabel }) : ""}`}
+          description={activeFilterCount > 0 ? t("noMatchFilters") : t("dataAddedOverTime")}
         />
       )}
 
       {uncoveredCountries.length > 0 ? (
         <p className="text-xs text-muted-foreground">
-          Note: {uncoveredCountries.length} check-in-progress {uncoveredCountries.length === 1 ? "country isn't" : "countries aren't"} yet mapped to a
-          region ({uncoveredCountries.join(", ")}) — included in the total above, not yet in any region tab.
+          {t("uncoveredNote", { count: uncoveredCountries.length, formatted: formatNumber(uncoveredCountries.length), names: uncoveredCountries.join(", ") })}
         </p>
       ) : null}
     </div>

@@ -1,8 +1,11 @@
 import Link from "next/link";
+import { useTranslations, useLocale } from "next-intl";
 import { Globe2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/oryn/empty-state";
-import { MAP_REGIONS } from "@/lib/data/regions";
+import { MAP_REGIONS, regionLabel } from "@/lib/data/regions";
+import { formatNumber } from "@/lib/i18n/format";
+import type { Locale } from "@/lib/i18n/config";
 import type { CountryCount } from "./world-map-explorer";
 
 const PILL = "rounded-full border px-4 py-2 text-sm font-medium transition-colors duration-(--duration-fast)";
@@ -37,6 +40,8 @@ export function RegionGridExplorer({
   selected: string | null;
   selectedRegion: string | null;
 }) {
+  const t = useTranslations("universities.explorer");
+  const locale = useLocale() as Locale;
   const countByName = new Map(countryCounts.map((c) => [c.country, c.count]));
   const region = selectedRegion ? MAP_REGIONS.find((r) => r.id === selectedRegion) : undefined;
   const regionCountrySet = region ? new Set(region.countries) : null;
@@ -57,15 +62,15 @@ export function RegionGridExplorer({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap gap-2" role="navigation" aria-label="Browse universities by region">
+      <div className="flex flex-wrap gap-2" role="navigation" aria-label={t("regionNavAriaLabel")}>
         <Link href="/universities" className={cn(PILL, "text-base", !selectedRegion && !selected ? PILL_ACTIVE : PILL_INACTIVE)}>
-          World
+          {t("world")}
         </Link>
         {MAP_REGIONS.map((r) => {
           const count = r.countries.reduce((sum, name) => sum + (countByName.get(name) ?? 0), 0);
           return (
             <Link key={r.id} href={`/universities?region=${r.id}`} className={cn(PILL, "text-base", selectedRegion === r.id ? PILL_ACTIVE : PILL_INACTIVE)}>
-              {r.name} <span className="opacity-70">· {count}</span>
+              {regionLabel(r, locale)} <span className="opacity-70">· {count}</span>
             </Link>
           );
         })}
@@ -74,12 +79,12 @@ export function RegionGridExplorer({
       {withData.length === 0 ? (
         <EmptyState
           icon={Globe2}
-          title={region ? `No ${region.name} universities yet` : "University data is still being added"}
-          description="Check back soon."
+          title={region ? t("noRegionUniversitiesYet", { region: regionLabel(region, locale) }) : t("dataBeingAdded")}
+          description={t("checkBackSoon")}
           className="py-6"
         />
       ) : (
-        <div role="navigation" aria-label="Browse universities by country">
+        <div role="navigation" aria-label={t("countryNavAriaLabel")}>
           <div className="flex flex-wrap gap-2">
             {visible.map(({ country, count }) => (
               <CountryPill key={country} country={country} count={count} />
@@ -91,7 +96,7 @@ export function RegionGridExplorer({
                   otherwise a direct link or a page reload with e.g. ?country=Turkey would
                   show the pill list with the actually-selected country hidden. */}
               <summary className={cn(PILL, PILL_INACTIVE, "inline-flex w-fit cursor-pointer list-none [&::-webkit-details-marker]:hidden")}>
-                All countries <span className="opacity-60">({overflow.length} more)</span>
+                {t("allCountries")} <span className="opacity-60">{t("moreCount", { count: formatNumber(overflow.length) })}</span>
               </summary>
               <div className="mt-2 flex flex-wrap gap-2">
                 {overflow.map(({ country, count }) => (

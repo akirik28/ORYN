@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
@@ -40,19 +41,20 @@ const CHIP_INACTIVE = "border-border hover:border-brand-primary-border hover:bg-
  * spec suggested as its preference.
  */
 export function FilterSheet({ groups, clearHref, activeCount }: { groups: FilterGroup[]; clearHref: string; activeCount: number }) {
+  const t = useTranslations("universities.filterSheet");
   const [open, setOpen] = useState(false);
 
   return (
     <>
       <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
         <SlidersHorizontal className="size-3.5" />
-        Filters
+        {t("filters")}
         {activeCount > 0 ? <span className="ml-0.5 rounded-full bg-brand-primary px-1.5 text-xs text-primary-foreground">{activeCount}</span> : null}
       </Button>
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent className="w-full gap-0 p-0 sm:max-w-md">
           <SheetHeader className="border-b">
-            <SheetTitle>Filters</SheetTitle>
+            <SheetTitle>{t("filters")}</SheetTitle>
           </SheetHeader>
           <div className="flex-1 space-y-6 overflow-y-auto p-4">
             {groups.map((group) => (
@@ -74,7 +76,7 @@ export function FilterSheet({ groups, clearHref, activeCount }: { groups: Filter
           {activeCount > 0 ? (
             <SheetFooter className="border-t">
               <Button variant="outline" size="sm" render={<Link href={clearHref} />} nativeButton={false}>
-                Clear all filters
+                {t("clearAll")}
               </Button>
             </SheetFooter>
           ) : null}

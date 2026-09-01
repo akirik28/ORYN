@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -9,7 +10,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { addUniversityRequirement, suggestRequirementRule } from "@/app/(app)/universities/[id]/requirement-actions";
-import { REQUIREMENT_CATEGORIES, REQUIREMENT_CATEGORY_LABELS } from "@/lib/requirements/types";
+import { REQUIREMENT_CATEGORIES } from "@/lib/requirements/types";
+import { requirementCategoryLabel } from "@/lib/counselor/copy";
+import type { Locale } from "@/lib/i18n/config";
 import type { RequirementCategory } from "@/types/database";
 
 /**
@@ -19,6 +22,8 @@ import type { RequirementCategory } from "@/types/database";
  * real way to get data into it instead of shipping schema with no usable entry point.
  */
 export function AdminRequirementForm({ universityId, programs }: { universityId: string; programs: { id: string; name: string }[] }) {
+  const t = useTranslations("universities.adminForm");
+  const locale = useLocale() as Locale;
   const [programId, setProgramId] = useState<string>("__none__");
   const [category, setCategory] = useState<RequirementCategory>("required_subject");
   const [title, setTitle] = useState("");
@@ -41,16 +46,16 @@ export function AdminRequirementForm({ universityId, programs }: { universityId:
 
   return (
     <div className="space-y-3 rounded-lg border border-dashed p-4">
-      <p className="text-sm font-medium">Admin: add a requirement</p>
+      <p className="text-sm font-medium">{t("heading")}</p>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label>Program</Label>
+          <Label>{t("program")}</Label>
           <Select value={programId} onValueChange={(value) => value && setProgramId(value)}>
             <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="__none__">University-wide (all programs)</SelectItem>
+              <SelectItem value="__none__">{t("universityWide")}</SelectItem>
               {programs.map((p) => (
                 <SelectItem key={p.id} value={p.id}>
                   {p.name}
@@ -60,7 +65,7 @@ export function AdminRequirementForm({ universityId, programs }: { universityId:
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>Category</Label>
+          <Label>{t("category")}</Label>
           <Select value={category} onValueChange={(v) => setCategory(v as RequirementCategory)}>
             <SelectTrigger className="w-full">
               <SelectValue />
@@ -68,7 +73,7 @@ export function AdminRequirementForm({ universityId, programs }: { universityId:
             <SelectContent>
               {REQUIREMENT_CATEGORIES.map((c) => (
                 <SelectItem key={c} value={c}>
-                  {REQUIREMENT_CATEGORY_LABELS[c]}
+                  {requirementCategoryLabel(c, locale)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -77,30 +82,30 @@ export function AdminRequirementForm({ universityId, programs }: { universityId:
       </div>
 
       <div className="space-y-1.5">
-        <Label>Title</Label>
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Mathematics through Calculus" />
+        <Label>{t("title")}</Label>
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("titlePlaceholder")} />
       </div>
 
       <div className="space-y-1.5">
-        <Label>Sourced requirement text</Label>
-        <Textarea value={detail} onChange={(e) => setDetail(e.target.value)} rows={3} placeholder="Paste the exact wording from the official source." />
+        <Label>{t("sourcedText")}</Label>
+        <Textarea value={detail} onChange={(e) => setDetail(e.target.value)} rows={3} placeholder={t("sourcedTextPlaceholder")} />
       </div>
 
       <div className="flex items-center gap-2">
         <Checkbox id="is-required" checked={isRequired} onCheckedChange={(c) => setIsRequired(c === true)} />
         <Label htmlFor="is-required" className="font-normal">
-          Required (not just recommended)
+          {t("requiredCheckbox")}
         </Label>
       </div>
 
       <div className="space-y-1.5">
-        <Label>Source URL</Label>
+        <Label>{t("sourceUrl")}</Label>
         <Input value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} placeholder="https://..." />
       </div>
 
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <Label>Structured rule (JSON, optional)</Label>
+          <Label>{t("structuredRule")}</Label>
           <Button
             type="button"
             variant="outline"
@@ -116,7 +121,7 @@ export function AdminRequirementForm({ universityId, programs }: { universityId:
             }
           >
             {isSuggesting ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
-            Suggest with AI
+            {t("suggestWithAi")}
           </Button>
         </div>
         <Textarea
@@ -124,11 +129,9 @@ export function AdminRequirementForm({ universityId, programs }: { universityId:
           onChange={(e) => setRuleJson(e.target.value)}
           rows={5}
           className="font-mono text-xs"
-          placeholder='Leave blank for categories like essay/interview. Otherwise e.g. {"kind": "minimum_grade", "minGpa": 3.5, "scale": 4}'
+          placeholder={`${t("rulePlaceholderPrefix")} {"kind": "minimum_grade", "minGpa": 3.5, "scale": 4}`}
         />
-        <p className="text-xs text-muted-foreground">
-          AI only structures text you already pasted above — review before saving, it never invents the requirement itself.
-        </p>
+        <p className="text-xs text-muted-foreground">{t("ruleJsonHint")}</p>
       </div>
 
       {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
@@ -152,13 +155,13 @@ export function AdminRequirementForm({ universityId, programs }: { universityId:
             });
             if (result.error) setError(result.error);
             else {
-              setStatus("Requirement added.");
+              setStatus(t("requirementAdded"));
               reset();
             }
           })
         }
       >
-        {isPending ? <Loader2 className="size-4 animate-spin" /> : "Add requirement"}
+        {isPending ? <Loader2 className="size-4 animate-spin" /> : t("addRequirement")}
       </Button>
     </div>
   );
