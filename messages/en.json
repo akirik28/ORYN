@@ -238,7 +238,7 @@
         "education": {
           "title": "Education",
           "description": "Schools and academic stages.",
-          "empty": "No education records yet."
+          "empty": "No education records yet. Add the schools you've attended, including your current one."
         },
         "coursework": {
           "title": "Coursework",
@@ -248,7 +248,7 @@
         "testScores": {
           "title": "Test scores",
           "description": "SAT, ACT, AP, IB, language proficiency, and more.",
-          "empty": "No test scores yet."
+          "empty": "No test scores yet. Add your SAT, ACT, IB, or other results."
         },
         "activities": {
           "title": "Activities",
@@ -263,7 +263,7 @@
         "projects": {
           "title": "Projects",
           "description": "Things you've built or shipped, on your own or with a team.",
-          "empty": "No projects yet."
+          "empty": "No projects yet. Add something you built or led — on your own or with a team."
         },
         "research": {
           "title": "Research",
@@ -273,22 +273,22 @@
         "workExperience": {
           "title": "Work experience",
           "description": "Internships, jobs, and apprenticeships.",
-          "empty": "No work experience yet."
+          "empty": "No work experience yet. Add an internship, part-time job, or other paid work."
         },
         "volunteering": {
           "title": "Volunteering",
           "description": "Community service and volunteering.",
-          "empty": "No volunteering yet."
+          "empty": "No volunteering yet. Add time you've given to a cause, school, or community."
         },
         "awards": {
           "title": "Awards",
           "description": "Competitions, honors, and distinctions.",
-          "empty": "No awards yet."
+          "empty": "No awards yet. Add honors or recognitions, from school-level to international."
         },
         "certifications": {
           "title": "Certifications",
           "description": "Certificates from courses or programs.",
-          "empty": "No certifications yet."
+          "empty": "No certifications yet. Add credentials you've earned outside of school."
         },
         "goals": {
           "title": "Goals",
@@ -412,8 +412,9 @@
       "saved": "Saved"
     },
     "portfolioView": {
-      "emptyTitle": "Nothing here yet",
-      "emptyDescription": "Achievements you add to your profile will appear here automatically.",
+      "emptyTitle": "Your portfolio is empty",
+      "emptyDescription": "Add activities, projects, awards, or other achievements on your Journey page — they'll show up here automatically, organized by timeline or category.",
+      "emptyAction": "Go to Journey",
       "timeline": "Timeline",
       "byCategory": "By category"
     },

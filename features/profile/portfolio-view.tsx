@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { FolderOpen } from "lucide-react";
 import { spanLabel } from "@/lib/profile/journey";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/oryn/empty-state";
 import { PORTFOLIO_CATEGORY_LABELS, type PortfolioItem, type PortfolioCategory } from "@/lib/portfolio/types";
 
@@ -41,7 +43,18 @@ export function PortfolioView({ items }: { items: PortfolioItem[] }) {
     .filter((group) => group.items.length > 0);
 
   if (items.length === 0) {
-    return <EmptyState icon={FolderOpen} title={t("emptyTitle")} description={t("emptyDescription")} />;
+    return (
+      <EmptyState
+        icon={FolderOpen}
+        title={t("emptyTitle")}
+        description={t("emptyDescription")}
+        action={
+          <Button size="sm" render={<Link href="/profile" />} nativeButton={false}>
+            {t("emptyAction")}
+          </Button>
+        }
+      />
+    );
   }
 
   return (

@@ -43,7 +43,7 @@ import { attachOpportunityTitles } from "@/lib/profile/activity-opportunities";
 import { getFeaturedItems } from "@/lib/social/featured";
 import { FeaturedManager, type FeaturedManagerItem } from "@/features/profile/featured-manager";
 import { assembleScoringFacts } from "@/lib/scoring/assemble-facts";
-import { getCompletenessChecklist } from "@/lib/scoring/completeness";
+import { completenessChecklistLabel, getCompletenessChecklist } from "@/lib/scoring/completeness";
 import { Progress } from "@/components/ui/progress";
 import {
   ACTIVITY_FIELDS,
@@ -385,7 +385,7 @@ export default async function ProfilePage() {
               {remainingSuggestions.length > 0 ? (
                 <ul className="grid gap-1.5 text-sm text-muted-foreground sm:grid-cols-2">
                   {remainingSuggestions.map((item) => (
-                    <li key={item.label}>{item.label}</li>
+                    <li key={item.key}>{completenessChecklistLabel(item.key, locale)}</li>
                   ))}
                 </ul>
               ) : (
