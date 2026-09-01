@@ -68,9 +68,21 @@ words: *breadth is not coverage.*
 Sharpest instances, all measured:
 
 - **MIT — the most-targeted university in the product, 5 of 8 students — has zero requirements.**
-  The research has existed since 21 August (16 records). All 44 MIT and Caltech records were
-  rejected because `mitadmissions.org` fails a `looksOfficial()` check requiring `.edu`/`.ac.`/
-  `.gov`. **MIT's own admissions site is a `.org`.**
+  Research has existed since 21 August, spread across **six corpus files** (34 records). All
+  **44** rows it produced in `requirement_research_queue` are `malformed_source`, because
+  `mitadmissions.org` fails `looksOfficial()` (`lib/acquisition/source-authority.ts:204`), which
+  accepts only `.edu`/`.ac.`/`.gov`/`.go.jp` — no `.org` anywhere. **MIT's own admissions site
+  is a `.org`.**
+- **Caltech is a different gap and must not be lumped in with MIT.** It has **zero rows** in
+  `requirement_research_queue` and **zero records anywhere in the corpus** — never researched,
+  not blocked. The allowlist fix that unblocks MIT's 44 will not touch it; Caltech needs a
+  fresh research pass.
+
+  *Corrected 2026-09-01 21:00.* The first version of this section said "44 MIT and Caltech
+  records rejected" and cited "16 records". Both were wrong in the same way: 16 was one file's
+  line count quoted next to a 44-row queue count **without reconciling the two**, and the 44 are
+  entirely MIT. Caught on independent verification. Two numbers about the same thing that don't
+  add up are the night's own recurring tell, and I published a pair of them.
 - **Türkiye: 12 universities in the catalogue**, for a pilot cohort of Turkish students.
 - **Warwick: 190 programmes, 5 requirements.**
 - ~466 further research records sit rejected; `unresolved_university` names *"Ankara University"*
