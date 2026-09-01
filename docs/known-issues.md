@@ -11,6 +11,20 @@ dedicated living docs rather than being tracked here — start at
 file's remaining entries (the Drive-doc product-decision conflict, data-readiness gaps,
 scoped-out items) are still current as of the dates on each entry.
 
+**Staleness pass, 2026-09-01**: every "Needs founder decision"/"Open" entry below was
+re-checked against current source and git history (read-only — no live database access,
+per this pass's own scope). Where something had closed, changed, or half-changed since it
+was written, that's noted inline as an **Update, 2026-09-01** paragraph directly under the
+original claim, with the commit or file that changed it — nothing was deleted, and nothing
+was marked resolved without a specific, checkable reason. Two categories couldn't be
+settled this way and are flagged as such rather than guessed: (a) the four
+`founder-blocked-backlog.md`-mirrored RLS/security entries (message_reports, the
+computed-column guards, admin self-grant, `public_profiles`) — confirmed still open via
+that canonical doc, unchanged; (b) claims that turn on live database or environment-variable
+state (a specific row's status, whether `.env.local` still holds a placeholder) — git
+history has no visibility into either, so those are marked "not verifiable this pass"
+rather than asserted either way.
+
 ## Tracking upstream — every Dialog silently loses focus on the first Shift+Tab
 
 **2026-09-01, accessibility audit follow-up.** Every dialog in the app (they all render
@@ -399,7 +413,14 @@ stop-and-protect event.
 **Split into three, per CEO/BASORG (2026-08-22)**:
 - **Tier 1 (6 rows, uncontested — not a judgment call, never valid opportunity records)**:
   the 5 institution-name-titled rows plus the UCSC course-catalogue row. Routed to
-  RES-I2 to set `status='disabled'` with reason recorded. In flight as of this writing.
+  RES-I2 to set `status='disabled'` with reason recorded.
+  **Update, 2026-09-01 — not "in flight," stalled**: `docs/handoffs/i2_retire-nonopportunities_ingest-report.md`
+  shows the dry run completed and re-verified clean (all 6 confirmed `active`, disable
+  transaction rehearsed and rolled back correctly), but the actual `commit` was blocked by
+  Claude Code's own auto-mode safety classifier — the same class of block covered in
+  `founder-blocked-backlog.md`. Escalated to the founder as one of four blocked writes that
+  session; no evidence since of it having been applied. Same status as the RLS migrations
+  above: written, verified, waiting on the founder to actually run it — not a lane task.
 - **Tier 2 (~79 rows)**: re-research-or-retire is a real product-cost tradeoff (a garbled
   card vs. an empty shelf on ~29% of the live catalogue) touching founder-supplied data —
   **escalated to the founder by ORYN-CEO, not decided by any lane.** Producing "corrected"
@@ -549,6 +570,15 @@ this pass.
   can see the opportunity but the app can't yet hard-gate it by eligibility the way
   `AGENTS.md` Phase 13 asks; needs a second, more targeted extraction pass per record
   (real scope, not a quick fix).
+  **Update, 2026-09-01 — real but partial progress, still substantially true**:
+  `docs/handoffs/opportunities-eligible-countries-gap.md` records a dedicated pass (Step 1
+  deterministic backfill + Step 2 research batch, both applied live) moving the gap from
+  366/391 (93.6%) to 352/391 (90.0%) missing — 14 rows closed, not the whole set, and that
+  handoff's own status line calls itself "idle pending next assignment," not complete. The
+  underlying risk it identified is still live: `computeEligibility`/
+  `evaluateOpportunityEligibility` both treat an empty `eligible_countries` as
+  *unrestricted*, so a genuinely restricted program with no researched countries still
+  reads as eligible to everyone — for ~90% of the catalogue, that's still the state today.
 - **`supabase/seed_drive_batch1.sql` genuinely untested against a real Postgres.** Checked
   programmatically (parenthesis/quote balance, no bare unquoted enum literals) and by hand
   (spot-read a representative sample), but this session has no database connection to
@@ -604,7 +634,14 @@ this pass.
 - **Newly-discovered opportunities would be stored as `active` immediately**, not held in
   a review/moderation state first — found auditing `lib/opportunities/discover.ts` this
   pass. Never mattered in practice (the pipeline has never run — see above), but worth
-  fixing before the first real ingestion run, not after. Needs product input on what a
+  fixing before the first real ingestion run, not after.
+  **Update, 2026-09-01 — half-addressed**: `OpportunityStatus` (`types/database.ts`) now
+  includes `"under_review"` alongside `active`/`expired`/`disabled` — the status value this
+  entry was asking for exists in the schema. But `lib/opportunities/ingest.ts` still writes
+  `status: "active"` unconditionally at both insertion sites (its own type default and its
+  `decideIngestion()` accept path) — nothing routes a newly-ingested row through
+  `under_review` today. The building block was added; the wiring described here wasn't.
+  Needs product input on what a
   review queue should look like; out of scope for this pass's "focused additions" mandate.
 - ~~No admin surface reads `message_reports`.~~ **Fixed** (autonomous pass, 2026-08-16):
   `/admin` now has a Reports section (status/reviewed_by/reviewed_at/resolution_note —
@@ -623,7 +660,20 @@ this pass.
   MCP tool either (unlike whatever tooling a prior session used for the adversarial
   connection-privacy live-verification — see `known-issues.md`'s Chat 3 section). Signing
   up through the real UI hit Supabase's own "confirm your email" gate, which nothing in
-  this sandbox can click through. The RLS-layer verification is still the one that
+  this sandbox can click through.
+  **Update, 2026-09-01 — very likely stale, not directly confirmable this pass.** This is
+  from 2026-08-16; every session since has routinely used a live Supabase MCP connector and
+  `createAdminClient()`-backed admin access (this repo's own later handoffs and memory
+  describe QA persona accounts, real signed-in test sessions, and direct admin SQL against
+  `oryn-qa-scratch` as normal practice), which is hard to reconcile with the secret key
+  still being an unfilled placeholder. But `.env.local` is gitignored — its contents leave
+  no trace in git history, so this can't be confirmed from the repo alone the way the code
+  changes above could. The concrete leftover named below (`oryn.qa.alpha.chat4@qamail.io`)
+  is a live-database fact, not a code fact, so it's in the same boat: probably long since
+  irrelevant, not something this pass can verify or clear without a live query. Flagging
+  rather than deleting or marking resolved either way — worth one actual check rather than
+  five more inherited assumptions.
+  The RLS-layer verification is still the one that
   actually matters for the safety invariant (that's the real enforcement boundary, and it
   was re-read line-by-line this session against `supabase/migrations/0027_messaging.sql`,
   `lib/messaging/messages.ts`, and `app/(app)/messages/actions.ts` — logic checks out), but
@@ -790,6 +840,19 @@ this pass.
   implementation matches the worked example exactly; the two unused enum values are
   schema flexibility for a feature that was never actually specified with a UI shape.
   Worth a deliberate look before building a new section for it (not a bug to silently fix).
+  **Update, 2026-09-01 — half true now, and the two halves are genuinely separate
+  systems, not one fixed codebase.** `lib/ai/weekly-plan.ts` → `lib/plan/persist.ts` is
+  unchanged: `lib/plan/persist.ts:109` still hardcodes `recommendation_class:
+  "avoid_for_now"` for every row it writes to `ai_recommendations`, exactly as this entry
+  describes. But a second, newer pipeline now exists alongside it —
+  `lib/counselor/scoring.ts`, wired live into `/advisor` and `/dashboard` (not dead code,
+  not this same file) — and it deterministically produces all four values; its own comment
+  (line 168) states the intent directly: *"deprioritize/avoid_for_now are produced
+  deterministically here rather than left unused."* `features/advisor/counselor-priorities.tsx`
+  renders `consider` today, under a real "Worth considering" section. So: still true for
+  the original file/table this entry names, no longer true for the product surface a
+  student actually sees on `/advisor` — worth noting precisely rather than as a flat
+  fixed/open call, since conflating the two pipelines would misdescribe both.
 - **`ProviderStatus`'s `down` value is never set** — `lib/providers/health.ts` only ever
   writes `healthy` or `degraded`. Distinguishing "one request failed" from "confirmed down"
   would need consecutive-failure tracking; low value for a pre-launch admin-only signal.
