@@ -3,6 +3,7 @@ import "server-only";
 import { z } from "zod";
 import { getAIProvider } from "./index";
 import { logAIUsage } from "./usage";
+import { selectModelForUser } from "./limits/budget";
 import { withOutputLanguage } from "./output-language";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
@@ -43,6 +44,7 @@ export async function refineAchievementDescription(params: {
   description: string | null;
 }): Promise<AchievementRefinement> {
   const provider = getAIProvider();
+  const selection = await selectModelForUser(params.userId);
 
   const result = await provider.generateStructured({
     system: withOutputLanguage(SYSTEM_PROMPT, params.locale ?? DEFAULT_LOCALE),
@@ -51,8 +53,16 @@ export async function refineAchievementDescription(params: {
     schemaName: "record_refinement",
     schemaDescription: "Records the suggested improved description and clarifying questions.",
     maxTokens: 768,
+    model: selection.model,
   });
 
-  await logAIUsage({ userId: params.userId, feature: "achievement_refinement", usage: result.usage });
+  await logAIUsage({
+    userId: params.userId,
+    feature: "achievement_refinement",
+    usage: result.usage,
+    model: result.model,
+    degraded: selection.degraded,
+    degradeReason: selection.degraded ? selection.reason : null,
+  });
   return result.data;
 }

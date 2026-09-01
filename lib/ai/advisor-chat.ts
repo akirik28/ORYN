@@ -23,11 +23,12 @@ export async function generateAdvisorReply(params: {
     locale,
   );
 
-  const result = await withUsageLogging({ userId: params.userId, feature: "advisor_chat" }, () =>
+  const result = await withUsageLogging({ userId: params.userId, feature: "advisor_chat" }, (model) =>
     provider.generateText({
       system,
       prompt: params.newMessage,
       history: params.history,
+      model,
       // This budget covers the model's thinking *and* the reply. Adaptive thinking is on by
       // default on claude-sonnet-5, and it scales with how much profile there is to reason
       // over — so the budget has to clear the reasoning before the student sees a word.

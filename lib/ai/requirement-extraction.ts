@@ -3,6 +3,7 @@ import "server-only";
 import { z } from "zod";
 import { getAIProvider } from "./index";
 import { logAIUsage } from "./usage";
+import { selectModelForUser } from "./limits/budget";
 import { REQUIREMENT_CATEGORIES } from "@/lib/requirements/types";
 import { StructuredRuleSchema } from "@/lib/validation/requirements";
 
@@ -59,6 +60,10 @@ export async function extractRequirementsFromContent(params: {
   content: string;
 }): Promise<{ candidates: RequirementCandidate[]; usage: { inputTokens: number; outputTokens: number } }> {
   const provider = getAIProvider();
+  // Same reasoning as opportunity-extraction.ts's identical line: always null (a catalog
+  // job, not a student's), routed through selectModelForUser anyway for consistency with
+  // every other call site rather than assuming env.anthropic.model directly.
+  const selection = await selectModelForUser(null);
   const result = await provider.generateStructured({
     system: SYSTEM_PROMPT,
     prompt: `Source URL: ${params.sourceUrl}\n\n<page_content>\n${params.content.slice(0, 12000)}\n</page_content>`,
@@ -66,8 +71,9 @@ export async function extractRequirementsFromContent(params: {
     schemaName: "record_requirements",
     schemaDescription: "Records the distinct admission requirements stated on this page.",
     maxTokens: 3072,
+    model: selection.model,
   });
 
-  await logAIUsage({ userId: null, feature: "requirement_extraction", usage: result.usage });
+  await logAIUsage({ userId: null, feature: "requirement_extraction", usage: result.usage, model: result.model });
   return { candidates: result.data.requirements, usage: result.usage };
 }

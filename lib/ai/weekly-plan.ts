@@ -3,6 +3,7 @@ import "server-only";
 import { z } from "zod";
 import { getAIProvider } from "./index";
 import { logAIUsage } from "./usage";
+import { selectModelForUser } from "./limits/budget";
 import { ADVISOR_SYSTEM_PROMPT } from "./advisor-prompt";
 import { buildStudentAdvisorContext, formatContextForPrompt } from "./student-context";
 import { formatEligibilityCaveat } from "./eligibility-text";
@@ -219,6 +220,10 @@ export async function generateWeeklyPlan(userId: string): Promise<WeeklyPlanGene
   const context = await buildStudentAdvisorContext(userId);
   const counselorGrounding = await buildCounselorGroundingText(userId);
   const provider = getAIProvider();
+  // Checked here, not just in principle: this is the exact feature the founder's own
+  // measured incident came from (2026-09-02) -- one student regenerating this plan 102
+  // times in a week, $3.04, 3x the monthly ceiling. See lib/ai/limits/budget.ts.
+  const selection = await selectModelForUser(userId);
 
   const result = await provider.generateStructured({
     system: withOutputLanguage(ADVISOR_SYSTEM_PROMPT, context.student.preferredLanguage),
@@ -227,8 +232,9 @@ export async function generateWeeklyPlan(userId: string): Promise<WeeklyPlanGene
     schemaName: "record_weekly_plan",
     schemaDescription: "Records this week's prioritized action plan for the student.",
     maxTokens: 2048,
+    model: selection.model,
   });
 
-  await logAIUsage({ userId, feature: "weekly_plan", usage: result.usage });
+  await logAIUsage({ userId, feature: "weekly_plan", usage: result.usage, model: result.model, degraded: selection.degraded, degradeReason: selection.degraded ? selection.reason : null });
   return resolvePlanSelfContradiction(result.data);
 }

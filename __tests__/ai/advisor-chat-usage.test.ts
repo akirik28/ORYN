@@ -19,16 +19,37 @@ interface RecordedInsert {
   row: Record<string, unknown>;
 }
 
-const { insertMock, providerRef } = vi.hoisted(() => ({
+const { insertMock, providerRef, monthToDateRowsRef } = vi.hoisted(() => ({
   insertMock: vi.fn<(call: RecordedInsert) => Promise<{ error: null }>>(async () => ({ error: null })),
   providerRef: { current: null as MockAIProvider | null },
+  // Backs lib/ai/limits/budget.ts's month-to-date read. Empty by default so every test here
+  // stays under the target and gets the ceiling model, same as before selectModelForUser
+  // existed — these tests are about *whether a call gets logged*, not about the budget
+  // decision itself (see __tests__/ai/limits/budget.test.ts for that).
+  monthToDateRowsRef: { current: [] as Array<{ estimated_cost: number | null }> },
 }));
 
-vi.mock("@/lib/supabase/admin", () => ({
-  createAdminClient: () => ({
-    from: (table: string) => ({ insert: (row: Record<string, unknown>) => insertMock({ table, row }) }),
-  }),
-}));
+// createAdminClient and tryCreateAdminClient are the same underlying client in production
+// (lib/supabase/admin.ts — tryCreateAdminClient just catches createAdminClient's throw), so
+// both are mocked here to the same stub. Without mocking tryCreateAdminClient too, it comes
+// back `undefined` from this factory (vi.mock replaces every export of the module, not just
+// the ones listed) and selectModelForUser's call to it throws immediately.
+vi.mock("@/lib/supabase/admin", () => {
+  const adminClient = {
+    from: (table: string) => ({
+      insert: (row: Record<string, unknown>) => insertMock({ table, row }),
+      select: () => ({
+        eq: () => ({
+          gte: async () => ({ data: monthToDateRowsRef.current, error: null }),
+        }),
+      }),
+    }),
+  };
+  return {
+    createAdminClient: () => adminClient,
+    tryCreateAdminClient: () => adminClient,
+  };
+});
 
 vi.mock("@/lib/ai/index", () => ({ getAIProvider: () => providerRef.current }));
 
@@ -49,6 +70,7 @@ function usageInserts(): RecordedInsert[] {
 beforeEach(() => {
   insertMock.mockClear();
   providerRef.current = new MockAIProvider();
+  monthToDateRowsRef.current = [];
 });
 
 describe("generateAdvisorReply — token budget", () => {
@@ -84,7 +106,7 @@ describe("generateAdvisorReply — usage recording", () => {
 
   test("(b) a consumed-but-failed call is still recorded, with the tokens it actually burned", async () => {
     providerRef.current!.queueText(
-      new AIResponseIncompleteError({ stopReason: "max_tokens", usage: { inputTokens: 1800, outputTokens: 1024 } }),
+      new AIResponseIncompleteError({ stopReason: "max_tokens", usage: { inputTokens: 1800, outputTokens: 1024 }, model: "claude-sonnet-5" }),
     );
 
     await expect(

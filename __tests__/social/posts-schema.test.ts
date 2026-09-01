@@ -69,8 +69,16 @@ describe("migration numbering", () => {
     // promised can also be measured. 0075 (deadline_notification_log) is the dedupe table
     // the reminder job's aggregation needs — one row per (student, deadline, urgency
     // bucket) already notified, so a nearer bucket can still re-notify without ever
-    // repeating the same bucket twice.
-    expect(Math.max(...numbers.map(Number))).toBe(75);
+    // repeating the same bucket twice. 0076 (ai_usage_degrade_columns) carries the
+    // per-user AI spend cap's degrade/degrade_reason columns and makes user_id's NULL
+    // contract explicit — see docs/handoffs/ai-usage-attribution-audit-2026-09-02.md.
+    // These two are worth reading together as the guard's fourth same-day collision and
+    // its first *avoided* one: 0076 started as 0075 too, and its author found the clash by
+    // checking every remote branch's tree before picking a number — not just this
+    // worktree's own migrations/ listing, which could not see an unmerged branch. That is
+    // the check this comment has been telling people to run, actually run, one step
+    // earlier than the guard itself would have caught it. All still unapplied.
+    expect(Math.max(...numbers.map(Number))).toBe(76);
   });
 });
 
