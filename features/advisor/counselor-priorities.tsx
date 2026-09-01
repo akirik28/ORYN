@@ -50,7 +50,7 @@ function RecommendationCard({
           </span>
           <span className="font-medium text-ink-1">{recommendation.title}</span>
         </p>
-        {recommendation.deadline ? <DeadlineBadge date={recommendation.deadline.date} className="shrink-0" /> : null}
+        {recommendation.deadline ? <DeadlineBadge date={recommendation.deadline.date} className="shrink-0" locale={locale} /> : null}
       </div>
 
       {recommendation.why.length > 0 ? (

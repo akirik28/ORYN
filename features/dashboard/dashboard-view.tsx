@@ -342,7 +342,7 @@ export async function DashboardView({
                 {hasAiPlan ? (
                   <WeeklyFocus actions={weeklyPlan!.actions} />
                 ) : usingCounselorFallback ? (
-                  <CounselorWeekFallback actions={counselorThisWeek} />
+                  <CounselorWeekFallback actions={counselorThisWeek} locale={locale} />
                 ) : (
                   <EmptyState
                     icon={Compass}
@@ -398,7 +398,7 @@ export async function DashboardView({
                                 {deadline.title}
                               </span>
                             </span>
-                            <DeadlineBadge date={deadline.date} />
+                            <DeadlineBadge date={deadline.date} locale={locale} />
                           </Link>
                         </li>
                       );
@@ -471,7 +471,7 @@ export async function DashboardView({
                       <p className="text-sm leading-snug text-ink-2">{opp.title}</p>
                       <p className="mt-1.5 flex items-center gap-3">
                         <span className="text-xs text-ink-3 tabular-nums">{t("matchPercent", { score: opp.matchScore })}</span>
-                        {opp.deadline ? <DeadlineBadge date={opp.deadline} /> : null}
+                        {opp.deadline ? <DeadlineBadge date={opp.deadline} locale={locale} /> : null}
                       </p>
                     </li>
                   ))}

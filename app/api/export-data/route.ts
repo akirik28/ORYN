@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
+import { resolveLocale } from "@/lib/i18n/locale";
 import { assertWithinRateLimit, RateLimitExceededError } from "@/lib/security/rate-limit";
 import { RATE_LIMITS } from "@/lib/security/rate-limit-config";
 import {
@@ -31,7 +32,7 @@ export async function GET() {
   const userId = session.userId!;
 
   try {
-    await assertWithinRateLimit(userId, "export_data", RATE_LIMITS.export_data);
+    await assertWithinRateLimit(userId, "export_data", RATE_LIMITS.export_data, await resolveLocale());
   } catch (error) {
     if (error instanceof RateLimitExceededError) {
       return NextResponse.json({ error: error.message }, { status: 429 });

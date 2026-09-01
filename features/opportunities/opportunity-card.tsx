@@ -322,7 +322,7 @@ export function OpportunityCard({
               </span>
             ))}
             {opportunity.deadline && daysUntilDeadline !== null && daysUntilDeadline >= 0 && daysUntilDeadline <= 14 ? (
-              <DeadlineBadge date={opportunity.deadline} />
+              <DeadlineBadge date={opportunity.deadline} locale={locale} />
             ) : null}
           </div>
         ) : null}

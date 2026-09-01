@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
+import { resolveLocale } from "@/lib/i18n/locale";
 import { recomputeCareerProfile } from "@/lib/scoring/persist";
 import { insertCvImportItems } from "@/lib/profile/cv-import";
 import {
@@ -58,7 +59,7 @@ export async function uploadAndExtractCV(formData: FormData): Promise<CVUploadRe
   }
 
   try {
-    await assertWithinAIRateLimit(session.userId!, "cv_extraction", { maxCalls: 5, windowMinutes: 60 });
+    await assertWithinAIRateLimit(session.userId!, "cv_extraction", { maxCalls: 5, windowMinutes: 60 }, await resolveLocale());
     const extraction = await extractCVData({ userId: session.userId!, mimeType: file.type, buffer });
     await logEvent(session.userId!, "cv_imported", { itemCount: extraction.education.length + extraction.activities.length + extraction.awards.length + extraction.projects.length + extraction.research.length + extraction.workExperience.length });
     return { success: true, extraction, filePath };

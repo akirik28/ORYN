@@ -2,6 +2,8 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
+import { NextIntlClientProvider } from "next-intl";
+import en from "@/messages/en.json";
 
 /**
  * Component-level coverage for WeeklyFocus (features/dashboard/weekly-focus.tsx) —
@@ -53,6 +55,18 @@ function action(overrides: Partial<WeeklyAction> = {}): WeeklyAction {
   };
 }
 
+// WeeklyFocus's ActionRow reads useLocale() (for DeadlineBadge's locale prop, added this
+// pass) — same NextIntlClientProvider-wrapping fix as __tests__/onboarding/onboarding-
+// wizard.test.tsx's renderWizard(), needed once a component under test calls any next-intl
+// hook.
+function renderWeeklyFocus(actions: WeeklyAction[]) {
+  return render(
+    <NextIntlClientProvider locale="en" messages={en}>
+      <WeeklyFocus actions={actions} />
+    </NextIntlClientProvider>
+  );
+}
+
 beforeEach(() => {
   vi.mocked(updateActionStatus).mockReset();
   vi.mocked(toast.error).mockReset();
@@ -65,7 +79,7 @@ afterEach(() => {
 describe("WeeklyFocus — pinned success-path behavior", () => {
   test("marking a not-started action complete: the checkbox shows done, no toast, and the reflection prompt appears", async () => {
     vi.mocked(updateActionStatus).mockResolvedValue({});
-    render(<WeeklyFocus actions={[action()]} />);
+    renderWeeklyFocus([action()]);
 
     fireEvent.click(screen.getByRole("button", { name: "Mark as complete" }));
 
@@ -77,7 +91,7 @@ describe("WeeklyFocus — pinned success-path behavior", () => {
 
   test("un-marking a completed action: the checkbox reverts to not-done, no toast", async () => {
     vi.mocked(updateActionStatus).mockResolvedValue({});
-    render(<WeeklyFocus actions={[action({ status: "completed" })]} />);
+    renderWeeklyFocus([action({ status: "completed" })]);
 
     fireEvent.click(screen.getByRole("button", { name: "Mark as not started" }));
 
@@ -88,7 +102,7 @@ describe("WeeklyFocus — pinned success-path behavior", () => {
 
   test("saving a reflection outcome on a successful write shows no toast and hides the reflection prompt", async () => {
     vi.mocked(updateActionStatus).mockResolvedValue({});
-    render(<WeeklyFocus actions={[action()]} />);
+    renderWeeklyFocus([action()]);
 
     fireEvent.click(screen.getByRole("button", { name: "Mark as complete" }));
     fireEvent.click(screen.getByRole("button", { name: /Completed successfully/ }));
@@ -104,7 +118,7 @@ describe("WeeklyFocus — pinned success-path behavior", () => {
 describe("WeeklyFocus — failure path (docs/feat2-error-surfacing-audit-2026-08-22.md finding #1)", () => {
   test("a failed toggle rolls the checkbox back rather than leaving it showing a false 'completed'", async () => {
     vi.mocked(updateActionStatus).mockResolvedValue({ error: "Couldn't update that action. Please try again." });
-    render(<WeeklyFocus actions={[action()]} />);
+    renderWeeklyFocus([action()]);
 
     fireEvent.click(screen.getByRole("button", { name: "Mark as complete" }));
 
@@ -116,7 +130,7 @@ describe("WeeklyFocus — failure path (docs/feat2-error-surfacing-audit-2026-08
 
   test("a failed toggle also closes the reflection prompt it optimistically opened", async () => {
     vi.mocked(updateActionStatus).mockResolvedValue({ error: "Couldn't update that action. Please try again." });
-    render(<WeeklyFocus actions={[action()]} />);
+    renderWeeklyFocus([action()]);
 
     fireEvent.click(screen.getByRole("button", { name: "Mark as complete" }));
 
@@ -126,7 +140,7 @@ describe("WeeklyFocus — failure path (docs/feat2-error-surfacing-audit-2026-08
 
   test("a failed un-toggle (completed -> not_started) rolls back to showing completed", async () => {
     vi.mocked(updateActionStatus).mockResolvedValue({ error: "Couldn't update that action. Please try again." });
-    render(<WeeklyFocus actions={[action({ status: "completed" })]} />);
+    renderWeeklyFocus([action({ status: "completed" })]);
 
     fireEvent.click(screen.getByRole("button", { name: "Mark as not started" }));
 
@@ -138,7 +152,7 @@ describe("WeeklyFocus — failure path (docs/feat2-error-surfacing-audit-2026-08
     vi.mocked(updateActionStatus)
       .mockResolvedValueOnce({}) // the toggle-to-complete call succeeds
       .mockResolvedValueOnce({ error: "Couldn't update that action. Please try again." }); // the reflection-attach call fails
-    render(<WeeklyFocus actions={[action()]} />);
+    renderWeeklyFocus([action()]);
 
     fireEvent.click(screen.getByRole("button", { name: "Mark as complete" }));
     await waitFor(() => expect(updateActionStatus).toHaveBeenCalledTimes(1));

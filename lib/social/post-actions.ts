@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Post, PostVisibility } from "@/types/database";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
+import { resolveLocale } from "@/lib/i18n/locale";
 import { isUuidLike } from "@/lib/validation/uuid";
 import { assertWithinRateLimit, RateLimitExceededError } from "@/lib/security/rate-limit";
 import { RATE_LIMITS } from "@/lib/security/rate-limit-config";
@@ -93,7 +94,7 @@ export async function createPost(input: {
   const userId = session.userId!;
 
   try {
-    await assertWithinRateLimit(userId, "create_post", RATE_LIMITS.create_post);
+    await assertWithinRateLimit(userId, "create_post", RATE_LIMITS.create_post, await resolveLocale());
     const supabase = await createClient();
     return await createPostForUser(supabase, userId, input);
   } catch (error) {
@@ -160,7 +161,7 @@ export async function repost(input: {
   try {
     // Shares create_post's quota on purpose — a repost is a post insert, and a separate
     // key would be a way around the post limit.
-    await assertWithinRateLimit(userId, "create_post", RATE_LIMITS.create_post);
+    await assertWithinRateLimit(userId, "create_post", RATE_LIMITS.create_post, await resolveLocale());
     const supabase = await createClient();
     return await repostForUser(supabase, userId, input);
   } catch (error) {
@@ -275,7 +276,7 @@ export async function likePost(postId: string): Promise<ActionResult> {
   const session = await requireUser();
   const userId = session.userId!;
   try {
-    await assertWithinRateLimit(userId, "like_post", RATE_LIMITS.like_post);
+    await assertWithinRateLimit(userId, "like_post", RATE_LIMITS.like_post, await resolveLocale());
     const supabase = await createClient();
     return await likePostForUser(supabase, userId, postId);
   } catch (error) {
@@ -352,7 +353,7 @@ export async function reportPost(postId: string, reason: string): Promise<Action
   const session = await requireUser();
   const userId = session.userId!;
   try {
-    await assertWithinRateLimit(userId, "report_post", RATE_LIMITS.report_post);
+    await assertWithinRateLimit(userId, "report_post", RATE_LIMITS.report_post, await resolveLocale());
     const supabase = await createClient();
     return await reportPostForUser(supabase, userId, postId, reason);
   } catch (error) {

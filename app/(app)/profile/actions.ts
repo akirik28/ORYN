@@ -330,8 +330,9 @@ export async function refineAchievement(params: {
   }
 
   try {
-    await assertWithinAIRateLimit(session.userId!, "achievement_refinement", { maxCalls: 20, windowMinutes: 30 });
-    const data = await refineAchievementDescription({ userId: session.userId!, locale: await resolveLocale(), ...params });
+    const locale = await resolveLocale();
+    await assertWithinAIRateLimit(session.userId!, "achievement_refinement", { maxCalls: 20, windowMinutes: 30 }, locale);
+    const data = await refineAchievementDescription({ userId: session.userId!, locale, ...params });
     return { data };
   } catch (error) {
     if (error instanceof RateLimitExceededError) return { error: error.message };
@@ -347,7 +348,7 @@ export async function generateResearchIdeas(field: string): Promise<{ data?: Res
   if (!field.trim()) return { error: "Enter a field or interest first." };
 
   try {
-    await assertWithinAIRateLimit(session.userId!, "research_generator", { maxCalls: 10, windowMinutes: 60 });
+    await assertWithinAIRateLimit(session.userId!, "research_generator", { maxCalls: 10, windowMinutes: 60 }, await resolveLocale());
     const supabase = await createClient();
     const { data: interests } = await supabase.from("student_interests").select("label").eq("user_id", session.userId!);
     const data = await generateResearchProjects({

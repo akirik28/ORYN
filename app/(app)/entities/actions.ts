@@ -2,6 +2,7 @@
 
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
+import { resolveLocale } from "@/lib/i18n/locale";
 import { searchEntities } from "@/lib/entities/search";
 import { createCustomEntity, type CreateCustomEntityResult } from "@/lib/entities/resolve";
 import { ENTITY_SCOPES, isEntityScope, type EntityScope } from "@/lib/entities/field-policy";
@@ -44,7 +45,7 @@ export async function createCustomEntityAction(
   // DEFINER, so it is deliberately the only way a student session can write to the
   // registry at all, and nothing about the row records who submitted it.
   try {
-    await assertWithinRateLimit(session.userId!, "create_custom_entity", RATE_LIMITS.create_custom_entity);
+    await assertWithinRateLimit(session.userId!, "create_custom_entity", RATE_LIMITS.create_custom_entity, await resolveLocale());
   } catch (error) {
     if (error instanceof RateLimitExceededError) return { status: "error", error: error.message };
     throw error;

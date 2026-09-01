@@ -3,6 +3,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { checkRateLimit, type RateLimitStore, type RateLimitOptions } from "@/lib/security/rate-limit-core";
 import { RateLimitExceededError } from "@/lib/errors/rate-limit-exceeded";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 /**
  * General-purpose sliding-window rate limit for Server Actions / Route Handlers outside
@@ -39,8 +40,8 @@ function supabaseRateLimitStore(): RateLimitStore {
   };
 }
 
-export async function assertWithinRateLimit(userId: string, action: string, opts: RateLimitOptions): Promise<void> {
-  return checkRateLimit(supabaseRateLimitStore(), userId, action, opts);
+export async function assertWithinRateLimit(userId: string, action: string, opts: RateLimitOptions, locale: Locale = DEFAULT_LOCALE): Promise<void> {
+  return checkRateLimit(supabaseRateLimitStore(), userId, action, opts, locale);
 }
 
 export { RateLimitExceededError };

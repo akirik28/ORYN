@@ -103,7 +103,7 @@ export async function ApplicationsView({
                     {application.deadline ? (
                       <>
                         {" "}
-                        · {t("due")} <DeadlineBadge date={application.deadline} />
+                        · {t("due")} <DeadlineBadge date={application.deadline} locale={locale} />
                       </>
                     ) : null}
                   </p>

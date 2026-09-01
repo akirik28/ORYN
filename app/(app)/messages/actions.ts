@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 import { requireUser, getCurrentProfile } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
+import { resolveLocale } from "@/lib/i18n/locale";
 import { createNotification } from "@/lib/notifications/create";
 import { isUuidLike } from "@/lib/validation/uuid";
 import { getConnectionWith } from "@/lib/social/connections";
@@ -28,7 +29,7 @@ export async function sendMessage(recipientId: string, body: string): Promise<{ 
   // don't burn quota, but before any DB round-trip so a flood can't hammer the
   // connection/block checks below.
   try {
-    await assertWithinRateLimit(userId, "send_message", RATE_LIMITS.send_message);
+    await assertWithinRateLimit(userId, "send_message", RATE_LIMITS.send_message, await resolveLocale());
   } catch (error) {
     if (error instanceof RateLimitExceededError) return { error: error.message };
     throw error;
@@ -125,7 +126,7 @@ export async function reportMessage(messageId: string, reportedUserId: string, r
 
   // Abuse guard — see lib/security/rate-limit-config.ts.
   try {
-    await assertWithinRateLimit(session.userId!, "report_message", RATE_LIMITS.report_message);
+    await assertWithinRateLimit(session.userId!, "report_message", RATE_LIMITS.report_message, await resolveLocale());
   } catch (error) {
     if (error instanceof RateLimitExceededError) return { error: error.message };
     throw error;
