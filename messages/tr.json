@@ -1156,6 +1156,18 @@
       "passwordMinLength": "En az 8 karakter kullan.",
       "passwordNeedsLetter": "En az bir harf ekle.",
       "passwordNeedsNumber": "En az bir rakam ekle."
+    },
+    "signup": {
+      "title": "Hesabını oluştur",
+      "subtitle": "Öğrenciler için ücretsiz. Kredi kartı gerekmez.",
+      "haveAccount": "Zaten bir hesabın var mı?",
+      "signIn": "Giriş yap",
+      "displayName": "Görünen ad",
+      "email": "E-posta",
+      "password": "Şifre",
+      "passwordHint": "En az 8 karakter, bir harf ve bir rakam içermeli.",
+      "submitting": "Hesap oluşturuluyor…",
+      "submit": "Hesap oluştur"
     }
   },
   "landing": {
@@ -1288,7 +1300,7 @@
     "fallbackName": "Oryn öğrencisi",
     "classOf": "{year} mezunu",
     "mutualConnections": "{count, plural, one {{count} ortak bağlantı} other {{count} ortak bağlantı}}",
-    "message": "Mesaj gönder",
+    "message": "Mesaj",
     "about": "Hakkında",
     "featured": "Öne çıkanlar",
     "portfolio": "Portföy",
@@ -1297,6 +1309,22 @@
     "email": "E-posta",
     "phone": "Telefon",
     "website": "Web sitesi",
-    "privateNotice": "Bunu sadece sen görebilirsin. Paylaşmak için Ayarlar'dan <link>Herkese açık profil</link> seçeneğini aç."
+    "privateNotice": "Bunu yalnızca sen görebilirsin. Paylaşmak için Ayarlar'dan <settingsLink>Herkese açık profil</settingsLink> özelliğini aç.",
+    "lookingFor": "Aradığı: {value}",
+    "aboutHeading": "Hakkında",
+    "featuredHeading": "Öne çıkanlar",
+    "skillsHeading": "Beceriler",
+    "portfolioHeading": "Portföy",
+    "loadFailed": "Portföyün tamamını şu anda yükleyemedik. Yukarıdaki profil hâlâ doğru.",
+    "openToHeading": "Açık olduğu alanlar",
+    "contactHeading": "İletişim",
+    "contactEmail": "E-posta: ",
+    "contactPhone": "Telefon: ",
+    "contactLinkedin": "LinkedIn: ",
+    "contactGithub": "GitHub: ",
+    "contactWebsite": "Web sitesi: ",
+    "contactInstagram": "Instagram: ",
+    "contactTwitter": "X / Twitter: ",
+    "contactDiscord": "Discord: "
   }
 }
