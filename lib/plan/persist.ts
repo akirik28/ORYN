@@ -102,26 +102,60 @@ export async function getOrCreateWeeklyPlan(userId: string, opts?: { force?: boo
     // whole weekly plan -- same discipline as lib/scoring/persist.ts.
     const admin = tryCreateAdminClient();
     if (admin) {
-      await admin.from("ai_recommendations").insert({
-        user_id: userId,
-        title: generation.avoidForNow.activity,
-        reason: generation.avoidForNow.reason,
-        recommendation_class: "avoid_for_now",
-        category: "weekly_plan",
-        related_dimension: null,
-      });
+      // Dedup, same shape as lib/deadlines/scan.ts's notifyIfThresholdCrossed: getOrCreateWeeklyPlan
+      // has exactly two callers (this action's own regenerate, and the dashboard's lazy
+      // first-generate-of-the-week) and neither is a scheduled job a student could be away
+      // from -- so every regeneration re-proposed the identical avoid-for-now title with no
+      // check, and student-context.ts's own prompt-assembly reads the 15 most recent
+      // unconditionally. Live before this: one student had the same title written 99 times,
+      // crowding 14 of 15 "don't repeat this" slots the advisor's prompt is supposed to hold
+      // with copies of itself. Scoped to this ISO week, matching weekly_plans' own
+      // one-row-per-(user,week) shape, not a rolling window -- a genuinely new avoid-for-now
+      // suggestion next week should still land.
+      const { data: existingRecommendation } = await supabase
+        .from("ai_recommendations")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("recommendation_class", "avoid_for_now")
+        .eq("title", generation.avoidForNow.activity)
+        .gte("shown_at", `${weekStartDate}T00:00:00.000Z`)
+        .maybeSingle();
+      if (!existingRecommendation) {
+        await admin.from("ai_recommendations").insert({
+          user_id: userId,
+          title: generation.avoidForNow.activity,
+          reason: generation.avoidForNow.reason,
+          recommendation_class: "avoid_for_now",
+          category: "weekly_plan",
+          related_dimension: null,
+        });
+      }
     } else {
       console.error("[plan] SUPABASE_SECRET_KEY not configured — skipping avoid-for-now recommendation write");
     }
   }
 
-  await createNotification({
-    userId,
-    category: "weekly_plan",
-    title: "Your weekly plan is ready",
-    body: generation.summary,
-    link: "/plan",
-  });
+  // Same dedup shape and reasoning as the ai_recommendations check above: two non-scheduled
+  // callers, no reason a student who just clicked "Regenerate" and is looking at the result
+  // needs a second notification telling them so. Live before this: one student had 100
+  // identical "Your weekly plan is ready" notifications, 100 of them unread. Scoped to the
+  // ISO week for the same reason -- once per week's plan, not once per generation.
+  const { data: existingNotification } = await supabase
+    .from("notifications")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("category", "weekly_plan")
+    .gte("created_at", `${weekStartDate}T00:00:00.000Z`)
+    .maybeSingle();
+  if (!existingNotification) {
+    await createNotification({
+      userId,
+      category: "weekly_plan",
+      title: "Your weekly plan is ready",
+      body: generation.summary,
+      link: "/plan",
+    });
+  }
 
   return { plan, actions: actions ?? [] };
 }
