@@ -2,6 +2,8 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
+import { NextIntlClientProvider } from "next-intl";
+import en from "@/messages/en.json";
 
 /**
  * Component-level coverage for AchievementSection (features/profile/achievement-section.tsx)
@@ -29,23 +31,29 @@ interface TestItem {
   title: string;
 }
 
+// AchievementSection calls useTranslations (common + profile.achievementSection) — needs
+// the same real-catalog provider wrap as featured-manager.test.tsx, for the same reason:
+// an empty messages object would throw, not just render blank, and these assertions query
+// rendered English text by role/name ("Delete").
 function renderSection(overrides: { onDelete?: (id: string) => Promise<{ error?: string }> } = {}) {
   const onCreate = vi.fn().mockResolvedValue({});
   const onUpdate = vi.fn().mockResolvedValue({});
   const onDelete = overrides.onDelete ?? vi.fn().mockResolvedValue({});
 
   render(
-    <AchievementSection<TestItem>
-      title="Activities"
-      items={[{ id: "item-1", title: "Regional Science Fair" }]}
-      summaries={{ "item-1": { title: "Regional Science Fair" } }}
-      fields={[{ type: "text", name: "title", label: "Title" }]}
-      defaultValues={{ title: "" }}
-      onCreate={onCreate}
-      onUpdate={onUpdate}
-      onDelete={onDelete}
-      emptyStateText="No activities yet."
-    />
+    <NextIntlClientProvider locale="en" messages={en}>
+      <AchievementSection<TestItem>
+        title="Activities"
+        items={[{ id: "item-1", title: "Regional Science Fair" }]}
+        summaries={{ "item-1": { title: "Regional Science Fair" } }}
+        fields={[{ type: "text", name: "title", label: "Title" }]}
+        defaultValues={{ title: "" }}
+        onCreate={onCreate}
+        onUpdate={onUpdate}
+        onDelete={onDelete}
+        emptyStateText="No activities yet."
+      />
+    </NextIntlClientProvider>
   );
 
   return { onCreate, onUpdate, onDelete };

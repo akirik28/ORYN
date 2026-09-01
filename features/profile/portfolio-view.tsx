@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { FolderOpen } from "lucide-react";
 import { spanLabel } from "@/lib/profile/journey";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,26 +34,21 @@ function ItemCard({ item }: { item: PortfolioItem }) {
 }
 
 export function PortfolioView({ items }: { items: PortfolioItem[] }) {
+  const t = useTranslations("profile.portfolioView");
   const categories = Object.keys(PORTFOLIO_CATEGORY_LABELS) as PortfolioCategory[];
   const byCategory = categories
     .map((category) => ({ category, items: items.filter((i) => i.category === category) }))
     .filter((group) => group.items.length > 0);
 
   if (items.length === 0) {
-    return (
-      <EmptyState
-        icon={FolderOpen}
-        title="Nothing here yet"
-        description="Achievements you add to your profile will appear here automatically."
-      />
-    );
+    return <EmptyState icon={FolderOpen} title={t("emptyTitle")} description={t("emptyDescription")} />;
   }
 
   return (
     <Tabs defaultValue="timeline">
       <TabsList>
-        <TabsTrigger value="timeline">Timeline</TabsTrigger>
-        <TabsTrigger value="category">By category</TabsTrigger>
+        <TabsTrigger value="timeline">{t("timeline")}</TabsTrigger>
+        <TabsTrigger value="category">{t("byCategory")}</TabsTrigger>
       </TabsList>
       <TabsContent value="timeline" className="space-y-3 pt-4">
         {items.map((item) => (
@@ -60,6 +56,10 @@ export function PortfolioView({ items }: { items: PortfolioItem[] }) {
         ))}
       </TabsContent>
       <TabsContent value="category" className="space-y-8 pt-4">
+        {/* PORTFOLIO_CATEGORY_LABELS deliberately untranslated — shared with cv-builder.tsx,
+            which can't localize it without either mismatching its own controls-vs-print
+            labels or answering a real product question about printed-CV language this pass
+            doesn't own. See that file's own comment. */}
         {byCategory.map((group) => (
           <div key={group.category} className="space-y-3">
             <h2 className="font-semibold">{PORTFOLIO_CATEGORY_LABELS[group.category]}</h2>

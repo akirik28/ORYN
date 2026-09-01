@@ -27,7 +27,10 @@
     "submit": "Gönder",
     "delete": "Sil",
     "show": "Göster",
-    "hide": "Gizle"
+    "hide": "Gizle",
+    "add": "Ekle",
+    "edit": "Düzenle",
+    "save": "Kaydet"
   },
   "profile": {
     "backToProfile": "Profile geri dön",
@@ -141,6 +144,37 @@
     "portfolio": {
       "title": "Portföy",
       "description": "Yaptığın her şey, tek bir yerde."
+    },
+    "portfolioView": {
+      "emptyTitle": "Henüz burada bir şey yok",
+      "emptyDescription": "Profiline eklediğin başarılar burada otomatik olarak görünecek.",
+      "timeline": "Zaman çizelgesi",
+      "byCategory": "Kategoriye göre"
+    },
+    "cvBuilder": {
+      "emptyTitle": "Önce profiline başarı ekle",
+      "emptyDescription": "CV'in tamamen yapılandırılmış profilinden oluşturulur, sıfırdan yazılmaz.",
+      "cvTitleLabel": "CV başlığı",
+      "cvTitlePlaceholder": "ör. Ekonomi CV'si",
+      "cvTitleHelper": "Yalnızca kendi referansın için — CV'nin üzerinde yazdırılmaz.",
+      "includeCount": "Dahil et ({selected}/{total})",
+      "printButton": "Yazdır / PDF olarak kaydet"
+    },
+    "peerBenchmark": {
+      "notEnoughStudents": "Henüz karşılaştırılabilir yeterli Oryn öğrencisi yok",
+      "notEnoughDescription": "Akran karşılaştırması gösterebilmek için ({cohort}, en az {min}).",
+      "comparedTo": "Karşılaştırma grubu: {cohort}",
+      "overallProfile": "Genel profil",
+      "percentile": "%{percentile}. dilim",
+      "cohortSize": "(n={size})",
+      "someDimensionsHidden": "Bazı alanlar için henüz gösterecek kadar karşılaştırılabilir öğrenci yok."
+    },
+    "achievementSection": {
+      "untitled": "Başlıksız",
+      "addDialogTitle": "{title} ekle",
+      "editDialogTitle": "{title} düzenle",
+      "improveWithAi": "Bu kaydı yapay zekâ ile geliştir",
+      "useThisDescription": "Bu açıklamayı kullan"
     },
     "researchIdeas": {
       "eyebrow": "Araştırma",

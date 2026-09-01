@@ -27,7 +27,10 @@
     "submit": "Submit",
     "delete": "Delete",
     "show": "Show",
-    "hide": "Hide"
+    "hide": "Hide",
+    "add": "Add",
+    "edit": "Edit",
+    "save": "Save"
   },
   "profile": {
     "backToProfile": "Back to profile",
@@ -141,6 +144,37 @@
     "portfolio": {
       "title": "Portfolio",
       "description": "Everything you've done, in one place."
+    },
+    "portfolioView": {
+      "emptyTitle": "Nothing here yet",
+      "emptyDescription": "Achievements you add to your profile will appear here automatically.",
+      "timeline": "Timeline",
+      "byCategory": "By category"
+    },
+    "cvBuilder": {
+      "emptyTitle": "Add achievements to your profile first",
+      "emptyDescription": "Your CV is built entirely from your structured profile, never written from scratch.",
+      "cvTitleLabel": "CV title",
+      "cvTitlePlaceholder": "e.g. Economics CV",
+      "cvTitleHelper": "Only for your own reference — it doesn't print on the CV itself.",
+      "includeCount": "Include ({selected}/{total})",
+      "printButton": "Print / Save as PDF"
+    },
+    "peerBenchmark": {
+      "notEnoughStudents": "Not enough comparable Oryn students yet",
+      "notEnoughDescription": "To show peer comparison ({cohort}, minimum {min}).",
+      "comparedTo": "Compared to {cohort}",
+      "overallProfile": "Overall profile",
+      "percentile": "{percentile}th percentile",
+      "cohortSize": "(n={size})",
+      "someDimensionsHidden": "Some dimensions don't have enough comparable students yet to show."
+    },
+    "achievementSection": {
+      "untitled": "Untitled",
+      "addDialogTitle": "Add {title}",
+      "editDialogTitle": "Edit {title}",
+      "improveWithAi": "Improve this entry with AI",
+      "useThisDescription": "Use this description"
     },
     "researchIdeas": {
       "eyebrow": "Research",
