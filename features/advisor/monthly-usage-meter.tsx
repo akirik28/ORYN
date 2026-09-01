@@ -26,8 +26,30 @@ import type { MonthlyQuota } from "@/lib/ai/monthly-quota";
  * once the allowance is nearly gone. The sheen animation is confined to the filled portion
  * and stops entirely at the exhausted state, where a cheerful shimmer would be the wrong
  * note.
+ *
+ * `budgetDegraded` is a second, independent signal from `quota` (2026-09-02, degrade-
+ * disclosure package) — `quota` is the 300-message/month hard backstop
+ * (lib/ai/monthly-quota.ts), but replies actually start using the cheaper model far
+ * earlier, once this month's spend crosses lib/ai/limits/budget.ts's $0.50 target (~14
+ * messages at ~$0.035 each). Before this, the bar could show a full indigo-violet fill and
+ * "270 messages left" while the student's last several replies were already degraded —
+ * true about the message count, misleading about what's actually happening to their
+ * conversation. `budgetDegraded` takes priority over the message-count colour/copy for
+ * exactly that reason: being degraded is the more urgent, more immediate fact once it's
+ * true, regardless of how much of the 300-message backstop remains. Optional and defaults
+ * to `false` — a caller not yet passing it renders exactly as before, matching this
+ * codebase's established "not yet wired up" convention (see lib/ai/usage.ts's `degraded?`
+ * param doc).
  */
-export function MonthlyUsageMeter({ quota, className }: { quota: MonthlyQuota; className?: string }) {
+export function MonthlyUsageMeter({
+  quota,
+  budgetDegraded = false,
+  className,
+}: {
+  quota: MonthlyQuota;
+  budgetDegraded?: boolean;
+  className?: string;
+}) {
   const t = useTranslations("advisor.usageMeter");
   const locale = useLocale() as Locale;
   // Animate up from empty on mount so the bar reads as a measurement being taken rather
@@ -45,11 +67,15 @@ export function MonthlyUsageMeter({ quota, className }: { quota: MonthlyQuota; c
 
   const spent = quota.fraction;
   const exhausted = !unknown && quota.remaining <= 0;
-  const low = !unknown && !exhausted && quota.remaining <= quota.limit * 0.1;
+  // Takes priority over `low` — a student can be several degraded replies deep while the
+  // 300-message backstop still shows plenty of headroom (the founder's own benchmark: the
+  // $0.50 target is ~14 messages, nowhere near 300 — see the component doc comment above).
+  const degraded = !unknown && !exhausted && budgetDegraded;
+  const low = !unknown && !exhausted && !degraded && quota.remaining <= quota.limit * 0.1;
 
   const fill = exhausted
     ? "from-rose-500 via-rose-400 to-rose-500"
-    : low
+    : degraded || low
       ? "from-amber-500 via-orange-400 to-amber-500"
       : spent > 0.75
         ? "from-amber-400 via-violet-400 to-indigo-400"
@@ -60,7 +86,7 @@ export function MonthlyUsageMeter({ quota, className }: { quota: MonthlyQuota; c
   // being flattened to a transparent shadow.
   const glow = exhausted
     ? "0 0 18px -2px rgba(244,63,94,0.65)"
-    : low
+    : degraded || low
       ? "0 0 18px -2px rgba(245,158,11,0.6)"
       : "0 0 20px -2px rgba(139,92,246,0.55)";
 
@@ -96,7 +122,7 @@ export function MonthlyUsageMeter({ quota, className }: { quota: MonthlyQuota; c
                 ? "text-muted-foreground"
                 : exhausted
                 ? "text-rose-600 dark:text-rose-300"
-                : low
+                : degraded || low
                   ? "text-amber-600 dark:text-amber-300"
                   : "text-foreground",
             )}
@@ -142,9 +168,11 @@ export function MonthlyUsageMeter({ quota, className }: { quota: MonthlyQuota; c
           ? t("unknown", { limit: formatNumber(quota.limit), date: resets })
           : exhausted
             ? t("exhausted", { limit: formatNumber(quota.limit), date: resets })
-            : low
-              ? t("low", { remaining: formatNumber(quota.remaining), date: resets })
-              : t("normal", { remaining: formatNumber(quota.remaining), date: resets })}
+            : degraded
+              ? t("degraded", { date: resets })
+              : low
+                ? t("low", { remaining: formatNumber(quota.remaining), date: resets })
+                : t("normal", { remaining: formatNumber(quota.remaining), date: resets })}
       </p>
     </div>
   );
