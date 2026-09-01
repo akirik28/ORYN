@@ -292,19 +292,36 @@ three files' `t` also collides with a `: Translator`-typed helper parameter, the
 already-correct shadowing logic every other file with this shape already triggers — raised
 the ceiling assertion from `<8` to `<12` to match, with the reasoning recorded inline.
 
-**Named, not fixed: the shadowing that catches the collision above is file-scoped, not
-function-scoped, and throws away real coverage to stay safe.** Once a name is flagged
-ambiguous, *every* call to that name in the whole file is skipped — including calls in a
-completely different, unambiguous function that never sees the `: Translator` parameter at
-all. Concretely: `CounselorPriorities()`'s own `t("needsMoreInfoTitle")` and its siblings are
-just as resolvable as any other call in the file (one binding, one namespace, no ambiguity)
-but are discarded anyway because a *different* function three functions down,
-`RecommendationCard`, receives a same-named `t` as a parameter. The correct fix is
-function-scoped resolution — and that needs real scope tracking (matching braces per
-function body, distinguishing a param list from a call), not a regex tweak, so it wasn't
-attempted here rather than shipping something that looks precise and silently misparses a
-nested arrow function. This is the single highest-value next investment in this guard: it is
-currently under-counting its own best cases, on the pages CEO's own example bug lived in.
+**Was named as the highest-value next investment in this guard; taken with dedicated time
+the same day and fixed properly.** The file-scoped shadowing above threw away real coverage
+to stay safe — once a name was flagged ambiguous, *every* call to it in the whole file was
+skipped, including calls in a completely different, unambiguous function that never saw the
+`: Translator` parameter at all. `CounselorPriorities()`'s own `t("needsMoreInfoTitle")` and
+its siblings were just as resolvable as any other call in the file (one binding, one
+namespace, no ambiguity) but were discarded anyway because a *different* function three
+functions down, `RecommendationCard`, receives a same-named `t` as a parameter. Regex-based
+scope approximation was explicitly rejected as the fix (a scope tracker that's subtly wrong
+is worse than the honest over-skipping it would replace — it would go from *under-claiming*
+to *falsely claiming*, silently). Rewrote `translation-keys.test.ts` to use the TypeScript
+compiler API instead: `ts.createSourceFile` parses each file (syntax only, no `tsconfig`/
+`Program`, no type-checking — this needs scope, not types, so it stays fast), and a single
+top-down traversal carries an explicit binding-scope stack, pushing on every function and
+block and resolving each call against the *nearest* enclosing declaration — the same rule
+the language itself uses, which is what makes it correct rather than an approximation of
+correct. Verified two ways before trusting it: replayed against every real problem case by
+hand first (opportunity-card.tsx's three-scopes-one-name shape, `app/(auth)/actions.ts`'s
+three sibling functions each binding `t` to a different `auth.*` namespace — every case
+resolved exactly as real JS scoping predicts), then deliberately broke a real call
+(`counselor-priorities.tsx`'s `needsMoreInfoTitle` → `needsMoreInfoTitleTYPO`) and confirmed
+the rewritten guard caught it with an exact file and line, then reverted the break. `checked`
+moved 1068 → 1160 (zero new offenders — closes coverage, doesn't reveal a hidden bug);
+`skipped` changed units entirely, from *(file, name) pairs treated as ambiguous* to
+*individual call sites whose nearest binding is a real, undecidable parameter* — 27 of those,
+a smaller and more honest number than it looks next to the old "8," since the old 8 was
+hiding far more discarded calls per entry. Performance, measured rather than assumed:
+parsing everything `SCAN_DIRS` covers (519 files) takes ~200ms standalone; the full suite's
+total runtime was 16.44s after the rewrite against a 16.01–16.29s baseline range across the
+rest of the same session — no measurable difference, not a vague reassurance.
 
 **Named, not fixed, and not really fixable by this kind of guard: `t(\`x.${y}\`)` and
 `t(someVar)`.** Already excluded by design (the guard's own comment says so), re-confirmed

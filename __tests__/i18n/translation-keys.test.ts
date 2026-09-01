@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
+import * as ts from "typescript";
 import en from "@/messages/en.json";
 
 /**
@@ -19,18 +20,53 @@ import en from "@/messages/en.json";
  * (i18n lane, 2026-09-01, found by reading rendered text). They then cross-checked seven
  * files by hand. This does that for every file, every time.
  *
- * Deliberately narrow, and the narrowness is the point. It resolves only what a regex can
- * actually decide: a namespace given as a string literal, a key given as a string literal,
- * and a binding name that means one thing in its file. Everything else is skipped rather than
- * guessed at.
+ * **Rewritten 2026-09-01 to use the TypeScript compiler API for real lexical scope
+ * resolution, replacing an earlier regex-based version.** The regex approach's own
+ * `namespaceBindings` treated any name bound to 2+ namespaces *anywhere in a file*, or ever
+ * used as a `: Translator`-typed parameter *anywhere in a file*, as ambiguous for every one
+ * of its occurrences in that entire file — including calls in a completely different,
+ * unambiguous function that never saw the conflicting binding at all. Two bugs came from
+ * that, found auditing the guard itself the same day: (1) a parenthesized-cast pattern —
+ * `const t = (await getTranslations("x")) as Translator`, needed because `await x as Y`
+ * doesn't parse the way the cast intends — didn't match the binding regex at all, so a file
+ * using it contributed to neither `checked` nor `skipped`; it was simply invisible, with no
+ * signal anywhere that it hadn't been looked at. That included
+ * `app/(app)/opportunities/[id]/page.tsx` — the exact file whose exact bug this guard exists
+ * to catch. (2) Even after that regex was patched, whole-file shadowing still discarded
+ * real, resolvable calls (`app/(auth)/actions.ts`'s three sibling functions each bind `t` to
+ * a different `auth.*` namespace; every one of their ~14 calls was being thrown out because
+ * the *name* "t" meant more than one thing *somewhere* in the file, even though each call
+ * site was individually unambiguous).
  *
- * That last exclusion came from this guard being wrong on its first run. It flagged eleven
- * calls in opportunity-card.tsx, all correct: that file binds `t` twice in different scopes
- * (`opportunities.reasons` in a helper, `opportunities.card` in the component) and passes a
- * third `t` as a function parameter. A flat name→namespace map attributed every call to
- * whichever binding it saw last. A guard that reports confident findings from input it cannot
- * read is the exact thing this codebase keeps removing, so it now skips shadowed names and
- * says how many it skipped.
+ * A real AST fixes both, correctly, because it tracks actual lexical scope rather than
+ * approximating it: `ts.createSourceFile` parses each file (no type-checking, no
+ * `tsconfig`/`Program` needed — this only needs syntax, not types, so it stays fast: ~200ms
+ * to parse everything `SCAN_DIRS` covers), and a single top-down traversal carries an
+ * explicit scope stack — push a new binding scope on every function and block, pop on exit,
+ * resolve each `name(...)` call against the *nearest* enclosing declaration of `name`, exactly
+ * the way the language itself resolves it. A `const t = useTranslations(...)` binds `t` to a
+ * namespace in its own scope; a `t: Translator` function parameter also binds `t`, to no
+ * known namespace, in its own (necessarily more nested) scope — nesting is what makes "nearest
+ * wins" correct without needing to reason about namespaces vs. parameters as separate cases.
+ * `checked` moved 1055 → 1160 in the rewrite (the regex-only parens fix alone had already
+ * taken it to 1068); zero new offenders among the newly-checked calls, so this closes real
+ * coverage gaps without also surfacing a live bug hiding behind them. `skipped` moved from
+ * counting *(file, name) pairs treated as ambiguous* to counting *individual call sites*
+ * whose nearest binding is a parameter — a different, more precise unit, and a smaller
+ * number of the thing that actually matters (unverifiable calls) even though the file-level
+ * predecessor's number was smaller in its own units.
+ *
+ * Deliberately still narrow in the one way narrowing is actually unavoidable: a
+ * `: Translator`-typed parameter's *own* namespace is genuinely undecidable from inside the
+ * function that declares it — it depends on what the caller passes, which is real
+ * cross-function data-flow analysis, not scope resolution, and a different kind of tool than
+ * this file. `t(\`x.${y}\`)` (template-literal keys) and `t(someVar)` (non-literal keys) stay
+ * unresolvable for the same reason string literals exist as a concept: there's no value to
+ * resolve without either running the program or reasoning about every value `y`/`someVar`
+ * could hold. Both are still real, both are documented, and both were re-confirmed rather
+ * than silently inherited: this session's own manual audit already checked all 12 live
+ * dynamic-key call sites against their real TypeScript/Zod types and found them clean — a
+ * one-time sweep, not something this guard can do standing.
  */
 
 const ROOT = process.cwd();
@@ -54,92 +90,153 @@ function hasKey(path: string): boolean {
   }, en) !== undefined;
 }
 
-/**
- * `const t = useTranslations("a.b")` → { t: "a.b" }, but only for names that mean one thing
- * in this file. A name bound twice (two scopes, two namespaces) or taken as a parameter is
- * ambiguous to a regex, so it is dropped rather than resolved to the last one seen.
- */
-function namespaceBindings(source: string): { bindings: Map<string, string>; ambiguous: string[] } {
-  const seen = new Map<string, Set<string>>();
-  // `\(?…\)?` around the await: the `Translator`-cast pattern this codebase uses for every
-  // cross-boundary translator (see this file's own doc comment on the Translator type alias)
-  // wraps the whole call in an extra pair of parens — `(await getTranslations("x")) as
-  // Translator` — because `await x as Y` doesn't parse the way the cast intends. Without
-  // this, the regex never matched that shape at all: not "ambiguous," not counted in
-  // `skipped`, just silently absent from `seen`, which silently emptied `bindings` for the
-  // whole file. Found 2026-09-01 auditing this guard itself — the three files it missed this
-  // way include app/(app)/opportunities/[id]/page.tsx, the exact file whose exact bug
-  // (documented above) is why this guard exists, now checkable again.
-  const re = /(?:const|let)\s+(\w+)\s*=\s*\(?\s*(?:await\s+)?(?:useTranslations|getTranslations)\(\s*"([^"]+)"\s*\)\s*\)?/g;
-  for (const match of source.matchAll(re)) {
-    if (!seen.has(match[1])) seen.set(match[1], new Set());
-    seen.get(match[1])!.add(match[2]);
+/** Strips `await`, wrapping parens, and `as`/`satisfies` casts down to the real expression —
+ * `(await getTranslations("x")) as Translator` needs all three peeled off to find the call. */
+function unwrapExpression(expr: ts.Expression): ts.Expression {
+  for (;;) {
+    if (ts.isParenthesizedExpression(expr)) { expr = expr.expression; continue; }
+    if (ts.isAwaitExpression(expr)) { expr = expr.expression; continue; }
+    if (ts.isAsExpression(expr) || ts.isSatisfiesExpression(expr)) { expr = expr.expression; continue; }
+    return expr;
   }
+}
 
-  const bindings = new Map<string, string>();
-  const ambiguous: string[] = [];
-  for (const [name, namespaces] of seen) {
-    // Rebound in another scope, or shadowed by a parameter of the same name.
-    const shadowed = namespaces.size > 1 || new RegExp(`\\(\\s*[^)]*\\b${name}\\s*:\\s*Translator`).test(source);
-    if (shadowed) ambiguous.push(name);
-    else bindings.set(name, [...namespaces][0]);
-  }
-  return { bindings, ambiguous };
+function isFunctionLike(node: ts.Node): node is ts.FunctionDeclaration | ts.FunctionExpression | ts.ArrowFunction | ts.MethodDeclaration {
+  return ts.isFunctionDeclaration(node) || ts.isFunctionExpression(node) || ts.isArrowFunction(node) || ts.isMethodDeclaration(node);
 }
 
 interface Offender {
   file: string;
+  line: number;
   call: string;
   resolved: string;
 }
 
-function scan(): { offenders: Offender[]; checked: number; skipped: number } {
+interface SkippedCall {
+  file: string;
+  line: number;
+  call: string;
+}
+
+/** One file's worth of `name("literal")` calls, resolved against real lexical scope. A
+ * binding is either a known namespace (from `useTranslations`/`getTranslations`) or `null`
+ * (a `Translator`-typed parameter — real, but not resolvable from inside this file). */
+function scanFile(filePath: string): { offenders: Offender[]; skipped: SkippedCall[]; checked: number } {
+  const source = readFileSync(filePath, "utf8");
+  const sourceFile = ts.createSourceFile(
+    filePath,
+    source,
+    ts.ScriptTarget.Latest,
+    /* setParentNodes */ false,
+    filePath.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+  );
+
   const offenders: Offender[] = [];
+  const skipped: SkippedCall[] = [];
   let checked = 0;
-  let skipped = 0;
 
-  for (const file of SCAN_DIRS.flatMap((d) => walk(join(ROOT, d)))) {
-    const source = readFileSync(file, "utf8");
-    const { bindings, ambiguous } = namespaceBindings(source);
-    skipped += ambiguous.length;
-    if (bindings.size === 0) continue;
+  const stack: Map<string, string | null>[] = [new Map()];
+  const declareHere = (name: string, namespace: string | null) => stack[stack.length - 1].set(name, namespace);
+  const lookup = (name: string): string | null | undefined => {
+    for (let i = stack.length - 1; i >= 0; i--) {
+      if (stack[i].has(name)) return stack[i].get(name);
+    }
+    return undefined;
+  };
 
-    for (const [binding, namespace] of bindings) {
-      // Only string-literal keys. `t(`x.${y}`)` and `t(someVar)` cannot be resolved here.
-      const callRe = new RegExp(`\\b${binding}\\(\\s*"([^"]+)"`, "g");
-      for (const match of source.matchAll(callRe)) {
-        checked += 1;
-        const resolved = `${namespace}.${match[1]}`;
-        if (!hasKey(resolved)) {
-          offenders.push({ file: relative(ROOT, file), call: `${binding}("${match[1]}")`, resolved });
+  function visit(node: ts.Node) {
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) {
+      const init = unwrapExpression(node.initializer);
+      if (ts.isCallExpression(init) && ts.isIdentifier(init.expression)) {
+        const fnName = init.expression.text;
+        if ((fnName === "useTranslations" || fnName === "getTranslations") && init.arguments.length >= 1 && ts.isStringLiteral(init.arguments[0])) {
+          declareHere(node.name.text, (init.arguments[0] as ts.StringLiteral).text);
         }
       }
     }
+
+    if (isFunctionLike(node)) {
+      stack.push(new Map());
+      for (const param of node.parameters) {
+        if (ts.isIdentifier(param.name)) {
+          declareHere(param.name.text, null);
+        } else if (ts.isObjectBindingPattern(param.name)) {
+          for (const element of param.name.elements) {
+            if (ts.isIdentifier(element.name)) declareHere(element.name.text, null);
+          }
+        }
+      }
+      ts.forEachChild(node, visit);
+      stack.pop();
+      return;
+    }
+
+    if (ts.isBlock(node)) {
+      stack.push(new Map());
+      ts.forEachChild(node, visit);
+      stack.pop();
+      return;
+    }
+
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.arguments.length >= 1 && ts.isStringLiteral(node.arguments[0])) {
+      const name = node.expression.text;
+      const key = (node.arguments[0] as ts.StringLiteral).text;
+      const namespace = lookup(name);
+      if (namespace !== undefined) {
+        const line = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile)).line + 1;
+        const call = `${name}("${key}")`;
+        if (namespace === null) {
+          skipped.push({ file: relative(ROOT, filePath), line, call });
+        } else {
+          checked += 1;
+          const resolved = `${namespace}.${key}`;
+          if (!hasKey(resolved)) offenders.push({ file: relative(ROOT, filePath), line, call, resolved });
+        }
+      }
+    }
+
+    ts.forEachChild(node, visit);
   }
-  return { offenders, checked, skipped };
+  visit(sourceFile);
+
+  return { offenders, skipped, checked };
+}
+
+function scan(): { offenders: Offender[]; skipped: SkippedCall[]; checked: number } {
+  const offenders: Offender[] = [];
+  const skipped: SkippedCall[] = [];
+  let checked = 0;
+  for (const file of SCAN_DIRS.flatMap((d) => walk(join(ROOT, d)))) {
+    const result = scanFile(file);
+    offenders.push(...result.offenders);
+    skipped.push(...result.skipped);
+    checked += result.checked;
+  }
+  return { offenders, skipped, checked };
 }
 
 describe("every statically-resolvable t() key exists in the catalog", () => {
-  const { offenders, checked, skipped } = scan();
+  const { offenders, skipped, checked } = scan();
 
-  test("the scan actually found calls to check — a broken regex must fail loudly", () => {
-    // Without this, a regex that stops matching turns the assertion below into a no-op that
-    // reports success forever, which is the failure mode this file exists to prevent.
-    expect(checked).toBeGreaterThan(100);
+  test("the scan actually found calls to check — a broken parse must fail loudly", () => {
+    // Without this, a parse that silently stops matching (a TS API change, a scan-dir typo)
+    // turns the assertion below into a no-op that reports success forever — the exact failure
+    // mode this file exists to prevent, now one level up from the string check it verifies.
+    expect(checked).toBeGreaterThan(1000);
   });
 
-  test("the skipped set stays small — if most bindings become ambiguous this guard stops meaning much", () => {
-    // Shadowed names are unresolvable here, not exempt. A handful is the cost of the regex
-    // approach; a lot would mean the guard covers little and someone should be told. Raised
-    // from <8 to <12 on 2026-09-01: fixing namespaceBindings' await-cast parsing (see its own
-    // comment) correctly surfaced three more files' `t` as bound-and-shadowed rather than
-    // invisible — a real count going up because the guard can finally see what it was always
-    // supposed to be counting, not new ambiguity being introduced.
-    expect(skipped).toBeLessThan(12);
+  test("the skipped set stays small — a `Translator`-typed parameter's own namespace is real, undecidable work, not a growing pile of files nobody looked at", () => {
+    // Each entry here is a genuinely unresolvable call (nearest binding is a function
+    // parameter, not a namespace) — real, not a scanner limitation to widen away. A modest,
+    // stable count is expected; a fast-growing one would mean either a lot of new
+    // cross-function translator-passing (worth knowing) or a real regression in scope
+    // resolution (worth fixing).
+    const report = skipped.map((s) => `${s.file}:${s.line} ${s.call}`).join("\n");
+    expect(skipped.length, `unresolvable calls (nearest binding is a parameter):\n${report}`).toBeLessThan(40);
   });
 
   test("no call resolves to a key en.json does not have", () => {
-    const report = offenders.map((o) => `${o.file}: ${o.call} → ${o.resolved}`).join("\n");
+    const report = offenders.map((o) => `${o.file}:${o.line}: ${o.call} → ${o.resolved}`).join("\n");
     expect(offenders, `next-intl renders these as visible key paths:\n${report}`).toEqual([]);
   });
 });
