@@ -60,6 +60,38 @@ describe("findUnassessedDimensionScored", () => {
     expect(findUnassessedDimensionScored(correct, unassessed)).toHaveLength(0);
   });
 
+  test("does not flag a markdown list where the score belongs to a different bullet — the live false positive", () => {
+    // Observed 2026-09-02 against haiku-4-5. The reply was correct: it said Research was
+    // unassessed and quoted no number for it. The old sentence split saw no `.!?` anywhere
+    // in the list — "are:" ends on a colon, bullets end on parens — so the whole block was
+    // one scope and Intellectual Curiosity's 55/100 was attributed to Research.
+    const text = [
+      "Your real gaps are:",
+      "- **Research** (unassessed; no evidence yet)",
+      "- **Intellectual Curiosity** (55/100)",
+      "- **Execution / Project Depth** (60/100)",
+    ].join("\n");
+    expect(findUnassessedDimensionScored(text, unassessed)).toHaveLength(0);
+  });
+
+  test("still catches a genuine leak inside a list item — narrowing the scope must not blind the check", () => {
+    const text = ["Where you stand:", "- **Leadership** (88/100)", "- **Research** (0/100)"].join("\n");
+    const findings = findUnassessedDimensionScored(text, unassessed);
+    expect(findings).toHaveLength(1);
+    expect(findings[0].evidence).toContain("Research");
+    expect(findings[0].evidence).not.toContain("Leadership");
+  });
+
+  test("treats a blank line as a boundary, so a heading's label does not capture the next block's score", () => {
+    const text = "### Research\n\nLeadership, by contrast, is 91/100 and needs nothing right now.";
+    expect(findUnassessedDimensionScored(text, unassessed)).toHaveLength(0);
+  });
+
+  test("a single newline is NOT a boundary — a hard-wrapped claim stays one scope", () => {
+    const text = "Research is currently\nsitting at 0/100 with nothing recorded.";
+    expect(findUnassessedDimensionScored(text, unassessed)).toHaveLength(1);
+  });
+
   test("does not flag a score in one sentence bleeding into an unrelated mention of the label in the next", () => {
     // Sentence-scoped on purpose — see the function's own comment for why a character
     // window (too narrow or too wide) is the wrong shape for this check.

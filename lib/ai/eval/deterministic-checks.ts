@@ -84,11 +84,33 @@ export function findRawIdentifierLeaks(text: string): DeterministicFinding[] {
  * next sentence's unrelated score). A label appearing with no adjacent number is not
  * itself a finding; stating the *state* honestly is exactly the correct behavior this
  * check exists to allow.
+ *
+ * A sentence split alone assumed prose, and that assumption broke the first time a model
+ * answered in markdown. Observed live on 2026-09-02 (haiku-4-5, advisor_chat/en/regression):
+ *
+ *     Your real gaps are:
+ *     - **Research** (unassessed; no evidence yet)
+ *     - **Intellectual Curiosity** (55/100)
+ *
+ * There is no `.!?` anywhere in that block — "are:" ends on a colon and every bullet ends
+ * on a paren — so the whole list collapsed into one "sentence", the unassessed label
+ * "Research" landed in the same scope as a score belonging to a *different* dimension two
+ * lines down, and the check reported a leak against a reply that had done exactly the
+ * right thing. So the scope is now the unit that actually carries one claim: a sentence in
+ * prose, a list item in a list, a block between blank lines. Note which direction this
+ * moves — every added boundary makes scopes NARROWER, so it can only remove false
+ * positives, never create a false negative on text the old split already handled. The one
+ * genuine risk is a claim hard-wrapped across a line break, which is why plain single
+ * newlines are NOT boundaries: only a blank line or the start of a new list item is.
  */
+/** Sentence end, blank line, or the start of a markdown list item (`-`/`*`/`+`/`1.`/`1)`).
+ * A bare `\n` is deliberately absent — see the note above on hard-wrapped claims. */
+const CLAIM_BOUNDARY = /(?<=[.!?])\s+|\n\s*\n|\n(?=[ \t]*(?:[-*+]|\d+[.)])\s)/;
+
 export function findUnassessedDimensionScored(text: string, unassessedDimensionLabels: readonly string[]): DeterministicFinding[] {
   const findings: DeterministicFinding[] = [];
   const scorePattern = /\b\d{1,3}\s*(?:\/\s*100|out of 100|points?)\b/i;
-  const sentences = text.split(/(?<=[.!?])\s+/);
+  const sentences = text.split(CLAIM_BOUNDARY);
   for (const sentence of sentences) {
     for (const label of unassessedDimensionLabels) {
       if (!sentence.toLowerCase().includes(label.toLowerCase())) continue;
