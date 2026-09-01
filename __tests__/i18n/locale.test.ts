@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import en from "@/messages/en.json";
 import tr from "@/messages/tr.json";
@@ -217,5 +219,47 @@ describe("ICU plural counts that bypass formatNumber are deliberate", () => {
     scan(en);
     scan(tr);
     expect([...offenders].sort()).toEqual(BOUNDED_BELOW_1000.slice().sort());
+  });
+});
+
+/**
+ * A duplicate top-level key is the one catalog error that fails silently: `JSON.parse`
+ * resolves `{"auth": {...}, "auth": {...}}` by keeping the last and dropping the first, with
+ * no error anywhere. A lane hit this on 2026-09-01 adding a second `auth` block rather than
+ * merging into the one already in the file, which would have broken four unrelated files
+ * while every test still passed. It was caught by typecheck only because the dropped keys
+ * happened to be referenced; keys nobody references yet would have gone in unnoticed.
+ *
+ * The files are past a thousand lines each, so "grep before you add a namespace" is real
+ * advice and also not something to rely on at 2am.
+ */
+describe("no duplicate keys in either catalog", () => {
+  test.each([["en", "messages/en.json"], ["tr", "messages/tr.json"]])("%s.json parses to as many keys as it declares", (_locale, file) => {
+    const raw = readFileSync(join(process.cwd(), file), "utf8");
+    const seen = new Map<string, number>();
+    const path: string[] = [];
+
+    // Full path, not brace depth. Depth alone reports `settings.view.title` and
+    // `profile.page.title` as the same key -- the first version of this test did exactly
+    // that and produced 108 false positives on a clean file, which is why it is worth
+    // saying: a guard that cries wolf is worse than no guard, because the next person
+    // silences it.
+    for (const line of raw.split("\n")) {
+      const opening = line.match(/^\s*"([^"]+)"\s*:\s*[{[]\s*$/);
+      const leaf = line.match(/^\s*"([^"]+)"\s*:\s*(?![{[]\s*$)/);
+      if (opening) {
+        const id = [...path, opening[1]].join(".");
+        seen.set(id, (seen.get(id) ?? 0) + 1);
+        path.push(opening[1]);
+      } else if (leaf) {
+        const id = [...path, leaf[1]].join(".");
+        seen.set(id, (seen.get(id) ?? 0) + 1);
+      } else if (/^\s*[}\]],?\s*$/.test(line)) {
+        path.pop();
+      }
+    }
+
+    const duplicates = [...seen.entries()].filter(([, n]) => n > 1).map(([id]) => id);
+    expect(duplicates, `duplicate key(s) in ${file}: ${duplicates.join(", ")} — JSON.parse keeps the last and drops the rest`).toEqual([]);
   });
 });
