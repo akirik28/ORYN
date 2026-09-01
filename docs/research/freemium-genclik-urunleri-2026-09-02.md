@@ -223,3 +223,167 @@ source checked, and I'm not guessing.
 
 ---
 
+## 3. Photomath
+
+Photomath is owned by Google (acquired 2022); its help center now lives on
+`support.google.com`, not a Photomath-branded domain — worth knowing since it means
+"official" here spans two domains.
+
+**Sources checked (all this session, 2026-09-02):**
+- [support.google.com/photomath/answer/14330572 — Photomath Plus overview](https://support.google.com/photomath/answer/14330572?hl=en)
+- [photomath.com/terms](https://photomath.com/terms/) — Terms of Service
+- [photomath.com/en/privacypolicy](https://photomath.com/en/privacypolicy) — Privacy Policy
+- App Store listing (checked, price not extractable — see 3.5)
+
+### 3.1 What exactly stays free
+The clearest, simplest free tier in this whole survey. OBSERVED, quoted directly from
+Google's official Photomath Plus overview: "Core Photomath features with step-by-step
+solutions to symbolic math will always remain free of cost, so you can scan equations,
+expressions, functions etc., or use our calculator to solve **as many problems as you
+need**." That's an explicit, official no-usage-cap statement — Photomath's free tier is
+not metered by count at all. The wall here is 100% a feature wall, not a volume wall.
+
+### 3.2 What's behind the wall
+"AI-powered animated tutorials, deeper explanations and contextual hints" — Plus doesn't
+unlock more answers, it unlocks better-explained answers to the same unlimited problems.
+
+### 3.3 WHEN the wall appears
+Based on the official text (not on watching the live app, which would need an account/
+device session out of scope here): there is no limit to trigger, so there is no
+limit-triggered upgrade moment. The overview article describes Plus as reachable via a
+persistent "Photomath Plus tab" in the app's menu — i.e. discoverable/always-available
+rather than interrupt-triggered. This is an inference from official documentation of the
+navigation, not a direct observation of the in-app moment, and I'm flagging it as such.
+
+### 3.4 CTA style
+**NOT VERIFIED.** Same limitation as 3.3 — I have the official description of where Plus
+lives in the app's navigation, not a first-hand look at how it's presented visually.
+
+### 3.5 Price
+OBSERVED (official): yearly billing is stated explicitly as "a 50% discount compared to a
+monthly plan," and a 6-month tier exists at its own discounted rate (no percentage given
+for that one). **The dollar figures themselves are NOT FOUND via an official page** — the
+overview article defers to the in-app menu ("Check out our subscription plans by opening
+the Menu button...") rather than stating a number, and the App Store listing's price
+component did not render as extractable text this session (same failure mode as Duolingo
+and Quizlet's store listings — see §1.5, §2.5; this looks like a general limitation of
+this session's tooling against App Store IAP price widgets, not something specific to any
+one app). **SECONDARY, flagged, not verified:** widely-reported figures put monthly at
+$9.99 and yearly at $69.99 (≈$5.83/mo, consistent with the official 50%-off claim above).
+Student discount: not found.
+
+### 3.6 Minor-specific flow
+OBSERVED (Privacy Policy §15, "Children's Privacy"): Photomath tracks age at use, "will
+never knowingly collect personal data from children under 13 years of age (or applicable
+age in your country)," and for anyone under 16, requires "consent or consent of your
+authorized holder of parental responsibility before we process your Personal information
+in any way" (GDPR-style language, not COPPA-specific phrasing — a different legal
+vocabulary than Duolingo's or Quizlet's US-centric COPPA framing). Notably, unlike
+Duolingo, **no separate payment/subscription-specific consent mechanic is described** —
+the consent requirement is framed generally around personal-data processing, not
+specifically tied to purchasing Plus. Terms of Service, checked separately, has no
+age/minor clause at all — the age-gating logic lives entirely in the Privacy Policy here.
+
+---
+
+## 4. Brilliant
+
+**Sources checked (all this session, 2026-09-02):**
+- [brilliant.org/premium/](https://brilliant.org/premium/) — pricing/comparison page
+- [brilliant.org/courses/](https://brilliant.org/courses/) and a specific course page (Fractions) — public catalog
+- [brilliant.org/privacy/](https://brilliant.org/privacy/) — Privacy Policy
+- The onboarding flow itself, up to (not including) any request for name/email/payment — see 4.3
+
+Note on pricing currency: this session's browser resolved to a Turkish IP, so
+`brilliant.org/premium/` rendered prices in **TRY (Turkish Lira)**, live, under an active
+"Back to School" promotion. Given ORYN's own Turkey market, I'm treating this as a feature
+of this observation, not a limitation — but it means the figures below are what a
+Turkey-based visitor sees today, not a universal USD list price, and the promotional
+framing means the "everyday" price may differ once Back-to-School ends.
+
+### 4.1 What exactly stays free
+OBSERVED directly from the pricing page's comparison table (read via the accessibility
+tree, which — unlike Duolingo's version of this same kind of table — carries explicit
+per-cell alt text confirming availability, not just a flattened list): the free plan gets
+exactly one of five listed benefits, **"Daily lesson."** All four others — Unlimited
+learning, Tutoring by Koji, No ads, Jump ahead and personalized practice — are each
+explicitly marked "not available in the Free plan." The full 40+ course catalog (with
+syllabus, lesson-by-lesson breakdown, grade-level tags 4–12) is browsable with zero
+authentication — I read a complete course outline (Fractions: 27 lessons, 375 exercises
+across 5 levels) without signing in.
+
+### 4.2 What's behind the wall
+"Unlimited learning" (full access to all 40+ courses, vs. free's single daily lesson),
+**"Tutoring by Koji"** — Brilliant's own AI tutor/chat feature, entirely Premium-gated per
+this table — no ads, and "jump ahead and personalized practice."
+
+**Worth flagging plainly, per the standing ask to surface this rather than bury it:**
+Brilliant put its AI tutor behind the hardest gate in this survey — not metered, not
+age-limited, just **not available on free at all** per the pricing page's own comparison
+table. That's a stricter stance than Quizlet's Ask Quizlet (age/geography-gated but not
+stated as paid-only) and stricter than what I understand ORYN's chosen design to be (some
+free advisor access, wall on depth/volume). One nuance worth naming rather than smoothing
+over: Brilliant's own Privacy Policy (Children's Privacy section, detailed in 4.6) lists
+"AI tutor interaction data" among what it collects from **under-13 users with parental
+consent** — meaning children can generate AI-tutor chat data on this product, which sits
+in tension with the pricing page's blanket "Premium only" claim. I did not resolve this
+tension myself (most likely explanation: the child is on a parent's paid Family plan,
+which the pricing table doesn't separately depict) — flagging the discrepancy rather than
+picking one source over the other silently.
+
+### 4.3 WHEN the wall appears — directly observed, not inferred
+This is the one product in the survey where I watched the actual trigger fire. From the
+public, no-login Fractions course page, clicking **"Start" on the very first exercise of
+the very first lesson** (not after any free usage at all) redirected immediately to
+`brilliant.org/welcome/`, an onboarding flow opening with "Hi, I'm Koji! I'll be your
+personal tutor" and a first question ("What motivates you to learn?" — school, professional
+growth, staying sharp, or helping a child learn). I stopped at that point, before any
+screen requested a name, email, or payment method, in keeping with this session's no-signup
+rule — so I can confirm the gate sits at **first interaction with any lesson content**, but
+not exactly which step inside that funnel first asks for real personal data. **This
+directly contradicts a reading of "Daily lesson" as something a visitor can just start
+doing** — in practice, "free" still requires completing at least the start of an account
+funnel before the first exercise renders; there is no fully anonymous trial exercise.
+
+### 4.4 CTA style
+The pricing page itself is interruptive-by-default in structure (dedicated `/premium/`
+page, comparison table, single prominent "Subscribe now" CTA repeated at top and bottom),
+similar in spirit to Duolingo's marketing pages. The in-product moment is stronger evidence
+though: clicking to begin a specific lesson **redirects away from the content entirely**
+into a full-screen onboarding flow, rather than showing an inline banner or dismissible
+modal over the content. That's the most aggressive placement pattern found in this survey —
+everyone else's hardest gate is a modal or a locked feature *within* the page; Brilliant's
+is a page-level redirect before the page you wanted ever loads.
+
+### 4.5 Price
+OBSERVED, live, TRY, 2026-09-02, with the caveats above: **Monthly** TRY 450/mo (no
+discount). **Annual**, under the active Back-to-School promotion: TRY 300/mo struck
+through, discounted to **TRY 210/mo** (billed as one annual payment) — a **30% discount**,
+matching the page's own "Save 30%" banner exactly (300 × 0.7 = 210). **Family** (6 seats):
+TRY 600/mo struck through, discounted to **TRY 420/mo**, same 30% rate. A separate gift
+option and a group/institutional plan both exist (linked, not priced on this page). Student
+-specific discount: not found — nothing on this page names a separate student price; the
+discount available today is seasonal ("Back to School"), not identity-based.
+
+### 4.6 Minor-specific flow
+OBSERVED (Privacy Policy, "Children's Privacy" section, standard COPPA framing, names
+Brilliant Worldwide, Inc. as the COPPA "operator"): verifiable parental consent required
+under 13; if collected without consent, Brilliant will "either seek parental consent or
+promptly delete the information." The policy is unusually specific about exactly what's
+collected from a consented under-13 account — **full name, email address, age, push
+notification tokens, and AI tutor interaction data** (chat messages, submitted files like a
+homework photo, and Voice Input transcriptions — the AI tutor's file inputs are explicitly
+"processed... and not stored"). No chat rooms, community areas, public profiles, or message
+boards exist for any user, adult or child. Children under 13 can appear in leaderboards but
+"anonymized."
+
+**Comparative note against §1.6 (Duolingo):** two real products, same underlying COPPA
+obligation, opposite design choices about what a child's own account holds. Duolingo's
+Child User has no email at all — a username only, with the *parent's* email collected
+instead. Brilliant's under-13 flow collects the *child's own* full name and email address
+directly (under verifiable parental consent). Neither is wrong, but they're genuinely
+different privacy postures worth ORYN knowing exist as two validated options, not one
+default.
+
+---
+
