@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { UserPlus, Clock, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,13 +19,14 @@ export function ConnectButton({
   initialConnectionId: string | null;
   isRecipient: boolean;
 }) {
+  const t = useTranslations("connections.actions");
   const [status, setStatus] = useState(initialStatus);
   const [isPending, startTransition] = useTransition();
 
   if (status === "accepted") {
     return (
       <Button variant="secondary" size="sm" disabled>
-        <Check className="size-3.5" /> Connected
+        <Check className="size-3.5" /> {t("connected")}
       </Button>
     );
   }
@@ -42,7 +44,7 @@ export function ConnectButton({
             })
           }
         >
-          Accept
+          {t("accept")}
         </Button>
         <Button
           size="sm"
@@ -55,7 +57,7 @@ export function ConnectButton({
             })
           }
         >
-          Decline
+          {t("decline")}
         </Button>
       </div>
     );
@@ -64,7 +66,7 @@ export function ConnectButton({
   if (status === "pending") {
     return (
       <Button variant="outline" size="sm" disabled>
-        <Clock className="size-3.5" /> Requested
+        <Clock className="size-3.5" /> {t("requested")}
       </Button>
     );
   }
@@ -80,7 +82,7 @@ export function ConnectButton({
         })
       }
     >
-      <UserPlus className="size-3.5" /> Connect
+      <UserPlus className="size-3.5" /> {t("connect")}
     </Button>
   );
 }

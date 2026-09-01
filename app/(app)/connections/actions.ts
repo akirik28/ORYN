@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { requireUser, getCurrentProfile } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { createNotification } from "@/lib/notifications/create";
@@ -11,7 +12,8 @@ import { canRespondToConnectionRequest } from "@/lib/social/connection-transitio
 export async function sendConnectionRequest(recipientId: string): Promise<{ error?: string }> {
   const session = await requireUser();
   const userId = session.userId!;
-  if (recipientId === userId) return { error: "You can't connect with yourself." };
+  const t = await getTranslations("connections.errors");
+  if (recipientId === userId) return { error: t("cantConnectSelf") };
 
   // Abuse guard — see lib/security/rate-limit-config.ts.
   try {
@@ -29,14 +31,14 @@ export async function sendConnectionRequest(recipientId: string): Promise<{ erro
   // created a 'pending' row, which alone was enough to leak basic info through
   // public_profiles' connection carve-out — see migration 0024.
   const { data: recipientIsPublic } = await supabase.from("public_profiles").select("id").eq("id", recipientId).maybeSingle();
-  if (!recipientIsPublic) return { error: "This profile isn't public, so you can't connect with it." };
+  if (!recipientIsPublic) return { error: t("notPublic") };
 
   const { error } = await supabase.from("connections").insert({ requester_id: userId, recipient_id: recipientId });
 
   if (error) {
     // Unique violation on (low_id, high_id) — a request already exists in either direction.
-    if (error.code === "23505") return { error: "A connection request already exists between you two." };
-    return { error: "Couldn't send that request. Please try again." };
+    if (error.code === "23505") return { error: t("alreadyExists") };
+    return { error: t("sendFailed") };
   }
 
   const profile = await getCurrentProfile();
@@ -54,6 +56,7 @@ export async function sendConnectionRequest(recipientId: string): Promise<{ erro
 export async function respondToConnectionRequest(connectionId: string, accept: boolean): Promise<{ error?: string }> {
   const session = await requireUser();
   const supabase = await createClient();
+  const t = await getTranslations("connections.errors");
 
   // Re-verify server-side that this request is still pending and actually addressed to
   // the caller — never trust that the UI only offered Accept/Decline on a genuinely
@@ -62,7 +65,7 @@ export async function respondToConnectionRequest(connectionId: string, accept: b
   // the status half of the check, which RLS knows nothing about.
   const { data: existing } = await supabase.from("connections").select("status, recipient_id").eq("id", connectionId).maybeSingle();
   if (!existing || !canRespondToConnectionRequest({ status: existing.status, recipientId: existing.recipient_id }, session.userId!)) {
-    return { error: "Couldn't update that request." };
+    return { error: t("updateFailed") };
   }
 
   const { data: updated, error } = await supabase
@@ -73,7 +76,7 @@ export async function respondToConnectionRequest(connectionId: string, accept: b
     .select("requester_id")
     .single();
 
-  if (error) return { error: "Couldn't update that request." };
+  if (error) return { error: t("updateFailed") };
 
   if (accept && updated) {
     const profile = await getCurrentProfile();
@@ -95,9 +98,10 @@ export async function respondToConnectionRequest(connectionId: string, accept: b
 export async function removeConnection(connectionId: string): Promise<{ error?: string }> {
   await requireUser();
   const supabase = await createClient();
+  const t = await getTranslations("connections.errors");
 
   const { error } = await supabase.from("connections").delete().eq("id", connectionId);
-  if (error) return { error: "Couldn't remove that." };
+  if (error) return { error: t("removeFailed") };
 
   revalidatePath("/connections");
   return {};

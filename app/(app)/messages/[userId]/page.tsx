@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { getConversation, getBlockState } from "@/lib/messaging/messages";
@@ -31,14 +32,15 @@ export default async function ConversationPage({ params }: { params: Promise<{ u
 
   const supabase = await createClient();
 
-  const [connection, otherProfileRes, blockState, messages] = await Promise.all([
+  const [connection, otherProfileRes, blockState, messages, t] = await Promise.all([
     getConnectionWith(supabase, userId, otherUserId),
     supabase.from("public_profiles").select("display_name").eq("id", otherUserId).maybeSingle(),
     getBlockState(supabase, userId, otherUserId),
     getConversation(supabase, userId, otherUserId),
+    getTranslations("messaging.conversation"),
   ]);
 
-  const displayName = otherProfileRes.data?.display_name ?? "This student";
+  const displayName = otherProfileRes.data?.display_name ?? t("defaultName");
 
   // Same "re-check server-side, never trust that the UI only linked here from a valid
   // state" discipline as every other authorization-sensitive page in this app — a bare
@@ -54,12 +56,8 @@ export default async function ConversationPage({ params }: { params: Promise<{ u
   if (!access.canRead) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Conversation" />
-        <EmptyState
-          icon={ShieldOff}
-          title="You can only message accepted connections"
-          description="This conversation isn't available — either there's no accepted connection with this student, or it hasn't been accepted yet."
-        />
+        <PageHeader title={t("title")} />
+        <EmptyState icon={ShieldOff} title={t("deniedTitle")} description={t("deniedDescription")} />
       </div>
     );
   }

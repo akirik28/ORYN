@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { Send, ShieldOff, ShieldCheck, Flag, MoreVertical } from "lucide-react";
@@ -46,6 +47,8 @@ export function ConversationThread({
   blockedByMe: boolean;
   messagingBlocked: boolean;
 }) {
+  const t = useTranslations("messaging.thread");
+  const tCommon = useTranslations("common");
   const [messages, setMessages] = useState(initialMessages);
   // Reconciles local state with the server's authoritative list whenever
   // router.refresh() lands new props — adjusted during render (React's documented
@@ -169,26 +172,26 @@ export function ConversationThread({
 
   const headerCopy =
     blockUiState === "blocked_by_me"
-      ? "You've blocked this student — they can't message you, and you can't message them."
+      ? t("blockedByMeNotice")
       : blockUiState === "unavailable"
-        ? "You can't message this student right now."
+        ? t("unavailableNotice")
         : !connectionAccepted
-          ? "You're no longer connected — you can view this conversation, but you can't send new messages."
-          : "Accepted connection";
+          ? t("disconnectedNotice")
+          : t("acceptedConnection");
 
   const footerCopy =
     blockUiState === "blocked_by_me"
-      ? "Unblock to send a new message."
+      ? t("unblockToSendFooter")
       : blockUiState === "unavailable"
-        ? "You can't send messages to this student right now."
-        : "You're no longer connected, so you can't send new messages.";
+        ? t("unavailableFooter")
+        : t("disconnectedFooter");
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border bg-card">
       <div className="flex items-center justify-between border-b px-4 py-2.5">
         <p className="text-sm text-muted-foreground">{headerCopy}</p>
         <DropdownMenu>
-          <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" />} nativeButton={true} aria-label="Conversation options">
+          <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" />} nativeButton={true} aria-label={t("options")}>
             <MoreVertical className="size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -198,7 +201,7 @@ export function ConversationThread({
                 block relationship). */}
             <DropdownMenuItem onClick={handleBlockMenuClick}>
               {blocked ? <ShieldCheck className="size-3.5" /> : <ShieldOff className="size-3.5" />}
-              {blocked ? "Unblock" : "Block"} {otherDisplayName}
+              {blocked ? t("unblock") : t("block")} {otherDisplayName}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -206,7 +209,7 @@ export function ConversationThread({
 
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
         {messages.length === 0 ? (
-          <p className="py-10 text-center text-sm text-muted-foreground">No messages yet — say hello.</p>
+          <p className="py-10 text-center text-sm text-muted-foreground">{t("emptyMessages")}</p>
         ) : (
           messages.map((m) => {
             const mine = m.sender_id === currentUserId;
@@ -234,7 +237,7 @@ export function ConversationThread({
                         setReportOpen(true);
                       }}
                     >
-                      <Flag className="inline size-3" /> Report
+                      <Flag className="inline size-3" /> {t("report")}
                     </button>
                   ) : null}
                 </div>
@@ -260,12 +263,12 @@ export function ConversationThread({
                   submit();
                 }
               }}
-              placeholder="Write a message…"
+              placeholder={t("writePlaceholder")}
               rows={1}
               className="min-h-9 resize-none"
               maxLength={4000}
             />
-            <Button size="icon" onClick={submit} disabled={isPending || !draft.trim()} aria-label="Send">
+            <Button size="icon" onClick={submit} disabled={isPending || !draft.trim()} aria-label={t("send")}>
               <Send className="size-4" />
             </Button>
           </div>
@@ -275,20 +278,20 @@ export function ConversationThread({
       <Dialog open={reportOpen} onOpenChange={setReportOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Report this message</DialogTitle>
+            <DialogTitle>{t("reportDialogTitle")}</DialogTitle>
           </DialogHeader>
           <Textarea
             value={reportReason}
             onChange={(e) => setReportReason(e.target.value)}
-            placeholder="What's wrong with this message?"
+            placeholder={t("reportPlaceholder")}
             rows={4}
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => setReportOpen(false)}>
-              Cancel
+              {tCommon("cancel")}
             </Button>
             <Button onClick={submitReport} disabled={isPending || !reportReason.trim()}>
-              Submit report
+              {t("submitReport")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -297,15 +300,13 @@ export function ConversationThread({
       <AlertDialog open={blockConfirmOpen} onOpenChange={setBlockConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Block {otherDisplayName}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Neither of you will be able to send messages to the other until you unblock them.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t("blockConfirmTitle", { name: otherDisplayName })}</AlertDialogTitle>
+            <AlertDialogDescription>{t("blockConfirmDescription")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel render={<Button variant="outline" disabled={isPending} />}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel render={<Button variant="outline" disabled={isPending} />}>{tCommon("cancel")}</AlertDialogCancel>
             <Button variant="destructive" onClick={toggleBlock} disabled={isPending}>
-              Block
+              {t("block")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

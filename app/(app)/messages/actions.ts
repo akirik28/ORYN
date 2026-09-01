@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { requireUser, getCurrentProfile } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { createNotification } from "@/lib/notifications/create";
@@ -15,11 +16,12 @@ export async function sendMessage(recipientId: string, body: string): Promise<{ 
   const session = await requireUser();
   const userId = session.userId!;
   const trimmed = body.trim();
+  const t = await getTranslations("messaging.errors");
 
-  if (!isUuidLike(recipientId)) return { error: "Invalid recipient." };
-  if (recipientId === userId) return { error: "You can't message yourself." };
-  if (!trimmed) return { error: "Message can't be empty." };
-  if (trimmed.length > MAX_BODY_LENGTH) return { error: "Message is too long." };
+  if (!isUuidLike(recipientId)) return { error: t("invalidRecipient") };
+  if (recipientId === userId) return { error: t("cantMessageSelf") };
+  if (!trimmed) return { error: t("emptyMessage") };
+  if (trimmed.length > MAX_BODY_LENGTH) return { error: t("messageTooLong") };
 
   // Abuse guard (thresholds + fail-open rationale: lib/security/rate-limit-config.ts and
   // lib/security/rate-limit.ts). Checked after trivial validation so malformed calls
@@ -41,14 +43,14 @@ export async function sendMessage(recipientId: string, body: string): Promise<{ 
   // check only exists to return a friendly error instead of a raw RLS denial.
   const connection = await getConnectionWith(supabase, userId, recipientId);
   if (!connection || connection.status !== "accepted") {
-    return { error: "You can only message accepted connections." };
+    return { error: t("notAccepted") };
   }
 
   const { data: blocked } = await supabase.rpc("is_blocked_between", { user_a: userId, user_b: recipientId });
-  if (blocked) return { error: "You can't message this person." };
+  if (blocked) return { error: t("blockedByOther") };
 
   const { error } = await supabase.from("messages").insert({ sender_id: userId, recipient_id: recipientId, body: trimmed });
-  if (error) return { error: "Couldn't send that message. Please try again." };
+  if (error) return { error: t("sendFailed") };
 
   const profile = await getCurrentProfile();
   await createNotification({
@@ -65,7 +67,8 @@ export async function sendMessage(recipientId: string, body: string): Promise<{ 
 
 export async function markConversationRead(otherUserId: string): Promise<{ error?: string }> {
   const session = await requireUser();
-  if (!isUuidLike(otherUserId)) return { error: "Invalid conversation." };
+  const t = await getTranslations("messaging.errors");
+  if (!isUuidLike(otherUserId)) return { error: t("invalidConversation") };
   const supabase = await createClient();
 
   // RLS's "recipient marks message read" policy already scopes this to messages the
@@ -78,7 +81,7 @@ export async function markConversationRead(otherUserId: string): Promise<{ error
     .eq("recipient_id", session.userId!)
     .is("read_at", null);
 
-  if (error) return { error: "Couldn't update read status." };
+  if (error) return { error: t("readStatusFailed") };
   revalidatePath("/messages");
   revalidatePath(`/messages/${otherUserId}`);
   return {};
@@ -86,11 +89,12 @@ export async function markConversationRead(otherUserId: string): Promise<{ error
 
 export async function blockUser(userId: string): Promise<{ error?: string }> {
   const session = await requireUser();
-  if (!isUuidLike(userId) || userId === session.userId) return { error: "Invalid user." };
+  const t = await getTranslations("messaging.errors");
+  if (!isUuidLike(userId) || userId === session.userId) return { error: t("invalidUser") };
   const supabase = await createClient();
 
   const { error } = await supabase.from("blocked_users").insert({ blocker_id: session.userId!, blocked_id: userId });
-  if (error && error.code !== "23505") return { error: "Couldn't block that user." };
+  if (error && error.code !== "23505") return { error: t("blockFailed") };
 
   revalidatePath("/messages");
   revalidatePath(`/messages/${userId}`);
@@ -100,11 +104,12 @@ export async function blockUser(userId: string): Promise<{ error?: string }> {
 
 export async function unblockUser(userId: string): Promise<{ error?: string }> {
   const session = await requireUser();
-  if (!isUuidLike(userId)) return { error: "Invalid user." };
+  const t = await getTranslations("messaging.errors");
+  if (!isUuidLike(userId)) return { error: t("invalidUser") };
   const supabase = await createClient();
 
   const { error } = await supabase.from("blocked_users").delete().eq("blocker_id", session.userId!).eq("blocked_id", userId);
-  if (error) return { error: "Couldn't unblock that user." };
+  if (error) return { error: t("unblockFailed") };
 
   revalidatePath("/messages");
   revalidatePath(`/messages/${userId}`);
@@ -113,9 +118,10 @@ export async function unblockUser(userId: string): Promise<{ error?: string }> {
 
 export async function reportMessage(messageId: string, reportedUserId: string, reason: string): Promise<{ error?: string }> {
   const session = await requireUser();
-  if (!isUuidLike(messageId) || !isUuidLike(reportedUserId)) return { error: "Invalid report." };
+  const t = await getTranslations("messaging.errors");
+  if (!isUuidLike(messageId) || !isUuidLike(reportedUserId)) return { error: t("invalidReport") };
   const trimmedReason = reason.trim().slice(0, 1000);
-  if (!trimmedReason) return { error: "Please describe the issue." };
+  if (!trimmedReason) return { error: t("reportReasonRequired") };
 
   // Abuse guard — see lib/security/rate-limit-config.ts.
   try {
@@ -129,6 +135,6 @@ export async function reportMessage(messageId: string, reportedUserId: string, r
   const { error } = await supabase
     .from("message_reports")
     .insert({ reporter_id: session.userId!, reported_user_id: reportedUserId, message_id: messageId, reason: trimmedReason });
-  if (error) return { error: "Couldn't submit that report." };
+  if (error) return { error: t("reportFailed") };
   return {};
 }

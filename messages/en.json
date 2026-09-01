@@ -939,5 +939,107 @@
       "visitOfficialPage": "Visit official page",
       "any": "any"
     }
+  },
+  "messaging": {
+    "list": {
+      "pageTitle": "Messages",
+      "description": "1:1 conversations with your connections. Removed connections stay readable but read-only.",
+      "emptyTitle": "No conversations yet",
+      "emptyDescription": "Messaging opens up once you and someone else accept a connection request. Visit Connections to get started.",
+      "defaultName": "A student",
+      "readOnlyNotice": "No longer connected — read only",
+      "sayHello": "Say hello — start the conversation."
+    },
+    "conversation": {
+      "title": "Conversation",
+      "deniedTitle": "You can only message accepted connections",
+      "deniedDescription": "This conversation isn't available — either there's no accepted connection with this student, or it hasn't been accepted yet.",
+      "defaultName": "This student"
+    },
+    "thread": {
+      "options": "Conversation options",
+      "block": "Block",
+      "unblock": "Unblock",
+      "blockedByMeNotice": "You've blocked this student — they can't message you, and you can't message them.",
+      "unavailableNotice": "You can't message this student right now.",
+      "disconnectedNotice": "You're no longer connected — you can view this conversation, but you can't send new messages.",
+      "acceptedConnection": "Accepted connection",
+      "unblockToSendFooter": "Unblock to send a new message.",
+      "unavailableFooter": "You can't send messages to this student right now.",
+      "disconnectedFooter": "You're no longer connected, so you can't send new messages.",
+      "emptyMessages": "No messages yet — say hello.",
+      "report": "Report",
+      "writePlaceholder": "Write a message…",
+      "send": "Send",
+      "reportDialogTitle": "Report this message",
+      "reportPlaceholder": "What's wrong with this message?",
+      "submitReport": "Submit report",
+      "blockConfirmTitle": "Block {name}?",
+      "blockConfirmDescription": "Neither of you will be able to send messages to the other until you unblock them."
+    },
+    "errors": {
+      "invalidRecipient": "Invalid recipient.",
+      "cantMessageSelf": "You can't message yourself.",
+      "emptyMessage": "Message can't be empty.",
+      "messageTooLong": "Message is too long.",
+      "notAccepted": "You can only message accepted connections.",
+      "blockedByOther": "You can't message this person.",
+      "sendFailed": "Couldn't send that message. Please try again.",
+      "invalidConversation": "Invalid conversation.",
+      "readStatusFailed": "Couldn't update read status.",
+      "invalidUser": "Invalid user.",
+      "blockFailed": "Couldn't block that user.",
+      "unblockFailed": "Couldn't unblock that user.",
+      "invalidReport": "Invalid report.",
+      "reportReasonRequired": "Please describe the issue.",
+      "reportFailed": "Couldn't submit that report."
+    }
+  },
+  "connections": {
+    "page": {
+      "eyebrow": "Connections",
+      "title": "People on a similar path.",
+      "description": "Students whose record overlaps with yours. Oryn shows you why before you connect — and only ever surfaces someone who has chosen to make their profile public.",
+      "emptyTitle": "No connections yet",
+      "emptyDescription": "Turn on your public profile in Settings to share it, or accept a request when one comes in.",
+      "requestsTitle": "Requests",
+      "requestsWaiting": "{count} waiting for your response",
+      "connectionsTitle": "Your connections",
+      "connectedCount": "{count} connected",
+      "acceptedEmptyTitle": "Accepted connections will appear here.",
+      "sentTitle": "Sent",
+      "sentDescription": "Waiting for a response",
+      "suggestionsTitle": "People on a similar path",
+      "suggestionsDescription": "Ranked by real overlap with your record — mutual connections, school, interests and skills. Every reason is shown."
+    },
+    "actions": {
+      "accept": "Accept",
+      "decline": "Decline",
+      "requested": "Requested",
+      "connected": "Connected",
+      "connect": "Connect",
+      "message": "Message"
+    },
+    "row": {
+      "defaultName": "A student",
+      "thisStudent": "this student",
+      "withdrawRequest": "Withdraw request",
+      "removeConnection": "Remove connection",
+      "withdrawConfirmDescription": "Your connection request to {name} will be withdrawn. You can send a new one later.",
+      "removeConfirmDescription": "You'll no longer be connected to {name}. They won't be notified, and you can reconnect later."
+    },
+    "peopleYouMayKnow": {
+      "overlapLabel": "You overlap on",
+      "viewProfile": "View profile",
+      "defaultName": "Oryn student"
+    },
+    "errors": {
+      "cantConnectSelf": "You can't connect with yourself.",
+      "notPublic": "This profile isn't public, so you can't connect with it.",
+      "alreadyExists": "A connection request already exists between you two.",
+      "sendFailed": "Couldn't send that request. Please try again.",
+      "updateFailed": "Couldn't update that request.",
+      "removeFailed": "Couldn't remove that."
+    }
   }
 }
