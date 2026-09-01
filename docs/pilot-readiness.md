@@ -1,5 +1,19 @@
 # 10-person pilot readiness
 
+> **Superseded 2026-09-01.** Of the three named blockers below, the opportunity-catalogue one
+> is resolved (275 active rows today, not 11); the other two (Confirm-email,
+> `ANTHROPIC_API_KEY`) are deployment/dashboard state this pass can't see any more than
+> `docs/current-state.md` can — genuinely unverified, not assumed either way. More important:
+> two things found only tonight would matter more to a real pilot than any of these three —
+> the plan-regenerate action that silently deletes a student's completed actions and
+> reflections, and the admission-outlook badge that never recomputes after a save (so task 5
+> below would show "Not yet assessed" indefinitely for most testers). The ten-task script's
+> *structure* (success/failure signals, sequencing, the `product_events` query) is still
+> reusable if a pilot is scheduled; the blockers/status sections are not. Current state:
+> `docs/current-state.md` and `docs/what-a-student-cannot-do-yet-2026-09-01.md`. Kept as
+> historical record, not corrected in place — full analysis in
+> `docs/handoffs/product-status-docs-audit-2026-09-01.md`.
+
 A task-based script for the founder's first ~10-person test group, plus what to check
 before handing it to anyone. Everything below was verified directly against the live
 `oryn-qa-scratch` project and the current codebase this session — not assumed from older

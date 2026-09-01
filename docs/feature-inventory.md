@@ -1,5 +1,13 @@
 # Feature Inventory
 
+> **Superseded 2026-09-01.** Every "Readiness"/"Content-empty" cell below is stale by 92
+> merges — universities and opportunities in particular are now richly populated, not empty.
+> Current, live-verified state: `docs/current-state.md` (DB/migrations/integrations) and
+> `docs/what-a-student-cannot-do-yet-2026-09-01.md` (product capability, what's missing). The
+> "Not yet built" section near the bottom is the one part of this document still worth
+> reading — spot-checked, still accurate. Kept as historical record, not corrected in place —
+> full analysis in `docs/handoffs/product-status-docs-audit-2026-09-01.md`.
+
 Every production feature discovered by reading the actual code (not the spec), organized
 by product area rather than by route (see `docs/production-route-audit.md` for the
 route-centric view — this doc groups routes under features and adds current readiness).

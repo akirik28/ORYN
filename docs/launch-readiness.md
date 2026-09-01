@@ -1,5 +1,15 @@
 # Launch Readiness
 
+> **Superseded 2026-09-01.** This document's own second paragraph already knew it was going
+> stale on security/test/CI status; 92 merges have since done the same to the
+> product-capability assessment it hedged as still-accurate. Its "zero opportunity data"
+> launch blocker is now false by two orders of magnitude. Its other named blocker (no
+> professional legal review) is still genuinely open, but already tracked as its own item —
+> `founder-blocked-backlog.md` item 13 — nothing here to carry forward beyond that. Current,
+> live-verified state: `docs/current-state.md` and
+> `docs/what-a-student-cannot-do-yet-2026-09-01.md`. Kept as historical record, not corrected
+> in place — full analysis in `docs/handoffs/product-status-docs-audit-2026-09-01.md`.
+
 Chat 4. Honest classification, not a status celebration. "Launch blocker" means the core
 promise ("what should I do next?") cannot be safely or credibly delivered without it —
 not "would be nice to have."

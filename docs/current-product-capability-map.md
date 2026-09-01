@@ -1,5 +1,17 @@
 # ORYN current product capability map
 
+> **Superseded 2026-09-01.** This document's own closing line — "treat any doc as a lead to
+> verify against code, never as ground truth, until a fresh integration checkpoint is
+> written" — now applies to itself: 92 merges since, and a spot-check of its most specific
+> claim (migration `0043`'s duplicate-university handling "never actually applied live")
+> found it now resolved and live. The rest of its ~150 cells weren't individually
+> re-verified, but the pattern is consistent with the other four documents audited alongside
+> this one. Its area-by-area (Student/Counseling/Opportunities/University/Social) structure
+> is the strongest template of the five if this granularity is ever wanted again — as a
+> current document, it isn't one. Current, live-verified state: `docs/current-state.md` and
+> `docs/what-a-student-cannot-do-yet-2026-09-01.md`. Kept as historical record, not corrected
+> in place — full analysis in `docs/handoffs/product-status-docs-audit-2026-09-01.md`.
+
 Compiled 2026-08-20 by Claude B (Computer B / PRODUCT-COUNSELOR-UX-INTEGRATION workstream,
 branch `oryn/counselor-data-quality-v1`), from direct code/schema reads — `supabase/
 migrations/*.sql`, `lib/`, `app/(app)/**`, `features/`, `__tests__/` — not from prior docs.
