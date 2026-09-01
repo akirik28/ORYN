@@ -1565,6 +1565,39 @@
       "sectionTitle": "Budget warnings",
       "message": "{name}: {amount} in the last 30 days ({percent}% of the {ceiling} monthly ceiling)",
       "none": "No student is over 80% of the monthly ceiling."
+    },
+    "reports": {
+      "sectionTitle": "Reports",
+      "openCount": "{count} open",
+      "reportedBy": "<bold>{reporter}</bold> reported <bold>{reported}</bold>",
+      "unnamedReporter": "A student",
+      "unnamedReported": "a student",
+      "noReports": "No reports filed yet.",
+      "repostNoComment": "(repost with no added comment)",
+      "messageMissing": "(reported message no longer available)",
+      "recommendationMissing": "(reported recommendation no longer available)"
+    },
+    "providers": {
+      "sectionTitle": "Provider health",
+      "lastOk": "Last OK {time}",
+      "neverSucceeded": "Never succeeded",
+      "lastFailure": "Last failure {time}",
+      "neverFailed": "Never failed",
+      "noProviders": "No provider calls recorded yet."
+    },
+    "jobs": {
+      "sectionTitle": "Scheduled jobs",
+      "subtitle": "One row per job — a job that hasn't run recently can't hide behind another job's activity",
+      "notDeployedNote": "ORYN has not been deployed yet. Scheduled jobs only run against a live deployment, so every job below reads “Never run” or “Stale” — that's an infrastructure fact, not a defect in any of them.",
+      "triggerOpportunityDiscovery": "Run opportunity discovery",
+      "triggerUniversitySync": "Run university sync",
+      "triggerDeadlineScan": "Run deadline scan",
+      "triggerRequirementDiscovery": "Run requirement discovery",
+      "itemsProcessed": "{count} processed",
+      "ranDuration": "ran {duration}",
+      "stillRunning": "still running",
+      "never": "never",
+      "emptyStreakWarning": "0 items processed on the last {count} consecutive runs — succeeding, but not doing anything. Worth checking whether a required credential is missing."
     }
   },
   "saved": {

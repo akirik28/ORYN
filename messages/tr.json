@@ -1565,6 +1565,39 @@
       "sectionTitle": "Bütçe uyarıları",
       "message": "{name}: son 30 günde {amount} (aylık {ceiling} tavanının %{percent}'i)",
       "none": "Hiçbir öğrenci aylık tavanın %80'ini aşmadı."
+    },
+    "reports": {
+      "sectionTitle": "Bildirimler",
+      "openCount": "{count} açık",
+      "reportedBy": "Bildiren: <bold>{reporter}</bold> · Bildirilen: <bold>{reported}</bold>",
+      "unnamedReporter": "Bir öğrenci",
+      "unnamedReported": "bir öğrenci",
+      "noReports": "Henüz bildirim yapılmadı.",
+      "repostNoComment": "(yorum eklenmemiş repost)",
+      "messageMissing": "(bildirilen mesaj artık mevcut değil)",
+      "recommendationMissing": "(bildirilen öneri artık mevcut değil)"
+    },
+    "providers": {
+      "sectionTitle": "Sağlayıcı durumu",
+      "lastOk": "Son başarılı: {time}",
+      "neverSucceeded": "Hiç başarılı olmadı",
+      "lastFailure": "Son hata: {time}",
+      "neverFailed": "Hiç hata vermedi",
+      "noProviders": "Henüz kaydedilmiş sağlayıcı çağrısı yok."
+    },
+    "jobs": {
+      "sectionTitle": "Zamanlanmış görevler",
+      "subtitle": "Her görev kendi satırında — yakın zamanda çalışmamış bir görev, başka bir görevin etkinliğinin arkasına gizlenemez",
+      "notDeployedNote": "ORYN henüz canlıya alınmadı. Zamanlanmış görevler yalnızca canlı bir dağıtıma karşı çalışır, bu yüzden aşağıdaki her görev “Hiç çalıştırılmadı” ya da “Güncel değil” gösteriyor — bu bir altyapı gerçeği, hiçbirinde sorun olduğu anlamına gelmiyor.",
+      "triggerOpportunityDiscovery": "Fırsat taramasını çalıştır",
+      "triggerUniversitySync": "Üniversite senkronizasyonunu çalıştır",
+      "triggerDeadlineScan": "Son tarih taramasını çalıştır",
+      "triggerRequirementDiscovery": "Gereksinim taramasını çalıştır",
+      "itemsProcessed": "{count} işlendi",
+      "ranDuration": "{duration} sürdü",
+      "stillRunning": "hâlâ çalışıyor",
+      "never": "hiç",
+      "emptyStreakWarning": "Son {count} ardışık çalıştırmada 0 öğe işlendi — başarılı sayılıyor ama hiçbir şey yapmıyor. Gerekli bir kimlik bilgisinin eksik olup olmadığını kontrol etmekte fayda var."
     }
   },
   "saved": {
