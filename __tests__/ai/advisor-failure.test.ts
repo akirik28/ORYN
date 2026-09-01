@@ -10,7 +10,7 @@ describe("classifyAdvisorFailure", () => {
 
   test("(b) maps a budget-exhausted response to its own actionable message, not the generic one", () => {
     const result = classifyAdvisorFailure(
-      new AIResponseIncompleteError({ stopReason: "max_tokens", usage: { inputTokens: 1800, outputTokens: 1024 } }),
+      new AIResponseIncompleteError({ stopReason: "max_tokens", usage: { inputTokens: 1800, outputTokens: 1024 }, model: "claude-sonnet-5" }),
     );
 
     // The SEV-1 symptom was this case being indistinguishable from an unknown failure.

@@ -3,6 +3,7 @@ import "server-only";
 import { z } from "zod";
 import { getAIProvider } from "./index";
 import { logAIUsage } from "./usage";
+import { selectModelForUser } from "./limits/budget";
 import { openAlexProvider } from "@/lib/providers/openalex";
 import { buildStudentAdvisorContext } from "./student-context";
 import { withOutputLanguage } from "./output-language";
@@ -51,6 +52,7 @@ export async function generateResearchProjects(params: { userId: string; interes
     : "No live research database results available — rely on general knowledge of the field and stay conservative about what's current.";
 
   const provider = getAIProvider();
+  const selection = await selectModelForUser(params.userId);
   const result = await provider.generateStructured({
     system: withOutputLanguage(SYSTEM_PROMPT, context.student.preferredLanguage),
     prompt: `Student field of interest: ${params.field}\nOther interests: ${params.interests.join(", ") || "none stated"}\nWeekly time budget: ${context.student.weeklyTimeBudget ?? "not set"}\nCurrent research score: ${context.profileScores.find((s) => s.dimension === "research")?.score ?? "unknown"}/100\n\nCurrent research literature in this space, for grounding:\n${themesContext}\n\nGenerate up to 3 achievable research project ideas.`,
@@ -58,8 +60,16 @@ export async function generateResearchProjects(params: { userId: string; interes
     schemaName: "record_research_projects",
     schemaDescription: "Records up to 3 achievable research project ideas for the student.",
     maxTokens: 2048,
+    model: selection.model,
   });
 
-  await logAIUsage({ userId: params.userId, feature: "research_generator", usage: result.usage });
+  await logAIUsage({
+    userId: params.userId,
+    feature: "research_generator",
+    usage: result.usage,
+    model: result.model,
+    degraded: selection.degraded,
+    degradeReason: selection.degraded ? selection.reason : null,
+  });
   return result.data.projects;
 }

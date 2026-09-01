@@ -26,6 +26,9 @@ export interface AIRequest {
   documents?: AIDocument[];
   /** Prior turns, oldest first. `prompt` is the new final user turn — don't include it here too. */
   history?: AIMessage[];
+  /** Overrides the provider's default (`ANTHROPIC_MODEL`) for this one call — e.g.
+   * lib/ai/limits/budget.ts's degrade path. Omit to use the default; most callers should. */
+  model?: string;
 }
 
 export interface AIStructuredRequest<T> extends AIRequest {
@@ -38,11 +41,20 @@ export interface AIStructuredRequest<T> extends AIRequest {
 export interface AITextResult {
   text: string;
   usage: AIUsage;
+  /** The model that actually produced this response — not necessarily the request's own
+   * `model` field (which may have been omitted), and not `ANTHROPIC_MODEL` by assumption.
+   * The provider is the one place that knows for certain, so it reports it back rather than
+   * making every caller re-derive or assume it — lib/ai/usage.ts's logAIUsage requires this
+   * exact value, not env.anthropic.model, precisely so a degraded call is never mis-recorded
+   * (and mis-priced) as the ceiling model. */
+  model: string;
 }
 
 export interface AIStructuredResult<T> {
   data: T;
   usage: AIUsage;
+  /** See AITextResult.model's own doc — identical reasoning. */
+  model: string;
 }
 
 /**
@@ -82,8 +94,11 @@ export class AIProviderNotConfiguredError extends Error {
 export class AIResponseIncompleteError extends Error {
   readonly stopReason: string | null;
   readonly usage: AIUsage;
+  /** See AITextResult.model's own doc — a failed-but-billed call needs its real model
+   * recorded exactly as much as a successful one does. */
+  readonly model: string;
 
-  constructor(params: { stopReason: string | null; usage: AIUsage }) {
+  constructor(params: { stopReason: string | null; usage: AIUsage; model: string }) {
     // Deliberately says nothing about the prompt or the model's reasoning — this message
     // reaches server logs, and SECURITY.md forbids leaking either into them.
     super(
@@ -94,5 +109,6 @@ export class AIResponseIncompleteError extends Error {
     this.name = "AIResponseIncompleteError";
     this.stopReason = params.stopReason;
     this.usage = params.usage;
+    this.model = params.model;
   }
 }

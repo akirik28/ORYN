@@ -3,6 +3,7 @@ import "server-only";
 import { z } from "zod";
 import { getAIProvider } from "./index";
 import { logAIUsage } from "./usage";
+import { selectModelForUser } from "./limits/budget";
 import { RULE_FIELD_SCHEMAS_BY_KIND, ruleAuthoringRefusal } from "@/lib/validation/requirements";
 import { categoryToRuleKind } from "@/lib/requirements/types";
 import type { RequirementCategory } from "@/types/database";
@@ -44,6 +45,7 @@ export async function interpretRequirementText(params: {
 
   const fieldSchema = RULE_FIELD_SCHEMAS_BY_KIND[kind];
   const provider = getAIProvider();
+  const selection = await selectModelForUser(params.adminUserId);
   const result = await provider.generateStructured({
     system: SYSTEM_PROMPT,
     prompt: `Requirement title: ${params.title}\nCategory: ${params.category}\nSourced text:\n${params.requirementDetail.slice(0, 4000)}\n\nStructure this as a "${kind}" rule.`,
@@ -51,8 +53,16 @@ export async function interpretRequirementText(params: {
     schemaName: "record_requirement_rule",
     schemaDescription: `Records the structured "${kind}" rule extracted from the requirement text.`,
     maxTokens: 512,
+    model: selection.model,
   });
 
-  await logAIUsage({ userId: params.adminUserId, feature: "requirement_interpretation", usage: result.usage });
+  await logAIUsage({
+    userId: params.adminUserId,
+    feature: "requirement_interpretation",
+    usage: result.usage,
+    model: result.model,
+    degraded: selection.degraded,
+    degradeReason: selection.degraded ? selection.reason : null,
+  });
   return { kind, ...result.data } as StructuredRule;
 }

@@ -66,8 +66,15 @@ describe("migration numbering", () => {
     // of the above before appending — which is the point of a tripwire over a ceiling. 0074
     // (deadline_freshness) is the column pair that lets a deadline say when it was last
     // checked, added before applying 85 records across six new countries so that what gets
-    // promised can also be measured.
-    expect(Math.max(...numbers.map(Number))).toBe(74);
+    // promised can also be measured. 0075 was claimed first by
+    // origin/oryn/deadline-notifications-2026-09-02 (deadline_notification_log) — not
+    // visible in this worktree's own migrations/ listing since that branch isn't merged,
+    // but found by checking every remote branch's tree before picking a number, the same
+    // check this test's own history says to run. ai_usage_degrade_columns (the per-user AI
+    // spend cap's degrade/degrade_reason columns, plus making user_id's NULL contract
+    // explicit — see docs/handoffs/ai-usage-attribution-audit-2026-09-02.md) took 0076
+    // instead. All still unapplied, same discipline as every migration above.
+    expect(Math.max(...numbers.map(Number))).toBe(76);
   });
 });
 

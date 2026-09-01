@@ -3,6 +3,7 @@ import "server-only";
 import { z } from "zod";
 import { getAIProvider } from "./index";
 import { logAIUsage } from "./usage";
+import { selectModelForUser } from "./limits/budget";
 
 export const OpportunityCandidateSchema = z.object({
   isRealOpportunity: z
@@ -64,6 +65,11 @@ export async function extractOpportunityFromContent(params: {
   content: string;
 }): Promise<{ candidate: OpportunityCandidate; usage: { inputTokens: number; outputTokens: number } }> {
   const provider = getAIProvider();
+  // userId is always null here (a catalog-maintenance background job, not a student's own
+  // usage) -- still goes through selectModelForUser rather than assuming env.anthropic.model
+  // directly, so this site can't quietly drift out of sync with lib/ai/limits/budget.ts's
+  // own no-user handling (selection.reason === "no_user") if that ever changes.
+  const selection = await selectModelForUser(null);
   const result = await provider.generateStructured({
     system: SYSTEM_PROMPT,
     prompt: `Source URL: ${params.sourceUrl}\n\n<page_content>\n${params.content.slice(0, 12000)}\n</page_content>`,
@@ -71,8 +77,9 @@ export async function extractOpportunityFromContent(params: {
     schemaName: "record_opportunity",
     schemaDescription: "Records the structured details of the opportunity described on this page.",
     maxTokens: 1536,
+    model: selection.model,
   });
 
-  await logAIUsage({ userId: null, feature: "opportunity_extraction", usage: result.usage });
+  await logAIUsage({ userId: null, feature: "opportunity_extraction", usage: result.usage, model: result.model });
   return { candidate: result.data, usage: result.usage };
 }

@@ -32,7 +32,7 @@ export class MockAIProvider implements AIProvider {
     const next = this.textQueue.shift();
     if (next === undefined) throw new Error("MockAIProvider: no more text responses queued");
     if (next instanceof Error) throw next;
-    return { text: next, usage: { inputTokens: 10, outputTokens: 10 } };
+    return { text: next, usage: { inputTokens: 10, outputTokens: 10 }, model: request.model ?? "mock-model" };
   }
 
   async generateStructured<T>(request: AIStructuredRequest<T>): Promise<AIStructuredResult<T>> {
@@ -44,6 +44,6 @@ export class MockAIProvider implements AIProvider {
     if (!parsed.success) {
       throw new Error(`MockAIProvider: queued response failed schema validation: ${parsed.error.message}`);
     }
-    return { data: parsed.data, usage: { inputTokens: 10, outputTokens: 10 } };
+    return { data: parsed.data, usage: { inputTokens: 10, outputTokens: 10 }, model: request.model ?? "mock-model" };
   }
 }

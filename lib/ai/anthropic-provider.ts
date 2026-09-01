@@ -84,10 +84,11 @@ export class AnthropicProvider implements AIProvider {
     // deployment/configuration fact (AIProviderNotConfiguredError), not a live health
     // signal, and recording it as a provider_health failure would make a dashboard read
     // "Anthropic is degraded" when the honest statement is "nobody has set the key yet".
+    const model = request.model ?? env.anthropic.model;
     let message: Anthropic.Message;
     try {
       message = await client.messages.create({
-        model: env.anthropic.model,
+        model,
         max_tokens: request.maxTokens ?? DEFAULT_MAX_TOKENS,
         system: request.system,
         messages: buildMessages(request),
@@ -108,14 +109,14 @@ export class AnthropicProvider implements AIProvider {
       // Recorded as a provider_health failure too — the call reached Anthropic and came
       // back with nothing usable, which is exactly the kind of degradation this table
       // exists to surface, distinct from a clean network/auth failure above.
-      const incomplete = new AIResponseIncompleteError({ stopReason: message.stop_reason, usage });
+      const incomplete = new AIResponseIncompleteError({ stopReason: message.stop_reason, usage, model });
       await recordProviderFailure(PROVIDER_NAME, incomplete.message);
       throw incomplete;
     }
 
     await recordProviderSuccess(PROVIDER_NAME);
 
-    return { text: textBlock.text, usage };
+    return { text: textBlock.text, usage, model };
   }
 
   async generateStructured<T>(request: AIStructuredRequest<T>): Promise<AIStructuredResult<T>> {
@@ -127,6 +128,7 @@ export class AnthropicProvider implements AIProvider {
     };
 
     let lastError: string | null = null;
+    const model = request.model ?? env.anthropic.model;
 
     // One retry on schema-validation failure (Phase 26): the model occasionally omits a
     // required field or invents an out-of-enum value. A single retry with the validation
@@ -143,7 +145,7 @@ export class AnthropicProvider implements AIProvider {
       let message: Anthropic.Message;
       try {
         message = await client.messages.create({
-          model: env.anthropic.model,
+          model,
           max_tokens: request.maxTokens ?? DEFAULT_MAX_TOKENS,
           system: request.system,
           messages: [{ role: "user", content: buildUserContent({ ...request, prompt }) }],
@@ -166,7 +168,7 @@ export class AnthropicProvider implements AIProvider {
       const parsed = request.schema.safeParse(toolUse.input);
       if (parsed.success) {
         await recordProviderSuccess(PROVIDER_NAME);
-        return { data: parsed.data, usage };
+        return { data: parsed.data, usage, model };
       }
 
       lastError = parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; ");

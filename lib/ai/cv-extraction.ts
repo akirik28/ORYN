@@ -4,6 +4,7 @@ import { z } from "zod";
 import mammoth from "mammoth";
 import { getAIProvider } from "./index";
 import { logAIUsage } from "./usage";
+import { selectModelForUser } from "./limits/budget";
 
 const ExtractedItemSchema = z.object({
   title: z.string(),
@@ -85,6 +86,7 @@ export async function extractCVData(params: {
 
   try {
     const provider = getAIProvider();
+    const selection = await selectModelForUser(params.userId);
     const result = await provider.generateStructured({
       system: SYSTEM_PROMPT,
       prompt: "Extract every education entry, activity, award, project, research experience, work experience, skill, and language from the attached CV.",
@@ -93,9 +95,17 @@ export async function extractCVData(params: {
       schemaName: "record_cv_extraction",
       schemaDescription: "Records the structured data extracted from the student's CV.",
       maxTokens: 4096,
+      model: selection.model,
     });
 
-    await logAIUsage({ userId: params.userId, feature: "cv_extraction", usage: result.usage });
+    await logAIUsage({
+      userId: params.userId,
+      feature: "cv_extraction",
+      usage: result.usage,
+      model: result.model,
+      degraded: selection.degraded,
+      degradeReason: selection.degraded ? selection.reason : null,
+    });
     return result.data;
   } catch (error) {
     throw new CVExtractionFailedError(error);
