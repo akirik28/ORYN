@@ -3,6 +3,8 @@ import "server-only";
 import { z } from "zod";
 import { getAIProvider } from "./index";
 import { logAIUsage } from "./usage";
+import { withOutputLanguage } from "./output-language";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 const RefinementSchema = z.object({
   improvedDescription: z
@@ -32,6 +34,9 @@ Rules — these are absolute:
 
 export async function refineAchievementDescription(params: {
   userId: string;
+  /** The student's current UI language. Additive and optional — an un-migrated caller
+   *  keeps English, which is what the prompt was written in. */
+  locale?: Locale;
   achievementType: string;
   title: string;
   organization: string | null;
@@ -40,7 +45,7 @@ export async function refineAchievementDescription(params: {
   const provider = getAIProvider();
 
   const result = await provider.generateStructured({
-    system: SYSTEM_PROMPT,
+    system: withOutputLanguage(SYSTEM_PROMPT, params.locale ?? DEFAULT_LOCALE),
     prompt: `Achievement type: ${params.achievementType}\nTitle: ${params.title}\nOrganization: ${params.organization ?? "(not given)"}\nCurrent description: ${params.description ?? "(none)"}\n\nSuggest a tightened description (or null) and up to 4 clarifying questions.`,
     schema: RefinementSchema,
     schemaName: "record_refinement",

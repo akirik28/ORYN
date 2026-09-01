@@ -3,6 +3,8 @@ import "server-only";
 import { z } from "zod";
 import { getAIProvider } from "./index";
 import { logAIUsage } from "./usage";
+import { withOutputLanguage } from "./output-language";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 /**
  * Essay Story Bank (founder-confirmed MVP scope). Deliberately NOT an essay writer: it
@@ -83,6 +85,9 @@ function formatExperience(e: StoryBankExperience): string {
 
 export async function generateEssayOutlines(params: {
   userId: string;
+  /** The student's current UI language. Additive and optional — an un-migrated caller
+   *  keeps English, which is what the prompt was written in. */
+  locale?: Locale;
   essayPrompt: string;
   experiences: StoryBankExperience[];
   goals: string[];
@@ -90,7 +95,7 @@ export async function generateEssayOutlines(params: {
   const provider = getAIProvider();
 
   const result = await provider.generateStructured({
-    system: SYSTEM_PROMPT,
+    system: withOutputLanguage(SYSTEM_PROMPT, params.locale ?? DEFAULT_LOCALE),
     prompt: [
       `Essay prompt the student is answering:\n${params.essayPrompt}`,
       "",

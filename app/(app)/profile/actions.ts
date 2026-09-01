@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { recomputeCareerProfile } from "@/lib/scoring/persist";
 import { refineAchievementDescription, type AchievementRefinement } from "@/lib/ai/refine-achievement";
+import { resolveLocale } from "@/lib/i18n/locale";
 import { generateResearchProjects, type ResearchProject } from "@/lib/ai/research-generator";
 import { assertWithinAIRateLimit, RateLimitExceededError } from "@/lib/ai/rate-limit";
 import { AIProviderNotConfiguredError } from "@/lib/ai";
@@ -321,7 +322,7 @@ export async function refineAchievement(params: {
 
   try {
     await assertWithinAIRateLimit(session.userId!, "achievement_refinement", { maxCalls: 20, windowMinutes: 30 });
-    const data = await refineAchievementDescription({ userId: session.userId!, ...params });
+    const data = await refineAchievementDescription({ userId: session.userId!, locale: await resolveLocale(), ...params });
     return { data };
   } catch (error) {
     if (error instanceof RateLimitExceededError) return { error: error.message };

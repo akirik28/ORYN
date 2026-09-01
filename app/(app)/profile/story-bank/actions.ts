@@ -6,6 +6,7 @@ import { collectStoryBankExperiences } from "@/lib/story-bank/collect";
 import { generateEssayOutlines, type EssayOutlineResponse } from "@/lib/ai/essay-outlines";
 import { assertWithinAIRateLimit, RateLimitExceededError } from "@/lib/ai/rate-limit";
 import { AIProviderNotConfiguredError } from "@/lib/ai";
+import { resolveLocale } from "@/lib/i18n/locale";
 
 const MAX_PROMPT_LENGTH = 1000;
 
@@ -38,6 +39,7 @@ export async function generateStoryOutlines(
 
     const data = await generateEssayOutlines({
       userId: session.userId!,
+      locale: await resolveLocale(),
       essayPrompt: trimmed,
       experiences: selected,
       goals: (goalsRes.data ?? []).map((g) => g.title),

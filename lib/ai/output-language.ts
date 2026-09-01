@@ -23,6 +23,14 @@ import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
  * - **The voice does not change with the language.** Phase 57's brief — specific, analytical,
  *   calm, no praise inflation — is a property of the counsel, not of English.
  *
+ * Wired into all six AI surfaces that produce prose a student reads. The three sharing
+ * `buildStudentAdvisorContext` (advisor-chat, weekly-plan, research-generator) take the
+ * language from the student's stored `preferred_language`, because two of them also run from
+ * cron where there is no request. The other three (essay-outlines, refine-achievement, and
+ * counselor-explain when it lands) are only ever called from a Server Action, so their caller
+ * passes `resolveLocale()` — which prefers the cookie, and should: the student is looking at
+ * the interface in that language right now.
+ *
  * WHAT THIS DOES NOT DO, and it matters: nothing here measures the *quality* of Turkish
  * output. The eval coverage in `__tests__` is English-only, and checking whether Turkish
  * counsel keeps the demanding-mentor register costs real model calls. The mechanism is
