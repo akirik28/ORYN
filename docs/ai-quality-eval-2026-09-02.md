@@ -202,3 +202,84 @@ less when there is less to say.**
 
 That work is already assigned. Until it lands, "free tier on Haiku" is a supported
 direction, not a finished answer.
+
+---
+
+# Third run: testing the empty-slot hypothesis — 2026-09-02, 03:10
+
+The two runs above found the same defect in two models and produced a hypothesis nobody had
+tested: **the missing instruction is not "be brief" but permission to produce nothing** when
+there is nothing to produce. oryn-4e's brevity attempt had already been measured making
+things worse (307/360) and reverted. This run tests the other reading.
+
+Changes made: two bullets in `ADVISOR_SYSTEM_PROMPT` (permission not to discourage when
+nothing warrants it; permission to answer short when there is little to add), and a
+surface-specific instruction in `lib/ai/weekly-plan.ts`'s per-call prompt to leave
+`avoidForNow` null, framed as "a fabricated warning is worse than an empty field."
+
+**Cost $0.337** (50,318 in / 12,403 out). An earlier attempt crashed mid-run and produced
+nothing readable — see the harness fault-tolerance fix below.
+
+## The number: 323/360, against 325. It does not beat the baseline.
+
+Stated first and plainly, because the decomposition that follows is the shape a rationalisation
+takes and should not be read before the headline.
+
+## But the flagship defect is gone
+
+Both `weekly_plan` baseline cases had invented an `avoidForNow` that **inverted the fixture's
+only real recommendation** — the `do`-classed Regional Science Fair — in **4 of 4 runs across
+two independent models.** That is the clearest defect this harness has ever produced.
+
+This run: both scored `discourage=n/a`, no invented target, 28–29/30. The hypothesis
+confirmed on exactly the thing it was written for.
+
+## Where the −2 came from: a surface that was never touched
+
+Both `counselor_explain` baseline cases scored `analytical=3`, which is the entire gap.
+**Verified rather than accepted:** `buildCounselorExplainPrompt` uses
+`COUNSELOR_EXPLANATION_SYSTEM_PROMPT` exclusively and never reads `ADVISOR_SYSTEM_PROMPT`;
+the diff touches three files, none of them counselor-explain's. The change cannot reach that
+surface.
+
+On the eight cases the change *did* touch: **228/240.**
+
+## Why everything was kept, including the part the author would have dropped
+
+The author's own read was to keep the weekly-plan instruction and revert the two general
+bullets. Two arguments overrode it:
+
+1. **Symmetry.** `counselor_explain`'s drop was attributed to single-sample judge variance.
+   But `advisor_chat/tr/baseline` flipping from correctly abstaining to manufacturing caution
+   is the *same magnitude of n=1 movement*. One standard has to apply to both — either both
+   are noise, or the aggregate isn't attributable to the change at all. Reverting on the raw
+   number is the one option the evidence doesn't support.
+2. **The win isn't cleanly attributable.** `weekly_plan` receives **both** changes —
+   `harness.ts` builds its system prompt from `ADVISOR_SYSTEM_PROMPT`. Dropping the general
+   bullets would have risked undoing part of what produced the result, untested, with no way
+   to know without another $0.34.
+
+## What this establishes, and what stays open
+
+**Surface-specific null-permission works. General tone instruction does not reliably.**
+`advisor_chat` received only the general bullets and remains a wash — EN improved from a hard
+manufactured discouragement to a soft non-load-bearing one, TR moved the other way.
+Conciseness did not move at all (4.08, identical to two decimals), though the floor rose from
+3 to 4.
+
+So the padding pattern is **still live on `advisor_chat`**, and two different families of
+prompt instruction have now failed to move `concise` in three measured runs.
+
+## The harness bug this run paid for
+
+The first attempt threw on a `weekly_plan` case — the model omitted a required field on both
+attempts, a behaviour `anthropic-provider.ts`'s own retry comment already documents — and
+`runEval`'s bare `results.push(await runEvalCase(...))` let the exception destroy the entire
+report: every case already completed, every judge score already billed, and the usage total.
+Roughly $0.25 produced nothing, and the operator could not state the figure precisely because
+totals are computed at the end.
+
+Fixed: failures are data, the run continues, and the report carries them alongside results.
+Also closed in the same package: `harness.ts` had been **hand-copying** the weekly-plan prompt,
+so an edit to the real one was not being measured at all — a drift risk the file's own header
+had warned about since it was written. It now calls the real exported builder.
