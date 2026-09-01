@@ -35,17 +35,19 @@ export async function generateAdvisorReply(params: {
       // Lowering this does NOT make thinking shorter: the model reasons however much the
       // task needs regardless of the ceiling, so this number only controls how much margin
       // exists between that need and a truncated response. It is not a lever for reply
-      // length — the system prompt's own conciseness instructions are (2026-09-02).
+      // length at all -- there is no separate mechanism in this file that is.
       //
       // The 2026-08-23 benchmark, on a rich profile: 1024 returned a thinking block and no
       // text at all — a hard failure; 2048 truncated mid-answer; 4096 completed cleanly with
       // 1599 thinking tokens (a separate sample hit 1736). Brought back down from 8192
-      // (2026-08-23's defensive ceiling, chosen before the reply itself was ever shortened)
-      // to 4096 — the measured, benchmark-verified floor, not a new guess: ~2.3-2.5k of
-      // headroom over both observed thinking samples, and the reply this budget now also
-      // has to cover is shorter than it was when 4096 was first measured as sufficient, not
-      // longer. Re-tighten only against a new benchmark showing thinking has grown, never by
-      // assumption.
+      // (2026-08-23's defensive ceiling) to 4096 — the measured, benchmark-verified floor,
+      // not a new guess: ~2.3-2.5k of headroom over both observed thinking samples. 8192 was
+      // originally paired with a prompt-brevity change (2026-09-02, branch
+      // oryn/advisor-reply-length-2026-09-02) reverted the same day after the one live
+      // eval comparison scored worse, not better -- 4096 does not depend on that reverted
+      // change; it is the same floor this codebase already had independent evidence for
+      // before that experiment started. Re-tighten only
+      // against a new benchmark showing thinking has grown, never by assumption.
       maxTokens: 4096,
     }),
   );
