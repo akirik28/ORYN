@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { getTranslations, getLocale } from "next-intl/server";
 import { Lock, Sparkles, MessageCircle } from "lucide-react";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
@@ -13,7 +14,7 @@ import { getEndorsementsForSkills, type SkillEndorsementInfo } from "@/lib/socia
 import { getRecommendationsFor } from "@/lib/social/recommendations-query";
 import { getMutualConnections } from "@/lib/social/mutual-connections";
 import { recordProfileView } from "@/lib/social/profile-views";
-import { OPEN_TO_LABELS, type OpenToOption } from "@/lib/social/open-to";
+import { openToLabel, type OpenToOption } from "@/lib/social/open-to";
 import { EndorseSkillButton } from "@/features/connections/endorse-skill-button";
 import { RecommendationsSection } from "@/features/profile/recommendations-section";
 import { RecentActivityStrip } from "@/features/profile/recent-activity-strip";
@@ -40,16 +41,18 @@ function SkillList({
   endorsements,
   ownerId,
   canEndorse,
+  heading,
 }: {
   skills: PublicSkill[];
   endorsements: Record<string, SkillEndorsementInfo>;
   ownerId: string;
   canEndorse: boolean;
+  heading: string;
 }) {
   if (skills.length === 0) return null;
   return (
     <div className="space-y-2">
-      <h2 className="font-semibold">Skills</h2>
+      <h2 className="font-semibold">{heading}</h2>
       <div className="flex flex-wrap gap-1.5">
         {skills.map((skill) => {
           const info = endorsements[skill.id] ?? { count: 0, endorsedByMe: false };
@@ -96,6 +99,9 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
   const session = await requireUser();
   const supabase = await createClient();
   const isSelf = session.userId === id;
+  const locale = await getLocale();
+  const t = await getTranslations("publicProfile");
+  const fallbackName = t("fallbackName");
 
   const publicRow = await getPublicProfile(supabase, id);
   let display: PublicProfileRow | null = publicRow;
@@ -143,11 +149,13 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
       {isSelfPrivate ? (
         <div className="flex items-center gap-2 rounded-xl border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
           <Lock className="size-4 shrink-0" />
-          Only you can see this. Turn on{" "}
-          <Link href="/settings" className="text-brand-primary hover:underline">
-            Public profile
-          </Link>{" "}
-          in Settings to share it.
+          {t.rich("privateNotice", {
+            settingsLink: (chunks) => (
+              <Link href="/settings" className="text-brand-primary hover:underline">
+                {chunks}
+              </Link>
+            ),
+          })}
         </div>
       ) : null}
 
@@ -159,19 +167,19 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             </AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="font-display text-2xl tracking-tight">{display.display_name ?? "Oryn student"}</h1>
+            <h1 className="font-display text-2xl tracking-tight">{display.display_name ?? fallbackName}</h1>
             {display.headline ? <p className="text-sm font-medium text-foreground/90">{display.headline}</p> : null}
             <p className="text-sm text-muted-foreground">
-              {[display.curriculum, display.country, display.graduation_year ? `Class of ${display.graduation_year}` : null]
+              {[display.curriculum, display.country, display.graduation_year ? t("classOf", { year: display.graduation_year }) : null]
                 .filter(Boolean)
                 .join(" · ")}
             </p>
             {mutual.count > 0 ? (
               <p className="mt-0.5 text-xs text-muted-foreground">
-                {mutual.count} mutual connection{mutual.count === 1 ? "" : "s"}
+                {t("mutualConnections", { count: mutual.count })}
                 {mutual.preview.length > 0
                   ? `: ${mutual.preview
-                      .map((p) => p.displayName ?? "Oryn student")
+                      .map((p) => p.displayName ?? fallbackName)
                       .join(", ")}${mutual.count > mutual.preview.length ? ` +${mutual.count - mutual.preview.length}` : ""}`
                   : null}
               </p>
@@ -182,7 +190,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
           <div className="flex gap-2">
             {canShowMessageButton(connection?.status ?? null) ? (
               <Button size="sm" variant="outline" render={<Link href={`/messages/${id}`} />} nativeButton={false}>
-                <MessageCircle className="size-3.5" /> Message
+                <MessageCircle className="size-3.5" /> {t("message")}
               </Button>
             ) : null}
             <ConnectButton
@@ -196,12 +204,12 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
       </div>
 
       {display.looking_for ? (
-        <StatusBadge tone="brand" icon={Sparkles} label={`Looking for: ${display.looking_for}`} />
+        <StatusBadge tone="brand" icon={Sparkles} label={t("lookingFor", { value: display.looking_for })} />
       ) : null}
 
       {display.about ? (
         <div className="space-y-2">
-          <h2 className="font-semibold">About</h2>
+          <h2 className="font-semibold">{t("aboutHeading")}</h2>
           <p className="whitespace-pre-wrap text-sm break-words text-muted-foreground">{display.about}</p>
         </div>
       ) : null}
@@ -210,7 +218,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
       {featured.length > 0 ? (
         <div className="space-y-3">
-          <h2 className="font-semibold">Featured</h2>
+          <h2 className="font-semibold">{t("featuredHeading")}</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {featured.map((item) =>
               item.url ? (
@@ -237,12 +245,18 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
       ) : null}
 
       {loadFailed ? (
-        <ErrorState description="We couldn't load the full portfolio right now. The profile above is still accurate." />
+        <ErrorState description={t("loadFailed")} />
       ) : (
         <>
-          <SkillList skills={skills} endorsements={endorsements} ownerId={id} canEndorse={!isSelf && hasAcceptedConnection} />
+          <SkillList
+            skills={skills}
+            endorsements={endorsements}
+            ownerId={id}
+            canEndorse={!isSelf && hasAcceptedConnection}
+            heading={t("skillsHeading")}
+          />
           <div className="space-y-3">
-            <h2 className="font-semibold">Portfolio</h2>
+            <h2 className="font-semibold">{t("portfolioHeading")}</h2>
             <PortfolioView items={portfolio} />
           </div>
         </>
@@ -258,11 +272,11 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
       {contact.openTo.length > 0 ? (
         <div className="space-y-2">
-          <h2 className="font-semibold">Open to</h2>
+          <h2 className="font-semibold">{t("openToHeading")}</h2>
           <div className="flex flex-wrap gap-1.5">
             {contact.openTo.map((option) => (
               <Badge key={option} variant="outline">
-                {OPEN_TO_LABELS[option as OpenToOption] ?? option}
+                {openToLabel(option as OpenToOption, locale)}
               </Badge>
             ))}
           </div>
@@ -271,7 +285,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
       {hasAnyContact ? (
         <div className="space-y-2">
-          <h2 className="font-semibold">Contact</h2>
+          <h2 className="font-semibold">{t("contactHeading")}</h2>
           {/* break-words on every URL/email value below (2026-08-29 mobile sweep) — a real
               value like an email address or a non-vanity LinkedIn/GitHub URL is one
               unbroken token with no space for the browser to wrap on by default, so it
@@ -283,7 +297,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
           <ul className="space-y-1.5 text-sm">
             {contact.email ? (
               <li>
-                <span className="text-muted-foreground">Email: </span>
+                <span className="text-muted-foreground">{t("contactEmail")}</span>
                 <a href={`mailto:${contact.email}`} className="break-words text-brand-primary hover:underline">
                   {contact.email}
                 </a>
@@ -291,13 +305,13 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             ) : null}
             {contact.phone ? (
               <li>
-                <span className="text-muted-foreground">Phone: </span>
+                <span className="text-muted-foreground">{t("contactPhone")}</span>
                 {contact.phone}
               </li>
             ) : null}
             {contact.linkedinUrl ? (
               <li>
-                <span className="text-muted-foreground">LinkedIn: </span>
+                <span className="text-muted-foreground">{t("contactLinkedin")}</span>
                 <a href={contact.linkedinUrl} target="_blank" rel="noreferrer noopener" className="break-words text-brand-primary hover:underline">
                   {contact.linkedinUrl}
                 </a>
@@ -305,7 +319,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             ) : null}
             {contact.githubUrl ? (
               <li>
-                <span className="text-muted-foreground">GitHub: </span>
+                <span className="text-muted-foreground">{t("contactGithub")}</span>
                 <a href={contact.githubUrl} target="_blank" rel="noreferrer noopener" className="break-words text-brand-primary hover:underline">
                   {contact.githubUrl}
                 </a>
@@ -313,7 +327,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             ) : null}
             {contact.websiteUrl ? (
               <li>
-                <span className="text-muted-foreground">Website: </span>
+                <span className="text-muted-foreground">{t("contactWebsite")}</span>
                 <a href={contact.websiteUrl} target="_blank" rel="noreferrer noopener" className="break-words text-brand-primary hover:underline">
                   {contact.websiteUrl}
                 </a>
@@ -321,19 +335,19 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             ) : null}
             {contact.instagramHandle ? (
               <li>
-                <span className="text-muted-foreground">Instagram: </span>
+                <span className="text-muted-foreground">{t("contactInstagram")}</span>
                 {contact.instagramHandle}
               </li>
             ) : null}
             {contact.twitterHandle ? (
               <li>
-                <span className="text-muted-foreground">X / Twitter: </span>
+                <span className="text-muted-foreground">{t("contactTwitter")}</span>
                 {contact.twitterHandle}
               </li>
             ) : null}
             {contact.discordHandle ? (
               <li>
-                <span className="text-muted-foreground">Discord: </span>
+                <span className="text-muted-foreground">{t("contactDiscord")}</span>
                 {contact.discordHandle}
               </li>
             ) : null}

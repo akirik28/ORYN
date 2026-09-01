@@ -1145,6 +1145,18 @@
       "passwordMinLength": "Use at least 8 characters.",
       "passwordNeedsLetter": "Include at least one letter.",
       "passwordNeedsNumber": "Include at least one number."
+    },
+    "signup": {
+      "title": "Create your account",
+      "subtitle": "Free for students. No credit card required.",
+      "haveAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "displayName": "Display name",
+      "email": "Email",
+      "password": "Password",
+      "passwordHint": "At least 8 characters, with a letter and a number.",
+      "submitting": "Creating account…",
+      "submit": "Create account"
     }
   },
   "landing": {
@@ -1256,5 +1268,28 @@
       "updateFailed": "Couldn't update that request.",
       "removeFailed": "Couldn't remove that."
     }
+  },
+  "publicProfile": {
+    "privateNotice": "Only you can see this. Turn on <settingsLink>Public profile</settingsLink> in Settings to share it.",
+    "fallbackName": "Oryn student",
+    "classOf": "Class of {year}",
+    "mutualConnections": "{count, plural, one {# mutual connection} other {# mutual connections}}",
+    "message": "Message",
+    "lookingFor": "Looking for: {value}",
+    "aboutHeading": "About",
+    "featuredHeading": "Featured",
+    "skillsHeading": "Skills",
+    "portfolioHeading": "Portfolio",
+    "loadFailed": "We couldn't load the full portfolio right now. The profile above is still accurate.",
+    "openToHeading": "Open to",
+    "contactHeading": "Contact",
+    "contactEmail": "Email: ",
+    "contactPhone": "Phone: ",
+    "contactLinkedin": "LinkedIn: ",
+    "contactGithub": "GitHub: ",
+    "contactWebsite": "Website: ",
+    "contactInstagram": "Instagram: ",
+    "contactTwitter": "X / Twitter: ",
+    "contactDiscord": "Discord: "
   }
 }

@@ -121,6 +121,18 @@ describe("message catalogs", () => {
       "applications.newDialog.typeOptions.early_decision",
       "applications.newDialog.typeOptions.early_action",
       "applications.newDialog.typeOptions.rolling",
+      // publicProfile's contact-field labels (2026-09-01): Discord, GitHub, Instagram and
+      // LinkedIn are the platforms' own product names, not English words with a Turkish
+      // equivalent — same reasoning as AP/IB/A-Level above. "X / Twitter" is the same case
+      // twice over (X's own brand name, plus the literal "/" some students still search the
+      // old name by). "Email:", "Phone:" and "Website:" are genuinely translated elsewhere
+      // in this same object and are not in this list, which is what confirms these five are
+      // a deliberate choice rather than the whole block being left untranslated.
+      "publicProfile.contactDiscord",
+      "publicProfile.contactGithub",
+      "publicProfile.contactInstagram",
+      "publicProfile.contactLinkedin",
+      "publicProfile.contactTwitter",
       ].sort(),
     );
   });
@@ -180,6 +192,10 @@ describe("ICU plural counts that bypass formatNumber are deliberate", () => {
     // Universities a single student is tracking applications to — bounded by how many
     // schools one person can realistically apply to, nowhere near four digits.
     "applications.hero.universityCount",
+    // Mutual connections between two individual students (2026-09-01) — bounded by how
+    // many people one teenager could plausibly know on this product, nowhere near four
+    // digits either.
+    "publicProfile.mutualConnections",
   ];
 
   test("no un-reviewed `#` inside a plural block", () => {

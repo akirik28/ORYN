@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 import { signUp } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ import { SignUpConsent } from "./signup-consent";
 
 export function SignUpForm({ locale }: { locale: Locale }) {
   const [state, action, pending] = useActionState(signUp, undefined);
+  const t = useTranslations("auth.signup");
 
   if (state?.variant === "success") {
     return (
@@ -24,7 +26,7 @@ export function SignUpForm({ locale }: { locale: Locale }) {
     <form action={action} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="displayName" style={{ color: "#3A3A4A", fontWeight: 500 }}>
-          Display name
+          {t("displayName")}
         </Label>
         <Input id="displayName" name="displayName" autoComplete="name" required className={AUTH_INPUT_CLASS} />
         {state?.errors?.displayName ? (
@@ -33,14 +35,14 @@ export function SignUpForm({ locale }: { locale: Locale }) {
       </div>
       <div className="space-y-2">
         <Label htmlFor="email" style={{ color: "#3A3A4A", fontWeight: 500 }}>
-          Email
+          {t("email")}
         </Label>
         <Input id="email" name="email" type="email" autoComplete="email" required className={AUTH_INPUT_CLASS} />
         {state?.errors?.email ? <p className="text-sm text-destructive">{state.errors.email[0]}</p> : null}
       </div>
       <div className="space-y-2">
         <Label htmlFor="password" style={{ color: "#3A3A4A", fontWeight: 500 }}>
-          Password
+          {t("password")}
         </Label>
         <Input
           id="password"
@@ -50,7 +52,7 @@ export function SignUpForm({ locale }: { locale: Locale }) {
           required
           className={AUTH_INPUT_CLASS}
         />
-        <p className="text-xs" style={{ color: "#AAAABC" }}>At least 8 characters, with a letter and a number.</p>
+        <p className="text-xs" style={{ color: "#AAAABC" }}>{t("passwordHint")}</p>
         {state?.errors?.password ? (
           <p className="text-sm text-destructive">{state.errors.password[0]}</p>
         ) : null}
@@ -60,7 +62,7 @@ export function SignUpForm({ locale }: { locale: Locale }) {
         <p className="text-sm text-destructive">{state.message}</p>
       ) : null}
       <Button type="submit" className="w-full text-white hover:opacity-90" style={AUTH_SUBMIT_STYLE} disabled={pending}>
-        {pending ? "Creating account…" : "Create account"}
+        {pending ? t("submitting") : t("submit")}
       </Button>
     </form>
   );
