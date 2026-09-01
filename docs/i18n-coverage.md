@@ -123,9 +123,17 @@ appends one shared instruction to each system prompt, driven by the student's st
 `preferred_language` rather than the request cookie — weekly plans are generated from cron,
 where there is no request to read a cookie from.
 
-Wired into `advisor-chat`, `weekly-plan` and `research-generator`, the three surfaces that
-share `buildStudentAdvisorContext`. `counselor-explain`, `essay-outlines` and
-`refine-achievement` do not take that context and are **not** wired yet.
+Wired into five of the six surfaces that produce prose a student reads, from two different
+locale sources on purpose:
+
+- `advisor-chat`, `weekly-plan`, `research-generator` — from the student's stored
+  `preferred_language`, because two of them also run from cron where there is no request.
+- `essay-outlines`, `refine-achievement` — from `resolveLocale()`, passed by the Server Action
+  that calls them. That prefers the cookie, and should: the student is reading the interface
+  in that language right now, which beats a preference set months ago.
+
+`counselor-explain` is the one still unwired — it takes neither the context nor a locale
+today, and belongs with the advisor package.
 
 The instruction says three things beyond "write in Turkish", each protecting a decision the
 product already made:
