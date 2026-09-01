@@ -32,3 +32,27 @@ export function buildActionStatusPatch(params: {
   if (params.reflectionNote !== undefined) patch.reflection_note = params.reflectionNote;
   return patch;
 }
+
+/**
+ * Whether this update is a real transition INTO `completed`, and therefore the one call of
+ * the pair that should log `weekly_action_completed`.
+ *
+ * Same race as above, different casualty. Both Server Action calls from one click carry
+ * `status: "completed"` — the toggle, then saveReflection() moments later. The patch fix
+ * above stopped the second call clobbering the reflection; nothing stopped it logging the
+ * event a second time. Measured live on 2026-09-02 before this existed: `product_events`
+ * held **8 `weekly_action_completed` rows across 4 distinct actionIds — exactly 2.00 per
+ * action**, so every figure derived from that event was doubled.
+ *
+ * Extracted here rather than inlined in the Server Action for the same reason
+ * buildActionStatusPatch is — a "use server" file may only export async functions, so a
+ * pure predicate cannot live there and could not otherwise be unit-tested.
+ *
+ * Deliberately takes the previous status as a value rather than reading it: the caller does
+ * the read, so this stays pure. It does NOT close the concurrent case where two calls both
+ * observe a pre-completion status — that is the same race documented above and not one this
+ * claims to remove. It converts a guaranteed double into a rare one.
+ */
+export function shouldLogCompletion(previousStatus: ActionStatus | null | undefined, nextStatus: ActionStatus): boolean {
+  return nextStatus === "completed" && previousStatus !== "completed";
+}
