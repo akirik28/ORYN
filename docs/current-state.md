@@ -1,261 +1,211 @@
 # ORYN Current State
 
 Single short operational source of truth. **Rewritten in place, not appended to**, at each
-integration checkpoint — history lives in `docs/handoffs/*` and `git log`, not here.
+integration checkpoint — history lives in `docs/handoffs/*` and `git log`, not here. This is
+"here is what ORYN is right now," not a record of what happened to get here.
 
-**Read `docs/ORYN_WORKSTREAMS.md` for who owns what right now, and
-`docs/MASTER-EXECUTION-STRATEGY.md` for the enduring product/build direction — this file only
-answers "what is actually true right now."**
+**Read `docs/ORYN_WORKSTREAMS.md` for who owns what right now (last touched 2026-08-29 — check
+it's not itself stale before trusting an ownership claim), and `docs/MASTER-EXECUTION-STRATEGY.md`
+for the enduring product/build direction.**
 
 ## Measurement provenance (read this before trusting any number below)
 
 - **Code state** is measured against a specific commit on a specific branch. It goes stale the
-  moment anyone pushes. Re-run `git log --oneline -1 <ref>` before trusting it.
+  moment anyone pushes. Re-run `git log --oneline -1 origin/main` before trusting it.
 - **Live database state** is measured by directly querying the `oryn-qa-scratch` Supabase
-  project (`qtcvcflzxbuagvvwahhu`) at a specific timestamp. Re-measure before trusting it for
-  anything more than a same-day approximation.
+  project (`qtcvcflzxbuagvvwahhu`) via the Supabase MCP connector. Re-measure before trusting it
+  for anything more than a same-day approximation — every count below was queried fresh for this
+  checkpoint, none carried forward from the prior one.
+- **Deployment state is not measured here at all.** Whether the app is actually deployed, whether
+  the Vercel cron schedules below are actually firing, whether the founder's own `.env.local`
+  holds real credentials — none of that is visible from a git checkout or from this session's
+  Supabase MCP access, which is a separate credential path from the app's own runtime env vars.
+  Flagged explicitly wherever it matters below rather than assumed either way.
 
 | What | Value |
 |---|---|
-| Code measured against | `origin/main` @ `2334f07` |
-| Code measurement timestamp | **2026-08-22 19:40** (late-evening checkpoint — supersedes 18:20 and 04:34) |
-| Gate on that commit | lint clean · typecheck clean · **144 files / 2,122 tests** · production build compiles — run by ORYN-CEO in a clean checkout, then **independently reproduced by ORYN-CFO** in a second clean-room worktree |
-| PR queue | **empty.** 93 merged today |
-| Live DB measured against | `oryn-qa-scratch` (`qtcvcflzxbuagvvwahhu`), via Supabase MCP `execute_sql`/`list_migrations`/`get_advisors` |
-| Live DB measurement timestamp | 2026-08-22 (this checkpoint) |
+| Code measured against | `origin/main` @ `4188bada` |
+| Code measurement timestamp | **2026-09-01 03:15** |
+| Prior checkpoint | `2334f07`, 2026-08-22 19:40 — **208 commits since**, not individually reconstructed here; see `git log 2334f07..origin/main` for the full record |
+| Gate on the checkpoint commit | lint clean · typecheck clean · **189 files / 2,864 tests** · production build compiles (this session's own worktree, `npm run lint && typecheck && test && build`) |
+| Live DB measured against | `oryn-qa-scratch` (`qtcvcflzxbuagvvwahhu`), via Supabase MCP, 2026-09-01 ~03:10 |
 
 If this file and a handoff doc disagree, this file is newer and wins *for the date stamped
 above*. If this file and a fresh live measurement disagree, the live measurement wins — this
 file is a snapshot, not a live view.
 
-## Branches / integration state
+## What ORYN is today
 
-- `main` (`dcce22f`) is being actively integrated into — 8+ merges landed the morning of
-  2026-08-22 alone (04:19–04:34): Canada programme catalogue (Western University, 555
-  records), UK programme catalogue, live-row-verification, schema-gaps-design, ca-programmes.
-  The prior checkpoint's framing ("main hasn't merged either active product branch yet") is
-  now stale.
-- Per `docs/ORYN_WORKSTREAMS.md` (rows dated 2026-08-21, not individually re-verified this
-  checkpoint): DATA-A (`oryn/programs-pipeline-reconciled`) was deferred from the 08-21
-  integration wave (still-moving branch, freeze-test rule); PROD-B
-  (`oryn/counselor-data-quality-v1`) was included in that wave; UI-SIMPLIFY
-  (`oryn/ui-simplification-v1`) was explicitly excluded per founder instruction, continuing
-  independently. Current status of all three not re-checked this pass.
-- 80+ local branches and ~85 worktrees exist under `.claude/worktrees/`. Most research lanes
-  in `ORYN_WORKSTREAMS.md` are marked complete/idle-pending-assignment; several product/data
-  branches are marked dormant/superseded. Not individually re-verified this checkpoint —
-  flagged as real integration debt worth a dedicated audit.
-- **CORRECTED 18:35.** This line previously read "no other Claude sessions were reachable —
-  the overnight fleet appears to have gone idle." That was true when written this morning and
-  **false for the whole of this afternoon and evening**, when a 13-session organization was
-  running against this repo. A research lane read it as current, concluded its own manager was
-  gone, and re-routed its reporting on that basis — the doc did the misleading, not the lane.
-  **Live at 18:35: roughly a dozen sessions active**, coordinated per
-  `docs/ORYN-ORG-STRUCTURE.md`. Session liveness changes by the minute and does not belong in
-  a checkpoint document at all; `ListAgents` is the only answer to that question, and even it
-  reports a moment rather than an identity — a session that briefly drops and resumes returns
-  under a different reference, which misled three sessions today including this one's author.
+Capabilities the 2026-08-22 checkpoint described as missing or broken, verified against current
+source and the commits that changed them — not from memory of what a lane intended to build.
 
-## Live database (measured 2026-08-22, this checkpoint)
+- **Legal pages exist and are live**: `app/(legal)/privacy`, `/terms`, `/kvkk`, a footer, and
+  signup consent — English and Turkish, both explicitly marked draft/unapproved-by-counsel in
+  their own copy (`lib/legal/content.ts`'s `LEGAL_REVIEW_STATUS`). Account deletion now removes
+  Storage objects before the DB row (`lib/account/delete-storage.ts`,
+  `fix(settings): remove Storage objects before deleting an account, not never`) — it used to
+  leave orphaned files behind indefinitely. Neither claim is "launch-ready legal compliance";
+  both are "the thing the 08-22 checkpoint said didn't exist now exists and does what it says."
+- **Turkish coverage is real and broader than a single `messages/` file suggests.** `next-intl`
+  covers navigation chrome (`messages/en.json`/`tr.json`), but most of the product's actual
+  content — legal pages, the counselor's reasoning copy, requirements explanations, admission
+  outlook explanations, dashboard hero/profile-signal copy, scoring labels — goes through a
+  separate, consistent `getXCopy(locale)` bilingual-object pattern instead (`lib/legal/content.ts`,
+  `lib/counselor/copy.ts`, `lib/requirements/copy.ts`, `lib/admissions/explain.ts`,
+  `lib/scoring/*.ts`), across 8 separately merged i18n lanes. Checking only `messages/*.json`
+  undercounts this substantially — checked both this pass after the first read was misleading.
+- **A scheduler exists in config** (`vercel.json`): four daily cron jobs — opportunity discovery
+  (02:00), requirement discovery (04:00), university-data sync (06:00), deadline reminders
+  (08:00) — hitting the four `app/api/jobs/*` routes built for Phase 30. **Whether they're
+  actually firing depends on Vercel deployment state, which this pass cannot see.** The 08-22
+  checkpoint's "opportunities pipeline has never run" claim about live data is very likely still
+  true (`external_sync_jobs` would show it — not re-queried this pass, worth one live check) but
+  isn't the same claim as "no scheduler exists," which is what's now fixed in config.
+- **The dashboard no longer contradicts itself.** Home used to be able to tell a student their
+  profile was "balanced" specifically in the one state that can only be reached when Oryn hasn't
+  assessed their weakest dimension yet — and separately, mislabeled its own "areas assessed" /
+  "no evidence yet" counts, both wrong on the same account that surfaced it (commit `a2967804`,
+  `fix(dashboard): Home called an unmeasured profile balanced, and miscounted its own evidence`).
+  Now uses the same `signalCoverage`/`isAssessed` predicates the rest of the product already used
+  correctly, and the three surfaces (Home, Counselor, weekly plan) agree.
+- **Admission outlook no longer computes a verdict from an empty profile.** `refreshAdmissionOutlook`
+  now gates on `hasConfidentSignal` before producing Reach/Competitive/Strong language — confirmed
+  6/7 live `target_universities` rows were affected by the old behavior before the fix (commit
+  `178ff931`, merged `04f91ca9`).
+- **The recommendation engine produces more than two of its four defined classes — but only on
+  one of its two pipelines.** `lib/counselor/scoring.ts` (live on `/advisor` and `/dashboard`)
+  deterministically produces `do`/`consider`/`deprioritize`/`avoid_for_now`. The older
+  `lib/ai/weekly-plan.ts` → `lib/plan/persist.ts` path, which writes to the `ai_recommendations`
+  table, still only ever writes `avoid_for_now` — two systems, not one that got fixed. See
+  `docs/known-issues.md`'s "consider/deprioritize" entry for the full detail.
+- **A verified, real accessibility fix landed tonight**: `role="alert"` on 22 form/dialog error
+  messages (including the delete-account confirmation), a contrast-token split (`ink-4` vs
+  `ink-3`, 21 real-text call sites moved), and the guardian-consent disclosure's own contrast
+  fixed. A genuine upstream `@base-ui/react` Dialog focus-trap bug (Shift+Tab from the first
+  element loses focus entirely) was found, minimally reproduced, and is tracked — not
+  patched — in `docs/known-issues.md`, deliberately, since a hand-rolled fix would fork behavior
+  owned by a library this product doesn't maintain.
 
-- `universities`: **1,019** rows — **1,010 `canonical`, 9 `superseded`** (migration 0043's
-  data backfill confirmed genuinely live and correct: `duplicate_status` is populated).
-- `university_programs`: **17,046** rows (418 at the 08-20 checkpoint → 14,457 yesterday morning
-  → 16,119 this afternoon → **17,046** now). Today added **927 programmes across five universities
-  in two countries**, every record through research → contract verification → source verification
-  by three separate lanes, with dry-run and apply as separate packages:
-  - **Australia 0 → 651** across four universities (UNSW 217, Monash 178, Sydney 149, UWA 107).
-    Three further universities deferred, each blocked by a different access-control mechanism.
-    All 107 UWA records were re-fetched through a `robots.txt`-permitted path *before* merge,
-    after the lane caught that its own completed work had used a disallowed one — verified live,
-    zero `/sitecore` URLs remain.
-  - **Ottawa 276**, Canada's first corpus through the full pipeline. Revert path:
-    `batch_id = ca_programs_ottawa_2026-08-22.jsonl_2026-08-22`.
-  - **Adelaide's 120 records are verified by both verifier lanes and deliberately NOT ingested.**
-    Live Adelaide count is **0**, which is what independently confirms the status. This is the
-    single easiest figure in the corpus to misread — verified-and-withheld looks identical to
-    overlooked unless someone says otherwise. It has already produced two wrong numbers in one
-    evening: a "five universities" headline that should have said four, and my own "119" written
-    inside the sentence warning that this number would be misread.
-- **Known completeness gap**: `degree_type` is null on **257 of 651** Australian rows — 100% of
-  Sydney and 100% of UWA, versus 1 of 217 at UNSW and 0 of 178 at Monash. The null tracks the
-  *extraction method*, not the university: title-token extraction leaves it empty, structured-field
-  extraction fills it densely. `degree_level` is populated on **all 651**, so the qualification
-  level shows on every record and only the abbreviation is missing. **Completeness, not
-  correctness** — and an honest null is the right outcome if the source doesn't publish an
-  abbreviation, since a `degree_type` inferred from a title would be Oryn's guess dressed as a
-  sourced fact. Open question routed to the research lane: does the source publish one at all?
-- `university_requirements`: **1,254** rows (up from 84).
-- `university_deadlines`: **396** rows (up from 26).
-- `opportunities`: **391** rows, **271 `active`** (the browse surface). Two open gaps, both
-  measured live this afternoon and both independently re-measured by ORYN-BASORG:
-  - **351/391 missing `eligible_countries`** (was 366 this morning). Still the gate on real
-    eligibility matching per `docs/MASTER-EXECUTION-STRATEGY.md` §P3. Now honestly *labelled*
-    even where unresearched — see FEAT-1's Package 1 below.
-  - **only 60/391 carry a deadline.** Verified records are still moving through the pipeline
-    with nothing able to apply them: **the `opportunities*` write territory is deliberately
-    vacant.** The founder stopped one of two RES-I2 instances and which one is ambiguous, so
-    waking either risks overriding a deliberate stop or handing live-write access to the wrong
-    session. Ruling: nobody writes to `opportunities*` until the founder opens a lane
-    (backlog item 34). Research on those tables continues and is unaffected — produce freely,
-    apply nothing.
-- `canonical_entities`: **1,172** rows. `entity_verification_queue`: **101** rows still open.
-- `profiles`: **5** — no longer the pre-launch scratch "1", real signups now exist.
+## Live database (measured 2026-09-01 ~03:10, this checkpoint — every number re-queried, none
+carried forward)
 
-## Referential & duplicate integrity (measured 2026-08-22 19:50, ORYN-CEO)
+- `universities`: **1,019** rows — **1,010 canonical, 9 superseded** — **unchanged from 08-22.**
+  No university-catalogue growth since; the intervening work went into requirements, deadlines,
+  and i18n instead.
+- `university_programs`: **17,046** — also **unchanged from 08-22.** Same caveat.
+- `university_requirements`: **1,325** (up from 1,254 — +71).
+- `university_deadlines`: **470** (up from 396 — +74; includes the UK October-exception
+  deadlines added today).
+- `opportunities`: **421** total, **275 `active`** (up from 391/271 — +30 rows, +4 active).
+  - **380/421 (90.3%) still missing `eligible_countries`** — proportionally about where the
+    08-22 checkpoint's 351/391 (89.8%) was; the gap widened in absolute terms as new
+    unresearched rows were added faster than the backfill closed old ones. The underlying risk
+    is unchanged: `computeEligibility`/`evaluateOpportunityEligibility` both still read an empty
+    array as *unrestricted*, not *unknown*.
+  - **82/421 carry a deadline** (up from 60/391).
+  - The Tier-1 six-row disable (institution-name-titled rows filed as opportunities) is still
+    not applied — verified dry-run, blocked by the safety classifier, escalated to the founder;
+    see `docs/known-issues.md`. Not re-measured live this pass whether the 6 specific rows are
+    still `active` — would take one more query to confirm, not assumed either way.
+- `canonical_entities`: **1,174** (up from 1,172). `entity_verification_queue`: **92 open**
+  (36 `in_progress` + 56 `queued`), **11 `verified`** — down from "101 still open," real
+  progress, not carried forward.
+- `profiles`: **11** (up from 5 pre-launch-scratch) — **7 of 11 missing `birth_year`, 8 of 11
+  onboarded.** Measured fresh this pass, not copied from an earlier verbal count from elsewhere
+  in tonight's own work — a small (one-row) discrepancy from a number quoted hours earlier is
+  exactly the kind of drift a live system produces between two real checks, not an error in
+  either one.
 
-Run directly against live `oryn-qa-scratch` after the day's 96 merges and the Australian
-ingestion. **All clean:**
-
-| check | result |
-|---|---|
-| `university_programs` with a missing university | **0** |
-| `university_requirements` with a missing university | **0** |
-| `university_deadlines` with a missing university | **0** |
-| `university_deadlines.program_id` not in `university_programs` | **0** |
-| `opportunity_matches` with a missing opportunity | **0** |
-| `profile_scores` with a missing profile | **0** |
-| **true duplicate programme rows** | **0 across all 16,770** |
-
-**The duplicate check is worth reading carefully, because a coarser version of it produces a
-false alarm.** 318 `official_program_url` values appear on more than one row, and 120 rows share
-an identical (name, degree_level, url) triple within one university. **Neither is a defect.**
-Many programmes legitimately share one catalogue URL — Turkey's largest group has 391 rows on a
-single YÖK Atlas page, which is expected while those rows have no per-programme identifier
-(backlog item 26). And the identical-triple rows are genuinely distinct programmes: Harvard's two
-"Economics" entries are the **Harvard College `AB`** and the **Extension School `ALB`** — same
-name, same level, same catalogue URL, different school and different degree designation.
-
-Duplicate identity for a programme therefore requires **degree_type** as well as name, level and
-url. Under that definition there are zero duplicates; under name+level+url alone there appear to
-be 120, and that number is wrong.
-
-**And this is enforced, not merely observed.** The live schema carries a UNIQUE index —
-`university_programs_dedup_idx`, added 2026-08-21 by `program_dedup_index_degree_type`:
-
-```sql
-UNIQUE (university_id, normalized_name, COALESCE(degree_level,''),
-        COALESCE(language_of_instruction,''), official_program_url,
-        COALESCE(degree_type,''))
-```
-
-So the database **cannot** hold a duplicate under that definition — the measured zero is a
-consequence of an enforced constraint rather than a lucky state, and it will stay zero through
-future ingestion without anyone re-checking. The schema had already encoded `degree_type` as part
-of programme identity before this evening's check derived the same thing empirically; anyone
-reasoning about duplicates should read this index rather than inventing a definition, as I did.
+**Not re-run this checkpoint, flagged rather than silently reused**: the full referential-
+integrity/duplicate-programme sweep the 08-22 checkpoint ran (7 specific queries, all clean) —
+the schema-level protections it found (the `university_programs_dedup_idx` UNIQUE index) are
+still in the schema and still enforce the same guarantee structurally, so the *mechanism* is
+still verifiably true from source even though the *live query* wasn't repeated today.
 
 ## Migrations
 
-Applied through `20260821184903_requirement_shape_representability` — this **is** migration
-`0056` (`0056_requirement_shape_representability.sql`), confirmed live. **Reconciled this
-checkpoint**: commit messages loosely calling two different things "migration 0056" was the
-source of the apparent discrepancy flagged at the last checkpoint, not a real gap —
-`0057_university_program_kilavuz_kodu.sql` was originally drafted *as* 0056, then renumbered
-to 0057 once the real 0056 claimed that number first (`c710acc`). 0057 itself is **deliberately
-not applied**: its own header states a prior coordination session's authorization for 0055
-"does not extend to this migration" and instructs not to apply without asking the founder
-again. Confirmed live: no `kilavuz_kodu` column exists on `university_programs`. Now tracked as
-founder-blocked-backlog item 26.
+**Latest applied live**: `20260831211822_calendar_bound_fact_class` (repo: `0071`). The repo
+has migrations through `0072_birth_year_change_audit.sql`.
 
-## External service status (measured 2026-08-22, via `npm run check:integrations` — this
-worktree only; credentials are per-checkout via `.env.local`, not shared across worktrees)
+**This is not a clean "N behind."** Checked directly against the live migration ledger (by
+name, not just number, since not every applied migration's ledger name carries its repo file's
+numeric prefix): `0060`, `0066`, `0070`, and `0071` are all live, out of numeric order relative
+to what isn't — `0057` (deliberately withheld per its own header), the Security Gate 1 set
+`0061`–`0065` (deliberately founder-gated, see `docs/founder-blocked-backlog.md`), and `0072`
+(this session's own birth-year audit-trail migration) are not. `0058`/`0059`/`0067`/`0068`/`0069`
+were not individually reconciled against the live ledger this pass — flagged, not assumed either
+way; a precise migration-by-migration diff would need a dedicated pass, not a byproduct of this
+one.
 
-| Service | Status |
+## External service status
+
+**Per-checkout, not global** — `.env.local` is gitignored and not shared across worktrees, so
+this only describes what this session's own worktree can see, not the founder's real checkout or
+any deployment. Ran `npm run check:integrations` fresh this pass:
+
+| Service | Status (this worktree) |
 |---|---|
-| Supabase (anon key) | OK |
-| Supabase (secret key) | **OK — resolved 2026-08-22 ~10:15 UTC.** The "JWT issued at future" failure (open since 08-20) turned out to be a transient Supabase server-side condition, not a credential problem: the key in `.env.local` was a valid current `sb_secret_` key all along, and the identical request now returns 200 on 10/10 direct probes and 3/3 `check:integrations` runs. Investigated and ruled out before concluding transient: key format/staleness, project-URL mismatch, duplicate env definitions, shell-env override, local clock skew (server and local clocks matched to the second), supabase-js client-side validation (error string absent from the library). Everything secret-key-dependent (admin panel, notifications, account deletion, moderation) is unblocked. If it recurs, it flaps server-side — re-probe before touching credentials. |
-| Anthropic | Missing credential in this checkout specifically (not necessarily a global blocker — other worktrees have had this working per `ORYN_WORKSTREAMS.md`'s DATA-A row) |
-| Tavily | Missing credential in this checkout specifically (same caveat) |
-| College Scorecard | Missing credential (unchanged; optional) |
-| OpenAlex | OK (keyless, unchanged) |
+| Supabase (anon key) | Missing credential in this checkout |
+| Supabase (secret key) | Missing credential in this checkout |
+| Anthropic | Missing credential in this checkout |
+| Tavily | Missing credential in this checkout |
+| College Scorecard | Missing credential in this checkout |
+| OpenAlex | OK (keyless) |
 
-## Security advisors snapshot (measured 2026-08-22)
+**Separately, this session's Supabase MCP connector has real, working live access** to
+`oryn-qa-scratch` (used throughout this checkpoint's own measurements) — a different credential
+path from the app's own `.env.local`, and not evidence either way about whether the app's own
+runtime secrets are configured anywhere real. Whether the founder's actual `.env.local` (or a
+real deployment's env vars) holds working Anthropic/Tavily/Supabase-secret-key credentials is
+**not verifiable from this pass** — outside git, outside this session's tool access.
 
-No new alarming findings. Same accepted WARN/ERROR items as the 08-20 checkpoint
-(`public_profiles` SECURITY DEFINER, `pg_trgm`/`unaccent` in public schema, two
-SECURITY DEFINER functions callable by anon/authenticated, leaked-password-protection
-disabled — all previously reviewed and accepted, not re-litigated here). New since 08-20:
-**9 `_backup_*` tables** left by various sessions' before-risky-write snapshots (e.g.
-`_backup_eligible_countries_2026_08_22b`, `_backup_yokatlas_confidence_2026_08_22`), flagged
-INFO-level RLS-enabled-no-policy — expected for internal snapshot tables, but worth a cleanup
-pass once nobody needs them for rollback.
+## Security advisors snapshot (measured 2026-09-01, live via Supabase MCP `get_advisors`)
+
+Same previously-accepted WARN/ERROR items as every prior checkpoint, unchanged: `public_profiles`
+SECURITY DEFINER view, `pg_trgm`/`unaccent` extensions in the public schema, two SECURITY
+DEFINER functions callable by `authenticated`, leaked-password-protection disabled.
+
+**The INFO-level `rls_enabled_no_policy` set has changed shape, not just count.** 14 tables now
+carry it — `canonical_entity_merges`, `canonical_field_policies`, `deadline_research_queue`,
+`entity_locations`, `entity_relationships`, `entity_verification_queue`, `external_sync_jobs`,
+`global_university_discovery_queue`, `product_events`, `program_research_queue`,
+`provider_health`, `qs2027_import_staging`, `requirement_research_queue`,
+`university_profile_verification_queue` — **none of them the `_backup_*` tables the 08-22
+checkpoint named.** Those still exist separately: `supabase/migrations/0069_drop_ad_hoc_backup_tables.sql`
+is in the repo but not in the confirmed-live migration set above, and `founder-blocked-backlog.md`
+item 33 ("ten `_backup_*`/staging tables... drop them, or move them out") is still open — so this
+pass's 14-table list is a genuinely different, additional set the 08-22 checkpoint didn't
+mention, not a renaming of the same one. These are internal research/queue/tracking tables with
+no direct student-facing exposure, same risk class as the backup-table set.
 
 ## Founder actions required
 
-Only items no Claude session can do unilaterally. Full detail:
-`docs/founder-blocked-backlog.md`, `docs/FOUNDER-START-HERE.md`.
+Full detail: `docs/founder-blocked-backlog.md` (38 items) — **itself last touched 2026-08-22,
+same as the prior checkpoint**, but that's less alarming than it sounds for this specific doc:
+its contents are, by definition, things nothing but the founder's own authorization can close,
+so an unchanged file plausibly means unchanged (still-blocked) reality rather than staleness —
+confirmed for the two highest-priority items by direct re-read this pass:
 
-1. ~~Supabase secret-key failure~~ — **resolved 2026-08-22, transient server-side; no
-   founder action was needed after all** (see External service status above).
-2. Supabase dashboard → Authentication → Sign In / Providers → Email → turn **Confirm
-   email** off — still the one gate on browser-QA signup.
-3. Add billing credit to the Anthropic account (unblocks live AI-advisor testing; timing
-   optional) / resolve the Tavily plan-usage limit when discovery jobs are wanted.
-3. The remaining `founder-blocked-backlog.md` items (QA accounts, `is_admin` grant, legal
-   review, hosting/deploy choice, error-monitoring provider, scholarship-sourcing policy,
-   QS-ranking licensing position, GPA-on-public-profile decision, etc.) — unchanged, see that
-   file directly rather than a second copy going stale here.
+1. Item 36 (admin self-grant, migration `0062`) — still open, still "written, not applied."
+2. Item 30 (`public_profiles` anonymous read) — still open, same status.
+3. The remaining 36 items were not individually re-verified this pass — the file's own
+   08-22 vintage plus the reasoning above make outright staleness unlikely, but "unlikely" is
+   not "checked," and a dedicated pass through that file specifically (the same method used for
+   `docs/known-issues.md`) would be the honest way to close that gap, not this document.
+4. Confirm email still off (Supabase dashboard) is unverifiable from git/MCP — deployment/dashboard
+   state, not a code fact.
 
 ## Next phase
 
-1. ~~Canonical identity correctness (P1)~~ — **done, merged to `main`** ([PR #2](https://github.com/akirik28/ORYN/pull/2),
-   `b36214b`, merged by the founder 2026-08-22 09:38 UTC). All 23 real consumers (not 16 —
-   corrected during the work) of `lib/universities/canonical.ts` now query the live
-   `duplicate_status`/`superseded_by_id` columns directly; the static JSON snapshot and its
-   generation script are deleted. Independently re-verified before merge: lint/typecheck clean,
-   121 files/1824 tests pass, build succeeds, live DB state unchanged (canonical=1010/
-   superseded=9). Full detail: `docs/handoffs/canonical-live-column-refactor-2026-08-22.md`.
-2. ~~Opportunity eligibility gap (P3)~~ — **first pass done, merged to `main`** ([PR #3](https://github.com/akirik28/ORYN/pull/3),
-   `8f0b145`, merged 2026-08-22 09:38 UTC). `eligible_countries` moved from 366/391 null (93.6%)
-   to 352/391 (90.0%). **Real finding, not just a completeness one**: confirmed directly in
-   `lib/opportunities/matching.ts`/`lib/counselor/eligibility.ts` that an empty array already
-   means "not restricted," not "unknown" — a genuinely restricted program with no data is shown
-   as eligible to everyone today with no warning (e.g. MIT PRIMES, QuestBridge, both closed by
-   this pass). Worth counselor/PROD-B attention independent of finishing the backfill. Scoped
-   5-wave plan for the remaining 352 in `docs/research/opportunities-eligible-countries/README.md`
-   — Wave 2 (research/scholarship/fellowship/internship, ~20 records) is next, see the research
-   queue below.
-3. ~~Branch/worktree integration audit~~ — done. 55 clean, already-merged worktrees removed
-   (no branch deleted, no work lost); disk went from 9.7GB free to ~11GB with headroom held
-   steady since despite 13 concurrent sessions.
-4. ~~Migration 0056/0057 reconciliation~~ — resolved. What's left is founder-blocked-backlog
-   item 26 (authorize applying 0057), not a Claude-session task.
-5. Production readiness items unchanged (legal review, hosting, error-monitoring, CI).
+Not re-derived from this pass's own opinion — pointing at what's already decided elsewhere
+rather than inventing a new roadmap:
 
-## What the 13-session organization shipped on 2026-08-22
-
-Structure and operating rules: `docs/ORYN-ORG-STRUCTURE.md`. Per-role briefs:
-`docs/ORYN-ORG-BRIEFS.md`. Merge history: `docs/handoffs/merge-log.md`.
-
-**Live trust defects closed** — every one of these was the product asserting something its
-own data did not support, which is the strategy's first priority:
-- **Türkiye Scholarships** told students it was open to citizens of all countries while its
-  own official `.gov.tr` source separately lists Turkish citizens as *ineligible*. For a
-  product whose core audience is Turkish students, the live row said the opposite of its
-  source. Fixed and verified live.
-- **Unresearched opportunities read as unrestricted.** An empty `eligible_countries` meant
-  "no country restriction" in both the matching layer and the counselor, so a genuinely
-  restricted programme nobody had researched appeared eligible to everyone, silently.
-  Now carries an honest "not verified yet" note instead (FEAT-1 Package 1, migration 0060
-  written and **not applied** — founder item 29).
-- **Closed-cycle opportunities could appear in "Due soon"** and fire a deadline reminder —
-  the dashboard's own opportunity block already suppressed them, the deadline block did not
-  (FEAT-2 Package 2).
-- **The admission outlook told students with no essays that essays were an unknown.** For a
-  YKS/CAO-style placement system the engine correctly computed a sourced explanation, and the
-  page dropped it on the floor and rendered a US-holistic strengths/gaps/essays panel instead
-  (FEAT-1 Package 2).
-- **2,097 well-sourced programme records were wrongly blocked** by an evidence gate that
-  prose-matched attestation wording instead of judging evidence. Replaced with a structured
-  `retrieval_method`; 1,657 Canadian records ingested and verified as a result. Genuinely weak
-  evidence (McGill's archive captures) stays correctly blocked.
-
-**Known and deliberately not acted on** (founder items 27–29): ~79 opportunity rows whose
-descriptions are degraded in the founder's own source spreadsheet; 5 opportunities no
-AI-permitted fetch path can reach; migration 0060.
-
-**In flight at time of writing**: RLS/database-security verification (BUG-1), Australia
-programme catalogues (RES-R1, 37 universities at zero coverage), opportunity deadlines
-wave 2 and eligibility wave 3, territory test coverage (FEAT-2), UI defect fixes (UI-1,
-audit at `docs/ui-audit-2026-08-22.md` — the agenda for the founder's UI conversation).
+1. `docs/founder-blocked-backlog.md` items 36 and 30 (privilege escalation, anonymous profile
+   read) remain the two highest-priority founder actions on the whole list, per that file's own
+   framing, unchanged.
+2. `docs/counselor-core-plan.md`/`docs/counselor-core.md` describe the `lib/counselor/` pipeline
+   this checkpoint found doing real, live work on `/advisor` and `/dashboard` — read those
+   directly for where that effort is scoped to go next rather than a summary here.
+3. `docs/known-issues.md` (refreshed the same night as this file) is the current, checked list of
+   what's still actually wrong — read it directly rather than a summary here that will itself go
+   stale.
