@@ -6,6 +6,44 @@ competing list; oryn-d0 makes the final combined call.** **Base:** local `main`.
 fetched live today (2026-09-01) directly from YÖK Atlas's own API — not carried forward from
 memory or prior research.
 
+> **Correction (2026-09-01, same day, after the follow-on TOBB ETÜ research pass).** §3's
+> TOBB ETÜ row cited peak rank 188 (Tarih, Burslu), labeled "unfloored." That label was accurate
+> but I didn't follow through on what it meant: that specific record's `kontenjan` is **3 seats**
+> — below this very document's own §1 floor (`kontenjan ≥ 10`), the exact artifact shape §1
+> already demonstrated once (İstanbul Medipol's 3-seat rank-#1 Medicine outlier) and should have
+> applied to my own citation, not just to Medipol's. **Re-measured properly floored: TOBB ETÜ's
+> true peak is rank 3,554** (Elektrik-Elektronik Mühendisliği, Burslu, 13 seats) — roughly
+> national rank #26-27, not top-5. It does not make my printed top-25 floored table at all.
+>
+> **Tier-1 status stands, but on different grounds than originally written.** TOBB ETÜ's breadth
+> signal (#17 nationally, 28 programmes ≤50k, untouched by this correction — breadth sums across
+> every fee tier, so one thin scholarship seat can't distort it the way peak-on-one-record can) is
+> the real basis for its inclusion, the same shape as Marmara's own Tier-1 justification (breadth
+> #3, peak only #19) already was. TOBB ETÜ was never a Koç/Sabancı/Galatasaray-tier peak pick; it's
+> a strong-breadth, solid-not-extreme-peak pick, and should have been described that way from the
+> start.
+>
+> **Gebze Teknik is unaffected — checked, not assumed.** It's `DEVLET`, carries no fee-tier
+> structure at all (devlet tuition is nationally set, not per-seat — §4), so both its original
+> weak numbers (breadth #106, peak #148) were single-track measurements from the start, the same
+> clean shape as Galatasaray's or Marmara's own numbers. Nothing about this correction changes
+> §0/§2's read of it.
+>
+> **Yeditepe's peak figure (§3: "744, floored") was not independently re-verified against this
+> specific failure mode before this correction was written** — flagged rather than asserted either
+> way; will be confirmed against its own per-programme kontenjan data in the upcoming Yeditepe
+> research pass rather than carried forward unchecked.
+>
+> **The larger point, which is why this isn't just a TOBB ETÜ fix:** a vakıf university's
+> selectivity can span three orders of magnitude *within one programme* by fee tier alone — TOBB
+> ETÜ's own İktisat is rank 838 on its scholarship seat and rank 818,411 on its full-price seat,
+> found independently in the follow-on TOBB ETÜ research pass. A single peak-selectivity number
+> per institution is genuinely ambiguous for any vakıf university until it's clear which tier it
+> describes — the same class of finding as this project's Gate F report naming the placement table
+> with no reader: a number that looks like an answer but needs a stated caveat before anyone
+> designs a UI or a ranking around it. Worth the founder/oryn-d0 knowing before either happens, not
+> after.
+
 ---
 
 ## 0. The direct answer first: is 12 closer to right than it looks?
@@ -79,7 +117,7 @@ just that its presence in a "top 12" company isn't evidenced the way its neighbo
 | Galatasaray Üniversitesi | DEVLET | İstanbul | 9 | 4 | 13 programmes, **all 13** under the 50k bar — the most concentrated selectivity profile in the entire dataset outside Koç/Sabancı. French-medium, nationally recognized as one of the hardest public universities to enter. The single clearest absence. |
 | Marmara Üniversitesi | DEVLET | İstanbul | 3 | 19 | 126 programmes, 50 under 50k — broader than Ankara Üniversitesi's own footprint. Major comprehensive İstanbul devlet flagship, currently entirely absent. |
 | Yeditepe Üniversitesi | VAKIF | İstanbul | 5 | 8 (floored) | 142 programmes, 40 under 50k, best=744 (floored). Comparable scale and selectivity profile to Bahçeşehir/Bilgi but stronger on both axes than either. |
-| TOBB Ekonomi ve Teknoloji Üniversitesi | VAKIF | Ankara | 17 | 5 (unfloored, 188) | Small (62 programmes), elite technical/economics vakıf university — same profile shape as Bilkent, one tier down in scale, comparable in peak selectivity. |
+| TOBB Ekonomi ve Teknoloji Üniversitesi | VAKIF | Ankara | 17 | ~26-27 (floored, 3554 — see correction note above; originally miscited at 188 on a 3-seat record) | 22 programmes (62 raw fee-tier records), strong breadth comparable to Bilkent's — the real basis for inclusion, not peak. |
 
 Devlet/vakıf split of this add-list: 2/2 — keeps the current catalogue's own 6/6 balance intact
 rather than skewing it.

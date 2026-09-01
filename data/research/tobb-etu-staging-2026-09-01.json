@@ -46,8 +46,13 @@
   },
   "placement_signal_summary": {
     "note": "Aggregate only this pass, not all 62 individual placement-cycle rows -- see the handoff doc for why.",
-    "best_basari_sirasi": 188,
-    "best_program": "Tarih (Burslu)",
+    "best_basari_sirasi_raw": 188,
+    "best_program_raw": "Tarih (Burslu)",
+    "best_program_raw_kontenjan": 3,
+    "best_program_raw_caveat": "3-seat program, below this project's own kontenjan>=10 trustworthy-peak floor -- do not cite 188 alone as this institution's peak selectivity. See tr-university-candidate-list-2026-09-01.md's same-day correction.",
+    "best_basari_sirasi_floored": 3554,
+    "best_program_floored": "Elektrik-Elektronik Mühendisliği (Burslu)",
+    "best_program_floored_kontenjan": 13,
     "worst_filled_basari_sirasi": 1012275,
     "worst_filled_program": "Uluslararası Girişimcilik (Ücretli)",
     "spread_finding": "The same underlying programme spans an enormous selectivity range depending on fee tier -- e.g. İktisat: rank 838 on the Burslu (scholarship) seat vs rank 818,411 on the Ücretli (full-price) seat. This is the real shape of a mid-size vakif university's selectivity: a small number of genuinely elite, free seats per programme, and a much larger number of full-price seats reachable by nearly any YKS candidate. A single 'best rank' number (188, used in this project's own candidate-list ranking) is accurate but describes only the scholarship tier, not the institution as a whole -- worth keeping in mind when this university's overall selectivity is discussed with a student who may or may not be scholarship-eligible."
