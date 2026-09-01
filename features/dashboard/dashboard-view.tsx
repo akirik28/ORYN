@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
+import { getTranslations } from "next-intl/server";
 import { ArrowRight, Compass, FileText, Landmark, Minus, TrendingUp } from "lucide-react";
 import { Eyebrow } from "@/components/oryn/eyebrow";
 import { SectionHeader } from "@/components/oryn/section-header";
@@ -34,10 +35,14 @@ export interface DashboardViewProps {
   displayName: string;
   greeting: string;
   /** The student's resolved locale (lib/i18n/locale.ts). Drives the hero's own copy and
-   *  Profile dimensions; every other section on this page (This week, Due soon, One thing
-   *  not to do, University outlook, Opportunities) is out of this pass's scope and stays
-   *  English regardless — safe by default, since every component it renders through
-   *  defaults to English when no locale is passed (see components/oryn/eyebrow.tsx). */
+   *  Profile dimensions directly (both still the older inline `tr ? … : …` pattern, from
+   *  before this file's own next-intl namespace existed) — the rest of this file's static
+   *  copy (This week, Due soon, One thing not to do, University outlook, Opportunities)
+   *  now reads from the `dashboard` catalog namespace via `getTranslations`, which resolves
+   *  the request-scoped locale itself rather than needing this prop threaded to it. Both
+   *  mechanisms trace back to the same lib/i18n/locale.ts resolution, so they can't disagree
+   *  — kept as two patterns in one file rather than a forced rewrite of the working hero
+   *  code, per the project's own catalogs-for-request-tree-copy convention. */
   locale?: Locale;
   biggestGap: { dimension: ProfileDimension; score: number } | null;
   /** Per-dimension movement since the last snapshot. Replaced the single aggregate delta —
@@ -74,7 +79,7 @@ const glassCard: CSSProperties = {
   border: "1px solid rgba(255,255,255,0.65)",
 };
 
-export function DashboardView({
+export async function DashboardView({
   displayName,
   greeting,
   locale = DEFAULT_LOCALE,
@@ -90,6 +95,7 @@ export function DashboardView({
   opportunityPreview,
   opportunityMatchesRefreshed,
 }: DashboardViewProps) {
+  const t = await getTranslations("dashboard");
   const hasAiPlan = Boolean(weeklyPlan && weeklyPlan.actions.length > 0);
   const usingCounselorFallback = !hasAiPlan && counselorThisWeek.length > 0;
   // See lib/scoring/dashboard-hero.ts for why this needs three states, not two — a rich
@@ -326,10 +332,10 @@ export function DashboardView({
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] lg:gap-8">
             <section style={glassCard} className="glass-card min-w-0 p-6 md:p-7">
               <SectionHeader
-                title="Your focus this week"
+                title={t("focusThisWeek")}
                 description={
                   weeklyPlan?.plan.summary ??
-                  (usingCounselorFallback ? "Based on your verified profile data — no AI required." : undefined)
+                  (usingCounselorFallback ? t("counselorFallbackDescription") : undefined)
                 }
               />
               <div className="mt-6">
@@ -342,17 +348,17 @@ export function DashboardView({
                     icon={Compass}
                     title={
                       planError === "not_configured"
-                        ? "The AI Advisor isn't configured yet"
+                        ? t("planNotConfiguredTitle")
                         : planError === "failed"
-                          ? "We couldn't generate this week's plan"
-                          : "No weekly plan yet"
+                          ? t("planFailedTitle")
+                          : t("noPlanTitle")
                     }
                     description={
                       planError === "not_configured"
-                        ? "Add ANTHROPIC_API_KEY to enable weekly plans — see API_SETUP.md."
+                        ? t("planNotConfiguredDescription")
                         : planError === "failed"
-                          ? "Please try again."
-                          : "Add a few things to your profile and Oryn will generate your first weekly plan."
+                          ? t("planFailedDescription")
+                          : t("noPlanDescription")
                     }
                     action={planError !== "not_configured" ? <GeneratePlanButton /> : undefined}
                   />
@@ -375,8 +381,8 @@ export function DashboardView({
               </section>
 
               {upcomingDeadlines.length > 0 ? (
-                <section style={glassCard} className="glass-card-fast p-6" aria-label="Due soon">
-                  <Eyebrow>Due soon</Eyebrow>
+                <section style={glassCard} className="glass-card-fast p-6" aria-label={t("dueSoon")}>
+                  <Eyebrow locale={locale}>{t("dueSoon")}</Eyebrow>
                   <ul className="mt-5 space-y-0">
                     {upcomingDeadlines.map((deadline) => {
                       const SourceIcon = DEADLINE_SOURCE_ICONS[deadline.source];
@@ -404,7 +410,7 @@ export function DashboardView({
           </div>
 
           {avoidRecommendation ? (
-            <InsightCard variant="avoid" eyebrow="One thing not to do" title={avoidRecommendation.title}>
+            <InsightCard variant="avoid" eyebrow={t("oneThingNotToDo")} title={avoidRecommendation.title}>
               {avoidRecommendation.reason}
             </InsightCard>
           ) : null}
@@ -412,10 +418,10 @@ export function DashboardView({
           <div className="grid gap-10 md:grid-cols-2 md:gap-8">
             <section style={glassCard} className="glass-card-offset2 p-6">
               <SectionHeader
-                title="University outlook"
+                title={t("universityOutlook")}
                 action={
                   <Link href="/universities" className="text-sm text-brand-primary underline-offset-4 hover:underline">
-                    Explore
+                    {t("explore")}
                   </Link>
                 }
               />
@@ -427,7 +433,7 @@ export function DashboardView({
                       className="flex items-center justify-between gap-3 border-b border-border/60 py-3 last:border-0"
                     >
                       <span className="min-w-0 truncate text-sm text-ink-2">
-                        {target.university?.name ?? "Unknown university"}
+                        {target.university?.name ?? t("unknownUniversity")}
                       </span>
                       <OutlookBadge outlook={target.outlook} />
                     </li>
@@ -435,27 +441,27 @@ export function DashboardView({
                 </ul>
               ) : (
                 <p className="mt-5 max-w-md text-sm leading-relaxed text-ink-2">
-                  No target universities yet.{" "}
+                  {t("noTargetUniversitiesPrefix")}{" "}
                   <Link href="/universities" className="text-brand-primary underline-offset-4 hover:underline">
-                    Explore universities
+                    {t("exploreUniversities")}
                   </Link>{" "}
-                  to add your first — Oryn will start showing you where you stand.
+                  {t("noTargetUniversitiesSuffix")}
                 </p>
               )}
             </section>
 
             <section style={glassCard} className="glass-card p-6">
               <SectionHeader
-                title="Opportunities"
+                title={t("opportunities")}
                 action={
                   <Link href="/opportunities" className="text-sm text-brand-primary underline-offset-4 hover:underline">
-                    Browse
+                    {t("browse")}
                   </Link>
                 }
               />
               {!opportunityMatchesRefreshed ? (
                 <div className="mt-5">
-                  <ErrorState description="We couldn't refresh your matches just now. The list below is your last known result, not necessarily current." />
+                  <ErrorState description={t("couldntRefreshMatches")} />
                 </div>
               ) : null}
               {opportunityPreview.length > 0 ? (
@@ -464,17 +470,14 @@ export function DashboardView({
                     <li key={opp.title} className="border-b border-border/60 py-3 last:border-0">
                       <p className="text-sm leading-snug text-ink-2">{opp.title}</p>
                       <p className="mt-1.5 flex items-center gap-3">
-                        <span className="text-xs text-ink-3 tabular-nums">{opp.matchScore}% match</span>
+                        <span className="text-xs text-ink-3 tabular-nums">{t("matchPercent", { score: opp.matchScore })}</span>
                         {opp.deadline ? <DeadlineBadge date={opp.deadline} /> : null}
                       </p>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="mt-5 max-w-md text-sm leading-relaxed text-ink-2">
-                  Personalized matches appear here once your profile has enough signal for Oryn to rank them
-                  honestly.
-                </p>
+                <p className="mt-5 max-w-md text-sm leading-relaxed text-ink-2">{t("noOpportunityMatches")}</p>
               )}
             </section>
           </div>
