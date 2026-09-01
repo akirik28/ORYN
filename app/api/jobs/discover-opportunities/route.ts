@@ -20,7 +20,13 @@ export async function POST(request: NextRequest) {
   const results = await runWithTracking("discover_opportunities", async () => {
     const runs = [];
     for (const query of queries) {
-      runs.push(await discoverOpportunitiesForQuery(query));
+      const run = await discoverOpportunitiesForQuery(query);
+      runs.push(run);
+      // Once one query's run stops for budget (lib/ai/limits/job-budget.ts), every
+      // remaining query this batch would hit the same check on its very first candidate —
+      // stop starting new ones rather than spend Tavily searches on runs that can't do any
+      // AI work anyway.
+      if (run.stoppedForBudget) break;
     }
     const itemsProcessed = runs.reduce((sum, r) => sum + r.opportunitiesStored, 0);
     return { itemsProcessed, result: runs };
