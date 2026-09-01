@@ -740,7 +740,11 @@
       "prefix": "Sırala: {label}"
     },
     "saveButton": {
-      "saveToMyUniversities": "Üniversitelerime kaydet"
+      "saveToMyUniversities": "Üniversitelerime kaydet",
+      "remove": "Kaldır",
+      "removeLabel": "{name} üniversitesini listemden kaldır",
+      "removeConfirm": "{name}, durumu ve kabul görünümüyle birlikte üniversitelerinden kaldırılacak. Daha sonra tekrar kaydedebilirsin, ama durum geçmişi geri gelmez.",
+      "cancel": "Vazgeç"
     },
     "targetStatus": {
       "exploring": "Keşfediliyor",

@@ -308,7 +308,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
             {[university.city, university.country].filter(Boolean).join(", ")}
           </span>
         }
-        action={<SaveUniversityButton universityId={university.id} targetId={targetRes.data?.id ?? null} status={targetRes.data?.status ?? null} />}
+        action={<SaveUniversityButton universityId={university.id} universityName={university.name} targetId={targetRes.data?.id ?? null} status={targetRes.data?.status ?? null} />}
       />
 
       {university.institution_type ? (

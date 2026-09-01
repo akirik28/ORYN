@@ -740,7 +740,11 @@
       "prefix": "Sort: {label}"
     },
     "saveButton": {
-      "saveToMyUniversities": "Save to my universities"
+      "saveToMyUniversities": "Save to my universities",
+      "remove": "Remove",
+      "removeLabel": "Remove {name} from my universities",
+      "removeConfirm": "{name} will be removed from your universities, along with its status and outlook. You can save it again later, but the status history won't come back.",
+      "cancel": "Cancel"
     },
     "targetStatus": {
       "exploring": "Exploring",
