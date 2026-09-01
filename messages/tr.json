@@ -80,7 +80,9 @@
       "dangerZone": "Tehlikeli bölge",
       "dangerZoneDescription": "Oryn'ın senin hakkında sakladığı her şeyi indir veya hesabını kalıcı olarak sil.",
       "exportData": "Verilerimi dışa aktar",
-      "footerDisclaimer": "Kariyer profili puanları Oryn'ın kendi gelişim değerlendirmesidir, resmi bir kabul olasılığı değildir. Üniversite ve fırsat verileri için kaynak bilgisine ilgili sayfalardan bakabilirsin."
+      "footerDisclaimer": "Kariyer profili puanları Oryn'ın kendi gelişim değerlendirmesidir, resmi bir kabul olasılığı değildir. Üniversite ve fırsat verileri için kaynak bilgisine ilgili sayfalardan bakabilirsin.",
+      "languageTitle": "Dil",
+      "languageDescription": "Oryn'ın arayüzde ve danışman cevaplarında kullandığı dil. Seçimin başka bir cihazda da geçerli olur."
     },
     "birthYear": {
       "label": "Doğduğun yıl",

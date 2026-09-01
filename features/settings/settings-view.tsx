@@ -9,6 +9,7 @@ import { DisplayNameForm } from "@/features/settings/display-name-form";
 import { LocationForm } from "@/features/settings/location-form";
 import { CitizenshipForm } from "@/features/settings/citizenship-form";
 import { BirthYearForm } from "@/features/settings/birth-year-form";
+import { LanguageSwitcher } from "@/features/app-shell/language-switcher";
 import { CapacityForm } from "@/features/settings/capacity-form";
 import { VisibilityForm } from "@/features/settings/visibility-form";
 import { DeleteAccountDialog } from "@/features/settings/delete-account-dialog";
@@ -88,7 +89,18 @@ export async function SettingsView({ email, userId, profile }: SettingsViewProps
           {t("preferences")}
         </h2>
 
+        {/* Language first in Preferences, and present here at all, because the sidebar was
+            the only place to change it (founder, 2026-09-01: "ayarlar kısmında dil seçeneği
+            olmalı"). Settings is where someone goes looking for it. Same LanguageSwitcher
+            the shell uses, so there is one control and one Server Action, not a second copy
+            of the switching logic to drift. */}
         <div className="space-y-1.5">
+          <h3 className="text-sm font-medium">{t("languageTitle")}</h3>
+          <p className="text-sm text-muted-foreground">{t("languageDescription")}</p>
+          <LanguageSwitcher variant="settings" />
+        </div>
+
+        <div className="space-y-1.5 border-t border-brand-primary-border/40 pt-6">
           <h3 className="text-sm font-medium">{t("locationTitle")}</h3>
           <p className="text-sm text-muted-foreground">{t("locationDescription")}</p>
           <LocationForm initialCountry={profile?.country ?? ""} initialCity={profile?.city ?? null} />

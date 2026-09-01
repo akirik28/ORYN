@@ -28,7 +28,7 @@ import { LOCALES, LOCALE_LABELS, isLocale } from "@/lib/i18n/config";
  * drift out of sync with what the server believes. `useTransition` keeps the current
  * language legible while that happens instead of blanking the control.
  */
-export function LanguageSwitcher({ variant = "sidebar" }: { variant?: "sidebar" | "sheet" }) {
+export function LanguageSwitcher({ variant = "sidebar" }: { variant?: "sidebar" | "sheet" | "settings" }) {
   const t = useTranslations("language");
   const active = useLocale();
   const [pending, startTransition] = useTransition();

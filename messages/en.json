@@ -80,7 +80,9 @@
       "dangerZone": "Danger zone",
       "dangerZoneDescription": "Download everything Oryn has stored about you, or permanently delete your account.",
       "exportData": "Export my data",
-      "footerDisclaimer": "Career profile scores are Oryn's own development assessment, not an official admissions probability. See individual pages for source information on university and opportunity data."
+      "footerDisclaimer": "Career profile scores are Oryn's own development assessment, not an official admissions probability. See individual pages for source information on university and opportunity data.",
+      "languageTitle": "Language",
+      "languageDescription": "The language Oryn uses for the interface and for your counselor's replies. Your choice follows you to another device."
     },
     "birthYear": {
       "label": "Year you were born",
