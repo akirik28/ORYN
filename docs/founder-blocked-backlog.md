@@ -1135,6 +1135,101 @@ without picking one is not.
 
 ---
 
+## 39. Product decision: what should "Regenerate" do with a student's completed work?
+
+**Action**: decide one of three shapes for what `getOrCreateWeeklyPlan(..., {force: true})`
+does to a week's already-completed actions when a student regenerates their plan — see
+below. Everything else in this item is already fixed and pushed; this one decision is the
+only founder-gated part.
+
+**What was found, all re-verified directly against the live database, not taken from any
+report**: `lib/plan/persist.ts:70` runs
+`supabase.from("weekly_actions").delete().eq("plan_id", plan.id)` **unconditionally** before
+inserting the newly-generated actions. `weekly_plans` is upserted on `(user_id,
+week_start_date)`, so a regenerate within the same ISO week reuses the same `plan.id` — the
+delete lands on the actions the student is currently looking at, including any already marked
+`completed` with a `reflection_outcome`/`reflection_note` attached. Nothing copies that data
+anywhere first.
+
+**Why this is worse than "some history gets tidied up": it breaks the product's own central
+loop.** `lib/ai/student-context.ts:200-201` reads `weekly_actions.reflection_outcome`/
+`reflection_note` for exactly this student, and `formatContextForPrompt` (line 385) puts them
+in the advisor's prompt as `Recent weekly-action outcomes (learn from these...)`. Once the row
+is deleted, that reflection cannot reach the advisor again — not "harder to find," gone. The
+act → reflect → advisor-adjusts loop the founder's own plan names as what separates this
+product from a to-do list is destroyed by the same click that's supposed to feed it.
+
+**Live evidence this already happened, not a theoretical risk**: `product_events` holds 4
+distinct `weekly_action_completed` action ids from 2026-08-22/08-23. All 4 are confirmed
+absent from `weekly_actions` today (`select id from weekly_actions where id in (...)` returns
+zero rows) — `weekly_actions` currently holds 22 rows, every one `not_started`, zero with a
+`reflection_outcome`. The two affected accounts (`46dd6f7e…`, `e9eba798…`) each show exactly 2
+`weekly_plan` notifications, i.e. roughly two regenerations apiece. **This was not a heavy-use
+edge case** — the account that regenerated 100 times (`ccf2161e…`, the founder's own account,
+confirmed via `profiles.display_name`) has zero completions, nothing to lose. The lightest
+plausible use — complete an action, reflect, regenerate once or twice — was enough to erase it
+on two separate accounts.
+
+**The decision** (not made here — three real options, not equally simple to build):
+- **(a) Carry completed actions forward** into the regenerated plan instead of deleting them,
+  so a student's history persists across regenerations within the week.
+- **(b) Delete only non-completed actions**, leaving anything with `status = 'completed'` (and
+  its reflection) untouched by the delete.
+- **(c) Soft-delete** (a `deleted_at`/similar column) so the row and its reflection survive in
+  the table even after being removed from what's rendered, recoverable and still readable by
+  `buildStudentAdvisorContext` if that function is updated to include it.
+
+No option is applied. Whichever is chosen still needs `lib/plan/persist.ts:70`'s unconditional
+delete rewritten, which is real, scoped work, not a one-line fix.
+
+**Two related defects in the same function — already fixed and pushed, not part of the
+decision above.** Both are the same shape (an unconditional insert on every regeneration, no
+dedup, going back to the same finding that `getOrCreateWeeklyPlan` has exactly two callers —
+the regenerate action and the dashboard's own lazy first-generate — and neither is a scheduled
+job a student could be away from, so every one of these inserts happened while the student was
+looking at the page):
+
+1. **Notification spam.** `createNotification(...)` at line 118 fired on every regeneration,
+   unconditionally. Live: one account (`ccf2161e`, the founder's own) had **100** identical
+   "Your weekly plan is ready" notifications, **107 of 110 notifications in the whole table**
+   unread. Fixed by mirroring `lib/deadlines/scan.ts`'s own `notifyIfThresholdCrossed`
+   dedup-before-insert pattern, scoped to the ISO week (matching `weekly_plans`' own
+   one-row-per-week shape): skip the insert if a `weekly_plan` notification already exists for
+   this user since the week started.
+2. **`ai_recommendations` duplication reaching the advisor's prompt.** Line 105 inserted a new
+   `avoid_for_now` row on every regeneration with no dedup either. Live: 110 rows total, the
+   same 100 for the same founder account, split 99/1 across exactly 2 distinct titles (not an
+   even split — corrected after an initial "fifty each" characterization that turned out to be
+   arithmetic, not a query). `lib/ai/student-context.ts:274` reads the 15 most recent
+   `avoid_for_now` titles undeduplicated into the prompt's "don't repeat this" list — for that
+   account, most of those 15 slots were the same one or two titles repeated, degrading the
+   exact mechanism meant to stop Oryn re-suggesting something already rejected, worst for the
+   account that uses the product most. Fixed the same way as (1), at the write site in
+   `lib/plan/persist.ts`, not by touching `student-context.ts` — same file, same precedent, and
+   it avoids any change to the prompt-assembly code a separate eval-harness effort depends on
+   matching exactly.
+
+**What the two fixes above do not do, stated plainly rather than left implied**: they stop
+*new* duplicates. They do not clean up the **110 rows already in the table** — a live data
+write, so it stays out of this branch; it's a one-time cleanup someone with write access can do
+once the fix above is live: `ccf2161e` (the founder's own account) will keep showing a
+degraded, mostly-repeated "avoid for now" history to the advisor until those existing rows are
+cleared.
+
+**A separate, smaller spec gap surfaced by the same investigation**: Phase 30 names five
+background jobs including "Job D: Weekly student plan generation," but no scheduled job
+actually calls `getOrCreateWeeklyPlan` — its only two callers are both request-time (the
+regenerate action, the dashboard's lazy generate). Every plan in the table today was generated
+by a student sitting on the page, not a Monday-morning cron. Reporting this as its own gap,
+not building it: whether weekly plans should generate on a schedule (and, if so, whether *that*
+context is the one place today's notification would have been genuinely useful) is a separate
+product question from the three defects above.
+
+**Depends on**: your decision on (a)/(b)/(c) above for the deletion behavior. The two dedup
+fixes and this write-up need no decision — already on `oryn/plan-regenerate-defects-2026-09-01`.
+
+---
+
 ## Environment hazard (not a decision, but you should know)
 
 **The primary checkout `/Users/adasarpkirik/Desktop/Founder/ORYN` sits on branch
