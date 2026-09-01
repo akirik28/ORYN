@@ -2,6 +2,8 @@
 import { describe, test, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
+import { NextIntlClientProvider } from "next-intl";
+import en from "@/messages/en.json";
 
 /**
  * `setOpportunityStatus` had no test at all (docs/test-coverage-vs-spec.md), and the
@@ -26,10 +28,19 @@ afterEach(() => {
 
 const props = { opportunityId: "opp-1", officialUrl: "https://example.org", applicationUrl: null };
 
+/** The component reads its labels from the catalog now, so it needs the provider. */
+function renderActions(initialStatus: Parameters<typeof OpportunityActions>[0]["initialStatus"]) {
+  return render(
+    <NextIntlClientProvider locale="en" messages={en}>
+      <OpportunityActions {...props} initialStatus={initialStatus} />
+    </NextIntlClientProvider>,
+  );
+}
+
 describe("saving and rejecting an opportunity", () => {
   test("Save sends the saved status for this opportunity", async () => {
     vi.mocked(setOpportunityStatus).mockResolvedValue({});
-    render(<OpportunityActions {...props} initialStatus={null} />);
+    renderActions(null);
 
     fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
 
@@ -40,7 +51,7 @@ describe("saving and rejecting an opportunity", () => {
 
   test("a failed write rolls the button back instead of leaving a status nobody saved", async () => {
     vi.mocked(setOpportunityStatus).mockResolvedValue({ error: "Couldn't update that opportunity. Please try again." });
-    render(<OpportunityActions {...props} initialStatus={null} />);
+    renderActions(null);
 
     fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
 
@@ -52,7 +63,7 @@ describe("saving and rejecting an opportunity", () => {
 
   test("a successful write keeps the new status", async () => {
     vi.mocked(setOpportunityStatus).mockResolvedValue({});
-    render(<OpportunityActions {...props} initialStatus={null} />);
+    renderActions(null);
 
     fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
 
@@ -62,7 +73,7 @@ describe("saving and rejecting an opportunity", () => {
 
   test("a not-interested reason reaches the action — it is the whole point of asking", async () => {
     vi.mocked(setOpportunityStatus).mockResolvedValue({});
-    render(<OpportunityActions {...props} initialStatus={null} />);
+    renderActions(null);
 
     fireEvent.click(screen.getByRole("button", { name: /not interested/i }));
     const reason = await screen.findByText("Too expensive");
@@ -79,7 +90,7 @@ describe("saving and rejecting an opportunity", () => {
 
   test("a rejected opportunity offers an undo rather than disappearing silently", async () => {
     vi.mocked(setOpportunityStatus).mockResolvedValue({});
-    render(<OpportunityActions {...props} initialStatus="not_interested" />);
+    renderActions("not_interested");
 
     fireEvent.click(screen.getByRole("button", { name: /undo/i }));
 
