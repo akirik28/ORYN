@@ -927,6 +927,98 @@ to assign these directly once this item exists):
 one migration for age/grade, following `0060`'s exact pattern. Audit and design by FEAT-1,
 2026-08-22 — no code or migration written for this item, per CEO's explicit scope.
 
+## 38. Apply migration 0074, then the 85-record Nordic/Belgian/Austrian batch
+
+**Action, in order:**
+
+1. Apply `supabase/migrations/0074_deadline_freshness.sql` (below) to `oryn-qa-scratch`.
+2. Run the batch (terminal, from the repo root, once 0074 is live):
+   ```bash
+   npm run ingest:requirements-deadlines -- --only=nordic_requirements_ --apply
+   ```
+3. Read "The 8 `VERIFIED_HISTORICAL` records" below before step 2 — one of them is not the
+   same kind of safe as the other seven.
+
+**Status check, done today (2026-09-01), not assumed from the 2026-08-31 handoff**: re-ran
+the exact ingestion decision logic this batch will use, live against `oryn-qa-scratch` as it
+stands right now — **64 requirements + 21 deadlines = 85, identical to what the original
+vetting pass reported yesterday.** Nothing in the six new countries has become a duplicate or
+broken in the day since, despite other lanes actively writing to `universities`/
+`university_programs` in the meantime. Source: `docs/handoffs/old-corpus-vetting-2026-08-31.md`
+(the original pass — countries, source-freshness checks, human-or-script disclosure, full
+per-record reasoning) and my own re-run using the ingester's existing `--only=` filter, which
+exists for exactly this ("a batch that is still being reviewed can sit untouched while a
+separately-vetted batch is applied on its own branch").
+
+**Correcting my own first message on this**: I told oryn-a7 "86 records" before I'd read the
+handoff doc closely. That number came from nowhere — the doc says 89 (68 requirements + 21
+deadlines: 85 across the six new countries + 4 already-applied Turkey rows), and both my fresh
+count and the doc agree on 89. Saying so plainly rather than quietly using the right number.
+
+**The 4 Turkey (Ankara Üniversitesi) records are already live — nothing to do.** The handoff
+doc's "Applied" was a real write, not a pending one: checked `university_requirements` directly
+and found exactly 4 rows with `research_record_id` in `REQ-2026-08-21-{9321,9324,9325,9326}`,
+`created_at` 2026-08-31 19:11:15, matching the doc's description (standardized-test and
+minimum-grade facts) exactly. Ankara shows 7 requirements + 2 deadlines live today, not 4 — the
+other 3 requirements (`REQ-2026-08-23-ANK000{1,2,3}`) and both deadlines are from the separate
+40-institution depth pass, unrelated to this corpus, already live before this handoff ran.
+Re-running the 4 Turkey rows would duplicate them — don't include `tr_requirements_*` files in
+any re-run of this batch.
+
+**Migration 0074** — written and committed (`c4eaaea4`) but **not yet on `main`, not live**:
+confirmed `university_deadlines` has neither `last_checked_at` nor `data_status` in
+`oryn-qa-scratch` right now, and `c4eaaea4` isn't an ancestor of `origin/main`. Mirrors
+`university_requirements`'s existing two columns exactly; `last_checked_at` stays `NULL` on the
+existing 470 rows rather than backfilled, since nobody has actually rechecked them.
+
+```sql
+alter table public.university_deadlines
+  add column if not exists last_checked_at timestamptz;
+
+alter table public.university_deadlines
+  add column if not exists data_status data_status not null default 'fresh';
+
+comment on column public.university_deadlines.last_checked_at is
+  'When this deadline was last verified against its source. NULL means never checked since ingestion -- not a failure, but not a check either. Never backfill this with now(): a timestamp asserts a verification that happened.';
+
+comment on column public.university_deadlines.data_status is
+  'fresh | stale | needs_review | unavailable (Phase 29), same enum and same meanings as university_requirements.data_status. Defaults to fresh on insert, matching that table; a row is only as fresh as its last_checked_at actually says.';
+
+create index if not exists university_deadlines_staleness_idx
+  on public.university_deadlines (last_checked_at nulls first)
+  where data_status <> 'unavailable';
+```
+
+**The 8 `VERIFIED_HISTORICAL` records** (1 requirement, 7 deadlines — exact ids from today's
+re-run): `REQ-2026-08-22-FI-HEL-001`, and deadlines `DL-2026-08-22-FI-AALTO-003/004/005`,
+`DL-2026-08-22-FI-HEL-001/002`, `DL-2026-08-22-SE-LUND-001`, `DL-2026-08-22-AT-UNIVIE-001`.
+Each is a real, correctly-sourced date for a cycle that has already closed — 4 dated ones
+already past, 3 Aalto ones recurring but researched with lower confidence than this corpus's
+other recurring facts (`recurrence: recurring_annual_undated` rather than the
+`VERIFIED_RECURRING_UNDATED` label used elsewhere for facts confirmed to actually recur), and
+the 1 requirement is Helsinki's own admission-group timing.
+
+I independently re-verified — not just trusted the handoff doc's claim — that the 7 deadline
+ones are safe to insert even so: read `lib/deadlines/ingest.ts` (`NON_ACTIONABLE_VERIFICATION_STATES`),
+`lib/deadlines/upcoming.ts`, and `lib/deadlines/scan.ts` just now, and both the "Due soon"
+widget and the deadline-reminder job filter `VERIFIED_HISTORICAL` rows out explicitly — a
+student cannot see one as an upcoming or approaching deadline. Migration 0056 is what made
+this safe (before it, the table had no way to mark a row non-actionable at all).
+
+**The 1 requirement record is different, and this is the actual decision left in this item**:
+`university_requirements` has no equivalent filter — a `VERIFIED_HISTORICAL` requirement
+renders on a university page exactly like a current one, a real gap `lib/requirements/shape-audit.ts:206-212`
+already names. The ingestion script does not exclude it (that state was refused at
+ingestion-time before 0056; it no longer is). Two honest options, not a formality: (a) run the
+full batch including this one row and accept it displays without a "may be outdated"
+distinction until that filter is built (small, separately scoped — mirroring the deadlines-side
+fix this same item just applied), or (b) run the batch, then
+`delete from public.university_requirements where research_record_id = 'REQ-2026-08-22-FI-HEL-001';`
+to hold it out until the display gap closes. Either is defensible; leaving it in silently
+without picking one is not.
+
+**Depends on**: your go-ahead to run both steps against live data — same posture as items 26/29.
+
 ---
 
 ## Environment hazard (not a decision, but you should know)
