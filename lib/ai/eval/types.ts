@@ -85,8 +85,18 @@ export interface EvalCaseResult {
   judgeUsage: { inputTokens: number; outputTokens: number };
 }
 
+/** A case that threw instead of producing a result. Kept as data rather than allowed to
+ * abort the run — see runEval's own comment on why. */
+export interface EvalCaseFailure {
+  case: EvalCase;
+  message: string;
+}
+
 export interface EvalReport {
   results: EvalCaseResult[];
+  /** Cases that threw. A run with failures is still a usable report for every case that
+   * succeeded — and every one of those was paid for. */
+  failures: EvalCaseFailure[];
   /** Cases with at least one deterministic finding — the thing this harness exists to
    * catch even when nobody reviews the qualitative scores. */
   deterministicFailureCount: number;

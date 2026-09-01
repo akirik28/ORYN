@@ -18,7 +18,7 @@ import {
   REGRESSION_UNASSESSED_LABELS_EN,
   REGRESSION_UNASSESSED_LABELS_TR,
 } from "./fixtures";
-import type { EvalCase, EvalCaseResult, EvalReport } from "./types";
+import type { EvalCase, EvalCaseFailure, EvalCaseResult, EvalReport } from "./types";
 
 /**
  * Orchestrates one (fixture x target x locale) case: builds the exact prompt the real
@@ -163,10 +163,30 @@ export async function runEvalCase(provider: AIProvider, evalCase: EvalCase, opti
   return { case: evalCase, responseText: text, deterministicFindings, judge, targetUsage, judgeUsage };
 }
 
+/**
+ * Runs every case, and **never lets one failure destroy the run.**
+ *
+ * Before 2026-09-02 this loop was a bare `results.push(await runEvalCase(...))`. A live run
+ * threw on a weekly_plan case — the model omitted a required field twice, which
+ * anthropic-provider.ts's own retry comment documents as a known, pre-existing model
+ * behaviour — and the exception took the whole report with it: every case that had already
+ * succeeded, every judge score already paid for, and the usage total. Roughly $0.20-0.30 of
+ * real spend produced nothing, and the operator could not even say how much precisely,
+ * because the totals are computed at the end.
+ *
+ * A failing case is now data. The run continues, the report carries what succeeded, and the
+ * caller decides whether a partial report is worth reading — which it usually is, since the
+ * expensive part already happened.
+ */
 export async function runEval(provider: AIProvider, cases: readonly EvalCase[], options: { includeJudge: boolean }): Promise<EvalReport> {
   const results: EvalCaseResult[] = [];
+  const failures: EvalCaseFailure[] = [];
   for (const evalCase of cases) {
-    results.push(await runEvalCase(provider, evalCase, options));
+    try {
+      results.push(await runEvalCase(provider, evalCase, options));
+    } catch (error) {
+      failures.push({ case: evalCase, message: error instanceof Error ? error.message : String(error) });
+    }
   }
   const totalUsage = results.reduce(
     (sum, r) => ({
@@ -177,6 +197,7 @@ export async function runEval(provider: AIProvider, cases: readonly EvalCase[], 
   );
   return {
     results,
+    failures,
     deterministicFailureCount: results.filter((r) => r.deterministicFindings.length > 0).length,
     totalUsage,
   };

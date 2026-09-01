@@ -111,7 +111,16 @@ async function main() {
     }
   }
 
-  console.log(`\n${report.deterministicFailureCount} of ${report.results.length} cases had a deterministic finding.`);
+  for (const failure of report.failures) {
+    console.log(`\n[ERROR] ${failure.case.target}/${failure.case.locale}/${failure.case.fixture.id} — did not complete: ${failure.message}`);
+  }
+
+  if (report.failures.length > 0) {
+    console.log(
+      `\n${report.failures.length} of ${ALL_CASES.length} cases did not complete. The rest are below and were still paid for — a partial report is a real report.`,
+    );
+  }
+  console.log(`\n${report.deterministicFailureCount} of ${report.results.length} completed cases had a deterministic finding.`);
   console.log(`Actual usage this run: ${report.totalUsage.inputTokens} input tokens, ${report.totalUsage.outputTokens} output tokens.`);
 }
 
