@@ -33,9 +33,11 @@ const MAPS_WITH_ACCESSORS = [
   "OPEN_TO_LABELS",
   "SUBJECT_LABELS",
   "REQUIREMENT_CATEGORY_LABELS",
+  "SEARCH_RESULT_TYPE_LABELS",
 ] as const;
 
-const LOCALE_AWARE = /useTranslations|getTranslations|locale === "tr"|getLegalCopy|dimensionLabel|evidenceStateLabel|openToLabel|subjectLabel|requirementCategoryLabel/;
+const LOCALE_AWARE =
+  /useTranslations|getTranslations|locale === "tr"|getLegalCopy|dimensionLabel|evidenceStateLabel|openToLabel|subjectLabel|requirementCategoryLabel|searchResultTypeLabel/;
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {

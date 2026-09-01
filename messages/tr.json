@@ -939,5 +939,27 @@
       "visitOfficialPage": "Resmi sayfayı ziyaret et",
       "any": "herhangi"
     }
+  },
+  "search": {
+    "view": {
+      "title": "Arama",
+      "placeholder": "Üniversitelerde, fırsatlarda, profilinde ara…",
+      "inputAriaLabel": "Oryn'de ara",
+      "clearAriaLabel": "Aramayı temizle",
+      "keepTyping": "Yazmaya devam et — arama en az 2 karakter gerektiriyor.",
+      "noResultsTitle": "Sonuç yok",
+      "noResultsFor": "\"{query}\" ile eşleşen bir şey bulunamadı."
+    },
+    "commandPalette": {
+      "barLabel": "Üniversite, program, yarışma ara…",
+      "barSrOnly": "Oryn'de ara. Kısayol: Command K",
+      "iconAriaLabel": "Ara",
+      "dialogTitle": "Oryn'de ara",
+      "inputPlaceholder": "Üniversitelerde, fırsatlarda, profilinde ara…",
+      "searchFailed": "Arama şu anda kullanılamıyor. Lütfen tekrar deneyin.",
+      "keepTyping": "Yazmaya devam et — en az 2 karakter.",
+      "emptyPrompt": "Üniversitelerde, fırsatlarda, başvurularda ve profilindeki her şeyde ara.",
+      "noResultsFor": "\"{query}\" için sonuç yok."
+    }
   }
 }

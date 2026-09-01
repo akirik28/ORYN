@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { Search, Loader2, CornerDownLeft } from "lucide-react";
 import { Dialog, DialogPortal, DialogOverlay } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { searchAction } from "@/app/(app)/search/actions";
-import { SEARCH_RESULT_TYPE_LABELS, type SearchResult, type SearchResultType } from "@/lib/search/types";
+import { searchResultTypeLabel, type SearchResult, type SearchResultType } from "@/lib/search/types";
+import type { Locale } from "@/lib/i18n/config";
 
 const GROUP_ORDER: SearchResultType[] = [
   "university",
@@ -34,6 +36,8 @@ const GROUP_ORDER: SearchResultType[] = [
  */
 export function CommandPalette({ variant = "icon" }: { variant?: "icon" | "bar" } = {}) {
   const router = useRouter();
+  const t = useTranslations("search.commandPalette");
+  const locale = useLocale() as Locale;
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -140,7 +144,7 @@ export function CommandPalette({ variant = "icon" }: { variant?: "icon" | "bar" 
           }
         >
           <Search className="size-4 shrink-0" />
-          <span className="hidden truncate text-[13px] sm:inline">Search universities, programs, competitions…</span>
+          <span className="hidden truncate text-[13px] sm:inline">{t("barLabel")}</span>
           {/* Decorative: the shortcut is announced by the button's own accessible name
               below, so leaving this in the a11y tree would just read "K" twice. */}
           <kbd
@@ -149,14 +153,14 @@ export function CommandPalette({ variant = "icon" }: { variant?: "icon" | "bar" 
           >
             ⌘K
           </kbd>
-          <span className="sr-only">Search Oryn. Shortcut: Command K</span>
+          <span className="sr-only">{t("barSrOnly")}</span>
         </DialogPrimitive.Trigger>
       ) : (
         <DialogPrimitive.Trigger
           render={
             <button
               type="button"
-              aria-label="Search"
+              aria-label={t("iconAriaLabel")}
               className="inline-flex size-8 items-center justify-center rounded-lg text-ink-3 transition-colors hover:bg-muted hover:text-ink-1 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
             />
           }
@@ -169,7 +173,7 @@ export function CommandPalette({ variant = "icon" }: { variant?: "icon" | "bar" 
         <DialogPrimitive.Popup
           className="fixed top-24 left-1/2 z-50 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 overflow-hidden rounded-2xl border bg-popover text-popover-foreground shadow-2xl outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0"
         >
-          <DialogPrimitive.Title className="sr-only">Search Oryn</DialogPrimitive.Title>
+          <DialogPrimitive.Title className="sr-only">{t("dialogTitle")}</DialogPrimitive.Title>
           <div className="flex items-center gap-2.5 border-b px-4">
             {isPending ? (
               <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />
@@ -181,7 +185,7 @@ export function CommandPalette({ variant = "icon" }: { variant?: "icon" | "bar" 
               value={query}
               onChange={(e) => onQueryChange(e.target.value)}
               onKeyDown={onKeyDown}
-              placeholder="Search universities, opportunities, your profile…"
+              placeholder={t("inputPlaceholder")}
               className="h-12 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />
             <kbd className="hidden shrink-0 rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground sm:inline">
@@ -191,22 +195,18 @@ export function CommandPalette({ variant = "icon" }: { variant?: "icon" | "bar" 
 
           <div className="max-h-96 overflow-y-auto py-2">
             {searchFailed ? (
-              <p className="px-4 py-6 text-center text-sm text-muted-foreground">
-                Search isn&apos;t available right now. Please try again.
-              </p>
+              <p className="px-4 py-6 text-center text-sm text-muted-foreground">{t("searchFailed")}</p>
             ) : query.trim().length > 0 && query.trim().length < 2 ? (
-              <p className="px-4 py-6 text-center text-sm text-muted-foreground">Keep typing — at least 2 characters.</p>
+              <p className="px-4 py-6 text-center text-sm text-muted-foreground">{t("keepTyping")}</p>
             ) : query.trim().length === 0 ? (
-              <p className="px-4 py-6 text-center text-sm text-muted-foreground">
-                Search universities, opportunities, applications, and everything in your profile.
-              </p>
+              <p className="px-4 py-6 text-center text-sm text-muted-foreground">{t("emptyPrompt")}</p>
             ) : flatResults.length === 0 && !isPending ? (
-              <p className="px-4 py-6 text-center text-sm text-muted-foreground">No results for &quot;{query}&quot;.</p>
+              <p className="px-4 py-6 text-center text-sm text-muted-foreground">{t("noResultsFor", { query })}</p>
             ) : (
               grouped.map((group) => (
                 <div key={group.type} className="px-2 py-1">
                   <p className="px-2 py-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                    {SEARCH_RESULT_TYPE_LABELS[group.type]}
+                    {searchResultTypeLabel(group.type, locale)}
                   </p>
                   {group.items.map((item) => {
                     const index = flatResults.indexOf(item);
