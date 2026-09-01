@@ -154,6 +154,12 @@ const strings = untranslated.reduce((sum, f) => sum + f.count, 0);
 console.log("\nComponents");
 console.log(`  ${aware} of ${files.length} .tsx files under ${SCAN_DIRS.join("/ and ")}/ are locale-aware`);
 console.log(`  ${untranslated.length} untouched student-facing files carry >= ${strings} untranslated user-facing strings (floor, see header)`);
+// Says ".tsx" out loud on the line people quote. On 2026-09-01 this section reported zero
+// while features/profile/field-config.ts -- a .ts file holding every achievement form's
+// labels, placeholders and select options -- was entirely English, because `walk` only ever
+// collected .tsx. "Zero" was true of what was scanned and false of the product; a headline
+// that cannot be quoted without its scope is a headline that will be.
+console.log(`  scope: .tsx only — see "Data modules" below for the .ts files this cannot see`);
 console.log(`  ${partlyDone.length} locale-aware files still contain raw JSX text — need a human to look; not counted above (see header)`);
 console.log("\n  Largest untouched blocks:");
 for (const { file, count } of untranslated.slice(0, 10)) console.log(`    ${String(count).padStart(3)}  ${file}`);
@@ -178,6 +184,61 @@ for (const { file, count } of untranslated) {
 console.log("\n  By area:");
 for (const [area, { files: n, strings: s }] of [...byArea].sort((a, b) => b[1].strings - a[1].strings).slice(0, 12)) {
   console.log(`    ${String(s).padStart(3)} strings  ${String(n).padStart(2)} files  ${area}`);
+}
+
+/**
+ * The blind spot that made the section above read "0" on 2026-09-01.
+ *
+ * Copy does not only live in JSX. `features/profile/field-config.ts` defines every
+ * achievement form -- field labels, placeholders, help text, select options -- as plain
+ * object literals in a .ts file, and `lib/scoring/completeness.ts` defines the profile
+ * checklist whose labels become the dashboard's top three actions for a new student. Neither
+ * is a .tsx file, so `walk` never opened them and the component scan called the product
+ * finished while the first form a Turkish student fills in was entirely English.
+ *
+ * Reported as its own class, never folded into the count above, because this pattern cannot
+ * be measured the same way: a .ts file's `message:` may be a toast a student reads or a log
+ * line nobody sees, and only reading the consumer settles it. So this is a candidate list for
+ * a human, and the honest verb is "look at these", not "translate these" -- lib/providers,
+ * lib/jobs and lib/acquisition legitimately hold English operator strings that must stay.
+ *
+ * Ranked by count, which is a proxy for how much a file would cost to fix, not for whether
+ * it should be. Files already carrying a locale branch are excluded: tuition-format.ts holds
+ * five English `note:`s beside their five Turkish counterparts and is finished.
+ */
+const DATA_MODULE_DIRS = ["app", "features", "lib"];
+const DATA_MODULE_STRING = /(?:label|placeholder|hint|help|title|description|heading|summary|note|cta):\s*"[A-Z][^"]{3,}"/g;
+
+function walkTs(dir: string, out: string[] = []): string[] {
+  for (const entry of readdirSync(dir)) {
+    const full = join(dir, entry);
+    if (statSync(full).isDirectory()) walkTs(full, out);
+    else if (entry.endsWith(".ts") && !entry.endsWith(".d.ts") && !entry.endsWith(".test.ts")) out.push(full);
+  }
+  return out;
+}
+
+const dataModules: Array<{ file: string; count: number }> = [];
+for (const file of DATA_MODULE_DIRS.flatMap((d) => walkTs(join(ROOT, d)))) {
+  const rel = relative(ROOT, file);
+  if (NOT_STUDENT_FACING.some((re) => re.test(`/${rel}`))) continue;
+  if (rel.includes("__tests__") || rel.startsWith("lib/dev/")) continue;
+  const source = readFileSync(file, "utf8");
+  if (LOCALE_AWARE.test(source)) continue;
+  const count = source.match(DATA_MODULE_STRING)?.length ?? 0;
+  if (count > 0) dataModules.push({ file: rel, count });
+}
+dataModules.sort((a, b) => b.count - a.count);
+
+console.log("\nData modules (.ts, not scanned above)");
+if (dataModules.length === 0) {
+  console.log("  none — no locale-blind .ts file carries user-facing-shaped literals");
+} else {
+  console.log(`  ${dataModules.length} locale-blind .ts files carry user-facing-shaped literals — candidates, not a count`);
+  console.log("  (a `message:` here may be a student's toast or an operator's log line; read the");
+  console.log("   consumer before treating one as a gap. Confirmed live: field-config.ts feeds every");
+  console.log("   achievement form; completeness.ts feeds the dashboard's top three actions.)");
+  for (const { file, count } of dataModules.slice(0, 12)) console.log(`    ${String(count).padStart(3)}  ${file}`);
 }
 
 const meta = scanMetadata();
