@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,8 @@ import { changePassword } from "@/app/(app)/settings/actions";
  * weaken anything.
  */
 export function PasswordForm() {
+  const t = useTranslations("common");
+  const tPassword = useTranslations("settings.password");
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -30,7 +33,7 @@ export function PasswordForm() {
   function submit() {
     setError(null);
     if (password !== confirm) {
-      setError("Those two passwords don't match.");
+      setError(tPassword("mismatchError"));
       return;
     }
     startTransition(async () => {
@@ -52,9 +55,9 @@ export function PasswordForm() {
     return (
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="outline" onClick={() => { setOpen(true); setSaved(false); }}>
-          Change password
+          {tPassword("changePassword")}
         </Button>
-        {saved ? <p className="text-sm text-success">Password updated.</p> : null}
+        {saved ? <p className="text-sm text-success">{tPassword("updated")}</p> : null}
       </div>
     );
   }
@@ -62,7 +65,7 @@ export function PasswordForm() {
   return (
     <div className="space-y-3">
       <div className="space-y-1.5">
-        <Label htmlFor="new-password">New password</Label>
+        <Label htmlFor="new-password">{tPassword("newPasswordLabel")}</Label>
         <Input
           id="new-password"
           type="password"
@@ -70,10 +73,10 @@ export function PasswordForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        <p className="text-xs text-ink-3">At least 8 characters, with a letter and a number.</p>
+        <p className="text-xs text-ink-3">{tPassword("requirements")}</p>
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="confirm-password">Confirm new password</Label>
+        <Label htmlFor="confirm-password">{tPassword("confirmLabel")}</Label>
         <Input
           id="confirm-password"
           type="password"
@@ -85,14 +88,14 @@ export function PasswordForm() {
       {error ? <p className="text-sm text-error">{error}</p> : null}
       <div className="flex items-center gap-2">
         <Button onClick={submit} disabled={isPending || password.length === 0 || confirm.length === 0}>
-          {isPending ? <Loader2 className="size-4 animate-spin" /> : "Update password"}
+          {isPending ? <Loader2 className="size-4 animate-spin" /> : tPassword("updateButton")}
         </Button>
         <Button
           variant="outline"
           disabled={isPending}
           onClick={() => { setOpen(false); setPassword(""); setConfirm(""); setError(null); }}
         >
-          Cancel
+          {t("cancel")}
         </Button>
       </div>
     </div>

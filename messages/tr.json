@@ -56,6 +56,105 @@
     "save": "Kaydet",
     "selectPlaceholder": "Seç…"
   },
+  "settings": {
+    "view": {
+      "description": "Hesabını ve tercihlerini yönet.",
+      "account": "Hesap",
+      "signedInAs": "Şu hesapla oturum açtın",
+      "password": "Şifre",
+      "signOut": "Çıkış yap",
+      "yourRecord": "Kaydın",
+      "yourRecordDescription": "Her şeyi tek tek yazmak yerine bir CV'den içe aktar. Oryn ne bulduğunu gösterir ve yalnızca onayladığını ekler.",
+      "scanCv": "CV Tara",
+      "preferences": "Tercihler",
+      "locationTitle": "Konum",
+      "locationDescription": "Yakındaki fırsatları önceliklendirmek için kullanılır. Aşağıda açarsan ülke herkese açık profilinin bir parçası olur; şehir hiçbir zaman herkese açık gösterilmez.",
+      "ageTitle": "Yaş",
+      "ageDescription": "Çoğu yarışma ve yaz programının bir yaş sınırı var. Bu bilgi olmadan Oryn, uygun olup olmadığını söylemek yerine bunları doğrulanmamış olarak gösterir.",
+      "citizenshipTitle": "Vatandaşlık",
+      "citizenshipDescription": "Yukarıdaki konumundan farklı — vatandaşlıkla sınırlı fırsatları kontrol etmek için kullanılır. İsteğe bağlı; geçerli olan kadarını ekle.",
+      "studyCapacityTitle": "Çalışma kapasitesi",
+      "studyCapacityDescription": "Haftalık planın gerçekçi olarak yapabileceklerinle eşleşmesine yardımcı olur.",
+      "visibilityTitle": "Görünürlük",
+      "visibilityDescription": "Diğer Oryn öğrencilerinin senin hakkında ne görebileceğini kontrol et.",
+      "dangerZone": "Tehlikeli bölge",
+      "dangerZoneDescription": "Oryn'ın senin hakkında sakladığı her şeyi indir veya hesabını kalıcı olarak sil.",
+      "exportData": "Verilerimi dışa aktar",
+      "footerDisclaimer": "Kariyer profili puanları Oryn'ın kendi gelişim değerlendirmesidir, resmi bir kabul olasılığı değildir. Üniversite ve fırsat verileri için kaynak bilgisine ilgili sayfalardan bakabilirsin."
+    },
+    "birthYear": {
+      "label": "Doğduğun yıl",
+      "notSet": "Belirtilmedi. Yaş sınırı olan programlar, onaylı ya da onaysız değil, doğrulanmamış olarak gösterilecek — çünkü Oryn yaşını tahmin etmez.",
+      "helper": "Programlardaki ve yarışmalardaki yaş sınırlarını kontrol etmek için kullanılır. Yıl yeterli — Oryn tam doğum tarihini asla sormaz.",
+      "saved": "Kaydedildi"
+    },
+    "citizenship": {
+      "notStated": "Belirtilmedi. Oryn, vatandaşlıkla sınırlı fırsatlar için uygunluğu onaylı ya da onaysız değil, doğrulanmamış olarak gösterecek.",
+      "addLabel": "Bir vatandaşlık ekle",
+      "placeholder": "ör. Türkiye",
+      "removeAriaLabel": "{country} ülkesini kaldır",
+      "saved": "Kaydedildi"
+    },
+    "capacity": {
+      "timeBudgetLabel": "Okul dışında haftalık ayırabileceğin zaman",
+      "notSet": "Belirtilmedi",
+      "timeBudgetOptions": {
+        "under2h": "2 saatten az",
+        "between2And5h": "2–5 saat",
+        "between5And10h": "5–10 saat",
+        "over10h": "10+ saat"
+      },
+      "timeBudgetHelper": "Haftalık planını oluştururken kullanılır, böylece öneriler gerçekten ayırabildiğin zamana uyar.",
+      "busyModeLabel": "Şu anda yoğun bir dönemdeyim (sınavlar, son teslim tarihleri)",
+      "until": "Bitiş tarihi",
+      "busyModeHelper": "Bu geçene kadar haftalık planın senden istediklerini azaltır.",
+      "saved": "Kaydedildi"
+    },
+    "deleteAccount": {
+      "trigger": "Hesabı sil",
+      "title": "Hesabını sil",
+      "description": "Bu, profilini, başarılarını, kanıt dosyalarını, konuşmalarını ve geri kalan her şeyi kalıcı olarak siler. Bu işlem geri alınamaz.",
+      "confirmLabel": "Onaylamak için DELETE yaz",
+      "permanentlyDelete": "Kalıcı olarak sil"
+    },
+    "displayName": {
+      "label": "Görünen ad",
+      "saved": "Kaydedildi"
+    },
+    "password": {
+      "changePassword": "Şifreyi değiştir",
+      "updated": "Şifre güncellendi.",
+      "mismatchError": "Bu iki şifre eşleşmiyor.",
+      "newPasswordLabel": "Yeni şifre",
+      "requirements": "En az 8 karakter, bir harf ve bir rakam içermeli.",
+      "confirmLabel": "Yeni şifreyi onayla",
+      "updateButton": "Şifreyi güncelle"
+    },
+    "visibility": {
+      "publicProfileTitle": "Herkese açık profil",
+      "publicProfileDescription": "Projelerini, başarılarını ve becerilerini gösteren paylaşılabilir bir profil göster. Varsayılan olarak kapalı — notlar ve okul bilgileri asla dahil edilmez.",
+      "on": "Açık",
+      "off": "Kapalı",
+      "lookingForLabel": "Şu anda aradığın (isteğe bağlı)",
+      "lookingForPlaceholder": "ör. Araştırma ortakları",
+      "lookingForPresets": {
+        "researchCollaborators": "Araştırma ortakları",
+        "internshipNextSummer": "Gelecek yaz için staj",
+        "competitionTeammates": "Yarışma takım arkadaşları",
+        "startupCoFounders": "Girişim kurucu ortakları",
+        "mentorship": "Mentorluk"
+      },
+      "copyLink": "Bağlantıyı kopyala",
+      "copied": "Kopyalandı",
+      "visibleToStudents": "Diğer oturum açmış Oryn öğrencilerine görünür, açık web'e değil.",
+      "saved": "Kaydedildi"
+    },
+    "location": {
+      "countryLabel": "Ülke",
+      "cityLabel": "Şehir (isteğe bağlı)",
+      "saved": "Kaydedildi"
+    }
+  },
   "profile": {
     "backToProfile": "Profile geri dön",
     "page": {

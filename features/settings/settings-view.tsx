@@ -1,3 +1,4 @@
+import { getTranslations, getLocale } from "next-intl/server";
 import { Download, FileUp, LogOut } from "lucide-react";
 import { signOut } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
@@ -33,85 +34,81 @@ export interface SettingsViewProps {
 const cardClassName = "glass-card space-y-6 rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-7";
 const cardClassNameOffset = "glass-card-offset space-y-6 rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-7";
 
-export function SettingsView({ email, userId, profile }: SettingsViewProps) {
+export async function SettingsView({ email, userId, profile }: SettingsViewProps) {
+  const t = await getTranslations("settings.view");
+  const tNav = await getTranslations("nav");
+  const locale = await getLocale();
   return (
     <div className="max-w-xl space-y-8">
-      <PageHeader title="Settings" description="Manage your account and preferences." />
+      <PageHeader title={tNav("settings")} description={t("description")} />
 
       <section className={cardClassName}>
-        <h2 className="text-[13px] font-bold tracking-[0.08em] text-[#AAAABC] uppercase">Account</h2>
+        <h2 lang={locale} className="text-[13px] font-bold tracking-[0.08em] text-[#AAAABC] uppercase">
+          {t("account")}
+        </h2>
 
         {/* The email was previously an unlabelled grey line, which reads as decoration.
             A student needs to be able to answer "which account am I actually in?" —
             especially after switching between a school and a personal address. */}
         <div className="rounded-xl bg-surface-tint px-4 py-3">
-          {/* The one uppercase label on this page where Turkish case-folding actually
-              diverges (contains "i") — migrated to the shared Eyebrow rather than
-              translated in place, since the rest of this page stays English for now;
-              Eyebrow's default locale="en" is what stops "Signed in as" from folding to
-              "SİGNED İN AS" (dotted İ) under a Turkish document lang. */}
-          <Eyebrow rule={false}>Signed in as</Eyebrow>
+          {/* Was a hand-fixed English-only workaround (Eyebrow's own lang handling,
+              default locale="en") specifically because this page hadn't been translated
+              yet — now that it is, pass the real locale through instead of relying on
+              the default. */}
+          <Eyebrow rule={false} locale={locale}>{t("signedInAs")}</Eyebrow>
           <p className="mt-1 text-sm break-all text-ink-1">{email}</p>
         </div>
 
         <DisplayNameForm initialName={profile?.display_name ?? ""} />
 
         <div className="space-y-1.5">
-          <h3 className="text-sm font-medium">Password</h3>
+          <h3 className="text-sm font-medium">{t("password")}</h3>
           <PasswordForm />
         </div>
 
         <form action={signOut}>
           <Button type="submit" variant="outline">
-            <LogOut className="size-4" /> Sign out
+            <LogOut className="size-4" /> {t("signOut")}
           </Button>
         </form>
       </section>
 
       <section className="space-y-3">
         <div>
-          <h2 className="font-semibold">Your record</h2>
-          <p className="mt-1 text-sm leading-relaxed text-ink-2">
-            Import from a CV instead of typing everything in. Oryn shows you what it found and
-            adds only what you confirm.
-          </p>
+          <h2 className="font-semibold">{t("yourRecord")}</h2>
+          <p className="mt-1 text-sm leading-relaxed text-ink-2">{t("yourRecordDescription")}</p>
         </div>
         <ButtonLink href="/profile/import" variant="outline">
-          <FileUp className="size-4" /> Scan a CV
+          <FileUp className="size-4" /> {t("scanCv")}
         </ButtonLink>
       </section>
 
       <section className={cardClassNameOffset}>
-        <h2 className="text-[13px] font-bold tracking-[0.08em] text-[#AAAABC] uppercase">Preferences</h2>
+        <h2 lang={locale} className="text-[13px] font-bold tracking-[0.08em] text-[#AAAABC] uppercase">
+          {t("preferences")}
+        </h2>
 
         <div className="space-y-1.5">
-          <h3 className="text-sm font-medium">Location</h3>
-          <p className="text-sm text-muted-foreground">
-            Used to prioritize nearby opportunities. Country is part of your public profile if you turn that on below; city is never shown publicly.
-          </p>
+          <h3 className="text-sm font-medium">{t("locationTitle")}</h3>
+          <p className="text-sm text-muted-foreground">{t("locationDescription")}</p>
           <LocationForm initialCountry={profile?.country ?? ""} initialCity={profile?.city ?? null} />
         </div>
 
         <div className="space-y-1.5 border-t border-brand-primary-border/40 pt-6">
-          <h3 className="text-sm font-medium">Age</h3>
-          <p className="text-sm text-muted-foreground">
-            Most competitions and summer programs have an age limit. Without this, Oryn shows them as
-            unverified instead of telling you whether you qualify.
-          </p>
+          <h3 className="text-sm font-medium">{t("ageTitle")}</h3>
+          <p className="text-sm text-muted-foreground">{t("ageDescription")}</p>
           <BirthYearForm initialBirthYear={profile?.birth_year ?? null} />
         </div>
 
         <div className="space-y-1.5 border-t border-brand-primary-border/40 pt-6">
-          <h3 className="text-sm font-medium">Citizenship</h3>
-          <p className="text-sm text-muted-foreground">
-            Different from your location above — used to check citizenship-restricted opportunities. Optional; add as many as apply.
-          </p>
+          <h3 className="text-sm font-medium">{t("citizenshipTitle")}</h3>
+          <p className="text-sm text-muted-foreground">{t("citizenshipDescription")}</p>
           <CitizenshipForm initialCitizenships={profile?.citizenship_countries ?? []} />
         </div>
 
         <div className="space-y-1.5 border-t border-brand-primary-border/40 pt-6">
-          <h3 className="text-sm font-medium">Study capacity</h3>
-          <p className="text-sm text-muted-foreground">Helps the weekly plan match what you can realistically do.</p>
+          <h3 className="text-sm font-medium">{t("studyCapacityTitle")}</h3>
+          <p className="text-sm text-muted-foreground">{t("studyCapacityDescription")}</p>
           <CapacityForm
             initialTimeBudget={profile?.weekly_time_budget ?? null}
             initialBusyMode={profile?.busy_mode ?? false}
@@ -120,8 +117,8 @@ export function SettingsView({ email, userId, profile }: SettingsViewProps) {
         </div>
 
         <div className="space-y-1.5 border-t border-brand-primary-border/40 pt-6">
-          <h3 className="text-sm font-medium">Visibility</h3>
-          <p className="text-sm text-muted-foreground">Control what other Oryn students can see about you.</p>
+          <h3 className="text-sm font-medium">{t("visibilityTitle")}</h3>
+          <p className="text-sm text-muted-foreground">{t("visibilityDescription")}</p>
           <VisibilityForm
             userId={userId}
             initialIsPublic={profile?.is_public ?? false}
@@ -136,23 +133,20 @@ export function SettingsView({ email, userId, profile }: SettingsViewProps) {
         className="space-y-3 rounded-2xl p-6 md:p-7"
         style={{ background: "rgba(201,53,53,0.04)", border: "1px solid rgba(201,53,53,0.15)" }}
       >
-        <h2 className="text-[13px] font-bold tracking-[0.08em] text-[#C93535] uppercase">Danger zone</h2>
-        <p className="text-sm text-muted-foreground">
-          Download everything Oryn has stored about you, or permanently delete your account.
-        </p>
+        <h2 lang={locale} className="text-[13px] font-bold tracking-[0.08em] text-[#C93535] uppercase">
+          {t("dangerZone")}
+        </h2>
+        <p className="text-sm text-muted-foreground">{t("dangerZoneDescription")}</p>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" render={<a href="/api/export-data" />} nativeButton={false}>
-            <Download className="size-4" /> Export my data
+            <Download className="size-4" /> {t("exportData")}
           </Button>
           <DeleteAccountDialog />
         </div>
       </section>
 
       <section className="space-y-2 border-t pt-6 text-xs text-muted-foreground">
-        <p>
-          Career profile scores are Oryn&apos;s own development assessment, not an official admissions
-          probability. See individual pages for source information on university and opportunity data.
-        </p>
+        <p>{t("footerDisclaimer")}</p>
       </section>
     </div>
   );

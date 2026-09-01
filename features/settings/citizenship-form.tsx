@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,8 @@ import { updateCitizenship } from "@/app/(app)/settings/actions";
  * citizenship-restricted opportunities as unknown-eligibility either way, not blocked on
  * this being filled in. */
 export function CitizenshipForm({ initialCitizenships }: { initialCitizenships: string[] }) {
+  const t = useTranslations("common");
+  const tCitizenship = useTranslations("settings.citizenship");
   const [citizenships, setCitizenships] = useState<string[]>(initialCitizenships);
   const [draft, setDraft] = useState("");
   const [saved, setSaved] = useState(false);
@@ -43,16 +46,14 @@ export function CitizenshipForm({ initialCitizenships }: { initialCitizenships: 
           {citizenships.map((c) => (
             <span key={c} className="inline-flex items-center gap-1 rounded-full border border-input px-3 py-1 text-sm">
               {c}
-              <button type="button" onClick={() => remove(c)} aria-label={`Remove ${c}`} className="text-muted-foreground hover:text-foreground">
+              <button type="button" onClick={() => remove(c)} aria-label={tCitizenship("removeAriaLabel", { country: c })} className="text-muted-foreground hover:text-foreground">
                 <X className="size-3" />
               </button>
             </span>
           ))}
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">
-          Not stated. Oryn will show eligibility for citizenship-restricted opportunities as unverified rather than confirmed either way.
-        </p>
+        <p className="text-sm text-muted-foreground">{tCitizenship("notStated")}</p>
       )}
       <form
         className="flex flex-wrap items-end gap-2"
@@ -62,11 +63,11 @@ export function CitizenshipForm({ initialCitizenships }: { initialCitizenships: 
         }}
       >
         <div className="min-w-40 flex-1 space-y-1.5">
-          <Label htmlFor="citizenship-add">Add a citizenship</Label>
-          <SuggestInput id="citizenship-add" value={draft} onChange={setDraft} suggestions={COUNTRY_SUGGESTIONS} placeholder="e.g. Turkey" />
+          <Label htmlFor="citizenship-add">{tCitizenship("addLabel")}</Label>
+          <SuggestInput id="citizenship-add" value={draft} onChange={setDraft} suggestions={COUNTRY_SUGGESTIONS} placeholder={tCitizenship("placeholder")} />
         </div>
         <Button type="submit" variant="outline" disabled={!draft.trim()}>
-          Add
+          {t("add")}
         </Button>
       </form>
       <Button
@@ -84,7 +85,7 @@ export function CitizenshipForm({ initialCitizenships }: { initialCitizenships: 
           })
         }
       >
-        {isPending ? <Loader2 className="size-4 animate-spin" /> : saved ? "Saved" : "Save"}
+        {isPending ? <Loader2 className="size-4 animate-spin" /> : saved ? tCitizenship("saved") : t("save")}
       </Button>
       {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
     </div>
