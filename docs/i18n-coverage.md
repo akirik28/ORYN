@@ -116,6 +116,37 @@ const el = document.querySelector('<selector>');
 
 `innerText` shows what the transform actually produced, which `textContent` does not.
 
+## The AI now answers in Turkish — and what that does not yet guarantee
+
+Until 2026-09-01 every AI surface wrote English regardless of locale. `lib/ai/output-language.ts`
+appends one shared instruction to each system prompt, driven by the student's stored
+`preferred_language` rather than the request cookie — weekly plans are generated from cron,
+where there is no request to read a cookie from.
+
+Wired into `advisor-chat`, `weekly-plan` and `research-generator`, the three surfaces that
+share `buildStudentAdvisorContext`. `counselor-explain`, `essay-outlines` and
+`refine-achievement` do not take that context and are **not** wired yet.
+
+The instruction says three things beyond "write in Turkish", each protecting a decision the
+product already made:
+
+- **Proper names and quoted source text stay verbatim.** A translated university or programme
+  name cannot be checked against the source it came from, and traceability is the discipline
+  the whole product rests on.
+- **Don't invent a term where the language has none** — the position `lib/legal/content.ts`
+  already took with KVKK vocabulary.
+- **The voice doesn't change with the language.** Phase 57's register belongs to the counsel,
+  not to English.
+
+**What is not covered, and it is the important half.** Nothing measures the *quality* of the
+Turkish that comes back. The eval suite is English-only, and checking whether Turkish counsel
+keeps the demanding-mentor register costs real model calls against a nearly-spent balance.
+The mechanism is asserted in `__tests__/ai/output-language.test.ts`; the register is not.
+
+So the honest status is: a Turkish student now gets Turkish counsel, and nobody has read it.
+That is better than certainly-English, and it is not the same as verified. A Turkish eval pass
+is the missing piece, and it is a founder decision because it costs credit.
+
 ## A whole class of gap no string count can see
 
 `npm run check:i18n` counts text. It cannot see a gap whose symptom is a *missing function
