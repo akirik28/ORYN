@@ -146,3 +146,31 @@ describe("formatContextForPrompt — dimension names are human labels, not colum
     expect(formatContextForPrompt(withScores)).toContain("Career Exploration:");
   });
 });
+
+/**
+ * `extreme_reach` reached four live advisor replies the same way `career_exploration` reached
+ * the dashboard: a persisted enum handed to the model raw, then written into prose. The badge
+ * has always said "Extreme Reach"; only the prompt disagreed.
+ */
+describe("formatContextForPrompt — target outlooks use the same words the badge shows", () => {
+  test("renders the display label, not the enum member", () => {
+    const text = formatContextForPrompt({
+      ...baseContext(),
+      targetUniversities: [
+        { id: "t1", universityId: "u1", programId: null, name: "LSE", status: "target", outlook: "extreme_reach" },
+        { id: "t2", universityId: "u2", programId: null, name: "Bocconi", status: "applying", outlook: "competitive" },
+      ],
+    });
+    expect(text).toContain("LSE (target, Extreme Reach)");
+    expect(text).toContain("Bocconi (applying, Competitive)");
+    expect(text).not.toContain("extreme_reach");
+  });
+
+  test("a target with no outlook yet says nothing rather than inventing one", () => {
+    const text = formatContextForPrompt({
+      ...baseContext(),
+      targetUniversities: [{ id: "t1", universityId: "u1", programId: null, name: "LSE", status: "exploring", outlook: null }],
+    });
+    expect(text).toContain("LSE (exploring)");
+  });
+});

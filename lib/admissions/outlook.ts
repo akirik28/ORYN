@@ -5,6 +5,27 @@ import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 export const ADMISSION_MODEL_VERSION = "admission_model_v1";
 
+/**
+ * Human labels for the persisted `OutlookLabel` enum. Here rather than in the badge that
+ * used to own them, because a second consumer appeared that is not a component:
+ * lib/ai/student-context.ts puts the student's targets into the model prompt, and the model
+ * writes the prose they read. With the raw value it wrote the raw value — four live advisor
+ * replies say `extreme_reach` to a student, where every rendered surface says "Extreme Reach".
+ *
+ * `not_applicable` keeps the vaguest wording on purpose. It is one enum member covering
+ * reasons that are not variations of each other, and the surface that knows which reason
+ * applies substitutes a specific one (NOT_APPLICABLE_REASONS below); anything reading this
+ * map directly asserts only what the enum itself guarantees.
+ */
+export const OUTLOOK_LABELS: Record<OutlookLabel, string> = {
+  extreme_reach: "Extreme Reach",
+  reach: "Reach",
+  competitive: "Competitive",
+  strong: "Strong",
+  likely: "Likely",
+  not_applicable: "Not rated on this scale",
+};
+
 /** Selectivity penalty applied to profile strength — configurable, named constants per
  * spec 17 ("all formula parameters must be configurable"), not magic numbers inline. */
 const SELECTIVITY_PENALTY = {

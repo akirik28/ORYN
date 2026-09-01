@@ -3,13 +3,14 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { assembleScoringFacts } from "@/lib/scoring/assemble-facts";
 import { computeCareerProfile } from "@/lib/scoring";
+import { OUTLOOK_LABELS } from "@/lib/admissions/outlook";
 import { buildProfileSignal, isAssessed, EVIDENCE_STATE_LABELS, type EvidenceState } from "@/lib/scoring/signal";
 import { getUpcomingDeadlines } from "@/lib/deadlines/upcoming";
 import { canonicalUniversityId, loadSupersessionMap, type SupersessionMap } from "@/lib/universities/canonical";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { dimensionLabel } from "@/lib/scoring/labels";
 import type { Locale } from "@/lib/i18n/config";
-import type { Database, EvidenceStatus, ProfileDimension } from "@/types/database";
+import type { Database, EvidenceStatus, OutlookLabel, ProfileDimension } from "@/types/database";
 
 export interface StudentAdvisorContext {
   student: {
@@ -59,7 +60,9 @@ export interface StudentAdvisorContext {
   /** Counselor Core field/relevance matching (mirrors lib/opportunities/persist-matches.ts's
    * existing use of this table) — not included in formatContextForPrompt today. */
   interests: string[];
-  targetUniversities: { id: string; universityId: string; programId: string | null; name: string; status: string; outlook: string | null }[];
+  /** `outlook` is the persisted enum, not a free string — typing it loosely is what let the
+   *  raw `extreme_reach` reach the prompt and then a student. */
+  targetUniversities: { id: string; universityId: string; programId: string | null; name: string; status: string; outlook: OutlookLabel | null }[];
   upcomingDeadlines: { title: string; date: string; source: string }[];
   recentRecommendationTitles: string[];
   /** Phase 10/62/63 — what actually happened after past advice, so the advisor learns from
@@ -126,7 +129,7 @@ async function getTargetUniversitiesForContext(
   supabase: SupabaseClient<Database>,
   userId: string,
   supersessionMap: SupersessionMap
-): Promise<{ id: string; universityId: string; programId: string | null; name: string; status: string; outlook: string | null }[]> {
+): Promise<{ id: string; universityId: string; programId: string | null; name: string; status: string; outlook: OutlookLabel | null }[]> {
   const { data: targets } = await supabase.from("target_universities").select("id, status, outlook, university_id, program_id").eq("user_id", userId);
   if (!targets || targets.length === 0) return [];
 
@@ -343,7 +346,23 @@ export function formatContextForPrompt(context: StudentAdvisorContext, locale: L
     );
   }
   lines.push(`Goals: ${context.goals.map((g) => g.title).join("; ") || "none set"}`);
-  lines.push(`Target universities: ${context.targetUniversities.map((t) => `${t.name} (${t.status}${t.outlook ? `, ${t.outlook}` : ""})`).join("; ") || "none yet"}`);
+  /**
+   * `outlook` is a persisted enum (`extreme_reach`, `not_applicable`, …) and the badge that
+   * renders it says "Extreme Reach". Handed the raw value, the model writes the raw value:
+   * four live advisor replies say `extreme_reach` to a student. Same fix as the dimension
+   * names above, and the labels now live in lib/admissions/outlook.ts so the badge and this
+   * prompt cannot drift apart.
+   *
+   * `status` is left as-is deliberately — its values are ordinary words a student would
+   * recognise ("applying", "accepted", "waitlisted"), not identifiers.
+   */
+  lines.push(
+    `Target universities: ${
+      context.targetUniversities
+        .map((t) => `${t.name} (${t.status}${t.outlook ? `, ${OUTLOOK_LABELS[t.outlook]}` : ""})`)
+        .join("; ") || "none yet"
+    }`,
+  );
   lines.push(`Upcoming deadlines: ${context.upcomingDeadlines.map((d) => `${d.title} on ${d.date} (${d.source})`).join("; ") || "none"}`);
   if (context.pendingApplicationRequirements.length > 0) {
     lines.push(`Unfinished application checklist items: ${context.pendingApplicationRequirements.map((r) => `${r.requirementTitle} (${r.applicationTitle})`).join("; ")}`);

@@ -1,5 +1,5 @@
 import { StatusBadge, type StatusTone } from "@/components/oryn/status-badge";
-import type { NotApplicableKind } from "@/lib/admissions/outlook";
+import { OUTLOOK_LABELS, type NotApplicableKind } from "@/lib/admissions/outlook";
 import type { OutlookLabel } from "@/types/database";
 
 // Selectivity, not sentiment: "Extreme Reach" isn't an error state and "Likely" isn't a
@@ -11,14 +11,19 @@ import type { OutlookLabel } from "@/types/database";
 // outlook, it's a statement that this scale doesn't describe the target. "neutral" tone,
 // same as the "not yet assessed" case below, so it never reads as a reach-y classification
 // by accident. Its LABEL comes from NOT_APPLICABLE_LABELS instead — see below.
-const OUTLOOK_CONFIG: Record<OutlookLabel, { label: string; tone: StatusTone }> = {
-  extreme_reach: { label: "Extreme Reach", tone: "error" },
-  reach: { label: "Reach", tone: "warning" },
-  competitive: { label: "Competitive", tone: "brand" },
-  strong: { label: "Strong", tone: "success" },
-  likely: { label: "Likely", tone: "success" },
-  not_applicable: { label: "Not rated on this scale", tone: "neutral" },
+// Labels come from OUTLOOK_LABELS in lib/admissions/outlook.ts — shared, because the model
+// prompt needs the same words this badge shows. Tone is presentation and stays here.
+const OUTLOOK_TONE: Record<OutlookLabel, StatusTone> = {
+  extreme_reach: "error",
+  reach: "warning",
+  competitive: "brand",
+  strong: "success",
+  likely: "success",
+  not_applicable: "neutral",
 };
+const OUTLOOK_CONFIG: Record<OutlookLabel, { label: string; tone: StatusTone }> = Object.fromEntries(
+  (Object.keys(OUTLOOK_TONE) as OutlookLabel[]).map((k) => [k, { label: OUTLOOK_LABELS[k], tone: OUTLOOK_TONE[k] }]),
+) as Record<OutlookLabel, { label: string; tone: StatusTone }>;
 
 /**
  * `not_applicable` is one persisted enum member covering reasons that are not variations of
