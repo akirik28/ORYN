@@ -137,17 +137,69 @@ function ActionRow({ action, index }: { action: WeeklyAction; index: number }) {
   );
 }
 
+/**
+ * A completed action that survived a "Regenerate" click (migration 0077's `carried_forward`
+ * -- see lib/plan/persist.ts). Read-only, deliberately: it already has whatever reflection
+ * the student gave it, and re-opening that for editing weeks later isn't something this
+ * surface needs to support. `reason` is repurposed from "why Oryn suggested this" (its role
+ * in ActionRow, for a not-yet-done action) to "how it went" -- once an action is done, the
+ * outcome is the more useful thing to show in the same slot, not a second line competing for
+ * attention on what CEO scoped this as: a lighter, secondary surface.
+ */
+function CarriedForwardRow({ action }: { action: WeeklyAction }) {
+  const t = useTranslations("dashboard.weeklyFocus");
+  return (
+    <ActionCard
+      leading={
+        <span
+          aria-hidden="true"
+          className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-primary text-primary-foreground"
+        >
+          <Check className="size-3.5" />
+        </span>
+      }
+      title={action.title}
+      reason={action.reflection_outcome ? reflectionLabel(t, action.reflection_outcome) : undefined}
+      done
+    />
+  );
+}
+
 export function WeeklyFocus({ actions }: { actions: WeeklyAction[] }) {
   const t = useTranslations("dashboard.weeklyFocus");
   if (actions.length === 0) {
     return <p className="text-sm text-ink-3">{t("noActions")}</p>;
   }
 
+  // Split, not filtered-and-dropped: a carried-forward action is still real, it's just a
+  // different kind of real. AGENTS.md's "at most three primary actions" is about what's
+  // still to do -- CEO's call (docs/founder-blocked-backlog.md item 39) was that what's
+  // already done this week is worth showing too, as long as it isn't competing with the
+  // active three for the same slots. Active keeps the exact rendering (and index/priority
+  // meaning) this component always had; nothing here changes for a week that's never been
+  // regenerated, since carried_forward only ever becomes true partway through one.
+  const active = actions.filter((action) => !action.carried_forward);
+  const carriedForward = actions.filter((action) => action.carried_forward);
+
   return (
-    <div className="space-y-3">
-      {actions.map((action, index) => (
-        <ActionRow key={action.id} action={action} index={index} />
-      ))}
+    <div className="space-y-6">
+      {active.length > 0 ? (
+        <div className="space-y-3">
+          {active.map((action, index) => (
+            <ActionRow key={action.id} action={action} index={index} />
+          ))}
+        </div>
+      ) : null}
+      {carriedForward.length > 0 ? (
+        <div className="space-y-1 border-t pt-4">
+          <p className="text-xs text-ink-3">{t("completedThisWeek")}</p>
+          <div className="space-y-1">
+            {carriedForward.map((action) => (
+              <CarriedForwardRow key={action.id} action={action} />
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

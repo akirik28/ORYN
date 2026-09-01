@@ -63,6 +63,7 @@
       "whatHappened": "What happened?",
       "reflectionPlaceholder": "Add a short note (optional)",
       "noActions": "No actions in this week's plan yet.",
+      "completedThisWeek": "Completed this week",
       "reflectionOptions": {
         "completedSuccessfully": "Completed successfully",
         "partiallyCompleted": "Partially completed",

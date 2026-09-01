@@ -1578,10 +1578,13 @@ export interface WeeklyAction {
   reflection_outcome: ReflectionOutcome | null;
   reflection_note: string | null;
   completed_at: string | null;
+  /** True once this row has survived a "Regenerate" click — see migration 0077 and
+   *  lib/plan/persist.ts for why this can't be inferred from `status` alone. */
+  carried_forward: boolean;
   created_at: string;
   updated_at: string;
 }
-export type WeeklyActionInsert = Insertable<WeeklyAction, "id" | "created_at" | "updated_at" | "priority" | "impact_level" | "status">;
+export type WeeklyActionInsert = Insertable<WeeklyAction, "id" | "created_at" | "updated_at" | "priority" | "impact_level" | "status" | "carried_forward">;
 export type WeeklyActionUpdate = Updatable<WeeklyAction, "id" | "user_id" | "plan_id" | "created_at" | "updated_at">;
 
 export interface AiRecommendation {

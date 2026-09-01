@@ -77,8 +77,12 @@ describe("migration numbering", () => {
     // checking every remote branch's tree before picking a number — not just this
     // worktree's own migrations/ listing, which could not see an unmerged branch. That is
     // the check this comment has been telling people to run, actually run, one step
-    // earlier than the guard itself would have caught it. All still unapplied.
-    expect(Math.max(...numbers.map(Number))).toBe(76);
+    // earlier than the guard itself would have caught it. 0077
+    // (weekly_actions_carried_forward) is the "Regenerate destroys completed actions and
+    // their reflections" fix — docs/founder-blocked-backlog.md item 39 — adding the column
+    // that tells a preserved-through-regeneration action apart from a fresh one. All still
+    // unapplied.
+    expect(Math.max(...numbers.map(Number))).toBe(77);
   });
 });
 

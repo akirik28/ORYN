@@ -77,8 +77,42 @@ export async function getOrCreateWeeklyPlan(userId: string, opts?: { force?: boo
     throw new Error(`Failed to save weekly plan: ${planError?.message ?? "no data"}`);
   }
 
-  await supabase.from("weekly_actions").delete().eq("plan_id", plan.id);
+  // CEO decision, docs/founder-blocked-backlog.md item 39 (2026-09-02, under the founder's
+  // overnight product-authority grant): a completed action is a fact about what the student
+  // did, not a plan item -- regenerating is not a reason to unremember it. This used to be
+  // an unconditional delete, which erased every reflection written this week along with it
+  // (lib/ai/student-context.ts reads reflection_outcome/reflection_note into the advisor's
+  // prompt -- the deletion didn't just lose history, it made the advisor forget). Only rows
+  // the student never acted on are cleared now.
+  //
+  // Two steps, not one, and in this order: mark survivors carried_forward BEFORE deleting
+  // the rest, not after. If the delete step below ever fails and throws, a completed row
+  // that's already marked is still correct (idempotent -- re-running this on the next
+  // regenerate attempt marks the same rows the same way); the reverse order would risk
+  // deleting the pending rows and then throwing before the survivors were ever marked,
+  // leaving completed rows silently indistinguishable from a fresh batch until the next
+  // successful regenerate. `.in(...)` here is deliberately the full ActionStatus list minus
+  // {not_started, in_progress} rather than just "completed" -- skipped/expired carry a
+  // reflection the same way completed does (no code path produces them today, but the rule
+  // should already be correct the day one does, not need a second edit).
+  const { error: preserveError } = await supabase
+    .from("weekly_actions")
+    .update({ carried_forward: true })
+    .eq("plan_id", plan.id)
+    .in("status", ["completed", "skipped", "expired"]);
+  if (preserveError) {
+    throw new Error(`Failed to preserve this week's completed actions: ${preserveError.message}`);
+  }
 
+  await supabase.from("weekly_actions").delete().eq("plan_id", plan.id).in("status", ["not_started", "in_progress"]);
+
+  // priority is intentionally NOT renumbered around whatever a carried-forward action already
+  // holds. A fresh batch's 1..N is this week's current ranking; a carried-forward action's
+  // number is a snapshot of a ranking from a previous batch that's no longer being re-ranked
+  // against anything -- the two are never meant to be compared, so a reader has to check
+  // carried_forward (or status) either way, and renumbering to dodge a same-looking value
+  // would cost the historical number for no real gain. features/dashboard/weekly-focus.tsx
+  // renders the two groups as separate lists rather than one list sorted by priority.
   const actionRows = generation.actions.map((action, index) => ({
     plan_id: plan.id,
     user_id: userId,

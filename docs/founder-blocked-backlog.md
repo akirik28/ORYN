@@ -1233,12 +1233,40 @@ without picking one is not.
 
 ---
 
-## 39. Product decision: what should "Regenerate" do with a student's completed work?
+## 39. ~~Product decision: what should "Regenerate" do with a student's completed work?~~ — DECIDED AND BUILT, 2026-09-02
 
-**Action**: decide one of three shapes for what `getOrCreateWeeklyPlan(..., {force: true})`
-does to a week's already-completed actions when a student regenerates their plan — see
-below. Everything else in this item is already fixed and pushed; this one decision is the
-only founder-gated part.
+> ### ✅ DECIDED — option (b), by CEO under the founder's overnight product-authority grant.
+>
+> **Decision**: delete only `not_started`/`in_progress` actions on regenerate (option (b)
+> below, generalized to the full non-acted-on set rather than hand-listing "completed" —
+> `skipped`/`expired` get the same protection even though no code path produces them today,
+> so the rule is already correct the day one does). Not (a) (no separate "carry forward"
+> copy step needed — the row already exists, it's just no longer deleted) and not (c)
+> (soft-delete would have meant teaching every reader of `weekly_actions` about a
+> `deleted_at` it didn't have to care about before).
+>
+> **Built**: `supabase/migrations/0077_weekly_actions_carried_forward.sql` (unapplied,
+> founder-gated like every migration here) adds `weekly_actions.carried_forward boolean not
+> null default false`. `lib/plan/persist.ts` now marks survivors `carried_forward = true`
+> *before* deleting the rest (not after — see that file's own comment on why the order
+> matters for a mid-failure state). `features/dashboard/weekly-focus.tsx` renders carried-
+> forward actions as a separate, read-only "Completed this week" section rather than mixing
+> them into the interactive active list — keeps AGENTS.md's "at most three primary actions"
+> meaningful (it's about what's still to do) without deleting the record of what's done.
+> Both locales. Tests: `__tests__/plan/persist.test.ts` (new — the preserve/delete split
+> itself) and 6 new cases in `__tests__/dashboard/weekly-focus.test.tsx` (the display split).
+> Not verified live in a browser — the migration is unapplied, so there is no path in the
+> real app today that can produce a `carried_forward = true` row to look at; the component
+> tests render the real component against fixture data instead, which is the verification
+> this specific change actually admits before the migration lands.
+>
+> Still founder-gated: applying `0077` itself. Everything else in this item is done.
+
+**Action, historical — decision now made above**: this used to ask you to decide one of
+three shapes for what `getOrCreateWeeklyPlan(..., {force: true})` does to a week's
+already-completed actions when a student regenerates their plan — see below for the original
+investigation. Everything else in this item was already fixed and pushed; the decision above
+was the only founder-gated part, and it's now built pending the migration.
 
 **What was found, all re-verified directly against the live database, not taken from any
 report**: `lib/plan/persist.ts:70` runs

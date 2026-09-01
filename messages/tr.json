@@ -63,6 +63,7 @@
       "whatHappened": "Ne oldu?",
       "reflectionPlaceholder": "Kısa bir not ekle (opsiyonel)",
       "noActions": "Bu haftanın planında henüz eylem yok.",
+      "completedThisWeek": "Bu hafta tamamlananlar",
       "reflectionOptions": {
         "completedSuccessfully": "Başarıyla tamamlandı",
         "partiallyCompleted": "Kısmen tamamlandı",
