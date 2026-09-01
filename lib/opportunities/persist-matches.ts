@@ -6,6 +6,7 @@ import { computeOpportunityMatch, isNearStudent } from "./matching";
 import type { StudentMatchProfile, OpportunityForMatching } from "./matching";
 import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
 import { filterActionableOpportunities } from "./lifecycle";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 /**
  * Recomputes and upserts opportunity_matches for one student against every active
@@ -51,7 +52,7 @@ import { filterActionableOpportunities } from "./lifecycle";
  * legitimate, non-stale outcome (opportunities.length === 0 below) and reports
  * `refreshed: true`, since nothing was skipped, there was just nothing to compute.
  */
-export async function refreshOpportunityMatches(userId: string): Promise<{ refreshed: boolean }> {
+export async function refreshOpportunityMatches(userId: string, locale: Locale = DEFAULT_LOCALE): Promise<{ refreshed: boolean }> {
   const admin = tryCreateAdminClient();
   if (!admin) {
     console.error("[opportunity-matches] SUPABASE_SECRET_KEY not configured — skipping match refresh, page will render with existing (possibly stale) matches");
@@ -126,7 +127,7 @@ export async function refreshOpportunityMatches(userId: string): Promise<{ refre
       fields: opportunity.fields,
       country: opportunity.country,
     };
-    const match = computeOpportunityMatch(studentProfile, forMatching, savedStatusByOpportunityId.get(opportunity.id) ?? null);
+    const match = computeOpportunityMatch(studentProfile, forMatching, savedStatusByOpportunityId.get(opportunity.id) ?? null, locale);
 
     return {
       user_id: userId,

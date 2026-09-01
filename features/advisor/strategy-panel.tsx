@@ -1,28 +1,29 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { ChevronDown } from "lucide-react";
 import { differenceInCalendarDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Eyebrow } from "@/components/oryn/eyebrow";
-import { DIMENSION_LABELS } from "@/lib/scoring/labels";
-import { EVIDENCE_STATE_LABELS, type DimensionSignal } from "@/lib/scoring/signal";
+import { dimensionLabel } from "@/lib/scoring/labels";
+import { evidenceStateLabel, type DimensionSignal } from "@/lib/scoring/signal";
+import { formatNumber } from "@/lib/i18n/format";
+import type { Locale } from "@/lib/i18n/config";
 import type { TimeBudget } from "@/types/database";
 
-function daysAway(date: string): string {
-  const days = differenceInCalendarDays(new Date(date), new Date());
-  if (days < 0) return "past due";
-  if (days === 0) return "today";
-  if (days === 1) return "tomorrow";
-  return `in ${days} days`;
-}
+/** Same TS2589-adjacent workaround as every other file in this i18n effort that passes a
+ * next-intl translator across a function boundary (see app/(app)/universities/[id]/page.tsx's
+ * own `Translator` alias). */
+type Translator = (key: string, values?: Record<string, string | number>) => string;
 
-const TIME_BUDGET_LABEL: Record<TimeBudget, string> = {
-  under_2h: "Under 2h a week",
-  "2_5h": "2–5h a week",
-  "5_10h": "5–10h a week",
-  "10h_plus": "10h+ a week",
-};
+function daysAway(date: string, t: Translator): string {
+  const days = differenceInCalendarDays(new Date(date), new Date());
+  if (days < 0) return t("pastDue");
+  if (days === 0) return t("today");
+  if (days === 1) return t("tomorrow");
+  return t("inDays", { days: formatNumber(days) });
+}
 
 /**
  * The standing brief at the top of the Counselor (UI-V3 § 14/15) — what Oryn is holding in
@@ -52,16 +53,25 @@ export function StrategyPanel({
   timeBudget: TimeBudget | null;
   signal: DimensionSignal[];
 }) {
+  const t = useTranslations("advisor.strategyPanel") as Translator;
+  const locale = useLocale() as Locale;
   const [open, setOpen] = useState(false);
 
+  const TIME_BUDGET_LABEL: Record<TimeBudget, string> = {
+    under_2h: t("timeBudget.under2h"),
+    "2_5h": t("timeBudget.2to5h"),
+    "5_10h": t("timeBudget.5to10h"),
+    "10h_plus": t("timeBudget.10hPlus"),
+  };
+
   const facts: { term: string; value: string }[] = [
-    focusLabel ? { term: "Current focus", value: focusLabel } : null,
+    focusLabel ? { term: t("currentFocus"), value: focusLabel } : null,
     // Relative, never the absolute date: deadline titles are frequently self-describing
     // ("Yale University — Early Action: November 1, 2026") and appending a formatted date
     // produced "November 1, 2026 · Nov 1". Days-remaining adds information instead of
     // repeating it, and it's the framing that actually drives a decision.
-    nextDecision ? { term: "Next decision", value: `${nextDecision.title} — ${daysAway(nextDecision.date)}` } : null,
-    timeBudget ? { term: "Time available", value: TIME_BUDGET_LABEL[timeBudget] } : null,
+    nextDecision ? { term: t("nextDecision"), value: `${nextDecision.title} — ${daysAway(nextDecision.date, t)}` } : null,
+    timeBudget ? { term: t("timeAvailable"), value: TIME_BUDGET_LABEL[timeBudget] } : null,
   ].filter((f): f is { term: string; value: string } => f !== null);
 
   if (facts.length === 0 && signal.length === 0) return null;
@@ -71,16 +81,16 @@ export function StrategyPanel({
     // Applications) — replaces the flat `bg-surface-tint` panel so this reads as one of the
     // Counselor's boxed blocks rather than the one ungrouped surface on the page.
     <section
-      aria-label="What Oryn is working from"
+      aria-label={t("ariaLabel")}
       className="glass-card rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-7"
     >
-      <Eyebrow>Where you stand</Eyebrow>
+      <Eyebrow locale={locale}>{t("whereYouStand")}</Eyebrow>
 
       {facts.length > 0 ? (
         <dl className="mt-5 flex flex-wrap gap-x-12 gap-y-5">
           {facts.map((fact) => (
             <div key={fact.term}>
-              <dt className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-3 uppercase">
+              <dt className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-3 uppercase" lang={locale}>
                 {fact.term}
               </dt>
               <dd className="mt-1.5 text-sm text-ink-1">{fact.value}</dd>
@@ -97,7 +107,7 @@ export function StrategyPanel({
             aria-expanded={open}
             className="group inline-flex items-center gap-1.5 text-sm text-ink-2 transition-colors hover:text-ink-1 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
           >
-            Based on {signal.length} profile signal{signal.length === 1 ? "" : "s"}
+            {t("basedOnSignals", { count: signal.length, formatted: formatNumber(signal.length) })}
             <ChevronDown
               aria-hidden="true"
               className={cn("size-4 text-ink-4 transition-transform", open && "rotate-180")}
@@ -108,8 +118,8 @@ export function StrategyPanel({
             <ul className="mt-4 grid gap-x-10 gap-y-2 sm:grid-cols-2">
               {signal.map((row) => (
                 <li key={row.dimension} className="flex items-baseline justify-between gap-4 text-sm">
-                  <span className="min-w-0 truncate text-ink-2">{DIMENSION_LABELS[row.dimension]}</span>
-                  <span className="shrink-0 text-xs text-ink-3">{EVIDENCE_STATE_LABELS[row.state]}</span>
+                  <span className="min-w-0 truncate text-ink-2">{dimensionLabel(row.dimension, locale)}</span>
+                  <span className="shrink-0 text-xs text-ink-3">{evidenceStateLabel(row.state, locale)}</span>
                 </li>
               ))}
             </ul>

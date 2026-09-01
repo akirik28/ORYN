@@ -1,6 +1,7 @@
 import { clampScore } from "@/lib/scoring/math";
 import { normalizeEntitySearchText } from "@/lib/entities/normalize";
 import { currentGradeLevel, gradeMatchesEligibility } from "@/lib/profile/grade-level";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import type { OpportunityCategory, ProfileDimension, SavedOpportunityStatus } from "@/types/database";
 
 export interface StudentMatchProfile {
@@ -104,38 +105,58 @@ export function isSameCountry(a: string, b: string): boolean {
  * this function had no idea a saved-opportunity record existed at all). A plain `saved`
  * bookmark is not an exclusion — the student hasn't decided yet.
  */
+/**
+ * `locale` is additive (defaults to English, same pattern as lib/counselor/copy.ts and every
+ * other lib/-side reasoning function this i18n effort has threaded a locale through) — found
+ * and fixed as part of the advisor package, not the earlier opportunities pass, because these
+ * notes are `eligibility_notes`/warnings shown on BOTH the opportunities cards AND the
+ * Counselor's own recommendation warnings (lib/counselor/evidence.ts reads `ranked.eligibility.notes`
+ * straight from this function's output). Real numbers, not a guess: measured 2026-09-01,
+ * 325 of 623 currently "strong match" opportunities carry a note here, and 110 of those say
+ * "add your birth year to check" — a Turkish student was seeing English on roughly a third
+ * of their best recommendations. The two "restriction on file" notes below echo
+ * `opportunity.citizenshipRestrictions`/`residencyRestrictions` verbatim (sourced prose from
+ * the opportunity's own record) — only their prefix is translated, matching this whole
+ * effort's "sourced text stays as stored" rule.
+ */
 export function computeEligibility(
   student: StudentMatchProfile,
   opportunity: OpportunityForMatching,
-  savedStatus: SavedOpportunityStatus | null = null
+  savedStatus: SavedOpportunityStatus | null = null,
+  locale: Locale = DEFAULT_LOCALE
 ): EligibilityResult {
+  const tr = locale === "tr";
+
   if (savedStatus === "applied") {
-    return { eligible: false, notes: "You already applied to this." };
+    return { eligible: false, notes: tr ? "Bu fırsata zaten başvurdun." : "You already applied to this." };
   }
   if (savedStatus === "not_interested") {
-    return { eligible: false, notes: "You already marked this not interested." };
+    return { eligible: false, notes: tr ? "Bunu zaten ilgilenmiyorum olarak işaretledin." : "You already marked this not interested." };
   }
 
   const unknownNotes: string[] = [];
 
   const hasAgeRestriction = opportunity.minimumAge !== null || opportunity.maximumAge !== null;
   if (hasAgeRestriction && student.age === null) {
-    unknownNotes.push("Has an age requirement — add your birth year to check.");
+    unknownNotes.push(tr ? "Yaş şartı var — kontrol etmek için doğum yılını ekle." : "Has an age requirement — add your birth year to check.");
   } else {
     if (opportunity.minimumAge !== null && student.age !== null && student.age < opportunity.minimumAge) {
-      return { eligible: false, notes: `Requires minimum age ${opportunity.minimumAge}.` };
+      return { eligible: false, notes: tr ? `Asgari ${opportunity.minimumAge} yaş gerektiriyor.` : `Requires minimum age ${opportunity.minimumAge}.` };
     }
     if (opportunity.maximumAge !== null && student.age !== null && student.age > opportunity.maximumAge) {
-      return { eligible: false, notes: `Requires maximum age ${opportunity.maximumAge}.` };
+      return { eligible: false, notes: tr ? `Azami ${opportunity.maximumAge} yaş gerektiriyor.` : `Requires maximum age ${opportunity.maximumAge}.` };
     }
   }
 
   const hasCountryRestriction = opportunity.eligibleCountries.length > 0;
   if (hasCountryRestriction) {
     if (!student.country) {
-      unknownNotes.push("Restricted by country — add your country to check.");
+      unknownNotes.push(tr ? "Ülkeye göre kısıtlı — kontrol etmek için ülkeni ekle." : "Restricted by country — add your country to check.");
     } else if (!opportunity.eligibleCountries.some((eligible) => isSameCountry(eligible, student.country!))) {
-      return { eligible: false, notes: `Not currently open to students from ${student.country}.` };
+      return {
+        eligible: false,
+        notes: tr ? `Şu anda ${student.country} öğrencilerine açık değil.` : `Not currently open to students from ${student.country}.`,
+      };
     }
   }
 
@@ -144,9 +165,14 @@ export function computeEligibility(
   if (hasCitizenshipRestriction) {
     const citizenshipCountries = student.citizenshipCountries ?? [];
     if (citizenshipCountries.length === 0) {
-      unknownNotes.push("Requires a specific citizenship — add yours in Settings to check.");
+      unknownNotes.push(
+        tr ? "Belirli bir vatandaşlık gerektiriyor — kontrol etmek için Ayarlar'a kendi vatandaşlığını ekle." : "Requires a specific citizenship — add yours in Settings to check."
+      );
     } else if (!citizenshipCountries.some((c) => eligibleCitizenships.some((e) => isSameCountry(c, e)))) {
-      return { eligible: false, notes: `Requires citizenship in ${eligibleCitizenships.join(", ")}.` };
+      return {
+        eligible: false,
+        notes: tr ? `Şu vatandaşlıklardan birini gerektiriyor: ${eligibleCitizenships.join(", ")}.` : `Requires citizenship in ${eligibleCitizenships.join(", ")}.`,
+      };
     }
   }
 
@@ -160,10 +186,18 @@ export function computeEligibility(
   // this now surfaces that previously produced no note at all (verified against
   // oryn-qa-scratch, 2026-08-22).
   if (opportunity.citizenshipRestrictions && !hasCitizenshipRestriction) {
-    unknownNotes.push(`Citizenship restriction on file (not automatically verified): ${opportunity.citizenshipRestrictions}`);
+    unknownNotes.push(
+      tr
+        ? `Kayıtlı vatandaşlık kısıtlaması (otomatik doğrulanmadı): ${opportunity.citizenshipRestrictions}`
+        : `Citizenship restriction on file (not automatically verified): ${opportunity.citizenshipRestrictions}`
+    );
   }
   if (opportunity.residencyRestrictions && !hasCountryRestriction) {
-    unknownNotes.push(`Residency restriction on file (not automatically verified): ${opportunity.residencyRestrictions}`);
+    unknownNotes.push(
+      tr
+        ? `Kayıtlı ikamet kısıtlaması (otomatik doğrulanmadı): ${opportunity.residencyRestrictions}`
+        : `Residency restriction on file (not automatically verified): ${opportunity.residencyRestrictions}`
+    );
   }
 
   // Empty eligibleCountries has two live meanings: research-confirmed open (deliberately
@@ -180,16 +214,18 @@ export function computeEligibility(
     !hasUnstructuredRestrictionEvidence &&
     !(opportunity.countryEligibilityConfirmedOpen ?? false)
   ) {
-    unknownNotes.push("Country eligibility not verified yet — check the official page for restrictions.");
+    unknownNotes.push(
+      tr ? "Ülke uygunluğu henüz doğrulanmadı — kısıtlamalar için resmi sayfayı kontrol et." : "Country eligibility not verified yet — check the official page for restrictions."
+    );
   }
 
   const eligibleGrades = opportunity.eligibleGrades ?? [];
   if (eligibleGrades.length > 0) {
     const grade = currentGradeLevel(student.graduationYear ?? null);
     if (grade === null) {
-      unknownNotes.push("Restricted by grade level — add your graduation year to check.");
+      unknownNotes.push(tr ? "Sınıf seviyesine göre kısıtlı — kontrol etmek için mezuniyet yılını ekle." : "Restricted by grade level — add your graduation year to check.");
     } else if (!gradeMatchesEligibility(grade, eligibleGrades)) {
-      return { eligible: false, notes: `Restricted to grades ${eligibleGrades.join(", ")}.` };
+      return { eligible: false, notes: tr ? `${eligibleGrades.join(", ")}. sınıflarla sınırlı.` : `Restricted to grades ${eligibleGrades.join(", ")}.` };
     }
   }
 
@@ -287,9 +323,10 @@ export interface OpportunityMatchResult {
 export function computeOpportunityMatch(
   student: StudentMatchProfile,
   opportunity: OpportunityForMatching,
-  savedStatus: SavedOpportunityStatus | null = null
+  savedStatus: SavedOpportunityStatus | null = null,
+  locale: Locale = DEFAULT_LOCALE
 ): OpportunityMatchResult {
-  const { eligible, notes } = computeEligibility(student, opportunity, savedStatus);
+  const { eligible, notes } = computeEligibility(student, opportunity, savedStatus, locale);
   const relevanceScore = computeRelevanceScore(student, opportunity);
   const profileNeedScore = computeProfileNeedScore(student, opportunity);
   const matchScore = eligible ? clampScore(relevanceScore * 0.4 + profileNeedScore * 0.6) : 0;

@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { requireUser, getCurrentProfile } from "@/lib/security/dal";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
@@ -10,7 +11,7 @@ import { SectionHeader } from "@/components/oryn/section-header";
 import { isAIConfigured } from "@/lib/ai";
 import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
 import { toProfileSignal, canClaimGap } from "@/lib/scoring/signal";
-import { DIMENSION_LABELS } from "@/lib/scoring/labels";
+import { dimensionLabel } from "@/lib/scoring/labels";
 import { getCounselorRecommendations } from "@/lib/counselor";
 import { getMonthlyQuota } from "@/lib/ai/monthly-quota";
 import { MonthlyUsageMeter } from "@/features/advisor/monthly-usage-meter";
@@ -21,6 +22,8 @@ export default async function AdvisorPage() {
   const session = await requireUser();
   const userId = session.userId!;
   const supabase = await createClient();
+  const locale = await resolveLocale();
+  const t = await getTranslations("advisor.page");
 
   const [conversationRes, profile, scoresRes, upcomingDeadlines] = await Promise.all([
     supabase.from("advisor_conversations").select("*").eq("user_id", userId).order("updated_at", { ascending: false }).limit(1).maybeSingle(),
@@ -52,7 +55,7 @@ export default async function AdvisorPage() {
   // support from the data. The strategy panel simply omits the row instead.
   const focusLabel =
     biggestGap && canClaimGap(profileSignal, biggestGap.dimension)
-      ? DIMENSION_LABELS[biggestGap.dimension]
+      ? dimensionLabel(biggestGap.dimension, locale)
       : null;
   const nextDecision = upcomingDeadlines[0]
     ? { title: upcomingDeadlines[0].title, date: upcomingDeadlines[0].date }
@@ -64,7 +67,6 @@ export default async function AdvisorPage() {
   // confidence states for the ordinary case; this only guards the unexpected one.
   let counselorResult: Awaited<ReturnType<typeof getCounselorRecommendations>> | null = null;
   try {
-    const locale = await resolveLocale();
     counselorResult = await getCounselorRecommendations(userId, locale);
   } catch (error) {
     console.error("[advisor] failed to compute counselor recommendations", error instanceof Error ? error.stack : error);
@@ -72,11 +74,7 @@ export default async function AdvisorPage() {
 
   return (
     <div className="space-y-10">
-      <PageHeader
-        eyebrow="Counselor"
-        title="Your strategy room."
-        description="Oryn answers from your actual profile — including when the honest answer is to do less."
-      />
+      <PageHeader eyebrow={t("eyebrow")} title={t("title")} description={t("description")} />
 
       <StrategyPanel
         focusLabel={focusLabel}
@@ -97,10 +95,7 @@ export default async function AdvisorPage() {
           carries this month's real allowance beside it rather than hiding the number
           inside an error message the student only sees once they hit the wall. */}
       <section className="space-y-4">
-        <SectionHeader
-          title="Talk it through"
-          description="Ask anything about your profile, your targets or what to do next. Oryn answers from your record — including when the honest answer is to do less."
-        />
+        <SectionHeader title={t("talkItThrough")} description={t("talkItThroughDescription")} />
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_18rem]">
           <div className="glass-card flex min-h-[34rem] flex-col rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-7">
             <AdvisorChat conversationId={conversation?.id ?? null} initialMessages={messages} aiConfigured={isAIConfigured()} />

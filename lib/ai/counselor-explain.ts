@@ -4,6 +4,8 @@ import { z } from "zod";
 import { getAIProvider } from "./index";
 import { logAIUsage } from "./usage";
 import { AIProviderNotConfiguredError } from "./provider";
+import { withOutputLanguage } from "./output-language";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import type { AIProvider } from "./provider";
 import type { CounselorResult } from "@/lib/counselor/types";
 
@@ -73,17 +75,24 @@ export function buildCounselorExplanationPrompt(result: CounselorResult): string
  * always fall back to the deterministic `why` text already on every recommendation. Never
  * called by the pipeline itself (lib/counselor/pipeline.ts) — only an explicit caller that
  * wants the narrated version opts in.
+ *
+ * `locale` follows lib/ai/output-language.ts's own documented plan for this exact function
+ * ("the other three... and counselor-explain when it lands... their caller passes
+ * resolveLocale()") — wired as part of the advisor i18n package, not the language-mechanism
+ * change itself. No caller exists yet (grep confirms only test files reference this
+ * function), so this makes the surface ready rather than changing any live behavior.
  */
 export async function explainCounselorRecommendations(
   userId: string,
   result: CounselorResult,
-  provider: AIProvider = getAIProvider()
+  provider: AIProvider = getAIProvider(),
+  locale: Locale = DEFAULT_LOCALE
 ): Promise<CounselorExplanation | null> {
   if (result.recommendations.length === 0) return null;
 
   try {
     const response = await provider.generateStructured({
-      system: COUNSELOR_EXPLANATION_SYSTEM_PROMPT,
+      system: withOutputLanguage(COUNSELOR_EXPLANATION_SYSTEM_PROMPT, locale),
       prompt: buildCounselorExplanationPrompt(result),
       schema: CounselorExplanationSchema,
       schemaName: "record_counselor_explanation",

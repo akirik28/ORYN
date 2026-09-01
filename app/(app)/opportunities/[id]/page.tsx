@@ -140,7 +140,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
   const { data: opportunity } = await supabase.from("opportunities").select("*").eq("id", id).single();
   if (!opportunity) notFound();
 
-  const { refreshed: matchRefreshed } = await refreshOpportunityMatches(userId);
+  const { refreshed: matchRefreshed } = await refreshOpportunityMatches(userId, locale);
   const [matchRes, savedRes, sourcesRes] = await Promise.all([
     supabase.from("opportunity_matches").select("*").eq("user_id", userId).eq("opportunity_id", id).maybeSingle(),
     supabase.from("saved_opportunities").select("status").eq("user_id", userId).eq("opportunity_id", id).maybeSingle(),

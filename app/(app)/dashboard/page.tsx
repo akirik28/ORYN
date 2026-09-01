@@ -51,7 +51,7 @@ export default async function DashboardPage() {
   // needs it — the hero, profile signal, and the counselor dashboard contract all do).
   const locale = await resolveLocale();
 
-  const { refreshed: opportunityMatchesRefreshed } = await refreshOpportunityMatches(userId);
+  const { refreshed: opportunityMatchesRefreshed } = await refreshOpportunityMatches(userId, locale);
 
   // Counselor Core Phase L/B4 — kicked off concurrently with the queries below, isolated
   // from them: an unexpected failure computing Counselor Core's deterministic state must

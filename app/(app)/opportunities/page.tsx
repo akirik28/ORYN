@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Compass } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { requireUser } from "@/lib/security/dal";
+import { resolveLocale } from "@/lib/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
 import { refreshOpportunityMatches } from "@/lib/opportunities/persist-matches";
 import { browseOpportunities, getOpportunityFacets } from "@/lib/opportunities/browse";
@@ -44,8 +45,9 @@ export default async function OpportunitiesPage({
   const userId = session.userId!;
   const isBrowse = params.view === "browse";
   const t = await getTranslations("opportunities.browsePage");
+  const locale = await resolveLocale();
 
-  const { refreshed: matchesRefreshed } = await refreshOpportunityMatches(userId);
+  const { refreshed: matchesRefreshed } = await refreshOpportunityMatches(userId, locale);
   const supabase = await createClient();
 
   const tabParams = new URLSearchParams();

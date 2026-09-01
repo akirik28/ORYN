@@ -939,5 +939,74 @@
       "visitOfficialPage": "Visit official page",
       "any": "any"
     }
+  },
+  "advisor": {
+    "page": {
+      "eyebrow": "Counselor",
+      "title": "Your strategy room.",
+      "description": "Oryn answers from your actual profile — including when the honest answer is to do less.",
+      "talkItThrough": "Talk it through",
+      "talkItThroughDescription": "Ask anything about your profile, your targets or what to do next. Oryn answers from your record — including when the honest answer is to do less."
+    },
+    "chat": {
+      "startHere": "Start here",
+      "headline": "Ask Oryn what to do — or whether something is worth doing at all.",
+      "subtext": "Oryn answers from what it already knows about your profile, and will tell you when the honest answer is to do less.",
+      "prompts": {
+        "weakestPart": "What's the weakest part of my profile?",
+        "anotherClub": "Should I start another club?",
+        "thisWeek": "What should I do this week?",
+        "universityListRealistic": "Is my university list realistic?"
+      },
+      "couldntComplete": "Oryn couldn't complete this response.",
+      "tryAgain": "Try again",
+      "placeholderReady": "Ask Oryn…",
+      "placeholderNotConfigured": "The AI counselor isn't configured yet",
+      "sendAriaLabel": "Send message"
+    },
+    "usageMeter": {
+      "thisMonth": "This month",
+      "ariaUnknown": "Counselor messages left this month could not be loaded. The monthly allowance is {limit}.",
+      "ariaKnown": "{remaining} of {limit} counselor messages left this month",
+      "unknown": "We couldn't load how many messages you've used. Your {limit}-message allowance still applies and resets {date}.",
+      "exhausted": "All {limit} messages used. Resets {date}.",
+      "low": "Only {remaining} left. Resets {date}.",
+      "normal": "{remaining} counselor messages left. Resets {date}."
+    },
+    "strategyPanel": {
+      "ariaLabel": "What Oryn is working from",
+      "whereYouStand": "Where you stand",
+      "currentFocus": "Current focus",
+      "nextDecision": "Next decision",
+      "timeAvailable": "Time available",
+      "pastDue": "past due",
+      "today": "today",
+      "tomorrow": "tomorrow",
+      "inDays": "in {days} days",
+      "timeBudget": {
+        "under2h": "Under 2h a week",
+        "2to5h": "2–5h a week",
+        "5to10h": "5–10h a week",
+        "10hPlus": "10h+ a week"
+      },
+      "basedOnSignals": "Based on {count, plural, one {{formatted} profile signal} other {{formatted} profile signals}}"
+    },
+    "priorities": {
+      "level": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      },
+      "whyThis": "Why this",
+      "impactEffort": "{impact} impact · {effort} effort",
+      "needsMoreInfoTitle": "Oryn needs a bit more information before it can make confident recommendations",
+      "needsMoreInfoDescription": "Profile completeness: {percent}%. The items below are the highest-value ones to add first.",
+      "completeProfile": "Complete your profile",
+      "noRecommendationsTitle": "No verified, eligible recommendations right now",
+      "noRecommendationsDescription": "Oryn only recommends opportunities and requirements it can verify and confirm you're eligible for — it doesn't guess. Check back as more verified data becomes available, or explore Opportunities and Universities directly.",
+      "yourPriorities": "Your priorities",
+      "oneThingNotToDo": "One thing not to do",
+      "worthConsidering": "Worth considering"
+    }
   }
 }
