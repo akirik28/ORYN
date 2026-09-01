@@ -94,15 +94,21 @@ describe("message catalogs", () => {
     // confirm it's deliberate before adding it here, don't add speculatively.
     const enFlat = new Map(flatten(en).map((key) => [key, key.split(".").reduce<unknown>((o, part) => (o as Record<string, unknown>)?.[part], en)]));
     const trFlat = new Map(flatten(tr).map((key) => [key, key.split(".").reduce<unknown>((o, part) => (o as Record<string, unknown>)?.[part], tr)]));
-    const shared = [...enFlat.keys()].filter((key) => enFlat.get(key) === trFlat.get(key));
-    expect(shared).toEqual([
+    // Sorted, because this is a set comparison and key order is incidental: it follows
+    // whatever order the namespaces happen to sit in, which changes when two branches adding
+    // different namespaces are merged. That is not a fact about translation quality, and it
+    // failed this test once for exactly that reason.
+    const shared = [...enFlat.keys()].filter((key) => enFlat.get(key) === trFlat.get(key)).sort();
+    expect(shared).toEqual(
+      [
       "nav.plan",
       "onboarding.wizard.curriculumOptions.ap",
       "onboarding.wizard.curriculumOptions.ib",
       "onboarding.wizard.curriculumOptions.aLevel",
       "profile.peerBenchmark.cohortSize",
       "profile.recommendations.relationships.mentor",
-    ]);
+      ].sort(),
+    );
   });
 
   test("every shipped locale has a label and an Intl tag", () => {
