@@ -284,9 +284,9 @@ export async function buildStudentAdvisorContext(userId: string): Promise<Studen
 
 /**
  * `locale` is additive and defaults to English, matching lib/scoring/labels.ts's own opt-in
- * pattern. The weekly plan is still generated in English regardless of the student's locale
- * — that is a separate, larger piece of work — so no caller passes this yet. It exists so
- * that work does not have to come back and re-plumb the prompt.
+ * pattern. Both real callers pass it now — weekly-plan.ts and advisor-chat.ts, from
+ * `context.student.preferredLanguage` — so the dimension names in the prompt are already in
+ * the student's language. The default remains for any caller that has no locale to hand.
  */
 export function formatContextForPrompt(context: StudentAdvisorContext, locale: Locale = "en"): string {
   const lines: string[] = [];

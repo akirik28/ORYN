@@ -311,6 +311,8 @@ export async function deleteSportsExperience(id: string) {
 }
 
 // ---------- AI-assisted refinement (Phase 5) — generic across every achievement type ----------
+const MAX_DESCRIPTION_LENGTH = 4000;
+
 export async function refineAchievement(params: {
   achievementType: string;
   title: string;
@@ -319,6 +321,13 @@ export async function refineAchievement(params: {
 }): Promise<{ data?: AchievementRefinement; error?: string }> {
   const session = await requireUser();
   if (!params.title.trim()) return { error: "Add a title first." };
+  // Same reason as the advisor's cap: without one, an overlong description produces a
+  // provider 400 that lib/ai/service-failure.ts reads as "not your fault", when it is both
+  // the student's and fixable by them. Stop it reaching the provider rather than trying to
+  // tell two 400s apart afterwards (review finding, 2026-09-01).
+  if ((params.description ?? "").length > MAX_DESCRIPTION_LENGTH) {
+    return { error: "That description is too long to refine. Trim it to the key facts and try again." };
+  }
 
   try {
     await assertWithinAIRateLimit(session.userId!, "achievement_refinement", { maxCalls: 20, windowMinutes: 30 });

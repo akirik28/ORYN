@@ -11,6 +11,23 @@ import { logEvent } from "@/lib/analytics/log";
 import { isUuidLike } from "@/lib/validation/uuid";
 import type { AIMessage } from "@/lib/ai/provider";
 
+/**
+ * Caps that exist so a 400 from the provider means one thing rather than two.
+ *
+ * `lib/ai/service-failure.ts` maps a 400 to "this isn't something you did", which is right
+ * for a spent balance and wrong for a message that overran the model's context — a cause
+ * that *is* the student's and *is* fixable by them. Status cannot tell those apart, so the
+ * fix is to stop the second one reaching the provider at all rather than to write a cleverer
+ * branch (review finding, 2026-09-01).
+ *
+ * 4,000 characters is far more than a question and far less than a context limit;
+ * MAX_HISTORY_TURNS bounds the other half, since the whole conversation was previously sent
+ * on every turn with no limit. Oldest turns drop first: the current question and its
+ * immediate context matter more than the opening of a long thread.
+ */
+const MAX_MESSAGE_LENGTH = 4000;
+const MAX_HISTORY_TURNS = 40;
+
 export async function sendAdvisorMessage(
   conversationId: string | null,
   content: string
@@ -19,6 +36,12 @@ export async function sendAdvisorMessage(
   const userId = session.userId!;
   const trimmed = content.trim();
   if (!trimmed) return { conversationId: conversationId ?? "", error: "Message can't be empty." };
+  if (trimmed.length > MAX_MESSAGE_LENGTH) {
+    return {
+      conversationId: conversationId ?? "",
+      error: "That message is too long for the counselor to read at once. Try asking one thing at a time.",
+    };
+  }
   if (conversationId && !isUuidLike(conversationId)) return { conversationId: "", error: "Invalid conversation." };
 
   try {
@@ -73,8 +96,14 @@ export async function sendAdvisorMessage(
     .select("role, content")
     .eq("conversation_id", convId)
     .eq("status", "complete")
-    .order("created_at", { ascending: true });
-  const history: AIMessage[] = (priorMessages ?? []).map((m) => ({ role: m.role, content: m.content ?? "" }));
+    .order("created_at", { ascending: false })
+    .limit(MAX_HISTORY_TURNS);
+  // Fetched newest-first to take the most recent N, then restored to chronological order —
+  // the model needs the conversation forwards, not backwards.
+  const history: AIMessage[] = (priorMessages ?? [])
+    .slice()
+    .reverse()
+    .map((m) => ({ role: m.role, content: m.content ?? "" }));
 
   const { error: userMessageError } = await supabase
     .from("advisor_messages")
