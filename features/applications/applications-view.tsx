@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { ClipboardCheck } from "lucide-react";
+import { getTranslations, getLocale } from "next-intl/server";
 import { NewApplicationDialog } from "@/features/applications/new-application-dialog";
 import { Progress } from "@/components/ui/progress";
 import { EmptyState } from "@/components/oryn/empty-state";
 import { StatusBadge, type StatusTone } from "@/components/oryn/status-badge";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
-import type { ApplicationStatus } from "@/types/database";
+import type { ApplicationStatus, ApplicationType } from "@/types/database";
 
 const APPLICATION_STATUS_TONE: Record<ApplicationStatus, StatusTone> = {
   not_started: "neutral",
@@ -21,13 +22,13 @@ const APPLICATION_STATUS_TONE: Record<ApplicationStatus, StatusTone> = {
 export interface ApplicationsViewRow {
   id: string;
   universityName: string;
-  applicationType: string;
+  applicationType: ApplicationType;
   deadline: string | null;
   status: ApplicationStatus;
   readiness: number;
 }
 
-export function ApplicationsView({
+export async function ApplicationsView({
   applications,
   hasTargets,
   availableTargets,
@@ -36,6 +37,8 @@ export function ApplicationsView({
   hasTargets: boolean;
   availableTargets: { id: string; name: string }[];
 }) {
+  const t = await getTranslations("applications");
+  const locale = await getLocale();
   const earliestDeadline = applications
     .map((a) => a.deadline)
     .filter((d): d is string => Boolean(d))
@@ -59,13 +62,17 @@ export function ApplicationsView({
           style={{ background: "rgba(61,53,232,0.12)" }}
         />
         <div className="dark relative text-foreground">
-          <p className="text-xs font-semibold tracking-[0.1em] text-white/35 uppercase">2026–27 cycle</p>
+          <p lang={locale} className="text-xs font-semibold tracking-[0.1em] text-white/35 uppercase">{t("hero.cycleLabel")}</p>
           <h1 className="mt-3.5 font-display text-4xl leading-[1.1] tracking-[-0.03em] italic text-[#A09CF8] md:text-5xl">
-            Applications.
+            {t("hero.title")}
           </h1>
           <p className="mt-1.5 text-[15px] text-white/50">
-            {applications.length} {applications.length === 1 ? "university" : "universities"}
-            {earliestDeadline ? ` · Earliest deadline ${new Date(earliestDeadline).toLocaleDateString(undefined, { month: "short", day: "numeric" })}` : ""}
+            {t("hero.universityCount", { count: applications.length })}
+            {earliestDeadline
+              ? t("hero.earliestDeadline", {
+                  date: new Date(earliestDeadline).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+                })
+              : ""}
           </p>
           <div className="mt-7">
             <NewApplicationDialog availableTargets={availableTargets} />
@@ -87,17 +94,16 @@ export function ApplicationsView({
                   <div className="flex flex-wrap items-center gap-2.5">
                     <span className="text-lg font-bold text-ink-1">{application.universityName}</span>
                     <StatusBadge
-                      label={application.status.replace(/_/g, " ")}
+                      label={t(`statusLabels.${application.status}`)}
                       tone={APPLICATION_STATUS_TONE[application.status]}
-                      className="capitalize"
                     />
                   </div>
-                  <p className="mt-1 text-sm text-ink-3 capitalize">
-                    {application.applicationType.replace(/_/g, " ")}
+                  <p className="mt-1 text-sm text-ink-3">
+                    {t(`newDialog.typeOptions.${application.applicationType}`)}
                     {application.deadline ? (
                       <>
                         {" "}
-                        · Due <DeadlineBadge date={application.deadline} />
+                        · {t("due")} <DeadlineBadge date={application.deadline} />
                       </>
                     ) : null}
                   </p>
@@ -106,7 +112,7 @@ export function ApplicationsView({
                   <div className={application.readiness === 100 ? "text-2xl font-bold text-success" : "text-2xl font-bold text-ink-1"}>
                     {application.readiness}%
                   </div>
-                  <div className="text-[11px] font-medium text-ink-3">ready</div>
+                  <div className="text-[11px] font-medium text-ink-3">{t("ready")}</div>
                 </div>
               </div>
               <Progress value={application.readiness} className="mt-5" />
@@ -115,12 +121,8 @@ export function ApplicationsView({
         ) : (
           <EmptyState
             icon={ClipboardCheck}
-            title={hasTargets ? "No applications started yet" : "No applications yet"}
-            description={
-              hasTargets
-                ? "Start one from a target university to begin tracking requirements and deadlines."
-                : "Save a university you're targeting to start an application."
-            }
+            title={hasTargets ? t("empty.hasTargetsTitle") : t("empty.noTargetsTitle")}
+            description={hasTargets ? t("empty.hasTargetsDescription") : t("empty.noTargetsDescription")}
           />
         )}
       </div>

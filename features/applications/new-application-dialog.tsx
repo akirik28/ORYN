@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,15 +19,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { createApplication } from "@/app/(app)/applications/actions";
 import type { ApplicationType } from "@/types/database";
 
-const TYPE_OPTIONS: { value: ApplicationType; label: string }[] = [
-  { value: "regular_decision", label: "Regular Decision" },
-  { value: "early_decision", label: "Early Decision" },
-  { value: "early_action", label: "Early Action" },
-  { value: "rolling", label: "Rolling" },
-  { value: "other", label: "Other" },
-];
+const APPLICATION_TYPES: ApplicationType[] = ["regular_decision", "early_decision", "early_action", "rolling", "other"];
 
 export function NewApplicationDialog({ availableTargets }: { availableTargets: { id: string; name: string }[] }) {
+  const t = useTranslations("applications.newDialog");
+  const tCommon = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [targetId, setTargetId] = useState(availableTargets[0]?.id ?? "");
   const [type, setType] = useState<ApplicationType>("regular_decision");
@@ -37,8 +34,8 @@ export function NewApplicationDialog({ availableTargets }: { availableTargets: {
 
   if (availableTargets.length === 0) {
     return (
-      <Button variant="outline" disabled title="Save a target university first — applications start from a target.">
-        <Plus className="size-4" /> Start an application
+      <Button variant="outline" disabled title={t("saveTargetFirst")}>
+        <Plus className="size-4" /> {t("startApplication")}
       </Button>
     );
   }
@@ -46,52 +43,52 @@ export function NewApplicationDialog({ availableTargets }: { availableTargets: {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button />}>
-        <Plus className="size-4" /> Start an application
+        <Plus className="size-4" /> {t("startApplication")}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Start an application</DialogTitle>
+          <DialogTitle>{t("startApplication")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label>University</Label>
+            <Label>{t("university")}</Label>
             <Select value={targetId} onValueChange={(value) => value && setTargetId(value)}>
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {availableTargets.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.name}
+                {availableTargets.map((target) => (
+                  <SelectItem key={target.id} value={target.id}>
+                    {target.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Application type</Label>
+            <Label>{t("applicationType")}</Label>
             <Select value={type} onValueChange={(v) => v && setType(v as ApplicationType)}>
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {TYPE_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+                {APPLICATION_TYPES.map((value) => (
+                  <SelectItem key={value} value={value}>
+                    {t(`typeOptions.${value}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Deadline</Label>
+            <Label>{t("deadline")}</Label>
             <Input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
           </div>
           {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
+            {tCommon("cancel")}
           </Button>
           <Button
             disabled={isPending || !targetId}
@@ -108,7 +105,7 @@ export function NewApplicationDialog({ availableTargets }: { availableTargets: {
             }
           >
             {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-            Create
+            {t("create")}
           </Button>
         </DialogFooter>
       </DialogContent>

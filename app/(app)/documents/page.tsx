@@ -1,4 +1,5 @@
 import { FileText } from "lucide-react";
+import { getTranslations, getLocale } from "next-intl/server";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { listLinkableItems } from "@/lib/profile/list-linkable-items";
@@ -6,7 +7,7 @@ import { UploadEvidenceDialog } from "@/features/documents/upload-evidence-dialo
 import { EvidenceRow } from "@/features/documents/evidence-row";
 import { EmptyState } from "@/components/oryn/empty-state";
 import { PageHeader } from "@/components/oryn/page-header";
-import { EVIDENCE_LINKABLE_LABELS, type EvidenceLinkableTable } from "@/lib/validation/evidence";
+import { evidenceLinkableLabel, type EvidenceLinkableTable } from "@/lib/validation/evidence";
 
 export const metadata = { title: "Documents" };
 
@@ -14,10 +15,12 @@ export default async function DocumentsPage() {
   const session = await requireUser();
   const userId = session.userId!;
   const supabase = await createClient();
+  const t = await getTranslations("documents");
+  const locale = await getLocale();
 
   const [evidenceRes, linkableItems] = await Promise.all([
     supabase.from("evidence_files").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
-    listLinkableItems(supabase, userId),
+    listLinkableItems(supabase, userId, locale),
   ]);
 
   const evidenceWithUrls = await Promise.all(
@@ -31,20 +34,17 @@ export default async function DocumentsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Documents"
-        description="Evidence you've attached to your achievements. Private to you unless you choose to share it."
-        action={<UploadEvidenceDialog items={linkableItems} />}
-      />
+      <PageHeader title={t("title")} description={t("description")} action={<UploadEvidenceDialog items={linkableItems} />} />
 
       {/* Literal source banner (ProfileTools.tsx `DocumentsScreen`) — the same
           self-reported/evidence-added/verified distinction AGENTS.md Phase 11 requires,
           restated here since a student uploading a file is exactly the moment that
           distinction needs to be visible, not just documented elsewhere. */}
       <div className="rounded-xl px-4 py-3 text-sm text-[#6A6A7A]" style={{ background: "rgba(61,53,232,0.06)" }}>
-        Uploading a document sets evidence status to <strong className="font-semibold text-ink-1">Evidence added</strong>. It does
-        not automatically become <strong className="font-semibold text-ink-1">Verified</strong> — verification is a separate
-        process.
+        {t.rich("banner", {
+          addedTag: (chunks) => <strong className="font-semibold text-ink-1">{chunks}</strong>,
+          verifiedTag: (chunks) => <strong className="font-semibold text-ink-1">{chunks}</strong>,
+        })}
       </div>
 
       {evidenceWithUrls.length > 0 ? (
@@ -53,18 +53,14 @@ export default async function DocumentsPage() {
             <EvidenceRow
               key={evidence.id}
               id={evidence.id}
-              fileName={evidence.file_path?.split("/").pop() ?? evidence.external_url ?? "Evidence"}
-              linkedLabel={EVIDENCE_LINKABLE_LABELS[evidence.linked_table as EvidenceLinkableTable] ?? evidence.linked_table}
+              fileName={evidence.file_path?.split("/").pop() ?? evidence.external_url ?? t("row.fallbackName")}
+              linkedLabel={evidenceLinkableLabel(evidence.linked_table as EvidenceLinkableTable, locale)}
               signedUrl={evidence.signedUrl}
             />
           ))}
         </ul>
       ) : (
-        <EmptyState
-          icon={FileText}
-          title="No evidence uploaded yet"
-          description="Evidence is always optional — self-reported achievements are still fully valid."
-        />
+        <EmptyState icon={FileText} title={t("empty.title")} description={t("empty.description")} />
       )}
     </div>
   );

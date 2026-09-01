@@ -2,7 +2,8 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
-import { EVIDENCE_LINKABLE_TABLES, EVIDENCE_LINKABLE_LABELS, type EvidenceLinkableTable } from "@/lib/validation/evidence";
+import type { Locale } from "@/lib/i18n/config";
+import { EVIDENCE_LINKABLE_TABLES, evidenceLinkableLabel, type EvidenceLinkableTable } from "@/lib/validation/evidence";
 
 export interface LinkableItem {
   table: EvidenceLinkableTable;
@@ -24,14 +25,14 @@ const TITLE_COLUMN: Record<EvidenceLinkableTable, string> = {
 
 /** Every achievement a student could attach evidence to, across all 9 achievement
  * tables — used to populate the "which item is this evidence for?" picker on Documents. */
-export async function listLinkableItems(supabase: SupabaseClient<Database>, userId: string): Promise<LinkableItem[]> {
+export async function listLinkableItems(supabase: SupabaseClient<Database>, userId: string, locale: Locale): Promise<LinkableItem[]> {
   const results = await Promise.all(
     EVIDENCE_LINKABLE_TABLES.map(async (table) => {
       const titleColumn = TITLE_COLUMN[table];
       const { data } = await supabase.from(table).select(`id, ${titleColumn}`).eq("user_id", userId);
       return (data ?? []).map((row) => {
         const record = row as unknown as Record<string, string>;
-        return { table, id: record.id, label: `${record[titleColumn]} (${EVIDENCE_LINKABLE_LABELS[table]})` };
+        return { table, id: record.id, label: `${record[titleColumn]} (${evidenceLinkableLabel(table, locale)})` };
       });
     })
   );

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useTranslations } from "next-intl";
 import { GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,15 +10,15 @@ import { updateApplicationStatus } from "@/app/(app)/applications/actions";
 import { transition } from "@/lib/motion";
 import type { ApplicationStatus } from "@/types/database";
 
-const STATUS_OPTIONS: { value: ApplicationStatus; label: string }[] = [
-  { value: "not_started", label: "Not started" },
-  { value: "in_progress", label: "In progress" },
-  { value: "submitted", label: "Submitted" },
-  { value: "under_review", label: "Under review" },
-  { value: "accepted", label: "Accepted" },
-  { value: "waitlisted", label: "Waitlisted" },
-  { value: "rejected", label: "Rejected" },
-  { value: "withdrawn", label: "Withdrawn" },
+const APPLICATION_STATUSES: ApplicationStatus[] = [
+  "not_started",
+  "in_progress",
+  "submitted",
+  "under_review",
+  "accepted",
+  "waitlisted",
+  "rejected",
+  "withdrawn",
 ];
 
 // A handful of small dots radiating outward on acceptance — restrained, not a literal
@@ -29,6 +30,7 @@ const BURST_DOTS = Array.from({ length: 10 }, (_, i) => {
 });
 
 export function AcceptanceMoment({ universityName }: { universityName: string }) {
+  const tAccept = useTranslations("applications.statusControl");
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.96, height: 0 }}
@@ -56,10 +58,8 @@ export function AcceptanceMoment({ universityName }: { universityName: string })
           <GraduationCap className="size-7" />
         </motion.span>
       </div>
-      <p className="mt-4 font-display text-xl">You&apos;re in.</p>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Accepted to {universityName}. Whatever came before this moment worked — well done.
-      </p>
+      <p className="mt-4 font-display text-xl">{tAccept("acceptedTitle")}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{tAccept("acceptedBody", { universityName })}</p>
     </motion.div>
   );
 }
@@ -73,6 +73,7 @@ export function ApplicationStatusControl({
   initialStatus: ApplicationStatus;
   universityName: string;
 }) {
+  const t = useTranslations("applications");
   const [status, setStatus] = useState(initialStatus);
   const [justAccepted, setJustAccepted] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -99,15 +100,15 @@ export function ApplicationStatusControl({
     <div className="space-y-4">
       <AnimatePresence>{justAccepted ? <AcceptanceMoment universityName={universityName} /> : null}</AnimatePresence>
       <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">Status</span>
+        <span className="text-sm text-muted-foreground">{t("statusControl.status")}</span>
         <Select value={status} onValueChange={(v) => v && changeStatus(v as ApplicationStatus)}>
           <SelectTrigger className="w-44" disabled={isPending}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {STATUS_OPTIONS.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
+            {APPLICATION_STATUSES.map((value) => (
+              <SelectItem key={value} value={value}>
+                {t(`statusLabels.${value}`)}
               </SelectItem>
             ))}
           </SelectContent>
