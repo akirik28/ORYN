@@ -100,7 +100,7 @@ export function formatCounselorGrounding(recommendations: CounselorRecommendatio
 
   const sections = [
     section(
-      "Oryn's Counselor Core has already identified these verified candidate actions this week (prefer these over inventing new ones when one genuinely fits — you may still propose something grounded in the student's own existing projects/activities/goals that isn't in this list, but never invent a new external program, competition, or deadline). A line marked ELIGIBILITY UNKNOWN or NOT ELIGIBLE has NOT been confirmed open to this student — pass that caveat on rather than presenting the item as a settled option:",
+      "Oryn's Counselor Core has already identified these verified candidate actions this week (prefer these over inventing new ones when one genuinely fits — you may still propose something grounded in the student's own existing projects/activities/goals that isn't in this list, but never invent a new external program, competition, or deadline). A line marked ELIGIBILITY UNKNOWN or NOT ELIGIBLE has NOT been confirmed open to this student — pass that caveat on rather than presenting the item as a settled option. Never put one of these in \"avoidForNow\" — they are Counselor Core's recommendations, the opposite of something to discourage, even if you choose not to put it in \"actions\" yourself:",
       recommended,
     ),
     section(
@@ -119,14 +119,23 @@ export function formatCounselorGrounding(recommendations: CounselorRecommendatio
  * invent, never required for weekly-plan generation to work). A failure here is non-fatal:
  * the plan still generates from student context alone, exactly as it did before this
  * existed — Counselor Core being unavailable must never block weekly plans.
+ *
+ * Returns `recommendedTitles` alongside the formatted text so the caller can also pass them
+ * to `resolvePlanSelfContradiction` — Counselor Core's own do/consider list is a second,
+ * authoritative source for "this was recommended", independent of whatever the model itself
+ * echoed into `actions`. On failure both come back empty, matching the text-only failure
+ * mode this function already had: no grounding means no cross-check either, not a blocked
+ * plan.
  */
-async function buildCounselorGroundingText(userId: string): Promise<string> {
+async function buildCounselorGrounding(userId: string): Promise<{ text: string; recommendedTitles: string[] }> {
   try {
     const counselorResult = await getCounselorRecommendations(userId);
-    return formatCounselorGrounding(counselorResult.recommendations);
+    const text = formatCounselorGrounding(counselorResult.recommendations);
+    const recommendedTitles = counselorResult.recommendations.filter((r) => RECOMMENDED_CLASSES.includes(r.recommendationClass)).map((r) => r.title);
+    return { text, recommendedTitles };
   } catch (error) {
     console.error("[weekly-plan] failed to fetch counselor grounding, continuing without it", error);
-    return "";
+    return { text: "", recommendedTitles: [] };
   }
 }
 
@@ -205,20 +214,29 @@ function namesSameActivity(a: string, b: string): boolean {
  * without the titles themselves, which are student-derived content that SECURITY.md keeps
  * out of server logs.
  */
-export function resolvePlanSelfContradiction(plan: WeeklyPlanGeneration): WeeklyPlanGeneration {
+export function resolvePlanSelfContradiction(plan: WeeklyPlanGeneration, counselorRecommendedTitles: string[] = []): WeeklyPlanGeneration {
   const avoided = plan.avoidForNow;
   if (!avoided) return plan;
 
-  const collides = plan.actions.some((action) => namesSameActivity(action.title, avoided.activity));
-  if (!collides) return plan;
+  // Two independent sources of "this was recommended, not something to avoid": the model's
+  // own `actions` array (the original collision this guard was built for), and Counselor
+  // Core's do/consider list (the 2026-09-02 eval finding — the model can put a Counselor
+  // Core recommendation in avoidForNow WITHOUT also putting it in actions, so the first
+  // check alone misses it entirely). Either one is enough to drop avoidForNow.
+  const collidesWithAction = plan.actions.some((action) => namesSameActivity(action.title, avoided.activity));
+  const collidesWithCounselorRecommendation = counselorRecommendedTitles.some((title) => namesSameActivity(title, avoided.activity));
+  if (!collidesWithAction && !collidesWithCounselorRecommendation) return plan;
 
-  console.warn("[weekly-plan] model named the same activity as both a recommended action and the thing to avoid — dropping avoidForNow");
+  console.warn("[weekly-plan] model named a recommended activity as the thing to avoid — dropping avoidForNow", {
+    collidesWithAction,
+    collidesWithCounselorRecommendation,
+  });
   return { ...plan, avoidForNow: null };
 }
 
 export async function generateWeeklyPlan(userId: string): Promise<WeeklyPlanGeneration> {
   const context = await buildStudentAdvisorContext(userId);
-  const counselorGrounding = await buildCounselorGroundingText(userId);
+  const { text: counselorGrounding, recommendedTitles } = await buildCounselorGrounding(userId);
   const provider = getAIProvider();
   // Checked here, not just in principle: this is the exact feature the founder's own
   // measured incident came from (2026-09-02) -- one student regenerating this plan 102
@@ -227,7 +245,7 @@ export async function generateWeeklyPlan(userId: string): Promise<WeeklyPlanGene
 
   const result = await provider.generateStructured({
     system: withOutputLanguage(ADVISOR_SYSTEM_PROMPT, context.student.preferredLanguage),
-    prompt: `Here is the student's current context:\n\n${formatContextForPrompt(context, context.student.preferredLanguage)}${counselorGrounding}\n\nGenerate this week's plan: 1-3 highest-impact actions (fewer is fine if that's all that's genuinely high-impact), plus one thing to explicitly avoid prioritizing right now if something stands out. Ground every action in the student's actual gaps and existing work — don't propose generic tasks. Never name the same activity in both "actions" and "avoidForNow" — if you would recommend it, it does not belong in "avoidForNow", and if it belongs in "avoidForNow", do not recommend it.`,
+    prompt: `Here is the student's current context:\n\n${formatContextForPrompt(context, context.student.preferredLanguage)}${counselorGrounding}\n\nGenerate this week's plan: 1-3 highest-impact actions (fewer is fine if that's all that's genuinely high-impact), plus one thing to explicitly avoid prioritizing right now if something genuinely stands out. Ground every action in the student's actual gaps and existing work — don't propose generic tasks. Never name the same activity in both "actions" and "avoidForNow" — if you would recommend it, it does not belong in "avoidForNow", and if it belongs in "avoidForNow", do not recommend it. This also applies to anything Counselor Core already recommended above, even if you don't put it in "actions" yourself — a Counselor Core recommendation is never a valid answer for "avoidForNow". If nothing genuinely stands out to avoid, leave "avoidForNow" null: an empty slot is a correct, complete answer, not something to fill.`,
     schema: WeeklyPlanSchema,
     schemaName: "record_weekly_plan",
     schemaDescription: "Records this week's prioritized action plan for the student.",
@@ -236,5 +254,5 @@ export async function generateWeeklyPlan(userId: string): Promise<WeeklyPlanGene
   });
 
   await logAIUsage({ userId, feature: "weekly_plan", usage: result.usage, model: result.model, degraded: selection.degraded, degradeReason: selection.degraded ? selection.reason : null });
-  return resolvePlanSelfContradiction(result.data);
+  return resolvePlanSelfContradiction(result.data, recommendedTitles);
 }
