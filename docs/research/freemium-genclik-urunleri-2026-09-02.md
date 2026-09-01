@@ -491,3 +491,117 @@ I'm not stating that as verified since I couldn't open the source page myself. F
 
 ---
 
+## 6. Chegg
+
+**This is the thinnest section in this document, and that itself is a finding.** After
+one successful load of `chegg.com`'s homepage, every subsequent request to the domain —
+`/study`, `/contactus`, even the bare homepage again, in both the original tab and a fresh
+second tab — returned **"Access to this page has been denied."** This reads as bot
+detection tripped after a small handful of requests, not a broken link (the same URLs are
+publicly live for a normal browser). Of the products in this survey, Chegg's own site was
+the most resistant to being read directly. I'm reporting exactly what I got before the
+block, and marking everything else NOT FOUND rather than filling the gaps from memory or
+blogs pretending to be equivalent to a verified figure.
+
+**Sources checked:** `chegg.com` homepage (one successful load, 2026-09-02, before being
+blocked) and the [Chegg Study App Store listing](https://apps.apple.com/us/app/chegg-study-homework-help/id385758163).
+
+### 6.1–6.4 What's free / what's paid / when / CTA style
+OBSERVED (the one homepage load that succeeded): Chegg states its own funnel in three
+steps, verbatim: *"Create an account & explore our free tools → Choose your subscription →
+Ask a question & start learning."* That confirms account creation happens **before**
+subscription choice, and that some tools are usable free post-signup — but I could not
+open any further page to see which specific tools those are, what limit they carry, or
+what the upgrade moment looks like. The App Store listing confirms the core product is
+"expert Q&A" (submit a scanned/typed question, get a written solution, historically ~30–46
+minute average response time per the listing's own fine print) plus a "60 million" question
+solution library and AI-assisted solving layered on top of the expert-answer model. Whether
+any of that is accessible free, or how much, is **NOT FOUND** — the page that would show it
+was the one that got blocked.
+
+### 6.5 Price
+**NOT FOUND** via an official page opened this session. **SECONDARY, explicitly flagged,
+not verified, and inconsistent across the aggregators that report it** (one summary this
+session cited both $15.95 and $14.95 for the same plan in the same paragraph, which is
+itself a reason not to trust the category of source): commonly-reported figures are
+Chegg Study around $14–16/month with a cheaper effective annual rate (~$9.95/mo billed
+annually), a higher "Study Pack" tier around $19.95/month, and a 7-day free trial. None of
+this is used as a verified number in this document — it's reported only so the gap isn't
+silent.
+
+### 6.6 Minor-specific flow
+**NOT FOUND.** The Privacy Policy URL is known (`chegg.com/en-US/privacypolicy`, visible in
+the App Store listing's own text) but was blocked when I tried to open it. No claim made.
+
+---
+
+## 7. Scribbr
+
+Scribbr doesn't fit the subscription mold at all, and that's the headline finding — worth
+stating plainly rather than forcing it into the same shape as the other six.
+
+**Sources checked (all this session, 2026-09-02):**
+- [scribbr.com/plagiarism-checker/pricing](https://www.scribbr.com/plagiarism-checker/pricing/)
+- [scribbr.com/citation/generator](https://www.scribbr.com/citation/generator/)
+- [app.scribbr.com/plagiarism-checker](https://app.scribbr.com/plagiarism-checker) — the actual product step 1 (viewed, nothing uploaded)
+- [scribbr.com/privacy-policy](https://www.scribbr.com/privacy-policy/)
+
+### 7.1 What exactly stays free
+OBSERVED: the **Citation Generator** (APA/MLA/Chicago/Harvard, autocite by title/URL/ISBN/
+DOI, export to Word) is free with no cap or account stated, plus a free Chrome extension
+that auto-fills citations from any page. This is Scribbr's genuinely free, ungated tool —
+directly relevant to ORYN's own audience since it's explicitly marketed to "University
+applicants": ORYN's users are exactly the people citing sources in application essays and
+extended-essay-style projects.
+
+### 7.2 What's behind the wall
+The **plagiarism checker, AI Detector, and AI Proofreader are not a subscription feature at
+all — they're bundled into a single paid, one-time check**, priced by document length (7.5).
+The pricing page states this explicitly: AI Detector and AI Proofreader access is "free
+access... with a premium plagiarism check" — i.e. bundled into the one-time purchase, not
+separately free and not separately subscribable.
+
+### 7.3 WHEN the wall appears — directly observed
+No free preview of any kind. From the actual product flow (app.scribbr.com/plagiarism-
+checker, step 1 of 4, read directly, nothing submitted): **"1. Upload — Upload a Microsoft
+Word, PDF or ODT file of your paper, enter your details and pay."** Payment is bundled into
+step 1, before the document is even processed — there's no scan-first-see-a-teaser-result
+pattern here the way there is with, say, a metered AI query. You pay to submit, not to see
+results.
+
+### 7.4 CTA style
+Not applicable in the usual sense — there's no upgrade modal interrupting a free experience,
+because the paid tool and the free tools are simply different products on different pages.
+The paid tool's own pricing page is a standard interruptive marketing page (comparison-style
+feature list, prominent "Get started" CTA), but nothing about using the free Citation
+Generator ever prompts an upsell into the plagiarism checker within the flow I observed.
+
+### 7.5 Price
+OBSERVED, `scribbr.com/plagiarism-checker/pricing`, 2026-09-02, USD (page offered a
+currency switcher): **pay-per-document, explicitly stated "Prices are per check, not a
+subscription"** — Small document (up to 7,499 words) **$19.95**, Regular (7,500–49,999
+words) **$29.95**, Large (50,000+ words) **$39.95**. No monthly/annual price exists to
+compare, and therefore no annual discount rate applies — the pricing page's FAQ literally
+asks "Can I buy a monthly subscription for the Scribbr Plagiarism Checker?" as one of its
+listed questions, which I take as Scribbr pre-empting the exact comparison a reader used to
+subscriptions would reach for. Student discount: not found.
+
+### 7.6 Minor-specific flow
+OBSERVED (Privacy Policy, "Children's Privacy" section), and genuinely the **lightest-touch
+policy in this survey** — worth naming as its own category, not a variant of the others:
+*"Our Services are not intended for or directed to children, meaning those under the age of
+13 years old in the United States, age 16 years old in Europe and the U.K.... We do not
+knowingly collect or solicit personal information from children. If you are above the age
+of consent and below 18 years of age please get your parent or guardian's permission before
+using our Services."* That's the entire mechanic: a statement that under-13/16 users
+shouldn't be there, plus an honor-system request for parental permission for 13/16–18 —
+**no age-gate at signup, no restricted/child account type, no verified-parental-consent
+flow, and no separate product experience for a minor**, unlike every other product in this
+document. Worth naming directly for ORYN's audience: Scribbr's own stated floor (16 in
+Europe/UK) sits *above* the bottom of ORYN's 14–18 target band, meaning Scribbr's own
+policy would treat some of ORYN's actual users as below its intended age. (Corporate
+footnote, incidental: the contact address in this section is `privacy@learneo.com` — Learneo
+is Scribbr's parent company.)
+
+---
+
