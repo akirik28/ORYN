@@ -77,6 +77,38 @@ The operational lesson for anyone taking a package: use this script to decide *w
 to prioritise, never to decide whether a file is *finished*, and never read a partly-done
 file's number as remaining work. Inside a file, check by hand.
 
+## A whole class of gap no string count can see
+
+`npm run check:i18n` counts text. It cannot see a gap whose symptom is a *missing function
+call* — a component reading an English-only `Record<Type, string>` map directly instead of
+calling the locale-aware accessor beside it. There is no untranslated string to find; the
+string is in `lib/`, correct, and simply never asked which language it should be in.
+
+Found repeatedly: `page.tsx` and `progress-view.tsx` reading `DIMENSION_LABELS` /
+`EVIDENCE_STATE_SHORT_LABELS` raw, `score-radar.tsx` reading `DIMENSION_LABELS_SHORT` raw,
+and `lib/ai/student-context.ts` writing raw dimension *keys* into the model prompt — which
+then came back out inside the counsel a student reads ("your career_exploration gap…").
+
+Swept all thirteen exported label maps under `lib/` on 2026-09-01. Three have locale-aware
+accessors (`scoring/labels.ts`, `scoring/signal.ts`, `social/open-to.ts`). Of the rest:
+
+| Map | Student-facing consumers |
+|---|---|
+| `REQUIREMENT_CATEGORY_LABELS` | `universities/[id]/page.tsx`, `admin-requirement-form.tsx` |
+| `SUBJECT_LABELS` | `universities/[id]/page.tsx` |
+| `SEARCH_RESULT_TYPE_LABELS` | `command-palette.tsx`, `search-view.tsx` |
+| `EVIDENCE_LINKABLE_LABELS` | `documents/page.tsx` |
+| `SCORE_PROVENANCE_LABELS`, `CURRICULUM_LABELS` | none |
+| `PORTFOLIO_CATEGORY_LABELS` | 3 in `features/profile/` — **deferred on purpose, see below** |
+
+`PORTFOLIO_CATEGORY_LABELS` is shared with `cv-builder.tsx`, which produces a printed CV.
+Localizing it would either mismatch the on-screen controls against the printed output or
+require deciding what language a printed CV should be in — a product question, recorded in
+the component rather than answered silently. Worth knowing before anyone "fixes" it.
+
+**When taking a package, grep it for direct `LABELS[` indexing as well as running the
+script.** The two find different things, and only one of them finds this.
+
 ## Read the 332 as a floor, not a total
 
 The count matches JSX text nodes of two or more words plus
