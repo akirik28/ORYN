@@ -685,3 +685,89 @@ some version of "yes, with an adult in the loop."
 
 ---
 
+## 9. Notion (student plan)
+
+**The most surprising finding in this document, and directly relevant to why ORYN can't
+just copy Notion's model:** Notion's celebrated free "student plan" is a **higher-education-
+only offer that explicitly excludes ORYN's entire target age band.**
+
+**Sources checked (all this session, 2026-09-02):**
+- [notion.com/pricing](https://www.notion.com/pricing) — general pricing/comparison page
+- [notion.com/students](https://www.notion.com/students) — student-facing marketing page, FAQ accordion opened and read directly
+- [notion.com/help/notion-for-education](https://www.notion.com/help/notion-for-education) — official help center article
+
+### 9.1 What exactly stays free
+General Free tier (OBSERVED, pricing page): unlimited pages/blocks for a single-member
+workspace (limited for 2+ members), file uploads capped at 5 MB each, 7-day page history,
+10 external-guest limit, and only a "Trial of Notion AI" — i.e., unlike Grammarly's
+recurring monthly AI allowance, Notion AI on Free is a one-time/limited trial, not a
+resettable quota.
+
+### 9.2 What's behind the wall — and the K-12 exclusion specifically
+Two separate things are gated, and conflating them would be a mistake: (a) the standard
+paid tiers (Plus $10/member/month, Business $20/member/month — unlimited file uploads,
+longer history, more AI, admin controls); and (b) a **free upgrade to the Plus plan for
+verified students**, which is where the real finding is.
+
+OBSERVED, quoted directly from the official help center article ("Get the Education Plan
+for students & teachers"): *"Individual students and teachers at accredited colleges and
+universities can upgrade to the Education Plan for free at any time."* Verification runs
+through WHED (World Higher Education Database) via a school email. And from the
+`/students` page's own FAQ, quoted directly and unambiguously: **"You're not eligible if:
+You're a K-12 student or K-12 educator. But you can still use our Free Plan with unlimited
+storage for free!"**
+
+That sentence is the finding: Notion drew its free-upgrade line exactly at the K-12/
+higher-ed boundary, **on purpose, by policy** — not as an oversight. A 14–18-year-old
+ORYN user, however academically serious, gets the same $0 Free plan as any random adult
+signing up with a personal Gmail address; there is no lesser-but-still-special K-12 offer,
+no separate verification path for a high school email, nothing. I found no evidence
+anywhere on Notion's own domain of a distinct K-12/school program beyond this exclusion
+notice itself.
+
+### 9.3 WHEN the wall appears
+For the base product: never, in the volume sense — Free has unlimited pages for a
+single-member workspace, so a student journaling/planning alone may never hit a content
+wall (mirrors Photomath's unlimited-core pattern). The real trigger is **structural, not
+usage-based**: multi-member collaboration (a study group, a club) immediately hits the
+"limited for 2+ members" condition on pages/blocks, and file uploads hit the 5 MB cap
+per file regardless of how little total storage is used. For the free Education Plus
+upgrade specifically: the gate is an **identity check** (a verifiable higher-ed email),
+not a usage limit at all — and it's not one-time, either: OBSERVED, the help article states
+status must be re-verified with a valid school email **once a year**, with automatic
+downgrade to the Free plan (content intact) if verification lapses.
+
+### 9.4 CTA style
+Not independently observed as an in-product interruption — everything found was on
+marketing/help pages, not inside an active workspace approaching a limit.
+
+### 9.5 Price
+OBSERVED, `notion.com/pricing`, 2026-09-02, USD: **Free** $0/member/month. **Plus** $10/
+member/month. **Business** $20/member/month ("Recommended"). **Enterprise**: custom. A
+"Save up to 20% with yearly" toggle is stated on the page (billing-mode selector: "Pay
+monthly" / "Pay yearly"), giving a confirmed 20% annual discount rate — on the higher end
+of what's been found elsewhere in this document (Duolingo/Photomath ~50%, Brilliant 30%,
+Grammarly's rate not determinable, Khanmigo 8.3%). Education discount specifically: **not
+a percentage off — a full 100% waiver of the Plus price** for verified higher-ed users,
+which is a different (and stronger) mechanic than every other "student discount" found in
+this survey.
+
+### 9.6 Minor-specific flow
+**NOT FOUND / NOT VERIFIED this session, and worth explaining why rather than leaving it
+blank.** I attempted to reach Notion's actual Privacy Policy through several official paths
+— `notion.com/privacy`, `notion.com/terms`, `notion.com/trust/privacy-policy` (found via
+Notion's own on-page footer link, and independently via web search), and the
+`notion.so/28ff...` legal-hub link taken directly from that footer — and every one either
+redirected to the general marketing homepage or to a logged-out app shell rather than
+rendering the policy text. **Separately worth flagging as a methodology note, since it's
+exactly the failure mode this document's sourcing rules exist to catch:** web search
+results for "Notion privacy policy children" repeatedly surfaced `support.getnotion.com`
+and presented it as "Notion's official support documentation" — that domain belongs to a
+different, unrelated small business that happens to share the name "Notion," not Notion
+Labs, Inc. (whose only domains, confirmed by direct navigation all session, are
+`notion.com` and `notion.so`). I did not use that content, quoted or otherwise. Notion's
+actual minor-specific policy, if any, remains unverified here rather than filled in from
+a source I couldn't confirm was really theirs.
+
+---
+
