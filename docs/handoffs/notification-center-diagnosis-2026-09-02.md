@@ -1,8 +1,11 @@
 # Notification center diagnosis — two real bugs fixed, one gap flagged as a fork
 
-**Status:** diagnosis + two fixes, gates green (typecheck/lint/3221 tests/build). **Author
-lane:** oryn-31, at oryn-a7's request. **Base:** local `main` (`dc4f2ae9`, the just-merged
-Applications-page-rebuild commit). **Branch:** `oryn/notifications-diagnosis-2026-09-02`.
+**Status:** diagnosis + two fixes (part 1), full notifications page built (part 2, oryn-a7's
+call on the flagged fork). Gates green throughout. **Author lane:** oryn-31, at oryn-a7's
+request. **Base:** local `main` (`dc4f2ae9`, the just-merged Applications-page-rebuild
+commit); part 2 additionally merges main forward through `1557180d` to pick up
+`university_data_changed` going live mid-task (§5). **Branch:**
+`oryn/notifications-diagnosis-2026-09-02`.
 
 ---
 
@@ -152,11 +155,113 @@ with the popover staying as a capped preview and a "View all" link. Each has rea
 interaction-model implications for a component this session didn't design from scratch — flagging
 rather than picking one.
 
-## What this does NOT do
+## What this does NOT do (part 1)
 
-- No new `/notifications` page or pagination — see above, flagged not built.
+- No new `/notifications` page or pagination — see above, flagged not built. **Built in part 2,
+  below.**
 - No change to dedup keys, grouping, or link targets — all four checked clean, nothing to fix.
 - No live writes — `deadline` and `profile_update` still have zero production rows; nothing here
   triggered either to fire for real.
 - No change to `markAllNotificationsRead`'s all-or-nothing shape — it's correct as a bulk action,
   just not a substitute for the missing individual-triage path above 20 items.
+
+---
+
+# Part 2 — the notifications page
+
+oryn-a7's call on the fork: build the full page, not raise-and-paginate the popover. Reasoning
+(theirs): #21 was unreachable by anything but all-or-nothing "mark all read", which destroys
+information to navigate — same shape as the applications dead end from earlier tonight — and
+the cap was about to get hit in normal use once `deadline`/`profile_update` start producing
+real volume, not just at the tail.
+
+## 1. What's new
+
+**`app/(app)/notifications/page.tsx`** — server-rendered, `searchParams`-driven
+(`?category=&page=`), matching this codebase's established convention
+(`app/(app)/opportunities/page.tsx`). 25/page (deliberately larger than the popover's 20, so
+the page reads as "more," not "+5"), offset pagination via `.range()`, category filter via
+`.eq("category", ...)`. Three parallel queries: the current page's rows, a total count for
+that filter (pagination math), and a *global* unread count (`Mark all read` always clears
+everything regardless of which filter is on screen, matching what the action itself already
+does — the button's gating has to match its real effect).
+
+**`features/notifications/notification-list.tsx`** (client) — the page's row list. Full body
+text, no `line-clamp` (the page has room; the popover doesn't, see part 1 §1). Each unread row
+gets an explicit, properly-labeled "Mark read" button — not just the popover's tiny decorative
+dot repurposed as a click target, which would fail a reasonable touch-target-size bar. Clicking
+a row's title still marks it read too (same behavior as the popover), so the two paths are
+consistent, not competing.
+
+**`features/notifications/mark-read.ts`** — `markReadIfUnread` / `markAllRead`, the actual
+"skip if read, call the action, toast on error" logic, extracted so the popover and the new
+list call the literal same function rather than two copies that could quietly drift — which is
+exactly the kind of divergence part 1 was watching for elsewhere (the `line-clamp-2` fix and
+the `unreadCount` fix were each a case of two things that were supposed to agree silently not
+agreeing).
+
+**`components/oryn/pagination.tsx`** — had zero callers anywhere in the codebase before this
+(confirmed by grep) and hardcoded English `"Previous"`/`"Next"`/`"Page X of Y"` with no
+translation. Made the four labels required props while giving it its first real caller, so
+this page's "both locales" requirement can't silently regress for whoever calls it next — same
+"required, not optional-with-a-silent-default" shape as `unreadCount` in part 1.
+
+**Category filter**: 7 of `NotificationCategory`'s 8 values (`system` excluded — no writer,
+ever, per the earlier audit). `university_data_changed` **went live mid-task** — commit
+`afa33a57` landed on `main` while this was being built, giving that category its first real
+writer (`lib/universities/data-change-scan.ts`). Checked it against the same link-dedup
+question part 1 asked of everything else: dedupes on `(user_id, university_id, source,
+last_changed_at)` via `university_notification_log` (migration `0078`), not link — clean, same
+established pattern as `deadline_notification_log`. `features/notifications/categories.ts` was
+written to exclude it, then updated once the merge surfaced that it shouldn't be anymore — left
+a comment there naming the commit, so the next person doesn't have to re-derive why the list
+looks the way it does.
+
+**The popover** (`features/app-shell/notification-bell.tsx`): unchanged except one addition — a
+"View all" footer link to `/notifications`, always shown (even when everything visible is
+read, since there can be older history past the 20 shown). This is the "honest preview" half of
+oryn-a7's own framing: the popover no longer has to pretend it's the whole story.
+
+**Deliberately not done**: no grouping — flat reverse-chronological, matching oryn-a7's explicit
+instruction not to add it just because a page makes it possible. No unread-only filter — not
+asked for, category filter plus per-row read state covers what was scoped.
+
+## 2. The merge
+
+Pushing this hit a real conflict, not a spurious one: `main` had moved from `dc4f2ae9` to
+`1557180d` while this was being built (20+ merges — an age-gate, the university-data-changed
+writer among them), and both this branch and `afa33a57` appended new keys to the same
+`notifications` object in both message catalogs. Purely additive on both sides, no logical
+conflict — resolved by keeping both sets of keys, then updating `categories.ts` per the note
+above. `app/(app)/layout.tsx` auto-merged clean (this branch's `unreadCount` change and the
+age-gate's `confirm-age` redirect touch disjoint parts of the file). All 4 gates re-run clean
+after the merge: typecheck, lint, 3285 tests, build. `git merge-tree --write-tree` against
+`main` at `1557180d` confirmed clean immediately before pushing.
+
+## 3. Verification
+
+Browser-verified via this worktree's own dev server (not `preview_start` — its
+`.claude/launch.json` resolution is pinned to the primary checkout regardless of worktree
+`cwd`, a known issue; ran `next dev` directly and pointed the pane at the resulting URL
+instead). `/design-preview/notifications` (new, mirrors the existing per-page preview
+pattern) renders every state — mixed 7-item list across all categories, per-row "Mark read"
+present only on unread rows, pagination component, both empty-state variants — with zero
+console errors. Confirmed no horizontal overflow and no button clipping at a 375px mobile
+viewport via direct DOM measurement (`get_page_text`/`javascript_tool`, not screenshots — the
+Browser pane was intermittently hidden from view mid-session, which zeroes
+`window.innerWidth`/breaks click coordinates without erroring; this is a previously-documented
+pattern, not new). Component tests added for both new client pieces
+(`__tests__/notifications/notification-list.test.tsx`,
+`__tests__/notifications/mark-all-read-button.test.tsx`), covering per-row mark-read, the
+no-link-renders-as-text case, unclamped long-body rendering, and both success/failure paths for
+each server action — 9 new tests, all passing alongside the existing suite.
+
+## What this does NOT do (part 2)
+
+- No unread-only filter, no grouping — not asked for / explicitly declined.
+- No change to how `deadline`/`profile_update` generate content — still zero live rows for
+  either as of this writing; the page will render their real content correctly whenever they
+  first fire (same builder functions, same shape as the digest fixtures already verified).
+- No sidebar/nav entry for `/notifications` — reachable via the popover's new "View all" link,
+  which is the entry point oryn-a7's own reasoning pointed at; adding a persistent nav item
+  wasn't asked for and would be its own scope decision.
