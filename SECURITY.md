@@ -42,6 +42,31 @@ the new table is owner-only (`user_id = auth.uid()`, full CRUD), added in the sa
 migration that creates it (`0020_requirement_evaluation.sql`) rather than as a follow-up
 fix, to avoid repeating the `profile_scores` mistake this section already documents.
 
+**Re-verified live 2026-09-01, against `oryn-qa-scratch`.** The counts below have moved a
+long way from the "44 tables" figure this section was written around — 34 tables have been
+added since — so the useful thing is not the number but that the properties still hold at
+the new size. Four queries against `pg_class` / `pg_policies` / `pg_proc`:
+
+| Check | Result |
+|---|---|
+| Tables in `public` with RLS enabled | **78 of 78** — none missing |
+| Tables with a `user_id` column carrying a blanket `SELECT` (`using (true)`) | **0** |
+| Policies granting anything to `anon` without an `auth.uid()` predicate | **0** |
+| `INSERT`/`ALL` policies with a null or `true` `WITH CHECK` | **0** — no forgery surface |
+| `SECURITY DEFINER` functions in `public` without a pinned `search_path` | **0 of 3** |
+
+Note on reading `pg_policies`: nearly every policy here lists its role as `{public}`, which
+looks alarming and is not. A policy written without an explicit `TO` clause defaults to
+PUBLIC, and the work is done by the predicate — `user_id = auth.uid()` evaluates to NULL for
+an anonymous request, so no row matches. The check that matters is therefore the *predicate*,
+not the role list, which is why the table above tests for `auth.uid()` rather than for the
+absence of `anon`.
+
+**What this pass did not cover**, so it is not mistaken for a full audit: Storage bucket
+policies, the service-role key's handling in deployment, and the application-layer
+authorization above RLS (a Server Action reading the right rows for the wrong user is not an
+RLS question). Those remain as stated elsewhere in this document.
+
 **Re-verified again in Chat 3, this time live, not by grep.** Every migration through
 `0025` was previously reviewed by hand only — no Docker/Supabase existed in any sandbox
 this product had been built in, so "N tables have RLS" was a static-analysis claim, never
