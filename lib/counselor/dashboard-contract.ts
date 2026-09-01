@@ -109,3 +109,42 @@ export function buildCounselorDashboardContract(
     targetUniversityInsights: state.advisor.targetUniversities,
   };
 }
+
+/** The shape app/(app)/dashboard/page.tsx's `ai_recommendations` query returns — only the
+ *  two fields this function reads. */
+export interface StoredAvoidRecommendation {
+  title: string;
+  reason: string | null;
+}
+
+/**
+ * Which "one thing not to do" the dashboard should show, and where it comes from. Extracted
+ * (2026-09-01) from app/(app)/dashboard/page.tsx so this precedence has one place to live
+ * and one place to test, same rationale as lib/scoring/dashboard-hero.ts's
+ * computeDashboardHeroState — after a live bug where the previous version got the direction
+ * wrong (see docs/handoffs/avoid-for-now-precedence-2026-09-01.md for the full incident).
+ *
+ * Trusts a successful Counselor Core computation completely: a populated `avoidForNow` or a
+ * confident null, doesn't matter which. `avoidEligible` (scoring.ts) is a narrow,
+ * deterministic condition — every matched gap must already be a strong dimension, and the
+ * same dimension as the single overall strongest gap — so `null` here means "nothing
+ * currently warrants this," recomputed fresh from the student's current profile on every
+ * render, not "no opinion available."
+ *
+ * `storedRecommendation` (an `ai_recommendations` row) is the fallback for the one case
+ * Counselor Core can't cover at all: `contract` is `null` because the computation didn't run
+ * (see dashboard/page.tsx's try/catch around buildCounselorDashboardContract and
+ * getCounselorState's own `.catch`). A previous version preferred the stored row whenever
+ * one existed, with no check on how old it was — a stale row, once written, could outrank a
+ * fresh, correct answer indefinitely, including rows written before a since-fixed prompt bug
+ * stopped leaking raw dimension identifiers into AI-generated `reason` text.
+ */
+export function resolveAvoidRecommendation(
+  contract: Pick<CounselorDashboardContract, "avoidForNow"> | null,
+  storedRecommendation: StoredAvoidRecommendation | null
+): { title: string; reason: string } | null {
+  if (contract) {
+    return contract.avoidForNow ? { title: contract.avoidForNow.title, reason: contract.avoidForNow.why[0] ?? "" } : null;
+  }
+  return storedRecommendation ? { title: storedRecommendation.title, reason: storedRecommendation.reason ?? "" } : null;
+}

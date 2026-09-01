@@ -15,7 +15,7 @@ import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
 import { toProfileSignal } from "@/lib/scoring/signal";
 import { buildProfileChange } from "@/lib/scoring/change";
 import { getCounselorState } from "@/lib/counselor/state";
-import { buildCounselorDashboardContract, type CounselorDashboardContract } from "@/lib/counselor/dashboard-contract";
+import { buildCounselorDashboardContract, resolveAvoidRecommendation, type CounselorDashboardContract } from "@/lib/counselor/dashboard-contract";
 import { DashboardView } from "@/features/dashboard/dashboard-view";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -210,15 +210,10 @@ export default async function DashboardPage() {
 
   const displayName = profile?.display_name || profile?.first_name || "there";
 
-  // AI-generated "avoid for now" rows only ever get written when a weekly plan generation
-  // has actually succeeded at least once (lib/plan/persist.ts) — so this was, until now,
-  // silently just as AI-dependent as the "This week" block itself. Counselor Core's own
-  // avoidForNow (deterministic, spec Phase 39) fills the same gap the same way.
-  const avoidRecommendation = recommendationRes.data
-    ? { title: recommendationRes.data.title, reason: recommendationRes.data.reason ?? "" }
-    : counselorContract?.avoidForNow
-      ? { title: counselorContract.avoidForNow.title, reason: counselorContract.avoidForNow.why[0] ?? "" }
-      : null;
+  // See resolveAvoidRecommendation's own doc comment (lib/counselor/dashboard-contract.ts)
+  // for why a successful Counselor Core computation is trusted completely and the stored
+  // ai_recommendations row is only a fallback for computation failure, not for "no opinion."
+  const avoidRecommendation = resolveAvoidRecommendation(counselorContract, recommendationRes.data);
 
   return (
     <DashboardView

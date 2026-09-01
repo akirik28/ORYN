@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { buildCounselorDashboardContract } from "@/lib/counselor/dashboard-contract";
+import { buildCounselorDashboardContract, resolveAvoidRecommendation } from "@/lib/counselor/dashboard-contract";
 import { toDimensionScoreRows } from "@/lib/counselor/gaps";
 import { RANKING_THRESHOLDS } from "@/lib/counselor/config";
-import type { CounselorState } from "@/lib/counselor/types";
+import type { CounselorRecommendation, CounselorState } from "@/lib/counselor/types";
 import type { UpcomingDeadline } from "@/lib/deadlines/upcoming";
 import type { Opportunity, OpportunityMatch, ProfileDimension } from "@/types/database";
 
@@ -281,5 +281,63 @@ describe("buildCounselorDashboardContract", () => {
     expect(rec.eligibility.verdict).toBe("known_eligible");
     expect(typeof rec.recommendationClass).toBe("string");
     expect(Array.isArray(rec.why)).toBe(true);
+  });
+});
+
+// 2026-09-01 — a live bug found via a stale ai_recommendations row that outranked a fresh,
+// correct Counselor Core answer indefinitely (no check on how old the stored row was). The
+// four cases below are the actual matrix the fix depends on: which of {contract present,
+// avoidForNow present} × {stored row present} wins, and why "computation didn't run" is the
+// only condition that should ever fall back to stored prose.
+describe("resolveAvoidRecommendation", () => {
+  function recommendation(overrides: Partial<Pick<CounselorRecommendation, "title" | "why">> = {}): CounselorRecommendation {
+    return {
+      id: "profile_task:x",
+      title: "Fresh, correct recommendation",
+      recommendationClass: "avoid_for_now",
+      why: ["Fresh reasoning"],
+      matchedGapDimensions: [],
+      impact: "medium",
+      effort: "medium",
+      urgency: "medium",
+      deadline: null,
+      costOnFile: null,
+      applicationRequirements: [],
+      eligibility: { verdict: "known_eligible", notes: [] },
+      confidence: "medium",
+      evidence: [],
+      warnings: [],
+      nextAction: { label: "View", type: "VIEW", href: "/" },
+      ...overrides,
+    };
+  }
+
+  const staleStoredRow = { title: "Stale stored title", reason: "Stale stored reason, possibly containing a raw career_exploration identifier" };
+
+  test("a populated avoidForNow wins over a stored row — fresh over stale, even when both exist", () => {
+    const contract = { avoidForNow: recommendation({ title: "Fresh pick", why: ["Fresh why"] }) };
+    const result = resolveAvoidRecommendation(contract, staleStoredRow);
+    expect(result).toEqual({ title: "Fresh pick", reason: "Fresh why" });
+  });
+
+  test("a confident null avoidForNow wins over a stored row too — null from a real computation is a real answer, not a gap to fill", () => {
+    const contract = { avoidForNow: null };
+    const result = resolveAvoidRecommendation(contract, staleStoredRow);
+    expect(result).toBeNull();
+  });
+
+  test("the stored row is used only when the computation itself did not run (contract is null)", () => {
+    const result = resolveAvoidRecommendation(null, staleStoredRow);
+    expect(result).toEqual({ title: "Stale stored title", reason: "Stale stored reason, possibly containing a raw career_exploration identifier" });
+  });
+
+  test("null when neither is available", () => {
+    expect(resolveAvoidRecommendation(null, null)).toBeNull();
+    expect(resolveAvoidRecommendation({ avoidForNow: null }, null)).toBeNull();
+  });
+
+  test("a stored row's null reason becomes an empty string, not the literal 'null'", () => {
+    const result = resolveAvoidRecommendation(null, { title: "T", reason: null });
+    expect(result).toEqual({ title: "T", reason: "" });
   });
 });

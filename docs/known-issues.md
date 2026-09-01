@@ -39,6 +39,49 @@ claims category (b) had marked unverifiable, live-data-quality findings in the
 opportunities entry, and one confirmed-merged branch — see the inline **Update, 2026-09-01
 (staleness pass)** / **(second pass)** notes throughout.
 
+## Needs founder decision — raw dimension identifiers still live in three stored-content tables
+
+**2026-09-01.** A prompt bug let raw `ProfileDimension` values (`career_exploration`,
+`community_impact`, `awards_distinction`, `execution_project_depth`,
+`intellectual_curiosity` — the five that can't be mistaken for ordinary English words, as
+opposed to `academics`/`leadership`/`research`/`entrepreneurship`, which read fine even
+raw) leak into AI-generated recommendation and plan prose. The generator is fixed; nothing
+swept what it had already written before the fix.
+
+`ai_recommendations` is closed off in code — see
+`docs/handoffs/avoid-for-now-precedence-2026-09-01.md`. The dashboard's "one thing not to
+do" card previously preferred a stored row over a fresh Counselor Core computation whenever
+one existed, with no check on how old it was; three accounts, including the founder's own,
+had a tainted row about to render (*"...your career_exploration gap is better addressed
+by..."*). Now the fresh computation is trusted completely — populated or a confident
+null, either way — and the stored row is only a fallback for the computation failing to
+run at all. All 105 historically-tainted `ai_recommendations` rows are now unreachable via
+that card, not just the 3 that were live.
+
+Three more tables carry the same leak and have **no deterministic alternative to fall back
+to** — a stored weekly action or a past advisor message is the only copy that exists, so
+there is no code-level fix, only a data write:
+
+| table | affected | renders on |
+|---|---|---|
+| `weekly_actions` | 6 of 22 rows, all 5 users | dashboard "This week" and `/plan` |
+| `weekly_plans.summary` | 1 of 8 | plan summary |
+| `advisor_messages.content` | 3 of 26, 2 conversations | chat history |
+
+Live on the founder's own account, confirmed independently twice (once by the session that
+found this, once during the `ai_recommendations` fix's own live-verification pass): a
+stored weekly action currently reads *"Career_exploration is at 9/100 with low confidence —
+one of your weakest, least-understood dimensions."*
+
+Options, none applied: regenerate the affected rows now that the prompt bug is fixed, or
+hand-edit the roughly 10 rows directly. Either is a real content mutation and needs the
+founder's own call — some may already be superseded by newer, clean rows for the affected
+users by the time this is read, since weekly plans regenerate on their own cadence.
+
+**The general lesson, worth keeping**: a generator fix and a sweep of what the generator
+already wrote are two different tasks, and the second is easy to skip because nothing
+fails loudly when it's missing — the old rows just sit there, correct-looking, until the
+"most recent" one for some student happens to be a bad one again.
 
 ## English month names on university deadlines, and why it is one file
 
