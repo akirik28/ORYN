@@ -764,12 +764,9 @@ some of it moved)**:
   (CEO, 2026-09-01): field coverage on the 122 `under_review` rows is materially thinner
   than on the 275 `active` ones across every dimension checked — deadline 11% vs 24%,
   cost 9% vs 36%, age bounds 1% vs 34%, country eligibility 0% vs 15%. The moderation gate
-  is doing real work; rows that clear it are better-populated than rows that don't. (Where
-  those 122 `under_review` rows came from is not fully accounted for — `lib/opportunities/
-  ingest.ts` still only ever writes `status: "active"`, confirmed by reading the current
-  file, so this status is reaching rows through some other path. The 51-row batch above
-  explains 41 of the 122; the remaining ~81 are unexplained by anything checked this pass
-  and worth a look, not a guess.)
+  is doing real work; rows that clear it are better-populated than rows that don't. **Full
+  trace of where all 122 rows came from, and whether the gate is broken (it isn't): see
+  "All 122 `under_review` opportunity rows, traced" below.**
 - **A cheap, real check that existing reasoning talked past, not a bug in that reasoning**
   (CEO, 2026-09-01): of 275 active rows, 208 have no deadline — but `lib/opportunities/
   lifecycle.ts`'s own comment already correctly explains most of that (50
@@ -805,6 +802,77 @@ that script's behavior is deliberate and already disclosed, not a defect. Record
 so the retraction has a durable home, not just a chat message.) No code change made; the
 merge decision on the two rows stays a human/review-queue call, not an automatic one,
 per this org's standing rule against fuzzy-merging entities.
+
+## All 122 `under_review` opportunity rows, traced — the gate is working, and the real gap is narrower
+
+**2026-09-01.** Follow-up to the coverage-quality finding above: where did 122 rows in
+`under_review` come from, is the queue a graveyard of forgotten inventory or a working
+moderation gate, and can anything promote a row out of it? Traced all 122, live-queried,
+not sampled.
+
+**The number that looked like a contradiction resolves once `source_confidence` and
+`status` are read as two different axes, not one.** `source_confidence` answers "is this
+organization/programme real" — set once, at research time. `status` (`active` vs
+`under_review`) answers a narrower, separate question: "is *this specific cycle*
+confirmed." A row can be fully real and well-sourced while nobody has yet confirmed this
+year's dates — that's not a contradiction, it's exactly what two independent checks should
+produce. 46 of the 81 rows this entry is about read `source_confidence='high'` while
+sitting in `under_review`; that number is the two axes disagreeing on purpose, not the gate
+malfunctioning.
+
+**Two traceable pathways, not one bucket:**
+
+1. **107 rows, `source = "Founder school-counselor Drive corpus..."`** (41 of these are the
+   truncated-import defect the entry above already covers — same rows, different lens).
+   Traced to `scripts/drive-import/generate_sql.py`'s `opp_status()`, called when
+   `supabase/seed_drive_batch1.sql` was generated — `import-opportunity-corpus.ts` (the
+   script that actually inserts) doesn't decide status at all, it writes whatever this
+   generator already decided:
+   ```python
+   def opp_status(current_cycle_status, current_cycle_details):
+       if any(sig in details_l for sig in CLOSED_SIGNALS): return "expired"
+       if "2026 cycle confirmed" in (current_cycle_status or ""): return "active"
+       return "under_review"
+   ```
+   `under_review` is the *default* — a row only reaches `active` if the research
+   explicitly confirmed this year's cycle is live. Checked the 65 non-truncated rows
+   directly: **61/65 have `cycle_status='unverified'`**, exactly what this rule predicts.
+   The gate is doing what it was written to do. This is the founder's own "decision-grade
+   coverage over row count" priority, implemented in a function nobody had read until now.
+
+2. **15 rows — 14 "UK Mathematics Trust (direct fetch)", 1 "Barnard Athena Center...
+   (direct fetch)"**, both single-timestamp batches (2026-08-24 00:52:13 and 00:45:56 —
+   one INSERT statement each, not incremental). No script anywhere in `scripts/` produces
+   this source string for `opportunities` — searched, not assumed absent. The row content
+   itself reads as researched, not stubbed: all 15 are `source_confidence='high'`, 10 of
+   the 14 UK MT rows carry real, specific future deadlines (2027-03-19, 2027-01-06,
+   2026-09-23...). **Circumstantial evidence, stated as such and not as more than that**:
+   `lib/counselor/state.ts` carries a comment naming a precedent for exactly this action —
+   "pulling a record to `under_review`" — citing a specific incident one day earlier
+   (Wharton Hack-AI-thon, 2026-08-23). That is consistent with a researcher deliberately
+   holding well-researched rows pending review, and it is not proof: there is no
+   field-level audit trail (see that entry elsewhere in this doc), so intent for these 15
+   specifically cannot actually be confirmed, only inferred from shape and timing.
+
+**The real gap, and it's narrower than "122 unexplained rows": no promotion path exists
+anywhere.** Checked exhaustively, not by grep alone. No code in `app/`, `lib/`, or
+`scripts/` transitions a row from `under_review` to `active` — every `status = "active"`
+reference is either a read-side filter or a write that sets `active` at creation, never a
+transition. No admin action touches opportunity status (`app/(app)/admin/actions.ts` only
+handles `message_reports`). And on the database side: `select proname from pg_proc join
+pg_namespace ... where proname ilike '%opportunit%'` returns exactly one function,
+`opportunity_matches_guard_computed_columns` (the 0063 guard trigger) — nothing
+promotion-shaped. `under_review` is a one-way door. A row can be held for exactly the right
+reason and still have no way out except someone running SQL by hand.
+
+**Two different promotion costs, kept separate rather than folded into one "promote the
+queue" number**: the 61 `unverified` Drive-corpus rows need fresh per-row research
+confirming the current cycle — the same "detectable, not yet detected" shape as the
+25-row open/null-deadline finding above, just needing new research instead of a stored-data
+check. The 15 direct-fetch rows look closer to ready — most already carry a real,
+specific deadline — so a lighter review (confirm the date and URL, no new research) would
+likely clear most of them. Neither is built; both are live-DB writes and therefore
+founder-gated, same as Tier 2 above. Not a lane decision.
 
 ## Fixed this session (BUG-1, triage cycle 2)
 
@@ -988,12 +1056,13 @@ this pass.
   `under_review` today. The building block was added; the wiring described here wasn't.
   Needs product input on what a
   review queue should look like; out of scope for this pass's "focused additions" mandate.
-  **Update, 2026-09-01 (staleness pass) — still true at the code level, re-confirmed by
-  reading `ingest.ts` fresh, but the live database now has 122 `under_review` rows
-  despite that.** Something outside this code path is setting the status — not identified
-  this pass. See the "85/271 live opportunities" entry's 2026-09-01 update above for what
-  is known about those rows (41 explained by one specific import batch, coverage-quality
-  comparison against `active`, ~81 still unaccounted for).
+  **Update, 2026-09-01 — still true at the code level (`ingest.ts` re-read fresh, still
+  only ever writes `active`), and the live database's 122 `under_review` rows are now
+  fully traced to two other sources, neither of them this file.** See "All 122
+  `under_review` opportunity rows, traced" below: a deterministic gate in
+  `scripts/drive-import/generate_sql.py` accounts for 107, a small researcher-driven
+  batch accounts for the other 15, and — the actual gap — no code anywhere promotes a row
+  out of `under_review` once it lands there, regardless of source.
 - ~~No admin surface reads `message_reports`.~~ **Fixed** (autonomous pass, 2026-08-16):
   `/admin` now has a Reports section (status/reviewed_by/reviewed_at/resolution_note —
   migration `0030_moderation.sql`, `CODE_READY_ENV_BLOCKED` until applied). See
