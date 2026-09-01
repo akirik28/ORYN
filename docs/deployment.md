@@ -87,7 +87,9 @@ npx supabase link --project-ref <your-project-ref>
 npx supabase db push
 ```
 
-Expect 68 migrations. Verify the result rather than trusting the exit code:
+Expect every file in `supabase/migrations/` to apply — **74 at the time of writing**, and that
+number grows, so count the directory rather than trusting this sentence:
+`ls supabase/migrations/*.sql | wc -l`. Verify the result rather than trusting the exit code:
 
 ```bash
 npx supabase db push --dry-run
@@ -100,8 +102,25 @@ with `psql` and check the shape:
 psql "$PRODUCTION_DB_URL" -c "select (select count(*) from pg_tables where schemaname='public') as tables, (select count(*) from pg_policies where schemaname='public') as policies;"
 ```
 
-A correct, fully-migrated database reports **81 tables and 103 policies**. Fewer tables
-means the push stopped early — do not continue until this matches.
+**Do not compare this against a number written in a document.** An earlier version of this
+section said "81 tables and 103 policies" and it went stale the moment a migration added a
+table — by 2026-09-01 the repo had six migrations past that snapshot, two of which create a
+table and a policy. A hardcoded expected count in a runbook fails in the worst direction: it
+tells you a correct deployment is broken, in the middle of a step you cannot easily undo.
+
+Two reference points that do not go stale:
+
+- **`.github/workflows/migrations.yml` prints the real numbers** (`tables=… policies=…
+  indexes=… functions=…`) on every green run against a freshly replayed database. That output,
+  from the most recent green run on `main`, is the authoritative expectation — read it there,
+  not here.
+- **For a rough sanity check only**, the long-running QA project `oryn-qa-scratch` reported
+  **78 tables / 94 policies** on 2026-09-01 while still missing six migrations. A fresh push of
+  everything should land somewhat above both figures. An order of magnitude below means the
+  push stopped early; do not continue.
+
+The check that genuinely must pass, and the only one worth blocking on, is the RLS one below —
+it is an invariant rather than a count, so it stays true no matter how many migrations exist.
 
 Confirm row-level security is on everywhere, since this is the boundary protecting student
 data:
