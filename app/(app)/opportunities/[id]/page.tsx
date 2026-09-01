@@ -30,6 +30,21 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return { title: opportunity?.title ?? "Opportunity" };
 }
 
+/**
+ * What to call a source when `opportunities.source` is null — which it can be: the column is
+ * nullable with no default, so any row inserted with a `source_url` but no `source` reaches
+ * this. It used to read "Official source", which asserts a source tier nobody recorded. The
+ * host name is the one thing the URL actually proves, and it matches what the branch above
+ * does with a real `opportunity_sources` row (`source_domain ?? source_url`).
+ */
+function sourceNameFromUrl(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+
 function humanize(value: string): string {
   return value.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
 }
@@ -301,7 +316,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
       ) : opportunity.source_url ? (
         <div className="border-t pt-4">
           <SourceBadge
-            sourceName={opportunity.source ?? "Official source"}
+            sourceName={opportunity.source ?? sourceNameFromUrl(opportunity.source_url)}
             checkedAt={opportunity.last_verified_at}
             url={opportunity.source_url}
             confidence={opportunity.source_confidence as ConfidenceLevel}
