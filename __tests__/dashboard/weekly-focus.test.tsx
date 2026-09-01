@@ -50,6 +50,7 @@ function action(overrides: Partial<WeeklyAction> = {}): WeeklyAction {
     reflection_outcome: null,
     reflection_note: null,
     completed_at: null,
+    carried_forward: false,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     ...overrides,
@@ -191,5 +192,57 @@ describe("WeeklyFocus renders translated copy", () => {
   test("Turkish: an empty plan shows the translated empty state", () => {
     renderWeeklyFocus([], tr);
     expect(screen.getByText("Bu haftanın planında henüz eylem yok.")).toBeInTheDocument();
+  });
+});
+
+/**
+ * Migration 0077 / docs/founder-blocked-backlog.md item 39 (2026-09-02): "Regenerate" no
+ * longer deletes a completed action, it marks it carried_forward instead. These pin the
+ * display half of that decision — a carried-forward action must render as a separate,
+ * read-only "done" entry, never mixed into the active list's interactive toggle/reflection
+ * flow (that flow would let a student "un-complete" or re-reflect on something from a
+ * previous week's batch, which was never the intent).
+ */
+describe("WeeklyFocus — carried-forward completed actions (migration 0077)", () => {
+  test("a plan with no carried-forward actions renders exactly the active list — no second section", () => {
+    renderWeeklyFocus([action(), action({ id: "action-2", priority: 2 })]);
+    expect(screen.queryByText("Completed this week")).not.toBeInTheDocument();
+  });
+
+  test("a carried-forward action renders under its own heading, not among the active list", () => {
+    renderWeeklyFocus([
+      action({ id: "fresh-1", title: "Fresh action" }),
+      action({ id: "old-1", title: "Old completed action", status: "completed", carried_forward: true, reflection_outcome: "completed_successfully" }),
+    ]);
+
+    expect(screen.getByText("Completed this week")).toBeInTheDocument();
+    expect(screen.getByText("Fresh action")).toBeInTheDocument();
+    expect(screen.getByText("Old completed action")).toBeInTheDocument();
+    // The reflection outcome is shown in the carried-forward row's reason slot.
+    expect(screen.getByText("Completed successfully")).toBeInTheDocument();
+  });
+
+  test("a carried-forward action has no toggle button and no reflection prompt — it is read-only", () => {
+    renderWeeklyFocus([action({ status: "completed", carried_forward: true })]);
+
+    expect(screen.queryByRole("button", { name: "Mark as complete" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Mark as not started" })).not.toBeInTheDocument();
+    expect(screen.queryByText("What happened?")).not.toBeInTheDocument();
+  });
+
+  test("a carried-forward action with no reflection on record shows the title with no reason line", () => {
+    renderWeeklyFocus([action({ status: "completed", carried_forward: true, reflection_outcome: null, title: "Undocumented completion" })]);
+    expect(screen.getByText("Undocumented completion")).toBeInTheDocument();
+  });
+
+  test("a plan that is entirely carried-forward (no fresh batch) still renders the completed section alone", () => {
+    renderWeeklyFocus([action({ status: "completed", carried_forward: true })]);
+    expect(screen.getByText("Completed this week")).toBeInTheDocument();
+    expect(screen.queryByText("No actions in this week's plan yet.")).not.toBeInTheDocument();
+  });
+
+  test("Turkish: the carried-forward heading translates", () => {
+    renderWeeklyFocus([action({ status: "completed", carried_forward: true })], tr);
+    expect(screen.getByText("Bu hafta tamamlananlar")).toBeInTheDocument();
   });
 });
