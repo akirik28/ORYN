@@ -78,6 +78,22 @@ hand-edit the roughly 10 rows directly. Either is a real content mutation and ne
 founder's own call — some may already be superseded by newer, clean rows for the affected
 users by the time this is read, since weekly plans regenerate on their own cadence.
 
+**Bounded, 2026-09-01: the leak is confined to AI-authored prose, and the deterministic
+engines never produced it.** Swept the two other stored surfaces that render generated text to
+a student and both are clean — `opportunity_matches` (1,921 rows, both `eligibility_notes` and
+`reason_codes`) and `student_requirement_evaluations.reasoning` (259 rows): **zero** raw
+identifiers across 2,180 rows. That is a useful negative: the four affected tables are exactly
+the four written by a model, and the two written by deterministic scoring are untouched. So the
+question to ask of any future stored-text surface is not "does it show scores" but **"is a model
+writing this sentence"** — and the remedy for the ~10 remaining rows stays a data write rather
+than something a broader code fix could reach.
+
+**Detector note for whoever re-runs this**: derive the identifier list from the
+`ProfileDimension` type rather than writing one by hand (a hand-written attempt missed
+`awards_distinction` and undercounted), then keep only values containing an underscore —
+`research`, `academics` and `leadership` are ordinary English words and match perfectly clean
+prose.
+
 **The general lesson, worth keeping**: a generator fix and a sweep of what the generator
 already wrote are two different tasks, and the second is easy to skip because nothing
 fails loudly when it's missing — the old rows just sit there, correct-looking, until the
