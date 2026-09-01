@@ -9,9 +9,12 @@
 -- GoTrue column), the replay job fails and tells us, which is the point. Resist the urge
 -- to broaden it speculatively; add only what a real migration provably needs.
 --
--- Verified dependency surface as of migration 0072: auth.users(id), auth.uid(),
+-- Verified dependency surface as of migration 0073: auth.users(id), auth.uid(),
 -- storage.buckets, storage.objects, storage.foldername(), the anon/authenticated/
--- service_role roles, and the supabase_realtime publication.
+-- service_role roles, and the supabase_realtime publication. (0073 adds a policy using
+-- auth.uid() on an existing table and needed nothing new here -- bumped anyway, because
+-- the note below is about a header that was accurate when written and went stale in
+-- silence, and "it didn't need anything" is exactly when that happens.)
 
 create extension if not exists pgcrypto;
 

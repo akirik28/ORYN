@@ -61,8 +61,10 @@ describe("migration numbering", () => {
     // third same-day collision, this time caught by this exact guard before merging rather
     // than on merge: birth_year_changes (the minor-consent audit trail) also started as
     // 0071, found the collision with calendar_bound_fact_class on rebase, and was
-    // renumbered to 0072.
-    expect(Math.max(...numbers.map(Number))).toBe(72);
+    // renumbered to 0072. 0073 (product_events_select_own) is the export-coverage fix: it
+    // added no collision, but the pin did its other job and made whoever added it read all
+    // of the above before appending — which is the point of a tripwire over a ceiling.
+    expect(Math.max(...numbers.map(Number))).toBe(73);
   });
 });
 
