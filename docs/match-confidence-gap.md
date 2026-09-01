@@ -23,12 +23,31 @@ hides anything from a student who reads the card.
 
 What it *is*: the headline tier (`tierFor()` in `features/opportunities/opportunity-card.tsx`)
 is a pure function of `match_score`, so a confirmed-eligible opportunity and an
-unknown-eligibility one get the same headline and the same rank. Phase 12 of the spec lists
+unknown-eligibility one get the same headline and the same rank. Phase 12 lists
 **Confidence** as one of the seven fields a match should express and says explicitly not to
-collapse them into one opaque score. Whether the tier should be damped by eligibility
-confidence is a product decision, not a defect to quietly patch — and it sits in the
-opportunity-engine territory, so it belongs to that lane and the founder, not to a passing
-audit.
+collapse them into one opaque score.
+
+**And ORYN already does this correctly — on the other surface.** `lib/counselor/scoring.ts:70`:
+
+```ts
+const dataQuality = eligibility.verdict === "unknown" ? Math.round(dataQualityBase * 0.6) : dataQualityBase;
+```
+
+The Counselor damps data quality by 40% when eligibility is unknown, as its own weighted
+factor alongside gapRelevance / fieldAlignment / urgency — so the dashboard's "This Week"
+and the advisor's priorities already account for this. Browse reads the separate, undamped
+`match_score` off `opportunity_matches` and never learned the same lesson. (Identified by
+the opportunity-engine lane, verified here against the source.)
+
+That makes this a smaller decision than it first looked: not "should we invent a confidence
+adjustment," but "extend a pattern already trusted on one surface to a second one." The
+shape to copy is Counselor's — add eligibility confidence as its own factor in whatever
+decides tier and rank, and leave the persisted `match_score` alone as an honest fit number.
+Phase 38 warns specifically against a blind multiply and asks for normalized factors; and
+mutating a stored fit score to simulate a confidence adjustment would be the same
+false-precision this codebase keeps having to undo.
+
+Still the opportunity-engine lane's call to make and schedule, not a passing audit's diff.
 
 ## Two things this does settle
 
