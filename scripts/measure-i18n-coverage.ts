@@ -245,6 +245,19 @@ if (dataModules.length === 0) {
   console.log("  (a `message:` here may be a student's toast or an operator's log line; read the");
   console.log("   consumer before treating one as a gap. Confirmed live: field-config.ts feeds every");
   console.log("   achievement form; completeness.ts feeds the dashboard's top three actions.)");
+  // Every entry below was traced to its consumer on 2026-09-01 and none is a gap. Printed so
+  // the list doesn't read as six outstanding items forever, and so the next person doesn't
+  // re-walk work already done -- but printed rather than filtered out, because "checked and
+  // cleared" is a claim with a date on it: a new consumer can make any of these
+  // student-facing tomorrow, and a hidden file cannot be re-examined.
+  console.log("");
+  console.log("  Traced to their consumers 2026-09-01, none student-facing — re-check only if a");
+  console.log("  new caller appears:");
+  console.log("    lib/validation/onboarding.ts   dead to the UI; onboarding-wizard.tsx:89 defines its own");
+  console.log("    lib/moderation/report-status.ts  /admin only, operator-facing");
+  console.log("    lib/jobs/schedule.ts, lib/acquisition/verification.ts  operator/log strings");
+  console.log("    lib/deadlines/ingest.ts        ingestion notes and rejection reasons");
+  console.log("    lib/requirements/evaluate.ts   \"TOEFL\" / \"TR-YÖS\" — proper nouns, same in both");
   for (const { file, count } of dataModules.slice(0, 12)) console.log(`    ${String(count).padStart(3)}  ${file}`);
 }
 
