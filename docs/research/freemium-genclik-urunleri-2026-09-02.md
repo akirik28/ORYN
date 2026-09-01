@@ -771,3 +771,118 @@ a source I couldn't confirm was really theirs.
 
 ---
 
+## 10. CollegeVine — the closest real competitor, and the single most load-bearing finding in this document
+
+I added CollegeVine myself, beyond the brief's named list, because it isn't a general
+analog the way the other nine are — it's the same product, for the same student, solving
+the same problem, and it has already made the exact free-vs-paid call ORYN is about to
+make. What I found changes the shape of the recommendation in §11, so I'm giving it the
+fullest treatment in this document.
+
+**Sources checked (all this session, 2026-09-02):**
+- [collegevine.com](https://www.collegevine.com) — current homepage
+- [collegevine.com/collegevine-faq](https://www.collegevine.com/collegevine-faq) — current FAQ
+- [collegevine.com/the-vine](https://www.collegevine.com/the-vine) — current community page
+- [collegevine.com/admissions-calculator](https://www.collegevine.com/admissions-calculator) — legacy student-facing chancing tool (still live, not linked from current nav)
+- [collegevine.com/sage](https://www.collegevine.com/sage) — legacy AI counselor product, FAQ accordion opened and read directly (still live, not linked from current nav)
+- [collegevine.com/legal/privacy](https://www.collegevine.com/legal/privacy/) — Privacy Policy
+
+### 10.0 CollegeVine has pivoted its primary business to B2B — report this plainly, it changes what the rest of this section means
+This is not what I expected to find, and it's worth stating before anything else. The
+current `collegevine.com` homepage, main navigation, and FAQ describe **"The AI operating
+system for universities"** — an enterprise platform selling AI agents to *university
+administrations* across enrollment management, financial aid, advancement, academic
+operations, career services, student affairs, IT, HR, facilities, and more. Every nav link
+(`/solutions/enrollment`, `/solutions/advancement`, `/solutions/finance`, etc.), the entire
+FAQ (implementation timelines, "how many team members need to be involved," ROI
+measurement), and even the community page ("The Vine," whose "founding voices" are named
+VPs and Directors of Enrollment at named universities) are addressed to **institutions as
+the customer**, not students. There is no student-facing link anywhere in the current
+primary navigation.
+
+**The original consumer product — free chancing calculator, free essay review, and an AI
+counselor called "Sage" — is still live, at stable URLs, but is no longer linked from
+anywhere in the current site's navigation.** I found it only by guessing a known legacy
+path and having it resolve. I can't tell from the outside whether this is a maintained
+product CollegeVine still actively supports for its installed base of students while
+selling B2B elsewhere, or a deprioritized legacy surface left running. Both the chancing
+tool and Sage show live signals of currency (working FAQ accordions, a stated "2.2 Million
+active students" figure on the Sage page, functioning "Get started" / "Start chatting"
+CTAs) — I'm reporting what's actually live today, not what CollegeVine is currently
+promoting.
+
+### 10.1 What exactly stays free (on the legacy student product)
+Everything, per the product's own explicit framing. OBSERVED, `/admissions-calculator`:
+*"Your account unlocks all these free tools"* — the chancing calculator itself ("Calculate
+your chances for free"), advising livestreams, **essay guidance and peer review**
+("Submit your own essay for a review in less than 6 hours on the world's first entirely
+free college essay review system"), and Q&A with experts/peers. And, separately and most
+importantly:
+
+### 10.2 What's behind the wall — nothing found
+I could not find a paid consumer tier anywhere on `collegevine.com`. The product directly
+answers *why* it's free, OBSERVED verbatim: *"We believe that every student deserves expert
+guidance. To make that possible, access to the CollegeVine platform is free for students.
+We partner with colleges that pay to join our ecosystem and interact with students via
+virtual events and 1-1 connections... Connections with colleges are student-initiated,
+meaning your profile is only shared if and when you opt-in."* **This is a third
+monetization pattern, distinct from every other product in this document**: not
+subscription-freemium (Duolingo, Quizlet, Brilliant, Khanmigo, Grammarly, Notion), not
+pay-per-use (Scribbr), but a **two-sided marketplace where the student side is
+monetization-free by design and universities pay for access to (opted-in) students.**
+
+### 10.3 Sage — CollegeVine's AI counselor — is stated as completely free, with no cap mentioned
+This is the finding I'd flag most plainly, exactly because ORYN's own wall is planned for
+this exact feature shape. Sage is described, OBSERVED on its own page, as *"Your AI
+counselor, tutor, and superconnector"* — chancing, school-list building, essay
+brainstorming and review, 24/7 homework help and test prep (named subjects: Math, English,
+Chemistry), SAT/ACT prep, scholarship finding, and direct connections to admissions
+officers. Its own FAQ asks the exact question this document needs answered and answers it
+without hedging, **quoted verbatim, twice, in two different FAQ answers**: *"Is Sage really
+free? Yes, Sage is completely free. Our goal is to make quality education and college
+counseling accessible to all students, regardless of their background,"* and separately,
+*"Sage is free and adapts to your personal learning journey."* **No usage cap, message
+limit, or paid tier is mentioned anywhere on the page.** I did not create an account, so I
+can't confirm there's truly no rate limit in the live product — only that the product's own
+marketing makes no mention of one, in contrast to, say, Grammarly's explicit "100 AI
+prompts/month" framing on its own free tier.
+
+*Flagging for oryn-f5 rather than analyzing here, per our territory split:* if Sage does
+throttle or degrade at some undisclosed limit, that's their question to chase, not mine —
+I'm reporting the free-vs-paid claim, not what happens at a boundary the marketing doesn't
+admit exists.
+
+### 10.4 WHEN the wall appears
+There is no wall to time, on the evidence found — both the chancing tool and Sage are
+positioned as free from the first interaction (no trial period, no "N free questions then
+pay" framing anywhere in the copy checked). The only gate found at all is **account
+creation** — the calculator's primary CTA is "Calculate your chances for free" but the
+detailed version requires signing up ("Complete my chancing profile" / "Sign up to get
+started"), same shape as Brilliant's immediate-onboarding-redirect (§4.3), except
+CollegeVine's funnel ends at a free account, not a paywall.
+
+### 10.5 CTA style
+The legacy pages read as standard content-marketing pages (testimonials, "what Sage can
+help with" feature list, FAQ), not upgrade-interruption pages — unsurprising, since there's
+no upgrade being sold. The *current* B2B homepage, by contrast, is a fully interruptive
+enterprise-sales funnel ("Request a demo," "Talk to an AI Agent," "Get started" repeated
+throughout) — just aimed at university administrators, not students.
+
+### 10.6 Price
+**$0 for every student-facing feature found**, with no paid consumer tier located anywhere
+on the domain. I looked specifically for one (a "CollegeVine For Counselors" link exists at
+`go.collegevine.com/counselors`, which is a B2B2C page for independent counselors, not a
+direct-to-student paid tier — not investigated further as out of scope). Student discount:
+not applicable — there's nothing to discount.
+
+### 10.7 Minor-specific flow
+OBSERVED, Privacy Policy "Children's Policy" section, standard COPPA framing: services "not
+directed to or intended for use by children under 13 years of age," no collection without
+parental consent under 13, no accommodation described for the 13–17 band specifically (no
+Child User mode, no verified-consent path, unlike Duolingo/Brilliant — closer to
+Scribbr's/Grammarly's simpler-policy category). Practically low-stakes for this product
+specifically, since college-chancing users skew toward the older end of high school by the
+nature of the product, but worth noting for completeness.
+
+---
+
