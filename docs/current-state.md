@@ -27,7 +27,8 @@ for the enduring product/build direction.**
 | Code measured against | `origin/main` @ `4188bada` |
 | Code measurement timestamp | **2026-09-01 03:15** |
 | Prior checkpoint | `2334f07`, 2026-08-22 19:40 — **208 commits since**, not individually reconstructed here; see `git log 2334f07..origin/main` for the full record |
-| Gate on the checkpoint commit | lint clean · typecheck clean · **189 files / 2,864 tests** · production build compiles (this session's own worktree, `npm run lint && typecheck && test && build`) |
+| Gate on the checkpoint commit | lint clean · typecheck clean · **203 files / 2,998 tests** · production build compiles |
+| Updated | 2026-09-01 evening, at `9ca9371d` — 78 merges since `0bd3206b`. The 03:21 version of this file described an i18n situation that no longer exists; that section is rewritten below rather than amended. |
 | Live DB measured against | `oryn-qa-scratch` (`qtcvcflzxbuagvvwahhu`), via Supabase MCP, 2026-09-01 ~03:10 |
 | Which migrations are actually live | `docs/migration-state.md` — probed from the schema, **not** from `schema_migrations`, which has no row for twelve of them |
 | RLS re-verified live | 2026-09-01, at 78 tables (the figure in `SECURITY.md` had been 44); 78/78 enabled, no blanket SELECT on a `user_id` table, no `anon` grant without an `auth.uid()` predicate |
@@ -48,14 +49,40 @@ source and the commits that changed them — not from memory of what a lane inte
   `fix(settings): remove Storage objects before deleting an account, not never`) — it used to
   leave orphaned files behind indefinitely. Neither claim is "launch-ready legal compliance";
   both are "the thing the 08-22 checkpoint said didn't exist now exists and does what it says."
-- **Turkish coverage is real and broader than a single `messages/` file suggests.** `next-intl`
-  covers navigation chrome (`messages/en.json`/`tr.json`), but most of the product's actual
-  content — legal pages, the counselor's reasoning copy, requirements explanations, admission
-  outlook explanations, dashboard hero/profile-signal copy, scoring labels — goes through a
-  separate, consistent `getXCopy(locale)` bilingual-object pattern instead (`lib/legal/content.ts`,
-  `lib/counselor/copy.ts`, `lib/requirements/copy.ts`, `lib/admissions/explain.ts`,
-  `lib/scoring/*.ts`), across 8 separately merged i18n lanes. Checking only `messages/*.json`
-  undercounts this substantially — checked both this pass after the first read was misleading.
+- **Turkish is complete on the string level, and there are now four guards keeping it that
+  way.** `npm run check:i18n` reports **0 untranslated student-facing strings** (from 332
+  across 86 files that morning) and **0 pages with a build-time English title** (from 25).
+  The catalogs hold 1,000+ keys in exact parity. Two files still show raw JSX and both are
+  deliberate — one is bilingual by conditional, one is prompt-coupled.
+
+  The guards matter more than the number, because each was written after a real defect:
+  `__tests__/i18n/locale.test.ts` fails on catalog drift, on a **duplicate key** (which
+  `JSON.parse` resolves silently by dropping one — it nearly broke four unrelated files), and
+  on a new ICU `#` inside a plural (which formats with the active locale, bypassing the
+  pinned `formatNumber` — it rendered "1.010 üniversite" against "1,010" elsewhere on the same
+  page). `__tests__/i18n/translation-keys.test.ts` resolves every statically-decidable `t()`
+  key, because next-intl renders an unresolved key as *visible literal text*.
+  `__tests__/i18n/label-accessors.test.ts` fails when a locale-aware file indexes an
+  English-only label map directly — the class that leaves no untranslated string behind and
+  which no string count can see.
+
+  **What the count still cannot see, and repeatedly did not:** strings held in const arrays
+  and maps. Every package this day found more than the tool reported — one file counted as 1
+  string contained 21, all inside a `FEATURES` array. Treat `check:i18n` as a ceiling for
+  prioritising files, never as a definition of done inside one.
+
+  AI output follows the student's language too, on five of six surfaces
+  (`lib/ai/output-language.ts`). **Its quality is unmeasured** — the eval suite is
+  English-only and checking whether Turkish counsel keeps its register costs model calls.
+
+- **A Saved page exists** (`/saved`, secondary nav) — founder request, 2026-09-01. Two
+  sections rather than one merged list, because "compare" means different things for a
+  university and an opportunity. "Saved" includes every status except the two meaning *I took
+  this off my list*, so applied/accepted/rejected all still appear — hiding `applied` would
+  have hidden the most important rows. Opportunities had no compare mechanism at all before
+  this; the university one's shape was mirrored rather than abstracted over, since two call
+  sites is not enough information to design an abstraction from.
+
 - **A scheduler exists in config** (`vercel.json`): four daily cron jobs — opportunity discovery
   (02:00), requirement discovery (04:00), university-data sync (06:00), deadline reminders
   (08:00) — hitting the four `app/api/jobs/*` routes built for Phase 30. **Whether they're
