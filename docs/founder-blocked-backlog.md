@@ -745,6 +745,21 @@ it presents an extraction artifact as an editorial fact, and the field's authori
 misleading.*
 **Depends on**: nothing technical — a schema/product judgment. ORYN-CFO was asked to weigh in.
 
+> **ORYN-CFO's answer, recorded 2026-09-01 — a recommendation, not a decision. This item is
+> still yours.**
+>
+> **Yes, and do this one first: it's the cheapest of the five.** A join table
+> `university_program_degree_types(program_id, degree_type, display_order)`, with the single
+> field retired to a derived "primary award" if anything still needs one. The 51 held Glasgow
+> rows are already verified 30/30 correct, so this is schema plus a backfill of data we already
+> trust — **no new research**, and it fixes the MEng-misses-BEng search miss directly.
+>
+> The general principle, which item 35 puts to you across all five instances: when a field's job
+> is "the current single truth" but reality has coexisting truths, model it as rows rather than
+> fighting the field — the `university_deadlines.verification_state` precedent.
+>
+> Writing the migration needs nothing from you; *applying* it does, same as 0073 and 0074.
+
 ## 33. ~~Ten `_backup_*`/staging tables in `public`~~ — NINE DROPPED; the tenth is live infrastructure, not a straggler
 
 > ### Resolved for nine. The tenth needed a different read, arrived at over three passes.
@@ -900,6 +915,43 @@ proposal, and it answers all five instances at once.
 **Depends on**: nothing technical — a schema/product judgment. Deciding the principle once
 settles all five and prevents the next one. ORYN-CFO was asked to weigh in on the `degree_type`
 instance. Full analysis: `docs/feat2-multi-axis-status-audit-2026-08-22.md`.
+
+> **ORYN-CFO's answer, recorded 2026-09-01 — a recommendation, not a decision. The call is
+> still yours.**
+>
+> **The principle: yes.** Where a field's job is "the current single truth" but reality has
+> coexisting or historically-layered truths, model it as rows. A field that silently overwrites
+> a coexisting truth is indistinguishable, *from its own output*, from one that never had it —
+> the same failure class as this codebase's confident-output-from-absent-input pattern, in its
+> information-loss variant.
+>
+> **But deciding the principle once does not mean treating all five the same**, and the ranking
+> matters more than the principle:
+>
+> 1. **`ApplicationStatus`/`TargetStatus` — highest actual harm, do this one first.** The
+>    institution's decision and the student's own later choice are different axes, not one
+>    field's history. `applications.status` is a single column, so `accepted` → `withdrawn`
+>    **destroys the fact of the acceptance outright** — not hidden from a view, gone from the
+>    record. The product forgetting the best thing that happened to a student because they later
+>    made an unrelated choice. Needs an event table (two immutable rows), with "current status"
+>    derived.
+>    *Precision, since an earlier draft of this note put the harm in the wrong place:*
+>    `lib/scoring/monthly-review.ts` counts `applicationsSubmittedRecently` and never displays
+>    acceptances, so a withdrawal drops one from a **submitted count** there. The acceptance loss
+>    is in the schema, not in that view.
+> 2. **`degree_type` — do this second; it's the free unlock.** See item 32: the data is already
+>    verified, so it's schema plus backfill.
+> 3. **Girl Up per-region deadlines** — trivial; reuse `university_deadlines`' existing shape as
+>    a region-scoped `opportunity_deadlines`.
+> 4. **`cycle_status`** — model cycles as rows; current-cycle-status and next-cycle-date-known
+>    are orthogonal facts forced into one column.
+> 5. **Concord Review — check this one before assuming it needs the same treatment.** It reads
+>    more like a single mislabelled field (publication month vs deadline month sharing an
+>    ambiguous "cycle" name) than genuine multi-value reality. Four lanes converging on a
+>    principle is exactly when the fifth case gets forced to fit it.
+>
+> None of this is destructive DDL — additive schema plus backfill. Writing the migrations needs
+> nothing from you; applying them does, same as 0073 and 0074.
 
 ---
 
