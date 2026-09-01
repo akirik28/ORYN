@@ -3,6 +3,8 @@ import { useState } from "react";
 import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
+import { NextIntlClientProvider } from "next-intl";
+import en from "@/messages/en.json";
 
 /**
  * Component-level regression coverage for EntityCombobox (features/entities/entity-combobox.tsx)
@@ -74,17 +76,21 @@ function Harness({
 }) {
   const [state, setState] = useState<EntityComboboxValue>({ id: initialEntityId, displayName: initialValue });
   return (
-    <EntityCombobox
-      scope={scope}
-      value={state.displayName}
-      entityId={state.id}
-      allowCustom={allowCustom}
-      customLabel={customLabel}
-      onChange={(next) => {
-        setState(next);
-        onChangeSpy?.(next);
-      }}
-    />
+    // Real-catalog provider wrap — same reasoning as quick-add-entry.test.tsx: the
+    // component now calls useTranslations("entities"), which throws without a provider.
+    <NextIntlClientProvider locale="en" messages={en}>
+      <EntityCombobox
+        scope={scope}
+        value={state.displayName}
+        entityId={state.id}
+        allowCustom={allowCustom}
+        customLabel={customLabel}
+        onChange={(next) => {
+          setState(next);
+          onChangeSpy?.(next);
+        }}
+      />
+    </NextIntlClientProvider>
   );
 }
 

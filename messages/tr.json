@@ -1071,6 +1071,10 @@
       "status": "Durum",
       "acceptedTitle": "Kabul edildin.",
       "acceptedBody": "{universityName} sana kabul verdi. Buraya kadar yaptığın her şey işe yaradı — tebrikler."
+    },
+    "readiness": {
+      "label": "Başvuru hazırlığı",
+      "description": "Bilinen kontrol listenin ne kadarının tamamlandığını gösterir — kabul şansını değil."
     }
   },
   "documents": {
@@ -1256,5 +1260,20 @@
       "updateFailed": "Bu istek güncellenemedi.",
       "removeFailed": "Kaldırılamadı."
     }
+  },
+  "entities": {
+    "linkedToVerified": "Doğrulanmış bir kayda bağlı.",
+    "searchFailed": "Arama şu anda çalışmıyor — biraz sonra tekrar dene.",
+    "noMatches": "Eşleşme bulunamadı.",
+    "unverifiedTag": "(doğrulanmamış)",
+    "cantFind": "Aradığın {noun} yok mu?",
+    "schoolAddTitle": "Okulunu ekle",
+    "addTitle": "{noun} ekle",
+    "didYouMean": "Bunlardan birini mi demek istedin?",
+    "noneOfThese": "Hiçbiri değil — yine de ekle",
+    "name": "Ad",
+    "city": "Şehir",
+    "country": "Ülke",
+    "unverifiedNotice": "Oryn bunu, resmi bir kaynakla karşılaştırılana kadar doğrulanmamış olarak ekleyecek."
   }
 }

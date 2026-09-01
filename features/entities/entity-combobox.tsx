@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { Loader2, Plus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +13,25 @@ import { ENTITY_SCOPES, type EntityScope } from "@/lib/entities/field-policy";
 
 const DEBOUNCE_MS = 300;
 const MIN_QUERY_LENGTH = 2;
+
+/**
+ * `customLabel` is free English text threaded in from callers (lib/entities/field-policy.ts's
+ * per-scope defaults, and per-field overrides in features/profile/field-config.ts) — not a
+ * closed enum this file owns, so it can't be translated here without reaching into those
+ * other files' territory. "Add {article} {noun}" and "Can't find your {noun}?" therefore
+ * interpolate the noun as-is (still English) rather than attempting it; see the entities.*
+ * catalog keys for how each locale's template copes with an untranslated noun. English gets
+ * its article computed here since that's a same-file, low-risk fix already needed either way
+ * (the old `a ${noun}` template said "a organization", "a issuer", "a institution or lab" —
+ * never correct); Turkish sidesteps the problem structurally (see the "cantFind"/"addTitle"
+ * catalog comment) rather than needing a Turkish equivalent of this table.
+ */
+const VOWEL_SOUND_EXCEPTIONS = ["university"];
+function englishArticle(noun: string): "a" | "an" {
+  const firstWord = noun.trim().split(/\s+/)[0]?.toLowerCase() ?? "";
+  if (VOWEL_SOUND_EXCEPTIONS.includes(firstWord)) return "a";
+  return /^[aeiou]/.test(firstWord) ? "an" : "a";
+}
 
 export interface EntityComboboxValue {
   id: string | null;
@@ -55,6 +75,7 @@ export function EntityCombobox({
   // A scope with no custom fallback type cannot accept one however the caller configured
   // it — the Server Action refuses it too, so offering the affordance would only produce
   // an error the student can do nothing about.
+  const t = useTranslations("entities");
   const canAddCustom = allowCustom && ENTITY_SCOPES[scope].customFallbackType !== null;
   const customNoun = customLabel ?? ENTITY_SCOPES[scope].customLabel;
   const [results, setResults] = useState<EntitySearchResult[]>([]);
@@ -181,14 +202,14 @@ export function EntityCombobox({
         {isSearching ? <Loader2 className="absolute right-2 top-1/2 size-3.5 -translate-y-1/2 animate-spin text-muted-foreground" /> : null}
       </div>
 
-      {entityId ? <p className="mt-1 text-xs text-muted-foreground">Linked to a verified entry.</p> : null}
+      {entityId ? <p className="mt-1 text-xs text-muted-foreground">{t("linkedToVerified")}</p> : null}
 
       {open && hasQuery && (results.length > 0 || canAddCustom || searchFailed || noResults) ? (
         <ul id={listboxId} role="listbox" className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-lg border bg-popover py-1 text-popover-foreground shadow-md ring-1 ring-foreground/10">
           {searchFailed ? (
-            <li className="px-3 py-2 text-sm text-muted-foreground">Search isn&apos;t working right now — try again in a moment.</li>
+            <li className="px-3 py-2 text-sm text-muted-foreground">{t("searchFailed")}</li>
           ) : noResults && !canAddCustom ? (
-            <li className="px-3 py-2 text-sm text-muted-foreground">No matches found.</li>
+            <li className="px-3 py-2 text-sm text-muted-foreground">{t("noMatches")}</li>
           ) : null}
           {results.map((result, index) => (
             <li key={result.id} role="option" aria-selected={index === highlightedIndex}>
@@ -201,7 +222,7 @@ export function EntityCombobox({
               >
                 <span className="font-medium">
                   {result.displayName}
-                  {result.isCustom ? <span className="ml-1.5 text-xs font-normal text-muted-foreground">(unverified)</span> : null}
+                  {result.isCustom ? <span className="ml-1.5 text-xs font-normal text-muted-foreground">{t("unverifiedTag")}</span> : null}
                 </span>
                 {result.subtitle ? <span className="text-xs text-muted-foreground">{result.subtitle}</span> : null}
               </button>
@@ -219,7 +240,7 @@ export function EntityCombobox({
                   setCustomOpen(true);
                 }}
               >
-                <Plus className="size-3.5" /> Can&apos;t find your {customNoun}?
+                <Plus className="size-3.5" /> {t("cantFind", { noun: customNoun })}
               </button>
             </li>
           ) : null}
@@ -262,6 +283,8 @@ function CreateCustomEntityDialog({
   context?: { country?: string | null; city?: string | null };
   onCreated: (entity: { id: string; canonicalName: string }) => void;
 }) {
+  const t = useTranslations("entities");
+  const tCommon = useTranslations("common");
   // Fresh on every mount only — the parent forces a remount (via a changing `key`) each
   // time the dialog is reopened, so these never need to be reset by an effect.
   const [name, setName] = useState(initialName);
@@ -291,12 +314,14 @@ function CreateCustomEntityDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add {scope === "school" ? "your school" : `a ${noun}`}</DialogTitle>
+          <DialogTitle>
+            {scope === "school" ? t("schoolAddTitle") : t("addTitle", { article: englishArticle(noun), noun })}
+          </DialogTitle>
         </DialogHeader>
 
         {duplicates && duplicates.length > 0 ? (
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">Did you mean one of these already-listed entries?</p>
+            <p className="text-sm text-muted-foreground">{t("didYouMean")}</p>
             <ul className="space-y-1.5">
               {duplicates.map((candidate) => (
                 <li key={candidate.id}>
@@ -307,31 +332,29 @@ function CreateCustomEntityDialog({
               ))}
             </ul>
             <Button type="button" variant="ghost" size="sm" disabled={isPending} onClick={() => submit(true)}>
-              {isPending ? <Loader2 className="size-3.5 animate-spin" /> : "None of these — add it anyway"}
+              {isPending ? <Loader2 className="size-3.5 animate-spin" /> : t("noneOfThese")}
             </Button>
           </div>
         ) : (
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label htmlFor="custom-entity-name">Name</Label>
+              <Label htmlFor="custom-entity-name">{t("name")}</Label>
               <Input id="custom-entity-name" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1.5">
-                <Label htmlFor="custom-entity-city">City</Label>
+                <Label htmlFor="custom-entity-city">{t("city")}</Label>
                 <Input id="custom-entity-city" value={city} onChange={(e) => setCity(e.target.value)} />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="custom-entity-country">Country</Label>
+                <Label htmlFor="custom-entity-country">{t("country")}</Label>
                 <Input id="custom-entity-country" value={country} onChange={(e) => setCountry(e.target.value)} />
               </div>
             </div>
             {/* No website field: a registry row's official_url is sourced during
                 verification from the official page itself. A student-typed URL would put
                 unverified data on a row every other student reads. */}
-            <p className="text-xs text-muted-foreground">
-              Oryn will add this as unverified until someone checks it against an official source.
-            </p>
+            <p className="text-xs text-muted-foreground">{t("unverifiedNotice")}</p>
             {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
           </div>
         )}
@@ -339,10 +362,10 @@ function CreateCustomEntityDialog({
         {!duplicates ? (
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {tCommon("cancel")}
             </Button>
             <Button type="button" onClick={() => submit(false)} disabled={isPending || !name.trim()}>
-              {isPending ? <Loader2 className="size-4 animate-spin" /> : "Add"}
+              {isPending ? <Loader2 className="size-4 animate-spin" /> : tCommon("add")}
             </Button>
           </DialogFooter>
         ) : null}
