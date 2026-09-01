@@ -26,6 +26,18 @@ time by someone noticing rather than by the process. Overnight working sessions 
 skip end-of-session cleanup, so worktrees accumulate between passes with nothing to stop
 them. Attaching removal to the merge makes it happen exactly as often as it needs to.
 
+### Do it in the same command as the merge, not after it
+
+**Written down twice and still not followed.** After the sweep incident above, four
+consecutive branches were merged over about two hours and not one of their worktrees was
+removed — they accumulated 5.7Gi between them and were found only because someone was
+watching free space, not because the rule fired. The failure is not the rule's content; it is
+that "remove it afterwards" is a second action, and second actions get dropped when the next
+lane's report is already waiting.
+
+So: `git merge … && git worktree remove …` in one command, or it will not happen. If the
+worktree is not clean at that moment, the branch was not ready to merge.
+
 ### Remove the one branch you merged, by name — never sweep
 
 **The rule is per-merge, not periodic, and that distinction has teeth.** On 2026-09-01 the
