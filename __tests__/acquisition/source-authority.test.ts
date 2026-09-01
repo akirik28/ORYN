@@ -122,12 +122,21 @@ describe("sourceAuthority", () => {
   // 2026-08-21 (docs/research/university-requirements/source-authority-gap.md). 7 of 8 real
   // application systems the requirements lane actually fetched failed looksOfficial() outright.
   describe("application systems (RESOLVED decision — HIGH for policy only)", () => {
-    test.each(["https://www.ucas.com/deadlines", "https://cao.ie/index.php", "https://www.studielink.nl/", "https://www.hochschulstart.de/", "https://www.uni-assist.de/", "https://www.commonapp.org/", "https://www.parcoursup.fr/"])(
+    test.each(["https://www.ucas.com/deadlines", "https://cao.ie/index.php", "https://www.studielink.nl/", "https://www.hochschulstart.de/", "https://www.uni-assist.de/", "https://www.commonapp.org/", "https://www.parcoursup.fr/", "https://www.questbridge.org/"])(
       "%s is HIGH/official_application_system for policy",
       (url) => {
         expect(sourceAuthority("policy", url)).toEqual({ tier: "HIGH", sourceType: "official_application_system" });
       }
     );
+
+    // Regression: found via `npm run report:uncurated-domains` (a real malformed_source
+    // deadline row for Harvard's own binding QuestBridge National College Match deadline,
+    // 2026-09-01). Confirmed institutional participation from Harvard's own .edu domain
+    // (college.harvard.edu links directly to a QuestBridge application page) before adding.
+    test("Harvard's real binding QuestBridge deadline page is an acceptable policy source", () => {
+      const authority = sourceAuthority("policy", "https://www.questbridge.org/apply-to-college/programs/national-college-match/apply/dates-and-deadlines");
+      expect(authority).toEqual({ tier: "HIGH", sourceType: "official_application_system" });
+    });
 
     test("an application system is refused outright for every other fact class — it is not authoritative about an institution's own facts", () => {
       for (const factClass of ["identity", "population", "cost", "programs", "research_strength", "opportunities"] as const) {

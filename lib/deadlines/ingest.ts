@@ -1,6 +1,6 @@
 import { resolveIdentity, type LocalUniversity } from "@/lib/acquisition/identity";
 import { resolveExactProgram, type ProgramLookupRow } from "@/lib/acquisition/program-identity";
-import { sourceAuthority, domainOf } from "@/lib/acquisition/source-authority";
+import { sourceAuthority, officialDomainsFor } from "@/lib/acquisition/source-authority";
 
 /** One record from data/research/university-requirements/deadlines_batch*.jsonl — see
  * docs/research/university-requirements/research-handoff-university-requirements.md for the
@@ -274,7 +274,13 @@ export function decideDeadlineIngestion(
   }
 
   const matchedUniversity = universities.find((u) => u.id === universityId);
-  const officialDomains = new Set(matchedUniversity?.websiteUrl ? [domainOf(matchedUniversity.websiteUrl)] : []);
+  // officialDomainsFor (lib/acquisition/source-authority.ts) — same hand-curated secondary
+  // domains this pipeline's sibling call site (lib/requirements/ingest.ts) already consumes,
+  // now here too: MIT's mitadmissions.org alone accounted for 7 of this table's
+  // malformed_source rows (plus 3 LMU, 2 UvA) sitting on the identical website_url-only gap
+  // that call site had until this same day. Zero new verification needed — every domain in
+  // that curated set was already independently confirmed before landing there.
+  const officialDomains = officialDomainsFor(matchedUniversity ?? {});
   const authority = sourceAuthority("policy", record.source_url, officialDomains);
   if (!authority) {
     return {

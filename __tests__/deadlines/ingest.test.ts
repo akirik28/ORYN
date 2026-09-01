@@ -12,10 +12,12 @@ import {
 
 const ERASMUS_ID = "11111111-1111-1111-1111-111111111111";
 const UCC_ID = "22222222-2222-2222-2222-222222222222";
+const MIT_ID = "33333333-3333-3333-3333-333333333333";
 
 const UNIVERSITIES: UniversityLookupRow[] = [
   { id: ERASMUS_ID, name: "Erasmus University Rotterdam", country: "Netherlands", websiteUrl: "https://www.eur.nl" },
   { id: UCC_ID, name: "University College Cork", country: "Ireland", websiteUrl: "https://www.ucc.ie" },
+  { id: MIT_ID, name: "Massachusetts Institute of Technology", country: "United States", websiteUrl: "https://web.mit.edu" },
 ];
 
 /** Minimal record that lands cleanly; each test overrides only the field under examination. */
@@ -362,5 +364,35 @@ describe("decideDeadlineIngestion — program linking (exact match or null)", ()
     const decision = decide(dl({ program_name: "International Bachelor Economics and Business Economics" }));
     expect(decision.outcome).toBe("accepted");
     expect(decision.row?.program_id).toBeNull();
+  });
+});
+
+describe("decideDeadlineIngestion — officialDomainsFor (sibling of the requirements-side fix)", () => {
+  // This table had the identical website_url-only officialDomains gap as
+  // lib/requirements/ingest.ts, on the same day, sitting on the same already-curated domains:
+  // 7 real malformed_source rows for MIT (mitadmissions.org) alone, plus 3 LMU
+  // (uni-muenchen.de) and 2 UvA (auc.nl) — all fixed by wiring this file to the same
+  // officialDomainsFor() helper, zero new domain verification needed.
+  it("accepts a deadline sourced from MIT's official admissions domain", () => {
+    const record = dl({
+      research_deadline_id: "DL-MIT-0001",
+      university_name: "Massachusetts Institute of Technology",
+      university_country: "United States",
+      source_url: "https://mitadmissions.org/apply/firstyear/deadlines-requirements/",
+    });
+    const decision = decide(record);
+    expect(decision.outcome).toBe("accepted");
+    expect(decision.row?.university_id).toBe(MIT_ID);
+  });
+
+  it("still refuses the same record for an institution with no curated addition", () => {
+    const record = dl({
+      research_deadline_id: "DL-ERASMUS-MITADMISSIONS-0001",
+      university_name: "Erasmus University Rotterdam",
+      university_country: "Netherlands",
+      source_url: "https://mitadmissions.org/apply/firstyear/deadlines-requirements/",
+    });
+    const decision = decide(record);
+    expect(decision.outcome).toBe("malformed_source");
   });
 });

@@ -80,8 +80,19 @@ const OPEN_REGISTRY_DOMAINS = new Set(["ror.org", "api.ror.org", "openalex.org",
  * App, Studielink, Parcoursup, ÖSYM/YKS, uni-assist, direct) plus CAO and Hochschulstart,
  * both named directly in the source doc above. Every domain in this set was live-fetched by
  * that research pass, not guessed.
+ *
+ * `questbridge.org` added 2026-09-01, found by `npm run report:uncurated-domains` (a real
+ * malformed_source deadline row for Harvard's National College Match, binding once ranked)
+ * and verified the same way, not the same shape as the migration-0042-named systems above —
+ * QuestBridge is a match/scholarship program with its own binding deadlines, not a general
+ * multi-institution application portal students route their whole application through — but
+ * the same underlying property holds: a platform-operated deadline it sets itself, which is
+ * exactly what this tier exists to cover. `college.harvard.edu` (Harvard's own `.edu` domain)
+ * links directly to a QuestBridge application page — institutional participation confirmed
+ * from the institution's own site, the same bar as the rest of this set, not assumed from
+ * QuestBridge's own about-us copy.
  */
-const APPLICATION_SYSTEM_DOMAINS = new Set(["ucas.com", "cao.ie", "studielink.nl", "hochschulstart.de", "uni-assist.de", "commonapp.org", "parcoursup.fr"]);
+const APPLICATION_SYSTEM_DOMAINS = new Set(["ucas.com", "cao.ie", "studielink.nl", "hochschulstart.de", "uni-assist.de", "commonapp.org", "parcoursup.fr", "questbridge.org"]);
 
 /**
  * Standardised-test operators. HIGH for `policy` only, same reasoning and same restriction as
