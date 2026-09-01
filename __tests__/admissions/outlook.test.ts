@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { computeAdmissionOutlook, dataConfidenceForCompleteness } from "@/lib/admissions/outlook";
+import { computeAdmissionOutlook, dataConfidenceForCompleteness, outlookLabel } from "@/lib/admissions/outlook";
 import { checkUndergraduateFieldAvailability } from "@/lib/admissions/field-availability";
 import { resolveAdmissionSystem } from "@/lib/admissions/system-shape";
 
@@ -397,5 +397,28 @@ describe("computeAdmissionOutlook — locale: tr", () => {
     for (const input of cases) {
       expect(computeAdmissionOutlook(input)).toEqual(computeAdmissionOutlook(input, "en"));
     }
+  });
+});
+
+/**
+ * 2026-09-01: OUTLOOK_LABELS had no Turkish counterpart until features/universities/
+ * outlook-badge.tsx's i18n pass — this is the shared accessor both the badge and
+ * lib/ai/student-context.ts's prompt-builder now call instead of indexing the map raw.
+ */
+describe("outlookLabel", () => {
+  test("every real outlook class has a distinct Turkish label", () => {
+    const outlooks = ["extreme_reach", "reach", "competitive", "strong", "likely"] as const;
+    const labels = outlooks.map((o) => outlookLabel(o, "tr"));
+    expect(new Set(labels).size).toBe(outlooks.length);
+    expect(labels).toEqual(["Aşırı Zorlu", "Zorlu", "Rekabetçi", "Güçlü", "Olası"]);
+  });
+
+  test("not_applicable translates too", () => {
+    expect(outlookLabel("not_applicable", "tr")).toBe("Bu ölçekte değerlendirilmiyor");
+  });
+
+  test("English is unchanged from the original OUTLOOK_LABELS map", () => {
+    expect(outlookLabel("extreme_reach", "en")).toBe("Extreme Reach");
+    expect(outlookLabel("not_applicable", "en")).toBe("Not rated on this scale");
   });
 });

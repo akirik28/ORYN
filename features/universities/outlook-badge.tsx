@@ -1,5 +1,6 @@
 import { StatusBadge, type StatusTone } from "@/components/oryn/status-badge";
-import { OUTLOOK_LABELS, type NotApplicableKind } from "@/lib/admissions/outlook";
+import { outlookLabel, type NotApplicableKind } from "@/lib/admissions/outlook";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import type { OutlookLabel } from "@/types/database";
 
 // Selectivity, not sentiment: "Extreme Reach" isn't an error state and "Likely" isn't a
@@ -11,8 +12,9 @@ import type { OutlookLabel } from "@/types/database";
 // outlook, it's a statement that this scale doesn't describe the target. "neutral" tone,
 // same as the "not yet assessed" case below, so it never reads as a reach-y classification
 // by accident. Its LABEL comes from NOT_APPLICABLE_LABELS instead — see below.
-// Labels come from OUTLOOK_LABELS in lib/admissions/outlook.ts — shared, because the model
-// prompt needs the same words this badge shows. Tone is presentation and stays here.
+// Tone is presentation-only and doesn't depend on locale, unlike the label (outlookLabel(),
+// lib/admissions/outlook.ts — shared, because the model prompt needs the same words this
+// badge shows), so it stays a plain static map rather than joining the label in one object.
 const OUTLOOK_TONE: Record<OutlookLabel, StatusTone> = {
   extreme_reach: "error",
   reach: "warning",
@@ -21,9 +23,6 @@ const OUTLOOK_TONE: Record<OutlookLabel, StatusTone> = {
   likely: "success",
   not_applicable: "neutral",
 };
-const OUTLOOK_CONFIG: Record<OutlookLabel, { label: string; tone: StatusTone }> = Object.fromEntries(
-  (Object.keys(OUTLOOK_TONE) as OutlookLabel[]).map((k) => [k, { label: OUTLOOK_LABELS[k], tone: OUTLOOK_TONE[k] }]),
-) as Record<OutlookLabel, { label: string; tone: StatusTone }>;
 
 /**
  * `not_applicable` is one persisted enum member covering reasons that are not variations of
@@ -51,12 +50,32 @@ const NOT_APPLICABLE_LABELS: Record<NotApplicableKind, string> = {
   credential_gate_unspecified: "Not a profile-review system",
 };
 
-export function OutlookBadge({ outlook, notApplicableKind }: { outlook: OutlookLabel | null; notApplicableKind?: NotApplicableKind | null }) {
+/** Only this badge renders these — unlike OUTLOOK_LABELS, no second consumer has appeared,
+ *  so the Turkish stays local here rather than moving into lib/admissions/outlook.ts. */
+const NOT_APPLICABLE_LABELS_TR: Record<NotApplicableKind, string> = {
+  field_not_offered_at_undergraduate: "Burada lisans programı değil",
+  no_evidence_review_rank_competitive: "Profil değerlendirmeli bir sistem değil",
+  no_evidence_review_threshold: "Profil değerlendirmeli bir sistem değil",
+  credential_gate_unspecified: "Profil değerlendirmeli bir sistem değil",
+};
+
+export function OutlookBadge({
+  outlook,
+  notApplicableKind,
+  locale = DEFAULT_LOCALE,
+}: {
+  outlook: OutlookLabel | null;
+  notApplicableKind?: NotApplicableKind | null;
+  locale?: Locale;
+}) {
   if (!outlook) {
-    return <StatusBadge label="Not yet assessed" tone="neutral" />;
+    return <StatusBadge label={locale === "tr" ? "Henüz değerlendirilmedi" : "Not yet assessed"} tone="neutral" />;
   }
 
-  const config = OUTLOOK_CONFIG[outlook];
-  const label = outlook === "not_applicable" && notApplicableKind ? NOT_APPLICABLE_LABELS[notApplicableKind] : config.label;
-  return <StatusBadge label={label} tone={config.tone} />;
+  const tone = OUTLOOK_TONE[outlook];
+  const label =
+    outlook === "not_applicable" && notApplicableKind
+      ? (locale === "tr" ? NOT_APPLICABLE_LABELS_TR : NOT_APPLICABLE_LABELS)[notApplicableKind]
+      : outlookLabel(outlook, locale);
+  return <StatusBadge label={label} tone={tone} />;
 }

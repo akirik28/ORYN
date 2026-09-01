@@ -174,4 +174,19 @@ describe("formatContextForPrompt — target outlooks use the same words the badg
     });
     expect(text).toContain("LSE (exploring)");
   });
+
+  // 2026-09-01: OUTLOOK_LABELS itself had no Turkish counterpart until the same pass that
+  // added outlook-badge.tsx's — this line read the raw English map regardless of the
+  // student's locale, unlike the dimension-name fix right above it in this same file.
+  test("Turkish: renders the same word the badge shows in Turkish, not the English label", () => {
+    const text = formatContextForPrompt(
+      {
+        ...baseContext(),
+        targetUniversities: [{ id: "t1", universityId: "u1", programId: null, name: "LSE", status: "target", outlook: "extreme_reach" }],
+      },
+      "tr",
+    );
+    expect(text).toContain("LSE (target, Aşırı Zorlu)");
+    expect(text).not.toContain("Extreme Reach");
+  });
 });

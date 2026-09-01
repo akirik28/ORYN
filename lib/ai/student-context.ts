@@ -3,7 +3,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { assembleScoringFacts } from "@/lib/scoring/assemble-facts";
 import { computeCareerProfile } from "@/lib/scoring";
-import { OUTLOOK_LABELS } from "@/lib/admissions/outlook";
+import { outlookLabel } from "@/lib/admissions/outlook";
 import { buildProfileSignal, isAssessed, EVIDENCE_STATE_LABELS, type EvidenceState } from "@/lib/scoring/signal";
 import { getUpcomingDeadlines } from "@/lib/deadlines/upcoming";
 import { canonicalUniversityId, loadSupersessionMap, type SupersessionMap } from "@/lib/universities/canonical";
@@ -368,7 +368,7 @@ export function formatContextForPrompt(context: StudentAdvisorContext, locale: L
   lines.push(
     `Target universities: ${
       context.targetUniversities
-        .map((t) => `${t.name} (${t.status}${t.outlook ? `, ${OUTLOOK_LABELS[t.outlook]}` : ""})`)
+        .map((t) => `${t.name} (${t.status}${t.outlook ? `, ${outlookLabel(t.outlook, locale)}` : ""})`)
         .join("; ") || "none yet"
     }`,
   );

@@ -354,7 +354,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
                 the refresh above wrote to it, so the persisted value here is one render
                 stale, and pairing a stale label with a fresh reason could show the reason
                 for a classification that is no longer the one displayed. */}
-            <OutlookBadge outlook={outlook?.outlook ?? targetRes.data.outlook} notApplicableKind={outlook?.notApplicableKind} />
+            <OutlookBadge outlook={outlook?.outlook ?? targetRes.data.outlook} notApplicableKind={outlook?.notApplicableKind} locale={locale} />
           </div>
           {/* The freshly computed range, for the same reason as the badge above: `targetRes.data`
               was read before the refresh wrote to it, so pairing a stale range with a fresh
