@@ -64,18 +64,29 @@ comment claims "Phase 30, Job B," and that's wrong.** `lib/deadlines/scan.ts` se
 problem — "fetch the page, compare to what's stored" — which is why that design deliberately
 merges them into one job (`opportunity_reverification`) rather than building two.
 
-Two things worth flagging, not fixing here:
+One thing worth flagging, not fixing here:
 
-- **A rev 2 of that design exists and isn't merged.** `oryn/reverify-doc-refresh` (`7cdbd379`)
-  revises the doc *and* ships real code (`lib/opportunities/lifecycle.ts`,
-  `lib/counselor/eligibility.ts`, `lib/ai/opportunity-context.ts`, plus tests — 1669 lines
-  across 10 files) on top of rev 1. It's not on `origin/main` and, per `git log`, not on local
-  `main` either. Whoever picks up Job B/E should read this branch before rev 1 — rev 2's
-  headline finding is that rev 1's "51 rows to rescue" number is now 0 (a different guard
-  fix changed the predicate), which changes what the job's first run would actually do.
 - **The stale "Job B" comment on `deadline-reminders`** — flagged by that design doc on
   2026-08-23, still there today. A one-line fix (correct the comment, nothing behavioral)
   whenever someone who owns that route is already in the file.
+
+**Correction (2026-09-01, after this doc first merged):** an earlier version of this section
+claimed `oryn/reverify-doc-refresh` (`7cdbd379`) shipped real code
+(`lib/opportunities/lifecycle.ts`, `lib/counselor/eligibility.ts`,
+`lib/ai/opportunity-context.ts`, tests) on top of the rev 1 design doc. **It doesn't.**
+`git show 7cdbd379 --stat` — the commit against its own parent — touches exactly one file,
+the design doc itself (+1008/−207), and its own commit message says outright "Design only:
+no code, no migration, no database write, no scheduler enabled." That commit is now merged
+(rev 2 is the current content of
+[opportunity-reverification-job-design-2026-08-23.md](opportunity-reverification-job-design-2026-08-23.md)).
+The false "ships real code" claim came from diffing against a stale ancestor commit rather
+than the actual merge-base with `main`, which pulled in two *other*, already-separately-merged
+commits' changes (`#146`, `#147`) and misattributed them to this branch. Caught by oryn-a7,
+independently re-verified here via `git show <sha> --stat` on the commit itself, which
+sidesteps branch-comparison ambiguity entirely. Whoever picks up Job B/E: rev 2's headline
+finding still stands and still matters — rev 1's "51 rows to rescue" number is now 0 (a
+different guard fix changed the predicate) — there just isn't a separate code branch to also
+read. Read the doc as it stands now; there's nothing else to find.
 
 **For universities, Job E has no design at all.** The reverification doc's own §12 scopes it
 out explicitly: *"University data freshness (Phase 30 Job C). Same pattern, different corpus,
