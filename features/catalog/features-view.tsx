@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { getTranslations } from "next-intl/server";
 import {
   FileText,
   ScanLine,
@@ -51,13 +52,28 @@ import imgResearchIdeas from "@/public/features/research-ideas.webp";
  * heading and description already carry the meaning, so announcing the art would only add
  * noise for a screen reader.
  */
+/** Matches a `catalog.features.<key>` entry in the message catalogs — see messages/en.json. */
+type FeatureKey =
+  | "cvGenerator"
+  | "scanCv"
+  | "storyBank"
+  | "portfolio"
+  | "documents"
+  | "publicProfile"
+  | "weeklyPlan"
+  | "progress"
+  | "compareUniversities"
+  | "researchIdeas";
+
 interface Feature {
   href: string;
   /** Statically imported tile illustration — see the import block above on why these are
    *  imports rather than /public string paths. */
   image: StaticImageData;
-  title: string;
-  description: string;
+  /** Title and description live in the `catalog.features` message namespace, not here —
+   *  this only says which entry. Kept as a key rather than the strings themselves so this
+   *  table can stay locale-agnostic. */
+  key: FeatureKey;
   icon: LucideIcon;
   /** Tailwind gradient stops for the tile header. Varied per feature so a grid of these
    *  doesn't read as one repeated card — founder direction, 2026-08-30. */
@@ -69,9 +85,7 @@ const FEATURES: Feature[] = [
   {
     href: "/profile/cv",
     image: imgCvGenerator,
-    title: "CV Generator",
-    description:
-      "Build a CV from what's already in your Journey — choose what to include, then print or save as PDF. Nothing is invented.",
+    key: "cvGenerator",
     icon: FileText,
     tint: "from-indigo-500/22 via-violet-500/12 to-transparent",
     group: "Your record",
@@ -79,9 +93,7 @@ const FEATURES: Feature[] = [
   {
     href: "/profile/import",
     image: imgScanCv,
-    title: "Scan a CV",
-    description:
-      "Upload a CV or résumé and Oryn extracts your activities, awards and education. You review every item before anything is saved.",
+    key: "scanCv",
     icon: ScanLine,
     tint: "from-sky-500/22 via-cyan-500/12 to-transparent",
     group: "Your record",
@@ -89,9 +101,7 @@ const FEATURES: Feature[] = [
   {
     href: "/profile/story-bank",
     image: imgStoryBank,
-    title: "Essay Story Bank",
-    description:
-      "The moments behind your achievements, kept in your own words — raw material for application essays, never auto-written for you.",
+    key: "storyBank",
     icon: BookOpen,
     tint: "from-amber-500/22 via-orange-500/12 to-transparent",
     group: "Your record",
@@ -99,8 +109,7 @@ const FEATURES: Feature[] = [
   {
     href: "/profile/portfolio",
     image: imgPortfolio,
-    title: "Portfolio",
-    description: "Everything you've done in one place, as a timeline or grouped by category.",
+    key: "portfolio",
     icon: FolderOpen,
     tint: "from-emerald-500/22 via-teal-500/12 to-transparent",
     group: "Your record",
@@ -108,9 +117,7 @@ const FEATURES: Feature[] = [
   {
     href: "/documents",
     image: imgDocuments,
-    title: "Documents",
-    description:
-      "Certificates and evidence files, attached to the achievements they belong to. Private by default — never public.",
+    key: "documents",
     icon: FolderClosed,
     tint: "from-slate-500/22 via-zinc-500/12 to-transparent",
     group: "Your record",
@@ -118,9 +125,7 @@ const FEATURES: Feature[] = [
   {
     href: "/u/me",
     image: imgPublicProfile,
-    title: "Public profile",
-    description:
-      "A shareable version of your record. Off by default; grades and school details are never included.",
+    key: "publicProfile",
     icon: Eye,
     tint: "from-fuchsia-500/22 via-pink-500/12 to-transparent",
     group: "Your record",
@@ -128,9 +133,7 @@ const FEATURES: Feature[] = [
   {
     href: "/plan",
     image: imgWeeklyPlan,
-    title: "Weekly plan",
-    description:
-      "Your three highest-value actions for the week, sized to the time you actually have.",
+    key: "weeklyPlan",
     icon: ListChecks,
     tint: "from-violet-500/22 via-indigo-500/12 to-transparent",
     group: "Planning",
@@ -138,9 +141,7 @@ const FEATURES: Feature[] = [
   {
     href: "/profile/history",
     image: imgProgress,
-    title: "Progress",
-    description:
-      "How your profile has changed month to month, and which areas actually moved.",
+    key: "progress",
     icon: TrendingUp,
     tint: "from-lime-500/22 via-green-500/12 to-transparent",
     group: "Planning",
@@ -148,9 +149,7 @@ const FEATURES: Feature[] = [
   {
     href: "/universities/compare",
     image: imgCompareUniversities,
-    title: "Compare universities",
-    description:
-      "Put two to four universities side by side. Unknown figures read \"—\", never a guess.",
+    key: "compareUniversities",
     icon: Scale,
     tint: "from-blue-500/22 via-indigo-500/12 to-transparent",
     group: "Exploring",
@@ -158,9 +157,7 @@ const FEATURES: Feature[] = [
   {
     href: "/profile/research-ideas",
     image: imgResearchIdeas,
-    title: "Research idea generator",
-    description:
-      "Project ideas scaled to your level and interests, built from real academic literature — achievable, not impressive-sounding.",
+    key: "researchIdeas",
     icon: FlaskConical,
     tint: "from-rose-500/22 via-red-500/12 to-transparent",
     group: "Exploring",
@@ -172,7 +169,9 @@ const GROUP_ORDER: Feature["group"][] = ["Your record", "Planning", "Exploring"]
 // Rotated per-card so a grid doesn't pulse in unison — same technique the dashboard uses.
 const GLOW_VARIANTS = ["glass-card", "glass-card-offset", "glass-card-fast", "glass-card-offset2"];
 
-export function FeaturesView({ userId }: { userId: string }) {
+export async function FeaturesView({ userId }: { userId: string }) {
+  const t = await getTranslations("catalog");
+
   return (
     <div className="space-y-10">
       <div
@@ -190,19 +189,18 @@ export function FeaturesView({ userId }: { userId: string }) {
           style={{ background: "radial-gradient(circle, rgba(184,106,0,0.4) 0%, rgba(184,106,0,0) 70%)" }}
         />
         <div className="relative">
-          <PageHeader
-            eyebrow="Features"
-            title="Everything Oryn can do."
-            description="Tools that work from the record you've already built — not separate things to fill in again."
-          />
+          <PageHeader eyebrow={t("eyebrow")} title={t("title")} description={t("description")} />
         </div>
       </div>
 
       {GROUP_ORDER.map((group) => {
         const items = FEATURES.filter((f) => f.group === group);
+        // Every t() call here stays a string literal (not a computed key) on purpose —
+        // see __tests__/i18n/translation-keys.test.ts, which can only verify literal keys.
+        const groupLabel = group === "Your record" ? t("groups.yourRecord") : group === "Planning" ? t("groups.planning") : t("groups.exploring");
         return (
           <section key={group} className="space-y-4">
-            <h2 className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-3 uppercase">{group}</h2>
+            <h2 className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-3 uppercase">{groupLabel}</h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {items.map((feature, i) => {
                 const Icon = feature.icon;
@@ -231,10 +229,10 @@ export function FeaturesView({ userId }: { userId: string }) {
                       />
                     </div>
                     <div className="flex flex-1 flex-col gap-2 p-5">
-                      <h3 className="font-medium text-ink-1">{feature.title}</h3>
-                      <p className="text-sm leading-relaxed text-ink-2">{feature.description}</p>
+                      <h3 className="font-medium text-ink-1">{t(`features.${feature.key}.title`)}</h3>
+                      <p className="text-sm leading-relaxed text-ink-2">{t(`features.${feature.key}.description`)}</p>
                       <span className="mt-auto inline-flex items-center gap-1 pt-2 text-sm text-brand-primary">
-                        Open
+                        {t("open")}
                         <ArrowRight className="size-3.5 transition-transform duration-(--duration-fast) group-hover:translate-x-0.5" />
                       </span>
                     </div>

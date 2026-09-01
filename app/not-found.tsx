@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { getTranslations } from "next-intl/server";
 import { SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/oryn/empty-state";
@@ -10,7 +11,8 @@ import { EmptyState } from "@/components/oryn/empty-state";
 // built-in 404 (unbranded, no way back). Same copy/shape as app/(app)/not-found.tsx,
 // but standalone — this renders under the root layout, so there's no sidebar/nav to sit
 // inside, and the visitor may not be signed in, hence linking home rather than /dashboard.
-export default function RootNotFound() {
+export default async function RootNotFound() {
+  const t = await getTranslations("errors.notFound");
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-8 px-4 py-12">
       <Link href="/">
@@ -18,11 +20,11 @@ export default function RootNotFound() {
       </Link>
       <EmptyState
         icon={SearchX}
-        title="We couldn't find that"
-        description="This might have been removed, or the link may be out of date."
+        title={t("title")}
+        description={t("description")}
         action={
           <Button size="sm" render={<Link href="/" />} nativeButton={false}>
-            Back to home
+            {t("backToHome")}
           </Button>
         }
       />

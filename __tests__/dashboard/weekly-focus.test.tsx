@@ -4,6 +4,7 @@ import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/re
 import "@testing-library/jest-dom/vitest";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
+import tr from "@/messages/tr.json";
 
 /**
  * Component-level coverage for WeeklyFocus (features/dashboard/weekly-focus.tsx) —
@@ -59,9 +60,9 @@ function action(overrides: Partial<WeeklyAction> = {}): WeeklyAction {
 // pass) — same NextIntlClientProvider-wrapping fix as __tests__/onboarding/onboarding-
 // wizard.test.tsx's renderWizard(), needed once a component under test calls any next-intl
 // hook.
-function renderWeeklyFocus(actions: WeeklyAction[]) {
+function renderWeeklyFocus(actions: WeeklyAction[], messages: typeof en = en) {
   return render(
-    <NextIntlClientProvider locale="en" messages={en}>
+    <NextIntlClientProvider locale={messages === tr ? "tr" : "en"} messages={messages}>
       <WeeklyFocus actions={actions} />
     </NextIntlClientProvider>
   );
@@ -159,5 +160,36 @@ describe("WeeklyFocus — failure path (docs/feat2-error-surfacing-audit-2026-08
     fireEvent.click(screen.getByRole("button", { name: /Completed successfully/ }));
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Couldn't update that action. Please try again."));
+  });
+});
+
+/**
+ * Turkish coverage added 2026-09-01 i18n pass — every string this component owns was
+ * hardcoded English until now (aria-labels, the reflection options array, the note
+ * placeholder, the empty-list message). Reuses the same interaction pattern as the
+ * pinned-success-path block above rather than a parallel English-only route through the
+ * component.
+ */
+describe("WeeklyFocus renders translated copy", () => {
+  test("Turkish: empty list, toggle aria-labels, and the reflection flow all translate", async () => {
+    vi.mocked(updateActionStatus).mockResolvedValue({});
+    renderWeeklyFocus([action()], tr);
+
+    expect(screen.getByRole("button", { name: "Tamamlandı olarak işaretle" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Tamamlandı olarak işaretle" }));
+
+    await waitFor(() => expect(updateActionStatus).toHaveBeenCalledWith({ actionId: "action-1", status: "completed" }));
+    expect(screen.getByRole("button", { name: "Başlanmadı olarak işaretle" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText("Ne oldu?")).toBeInTheDocument();
+    expect(screen.getByText("Başarıyla tamamlandı")).toBeInTheDocument();
+    expect(screen.getByText("Kısmen tamamlandı")).toBeInTheDocument();
+    expect(screen.getByText("İşe yaramadı")).toBeInTheDocument();
+    expect(screen.getByText("Artık mevcut değil")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Kısa bir not ekle (opsiyonel)")).toBeInTheDocument();
+  });
+
+  test("Turkish: an empty plan shows the translated empty state", () => {
+    renderWeeklyFocus([], tr);
+    expect(screen.getByText("Bu haftanın planında henüz eylem yok.")).toBeInTheDocument();
   });
 });

@@ -32,10 +32,24 @@ export async function signUp(_prevState: AuthFormState, formData: FormData): Pro
 
   if (!parsed.success) {
     const errors = parsed.error.flatten().fieldErrors as Record<string, string[]>;
-    // SignUpSchema's own message is a static English fallback (see its comment) — the
+    // SignUpSchema's own messages are a static English fallback (see its comments) — the
     // schema can't know the visitor's locale at module-load time, but this action runs
-    // per-request and can, so it overrides just this one field's message with the
-    // localized version.
+    // per-request and can. Same reasoning and shape as signIn()/updatePassword() below:
+    // email and password reuse the shared login/resetPassword translations for the
+    // identical validator text rather than duplicating it under a third key.
+    const tLogin = await getTranslations("auth.login");
+    const tReset = await getTranslations("auth.resetPassword");
+    const tSignup = await getTranslations("auth.signup");
+    const translated: Record<string, string> = {
+      "Enter at least 2 characters.": tSignup("displayNameTooShort"),
+      "Enter a valid email address.": tLogin("emailInvalid"),
+      "Use at least 8 characters.": tReset("passwordMinLength"),
+      "Include at least one letter.": tReset("passwordNeedsLetter"),
+      "Include at least one number.": tReset("passwordNeedsNumber"),
+    };
+    for (const field of Object.keys(errors)) {
+      errors[field] = errors[field].map((message) => translated[message] ?? message);
+    }
     if (errors.acceptedTerms) {
       const locale = await resolveLocale();
       errors.acceptedTerms = [getLegalCopy(locale).signupConsent.checkboxRequiredError];
@@ -73,6 +87,8 @@ export async function signUp(_prevState: AuthFormState, formData: FormData): Pro
   });
 
   if (error) {
+    // error.message is Supabase Auth's own SDK error text, not static app copy — same
+    // deliberate choice as updatePassword() below: no catalog entry, left in English.
     return { message: error.message, variant: "error" };
   }
 
@@ -82,9 +98,10 @@ export async function signUp(_prevState: AuthFormState, formData: FormData): Pro
     redirect("/onboarding");
   }
 
+  const t = await getTranslations("auth.signup");
   return {
     variant: "success",
-    message: "Check your email to confirm your account and get started.",
+    message: t("checkEmailMessage"),
   };
 }
 
@@ -134,7 +151,15 @@ export async function requestPasswordReset(
   const parsed = RequestPasswordResetSchema.safeParse({ email: formData.get("email") });
 
   if (!parsed.success) {
-    return { errors: parsed.error.flatten().fieldErrors as Record<string, string[]> };
+    const errors = parsed.error.flatten().fieldErrors as Record<string, string[]>;
+    // Same reasoning as signIn()/signUp() above — RequestPasswordResetSchema's own
+    // message is a static English fallback; reuses auth.login's translation for the
+    // identical email validator rather than a fourth copy of the same string.
+    if (errors.email) {
+      const t = await getTranslations("auth.login");
+      errors.email = errors.email.map((message) => (message === "Enter a valid email address." ? t("emailInvalid") : message));
+    }
+    return { errors };
   }
 
   const supabase = await createClient();
@@ -146,9 +171,10 @@ export async function requestPasswordReset(
 
   // Always return the same message whether or not the email exists, to avoid leaking
   // which addresses have accounts.
+  const t = await getTranslations("auth.forgotPassword");
   return {
     variant: "success",
-    message: "If an account exists for that email, a reset link is on its way.",
+    message: t("linkSentMessage"),
   };
 }
 
