@@ -10,13 +10,13 @@ import { cn } from "@/lib/utils";
 //
 // `locale` is optional and additive rather than this component fetching its own catalog
 // namespace (getTranslations) — it renders many times per page (once per program/source
-// row), and both current callers are Server Components that already have a `locale` and a
-// translator in scope. Callers pass the three chrome strings straight from
-// universities.sourceBadge.* (or their own equivalent); a caller that passes nothing keeps
-// getting exactly today's English, so app/(app)/opportunities/[id]/page.tsx — the other
-// consumer, not touched by this pass — is unaffected. `formatRelativeTime` replaces a raw
-// `formatDistanceToNow` call that bypassed lib/i18n/date.ts's locale-aware helper entirely,
-// same plumbing-gap shape as features/universities/calendar-bound-fact-card.tsx's fix.
+// row), and both callers (app/(app)/universities/[id]/page.tsx,
+// app/(app)/opportunities/[id]/page.tsx) are Server Components that already have a `locale`
+// and a translator in scope. Callers pass the three chrome strings from the shared
+// top-level `sourceBadge` catalog namespace; a caller that passes nothing keeps getting
+// exactly the original English. `formatRelativeTime` replaces a raw `formatDistanceToNow`
+// call that bypassed lib/i18n/date.ts's locale-aware helper entirely, same plumbing-gap
+// shape as features/universities/calendar-bound-fact-card.tsx's fix.
 export function SourceBadge({
   sourceName,
   checkedAt,
@@ -44,7 +44,7 @@ export function SourceBadge({
         {sourceLabel} <span className="text-foreground/80">{sourceName}</span>
       </span>
       {checkedAt ? <span>{checkedLabel(formatRelativeTime(checkedAt, locale))}</span> : null}
-      {confidence ? <ConfidenceIndicator level={confidence} /> : null}
+      {confidence ? <ConfidenceIndicator level={confidence} locale={locale} /> : null}
       {url ? (
         <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
           {viewSourceLabel} <ExternalLink className="size-3" />

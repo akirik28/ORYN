@@ -828,5 +828,110 @@
     "source": "Source:",
     "checked": "Checked {time}",
     "viewSource": "View source"
+  },
+  "opportunities": {
+    "card": {
+      "noImageYet": "No image yet",
+      "ineligibleLabel": "Not eligible",
+      "eligibilityUnknown": "Eligibility unknown",
+      "view": "View",
+      "saved": "Saved",
+      "applied": "Applied",
+      "notInterestedAriaLabel": "Not interested",
+      "taughtInPrefix": "Taught in {languages}"
+    },
+    "matchTier": {
+      "exceptional": "Exceptional match",
+      "strong": "Strong match",
+      "worthALook": "Worth a look",
+      "lowPriority": "Low priority"
+    },
+    "fitTier": {
+      "exceptional": "Exceptional fit",
+      "strong": "Strong fit",
+      "worthALook": "Worth a look",
+      "lowPriority": "Low priority"
+    },
+    "actions": {
+      "markedNotInterestedUndo": "Marked not interested — undo",
+      "officialPage": "Official page",
+      "apply": "Apply",
+      "markApplied": "Mark applied"
+    },
+    "reasons": {
+      "notInterestedTopic": "Not interested in this topic",
+      "tooExpensive": "Too expensive",
+      "noTime": "No time",
+      "location": "Location doesn't work",
+      "tooCompetitive": "Too competitive",
+      "alreadyApplied": "Already applied",
+      "other": "Other"
+    },
+    "browseGrid": {
+      "loadingMoreSr": "Loading more opportunities",
+      "shownCountSr": "{count} opportunities shown",
+      "loading": "Loading…",
+      "tryAgain": "Try again",
+      "loadMore": "Load more",
+      "allShown": "That's everything matching these filters."
+    },
+    "filterBar": {
+      "categoryNavAriaLabel": "Browse opportunities by category",
+      "all": "All",
+      "search": "Search",
+      "searchPlaceholder": "Title or organization…",
+      "country": "Country",
+      "any": "Any",
+      "cycleStatus": "Cycle status",
+      "remoteOnline": "Remote/online",
+      "freeOnly": "Free only",
+      "applyButton": "Apply",
+      "reset": "Reset"
+    },
+    "standingBadge": {
+      "ineligibleForYou": "Not eligible for you",
+      "notOpenRightNow": "Not open right now"
+    },
+    "browsePage": {
+      "eyebrow": "Opportunities",
+      "title": "Chosen for where you are now.",
+      "description": "Ranked by what each one could add to your profile — not by prestige or popularity.",
+      "refreshError": "We couldn't refresh your matches just now. Match scores and eligibility below are your last known result, not necessarily current.",
+      "forYou": "For you",
+      "browseAll": "Browse all",
+      "noMatchesTitle": "No matches yet",
+      "noMatchesConfigured": "Opportunities are discovered on a schedule. Check back soon, or complete more of your profile so Oryn knows what to look for.",
+      "noMatchesNotConfigured": "Opportunity discovery isn't configured yet in this environment (needs TAVILY_API_KEY). See API_SETUP.md.",
+      "bestNextMove": "Best next move",
+      "bestNextMoveDescription": "The single opportunity that would add most to your profile right now.",
+      "alsoWorthYourTime": "Also worth your time",
+      "resultsCount": "{count, plural, one {{formatted} opportunity matches} other {{formatted} opportunities match}}",
+      "noOpportunitiesFound": "No opportunities found",
+      "matchingQuerySuffix": " matching “{query}”",
+      "tryDifferentSearch": "Try a different search, or clear a filter — Oryn's opportunity catalog grows over time."
+    },
+    "detailPage": {
+      "orynsTake": "Oryn's take",
+      "cantConfirmPrefix": "One thing Oryn can't confirm: ",
+      "refreshError": "We couldn't refresh your match for this opportunity just now. The eligibility and match details below are your last known result, not necessarily current.",
+      "fit": "Fit",
+      "selectivity": "Selectivity",
+      "urgency": "Urgency",
+      "closesToday": "Closes today",
+      "daysLeft": "{days} days left",
+      "deadlineLabel": "Deadline:",
+      "financialAidAvailable": "Financial aid available",
+      "financialAidAvailableSuffix": " · Financial aid available",
+      "currencyNotRecorded": " · currency not recorded, check the official page",
+      "agesRange": "Ages {min}–{max}",
+      "gradesSuffix": " · Grades {grades}",
+      "whatYoullNeed": "What you'll need to apply",
+      "eligibilityNotesHeading": "Eligibility notes",
+      "citizenshipLabel": "Citizenship: {text}",
+      "residencyLabel": "Residency: {text}",
+      "sourcesHeading": "Sources",
+      "visitOfficialPage": "Visit official page",
+      "any": "any"
+    }
   }
 }

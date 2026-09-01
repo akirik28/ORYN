@@ -1,12 +1,21 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 // Wallet, not DollarSign: the icon sits beside a figure whose currency is not recorded, so a
 // dollar glyph asserts the same thing the "$" prefix used to.
 import { ExternalLink, MapPin, Wallet, Calendar, Users2 } from "lucide-react";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
+import { resolveLocale } from "@/lib/i18n/locale";
 import { refreshOpportunityMatches } from "@/lib/opportunities/persist-matches";
-import { INSUFFICIENT_VERIFICATION_REASON, isOpportunitySufficientlyVerified, resolveStoredEligibility } from "@/lib/opportunities/lifecycle";
+import {
+  insufficientVerificationReason,
+  isOpportunitySufficientlyVerified,
+  resolveStoredEligibility,
+  selectivityLabel,
+  cycleStatusLabel,
+} from "@/lib/opportunities/lifecycle";
+import { categoryLabel } from "@/lib/opportunities/labels";
 import { OpportunityStandingBadge } from "@/features/opportunities/standing-badge";
 import { PageHeader } from "@/components/oryn/page-header";
 import { ErrorState } from "@/components/oryn/error-state";
@@ -17,6 +26,7 @@ import { NextMove } from "@/components/oryn/next-move";
 import { differenceInCalendarDays } from "date-fns";
 import { OpportunityActions } from "@/features/opportunities/opportunity-actions";
 import { formatMoney } from "@/lib/i18n/format";
+import type { Locale } from "@/lib/i18n/config";
 import type { ConfidenceLevel } from "@/components/oryn/confidence-indicator";
 
 // Was a static "Opportunity" title on every one of these pages — technically present, but
@@ -45,27 +55,61 @@ function sourceNameFromUrl(url: string): string {
   }
 }
 
+/** Same TS2589 workaround as app/(app)/universities/[id]/page.tsx's own `Translator` alias —
+ * `Awaited<ReturnType<typeof getTranslations>>` blows up type instantiation once passed into
+ * a plain function and called with a dynamic key, on this catalog's scale. */
+type Translator = (key: string, values?: Record<string, string | number>) => string;
+
 function humanize(value: string): string {
   return value.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
 }
 
-const SELECTIVITY_LABEL: Partial<Record<string, string>> = {
-  extremely_selective: "Extremely selective",
-  highly_selective: "Highly selective",
-  selective: "Selective",
-  competitive_award: "Competitive award",
-  open_enrollment: "Open enrollment",
+const LOCATION_MODE_LABEL_EN: Record<string, string> = {
+  online: "Online",
+  in_person: "In person",
+  hybrid: "Hybrid",
 };
 
-function fitLabel(score: number): string {
-  if (score >= 80) return "Exceptional fit";
-  if (score >= 60) return "Strong fit";
-  if (score >= 40) return "Worth a look";
-  return "Low priority";
+const LOCATION_MODE_LABEL_TR: Record<string, string> = {
+  online: "Çevrimiçi",
+  in_person: "Yüz yüze",
+  hybrid: "Hibrit",
+};
+
+function locationModeLabel(mode: string, locale: Locale): string {
+  const table = locale === "tr" ? LOCATION_MODE_LABEL_TR : LOCATION_MODE_LABEL_EN;
+  return table[mode] ?? humanize(mode);
 }
 
-/** Same reason vocabulary as the card, written long-form for the detail page. */
-function takeSentences(reasonCodes: string[]): string[] {
+/** "fit" register — this page's own first-person verdict framing ("Oryn's take"), not
+ * Browse's ranked-list "match" wording (features/opportunities/opportunity-card.tsx's
+ * tierFor). Same four thresholds and, deliberately, the same English text for the middle two
+ * tiers — that's this codebase's actual copy, not a shortcut taken while translating. */
+function fitLabel(score: number, t: Translator): string {
+  if (score >= 80) return t("exceptional");
+  if (score >= 60) return t("strong");
+  if (score >= 40) return t("worthALook");
+  return t("lowPriority");
+}
+
+/** Same reason vocabulary as the card, written long-form for the detail page. Kept local for
+ * the same reason opportunity-card.tsx's reasonSentence is — generated prose from reason
+ * codes, not static React-tree copy, so it stays out of the message catalog even though this
+ * file is itself a Server Component (the split is generated-vs-static, not client-vs-server). */
+function takeSentences(reasonCodes: string[], locale: Locale): string[] {
+  if (locale === "tr") {
+    const out: string[] = [];
+    if (reasonCodes.includes("addresses_a_current_gap")) {
+      out.push("Profilinde şu anda en az kanıt bulunan bir alanı hedefliyor; bu yüzden burada harcayacağın aynı emek, profilini başka bir yerden daha fazla ileri taşır.");
+    }
+    if (reasonCodes.includes("matches_your_interests")) {
+      out.push("Oryn'a takip ettiğini söylediğin bir alanda yer alıyor; bu da sürdürmesini kolaylaştırır ve profilinin geri kalanıyla daha tutarlı olmasını sağlar.");
+    }
+    if (reasonCodes.includes("near_you")) {
+      out.push("Kendi ülkende gerçekleşiyor; bu genellikle yurt dışındaki benzer bir programa kıyasla daha az seyahat, maliyet ve vize engeli anlamına gelir.");
+    }
+    return out;
+  }
   const out: string[] = [];
   if (reasonCodes.includes("addresses_a_current_gap")) {
     out.push("It targets an area where your profile currently has the least supporting evidence, so the same effort here moves your profile further than it would elsewhere.");
@@ -79,21 +123,19 @@ function takeSentences(reasonCodes: string[]): string[] {
   return out;
 }
 
-const CYCLE_STATUS_LABEL: Partial<Record<string, string>> = {
-  open: "Open now",
-  upcoming: "Opens soon",
-  closed: "Closed for this cycle",
-  date_not_announced: "Next dates not announced",
-  historical: "Historical — not currently running",
-  discontinued: "Discontinued",
-  unverified: "Verification pending",
-};
-
 export default async function OpportunityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await requireUser();
   const userId = session.userId!;
   const supabase = await createClient();
+  const locale = await resolveLocale();
+  const t = (await getTranslations("opportunities.detailPage")) as Translator;
+  const tTier = (await getTranslations("opportunities.fitTier")) as Translator;
+  const tSourceBadge = (await getTranslations("sourceBadge")) as Translator;
+  // "Eligibility unknown" is the same badge Browse's card shows for the identical condition
+  // (opportunity-card.tsx) — reused from opportunities.card rather than duplicated into
+  // opportunities.detailPage.
+  const tCard = (await getTranslations("opportunities.card")) as Translator;
 
   const { data: opportunity } = await supabase.from("opportunities").select("*").eq("id", id).single();
   if (!opportunity) notFound();
@@ -129,12 +171,12 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
   // for themselves and a confident-sounding verdict on top of them would be the exact
   // false certainty this product is not allowed to manufacture.
   const canGiveTake = Boolean(match) && (eligibility?.eligible ?? true) && !needsVerification;
-  const takeReasons = match ? takeSentences((match.reason_codes as string[]) ?? []) : [];
+  const takeReasons = match ? takeSentences((match.reason_codes as string[]) ?? [], locale) : [];
 
   return (
     <div className="max-w-3xl space-y-10">
       <PageHeader
-        eyebrow={humanize(opportunity.category)}
+        eyebrow={categoryLabel(opportunity.category, locale)}
         title={opportunity.title}
         description={opportunity.organization}
         action={
@@ -154,8 +196,9 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
       {canGiveTake && match ? (
         <NextMove
           surface
-          eyebrow="Oryn's take"
-          headline={fitLabel(match.match_score)}
+          locale={locale}
+          eyebrow={t("orynsTake")}
+          headline={fitLabel(match.match_score, tTier)}
           why={
             takeReasons.length > 0 ? (
               <div className="space-y-2.5">
@@ -166,15 +209,15 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
             ) : undefined
           }
           facts={[
-            { term: "Fit", value: fitLabel(match.match_score) },
-            ...(SELECTIVITY_LABEL[opportunity.selectivity_tier]
-              ? [{ term: "Selectivity", value: SELECTIVITY_LABEL[opportunity.selectivity_tier]! }]
+            { term: t("fit"), value: fitLabel(match.match_score, tTier) },
+            ...(selectivityLabel(opportunity.selectivity_tier, locale)
+              ? [{ term: t("selectivity"), value: selectivityLabel(opportunity.selectivity_tier, locale)! }]
               : []),
             ...(daysUntilDeadline !== null && daysUntilDeadline >= 0
               ? [
                   {
-                    term: "Urgency",
-                    value: daysUntilDeadline === 0 ? "Closes today" : `${daysUntilDeadline} days left`,
+                    term: t("urgency"),
+                    value: daysUntilDeadline === 0 ? t("closesToday") : t("daysLeft", { days: daysUntilDeadline }),
                   },
                 ]
               : []),
@@ -182,7 +225,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
           footnote={
             eligibility?.notes ? (
               <>
-                <span className="font-medium text-ink-1">One thing Oryn can&apos;t confirm: </span>
+                <span className="font-medium text-ink-1">{t("cantConfirmPrefix")}</span>
                 {eligibility.notes}
               </>
             ) : undefined
@@ -190,14 +233,17 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
         />
       ) : null}
 
-      {!matchRefreshed ? (
-        <ErrorState description="We couldn't refresh your match for this opportunity just now. The eligibility and match details below are your last known result, not necessarily current." />
-      ) : null}
+      {!matchRefreshed ? <ErrorState description={t("refreshError")} /> : null}
 
       <div className="flex flex-wrap items-center gap-2">
-        {SELECTIVITY_LABEL[opportunity.selectivity_tier] ? <StatusBadge label={SELECTIVITY_LABEL[opportunity.selectivity_tier]!} tone="neutral" /> : null}
-        {CYCLE_STATUS_LABEL[opportunity.cycle_status] ? <StatusBadge label={CYCLE_STATUS_LABEL[opportunity.cycle_status]!} tone="info" /> : null}
-        <StatusBadge label={humanize(opportunity.category)} tone="brand" />
+        {selectivityLabel(opportunity.selectivity_tier, locale) ? (
+          <StatusBadge label={selectivityLabel(opportunity.selectivity_tier, locale)!} tone="neutral" />
+        ) : null}
+        {/* Unlike Browse's card, this page always showed a badge for every one of the 7 real
+            cycle_status values, including "open" — CYCLE_STATUS_LABEL (now cycleStatusLabel)
+            had no gaps here, so no membership check is needed. */}
+        <StatusBadge label={cycleStatusLabel(opportunity.cycle_status, locale)} tone="info" />
+        <StatusBadge label={categoryLabel(opportunity.category, locale)} tone="brand" />
         {/* One shared component with Browse's card (features/opportunities/standing-badge.tsx):
             it keeps "not open" (about the opportunity), "not eligible" (about the student) and
             "needs verification" (about Oryn's data) from ever being described in each other's
@@ -206,8 +252,9 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
           eligible={eligibility?.eligible ?? true}
           notActionable={eligibility?.notActionable ?? false}
           needsVerification={needsVerification}
+          locale={locale}
         />
-        {eligibility && eligibility.eligible && eligibility.notes ? <StatusBadge label="Eligibility unknown" tone="warning" /> : null}
+        {eligibility && eligibility.eligible && eligibility.notes ? <StatusBadge label={tCard("eligibilityUnknown")} tone="warning" /> : null}
       </div>
 
       {/* Only when the take didn't already carry it (an ineligible or unverifiable row has
@@ -216,7 +263,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
         <p className="rounded-lg bg-surface-tint px-4 py-3 text-sm leading-relaxed text-ink-2">{eligibility.notes}</p>
       ) : null}
       {needsVerification ? (
-        <p className="rounded-lg bg-surface-tint px-4 py-3 text-sm leading-relaxed text-ink-2">{INSUFFICIENT_VERIFICATION_REASON}</p>
+        <p className="rounded-lg bg-surface-tint px-4 py-3 text-sm leading-relaxed text-ink-2">{insufficientVerificationReason(locale)}</p>
       ) : null}
 
       {opportunity.description ? <p className="text-muted-foreground">{opportunity.description}</p> : null}
@@ -226,7 +273,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
           <div className="flex items-center gap-2">
             <Calendar className="size-4 shrink-0 text-muted-foreground" />
             <span>
-              Deadline: <span className="font-medium">{opportunity.deadline}</span>
+              {t("deadlineLabel")} <span className="font-medium">{opportunity.deadline}</span>
               {opportunity.current_cycle_label ? ` (${opportunity.current_cycle_label})` : ""}
             </span>
           </div>
@@ -234,7 +281,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
         {opportunity.country || opportunity.location_mode ? (
           <div className="flex items-center gap-2">
             <MapPin className="size-4 shrink-0 text-muted-foreground" />
-            <span>{[opportunity.country, opportunity.location_mode ? humanize(opportunity.location_mode) : null].filter(Boolean).join(" · ")}</span>
+            <span>{[opportunity.country, opportunity.location_mode ? locationModeLabel(opportunity.location_mode, locale) : null].filter(Boolean).join(" · ")}</span>
           </div>
         ) : null}
         {opportunity.cost != null ? (
@@ -244,14 +291,14 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
               {/* null currency, not a guess: `opportunities` has no currency column, and live
                   rows hold GBP/EUR/CHF/TRY in this field. See lib/i18n/format.ts. */}
               {formatMoney(opportunity.cost, null)}
-              <span className="text-muted-foreground"> · currency not recorded, check the official page</span>
-              {opportunity.financial_aid_available ? " · Financial aid available" : ""}
+              <span className="text-muted-foreground">{t("currencyNotRecorded")}</span>
+              {opportunity.financial_aid_available ? t("financialAidAvailableSuffix") : ""}
             </span>
           </div>
         ) : opportunity.financial_aid_available ? (
           <div className="flex items-center gap-2">
             <Wallet className="size-4 shrink-0 text-muted-foreground" />
-            <span>Financial aid available</span>
+            <span>{t("financialAidAvailable")}</span>
           </div>
         ) : null}
         {opportunity.minimum_age != null || opportunity.maximum_age != null || opportunity.eligible_grades.length > 0 ? (
@@ -259,9 +306,9 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
             <Users2 className="size-4 shrink-0 text-muted-foreground" />
             <span>
               {opportunity.minimum_age != null || opportunity.maximum_age != null
-                ? `Ages ${opportunity.minimum_age ?? "any"}–${opportunity.maximum_age ?? "any"}`
+                ? t("agesRange", { min: opportunity.minimum_age ?? t("any"), max: opportunity.maximum_age ?? t("any") })
                 : null}
-              {opportunity.eligible_grades.length > 0 ? ` · Grades ${opportunity.eligible_grades.join(", ")}` : ""}
+              {opportunity.eligible_grades.length > 0 ? t("gradesSuffix", { grades: opportunity.eligible_grades.join(", ") }) : ""}
             </span>
           </div>
         ) : null}
@@ -269,7 +316,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
 
       {opportunity.application_requirements.length > 0 ? (
         <div className="space-y-2">
-          <SectionHeader title="What you'll need to apply" />
+          <SectionHeader title={t("whatYoullNeed")} />
           <ul className="flex flex-wrap gap-1.5">
             {opportunity.application_requirements.map((req) => (
               <li key={req} className="rounded-full border px-3 py-1 text-xs">
@@ -282,9 +329,9 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
 
       {opportunity.citizenship_restrictions || opportunity.residency_restrictions ? (
         <div className="space-y-1 text-sm">
-          <SectionHeader title="Eligibility notes" />
-          {opportunity.citizenship_restrictions ? <p className="text-muted-foreground">Citizenship: {opportunity.citizenship_restrictions}</p> : null}
-          {opportunity.residency_restrictions ? <p className="text-muted-foreground">Residency: {opportunity.residency_restrictions}</p> : null}
+          <SectionHeader title={t("eligibilityNotesHeading")} />
+          {opportunity.citizenship_restrictions ? <p className="text-muted-foreground">{t("citizenshipLabel", { text: opportunity.citizenship_restrictions })}</p> : null}
+          {opportunity.residency_restrictions ? <p className="text-muted-foreground">{t("residencyLabel", { text: opportunity.residency_restrictions })}</p> : null}
         </div>
       ) : null}
 
@@ -300,7 +347,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
 
       {sourcesRes.data && sourcesRes.data.length > 0 ? (
         <div className="space-y-2 border-t pt-4">
-          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Sources</p>
+          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase" lang={locale}>{t("sourcesHeading")}</p>
           <div className="space-y-2">
             {sourcesRes.data.map((source) => (
               <SourceBadge
@@ -309,6 +356,10 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
                 checkedAt={source.retrieved_at}
                 url={source.source_url}
                 confidence={source.confidence as ConfidenceLevel}
+                locale={locale}
+                sourceLabel={tSourceBadge("source")}
+                checkedLabel={(time) => tSourceBadge("checked", { time })}
+                viewSourceLabel={tSourceBadge("viewSource")}
               />
             ))}
           </div>
@@ -320,6 +371,10 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
             checkedAt={opportunity.last_verified_at}
             url={opportunity.source_url}
             confidence={opportunity.source_confidence as ConfidenceLevel}
+            locale={locale}
+            sourceLabel={tSourceBadge("source")}
+            checkedLabel={(time) => tSourceBadge("checked", { time })}
+            viewSourceLabel={tSourceBadge("viewSource")}
           />
         </div>
       ) : null}
@@ -331,7 +386,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1 text-sm text-brand-primary hover:underline"
         >
-          Visit official page <ExternalLink className="size-3.5" />
+          {t("visitOfficialPage")} <ExternalLink className="size-3.5" />
         </a>
       ) : null}
     </div>

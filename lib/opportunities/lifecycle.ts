@@ -415,6 +415,73 @@ export function insufficientVerificationReason(locale: Locale = DEFAULT_LOCALE):
   return locale === "tr" ? INSUFFICIENT_VERIFICATION_REASON_TR : INSUFFICIENT_VERIFICATION_REASON;
 }
 
+const NEEDS_VERIFICATION_LABEL_TR = "Doğrulama gerekiyor";
+
+export function needsVerificationLabel(locale: Locale = DEFAULT_LOCALE): string {
+  return locale === "tr" ? NEEDS_VERIFICATION_LABEL_TR : NEEDS_VERIFICATION_LABEL;
+}
+
+/**
+ * Every real `cycle_status` value, one label each — unlike `CYCLE_STATUS_LABEL_TR` above
+ * (deliberately a 3-value subset, for one sentence's interpolation), this is the general
+ * accessor. Found three independent copies of this same 7-value map while translating the
+ * opportunities UI (features/opportunities/opportunity-card.tsx's badge map missing "open"
+ * on purpose, features/opportunities/opportunity-filter-bar.tsx's 4-value filter dropdown,
+ * and app/(app)/opportunities/[id]/page.tsx's full 7-value copy) — identical English text
+ * on every overlapping key, the exact "#140/#141" duplication this file's own comments
+ * already warn about. One accessor now; a caller that doesn't want "open" shown (the card)
+ * simply doesn't call it for that status, same effect as the value being absent.
+ */
+const CYCLE_STATUS_LABEL_FULL_TR: Record<Opportunity["cycle_status"], string> = {
+  open: "Şu anda açık",
+  upcoming: "Yakında açılıyor",
+  closed: "Bu dönem için kapalı",
+  date_not_announced: "Yeni tarihler açıklanmadı",
+  historical: "Geçmişte kaldı — artık düzenlenmiyor",
+  discontinued: "İptal edildi",
+  unverified: "Doğrulama bekleniyor",
+};
+
+const CYCLE_STATUS_LABEL_FULL_EN: Record<Opportunity["cycle_status"], string> = {
+  open: "Open now",
+  upcoming: "Opens soon",
+  closed: "Closed for this cycle",
+  date_not_announced: "Next dates not announced",
+  historical: "Historical — not currently running",
+  discontinued: "Discontinued",
+  unverified: "Verification pending",
+};
+
+export function cycleStatusLabel(status: Opportunity["cycle_status"], locale: Locale = DEFAULT_LOCALE): string {
+  return locale === "tr" ? CYCLE_STATUS_LABEL_FULL_TR[status] : CYCLE_STATUS_LABEL_FULL_EN[status];
+}
+
+/**
+ * Same duplication shape, two copies (opportunity-card.tsx and [id]/page.tsx, byte-identical
+ * English on every key). "unknown" is deliberately absent from both maps — an absent key
+ * means "say nothing" (see either caller's own `?? null` / falsy check), not a value to
+ * translate; adding one here would turn a silent, correct omission into a rendered badge.
+ */
+const SELECTIVITY_LABEL_TR: Partial<Record<Opportunity["selectivity_tier"], string>> = {
+  extremely_selective: "Son derece seçici",
+  highly_selective: "Yüksek düzeyde seçici",
+  selective: "Seçici",
+  competitive_award: "Rekabetçi ödül",
+  open_enrollment: "Açık kayıt",
+};
+
+const SELECTIVITY_LABEL_EN: Partial<Record<Opportunity["selectivity_tier"], string>> = {
+  extremely_selective: "Extremely selective",
+  highly_selective: "Highly selective",
+  selective: "Selective",
+  competitive_award: "Competitive award",
+  open_enrollment: "Open enrollment",
+};
+
+export function selectivityLabel(tier: Opportunity["selectivity_tier"], locale: Locale = DEFAULT_LOCALE): string | undefined {
+  return locale === "tr" ? SELECTIVITY_LABEL_TR[tier] : SELECTIVITY_LABEL_EN[tier];
+}
+
 /**
  * The composed gate every recommendation-critical path calls: actionable AND supported by
  * enough evidence to present with confidence. The two halves stay separate functions on

@@ -1,5 +1,6 @@
 import { StatusBadge } from "@/components/oryn/status-badge";
-import { NEEDS_VERIFICATION_LABEL } from "@/lib/opportunities/lifecycle";
+import { needsVerificationLabel } from "@/lib/opportunities/lifecycle";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 /**
  * The one badge that answers "why isn't this presented as a confident match?", shared by
@@ -27,24 +28,36 @@ import { NEEDS_VERIFICATION_LABEL } from "@/lib/opportunities/lifecycle";
  * together would read as two unrelated problems with one row, when the first already says
  * everything actionable.
  */
+/** `locale` is a plain prop, not a self-fetched catalog namespace — both callers
+ * (opportunity-card.tsx, a Client Component, and [id]/page.tsx, a Server Component) already
+ * have one in scope, and this badge renders once per card in a grid. `ineligibleLabel` and
+ * `notOpenLabel` default from it via lib/opportunities/lifecycle.ts's needsVerificationLabel
+ * sibling pattern, rather than the message catalog — same "lib/-side enum label, not React
+ * catalog copy" split as lib/programs/subject-labels.ts's subjectLabel. */
 export function OpportunityStandingBadge({
   eligible,
   notActionable,
   needsVerification,
-  ineligibleLabel = "Not eligible for you",
+  locale = DEFAULT_LOCALE,
+  ineligibleLabel,
+  notOpenLabel,
 }: {
   eligible: boolean;
   notActionable: boolean;
   needsVerification: boolean;
+  locale?: Locale;
   /** Only the wording for the per-student case is caller-adjustable; the other two are the
    * product's answer to a question about the opportunity and must read identically everywhere. */
   ineligibleLabel?: string;
+  notOpenLabel?: string;
 }) {
   if (!eligible) {
-    return <StatusBadge label={notActionable ? "Not open right now" : ineligibleLabel} tone="neutral" />;
+    const fallbackIneligible = locale === "tr" ? "Senin için uygun değil" : "Not eligible for you";
+    const fallbackNotOpen = locale === "tr" ? "Şu anda açık değil" : "Not open right now";
+    return <StatusBadge label={notActionable ? (notOpenLabel ?? fallbackNotOpen) : (ineligibleLabel ?? fallbackIneligible)} tone="neutral" />;
   }
   if (needsVerification) {
-    return <StatusBadge label={NEEDS_VERIFICATION_LABEL} tone="warning" />;
+    return <StatusBadge label={needsVerificationLabel(locale)} tone="warning" />;
   }
   return null;
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Compass } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { requireUser } from "@/lib/security/dal";
@@ -10,6 +11,7 @@ import { OpportunityCard } from "@/features/opportunities/opportunity-card";
 import { OpportunityBrowseGrid } from "@/features/opportunities/opportunity-browse-grid";
 import { OpportunityFilterBar } from "@/features/opportunities/opportunity-filter-bar";
 import { integrationStatus } from "@/lib/env";
+import { formatNumber } from "@/lib/i18n/format";
 import { PageHeader } from "@/components/oryn/page-header";
 import { SectionHeader } from "@/components/oryn/section-header";
 import { EmptyState } from "@/components/oryn/empty-state";
@@ -41,6 +43,7 @@ export default async function OpportunitiesPage({
   const session = await requireUser();
   const userId = session.userId!;
   const isBrowse = params.view === "browse";
+  const t = await getTranslations("opportunities.browsePage");
 
   const { refreshed: matchesRefreshed } = await refreshOpportunityMatches(userId);
   const supabase = await createClient();
@@ -55,26 +58,20 @@ export default async function OpportunitiesPage({
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Opportunities"
-        title="Chosen for where you are now."
-        description="Ranked by what each one could add to your profile — not by prestige or popularity."
-      />
+      <PageHeader eyebrow={t("eyebrow")} title={t("title")} description={t("description")} />
 
-      {!matchesRefreshed ? (
-        <ErrorState description="We couldn't refresh your matches just now. Match scores and eligibility below are your last known result, not necessarily current." />
-      ) : null}
+      {!matchesRefreshed ? <ErrorState description={t("refreshError")} /> : null}
 
       <div className="flex gap-6 border-b border-border">
         <Link href="/opportunities" aria-current={!isBrowse ? "page" : undefined} className={cn(TAB, !isBrowse ? TAB_ACTIVE : TAB_INACTIVE)}>
-          For you
+          {t("forYou")}
         </Link>
         <Link
           href={`/opportunities?${new URLSearchParams({ view: "browse", ...Object.fromEntries(tabParams) }).toString()}`}
           aria-current={isBrowse ? "page" : undefined}
           className={cn(TAB, isBrowse ? TAB_ACTIVE : TAB_INACTIVE)}
         >
-          Browse all
+          {t("browseAll")}
         </Link>
       </div>
 
@@ -96,6 +93,7 @@ async function ForYouView({
   userId: string;
   tavilyConfigured: boolean;
 }) {
+  const t = await getTranslations("opportunities.browsePage");
   const [matchesRes, savedRes] = await Promise.all([
     supabase
       .from("opportunity_matches")
@@ -136,12 +134,8 @@ async function ForYouView({
     return (
       <EmptyState
         icon={Compass}
-        title="No matches yet"
-        description={
-          tavilyConfigured
-            ? "Opportunities are discovered on a schedule. Check back soon, or complete more of your profile so Oryn knows what to look for."
-            : "Opportunity discovery isn't configured yet in this environment (needs TAVILY_API_KEY). See API_SETUP.md."
-        }
+        title={t("noMatchesTitle")}
+        description={tavilyConfigured ? t("noMatchesConfigured") : t("noMatchesNotConfigured")}
       />
     );
   }
@@ -178,14 +172,14 @@ async function ForYouView({
     <div className="space-y-10">
       {leadIsVouchable ? (
         <section>
-          <SectionHeader title="Best next move" description="The single opportunity that would add most to your profile right now." />
+          <SectionHeader title={t("bestNextMove")} description={t("bestNextMoveDescription")} />
           <div className="mt-4">{renderCard(lead, true)}</div>
         </section>
       ) : null}
 
       {(leadIsVouchable ? rest : cards).length > 0 ? (
         <section>
-          {leadIsVouchable ? <SectionHeader title="Also worth your time" className="mb-4" /> : null}
+          {leadIsVouchable ? <SectionHeader title={t("alsoWorthYourTime")} className="mb-4" /> : null}
           <div className="grid gap-4 md:grid-cols-2">
             {(leadIsVouchable ? rest : cards).map((card) => renderCard(card, false))}
           </div>
@@ -212,6 +206,7 @@ async function BrowseAllView({
     page?: string;
   };
 }) {
+  const t = await getTranslations("opportunities.browsePage");
   const page = Math.max(1, Number(params.page) || 1);
   const filters = {
     q: params.q,
@@ -245,9 +240,7 @@ async function BrowseAllView({
 
       {rows.length > 0 ? (
         <>
-          <p className="text-xs text-muted-foreground">
-            {total} opportunit{total === 1 ? "y" : "ies"} match{total === 1 ? "es" : ""}
-          </p>
+          <p className="text-xs text-muted-foreground">{t("resultsCount", { count: total, formatted: formatNumber(total) })}</p>
           {/* Page 1 is still server-rendered; the grid appends subsequent pages as the
               student scrolls, replacing the old "Page N of M" pager (founder direction,
               2026-08-30). */}
@@ -262,8 +255,8 @@ async function BrowseAllView({
       ) : (
         <EmptyState
           icon={Compass}
-          title={`No opportunities found${params.q ? ` matching "${params.q}"` : ""}`}
-          description="Try a different search, or clear a filter — Oryn's opportunity catalog grows over time."
+          title={`${t("noOpportunitiesFound")}${params.q ? t("matchingQuerySuffix", { query: params.q }) : ""}`}
+          description={t("tryDifferentSearch")}
         />
       )}
     </div>
