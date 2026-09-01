@@ -1437,6 +1437,35 @@ the same discipline as item 33.
 
 ---
 
+## 40. Approve applying migration 0059 (widen the YÖK placement-cycle unique key)
+
+**Action**: decide whether to authorize applying
+`supabase/migrations/0059_schema_gaps_2026-08-22.sql`'s change to
+`university_program_placement_cycles_key_idx` — widening it from
+`(program_id, cycle_year, burs_orani_adi, fymk_id)` to also include `kilavuz_kodu`.
+**Why it's blocked**: not technical — the migration is written, and the file's own comment says
+it needs authorization before running against the live, populated table. Confirmed still not
+applied today (2026-09-01): `pg_indexes` shows the live index still in its 4-column form.
+**What it unblocks**: 23 real YÖK Atlas placement records currently colliding onto shared keys
+with genuinely different pairs — e.g. two of Yıldız Teknik's own admission tracks (Turkish-medium
+vs. English-medium, or day vs. evening — not confirmed which) with a 2,830-place ranking gap and
+15-point cutoff difference between them, both trying to occupy one row. Without the widened key,
+one of every colliding pair silently doesn't exist in the data a student would see once §0's read
+side gets built (see `docs/handoffs/tr-university-depth-gate-f-2026-09-01.md`). First found and
+explained in full in `docs/handoffs/yok-placement-key-gap-2026-08-22.md`, including the harder
+question worth reading before approving: **widening the key lets two tracks share one
+`university_programs` row; the more honest fix might be splitting the row instead** (same shape
+as Durham's BSc/MChem and four other institutions' variant-field collisions this project has
+already hit). This item approves the cheaper, reversible fix; the harder question is not this
+item's call to make.
+**What it does NOT do**: insert any of the 23 rows itself (that still needs the ingest script's
+`--apply` run afterward) or touch the *other* pending YÖK migration, item 26
+(`university_programs.kilavuz_kodu`, a source-traceability column — related field, different
+table, different migration, independently blocked).
+**Depends on**: your call — DDL against a populated table, no different in kind from items 33/35.
+
+---
+
 ## Environment hazard (not a decision, but you should know)
 
 **The primary checkout `/Users/adasarpkirik/Desktop/Founder/ORYN` sits on branch
