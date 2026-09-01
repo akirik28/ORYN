@@ -1,5 +1,7 @@
 import "server-only";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/database";
 import { createClient } from "@/lib/supabase/server";
 import { checkUndergraduateFieldAvailability } from "./field-availability";
 import { computeAdmissionOutlook, dataConfidenceForCompleteness, type AdmissionOutlookResult } from "./outlook";
@@ -35,9 +37,20 @@ import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
  * keeps whatever it already had (null for a fresh row), and `OutlookBadge`'s existing
  * `!outlook -> "Not yet assessed"` fallback — which could never actually fire before,
  * because this function always wrote a real value first — now does its job.
+ *
+ * `client` is optional and defaults to the request-scoped, cookie-bound client this function
+ * has always used — every existing caller (the save action, the university detail page) is a
+ * logged-in user's own request and is unaffected. It exists so a context with no
+ * request/cookies to read — a scheduled job sweeping many users' rows — can pass an admin
+ * client instead. See lib/admissions/scan.ts's `scanStaleOutlooks`, the one caller that does.
  */
-export async function refreshAdmissionOutlook(targetUniversityId: string, userId: string, locale: Locale = DEFAULT_LOCALE): Promise<AdmissionOutlookResult | null> {
-  const supabase = await createClient();
+export async function refreshAdmissionOutlook(
+  targetUniversityId: string,
+  userId: string,
+  locale: Locale = DEFAULT_LOCALE,
+  client?: SupabaseClient<Database>
+): Promise<AdmissionOutlookResult | null> {
+  const supabase = client ?? (await createClient());
 
   const { data: target } = await supabase
     .from("target_universities")
