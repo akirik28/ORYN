@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { removeAllUserStorage, StorageCleanupError } from "@/lib/account/delete-storage";
 import { UpdatePasswordSchema } from "@/lib/validation/auth";
+import { meetsMinimumSignupAge } from "@/lib/legal/age-policy";
+import { logEvent } from "@/lib/analytics/log";
 import type { TimeBudget } from "@/types/database";
 
 /**
@@ -99,6 +101,15 @@ export async function updateBirthYear(birthYear: number | null): Promise<{ error
   const supabase = await createClient();
   const { error } = await supabase.from("profiles").update({ birth_year: birthYear }).eq("id", session.userId!);
   if (error) return { error: "Couldn't save your birth year." };
+
+  // Same non-blocking flag as app/(confirm-age)/confirm-age/actions.ts, and the same
+  // reasoning: this is an existing account correcting its own on-file value, not a new
+  // signup — refusing or reverting the edit unilaterally would be a bigger decision than
+  // "capture the age" (see docs/age-gate-design-2026-09-02.md). Only fires on an actual
+  // value, never on clearing it back to null — there's no age to flag in that case.
+  if (birthYear !== null && !meetsMinimumSignupAge(birthYear)) {
+    await logEvent(session.userId!, "birth_year_settings_update_below_minimum_age", { birthYear });
+  }
 
   revalidatePath("/settings");
   // Both surfaces re-derive eligibility from this value, so a stale cache here is the
