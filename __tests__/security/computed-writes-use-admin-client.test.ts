@@ -38,14 +38,26 @@ describe("lib/scoring/persist.ts", () => {
   test("no write to these tables still uses the RLS-scoped client", () => {
     expect(src).not.toContain('supabase.from("profile_scores")');
     expect(src).not.toContain('supabase\n    .from("profiles")\n    .update({ profile_strength_score:');
-    expect(src).not.toContain('supabase.from("profile_score_snapshots")');
+    // profile_score_snapshots gained a legitimate RLS-scoped READ 2026-09-02 (the
+    // profile_update notification's own previous-snapshot lookup, same client the
+    // dashboard already uses for this exact table) -- narrowed from "no mention of
+    // supabase+this table at all" to "no WRITE", the same shape the opportunity_matches
+    // assertion below already uses for the identical read-vs-write distinction.
+    expect(src).not.toMatch(/supabase\.from\("profile_score_snapshots"\)\.(upsert|insert|update|delete)\(/);
   });
 
   test("reads stay on the RLS-scoped client -- widening a client to fix a write must not widen what it reads", () => {
-    expect(src).toContain('supabase.from("profiles").select(');
+    // Reformatted onto multiple lines 2026-09-02 (profile_update notifications added
+    // completeness_percent/preferred_language to this select) -- same multi-line match
+    // shape this file already uses for the admin.from("profiles").update(...) assertion
+    // above, applied here for the same reason (a longer call no longer fits one line).
+    expect(src).toContain('supabase\n      .from("profiles")\n      .select(');
     expect(src).toContain('supabase.from("skills").select(');
     expect(src).toContain('supabase.from("featured_items").select(');
     expect(src).toContain('supabase.from("contact_info").select(');
+    // The profile_update notification's own read, added in the same package -- also
+    // RLS-scoped, not admin (see this function's own comment on why).
+    expect(src).toContain('supabase.from("profile_score_snapshots").select(');
   });
 });
 
