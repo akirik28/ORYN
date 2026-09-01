@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getAIProvider } from "./index";
 import { logAIUsage } from "./usage";
 import { selectModelForUser } from "./limits/budget";
+import { assertWithinJobBudget } from "./limits/job-budget";
 import { REQUIREMENT_CATEGORIES } from "@/lib/requirements/types";
 import { StructuredRuleSchema } from "@/lib/validation/requirements";
 
@@ -59,6 +60,12 @@ export async function extractRequirementsFromContent(params: {
   sourceUrl: string;
   content: string;
 }): Promise<{ candidates: RequirementCandidate[]; usage: { inputTokens: number; outputTokens: number } }> {
+  // Same reasoning as opportunity-extraction.ts's identical line: no per-student cap sees
+  // this call, so nothing else stops it from running unbounded. Throws
+  // JobBudgetExceededError once requirement_extraction is over its monthly figure — see
+  // lib/ai/limits/job-budget.ts, caught in lib/requirements/discover.ts.
+  await assertWithinJobBudget("requirement_extraction");
+
   const provider = getAIProvider();
   // Same reasoning as opportunity-extraction.ts's identical line: always null (a catalog
   // job, not a student's), routed through selectModelForUser anyway for consistency with

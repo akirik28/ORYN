@@ -2,6 +2,7 @@ import "server-only";
 
 import { tavilyProvider } from "@/lib/providers/tavily";
 import { extractRequirementsFromContent } from "@/lib/ai/requirement-extraction";
+import { JobBudgetExceededError } from "@/lib/ai/limits/job-budget";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isDuplicateRequirement } from "./dedup";
 import { categoryToRuleKind } from "./types";
@@ -14,6 +15,12 @@ export interface RequirementDiscoveryResult {
   candidatesFound: number;
   requirementsStored: number;
   errors: string[];
+  /** True when this university's run stopped early because requirement_extraction hit its
+   *  monthly AI budget (lib/ai/limits/job-budget.ts) — a clean, expected stop, not a
+   *  failure. discoverRequirementsForUncoveredUniversities uses this to stop starting new
+   *  universities for the rest of this batch rather than let each one waste a Tavily search
+   *  only to hit the same budget check on its first candidate. */
+  stoppedForBudget: boolean;
 }
 
 /**
@@ -30,7 +37,14 @@ export async function discoverRequirementsForUniversity(params: { universityId: 
   const searchResult = await tavilyProvider.search(`${params.universityName} admission requirements for applicants`, { maxResults: 3 });
 
   if (!searchResult.success) {
-    return { universityId: params.universityId, universityName: params.universityName, candidatesFound: 0, requirementsStored: 0, errors: [searchResult.error.message] };
+    return {
+      universityId: params.universityId,
+      universityName: params.universityName,
+      candidatesFound: 0,
+      requirementsStored: 0,
+      errors: [searchResult.error.message],
+      stoppedForBudget: false,
+    };
   }
 
   const admin = createAdminClient();
@@ -44,6 +58,7 @@ export async function discoverRequirementsForUniversity(params: { universityId: 
 
   let candidatesFound = 0;
   let stored = 0;
+  let stoppedForBudget = false;
 
   for (const result of searchResult.data) {
     try {
@@ -87,11 +102,18 @@ export async function discoverRequirementsForUniversity(params: { universityId: 
         stored += 1;
       }
     } catch (error) {
+      if (error instanceof JobBudgetExceededError) {
+        // A clean stop, not a failure — see JobBudgetExceededError's own doc comment. Break
+        // the outer (per-search-result) loop: every remaining result for this university
+        // would hit the exact same check, so there's nothing to gain from trying them.
+        stoppedForBudget = true;
+        break;
+      }
       errors.push(error instanceof Error ? error.message : "Unknown error during extraction");
     }
   }
 
-  return { universityId: params.universityId, universityName: params.universityName, candidatesFound, requirementsStored: stored, errors };
+  return { universityId: params.universityId, universityName: params.universityName, candidatesFound, requirementsStored: stored, errors, stoppedForBudget };
 }
 
 const DEFAULT_BATCH_SIZE = 5;
@@ -126,7 +148,12 @@ export async function discoverRequirementsForUncoveredUniversities(limit = DEFAU
   const targets = await getUniversitiesNeedingRequirementDiscovery(limit);
   const results: RequirementDiscoveryResult[] = [];
   for (const target of targets) {
-    results.push(await discoverRequirementsForUniversity({ universityId: target.id, universityName: target.name }));
+    const result = await discoverRequirementsForUniversity({ universityId: target.id, universityName: target.name });
+    results.push(result);
+    // Once one university's run stops for budget, every remaining university this batch
+    // would hit the same check on its very first candidate — stop starting new ones rather
+    // than spend Tavily searches on runs that can't do any AI work anyway.
+    if (result.stoppedForBudget) break;
   }
   return results;
 }

@@ -33,7 +33,7 @@ vi.mock("@/lib/supabase/admin", () => ({
   },
 }));
 
-import { selectModelForUser } from "@/lib/ai/limits/budget";
+import { selectModelForUser, getSpendQuota, MONTHLY_BUDGET_TARGET_USD, MONTHLY_BUDGET_CEILING_USD } from "@/lib/ai/limits/budget";
 import { env } from "@/lib/env";
 
 const USER_ID = "22222222-2222-4222-8222-222222222222";
@@ -144,5 +144,79 @@ describe("selectModelForUser", () => {
     expect(capturedQueryRef.current?.userId).toBe(USER_ID);
     expect(capturedQueryRef.current?.gteColumn).toBe("created_at");
     expect(capturedQueryRef.current?.gteValue).toBe(expectedMonthStart);
+  });
+});
+
+/**
+ * getSpendQuota — the UI-facing view added 2026-09-02 to close the gap oryn-b9 found:
+ * MonthlyUsageMeter renders a 300-message quota that has nothing to do with this file's
+ * $0.50 target, so a student could be degraded for a while before the meter shows anything
+ * unusual. These pin that getSpendQuota's `degraded` always agrees with what
+ * selectModelForUser would actually decide for the same inputs — the property that matters,
+ * since a UI reading a *second*, independently-wrong number would just move the lie rather
+ * than fix it.
+ */
+describe("getSpendQuota", () => {
+  test("well under target — not degraded, exact spend and fraction reported", async () => {
+    tryCreateAdminClientMock.mockReturnValue(adminReturning({ data: [{ estimated_cost: 0.1 }], error: null }));
+
+    const quota = await getSpendQuota(USER_ID);
+
+    expect(quota.spentUsd).toBeCloseTo(0.1, 10);
+    expect(quota.spentIsKnown).toBe(true);
+    expect(quota.degraded).toBe(false);
+    expect(quota.targetUsd).toBe(MONTHLY_BUDGET_TARGET_USD);
+    expect(quota.ceilingUsd).toBe(MONTHLY_BUDGET_CEILING_USD);
+    expect(quota.fraction).toBeCloseTo(0.1 / MONTHLY_BUDGET_TARGET_USD, 10);
+  });
+
+  test("at or over target — degraded true, agreeing with selectModelForUser for the same data", async () => {
+    tryCreateAdminClientMock.mockReturnValue(adminReturning({ data: [{ estimated_cost: MONTHLY_BUDGET_TARGET_USD }], error: null }));
+
+    const quota = await getSpendQuota(USER_ID);
+
+    expect(quota.degraded).toBe(true);
+    expect(quota.spentIsKnown).toBe(true);
+    expect(quota.fraction).toBe(1); // clamped, not > 1
+  });
+
+  test("spend well past target clamps fraction to 1 rather than overflowing the bar", async () => {
+    tryCreateAdminClientMock.mockReturnValue(adminReturning({ data: [{ estimated_cost: MONTHLY_BUDGET_TARGET_USD * 3 }], error: null }));
+
+    const quota = await getSpendQuota(USER_ID);
+
+    expect(quota.fraction).toBe(1);
+    expect(quota.degraded).toBe(true);
+  });
+
+  test("an unpriced row: spend is still known (a real partial sum), but degraded is true — the two fields answer different questions", async () => {
+    tryCreateAdminClientMock.mockReturnValue(adminReturning({ data: [{ estimated_cost: 0.01 }, { estimated_cost: null }], error: null }));
+
+    const quota = await getSpendQuota(USER_ID);
+
+    expect(quota.spentIsKnown).toBe(true);
+    expect(quota.spentUsd).toBeCloseTo(0.01, 10);
+    expect(quota.degraded).toBe(true); // the defensive degrade, not a statement that spend itself is unknown
+  });
+
+  test("usage unavailable (no admin client) — spentUsd null, spentIsKnown false, NOT degraded", async () => {
+    tryCreateAdminClientMock.mockReturnValue(null);
+
+    const quota = await getSpendQuota(USER_ID);
+
+    expect(quota.spentUsd).toBeNull();
+    expect(quota.spentIsKnown).toBe(false);
+    expect(quota.degraded).toBe(false); // fails open — matches selectModelForUser's own usage_unavailable branch, never punishes the student for the check's own outage
+    expect(quota.fraction).toBe(0); // an unreadable count is not the same as an empty bar's worth of confidence, but there is no fraction to show either
+  });
+
+  test("resetsAt is the first instant of next UTC calendar month", async () => {
+    tryCreateAdminClientMock.mockReturnValue(adminReturning({ data: [], error: null }));
+
+    const quota = await getSpendQuota(USER_ID);
+
+    const now = new Date();
+    const expectedResetsAt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)).toISOString();
+    expect(quota.resetsAt).toBe(expectedResetsAt);
   });
 });
