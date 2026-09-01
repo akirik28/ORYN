@@ -460,6 +460,22 @@ where id in (
 );
 ```
 
+**This is one decision, not two — it is the umbrella-row question, arriving from a second
+direction.** The S5 research lane independently found the same shape and named it: a single
+row standing in for a family of programmes with genuinely different facts (BRAND-ED covers
+four differently-branded, differently-priced, differently-aged sub-programmes; UWC Short
+Courses covers many independently-organised courses at different colleges). Six such cases
+are already recorded as awaiting a product decision — see `docs/ORYN_WORKSTREAMS.md`'s
+S5-TURKEY-ACADEMIC-OPPORTUNITIES row and `docs/handoffs/s5a-summer-academic-enrichment-handoff.md`
+— alongside a "systemic bare institution name" pattern the same lane put at roughly a third
+of the unverified bucket.
+
+CMU, NYU and USC are the same thing found from the cleanup side rather than the research
+side. Worth deciding once, for the shape, rather than case by case in two places — with the
+caveat USC demonstrates: *which* action a given umbrella row needs (split, retitle, or
+retire) still has to be checked per row, because it depends on whether properly-titled
+replacements already exist. Only the policy generalises; the verdict does not.
+
 **USC needs a retitle, not a retirement** — its `official_url` is already correct
 (`https://precollege.usc.edu/summer-programs/`); only the `title` field carries the
 institution name instead of the programme name:
