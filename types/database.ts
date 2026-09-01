@@ -1695,6 +1695,24 @@ export interface ProductEvent {
 }
 export type ProductEventInsert = Insertable<ProductEvent, "id" | "created_at" | "metadata">;
 
+/** "application" | "opportunity" | "university_deadline" — matches lib/deadlines/scan.ts's
+ * DeadlineHit["source"] exactly. Kept as a plain string in the DB (migration 0075's own
+ * comment explains why), so this union exists only here and in scan.ts — not a DB enum. */
+export type DeadlineNotificationSource = "application" | "opportunity" | "university_deadline";
+
+export interface DeadlineNotificationLog {
+  id: string;
+  user_id: string;
+  source: DeadlineNotificationSource;
+  /** applications.id | opportunities.id | university_deadlines.id, per `source`. */
+  source_id: string;
+  /** Which REMINDER_THRESHOLDS bucket (30/14/7/3/1) this row fired for — part of the
+   * dedupe key, not metadata: see migration 0075 for why a nearer bucket re-notifies. */
+  threshold_days: number;
+  notified_at: string;
+}
+export type DeadlineNotificationLogInsert = Insertable<DeadlineNotificationLog, "id" | "notified_at">;
+
 export interface BirthYearChange {
   id: string;
   user_id: string;
@@ -1817,6 +1835,7 @@ export interface Database {
       rate_limit_events: Table<RateLimitEvent, RateLimitEventInsert, Partial<RateLimitEventInsert>>;
       product_events: Table<ProductEvent, ProductEventInsert, Partial<ProductEventInsert>>;
       birth_year_changes: Table<BirthYearChange, never, never>;
+      deadline_notification_log: Table<DeadlineNotificationLog, DeadlineNotificationLogInsert, never>;
     };
   };
 }

@@ -1,4 +1,4 @@
-import { describe, expect, test, vi, beforeEach } from "vitest";
+import { describe, expect, test } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import type { Locale } from "@/lib/i18n/config";
@@ -6,24 +6,25 @@ import type { Locale } from "@/lib/i18n/config";
 /**
  * scanTargetUniversityDeadlines feeds the deadline-reminder job's target-university source
  * (Phase 24; see lib/deadlines/scan.ts's own scanDeadlines doc comment for why this is NOT
- * Phase 30 Job B) — untested until this package, same gap closed for its two siblings in
- * __tests__/deadlines/scan.test.ts and scan-applications.test.ts. Isolated the same way:
- * mocks only `target_universities`, `university_deadlines`, `universities`, `profiles`, and
- * `notifications` (via a mocked createNotification). `canonicalUniversityId` is exercised
- * with a real, empty `SupersessionMap` rather than mocked — see scan-applications.test.ts's
- * header for why that's safe and representative of the common case.
+ * Phase 30 Job B). Isolated the same way its siblings are: mocks only `target_universities`,
+ * `university_deadlines`, `universities`, and `profiles`. `canonicalUniversityId` is
+ * exercised with a real, empty `SupersessionMap` rather than mocked — see
+ * scan-applications.test.ts's header for why that's safe and representative.
  *
- * `TRANSLATORS` (2026-09-01, notification i18n) reproduces messages/en.json and
- * messages/tr.json's real notification strings for this file's body shape.
+ * This package changed what the function DOES with a crossed threshold (returns a
+ * DeadlineHit instead of calling createNotification directly) without changing the
+ * program/verification-state eligibility logic itself — see scan-applications.test.ts's
+ * header for the full "one file, one concern" split this reflects.
+ *
+ * `TRANSLATORS` reproduces messages/en.json and messages/tr.json's real notification
+ * strings for this source's body shape.
  */
 
-vi.mock("@/lib/notifications/create", () => ({ createNotification: vi.fn() }));
-
 import { scanTargetUniversityDeadlines } from "@/lib/deadlines/scan";
-import { createNotification } from "@/lib/notifications/create";
 
 type TargetUniversityRow = { id: string; user_id: string; university_id: string; program_id: string | null; status: string };
 type UniversityDeadlineRow = {
+  id: string;
   university_id: string;
   program_id: string | null;
   deadline_type: string;
@@ -32,29 +33,23 @@ type UniversityDeadlineRow = {
 };
 type UniversityRow = { id: string; name: string };
 type ProfileRow = { id: string; preferred_language: string | null };
-type NotificationRow = { id: string; user_id: string; category: string; link: string; created_at: string };
 
 function makeQueryBuilder<T extends Record<string, unknown>>(rows: T[]) {
   let filtered = [...rows];
   const builder = {
-    select: vi.fn(() => builder),
-    eq: vi.fn((column: keyof T, value: unknown) => {
+    select: () => builder,
+    eq: (column: keyof T, value: unknown) => {
       filtered = filtered.filter((row) => row[column] === value);
       return builder;
-    }),
-    in: vi.fn((column: keyof T, values: unknown[]) => {
+    },
+    in: (column: keyof T, values: unknown[]) => {
       filtered = filtered.filter((row) => values.includes(row[column]));
       return builder;
-    }),
-    not: vi.fn((column: keyof T, _operator: "is", value: null) => {
+    },
+    not: (column: keyof T, _operator: "is", value: null) => {
       filtered = filtered.filter((row) => row[column] !== value);
       return builder;
-    }),
-    gte: vi.fn((column: keyof T, value: string) => {
-      filtered = filtered.filter((row) => (row[column] as string) >= value);
-      return builder;
-    }),
-    maybeSingle: vi.fn(() => Promise.resolve({ data: filtered[0] ?? null, error: null })),
+    },
     then(onFulfilled: (result: { data: T[]; error: null }) => unknown, onRejected?: (reason: unknown) => unknown) {
       return Promise.resolve({ data: filtered, error: null }).then(onFulfilled, onRejected);
     },
@@ -67,20 +62,17 @@ function makeSupabase(tables: {
   university_deadlines?: UniversityDeadlineRow[];
   universities?: UniversityRow[];
   profiles?: ProfileRow[];
-  notifications?: NotificationRow[];
 }) {
   const universityDeadlines = tables.university_deadlines ?? [];
   const universities = tables.universities ?? [];
   const profiles = tables.profiles ?? [];
-  const notifications = tables.notifications ?? [];
   return {
-    from: vi.fn((table: "target_universities" | "university_deadlines" | "universities" | "profiles" | "notifications") => {
+    from: (table: "target_universities" | "university_deadlines" | "universities" | "profiles") => {
       if (table === "target_universities") return makeQueryBuilder(tables.target_universities);
       if (table === "university_deadlines") return makeQueryBuilder(universityDeadlines);
       if (table === "universities") return makeQueryBuilder(universities);
-      if (table === "profiles") return makeQueryBuilder(profiles);
-      return makeQueryBuilder(notifications);
-    }),
+      return makeQueryBuilder(profiles);
+    },
   } as unknown as SupabaseClient<Database>;
 }
 
@@ -104,111 +96,115 @@ const TRANSLATORS: Record<Locale, (key: string, values?: Record<string, string |
         : key,
 };
 
-beforeEach(() => {
-  vi.mocked(createNotification).mockClear();
-});
-
 describe("scanTargetUniversityDeadlines", () => {
-  test("a university-level deadline (program_id null) notifies for any target of that university", async () => {
+  test("a university-level deadline (program_id null) produces a hit for any target of that university", async () => {
     const supabase = makeSupabase({
       target_universities: [{ id: "t1", user_id: STUDENT_ID, university_id: "univ-1", program_id: "some-program", status: "target" }],
-      university_deadlines: [{ university_id: "univ-1", program_id: null, deadline_type: "regular_decision", deadline_date: DEADLINE_7_DAYS_OUT, verification_state: "VERIFIED_CURRENT" }],
+      university_deadlines: [{ id: "ud-1", university_id: "univ-1", program_id: null, deadline_type: "regular_decision", deadline_date: DEADLINE_7_DAYS_OUT, verification_state: "VERIFIED_CURRENT" }],
       universities: [{ id: "univ-1", name: "Yale University" }],
     });
 
     const result = await scanTargetUniversityDeadlines(supabase, TODAY, EMPTY_SUPERSESSION_MAP, TRANSLATORS);
 
-    expect(result).toEqual({ notified: 1, checked: 1 });
-    expect(createNotification).toHaveBeenCalledWith(
-      expect.objectContaining({ userId: STUDENT_ID, link: "/universities/univ-1", body: "Yale University — regular_decision deadline approaching." })
-    );
+    expect(result.checked).toBe(1);
+    expect(result.hits).toEqual([
+      {
+        userId: STUDENT_ID,
+        locale: "en",
+        source: "university_deadline",
+        sourceId: "ud-1",
+        daysUntil: 7,
+        link: "/universities/univ-1",
+        itemLabel: "Yale University — regular_decision",
+        singleBody: "Yale University — regular_decision deadline approaching.",
+      },
+    ]);
   });
 
   test("a program-specific deadline only applies to a target that picked that exact program", async () => {
     const supabase = makeSupabase({
       target_universities: [{ id: "t1", user_id: STUDENT_ID, university_id: "univ-1", program_id: "econ-ba", status: "target" }],
-      university_deadlines: [{ university_id: "univ-1", program_id: "econ-ba", deadline_type: "program_specific", deadline_date: DEADLINE_7_DAYS_OUT, verification_state: "VERIFIED_CURRENT" }],
+      university_deadlines: [{ id: "ud-1", university_id: "univ-1", program_id: "econ-ba", deadline_type: "program_specific", deadline_date: DEADLINE_7_DAYS_OUT, verification_state: "VERIFIED_CURRENT" }],
       universities: [{ id: "univ-1", name: "Yale University" }],
     });
     const result = await scanTargetUniversityDeadlines(supabase, TODAY, EMPTY_SUPERSESSION_MAP, TRANSLATORS);
-    expect(result).toEqual({ notified: 1, checked: 1 });
+    expect(result.checked).toBe(1);
+    expect(result.hits).toHaveLength(1);
   });
 
   test("a program-specific deadline for a DIFFERENT program than the one targeted does not apply", async () => {
     const supabase = makeSupabase({
       target_universities: [{ id: "t1", user_id: STUDENT_ID, university_id: "univ-1", program_id: "econ-ba", status: "target" }],
-      university_deadlines: [{ university_id: "univ-1", program_id: "physics-ba", deadline_type: "program_specific", deadline_date: DEADLINE_7_DAYS_OUT, verification_state: "VERIFIED_CURRENT" }],
+      university_deadlines: [{ id: "ud-1", university_id: "univ-1", program_id: "physics-ba", deadline_type: "program_specific", deadline_date: DEADLINE_7_DAYS_OUT, verification_state: "VERIFIED_CURRENT" }],
       universities: [{ id: "univ-1", name: "Yale University" }],
     });
     const result = await scanTargetUniversityDeadlines(supabase, TODAY, EMPTY_SUPERSESSION_MAP, TRANSLATORS);
-    expect(result).toEqual({ notified: 0, checked: 0 });
-    expect(createNotification).not.toHaveBeenCalled();
+    expect(result).toEqual({ hits: [], checked: 0 });
   });
 
   for (const nonActionableState of ["VERIFIED_HISTORICAL", "CONFLICTING_EVIDENCE", "NEEDS_REVIEW", "CURRENT_CYCLE_NOT_PUBLISHED"]) {
-    test(`a deadline with verification_state='${nonActionableState}' never notifies, even at a reminder threshold`, async () => {
+    test(`a deadline with verification_state='${nonActionableState}' never produces a hit, even at a reminder threshold`, async () => {
       const supabase = makeSupabase({
         target_universities: [{ id: "t1", user_id: STUDENT_ID, university_id: "univ-1", program_id: null, status: "target" }],
-        university_deadlines: [{ university_id: "univ-1", program_id: null, deadline_type: "regular_decision", deadline_date: DEADLINE_7_DAYS_OUT, verification_state: nonActionableState }],
+        university_deadlines: [{ id: "ud-1", university_id: "univ-1", program_id: null, deadline_type: "regular_decision", deadline_date: DEADLINE_7_DAYS_OUT, verification_state: nonActionableState }],
         universities: [{ id: "univ-1", name: "Yale University" }],
       });
       const result = await scanTargetUniversityDeadlines(supabase, TODAY, EMPTY_SUPERSESSION_MAP, TRANSLATORS);
-      expect(result).toEqual({ notified: 0, checked: 0 });
-      expect(createNotification).not.toHaveBeenCalled();
+      expect(result).toEqual({ hits: [], checked: 0 });
     });
   }
 
-  test("verification_state='unverified' still notifies — only the four named states are excluded, not merely-unconfirmed ones", async () => {
+  test("verification_state='unverified' still produces a hit — only the four named states are excluded, not merely-unconfirmed ones", async () => {
     const supabase = makeSupabase({
       target_universities: [{ id: "t1", user_id: STUDENT_ID, university_id: "univ-1", program_id: null, status: "target" }],
-      university_deadlines: [{ university_id: "univ-1", program_id: null, deadline_type: "regular_decision", deadline_date: DEADLINE_7_DAYS_OUT, verification_state: "unverified" }],
+      university_deadlines: [{ id: "ud-1", university_id: "univ-1", program_id: null, deadline_type: "regular_decision", deadline_date: DEADLINE_7_DAYS_OUT, verification_state: "unverified" }],
       universities: [{ id: "univ-1", name: "Yale University" }],
     });
     const result = await scanTargetUniversityDeadlines(supabase, TODAY, EMPTY_SUPERSESSION_MAP, TRANSLATORS);
-    expect(result).toEqual({ notified: 1, checked: 1 });
+    expect(result.checked).toBe(1);
+    expect(result.hits).toHaveLength(1);
   });
 
-  test("a target with two relevant deadlines (university-level + its own program) counts both", async () => {
+  test("a target with two relevant deadlines (university-level + its own program) produces two separate hits", async () => {
     const supabase = makeSupabase({
       target_universities: [{ id: "t1", user_id: STUDENT_ID, university_id: "univ-1", program_id: "econ-ba", status: "target" }],
       university_deadlines: [
-        { university_id: "univ-1", program_id: null, deadline_type: "regular_decision", deadline_date: DEADLINE_7_DAYS_OUT, verification_state: "VERIFIED_CURRENT" },
-        { university_id: "univ-1", program_id: "econ-ba", deadline_type: "supplemental_essay", deadline_date: DEADLINE_7_DAYS_OUT, verification_state: "VERIFIED_CURRENT" },
+        { id: "ud-1", university_id: "univ-1", program_id: null, deadline_type: "regular_decision", deadline_date: DEADLINE_7_DAYS_OUT, verification_state: "VERIFIED_CURRENT" },
+        { id: "ud-2", university_id: "univ-1", program_id: "econ-ba", deadline_type: "supplemental_essay", deadline_date: DEADLINE_7_DAYS_OUT, verification_state: "VERIFIED_CURRENT" },
       ],
       universities: [{ id: "univ-1", name: "Yale University" }],
     });
     const result = await scanTargetUniversityDeadlines(supabase, TODAY, EMPTY_SUPERSESSION_MAP, TRANSLATORS);
-    expect(result).toEqual({ notified: 2, checked: 2 });
-    expect(createNotification).toHaveBeenCalledTimes(2);
+    expect(result.checked).toBe(2);
+    expect(result.hits.map((h) => h.sourceId).sort()).toEqual(["ud-1", "ud-2"]);
   });
 
   test("only exploring/target/applying statuses are scanned — an accepted/withdrawn target is not", async () => {
     const supabase = makeSupabase({
       target_universities: [{ id: "t1", user_id: STUDENT_ID, university_id: "univ-1", program_id: null, status: "accepted" }],
-      university_deadlines: [{ university_id: "univ-1", program_id: null, deadline_type: "regular_decision", deadline_date: DEADLINE_7_DAYS_OUT, verification_state: "VERIFIED_CURRENT" }],
+      university_deadlines: [{ id: "ud-1", university_id: "univ-1", program_id: null, deadline_type: "regular_decision", deadline_date: DEADLINE_7_DAYS_OUT, verification_state: "VERIFIED_CURRENT" }],
       universities: [{ id: "univ-1", name: "Yale University" }],
     });
     const result = await scanTargetUniversityDeadlines(supabase, TODAY, EMPTY_SUPERSESSION_MAP, TRANSLATORS);
-    expect(result).toEqual({ notified: 0, checked: 0 });
-    expect(createNotification).not.toHaveBeenCalled();
+    expect(result).toEqual({ hits: [], checked: 0 });
   });
 
   test("no active targets returns zero without querying university_deadlines", async () => {
     const supabase = makeSupabase({ target_universities: [] });
     const result = await scanTargetUniversityDeadlines(supabase, TODAY, EMPTY_SUPERSESSION_MAP, TRANSLATORS);
-    expect(result).toEqual({ notified: 0, checked: 0 });
-    expect(createNotification).not.toHaveBeenCalled();
+    expect(result).toEqual({ hits: [], checked: 0 });
   });
 
   test("a university that can't be resolved by name falls back to a translated placeholder, not raw English inside a Turkish sentence", async () => {
     const supabase = makeSupabase({
       target_universities: [{ id: "t1", user_id: STUDENT_ID, university_id: "univ-missing", program_id: null, status: "target" }],
-      university_deadlines: [{ university_id: "univ-missing", program_id: null, deadline_type: "regular_decision", deadline_date: DEADLINE_7_DAYS_OUT, verification_state: "VERIFIED_CURRENT" }],
+      university_deadlines: [{ id: "ud-1", university_id: "univ-missing", program_id: null, deadline_type: "regular_decision", deadline_date: DEADLINE_7_DAYS_OUT, verification_state: "VERIFIED_CURRENT" }],
       universities: [],
       profiles: [{ id: STUDENT_ID, preferred_language: "tr" }],
     });
     const result = await scanTargetUniversityDeadlines(supabase, TODAY, EMPTY_SUPERSESSION_MAP, TRANSLATORS);
-    expect(result).toEqual({ notified: 1, checked: 1 });
-    expect(createNotification).toHaveBeenCalledWith(expect.objectContaining({ body: "Bir hedef üniversite — regular_decision son tarihi yaklaşıyor." }));
+    expect(result.hits).toHaveLength(1);
+    expect(result.hits[0].singleBody).toBe("Bir hedef üniversite — regular_decision son tarihi yaklaşıyor.");
+    expect(result.hits[0].itemLabel).toBe("Bir hedef üniversite — regular_decision");
   });
 });
