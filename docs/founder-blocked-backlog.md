@@ -623,9 +623,26 @@ org can backfill the confirmed-open rows with per-row evidence.
 
 ---
 
-## 30. LAUNCH BLOCKER — anonymous users can read any public student profile
+## 30. ~~LAUNCH BLOCKER — anonymous users can read any public student profile~~ — RESOLVED, VERIFIED LIVE 2026-09-01
 
-**Action**: authorize the fix. A migration will be written (not applied) — you approve applying
+> ### ✅ Already fixed. Nothing to authorize.
+>
+> Verified live against `oryn-qa-scratch` on 2026-09-01 16:30, by reading the definitions rather
+> than trusting this entry or the ledger:
+>
+> - **`public_profiles`' live view definition now begins `WHERE auth.uid() IS NOT NULL AND (…)`**
+>   (`pg_get_viewdef`). The anonymous branch this entry describes no longer exists.
+> - **The base table is independently closed too**: `profiles` carries exactly two policies,
+>   `select own profile` and `update own profile`, both `USING (id = auth.uid())`. So there is no
+>   second path around the view.
+>
+> Found by the `docs/known-issues.md` staleness pass and confirmed by me independently before
+> striking a launch blocker off your list — removing a real security item because a document said
+> it was fixed is the one mistake worth being slow about. `docs/migration-state.md` already had
+> this right and dated; **this entry is where the staleness lived**, and it stayed stale because
+> both earlier passes treated *this file* as the authority on live state instead of querying it.
+
+**Original entry preserved below for the record. Action (no longer required)**: authorize the fix. A migration will be written (not applied) — you approve applying
 it, the same as items 26 and 29. This is the one item on this list that must be closed before a
 real student signs up.
 
@@ -840,7 +857,7 @@ instance. Full analysis: `docs/feat2-multi-axis-status-audit-2026-08-22.md`.
 
 ---
 
-## 36. CRITICAL — any signed-in user can make themselves an admin
+## 36. ~~CRITICAL — any signed-in user can make themselves an admin~~ — RESOLVED, VERIFIED LIVE 2026-09-01
 
 > ### ✅ RESOLVED — `0062` is now correct and safe to apply.
 >
@@ -860,8 +877,37 @@ instance. Full analysis: `docs/feat2-multi-axis-status-audit-2026-08-22.md`.
 > Nothing was ever applied to the database during the defective window, so there is nothing to
 > undo. ORYN-CEO reviewed the original line by line and merged it without catching this.
 
-**Action**: authorize applying migration `0062`. Written, not applied — same shape as items
-26/29/30. Still the highest-priority item on this list, above item 30.
+> ### ✅ APPLIED AND LIVE — verified 2026-09-01. This is no longer your highest-priority item; it is not an item at all.
+>
+> The escalation is closed **in the database right now**. Verified by reading the trigger's own
+> source, not the ledger and not this entry:
+>
+> ```
+> trigger  profiles_00_guard_protected_columns  on public.profiles
+> function public.profiles_guard_protected_columns()  -- SET search_path TO ''
+>   if pg_trigger_depth() <= 1 and current_user <> 'service_role' then
+>     new.is_admin                := old.is_admin;
+>     new.profile_strength_score  := old.profile_strength_score;
+>     new.completeness_percent    := old.completeness_percent;
+> ```
+>
+> Live admin count is **1**, unchanged. A signed-in student's `is_admin := true` is silently
+> reset to its old value before the row is written.
+>
+> **And the shipped design is better than the one described below.** This entry says `0062`
+> guards "`is_admin` alone" because guarding the two computed columns would freeze score
+> recompute. What actually landed guards **all three** and exempts `service_role`, paired with
+> the code change routing those writes through the admin client — so the computed columns are
+> protected too, without the freeze. Five sibling guards exist on the same pattern
+> (`profile_scores`, `profile_score_snapshots`, `opportunity_matches`,
+> `student_requirement_evaluations`, `evidence_files`).
+>
+> **Why this sat here wrong:** every pass that "confirmed" it re-read this file instead of
+> querying the database. The word *CRITICAL* made re-derivation feel unnecessary, which is
+> exactly backwards.
+
+**Action (no longer required — see above)**: ~~authorize applying migration `0062`. Written, not applied — same shape as items
+26/29/30. Still the highest-priority item on this list, above item 30.~~
 
 **What was found** (BUG-1, 2026-08-22, live against `oryn-qa-scratch`; I re-verified the policy
 definitions independently): the QA account `oryn.qa.b@example.com` — an ordinary, non-admin
