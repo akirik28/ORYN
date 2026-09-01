@@ -25,8 +25,23 @@ afterEach(() => {
 const FAKE_USER_ID = "11111111-1111-1111-1111-111111111111";
 const FAKE_UNIVERSITY_ID = "22222222-2222-2222-2222-222222222222";
 
+/**
+ * Whichever test imports `persist-matches` first pays for the whole module graph — the
+ * scoring, counselor and lifecycle chains behind it — and under load that alone can exceed
+ * vitest's 5s default before the assertion is reached. It has failed that way for three
+ * separate lanes today at load averages of 26-59 on 8 cores, every time on the FIRST test in
+ * this file and never on the second, which exercises the same early return through the
+ * now-cached module.
+ *
+ * So the timeout is raised rather than the flake tolerated. It is not a licence for the
+ * function to be slow: `refreshOpportunityMatches` returns before touching a database when
+ * the admin client is unconfigured, which is the whole point of the test. What is slow is
+ * `import`, once, and a test that fails on machine load teaches people to ignore red.
+ */
+const FIRST_IMPORT_TIMEOUT_MS = 30_000;
+
 describe("refreshOpportunityMatches degrades instead of crashing when the admin client is unavailable", () => {
-  test("resolves { refreshed: false } rather than rejecting", async () => {
+  test("resolves { refreshed: false } rather than rejecting", { timeout: FIRST_IMPORT_TIMEOUT_MS }, async () => {
     const { refreshOpportunityMatches } = await import("@/lib/opportunities/persist-matches");
     await expect(refreshOpportunityMatches(FAKE_USER_ID)).resolves.toEqual({ refreshed: false });
   });
@@ -41,7 +56,9 @@ describe("refreshOpportunityMatches degrades instead of crashing when the admin 
 });
 
 describe("refreshRequirementEvaluations degrades instead of crashing when the admin client is unavailable", () => {
-  test("resolves (void) rather than rejecting", async () => {
+  // Same reason as above — this block's first test pays for a different module graph
+  // (lib/requirements/persist) and would flake the same way.
+  test("resolves (void) rather than rejecting", { timeout: FIRST_IMPORT_TIMEOUT_MS }, async () => {
     const { refreshRequirementEvaluations } = await import("@/lib/requirements/persist");
     await expect(refreshRequirementEvaluations(FAKE_UNIVERSITY_ID, FAKE_USER_ID, null)).resolves.toBeUndefined();
   });
