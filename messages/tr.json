@@ -125,7 +125,18 @@
       "title": "CV Tara.",
       "description": "Kaydın zaten bir yerde yazılı mı? Oryn onu okuyup eğitim, faaliyet, ödül, proje, araştırma ve iş bilgilerini çıkarabilir — hiçbiri kaydedilmeden önce her şeyi sen gözden geçirirsin.",
       "notConfiguredTitle": "CV taraması henüz yapılandırılmadı",
-      "notConfiguredDescription": "Bunun için ANTHROPIC_API_KEY ayarlanmalı — bkz. API_SETUP.md. Yine de her şeyi profiline elle ekleyebilirsin."
+      "notConfiguredDescription": "Bunun için ANTHROPIC_API_KEY ayarlanmalı — bkz. API_SETUP.md. Yine de her şeyi profiline elle ekleyebilirsin.",
+      "reviewBeforeAdding": "Eklemeden önce gözden geçir",
+      "foundItems": "Oryn, {fileName} içinde {count, plural, one {# öğe} other {# öğe}} buldu. Onaylamadan hiçbiri profiline eklenmez — doğru olmayanların işaretini kaldır.",
+      "unsureAboutThis": "Oryn bundan emin değil",
+      "addItemsToProfile": "{count, plural, one {# öğeyi profilime ekle} other {# öğeyi profilime ekle}}",
+      "scanTitle": "Bir CV veya özgeçmiş tara",
+      "scanDescription": "Bir PDF, DOCX veya metin dosyası yükle. Oryn onu okur, ne bulduğunu gösterir ve yalnızca onayladığını ekler — incelemeden hiçbir şey kaydedilmez.",
+      "readingFile": "{fileName} okunuyor…",
+      "chooseFile": "Bir dosya seç",
+      "noItemsFoundError": "Dosyayı okuduk ama içe aktarılacak bir şey bulamadık. Kayıtları elle ekleyebilirsin.",
+      "selectAtLeastOneError": "İçe aktarmak için en az bir öğe seç.",
+      "addedNotice": "{count, plural, one {# öğe} other {# öğe}} profiline eklendi."
     },
     "portfolio": {
       "title": "Portföy",
