@@ -21,7 +21,11 @@ const WeeklyActionSchema = z.object({
   impact: z.enum(["low", "medium", "high", "very_high"]),
 });
 
-const WeeklyPlanSchema = z.object({
+// Exported (no behavior change) so lib/ai/eval/harness.ts can call provider.generateStructured
+// with the real schema instead of a second, hand-copied one that could drift from it —
+// same "pure functions exported for testability" pattern this file already applies to
+// formatCounselorGrounding above.
+export const WeeklyPlanSchema = z.object({
   summary: z.string().describe("One or two sentences on what changed and what matters most this week"),
   actions: z.array(WeeklyActionSchema).min(1).max(3),
   avoidForNow: z
